@@ -17,6 +17,14 @@ The tasks are normal entries in the Windows Task Scheduler, managed using `its W
 The default browser agent needs to run as some OS-level user, as opposed to, say, ``LOCAL SERVICE``, in order to read the user's default browser setting. Therefore, the default browser agent runs as the user that ran the Firefox installer (although always without elevation, whether the installer had it or not).
 
 
+Remote Disablement
+------------------
+
+The default browser agent can be remotely disabled and (re-)enabled.  Each time the scheduled task runs it queries `Firefox Remote Settings <https://remote-settings.readthedocs.io/en/latest/>`_ to determine if the agent has been remotely disabled or (re-)enabled.
+
+If the default browser agent is disabled by policy, remote disablement will not be checked.  However, the notification functionality of the agent is distinct from the telemetry functionality of the agent, and remote disablement must apply to both functions.  Therefore, even if the user has opted out of sending telemetry (by policy or by preference), the agent must check for remote disablement.  For a user who is currently opted out of telemetry, they will not be opted in due to the default browser agent being remotely (re-)enabled.
+
+
 Data Management
 ===============
 
@@ -31,6 +39,8 @@ The agent needs to be able to read (but not set) values that have their canonica
 The list of reflected prefs includes the global telemetry opt-out pref ``datareporting.healthreport.uploadEnabled`` and a pref called ``default-browser-agent.enabled``, which can enable or disable the entire agent. The agent checks these registry-reflected pref values when its scheduled task runs, they do not actually prevent the scheduled task from running.
 
 Enterprise policies also exist to perform the same functions as these prefs. These work the same way as all other Firefox policies and `the documentation for those <https://github.com/mozilla/policy-templates/blob/master/README.md>`_ explains how to use them.
+
+In addition, the following Firefox Remote Settings prefs are reflected: ``services.settings.server`` and ``security.content.signature.root_hash``.  The former is the service endpoint to consult for remote-disablement and the latter is used to secure the content of queries to that service endpoint.
 
 
 Default Browser Setting
