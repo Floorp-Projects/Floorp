@@ -3254,7 +3254,7 @@ void GCRuntime::decommitFreeArenas(const bool& cancel, AutoLockGC& lock) {
        chunk.next()) {
     if (chunk->info.numArenasFreeCommitted != 0 &&
         !chunksToDecommit.append(chunk)) {
-      decommitFreeArenasWithoutUnlocking(lock);
+      onOutOfMallocMemory(lock);
       return;
     }
   }
