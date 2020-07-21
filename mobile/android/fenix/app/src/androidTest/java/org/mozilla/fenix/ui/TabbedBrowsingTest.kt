@@ -104,6 +104,7 @@ class TabbedBrowsingTest {
         }
     }
 
+    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/12752")
     @Test
     fun closeAllTabsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

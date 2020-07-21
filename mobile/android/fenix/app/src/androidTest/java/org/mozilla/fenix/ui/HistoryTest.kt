@@ -11,6 +11,7 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -203,6 +204,7 @@ class HistoryTest {
         }
     }
 
+    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/12752")
     @Test
     fun openHistoryInNewTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

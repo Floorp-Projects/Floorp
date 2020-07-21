@@ -322,6 +322,7 @@ class BookmarksTest {
         }
     }
 
+    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/12752")
     @Test
     fun openSelectionInNewTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
