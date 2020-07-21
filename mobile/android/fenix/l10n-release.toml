@@ -1,13 +1,12 @@
-
-basepath = "."
-
+# Locales that should be present in release builds
+# Locales that are at 70% or higher completion on https://pontoon.mozilla.org/projects/android-l10n/
+# should be in this list
 locales = [
   "an",
   "ar",
   "ast",
   "az",
   "be",
-  "bg",
   "bn",
   "br",
   "bs",
@@ -59,13 +58,10 @@ locales = [
   "lt",
   "ml",
   "mr",
-  "ms",
   "my",
   "nb-NO",
-  "ne-NP",
   "nl",
   "nn-NO",
-  "nv",
   "oc",
   "pa-IN",
   "pl",
@@ -87,21 +83,9 @@ locales = [
   "trs",
   "uk",
   "ur",
-  "uz",
   "vec",
   "vi",
   "zh-CN",
   "zh-TW",
 ]
 
-# Expose the following branches to localization
-# Changes to this list should be announced to the l10n team ahead of time.
-branches = [
-    "master",
-]
-
-[env]
-
-[[paths]]
-  reference = "app/src/main/res/values/strings.xml"
-  l10n = "app/src/main/res/values-{android_locale}/strings.xml"

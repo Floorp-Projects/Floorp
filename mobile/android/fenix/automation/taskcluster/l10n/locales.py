@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 
-OPEN_LOCALES = "release_locales = ["
+OPEN_LOCALES = "locales = ["
 CLOSE_LOCALES = "]"
 
 def trim_to_locale(str):
@@ -18,11 +18,11 @@ def trim_to_locale(str):
     return match.group(1)
 
 
-# This file is a dumb parser that converts values from '/l10n.toml' to be easily consumed from
-# Python.
+# This file is a dumb parser that converts values from '/l10n-release.toml' to be easily
+# consumed from Python.
 #
-# 'l10n.toml' has a very simple structure, and it is reasonable to believe that this (very basic)
-# algorithm will continue to work as it is changed.
+# 'l10n-release.toml' has a very simple structure, and it is reasonable to believe that this
+# (very basic) algorithm will continue to work as it is changed.
 #
 # Alternatives to custom parsing that were considered:
 # - Using standard library module --- none exists to parse TOML
@@ -31,7 +31,7 @@ def trim_to_locale(str):
 # - Vendoring a TOML module --- large amount of code given the use case. Introduces a security
 #   risk
 def get_release_locales():
-    with open(r"l10n.toml") as f:
+    with open(r"l10n-release.toml") as f:
         file = f.read().splitlines()
 
     locales_opened = False
@@ -42,7 +42,7 @@ def get_release_locales():
     for line in file:
         if line == OPEN_LOCALES:
             locales_opened = True
-        elif line == CLOSE_LOCALES and locales_opened == True:
+        elif line == CLOSE_LOCALES:
             locales_closed = True
             break
         elif locales_opened:
