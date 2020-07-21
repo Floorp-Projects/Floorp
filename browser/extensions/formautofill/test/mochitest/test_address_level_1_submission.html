@@ -28,6 +28,8 @@ const TEST_ADDRESSES = [{
 add_task(async function test_DE_is_valid_testcase() {
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["extensions.formautofill.addresses.enabled", true],
+      ["extensions.formautofill.addresses.capture.enabled", true],
       ["extensions.formautofill.supportedCountries", "US,CA,DE"],
     ],
   });

@@ -6,6 +6,12 @@ const PRIVACY_PREF_URL = "about:preferences#privacy";
 
 // Start by adding a few addresses to storage.
 add_task(async function setup_storage() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
+      [ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, true],
+    ],
+  });
   await saveAddress(TEST_ADDRESS_2);
   await saveAddress(TEST_ADDRESS_4);
   await saveAddress(TEST_ADDRESS_5);

@@ -453,6 +453,9 @@ class FormAutofillParent extends JSWindowActorParent {
 
   async _onAddressSubmit(address, browser, timeStartedFillingMS) {
     let showDoorhanger = null;
+    if (!FormAutofill.isAutofillAddressesCaptureEnabled) {
+      return showDoorhanger;
+    }
     if (address.guid) {
       // Avoid updating the fields that users don't modify.
       let originalAddress = await gFormAutofillStorage.addresses.get(
