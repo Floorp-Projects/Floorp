@@ -605,6 +605,23 @@ class TextInputDelegateTest : BaseSessionTest() {
         assertText("Can type using event", ic, "frabat")
     }
 
+    // Test for Multiple setComposingText with same string length.
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun inputConnection_multiple_setComposingText() {
+
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        // Don't wait composition event for this test.
+        ic.setComposingText("aaa", 1)
+        ic.setComposingText("aaa", 1)
+        ic.setComposingText("aab", 1)
+
+        finishComposingText(ic)
+        assertTextAndSelectionAt("Multiple setComposingText don't commit composition string",
+                                 ic, "aab", 3)
+    }
+
     // Bug 1133802, duplication when setting the same composing text more than once.
     @Ignore // Disable for frequent failures.
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.

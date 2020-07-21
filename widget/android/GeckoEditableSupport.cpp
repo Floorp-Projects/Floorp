@@ -595,24 +595,30 @@ void GeckoEditableSupport::AddIMETextChange(const IMETextChange& aChange) {
       // No overlap between ranges
       continue;
     }
-    // When merging two ranges, there are generally four posibilities:
-    // [----(----]----), (----[----]----),
-    // [----(----)----], (----[----)----]
-    // where [----] is the first range and (----) is the second range
-    // As seen above, the start of the merged range is always the lesser
-    // of the two start offsets. OldEnd and NewEnd then need to be
-    // adjusted separately depending on the case. In any case, the change
-    // in text length of the merged range should be the sum of text length
-    // changes of the two original ranges, i.e.,
-    // newNewEnd - newOldEnd == newEnd1 - oldEnd1 + newEnd2 - oldEnd2
-    dst.mStart = std::min(dst.mStart, src.mStart);
-    if (src.mOldEnd < dst.mNewEnd) {
-      // New range overlaps or is within previous range; merge
-      dst.mNewEnd += src.mNewEnd - src.mOldEnd;
-    } else {  // src.mOldEnd >= dst.mNewEnd
-      // New range overlaps previous range; merge
-      dst.mOldEnd += src.mOldEnd - dst.mNewEnd;
-      dst.mNewEnd = src.mNewEnd;
+
+    if (src.mStart == dst.mStart && src.mNewEnd == dst.mNewEnd) {
+      // Same range. Adjust old end offset.
+      dst.mOldEnd = std::min(src.mOldEnd, dst.mOldEnd);
+    } else {
+      // When merging two ranges, there are generally four posibilities:
+      // [----(----]----), (----[----]----),
+      // [----(----)----], (----[----)----]
+      // where [----] is the first range and (----) is the second range
+      // As seen above, the start of the merged range is always the lesser
+      // of the two start offsets. OldEnd and NewEnd then need to be
+      // adjusted separately depending on the case. In any case, the change
+      // in text length of the merged range should be the sum of text length
+      // changes of the two original ranges, i.e.,
+      // newNewEnd - newOldEnd == newEnd1 - oldEnd1 + newEnd2 - oldEnd2
+      dst.mStart = std::min(dst.mStart, src.mStart);
+      if (src.mOldEnd < dst.mNewEnd) {
+        // New range overlaps or is within previous range; merge
+        dst.mNewEnd += src.mNewEnd - src.mOldEnd;
+      } else {  // src.mOldEnd >= dst.mNewEnd
+        // New range overlaps previous range; merge
+        dst.mOldEnd += src.mOldEnd - dst.mNewEnd;
+        dst.mNewEnd = src.mNewEnd;
+      }
     }
     // src merged to dst; delete src.
     mIMETextChanges.RemoveElementAt(srcIndex);
