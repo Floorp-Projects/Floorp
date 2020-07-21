@@ -1,3 +1,101 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html, body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.row {
+  padding-inline-start: 34px;
+  margin-block: 18px;
+}
+
+.row .block-label {
+  display: block;
+  margin-bottom: 4px;
+}
+.row .block-label + input,
+.row .block-label + select,
+.row .block-label + .page-range-input select {
+  margin-inline-start: 0;
+}
+
+.header-container {
+  display: flex;
+  flex-direction: row;
+  flex: 0 1 auto;
+  border-bottom: 1px solid var(--in-content-border-color);
+  margin-block: 18px 0;
+}
+.header-container > h2 {
+  margin-top: 0;
+}
+.header-container > #sheets-count {
+  display: none;
+}
+
+form#print {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.body-container {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+#more-settings {
+  border-top: 1px solid var(--in-content-border-color);
+}
+
+#more-settings.twisty > summary {
+  list-style: none;
+  display: flex;
+  cursor: pointer;
+  padding-inline-end: 8px;
+}
+
+#more-settings > summary > .twisty {
+  background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 20px;
+  scale: 1 1;
+}
+
+#more-settings > summary > .label {
+  flex-grow: 1;
+}
+
+#more-settings[open] > summary > .twisty {
+  /* flip arrow to point up for the open state */
+  scale: 1 -1;
+}
+
+#open-dialog-link {
+  display: block;
+}
+
+.footer-container {
+  border-top: 1px solid var(--in-content-border-color);
+  flex: 0 1 auto;
+}
+
+#button-container > button:first-child {
+  margin-inline-start: 0;
+}
+
+.page-range-input:not(.custom-input-selected) #custom-range {
+  display: none;
+}
