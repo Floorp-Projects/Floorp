@@ -44,6 +44,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
+import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -184,9 +185,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 selectedItem.url
             }
 
-            navigate(
-                HistoryFragmentDirections.actionGlobalTabTrayDialogFragment()
-            )
+            showTabTray()
             true
         }
         R.id.open_history_in_private_tabs_multi_select -> {
@@ -199,12 +198,16 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 browsingModeManager.mode = BrowsingMode.Private
                 supportActionBar?.hide()
             }
-            navigate(
-                HistoryFragmentDirections.actionGlobalTabTrayDialogFragment()
-            )
+
+            showTabTray()
             true
         }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun showTabTray() {
+        invokePendingDeletion()
+        TabTrayDialogFragment.show(parentFragmentManager)
     }
 
     private fun getMultiSelectSnackBarMessage(historyItems: Set<HistoryItem>): String {

@@ -51,6 +51,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
+import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.utils.allowUndo
 
 /**
@@ -207,14 +208,14 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             R.id.open_bookmarks_in_new_tabs_multi_select -> {
                 openItemsInNewTab { node -> node.url }
 
-                navigate(BookmarkFragmentDirections.actionGlobalTabTrayDialogFragment())
+                showTabTray()
                 metrics?.track(Event.OpenedBookmarksInNewTabs)
                 true
             }
             R.id.open_bookmarks_in_private_tabs_multi_select -> {
                 openItemsInNewTab(private = true) { node -> node.url }
 
-                navigate(BookmarkFragmentDirections.actionGlobalTabTrayDialogFragment())
+                showTabTray()
                 metrics?.track(Event.OpenedBookmarksInPrivateTabs)
                 true
             }
@@ -235,6 +236,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun showTabTray() {
+        invokePendingDeletion()
+        TabTrayDialogFragment.show(parentFragmentManager)
     }
 
     private fun navigate(directions: NavDirections) {
