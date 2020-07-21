@@ -30,7 +30,7 @@ class LightweightThemeChild extends JSWindowActorChild {
     }
     // We don't have a message manager, so presumable we're running in a sidebar
     // in the parent process.
-    return this.contentWindow.top.windowUtils.outerWindowID;
+    return this.contentWindow.top.docShell.outerWindowID;
   }
 
   /**

@@ -430,8 +430,8 @@ const browsingContextTargetPrototype = {
   },
 
   get outerWindowID() {
-    if (this.window) {
-      return this.window.windowUtils.outerWindowID;
+    if (this.docShell) {
+      return this.docShell.outerWindowID;
     }
     return null;
   },
@@ -893,7 +893,7 @@ const browsingContextTargetPrototype = {
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebProgress);
     const window = webProgress.DOMWindow;
-    const id = window.windowUtils.outerWindowID;
+    const id = docShell.outerWindowID;
     let parentID = undefined;
     // Ignore the parent of the original document on non-e10s firefox,
     // as we get the xul window as parent and don't care about it.
@@ -905,7 +905,7 @@ const browsingContextTargetPrototype = {
       window.parent != window &&
       window != this._originalWindow
     ) {
-      parentID = window.parent.windowUtils.outerWindowID;
+      parentID = window.parent.docShell.outerWindowID;
     }
 
     return {
@@ -952,7 +952,7 @@ const browsingContextTargetPrototype = {
     }
 
     webProgress = webProgress.QueryInterface(Ci.nsIWebProgress);
-    const id = webProgress.DOMWindow.windowUtils.outerWindowID;
+    const id = webProgress.DOMWindow.docShell.outerWindowID;
     this.emit("frameUpdate", {
       frames: [
         {
