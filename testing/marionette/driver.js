@@ -382,6 +382,19 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
 };
 
 /**
+ * Get the current "MarionetteFrame" parent actor.
+ *
+ * @returns {MarionetteFrameParent}
+ *     The parent actor.
+ */
+GeckoDriver.prototype.getActor = async function() {
+  // TODO: Make it an `actor` property after removing async from
+  // getBrowsingContext()
+  const browsingContext = await this.getBrowsingContext();
+  return browsingContext.currentWindowGlobal.getActor("MarionetteFrame");
+};
+
+/**
  * Get the browsing context.
  *
  * @param {boolean=} topContext
@@ -396,7 +409,7 @@ GeckoDriver.prototype.getBrowsingContext = async function(topContext = false) {
 
   switch (this.context) {
     case Context.Chrome:
-      browsingContext = this.getCurrentWindow().docShell.browsingContext;
+      browsingContext = this.getCurrentWindow().browsingContext;
       break;
 
     case Context.Content:
@@ -849,6 +862,26 @@ GeckoDriver.prototype.newSession = async function(cmd) {
 
   await registerBrowsers;
   await browserListening;
+
+  // Register the JSWindowActor pair as used by Marionette
+  ChromeUtils.registerWindowActor("MarionetteFrame", {
+    kind: "JSWindowActor",
+    parent: {
+      moduleURI: "chrome://marionette/content/actors/MarionetteFrameParent.jsm",
+    },
+    child: {
+      moduleURI: "chrome://marionette/content/actors/MarionetteFrameChild.jsm",
+      events: {
+        beforeunload: { capture: true },
+        DOMContentLoaded: { mozSystemGroup: true },
+        pagehide: { mozSystemGroup: true },
+        pageshow: { mozSystemGroup: true },
+      },
+    },
+
+    allFrames: true,
+    includeChrome: true,
+  });
 
   if (this.mainFrame) {
     this.mainFrame.focus();
@@ -2915,6 +2948,8 @@ GeckoDriver.prototype.deleteSession = function() {
       }
     }
   }
+
+  ChromeUtils.unregisterWindowActor("MarionetteFrame");
 
   // reset frame to the top-most frame, and clear reference to chrome window
   this.curFrame = null;
