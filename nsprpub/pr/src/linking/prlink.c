@@ -776,6 +776,9 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         int dl_flags = 0;
 #endif
         void *h = NULL;
+#if defined(DARWIN)
+        PRBool okToLoad = PR_FALSE;
+#endif
 
         if (flags & PR_LD_LAZY) {
             dl_flags |= RTLD_LAZY;
@@ -789,7 +792,41 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         if (flags & PR_LD_LOCAL) {
             dl_flags |= RTLD_LOCAL;
         }
+#if defined(DARWIN)
+        /* If the file contains an absolute or relative path (slash)
+         * and the path doesn't look like a System path, then require
+         * the file exists.
+         * The reason is that DARWIN's dlopen ignores the provided path
+         * and checks for the plain filename in DYLD_LIBRARY_PATH,
+         * which could load an unexpected version of a library. */
+        if (strchr(name, PR_DIRECTORY_SEPARATOR) == NULL) {
+          /* no slash, allow to load from any location */
+          okToLoad = PR_TRUE;
+        } else {
+          const char systemPrefix1[] = "/System/";
+          const size_t systemPrefixLen1 = strlen(systemPrefix1);
+          const char systemPrefix2[] = "/usr/lib/";
+          const size_t systemPrefixLen2 = strlen(systemPrefix2);
+          const name_len = strlen(name);
+          if (((name_len > systemPrefixLen1) &&
+               (strncmp(name, systemPrefix1, systemPrefixLen1) == 0)) ||
+             ((name_len > systemPrefixLen2) &&
+               (strncmp(name, systemPrefix2, systemPrefixLen2) == 0))) {
+            /* found at beginning, it's a system library.
+             * Skip filesystem check (required for macOS 11),
+             * allow loading from any location */
+            okToLoad = PR_TRUE;
+          } else if (PR_Access(name, PR_ACCESS_EXISTS) == PR_SUCCESS) {
+            /* file exists, allow to load */
+            okToLoad = PR_TRUE;
+          }
+        }
+        if (okToLoad) {
+          h = dlopen(name, dl_flags);
+        }
+#else
         h = dlopen(name, dl_flags);
+#endif
 #elif defined(USE_HPSHL)
         int shl_flags = 0;
         shl_t h;
