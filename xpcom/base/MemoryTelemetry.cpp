@@ -7,7 +7,6 @@
 #include "MemoryTelemetry.h"
 #include "nsMemoryReporterManager.h"
 
-#include "GCTelemetry.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
@@ -46,19 +45,6 @@ static constexpr const char* kTopicCycleCollectorBegin =
 
 // How long to wait in millis for all the child memory reports to come in
 static constexpr uint32_t kTotalMemoryCollectorTimeout = 200;
-
-static Result<nsCOMPtr<mozIGCTelemetry>, nsresult> GetGCTelemetry() {
-  nsresult rv;
-
-  nsCOMPtr<mozIGCTelemetryJSM> jsm =
-      do_ImportModule("resource://gre/modules/GCTelemetry.jsm", &rv);
-  MOZ_TRY(rv);
-
-  nsCOMPtr<mozIGCTelemetry> gcTelemetry;
-  MOZ_TRY(jsm->GetGCTelemetry(getter_AddRefs(gcTelemetry)));
-
-  return std::move(gcTelemetry);
-}
 
 namespace {
 
@@ -141,13 +127,6 @@ nsresult MemoryTelemetry::DelayedInit() {
 
   GatherReports();
 
-  if (Telemetry::CanRecordExtended()) {
-    nsCOMPtr<mozIGCTelemetry> gcTelemetry;
-    MOZ_TRY_VAR(gcTelemetry, GetGCTelemetry());
-
-    MOZ_TRY(gcTelemetry->Init());
-  }
-
   return NS_OK;
 }
 
@@ -156,13 +135,6 @@ nsresult MemoryTelemetry::Shutdown() {
   MOZ_RELEASE_ASSERT(obs);
 
   obs->RemoveObserver(this, kTopicCycleCollectorBegin);
-
-  if (Telemetry::CanRecordExtended()) {
-    nsCOMPtr<mozIGCTelemetry> gcTelemetry;
-    MOZ_TRY_VAR(gcTelemetry, GetGCTelemetry());
-
-    MOZ_TRY(gcTelemetry->Shutdown());
-  }
 
   return NS_OK;
 }
