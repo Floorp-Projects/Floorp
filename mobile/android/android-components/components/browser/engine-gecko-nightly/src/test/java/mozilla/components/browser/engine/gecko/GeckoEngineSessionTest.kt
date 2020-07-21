@@ -461,23 +461,27 @@ class GeckoEngineSessionTest {
 
     @Test
     fun reload() {
-        val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
         engineSession.loadUrl("http://mozilla.org")
 
+        // Initial load is still in progress so reload should not be called.
+        // Instead we should have called loadUrl again to prevent reloading
+        // about:blank.
         engineSession.reload()
+        verify(geckoSession, never()).reload(GeckoSession.LOAD_FLAGS_BYPASS_CACHE)
+        verify(geckoSession, times(2)).loadUri(
+            "http://mozilla.org",
+            null as GeckoSession?,
+            GeckoSession.LOAD_FLAGS_NONE,
+            null
+        )
 
+        // Subsequent reloads should simply call reload on the gecko session.
+        engineSession.initialLoadRequest = null
+        engineSession.reload()
         verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_NONE)
-    }
-
-    @Test
-    fun reloadBypassingCache() {
-        val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
-        engineSession.loadUrl("http://mozilla.org")
 
         engineSession.reload(flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE))
-
         verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_BYPASS_CACHE)
     }
 
@@ -2525,6 +2529,7 @@ class GeckoEngineSessionTest {
         fakePageLoad(true)
 
         // reload()
+        engineSession.initialLoadRequest = null
         engineSession.reload()
         verify(geckoSession).reload(GeckoSession.LOAD_FLAGS_NONE)
         fakePageLoad(false)

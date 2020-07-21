@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.annotation.SuppressLint
 import android.os.Build
 import android.view.WindowManager
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -101,6 +102,24 @@ class GeckoEngineSession(
     }
 
     /**
+     * Represents a request to load a [url].
+     *
+     * @param url the url to load.
+     * @param parent the parent (referring) [EngineSession] i.e. the session that
+     * triggered creating this one.
+     * @param flags the [LoadUrlFlags] to use when loading the provided url.
+     * @param additionalHeaders the extra headers to use when loading the provided url.
+     **/
+    data class LoadRequest(
+        val url: String,
+        val parent: EngineSession?,
+        val flags: LoadUrlFlags,
+        val additionalHeaders: Map<String, String>?
+    )
+    @VisibleForTesting
+    internal var initialLoadRequest: LoadRequest? = null
+
+    /**
      * See [EngineSession.loadUrl]
      */
     override fun loadUrl(
@@ -109,6 +128,9 @@ class GeckoEngineSession(
         flags: LoadUrlFlags,
         additionalHeaders: Map<String, String>?
     ) {
+        if (initialLoad) {
+            initialLoadRequest = LoadRequest(url, parent, flags, additionalHeaders)
+        }
         geckoSession.loadUri(url, (parent as? GeckoEngineSession)?.geckoSession, flags.value, additionalHeaders)
     }
 
@@ -133,7 +155,12 @@ class GeckoEngineSession(
      * See [EngineSession.reload]
      */
     override fun reload(flags: LoadUrlFlags) {
-        geckoSession.reload(flags.value)
+        initialLoadRequest?.let {
+            // We have a pending initial load request, which means we never
+            // successfully loaded a page. Calling reload now would just reload
+            // about:blank. To prevent that we trigger the initial load again.
+            loadUrl(it.url, it.parent, it.flags, it.additionalHeaders)
+        } ?: geckoSession.reload(flags.value)
     }
 
     /**
@@ -352,6 +379,8 @@ class GeckoEngineSession(
 
             currentUrl = url
             initialLoad = false
+            initialLoadRequest = null
+
             isIgnoredForTrackingProtection { ignored ->
                 notifyObservers {
                     onExcludedOnTrackingProtectionChange(ignored)
