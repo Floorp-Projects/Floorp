@@ -76,3 +76,12 @@ interface nsIAccessibleMacInterface : nsISupports
   [implicit_jscontext]
   void setAttributeValue(in AString attributeName, in jsval attributeValue);
 };
+
+[scriptable, builtinclass, uuid(6153f07b-2260-495b-9899-9699d9fe323e)]
+interface nsIAccessibleMacEvent : nsISupports
+{
+  readonly attribute nsIAccessibleMacInterface macIface;
+
+  [implicit_jscontext]
+  readonly attribute jsval data;
+};

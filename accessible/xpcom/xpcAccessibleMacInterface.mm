@@ -233,6 +233,17 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
       return NS_ERROR_FAILURE;
     }
     aResult.setObject(*arrayObj);
+  } else if ([aObj isKindOfClass:[NSDictionary class]]) {
+    JS::RootedObject obj(aCx, JS_NewPlainObject(aCx));
+    for (NSString* key in aObj) {
+      nsAutoString strKey;
+      nsCocoaUtils::GetStringForNSString(key, strKey);
+      JS::RootedValue value(aCx);
+      nsresult rv = NSObjectToJsValue(aObj[key], aCx, &value);
+      NS_ENSURE_SUCCESS(rv, rv);
+      JS_SetUCProperty(aCx, obj, strKey.get(), strKey.Length(), value);
+    }
+    aResult.setObject(*obj);
   } else if ([aObj respondsToSelector:@selector(isAccessibilityElement)]) {
     // We expect all of our accessibility objects to implement isAccessibilityElement
     // at the very least. If it is implemented we will assume its an accessibility object.
@@ -356,7 +367,32 @@ id xpcAccessibleMacInterface::JsValueToNSValue(JS::HandleObject aObject, JSConte
   return nil;
 }
 
-void xpcAccessibleMacInterface::FireEvent(id aNativeObj, id aNotification) {
+NS_IMPL_ISUPPORTS(xpcAccessibleMacEvent, nsIAccessibleMacEvent)
+
+xpcAccessibleMacEvent::xpcAccessibleMacEvent(id aNativeObj, id aData)
+    : mNativeObject(aNativeObj), mData(aData) {
+  [mNativeObject retain];
+  [mData retain];
+}
+
+xpcAccessibleMacEvent::~xpcAccessibleMacEvent() {
+  [mNativeObject release];
+  [mData release];
+}
+
+NS_IMETHODIMP
+xpcAccessibleMacEvent::GetMacIface(nsIAccessibleMacInterface** aMacIface) {
+  RefPtr<xpcAccessibleMacInterface> macIface = new xpcAccessibleMacInterface(mNativeObject);
+  macIface.forget(aMacIface);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessibleMacEvent::GetData(JSContext* aCx, JS::MutableHandleValue aData) {
+  return xpcAccessibleMacInterface::NSObjectToJsValue(mData, aCx, aData);
+}
+
+void xpcAccessibleMacEvent::FireEvent(id aNativeObj, id aNotification, id aUserInfo) {
   if (nsCOMPtr<nsIObserverService> obsService = services::GetObserverService()) {
     nsCOMPtr<nsISimpleEnumerator> observers;
     // Get all observers for the mac event topic.
@@ -366,7 +402,7 @@ void xpcAccessibleMacInterface::FireEvent(id aNativeObj, id aNotification) {
       observers->HasMoreElements(&hasObservers);
       // If we have observers, notify them.
       if (hasObservers) {
-        nsCOMPtr<nsIAccessibleMacInterface> xpcIface = new xpcAccessibleMacInterface(aNativeObj);
+        nsCOMPtr<nsIAccessibleMacEvent> xpcIface = new xpcAccessibleMacEvent(aNativeObj, aUserInfo);
         nsAutoString notificationStr;
         nsCocoaUtils::GetStringForNSString(aNotification, notificationStr);
         obsService->NotifyObservers(xpcIface, NS_ACCESSIBLE_MAC_EVENT_TOPIC, notificationStr.get());
