@@ -7,6 +7,7 @@
 
 #include "DocAccessible.h"
 #include "nsObjCExceptions.h"
+#include "nsCocoaUtils.h"
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
@@ -172,8 +173,16 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       break;
     }
 
+    case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
+    case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
+      AccTextChangeEvent* tcEvent = downcast_accEvent(aEvent);
+      [nativeAcc handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(tcEvent->ModifiedText())
+                                        inserted:tcEvent->IsTextInserted()
+                                              at:tcEvent->GetStartOffset()];
+      break;
+    }
+
     case nsIAccessibleEvent::EVENT_FOCUS:
-    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
