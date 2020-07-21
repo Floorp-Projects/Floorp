@@ -149,6 +149,8 @@ this.GeckoDriver = function(server) {
   this.mainFrame = null;
   // chrome iframe that currently has focus
   this.curFrame = null;
+  // browsing context of current content frame
+  this.currentFrameBrowsingContext = null;
   this.currentFrameElement = null;
   this.observing = null;
   this._browserIds = new WeakMap();
@@ -613,8 +615,8 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
     this.curBrowser.register(id, be);
   }
 
-  const context = BrowsingContext.get(id);
-  this.wins.set(id, context.currentWindowGlobal);
+  this.currentFrameBrowsingContext = BrowsingContext.get(id);
+  this.wins.set(id, this.currentFrameBrowsingContext.currentWindowGlobal);
 
   return id;
 };
@@ -3542,6 +3544,11 @@ GeckoDriver.prototype.receiveMessage = function(message) {
           );
         } else {
           this.currentFrameElement = null;
+        }
+        if (message.json.browsingContextId) {
+          this.currentFrameBrowsingContext = BrowsingContext.get(
+            message.json.browsingContextId
+          );
         }
       }
       break;
