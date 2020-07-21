@@ -973,7 +973,7 @@ HTMLInputElement::~HTMLInputElement() {
   if (mNumberControlSpinnerIsSpinning) {
     StopNumberControlSpinnerSpin(eDisallowDispatchingEvents);
   }
-  DestroyImageLoadingContent();
+  nsImageLoadingContent::Destroy();
   FreeData();
 }
 
