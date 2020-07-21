@@ -151,10 +151,12 @@ open class FenixApplication : LocaleAwareApplication() {
         //    runStorageMaintenance()
         // }
 
+        initVisualCompletenessQueueAndQueueTasks()
+    }
+
+    private fun initVisualCompletenessQueueAndQueueTasks() {
         val taskQueue = components.performance.visualCompletenessQueue
-        registerActivityLifecycleCallbacks(
-            PerformanceActivityLifecycleCallbacks(taskQueue)
-        )
+        registerActivityLifecycleCallbacks(PerformanceActivityLifecycleCallbacks(taskQueue))
 
         // Enable the service-experiments component to be initialized after visual completeness
         // for performance wins.
