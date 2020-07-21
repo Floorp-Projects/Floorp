@@ -905,7 +905,7 @@ class ContextMenuChild extends JSWindowActorChild {
     );
 
     context.frameOuterWindowID =
-      context.target.ownerGlobal.docShell.outerWindowID;
+      context.target.ownerGlobal.windowUtils.outerWindowID;
 
     context.frameBrowsingContextID =
       context.target.ownerGlobal.browsingContext.id;

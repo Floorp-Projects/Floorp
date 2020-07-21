@@ -385,7 +385,7 @@ const loadListener = {
       // In the case when the currently selected frame is closed,
       // there will be no further load events. Stop listening immediately.
       case "outer-window-destroyed":
-        if (bc.currentWindowContext.outerWindowId == winId) {
+        if (bc.window.windowUtils.outerWindowID == winId) {
           this.stop();
           sendOk(this.commandID);
         }

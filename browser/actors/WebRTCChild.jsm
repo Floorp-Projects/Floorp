@@ -504,7 +504,7 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
 }
 
 function getInnerWindowIDForWindow(aContentWindow) {
-  return aContentWindow.windowGlobalChild.innerWindowId;
+  return aContentWindow.windowUtils.currentInnerWindowID;
 }
 
 function getMessageManagerForWindow(aContentWindow) {

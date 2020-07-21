@@ -687,7 +687,7 @@ var BrowserElementPromptService = {
   },
 
   _getOuterWindowID(win) {
-    return win.docShell.outerWindowID;
+    return win.windowUtils.outerWindowID;
   },
 
   _browserElementChildMap: {},
