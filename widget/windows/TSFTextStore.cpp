@@ -677,76 +677,6 @@ class GetEscapedUTF8String final : public NS_ConvertUTF16toUTF8 {
   }
 };
 
-class GetIMEStateString : public nsAutoCString {
- public:
-  explicit GetIMEStateString(const IMEState& aIMEState) {
-    AppendLiteral("{ mEnabled=");
-    switch (aIMEState.mEnabled) {
-      case IMEState::DISABLED:
-        AppendLiteral("DISABLED");
-        break;
-      case IMEState::ENABLED:
-        AppendLiteral("ENABLED");
-        break;
-      case IMEState::PASSWORD:
-        AppendLiteral("PASSWORD");
-        break;
-      case IMEState::PLUGIN:
-        AppendLiteral("PLUGIN");
-        break;
-      case IMEState::UNKNOWN:
-        AppendLiteral("UNKNOWN");
-        break;
-      default:
-        AppendPrintf("Unknown value (%d)", aIMEState.mEnabled);
-        break;
-    }
-    AppendLiteral(", mOpen=");
-    switch (aIMEState.mOpen) {
-      case IMEState::OPEN_STATE_NOT_SUPPORTED:
-        AppendLiteral("OPEN_STATE_NOT_SUPPORTED or DONT_CHANGE_OPEN_STATE");
-        break;
-      case IMEState::OPEN:
-        AppendLiteral("OPEN");
-        break;
-      case IMEState::CLOSED:
-        AppendLiteral("CLOSED");
-        break;
-      default:
-        AppendPrintf("Unknown value (%d)", aIMEState.mOpen);
-        break;
-    }
-    AppendLiteral(" }");
-  }
-};
-
-class GetInputContextString : public nsAutoCString {
- public:
-  explicit GetInputContextString(const InputContext& aInputContext) {
-    AppendPrintf("{ mIMEState=%s, ",
-                 GetIMEStateString(aInputContext.mIMEState).get());
-    AppendLiteral("mOrigin=");
-    switch (aInputContext.mOrigin) {
-      case InputContext::ORIGIN_MAIN:
-        AppendLiteral("ORIGIN_MAIN");
-        break;
-      case InputContext::ORIGIN_CONTENT:
-        AppendLiteral("ORIGIN_CONTENT");
-        break;
-      default:
-        AppendPrintf("Unknown value (%d)", aInputContext.mOrigin);
-        break;
-    }
-    AppendPrintf(
-        ", mHTMLInputType=\"%s\", mHTMLInputInputmode=\"%s\", "
-        "mActionHint=\"%s\", mMayBeIMEUnaware=%s }",
-        NS_ConvertUTF16toUTF8(aInputContext.mHTMLInputType).get(),
-        NS_ConvertUTF16toUTF8(aInputContext.mHTMLInputInputmode).get(),
-        NS_ConvertUTF16toUTF8(aInputContext.mActionHint).get(),
-        GetBoolName(aInputContext.mMayBeIMEUnaware));
-  }
-};
-
 class GetInputScopeString : public nsAutoCString {
  public:
   explicit GetInputScopeString(const nsTArray<InputScope>& aList) {
@@ -5740,7 +5670,7 @@ nsresult TSFTextStore::OnFocusChange(bool aGotFocus,
            "aFocusedWidget=0x%p, aContext=%s), "
            "sThreadMgr=0x%p, sEnabledTextStore=0x%p",
            GetBoolName(aGotFocus), aFocusedWidget,
-           GetInputContextString(aContext).get(), sThreadMgr.get(),
+           mozilla::ToString(aContext).c_str(), sThreadMgr.get(),
            sEnabledTextStore.get()));
 
   if (NS_WARN_IF(!IsInTSFMode())) {
@@ -6654,7 +6584,7 @@ void TSFTextStore::SetInputContext(nsWindowBase* aWidget,
           ("TSFTextStore::SetInputContext(aWidget=%p, "
            "aContext=%s, aAction.mFocusChange=%s), "
            "sEnabledTextStore(0x%p)={ mWidget=0x%p }, ThinksHavingFocus()=%s",
-           aWidget, GetInputContextString(aContext).get(),
+           aWidget, mozilla::ToString(aContext).c_str(),
            GetFocusChangeName(aAction.mFocusChange), sEnabledTextStore.get(),
            sEnabledTextStore ? sEnabledTextStore->mWidget.get() : nullptr,
            GetBoolName(ThinksHavingFocus())));
