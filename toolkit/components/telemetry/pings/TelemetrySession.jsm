@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
   UITelemetry: "resource://gre/modules/UITelemetry.jsm",
-  GCTelemetry: "resource://gre/modules/GCTelemetry.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetryReportingPolicy:
     "resource://gre/modules/TelemetryReportingPolicy.jsm",
@@ -737,15 +736,6 @@ var Impl = {
           Object.keys(this._slowSQLStartup.otherThreads).length)
       ) {
         payloadObj.slowSQLStartup = this._slowSQLStartup;
-      }
-
-      if (!this._isClassicReason(reason)) {
-        payloadObj.processes.parent.gc = protect(() =>
-          GCTelemetry.entries("main", clearSubsession)
-        );
-        payloadObj.processes.content.gc = protect(() =>
-          GCTelemetry.entries("content", clearSubsession)
-        );
       }
 
       // Adding captured stacks to the payload only if any exist and clearing
