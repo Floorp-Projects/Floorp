@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('Iterator'))
+
 /*---
 esid: pending
 description: %Iterator.prototype%.map value and descriptor.
