@@ -850,6 +850,13 @@
         ]
       }
     },
+    "szl": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "ddg", "wikipedia"
+        ]
+      }
+    },
     "ta": {
       "default": {
         "visibleDefaultEngines": [
