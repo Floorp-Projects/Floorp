@@ -215,4 +215,39 @@ class SmokeTest {
             }
         }
     }
+
+    @Test
+    fun verifyETPToolbarShieldIconIsNotDisplayedIfETPIsOFFGloballyTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openEnhancedTrackingProtectionSubMenu {
+            clickEnhancedTrackingProtectionDefaults()
+            verifyEnhancedTrackingProtectionOptionsGrayedOut()
+        }.goBackToHomeScreen {
+            navigationToolbar {
+            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+                verifyEnhancedTrackingProtectionPanelNotVisible()
+            }.openThreeDotMenu {
+            }.clickAddOnsReportSiteIssue {
+                verifyUrl("webcompat.com/issues/new")
+                verifyTabCounter("2")
+            }.openTabDrawer {
+            }.openHomeScreen {
+            }.openThreeDotMenu {
+            }.openSettings {
+            }.openEnhancedTrackingProtectionSubMenu {
+                clickEnhancedTrackingProtectionDefaults()
+            }.goBackToHomeScreen {
+            }.openTabDrawer {
+            }.openTab(defaultWebPage.title) {
+                clickEnhancedTrackingProtectionPanel()
+                verifyEnhancedTrackingProtectionSwitch()
+                // Turning off TP Switch results in adding the WebPage to exception list
+                clickEnhancedTrackingProtectionSwitchOffOn()
+            }
+        }
+    }
 }

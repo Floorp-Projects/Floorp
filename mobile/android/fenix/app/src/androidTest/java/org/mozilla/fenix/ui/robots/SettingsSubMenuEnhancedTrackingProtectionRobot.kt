@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui.robots
 import androidx.preference.R
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
@@ -23,9 +24,11 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.not
 import org.mozilla.fenix.helpers.assertIsChecked
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.isChecked
+import org.mozilla.fenix.helpers.isEnabled
 
 /**
  * Implementation of Robot Pattern for the settings Enhanced Tracking Protection sub menu.
@@ -44,7 +47,11 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     fun verifyEnhancedTrackingProtectionOptions() = assertEnhancedTrackingProtectionOptions()
 
+    fun verifyEnhancedTrackingProtectionOptionsGrayedOut() = assertEnhancedTrackingProtectionOptionsGrayedOut()
+
     fun verifyEnhancedTrackingProtectionDefaults() = assertEnhancedTrackingProtectionDefaults()
+
+    fun clickEnhancedTrackingProtectionDefaults() = onView(withResourceName("switch_widget")).click()
 
     fun verifyRadioButtonDefaults() = assertRadioButtonDefaults()
 
@@ -60,6 +67,16 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
+
+        fun goBackToHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            // To settings
+            goBackButton().click()
+            // To HomeScreen
+            pressBack()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
 
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             goBackButton().click()
@@ -139,6 +156,31 @@ private fun assertEnhancedTrackingProtectionOptions() {
         "Choose which trackers and scripts to block."
     onView(withText(customText))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun assertEnhancedTrackingProtectionOptionsGrayedOut() {
+    onView(withText("Standard (default)"))
+        .check(matches(not(isEnabled(true))))
+
+    val stdText = "Blocks fewer trackers. Pages will load normally."
+    onView(withText(stdText))
+        .check(matches(not(isEnabled(true))))
+
+    onView(withText("Strict"))
+        .check(matches(not(isEnabled(true))))
+
+    val strictText =
+        "Blocks more trackers, ads, and popups. Pages load faster, but some functionality might not work."
+    onView(withText(strictText))
+        .check(matches(not(isEnabled(true))))
+
+    onView(withText("Custom"))
+        .check(matches(not(isEnabled(true))))
+
+    val customText =
+        "Choose which trackers and scripts to block."
+    onView(withText(customText))
+        .check(matches(not(isEnabled(true))))
 }
 
 private fun assertEnhancedTrackingProtectionDefaults() {

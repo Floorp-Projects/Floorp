@@ -141,6 +141,7 @@ class SettingsRobot {
         }
 
         fun openEnhancedTrackingProtectionSubMenu(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
+            scrollToElementByText("Enhanced Tracking Protection")
             fun enhancedTrackingProtectionButton() =
                 onView(withText("Enhanced Tracking Protection"))
             enhancedTrackingProtectionButton().click()

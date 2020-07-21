@@ -23,6 +23,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -144,6 +145,8 @@ class BrowserRobot {
 
     fun verifyEnhancedTrackingProtectionSwitch() = assertEnhancedTrackingProtectionSwitch()
 
+    fun clickEnhancedTrackingProtectionSwitchOffOn() = onView(withResourceName("switch_widget")).click()
+
     fun verifyProtectionSettingsButton() = assertProtectionSettingsButton()
 
     fun verifyEnhancedTrackingOptions() {
@@ -187,6 +190,8 @@ class BrowserRobot {
     }
 
     fun clickEnhancedTrackingProtectionPanel() = enhancedTrackingProtectionPanel().click()
+
+    fun verifyEnhancedTrackingProtectionPanelNotVisible() = assertEnhancedTrackingProtectionPanelNotVisible()
 
     fun clickContextOpenLinkInNewTab() {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -419,6 +424,11 @@ private fun assertNavURLBar() = navURLBar()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 fun enhancedTrackingProtectionPanel() = onView(withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+
+private fun assertEnhancedTrackingProtectionPanelNotVisible() {
+    enhancedTrackingProtectionPanel()
+        .check(matches(withEffectiveVisibility(Visibility.GONE)))
+}
 
 private fun assertEnhancedTrackingProtectionSwitch() {
     withText(R.id.trackingProtectionSwitch)
