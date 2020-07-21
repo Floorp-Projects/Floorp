@@ -56,6 +56,8 @@ class GeckoTextMarker final {
 
  private:
   uint32_t CharacterCount(const AccessibleOrProxy& aContainer);
+
+  bool IsEditableRoot();
 };
 
 class GeckoTextMarkerRange final {
