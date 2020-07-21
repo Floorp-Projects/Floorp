@@ -38,10 +38,13 @@
   list-style-image: url(chrome://browser/skin/notification-icons/focus-tab-by-prompt.svg);
 }
 
-.popup-notification-icon[popupid="persistent-storage"],
 .popup-notification-icon[popupid="storage-access"],
-.persistent-storage-icon,
 .storage-access-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
+}
+
+.popup-notification-icon[popupid="persistent-storage"],
+.persistent-storage-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage.svg);
 }
 
