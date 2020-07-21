@@ -392,7 +392,8 @@ void CompositorBridgeParent::Initialize() {
   }
 
   if (mOptions.UseWebRender()) {
-    mOMTASampler = new OMTASampler(GetAnimationStorage());
+    CompositorAnimationStorage* animationStorage = GetAnimationStorage();
+    mOMTASampler = new OMTASampler(animationStorage, mRootLayerTreeID);
   }
 
   mPaused = mOptions.InitiallyPaused();
@@ -1370,7 +1371,7 @@ void CompositorBridgeParent::ApplyAsyncProperties(
 
 CompositorAnimationStorage* CompositorBridgeParent::GetAnimationStorage() {
   if (!mAnimationStorage) {
-    mAnimationStorage = new CompositorAnimationStorage();
+    mAnimationStorage = new CompositorAnimationStorage(this);
   }
   return mAnimationStorage;
 }

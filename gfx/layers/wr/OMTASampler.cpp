@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/layers/CompositorAnimationStorage.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/OMTAController.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -20,11 +21,14 @@ StaticMutex OMTASampler::sWindowIdLock;
 StaticAutoPtr<std::unordered_map<uint64_t, RefPtr<OMTASampler>>>
     OMTASampler::sWindowIdMap;
 
-OMTASampler::OMTASampler(const RefPtr<CompositorAnimationStorage>& aAnimStorage)
+OMTASampler::OMTASampler(const RefPtr<CompositorAnimationStorage>& aAnimStorage,
+                         LayersId aRootLayersId)
     : mAnimStorage(aAnimStorage),
       mStorageLock("OMTASampler::mStorageLock"),
       mThreadIdLock("OMTASampler::mThreadIdLock"),
-      mSampleTimeLock("OMTASampler::mSampleTimeLock") {}
+      mSampleTimeLock("OMTASampler::mSampleTimeLock") {
+  mController = new OMTAController(aRootLayersId);
+}
 
 void OMTASampler::Destroy() {
   StaticMutexAutoLock lock(sWindowIdLock);
@@ -116,7 +120,7 @@ WrAnimations OMTASampler::SampleAnimations(const TimeStamp& aPreviousSampleTime,
 
   MutexAutoLock lock(mStorageLock);
 
-  mAnimStorage->SampleAnimations(aPreviousSampleTime, aSampleTime);
+  mAnimStorage->SampleAnimations(mController, aPreviousSampleTime, aSampleTime);
 
   return mAnimStorage->CollectWebRenderAnimations();
 }
@@ -150,7 +154,7 @@ void OMTASampler::SampleForTesting(const Maybe<TimeStamp>& aTestingSampleTime) {
   }
 
   MutexAutoLock storageLock(mStorageLock);
-  mAnimStorage->SampleAnimations(previousSampleTime, sampleTime);
+  mAnimStorage->SampleAnimations(mController, previousSampleTime, sampleTime);
 }
 
 void OMTASampler::SetAnimations(
