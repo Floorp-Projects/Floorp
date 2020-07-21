@@ -33,15 +33,27 @@ addAccessibleTask(``, async (browser, accDoc) => {
 
 // Test iframe web area role and AXLayoutComplete event
 addAccessibleTask(`<title>webarea test</title>`, async (browser, accDoc) => {
-  // We should get a layout complete after the page content
-  // loads, so we start the await here.
-  let evt = waitForMacEvent("AXLayoutComplete");
+  // If the iframe loads before the top level document finishes loading, we'll
+  // get both an AXLayoutComplete event for the iframe and an AXLoadComplete
+  // event for the document. Otherwise, if the iframe loads after the
+  // document, we'll get one AXLoadComplete event.
+  let eventPromise = Promise.race([
+    waitForMacEvent("AXLayoutComplete"),
+    waitForMacEvent("AXLoadComplete"),
+  ]);
   await SpecialPowers.spawn(browser, [], () => {
     const iframe = content.document.createElement("iframe");
     iframe.src = "data:text/html,hello world";
     content.document.body.appendChild(iframe);
   });
-  let doc = await evt;
+  let doc = await eventPromise;
+
+  if (doc.getAttributeValue("AXTitle")) {
+    // iframe should have no title, so if we get a title here
+    // we've got the main document and need to get the iframe from
+    // the main doc
+    doc = doc.getAttributeValue("AXChildren")[0];
+  }
 
   is(
     doc.getAttributeValue("AXRole"),
