@@ -131,9 +131,11 @@ const gfxFontEntry::ScriptRange gfxPlatformFontList::sComplexScriptRanges[] = {
 #define FONT_LOADER_DELAY_PREF "gfx.font_loader.delay"
 #define FONT_LOADER_INTERVAL_PREF "gfx.font_loader.interval"
 
-static const char* kObservedPrefs[] = {"font.", "font.name-list.",
+static const char* kObservedPrefs[] = {"font.",
+                                       "font.name-list.",
                                        "intl.accept_languages",  // hmmmm...
                                        "layout.css.font-visibility.level",
+                                       "privacy.resistFingerprinting",
                                        nullptr};
 
 static const char kFontSystemWhitelistPref[] = "font.system.whitelist";
@@ -163,7 +165,8 @@ static void FontListPrefChanged(const char* aPref, void* aData = nullptr) {
   // changed but it probably isn't that big a deal.
   gfxPlatformFontList::PlatformFontList()->ClearLangGroupPrefFonts();
   gfxFontCache::GetCache()->AgeAllGenerations();
-  if (aPref && !strcmp(aPref, "layout.css.font-visibility.level")) {
+  if (aPref && (!strcmp(aPref, "layout.css.font-visibility.level") ||
+                !strcmp(aPref, "privacy.resistFingerprinting"))) {
     gfxPlatformFontList::PlatformFontList()->SetVisibilityLevel();
     if (XRE_IsParentProcess()) {
       gfxPlatform::ForceGlobalReflow();
@@ -524,10 +527,15 @@ nsresult gfxPlatformFontList::InitFontList() {
 }
 
 void gfxPlatformFontList::SetVisibilityLevel() {
-  FontVisibility newLevel = FontVisibility(
-      std::min(int32_t(FontVisibility::User),
-               std::max(int32_t(FontVisibility::Base),
-                        StaticPrefs::layout_css_font_visibility_level())));
+  FontVisibility newLevel;
+  if (StaticPrefs::privacy_resistFingerprinting()) {
+    newLevel = FontVisibility::Base;
+  } else {
+    newLevel = FontVisibility(
+        std::min(int32_t(FontVisibility::User),
+                 std::max(int32_t(FontVisibility::Base),
+                          StaticPrefs::layout_css_font_visibility_level())));
+  }
   if (newLevel != mVisibilityLevel) {
     mVisibilityLevel = newLevel;
     // (Re-)initialize ranges of characters for which system-wide font search
