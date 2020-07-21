@@ -140,8 +140,8 @@ static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
 // This is used for pref names and string pref values. We encode the string
 // length, then a '/', then the string chars. This encoding means there are no
 // special chars that are forbidden or require escaping.
-static void SerializeAndAppendString(const char* aChars, nsCString& aStr) {
-  aStr.AppendInt(uint32_t(strlen(aChars)));
+static void SerializeAndAppendString(const nsCString& aChars, nsCString& aStr) {
+  aStr.AppendInt(aChars.Length());
   aStr.Append('/');
   aStr.Append(aChars);
 }
@@ -272,7 +272,7 @@ union PrefValue {
         break;
 
       case PrefType::String: {
-        SerializeAndAppendString(mStringVal, aStr);
+        SerializeAndAppendString(nsDependentCString(mStringVal), aStr);
         break;
       }
 
@@ -437,7 +437,7 @@ class PrefWrapper;
 class Pref {
  public:
   explicit Pref(const nsACString& aName)
-      : mName(ArenaStrdup(aName, PrefNameArena())),
+      : mName(ArenaStrdup(aName, PrefNameArena()), aName.Length()),
         mType(static_cast<uint32_t>(PrefType::None)),
         mIsSticky(false),
         mIsLocked(false),
@@ -455,8 +455,8 @@ class Pref {
     mUserValue.Clear(Type());
   }
 
-  const char* Name() const { return mName; }
-  nsDependentCString NameString() const { return nsDependentCString(mName); }
+  const char* Name() const { return mName.get(); }
+  const nsDependentCString& NameString() const { return mName; }
 
   // Types.
 
@@ -566,7 +566,7 @@ class Pref {
 
   void FromDomPref(const dom::Pref& aDomPref, bool* aValueChanged) {
     MOZ_ASSERT(!XRE_IsParentProcess());
-    MOZ_ASSERT(strcmp(mName, aDomPref.name().get()) == 0);
+    MOZ_ASSERT(mName == aDomPref.name());
 
     mIsLocked = aDomPref.isLocked();
 
@@ -870,7 +870,7 @@ class Pref {
   }
 
  private:
-  const char* mName;  // allocated in sPrefNameArena
+  const nsDependentCString mName;  // allocated in sPrefNameArena
 
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
@@ -1075,7 +1075,7 @@ void Pref::FromWrapper(PrefWrapper& aWrapper) {
   auto pref = aWrapper.as<SharedPrefMap::Pref>();
 
   MOZ_ASSERT(IsTypeNone());
-  MOZ_ASSERT(strcmp(mName, pref.Name()) == 0);
+  MOZ_ASSERT(mName == pref.NameString());
 
   mType = uint32_t(pref.Type());
 
