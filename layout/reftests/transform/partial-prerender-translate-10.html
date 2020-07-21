@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+<!--
+  A test case for a transform animation frame is positioned by specifying
+  left property (i.e. not transform property) so that if we didn't factor the
+  offset (from the reference frame) in the jank mechanism, the animation will
+  jank at wrong positions.
+  -->
+<style>
+html {
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+@keyframes anim {
+  0% { transform: translateX(0px); animation-timing-function: step-end; }
+  /* After 1s, translate to a position where it's still inside the pre-render */
+  /* area.                                                                    */
+  /* The right edge of the pre-render area is 1162.5px (see below for the     */
+  /* calculation) and there is `left: -200px` property, which mean            */
+  /* translateX(-162.5px) is the point where a jank happens.  But we don't    */
+  /* want to cause a jank at the edge since it results blurry boundary        */
+  /* between green and blue areas because the jank will happen at a point     */
+  /* very close to -162.5px, e.g. -162.4px.                                   */
+  /* So what we try to do here is that, compositing where jank will never     */
+  /* happen with the left property value, then trying to composite where a    */
+  /* jank will happen if the left (-200px) value is not properly handled in   */
+  /* the jank mechanism because the horizontal pre-render range is            */
+  /* [37.5px, 1162.5px] (see below the calculation)                           */
+  1% { transform: translateX(-150px); animation-timing-function: step-end; }
+  /* We have 100ms margin to avoid skipping this very keyframe */
+  1.1% { transform: translateX(-150px); animation-timing-function: step-start; }
+  /* Back to the original position where jank should NEVER happen if the left */
+  /* property is handled in the jank mechanism, jank should happen if the     */
+  /* property is NOT handled                                                  */
+  100% { transform: translateX(0px); }
+}
+#target {
+  width: 1600px;
+  height: 1000px;
+  position: absolute;
+  left: -200px;
+  transform: translateX(0px);
+}
+</style>
+<div id="target">
+  <!--
+    Put an SVG element so that the transform display item has a blob on
+    WebRender which means this test properly fails without the proper fix.
+
+    The pre-render area width is 1125px, thus the expanded area outside of the
+    visible area is 325px. The 325px width is expaned to both directions,
+    leftward and rightward. Meanwhile, the horizontal visible frame range is
+    [200px, 1000px] because of `left: -200px`, so the left edge of the
+    pre-render area is 37.5px (= 200 - 325/2), the right edge is 1162.5px
+    (= 1000 + 325/2).
+    -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+    <rect fill="green" x="0"      width="800" height="1000"></rect>
+    <rect fill="blue"  x="800"    width="362.5" height="1000"></rect>
+    <rect fill="red"   x="1162.5" width="837.5" height="1000"></rect>
+  </svg>
+</div>
+<script>
+document.addEventListener("MozReftestInvalidate", () => {
+  // We don't specify 1s delay here since the @keyframes rule has already
+  // a kind of like delay with step-end timing function, which means even if
+  // the animation was painted at 0.1s position due to a lag on the main-thread
+  // (it quite often happens on our CIs!), the initial animation value on the
+  // compositor should be still the first value translateX(0px).
+  target.style.animation = "anim 100s";
+  target.addEventListener("animationstart", () => {
+    // Wait two seconds to make sure we tried to composite translateX(0px).
+    setTimeout(() => {
+      document.documentElement.classList.remove("reftest-wait");
+    }, 2000);
+  });
+}, { once: true });
+</script>
+</html>
