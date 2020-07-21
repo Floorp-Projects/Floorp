@@ -248,6 +248,7 @@ open class FenixApplication : LocaleAwareApplication() {
             components.core.topSiteStorage.prefetch()
         }
     }
+
     private fun setupPush() {
         // Sets the PushFeature as the singleton instance for push messages to go to.
         // We need the push feature setup here to deliver messages in the case where the service
