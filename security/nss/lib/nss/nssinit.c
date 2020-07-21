@@ -323,6 +323,18 @@ nss_FreeExternalRootPaths(char *oldpath, char *path)
     }
 }
 
+#if defined(DARWIN)
+static PRBool
+nss_fileExists(const char *path)
+{
+    return PR_Access(path, PR_ACCESS_EXISTS) == PR_SUCCESS;
+}
+
+#define CHECK_FILE_EXISTS_IF_NECESSARY(path) nss_fileExists(path)
+#else
+#define CHECK_FILE_EXISTS_IF_NECESSARY(path) PR_TRUE
+#endif
+
 static void
 nss_FindExternalRoot(const char *dbpath, const char *secmodprefix)
 {
@@ -336,11 +348,11 @@ nss_FindExternalRoot(const char *dbpath, const char *secmodprefix)
      * module with the old path first.
      */
     nss_FindExternalRootPaths(dbpath, secmodprefix, &oldpath, &path);
-    if (oldpath) {
+    if (oldpath && CHECK_FILE_EXISTS_IF_NECESSARY(oldpath)) {
         (void)SECMOD_AddNewModule("Root Certs", oldpath, 0, 0);
         hasrootcerts = SECMOD_HasRootCerts();
     }
-    if (path && !hasrootcerts) {
+    if (path && !hasrootcerts && CHECK_FILE_EXISTS_IF_NECESSARY(path)) {
         (void)SECMOD_AddNewModule("Root Certs", path, 0, 0);
     }
     nss_FreeExternalRootPaths(oldpath, path);
