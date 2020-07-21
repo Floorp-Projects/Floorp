@@ -100,7 +100,6 @@ job-defaults:
 jobs:
     tp6m-1-cold:
         test-name: amazon
-        run-on-tasks-for: [github-pull-request]
         treeherder:
             symbol: 'Btime(tp6m-1-c)'
 
