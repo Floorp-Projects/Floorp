@@ -1294,6 +1294,17 @@
     elementType: ScalarTypeImm
     allowDoubleForUint32: BoolImm
 
+- name: StoreDataViewValueResult
+  shared: true
+  transpile: false
+  cost_estimate: 4
+  args:
+    obj: ObjId
+    offset: Int32Id
+    value: RawId
+    littleEndian: Int32Id
+    elementType: ScalarTypeImm
+
 - name: LoadInt32ArrayLengthResult
   shared: true
   transpile: true

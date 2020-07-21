@@ -347,7 +347,7 @@ class MOZ_RAII CacheRegisterAllocator {
 
   void popPayload(MacroAssembler& masm, OperandLocation* loc, Register dest);
   void popValue(MacroAssembler& masm, OperandLocation* loc, ValueOperand dest);
-  Address valueAddress(MacroAssembler& masm, OperandLocation* loc);
+  Address valueAddress(MacroAssembler& masm, const OperandLocation* loc) const;
 
 #ifdef DEBUG
   void assertValidState() const;
@@ -496,9 +496,17 @@ class MOZ_RAII CacheRegisterAllocator {
 
   // Loads (potentially coercing) and unboxes a value into a float register
   // This is infallible, as there should have been a previous guard
-  // to ensure the ValOperandId is already a number.
+  // to ensure the value is already a number.
+  // Does not change the allocator's state.
   void ensureDoubleRegister(MacroAssembler& masm, NumberOperandId op,
-                            FloatRegister dest);
+                            FloatRegister dest) const;
+
+  // Loads an unboxed value into a scratch register. This can be useful
+  // especially on 32-bit x86 when there are not enough registers for
+  // useRegister.
+  // Does not change the allocator's state.
+  void copyToScratchRegister(MacroAssembler& masm, TypedOperandId typedId,
+                             Register dest) const;
 
   // Returns |val|'s JSValueType or JSVAL_TYPE_UNKNOWN.
   JSValueType knownType(ValOperandId val) const;
