@@ -52,6 +52,40 @@ std::ostream& operator<<(std::ostream& aStream, const IMEState::Open& aOpen) {
   return aStream;
 }
 
+std::ostream& operator<<(std::ostream& aStream, const IMEState& aState) {
+  aStream << "{ mEnabled=" << aState.mEnabled << ", mOpen=" << aState.mOpen
+          << " }";
+  return aStream;
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const InputContext::Origin& aOrigin) {
+  switch (aOrigin) {
+    case InputContext::ORIGIN_MAIN:
+      aStream << "ORIGIN_MAIN";
+      break;
+    case InputContext::ORIGIN_CONTENT:
+      aStream << "ORIGIN_CONTENT";
+      break;
+    default:
+      aStream << "illegal value";
+      break;
+  }
+  return aStream;
+}
+
+std::ostream& operator<<(std::ostream& aStream, const InputContext& aContext) {
+  aStream << "{ mIMEState=" << aContext.mIMEState
+          << ", mOrigin=" << aContext.mOrigin << ", mHTMLInputType=\""
+          << aContext.mHTMLInputType << "\", mHTMLInputInputmode=\""
+          << aContext.mHTMLInputInputmode << "\", mActionHint=\""
+          << aContext.mActionHint << "\", mMayBeIMEUnaware="
+          << (aContext.mMayBeIMEUnaware ? "true" : "false")
+          << ", mIsPrivateBrowsing="
+          << (aContext.mInPrivateBrowsing ? "true" : "false") << " }";
+  return aStream;
+}
+
 std::ostream& operator<<(std::ostream& aStream,
                          const InputContextAction::Cause& aCause) {
   switch (aCause) {
