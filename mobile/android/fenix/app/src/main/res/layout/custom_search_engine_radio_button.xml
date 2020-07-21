@@ -7,6 +7,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="@dimen/search_engine_radio_button_height"
+    android:minHeight="@dimen/radio_button_preference_height"
     android:layout_width="match_parent"
     android:background="?android:selectableItemBackground"
     android:clickable="true"

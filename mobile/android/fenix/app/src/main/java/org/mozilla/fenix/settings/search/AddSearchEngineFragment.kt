@@ -93,7 +93,7 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
 
         availableEngines.forEachIndexed(setupSearchEngineItem)
 
-        val engineItem = makeCustomButton(layoutInflater, res = resources)
+        val engineItem = makeCustomButton(layoutInflater)
         engineItem.id = CUSTOM_INDEX
         engineItem.radio_button.isChecked = selectedIndex == CUSTOM_INDEX
         engineViews.add(engineItem)
@@ -249,12 +249,11 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
         toggleCustomForm(selectedIndex == -1)
     }
 
-    private fun makeCustomButton(layoutInflater: LayoutInflater, res: Resources): View {
+    private fun makeCustomButton(layoutInflater: LayoutInflater): View {
         val wrapper = layoutInflater
             .inflate(R.layout.custom_search_engine_radio_button, null) as ConstraintLayout
         wrapper.setOnClickListener { wrapper.radio_button.isChecked = true }
         wrapper.radio_button.setOnCheckedChangeListener(this)
-        wrapper.minHeight = res.getDimensionPixelSize(R.dimen.radio_button_preference_height)
         return wrapper
     }
 
@@ -280,7 +279,6 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
         engineIcon.setBounds(0, 0, iconSize, iconSize)
         wrapper.engine_icon.setImageDrawable(engineIcon)
         wrapper.overflow_menu.visibility = View.GONE
-        wrapper.minHeight = res.getDimensionPixelSize(R.dimen.radio_button_preference_height)
         return wrapper
     }
 

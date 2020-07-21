@@ -2,12 +2,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="@dimen/search_engine_radio_button_height"
     android:layout_width="match_parent"
+    android:minHeight="@dimen/radio_button_preference_height"
     android:background="?android:selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
@@ -18,18 +18,14 @@
         android:importantForAccessibility="no"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:layout_marginStart="@dimen/search_bar_search_engine_icon_padding"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        android:layout_gravity="center" />
     <ImageView
         android:id="@+id/engine_icon"
         android:importantForAccessibility="no"
         android:layout_width="@dimen/search_engine_engine_icon_height"
         android:layout_height="@dimen/search_engine_engine_icon_height"
         android:layout_marginStart="@dimen/search_bar_search_icon_margin"
-        app:layout_constraintStart_toEndOf="@id/radio_button"
-        app:layout_constraintTop_toTopOf="@id/radio_button"
-        app:layout_constraintBottom_toBottomOf="@id/radio_button" />
+        android:layout_gravity="center" />
     <TextView
         android:id="@+id/engine_text"
         android:textColor="?primaryText"
@@ -37,19 +33,15 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/radio_button_padding_horizontal"
         android:layout_marginEnd="@dimen/radio_button_padding_horizontal"
-        android:textAlignment="viewStart"
         android:textSize="16sp"
-        app:layout_constraintStart_toEndOf="@id/engine_icon"
-        app:layout_constraintTop_toTopOf="@id/engine_icon"
-        app:layout_constraintEnd_toEndOf="parent" />
+        tools:text="Google"
+        android:layout_weight="1"
+        android:layout_gravity="center" />
     <ImageButton
         android:id="@+id/overflow_menu"
         android:layout_width="@dimen/glyph_button_width"
         android:layout_height="@dimen/glyph_button_height"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_menu"
-        app:srcCompat="@drawable/ic_menu"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
-</androidx.constraintlayout.widget.ConstraintLayout>
+        app:srcCompat="@drawable/ic_menu" />
+</LinearLayout>
