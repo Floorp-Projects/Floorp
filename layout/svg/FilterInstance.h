@@ -11,7 +11,7 @@
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "nsCOMPtr.h"
-#include "FilterSupport.h"
+#include "FilterDescription.h"
 #include "nsHashKeys.h"
 #include "nsPoint.h"
 #include "nsRect.h"
