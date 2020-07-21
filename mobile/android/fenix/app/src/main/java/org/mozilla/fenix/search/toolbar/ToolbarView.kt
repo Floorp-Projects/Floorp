@@ -7,6 +7,7 @@ package org.mozilla.fenix.search.toolbar
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
@@ -56,7 +57,8 @@ class ToolbarView(
     engine: Engine
 ) {
 
-    private var isInitialized = false
+    @VisibleForTesting
+    internal var isInitialized = false
 
     init {
         view.apply {
