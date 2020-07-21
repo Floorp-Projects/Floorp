@@ -56,6 +56,9 @@ class RenderPassEncoder final : public ObjectBase,
   void DrawIndexed(uint32_t aIndexCount, uint32_t aInstanceCount,
                    uint32_t aFirstIndex, int32_t aBaseVertex,
                    uint32_t aFirstInstance);
+  void DrawIndirect(const Buffer& aIndirectBuffer, uint64_t aIndirectOffset);
+  void DrawIndexedIndirect(const Buffer& aIndirectBuffer,
+                           uint64_t aIndirectOffset);
   void EndPass(ErrorResult& aRv);
 };
 
