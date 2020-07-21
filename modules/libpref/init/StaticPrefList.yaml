@@ -8973,6 +8973,12 @@
   value: false
   mirror: always
 
+# Pref to show warning when submitting from secure to insecure.
+- name: security.warn_submit_secure_to_insecure
+  type: bool
+  value: true
+  mirror: always
+
 # Hardware Origin-bound Second Factor Support
 - name: security.webauth.webauthn
   type: bool
