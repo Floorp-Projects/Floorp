@@ -868,6 +868,10 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
                                                         bool* aCancelSubmit) {
   *aCancelSubmit = false;
 
+  if (!StaticPrefs::security_warn_submit_secure_to_insecure()) {
+    return NS_OK;
+  }
+
   // Only ask the user about posting from a secure URI to an insecure URI if
   // this element is in the root document. When this is not the case, the mixed
   // content blocker will take care of security for us.
