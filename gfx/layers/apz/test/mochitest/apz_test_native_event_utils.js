@@ -784,6 +784,42 @@ function* pinchZoomInTouchSequence(focusX, focusY) {
   yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
 }
 
+// Synthesizes a native touch sequence of events corresponding to a
+// pinch-zoom-out at the center of the window.
+function* pinchZoomOutTouchSequenceAtCenter() {
+  // Divide the half of visual viewport size by 8, then cause touch events
+  // starting from the 7th furthest away from the center towards the center.
+  const deltaX = window.visualViewport.width / 16;
+  const deltaY = window.visualViewport.height / 16;
+  const centerX =
+    window.visualViewport.pageLeft + window.visualViewport.width / 2;
+  const centerY =
+    window.visualViewport.pageTop + window.visualViewport.height / 2;
+  // prettier-ignore
+  var zoom_out = [
+      [ { x: centerX - (deltaX * 6), y: centerY - (deltaY * 6) },
+        { x: centerX + (deltaX * 6), y: centerY + (deltaY * 6) } ],
+      [ { x: centerX - (deltaX * 5), y: centerY - (deltaY * 5) },
+        { x: centerX + (deltaX * 5), y: centerY + (deltaY * 5) } ],
+      [ { x: centerX - (deltaX * 4), y: centerY - (deltaY * 4) },
+        { x: centerX + (deltaX * 4), y: centerY + (deltaY * 4) } ],
+      [ { x: centerX - (deltaX * 3), y: centerY - (deltaY * 3) },
+        { x: centerX + (deltaX * 3), y: centerY + (deltaY * 3) } ],
+      [ { x: centerX - (deltaX * 2), y: centerY - (deltaY * 2) },
+        { x: centerX + (deltaX * 2), y: centerY + (deltaY * 2) } ],
+      [ { x: centerX - (deltaX * 1), y: centerY - (deltaY * 1) },
+        { x: centerX + (deltaX * 1), y: centerY + (deltaY * 1) } ],
+  ];
+
+  var touchIds = [0, 1];
+  yield* synthesizeNativeTouchSequences(
+    document.body,
+    zoom_out,
+    null,
+    touchIds
+  );
+}
+
 // Returns a promise that is resolved when the observer service dispatches a
 // message with the given topic.
 function promiseTopic(aTopic) {
@@ -814,6 +850,26 @@ async function pinchZoomInWithTouch(focusX, focusY) {
 
   // Dispatch all the touch events
   let generator = pinchZoomInTouchSequence(focusX, focusY);
+  while (true) {
+    let yieldResult = generator.next();
+    if (yieldResult.done) {
+      break;
+    }
+  }
+
+  // Wait for TransformEnd to fire.
+  await transformEndPromise;
+}
+
+// This generates a touch-based pinch zoom-out gesture that is expected
+// to succeed. It returns after APZ has completed the zoom and reaches the end
+// of the transform.
+async function pinchZoomOutWithTouchAtCenter() {
+  // Register the listener for the TransformEnd observer topic
+  let transformEndPromise = promiseTopic("APZ:TransformEnd");
+
+  // Dispatch all the touch events
+  let generator = pinchZoomOutTouchSequenceAtCenter();
   while (true) {
     let yieldResult = generator.next();
     if (yieldResult.done) {

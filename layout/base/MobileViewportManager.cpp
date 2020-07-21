@@ -717,3 +717,14 @@ void MobileViewportManager::ShrinkToDisplaySizeIfNeeded() {
     UpdateResolutionForContentSizeChange(scrollableRect->Size());
   }
 }
+
+CSSSize MobileViewportManager::GetIntrinsicCompositionSize() const {
+  ScreenIntSize displaySize = ViewAs<ScreenPixel>(
+      mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
+  ScreenIntSize compositionSize = GetCompositionSize(displaySize);
+  CSSToScreenScale intrinsicScale =
+      ComputeIntrinsicScale(mContext->GetViewportInfo(displaySize),
+                            compositionSize, mMobileViewportSize);
+
+  return ScreenSize(compositionSize) / intrinsicScale;
+}
