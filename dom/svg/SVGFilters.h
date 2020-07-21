@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGElement.h"
-#include "FilterSupport.h"
+#include "FilterDescription.h"
 #include "nsImageLoadingContent.h"
 #include "SVGAnimatedLength.h"
 #include "SVGAnimatedNumber.h"
