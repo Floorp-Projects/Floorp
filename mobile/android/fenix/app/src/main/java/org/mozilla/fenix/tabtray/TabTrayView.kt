@@ -16,6 +16,7 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.component_tabstray.*
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter.*
@@ -37,7 +38,7 @@ import org.mozilla.fenix.ext.settings
 /**
  * View that contains and configures the BrowserAwesomeBar
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 class TabTrayView(
     private val container: ViewGroup,
     private val interactor: TabTrayInteractor,
@@ -248,6 +249,15 @@ class TabTrayView(
             view.tab_tray_overflow.isVisible = !hasNoTabs
 
             counter_text.text = "${state.normalTabs.size}"
+            updateTabCounterContentDescription(state.normalTabs.size)
+        }
+    }
+
+    private fun updateTabCounterContentDescription(count: Int) {
+        view.tab_layout.getTabAt(0)?.contentDescription = if (count == 1) {
+            view.context?.getString(R.string.open_tab_tray_single)
+        } else {
+            view.context?.getString(R.string.open_tab_tray_plural, count.toString())
         }
     }
 
