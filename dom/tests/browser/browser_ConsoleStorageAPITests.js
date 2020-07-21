@@ -40,7 +40,7 @@ add_task(async function() {
           if (aTopic == "console-storage-cache-event") {
             apiCallCount++;
             if (apiCallCount == 4) {
-              let windowId = content.windowGlobalChild.innerWindowId;
+              let windowId = content.window.windowUtils.currentInnerWindowID;
 
               Services.obs.removeObserver(this, "console-storage-cache-event");
               ok(

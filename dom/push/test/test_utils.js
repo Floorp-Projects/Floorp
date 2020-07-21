@@ -216,8 +216,8 @@ function injectControlledFrame(target = document.body) {
           : Promise.reject(new Error("Frame removed from document"));
       },
       innerWindowId() {
-        return SpecialPowers.wrap(iframe).browsingContext.currentWindowContext
-          .innerWindowId;
+        var utils = SpecialPowers.getDOMWindowUtils(iframe.contentWindow);
+        return utils.currentInnerWindowID;
       },
     };
 
