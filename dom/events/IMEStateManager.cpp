@@ -600,18 +600,10 @@ void IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling) {
       sISMLog, LogLevel::Info,
       ("OnInstalledMenuKeyboardListener(aInstalling=%s), "
        "sInstalledMenuKeyboardListener=%s, BrowserParent::GetFocused()=0x%p, "
-       "sActiveChildInputContext={ mIMEState={ mEnabled=%s, mOpen=%s }, "
-       "mHTMLInputType=\"%s\", mHTMLInputInputmode=\"%s\", mActionHint=\"%s\", "
-       "mInPrivateBrowsing=%s }",
+       "sActiveChildInputContext=%s",
        GetBoolName(aInstalling), GetBoolName(sInstalledMenuKeyboardListener),
        BrowserParent::GetFocused(),
-       ToString(sActiveChildInputContext.mIMEState.mEnabled).c_str(),
-       ToString(sActiveChildInputContext.mIMEState.mOpen).c_str(),
-       NS_ConvertUTF16toUTF8(sActiveChildInputContext.mHTMLInputType).get(),
-       NS_ConvertUTF16toUTF8(sActiveChildInputContext.mHTMLInputInputmode)
-           .get(),
-       NS_ConvertUTF16toUTF8(sActiveChildInputContext.mActionHint).get(),
-       GetBoolName(sActiveChildInputContext.mInPrivateBrowsing)));
+       ToString(sActiveChildInputContext).c_str()));
 
   sInstalledMenuKeyboardListener = aInstalling;
 
@@ -810,12 +802,10 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
                                      EditorBase* aEditorBase) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
-      ("UpdateIMEState(aNewIMEState={ mEnabled=%s, "
-       "mOpen=%s }, aContent=0x%p, aEditorBase=0x%p), "
+      ("UpdateIMEState(aNewIMEState=%s, aContent=0x%p, aEditorBase=0x%p), "
        "sPresContext=0x%p, sContent=0x%p, sWidget=0x%p (available: %s), "
        "sActiveIMEContentObserver=0x%p, sIsGettingNewIMEState=%s",
-       ToString(aNewIMEState.mEnabled).c_str(),
-       ToString(aNewIMEState.mOpen).c_str(), aContent, aEditorBase,
+       ToString(aNewIMEState).c_str(), aContent, aEditorBase,
        sPresContext.get(), sContent.get(), sWidget,
        GetBoolName(sWidget && !sWidget->Destroyed()),
        sActiveIMEContentObserver.get(), GetBoolName(sIsGettingNewIMEState)));
@@ -1016,10 +1006,7 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
 
   IMEState newIMEState = aContent->GetDesiredIMEState();
   MOZ_LOG(sISMLog, LogLevel::Debug,
-          ("  GetNewIMEState() returns { mEnabled=%s, "
-           "mOpen=%s }",
-           ToString(newIMEState.mEnabled).c_str(),
-           ToString(newIMEState.mOpen).c_str()));
+          ("  GetNewIMEState() returns %s", ToString(newIMEState).c_str()));
   return newIMEState;
 }
 
@@ -1057,17 +1044,10 @@ void IMEStateManager::SetInputContextForChildProcess(
   MOZ_LOG(
       sISMLog, LogLevel::Info,
       ("SetInputContextForChildProcess(aBrowserParent=0x%p, "
-       "aInputContext={ mIMEState={ mEnabled=%s, mOpen=%s }, "
-       "mHTMLInputType=\"%s\", mHTMLInputInputmode=\"%s\", mActionHint=\"%s\", "
-       "mInPrivateBrowsing=%s }, aAction={ mCause=%s, mAction=%s }), "
+       "aInputContext=%s , aAction={ mCause=%s, mAction=%s }), "
        "sPresContext=0x%p (available: %s), sWidget=0x%p (available: %s), "
        "BrowserParent::GetFocused()=0x%p, sInstalledMenuKeyboardListener=%s",
-       aBrowserParent, ToString(aInputContext.mIMEState.mEnabled).c_str(),
-       ToString(aInputContext.mIMEState.mOpen).c_str(),
-       NS_ConvertUTF16toUTF8(aInputContext.mHTMLInputType).get(),
-       NS_ConvertUTF16toUTF8(aInputContext.mHTMLInputInputmode).get(),
-       NS_ConvertUTF16toUTF8(aInputContext.mActionHint).get(),
-       GetBoolName(aInputContext.mInPrivateBrowsing),
+       aBrowserParent, ToString(aInputContext).c_str(),
        ToString(aAction.mCause).c_str(), ToString(aAction.mFocusChange).c_str(),
        sPresContext.get(), GetBoolName(CanHandleWith(sPresContext)), sWidget,
        GetBoolName(sWidget && !sWidget->Destroyed()),
@@ -1248,15 +1228,12 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
                                   nsIContent* aContent, nsIWidget* aWidget,
                                   InputContextAction aAction,
                                   InputContext::Origin aOrigin) {
-  MOZ_LOG(
-      sISMLog, LogLevel::Info,
-      ("SetIMEState(aState={ mEnabled=%s, mOpen=%s }, "
-       "aContent=0x%p (BrowserParent=0x%p), aWidget=0x%p, aAction={ mCause=%s, "
-       "mFocusChange=%s }, aOrigin=%s)",
-       ToString(aState.mEnabled).c_str(), ToString(aState.mOpen).c_str(),
-       aContent, BrowserParent::GetFrom(aContent), aWidget,
-       ToString(aAction.mCause).c_str(), ToString(aAction.mFocusChange).c_str(),
-       ToChar(aOrigin)));
+  MOZ_LOG(sISMLog, LogLevel::Info,
+          ("SetIMEState(aState=%s, aContent=0x%p (BrowserParent=0x%p), "
+           "aWidget=0x%p, aAction={ mCause=%s, mFocusChange=%s }, aOrigin=%s)",
+           ToString(aState).c_str(), aContent, BrowserParent::GetFrom(aContent),
+           aWidget, ToString(aAction.mCause).c_str(),
+           ToString(aAction.mFocusChange).c_str(), ToChar(aOrigin)));
 
   NS_ENSURE_TRUE_VOID(aWidget);
 
@@ -1331,17 +1308,9 @@ void IMEStateManager::SetInputContext(nsIWidget* aWidget,
                                       const InputContextAction& aAction) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
-      ("SetInputContext(aWidget=0x%p, aInputContext={ "
-       "mIMEState={ mEnabled=%s, mOpen=%s }, mHTMLInputType=\"%s\", "
-       "mHTMLInputInputmode=\"%s\", mActionHint=\"%s\", "
-       "mInPrivateBrowsing=%s }, "
+      ("SetInputContext(aWidget=0x%p, aInputContext=%s, "
        "aAction={ mCause=%s, mAction=%s }), BrowserParent::GetFocused()=0x%p",
-       aWidget, ToString(aInputContext.mIMEState.mEnabled).c_str(),
-       ToString(aInputContext.mIMEState.mOpen).c_str(),
-       NS_ConvertUTF16toUTF8(aInputContext.mHTMLInputType).get(),
-       NS_ConvertUTF16toUTF8(aInputContext.mHTMLInputInputmode).get(),
-       NS_ConvertUTF16toUTF8(aInputContext.mActionHint).get(),
-       GetBoolName(aInputContext.mInPrivateBrowsing),
+       aWidget, ToString(aInputContext).c_str(),
        ToString(aAction.mCause).c_str(), ToString(aAction.mFocusChange).c_str(),
        BrowserParent::GetFocused()));
 

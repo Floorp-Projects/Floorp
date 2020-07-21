@@ -809,6 +809,10 @@ struct CandidateWindowPosition {
 std::ostream& operator<<(std::ostream& aStream,
                          const IMEState::Enabled& aEnabled);
 std::ostream& operator<<(std::ostream& aStream, const IMEState::Open& aOpen);
+std::ostream& operator<<(std::ostream& aStream, const IMEState& aState);
+std::ostream& operator<<(std::ostream& aStream,
+                         const InputContext::Origin& aOrigin);
+std::ostream& operator<<(std::ostream& aStream, const InputContext& aContext);
 std::ostream& operator<<(std::ostream& aStream,
                          const InputContextAction::Cause& aCause);
 std::ostream& operator<<(std::ostream& aStream,
