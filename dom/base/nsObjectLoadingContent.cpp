@@ -2420,6 +2420,12 @@ void nsObjectLoadingContent::Destroy() {
   if (mInstanceOwner || mInstantiating) {
     QueueCheckPluginStopEvent();
   }
+
+  // Reset state so that if the element is re-appended to tree again (e.g.
+  // adopting to another document), it will reload resource again.
+  UnloadObject();
+
+  nsImageLoadingContent::Destroy();
 }
 
 /* static */

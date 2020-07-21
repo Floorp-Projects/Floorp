@@ -158,6 +158,11 @@ EventStates SVGFEImageElement::IntrinsicState() const {
          nsImageLoadingContent::ImageState();
 }
 
+void SVGFEImageElement::DestroyContent() {
+  nsImageLoadingContent::Destroy();
+  SVGFEImageElementBase::DestroyContent();
+}
+
 //----------------------------------------------------------------------
 // nsINode methods
 
