@@ -162,7 +162,7 @@ jobs:
             platform: android-hw-g5-7-0-arm7-api-16/opt
         index:
             product: firefox
-            job-name: condprof-g5-fenix.nightly
+            job-name: condprof-g5-fenix
         dependencies:
             build: build-linux64-shippable/opt
         fetches:
@@ -180,7 +180,7 @@ jobs:
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
-                --firefox org.mozilla.fenix.nightly
+                --firefox org.mozilla.fenix
                 --scenario settled
                 ../../archive
         worker:
@@ -229,7 +229,7 @@ jobs:
             platform: android-hw-p2-8-0-android-aarch64/opt
         index:
             product: firefox
-            job-name: condprof-p2_aarch64-fenix.nightly
+            job-name: condprof-p2_aarch64-fenix
         dependencies:
             build: build-android-api-16-shippable/opt
         fetches:
@@ -247,7 +247,7 @@ jobs:
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
-                --firefox org.mozilla.fenix.nightly
+                --firefox org.mozilla.fenix
                 --scenario settled
                 ../../archive
         worker:

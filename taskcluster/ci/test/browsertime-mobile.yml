@@ -55,7 +55,7 @@ job-defaults:
             default: None
     binary-path:
         by-app:
-            fenix: org.mozilla.fenix.nightly
+            fenix: org.mozilla.fenix
             geckoview: org.mozilla.geckoview_example
             fennec: org.mozilla.firefox
             refbrow: org.mozilla.reference.browser.raptor
