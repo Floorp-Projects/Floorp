@@ -40,6 +40,7 @@ linux64-base-toolchains/opt:
             - linux64-gcc-7
             - linux64-rust-1.43
             - linux64-cbindgen
+            - linux64-dump-syms
             - linux64-sccache
             - linux64-nasm-2.14.02
             - linux64-node
@@ -81,6 +82,7 @@ linux64-base-toolchains/debug:
             - linux64-gcc-7
             - linux64-rust-1.43
             - linux64-cbindgen
+            - linux64-dump-syms
             - linux64-sccache
             - linux64-nasm-2.14.02
             - linux64-node
@@ -121,6 +123,7 @@ linux64-base-toolchains-clang/opt:
             - linux64-clang-5.0
             - linux64-rust-1.43
             - linux64-cbindgen
+            - linux64-dump-syms
             - linux64-nasm-2.14.02
             - linux64-node
 
@@ -159,6 +162,7 @@ linux64-base-toolchains-clang/debug:
             - linux64-clang-5.0
             - linux64-rust-1.43
             - linux64-cbindgen
+            - linux64-dump-syms
             - linux64-nasm-2.14.02
             - linux64-node
             # `fix-stacks` is needed because xpcshell self tests run as part of

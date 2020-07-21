@@ -14,6 +14,8 @@ ac_add_options --enable-valgrind
 . $topsrcdir/build/unix/mozconfig.asan
 ac_add_options --disable-elf-hack
 
+export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
+
 ac_add_options --disable-sandbox
 ac_add_options --disable-profiling
 ac_add_options --disable-warnings-as-errors

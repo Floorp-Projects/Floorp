@@ -8,6 +8,8 @@ ac_add_options --enable-optimize="-O2 -gline-tables-only"
 . $topsrcdir/build/unix/mozconfig.tsan
 ac_add_options --disable-elf-hack
 
+export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
+
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
