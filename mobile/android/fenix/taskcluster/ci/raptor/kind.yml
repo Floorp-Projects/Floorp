@@ -77,7 +77,7 @@ job-defaults:
             - './test-linux.sh'
             - '--cfg=mozharness/configs/raptor/android_hw_config.py'
             - '--app=fenix'
-            - '--binary=org.mozilla.fenix.nightly'
+            - '--binary=org.mozilla.fenix'
             - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
             - '--no-conditioned-profile'

@@ -103,11 +103,8 @@ private fun getSentryProjectUrl(): String? {
     val baseUrl = "https://sentry.prod.mozaws.net/operations"
     return when (Config.channel) {
         ReleaseChannel.FenixProduction -> "$baseUrl/fenix"
-        ReleaseChannel.FenixBeta -> "$baseUrl/fenix-beta"
-        ReleaseChannel.FenixNightly -> "$baseUrl/fenix-nightly"
         ReleaseChannel.FennecProduction -> "$baseUrl/fenix-fennec"
         ReleaseChannel.FennecBeta -> "$baseUrl/fenix-fennec-beta"
-        ReleaseChannel.FennecNightly -> "$baseUrl/fenix-fennec-nightly"
         else -> null
     }
 }

@@ -82,7 +82,7 @@ job-defaults:
             - '--app=fenix'
             - '--browsertime'
             - '--cold'
-            - '--binary=org.mozilla.fenix.nightly'
+            - '--binary=org.mozilla.fenix'
             - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
             - '--browsertime-node=$MOZ_FETCHES_DIR/node/bin/node'

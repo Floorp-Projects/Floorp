@@ -20,7 +20,7 @@ job-template:
     description: Sign Fenix
     worker-type:
         by-build-type:
-            (fennec-.+|nightly|beta|production|android-test-nightly):
+            (fennec-.+|nightly|android-test-nightly):
                 by-level:
                     '3': signing
                     default: dep-signing
@@ -32,37 +32,20 @@ job-template:
                     by-level:
                         '3': fennec-production-signing
                         default: dep-signing
-                fennec-nightly:
-                    by-level:
-                        '3': fennec-nightly-signing
-                        default: dep-signing
-                nightly:
-                    by-level:
-                        '3': nightly-signing
-                        default: dep-signing
                 android-test-nightly:
                     by-level:
-                        '3': nightly-signing
+                        '3': production-signing
                         default: dep-signing
                 performance-test: dep-signing
-                beta:
-                    by-level:
-                        '3': beta-signing
-                        default: dep-signing
-                production:
+                nightly:
                     by-level:
                         '3': production-signing
                         default: dep-signing
                 default: dep-signing
-    signing-format:
-      by-build-type:
-          # Fennec nightly cannot have the sha256 checksums. For more details, see
-          # https://github.com/mozilla-releng/scriptworker-scripts/pull/102#issue-349016967
-          fennec-nightly: autograph_apk_fennec_sha1
-          default: autograph_apk
+    signing-format: autograph_apk
     index:
         by-build-type:
-            (fennec-.+|nightly|performance-test|beta|production|debug|nightly-simulation):
+            (fennec-.+|performance-test|nightly|debug|nightly-simulation):
                 type: signing
             default: {}
     run-on-tasks-for:

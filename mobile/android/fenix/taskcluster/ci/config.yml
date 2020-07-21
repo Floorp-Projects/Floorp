@@ -2,7 +2,6 @@
 trust-domain: mobile
 treeherder:
     group-names:
-        'beta': 'Beta-related tasks'
         'betaFennec': 'Beta-related tasks with same APK configuration as Fennec'
         'Btime': 'Raptor-Browsertime tests'
         'bump': 'Bump dependencies'
@@ -12,7 +11,6 @@ treeherder:
         'I': 'Docker Image Builds'
         'nightly': 'Nightly-related tasks'
         'nightlySim': 'Nightly-related tasks that run on each github push'
-        'nightlyFennec': 'Nightly-related tasks with same APK configuration as Fennec'
         'production': 'Release-related tasks'
         'productionFennec': 'Production-related tasks with same APK configuration as Fennec'
         'Rap': 'Raptor tests'
