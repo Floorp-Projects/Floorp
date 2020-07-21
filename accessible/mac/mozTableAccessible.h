@@ -80,12 +80,6 @@
 // override
 - (NSArray*)moxChildren;
 
-// override
-- (NSArray*)moxColumnHeaderUIElements;
-
-// override
-- (id)moxCellForColumnAndRow:(NSArray*)columnAndRow
-
 @end
 
 @interface mozTableRowAccessible : mozTablePartAccessible
