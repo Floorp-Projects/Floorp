@@ -71,19 +71,19 @@
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">Esegui in navigazione anonima</string>
     <!-- Indicates the add-on is enabled. -->
-    <string name="mozac_feature_addons_enabled">Attivo</string>
+    <string name="mozac_feature_addons_enabled">Attivi</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_disabled">Disattivato</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Installata</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
-    <string name="mozac_feature_addons_recommended_section">Consigliate</string>
+    <string name="mozac_feature_addons_recommended_section">Consigliati</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Non ancora supportato</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
     <string name="mozac_feature_addons_unavailable_section">Non ancora disponibile</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
-    <string name="mozac_feature_addons_disabled_section">Disattivato</string>
+    <string name="mozac_feature_addons_disabled_section">Disattivati</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">Informazioni</string>
     <!-- Displays a page with all the permissions of an add-on. -->

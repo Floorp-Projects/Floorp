@@ -24,4 +24,9 @@
     <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
     <string name="mozac_lib_crash_activity_title">Rapoarte de defecțiuni</string>
 
-    </resources>
+    <!-- Text shown instead of crash list if no crashes have been submitted yet -->
+    <string name="mozac_lib_crash_no_crashes">Nu au fost trimise rapoarte de defecțiuni.</string>
+
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">Partajează</string>
+</resources>

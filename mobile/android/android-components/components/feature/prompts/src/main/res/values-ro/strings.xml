@@ -20,14 +20,20 @@
     <string name="mozac_feature_prompt_dont_save">Nu salva</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Salvează</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update">Nu actualiza</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Actualizează</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_empty_password">Câmpul de parolă nu trebuie să fie gol</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">Datele de autentificare nu au putut fi salvate</string>
-    <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="mozac_feature_prompt_logins_save_message">Vrei %s să salvezi aceste date de autentificare?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
+    <string name="mozac_feature_prompt_login_save_headline">Salvezi aceste date de autentificare?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">Actualizezi aceste date de autentificare?</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">Adaugi numele de utilizator la parola salvată?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
     <string name="mozac_feature_prompts_content_description_input_label">Etichetă pentru crearea unui câmp de introducere text</string>
@@ -37,6 +43,14 @@
     <string name="mozac_feature_prompts_allow">Permite</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Refuză</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">Ești sigur(ă)?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">Vrei să ieși de pe acest site? Datele pe care le-ai introdus nu vor fi salvate</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">Rămâi</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">Ieși</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">Alege o lună</string>
     <!-- January (short description), used on the month chooser dialog. -->
