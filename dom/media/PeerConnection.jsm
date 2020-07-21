@@ -1021,7 +1021,7 @@ class RTCPeerConnection {
       } else {
         this._havePermission = new Promise((resolve, reject) => {
           this._settlePermission = { allow: resolve, deny: reject };
-          let outerId = this._win.windowUtils.outerWindowID;
+          let outerId = this._win.docShell.outerWindowID;
 
           let chrome = new CreateOfferRequest(
             outerId,

@@ -207,7 +207,7 @@ const toolkitVariableMap = [
 function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   this._win = aDocument.defaultView;
-  this._winId = this._win.windowUtils.outerWindowID;
+  this._winId = this._win.docShell.outerWindowID;
 
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
