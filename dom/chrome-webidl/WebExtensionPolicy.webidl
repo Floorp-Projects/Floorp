@@ -230,9 +230,11 @@ interface WebExtensionPolicy {
    * This may be used to delay operations, such as loading extension pages,
    * which depend on extensions being fully initialized.
    *
-   * Note: This will always be either a Promise<WebExtensionPolicy> or null,
+   * Note: This will always be either a Promise<WebExtensionPolicy?> or null,
    * but the WebIDL grammar does not allow us to specify a nullable Promise
    * type.
+   *
+   * Note: This could resolve to null when the startup was interrupted.
    */
   readonly attribute object? readyPromise;
 
@@ -270,5 +272,5 @@ dictionary WebExtensionInit {
   sequence<DOMString>? backgroundScripts = null;
   DOMString? backgroundWorkerScript = null;
 
-  Promise<WebExtensionPolicy> readyPromise;
+  Promise<WebExtensionPolicy?> readyPromise;
 };
