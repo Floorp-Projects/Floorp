@@ -1085,6 +1085,8 @@ class MOZ_RAII IRGenerator {
 
   void emitIdGuard(ValOperandId valId, jsid id);
 
+  OperandId emitNumericGuard(ValOperandId valId, Scalar::Type type);
+
   friend class CacheIRSpewer;
 
  public:
@@ -1370,8 +1372,6 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   // matches |id|.
   void maybeEmitIdGuard(jsid id);
 
-  OperandId emitNumericGuard(ValOperandId valId, Scalar::Type type);
-
   AttachDecision tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
                                         HandleId id, ValOperandId rhsId);
   AttachDecision tryAttachUnboxedExpandoSetSlot(HandleObject obj,
@@ -1573,6 +1573,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachArrayJoin(HandleFunction callee);
   AttachDecision tryAttachArrayIsArray(HandleFunction callee);
   AttachDecision tryAttachDataViewGet(HandleFunction callee, Scalar::Type type);
+  AttachDecision tryAttachDataViewSet(HandleFunction callee, Scalar::Type type);
   AttachDecision tryAttachUnsafeGetReservedSlot(HandleFunction callee,
                                                 InlinableNative native);
   AttachDecision tryAttachIsSuspendedGenerator(HandleFunction callee);
