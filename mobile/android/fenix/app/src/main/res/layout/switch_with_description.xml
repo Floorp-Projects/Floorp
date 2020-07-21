@@ -20,7 +20,7 @@
         android:importantForAccessibility="no"
         android:textAppearance="@style/ListItemTextStyle"
         android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@+id/trackingProtectionCategoryItemDescription"
+        app:layout_constraintBottom_toTopOf="@id/trackingProtectionCategoryItemDescription"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,7 +41,7 @@
         app:layout_constraintEnd_toEndOf="@id/trackingProtectionCategoryTitle"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="@id/trackingProtectionCategoryTitle"
-        app:layout_constraintTop_toBottomOf="@+id/trackingProtectionCategoryTitle"
+        app:layout_constraintTop_toBottomOf="@id/trackingProtectionCategoryTitle"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="@tools:sample/lorem" />
 

@@ -7,7 +7,7 @@
 
     <action
         android:id="@+id/action_global_home"
-        app:destination="@+id/homeFragment"
+        app:destination="@id/homeFragment"
         app:popUpTo="@id/homeFragment"
         app:popUpToInclusive="true" />
 
@@ -56,7 +56,7 @@
         app:destination="@id/settingsFragment" />
     <action
         android:id="@+id/action_global_syncedTabsFragment"
-        app:destination="@+id/syncedTabsFragment" />
+        app:destination="@id/syncedTabsFragment" />
     <action
         android:id="@+id/action_global_privateBrowsingFragment"
         app:destination="@id/privateBrowsingFragment" />
@@ -392,7 +392,7 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:popUpTo="@+id/settingsFragment" />
+            app:popUpTo="@id/settingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_sitePermissionsFragment"
             app:destination="@id/sitePermissionsFragment"

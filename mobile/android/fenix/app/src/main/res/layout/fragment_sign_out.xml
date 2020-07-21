@@ -27,8 +27,8 @@
         style="@style/SitePermissionCancelButton"
         android:text="@string/sign_out_cancel"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/signOutDisconnect"
-        app:layout_constraintTop_toBottomOf="@+id/sign_out_message" />
+        app:layout_constraintEnd_toStartOf="@id/signOutDisconnect"
+        app:layout_constraintTop_toBottomOf="@id/sign_out_message" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/signOutDisconnect"
@@ -36,5 +36,5 @@
         android:text="@string/sign_out_disconnect"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sign_out_message" />
+        app:layout_constraintTop_toBottomOf="@id/sign_out_message" />
 </androidx.constraintlayout.widget.ConstraintLayout>

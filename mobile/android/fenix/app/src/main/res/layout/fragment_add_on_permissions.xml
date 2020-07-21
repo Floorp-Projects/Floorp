@@ -21,7 +21,7 @@
             android:id="@+id/learn_more_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/add_ons_permissions"
+            android:layout_below="@id/add_ons_permissions"
             android:background="?attr/selectableItemBackground"
             android:padding="16dp"
             android:paddingStart="16dp"

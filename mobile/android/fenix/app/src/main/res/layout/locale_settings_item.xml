@@ -31,9 +31,9 @@
         android:textAlignment="viewStart"
         app:layout_goneMarginStart="@dimen/locale_item_text_margin_gone_start"
         android:textSize="@dimen/locale_item_title_size"
-        app:layout_constraintBottom_toTopOf="@+id/locale_subtitle_text"
+        app:layout_constraintBottom_toTopOf="@id/locale_subtitle_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/locale_selected_icon"
+        app:layout_constraintStart_toEndOf="@id/locale_selected_icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="English (United States)" />
@@ -51,8 +51,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_goneMarginStart="@dimen/locale_item_text_margin_gone_start"
-        app:layout_constraintStart_toEndOf="@+id/locale_selected_icon"
-        app:layout_constraintTop_toBottomOf="@+id/locale_title_text"
+        app:layout_constraintStart_toEndOf="@id/locale_selected_icon"
+        app:layout_constraintTop_toBottomOf="@id/locale_title_text"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="English (United States)" />
 

@@ -38,7 +38,7 @@
         android:textAppearance="?android:attr/textAppearanceListItem"
         app:layout_constraintTop_toTopOf="@id/radio_button"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/radio_button"
+        app:layout_constraintStart_toEndOf="@id/radio_button"
         app:layout_constraintBottom_toBottomOf="@id/radio_button"/>
 
     <TextView

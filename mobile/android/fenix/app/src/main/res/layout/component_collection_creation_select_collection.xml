@@ -88,7 +88,7 @@
         android:fadingEdgeLength="30dp"
         android:requiresFadingEdge="vertical"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_button_bar_layout"
+        app:layout_constraintBottom_toTopOf="@id/bottom_button_bar_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/back_button"
