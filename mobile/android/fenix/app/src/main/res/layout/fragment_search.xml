@@ -147,7 +147,7 @@
                 android:layout_marginTop="@dimen/search_fragment_shortcuts_label_margin_vertical"
                 android:layout_marginEnd="@dimen/search_fragment_shortcuts_label_margin_horizontal"
                 android:visibility="gone"
-                android:text="@string/search_shortcuts_search_with_2"
+                android:text="@string/search_engines_search_with"
                 app:layout_constraintStart_toStartOf="@id/scrollable_area"
                 app:layout_constraintTop_toBottomOf="@id/awesomeBar_barrier"
                 tools:text="This time, search with:" />
@@ -197,8 +197,8 @@
         <ToggleButton
             android:id="@+id/search_shortcuts_button"
             style="@style/search_pill"
-            android:textOff="@string/search_shortcuts_button"
-            android:textOn="@string/search_shortcuts_button"
+            android:textOff="@string/search_engines_shortcut_button"
+            android:textOn="@string/search_engines_shortcut_button"
             app:drawableStartCompat="@drawable/ic_search" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

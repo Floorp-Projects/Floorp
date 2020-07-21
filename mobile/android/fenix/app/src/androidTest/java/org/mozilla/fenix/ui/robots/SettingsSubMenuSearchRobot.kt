@@ -85,10 +85,10 @@ private fun assertShowSearchSuggestions() {
 private fun assertShowSearchShortcuts() {
     onView(withId(androidx.preference.R.id.recycler_view)).perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-            hasDescendant(withText("Show search shortcuts"))
+            hasDescendant(withText("Show search engines"))
         )
     )
-    onView(withText("Show search shortcuts"))
+    onView(withText("Show search engines"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -146,11 +146,11 @@ private fun toggleShowSearchSuggestions() {
 private fun toggleShowSearchShortcuts() {
     onView(withId(androidx.preference.R.id.recycler_view)).perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-            hasDescendant(withText("Show search shortcuts"))
+            hasDescendant(withText("Show search engines"))
         )
     )
 
-    onView(withText("Show search shortcuts"))
+    onView(withText("Show search engines"))
         .perform(click())
 }
 
