@@ -22,7 +22,12 @@ import org.mockito.Mockito.verify
 
 private class TestTabViewHolder(view: View) : TabViewHolder(view) {
     override var tab: Tab? = null
-    override fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) { /* noop */ }
+    override fun bind(
+        tab: Tab,
+        isSelected: Boolean,
+        styling: TabsTrayStyling,
+        observable: Observable<TabsTray.Observer>
+    ) { /* noop */ }
 }
 
 @RunWith(AndroidJUnit4::class)
@@ -31,7 +36,6 @@ class TabsAdapterTest {
     @Test
     fun `onCreateViewHolder will create a DefaultTabViewHolder`() {
         val adapter = TabsAdapter()
-        adapter.tabsTray = mock()
 
         val type = adapter.onCreateViewHolder(FrameLayout(testContext), 0)
 
@@ -40,8 +44,7 @@ class TabsAdapterTest {
 
     @Test
     fun `onCreateViewHolder will create whatever TabViewHolder is provided`() {
-        val adapter = TabsAdapter(viewHolderProvider = { _, _ -> TestTabViewHolder(View(testContext)) })
-        adapter.tabsTray = mock()
+        val adapter = TabsAdapter(viewHolderProvider = { _ -> TestTabViewHolder(View(testContext)) })
 
         val type = adapter.onCreateViewHolder(FrameLayout(testContext), 0)
 
@@ -79,7 +82,6 @@ class TabsAdapterTest {
     @Test
     fun `onBindViewHolder calls bind on matching holder`() {
         val adapter = TabsAdapter()
-        adapter.tabsTray = mock()
 
         val holder: TabViewHolder = mock()
 
@@ -93,13 +95,12 @@ class TabsAdapterTest {
 
         adapter.onBindViewHolder(holder, 0)
 
-        verify(holder).bind(tab, true, adapter)
+        verify(holder).bind(tab, true, adapter.styling, adapter)
     }
 
     @Test
     fun `underlying adapter is notified about data set changes`() {
         val adapter = spy(TabsAdapter())
-        adapter.tabsTray = mock()
 
         adapter.onTabsInserted(27, 101)
         verify(adapter).notifyItemRangeInserted(27, 101)

@@ -15,6 +15,11 @@ permalink: /changelog/
 * **support-images**
   * ⚠️ **This is a breaking change**: Removed `ImageLoader.loadIntoView(view: ImageView, id: String)` extension function.
 
+* **browser-tabstray**
+  * ⚠️ **This is a breaking change**: The `BrowserTabsTray` is now deprecated. Using a `RecyclerView` directly is now recommended.
+  * ⚠️ **This is a breaking change**: `ViewHolderProvider` no longer has a second param.
+  * ⚠️ **This is a breaking change**: `TabsAdapter` has a `styling` field `TabsTrayStyling`.
+
 # 51.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v50.0.0...v51.0.0)

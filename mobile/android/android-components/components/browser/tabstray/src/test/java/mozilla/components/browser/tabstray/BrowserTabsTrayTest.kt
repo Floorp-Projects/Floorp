@@ -15,6 +15,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
+@Suppress("Deprecation")
 class BrowserTabsTrayTest {
 
     @Test
@@ -45,7 +46,7 @@ class BrowserTabsTrayTest {
         val adapter = TabsAdapter()
         val tabsTray = BrowserTabsTray(testContext, tabsAdapter = adapter)
 
-        assertEquals(tabsTray, adapter.tabsTray)
+        assertEquals(tabsTray.adapter, adapter)
     }
 
     @Test
@@ -58,6 +59,6 @@ class BrowserTabsTrayTest {
         val tabsTray = BrowserTabsTray(testContext, tabsAdapter = adapter, itemDecoration = decoration)
 
         assertEquals(decoration, tabsTray.getItemDecorationAt(0))
-        assertEquals(decoration, adapter.tabsTray.getItemDecorationAt(0))
+        assertEquals(decoration, tabsTray.getItemDecorationAt(0))
     }
 }

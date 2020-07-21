@@ -16,37 +16,32 @@ import mozilla.components.support.images.loader.ImageLoader
 /**
  * Function responsible for creating a `TabViewHolder` in the `TabsAdapter`.
  */
-typealias ViewHolderProvider = (ViewGroup, BrowserTabsTray) -> TabViewHolder
+typealias ViewHolderProvider = (ViewGroup) -> TabViewHolder
 
 /**
  * RecyclerView adapter implementation to display a list/grid of tabs.
- * @param delegate TabsTray.Observer registry to allow `TabsAdapter` to conform to `Observable<TabsTray.Observer>`.
+ *
+ * @param thumbnailLoader an implementation of an [ImageLoader] for loading thumbnail images in the tabs tray.
  * @param viewHolderProvider a function that creates a `TabViewHolder`.
+ * @param delegate TabsTray.Observer registry to allow `TabsAdapter` to conform to `Observable<TabsTray.Observer>`.
  */
 @Suppress("TooManyFunctions")
 open class TabsAdapter(
     thumbnailLoader: ImageLoader? = null,
-    private val viewHolderProvider: ViewHolderProvider = { parent, tabsTray ->
+    private val viewHolderProvider: ViewHolderProvider = { parent ->
         DefaultTabViewHolder(
-                LayoutInflater.from(parent.context).inflate(
-                        R.layout.mozac_browser_tabstray_item,
-                        parent,
-                        false),
-                tabsTray,
-                thumbnailLoader
+            LayoutInflater.from(parent.context).inflate(R.layout.mozac_browser_tabstray_item, parent, false),
+            thumbnailLoader
         )
     },
     delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : RecyclerView.Adapter<TabViewHolder>(),
-    TabsTray,
-    Observable<TabsTray.Observer> by delegate {
-
-    internal lateinit var tabsTray: BrowserTabsTray
-
+) : RecyclerView.Adapter<TabViewHolder>(), TabsTray, Observable<TabsTray.Observer> by delegate {
     private var tabs: Tabs? = null
 
+    var styling: TabsTrayStyling = TabsTrayStyling()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
-        return viewHolderProvider.invoke(parent, tabsTray)
+        return viewHolderProvider.invoke(parent)
     }
 
     override fun getItemCount() = tabs?.list?.size ?: 0
@@ -54,7 +49,7 @@ open class TabsAdapter(
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         val tabs = tabs ?: return
 
-        holder.bind(tabs.list[position], position == tabs.selectedIndex, this)
+        holder.bind(tabs.list[position], position == tabs.selectedIndex, styling, this)
     }
 
     override fun updateTabs(tabs: Tabs) {

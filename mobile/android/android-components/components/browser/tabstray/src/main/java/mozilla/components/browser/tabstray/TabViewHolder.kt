@@ -33,7 +33,12 @@ abstract class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
      * @param isSelected boolean to describe whether or not the `Tab` is selected.
      * @param observable message bus to pass events to Observers of the TabsTray.
      */
-    abstract fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>)
+    abstract fun bind(
+        tab: Tab,
+        isSelected: Boolean,
+        styling: TabsTrayStyling,
+        observable: Observable<TabsTray.Observer>
+    )
 }
 
 /**
@@ -41,7 +46,6 @@ abstract class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
  */
 class DefaultTabViewHolder(
     itemView: View,
-    private val tabsTray: BrowserTabsTray,
     private val thumbnailLoader: ImageLoader? = null
 ) : TabViewHolder(itemView) {
     private val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
@@ -55,7 +59,12 @@ class DefaultTabViewHolder(
     /**
      * Displays the data of the given session and notifies the given observable about events.
      */
-    override fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) {
+    override fun bind(
+        tab: Tab,
+        isSelected: Boolean,
+        styling: TabsTrayStyling,
+        observable: Observable<TabsTray.Observer>
+    ) {
         this.tab = tab
 
         val title = if (tab.title.isNotEmpty()) {
@@ -76,13 +85,13 @@ class DefaultTabViewHolder(
         }
 
         if (isSelected) {
-            titleView.setTextColor(tabsTray.styling.selectedItemTextColor)
-            itemView.setBackgroundColor(tabsTray.styling.selectedItemBackgroundColor)
-            closeView.imageTintList = ColorStateList.valueOf(tabsTray.styling.selectedItemTextColor)
+            titleView.setTextColor(styling.selectedItemTextColor)
+            itemView.setBackgroundColor(styling.selectedItemBackgroundColor)
+            closeView.imageTintList = ColorStateList.valueOf(styling.selectedItemTextColor)
         } else {
-            titleView.setTextColor(tabsTray.styling.itemTextColor)
-            itemView.setBackgroundColor(tabsTray.styling.itemBackgroundColor)
-            closeView.imageTintList = ColorStateList.valueOf(tabsTray.styling.itemTextColor)
+            titleView.setTextColor(styling.itemTextColor)
+            itemView.setBackgroundColor(styling.itemBackgroundColor)
+            closeView.imageTintList = ColorStateList.valueOf(styling.itemTextColor)
         }
 
         // In the final else case, we have no cache or fresh screenshot; do nothing instead of clearing the image.
