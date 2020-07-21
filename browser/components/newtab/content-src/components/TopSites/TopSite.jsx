@@ -376,7 +376,6 @@ export class TopSite extends React.PureComponent {
             type: at.TOP_SITES_ATTRIBUTION,
             data: {
               searchProvider: this.props.link.hostname,
-              siteURL: this.props.link.url,
               source: "newtab",
             },
           })
