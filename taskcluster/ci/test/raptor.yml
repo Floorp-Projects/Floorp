@@ -130,7 +130,11 @@ raptor-tp6:
     variants:
         # Used for defining webrender and fission build variant tests,
         by-app:
-            firefox: ["fission"]
+            firefox:
+                by-subtest:
+                    yahoo-mail: []
+                    wikipedia: []
+                    default: ["fission"]
             chrome: []
             chromium: []
             default: []
