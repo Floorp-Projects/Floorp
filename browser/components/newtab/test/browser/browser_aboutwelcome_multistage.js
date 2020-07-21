@@ -23,6 +23,8 @@ const TEST_MULTISTAGE_CONTENT = {
             {
               theme: "test-theme-1",
               label: "theme-1",
+              description: "test-desc",
+              tooltip: "test-tooltip",
             },
             {
               theme: "test-theme-2",
@@ -190,6 +192,8 @@ add_task(async function test_Multistage_About_Welcome_branches() {
       "div.secondary-cta.top",
       "button.secondary",
       "button.theme",
+      "button[title='test-tooltip']",
+      "div.theme-desc",
       "div.indicator.current",
     ],
     // Unexpected selectors:
@@ -208,7 +212,13 @@ add_task(async function test_Multistage_About_Welcome_branches() {
       "div.tiles-container.info",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top", "h1.welcomeZap"]
+    [
+      "main.AW_STEP1",
+      "main.AW_STEP3",
+      "div.secondary-cta.top",
+      "h1.welcomeZap",
+      "div.theme-desc",
+    ]
   );
   await onButtonClick(browser, "button.primary");
   await test_screen_content(

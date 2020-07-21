@@ -58,16 +58,6 @@ onboarding-multistage-import-subtitle = Coming from another browser? It’s easy
 onboarding-multistage-import-primary-button-label = Start Import
 onboarding-multistage-import-secondary-button-label = Not now
 
-# The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
-# automatically added to the text inside it. "look" should stay inside the span.
-onboarding-multistage-theme-header = Choose a <span data-l10n-name="zap">look</span>
-onboarding-multistage-theme-subtitle = Personalize { -brand-short-name } with a theme.
-onboarding-multistage-theme-primary-button-label = Save Theme
-onboarding-multistage-theme-secondary-button-label = Not now
-onboarding-multistage-theme-label-light = Light
-onboarding-multistage-theme-label-dark = Dark
-onboarding-multistage-theme-label-colorful = Colorful
-
 # Tooltip displayed on hover of top sites in import settings screen during onboarding flow.
 # This support welcome screen showing top sites imported from the user's default browser.
 # Title text is kept multiline to ensure tooltip container width is not more than 40 characters.
@@ -85,6 +75,55 @@ onboarding-import-sites-info =
 #   $total (Int) - Total number of pages
 onboarding-welcome-steps-indicator =
   .aria-label = Getting started: screen { $current } of { $total }
+
+# The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
+# automatically added to the text inside it. "look" should stay inside the span.
+onboarding-multistage-theme-header = Choose a <span data-l10n-name="zap">look</span>
+onboarding-multistage-theme-subtitle = Personalize { -brand-short-name } with a theme.
+onboarding-multistage-theme-primary-button-label = Save Theme
+onboarding-multistage-theme-secondary-button-label = Not now
+
+# Automatic theme uses operating system color settings
+onboarding-multistage-theme-label-automatic = Automatic
+
+# System refers to the operating system
+onboarding-multistage-theme-description-automatic = Use system theme
+onboarding-multistage-theme-label-light = Light
+onboarding-multistage-theme-label-dark = Dark
+onboarding-multistage-theme-label-colorful = Colorful
+
+## Please make sure to split the content of the title attribute into lines whose
+## width corresponds to about 40 Latin characters, to ensure that the tooltip
+## doesn't become too long. Line breaks will be preserved when displaying the
+## tooltip.
+
+# Tooltip displayed on hover of automatic theme
+onboarding-multistage-theme-tooltip-automatic =
+  .title =
+    Inherit the appearance of your operating
+    system for buttons, menus, and windows.
+  .aria-label = { onboarding-multistage-theme-tooltip-automatic.title }
+
+# Tooltip displayed on hover of light theme
+onboarding-multistage-theme-tooltip-light =
+  .title =
+    Use a light appearance for buttons,
+    menus, and windows.
+  .aria-label = { onboarding-multistage-theme-tooltip-light.title }
+
+# Tooltip displayed on hover of dark theme
+onboarding-multistage-theme-tooltip-dark =
+  .title =
+    Use a dark appearance for buttons,
+    menus, and windows.
+  .aria-label = { onboarding-multistage-theme-tooltip-dark.title }
+
+# Tooltip displayed on hover of colorful theme
+onboarding-multistage-theme-tooltip-colorful =
+  .title =
+    Use a colorful appearance for buttons,
+    menus, and windows.
+  .aria-label = { onboarding-multistage-theme-tooltip-colorful.title }
 
 ## Welcome full page string
 
