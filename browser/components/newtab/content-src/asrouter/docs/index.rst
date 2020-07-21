@@ -96,6 +96,7 @@ Detailed Docs
 .. toctree::
   :maxdepth: 2
 
+  simple-cfr-template
   debugging-docs
   experiment-guide
   first-run

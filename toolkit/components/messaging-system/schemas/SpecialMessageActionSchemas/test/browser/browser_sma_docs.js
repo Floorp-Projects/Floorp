@@ -1,5 +1,5 @@
 const TEST_URL =
-  "https://example.com/browser/toolkit/components/messaging-system/schemas/SpecialMessageActionSchemas/test/browser/SpecialMessageActionSchemas.md";
+  "https://example.com/browser/toolkit/components/messaging-system/schemas/SpecialMessageActionSchemas/test/browser/index.md";
 
 function getHeadingsFromDocs(docs) {
   const re = /### `(\w+)`/g;
@@ -24,7 +24,7 @@ add_task(async function test_sma_docs() {
   for (let schemaType of schemaTypes) {
     Assert.ok(
       headings.includes(schemaType),
-      `${schemaType} not found in SpecialMessageActionSchemas.md`
+      `${schemaType} not found in SpecialMessageActionSchemas/index.md`
     );
   }
 });
