@@ -156,46 +156,58 @@ open class FenixApplication : LocaleAwareApplication() {
 
     private fun initVisualCompletenessQueueAndQueueTasks() {
         val taskQueue = components.performance.visualCompletenessQueue
-        registerActivityLifecycleCallbacks(PerformanceActivityLifecycleCallbacks(taskQueue))
 
-        // Enable the service-experiments component to be initialized after visual completeness
-        // for performance wins.
-        if (settings().isExperimentationEnabled) {
-            taskQueue.runIfReadyOrQueue {
-                Experiments.initialize(
-                    applicationContext = applicationContext,
-                    onExperimentsUpdated = {
-                        ExperimentsManager.initSearchWidgetExperiment(this)
-                    },
-                    configuration = mozilla.components.service.experiments.Configuration(
-                        httpClient = components.core.client,
-                        kintoEndpoint = KINTO_ENDPOINT_PROD
+        fun initQueue() {
+            registerActivityLifecycleCallbacks(PerformanceActivityLifecycleCallbacks(taskQueue))
+        }
+
+        fun queueInitExperiments() {
+            if (settings().isExperimentationEnabled) {
+                taskQueue.runIfReadyOrQueue {
+                    Experiments.initialize(
+                        applicationContext = applicationContext,
+                        onExperimentsUpdated = {
+                            ExperimentsManager.initSearchWidgetExperiment(this)
+                        },
+                        configuration = mozilla.components.service.experiments.Configuration(
+                            httpClient = components.core.client,
+                            kintoEndpoint = KINTO_ENDPOINT_PROD
+                        )
                     )
-                )
-                ExperimentsManager.initSearchWidgetExperiment(this)
+                    ExperimentsManager.initSearchWidgetExperiment(this)
+                }
+            } else {
+                // We should make a better way to opt out for when we have more experiments
+                // See https://github.com/mozilla-mobile/fenix/issues/6278
+                ExperimentsManager.optOutSearchWidgetExperiment(this)
             }
-        } else {
-            // We should make a better way to opt out for when we have more experiments
-            // See https://github.com/mozilla-mobile/fenix/issues/6278
-            ExperimentsManager.optOutSearchWidgetExperiment(this)
         }
 
-        components.performance.visualCompletenessQueue.runIfReadyOrQueue {
-            GlobalScope.launch(Dispatchers.IO) {
-                logger.info("Running post-visual completeness tasks...")
-                logElapsedTime(logger, "Storage initialization") {
-                    components.core.historyStorage.warmUp()
-                    components.core.bookmarksStorage.warmUp()
-                    components.core.passwordsStorage.warmUp()
+        fun queueInitStorageAndServices() {
+            components.performance.visualCompletenessQueue.runIfReadyOrQueue {
+                GlobalScope.launch(Dispatchers.IO) {
+                    logger.info("Running post-visual completeness tasks...")
+                    logElapsedTime(logger, "Storage initialization") {
+                        components.core.historyStorage.warmUp()
+                        components.core.bookmarksStorage.warmUp()
+                        components.core.passwordsStorage.warmUp()
+                    }
                 }
-            }
-            // Account manager initialization needs to happen on the main thread.
-            GlobalScope.launch(Dispatchers.Main) {
-                logElapsedTime(logger, "Kicking-off account manager") {
-                    components.backgroundServices.accountManager
+                // Account manager initialization needs to happen on the main thread.
+                GlobalScope.launch(Dispatchers.Main) {
+                    logElapsedTime(logger, "Kicking-off account manager") {
+                        components.backgroundServices.accountManager
+                    }
                 }
             }
         }
+
+        initQueue()
+
+        // We init these items in the visual completeness queue to avoid them initing in the critical
+        // startup path, before the UI finishes drawing (i.e. visual completeness).
+        queueInitExperiments()
+        queueInitStorageAndServices()
     }
 
     private fun startMetricsIfEnabled() {
