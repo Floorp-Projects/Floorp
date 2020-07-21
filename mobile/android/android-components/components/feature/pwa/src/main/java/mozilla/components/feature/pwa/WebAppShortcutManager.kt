@@ -80,6 +80,7 @@ class WebAppShortcutManager(
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
             val manifest = session.installableManifest()
             val shortcut = if (supportWebApps && manifest != null) {
+                emitPwaInstallFact()
                 buildWebAppShortcut(context, manifest)
             } else {
                 buildBasicShortcut(context, session, overrideShortcutName)
