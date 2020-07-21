@@ -188,7 +188,10 @@ class MOZ_STACK_CLASS ContentIteratorBase::Initializer final {
       : mIterator{aIterator},
         mStart{aStart},
         mEnd{aEnd},
-        mStartIsCharacterData{mStart.Container()->IsCharacterData()} {}
+        mStartIsCharacterData{mStart.Container()->IsCharacterData()} {
+    MOZ_ASSERT(mStart.IsSetAndValid());
+    MOZ_ASSERT(mEnd.IsSetAndValid());
+  }
 
   nsresult Run();
 
