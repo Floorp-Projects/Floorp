@@ -27,11 +27,17 @@ class ClientWebGLContext;
 
 namespace dom {
 
+struct FlushedCmdInfo final {
+  size_t flushes = 0;
+  size_t flushedCmdBytes = 0;
+};
+
 class WebGLChild final : public PWebGLChild,
-                         public SyncProducerActor<WebGLChild>,
-                         public AsyncConsumerActor<WebGLChild>,
                          public SupportsWeakPtr<WebGLChild>,
                          public mozilla::webgl::PcqActor {
+  std::unique_ptr<webgl::ShmemCmdBuffer> mPendingCmds;
+  FlushedCmdInfo mFlushedCmdInfo;
+
  public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLChild)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLChild, override);
@@ -43,6 +49,9 @@ class WebGLChild final : public PWebGLChild,
 
   // For SyncProducerActor:
   static IpdlQueueProtocol GetIpdlQueueProtocol(size_t aCmd, ...);
+
+  Maybe<Range<uint8_t>> AllocPendingCmdBytes(size_t);
+  void FlushPendingCmds();
 
  private:
   friend PWebGLChild;

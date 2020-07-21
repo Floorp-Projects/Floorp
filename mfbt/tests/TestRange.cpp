@@ -20,5 +20,10 @@ void test_RangeToBoolConversionShouldCompile() {
   (void)dummy;
 }
 
+void test_RangeT_To_RangeConstT_ShouldCompile() {
+  auto dummy = Range<const int>{Range<int>{}};
+  (void)dummy;
+}
+
 // We need a proper program so we have someplace to hang the static_asserts.
 int main() { return 0; }

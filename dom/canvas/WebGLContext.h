@@ -265,6 +265,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
     LruPosition& operator=(LruPosition&& rhs) {
       reset();
       std::swap(mItr, rhs.mItr);
+      rhs.reset();
       return *this;
     }
 
@@ -491,10 +492,12 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
  public:
   void Present(WebGLFramebuffer*, layers::TextureType, const bool webvr);
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot();
+  bool FrontBufferSnapshotInto(Range<uint8_t>);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
                                                   const bool webvr);
 
   void ClearVRSwapChain();
+
   void RunContextLossTimer();
   void CheckForContextLoss();
 
@@ -599,15 +602,16 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
       const webgl::FormatUsageInfo* usage) const;
 
  protected:
-  void ReadPixelsImpl(const webgl::ReadPixelsDesc&, uintptr_t data,
-                      uint64_t dataLen);
+  webgl::ReadPixelsResult ReadPixelsImpl(const webgl::ReadPixelsDesc&,
+                                         uintptr_t dest, uint64_t availBytes);
   bool DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat,
                               const webgl::ReadPixelsDesc&, uintptr_t dest,
                               uint64_t dataLen, uint32_t rowStride);
 
  public:
   void ReadPixelsPbo(const webgl::ReadPixelsDesc&, uint64_t offset);
-  void ReadPixels(const webgl::ReadPixelsDesc&, const Range<uint8_t>& dest);
+  webgl::ReadPixelsResult ReadPixelsInto(const webgl::ReadPixelsDesc&,
+                                         const Range<uint8_t>& dest);
 
   ////
 
