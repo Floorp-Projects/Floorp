@@ -18,9 +18,6 @@ using namespace mozilla;
 // <mroot> -- form a radical - implementation
 //
 
-// additional ComputedStyle to be used by our MathMLChar.
-#define NS_SQR_CHAR_STYLE_CONTEXT_INDEX 0
-
 static const char16_t kSqrChar = char16_t(0x221A);
 
 nsIFrame* NS_NewMathMLmrootFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
@@ -42,15 +39,10 @@ void nsMathMLmrootFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                               nsIFrame* aPrevInFlow) {
   nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  nsPresContext* presContext = PresContext();
-
-  // No need to track the ComputedStyle given to our MathML char.
-  // The Style System will use Get/SetAdditionalComputedStyle() to keep it
-  // up-to-date if dynamic changes arise.
   nsAutoString sqrChar;
   sqrChar.Assign(kSqrChar);
   mSqrChar.SetData(sqrChar);
-  ResolveMathMLCharStyle(presContext, mContent, mComputedStyle, &mSqrChar);
+  mSqrChar.SetComputedStyle(Style());
 }
 
 NS_IMETHODIMP
@@ -373,24 +365,7 @@ void nsMathMLmrootFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
   aDesiredSize.mBoundingMetrics.rightBearing = width;
 }
 
-// ----------------------
-// the Style System will use these to pass the proper ComputedStyle to our
-// MathMLChar
-ComputedStyle* nsMathMLmrootFrame::GetAdditionalComputedStyle(
-    int32_t aIndex) const {
-  switch (aIndex) {
-    case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
-      return mSqrChar.GetComputedStyle();
-    default:
-      return nullptr;
-  }
-}
-
-void nsMathMLmrootFrame::SetAdditionalComputedStyle(
-    int32_t aIndex, ComputedStyle* aComputedStyle) {
-  switch (aIndex) {
-    case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
-      mSqrChar.SetComputedStyle(aComputedStyle);
-      break;
-  }
+void nsMathMLmrootFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
+  nsMathMLContainerFrame::DidSetComputedStyle(aOldStyle);
+  mSqrChar.SetComputedStyle(Style());
 }

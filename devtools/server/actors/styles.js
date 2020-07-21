@@ -763,9 +763,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         return this._nodeIsTextfieldLike(node);
       case ":-moz-focus-inner":
         return this._nodeIsButtonLike(node);
-      case ":-moz-math-anonymous":
-        // This one should be internal, really.
-        return false;
       case ":-moz-meter-bar":
         return node.nodeName == "METER";
       case ":-moz-progress-bar":
