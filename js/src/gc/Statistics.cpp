@@ -617,8 +617,7 @@ void Statistics::writeLogMessage(const char* fmt, ...) {
 }
 #endif
 
-UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
-                                          Statistics::JSONUse use) const {
+UniqueChars Statistics::renderJsonMessage() const {
   /*
    * The format of the JSON message is specified by the GCMajorMarkerPayload
    * type in profiler.firefox.com
@@ -638,16 +637,10 @@ UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
   JSONPrinter json(printer);
 
   json.beginObject();
-  json.property("status", "completed");         // JSON Key #1
-  formatJsonDescription(timestamp, json, use);  // #2-22
+  json.property("status", "completed");  // JSON Key #1
+  formatJsonDescription(json);           // #2-22
 
-  if (use == Statistics::JSONUse::TELEMETRY) {
-    json.beginListProperty("slices_list");  // #23
-    for (unsigned i = 0; i < slices_.length(); i++) {
-      formatJsonSlice(i, json);
-    }
-    json.endList();
-  }
+  // Removed #23
 
   json.beginObjectProperty("totals");  // #24
   formatJsonPhaseTimes(phaseTimes, json);
@@ -658,8 +651,7 @@ UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
   return printer.release();
 }
 
-void Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json,
-                                       JSONUse use) const {
+void Statistics::formatJsonDescription(JSONPrinter& json) const {
   // If you change JSON properties here, please update:
   // Telemetry ping code:
   //   toolkit/components/telemetry/other/GCTelemetry.jsm
@@ -674,7 +666,10 @@ void Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json,
   // Please also number each property to help correctly maintain the Telemetry
   // ping code
 
-  json.property("timestamp", timestamp);  // # JSON Key #2
+  // The timestamp used to be passed in by the telemetry code.  The profiler
+  // doesn't use this field but its type system expects it.  TODO: delete this
+  // field (https://bugzilla.mozilla.org/show_bug.cgi?id=1654155).
+  json.property("timestamp", 0);  // # JSON Key #2
 
   TimeDuration total, longest;
   gcDuration(&total, &longest);
@@ -709,9 +704,7 @@ void Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json,
                   ExplainAbortReason(nonincrementalReason_));  // #16
   }
   json.property("allocated_bytes", preTotalHeapBytes);  // #17
-  if (use == Statistics::JSONUse::PROFILER) {
-    json.property("post_heap_size", postTotalHeapBytes);
-  }
+  json.property("post_heap_size", postTotalHeapBytes);
 
   uint32_t addedChunks = getCount(COUNT_NEW_CHUNK);
   if (addedChunks) {

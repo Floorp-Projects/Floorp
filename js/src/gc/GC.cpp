@@ -8317,22 +8317,6 @@ JS::dbg::GarbageCollectionEvent::Ptr JS::GCDescription::toGCEvent(
       cx->runtime()->gc.majorGCCount());
 }
 
-char16_t* JS::GCDescription::formatJSONTelemetry(JSContext* cx,
-                                                 uint64_t timestamp) const {
-  UniqueChars cstr = cx->runtime()->gc.stats().renderJsonMessage(
-      timestamp, gcstats::Statistics::JSONUse::TELEMETRY);
-
-  size_t nchars = strlen(cstr.get());
-  UniqueTwoByteChars out(js_pod_malloc<char16_t>(nchars + 1));
-  if (!out) {
-    return nullptr;
-  }
-  out.get()[nchars] = 0;
-
-  CopyAndInflateChars(out.get(), cstr.get(), nchars);
-  return out.release();
-}
-
 TimeStamp JS::GCDescription::startTime(JSContext* cx) const {
   return cx->runtime()->gc.stats().start();
 }
@@ -8356,8 +8340,7 @@ JS::UniqueChars JS::GCDescription::sliceToJSONProfiler(JSContext* cx) const {
 }
 
 JS::UniqueChars JS::GCDescription::formatJSONProfiler(JSContext* cx) const {
-  return cx->runtime()->gc.stats().renderJsonMessage(
-      0, js::gcstats::Statistics::JSONUse::PROFILER);
+  return cx->runtime()->gc.stats().renderJsonMessage();
 }
 
 JS_PUBLIC_API JS::UniqueChars JS::MinorGcToJSON(JSContext* cx) {
