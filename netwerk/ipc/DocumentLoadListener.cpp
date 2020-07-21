@@ -348,14 +348,16 @@ already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
   RefPtr<LoadInfo> loadInfo;
   if (aBrowsingContext->GetParent()) {
     // Build LoadInfo for TYPE_SUBDOCUMENT
-    loadInfo = new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(),
-                            securityFlags, sandboxFlags);
+    loadInfo = LoadInfo::CreateForFrame(aBrowsingContext,
+                                        aLoadState->TriggeringPrincipal(),
+                                        securityFlags, sandboxFlags);
   } else {
     // Build LoadInfo for TYPE_DOCUMENT
     OriginAttributes attrs;
     aBrowsingContext->GetOriginAttributes(attrs);
-    loadInfo = new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(),
-                            attrs, securityFlags, sandboxFlags);
+    loadInfo = LoadInfo::CreateForDocument(aBrowsingContext,
+                                           aLoadState->TriggeringPrincipal(),
+                                           attrs, securityFlags, sandboxFlags);
   }
 
   loadInfo->SetHasValidUserGestureActivation(
