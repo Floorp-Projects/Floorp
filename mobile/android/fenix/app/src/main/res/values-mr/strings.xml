@@ -919,6 +919,20 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly हलले आहे</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">या अॅपला यापुढे सुरक्षा अद्यतने प्राप्त होणार नाहीत. हे अॅप वापरणे थांबवा आणि नवीन Nightly वर स्विच करा.
+        \n\nआपल्या वाचनखुणा, लॉगिन, आणि इतिहास इतर अॅप वर स्थानांतरित करण्यासाठी, एक Firefox खाते त.ार करा.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">नवीन Nightly वर स्विच करा</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly हलले आहे</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">या अॅपला यापुढे सुरक्षा अद्यतने प्राप्त होणार नाहीत. नवीन Nightly मिळवा आणि हे अॅप वापरणे थांबवा.
+        \n\nआपल्या वाचनखुणा, लॉगिन, आणि इतिहास इतर अॅप वर स्थानांतरित करण्यासाठी, एक Firefox खाते त.ार करा.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">नवीन Nightly मिळवा</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -954,6 +968,8 @@
     <string name="onboarding_firefox_account_sync_is_on">सिंक चालू आहे</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">साइन इन करण्यात अयशस्वी</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">स्वयंचलित गोपनीयता</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">कठोर (सुचवलेले)</string>
     <!-- text for the toolbar position card header

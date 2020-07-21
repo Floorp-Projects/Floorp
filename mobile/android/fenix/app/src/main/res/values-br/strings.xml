@@ -78,7 +78,7 @@
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Askouezhioù</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Nʼeus tamm enlugellad ebet amañ</string>
+    <string name="no_add_ons">Nʼeus tamm askouezh ebet amañ</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Skoazell</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -296,7 +296,7 @@
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">Anv an trevnad nʼhall ket bezañ goullo.</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">O goubredañ...</string>
+    <string name="sync_syncing_in_progress">O c’houbredañ...</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Goubredañ cʼhwitet. Berzh diwezhañ: %s</string>
 
@@ -390,7 +390,7 @@
     <!-- Preference for using top toolbar -->
     <string name="preference_top_toolbar">Krecʼh</string>
     <!-- Preference for using bottom toolbar -->
-    <string name="preference_bottom_toolbar">Diaz</string>
+    <string name="preference_bottom_toolbar">Traoñ</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -398,7 +398,7 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Teñval</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
-    <string name="preference_auto_battery_theme">Lakaet gant an esperner tredan</string>
+    <string name="preference_auto_battery_theme">Dibabet gant an esperner tredan</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Mont gant neuz ar benveg</string>
 
@@ -474,7 +474,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Rannañ an ivinelloù</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection1">Enrollañ an ivinelloù en dastumad</string>
+    <string name="tabs_menu_save_to_collection1">Enrollañ an ivinelloù en un dastumad</string>
 
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Lañser an ivinell</string>
@@ -690,7 +690,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Lañser an dastumadoù</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Dastumit ar pezh a gont evidocʼh</string>
+    <string name="no_collections_header1">Dastumit ar pezh a zo pouezus evidoc‘h</string>
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Strollit ar cʼhlaskoù, al lecʼhiennoù hag an ivinelloù heñvel evit mont daveto buanocʼh.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
@@ -863,7 +863,7 @@
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Skeudennoù ha restroù er c’hrubuilh</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cached_files_subtitle">Dieubiñ a ra egor kadaviñ</string>
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Dieubiñ a raio egor kadaviñ</string>
 
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Aotreoù al lec’hienn</string>
@@ -1170,7 +1170,7 @@
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL eilet er golver</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">Ouzhpennañ dʼar skramm degemer</string>
+    <string name="add_to_homescreen_title">Lakaat er skramm degemer</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Nullañ</string>
     <!-- Add button text for the Add to Homescreen dialog -->
@@ -1365,7 +1365,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ha fellout a ra deocʼh dilemel ar sined-mañ ?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Ouzhpennañ dʼal lecʼhiennoù gwellañ</string>
+    <string name="browser_menu_add_to_top_sites">Lakaat el lecʼhiennoù gwellañ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Gwiriet gant:%1$s</string>
