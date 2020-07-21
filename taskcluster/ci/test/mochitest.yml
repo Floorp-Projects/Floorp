@@ -277,8 +277,7 @@ mochitest-media:
     variants:
         by-test-platform:
             android.*: ['socketprocess']
-            linux1804-64/debug: ['fission', 'socketprocess']
-            default: ['fission', 'socketprocess']
+            default: ['fission', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size: large
     chunks:
@@ -350,6 +349,10 @@ mochitest-webgl1-core:
     treeherder-symbol: M(gl1c)
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
+    variants:
+        by-test-platform:
+            android.*: []
+            default: ['webgl-ipc']
     e10s: true
     loopback-video: true
     tier: default
@@ -371,6 +374,10 @@ mochitest-webgl1-ext:
     treeherder-symbol: M(gl1e)
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
+    variants:
+        by-test-platform:
+            android.*: []
+            default: ['webgl-ipc']
     chunks:
         by-test-platform:
             android.*: 2
@@ -394,6 +401,10 @@ mochitest-webgl2-core:
     treeherder-symbol: M(gl2c)
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
+    variants:
+        by-test-platform:
+            android.*: []
+            default: ['webgl-ipc']
     chunks:
         by-test-platform:
             android.*: 2
@@ -417,6 +428,10 @@ mochitest-webgl2-ext:
     treeherder-symbol: M(gl2e)
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
+    variants:
+        by-test-platform:
+            android.*: []
+            default: ['webgl-ipc']
     chunks: 4
     e10s: true
     loopback-video: true
@@ -434,6 +449,10 @@ mochitest-webgl2-deqp:
     schedules-component: mochitest-plain
     run-on-projects: []  # Don't run this for now.
     virtualization: virtual-with-gpu
+    variants:
+        by-test-platform:
+            android.*: []
+            default: ['webgl-ipc']
     chunks: 4
     e10s: true
     loopback-video: true
