@@ -851,8 +851,8 @@ interface mixin GPURenderEncoderBase {
                      optional GPUSignedOffset32 baseVertex = 0,
                      optional GPUSize32 firstInstance = 0);
 
-    //void drawIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
-    //void drawIndexedIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    void drawIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    void drawIndexedIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 };
 
 [Pref="dom.webgpu.enabled",
@@ -884,7 +884,7 @@ dictionary GPUComputePassDescriptor : GPUObjectDescriptorBase {
 interface GPUComputePassEncoder {
     void setPipeline(GPUComputePipeline pipeline);
     void dispatch(GPUSize32 x, optional GPUSize32 y = 1, optional GPUSize32 z = 1);
-    //void dispatchIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    void dispatchIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 
     [Throws]
     void endPass();

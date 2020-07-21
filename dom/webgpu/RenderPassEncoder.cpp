@@ -190,6 +190,22 @@ void RenderPassEncoder::DrawIndexed(uint32_t aIndexCount,
   }
 }
 
+void RenderPassEncoder::DrawIndirect(const Buffer& aIndirectBuffer,
+                                     uint64_t aIndirectOffset) {
+  if (mValid) {
+    ffi::wgpu_render_pass_draw_indirect(&mRaw, aIndirectBuffer.mId,
+                                        aIndirectOffset);
+  }
+}
+
+void RenderPassEncoder::DrawIndexedIndirect(const Buffer& aIndirectBuffer,
+                                            uint64_t aIndirectOffset) {
+  if (mValid) {
+    ffi::wgpu_render_pass_draw_indexed_indirect(&mRaw, aIndirectBuffer.mId,
+                                                aIndirectOffset);
+  }
+}
+
 void RenderPassEncoder::EndPass(ErrorResult& aRv) {
   if (mValid) {
     mValid = false;
