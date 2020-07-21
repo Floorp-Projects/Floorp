@@ -262,6 +262,10 @@ static const char kPrefHealthReportUploadEnabled[] =
         // || defined(MOZ_DEFAULT_BROWSER_AGENT)
 #if defined(MOZ_DEFAULT_BROWSER_AGENT)
 static const char kPrefDefaultAgentEnabled[] = "default-browser-agent.enabled";
+
+static const char kPrefServicesSettingsServer[] = "services.settings.server";
+static const char kPrefSecurityContentSignatureRootHash[] =
+    "security.content.signature.root_hash";
 #endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 
 int gArgc;
@@ -1645,44 +1649,94 @@ static void SetupLauncherProcessPref() {
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
 
 #  if defined(MOZ_DEFAULT_BROWSER_AGENT)
-static void OnDefaultAgentTelemetryPrefChanged(const char* aPref, void* aData) {
-  bool prefVal = Preferences::GetBool(aPref, true);
 
+#    define DEFAULT_BROWSER_AGENT_KEY_NAME \
+      "SOFTWARE\\" MOZ_APP_VENDOR "\\" MOZ_APP_NAME "\\Default Browser Agent"
+
+static nsresult PrependRegistryValueName(nsAutoString& aValueName) {
   nsresult rv;
+
+  nsCOMPtr<nsIFile> binaryPath;
+  rv = XRE_GetBinaryPath(getter_AddRefs(binaryPath));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> binaryDir;
+  rv = binaryPath->GetParent(getter_AddRefs(binaryDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString prefix;
+  rv = binaryDir->GetPath(prefix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  prefix.AppendLiteral("|");
+  aValueName.Insert(prefix, 0);
+
+  return NS_OK;
+}
+
+static void OnDefaultAgentTelemetryPrefChanged(const char* aPref, void* aData) {
+  nsresult rv;
+  nsAutoString valueName;
+  if (strcmp(aPref, kPrefHealthReportUploadEnabled) == 0) {
+    valueName.AssignLiteral("DisableTelemetry");
+  } else if (strcmp(aPref, kPrefDefaultAgentEnabled) == 0) {
+    valueName.AssignLiteral("DisableDefaultBrowserAgent");
+  } else {
+    return;
+  }
+  rv = PrependRegistryValueName(valueName);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   nsCOMPtr<nsIWindowsRegKey> regKey =
       do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsAutoString keyName;
-  keyName.AppendLiteral("SOFTWARE\\" MOZ_APP_VENDOR "\\" MOZ_APP_NAME
-                        "\\Default Browser Agent");
-
-  nsCOMPtr<nsIFile> binaryPath;
-  rv = XRE_GetBinaryPath(getter_AddRefs(binaryPath));
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  nsCOMPtr<nsIFile> binaryDir;
-  rv = binaryPath->GetParent(getter_AddRefs(binaryDir));
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  nsAutoString valueName;
-  rv = binaryDir->GetPath(valueName);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  if (strcmp(aPref, kPrefHealthReportUploadEnabled) == 0) {
-    valueName.AppendLiteral("|DisableTelemetry");
-  } else if (strcmp(aPref, kPrefDefaultAgentEnabled) == 0) {
-    valueName.AppendLiteral("|DisableDefaultBrowserAgent");
-  } else {
-    return;
-  }
-
+  keyName.AppendLiteral(DEFAULT_BROWSER_AGENT_KEY_NAME);
   rv = regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, keyName,
                       nsIWindowsRegKey::ACCESS_WRITE);
-  NS_ENSURE_SUCCESS_VOID(rv);
+
+  bool prefVal = Preferences::GetBool(aPref, true);
 
   // We're recording whether the pref is *disabled*, so invert the value.
   rv = regKey->WriteIntValue(valueName, prefVal ? 0 : 1);
+  NS_ENSURE_SUCCESS_VOID(rv);
+}
+
+static void OnDefaultAgentRemoteSettingsPrefChanged(const char* aPref,
+                                                    void* aData) {
+  nsresult rv;
+  nsAutoString valueName;
+  if (strcmp(aPref, kPrefServicesSettingsServer) == 0) {
+    valueName.AssignLiteral("ServicesSettingsServer");
+  } else if (strcmp(aPref, kPrefSecurityContentSignatureRootHash) == 0) {
+    valueName.AssignLiteral("SecurityContentSignatureRootHash");
+  } else {
+    return;
+  }
+  rv = PrependRegistryValueName(valueName);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsAutoString keyName;
+  keyName.AppendLiteral(DEFAULT_BROWSER_AGENT_KEY_NAME);
+  rv = regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, keyName,
+                      nsIWindowsRegKey::ACCESS_WRITE);
+
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsAutoString prefVal;
+  rv = Preferences::GetString(aPref, prefVal);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  if (prefVal.IsEmpty()) {
+    rv = regKey->RemoveValue(valueName);
+  } else {
+    rv = regKey->WriteStringValue(valueName, prefVal);
+  }
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 
@@ -4602,6 +4656,12 @@ nsresult XREMain::XRE_mainRun() {
                                          kPrefHealthReportUploadEnabled);
     Preferences::RegisterCallbackAndCall(&OnDefaultAgentTelemetryPrefChanged,
                                          kPrefDefaultAgentEnabled);
+
+    Preferences::RegisterCallbackAndCall(
+        &OnDefaultAgentRemoteSettingsPrefChanged, kPrefServicesSettingsServer);
+    Preferences::RegisterCallbackAndCall(
+        &OnDefaultAgentRemoteSettingsPrefChanged,
+        kPrefSecurityContentSignatureRootHash);
 #  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 #endif
 
