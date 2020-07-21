@@ -47,10 +47,10 @@ class xpcAccessibleMacInterface : public xpcAccessibleMacNSObjectWrapper,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEMACINTERFACE
 
-  // This sends notifications via nsIObserverService to be consumed by our
-  // mochitests. aNativeObj is a NSAccessibility protocol object,
-  // and aNotification is a NSString.
-  static void FireEvent(id aNativeObj, id aNotification);
+  // Convert an NSObject (which can be anything, string, number, array, etc.)
+  // into a properly typed js value populated in the aResult handle.
+  static nsresult NSObjectToJsValue(id aObj, JSContext* aCx,
+                                    JS::MutableHandleValue aResult);
 
  protected:
   virtual ~xpcAccessibleMacInterface() {}
@@ -59,11 +59,6 @@ class xpcAccessibleMacInterface : public xpcAccessibleMacNSObjectWrapper,
   // if it implements isAccessibilitySelectorAllowed check that it returns true
   // too.
   bool SupportsSelector(SEL aSelector);
-
-  // Convert an NSObject (which can be anything, string, number, array, etc.)
-  // into a properly typed js value populated in the aResult handle.
-  nsresult NSObjectToJsValue(id aObj, JSContext* aCx,
-                             JS::MutableHandleValue aResult);
 
   // Convert a js value to an NSObject. This is called recursively for arrays.
   // If the conversion fails, aResult is set to an error and nil is returned.
@@ -80,6 +75,25 @@ class xpcAccessibleMacInterface : public xpcAccessibleMacNSObjectWrapper,
   xpcAccessibleMacInterface(const xpcAccessibleMacInterface&) = delete;
   xpcAccessibleMacInterface& operator=(const xpcAccessibleMacInterface&) =
       delete;
+};
+
+class xpcAccessibleMacEvent : public nsIAccessibleMacEvent {
+ public:
+  explicit xpcAccessibleMacEvent(id aNativeObj, id aData);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLEMACEVENT;
+
+  // This sends notifications via nsIObserverService to be consumed by our
+  // mochitests. aNativeObj is a NSAccessibility protocol object,
+  // and aNotification is a NSString.
+  static void FireEvent(id aNativeObj, id aNotification, id aUserInfo);
+
+ protected:
+  virtual ~xpcAccessibleMacEvent();
+
+  id mNativeObject;
+  id mData;
 };
 
 }  // namespace a11y

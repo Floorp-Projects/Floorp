@@ -348,7 +348,7 @@ using namespace mozilla::a11y;
 
 - (void)moxPostNotification:(NSString*)notification withUserInfo:(NSDictionary*)userInfo {
   // This sends events via nsIObserverService to be consumed by our mochitests.
-  xpcAccessibleMacInterface::FireEvent(self, notification);
+  xpcAccessibleMacEvent::FireEvent(self, notification, userInfo);
 
   if (gfxPlatform::IsHeadless()) {
     // Using a headless toolkit for tests and whatnot, posting accessibility
