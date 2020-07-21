@@ -53,11 +53,26 @@ typedef nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>> RedirectHistoryArray;
  * Class that provides an nsILoadInfo implementation.
  */
 class LoadInfo final : public nsILoadInfo {
+  template <typename T, typename... Args>
+  friend already_AddRefed<T> mozilla::MakeAndAddRef(Args&&... aArgs);
+
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSILOADINFO
 
-  // Used for TYPE_SUBDOCUMENT load.
+  // Used for TYPE_DOCUMENT load.
+  static already_AddRefed<LoadInfo> CreateForDocument(
+      dom::CanonicalBrowsingContext* aBrowsingContext,
+      nsIPrincipal* aTriggeringPrincipal,
+      const OriginAttributes& aOriginAttributes, nsSecurityFlags aSecurityFlags,
+      uint32_t aSandboxFlags);
+
+  // Used for TYPE_FRAME or TYPE_IFRAME load.
+  static already_AddRefed<LoadInfo> CreateForFrame(
+      dom::CanonicalBrowsingContext* aBrowsingContext,
+      nsIPrincipal* aTriggeringPrincipal, nsSecurityFlags aSecurityFlags,
+      uint32_t aSandboxFlags);
+
   // aLoadingPrincipal MUST NOT BE NULL.
   LoadInfo(nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
            nsINode* aLoadingContext, nsSecurityFlags aSecurityFlags,
@@ -67,10 +82,6 @@ class LoadInfo final : public nsILoadInfo {
            const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController =
                Maybe<mozilla::dom::ServiceWorkerDescriptor>(),
            uint32_t aSandboxFlags = 0);
-  // Used for TYPE_SUBDOCUMENT load.
-  LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
-           nsIPrincipal* aTriggeringPrincipal, nsSecurityFlags aSecurityFlags,
-           uint32_t aSandboxFlags);
 
   // Constructor used for TYPE_DOCUMENT loads which have a different
   // loadingContext than other loads. This ContextForTopLevelLoad is
@@ -78,10 +89,6 @@ class LoadInfo final : public nsILoadInfo {
   LoadInfo(nsPIDOMWindowOuter* aOuterWindow, nsIPrincipal* aTriggeringPrincipal,
            nsISupports* aContextForTopLevelLoad, nsSecurityFlags aSecurityFlags,
            uint32_t aSandboxFlags);
-  LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
-           nsIPrincipal* aTriggeringPrincipal,
-           const OriginAttributes& aOriginAttributes,
-           nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
   // Used for loads initiated by DocumentLoadListener.
   LoadInfo(dom::WindowGlobalParent* aParentWGP,
@@ -89,6 +96,21 @@ class LoadInfo final : public nsILoadInfo {
            nsContentPolicyType aContentPolicyType,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
+ private:
+  // Use factory function CreateForDocument
+  // Used for TYPE_DOCUMENT load.
+  LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
+           nsIPrincipal* aTriggeringPrincipal,
+           const OriginAttributes& aOriginAttributes,
+           nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
+
+  // Use factory function CreateForFrame
+  // Used for TYPE_FRAME or TYPE_IFRAME load.
+  LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
+           nsIPrincipal* aTriggeringPrincipal, nsSecurityFlags aSecurityFlags,
+           uint32_t aSandboxFlags);
+
+ public:
   // Compute a list of ancestor principals and BrowsingContext IDs.
   // See methods AncestorPrincipals and AncestorBrowsingContextIDs
   // in nsILoadInfo.idl for details.
