@@ -23,6 +23,7 @@
           "text=secondname,popupid",
         ".popup-notification-description > span:last-of-type":
           "text=secondendlabel,popupid",
+        ".popup-notification-hint-text": "text=hinttext",
         ".popup-notification-closebutton":
           "oncommand=closebuttoncommand,hidden=closebuttonhidden",
         ".popup-notification-learnmore-link":
@@ -77,6 +78,7 @@
                   whitespace between them (whitespace is added in the
                   localization file, if necessary). -->
               <description class="popup-notification-description"><html:span></html:span><html:b></html:b><html:span></html:span><html:b></html:b><html:span></html:span></description>
+              <description class="popup-notification-hint-text"></description>
             </vbox>
             <toolbarbutton class="messageCloseButton close-icon popup-notification-closebutton tabbable" tooltiptext="&closeNotification.tooltip;"></toolbarbutton>
           </hbox>
