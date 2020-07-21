@@ -286,7 +286,7 @@ add_task(async function test_get_falls_back_to_dump_if_db_fails() {
     throw new Error("Unknown error");
   };
 
-  const records = await clientWithDump.get();
+  const records = await clientWithDump.get({ dumpFallback: true });
   ok(records.length > 0, "dump content is returned");
 
   // If fallback is disabled, error is thrown.
@@ -299,6 +299,32 @@ add_task(async function test_get_falls_back_to_dump_if_db_fails() {
   equal(error.message, "Unknown error");
 
   clientWithDump.db.getLastModified = backup;
+});
+add_task(clear_state);
+
+add_task(async function test_get_falls_back_to_dump_if_db_fails_later() {
+  if (IS_ANDROID) {
+    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+    return;
+  }
+  const backup = clientWithDump.db.list;
+  clientWithDump.db.list = () => {
+    throw new Error("Unknown error");
+  };
+
+  const records = await clientWithDump.get({ dumpFallback: true });
+  ok(records.length > 0, "dump content is returned");
+
+  // If fallback is disabled, error is thrown.
+  let error;
+  try {
+    await clientWithDump.get({ dumpFallback: false });
+  } catch (e) {
+    error = e;
+  }
+  equal(error.message, "Unknown error");
+
+  clientWithDump.db.list = backup;
 });
 add_task(clear_state);
 
