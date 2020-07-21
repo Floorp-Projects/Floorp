@@ -67,6 +67,24 @@ function showTooltip(toolbox) {
     return;
   }
 
+  updateTooltipContent(toolbox);
+
+  const commandId = "command-button-fission-prefs";
+  toolbox._fissionPrefsTooltip.show(toolbox.doc.getElementById(commandId));
+
+  // Follows a hack to be able to close the tooltip when clicking on the
+  // command button. Otherwise it will flicker and reopen.
+  toolbox._fissionPrefsTooltip.preventShow = true;
+  toolbox._fissionPrefsTooltip.once("hidden", () => {
+    toolbox.win.setTimeout(
+      () => (toolbox._fissionPrefsTooltip.preventShow = false),
+      250
+    );
+  });
+}
+exports.showTooltip = showTooltip;
+
+function updateTooltipContent(toolbox) {
   const container = toolbox.doc.createElement("div");
   container.style.padding = "12px";
   container.style.fontSize = "11px";
@@ -92,8 +110,18 @@ function showTooltip(toolbox) {
     prefEl.classList.toggle("theme-comment", !isPrefEnabled);
     prefEl.style.margin = "8px 0 0";
     prefEl.style.lineHeight = "12px";
+
+    /**
+     * The grid layout of a preference line is as follows:
+     *
+     *  +------+-----------------------------+-------+---------------+
+     *  | Icon | Preference name             | Value | Toggle button |
+     *  +------+-----------------------------+-------+---------------+
+     */
     prefEl.style.display = "grid";
-    prefEl.style.gridTemplateColumns = "max-content auto max-content";
+    prefEl.style.alignItems = "center";
+    prefEl.style.gridTemplateColumns =
+      "max-content minmax(300px, auto) max-content max-content";
     prefEl.style.gridColumnGap = "8px";
 
     const prefInfo = toolbox.doc.createElement("div");
@@ -110,9 +138,18 @@ function showTooltip(toolbox) {
     const prefValue = toolbox.doc.createElement("span");
     prefValue.textContent = isPrefEnabled;
 
+    const toggleButton = toolbox.doc.createElement("button");
+    toggleButton.addEventListener("click", () => {
+      Services.prefs.setBoolPref(name, !isPrefEnabled);
+      updateTooltipContent(toolbox);
+    });
+    toggleButton.textContent = "toggle";
+
     prefEl.appendChild(prefInfo);
     prefEl.appendChild(prefTitle);
     prefEl.appendChild(prefValue);
+    prefEl.appendChild(toggleButton);
+
     prefList.appendChild(prefEl);
   }
 
@@ -123,21 +160,7 @@ function showTooltip(toolbox) {
   toolbox._fissionPrefsTooltip.panel.style.maxWidth = "unset";
 
   toolbox._fissionPrefsTooltip.panel.appendChild(container);
-
-  const commandId = "command-button-fission-prefs";
-  toolbox._fissionPrefsTooltip.show(toolbox.doc.getElementById(commandId));
-
-  // Follows a hack to be able to close the tooltip when clicking on the
-  // command button. Otherwise it will flicker and reopen.
-  toolbox._fissionPrefsTooltip.preventShow = true;
-  toolbox._fissionPrefsTooltip.once("hidden", () => {
-    toolbox.win.setTimeout(
-      () => (toolbox._fissionPrefsTooltip.preventShow = false),
-      250
-    );
-  });
 }
-exports.showTooltip = showTooltip;
 
 function isAnyPreferenceEnabled() {
   for (const [name] of PREFERENCES) {
