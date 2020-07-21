@@ -546,22 +546,6 @@ void WebGLContext::AssertCachedGlobalState() const {
   MOZ_ASSERT(int4[0] == mViewportX && int4[1] == mViewportY &&
              int4[2] == mViewportWidth && int4[3] == mViewportHeight);
 
-  AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_ALIGNMENT,
-                         mPixelStore.mUnpackAlignment);
-
-  if (IsWebGL2()) {
-    AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_IMAGE_HEIGHT,
-                           mPixelStore.mUnpackImageHeight);
-    AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_IMAGES,
-                           mPixelStore.mUnpackSkipImages);
-    AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_ROW_LENGTH,
-                           mPixelStore.mUnpackRowLength);
-    AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_ROWS,
-                           mPixelStore.mUnpackSkipRows);
-    AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_PIXELS,
-                           mPixelStore.mUnpackSkipPixels);
-  }
-
   MOZ_ASSERT(!gl::GLContext::IsBadCallError(errorScope.GetError()));
 #endif
 }

@@ -233,8 +233,6 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
     }
 
     case LOCAL_GL_STENCIL_CLEAR_VALUE:
-    case LOCAL_GL_UNPACK_ALIGNMENT:
-    case LOCAL_GL_PACK_ALIGNMENT:
     case LOCAL_GL_SUBPIXEL_BITS: {
       GLint i = 0;
       gl->fGetIntegerv(pname, &i);
@@ -389,16 +387,6 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
       gl->fGetBooleanv(pname, &b);
       return Some(bool(b));
     }
-
-    // bool, WebGL-specific
-    case UNPACK_FLIP_Y_WEBGL:
-      return Some((bool)mPixelStore.mFlipY);
-    case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-      return Some((bool)mPixelStore.mPremultiplyAlpha);
-
-    // uint, WebGL-specific
-    case UNPACK_COLORSPACE_CONVERSION_WEBGL:
-      return Some(mPixelStore.mColorspaceConversion);
 
     default:
       break;

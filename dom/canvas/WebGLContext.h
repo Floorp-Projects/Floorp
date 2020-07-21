@@ -66,7 +66,6 @@ class HostWebGLContext;
 class ScopedCopyTexImageSource;
 class ScopedDrawCallWrapper;
 class ScopedResolveTexturesForDraw;
-class ScopedUnpackReset;
 class WebGLBuffer;
 class WebGLExtensionBase;
 class WebGLFramebuffer;
@@ -185,11 +184,11 @@ namespace webgl {
 
 class AvailabilityRunnable final : public Runnable {
  public:
-  const RefPtr<WebGLContext> mWebGL;  // Prevent CC
-  std::vector<RefPtr<WebGLQuery>> mQueries;
-  std::vector<RefPtr<WebGLSync>> mSyncs;
+  const WeakPtr<const ClientWebGLContext> mWebGL;
+  std::vector<WeakPtr<WebGLQueryJS>> mQueries;
+  std::vector<WeakPtr<WebGLSyncJS>> mSyncs;
 
-  explicit AvailabilityRunnable(WebGLContext* webgl);
+  explicit AvailabilityRunnable(const ClientWebGLContext* webgl);
   ~AvailabilityRunnable();
 
   NS_IMETHOD Run() override;
@@ -393,6 +392,10 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   }
   void GenerateErrorImpl(const GLenum err, const std::string& text) const;
 
+  void GenerateError(const webgl::ErrorInfo& err) {
+    GenerateError(err.type, "%s", err.info.c_str());
+  }
+
   template <typename... Args>
   void GenerateError(const GLenum err, const char* const fmt,
                      const Args&... args) const {
@@ -593,7 +596,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   void LineWidth(GLfloat width);
   void LinkProgram(WebGLProgram& prog);
-  void PixelStorei(GLenum pname, uint32_t param);
   void PolygonOffset(GLfloat factor, GLfloat units);
 
   ////
@@ -779,10 +781,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
                     const uvec2& size) const;
 
   // TexSubImage if `!respectFormat`
-  void TexImage(GLenum imageTarget, uint32_t level, GLenum respecFormat,
-                uvec3 offset, uvec3 size, const webgl::PackingInfo& pi,
-                const TexImageSource& src,
-                const dom::HTMLCanvasElement& canvas) const;
+  void TexImage(uint32_t level, GLenum respecFormat, uvec3 offset,
+                const webgl::PackingInfo& pi,
+                const webgl::TexUnpackBlobDesc&) const;
 
   void TexStorage(GLenum texTarget, uint32_t levels, GLenum sizedFormat,
                   uvec3 size) const;
@@ -1096,7 +1097,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
  public:
   void LoseContext(
       webgl::ContextLossReason reason = webgl::ContextLossReason::None);
-  const WebGLPixelStore GetPixelStore() const { return mPixelStore; }
 
  protected:
   nsTArray<RefPtr<WebGLTexture>> mBound2DTextures;
@@ -1128,20 +1128,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
  protected:
   RefPtr<WebGLTransformFeedback> mDefaultTransformFeedback;
   RefPtr<WebGLVertexArray> mDefaultVertexArray;
-
-  WebGLPixelStore mPixelStore;
-
-  CheckedUint32 GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
-                              uint32_t depth, uint8_t bytesPerPixel);
-
-  UniquePtr<webgl::TexUnpackBlob> FromDomElem(
-      const dom::HTMLCanvasElement& canvas, TexImageTarget target, uvec3 size,
-      const dom::Element& elem, ErrorResult* const out_error) const;
-
-  UniquePtr<webgl::TexUnpackBlob> From(
-      const dom::HTMLCanvasElement& canvas, TexImageTarget target,
-      const uvec3& size, const TexImageSource& src,
-      dom::Uint8ClampedArray* const scopedArr) const;
 
   ////////////////////////////////////
 
@@ -1294,19 +1280,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   const decltype(mBound2DTextures)* TexListForElemType(GLenum elemType) const;
 
-  // --
- private:
-  webgl::AvailabilityRunnable* mAvailabilityRunnable = nullptr;
-
- public:
-  webgl::AvailabilityRunnable* EnsureAvailabilityRunnable();
-
-  // -
-
   // Friend list
   friend class ScopedCopyTexImageSource;
   friend class ScopedResolveTexturesForDraw;
-  friend class ScopedUnpackReset;
   friend class webgl::TexUnpackBlob;
   friend class webgl::TexUnpackBytes;
   friend class webgl::TexUnpackImage;
@@ -1337,15 +1313,6 @@ V RoundUpToMultipleOf(const V& value, const M& multiple) {
 
 const char* GetEnumName(GLenum val, const char* defaultRet = "<unknown>");
 std::string EnumString(GLenum val);
-
-class ScopedUnpackReset final {
- private:
-  const WebGLContext* const mWebGL;
-
- public:
-  explicit ScopedUnpackReset(const WebGLContext* webgl);
-  ~ScopedUnpackReset();
-};
 
 class ScopedFBRebinder final {
  private:

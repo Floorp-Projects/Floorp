@@ -10,6 +10,89 @@
 #include "WebGLTypes.h"
 
 namespace mozilla {
+namespace webgl {
+
+// TODO: This should probably replace Shmem, or at least this should move to ipc/glue.
+class RaiiShmem final {
+  RefPtr<mozilla::ipc::ActorLifecycleProxy> mWeakRef;
+  mozilla::ipc::Shmem mShmem = {};
+
+ public:
+  /// Returns zeroed data.
+  static RaiiShmem Alloc(mozilla::ipc::IProtocol* const allocator,
+                         const size_t size,
+                         const Shmem::SharedMemory::SharedMemoryType type) {
+    mozilla::ipc::Shmem shmem;
+    if (!allocator->AllocShmem(size, type, &shmem)) return {};
+    return {allocator, shmem};
+  }
+
+  // -
+
+  RaiiShmem() = default;
+
+  RaiiShmem(mozilla::ipc::IProtocol* const allocator,
+            const mozilla::ipc::Shmem& shmem)
+      : mWeakRef(allocator->ToplevelProtocol()->GetLifecycleProxy()),
+        mShmem(shmem) {
+    // Shmems are handled by the top-level, so use that or we might leak after
+    // the actor dies.
+    MOZ_ASSERT(mWeakRef);
+  }
+
+  void reset() {
+    if (IsShmem()) {
+      const auto& allocator = mWeakRef->Get();
+      if (allocator) {
+        allocator->DeallocShmem(mShmem);
+      }
+    }
+    mWeakRef = nullptr;
+    mShmem = {};
+  }
+
+  ~RaiiShmem() { reset(); }
+
+  // -
+
+  RaiiShmem(RaiiShmem&& rhs) { *this = std::move(rhs); }
+  RaiiShmem& operator=(RaiiShmem&& rhs) {
+    reset();
+    mWeakRef = rhs.mWeakRef;
+    mShmem = rhs.Extract();
+    return *this;
+  }
+
+  // -
+
+  bool IsShmem() const { return mShmem.IsReadable(); }
+
+  explicit operator bool() const { return IsShmem(); }
+
+  // -
+
+  const auto& Shmem() const {
+    MOZ_ASSERT(IsShmem());
+    return mShmem;
+  }
+
+  Range<uint8_t> ByteRange() const {
+    MOZ_ASSERT(IsShmem());
+    return {mShmem.get<uint8_t>(), mShmem.Size<uint8_t>()};
+  }
+
+  mozilla::ipc::Shmem Extract() {
+    auto ret = mShmem;
+    mShmem = {};
+    reset();
+    return ret;
+  }
+};
+
+using Int32Vector = std::vector<int32_t>;
+
+}  // namespace webgl
+
 namespace ipc {
 
 template <>
@@ -475,16 +558,5 @@ struct ParamTraits<mozilla::avec3<U>> final {
 };
 
 }  // namespace IPC
-
-namespace mozilla {
-namespace webgl {
-using MaybeDouble = Maybe<double>;
-using MaybeFrontBufferSnapshotIpc = Maybe<FrontBufferSnapshotIpc>;
-using MaybeSurfaceDescriptor = Maybe<layers::SurfaceDescriptor>;
-using MaybeReadPixelsResultIpc = Maybe<ReadPixelsResultIpc>;
-using MaybeShaderPrecisionFormat = Maybe<ShaderPrecisionFormat>;
-using MaybeString = Maybe<std::string>;
-}  // namespace webgl
-}  // namespace mozilla
 
 #endif

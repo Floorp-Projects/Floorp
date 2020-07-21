@@ -425,10 +425,6 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
     mContext->LinkProgram(*obj);
   }
 
-  void PixelStorei(GLenum pname, uint32_t param) const {
-    mContext->PixelStorei(pname, param);
-  }
-
   void PolygonOffset(GLfloat factor, GLfloat units) const {
     mContext->PolygonOffset(factor, units);
   }
@@ -570,12 +566,10 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   }
 
   // TexSubImage if `!respecFormat`
-  void TexImage(GLenum imageTarget, uint32_t level, GLenum respecFormat,
-                const uvec3& offset, const uvec3& size,
-                const webgl::PackingInfo& pi, const TexImageSource& src,
-                const dom::HTMLCanvasElement& canvas) const {
-    mContext->TexImage(imageTarget, level, respecFormat, offset, size, pi, src,
-                       canvas);
+  void TexImage(uint32_t level, GLenum respecFormat, const uvec3& offset,
+                const webgl::PackingInfo& pi,
+                const webgl::TexUnpackBlobDesc& src) const {
+    mContext->TexImage(level, respecFormat, offset, pi, src);
   }
 
   void TexStorage(GLenum texTarget, uint32_t levels, GLenum internalFormat,

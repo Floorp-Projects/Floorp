@@ -22,9 +22,7 @@ class SurfaceDescriptor;
 
 namespace dom {
 
-class WebGLParent : public PWebGLParent,
-                    public SupportsWeakPtr<WebGLParent>,
-                    public mozilla::webgl::PcqActor {
+class WebGLParent : public PWebGLParent, public SupportsWeakPtr<WebGLParent> {
   friend PWebGLParent;
 
  public:
@@ -42,6 +40,8 @@ class WebGLParent : public PWebGLParent,
 
   IPCResult RecvDispatchCommands(mozilla::ipc::Shmem&&, uint64_t);
 
+  IPCResult RecvGetBufferSubData(GLenum target, uint64_t srcByteOffset,
+                                 uint64_t byteSize, mozilla::ipc::Shmem* ret);
   IPCResult RecvGetFrontBufferSnapshot(webgl::FrontBufferSnapshotIpc* ret);
   IPCResult RecvReadPixels(const webgl::ReadPixelsDesc&, uint64_t byteSize,
                            webgl::ReadPixelsResultIpc* ret);
@@ -60,8 +60,6 @@ class WebGLParent : public PWebGLParent,
   IPCResult RecvFinish();
   IPCResult RecvGetBufferParameter(GLenum target, GLenum pname,
                                    Maybe<double>* ret);
-  IPCResult RecvGetBufferSubData(GLenum target, uint64_t srcByteOffset,
-                                 uint64_t byteSize, mozilla::ipc::Shmem* ret);
   IPCResult RecvGetCompileResult(ObjectId id, webgl::CompileResult* ret);
   IPCResult RecvGetError(GLenum* ret);
   IPCResult RecvGetFragDataLocation(ObjectId id, const std::string& name,

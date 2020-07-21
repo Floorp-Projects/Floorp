@@ -48,6 +48,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -738,68 +739,66 @@ void WebGLContext::LinkProgram(WebGLProgram& prog) {
   }
 }
 
-void WebGLContext::PixelStorei(GLenum pname, uint32_t param) {
-  const FuncScope funcScope(*this, "pixelStorei");
-  if (IsContextLost()) return;
-
-  if (IsWebGL2()) {
+Maybe<webgl::ErrorInfo> SetPixelUnpack(const bool isWebgl2,
+                                       WebGLPixelStore* const unpacking,
+                                       const GLenum pname, const GLint param) {
+  if (isWebgl2) {
     uint32_t* pValueSlot = nullptr;
     switch (pname) {
       case LOCAL_GL_UNPACK_IMAGE_HEIGHT:
-        pValueSlot = &mPixelStore.mUnpackImageHeight;
+        pValueSlot = &unpacking->mUnpackImageHeight;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_IMAGES:
-        pValueSlot = &mPixelStore.mUnpackSkipImages;
+        pValueSlot = &unpacking->mUnpackSkipImages;
         break;
 
       case LOCAL_GL_UNPACK_ROW_LENGTH:
-        pValueSlot = &mPixelStore.mUnpackRowLength;
+        pValueSlot = &unpacking->mUnpackRowLength;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_ROWS:
-        pValueSlot = &mPixelStore.mUnpackSkipRows;
+        pValueSlot = &unpacking->mUnpackSkipRows;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_PIXELS:
-        pValueSlot = &mPixelStore.mUnpackSkipPixels;
+        pValueSlot = &unpacking->mUnpackSkipPixels;
         break;
     }
 
     if (pValueSlot) {
-      gl->fPixelStorei(pname, static_cast<int32_t>(param));
-      *pValueSlot = param;
-      return;
+      *pValueSlot = static_cast<uint32_t>(param);
+      return {};
     }
   }
 
   switch (pname) {
-    case UNPACK_FLIP_Y_WEBGL:
-      mPixelStore.mFlipY = bool(param);
-      return;
+    case dom::WebGLRenderingContext_Binding::UNPACK_FLIP_Y_WEBGL:
+      unpacking->mFlipY = bool(param);
+      return {};
 
-    case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-      mPixelStore.mPremultiplyAlpha = bool(param);
-      return;
+    case dom::WebGLRenderingContext_Binding::UNPACK_PREMULTIPLY_ALPHA_WEBGL:
+      unpacking->mPremultiplyAlpha = bool(param);
+      return {};
 
-    case UNPACK_COLORSPACE_CONVERSION_WEBGL:
+    case dom::WebGLRenderingContext_Binding::UNPACK_COLORSPACE_CONVERSION_WEBGL:
       switch (param) {
         case LOCAL_GL_NONE:
-        case BROWSER_DEFAULT_WEBGL:
-          mPixelStore.mColorspaceConversion = param;
-          return;
+        case dom::WebGLRenderingContext_Binding::BROWSER_DEFAULT_WEBGL:
+          break;
 
-        default:
-          ErrorInvalidEnumInfo("colorspace conversion parameter", param);
-          return;
+        default: {
+          const nsPrintfCString text("Bad UNPACK_COLORSPACE_CONVERSION: %s",
+                                     EnumString(param).c_str());
+          return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, ToString(text)});
+        }
       }
+      unpacking->mColorspaceConversion = param;
+      return {};
 
-    case UNPACK_REQUIRE_FASTPATH:
-      if (IsExtensionEnabled(WebGLExtensionID::MOZ_debug)) {
-        mPixelStore.mRequireFastPath = bool(param);
-        return;
-      }
-      break;
+    case dom::MOZ_debug_Binding::UNPACK_REQUIRE_FASTPATH:
+      unpacking->mRequireFastPath = bool(param);
+      return {};
 
     case LOCAL_GL_UNPACK_ALIGNMENT:
       switch (param) {
@@ -807,20 +806,22 @@ void WebGLContext::PixelStorei(GLenum pname, uint32_t param) {
         case 2:
         case 4:
         case 8:
-          mPixelStore.mUnpackAlignment = param;
-          gl->fPixelStorei(pname, static_cast<int32_t>(param));
-          return;
+          break;
 
-        default:
-          ErrorInvalidValue("Invalid pack/unpack alignment value.");
-          return;
+        default: {
+          const nsPrintfCString text(
+              "UNPACK_ALIGNMENT must be [1,2,4,8], was %i", param);
+          return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, ToString(text)});
+        }
       }
+      unpacking->mUnpackAlignment = param;
+      return {};
 
     default:
       break;
   }
-
-  ErrorInvalidEnumInfo("pname", pname);
+  const nsPrintfCString text("Bad `pname`: %s", EnumString(pname).c_str());
+  return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_ENUM, ToString(text)});
 }
 
 bool WebGLContext::DoReadPixelsAndConvert(

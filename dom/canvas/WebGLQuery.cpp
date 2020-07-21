@@ -76,11 +76,6 @@ void WebGLQuery::EndQuery() {
 
   const auto driverTarget = TargetForDriver(gl, mTarget);
   gl->fEndQuery(driverTarget);
-
-  ////
-
-  const auto& availRunnable = mContext->EnsureAvailabilityRunnable();
-  availRunnable->mQueries.push_back(this);
 }
 
 Maybe<double> WebGLQuery::GetQueryParameter(GLenum pname) const {
@@ -106,16 +101,6 @@ Maybe<double> WebGLQuery::GetQueryParameter(GLenum pname) const {
 
   // End of validation
   ////
-
-  // We must usually wait for an event loop before the query can be available.
-  const bool canBeAvailable =
-      (mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
-  if (!canBeAvailable) {
-    if (pname == LOCAL_GL_QUERY_RESULT_AVAILABLE) {
-      return Some(false);
-    }
-    return Nothing();
-  }
 
   const auto& gl = mContext->gl;
 
@@ -167,9 +152,6 @@ void WebGLQuery::QueryCounter() {
 
   const auto& gl = mContext->gl;
   gl->fQueryCounter(mGLName, mTarget);
-
-  const auto& availRunnable = mContext->EnsureAvailabilityRunnable();
-  availRunnable->mQueries.push_back(this);
 }
 
 }  // namespace mozilla
