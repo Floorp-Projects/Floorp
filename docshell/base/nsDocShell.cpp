@@ -8857,7 +8857,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
   // Similar check will be performed by the ParentProcessDocumentChannel if in
   // use.
   if (XRE_IsE10sParentProcess() &&
-      !DocumentChannel::CanUseDocumentChannel(aLoadState) &&
+      !DocumentChannel::CanUseDocumentChannel(aLoadState->URI(),
+                                              aLoadState->LoadFlags()) &&
       !CanLoadInParentProcess(aLoadState->URI())) {
     return NS_ERROR_FAILURE;
   }
@@ -9748,7 +9749,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       mBrowsingContext, Some(uriModified), Some(isXFOError));
 
   nsCOMPtr<nsIChannel> channel;
-  if (DocumentChannel::CanUseDocumentChannel(aLoadState)) {
+  if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI(),
+                                             aLoadState->LoadFlags())) {
     channel = DocumentChannel::CreateDocumentChannel(aLoadState, loadInfo,
                                                      loadFlags, this, cacheKey,
                                                      uriModified, isXFOError);
