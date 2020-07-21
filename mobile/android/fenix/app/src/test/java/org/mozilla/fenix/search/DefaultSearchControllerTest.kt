@@ -4,69 +4,73 @@
 
 package org.mozilla.fenix.search
 
-import android.content.Intent
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import io.mockk.MockKAnnotations
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertFalse
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.crashes.CrashListActivity
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.intentFilterEq
-import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.navigateSafe
-import org.mozilla.fenix.ext.searchEngineManager
-import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
 @ExperimentalCoroutinesApi
-@RunWith(FenixRobolectricTestRunner::class)
 class DefaultSearchControllerTest {
 
-    private val activity: HomeActivity = mockk(relaxed = true)
-    private val store: SearchFragmentStore = mockk(relaxed = true)
-    private val navController: NavController = mockk(relaxed = true)
-    private val defaultSearchEngine: SearchEngine? = mockk(relaxed = true)
-    private val searchEngine: SearchEngine = mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
-    private val sessionManager: SessionManager = mockk(relaxed = true)
-    private val settings: Settings = mockk(relaxed = true)
-    private val clearToolbarFocus: (() -> Unit) = mockk(relaxed = true)
+    @MockK(relaxed = true) private lateinit var activity: HomeActivity
+    @MockK(relaxed = true) private lateinit var store: SearchFragmentStore
+    @MockK(relaxed = true) private lateinit var navController: NavController
+    @MockK private lateinit var searchEngine: SearchEngine
+    @MockK(relaxed = true) private lateinit var metrics: MetricController
+    @MockK(relaxed = true) private lateinit var settings: Settings
+    @MockK private lateinit var sessionManager: SessionManager
+    @MockK(relaxed = true) private lateinit var clearToolbarFocus: () -> Unit
 
     private lateinit var controller: DefaultSearchController
 
     @Before
     fun setUp() {
-        every { activity.searchEngineManager.defaultSearchEngine } returns defaultSearchEngine
+        MockKAnnotations.init(this)
+        mockkObject(MetricsUtils)
+
         every { store.state.tabId } returns "test-tab-id"
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
-        every { activity.metrics } returns metrics
-        every { activity.components.core.sessionManager } returns sessionManager
-        every { activity.components.settings } returns settings
+        every { sessionManager.select(any()) } just Runs
+        every { MetricsUtils.createSearchEvent(searchEngine, activity, any()) } returns null
 
         controller = DefaultSearchController(
             activity = activity,
+            sessionManager = sessionManager,
             store = store,
             navController = navController,
+            settings = settings,
+            metrics = metrics,
             clearToolbarFocus = clearToolbarFocus
         )
+    }
+
+    @After
+    fun teardown() {
+        unmockkObject(MetricsUtils)
     }
 
     @Test
@@ -87,14 +91,31 @@ class DefaultSearchControllerTest {
     }
 
     @Test
+    fun handleSearchCommitted() {
+        val searchTerm = "Firefox"
+
+        controller.handleUrlCommitted(searchTerm)
+
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = searchTerm,
+                newTab = false,
+                from = BrowserDirection.FromSearch,
+                engine = searchEngine
+            )
+        }
+        verify { settings.incrementActiveSearchCount() }
+    }
+
+    @Test
     fun handleCrashesUrlCommitted() {
         val url = "about:crashes"
-        every { activity.packageName } returns testContext.packageName
+        every { activity.packageName } returns "org.mozilla.fenix"
 
         controller.handleUrlCommitted(url)
 
         verify {
-            activity.startActivity(intentFilterEq(Intent(testContext, CrashListActivity::class.java)))
+            activity.startActivity(any())
         }
     }
 
@@ -117,13 +138,6 @@ class DefaultSearchControllerTest {
 
     @Test
     fun handleEditingCancelled() = runBlockingTest {
-        controller = DefaultSearchController(
-            activity = activity,
-            store = store,
-            navController = navController,
-            clearToolbarFocus = clearToolbarFocus
-        )
-
         controller.handleEditingCancelled()
 
         verify {
@@ -183,8 +197,6 @@ class DefaultSearchControllerTest {
     fun `do not show search shortcuts when setting disabled AND query empty AND url not matching query`() {
         every { settings.shouldShowSearchShortcuts } returns false
 
-        assertFalse(testContext.settings().shouldShowSearchShortcuts)
-
         val text = ""
 
         controller.handleTextChanged(text)
@@ -195,8 +207,6 @@ class DefaultSearchControllerTest {
     @Test
     fun `do not show search shortcuts when setting disabled AND query non-empty`() {
         every { settings.shouldShowSearchShortcuts } returns false
-
-        assertFalse(testContext.settings().shouldShowSearchShortcuts)
 
         val text = "mozilla"
 
@@ -278,11 +288,32 @@ class DefaultSearchControllerTest {
 
     @Test
     fun handleExistingSessionSelected() {
-        val session: Session = mockk(relaxed = true)
+        val session = mockk<Session>()
 
         controller.handleExistingSessionSelected(session)
 
         verify { sessionManager.select(session) }
+        verify { activity.openToBrowser(from = BrowserDirection.FromSearch) }
+    }
+
+    @Test
+    fun handleExistingSessionSelected_tabId_nullSession() {
+        every { sessionManager.findSessionById("tab-id") } returns null
+
+        controller.handleExistingSessionSelected("tab-id")
+
+        verify(inverse = true) { sessionManager.select(any()) }
+        verify(inverse = true) { activity.openToBrowser(from = BrowserDirection.FromSearch) }
+    }
+
+    @Test
+    fun handleExistingSessionSelected_tabId() {
+        val session = mockk<Session>()
+        every { sessionManager.findSessionById("tab-id") } returns session
+
+        controller.handleExistingSessionSelected("tab-id")
+
+        verify { sessionManager.select(any()) }
         verify { activity.openToBrowser(from = BrowserDirection.FromSearch) }
     }
 }

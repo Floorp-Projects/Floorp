@@ -86,6 +86,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         savedInstanceState: Bundle?
     ): View? {
         val activity = activity as HomeActivity
+        val settings = activity.settings()
         val args by navArgs<SearchFragmentArgs>()
 
         val tabId = args.sessionId
@@ -112,13 +113,13 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                     defaultEngineSource = currentSearchEngine,
                     showSearchSuggestions = shouldShowSearchSuggestions(isPrivate),
                     showSearchSuggestionsHint = false,
-                    showSearchShortcuts = requireContext().settings().shouldShowSearchShortcuts &&
+                    showSearchShortcuts = settings.shouldShowSearchShortcuts &&
                             url.isEmpty() &&
                             areShortcutsAvailable,
                     areShortcutsAvailable = areShortcutsAvailable,
-                    showClipboardSuggestions = requireContext().settings().shouldShowClipboardSuggestions,
-                    showHistorySuggestions = requireContext().settings().shouldShowHistorySuggestions,
-                    showBookmarkSuggestions = requireContext().settings().shouldShowBookmarkSuggestions,
+                    showClipboardSuggestions = settings.shouldShowClipboardSuggestions,
+                    showHistorySuggestions = settings.shouldShowHistorySuggestions,
+                    showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
                     tabId = tabId,
                     pastedText = args.pastedText,
                     searchAccessPoint = args.searchAccessPoint
@@ -128,8 +129,11 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         val searchController = DefaultSearchController(
             activity = activity,
+            sessionManager = requireComponents.core.sessionManager,
             store = searchStore,
             navController = findNavController(),
+            settings = settings,
+            metrics = requireComponents.analytics.metrics,
             clearToolbarFocus = ::clearToolbarFocus
         )
 
@@ -163,7 +167,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 visible = {
                     currentSearchEngine.searchEngine.identifier.contains("google") &&
                         speechIsAvailable() &&
-                        requireContext().settings().shouldShowVoiceSearch
+                        settings.shouldShowVoiceSearch
                 },
                 listener = ::launchVoiceSearch
             )
