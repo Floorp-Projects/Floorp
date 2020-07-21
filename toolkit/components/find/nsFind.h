@@ -64,7 +64,7 @@ class nsFind : public nsIFind {
   // Get the first character from the next node (last if mFindBackward).
   //
   // This will mutate the state, but then restore it afterwards.
-  char32_t PeekNextChar(State&, bool aAlreadyMatching) const;
+  char32_t PeekNextChar(State&) const;
 };
 
 #endif  // nsFind_h__
