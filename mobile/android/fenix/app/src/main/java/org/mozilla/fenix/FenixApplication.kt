@@ -139,14 +139,7 @@ open class FenixApplication : LocaleAwareApplication() {
 
         prefetchForHomeFragment()
         setupLeakCanary()
-        if (settings().isTelemetryEnabled) {
-            components.analytics.metrics.start(MetricServiceType.Data)
-        }
-
-        if (settings().isMarketingTelemetryEnabled) {
-            components.analytics.metrics.start(MetricServiceType.Marketing)
-        }
-
+        startMetricsIfEnabled()
         setupPush()
 
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
@@ -200,6 +193,16 @@ open class FenixApplication : LocaleAwareApplication() {
                     components.backgroundServices.accountManager
                 }
             }
+        }
+    }
+
+    private fun startMetricsIfEnabled() {
+        if (settings().isTelemetryEnabled) {
+            components.analytics.metrics.start(MetricServiceType.Data)
+        }
+
+        if (settings().isMarketingTelemetryEnabled) {
+            components.analytics.metrics.start(MetricServiceType.Marketing)
         }
     }
 
