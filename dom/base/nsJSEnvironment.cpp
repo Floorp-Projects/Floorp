@@ -2204,35 +2204,6 @@ void nsJSContext::KillICCRunner() {
   }
 }
 
-class NotifyGCEndRunnable : public Runnable {
-  nsString mMessage;
-
- public:
-  explicit NotifyGCEndRunnable(nsString&& aMessage)
-      : mozilla::Runnable("NotifyGCEndRunnable"),
-        mMessage(std::move(aMessage)) {}
-
-  NS_DECL_NSIRUNNABLE
-};
-
-NS_IMETHODIMP
-NotifyGCEndRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (!observerService) {
-    return NS_OK;
-  }
-
-  const char16_t oomMsg[3] = {'{', '}', 0};
-  const char16_t* toSend = mMessage.get() ? mMessage.get() : oomMsg;
-  observerService->NotifyObservers(nullptr, "garbage-collection-statistics",
-                                   toSend);
-
-  return NS_OK;
-}
-
 static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
                                const JS::GCDescription& aDesc) {
   NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
@@ -2260,18 +2231,6 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
           cs->LogStringMessage(msg.get());
-        }
-      }
-
-      if (!sShuttingDown) {
-        if (StaticPrefs::javascript_options_mem_notify() ||
-            Telemetry::CanRecordExtended()) {
-          nsString json;
-          json.Adopt(aDesc.formatJSONTelemetry(aCx, PR_Now()));
-          RefPtr<NotifyGCEndRunnable> notify =
-              new NotifyGCEndRunnable(std::move(json));
-          SchedulerGroup::Dispatch(TaskCategory::GarbageCollection,
-                                   notify.forget());
         }
       }
 
