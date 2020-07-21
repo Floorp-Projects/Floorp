@@ -2613,7 +2613,8 @@
               preferredRemoteType
             );
         if (sameProcessAsFrameLoader) {
-          remoteType = sameProcessAsFrameLoader.messageManager.remoteType;
+          remoteType =
+            sameProcessAsFrameLoader.browsingContext.currentRemoteType;
         }
 
         // If we open a new tab with the newtab URL in the default
