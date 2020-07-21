@@ -191,7 +191,8 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
     let frame = this.content.document.querySelector(
       "iframe[src*='iframe.html']"
     );
-    let innerWindowID = frame.contentWindow.windowUtils.currentInnerWindowID;
+    let innerWindowID =
+      frame.browsingContext.currentWindowContext.innerWindowId;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);
 
     Assert.ok(context, "Got extension page context for child frame");
@@ -237,7 +238,7 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
       "resource://gre/modules/ExtensionPageChild.jsm"
     );
 
-    let innerWindowID = this.content.windowUtils.currentInnerWindowID;
+    let innerWindowID = this.content.windowGlobalChild.innerWindowId;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);
 
     Assert.ok(context, "Got extension page context for top-level document");

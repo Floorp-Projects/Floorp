@@ -2,7 +2,7 @@
 <script>
   dump("Content running top level script " + window.location.href + "\n");
 
-  var winID = SpecialPowers.getDOMWindowUtils(this).currentInnerWindowID;
+  var winID = SpecialPowers.wrap(this).windowGlobalChild.innerWindowId;
 
   var observer = {
     observe(subject, topic) {

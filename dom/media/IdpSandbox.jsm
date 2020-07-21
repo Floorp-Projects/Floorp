@@ -257,7 +257,7 @@ IdpSandbox.prototype = {
   // can't rethrow anything else because that could leak information about the
   // internal workings of the IdP across origins.
   _logError(e) {
-    let winID = this.window.windowUtils.currentInnerWindowID;
+    let winID = this.window.windowGlobalChild.innerWindowId;
     let scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(
       Ci.nsIScriptError
     );

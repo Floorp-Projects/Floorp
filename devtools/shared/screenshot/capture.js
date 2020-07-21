@@ -201,7 +201,7 @@ function logInPage(text, flags, window) {
     0,
     flags,
     "screenshot",
-    window.windowUtils.currentInnerWindowID
+    window.windowGlobalChild.innerWindowId
   );
   Services.console.logMessage(scriptError);
 }

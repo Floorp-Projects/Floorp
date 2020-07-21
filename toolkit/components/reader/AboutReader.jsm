@@ -69,7 +69,7 @@ var AboutReader = function(actor, articlePromise) {
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
-  this._innerWindowId = win.windowUtils.currentInnerWindowID;
+  this._innerWindowId = win.windowGlobalChild.innerWindowId;
 
   this._article = null;
   this._languagePromise = new Promise(resolve => {

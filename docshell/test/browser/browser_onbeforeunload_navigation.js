@@ -123,7 +123,7 @@ add_task(async function test() {
           let { testFns } = this.content.wrappedJSObject;
           this.content.onbeforeunload = testFns[testIdx];
           this.content.location = url;
-          return this.content.windowUtils.currentInnerWindowID;
+          return this.content.windowGlobalChild.innerWindowId;
         }
       );
 
@@ -142,7 +142,7 @@ add_task(async function test() {
               "Page should have navigated to the correct URL"
             );
             Assert.notEqual(
-              this.content.windowUtils.currentInnerWindowID,
+              this.content.windowGlobalChild.innerWindowId,
               winID,
               "Page should have a new inner window"
             );
@@ -157,7 +157,7 @@ add_task(async function test() {
             "Page should have the same URL"
           );
           Assert.equal(
-            this.content.windowUtils.currentInnerWindowID,
+            this.content.windowGlobalChild.innerWindowId,
             winID,
             "Page should have the same inner window"
           );
