@@ -572,13 +572,13 @@ class MOZ_RAII SharedPrefMapBuilder {
     uint8_t mIsSkippedByIteration : 1;
   };
 
-  void Add(const char* aKey, const Flags& aFlags, bool aDefaultValue,
+  void Add(const nsCString& aKey, const Flags& aFlags, bool aDefaultValue,
            bool aUserValue);
 
-  void Add(const char* aKey, const Flags& aFlags, int32_t aDefaultValue,
+  void Add(const nsCString& aKey, const Flags& aFlags, int32_t aDefaultValue,
            int32_t aUserValue);
 
-  void Add(const char* aKey, const Flags& aFlags,
+  void Add(const nsCString& aKey, const Flags& aFlags,
            const nsCString& aDefaultValue, const nsCString& aUserValue);
 
   // Finalizes the binary representation of the map, writes it to a shared
@@ -735,9 +735,9 @@ class MOZ_RAII SharedPrefMapBuilder {
 
     explicit UniqueStringTableBuilder(size_t aCapacity) : mEntries(aCapacity) {}
 
-    StringTableEntry Add(const CharType* aKey) {
+    StringTableEntry Add(const nsTString<CharType>& aKey) {
       auto entry =
-          mEntries.AppendElement(Entry{mSize, uint32_t(strlen(aKey)), aKey});
+          mEntries.AppendElement(Entry{mSize, aKey.Length(), aKey.get()});
 
       mSize += entry->mLength + 1;
 

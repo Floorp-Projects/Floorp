@@ -483,7 +483,7 @@ class Pref {
 
   template <typename T>
   void AddToMap(SharedPrefMapBuilder& aMap) {
-    aMap.Add(Name(),
+    aMap.Add(NameString(),
              {HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked(),
               IsSkippedByIteration()},
              HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
