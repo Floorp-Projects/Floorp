@@ -213,7 +213,7 @@ def check_mozglue_order(target, binary):
         raise RuntimeError('Could not parse readelf output?')
 
 
-def check_networking(binary):
+def check_networking(target, binary):
     retcode = 0
     networking_functions = set([
         # socketpair is not concerning; it is restricted to AF_UNIX
@@ -309,7 +309,7 @@ def main(args):
         return 1
 
     if options.networking:
-        return check_networking(options.binary)
+        return check_networking(TARGET, options.binary)
     elif options.host:
         return checks(HOST, options.binary)
     elif options.target:
