@@ -299,6 +299,8 @@ impl Transaction {
         device_rect: DeviceIntRect,
         device_pixel_ratio: f32,
     ) {
+        assert!(device_pixel_ratio > 0.0);
+        window_size_sanity_check(device_rect.size);
         self.scene_ops.push(
             SceneMsg::SetDocumentView {
                 device_rect,
@@ -1454,6 +1456,8 @@ impl RenderApi {
                                 initial_size: DeviceIntSize,
                                 layer: DocumentLayer,
                                 id: u32) -> DocumentId {
+        window_size_sanity_check(initial_size);
+
         let document_id = DocumentId::new(self.namespace_id, id);
 
         let msg = ApiMsg::AddDocument(document_id, initial_size, layer);
@@ -1707,6 +1711,8 @@ impl RenderApi {
         device_rect: DeviceIntRect,
         device_pixel_ratio: f32,
     ) {
+        assert!(device_pixel_ratio > 0.0);
+        window_size_sanity_check(device_rect.size);
         self.send_scene_msg(
             document_id,
             SceneMsg::SetDocumentView { device_rect, device_pixel_ratio },
@@ -2119,5 +2125,14 @@ bitflags! {
         const RIGHT = 0x4;
         ///
         const BOTTOM = 0x8;
+    }
+}
+
+fn window_size_sanity_check(size: DeviceIntSize) {
+    // Anything bigger than this will crash later when attempting to create
+    // a render task.
+    const MAX_SIZE: i32 = 16000;
+    if size.width > MAX_SIZE || size.height > MAX_SIZE {
+        panic!("Attempting to create a {}x{} window/document", size.width, size.height);
     }
 }
