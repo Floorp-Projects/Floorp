@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabViewHolder
+import mozilla.components.browser.tabstray.TabsTrayStyling
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.tabstray.Tab
@@ -64,7 +65,12 @@ class TabTrayViewHolder(
     /**
      * Displays the data of the given session and notifies the given observable about events.
      */
-    override fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) {
+    override fun bind(
+        tab: Tab,
+        isSelected: Boolean,
+        styling: TabsTrayStyling,
+        observable: Observable<TabsTray.Observer>
+    ) {
         // This is a hack to workaround a bug in a-c.
         // https://github.com/mozilla-mobile/android-components/issues/7186
         val isSelected2 = tab.id == getSelectedTabId()

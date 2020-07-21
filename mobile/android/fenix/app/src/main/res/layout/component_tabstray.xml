@@ -105,7 +105,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tab_layout" />
 
-    <mozilla.components.concept.tabstray.TabsTray
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/tabsTray"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -115,12 +115,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/divider"
-        mozac:tabsTrayItemBackgroundColor="@color/foundation_normal_theme"
-        mozac:tabsTrayItemTextColor="@color/tab_tray_item_text_normal_theme"
-        mozac:tabsTraySelectedItemBackgroundColor="@color/tab_tray_item_selected_background_normal_theme"
-        mozac:tabsTraySelectedItemTextColor="@color/tab_tray_item_selected_background_normal_theme"
-        mozac:tabsTrayItemUrlTextColor="@color/tab_tray_item_selected_background_normal_theme"
-        mozac:tabsTraySelectedItemUrlTextColor="@color/tab_tray_item_url_normal_theme" />
+        app:layout_constraintTop_toBottomOf="@+id/divider" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

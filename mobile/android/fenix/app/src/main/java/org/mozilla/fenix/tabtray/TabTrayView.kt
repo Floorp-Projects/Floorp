@@ -13,6 +13,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.extensions.LayoutContainer
@@ -29,7 +30,6 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.tabstray.BrowserTabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -41,6 +41,7 @@ import org.mozilla.fenix.ext.settings
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 class TabTrayView(
     private val container: ViewGroup,
+    private val tabsAdapter: FenixTabsAdapter,
     private val interactor: TabTrayInteractor,
     isPrivate: Boolean,
     startingInLandscape: Boolean,
@@ -118,27 +119,32 @@ class TabTrayView(
 
         setTopOffset(startingInLandscape)
 
-        (view.tabsTray as? BrowserTabsTray)?.also { tray ->
-            TabsTouchHelper(tray.tabsAdapter).attachToRecyclerView(tray)
-            (tray.tabsAdapter as? FenixTabsAdapter)?.also { adapter ->
-                adapter.onTabsUpdated = {
-                    if (hasAccessibilityEnabled) {
-                        adapter.notifyDataSetChanged()
-                    }
-                    if (!hasLoaded) {
-                        hasLoaded = true
-                        scrollToTab(view.context.components.core.store.state.selectedTabId)
-                        if (view.context.settings().accessibilityServicesEnabled) {
-                            lifecycleScope.launch {
-                                delay(SELECTION_DELAY.toLong())
-                                lifecycleScope.launch(Main) {
-                                    tray.layoutManager?.findViewByPosition(selectedBrowserTabIndex)
-                                        ?.requestFocus()
-                                    tray.layoutManager?.findViewByPosition(selectedBrowserTabIndex)
-                                        ?.sendAccessibilityEvent(
-                                            AccessibilityEvent.TYPE_VIEW_FOCUSED
-                                        )
-                                }
+        view.tabsTray.apply {
+            layoutManager = LinearLayoutManager(container.context).apply {
+                reverseLayout = true
+                stackFromEnd = true
+            }
+            adapter = tabsAdapter
+
+            TabsTouchHelper(tabsAdapter).attachToRecyclerView(this)
+
+            tabsAdapter.onTabsUpdated = {
+                if (hasAccessibilityEnabled) {
+                    tabsAdapter.notifyDataSetChanged()
+                }
+                if (!hasLoaded) {
+                    hasLoaded = true
+                    scrollToTab(view.context.components.core.store.state.selectedTabId)
+                    if (view.context.settings().accessibilityServicesEnabled) {
+                        lifecycleScope.launch {
+                            delay(SELECTION_DELAY.toLong())
+                            lifecycleScope.launch(Main) {
+                                layoutManager?.findViewByPosition(selectedBrowserTabIndex)
+                                    ?.requestFocus()
+                                layoutManager?.findViewByPosition(selectedBrowserTabIndex)
+                                    ?.sendAccessibilityEvent(
+                                        AccessibilityEvent.TYPE_VIEW_FOCUSED
+                                    )
                             }
                         }
                     }
@@ -241,7 +247,7 @@ class TabTrayView(
                 }
             }
 
-            view.tabsTray.asView().visibility = if (hasNoTabs) {
+            view.tabsTray.visibility = if (hasNoTabs) {
                 View.INVISIBLE
             } else {
                 View.VISIBLE
@@ -288,7 +294,7 @@ class TabTrayView(
     }
 
     fun scrollToTab(sessionId: String?) {
-        (view.tabsTray as? BrowserTabsTray)?.also { tray ->
+        view.tabsTray.apply {
             val tabs = if (isPrivateModeSelected) {
                 view.context.components.core.store.state.privateTabs
             } else {
@@ -298,7 +304,7 @@ class TabTrayView(
             val selectedBrowserTabIndex = tabs
                 .indexOfFirst { it.id == sessionId }
 
-            tray.layoutManager?.scrollToPosition(selectedBrowserTabIndex)
+            layoutManager?.scrollToPosition(selectedBrowserTabIndex)
         }
     }
 

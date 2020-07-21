@@ -28,7 +28,6 @@ import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,10 +40,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.browser.tabstray.BrowserTabsTray
-import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
 import mozilla.components.feature.search.SearchAdapter
@@ -97,7 +93,6 @@ import org.mozilla.fenix.settings.search.AddSearchEngineFragmentDirections
 import org.mozilla.fenix.settings.search.EditCustomSearchEngineFragmentDirections
 import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
 import org.mozilla.fenix.sync.SyncedTabsFragmentDirections
-import org.mozilla.fenix.tabtray.FenixTabsAdapter
 import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
@@ -315,17 +310,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 actionSorter = ::actionSorter
             )
         }.asView()
-        TabsTray::class.java.name -> {
-            val layout = LinearLayoutManager(context).apply {
-                reverseLayout = true
-                stackFromEnd = true
-            }
-
-            val thumbnailLoader = ThumbnailLoader(components.core.thumbnailStorage)
-            val adapter = FenixTabsAdapter(context, thumbnailLoader)
-
-            BrowserTabsTray(context, attrs, 0, adapter, layout)
-        }
         else -> super.onCreateView(parent, name, context, attrs)
     }
 

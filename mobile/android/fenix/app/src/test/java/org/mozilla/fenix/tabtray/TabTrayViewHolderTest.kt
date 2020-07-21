@@ -59,7 +59,7 @@ class TabTrayViewHolderTest {
             id = "123",
             url = extremelyLongUrl
         )
-        tabViewHolder.bind(tab, false, mockk())
+        tabViewHolder.bind(tab, false, mockk(), mockk())
 
         assertEquals("m".repeat(MAX_URI_LENGTH), tabViewHolder.urlView?.text)
         verify { imageLoader.loadIntoView(any(), ImageLoadRequest("123", 92)) }
@@ -82,7 +82,7 @@ class TabTrayViewHolderTest {
                 )
             )
         )
-        tabViewHolder.bind(tab, false, mockk())
+        tabViewHolder.bind(tab, false, mockk(), mockk())
 
         assertEquals("Play", playPauseButtonView.contentDescription)
     }
@@ -104,7 +104,7 @@ class TabTrayViewHolderTest {
                 )
             )
         )
-        tabViewHolder.bind(tab, false, mockk())
+        tabViewHolder.bind(tab, false, mockk(), mockk())
 
         assertEquals("Pause", playPauseButtonView.contentDescription)
     }

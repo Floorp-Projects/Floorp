@@ -23,6 +23,7 @@ import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.tabstray.TabsFeature
@@ -127,8 +128,12 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
 
+        val thumbnailLoader = ThumbnailLoader(requireContext().components.core.thumbnailStorage)
+        val adapter = FenixTabsAdapter(requireContext(), thumbnailLoader)
+
         _tabTrayView = TabTrayView(
             view.tabLayout,
+            adapter,
             interactor = TabTrayFragmentInteractor(
                 DefaultTabTrayController(
                     activity = (activity as HomeActivity),
@@ -152,7 +157,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
 
         tabsFeature.set(
             TabsFeature(
-                tabTrayView.view.tabsTray,
+                adapter,
                 view.context.components.core.store,
                 selectTabUseCase,
                 removeTabUseCase,

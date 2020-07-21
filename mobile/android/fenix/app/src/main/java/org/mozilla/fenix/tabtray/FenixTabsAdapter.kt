@@ -16,7 +16,7 @@ class FenixTabsAdapter(
     context: Context,
     imageLoader: ImageLoader
 ) : TabsAdapter(
-    viewHolderProvider = { parentView, _ ->
+    viewHolderProvider = { parentView ->
         TabTrayViewHolder(
             LayoutInflater.from(context).inflate(
                 R.layout.tab_tray_item,
