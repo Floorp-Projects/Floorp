@@ -5825,6 +5825,11 @@ void HTMLInputElement::DoneCreatingElement() {
   mShouldInitChecked = false;
 }
 
+void HTMLInputElement::DestroyContent() {
+  nsImageLoadingContent::Destroy();
+  TextControlElement::DestroyContent();
+}
+
 EventStates HTMLInputElement::IntrinsicState() const {
   // If you add states here, and they're type-dependent, you need to add them
   // to the type case in AfterSetAttr.
