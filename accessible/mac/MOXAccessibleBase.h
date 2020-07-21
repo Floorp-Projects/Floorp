@@ -96,6 +96,18 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 - (BOOL)moxBlockSelector:(SEL)selector;
 
 // override
+- (NSArray*)moxUnignoredChildren;
+
+// override
+- (NSArray*)moxChildren;
+
+// override
+- (id<mozAccessible>)moxUnignoredParent;
+
+// override
+- (id<mozAccessible>)moxParent;
+
+// override
 - (id<MOXTextMarkerSupport>)moxTextMarkerDelegate;
 
 #pragma mark -
