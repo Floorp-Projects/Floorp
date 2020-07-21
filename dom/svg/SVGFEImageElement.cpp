@@ -52,7 +52,7 @@ SVGFEImageElement::SVGFEImageElement(
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
 }
 
-SVGFEImageElement::~SVGFEImageElement() { DestroyImageLoadingContent(); }
+SVGFEImageElement::~SVGFEImageElement() { nsImageLoadingContent::Destroy(); }
 
 //----------------------------------------------------------------------
 

@@ -130,7 +130,7 @@ HTMLImageElement::HTMLImageElement(
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
 }
 
-HTMLImageElement::~HTMLImageElement() { DestroyImageLoadingContent(); }
+HTMLImageElement::~HTMLImageElement() { nsImageLoadingContent::Destroy(); }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLImageElement, nsGenericHTMLElement,
                                    mResponsiveSelector)
