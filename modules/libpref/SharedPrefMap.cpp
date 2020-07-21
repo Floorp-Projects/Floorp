@@ -70,10 +70,10 @@ bool SharedPrefMap::Find(const char* aKey, size_t* aIndex) const {
       aIndex);
 }
 
-void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
+void SharedPrefMapBuilder::Add(const nsCString& aKey, const Flags& aFlags,
                                bool aDefaultValue, bool aUserValue) {
   mEntries.AppendElement(Entry{
-      aKey,
+      aKey.get(),
       mKeyTable.Add(aKey),
       {aDefaultValue, aUserValue},
       uint8_t(PrefType::Bool),
@@ -85,7 +85,7 @@ void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
   });
 }
 
-void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
+void SharedPrefMapBuilder::Add(const nsCString& aKey, const Flags& aFlags,
                                int32_t aDefaultValue, int32_t aUserValue) {
   ValueIdx index;
   if (aFlags.mHasUserValue) {
@@ -95,7 +95,7 @@ void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
   }
 
   mEntries.AppendElement(Entry{
-      aKey,
+      aKey.get(),
       mKeyTable.Add(aKey),
       {index},
       uint8_t(PrefType::Int),
@@ -107,7 +107,7 @@ void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
   });
 }
 
-void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
+void SharedPrefMapBuilder::Add(const nsCString& aKey, const Flags& aFlags,
                                const nsCString& aDefaultValue,
                                const nsCString& aUserValue) {
   ValueIdx index;
@@ -120,7 +120,7 @@ void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
   }
 
   mEntries.AppendElement(Entry{
-      aKey,
+      aKey.get(),
       mKeyTable.Add(aKey),
       {index},
       uint8_t(PrefType::String),
