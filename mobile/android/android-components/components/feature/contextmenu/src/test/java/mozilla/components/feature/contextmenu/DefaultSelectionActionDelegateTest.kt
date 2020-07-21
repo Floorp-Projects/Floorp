@@ -8,6 +8,7 @@ import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.anyBoolean
@@ -25,6 +26,11 @@ class DefaultSelectionActionDelegateTest {
     val shareClicked: (String) -> Unit = { lambdaValue = it }
     val emailClicked: (String) -> Unit = { lambdaValue = it }
     val phoneClicked: (String) -> Unit = { lambdaValue = it }
+
+    @Before
+    fun setup() {
+        lambdaValue = null
+    }
 
     @Test
     fun `are non-private regular actions available`() {
@@ -73,8 +79,10 @@ class DefaultSelectionActionDelegateTest {
         )
 
         assertTrue(delegate.isActionAvailable(EMAIL, selectedEmailText))
+        assertTrue(delegate.isActionAvailable(EMAIL, " $selectedEmailText "))
         assertFalse(delegate.isActionAvailable(EMAIL, selectedRegularText))
         assertFalse(delegate.isActionAvailable(EMAIL, selectedPhoneText))
+        assertFalse(delegate.isActionAvailable(EMAIL, " $selectedPhoneText "))
     }
 
     @Test
@@ -129,6 +137,10 @@ class DefaultSelectionActionDelegateTest {
         delegate.performAction(EMAIL, selectedEmailText)
 
         assertEquals(lambdaValue, selectedEmailText)
+
+        delegate.performAction(EMAIL, " $selectedEmailText ")
+
+        assertEquals(lambdaValue, selectedEmailText)
     }
 
     @Test
@@ -138,6 +150,10 @@ class DefaultSelectionActionDelegateTest {
             DefaultSelectionActionDelegate(adapter, getTestResources(), callTextClicked = phoneClicked)
 
         delegate.performAction(CALL, selectedPhoneText)
+
+        assertEquals(lambdaValue, selectedPhoneText)
+
+        delegate.performAction(CALL, " $selectedPhoneText ")
 
         assertEquals(lambdaValue, selectedPhoneText)
     }
