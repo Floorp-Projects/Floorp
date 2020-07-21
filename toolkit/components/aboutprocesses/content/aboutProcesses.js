@@ -299,21 +299,6 @@ var View = {
       });
     }
 
-    // Column: VM size
-    {
-      let { formatedDelta, formatedValue } = this._formatMemoryAndDelta(
-        data.totalVirtualMemorySize,
-        data.deltaVirtualMemorySize
-      );
-      let content = formatedDelta
-        ? `${formatedValue}${formatedDelta}`
-        : formatedValue;
-      this._addCell(row, {
-        content,
-        classes: ["totalVirtualMemorySize"],
-      });
-    }
-
     // Column: CPU: User
     {
       let slope = this._formatPercentage(data.slopeCpuUser);
@@ -374,12 +359,6 @@ var View = {
     this._addCell(row, {
       content: "",
       classes: ["totalResidentSize"],
-    });
-
-    // Column: VM size (empty)
-    this._addCell(row, {
-      content: "",
-      classes: ["totalVirtualMemorySize"],
     });
 
     // Column: CPU: User
@@ -710,7 +689,6 @@ var Control = {
           break;
         case "column-cpu-threads":
         case "column-memory-resident":
-        case "column-memory-virtual":
         case "column-type":
         case "column-pid":
         case null:
@@ -758,9 +736,6 @@ var Control = {
           break;
         case "column-memory-resident":
           order = b.totalResidentSize - a.totalResidentSize;
-          break;
-        case "column-memory-virtual":
-          order = b.totalVirtualMemorySize - a.totalVirtualMemorySize;
           break;
         case null:
           // Default order: browser goes first.
