@@ -70,10 +70,15 @@ function test_getUnanimatedComputedStyle() {
   );
 }
 
+function test_setDynamicToolbarMaxHeight() {
+  window.open("file_domwindowutils_dynamic_toolbar.html");
+}
+
 var tests = [
   test_sendMouseEventDefaults,
   test_sendMouseEventOptionals,
-  test_getUnanimatedComputedStyle
+  test_getUnanimatedComputedStyle,
+  test_setDynamicToolbarMaxHeight
 ];
 
 function next() {

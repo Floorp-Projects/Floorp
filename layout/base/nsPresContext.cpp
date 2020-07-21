@@ -2467,6 +2467,7 @@ void nsPresContext::SetDynamicToolbarMaxHeight(ScreenIntCoord aHeight) {
     return;
   }
   mDynamicToolbarMaxHeight = aHeight;
+  mDynamicToolbarHeight = aHeight;
 
   AdjustSizeForViewportUnits();
 
