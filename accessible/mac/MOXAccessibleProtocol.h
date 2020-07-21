@@ -301,6 +301,9 @@
 // AttributedStringForRange
 - (NSAttributedString* _Nullable)moxAttributedStringForRange:(NSValue* _Nonnull)range;
 
+// AXCellForColumnAndRow
+- (id _Nullable)moxCellForColumnAndRow:(NSArray* _Nonnull)columnAndRow;
+
 @end
 
 // This protocol maps text marker and text marker range parameters to
