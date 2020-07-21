@@ -83,10 +83,6 @@ struct IpdlQueueBuffer {
 
 using IpdlQueueBuffers = nsTArray<IpdlQueueBuffer>;
 
-// Any object larger than this will be inserted into its own Shmem.
-// TODO: Base this on something.
-static constexpr size_t kMaxIpdlQueueArgSize = 256 * 1024;
-
 static constexpr uint32_t kAsyncFlushWaitMs = 4;  // 4ms
 
 template <typename Derived>
@@ -432,10 +428,6 @@ class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
         arg, aArgSize);
   }
 
-  inline bool NeedsSharedMemory(size_t aRequested) {
-    return aRequested >= kMaxIpdlQueueArgSize;
-  }
-
   base::ProcessId OtherPid() { return mActor ? mActor->OtherPid() : 0; }
 
  protected:
@@ -541,10 +533,6 @@ class IpdlConsumer final : public SupportsWeakPtr<IpdlConsumer<_Actor>> {
     // TODO: Queue needs one extra byte for PCQ (fixme).
     return mozilla::webgl::Marshaller::ReadObject(
         mBuf.Elements(), mBuf.Length() + 1, aRead, aWrite, arg, aArgSize);
-  }
-
-  static inline bool NeedsSharedMemory(size_t aRequested) {
-    return aRequested >= kMaxIpdlQueueArgSize;
   }
 
   base::ProcessId OtherPid() { return mActor ? mActor->OtherPid() : 0; }

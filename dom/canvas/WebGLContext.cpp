@@ -1029,9 +1029,9 @@ Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
   return front->ToSurfaceDescriptor();
 }
 
-RefPtr<gfx::DataSourceSurface> WebGLContext::GetFrontBufferSnapshot() {
+bool WebGLContext::FrontBufferSnapshotInto(Range<uint8_t> dest) {
   const auto& front = mSwapChain.FrontBuffer();
-  if (!front) return nullptr;
+  if (!front) return false;
 
   // -
 
@@ -1076,32 +1076,13 @@ RefPtr<gfx::DataSourceSurface> WebGLContext::GetFrontBufferSnapshot() {
   });
 
   const auto& size = front->mDesc.size;
-  const auto surfFormat = mOptions.alpha ? gfx::SurfaceFormat::B8G8R8A8
-                                         : gfx::SurfaceFormat::B8G8R8X8;
-  const auto stride = size.width * 4;
-  RefPtr<gfx::DataSourceSurface> surf =
-      gfx::Factory::CreateDataSourceSurfaceWithStride(size, surfFormat, stride,
-                                                      /*zero=*/true);
-  MOZ_ASSERT(surf);
-  if (NS_WARN_IF(!surf)) return nullptr;
+  const size_t stride = size.width * 4;
+  MOZ_ASSERT(dest.length() == stride * size.height);
+  gl->fReadPixels(0, 0, size.width, size.height, LOCAL_GL_RGBA,
+                  LOCAL_GL_UNSIGNED_BYTE, dest.begin().get());
+  gfxUtils::ConvertBGRAtoRGBA(dest.begin().get(), stride * size.height);
 
-  // -
-
-  {
-    const gfx::DataSourceSurface::ScopedMap map(
-        surf, gfx::DataSourceSurface::READ_WRITE);
-    if (!map.IsMapped()) {
-      MOZ_ASSERT(false);
-      return nullptr;
-    }
-    MOZ_ASSERT(map.GetStride() == stride);
-
-    gl->fReadPixels(0, 0, size.width, size.height, LOCAL_GL_RGBA,
-                    LOCAL_GL_UNSIGNED_BYTE, map.GetData());
-    gfxUtils::ConvertBGRAtoRGBA(map.GetData(), stride * size.height);
-  }
-
-  return surf;
+  return true;
 }
 
 void WebGLContext::ClearVRSwapChain() { mWebVRSwapChain.ClearPool(); }
@@ -1212,6 +1193,7 @@ void WebGLContext::LoseContext(const webgl::ContextLossReason reason) {
   printf_stderr("WebGL(%p)::LoseContext(%u)\n", this,
                 static_cast<uint32_t>(reason));
   mIsContextLost = true;
+  mLruPosition = {};
   mHost->OnContextLoss(reason);
 }
 
@@ -2079,6 +2061,10 @@ webgl::LinkActiveInfo GetLinkActiveInfo(
   return ret;
 }
 
+nsCString ToCString(const std::string& s) {
+  return nsCString(s.data(), s.size());
+}
+
 webgl::CompileResult WebGLContext::GetCompileResult(
     const WebGLShader& shader) const {
   webgl::CompileResult ret;
@@ -2087,11 +2073,12 @@ webgl::CompileResult WebGLContext::GetCompileResult(
     const auto& info = shader.CompileResults();
     if (!info) return;
     if (!info->mValid) {
-      ret.log = info->mInfoLog;
+      ret.log = info->mInfoLog.c_str();
       return;
     }
-    ret.translatedSource = info->mObjectCode;
-    ret.log = shader.CompileLog();
+    // TODO: These could be large and should be made fallible.
+    ret.translatedSource = ToCString(info->mObjectCode);
+    ret.log = ToCString(shader.CompileLog());
     if (!shader.IsCompiled()) return;
     ret.success = true;
   }();
@@ -2102,7 +2089,7 @@ webgl::LinkResult WebGLContext::GetLinkResult(const WebGLProgram& prog) const {
   webgl::LinkResult ret;
   [&]() {
     ret.pending = false;  // Link status polling not yet implemented.
-    ret.log = prog.LinkLog();
+    ret.log = ToCString(prog.LinkLog());
     const auto& info = prog.LinkInfo();
     if (!info) return;
     ret.success = true;

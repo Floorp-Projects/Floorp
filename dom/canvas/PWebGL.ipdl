@@ -9,10 +9,25 @@ include protocol PCompositorBridge;
 include protocol PLayerTransaction;
 
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
-using mozilla::webgl::ContextLossReason from "mozilla/dom/WebGLIpdl.h";
+using mozilla::layers::SurfaceDescriptor from "mozilla/layers/LayersTypes.h";
 using std::string from "ipc/IPCMessageUtils.h";
+using mozilla::uvec2 from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::CompileResult from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::ContextLossReason from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::FrontBufferSnapshotIpc from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::GetUniformData from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::InitContextDesc from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::InitContextResult from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::Int32Vector from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::LinkResult from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::MaybeDouble from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::MaybeFrontBufferSnapshotIpc from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::MaybeShaderPrecisionFormat from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::MaybeSurfaceDescriptor from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::MaybeString from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::OpaqueFramebufferOptions from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::ReadPixelsDesc from "mozilla/dom/WebGLIpdl.h";
+using mozilla::webgl::ReadPixelsResultIpc from "mozilla/dom/WebGLIpdl.h";
 using mozilla::HostWebGLCommandSinkP from "mozilla/dom/WebGLCrossProcessCommandQueue.h";
 using mozilla::HostWebGLCommandSinkI from "mozilla/dom/WebGLCrossProcessCommandQueue.h";
 using mozilla::dom::IpdlQueueBuffer from "mozilla/dom/IpdlQueue.h";
@@ -37,20 +52,53 @@ parent:
 
   async __delete__();
 
-  // DLP: TODO: Does this need to be sync?
-  sync UpdateCompositableHandle(PLayerTransaction aLayerTrans,
-                         CompositableHandle aHandle);
+  // -
 
-  sync ExchangeIpdlQueueData(IpdlQueueBuffer aMsg) returns (IpdlQueueBuffers aResponse);
+  async DispatchCommands(Shmem commands, uint64_t size);
+
+  // -
+
+  sync GetFrontBufferSnapshot() returns (FrontBufferSnapshotIpc ret);
+  sync ReadPixels(ReadPixelsDesc desc, uint64_t maxBytes) returns (ReadPixelsResultIpc ret);
+
+  // -
+
+  sync CheckFramebufferStatus(uint32_t target) returns (uint32_t ret);
+  sync ClientWaitSync(uint64_t id, uint32_t flags, uint64_t timeout) returns (uint32_t ret);
+  sync CreateOpaqueFramebuffer(uint64_t id, OpaqueFramebufferOptions options) returns (bool ret);
+  sync DrawingBufferSize() returns (uvec2 ret);
+  sync Finish();
+  sync GetBufferParameter(uint32_t target, uint32_t pname) returns (MaybeDouble ret);
+  sync GetBufferSubData(uint32_t target, uint64_t srcByteOffset, uint64_t byteSize) returns (Shmem ret);
+  sync GetCompileResult(uint64_t id) returns (CompileResult ret);
+  sync GetError() returns (uint32_t ret);
+  sync GetFragDataLocation(uint64_t id, string name) returns (int32_t ret);
+  sync GetFramebufferAttachmentParameter(uint64_t id,
+                                                  uint32_t attachment,
+                                                  uint32_t pname) returns (MaybeDouble ret);
+  sync GetFrontBuffer(uint64_t fb, bool vr) returns (MaybeSurfaceDescriptor ret);
+  sync GetIndexedParameter(uint32_t target, uint32_t index) returns (MaybeDouble ret);
+  sync GetInternalformatParameter(uint32_t target, uint32_t internalFormat, uint32_t pname) returns (Int32Vector? ret);
+  sync GetLinkResult(uint64_t id) returns (LinkResult ret);
+  sync GetNumber(uint32_t pname) returns (MaybeDouble ret);
+  sync GetQueryParameter(uint64_t id, uint32_t pname) returns (MaybeDouble ret);
+  sync GetRenderbufferParameter(uint64_t id, uint32_t pname) returns (MaybeDouble ret);
+  sync GetSamplerParameter(uint64_t id, uint32_t pname) returns (MaybeDouble ret);
+  sync GetShaderPrecisionFormat(
+      uint32_t shaderType, uint32_t precisionType) returns (MaybeShaderPrecisionFormat ret);
+  sync GetString(uint32_t pname) returns (MaybeString ret);
+  sync GetTexParameter(uint64_t id, uint32_t pname) returns (MaybeDouble ret);
+  sync GetUniform(uint64_t id, uint32_t loc) returns (GetUniformData ret);
+  sync GetVertexAttrib(uint32_t index, uint32_t pname) returns (MaybeDouble ret);
+  sync IsEnabled(uint32_t cap) returns (bool ret);
+  sync OnMemoryPressure();
+  sync ValidateProgram(uint64_t id) returns (bool ret);
 
 child:
   async JsWarning(string text);
 
   // Tell client that this queue needs to be shut down
   async OnContextLoss(ContextLossReason aReason);
-
-both:
-  async TransmitIpdlQueueData(IpdlQueueBuffer aData);
 };
 
 } // dom

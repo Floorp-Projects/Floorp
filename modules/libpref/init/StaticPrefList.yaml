@@ -9634,7 +9634,7 @@
   mirror: always
 
 - name: webgl.force-layers-readback
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
@@ -9684,14 +9684,14 @@
   mirror: always
 
 - name: webgl.power-preference-override
-  type: int32_t
+  type: RelaxedAtomicInt32
   value: 0
   mirror: always
 
 - name: webgl.prefer-16bpp
-  type: bool
+  type: RelaxedAtomicBool
   value: false
-  mirror: never
+  mirror: always
 
 - name: webgl.allow-immediate-queries
   type: RelaxedAtomicBool
@@ -9719,10 +9719,9 @@
   value: true
   mirror: always
 
-# value is 0 for PCQ, 1 for Ipdl
-- name: webgl.prototype.ipc-pcq
-  type: uint32_t
-  value: 0
+- name: webgl.oop.via-pcq
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

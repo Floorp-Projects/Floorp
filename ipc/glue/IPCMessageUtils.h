@@ -16,6 +16,7 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EnumTypeTraits.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/net/WebSocketFrame.h"
 #include "mozilla/TimeStamp.h"
@@ -28,6 +29,7 @@
 #include <limits>
 #include <stdint.h>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "nsDebug.h"
@@ -794,6 +796,38 @@ struct ParamTraits<std::vector<E>> {
       }
       LogParam(aParam[index], aLog);
     }
+  }
+};
+
+template <typename K, typename V>
+struct ParamTraits<std::unordered_map<K, V>> final {
+  using T = std::unordered_map<K, V>;
+
+  static void Write(Message* const msg, const T& in) {
+    WriteParam(msg, in.size());
+    for (const auto& pair : in) {
+      WriteParam(msg, pair.first);
+      WriteParam(msg, pair.second);
+    }
+  }
+
+  static bool Read(const Message* const msg, PickleIterator* const itr,
+                   T* const out) {
+    size_t size = 0;
+    if (!ReadParam(msg, itr, &size)) return false;
+    T map;
+    map.reserve(size);
+    for (const auto i : mozilla::IntegerRange(size)) {
+      std::pair<K, V> pair;
+      mozilla::Unused << i;
+      if (!ReadParam(msg, itr, &(pair.first)) ||
+          !ReadParam(msg, itr, &(pair.second))) {
+        return false;
+      }
+      map.insert(std::move(pair));
+    }
+    *out = std::move(map);
+    return true;
   }
 };
 

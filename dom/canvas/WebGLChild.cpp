@@ -16,6 +16,45 @@ WebGLChild::WebGLChild(ClientWebGLContext& context)
 
 WebGLChild::~WebGLChild() { (void)Send__delete__(this); }
 
+// -
+
+Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
+  if (!mPendingCmds) {
+    mPendingCmds.reset(new webgl::ShmemCmdBuffer);
+    size_t capacity = 1000 * 1000;
+    if (capacity < size) {
+      capacity = size;
+    }
+
+    if (!PWebGLChild::AllocShmem(
+            capacity, mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC,
+            &(mPendingCmds->mShmem))) {
+      return {};
+    }
+  }
+
+  auto remaining = mPendingCmds->Remaining();
+  if (size > remaining.length()) {
+    FlushPendingCmds();
+    return AllocPendingCmdBytes(size);
+  }
+  mPendingCmds->mPos += size;
+  return Some(Range<uint8_t>{remaining.begin(), remaining.begin() + size});
+}
+
+void WebGLChild::FlushPendingCmds() {
+  if (!mPendingCmds) return;
+
+  const auto cmdBytes = mPendingCmds->mPos;
+  SendDispatchCommands(std::move(mPendingCmds->mShmem), cmdBytes);
+  mPendingCmds = nullptr;
+
+  mFlushedCmdInfo.flushes += 1;
+  mFlushedCmdInfo.flushedCmdBytes += cmdBytes;
+}
+
+// -
+
 mozilla::ipc::IPCResult WebGLChild::RecvJsWarning(
     const std::string& text) const {
   mContext.JsWarning(text);
