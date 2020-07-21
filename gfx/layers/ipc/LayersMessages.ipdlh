@@ -44,6 +44,7 @@ using mozilla::LayerIntRegion from "Units.h";
 using mozilla::ParentLayerIntRect from "Units.h";
 using mozilla::ParentLayerRect from "Units.h";
 using mozilla::LayoutDeviceIntRect from "Units.h";
+using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
@@ -165,6 +166,12 @@ struct PartialPrerenderData {
   // The clip rectangle of the nearest scrollable frame.
   // NOTE: This should be used only for fallback cases where APZ is not enabled.
   ParentLayerRect clipRect;
+  // a transform from the coordinate space of the animated element to a
+  // coordinate space where the `clipRect` can be applied.
+  Matrix4x4 transformInClip; // Used only for WebRender.
+  // the position relative to the reference frame of the animated transform
+  // element in the element coordinate space.
+  LayoutDevicePoint position; // Used only for WebRender.
 };
 
 // Transforms need extra information to correctly convert the list of transform

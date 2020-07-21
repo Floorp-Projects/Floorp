@@ -116,10 +116,10 @@ class AnimationInfo final {
       const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
       AnimationGenerationCallback);
 
-  void AddAnimationsForDisplayItem(nsIFrame* aFrame,
-                                   nsDisplayListBuilder* aBuilder,
-                                   nsDisplayItem* aItem, DisplayItemType aType,
-                                   LayerManager* aLayerManager);
+  void AddAnimationsForDisplayItem(
+      nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
+      DisplayItemType aType, LayerManager* aLayerManager,
+      const Maybe<LayoutDevicePoint>& aPosition = Nothing());
 
  private:
   enum class Send {
