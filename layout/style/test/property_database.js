@@ -12128,8 +12128,6 @@ gCSSProperties["grid-template-areas"] = {
   type: CSS_TYPE_LONGHAND,
   initial_values: ["none"],
   other_values: [
-    "''",
-    "'' ''",
     "'1a-é_ .' \"b .\"",
     "' Z\t\\aZ' 'Z Z'",
     " '. . a b'  '. .a b' ",
@@ -12140,6 +12138,9 @@ gCSSProperties["grid-template-areas"] = {
     "'.. ..' '.. ...'",
   ],
   invalid_values: [
+    "''",
+    "' '",
+    "'' ''",
     "'a b' 'a/b'",
     "'a . a'",
     "'. a a' 'a a a'",
