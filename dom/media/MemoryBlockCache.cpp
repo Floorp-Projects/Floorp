@@ -52,6 +52,7 @@ MemoryBlockCache::MemoryBlockCache(int64_t aContentLength)
 }
 
 MemoryBlockCache::~MemoryBlockCache() {
+  MOZ_ASSERT(gCombinedSizes >= mBuffer.Length());
   size_t sizes = static_cast<size_t>(gCombinedSizes -= mBuffer.Length());
   LOG("~MemoryBlockCache() - destroying buffer of size %zu; combined sizes now "
       "%zu",
