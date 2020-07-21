@@ -675,16 +675,30 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
    */
   async getCurrentDevToolsTarget() {
     if (!this._currentDevToolsTarget) {
-      await this.devToolsToolbox.targetList.watchTargets(
-        [this.devToolsToolbox.targetList.TYPES.FRAME],
-        this._onTargetAvailable
-      );
+      if (!this._pendingWatchTargetsPromise) {
+        // When _onTargetAvailable is called, it will create a new target,
+        // via DevToolsShim.createTargetForTab. If this function is called multiple times
+        // before this._currentDevToolsTarget is populated, we don't want to create X
+        // new, duplicated targets, so we store the Promise returned by watchTargets, in
+        // order to properly wait on subsequent calls.
+        this._pendingWatchTargetsPromise = this.devToolsToolbox.targetList.watchTargets(
+          [this.devToolsToolbox.targetList.TYPES.FRAME],
+          this._onTargetAvailable
+        );
+      }
+      await this._pendingWatchTargetsPromise;
+      this._pendingWatchTargetsPromise = null;
     }
 
     return this._currentDevToolsTarget;
   }
 
-  shutdown() {
+  unload() {
+    // Bail if the toolbox reference was already cleared.
+    if (!this.devToolsToolbox) {
+      return;
+    }
+
     this.devToolsToolbox.targetList.unwatchTargets(
       [this.devToolsToolbox.targetList.TYPES.FRAME],
       this._onTargetAvailable
@@ -709,7 +723,7 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
 
     this._devToolsToolbox = null;
 
-    super.shutdown();
+    super.unload();
   }
 
   async _onTargetAvailable({ targetFront }) {
