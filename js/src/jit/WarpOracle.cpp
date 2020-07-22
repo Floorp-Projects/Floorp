@@ -947,6 +947,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
             alloc_, snapshots, offset, cacheIRSnapshot, scriptSnapshot, info)) {
       return abort(AbortReason::Alloc);
     }
+    fallbackStub->setUsedByTranspiler();
     return Ok();
   }
 
