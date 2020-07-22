@@ -4,6 +4,10 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
+<!-- TODO(domenic): update this to test window.originIsolated, not
+     window.originIsolationRestricted. See
+     https://github.com/WICG/origin-isolation/pull/34. -->
+
 <div id="log"></div>
 
 <script type="module">
@@ -29,10 +33,8 @@ promise_setup(() => {
   return waitPromise;
 });
 
-// The data: URL iframe has an opaque origin, so it definitely should return
-// false. It's pretty unlikely that it would return true anyway, since we can't
-// set the header on the iframe, but we should test it to make sure there isn't
-// some strange main page -> data: URL iframe inheritance going on.
+// The data: URL iframe has an opaque origin, so it should return true, since
+// for them site === origin so they are always "origin-isolated".
 
-testOriginIsolationRestricted(0, false);
+testOriginIsolationRestricted(0, true);
 </script>

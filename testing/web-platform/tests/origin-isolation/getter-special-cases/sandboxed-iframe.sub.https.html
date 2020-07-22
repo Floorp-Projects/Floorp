@@ -4,6 +4,10 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
+<!-- TODO(domenic): update this to test window.originIsolated, not
+     window.originIsolationRestricted. See
+     https://github.com/WICG/origin-isolation/pull/34. -->
+
 <div id="log"></div>
 
 <script type="module">
@@ -22,9 +26,7 @@ promise_setup(() => {
   return navigatePromise;
 });
 
-// Because sandboxed iframes have an opaque origin, their agent cluster key is
-// always an origin, so there are no additional restrictions imposed by origin
-// isolation. Thus the getter returns false.
-
-testOriginIsolationRestricted(0, false);
+// Sandboxed iframes have an opaque origin, so it should return true, since
+// for them site === origin so they are always "origin-isolated".
+testOriginIsolationRestricted(0, true);
 </script>
