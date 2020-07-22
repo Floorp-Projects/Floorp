@@ -37,5 +37,6 @@ module.exports = {
     RPMRecordTelemetryEvent: false,
     RPMAddToHistogram: false,
     RPMRemoveMessageListener: false,
+    RPMGetHttpResponseHeader: false,
   },
 };
