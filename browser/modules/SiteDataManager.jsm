@@ -147,9 +147,8 @@ var SiteDataManager = {
             let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               item.origin
             );
-            let uri = principal.URI;
-            if (uri.scheme == "http" || uri.scheme == "https") {
-              let site = this._getOrInsertSite(uri.host);
+            if (principal.schemeIs("http") || principal.schemeIs("https")) {
+              let site = this._getOrInsertSite(principal.host);
               // Assume 3 sites:
               //   - Site A (not persisted): https://www.foo.com
               //   - Site B (not persisted): https://www.foo.com^userContextId=2
@@ -217,8 +216,7 @@ var SiteDataManager = {
       let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         group
       );
-      let uri = principal.URI;
-      let site = this._getOrInsertSite(uri.host);
+      let site = this._getOrInsertSite(principal.host);
       if (!site.principals.some(p => p.origin == principal.origin)) {
         site.principals.push(principal);
       }
