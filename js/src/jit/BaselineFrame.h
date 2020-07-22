@@ -289,6 +289,10 @@ class BaselineFrame {
   void setInterpreterFieldsForPrologue(JSScript* script);
 
   ICScript* icScript() const;
+  void setICScript(ICScript* icScript) {
+    MOZ_ASSERT(JitOptions.warpBuilder);
+    icScript_ = icScript;
+  }
 
   bool hasReturnValue() const { return flags_ & HAS_RVAL; }
   MutableHandleValue returnValue() {
