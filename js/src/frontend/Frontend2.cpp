@@ -279,6 +279,10 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
     SmooshGCThing& item = smooshStencil.gcthings.data[i];
 
     switch (item.tag) {
+      case SmooshGCThing::Tag::Null: {
+        gcThings.infallibleAppend(NullScriptThing());
+        break;
+      }
       case SmooshGCThing::Tag::Atom: {
         gcThings.infallibleAppend(
             mozilla::AsVariant(allAtoms[item.AsAtom()].get()));

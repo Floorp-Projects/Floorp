@@ -7,6 +7,7 @@ use ast::source_atom_set::SourceAtomSetIndex;
 /// in m-c/js/src/frontend/BytecodeSection.h.
 #[derive(Debug)]
 pub enum GCThing {
+    Null,
     Atom(SourceAtomSetIndex),
     Function(ScriptStencilIndex),
     RegExp(RegExpIndex),

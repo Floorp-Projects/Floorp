@@ -247,24 +247,71 @@ impl SourceExtent {
 /// Maps to js::frontend::ScriptStencil in m-c/js/src/frontend/Stencil.h.
 #[derive(Debug)]
 pub struct ScriptStencil {
+    // Fields for BaseScript.
+    // Used by:
+    //   * Global script
+    //   * Eval
+    //   * Module
+    //   * non-lazy Function (except asm.js module)
+    //   * lazy Function (cannot be asm.js module)
+    /// See `BaseScript::immutableFlags_`.
     pub immutable_flags: ImmutableScriptFlags,
 
     /// For top level script and non-lazy function script,
     /// this is a list of GC things referred by bytecode and scope.
     ///
-    /// For lazy function script, this is a list of inner functions and
-    /// closed over bindings.
+    /// For lazy function script, this contains the list of inner functions,
+    /// followed by the list of names defined and closed over by inner script.
+    /// The list of names are delimited by GCThing::Null for each scope.
+    ///
+    /// The order of scopes are depth-first post-order, and names inside each
+    /// scope is in not defined.
+    ///
+    /// Trailing scopes without any names are omitted for space efficiency.
     pub gcthings: Vec<GCThing>,
 
+    /// See `BaseScript::sharedData_`.
     pub immutable_script_data: Option<ImmutableScriptDataIndex>,
 
+    /// The location of this script in the source.
     pub extent: SourceExtent,
 
+    // Fields for JSFunction.
+    // Used by:
+    //   * non-lazy Function
+    //   * lazy Function
+    //   * asm.js module
+    /// The explicit or implicit name of the function. The FunctionFlags
+    /// indicate the kind of name.
     pub fun_name: Option<SourceAtomSetIndex>,
+
+    /// See `JSFunction::nargs_`.
     pub fun_nargs: u16,
+
+    /// See: `FunctionFlags`.
     pub fun_flags: FunctionFlags,
 
+    /// If this ScriptStencil refers to a lazy child of the function being
+    /// compiled, this field holds the child's immediately enclosing scope's
+    /// index. Once compilation succeeds, we will store the scope pointed by
+    /// this in the child's BaseScript.  (Debugger may become confused if lazy
+    /// scripts refer to partially initialized enclosing scopes, so we must
+    /// avoid storing the scope in the BaseScript until compilation has
+    /// completed successfully.)
     pub lazy_function_enclosing_scope_index: Option<ScopeIndex>,
+
+    /// This function is a standalone function that is not syntactically part of
+    /// another script. Eg. Created by `new Function("")`.
+    pub is_standalone_function: bool,
+
+    /// This is set by the emitter of the enclosing script when a
+    /// reference to this function is generated.
+    pub was_function_emitted: bool,
+
+    /// This function should be marked as a singleton. It is expected to be
+    /// defined at most once. This is a heuristic only and does not affect
+    /// correctness.
+    pub is_singleton_function: bool,
 }
 
 impl ScriptStencil {
@@ -282,6 +329,9 @@ impl ScriptStencil {
             fun_nargs: 0,
             fun_flags: FunctionFlags::empty(),
             lazy_function_enclosing_scope_index: None,
+            is_standalone_function: false,
+            was_function_emitted: false,
+            is_singleton_function: false,
         }
     }
 
@@ -310,6 +360,9 @@ impl ScriptStencil {
             fun_nargs: 0,
             fun_flags,
             lazy_function_enclosing_scope_index: Some(lazy_function_enclosing_scope_index),
+            is_standalone_function: false,
+            was_function_emitted: false,
+            is_singleton_function: false,
         }
     }
 
@@ -392,16 +445,24 @@ impl ScriptStencil {
         self.fun_nargs += 1;
     }
 
-    pub fn set_to_string_starts(&mut self, to_string_start: usize) {
-        self.extent.to_string_start = to_string_start as u32;
+    /// source_start should point the start of parameter for functions.
+    pub fn set_source_starts(&mut self, source_start: usize) {
+        self.extent.source_start = source_start as u32;
     }
 
+    /// to_string_end should point the end of function body for function,
+    /// and the end of class for constructor.
     pub fn set_to_string_end(&mut self, to_string_end: usize) {
         self.extent.to_string_end = to_string_end as u32;
     }
 
+    /// source_end should point the end of function body.
     pub fn set_source_end(&mut self, source_end: usize) {
         self.extent.source_end = source_end as u32;
+    }
+
+    pub fn set_function_emitted(&mut self) {
+        self.was_function_emitted = true;
     }
 
     pub fn push_inner_function(&mut self, fun: ScriptStencilIndex) {
@@ -413,6 +474,11 @@ impl ScriptStencil {
     pub fn push_closed_over_bindings(&mut self, name: SourceAtomSetIndex) {
         debug_assert!(self.is_lazy_function());
         self.gcthings.push(GCThing::Atom(name));
+    }
+
+    pub fn push_closed_over_bindings_delimiter(&mut self) {
+        debug_assert!(self.is_lazy_function());
+        self.gcthings.push(GCThing::Null);
     }
 }
 

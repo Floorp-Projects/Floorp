@@ -473,6 +473,9 @@ pub struct FunctionScopeData {
     pub enclosing: ScopeIndex,
 
     pub function_index: ScriptStencilIndex,
+
+    /// True if the function is an arrow function.
+    pub is_arrow: bool,
 }
 
 impl FunctionScopeData {
@@ -483,6 +486,7 @@ impl FunctionScopeData {
         max_var_count: usize,
         enclosing: ScopeIndex,
         function_index: ScriptStencilIndex,
+        is_arrow: bool,
     ) -> Self {
         let capacity = positional_parameter_count + non_positional_formal_start + max_var_count;
 
@@ -495,6 +499,7 @@ impl FunctionScopeData {
             first_frame_slot: FrameSlot::new(0),
             enclosing,
             function_index,
+            is_arrow,
         }
     }
 }

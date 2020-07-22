@@ -72,6 +72,7 @@ pub struct SmooshCompileOptions {
 
 #[repr(C, u8)]
 pub enum SmooshGCThing {
+    Null,
     Atom(usize),
     Scope(usize),
     RegExp(usize),
@@ -80,6 +81,7 @@ pub enum SmooshGCThing {
 impl From<GCThing> for SmooshGCThing {
     fn from(item: GCThing) -> Self {
         match item {
+            GCThing::Null => Self::Null,
             GCThing::Atom(index) => Self::Atom(index.into()),
             GCThing::Function(_index) => {
                 panic!("Not yet implemented");

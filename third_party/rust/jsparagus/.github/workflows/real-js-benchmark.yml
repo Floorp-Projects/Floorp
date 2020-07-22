@@ -1,0 +1,135 @@
+name: Real JS Samples Benchmark
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+      branches:
+      - master
+
+jobs:
+  benchmark:
+    # This workflow relies on:
+    #   - A specific hardware (benchmark-pool-1) in order to have a consistent
+    #     and comparable results against multiple builds.
+    #
+    #   - Some persistent data to reduce the time needed to checkout
+    #     mozilla-central.
+    #
+    # To setup such host multiple things should be considered.
+    #
+    # In terms of security, the code which is executed on this hardware should
+    # not be trusted. As such, the Github Action jobs should run on a dedicated
+    # computer which is either isolated or containerized. Do not run this setup
+    # on a non-dedicated computer!
+    #
+    # It is best to create a dedicated user.
+    #   $ mkdir /var/github-action-runner
+    #   $ useradd -d /var/github-action-runner github-action-user
+    #
+    # Make sure this newly added user has no sudo capabilities.
+    #
+    # A checkout of Gecko should be present under /var/github-action-runner. The
+    # dependencies for building Gecko should as well be installed with `mach
+    # bootstrap`, which can be done using another user with sudo capabilities,
+    # and changing the HOME environment variable to match the github-action-user
+    # home.
+    #
+    # The file /var/github-action-runner/.profile contains:
+    #
+    #    export PATH="$HOME/.cargo/bin:$PATH"
+    #    export PATH="/var/github-action-runner/.mozbuild/git-cinnabar:$PATH"
+    #
+    # Which is used to add cargo in the path, as well as git-cinnabar, to keep
+    # the gecko clone up to date.
+    #
+    # To add this computer to the benchmark pool, follow the instruction
+    # provided by github, after clicking "Add runner" on this page:
+    #   https://github.com/mozilla-spidermonkey/jsparagus/settings/actions
+    #
+    # "benchmark-pool-1" specification:
+    #   /proc/cpuinfo:
+    #     Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz
+    #   dmidecode --type 17:
+    #     2x Hynix/Hyundai HMT41GU6MFR8C-PB (DDR3, 8GB, 1600 MT/s)
+    #
+    runs-on: [self-hosted, benchmark-pool-1]
+    steps:
+    - name: Clean Work Directory
+      run: |
+        rm -rf *
+    - name: Checkout jsparagus
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        path: 'jsparagus'
+    - name: Checkout real-js-samples
+      uses: actions/checkout@v2
+      with:
+        repository: 'Yoric/real-js-samples'
+        path: 'real-js-samples'
+        fetch-depth: 0
+    - name: Checkout mozilla-central
+      run: |
+          # Pull mozilla-central changes
+          source /var/github-action-runner/.profile
+          git -C /var/github-action-runner/gecko pull --all
+          # Create a local clone of mozilla-central
+          git clone -l /var/github-action-runner/gecko mozilla-central
+    - name: Status of Checkouts
+      run: |
+        echo "mozilla-central: $(git -C mozilla-central show --oneline -s)"
+        echo "jsparagus: $(git -C jsparagus show --oneline -s)"
+        echo "real-js-samples: $(git -C real-js-samples show --oneline -s)"
+    - name: Setup venv
+      run: |
+        source /var/github-action-runner/.profile
+        cd jsparagus
+        make init
+    - name: Generate Files
+      run: |
+        source /var/github-action-runner/.profile
+        cd jsparagus
+        make all
+        # OS independant replace
+        sed -i.bak '/*_generated.rs/d' .gitignore && rm .gitignore.bak
+    - name: Apply gecko patches
+      run: |
+        source /var/github-action-runner/.profile
+        cd mozilla-central
+        cat ../jsparagus/gecko-patches.txt | while read PATCH_AND_BUG; do
+          PATCH=$(echo $PATCH_AND_BUG | cut -d : -f 1)
+          BUG=$(echo $PATCH_AND_BUG | cut -d : -f 2)
+
+          # Check bug status and skip if it's already landed.
+          STATUS=$(curl https://bugzilla.mozilla.org/rest/bug/$BUG | python3 -c 'import sys, json; print(json.load(sys.stdin)["bugs"][0]["status"])')
+          echo "Bug $BUG $STATUS"
+          if [ "x$STATUS" = "xRESOLVED" ]; then
+            continue
+          fi
+
+          # Apply the latest patch from phabricator.
+          PATCH_URL=https://phabricator.services.mozilla.com/${PATCH}?download=true
+          curl --location "$PATCH_URL" | git apply --index || git reset --hard
+          git status
+          git commit --allow-empty -m "Bug $BUG"
+        done
+    - name: Build Gecko
+      run: |
+        # Disable Opcodes.h check, as we only focus on parsing speed.
+        export JS_SMOOSH_DISABLE_OPCODE_CHECK=1
+        # Apply Bug 1640982 fix.
+        export CARGO_PROFILE_RELEASE_LTO=true
+        source /var/github-action-runner/.profile
+        cd jsparagus
+        cargo run --bin smoosh_tools build --opt
+    - name: Benchmark Real JS Samples
+      run: |
+        source /var/github-action-runner/.profile
+        cd jsparagus
+        cargo run --bin smoosh_tools bench --opt
+    - name: Post Checkout mozilla-central
+      if: ${{ always() }}
+      run: |
+          # Remove checked out repository.
+          rm -rf mozilla-central
+
