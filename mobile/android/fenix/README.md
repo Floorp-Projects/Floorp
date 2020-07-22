@@ -81,10 +81,9 @@ Pre-requisites:
 2. **Import** the project into Android Studio **or** build on the command line:
 
   ```shell
-  ./gradlew clean app:assembleGeckoBetaDebug
+  ./gradlew clean app:assembleDebug
   ```
 
-  Use app:assembleGeckoNightlyDebug to build with the Gecko Nightly version instead.
   If this errors out, make sure that you have an `ANDROID_SDK_ROOT` environment
   variable pointing to the right path.
 
@@ -94,31 +93,21 @@ Pre-requisites:
 We have a lot of build variants. Each variant is composed of two flavors. One flavor is the version of Gecko to use and the other describes
 which app id and settings to use. Here is a description of what each means:
 
-- **geckoBeta** (recommended) uses the Beta variant of the Gecko rendering engine, which corresponds to the next version of Gecko which will go to production
-- **geckoNightly** uses the Nightly variant of the Gecko rendering engine, which is the version which will arrive after beta and is less stable
-
-<br />
-<br />
-
 - **debug** uses debug symbols and debug signing, adds tools like LeakCanary for troubleshooting, and does not strip unused or wasteful code
-- **fenixNightly** is a release build with nightly signing which uses the org.mozilla.fenix.nightly app id for nightly releases to Google Play
-- **fenixBeta** is a release build with beta signing which uses the org.mozilla.fenix.beta app id for beta releases to Google Play
-- **fenixProduction** is a release build with release signing which uses the org.mozilla.fenix app id for production releases to Google Play
-- **fennecProduction** is an experimental build with release signing which uses the org.mozilla.firefox app id and supports upgrading the older Firefox. **WARNING** Pre-production versions of this may result in data loss.
-- **forPerformanceTest**: see "Performance Build Variants" below.
+- **nightly** uses the Nightly variant of the Gecko rendering engine, which is the version which will arrive after beta and is less stable
+- **beta** (recommended) uses the Beta variant of the Gecko rendering engine, which corresponds to the next version of Gecko which will go to production
+- **release** is a release build with release signing which uses the org.mozilla.firefox app id for production releases to Google Play
 
 #### Performance Build Variants
 For accurate performance measurements, read this section!
 
 If you want to analyze performance during **local development** (note: there is a non-trivial performance impact - see caveats):
-- Recommendation: use a `forPerformanceTest` variant with local Leanplum, Adjust, & Sentry API tokens: contact the front-end perf group for access to them
-- Rationale: `forPerformanceTest` is a release variant with `debuggable` set to true. There are numerous performance-impacting differences between debug and release variants so we need a release variant. To profile, we also need debuggable, which is disabled on other release variants. If API tokens are not provided, the SDKs may change their behavior in non-trivial ways.
+- Recommendation: use a debuggable variant (see "local.properties helpers" below) with local Leanplum, Adjust, & Sentry API tokens: contact the front-end perf group for access to them
+- Rationale: There are numerous performance-impacting differences between debug and release variants so we need a release variant. To profile, we also need debuggable, which is disabled by default for release variants. If API tokens are not provided, the SDKs may change their behavior in non-trivial ways.
 - Caveats:
   - debuggable has a non-trivial & variable impact on performance but is needed to take profiles.
   - Random experiment opt-in & feature flags may impact performance (see [perf-frontend-issues#45](https://github.com/mozilla-mobile/perf-frontend-issues/issues/45) for mitigation).
   - This is slower to build than debug builds because it does additional tasks (e.g. minification) similar to other release builds
-
-Nightly `forPerformanceTest` variants with API tokens already added [are also available from Taskcluster](https://firefox-ci-tc.services.mozilla.com/tasks/index/project.mobile.fenix.v2.performance-test/).
 
 If you want to run **performance tests/benchmarks** in automation or locally:
 - Recommendation: production builds. If debuggable is required, use recommendation above but note the caveat above. If your needs are not met, please contact the front-end perf group to identify a new solution.
@@ -126,7 +115,7 @@ If you want to run **performance tests/benchmarks** in automation or locally:
 
 For additional context on these recommendations, see [the perf build variant analysis](https://docs.google.com/document/d/1aW-m0HYncTDDiRz_2x6EjcYkjBpL9SHhhYix13Vil30/edit#).
 
-Before you can install any release variants including `forPerformanceTest`, **you will need to sign them:** see [Automatically signing release builds](#automatically-sign-release-builds) for details.
+Before you can install any release variants, **you will need to sign them:** see [Automatically signing release builds](#automatically-sign-release-builds) for details.
 
 ## Pre-push hooks
 To reduce review turn-around time, we'd like all pushes to run tests locally. We'd
@@ -180,6 +169,22 @@ autosignReleaseWithDebugKey
 With this line, release build variants will automatically be signed with your debug key (like debug builds), allowing them to be built and installed directly through Android Studio or the command line.
 
 This is helpful when you're building release variants frequently, for example to test feature flags and or do performance analyses.
+
+### Building debuggable release variants
+
+Nightly, Beta and Release variants are getting published to Google Play and therefore are not debuggable. To locally create debuggable builds of those variants, add the following to `<proj-root>/local.properties`:
+
+```sh
+debuggable
+```
+
+### Setting raptor manifest flag
+
+To set the raptor manifest flag in Nightly, Beta and Release variants, add the following to `<proj-root>/local.properties`:
+
+```sh
+raptorEnabled
+```
 
 ### Auto-publication workflow for android-components and application-services
 If you're making changes to these projects and want to test them in Fenix, auto-publication workflow is the fastest, most reliable

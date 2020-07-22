@@ -49,21 +49,21 @@ class StrictModeTest {
 
     @Test
     fun `runs function block in release`() {
-        every { Config.channel } returns ReleaseChannel.FenixProduction
+        every { Config.channel } returns ReleaseChannel.Release
         assertEquals("Hello world", threadPolicy.resetPoliciesAfter(functionBlock))
         verify(exactly = 0) { StrictMode.setThreadPolicy(any()) }
     }
 
     @Test
     fun `runs function block in debug`() {
-        every { Config.channel } returns ReleaseChannel.FenixDebug
+        every { Config.channel } returns ReleaseChannel.Debug
         assertEquals("Hello world", threadPolicy.resetPoliciesAfter(functionBlock))
         verify { StrictMode.setThreadPolicy(threadPolicy) }
     }
 
     @Test
     fun `sets thread policy even if function throws`() {
-        every { Config.channel } returns ReleaseChannel.FenixDebug
+        every { Config.channel } returns ReleaseChannel.Debug
         every { functionBlock() } throws IllegalStateException()
         var exception: IllegalStateException? = null
 

@@ -5,14 +5,14 @@
 package org.mozilla.fenix
 
 enum class ReleaseChannel {
-    FenixDebug,
-    FenixProduction,
-    FennecProduction,
-    FennecBeta;
+    Debug,
+    Nightly,
+    Beta,
+    Release;
 
     val isReleased: Boolean
         get() = when (this) {
-            FenixDebug -> false
+            Debug -> false
             else -> true
         }
 
@@ -27,51 +27,39 @@ enum class ReleaseChannel {
         get() = !this.isReleased
 
     val isReleaseOrBeta: Boolean
-        get() = when (this) {
-            FennecProduction -> true
-            FennecBeta -> true
-            else -> false
-        }
+        get() = this == Release || this == Beta
 
     val isRelease: Boolean
         get() = when (this) {
-            FennecProduction -> true
+            Release -> true
             else -> false
         }
 
     val isBeta: Boolean
-        get() = when (this) {
-            FennecBeta -> true
-            else -> false
-        }
+        get() = this == Beta
 
     val isNightlyOrDebug: Boolean
-        get() = when (this) {
-            FenixDebug -> true
-            FenixProduction -> true
-            else -> false
-        }
+        get() = this == Debug || this == Nightly
 
+    /**
+     * Is this a build for a release channel that we used to ship Fennec on?
+     */
     val isFennec: Boolean
         get() = this in fennecChannels
 
+    /**
+     * Is this build for a "pure" Fenix channel that we never shipped Fennec on?
+     */
     val isFenix: Boolean
         get() = !isFennec
 }
 
 object Config {
     val channel = when (BuildConfig.BUILD_TYPE) {
-        "fenixProduction" -> ReleaseChannel.FenixProduction
-        "debug" -> ReleaseChannel.FenixDebug
-        "fennecProduction" -> ReleaseChannel.FennecProduction
-        "fennecBeta" -> ReleaseChannel.FennecBeta
-
-        // Builds for local performance analysis, recording benchmarks, automation, etc.
-        // This should be treated like a released channel because we want to test
-        // what users experience and there are performance-impacting changes in debug
-        // release channels (e.g. logging) that are never intended to be shipped.
-        "forPerformanceTest" -> ReleaseChannel.FenixProduction
-
+        "debug" -> ReleaseChannel.Debug
+        "nightly" -> ReleaseChannel.Nightly
+        "beta" -> ReleaseChannel.Beta
+        "release" -> ReleaseChannel.Release
         else -> {
             throw IllegalStateException("Unknown build type: ${BuildConfig.BUILD_TYPE}")
         }
@@ -79,6 +67,6 @@ object Config {
 }
 
 private val fennecChannels: List<ReleaseChannel> = listOf(
-    ReleaseChannel.FennecBeta,
-    ReleaseChannel.FennecProduction
+    ReleaseChannel.Beta,
+    ReleaseChannel.Release
 )

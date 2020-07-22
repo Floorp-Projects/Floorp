@@ -48,16 +48,16 @@ jobs:
     nightly-x86:
         run:
             commands:
-                - [wget, {artifact-reference: '<signing/public/build/x86/geckoNightly/target.apk>'}, '-O', app-x86.apk]
-                - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/geckoNightly/target.apk>'}, '-O', android-test.apk]
+                - [wget, {artifact-reference: '<signing/public/build/x86/target.apk>'}, '-O', app-x86.apk]
+                - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/target.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, x86-start-test, app-x86.apk, android-test.apk, '-1']
         treeherder:
             symbol: nightly(startup-x86)
     nightly-arm:
         run:
             commands:
-                - [wget, {artifact-reference: '<signing/public/build/armeabi-v7a/geckoNightly/target.apk>'}, '-O', app-arm.apk]
-                - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/geckoNightly/target.apk>'}, '-O', android-test.apk]
+                - [wget, {artifact-reference: '<signing/public/build/armeabi-v7a/target.apk>'}, '-O', app-arm.apk]
+                - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/target.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app-arm.apk, android-test.apk, '-1']
         treeherder:
             symbol: nightly(startup-arm)

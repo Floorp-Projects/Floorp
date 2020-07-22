@@ -43,7 +43,7 @@ class StrictModeManagerTest {
 
     @Test
     fun `test enableStrictMode in release`() {
-        every { Config.channel } returns ReleaseChannel.FenixProduction
+        every { Config.channel } returns ReleaseChannel.Release
         StrictModeManager.enableStrictMode(false)
 
         verify(exactly = 0) { StrictMode.setThreadPolicy(any()) }
@@ -52,7 +52,7 @@ class StrictModeManagerTest {
 
     @Test
     fun `test enableStrictMode in debug`() {
-        every { Config.channel } returns ReleaseChannel.FenixDebug
+        every { Config.channel } returns ReleaseChannel.Debug
         StrictModeManager.enableStrictMode(false)
 
         verify { StrictMode.setThreadPolicy(any()) }

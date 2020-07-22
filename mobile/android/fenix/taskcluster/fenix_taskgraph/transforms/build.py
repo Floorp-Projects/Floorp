@@ -67,8 +67,7 @@ def add_shippable_secrets(config, tasks):
 def build_gradle_command(config, tasks):
     for task in tasks:
         gradle_build_type = task["run"]["gradle-build-type"]
-        geckoview_engine = task["run"]["geckoview-engine"]
-        variant_config = get_variant(gradle_build_type, geckoview_engine)
+        variant_config = get_variant(gradle_build_type)
 
         task["run"]["gradlew"] = [
             "clean",
@@ -104,8 +103,7 @@ def add_release_version(config, tasks):
 def add_artifacts(config, tasks):
     for task in tasks:
         gradle_build_type = task["run"].pop("gradle-build-type")
-        geckoview_engine = task["run"].pop("geckoview-engine")
-        variant_config = get_variant(gradle_build_type, geckoview_engine)
+        variant_config = get_variant(gradle_build_type)
         artifacts = task.setdefault("worker", {}).setdefault("artifacts", [])
         task["attributes"]["apks"] = apks = {}
 
@@ -113,13 +111,12 @@ def add_artifacts(config, tasks):
             artifact_template = task.pop("apk-artifact-template")
             for apk in variant_config["apks"]:
                 apk_name = artifact_template["name"].format(
-                    geckoview_engine=geckoview_engine, **apk
+                    **apk
                 )
                 artifacts.append({
                     "type": artifact_template["type"],
                     "name": apk_name,
                     "path": artifact_template["path"].format(
-                        geckoview_engine=geckoview_engine,
                         gradle_build_type=gradle_build_type,
                         **apk
                     ),

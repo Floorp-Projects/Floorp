@@ -20,8 +20,8 @@ job-defaults:
     # `name` and `path`.
     apk-artifact-template:
         type: file
-        name: public/build/{abi}/{geckoview_engine}/target.apk
-        path: '/builds/worker/checkouts/src/app/build/outputs/apk/{geckoview_engine}/{gradle_build_type}/{fileName}'
+        name: public/build/{abi}/target.apk
+        path: '/builds/worker/checkouts/src/app/build/outputs/apk/{gradle_build_type}/{fileName}'
     description: Build Fenix from source code.
     fetches:
         toolchain:
@@ -49,7 +49,6 @@ jobs:
             code-review: true
         run-on-tasks-for: [github-pull-request, github-push]
         run:
-            geckoview-engine: geckoNightly
             gradle-build-type: debug
         treeherder:
             symbol: debug(B)
@@ -59,11 +58,10 @@ jobs:
             code-review: true
         run-on-tasks-for: [github-pull-request, github-push]
         run:
-            geckoview-engine: geckoNightly
             gradle-build-type: androidTest
         apk-artifact-template:
             # 2 differences here: "androidTest/" is added and "{gradle_build_type}" is forced to "debug"
-            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/{geckoview_engine}/debug/{fileName}'
+            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/debug/{fileName}'
         treeherder:
             symbol: debug(Bat)
 
@@ -78,20 +76,12 @@ jobs:
         attributes:
             nightly: true
         run:
-            geckoview-engine: geckoNightly
             gradle-build-type: androidTest
         apk-artifact-template:
             # 2 differences here: "androidTest/" is added and "{gradle_build_type}" is forced to "debug"
-            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/{geckoview_engine}/debug/{fileName}'
+            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/debug/{fileName}'
         treeherder:
             symbol: nightly(Bat)
-
-    performance-test:
-        run:
-            geckoview-engine: geckoNightly
-            gradle-build-type: forPerformanceTest
-        treeherder:
-            symbol: forPerformanceTest(B)
 
     nightly-simulation:
         attributes:
@@ -100,8 +90,7 @@ jobs:
         include-nightly-version: true
         include-shippable-secrets: true
         run:
-            geckoview-engine: geckoNightly
-            gradle-build-type: fenixProduction
+            gradle-build-type: nightly
         treeherder:
             symbol: nightlySim(B)
 
@@ -111,33 +100,29 @@ jobs:
         include-nightly-version: true
         include-shippable-secrets: true
         run:
-            geckoview-engine: geckoNightly
-            # XXX `fenixProduction` is now the new nightly.
-            gradle-build-type: fenixProduction
+            gradle-build-type: nightly
         run-on-tasks-for: []
         treeherder:
             symbol: nightly(B)
 
-    fennec-beta:
+    beta:
         attributes:
             release-type: beta
         include-release-version: true
         include-shippable-secrets: true
         filter-incomplete-translations: true
         run:
-            geckoview-engine: geckoBeta
-            gradle-build-type: fennecBeta
+            gradle-build-type: beta
         treeherder:
-            symbol: betaFennec(B)
+            symbol: beta(B)
 
-    fennec-production:
+    release:
         attributes:
-            release-type: production
+            release-type: release
         include-release-version: true
         include-shippable-secrets: true
         filter-incomplete-translations: true
         run:
-            geckoview-engine: geckoBeta
-            gradle-build-type: fennecProduction
+            gradle-build-type: release
         treeherder:
-            symbol: productionFennec(B)
+            symbol: release(B)

@@ -102,9 +102,9 @@ fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
 private fun getSentryProjectUrl(): String? {
     val baseUrl = "https://sentry.prod.mozaws.net/operations"
     return when (Config.channel) {
-        ReleaseChannel.FenixProduction -> "$baseUrl/fenix"
-        ReleaseChannel.FennecProduction -> "$baseUrl/fenix-fennec"
-        ReleaseChannel.FennecBeta -> "$baseUrl/fenix-fennec-beta"
+        ReleaseChannel.Nightly -> "$baseUrl/fenix"
+        ReleaseChannel.Release -> "$baseUrl/fenix-fennec"
+        ReleaseChannel.Beta -> "$baseUrl/fenix-fennec-beta"
         else -> null
     }
 }

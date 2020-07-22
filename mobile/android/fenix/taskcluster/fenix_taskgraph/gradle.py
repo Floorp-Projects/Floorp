@@ -11,20 +11,20 @@ from taskgraph.util.memoize import memoize
 
 
 
-def get_variant(build_type, engine):
+def get_variant(build_type):
     all_variants = _fetch_all_variants()
     matching_variants = [
         variant for variant in all_variants
-        if variant["build_type"] == build_type and variant["engine"] == engine
+        if variant["build_type"] == build_type
     ]
     number_of_matching_variants = len(matching_variants)
     if number_of_matching_variants == 0:
-        raise ValueError('No variant found for build type "{}" and engine "{}"'.format(
-            build_type, engine
+        raise ValueError('No variant found for build type "{}"'.format(
+            build_type
         ))
     elif number_of_matching_variants > 1:
-        raise ValueError('Too many variants found for build type "{}" and engine "{}": {}'.format(
-            build_type, engine, matching_variants
+        raise ValueError('Too many variants found for build type "{}"": {}'.format(
+            build_type, matching_variants
         ))
 
     return matching_variants.pop()

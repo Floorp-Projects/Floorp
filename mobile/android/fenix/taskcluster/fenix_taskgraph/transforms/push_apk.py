@@ -18,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("worker.channel", "worker.dep"):
+        for key in ("worker.channel", "worker.dep", "worker.certificate-alias"):
             resolve_keyed_by(
                 task,
                 key,
@@ -28,25 +28,4 @@ def resolve_keys(config, tasks):
                     'level': config.params["level"],
                 }
             )
-        yield task
-
-
-@transforms.add
-def build_worker_definition(config, tasks):
-    for task in tasks:
-        worker_definition = {}
-        worker_definition["certificate-alias"] = "{}-{}".format(
-            task["worker"]["product"], task["worker"]["channel"]
-        )
-
-        build_type = task["attributes"]["build-type"]
-        # Fenix production doesn't follow the rule {product}-{channel}
-        if build_type == "production":
-            worker_definition["certificate-alias"] = "fenix"
-        # Neither do Fennec flavored builds
-        elif build_type.startswith("fennec-"):
-            worker_definition["certificate-alias"] = build_type
-
-        task["worker"].update(worker_definition)
-
         yield task

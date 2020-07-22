@@ -32,35 +32,35 @@ class LogTest {
 
     @Test
     fun `Test log debug function`() {
-        every { Config.channel } returns ReleaseChannel.FenixDebug
+        every { Config.channel } returns ReleaseChannel.Debug
         logDebug("hi", "hi")
         verify { Log.d("hi", "hi") }
     }
 
     @Test
     fun `Test log warn function with tag and message args`() {
-        every { Config.channel } returns ReleaseChannel.FenixDebug
+        every { Config.channel } returns ReleaseChannel.Debug
         logWarn("hi", "hi")
         verify { Log.w("hi", "hi") }
     }
 
     @Test
     fun `Test log warn function with tag, message, and exception args`() {
-        every { Config.channel } returns ReleaseChannel.FenixDebug
+        every { Config.channel } returns ReleaseChannel.Debug
         logWarn("hi", "hi", mockThrowable)
         verify { Log.w("hi", "hi", mockThrowable) }
     }
 
     @Test
     fun `Test log error function with tag, message, and exception args`() {
-        every { Config.channel } returns ReleaseChannel.FenixDebug
+        every { Config.channel } returns ReleaseChannel.Debug
         logErr("hi", "hi", mockThrowable)
         verify { Log.e("hi", "hi", mockThrowable) }
     }
 
     @Test
     fun `Test no log in production channel`() {
-        every { Config.channel } returns ReleaseChannel.FenixProduction
+        every { Config.channel } returns ReleaseChannel.Release
 
         logDebug("hi", "hi")
         logWarn("hi", "hi")

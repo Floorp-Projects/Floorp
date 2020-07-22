@@ -17,8 +17,8 @@ primary-dependency: push-apk
 group-by: build-type
 
 only-for-build-types:
-    - fennec-beta
-    - fennec-production
+    - beta
+    - release
 
 job-template:
     description: Mark Fenix as shipped in ship-it
