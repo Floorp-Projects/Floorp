@@ -1710,12 +1710,16 @@
       };
     }
 
-    print(aOuterWindowID, aPrintSettings) {
+    print(aOuterWindowID, aPrintSettings, aPrintProgressListener) {
       if (!this.frameLoader) {
         throw Components.Exception("No frame loader.", Cr.NS_ERROR_FAILURE);
       }
 
-      return this.frameLoader.print(aOuterWindowID, aPrintSettings);
+      this.frameLoader.print(
+        aOuterWindowID,
+        aPrintSettings,
+        aPrintProgressListener
+      );
     }
 
     async drawSnapshot(x, y, w, h, scale, backgroundColor) {

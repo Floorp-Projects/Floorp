@@ -122,11 +122,12 @@ interface FrameLoader {
    * @param aOuterWindowID the ID of the outer window to print
    * @param aPrintSettings optional print settings to use; printSilent can be
    *                       set to prevent prompting.
-   * @return A Promise that resolves once printing is finished.
+   * @param aProgressListener optional print progress listener.
    */
   [Throws]
-  Promise<void> print(unsigned long long aOuterWindowID,
-                      nsIPrintSettings aPrintSettings);
+  void print(unsigned long long aOuterWindowID,
+             nsIPrintSettings aPrintSettings,
+             optional nsIWebProgressListener? aProgressListener = null);
 
   /**
    * The element which owns this frame loader.
