@@ -15,6 +15,9 @@ permalink: /changelog/
 * **support-images**
   * ⚠️ **This is a breaking change**: Removed `ImageLoader.loadIntoView(view: ImageView, id: String)` extension function.
 
+* **feature-syncedtabs**
+  * ⚠️ **This is a breaking change**: Adds context to the constructor of `SyncedTabsFeature`.
+
 # 51.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v50.0.0...v51.0.0)
@@ -52,9 +55,6 @@ permalink: /changelog/
 
 * **support-ktx**
   * Add `Activity.reportFullyDrawnSafe`, a function to call `Activity.reportFullyDrawn` while catching crashes under some circumstances.
-
-* **feature-syncedtabs**
-  * ⚠️ **This is a breaking change**: Adds context to the constructor of `SyncedTabsFeature`.
 
 # 50.0.0
 
