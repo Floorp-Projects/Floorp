@@ -522,6 +522,9 @@ void RTCRtpReceiver::UpdateStreams(StreamAssociationChanges* aChanges) {
   std::set<std::string> newIds(
       mJsepTransceiver->mRecvTrack.GetStreamIds().begin(),
       mJsepTransceiver->mRecvTrack.GetStreamIds().end());
+  MOZ_ASSERT(mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit() ||
+             newIds.empty());
+  bool needsTrackEvent = false;
   for (const auto& id : mStreamIds) {
     if (!newIds.count(id)) {
       aChanges->mStreamAssociationsRemoved.push_back({mTrack, id});
@@ -531,13 +534,12 @@ void RTCRtpReceiver::UpdateStreams(StreamAssociationChanges* aChanges) {
   std::set<std::string> oldIds(mStreamIds.begin(), mStreamIds.end());
   for (const auto& id : mJsepTransceiver->mRecvTrack.GetStreamIds()) {
     if (!oldIds.count(id)) {
+      needsTrackEvent = true;
       aChanges->mStreamAssociationsAdded.push_back({mTrack, id});
     }
   }
 
   mStreamIds = mJsepTransceiver->mRecvTrack.GetStreamIds();
-
-  bool needsTrackEvent = !aChanges->mStreamAssociationsAdded.empty();
 
   if (mRemoteSetSendBit != mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit()) {
     mRemoteSetSendBit = mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit();
