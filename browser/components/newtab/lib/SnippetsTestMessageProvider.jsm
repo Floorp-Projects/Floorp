@@ -384,39 +384,6 @@ const MESSAGES = () => [
     },
   },
   {
-    id: "SNIPPETS_SCENE2_SEND_TO_DEVICE_TEST",
-    template: "send_to_device_scene2_snippet",
-    content: {
-      include_sms: true,
-      locale: "en-CA",
-      country: "us",
-      message_id_sms: "ff-mobilesn-download",
-      message_id_email: "download-firefox-mobile",
-      scene2_icon: TEST_ICON,
-      section_title_icon:
-        "https://snippets.cdn.mozilla.net/media/icons/094b0707-ab65-4b2e-99a1-a84122b6ab26.png",
-      section_title_text: "Messages from Firefox",
-
-      scene2_button_label: "Send",
-      scene2_disclaimer_html:
-        "The intended recipient of the email must have consented. <privacyLink>Learn more</privacyLink>.",
-      scene2_input_placeholder: "Your email address or phone number",
-      scene2_text:
-        "Send Firefox to your phone and take a powerful independent browser with you.",
-      scene2_title: "Let's do this!",
-
-      error_text: "Oops, there was a problem.",
-      success_title: "Your download link was sent.",
-      success_text: "Check your device for the email message!",
-      links: {
-        privacyLink: {
-          url:
-            "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
-        },
-      },
-    },
-  },
-  {
     id: "SNIPPETS_SEND_TO_DEVICE_TEST_NO_DARK_THEME",
     template: "send_to_device_snippet",
     content: {

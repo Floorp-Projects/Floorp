@@ -3945,7 +3945,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   flex: 1 1 100%;
   width: 100%; }
   .SubmitFormSnippet .disclaimerText {
-    margin: 5px 0 0;
+    margin: 20px 0 0;
     font-size: 12px;
     color: var(--newtab-text-secondary-color); }
   .SubmitFormSnippet p {
@@ -3987,7 +3987,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     display: flex;
     flex: 0 0 100%; }
   .SubmitFormSnippet .innerWrapper {
-    max-width: 736px;
+    max-width: 670px;
     flex-wrap: wrap;
     justify-items: center;
     padding-top: 40px;
@@ -4018,22 +4018,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     .SubmitFormSnippet input.mainInput:focus {
       border: 1px solid var(--newtab-textbox-focus-color);
       box-shadow: var(--newtab-textbox-focus-boxshadow); }
-  .SubmitFormSnippet.scene2Alt {
-    text-align: start; }
-    .SubmitFormSnippet.scene2Alt .scene2Icon {
-      flex: 1;
-      margin-bottom: 0; }
-    .SubmitFormSnippet.scene2Alt .message {
-      flex: 5;
-      margin-bottom: 0; }
-      .SubmitFormSnippet.scene2Alt .message p {
-        margin-bottom: 10px; }
-    .SubmitFormSnippet.scene2Alt .section-header {
-      width: 100%; }
-      .SubmitFormSnippet.scene2Alt .section-header .icon {
-        margin-inline-end: 0; }
-    .SubmitFormSnippet.scene2Alt .innerWrapper {
-      padding: 0 0 16px 0; }
 
 .submissionStatus {
   text-align: center;
