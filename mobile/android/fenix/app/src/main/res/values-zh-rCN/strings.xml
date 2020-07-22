@@ -593,6 +593,8 @@
     <string name="bookmark_select_folder">选择文件夹</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">您确定要删除这个文件夹吗？</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s 将删除所选项目。</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">已删除 %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -650,8 +652,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">已删除 %1$s 条书签</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">书签已删除</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">正在删除所选文件夹</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">撤销</string>
 
@@ -756,6 +760,8 @@
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">标签页已保存！</string>
 
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">收藏集已保存！</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">标签页已保存！</string>
 
@@ -867,6 +873,10 @@
     <string name="qr_scanner_dialog_negative">拒绝</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">您确定要删除“%1$s”吗？</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">删除此标签页将删除整个收藏集。您可以随时新建收藏集。</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">要删除 %1$s 吗？</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">删除</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1268,6 +1278,8 @@
     <string name="preferences_passwords_exceptions_description_empty">不保存登录名和密码的网站将显示于此处。</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">将不保存这些网站的登录名和密码。</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">删除所有例外</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">搜索登录信息</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1306,6 +1318,8 @@
     <string name="saved_login_copy_username">复制用户名</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">复制网站</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">在浏览器中打开网站</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">显示密码</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

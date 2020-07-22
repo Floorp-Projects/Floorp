@@ -569,6 +569,8 @@
     <string name="bookmark_select_folder">Буманы таңдау</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Бұл буманы өшіруді шынымен қалайсыз ба?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s таңдалған элементтерді өшіреді.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s өшірілді</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -623,8 +625,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s өшірілді</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Бетбелгілер өшірілді</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Таңдалған бумаларды өшіру</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">БОЛДЫРМАУ</string>
 
@@ -718,6 +722,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d бет таңдалды</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Беттер сақталды!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Жинақ сақталды!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Бет сақталды!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -822,6 +828,10 @@
     <string name="qr_scanner_dialog_negative">ТЫЙЫМ САЛУ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">%1$s өшіруді шынымен қалайсыз ба?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Бұл бетті өшіру жинақты толығымен өшіреді. Жаңа жинақтарды кез келген уақытта жасауға болады.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s өшіру керек пе?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Өшіру</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -878,8 +888,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Негізгі мәзірден &quot;Шығу&quot; таңдау кезінде, шолу деректерін автоматты түрде өшіреді</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Негізгі мәзірден \&quot;Шығу\&quot; таңдау кезінде, шолу деректерін автоматты түрде өшіреді</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Шолу тарихы</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Шығу</string>
 
@@ -1227,6 +1235,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Сақталмаған логиндер мен парольдер осында көрсетіледі.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Бұл сайттар үшін логиндер мен парольдер сақталмайды.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Барлық ережеден тыс жағдайларды өшіру</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Логиндерден іздеу</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1265,6 +1275,8 @@
     <string name="saved_login_copy_username">Пайдаланушы атын көшіріп алу</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Сайтты көшіріп алу</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Сайтты браузерде ашу</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Парольді көрсету</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

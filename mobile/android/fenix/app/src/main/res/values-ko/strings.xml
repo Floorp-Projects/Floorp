@@ -593,6 +593,8 @@
     <string name="bookmark_select_folder">폴더 선택</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">이 폴더를 삭제하시겠습니까?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s가 선택된 항목들을 삭제합니다.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s 삭제됨</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -652,8 +654,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s 삭제됨</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">북마크 삭제됨</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">선택한 폴더 삭제 중</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">실행 취소</string>
 
@@ -757,6 +761,8 @@
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">탭이 저장되었습니다!</string>
 
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">모음집 저장됨!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">탭이 저장되었습니다!</string>
 
@@ -869,6 +875,10 @@
     <string name="qr_scanner_dialog_negative">거부</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">%1$s 파일을 삭제하시겠습니까?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">이 탭을 삭제하면 전체 모음집이 삭제됩니다. 언제든지 새 모음집을 만들 수 있습니다.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s 모음집을 삭제하시겠습니까?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">삭제</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1276,6 +1286,8 @@
     <string name="preferences_passwords_exceptions_description_empty">저장되지 않은 로그인과 비밀번호가 여기에 표시됩니다.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">이 사이트에 대한 로그인과 비밀번호는 저장되지 않습니다.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">모든 예외 삭제</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">로그인 검색</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1314,6 +1326,8 @@
     <string name="saved_login_copy_username">사용자 이름 복사</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">사이트 복사</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">브라우저에서 사이트 열기</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">비밀번호 보이기</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

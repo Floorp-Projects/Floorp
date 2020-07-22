@@ -582,6 +582,8 @@
     <string name="bookmark_select_folder">Velg mappe</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Er du sikker på at du vil slette denne mappen?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s vil slette de valgte elementene.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Slettet %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -637,8 +639,10 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Slettet %1$s</string>
 
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Bokmerker slettet</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Sletter valgte mapper</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANGRE</string>
 
@@ -734,6 +738,8 @@
 
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Faner lagret!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Samling lagret!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Fane lagret!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -838,6 +844,10 @@
     <string name="qr_scanner_dialog_negative">AVSLÅ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Er du sikker på at du vil slette %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Hvis du sletter denne fanen, blir hele samlingen slettet. Du kan når som helst lage nye samlinger.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Vil du slette %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Slett</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -894,8 +904,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Sletter nettleserdata automatisk når du velger «Avslutt» fra hovedmenyen</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Sletter nettleserdata automatisk når du velger «Avslutt» fra hovedmenyen</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Nettleserhistorikk</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Avslutt</string>
 
@@ -1250,6 +1258,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Innlogginger og passord som ikke er lagret vil vises her.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Innlogginger og passord vil ikke bli lagret for disse nettstedene.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Slett alle unntak</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Søk innlogginger</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1289,6 +1299,8 @@
     <string name="saved_login_copy_username">Kopier brukernavn</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopier nettsted</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Åpne nettsted i nettleseren</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Vis passord</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

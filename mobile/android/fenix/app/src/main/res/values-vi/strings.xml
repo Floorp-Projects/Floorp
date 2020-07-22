@@ -575,6 +575,8 @@
     <string name="bookmark_select_folder">Chọn thư mục</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Bạn có chắc chắn muốn xóa thư mục này?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s sẽ xóa các mục đã chọn.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Đã xóa %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -629,8 +631,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Đã xóa %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Đã xóa dấu trang</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Đang xóa các thư mục đã chọn</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">HOÀN TÁC</string>
 
@@ -724,6 +728,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d thẻ được chọn</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Đã lưu các thẻ!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Đã lưu bộ sưu tập!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Đã lưu thẻ!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -828,6 +834,10 @@
     <string name="qr_scanner_dialog_negative">TỪ CHỐI</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Bạn có chắc chắn muốn xóa %1$s không?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Xóa thẻ này sẽ xóa bộ sưu tập này. Bạn có thể tạo bộ sưu tập mới bất cứ lúc nào.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Xóa %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Xóa</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1224,6 +1234,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Đăng nhập và mật khẩu không được lưu sẽ được hiển thị ở đây.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Đăng nhập và mật khẩu sẽ không được lưu cho các trang web này.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Xóa tất cả các ngoại lệ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Tìm thông tin đăng nhập</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1262,6 +1274,8 @@
     <string name="saved_login_copy_username">Sao chép tên người dùng</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Sao chép URL trang web</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Mở trang web trong trình duyệt</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Hiện mật khẩu</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
