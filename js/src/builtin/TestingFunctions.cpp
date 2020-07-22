@@ -5892,26 +5892,6 @@ static bool ClearKeptObjects(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool NewPrivateName(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "newPrivateName", 1)) {
-    return false;
-  }
-
-  RootedString desc(cx, ToString(cx, args[0]));
-  if (!desc) {
-    return false;
-  }
-
-  auto* sym = JS::Symbol::new_(cx, JS::SymbolCode::PrivateNameSymbol, desc);
-  if (!sym) {
-    return false;
-  }
-
-  args.rval().setSymbol(sym);
-  return true;
-}
-
 static bool NumberToDouble(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "numberToDouble", 1)) {
@@ -6946,9 +6926,6 @@ gc::ZealModeHelpText),
 "sequence of ECMAScript execution completes. This is used for testing\n"
 "WeakRefs.\n"),
 
-  JS_FN_HELP("newPrivateName", NewPrivateName, 1, 0,
-"newPrivateName(desc)",
-"Create a new PrivateName symbol."),
 
   JS_FN_HELP("numberToDouble", NumberToDouble, 1, 0,
 "numberToDouble(number)",
