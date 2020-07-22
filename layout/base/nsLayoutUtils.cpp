@@ -8732,8 +8732,8 @@ bool nsLayoutUtils::UpdateCompositionBoundsForRCDRSF(
                             shouldSubtractDynamicToolbar)) {
     return false;
   }
-  aCompBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(
-      LayoutDeviceIntRect(LayoutDeviceIntPoint(), contentSize),
+  aCompBounds.SizeTo(ViewAs<ParentLayerPixel>(
+      LayoutDeviceSize(contentSize),
       PixelCastJustification::LayoutDeviceIsParentLayerForRCDRSF));
   return true;
 }
