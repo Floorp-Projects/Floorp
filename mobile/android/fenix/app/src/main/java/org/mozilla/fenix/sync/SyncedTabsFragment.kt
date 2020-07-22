@@ -37,6 +37,7 @@ class SyncedTabsFragment : LibraryPageFragment<Tab>() {
 
         syncedTabsFeature.set(
             feature = SyncedTabsFeature(
+                context = requireContext(),
                 storage = backgroundServices.syncedTabsStorage,
                 accountManager = backgroundServices.accountManager,
                 view = synced_tabs_layout,

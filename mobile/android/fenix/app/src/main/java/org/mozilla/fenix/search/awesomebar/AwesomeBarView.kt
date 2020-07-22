@@ -119,10 +119,10 @@ class AwesomeBarView(
 
         bookmarksStorageSuggestionProvider =
             BookmarksStorageSuggestionProvider(
-                components.core.bookmarksStorage,
-                loadUrlUseCase,
-                components.core.icons,
-                engineForSpeculativeConnects
+                bookmarksStorage = components.core.bookmarksStorage,
+                loadUrlUseCase = loadUrlUseCase,
+                icons = components.core.icons,
+                engine = engineForSpeculativeConnects
             )
 
         val searchBitmap = getDrawable(context, R.drawable.ic_search)!!.apply {
