@@ -88,3 +88,25 @@ details > summary {
   -moz-context-properties: fill;
   fill: currentColor;
 }
+
+.modal {
+  max-height: 90%;
+  max-width: min(700px, 80%);
+  overflow: auto;
+  background: var(--in-content-page-background);
+  color: var(--in-content-page-color);
+  border: 1px solid transparent;
+  border-radius: 3.5px;
+  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
+  padding: 8px 16px 0;
+}
+
+.modal > footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 16px;
+}
+
+.modal::backdrop {
+  background-color: rgba(0,0,0,.5);
+}
