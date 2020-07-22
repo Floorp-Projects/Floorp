@@ -12,9 +12,9 @@
     var yay = document.querySelector("#yay");
     yay.textContent = "nothing";
 
-    // Create a custom event to let the test know when the window has finished
-    // loading.
-    var event = new Event("test-page-processing-done");
+    // Create a promise that the test can wait for.
+    let resolveReadyPromise;
+    window.readyPromise = new Promise(r => (resolveReadyPromise = r));
 
     // Create/remove an iframe before load.
     var iframe = document.createElement("iframe");
@@ -37,8 +37,7 @@
       newIframe.remove();
       yay.textContent = "load";
 
-      // Dispatch the done event.
-      window.dispatchEvent(event);
+      resolveReadyPromise();
     });
   </script>
 </body>
