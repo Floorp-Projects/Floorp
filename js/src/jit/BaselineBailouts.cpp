@@ -788,6 +788,12 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   // Do not need to initialize scratchValue field in BaselineFrame.
   blFrame->setFlags(flags);
 
+  if (JitOptions.warpBuilder) {
+    ICScript* icScript = script->jitScript()->icScript();
+    JitSpew(JitSpew_BaselineBailouts, "      ICScript=%p", icScript);
+    blFrame->setICScript(icScript);
+  }
+
   // initArgsObjUnchecked modifies the frame's flags, so call it after setFlags.
   if (argsObj) {
     blFrame->initArgsObjUnchecked(*argsObj);
