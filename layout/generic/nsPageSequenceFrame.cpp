@@ -6,6 +6,7 @@
 
 #include "nsPageSequenceFrame.h"
 
+#include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/StaticPresData.h"
@@ -30,12 +31,9 @@
 #include "nsServiceManagerUtils.h"
 #include <algorithm>
 
-#define OFFSET_NOT_SET -1
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#include "mozilla/Logging.h"
 mozilla::LazyLogModule gLayoutPrintingLog("printing-layout");
 
 #define PR_PL(_p1) MOZ_LOG(gLayoutPrintingLog, mozilla::LogLevel::Debug, _p1)
@@ -250,7 +248,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   ReflowOutput kidSize(aReflowInput);
   for (nsIFrame* kidFrame : mFrames) {
     // Set the shared data into the page frame before reflow
-    nsPageFrame* pf = static_cast<nsPageFrame*>(kidFrame);
+    auto* pf = static_cast<nsPageFrame*>(kidFrame);
     pf->SetSharedPageData(mPageData.get());
 
     // Reflow the page
@@ -308,7 +306,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     MOZ_ASSERT(child->IsPageFrame(),
                "only expecting nsPageFrame children. Other children will make "
                "this static_cast bogus & probably violate other assumptions");
-    nsPageFrame* pf = static_cast<nsPageFrame*>(child);
+    auto* pf = static_cast<nsPageFrame*>(child);
     pf->SetPageNumInfo(pageNum, pageTot);
     pageNum++;
   }
@@ -407,11 +405,8 @@ nsresult nsPageSequenceFrame::StartPrint(nsPresContext* aPresContext,
   }
 
   // Begin printing of the document
-  nsresult rv = NS_OK;
-
   mPageNum = 1;
-
-  return rv;
+  return NS_OK;
 }
 
 static void GetPrintCanvasElementsInFrame(
