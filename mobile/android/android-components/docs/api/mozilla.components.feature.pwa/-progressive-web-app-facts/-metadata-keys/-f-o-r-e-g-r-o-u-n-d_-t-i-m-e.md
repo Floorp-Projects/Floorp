@@ -2,4 +2,4 @@
 
 # FOREGROUND_TIME
 
-`const val FOREGROUND_TIME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L31)
+`const val FOREGROUND_TIME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L32)

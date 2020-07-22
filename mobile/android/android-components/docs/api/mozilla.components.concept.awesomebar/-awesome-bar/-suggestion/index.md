@@ -2,7 +2,7 @@
 
 # Suggestion
 
-`data class Suggestion` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L87)
+`data class Suggestion` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L89)
 
 A [Suggestion](./index.md) to be displayed by an [AwesomeBar](../index.md) implementation.
 
@@ -17,7 +17,7 @@ A [Suggestion](./index.md) to be displayed by an [AwesomeBar](../index.md) imple
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Suggestion(provider: `[`SuggestionProvider`](../-suggestion-provider/index.md)`, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, description: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, icon: <ERROR CLASS>? = null, chips: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Chip`](-chip/index.md)`> = emptyList(), flags: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`Flag`](-flag/index.md)`> = emptySet(), onSuggestionClicked: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null, onChipClicked: (`[`Chip`](-chip/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null, score: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0)`<br>A [Suggestion](./index.md) to be displayed by an [AwesomeBar](../index.md) implementation. |
+| [&lt;init&gt;](-init-.md) | `Suggestion(provider: `[`SuggestionProvider`](../-suggestion-provider/index.md)`, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, description: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, icon: <ERROR CLASS>? = null, indicatorIcon: <ERROR CLASS>? = null, chips: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Chip`](-chip/index.md)`> = emptyList(), flags: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`Flag`](-flag/index.md)`> = emptySet(), onSuggestionClicked: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null, onChipClicked: (`[`Chip`](-chip/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null, score: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0)`<br>A [Suggestion](./index.md) to be displayed by an [AwesomeBar](../index.md) implementation. |
 
 ### Properties
 
@@ -28,6 +28,7 @@ A [Suggestion](./index.md) to be displayed by an [AwesomeBar](../index.md) imple
 | [flags](flags.md) | `val flags: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`Flag`](-flag/index.md)`>`<br>A set of [Flag](-flag/index.md) values for this [Suggestion](./index.md). |
 | [icon](icon.md) | `val icon: <ERROR CLASS>?`<br>A lambda that can be invoked by the [AwesomeBar](../index.md) implementation to receive an icon [Bitmap](#) for this [Suggestion](./index.md). The [AwesomeBar](../index.md) will pass in its desired width and height for the Bitmap. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A unique ID (provider scope) identifying this [Suggestion](./index.md). A stable ID but different data indicates to the [AwesomeBar](../index.md) that this is the same [Suggestion](./index.md) with new data. This will affect how the [AwesomeBar](../index.md) animates showing the new suggestion. |
+| [indicatorIcon](indicator-icon.md) | `val indicatorIcon: <ERROR CLASS>?`<br>A drawable for indicating different types of [Suggestion](./index.md). |
 | [onChipClicked](on-chip-clicked.md) | `val onChipClicked: (`[`Chip`](-chip/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A callback to be executed when a [Chip](-chip/index.md) was clicked by the user. |
 | [onSuggestionClicked](on-suggestion-clicked.md) | `val onSuggestionClicked: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A callback to be executed when the [Suggestion](./index.md) was clicked by the user. |
 | [provider](provider.md) | `val provider: `[`SuggestionProvider`](../-suggestion-provider/index.md)<br>The provider this suggestion came from. |

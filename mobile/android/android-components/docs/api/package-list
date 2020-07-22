@@ -319,7 +319,6 @@ mozilla.components.support.base.observer
 mozilla.components.support.base.utils
 mozilla.components.support.images
 mozilla.components.support.images.decoder
-mozilla.components.support.images.ext
 mozilla.components.support.images.loader
 mozilla.components.support.ktx.android.arch.lifecycle
 mozilla.components.support.ktx.android.content

@@ -2,12 +2,13 @@
 
 # &lt;init&gt;
 
-`SyncedTabsFeature(storage: `[`SyncedTabsStorage`](../../mozilla.components.feature.syncedtabs.storage/-synced-tabs-storage/index.md)`, accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, view: `[`SyncedTabsView`](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md)`, lifecycleOwner: LifecycleOwner, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO, onTabClicked: (`[`Tab`](../../mozilla.components.browser.storage.sync/-tab/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, controller: `[`SyncedTabsController`](../../mozilla.components.feature.syncedtabs.controller/-synced-tabs-controller/index.md)` = DefaultController(
+`SyncedTabsFeature(context: <ERROR CLASS>, storage: `[`SyncedTabsStorage`](../../mozilla.components.feature.syncedtabs.storage/-synced-tabs-storage/index.md)`, accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, view: `[`SyncedTabsView`](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md)`, lifecycleOwner: LifecycleOwner, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO, onTabClicked: (`[`Tab`](../../mozilla.components.browser.storage.sync/-tab/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, controller: `[`SyncedTabsController`](../../mozilla.components.feature.syncedtabs.controller/-synced-tabs-controller/index.md)` = DefaultController(
         storage,
         accountManager,
         view,
         coroutineContext
     ), presenter: `[`SyncedTabsPresenter`](../../mozilla.components.feature.syncedtabs.presenter/-synced-tabs-presenter/index.md)` = DefaultPresenter(
+        context,
         controller,
         accountManager,
         view,

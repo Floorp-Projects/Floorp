@@ -2,7 +2,7 @@
 
 # MetadataKeys
 
-`object MetadataKeys` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L29)
+`object MetadataKeys` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L30)
 
 Keys used to record metadata about [Items](../-items/index.md).
 

@@ -2,7 +2,7 @@
 
 # AddonInstallationDialogFragment
 
-`class AddonInstallationDialogFragment : AppCompatDialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonInstallationDialogFragment.kt#L51)
+`class AddonInstallationDialogFragment : AppCompatDialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonInstallationDialogFragment.kt#L56)
 
 A dialog that shows [Addon](../../mozilla.components.feature.addons/-addon/index.md) installation confirmation.
 
@@ -16,12 +16,13 @@ A dialog that shows [Addon](../../mozilla.components.feature.addons/-addon/index
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AddonInstallationDialogFragment(addonCollectionProvider: `[`AddonCollectionProvider`](../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md)`)`<br>A dialog that shows [Addon](../../mozilla.components.feature.addons/-addon/index.md) installation confirmation. |
+| [&lt;init&gt;](-init-.md) | `AddonInstallationDialogFragment()`<br>A dialog that shows [Addon](../../mozilla.components.feature.addons/-addon/index.md) installation confirmation. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [addonCollectionProvider](addon-collection-provider.md) | `var addonCollectionProvider: `[`AddonCollectionProvider`](../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md)`?`<br>Reference to the application's [AddonCollectionProvider](../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md) to fetch add-on icons. |
 | [onConfirmButtonClicked](on-confirm-button-clicked.md) | `var onConfirmButtonClicked: (`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`, `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A lambda called when the confirm button is clicked. |
 
 ### Functions
@@ -29,6 +30,8 @@ A dialog that shows [Addon](../../mozilla.components.feature.addons/-addon/index
 | Name | Summary |
 |---|---|
 | [onCreateDialog](on-create-dialog.md) | `fun onCreateDialog(savedInstanceState: <ERROR CLASS>?): <ERROR CLASS>` |
+| [onStop](on-stop.md) | `fun onStop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [show](show.md) | `fun show(manager: FragmentManager, tag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Companion Object Functions
 

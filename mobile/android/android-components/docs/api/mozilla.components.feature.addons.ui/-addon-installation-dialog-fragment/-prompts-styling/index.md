@@ -2,7 +2,7 @@
 
 # PromptsStyling
 
-`data class PromptsStyling` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonInstallationDialogFragment.kt#L256)
+`data class PromptsStyling` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonInstallationDialogFragment.kt#L290)
 
 Styling for the addon installation dialog.
 
