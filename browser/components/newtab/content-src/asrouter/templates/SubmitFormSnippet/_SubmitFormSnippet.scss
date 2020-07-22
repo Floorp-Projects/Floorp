@@ -4,7 +4,7 @@
   width: 100%;
 
   .disclaimerText {
-    margin: 20px 0 0;
+    margin: 5px 0 0;
     font-size: 12px;
     color: var(--newtab-text-secondary-color);
   }
@@ -72,7 +72,8 @@
   }
 
   .innerWrapper {
-    max-width: 670px;
+    // https://github.com/mozmeao/snippets/blob/2054899350590adcb3c0b0a341c782b0e2f81d0b/activity-stream/newsletter-subscribe.html#L46
+    max-width: 736px;
     flex-wrap: wrap;
     justify-items: center;
     padding-top: 40px;
@@ -119,6 +120,36 @@
         border: $input-border-active;
         box-shadow: var(--newtab-textbox-focus-boxshadow);
       }
+    }
+  }
+
+  &.scene2Alt {
+    text-align: start;
+
+    .scene2Icon {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .message {
+      flex: 5;
+      margin-bottom: 0;
+
+      p {
+        margin-bottom: 10px;
+      }
+    }
+
+    .section-header {
+      width: 100%;
+      
+      .icon {
+        margin-inline-end: 0;
+      }
+    }
+
+    .innerWrapper {
+      padding: 0 0 16px 0;
     }
   }
 }

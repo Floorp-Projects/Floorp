@@ -8,6 +8,7 @@ import { RichText } from "../../components/RichText/RichText";
 import { safeURI } from "../../template-utils";
 import { SimpleSnippet } from "../SimpleSnippet/SimpleSnippet";
 import { SnippetBase } from "../../components/SnippetBase/SnippetBase";
+import ConditionalWrapper from "../../components/ConditionalWrapper/ConditionalWrapper";
 
 // Alt text placeholder in case the prop from the server isn't available
 const ICON_ALT_TEXT = "";
@@ -226,6 +227,53 @@ export class SubmitFormSnippet extends React.PureComponent {
     );
   }
 
+  renderForm() {
+    return (
+      <form
+        action={this.props.form_action}
+        method={this.props.form_method}
+        onSubmit={this.handleSubmit}
+        ref="form"
+      >
+        {this.renderHiddenFormInputs()}
+        <div>
+          {this.renderInput()}
+          <button
+            type="submit"
+            className="ASRouterButton primary"
+            onClick={this.handleSubmitAttempt}
+            ref="formSubmitBtn"
+          >
+            {this.props.content.scene2_button_label}
+          </button>
+        </div>
+        {this.renderFormPrivacyNotice() || this.renderDisclaimer()}
+      </form>
+    );
+  }
+
+  renderScene2Icon() {
+    const { content } = this.props;
+    if (!content.scene2_icon) {
+      return null;
+    }
+
+    return (
+      <div className="scene2Icon">
+        <img
+          src={safeURI(content.scene2_icon)}
+          className="icon-light-theme"
+          alt={content.scene2_icon_alt_text || ICON_ALT_TEXT}
+        />
+        <img
+          src={safeURI(content.scene2_icon_dark_theme || content.scene2_icon)}
+          className="icon-dark-theme"
+          alt={content.scene2_icon_alt_text || ICON_ALT_TEXT}
+        />
+      </div>
+    );
+  }
+
   renderSignupView() {
     const { content } = this.props;
     const containerClass = `SubmitFormSnippet ${this.props.className}`;
@@ -235,22 +283,7 @@ export class SubmitFormSnippet extends React.PureComponent {
         className={containerClass}
         footerDismiss={true}
       >
-        {content.scene2_icon ? (
-          <div className="scene2Icon">
-            <img
-              src={safeURI(content.scene2_icon)}
-              className="icon-light-theme"
-              alt={content.scene2_icon_alt_text || ICON_ALT_TEXT}
-            />
-            <img
-              src={safeURI(
-                content.scene2_icon_dark_theme || content.scene2_icon
-              )}
-              className="icon-dark-theme"
-              alt={content.scene2_icon_alt_text || ICON_ALT_TEXT}
-            />
-          </div>
-        ) : null}
+        {this.renderScene2Icon()}
         <div className="message">
           <p>
             {content.scene2_title && (
@@ -264,26 +297,70 @@ export class SubmitFormSnippet extends React.PureComponent {
             )}
           </p>
         </div>
-        <form
-          action={this.props.form_action}
-          method={this.props.form_method}
-          onSubmit={this.handleSubmit}
-          ref="form"
-        >
-          {this.renderHiddenFormInputs()}
-          <div>
-            {this.renderInput()}
-            <button
-              type="submit"
-              className="ASRouterButton primary"
-              onClick={this.handleSubmitAttempt}
-              ref="formSubmitBtn"
-            >
-              {content.scene2_button_label}
-            </button>
-          </div>
-          {this.renderFormPrivacyNotice() || this.renderDisclaimer()}
-        </form>
+        {this.renderForm()}
+      </SnippetBase>
+    );
+  }
+
+  renderSectionHeader() {
+    const { props } = this;
+
+    // an icon and text must be specified to render the section header
+    if (props.content.section_title_icon && props.content.section_title_text) {
+      const sectionTitleIconLight = safeURI(props.content.section_title_icon);
+      const sectionTitleIconDark = safeURI(
+        props.content.section_title_icon_dark_theme ||
+          props.content.section_title_icon
+      );
+      const sectionTitleURL = props.content.section_title_url;
+
+      return (
+        <div className="section-header">
+          <h3 className="section-title">
+            <ConditionalWrapper condition={sectionTitleURL}>
+              <span
+                className="icon icon-small-spacer icon-light-theme"
+                style={{ backgroundImage: `url("${sectionTitleIconLight}")` }}
+              />
+              <span
+                className="icon icon-small-spacer icon-dark-theme"
+                style={{ backgroundImage: `url("${sectionTitleIconDark}")` }}
+              />
+              <span className="section-title-text">
+                {props.content.section_title_text}
+              </span>
+            </ConditionalWrapper>
+          </h3>
+        </div>
+      );
+    }
+
+    return null;
+  }
+
+  renderSignupViewAlt() {
+    const { content } = this.props;
+    const containerClass = `SubmitFormSnippet ${this.props.className} scene2Alt`;
+    return (
+      <SnippetBase
+        {...this.props}
+        className={containerClass}
+        // Don't show bottom dismiss button
+        footerDismiss={false}
+      >
+        {this.renderSectionHeader()}
+        {this.renderScene2Icon()}
+        <div className="message">
+          <p>
+            {content.scene2_text && (
+              <RichText
+                scene2_text={content.scene2_text}
+                localization_id="scene2_text"
+              />
+            )}
+          </p>
+          {this.renderForm()}
+        </div>
       </SnippetBase>
     );
   }
@@ -305,6 +382,10 @@ export class SubmitFormSnippet extends React.PureComponent {
     }
     if (this.state.expanded) {
       return this.renderSignupView();
+    }
+    // Render only scene 2 (signup view)
+    if (this.props.expandedAlt) {
+      return this.renderSignupViewAlt();
     }
     return (
       <SimpleSnippet
