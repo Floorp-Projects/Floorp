@@ -341,6 +341,7 @@ class WeakMap
   inline void forgetKey(UnbarrieredKey key);
 
   void barrierForInsert(Key k, const Value& v) {
+    assertMapIsSameZoneWithValue(v);
     if (!mapColor) {
       return;
     }
@@ -354,6 +355,8 @@ class WeakMap
     TraceEdge(trc, &tmp, "weakmap inserted value");
     MOZ_ASSERT(tmp == v);
   }
+
+  inline void assertMapIsSameZoneWithValue(const Value& v);
 
   bool markEntries(GCMarker* marker) override;
 
