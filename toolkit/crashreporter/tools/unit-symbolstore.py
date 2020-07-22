@@ -543,7 +543,7 @@ class TestFunctional(HelperMixin, unittest.TestCase):
         self.script_path = os.path.join(
             self.topsrcdir, "toolkit", "crashreporter", "tools", "symbolstore.py"
         )
-        if target_platform() == "WINNT":
+        if 'DUMP_SYMS' in buildconfig.substs:
             self.dump_syms = buildconfig.substs["DUMP_SYMS"]
         else:
             self.dump_syms = os.path.join(
