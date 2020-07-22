@@ -7,6 +7,7 @@
 #include "prio.h"
 #include "PLDHashTable.h"
 #include "mozilla/IOInterposer.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/IOBuffers.h"
 #include "mozilla/ipc/FileDescriptor.h"
@@ -889,6 +890,12 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
   *outbuf = value.mData.get();
   *length = value.mUncompressedSize;
 
+  if (value.mData.IsOwned()) {
+    // We're returning a raw reference to this entry's owned buffer, so we can
+    // no longer free that buffer.
+    value.mFlags += StartupCacheEntryFlags::DoNotFree;
+  }
+
   return NS_OK;
 }
 
@@ -1145,6 +1152,21 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   mWrittenOnce = true;
   mCacheData.reset();
   tmpFile->MoveToNative(nullptr, leafName);
+
+  // If we're shutting down, we do not care about freeing up memory right now.
+  if (AppShutdown::IsShuttingDown()) {
+    return Ok();
+  }
+
+  // We've just written our buffers to disk, and we're 60 seconds out from
+  // startup, so they're unlikely to be needed again any time soon; let's
+  // clean up what we can.
+  for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
+    auto& value = iter.get().value();
+    if (!value.mFlags.contains(StartupCacheEntryFlags::DoNotFree)) {
+      value.mData = nullptr;
+    }
+  }
 
   return Ok();
 }
