@@ -2357,7 +2357,7 @@ void HTMLMediaElement::NoSupportedMediaSourceError(
 
   bool isThirdPartyLoad = false;
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
-  if (mSrcAttrTriggeringPrincipal) {
+  if (mSrcAttrTriggeringPrincipal && mLoadingSrc) {
     rv = mSrcAttrTriggeringPrincipal->IsThirdPartyURI(mLoadingSrc,
                                                       &isThirdPartyLoad);
   }
