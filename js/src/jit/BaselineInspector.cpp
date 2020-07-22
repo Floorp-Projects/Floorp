@@ -241,7 +241,7 @@ static void SkipBinaryGuards(CacheIRReader& reader, bool* sawStringOperand) {
     if (reader.matchOp(CacheOp::GuardToInt32) ||
         reader.matchOp(CacheOp::GuardNonDoubleType) ||
         reader.matchOp(CacheOp::TruncateDoubleToUInt32) ||
-        reader.matchOp(CacheOp::GuardToBoolean)) {
+        reader.matchOp(CacheOp::GuardBooleanToInt32)) {
       reader.skip();  // Skip over operandId
       reader.skip();  // Skip over result/type.
       continue;
@@ -260,7 +260,8 @@ static void SkipBinaryGuards(CacheIRReader& reader, bool* sawStringOperand) {
     if (reader.matchOp(CacheOp::GuardIsNumber) ||
         reader.matchOp(CacheOp::GuardToString) ||
         reader.matchOp(CacheOp::GuardToObject) ||
-        reader.matchOp(CacheOp::GuardToBigInt)) {
+        reader.matchOp(CacheOp::GuardToBigInt) ||
+        reader.matchOp(CacheOp::GuardToBoolean)) {
       reader.skip();  // Skip over operandId
       continue;
     }
@@ -394,6 +395,9 @@ static bool GuardType(CacheIRReader& reader,
     case CacheOp::GuardToBigInt:
       guardType[guardOperand] = MIRType::BigInt;
       break;
+    case CacheOp::GuardToBoolean:
+      guardType[guardOperand] = MIRType::Boolean;
+      break;
     case CacheOp::GuardIsNumber:
       guardType[guardOperand] = MIRType::Double;
       break;
@@ -406,7 +410,7 @@ static bool GuardType(CacheIRReader& reader,
       // Skip over result
       reader.skip();
       break;
-    case CacheOp::GuardToBoolean:
+    case CacheOp::GuardBooleanToInt32:
       guardType[guardOperand] = MIRType::Boolean;
       // Skip over result
       reader.skip();

@@ -406,8 +406,12 @@ bool WarpCacheIRTranspiler::emitGuardToBigInt(ValOperandId inputId) {
   return emitGuardTo(inputId, MIRType::BigInt);
 }
 
-bool WarpCacheIRTranspiler::emitGuardToBoolean(ValOperandId inputId,
-                                               Int32OperandId resultId) {
+bool WarpCacheIRTranspiler::emitGuardToBoolean(ValOperandId inputId) {
+  return emitGuardTo(inputId, MIRType::Boolean);
+}
+
+bool WarpCacheIRTranspiler::emitGuardBooleanToInt32(ValOperandId inputId,
+                                                    Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
 
   MDefinition* boolean;
@@ -420,7 +424,6 @@ bool WarpCacheIRTranspiler::emitGuardToBoolean(ValOperandId inputId,
     boolean = unbox;
   }
 
-  // This is actually a no-op, but still required to get the correct type.
   auto* ins = MToIntegerInt32::New(alloc(), boolean);
   add(ins);
 
@@ -559,20 +562,9 @@ bool WarpCacheIRTranspiler::emitCallNumberToString(NumberOperandId inputId,
   return emitToString(inputId, resultId);
 }
 
-bool WarpCacheIRTranspiler::emitBooleanToString(Int32OperandId inputId,
+bool WarpCacheIRTranspiler::emitBooleanToString(BooleanOperandId inputId,
                                                 StringOperandId resultId) {
-  MDefinition* input = getOperand(inputId);
-
-  // Remove the MToIntegerInt32 instruction added by emitGuardToBoolean.
-  // TODO: Bug 1647602 add a BooleanOperandId.
-  MDefinition* boolean = input->toToIntegerInt32()->input();
-  MOZ_ASSERT(boolean->type() == MIRType::Boolean);
-
-  auto* ins =
-      MToString::New(alloc(), boolean, MToString::SideEffectHandling::Bailout);
-  add(ins);
-
-  return defineOperand(resultId, ins);
+  return emitToString(inputId, resultId);
 }
 
 bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {
@@ -631,6 +623,12 @@ bool WarpCacheIRTranspiler::emitLoadInt32Constant(uint32_t valOffset,
                                                   Int32OperandId resultId) {
   int32_t val = int32StubField(valOffset);
   auto* valConst = constant(Int32Value(val));
+  return defineOperand(resultId, valConst);
+}
+
+bool WarpCacheIRTranspiler::emitLoadBooleanConstant(bool val,
+                                                    BooleanOperandId resultId) {
+  auto* valConst = constant(BooleanValue(val));
   return defineOperand(resultId, valConst);
 }
 
