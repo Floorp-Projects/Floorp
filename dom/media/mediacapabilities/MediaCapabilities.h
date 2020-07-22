@@ -7,20 +7,24 @@
 #ifndef mozilla_dom_MediaCapabilities_h_
 #define mozilla_dom_MediaCapabilities_h_
 
-#include "DecoderDoctorLogger.h"
-#include "MediaContainerType.h"
-#include "js/TypeDecls.h"
+#include "DDLoggedTypeTraits.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "nsCOMPtr.h"
-#include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIGlobalObject.h"
 #include "nsISupports.h"
+#include "nsStringFwd.h"
 #include "nsWrapperCache.h"
 
+class nsIGlobalObject;
+
 namespace mozilla {
+class ErrorResult;
+class MediaContainerType;
+
 namespace layers {
 class KnowsCompositor;
 }

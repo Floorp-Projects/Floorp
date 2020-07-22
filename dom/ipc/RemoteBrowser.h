@@ -19,6 +19,8 @@
 #include "nsRect.h"
 #include "Units.h"
 
+class nsFrameLoader;
+
 namespace mozilla {
 
 namespace dom {

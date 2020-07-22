@@ -8,6 +8,7 @@
 #include "mozilla/dom/FeaturePolicyBinding.h"
 #include "mozilla/dom/FeaturePolicyParser.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 

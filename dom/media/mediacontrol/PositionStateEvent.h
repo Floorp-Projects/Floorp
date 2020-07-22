@@ -10,15 +10,16 @@
 #ifndef mozilla_dom_PositionStateEvent_h
 #define mozilla_dom_PositionStateEvent_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/PositionStateEventBinding.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
 
 struct JSContext;
 namespace mozilla {
 namespace dom {
+struct PositionStateEventInit;
 
 class PositionStateEvent : public Event {
  public:

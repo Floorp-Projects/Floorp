@@ -35,6 +35,7 @@
 #include "mozilla/dom/IdleRequest.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StorageNotifierService.h"

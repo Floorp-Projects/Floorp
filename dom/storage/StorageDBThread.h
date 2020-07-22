@@ -13,6 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/storage/StatementCache.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"

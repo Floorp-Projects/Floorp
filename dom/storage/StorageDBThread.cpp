@@ -28,6 +28,7 @@
 #include "nsVariant.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/IOInterposer.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/Services.h"
 #include "mozilla/Tokenizer.h"

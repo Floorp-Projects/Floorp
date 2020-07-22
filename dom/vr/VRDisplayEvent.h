@@ -7,13 +7,18 @@
 #ifndef mozilla_dom_VRDisplayEvent_h_
 #define mozilla_dom_VRDisplayEvent_h_
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/VRDisplayEventBinding.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/Event.h"
-
-#include "gfxVR.h"
+#include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/VRDisplay.h"
+#include "mozilla/dom/VRDisplayEventBinding.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
 
 struct JSContext;
 
