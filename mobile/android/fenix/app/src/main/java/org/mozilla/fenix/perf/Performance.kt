@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import android.provider.Settings as AndroidSettings
@@ -17,6 +18,8 @@ import android.provider.Settings as AndroidSettings
  */
 object Performance {
     const val TAG = "FenixPerf"
+    val logger = Logger(TAG)
+
     private const val EXTRA_IS_PERFORMANCE_TEST = "performancetest"
 
     /**
