@@ -6,18 +6,14 @@
 
 #include "chrome/common/child_thread.h"
 
-#include "base/string_util.h"
-#include "base/command_line.h"
 #include "chrome/common/child_process.h"
-#include "chrome/common/chrome_switches.h"
 
 ChildThread::ChildThread(Thread::Options options)
     : Thread("Chrome_ChildThread"),
       owner_loop_(MessageLoop::current()),
       options_(options) {
   DCHECK(owner_loop_);
-  channel_name_ = CommandLine::ForCurrentProcess()->GetSwitchValue(
-      switches::kProcessChannelID);
+  channel_name_ = IPC::Channel::ChannelIDForCurrentProcess();
 }
 
 ChildThread::~ChildThread() {}

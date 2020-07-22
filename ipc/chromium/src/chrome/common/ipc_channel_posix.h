@@ -29,8 +29,10 @@ namespace IPC {
 // socketpairs.  See the .cc file for an overview of the implementation.
 class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
  public:
+  using ChannelId = Channel::ChannelId;
+
   // Mirror methods of Channel, see ipc_channel.h for description.
-  ChannelImpl(const std::wstring& channel_id, Mode mode, Listener* listener);
+  ChannelImpl(const ChannelId& channel_id, Mode mode, Listener* listener);
   ChannelImpl(int fd, Mode mode, Listener* listener);
   ~ChannelImpl() { Close(); }
   bool Connect();
