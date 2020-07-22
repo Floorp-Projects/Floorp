@@ -103,15 +103,20 @@ function runTests()
   }
 }
 
-function compareCanvases() {
+function compareCanvases(options = {}) {
   const canvas1 = document.getElementsByTagName("canvas")[0];
   const canvas2 = document.getElementsByTagName("canvas")[1];
-  const result = window.windowUtils.compareCanvases(canvas1, canvas2, {}) == 0;
-  if (!result) {
+  let maxDifference = {};
+  const differingPixels = window.windowUtils.compareCanvases(canvas1, canvas2, maxDifference);
+  if (differingPixels) {
+    todo(false, "different: " + differingPixels + ", maxDifference: " + maxDifference.value);
     todo(false, "TEST CASE: " + canvas1.toDataURL());
     todo(false, "REFERENCE: " + canvas2.toDataURL());
   }
-  return result;
+
+  let maxAllowedDifferent = options.maxDifferent || 0;
+  let maxAllowedDifference = options.maxDifference || 0;
+  return differingPixels <= maxAllowedDifferent && maxDifference.value <= maxAllowedDifference;
 }
 
 function addHTMLContent(parent) {
@@ -441,7 +446,7 @@ async function compareFiles(src1, src2, options = {}) {
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
-  ok(compareCanvases(), `Printing ${src1} and ${src2} should produce the same results`);
+  ok(compareCanvases(options), `Printing ${src1} and ${src2} should produce the same results`);
 }
 
 // bug 1567105
@@ -485,12 +490,14 @@ async function runTest15() {
 
 // Various image tests.
 async function runTest16() {
-  await compareFiles("printpreview_images.html", "printpreview_images_ref.html");
+  // fuzzy: SVG image in the test pixel-snaps different than <div> in the ref.
+  await compareFiles("printpreview_images.html", "printpreview_images_ref.html", { maxDifferent: 118, maxDifference: 177 });
   requestAnimationFrame(function() { setTimeout(runTest17); } );
 }
 
 async function runTest17() {
-  await compareFiles("printpreview_images_sw.html", "printpreview_images_sw_ref.html", { waitForMessage: true });
+  // fuzzy: SVG image in the test pixel-snaps different than <div> in the ref.
+  await compareFiles("printpreview_images_sw.html", "printpreview_images_sw_ref.html", { waitForMessage: true, maxDifferent: 118, maxDifference: 177 });
   finish();
 }
 
