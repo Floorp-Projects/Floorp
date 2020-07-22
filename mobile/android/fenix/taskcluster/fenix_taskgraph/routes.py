@@ -16,11 +16,6 @@ SIGNING_ROUTE_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.{variant}.{build_date}.revision.{head_rev}.{abi}",
     "index.{trust-domain}.v2.{project}.{variant}.{build_date}.latest.{abi}",
     "index.{trust-domain}.v2.{project}.{variant}.revision.{head_rev}.{abi}",
-
-    # TODO Bug 1631839: Remove the following scopes once all consumers have migrated
-    "index.project.{trust-domain}.{project}.v2.{variant}.{build_date}.revision.{head_rev}",
-    "index.project.{trust-domain}.{project}.v2.{variant}.{build_date}.latest",
-    "index.project.{trust-domain}.{project}.v2.{variant}.latest",
 ]
 
 
