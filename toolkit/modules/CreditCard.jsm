@@ -48,7 +48,6 @@ const CREDIT_CARD_IIN = [
   { type: "diners", start: 3095, end: 3095, len: [14, 19] },
   { type: "diners", start: 36, end: 36, len: [14, 19] },
   { type: "diners", start: 38, end: 39, len: [14, 19] },
-  { type: "diners", start: 54, end: 55, len: 16 },
   { type: "discover", start: 6011, end: 6011, len: [16, 19] },
   { type: "discover", start: 622126, end: 622925, len: [16, 19] },
   { type: "discover", start: 624000, end: 626999, len: [16, 19] },
