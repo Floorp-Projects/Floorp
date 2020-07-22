@@ -9,7 +9,7 @@ using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 namespace mozilla {
 namespace dom {
 
-struct MIDIPortInfo {
+comparable struct MIDIPortInfo {
     nsString id;
     nsString name;
     nsString manufacturer;

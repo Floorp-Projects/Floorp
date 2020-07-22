@@ -1,4 +1,4 @@
-uncomparable struct S {
+comparable struct S {
     int i;
     double d;
 };

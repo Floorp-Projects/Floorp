@@ -12,7 +12,7 @@ namespace dom {
 // IPC type with enough information to create a ServiceWorker DOM object
 // in a child process.  Note that the state may be slightly out-of-sync
 // with the parent and should be updated dynamically if necessary.
-struct IPCServiceWorkerDescriptor
+comparable struct IPCServiceWorkerDescriptor
 {
   uint64_t id;
   uint64_t registrationId;
