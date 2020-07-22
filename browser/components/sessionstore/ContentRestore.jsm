@@ -158,6 +158,7 @@ ContentRestoreInternal.prototype = {
 
     this._shistoryInParent = shistoryInParent;
 
+    this._tabDataForFinishRestoreHistory = tabData;
     if (this._shistoryInParent) {
       callbacks.requestRestoreSHistory();
     } else {
@@ -177,8 +178,6 @@ ContentRestoreInternal.prototype = {
 
       webNavigation.sessionHistory.legacySHistory.addSHistoryListener(listener);
       this._historyListener = listener;
-
-      this._tabDataForFinishRestoreHistory = tabData;
       this.finishRestoreHistory(callbacks);
     }
   },
