@@ -4088,7 +4088,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-2].toObject());
 
       uint32_t index = GET_UINT32(REGS.pc);
-      if (!InitArrayElemOperation(cx, REGS.pc, obj, index, val)) {
+      if (!InitArrayElemOperation(cx, REGS.pc, obj.as<ArrayObject>(), index,
+                                  val)) {
         goto error;
       }
 
@@ -4103,7 +4104,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-3].toObject());
 
       uint32_t index = REGS.sp[-2].toInt32();
-      if (!InitArrayElemOperation(cx, REGS.pc, obj, index, val)) {
+      if (!InitArrayElemOperation(cx, REGS.pc, obj.as<ArrayObject>(), index,
+                                  val)) {
         goto error;
       }
 
@@ -5096,9 +5098,9 @@ bool js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
                                    pc);
 }
 
-bool js::InitElementArray(JSContext* cx, jsbytecode* pc, HandleObject obj,
+bool js::InitElementArray(JSContext* cx, jsbytecode* pc, HandleArrayObject arr,
                           uint32_t index, HandleValue value) {
-  return InitArrayElemOperation(cx, pc, obj, index, value);
+  return InitArrayElemOperation(cx, pc, arr, index, value);
 }
 
 bool js::AddValues(JSContext* cx, MutableHandleValue lhs,

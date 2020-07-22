@@ -332,7 +332,8 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   jsbytecode* pc = ic->pc();
   if (ic->kind() == CacheKind::SetElem) {
     if (JSOp(*pc) == JSOp::InitElemInc || JSOp(*pc) == JSOp::InitElemArray) {
-      if (!InitArrayElemOperation(cx, pc, obj, idVal.toInt32(), rhs)) {
+      if (!InitArrayElemOperation(cx, pc, obj.as<ArrayObject>(),
+                                  idVal.toInt32(), rhs)) {
         return false;
       }
     } else if (IsPropertyInitOp(JSOp(*pc))) {

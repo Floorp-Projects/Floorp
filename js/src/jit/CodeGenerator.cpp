@@ -11471,8 +11471,8 @@ void CodeGenerator::visitCallInitElementArray(LCallInitElementArray* lir) {
   pushArg(ToRegister(lir->object()));
   pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
 
-  using Fn =
-      bool (*)(JSContext*, jsbytecode*, HandleObject, uint32_t, HandleValue);
+  using Fn = bool (*)(JSContext*, jsbytecode*, HandleArrayObject, uint32_t,
+                      HandleValue);
   callVM<Fn, js::InitElementArray>(lir);
 }
 
