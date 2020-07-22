@@ -78,7 +78,7 @@ function checkEventTelemetry(expectedData) {
     is(method, expected.method, "'method' is correct");
     is(object, expected.object, "'object' is correct");
     is(value, expected.value, "'value' is correct");
-    is(extra.lines, expected.extra.lines, "'lines' is correct");
+    is(parseInt(extra.lines, 10), expected.extra.lines, "'lines' is correct");
     is(extra.input, expected.extra.input, "'input' is correct");
   }
 }

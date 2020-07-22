@@ -52,7 +52,7 @@ add_task(async function() {
   const policies = cspOBJ["csp-policies"];
   is(policies.length, 1, "CSP: should be one policy");
   const policy = policies[0];
-  is(policy["img-src"], "*", "CSP: img-src should be *");
+  is(`${policy["img-src"]}`, "*", "CSP: img-src should be *");
 
   return teardown(monitor);
 });

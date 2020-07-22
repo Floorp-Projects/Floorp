@@ -56,7 +56,7 @@ add_task(async function() {
     const row = childRows[name];
 
     is(
-      name,
+      parseInt(name, 10),
       i++,
       `index ${name} is correct and sorted into the correct position`
     );

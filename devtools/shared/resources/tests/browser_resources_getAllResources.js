@@ -22,7 +22,8 @@ add_task(async function() {
 
   info("Check the resources gotten from getAllResources at initial");
   is(
-    resourceWatcher.getAllResources(ResourceWatcher.TYPES.CONSOLE_MESSAGE),
+    resourceWatcher.getAllResources(ResourceWatcher.TYPES.CONSOLE_MESSAGE)
+      .length,
     0,
     "There is no resources at initial"
   );

@@ -102,7 +102,7 @@ add_task(async function() {
     receivedMessages.find(
       resource => resource.message.arguments[0] === "test-again"
     ),
-    null,
+    undefined,
     "The resource watcher should not watch CONSOLE_MESSAGE anymore"
   );
 

@@ -48,7 +48,7 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-margin.boxmodel-top > span"
   );
-  is(span.textContent, 5, "Should have the right value in the box model.");
+  is(span.textContent, "5", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -74,7 +74,7 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
     "",
     "Should be no margin-top on the element."
   );
-  is(span.textContent, 5, "Should have the right value in the box model.");
+  is(span.textContent, "5", "Should have the right value in the box model.");
 }
 
 async function testKeyBindings(inspector, boxmodel, testActor) {
@@ -93,7 +93,7 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-margin.boxmodel-left > span"
   );
-  is(span.textContent, 10, "Should have the right value in the box model.");
+  is(span.textContent, "10", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -142,7 +142,7 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
     "20px",
     "Should be the right margin-top on the element."
   );
-  is(span.textContent, 20, "Should have the right value in the box model.");
+  is(span.textContent, "20", "Should have the right value in the box model.");
 }
 
 async function testEscapeToUndo(inspector, boxmodel, testActor) {
@@ -161,7 +161,7 @@ async function testEscapeToUndo(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-margin.boxmodel-left > span"
   );
-  is(span.textContent, 20, "Should have the right value in the box model.");
+  is(span.textContent, "20", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -188,7 +188,7 @@ async function testEscapeToUndo(inspector, boxmodel, testActor) {
     "20px",
     "Should be the right margin-top on the element."
   );
-  is(span.textContent, 20, "Should have the right value in the box model.");
+  is(span.textContent, "20", "Should have the right value in the box model.");
 }
 
 async function testDeletingValue(inspector, boxmodel, testActor) {
@@ -202,7 +202,7 @@ async function testDeletingValue(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-margin.boxmodel-right > span"
   );
-  is(span.textContent, 15, "Should have the right value in the box model.");
+  is(span.textContent, "15", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -228,7 +228,7 @@ async function testDeletingValue(inspector, boxmodel, testActor) {
     "",
     "Should be the right margin-top on the element."
   );
-  is(span.textContent, 10, "Should have the right value in the box model.");
+  is(span.textContent, "10", "Should have the right value in the box model.");
 }
 
 async function testRefocusingOnClick(inspector, boxmodel, testActor) {
@@ -239,7 +239,7 @@ async function testRefocusingOnClick(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-margin.boxmodel-top > span"
   );
-  is(span.textContent, 1, "Should have the right value in the box model.");
+  is(span.textContent, "1", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -272,5 +272,5 @@ async function testRefocusingOnClick(inspector, boxmodel, testActor) {
     "2px",
     "Should be the right margin-top on the element."
   );
-  is(span.textContent, 2, "Should have the right value in the box model.");
+  is(span.textContent, "2", "Should have the right value in the box model.");
 }

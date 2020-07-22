@@ -130,5 +130,9 @@ async function hasCorrectSizeLabelValue({ getElementTextContent }) {
 
   is(parseFloat(width), WIDTH, "width on label's size is correct");
   is(parseFloat(height), HEIGHT, "height on label's size is correct");
-  is(parseFloat(hypot), HYPOTENUSE, "hypotenuse on label's size is correct");
+  is(
+    parseFloat(hypot),
+    parseFloat(HYPOTENUSE),
+    "hypotenuse on label's size is correct"
+  );
 }

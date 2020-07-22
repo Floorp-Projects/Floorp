@@ -29,7 +29,7 @@ add_task(async function() {
   // check the value of
   is(getValue(dbg, 2), "(unavailable)");
   is(getValue(dbg, 3), "(unavailable)");
-  is(getValue(dbg, 4), 2);
+  is(getValue(dbg, 4), "2");
 
   await toggleExpressionNode(dbg, 1);
   is(findAllElements(dbg, "expressionNodes").length, 37);

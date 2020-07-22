@@ -48,7 +48,7 @@ const res1 = [
   },
   {
     property: "z-index",
-    value: 2,
+    value: "2",
   },
 ];
 
@@ -75,7 +75,7 @@ const res2 = [
   },
   {
     property: "z-index",
-    value: 5,
+    value: "5",
   },
 ];
 

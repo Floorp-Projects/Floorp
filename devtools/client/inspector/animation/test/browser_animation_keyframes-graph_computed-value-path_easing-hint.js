@@ -321,12 +321,12 @@ add_task(async function() {
             `The <rect> element  in ${hintTarget} should be existence`
           );
           is(
-            interactionEl.getAttribute("x"),
+            parseInt(interactionEl.getAttribute("x"), 10),
             expectedHint.rect.x,
             `x of <rect> in ${hintTarget} should be ${expectedHint.rect.x}`
           );
           is(
-            interactionEl.getAttribute("width"),
+            parseInt(interactionEl.getAttribute("width"), 10),
             expectedHint.rect.width,
             `width of <rect> in ${hintTarget} should be ${expectedHint.rect.width}`
           );
@@ -350,7 +350,7 @@ add_task(async function() {
           win
         );
         is(
-          win.getComputedStyle(displayedEl).strokeOpacity,
+          parseInt(win.getComputedStyle(displayedEl).strokeOpacity, 10),
           0,
           `stroke-opacity of hintEl for ${hintTarget} should be 0 ` +
             "while mouse is out from the element"

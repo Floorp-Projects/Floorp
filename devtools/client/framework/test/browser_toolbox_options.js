@@ -169,8 +169,8 @@ async function testSelect(select) {
   info("Checking select for: " + pref);
 
   is(
-    select.options[select.selectedIndex].value,
-    GetPref(pref),
+    `${select.options[select.selectedIndex].value}`,
+    `${GetPref(pref)}`,
     "select starts out selected"
   );
 
@@ -185,7 +185,11 @@ async function testSelect(select) {
     const changeSeenPromise = new Promise(resolve => {
       observer.once(pref, () => {
         changeSeen = true;
-        is(GetPref(pref), option.value, "Preference been switched for " + pref);
+        is(
+          `${GetPref(pref)}`,
+          `${option.value}`,
+          "Preference been switched for " + pref
+        );
         resolve();
       });
     });

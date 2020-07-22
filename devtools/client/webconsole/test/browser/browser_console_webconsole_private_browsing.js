@@ -130,6 +130,10 @@ function logPrivateMessages(browser) {
 }
 
 function assertNoPrivateMessages(hud) {
-  is(findMessage(hud, PRIVATE_MESSAGE), null, "no console message displayed");
-  is(findMessage(hud, PRIVATE_EXCEPTION), null, "no exception displayed");
+  is(
+    findMessage(hud, PRIVATE_MESSAGE),
+    undefined,
+    "no console message displayed"
+  );
+  is(findMessage(hud, PRIVATE_EXCEPTION), undefined, "no exception displayed");
 }

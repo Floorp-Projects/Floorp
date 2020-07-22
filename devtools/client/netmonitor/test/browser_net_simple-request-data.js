@@ -50,7 +50,7 @@ function test() {
       expectEvent(TEST_EVENTS.NETWORK_EVENT, async () => {
         is(
           getSelectedRequest(store.getState()),
-          null,
+          undefined,
           "There shouldn't be any selected item in the requests menu."
         );
         is(
@@ -348,12 +348,12 @@ function test() {
 
         is(
           requestItem.transferredSize,
-          "347",
+          347,
           "The transferredSize data has an incorrect value."
         );
         is(
           requestItem.contentSize,
-          "12",
+          12,
           "The contentSize data has an incorrect value."
         );
         is(

@@ -137,8 +137,16 @@ const TEST_DATA = [
       points = points[0];
 
       is(topY1, points[0][1], "Top guide's y1 is correct");
-      is(rightX1, points[1][0] - 1, "Right guide's x1 is correct");
-      is(bottomY1, points[2][1] - 1, "Bottom guide's y1 is correct");
+      is(
+        parseInt(rightX1, 10),
+        points[1][0] - 1,
+        "Right guide's x1 is correct"
+      );
+      is(
+        parseInt(bottomY1, 10),
+        points[2][1] - 1,
+        "Bottom guide's y1 is correct"
+      );
       is(leftX1, points[3][0], "Left guide's x1 is correct");
     },
   },
@@ -167,8 +175,16 @@ const TEST_DATA = [
       points = points[0];
 
       is(topY1, points[0][1], "Top guide's y1 is correct");
-      is(rightX1, points[1][0] - 1, "Right guide's x1 is correct");
-      is(bottomY1, points[2][1] - 1, "Bottom guide's y1 is correct");
+      is(
+        parseInt(rightX1, 10),
+        points[1][0] - 1,
+        "Right guide's x1 is correct"
+      );
+      is(
+        parseInt(bottomY1, 10),
+        points[2][1] - 1,
+        "Bottom guide's y1 is correct"
+      );
       is(leftX1, points[3][0], "Left guide's x1 is correct");
     },
   },

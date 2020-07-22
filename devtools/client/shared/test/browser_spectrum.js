@@ -305,7 +305,7 @@ function testSettingColorShoudUpdateTheUI(container) {
   hueSliderOriginalVal = s.hueSlider.value;
 
   setSpectrumProps(s, { rgb: ZERO_ALPHA_COLOR });
-  is(s.alphaSlider.value, 0, "Alpha range UI has been updated again");
+  is(s.alphaSlider.value, "0", "Alpha range UI has been updated again");
   ok(
     hueSliderOriginalVal !== s.hueSlider.value,
     "Hue slider should have move again"

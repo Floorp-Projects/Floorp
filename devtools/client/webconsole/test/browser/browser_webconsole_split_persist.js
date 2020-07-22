@@ -28,8 +28,8 @@ add_task(async function() {
   ok(getVisiblePrefValue(), "Visibility pref is true");
 
   is(
-    getHeightPrefValue(),
-    toolbox.webconsolePanel.height,
+    parseInt(getHeightPrefValue(), 10),
+    parseInt(toolbox.webconsolePanel.height, 10),
     "Panel height matches the pref"
   );
   toolbox.webconsolePanel.height = 200;

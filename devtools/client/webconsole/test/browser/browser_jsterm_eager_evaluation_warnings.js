@@ -15,7 +15,7 @@ add_task(async function() {
   await wait(2000);
   is(
     findMessage(hud, "getElementById", ".warn"),
-    null,
+    undefined,
     "The eager evaluation did not triggered a warning message"
   );
 

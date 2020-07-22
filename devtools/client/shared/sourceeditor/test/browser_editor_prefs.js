@@ -52,7 +52,7 @@ async function test() {
   );
   is(ed.getOption("indentWithTabs"), true, "indentWithTabs is correct");
   is(ed.getOption("keyMap"), "default", "keyMap is correct");
-  is(ed.getOption("autoCloseBrackets"), "", "autoCloseBrackets is correct");
+  is(ed.getOption("autoCloseBrackets"), false, "autoCloseBrackets is correct");
   is(ed.getOption("autocomplete"), true, "autocomplete is correct");
   ok(!ed.isAutocompletionEnabled(), "Autocompletion is not enabled");
 

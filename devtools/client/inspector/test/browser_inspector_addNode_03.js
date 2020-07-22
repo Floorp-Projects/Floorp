@@ -44,7 +44,7 @@ async function testAddNode(parentNode, inspector) {
   const parentContainer = inspector.markup.getContainer(parentNode);
 
   is(
-    parentContainer.tagLine.getAttribute("aria-level"),
+    parseInt(parentContainer.tagLine.getAttribute("aria-level"), 10),
     PARENT_TREE_LEVEL,
     "The parent aria-level is up to date."
   );
@@ -81,7 +81,7 @@ async function testAddNode(parentNode, inspector) {
   const newNodeContainer = inspector.markup.getContainer(newNode);
 
   is(
-    newNodeContainer.tagLine.getAttribute("aria-level"),
+    parseInt(newNodeContainer.tagLine.getAttribute("aria-level"), 10),
     PARENT_TREE_LEVEL + 1,
     "The child aria-level is up to date."
   );

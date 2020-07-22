@@ -50,7 +50,7 @@ add_task(async function() {
 
 function checkLoc1(oldLoc, newLoc) {
   is(oldLoc.line, 6, "Correct line for JS:6");
-  is(oldLoc.column, null, "Correct column for JS:6");
+  is(oldLoc.column, undefined, "Correct column for JS:6");
   is(oldLoc.url, JS_URL, "Correct url for JS:6");
   is(newLoc.line, 4, "Correct line for JS:6 -> COFFEE");
   is(

@@ -92,22 +92,22 @@ add_task(function() {
   );
   is(
     $$fun(".call-tree-url")[0],
-    null,
+    undefined,
     "The root's function cell displays no url."
   );
   is(
     $$fun(".call-tree-line")[0],
-    null,
+    undefined,
     "The root's function cell displays no line."
   );
   is(
     $$fun(".call-tree-host")[0],
-    null,
+    undefined,
     "The root's function cell displays no host."
   );
   is(
     $$fun(".call-tree-category")[0],
-    null,
+    undefined,
     "The root's function cell displays no category."
   );
 

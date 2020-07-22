@@ -38,14 +38,18 @@ function testZoomLevel(type, times, expected, toolbox) {
   sendZoomKey("toolbox.zoom" + type + ".key", times);
 
   const zoom = getCurrentZoom(toolbox);
-  is(zoom.toFixed(1), expected, "zoom level correct after zoom " + type);
+  is(
+    zoom.toFixed(1),
+    expected.toFixed(1),
+    "zoom level correct after zoom " + type
+  );
 
   const savedZoom = parseFloat(
     Services.prefs.getCharPref("devtools.toolbox.zoomValue")
   );
   is(
     savedZoom.toFixed(1),
-    expected,
+    expected.toFixed(1),
     "saved zoom level is correct after zoom " + type
   );
 }

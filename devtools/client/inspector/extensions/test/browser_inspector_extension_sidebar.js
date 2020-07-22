@@ -331,11 +331,7 @@ add_task(async function testSidebarDOMNodeOpenInspector() {
   let onceNewNodeFront = inspector.selection.once("new-node-front");
   inspector.selection.setNodeFront(null);
   let nodeFront = await onceNewNodeFront;
-  is(
-    nodeFront,
-    undefined,
-    "The inspector selection should have been unselected"
-  );
+  is(nodeFront, null, "The inspector selection should have been unselected");
 
   info(
     "Select the ObjectInspector DOMNode in the inspector panel by clicking on it"

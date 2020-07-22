@@ -198,7 +198,7 @@ add_task(async function() {
       "The method value is incorrect."
     );
     is(
-      statusCode.dataset.code,
+      parseInt(statusCode.dataset.code, 10),
       status,
       "The status summary code is incorrect."
     );

@@ -78,5 +78,9 @@ add_task(async function() {
   );
 
   const spectrum = colorPicker.spectrum;
-  is(spectrum.rgb, "200,170,140,0.5", "The correct color picker was shown");
+  is(
+    `"${spectrum.rgb}"`,
+    '"200,170,140,0.5"',
+    "The correct color picker was shown"
+  );
 });

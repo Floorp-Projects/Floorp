@@ -66,10 +66,10 @@ async function circleHasCorrectAttrs(testActor, inspector, highlighterFront) {
     highlighterFront
   );
 
-  is(rx, 25, "Circle highlighter has correct rx");
-  is(ry, 25, "Circle highlighter has correct ry");
-  is(cx, 30, "Circle highlighter has correct cx");
-  is(cy, 40, "Circle highlighter has correct cy");
+  is(rx, "25", "Circle highlighter has correct rx");
+  is(ry, "25", "Circle highlighter has correct ry");
+  is(cx, "30", "Circle highlighter has correct cx");
+  is(cy, "40", "Circle highlighter has correct cy");
 }
 
 async function ellipseHasCorrectAttrs(testActor, inspector, highlighterFront) {
@@ -99,10 +99,10 @@ async function ellipseHasCorrectAttrs(testActor, inspector, highlighterFront) {
     highlighterFront
   );
 
-  is(rx, 40, "Ellipse highlighter has correct rx");
-  is(ry, 30, "Ellipse highlighter has correct ry");
-  is(cx, 25, "Ellipse highlighter has correct cx");
-  is(cy, 30, "Ellipse highlighter has correct cy");
+  is(rx, "40", "Ellipse highlighter has correct rx");
+  is(ry, "30", "Ellipse highlighter has correct ry");
+  is(cx, "25", "Ellipse highlighter has correct cx");
+  is(cy, "30", "Ellipse highlighter has correct cy");
 }
 
 async function insetHasCorrectAttrs(testActor, inspector, highlighterFront) {
@@ -132,8 +132,8 @@ async function insetHasCorrectAttrs(testActor, inspector, highlighterFront) {
     highlighterFront
   );
 
-  is(x, 15, "Rect highlighter has correct x");
-  is(y, 25, "Rect highlighter has correct y");
-  is(width, 72.5, "Rect highlighter has correct width");
-  is(height, 45, "Rect highlighter has correct height");
+  is(x, "15", "Rect highlighter has correct x");
+  is(y, "25", "Rect highlighter has correct y");
+  is(width, "72.5", "Rect highlighter has correct width");
+  is(height, "45", "Rect highlighter has correct height");
 }

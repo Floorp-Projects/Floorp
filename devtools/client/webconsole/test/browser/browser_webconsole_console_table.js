@@ -478,7 +478,7 @@ async function testItem(testCase, node) {
         if (isRegex(expected)) {
           ok(expected.test(cell), info);
         } else {
-          is(cell, expected, info);
+          is(cell, `${expected}`, info);
         }
       });
     } else {

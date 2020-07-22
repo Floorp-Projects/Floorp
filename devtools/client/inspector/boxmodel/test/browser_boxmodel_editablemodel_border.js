@@ -33,7 +33,7 @@ add_task(async function() {
   const span = boxmodel.document.querySelector(
     ".boxmodel-border.boxmodel-top > span"
   );
-  is(span.textContent, 0, "Should have the right value in the box model.");
+  is(span.textContent, "0", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -70,5 +70,5 @@ add_task(async function() {
     "",
     "Should have the right border"
   );
-  is(span.textContent, 0, "Should have the right value in the box model.");
+  is(span.textContent, "0", "Should have the right value in the box model.");
 });
