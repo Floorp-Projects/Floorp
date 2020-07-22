@@ -1643,6 +1643,16 @@ bool WarpCacheIRTranspiler::emitIsObjectResult(ValOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitIsPackedArrayResult(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* isPackedArray = MIsPackedArray::New(alloc(), obj);
+  add(isPackedArray);
+
+  pushResult(isPackedArray);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitIsCallableResult(ValOperandId inputId) {
   MDefinition* value = getOperand(inputId);
 

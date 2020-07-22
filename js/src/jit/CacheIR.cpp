@@ -5404,6 +5404,30 @@ AttachDecision CallIRGenerator::tryAttachIsObject(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachIsPackedArray(HandleFunction callee) {
+  // Self-hosted code calls this with a single object argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isObject());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  // Check if the argument is packed and return result.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objArgId = writer.guardToObject(argId);
+  writer.isPackedArrayResult(objArgId);
+
+  // This stub does not need to be monitored, because it always
+  // returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("IsPackedArray");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachIsCallable(HandleFunction callee) {
   // Need a single argument.
   if (argc_ != 1) {
@@ -6477,6 +6501,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachToLength(callee);
     case InlinableNative::IntrinsicIsObject:
       return tryAttachIsObject(callee);
+    case InlinableNative::IntrinsicIsPackedArray:
+      return tryAttachIsPackedArray(callee);
     case InlinableNative::IntrinsicIsCallable:
       return tryAttachIsCallable(callee);
     case InlinableNative::IntrinsicIsConstructor:
