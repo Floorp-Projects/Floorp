@@ -75,29 +75,11 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
     return NS_OK;
   }
 
+  // Nothing else is OK to load for data documents
   if (doc->IsLoadedAsData()) {
-    bool allowed = [&] {
-      if (!doc->IsStaticDocument()) {
-        // If not a print/print preview doc, then nothing else is allowed for
-        // data documents.
-        return false;
-      }
-      // Let static (print/print preview) documents to load fonts and
-      // images.
-      switch (contentType) {
-        case nsIContentPolicy::TYPE_IMAGE:
-        case nsIContentPolicy::TYPE_IMAGESET:
-        case nsIContentPolicy::TYPE_FONT:
-        // This one is a bit sketchy, but nsObjectLoadingContent takes care of
-        // only getting here if it is an image.
-        case nsIContentPolicy::TYPE_OBJECT:
-          return true;
-        default:
-          return false;
-      }
-    }();
-
-    if (!allowed) {
+    // ...but let static (print/print preview) documents to load fonts.
+    if (!doc->IsStaticDocument() ||
+        contentType != nsIContentPolicy::TYPE_FONT) {
       *aDecision = nsIContentPolicy::REJECT_TYPE;
       return NS_OK;
     }

@@ -2627,8 +2627,7 @@ class Document : public nsINode,
   bool ShouldLoadImages() const {
     // We check IsBeingUsedAsImage() so that SVG documents loaded as
     // images can themselves have data: URL image references.
-    return IsCurrentActiveDocument() || IsBeingUsedAsImage() ||
-           IsStaticDocument();
+    return IsCurrentActiveDocument() || IsBeingUsedAsImage();
   }
 
   /**
@@ -2809,7 +2808,7 @@ class Document : public nsINode,
    * If this document is a static clone, this returns the original
    * document.
    */
-  Document* GetOriginalDocument() const {
+  Document* GetOriginalDocument() {
     MOZ_ASSERT(!mOriginalDocument || !mOriginalDocument->GetOriginalDocument());
     return mOriginalDocument;
   }

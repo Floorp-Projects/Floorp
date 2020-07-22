@@ -937,6 +937,12 @@ class nsContentUtils {
       nsIImageLoadingContent* aContent, imgIRequest** aRequest = nullptr);
 
   /**
+   * Helper method to call imgIRequest::GetStaticRequest.
+   */
+  static already_AddRefed<imgRequestProxy> GetStaticRequest(
+      Document* aLoadingDocument, imgRequestProxy* aRequest);
+
+  /**
    * Method that decides whether a content node is draggable
    *
    * @param aContent The content node to test.
