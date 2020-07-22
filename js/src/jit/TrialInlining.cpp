@@ -174,7 +174,8 @@ bool TrialInliner::shouldInline(JSFunction* target, BytecodeLocation loc) {
   return true;
 }
 
-ICScript* TrialInliner::createInlinedICScript(JSFunction* target) {
+ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
+                                              BytecodeLocation loc) {
   MOZ_ASSERT(target->hasJitEntry());
   MOZ_ASSERT(target->hasJitScript());
 
@@ -213,11 +214,16 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target) {
     }
   }
 
+  uint32_t pcOffset = loc.bytecodeToOffset(script_);
   ICScript* result = inlinedICScript.get();
-  if (!root_->addInlinedScript(std::move(inlinedICScript))) {
+  if (!icScript_->addInlinedChild(cx(), std::move(inlinedICScript), pcOffset)) {
     return nullptr;
   }
   MOZ_ASSERT(result->numICEntries() == targetScript->numICEntries());
+
+  JitSpew(JitSpew_WarpTrialInlining,
+          "Outer ICScript: %p Inner ICScript: %p pcOffset: %u\n", icScript_,
+          result, pcOffset);
 
   return result;
 }
@@ -248,7 +254,7 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
     return true;
   }
 
-  ICScript* newICScript = createInlinedICScript(data->target);
+  ICScript* newICScript = createInlinedICScript(data->target, loc);
   if (!newICScript) {
     return false;
   }
