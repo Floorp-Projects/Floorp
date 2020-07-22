@@ -27,6 +27,8 @@ class ChildProcessHost : public IPC::Channel::Listener {
  public:
   virtual ~ChildProcessHost();
 
+  using ChannelId = IPC::Channel::ChannelId;
+
  protected:
   explicit ChildProcessHost();
 
@@ -44,7 +46,7 @@ class ChildProcessHost : public IPC::Channel::Listener {
   virtual void OnChannelError() override {}
 
   bool opening_channel() { return opening_channel_; }
-  const std::wstring& channel_id() { return channel_id_; }
+  const ChannelId& channel_id() { return channel_id_; }
 
   IPC::Channel* channelp() const { return channel_.get(); }
   mozilla::UniquePtr<IPC::Channel> TakeChannel() { return std::move(channel_); }
@@ -74,7 +76,7 @@ class ChildProcessHost : public IPC::Channel::Listener {
   mozilla::UniquePtr<IPC::Channel> channel_;
 
   // IPC Channel's id.
-  std::wstring channel_id_;
+  ChannelId channel_id_;
 };
 
 #endif  // CHROME_COMMON_CHILD_PROCESS_HOST_H_
