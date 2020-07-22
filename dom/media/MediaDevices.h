@@ -6,11 +6,15 @@
 #define mozilla_dom_MediaDevices_h
 
 #include "MediaEventSource.h"
-#include "mozilla/ErrorResult.h"
-#include "nsISupportsImpl.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "nsPIDOMWindow.h"
+#include "mozilla/UseCounter.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "nsCOMPtr.h"
+#include "nsID.h"
+#include "nsISupports.h"
+#include "nsITimer.h"
 
 namespace mozilla {
 namespace dom {

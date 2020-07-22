@@ -7,9 +7,10 @@
 #ifndef mozilla_dom_ReportBody_h
 #define mozilla_dom_ReportBody_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/Assertions.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
 #include "nsWrapperCache.h"
 
 class nsIGlobalObject;

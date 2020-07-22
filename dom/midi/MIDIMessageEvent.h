@@ -7,16 +7,21 @@
 #ifndef mozilla_dom_MIDIMessageEvent_h
 #define mozilla_dom_MIDIMessageEvent_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
+#include <cstdint>
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/MIDIMessageEventBinding.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
 
 struct JSContext;
 namespace mozilla {
 namespace dom {
+struct MIDIMessageEventInit;
 
 /**
  * Event that fires whenever a MIDI message is received by the MIDIInput object.

@@ -11,8 +11,14 @@
 #include "mozilla/Span.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
+#include "nsILoadInfo.h"
+#include "nsWrapperCache.h"
+
+class nsIGlobalObject;
 
 namespace mozilla {
+class LogModule;
+
 namespace dom {
 
 class WindowGlobalParent;

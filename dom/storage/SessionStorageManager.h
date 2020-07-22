@@ -9,13 +9,16 @@
 
 #include "nsIDOMStorageManager.h"
 #include "nsClassHashtable.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
-#include "nsRefPtrHashtable.h"
 #include "StorageObserver.h"
 
 namespace mozilla {
+class OriginAttributesPattern;
+
 namespace dom {
 
+class BrowsingContext;
 class ContentParent;
 class KeyValuePair;
 class SessionStorageCache;
@@ -51,9 +54,7 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
 
   NS_DECL_CYCLE_COLLECTION_CLASS(SessionStorageManager)
 
-  RefPtr<BrowsingContext> GetBrowsingContext() const {
-    return mBrowsingContext;
-  }
+  RefPtr<BrowsingContext> GetBrowsingContext() const;
 
   void SendSessionStorageDataToParentProcess();
   void SendSessionStorageDataToContentProcess(ContentParent* aActor,
@@ -94,6 +95,11 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
                                         RefPtr<SessionStorageCache>* aRetVal);
 
   struct OriginRecord {
+    OriginRecord() = default;
+    OriginRecord(OriginRecord&&) = default;
+    OriginRecord& operator=(OriginRecord&&) = default;
+    ~OriginRecord();
+
     RefPtr<SessionStorageCache> mCache;
     nsTHashtable<nsUint64HashKey> mKnownTo;
   };

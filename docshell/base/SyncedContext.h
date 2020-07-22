@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SyncedContext_h
 #define mozilla_dom_SyncedContext_h
 
-#include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"

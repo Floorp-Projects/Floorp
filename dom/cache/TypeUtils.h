@@ -7,11 +7,11 @@
 #ifndef mozilla_dom_cache_TypesUtils_h
 #define mozilla_dom_cache_TypesUtils_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/InternalHeaders.h"
-#include "mozilla/dom/SafeRefPtr.h"
-#include "nsError.h"
+#include "mozilla/AlreadyAddRefed.h"     // for already_AddRefed
+#include "mozilla/UniquePtr.h"           // for UniquePtr
+#include "mozilla/dom/HeadersBinding.h"  // for HeadersGuardEnum, HeadersGua...
+#include "mozilla/dom/SafeRefPtr.h"      // for SafeRefPtr
+#include "nsStringFwd.h"                 // for nsACString, nsAString
 
 class nsIGlobalObject;
 class nsIAsyncInputStream;
@@ -27,6 +27,7 @@ class AutoIPCStream;
 namespace dom {
 
 struct CacheQueryOptions;
+class InternalHeaders;
 class InternalRequest;
 class InternalResponse;
 class OwningRequestOrUSVString;

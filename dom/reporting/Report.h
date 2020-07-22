@@ -7,9 +7,14 @@
 #ifndef mozilla_dom_Report_h
 #define mozilla_dom_Report_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/RefPtr.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsString.h"
 #include "nsWrapperCache.h"
 
 class nsIGlobalObject;

@@ -13,6 +13,7 @@
 #include "mozilla/dom/ReportingUtils.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/Document.h"
+#include "nsJSUtils.h"
 
 namespace mozilla {
 namespace dom {

@@ -7,19 +7,20 @@
 #ifndef mozilla_dom_ImageData_h
 #define mozilla_dom_ImageData_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/TypedArray.h"
-#include <stdint.h>
-
-#include "nsCycleCollectionParticipant.h"
-#include "nsISupportsImpl.h"
+#include <cstdint>
+#include <utility>
 #include "js/RootingAPI.h"
-#include "js/StructuredClone.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/dom/TypedArray.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
 
 class nsIGlobalObject;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class ImageData final : public nsISupports {
