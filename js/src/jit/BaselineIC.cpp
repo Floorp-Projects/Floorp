@@ -2287,11 +2287,13 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
                "produce JSOp::InitElemArray with an index exceeding "
                "int32_t range");
     MOZ_ASSERT(uint32_t(index.toInt32()) == GET_UINT32(pc));
-    if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs)) {
+    if (!InitArrayElemOperation(cx, pc, obj.as<ArrayObject>(), index.toInt32(),
+                                rhs)) {
       return false;
     }
   } else if (op == JSOp::InitElemInc) {
-    if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs)) {
+    if (!InitArrayElemOperation(cx, pc, obj.as<ArrayObject>(), index.toInt32(),
+                                rhs)) {
       return false;
     }
   } else if (op == JSOp::InitPrivateElem) {
