@@ -86,7 +86,32 @@ add_task(async function testAboutPage() {
   const enrollmentButton = content.document.getElementById("enrollment-button");
   enrollmentButton.click();
 
-  await waitForAnimationFrame();
+  const dialog = content.document.getElementById("consent-dialog");
+  ok(dialog.open, "after clicking enrollment, consent dialog is open.");
+
+  const cancleDialogButton = content.document.getElementById(
+    "cancel-dialog-button"
+  );
+  cancleDialogButton.click();
+
+  ok(!dialog.open, "after cancelling enrollment, consent dialog is closed.");
+
+  const canceledEnrollment = Services.prefs.getStringPref(
+    PREF_PIONEER_ID,
+    null
+  );
+  ok(
+    !canceledEnrollment,
+    "after cancelling enrollment, Pioneer is not enrolled."
+  );
+
+  enrollmentButton.click();
+  ok(dialog.open, "after retrying enrollment, consent dialog is open.");
+
+  const acceptDialogButton = content.document.getElementById(
+    "accept-dialog-button"
+  );
+  acceptDialogButton.click();
 
   const pioneerEnrolled = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
   ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
