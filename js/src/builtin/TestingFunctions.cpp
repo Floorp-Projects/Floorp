@@ -6343,7 +6343,7 @@ gc::ZealModeHelpText),
 "  Start an incremental GC and run a slice that processes about n objects.\n"
 "  If 'shrinking' is passesd as the optional second argument, perform a\n"
 "  shrinking GC rather than a normal GC. If no zones have been selected with\n"
-"  schedulegc(), a full GC will be performed."),
+"  schedulezone(), a full GC will be performed."),
 
     JS_FN_HELP("finishgc", FinishGC, 0, 0,
 "finishgc()",
