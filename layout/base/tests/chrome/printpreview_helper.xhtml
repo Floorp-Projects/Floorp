@@ -16,6 +16,7 @@ var is = window.arguments[0].is;
 var isnot = window.arguments[0].isnot;
 var ok = window.arguments[0].ok;
 var todo = window.arguments[0].todo;
+var info = window.arguments[0].info;
 var SimpleTest = window.arguments[0].SimpleTest;
 var gWbp;
 var ctx1;
@@ -29,15 +30,28 @@ filePath = file.path;
 
 function printpreview(hasMozPrintCallback) {
   gWbp = frameElts[1].docShell.initOrReusePrintPreviewViewer();
+  let resolve;
+  let promise = new Promise(r => { resolve = r });
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress,
                                maxSelfProgress, curTotalProgress,
-                               maxTotalProgress) { },
+                               maxTotalProgress) {
+      info("onProgressChange", [...arguments].join(", "));
+    },
     onSecurityChange: function(webProgress, request, state) { },
-    onStateChange: function(webProgress, request, stateFlags, status) { },
-    onStatusChange: function(webProgress, request, status, message) { },
-    onContentBlockingEvent: function(webProgress, request, event) { },
+    onStateChange: function(webProgress, request, stateFlags, status) {
+      info("onStateChange", [...arguments].join(", "));
+      if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        setTimeout(resolve, 0);
+      }
+    },
+    onStatusChange: function(webProgress, request, status, message) {
+      info("onStatusChange", [...arguments].join(", "));
+    },
+    onContentBlockingEvent: function(webProgress, request, event) {
+      info("onContentBlockingEvent", [...arguments].join(", "));
+    },
     QueryInterface: function(iid) {
       if (iid.equals(Ci.nsIWebProgressListener) ||
           iid.equals(Ci.nsISupportsWeakReference))
@@ -64,6 +78,7 @@ function printpreview(hasMozPrintCallback) {
   }
   frameElts[0].contentWindow.removeEventListener("beforeprint", beforeprint, true);
   frameElts[0].contentWindow.removeEventListener("afterprint", afterprint, true);
+  return promise;
 }
 
 function exitprintpreview() {
@@ -124,7 +139,7 @@ function startTest1() {
   frameElts[0].contentWindow.setTimeout(frameElts[0].contentWindow.counterTimeout, 0);
   frameElts[0].contentDocument.body.firstChild.innerHTML = "Print preview";
 
-  printpreview();
+  let ppfinished = printpreview();
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
   frameElts[0].contentDocument.body.firstChild.innerHTML = "Galley presentation";
 
@@ -135,10 +150,13 @@ function startTest1() {
   // And readd.
   addHTMLContent(frameElts[0].contentDocument.body.lastChild);
 
-  setTimeout(finalizeTest1, 1000);
+  setTimeout(function() {
+    finalizeTest1(ppfinished)
+  }, 1000);
 }
 
-function finalizeTest1() {
+async function finalizeTest1(ppfinished) {
+  await ppfinished;
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
   ok(compareCanvases(), "Canvas should be the same!");
@@ -204,17 +222,17 @@ function runTest3() {
   setTimeout(runTest4, 0)
 }
 
-function compareFormElementPrint(el1, el2, equals) {
+async function compareFormElementPrint(el1, el2, equals) {
   frameElts[0].contentDocument.body.innerHTML = el1;
   frameElts[0].contentDocument.body.firstChild.value =
     frameElts[0].contentDocument.body.firstChild.getAttribute('value');
-  printpreview();
+  await printpreview();
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
   frameElts[0].contentDocument.body.innerHTML = el2;
   frameElts[0].contentDocument.body.firstChild.value =
     frameElts[0].contentDocument.body.firstChild.getAttribute('value');
-  printpreview();
+  await printpreview();
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
   is(compareCanvases(), equals,
@@ -229,19 +247,19 @@ function runTest4() {
   setTimeout(runTest4end, 500);
 }
 
-function runTest4end() {
-  printpreview();
+async function runTest4end() {
+  await printpreview();
   exitprintpreview();
 
   runTest5();
 }
 
 // This is a crash test for bug 595337
-function runTest5() {
+async function runTest5() {
   frameElts[0].contentDocument.body.innerHTML =
     '<iframe style="position: fixed; visibility: hidden; bottom: 10em;"></iframe>' +
     '<input contenteditable="true" style="display: table; page-break-before: left; width: 10000px;">';
-  printpreview();
+  await printpreview();
   exitprintpreview();
 
   setTimeout(runTest6, 0);
@@ -256,28 +274,28 @@ function runTest6() {
   setTimeout(runTest6end, 500);
 }
 
-function runTest6end() {
-  printpreview();
+async function runTest6end() {
+  await printpreview();
   exitprintpreview();
 
   requestAnimationFrame(function() { setTimeout(runTest7); } );
 }
 
-function runTest7() {
+async function runTest7() {
   var contentText = "<a href='#'>mozilla</a><input>test<select><option>option1</option></select>";
   // Create normal content
   frameElts[0].contentDocument.body.innerHTML =
     "<div>" + contentText + "</div>";
   frameElts[0].contentDocument.body.firstChild.value =
     frameElts[0].contentDocument.body.firstChild.getAttribute('value');
-  printpreview();
+  await printpreview();
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
   frameElts[0].contentDocument.body.innerHTML = "<div></div>";
   var sr = frameElts[0].contentDocument.body.firstChild.attachShadow({mode: "open"});
   sr.innerHTML = contentText;
-  printpreview();
+  await printpreview();
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
   ok(compareCanvases(), "Printing light DOM and shadow DOM should create same output");
@@ -294,7 +312,7 @@ async function runTest8() {
     iframeElement.addEventListener("load", resolve, { capture: true, once: true });
     iframeElement.setAttribute("src", "printpreview_font_api_ref.html");
   });
-  printpreview();
+  await printpreview();
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
@@ -303,7 +321,7 @@ async function runTest8() {
     iframeElement.addEventListener("message", resolve, { capture: true, once: true });
     iframeElement.setAttribute("src", "printpreview_font_api.html");
   });
-  printpreview();
+  await printpreview();
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
   ok(compareCanvases(), "Printing pages with fonts loaded from CSS and JS should be the same.");
@@ -319,7 +337,7 @@ async function runTest9() {
     </svg>
   `;
 
-  printpreview();
+  await printpreview();
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
@@ -341,7 +359,7 @@ async function runTest9() {
   // Ensure the <use> shadow tree is created so we test what we want to test.
   frameElts[0].contentDocument.body.offsetTop;
 
-  printpreview();
+  await printpreview();
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
   ok(compareCanvases(), "Printing <use> subtrees should create same output");
@@ -363,7 +381,7 @@ async function runTest10() {
   let mozPrintCallbackDone = new Promise((resolve) => {
     iframeElement.addEventListener("message", resolve, { capture: true, once: true });
   });
-  printpreview(true);
+  await printpreview(true);
   await mozPrintCallbackDone;
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
@@ -376,7 +394,7 @@ async function runTest10() {
   mozPrintCallbackDone = new Promise((resolve) => {
     iframeElement.addEventListener("message", resolve, { capture: true, once: true });
   });
-  printpreview(true);
+  await printpreview(true);
   // Wait for the mozprintcallback to finish.
   await mozPrintCallbackDone;
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
@@ -388,12 +406,13 @@ async function runTest10() {
 }
 
 async function compareFiles(src1, src2) {
+  info(`Comparing ${src1} with ${src2}`);
   const iframeElement = document.getElementsByTagName("iframe")[0];
   await new Promise((resolve) => {
     iframeElement.addEventListener("load", resolve, { capture: true, once: true });
     iframeElement.setAttribute("src", src1);
   });
-  printpreview();
+  await printpreview();
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
@@ -402,7 +421,7 @@ async function compareFiles(src1, src2) {
     iframeElement.setAttribute("src", src2);
   });
 
-  printpreview();
+  await printpreview();
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
@@ -442,8 +461,8 @@ async function runTest15() {
   // XXX Is there a more reliable way to wait for the background-image to load?
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  printpreview();
-  exitprintpreview();
+  await printpreview();
+  await exitprintpreview();
 
   requestAnimationFrame(function() { setTimeout(runTest16); } );
 }
