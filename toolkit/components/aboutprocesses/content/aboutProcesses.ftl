@@ -5,6 +5,11 @@
 # Page title
 about-processes-title = Process Manager
 
+## Tooltips
+
+about-processes-shutdown-process =
+    .title = Kill process
+
 ## Column headers
 
 about-processes-column-id = Id
