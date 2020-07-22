@@ -5095,10 +5095,10 @@ void LIRGenerator::visitFinishBoundFunctionInit(MFinishBoundFunctionInit* ins) {
 }
 
 void LIRGenerator::visitIsPackedArray(MIsPackedArray* ins) {
-  MOZ_ASSERT(ins->array()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Boolean);
 
-  auto lir = new (alloc()) LIsPackedArray(useRegister(ins->array()), temp());
+  auto lir = new (alloc()) LIsPackedArray(useRegister(ins->object()), temp());
   define(lir, ins);
 }
 

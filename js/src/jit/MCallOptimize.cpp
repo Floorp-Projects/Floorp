@@ -1881,34 +1881,15 @@ IonBuilder::InliningResult IonBuilder::inlineIsPackedArray(CallInfo& callInfo) {
     return InliningStatus_NotInlined;
   }
 
-  MDefinition* array = callInfo.getArg(0);
+  MDefinition* obj = callInfo.getArg(0);
 
-  if (array->type() != MIRType::Object) {
-    return InliningStatus_NotInlined;
-  }
-
-  TemporaryTypeSet* arrayTypes = array->resultTypeSet();
-  if (!arrayTypes) {
-    return InliningStatus_NotInlined;
-  }
-
-  const JSClass* clasp = arrayTypes->getKnownClass(constraints());
-  if (clasp != &ArrayObject::class_) {
-    return InliningStatus_NotInlined;
-  }
-
-  // Only inline if the array uses dense storage.
-  ObjectGroupFlags unhandledFlags = OBJECT_FLAG_SPARSE_INDEXES |
-                                    OBJECT_FLAG_LENGTH_OVERFLOW |
-                                    OBJECT_FLAG_NON_PACKED;
-
-  if (arrayTypes->hasObjectFlags(constraints(), unhandledFlags)) {
+  if (obj->type() != MIRType::Object) {
     return InliningStatus_NotInlined;
   }
 
   callInfo.setImplicitlyUsedUnchecked();
 
-  auto* ins = MIsPackedArray::New(alloc(), array);
+  auto* ins = MIsPackedArray::New(alloc(), obj);
   current->add(ins);
   current->push(ins);
 
