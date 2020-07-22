@@ -49,8 +49,10 @@ MOZPNG=10635
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
-GLIB_VERSION=2.42
-GLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_42
+GLIB_VERSION=2.22
+# 2_26 is the earliest version we can set GLIB_VERSION_MIN_REQUIRED.
+# The macro won't be used when compiling with earlier versions anyway.
+GLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_26
 CAIRO_VERSION=1.10
 GTK2_VERSION=2.18.0
 GTK3_VERSION=3.14.0
