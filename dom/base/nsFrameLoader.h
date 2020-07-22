@@ -24,7 +24,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsCOMPtr.h"
@@ -106,7 +105,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   typedef mozilla::dom::BrowserBridgeChild BrowserBridgeChild;
   typedef mozilla::dom::BrowsingContext BrowsingContext;
   typedef mozilla::dom::BrowsingContextGroup BrowsingContextGroup;
-  typedef mozilla::dom::Promise Promise;
 
  public:
   // Called by Frame Elements to create a new FrameLoader.
@@ -225,9 +223,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void RequestSHistoryUpdate(bool aImmediately = false);
 
-  already_AddRefed<Promise> Print(uint64_t aOuterWindowID,
-                                  nsIPrintSettings* aPrintSettings,
-                                  mozilla::ErrorResult& aRv);
+  void Print(uint64_t aOuterWindowID, nsIPrintSettings* aPrintSettings,
+             nsIWebProgressListener* aProgressListener,
+             mozilla::ErrorResult& aRv);
 
   void StartPersistence(BrowsingContext* aContext,
                         nsIWebBrowserPersistDocumentReceiver* aRecv,

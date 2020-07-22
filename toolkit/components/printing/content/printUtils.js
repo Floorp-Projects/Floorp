@@ -182,8 +182,6 @@ var PrintUtils = {
       printSettings.docURL = this._originalURL;
     }
 
-    // At some point we should handle the Promise that this returns (report
-    // rejection to telemetry?)
     topBrowser.print(windowID, printSettings);
 
     if (printPreviewIsOpen) {
