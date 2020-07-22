@@ -528,5 +528,7 @@ xpcom:
         subsuite: xpcom
     when:
         files-changed:
+            - 'third_party/python/ply/**'
             - 'xpcom/ds/tools/**'
             - 'xpcom/ds/test/**'
+            - 'xpcom/idl-parser/**'
