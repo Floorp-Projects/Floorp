@@ -410,6 +410,10 @@ bool WarpCacheIRTranspiler::emitGuardToBoolean(ValOperandId inputId) {
   return emitGuardTo(inputId, MIRType::Boolean);
 }
 
+bool WarpCacheIRTranspiler::emitGuardToInt32(ValOperandId inputId) {
+  return emitGuardTo(inputId, MIRType::Int32);
+}
+
 bool WarpCacheIRTranspiler::emitGuardBooleanToInt32(ValOperandId inputId,
                                                     Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
@@ -425,19 +429,6 @@ bool WarpCacheIRTranspiler::emitGuardBooleanToInt32(ValOperandId inputId,
   }
 
   auto* ins = MToIntegerInt32::New(alloc(), boolean);
-  add(ins);
-
-  return defineOperand(resultId, ins);
-}
-
-bool WarpCacheIRTranspiler::emitGuardToInt32(ValOperandId inputId,
-                                             Int32OperandId resultId) {
-  MDefinition* input = getOperand(inputId);
-  if (input->type() == MIRType::Int32) {
-    return defineOperand(resultId, input);
-  }
-
-  auto* ins = MUnbox::New(alloc(), input, MIRType::Int32, MUnbox::Fallible);
   add(ins);
 
   return defineOperand(resultId, ins);
