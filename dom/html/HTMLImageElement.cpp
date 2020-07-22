@@ -735,32 +735,25 @@ uint32_t HTMLImageElement::NaturalWidth() {
 }
 
 nsresult HTMLImageElement::CopyInnerTo(HTMLImageElement* aDest) {
-  bool destIsStatic = aDest->OwnerDoc()->IsStaticDocument();
-  if (destIsStatic) {
-    CreateStaticImageClone(aDest);
-  }
-
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if (!destIsStatic) {
-    // In SetAttr (called from nsGenericHTMLElement::CopyInnerTo), aDest skipped
-    // doing the image load because we passed in false for aNotify.  But we
-    // really do want it to do the load, so set it up to happen once the cloning
-    // reaches a stable state.
-    if (!aDest->InResponsiveMode() &&
-        aDest->HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
-        aDest->ShouldLoadImage()) {
-      // Mark channel as urgent-start before load image if the image load is
-      // initaiated by a user interaction.
-      mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
+  // In SetAttr (called from nsGenericHTMLElement::CopyInnerTo), aDest skipped
+  // doing the image load because we passed in false for aNotify.  But we
+  // really do want it to do the load, so set it up to happen once the cloning
+  // reaches a stable state.
+  if (!aDest->InResponsiveMode() &&
+      aDest->HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
+      aDest->ShouldLoadImage()) {
+    // Mark channel as urgent-start before load image if the image load is
+    // initaiated by a user interaction.
+    mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
-      nsContentUtils::AddScriptRunner(NewRunnableMethod<bool>(
-          "dom::HTMLImageElement::MaybeLoadImage", aDest,
-          &HTMLImageElement::MaybeLoadImage, false));
-    }
+    nsContentUtils::AddScriptRunner(NewRunnableMethod<bool>(
+        "dom::HTMLImageElement::MaybeLoadImage", aDest,
+        &HTMLImageElement::MaybeLoadImage, false));
   }
 
   return NS_OK;

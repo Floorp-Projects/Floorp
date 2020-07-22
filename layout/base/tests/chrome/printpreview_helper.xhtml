@@ -48,6 +48,7 @@ function printpreview(hasMozPrintCallback) {
   var settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
                        .getService(Ci.nsIPrintSettingsService).globalPrintSettings;
   settings.showPrintProgress = false;
+  settings.printBGColors = true;
   var before = 0;
   var after = 0;
   function beforeprint() { ++before; }
@@ -435,7 +436,7 @@ async function runTest14() {
 // Crash test for bug 1615261
 async function runTest15() {
   frameElts[0].contentDocument.body.innerHTML =
-    '<style> div { width: 100px; height: 100px; background-image: url("animated.gif"); } </style>' +
+    '<style>div { width: 100px; height: 100px; background-image: url("animated.gif"); } </style>' +
     '<div>Firefox will crash if you try and print this page</div>';
 
   // XXX Is there a more reliable way to wait for the background-image to load?
@@ -443,6 +444,13 @@ async function runTest15() {
 
   printpreview();
   exitprintpreview();
+
+  requestAnimationFrame(function() { setTimeout(runTest16); } );
+}
+
+// Various image tests.
+async function runTest16() {
+  await compareFiles("printpreview_images.html", "printpreview_images_ref.html");
   finish();
 }
 
