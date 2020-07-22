@@ -1,0 +1,56 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.w3.org/1999/xhtml");
+
+.pip-expanded,
+.pip-small {
+  border: 1px solid rgba(255,255,255,0.1);
+  box-sizing: border-box;
+}
+
+.pip-expanded {
+  translate: -33%;
+  transition: opacity 250ms, scale 200ms, translate 190ms;
+  transition-timing-function: cubic-bezier(.07,.95,0,1);
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-label {
+  margin-right: var(--pip-icon-width-with-margins);
+  margin-left: var(--pip-toggle-margin);
+}
+
+.pip-wrapper[position="right"] > .pip-expanded {
+  translate: calc(-100% + 48px);
+  transform-origin: right;
+}
+
+.pip-wrapper.hovering:not([small-video]) > .pip-small + .pip-expanded,
+.pip-wrapper.hovering:not([small-video]) > .pip-expanded {
+  opacity: 1;
+  scale: 1;
+  pointer-events: auto;
+}
+
+.pip-wrapper[position="left"].hovering:not([small-video]) > .pip-expanded {
+  translate: 0;
+}
+
+.pip-wrapper[position="right"].hovering:not([small-video])  > .pip-small + .pip-expanded,
+.pip-wrapper[position="right"].hovering:not([small-video]) > .pip-expanded {
+  translate: calc(-100% + var(--pip-icon-width-with-margins));
+}
+
+.pip-wrapper.hovering:not([small-video]) > .pip-small {
+  opacity: 0;
+  transition: opacity 200ms;
+}
+
+.pip-wrapper:is([small-video]) > .pip-expanded,
+.pip-explainer,
+.pip-icon-label > .pip-icon {
+  display: none;
+}
