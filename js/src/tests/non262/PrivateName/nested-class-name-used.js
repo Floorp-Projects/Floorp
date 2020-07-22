@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) shell-option(--enable-private-fields)
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
 
 // AllPrivateIdentifiersValid uses only lexical string names, not
 // the dynamic private names; which means the below is not a syntax

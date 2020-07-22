@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) shell-option(--enable-private-fields)
+// |reftest| shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
 
 // Returns the argument in the constructor to allow stamping private fields into
 // arbitrary objects.
