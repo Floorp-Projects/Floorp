@@ -557,7 +557,6 @@ function createWarningGroupMessage(id, type, firstMessage) {
 function getWarningGroupLabel(firstMessage) {
   if (
     isContentBlockingMessage(firstMessage) ||
-    isStorageIsolationMessage(firstMessage) ||
     isTrackingProtectionMessage(firstMessage)
   ) {
     return replaceURL(firstMessage.messageText, "<URL>");
@@ -629,10 +628,6 @@ function getWarningGroupType(message) {
     return MESSAGE_TYPE.CONTENT_BLOCKING_GROUP;
   }
 
-  if (isStorageIsolationMessage(message)) {
-    return MESSAGE_TYPE.STORAGE_ISOLATION_GROUP;
-  }
-
   if (isTrackingProtectionMessage(message)) {
     return MESSAGE_TYPE.TRACKING_PROTECTION_GROUP;
   }
@@ -668,7 +663,6 @@ function getParentWarningGroupMessageId(message) {
 function isWarningGroup(message) {
   return (
     message.type === MESSAGE_TYPE.CONTENT_BLOCKING_GROUP ||
-    message.type === MESSAGE_TYPE.STORAGE_ISOLATION_GROUP ||
     message.type === MESSAGE_TYPE.TRACKING_PROTECTION_GROUP ||
     message.type === MESSAGE_TYPE.COOKIE_SAMESITE_GROUP ||
     message.type === MESSAGE_TYPE.CORS_GROUP ||
@@ -687,18 +681,9 @@ function isContentBlockingMessage(message) {
     category == "cookieBlockedPermission" ||
     category == "cookieBlockedTracker" ||
     category == "cookieBlockedAll" ||
-    category == "cookieBlockedForeign"
+    category == "cookieBlockedForeign" ||
+    category == "cookiePartitionedForeign"
   );
-}
-
-/**
- * Returns true if the message is a storage isolation message.
- * @param {ConsoleMessage} message
- * @returns {Boolean}
- */
-function isStorageIsolationMessage(message) {
-  const { category } = message;
-  return category == "cookiePartitionedForeign";
 }
 
 /**
