@@ -1691,19 +1691,9 @@ function RecvStartPrint(isPrintSelection, printRange)
                 getService(Ci.nsIPrefBranch);
     ps.printInColor = prefs.getBoolPref("print.print_in_color", true);
 
-    g.browser.frameLoader.print(g.browser.outerWindowID, ps, {
-        onStateChange: function(webProgress, request, stateFlags, status) {
-            if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-                stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-                SendPrintDone(status, file.path);
-            }
-        },
-        onProgressChange: function () {},
-        onLocationChange: function () {},
-        onStatusChange: function () {},
-        onSecurityChange: function () {},
-        onContentBlockingEvent: function () {},
-    });
+    g.browser.print(g.browser.outerWindowID, ps)
+        .then(() => SendPrintDone(Cr.NS_OK, file.path))
+        .catch(exception => SendPrintDone(exception.code, file.path));
 }
 
 function RecvPrintResult(runtimeMs, status, fileName)
