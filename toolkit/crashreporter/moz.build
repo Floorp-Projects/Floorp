@@ -42,9 +42,12 @@ if CONFIG['MOZ_CRASHREPORTER']:
             'google-breakpad/src/common',
             'google-breakpad/src/common/mac',
             'google-breakpad/src/processor',
-            'google-breakpad/src/tools/mac/dump_syms',
-            'rust',
         ]
+        if not CONFIG['DUMP_SYMS']:
+            DIRS += [
+                'google-breakpad/src/tools/mac/dump_syms',
+                'rust',
+            ]
 
     elif CONFIG['OS_ARCH'] == 'Linux':
         DIRS += [
@@ -53,11 +56,12 @@ if CONFIG['MOZ_CRASHREPORTER']:
             'google-breakpad/src/common',
             'google-breakpad/src/common/linux',
             'google-breakpad/src/processor',
-            'rust',
         ]
-        if CONFIG['HOST_OS_ARCH'] == 'Linux':
-            DIRS += ['google-breakpad/src/tools/linux/dump_syms']
-
+        if not CONFIG['DUMP_SYMS'] and CONFIG['HOST_OS_ARCH'] == 'Linux':
+            DIRS += [
+                'google-breakpad/src/tools/linux/dump_syms',
+                'rust',
+            ]
 
     DIRS += [
         'client',
