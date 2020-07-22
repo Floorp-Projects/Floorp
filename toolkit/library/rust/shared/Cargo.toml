@@ -66,6 +66,8 @@ fluent = { version = "0.11" , features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/firefox-accounts-bridge", optional=true }
 
+processtools = { path = "../../../components/processtools" }
+
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "61dcc364ac0d6d0816ab88a494bbf20d824b009b"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
