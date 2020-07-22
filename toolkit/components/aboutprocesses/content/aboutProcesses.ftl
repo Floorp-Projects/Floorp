@@ -5,13 +5,6 @@
 # Page title
 about-processes-title = Process Manager
 
-## Tooltips
-
-about-processes-shutdown-process =
-    .title = Kill process
-about-processes-shutdown-browser =
-    .title = Kill the entire browser
-
 ## Column headers
 
 about-processes-column-id = Id
