@@ -156,11 +156,14 @@ struct Face {
                             // platform font reference
     uint16_t mIndex;        // an index used with descriptor (on some platforms)
     bool mFixedPitch;       // is the face fixed-pitch (monospaced)?
-    mozilla::WeightRange mWeight;     // CSS font-weight value
-    mozilla::StretchRange mStretch;   // CSS font-stretch value
-    mozilla::SlantStyleRange mStyle;  // CSS font-style value
+    mozilla::WeightRange mWeight;      // CSS font-weight value
+    mozilla::StretchRange mStretch;    // CSS font-stretch value
+    mozilla::SlantStyleRange mStyle;   // CSS font-style value
+    RefPtr<gfxCharacterMap> mCharMap;  // character map, or null if not loaded
   };
 
+  // Note that mCharacterMap is not set from the InitData by this constructor;
+  // the caller must use SetCharacterMap to handle that separately if required.
   Face(FontList* aList, const InitData& aData)
       : mDescriptor(aList, aData.mDescriptor),
         mIndex(aData.mIndex),
@@ -274,6 +277,9 @@ struct Family {
   bool IsForceClassic() const { return mIsForceClassic; }
   bool IsSimple() const { return mIsSimple; }
 
+  // IsInitialized indicates whether the family has been populated with faces,
+  // and is therefore ready to use.
+  // It is possible that character maps have not yet been loaded.
   bool IsInitialized() const { return !mFaces.IsNull(); }
 
   void FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,

@@ -219,7 +219,8 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
 
   void GetFacesInitDataForFamily(
       const mozilla::fontlist::Family* aFamily,
-      nsTArray<mozilla::fontlist::Face::InitData>& aFaces) const override;
+      nsTArray<mozilla::fontlist::Face::InitData>& aFaces,
+      bool aLoadCmaps) const override;
 
   void ReadFaceNamesForFamily(mozilla::fontlist::Family* aFamily,
                               bool aNeedFullnamePostscriptNames) override;

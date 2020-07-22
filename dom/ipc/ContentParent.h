@@ -1169,7 +1169,8 @@ class ContentParent final
       base::SharedMemoryHandle* aOut);
 
   mozilla::ipc::IPCResult RecvInitializeFamily(const uint32_t& aGeneration,
-                                               const uint32_t& aFamilyIndex);
+                                               const uint32_t& aFamilyIndex,
+                                               const bool& aLoadCmaps);
 
   mozilla::ipc::IPCResult RecvSetCharacterMap(
       const uint32_t& aGeneration, const mozilla::fontlist::Pointer& aFacePtr,

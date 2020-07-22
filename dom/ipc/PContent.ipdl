@@ -1336,6 +1336,9 @@ parent:
      * @param aFamilyIndex
      *   The 0-based index of the Family within the font-list that a content
      *   process needs to use.
+     * @param aLoadCmaps
+     *   If true, the parent should eagerly load character maps for the faces
+     *   in the family.
      *
      * This is a sync message because the content process cannot complete its
      * font-matching until the family is fully populated with Face records.
@@ -1343,7 +1346,8 @@ parent:
      * and then have to reflow again once all the font information needed
      * becomes available.
      */
-    sync InitializeFamily(uint32_t aGeneration, uint32_t aFamilyIndex);
+    sync InitializeFamily(uint32_t aGeneration, uint32_t aFamilyIndex,
+                          bool aLoadCmaps);
 
     /**
      * Record the character map of a given Face in the font list.

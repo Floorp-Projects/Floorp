@@ -1082,8 +1082,8 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
 }
 
 void gfxDWriteFontList::GetFacesInitDataForFamily(
-    const fontlist::Family* aFamily,
-    nsTArray<fontlist::Face::InitData>& aFaces) const {
+    const fontlist::Family* aFamily, nsTArray<fontlist::Face::InitData>& aFaces,
+    bool aLoadCmaps) const {
   IDWriteFontCollection* collection =
 #ifdef MOZ_BUNDLED_FONTS
       aFamily->IsBundled() ? mBundledFonts : mSystemFonts;
@@ -1116,20 +1116,37 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
     // Try to read PSName as a unique face identifier; we leave the name blank
     // if this fails, though the face may still be used.
     nsAutoCString name;
-    if (FAILED(GetDirectWriteFaceName(dwFont, PSNAME_ID, name))) {
+    RefPtr<gfxCharacterMap> charmap;
+    if (FAILED(GetDirectWriteFaceName(dwFont, PSNAME_ID, name)) || aLoadCmaps) {
       RefPtr<IDWriteFontFace> dwFontFace;
       if (SUCCEEDED(dwFont->CreateFontFace(getter_AddRefs(dwFontFace)))) {
+        const auto kNAME =
+            NativeEndian::swapToBigEndian(TRUETYPE_TAG('n', 'a', 'm', 'e'));
+        const auto kCMAP =
+            NativeEndian::swapToBigEndian(TRUETYPE_TAG('c', 'm', 'a', 'p'));
         const char* data;
         UINT32 size;
         void* context;
         BOOL exists;
-        if (SUCCEEDED(dwFontFace->TryGetFontTable(
-                NativeEndian::swapToBigEndian(TRUETYPE_TAG('n', 'a', 'm', 'e')),
-                (const void**)&data, &size, &context, &exists)) &&
-            exists) {
-          gfxFontUtils::ReadCanonicalName(
-              data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, name);
-          dwFontFace->ReleaseFontTable(context);
+        if (name.IsEmpty()) {
+          if (SUCCEEDED(dwFontFace->TryGetFontTable(
+                  kNAME, (const void**)&data, &size, &context, &exists)) &&
+              exists) {
+            gfxFontUtils::ReadCanonicalName(
+                data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, name);
+            dwFontFace->ReleaseFontTable(context);
+          }
+        }
+        if (aLoadCmaps) {
+          if (SUCCEEDED(dwFontFace->TryGetFontTable(
+                  kCMAP, (const void**)&data, &size, &context, &exists)) &&
+              exists) {
+            charmap = new gfxCharacterMap();
+            uint32_t offset;
+            gfxFontUtils::ReadCMAP((const uint8_t*)data, size, *charmap,
+                                   offset);
+            dwFontFace->ReleaseFontTable(context);
+          }
         }
       }
     }
@@ -1138,8 +1155,8 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
                               : dwstyle == DWRITE_FONT_STYLE_ITALIC
                                     ? FontSlantStyle::Italic()
                                     : FontSlantStyle::Oblique());
-    aFaces.AppendElement(fontlist::Face::InitData{name, uint16_t(i), false,
-                                                  weight, stretch, slant});
+    aFaces.AppendElement(fontlist::Face::InitData{
+        name, uint16_t(i), false, weight, stretch, slant, charmap});
   }
 }
 
