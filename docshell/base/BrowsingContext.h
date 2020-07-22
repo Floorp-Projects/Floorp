@@ -610,16 +610,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     uint64_t mRequestContextId = 0;
 
     FieldTuple mFields;
-
-    bool operator==(const IPCInitializer& aOther) const {
-      return mId == aOther.mId && mParentId == aOther.mParentId &&
-             mWindowless == aOther.mWindowless &&
-             mUseRemoteTabs == aOther.mUseRemoteTabs &&
-             mUseRemoteSubframes == aOther.mUseRemoteSubframes &&
-             mOriginAttributes == aOther.mOriginAttributes &&
-             mRequestContextId == aOther.mRequestContextId &&
-             mFields == aOther.mFields;
-    }
   };
 
   // Create an IPCInitializer object for this BrowsingContext.
