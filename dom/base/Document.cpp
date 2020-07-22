@@ -9458,7 +9458,7 @@ static Maybe<LayoutDeviceToScreenScale> ParseScaleString(
                       kViewportMaxScale));
 }
 
-bool Document::ParseScalesInViewportMetaData(
+void Document::ParseScalesInViewportMetaData(
     const ViewportMetaData& aViewportMetaData) {
   Maybe<LayoutDeviceToScreenScale> scale;
 
@@ -9482,10 +9482,9 @@ bool Document::ParseScalesInViewportMetaData(
   if (mValidMaxScale && mValidMinScale) {
     mScaleMaxFloat = std::max(mScaleMinFloat, mScaleMaxFloat);
   }
-  return mValidScaleFloat || mValidMaxScale || mValidMinScale;
 }
 
-bool Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
+void Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
                                                  const nsAString& aHeightString,
                                                  bool aHasValidScale) {
   // The width and height properties
@@ -9546,8 +9545,6 @@ bool Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
       }
     }
   }
-
-  return !aWidthString.IsEmpty() || !aHeightString.IsEmpty();
 }
 
 nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
@@ -9638,23 +9635,18 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       ViewportMetaData metaData = GetViewportMetaData();
 
       // Parse initial-scale, minimum-scale and maximum-scale.
-      bool hasValidContents = ParseScalesInViewportMetaData(metaData);
+      ParseScalesInViewportMetaData(metaData);
 
       // Parse width and height properties
       // This function sets m{Min,Max}{Width,Height}.
-      if (ParseWidthAndHeightInMetaViewport(metaData.mWidth, metaData.mHeight,
-                                            mValidScaleFloat)) {
-        hasValidContents = true;
-      }
+      ParseWidthAndHeightInMetaViewport(metaData.mWidth, metaData.mHeight,
+                                        mValidScaleFloat);
 
       mAllowZoom = true;
       if ((metaData.mUserScalable.EqualsLiteral("0")) ||
           (metaData.mUserScalable.EqualsLiteral("no")) ||
           (metaData.mUserScalable.EqualsLiteral("false"))) {
         mAllowZoom = false;
-      }
-      if (!metaData.mUserScalable.IsEmpty()) {
-        hasValidContents = true;
       }
 
       // Resolve viewport-fit value.
@@ -9663,22 +9655,17 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       if (!metaData.mViewportFit.IsEmpty()) {
         if (metaData.mViewportFit.EqualsLiteral("contain")) {
           mViewportFit = ViewportFitType::Contain;
-          hasValidContents = true;
         } else if (metaData.mViewportFit.EqualsLiteral("cover")) {
           mViewportFit = ViewportFitType::Cover;
-          hasValidContents = true;
-        } else if (metaData.mViewportFit.EqualsLiteral("auto")) {
-          hasValidContents = true;
         }
       }
 
       mWidthStrEmpty = metaData.mWidth.IsEmpty();
 
-      mViewportType = hasValidContents ? Specified : NoValidContent;
+      mViewportType = Specified;
       [[fallthrough]];
     }
     case Specified:
-    case NoValidContent:
     default:
       LayoutDeviceToScreenScale effectiveMinScale = mScaleMinFloat;
       LayoutDeviceToScreenScale effectiveMaxScale = mScaleMaxFloat;
@@ -9798,6 +9785,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
           minHeight = nsViewportInfo::Max(extendSize.height, maxHeight);
         }
       }
+
       // Resolve initial width and height from min/max descriptors
       // https://drafts.csswg.org/css-device-adapt/#resolve-initial-width-height
       CSSCoord width = nsViewportInfo::Auto;
