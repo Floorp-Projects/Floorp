@@ -24,7 +24,11 @@ async function testKeywordValues(inspector, viewDoc) {
   );
   const fontWeight = getPropertyValue(viewDoc, "font-weight");
   isnot(fontWeight.value, "bold", "Font weight is not shown as keyword");
-  is(fontWeight.value, "700", "Font weight is shown as computed style");
+  is(
+    parseInt(fontWeight.value, 10),
+    700,
+    "Font weight is shown as computed style"
+  );
 
   info(
     "Check font-size shows its computed style instead of the inherit keyword value."

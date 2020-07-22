@@ -70,7 +70,7 @@ add_task(async function() {
     findInspectResultMessage(hud.ui.outputNode, 2)
   );
   is(
-    inspectPrimitiveNode.textContent,
+    parseInt(inspectPrimitiveNode.textContent, 10),
     1,
     "The primitive is displayed as expected"
   );

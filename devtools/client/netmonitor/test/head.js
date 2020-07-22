@@ -643,11 +643,11 @@ function verifyRequestItemTarget(
     info("Displayed code: " + codeValue);
     info("Tooltip status: " + tooltip);
     is(
-      value,
-      displayedStatus ? displayedStatus : status,
+      `${value}`,
+      displayedStatus ? `${displayedStatus}` : `${status}`,
       "The displayed status is correct."
     );
-    is(codeValue, status, "The displayed status code is correct.");
+    is(`${codeValue}`, `${status}`, "The displayed status code is correct.");
     is(tooltip, status + " " + statusText, "The tooltip status is correct.");
   }
   if (cause !== undefined) {
@@ -667,12 +667,15 @@ function verifyRequestItemTarget(
   }
   if (type !== undefined) {
     const value = target.querySelector(".requests-list-type").textContent;
-    const tooltip = target
+    let tooltip = target
       .querySelector(".requests-list-type")
       .getAttribute("title");
     info("Displayed type: " + value);
     info("Tooltip type: " + tooltip);
     is(value, type, "The displayed type is correct.");
+    if (Object.is(tooltip, null)) {
+      tooltip = undefined;
+    }
     is(tooltip, fullMimeType, "The tooltip type is correct.");
   }
   if (transferred !== undefined) {
@@ -1174,8 +1177,12 @@ function validateRequests(requests, monitor) {
           if (frame.file.startsWith("resource:///")) {
             todo(false, "Requests from chrome resource should not be included");
           } else {
+            let value = stacktrace[j].functionName;
+            if (Object.is(value, null)) {
+              value = undefined;
+            }
             is(
-              stacktrace[j].functionName,
+              value,
               frame.fn,
               `Request #${i} has the correct function on JS stack frame #${j}`
             );
@@ -1189,8 +1196,12 @@ function validateRequests(requests, monitor) {
               frame.line,
               `Request #${i} has the correct line number on JS stack frame #${j}`
             );
+            value = stacktrace[j].asyncCause;
+            if (Object.is(value, null)) {
+              value = undefined;
+            }
             is(
-              stacktrace[j].asyncCause,
+              value,
               frame.asyncCause,
               `Request #${i} has the correct async cause on JS stack frame #${j}`
             );

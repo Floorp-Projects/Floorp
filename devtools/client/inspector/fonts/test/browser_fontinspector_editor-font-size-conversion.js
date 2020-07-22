@@ -53,8 +53,8 @@ add_task(async function() {
       unit
     );
     is(
-      convertedValue,
-      value,
+      parseFloat(convertedValue),
+      parseFloat(value),
       `Converting to ${unit} returns transformed value.`
     );
 

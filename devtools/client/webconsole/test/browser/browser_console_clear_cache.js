@@ -39,7 +39,7 @@ add_task(async function() {
   await logTextToConsole(hud, "Smoke message");
   is(
     findMessage(hud, CACHED_MESSAGE),
-    null,
+    undefined,
     "The cached message is not visible anymore"
   );
 });

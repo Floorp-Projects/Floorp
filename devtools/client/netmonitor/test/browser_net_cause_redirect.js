@@ -45,7 +45,11 @@ add_task(async function() {
   EXPECTED_REQUESTS.forEach(({ status }, i) => {
     const item = getSortedRequests(store.getState())[i];
 
-    is(item.status, status, `Request #${i} has the expected status`);
+    is(
+      parseInt(item.status, 10),
+      status,
+      `Request #${i} has the expected status`
+    );
 
     const { stacktrace } = item;
     const stackLen = stacktrace ? stacktrace.length : 0;

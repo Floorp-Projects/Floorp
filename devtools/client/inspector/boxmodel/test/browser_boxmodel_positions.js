@@ -37,7 +37,7 @@ const res1 = [
   },
   {
     selector: ".boxmodel-position.boxmodel-left > span",
-    value: 0,
+    value: "0",
   },
 ];
 

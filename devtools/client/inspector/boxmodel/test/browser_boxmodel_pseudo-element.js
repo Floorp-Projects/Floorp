@@ -48,51 +48,51 @@ const res1 = [
   },
   {
     selector: ".boxmodel-margin.boxmodel-top > span",
-    value: 0,
+    value: "0",
   },
   {
     selector: ".boxmodel-margin.boxmodel-left > span",
-    value: 4, // (100 - (10 * 2) - (20 * 2) - 32) / 2
+    value: "4", // (100 - (10 * 2) - (20 * 2) - 32) / 2
   },
   {
     selector: ".boxmodel-margin.boxmodel-bottom > span",
-    value: 6,
+    value: "6",
   },
   {
     selector: ".boxmodel-margin.boxmodel-right > span",
-    value: 4, // (100 - (10 * 2) - (20 * 2) - 32) / 2
+    value: "4", // (100 - (10 * 2) - (20 * 2) - 32) / 2
   },
   {
     selector: ".boxmodel-padding.boxmodel-top > span",
-    value: 0,
+    value: "0",
   },
   {
     selector: ".boxmodel-padding.boxmodel-left > span",
-    value: 0,
+    value: "0",
   },
   {
     selector: ".boxmodel-padding.boxmodel-bottom > span",
-    value: 0,
+    value: "0",
   },
   {
     selector: ".boxmodel-padding.boxmodel-right > span",
-    value: 0,
+    value: "0",
   },
   {
     selector: ".boxmodel-border.boxmodel-top > span",
-    value: 0,
+    value: "0",
   },
   {
     selector: ".boxmodel-border.boxmodel-left > span",
-    value: 0,
+    value: "0",
   },
   {
     selector: ".boxmodel-border.boxmodel-bottom > span",
-    value: 0,
+    value: "0",
   },
   {
     selector: ".boxmodel-border.boxmodel-right > span",
-    value: 0,
+    value: "0",
   },
 ];
 

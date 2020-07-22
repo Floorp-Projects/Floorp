@@ -31,7 +31,7 @@ async function testClickingOutsideEditor(boxmodel) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-margin.boxmodel-top > span"
   );
-  is(span.textContent, 10, "Should have the right value in the box model.");
+  is(span.textContent, "10", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -63,7 +63,7 @@ async function testClickingBelowContainer(boxmodel) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-margin.boxmodel-top > span"
   );
-  is(span.textContent, 10, "Should have the right value in the box model.");
+  is(span.textContent, "10", "Should have the right value in the box model.");
 
   info(
     "Test that clicking below the boxmodel-container blurs the opened editor"

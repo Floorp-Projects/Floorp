@@ -37,7 +37,7 @@ async function testUnits(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-top > span"
   );
-  is(span.textContent, 3, "Should have the right value in the box model.");
+  is(span.textContent, "3", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -74,7 +74,7 @@ async function testUnits(inspector, boxmodel, testActor) {
     "1em",
     "Should be the right padding."
   );
-  is(span.textContent, 16, "Should have the right value in the box model.");
+  is(span.textContent, "16", "Should have the right value in the box model.");
 }
 
 async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
@@ -90,7 +90,7 @@ async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-border.boxmodel-bottom > span"
   );
-  is(span.textContent, 16, "Should have the right value in the box model.");
+  is(span.textContent, "16", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -116,7 +116,7 @@ async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
     "0px",
     "Should be the right border-bottom-width."
   );
-  is(span.textContent, 0, "Should have the right value in the box model.");
+  is(span.textContent, "0", "Should have the right value in the box model.");
 }
 
 async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
@@ -132,7 +132,7 @@ async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-right > span"
   );
-  is(span.textContent, 32, "Should have the right value in the box model.");
+  is(span.textContent, "32", "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -148,5 +148,5 @@ async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
     "",
     "Should be the right padding."
   );
-  is(span.textContent, 32, "Should have the right value in the box model.");
+  is(span.textContent, "32", "Should have the right value in the box model.");
 }

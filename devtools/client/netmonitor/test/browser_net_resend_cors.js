@@ -87,7 +87,7 @@ add_task(async function() {
       `The ${item.method} request has the right method`
     );
     is(item.url, requestUrl, `The ${item.method} request has the right URL`);
-    is(item.status, 200, `The ${item.method} response has the right status`);
+    is(item.status, "200", `The ${item.method} response has the right status`);
 
     if (item.method === "POST") {
       is(

@@ -38,12 +38,12 @@ add_task(async function() {
   await logTextToConsole(hud, "Smoke message");
   is(
     findMessage(hud, CACHED_MESSAGE),
-    null,
+    undefined,
     "The cached message is not visible anymore"
   );
   is(
     findMessage(hud, EXPECTED_REPORT),
-    null,
+    undefined,
     "The cached error message is not visible anymore as well"
   );
 
@@ -66,7 +66,7 @@ add_task(async function() {
   await logTextToConsole(hud, "Second smoke message");
   is(
     findMessage(hud, NEW_CACHED_MESSAGE),
-    null,
+    undefined,
     "The new cached message is not visible anymore"
   );
 });

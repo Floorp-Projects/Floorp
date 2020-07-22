@@ -93,8 +93,12 @@ function assertLine(dbg, lineNumber) {
 }
 
 function assertColumn(dbg, columnNumber) {
+  let value = dbg.selectors.getSelectedLocation().column;
+  if (value === undefined) {
+    value = null;
+  }
   is(
-    dbg.selectors.getSelectedLocation().column,
+    value,
     columnNumber,
     `goto column is ${columnNumber}`
   );

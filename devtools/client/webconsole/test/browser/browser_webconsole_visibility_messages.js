@@ -64,8 +64,12 @@ add_task(async function() {
   info("Waiting for all messages to be logged into the store");
   await onAllMessagesInStore;
 
-  const count = await findMessages(hud, "in-inspector");
-  is(count, 0, "No messages from the inspector actually appear in the console");
+  const inInspectorMessages = await findMessages(hud, "in-inspector");
+  is(
+    inInspectorMessages.length,
+    0,
+    "No messages from the inspector actually appear in the console"
+  );
 
   info("select back the console");
   await toolbox.selectTool("webconsole");
