@@ -273,12 +273,12 @@ body.dark blockquote {
     transition-duration: 250ms;
   }
 
-  .toolbar-container.scrolled .toolbar:not(:hover) {
+  .toolbar-container.scrolled .toolbar:not(:hover):not(:focus-within) {
     border-color: transparent;
     box-shadow: 0 2px 8px transparent;
   }
 
-  .toolbar-container.scrolled .toolbar:not(:hover) .button {
+  .toolbar-container.scrolled .toolbar:not(:hover):not(:focus-within) .button {
     opacity: 0.6;
   }
 
