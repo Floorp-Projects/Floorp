@@ -229,7 +229,10 @@ var State = {
 
 var View = {
   _fragment: document.createDocumentFragment(),
+  // Processes that we killed during the previous iteration.
+  _killedRecently: [],
   async commit() {
+    this._killedRecently.length = 0;
     let tbody = document.getElementById("process-tbody");
 
     // Force translation to happen before we insert the new content in the DOM
@@ -329,6 +332,33 @@ var View = {
       classes: ["numberOfThreads"],
     });
 
+    // Column: Kill button – but not for all processes.
+    let killButton = this._addCell(row, {
+      content: "",
+      classes: ["action-icon"],
+    });
+
+    if (data.type == "socket") {
+      // We can't kill this process. Let's not pretend that we can.
+      // Don't display the kill button.
+    } else if (this._killedRecently.some(pid => pid == data.pid)) {
+      // We're racing between the "kill" action and the visual refresh.
+      // In a few cases, we could end up with the visual refresh showing
+      // a process as un-killed while we actually just killed it.
+      //
+      // We still want to display the process in case something actually
+      // went bad and the user needs the information to realize this.
+      // But we also want to make it visible that the process is being
+      // killed.
+      row.classList.add("killed");
+    } else {
+      // Otherwise, let's display the kill button.
+      killButton.classList.add("close-icon");
+      document.l10n.setAttributes(
+        killButton,
+        "about-processes-shutdown-process"
+      );
+    }
     this._fragment.appendChild(row);
     return row;
   },
@@ -391,13 +421,21 @@ var View = {
       classes: ["numberOfThreads"],
     });
 
+    // Column: Buttons (empty)
+    this._addCell(row, {
+      content: "",
+      classes: [],
+    });
+
     this._fragment.appendChild(row);
     return row;
   },
 
   _addCell(row, { content, classes }) {
     let elt = document.createElement("td");
-    this._setTextAndTooltip(elt, content);
+    if (content) {
+      this._setTextAndTooltip(elt, content);
+    }
     elt.classList.add(...classes);
     row.appendChild(elt);
     return elt;
@@ -541,19 +579,13 @@ var Control = {
     tbody.addEventListener("click", event => {
       this._updateLastMouseEvent();
 
-      // Handle showing or hiding subitems of a row.
       let target = event.target;
       if (target.classList.contains("twisty")) {
-        let row = target.parentNode.parentNode;
-        let id = row.process.pid;
-        if (target.classList.toggle("open")) {
-          this._openItems.add(id);
-          this._showChildren(row);
-          View.insertAfterRow(row);
-        } else {
-          this._openItems.delete(id);
-          this._removeSubtree(row);
-        }
+        // Handle showing or hiding subitems of a row.
+        this._handleTwisty(target);
+        return;
+      } else if (target.classList.contains("close-icon")) {
+        this._handleClose(target);
         return;
       }
 
@@ -755,6 +787,34 @@ var Control = {
       }
       return order;
     });
+  },
+
+  _handleTwisty(target) {
+    let row = target.parentNode.parentNode;
+    let id = row.process.pid;
+    if (target.classList.toggle("open")) {
+      this._openItems.add(id);
+      this._showChildren(row);
+      View.insertAfterRow(row);
+    } else {
+      this._openItems.delete(id);
+      this._removeSubtree(row);
+    }
+  },
+
+  _handleClose(target) {
+    const ProcessTools = Cc["@mozilla.org/processtools-service;1"].getService(
+      Ci.nsIProcessToolsService
+    );
+    let row = target.parentNode;
+    let pid = row.process.pid;
+    ProcessTools.kill(pid);
+
+    row.classList.add("killing");
+    target.classList.remove("close-icon");
+    // Make sure that the user can't click twice on the kill button.
+    // Otherwise, chaos might ensure. Plus we risk crashing under Windows.
+    View._killedRecently.push(pid);
   },
 };
 

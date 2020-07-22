@@ -10,6 +10,7 @@ html {
 body {
   overflow-x: hidden;
 }
+
 #process-table {
   -moz-user-select: none;
   font-size: 1em;
@@ -48,13 +49,19 @@ td:nth-child(1) {
 /* At least one column needs to have a flexible width,
    so no width specified for td:nth-child(2) */
 td:nth-child(3) {
-    width: 10%;
+  width: 10%;
 }
 td:nth-child(4) {
-    width: 10%;
+  width: 10%;
 }
 td:nth-child(5) {
-    width: 10%;
+  width: 10%;
+}
+td:nth-child(6) {
+  width: 10%;
+}
+td:nth-child(7) {
+  width: 16px;
 }
 
 #process-thead > tr {
@@ -73,7 +80,8 @@ td:nth-child(5) {
 }
 td {
   padding: 5px 10px;
-  min-height: 2em;
+  min-height: 1.5em;
+  max-height: 1.5em;
   color: var(--in-content-text-color);
   max-width: 70vw;
   overflow: hidden;
@@ -166,4 +174,26 @@ td {
 }
 #process-tbody > tr.thread {
   font-size-adjust: 0.5;
+}
+
+.killing {
+  opacity: 0.3;
+  transition-property: "opacity";
+  transition-duration: 1s;
+}
+
+.killed {
+  opacity: 0.3;
+}
+
+/* icons */
+.close-icon {
+  background: url("chrome://global/skin/icons/delete.svg") no-repeat center;
+  opacity: 0;
+}
+tr:-moz-any([selected], :hover) > .close-icon {
+  opacity: 1;
+}
+.close-icon:hover {
+  background-color: var(--in-content-button-background);
 }
