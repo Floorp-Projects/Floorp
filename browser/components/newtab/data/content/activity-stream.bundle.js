@@ -12819,7 +12819,6 @@ function SubmitFormSnippet_extends() { SubmitFormSnippet_extends = Object.assign
 
 
 
-
  // Alt text placeholder in case the prop from the server isn't available
 
 const SubmitFormSnippet_ICON_ALT_TEXT = "";
@@ -13053,30 +13052,15 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
     });
   }
 
-  renderForm() {
-    return external_React_default.a.createElement("form", {
-      action: this.props.form_action,
-      method: this.props.form_method,
-      onSubmit: this.handleSubmit,
-      ref: "form"
-    }, this.renderHiddenFormInputs(), external_React_default.a.createElement("div", null, this.renderInput(), external_React_default.a.createElement("button", {
-      type: "submit",
-      className: "ASRouterButton primary",
-      onClick: this.handleSubmitAttempt,
-      ref: "formSubmitBtn"
-    }, this.props.content.scene2_button_label)), this.renderFormPrivacyNotice() || this.renderDisclaimer());
-  }
-
-  renderScene2Icon() {
+  renderSignupView() {
     const {
       content
     } = this.props;
-
-    if (!content.scene2_icon) {
-      return null;
-    }
-
-    return external_React_default.a.createElement("div", {
+    const containerClass = `SubmitFormSnippet ${this.props.className}`;
+    return external_React_default.a.createElement(SnippetBase_SnippetBase, SubmitFormSnippet_extends({}, this.props, {
+      className: containerClass,
+      footerDismiss: true
+    }), content.scene2_icon ? external_React_default.a.createElement("div", {
       className: "scene2Icon"
     }, external_React_default.a.createElement("img", {
       src: Object(template_utils["safeURI"])(content.scene2_icon),
@@ -13086,75 +13070,24 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
       src: Object(template_utils["safeURI"])(content.scene2_icon_dark_theme || content.scene2_icon),
       className: "icon-dark-theme",
       alt: content.scene2_icon_alt_text || SubmitFormSnippet_ICON_ALT_TEXT
-    }));
-  }
-
-  renderSignupView() {
-    const {
-      content
-    } = this.props;
-    const containerClass = `SubmitFormSnippet ${this.props.className}`;
-    return external_React_default.a.createElement(SnippetBase_SnippetBase, SubmitFormSnippet_extends({}, this.props, {
-      className: containerClass,
-      footerDismiss: true
-    }), this.renderScene2Icon(), external_React_default.a.createElement("div", {
+    })) : null, external_React_default.a.createElement("div", {
       className: "message"
     }, external_React_default.a.createElement("p", null, content.scene2_title && external_React_default.a.createElement("h3", {
       className: "scene2Title"
     }, content.scene2_title), " ", content.scene2_text && external_React_default.a.createElement(RichText["RichText"], {
       scene2_text: content.scene2_text,
       localization_id: "scene2_text"
-    }))), this.renderForm());
-  }
-
-  renderSectionHeader() {
-    const {
-      props
-    } = this; // an icon and text must be specified to render the section header
-
-    if (props.content.section_title_icon && props.content.section_title_text) {
-      const sectionTitleIconLight = Object(template_utils["safeURI"])(props.content.section_title_icon);
-      const sectionTitleIconDark = Object(template_utils["safeURI"])(props.content.section_title_icon_dark_theme || props.content.section_title_icon);
-      const sectionTitleURL = props.content.section_title_url;
-      return external_React_default.a.createElement("div", {
-        className: "section-header"
-      }, external_React_default.a.createElement("h3", {
-        className: "section-title"
-      }, external_React_default.a.createElement(ConditionalWrapper_ConditionalWrapper, {
-        condition: sectionTitleURL
-      }, external_React_default.a.createElement("span", {
-        className: "icon icon-small-spacer icon-light-theme",
-        style: {
-          backgroundImage: `url("${sectionTitleIconLight}")`
-        }
-      }), external_React_default.a.createElement("span", {
-        className: "icon icon-small-spacer icon-dark-theme",
-        style: {
-          backgroundImage: `url("${sectionTitleIconDark}")`
-        }
-      }), external_React_default.a.createElement("span", {
-        className: "section-title-text"
-      }, props.content.section_title_text))));
-    }
-
-    return null;
-  }
-
-  renderSignupViewAlt() {
-    const {
-      content
-    } = this.props;
-    const containerClass = `SubmitFormSnippet ${this.props.className} scene2Alt`;
-    return external_React_default.a.createElement(SnippetBase_SnippetBase, SubmitFormSnippet_extends({}, this.props, {
-      className: containerClass // Don't show bottom dismiss button
-      ,
-      footerDismiss: false
-    }), this.renderSectionHeader(), this.renderScene2Icon(), external_React_default.a.createElement("div", {
-      className: "message"
-    }, external_React_default.a.createElement("p", null, content.scene2_text && external_React_default.a.createElement(RichText["RichText"], {
-      scene2_text: content.scene2_text,
-      localization_id: "scene2_text"
-    })), this.renderForm()));
+    }))), external_React_default.a.createElement("form", {
+      action: this.props.form_action,
+      method: this.props.form_method,
+      onSubmit: this.handleSubmit,
+      ref: "form"
+    }, this.renderHiddenFormInputs(), external_React_default.a.createElement("div", null, this.renderInput(), external_React_default.a.createElement("button", {
+      type: "submit",
+      className: "ASRouterButton primary",
+      onClick: this.handleSubmitAttempt,
+      ref: "formSubmitBtn"
+    }, content.scene2_button_label)), this.renderFormPrivacyNotice() || this.renderDisclaimer()));
   }
 
   getFirstSceneContent() {
@@ -13175,11 +13108,6 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
 
     if (this.state.expanded) {
       return this.renderSignupView();
-    } // Render only scene 2 (signup view)
-
-
-    if (this.props.expandedAlt) {
-      return this.renderSignupViewAlt();
     }
 
     return external_React_default.a.createElement(SimpleSnippet_SimpleSnippet, SubmitFormSnippet_extends({}, this.props, {
@@ -13370,11 +13298,6 @@ const SendToDeviceSnippet = props => {
     processFormData: processFormData
   }));
 };
-const SendToDeviceScene2Snippet = props => {
-  return external_React_default.a.createElement(SendToDeviceSnippet, SendToDeviceSnippet_extends({
-    expandedAlt: true
-  }, props));
-};
 // CONCATENATED MODULE: ./content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.jsx
 function SimpleBelowSearchSnippet_extends() { SimpleBelowSearchSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return SimpleBelowSearchSnippet_extends.apply(this, arguments); }
 
@@ -13520,7 +13443,6 @@ const SnippetsTemplates = {
   newsletter_snippet: NewsletterSnippet,
   fxa_signup_snippet: FXASignupSnippet,
   send_to_device_snippet: SendToDeviceSnippet,
-  send_to_device_scene2_snippet: SendToDeviceScene2Snippet,
   eoy_snippet: EOYSnippet,
   simple_below_search_snippet: SimpleBelowSearchSnippet_SimpleBelowSearchSnippet
 };
