@@ -26,63 +26,23 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+""" A Standalone WebSocket Server for testing purposes
 
-
-"""WebSocket extension for Apache HTTP Server.
-
-mod_pywebsocket is a WebSocket extension for Apache HTTP Server
-intended for testing or experimental purposes. mod_python is required.
-
+mod_pywebsocket is an API that provides WebSocket functionalities with
+a standalone WebSocket server. It is intended for testing or
+experimental purposes.
 
 Installation
 ============
+1. Follow standalone server documentation to start running the
+standalone server. It can be read by running the following command:
 
-0. Prepare an Apache HTTP Server for which mod_python is enabled.
+    $ pydoc mod_pywebsocket.standalone
 
-1. Specify the following Apache HTTP Server directives to suit your
-   configuration.
-
-   If mod_pywebsocket is not in the Python path, specify the following.
-   <websock_lib> is the directory where mod_pywebsocket is installed.
-
-       PythonPath "sys.path+['<websock_lib>']"
-
-   Always specify the following. <websock_handlers> is the directory where
-   user-written WebSocket handlers are placed.
-
-       PythonOption mod_pywebsocket.handler_root <websock_handlers>
-       PythonHeaderParserHandler mod_pywebsocket.headerparserhandler
-
-   To limit the search for WebSocket handlers to a directory <scan_dir>
-   under <websock_handlers>, configure as follows:
-
-       PythonOption mod_pywebsocket.handler_scan <scan_dir>
-
-   <scan_dir> is useful in saving scan time when <websock_handlers>
-   contains many non-WebSocket handler files.
-
-   If you want to allow handlers whose canonical path is not under the root
-   directory (i.e. symbolic link is in root directory but its target is not),
-   configure as follows:
-
-       PythonOption mod_pywebsocket.allow_handlers_outside_root_dir On
-
-   Example snippet of httpd.conf:
-   (mod_pywebsocket is in /websock_lib, WebSocket handlers are in
-   /websock_handlers, port is 80 for ws, 443 for wss.)
-
-       <IfModule python_module>
-         PythonPath "sys.path+['/websock_lib']"
-         PythonOption mod_pywebsocket.handler_root /websock_handlers
-         PythonHeaderParserHandler mod_pywebsocket.headerparserhandler
-       </IfModule>
-
-2. Tune Apache parameters for serving WebSocket. We'd like to note that at
-   least TimeOut directive from core features and RequestReadTimeout
-   directive from mod_reqtimeout should be modified not to kill connections
-   in only a few seconds of idle time.
-
-3. Verify installation. You can use example/console.html to poke the server.
+2. Once the standalone server is launched verify it by accessing
+http://localhost[:port]/console.html. Include the port number when
+specified on launch. If everything is working correctly, you
+will see a simple echo console.
 
 
 Writing WebSocket handlers
@@ -106,8 +66,8 @@ where:
     request: mod_python request.
 
 web_socket_do_extra_handshake is called during the handshake after the
-headers are successfully parsed and WebSocket properties (ws_location,
-ws_origin, and ws_resource) are added to request. A handler
+headers are successfully parsed and WebSocket properties (ws_origin,
+and ws_resource) are added to request. A handler
 can reject the request by raising an exception.
 
 A request object has the following properties that you can use during the
@@ -115,11 +75,10 @@ extra handshake (web_socket_do_extra_handshake):
 - ws_resource
 - ws_origin
 - ws_version
-- ws_location (HyBi 00 only)
-- ws_extensions (HyBi 06 and later)
-- ws_deflate (HyBi 06 and later)
+- ws_extensions
+- ws_deflate
 - ws_protocol
-- ws_requested_protocols (HyBi 06 and later)
+- ws_requested_protocols
 
 The last two are a bit tricky. See the next subsection.
 
@@ -127,20 +86,10 @@ The last two are a bit tricky. See the next subsection.
 Subprotocol Negotiation
 -----------------------
 
-For HyBi 06 and later, ws_protocol is always set to None when
+ws_protocol is always set to None when
 web_socket_do_extra_handshake is called. If ws_requested_protocols is not
 None, you must choose one subprotocol from this list and set it to
 ws_protocol.
-
-For HyBi 00, when web_socket_do_extra_handshake is called,
-ws_protocol is set to the value given by the client in
-Sec-WebSocket-Protocol header or None if
-such header was not found in the opening handshake request. Finish extra
-handshake with ws_protocol untouched to accept the request subprotocol.
-Then, Sec-WebSocket-Protocol header will be sent to
-the client in response with the same value as requested. Raise an exception
-in web_socket_do_extra_handshake to reject the requested subprotocol.
-
 
 Data Transfer
 -------------
@@ -189,8 +138,8 @@ use in web_socket_passive_closing_handshake.
 Threading
 ---------
 
-A WebSocket handler must be thread-safe if the server (Apache or
-standalone.py) is configured to use threads.
+A WebSocket handler must be thread-safe. The standalone
+server uses threads by default.
 
 
 Configuring WebSocket Extension Processors
@@ -219,6 +168,5 @@ A request object has these extension processing related attributes.
   A list of loaded extension processors. Find the processor for the
   extension you want to configure from it, and call its methods.
 """
-
 
 # vi:sts=4 sw=4 et tw=72

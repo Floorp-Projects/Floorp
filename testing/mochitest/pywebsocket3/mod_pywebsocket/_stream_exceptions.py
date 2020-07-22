@@ -1,4 +1,4 @@
-# Copyright 2011, Google Inc.
+# Copyright 2020, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,57 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-"""This file exports public symbols.
+"""Stream Exceptions.
 """
 
+# Note: request.connection.write/read are used in this module, even though
+# mod_python document says that they should be used only in connection
+# handlers. Unfortunately, we have no other options. For example,
+# request.write/read are not suitable because they don't allow direct raw bytes
+# writing/reading.
 
-from mod_pywebsocket._stream_base import BadOperationException
-from mod_pywebsocket._stream_base import ConnectionTerminatedException
-from mod_pywebsocket._stream_base import InvalidFrameException
-from mod_pywebsocket._stream_base import InvalidUTF8Exception
-from mod_pywebsocket._stream_base import UnsupportedFrameException
-from mod_pywebsocket._stream_hixie75 import StreamHixie75
-from mod_pywebsocket._stream_hybi import Frame
-from mod_pywebsocket._stream_hybi import Stream
-from mod_pywebsocket._stream_hybi import StreamOptions
 
-# These methods are intended to be used by WebSocket client developers to have
-# their implementations receive broken data in tests.
-from mod_pywebsocket._stream_hybi import create_close_frame
-from mod_pywebsocket._stream_hybi import create_header
-from mod_pywebsocket._stream_hybi import create_length_header
-from mod_pywebsocket._stream_hybi import create_ping_frame
-from mod_pywebsocket._stream_hybi import create_pong_frame
-from mod_pywebsocket._stream_hybi import create_binary_frame
-from mod_pywebsocket._stream_hybi import create_text_frame
-from mod_pywebsocket._stream_hybi import create_closing_handshake_body
+# Exceptions
+class ConnectionTerminatedException(Exception):
+    """This exception will be raised when a connection is terminated
+    unexpectedly.
+    """
+
+    pass
+
+
+class InvalidFrameException(ConnectionTerminatedException):
+    """This exception will be raised when we received an invalid frame we
+    cannot parse.
+    """
+
+    pass
+
+
+class BadOperationException(Exception):
+    """This exception will be raised when send_message() is called on
+    server-terminated connection or receive_message() is called on
+    client-terminated connection.
+    """
+
+    pass
+
+
+class UnsupportedFrameException(Exception):
+    """This exception will be raised when we receive a frame with flag, opcode
+    we cannot handle. Handlers can just catch and ignore this exception and
+    call receive_message() again to continue processing the next frame.
+    """
+
+    pass
+
+
+class InvalidUTF8Exception(Exception):
+    """This exception will be raised when we receive a text frame which
+    contains invalid UTF-8 strings.
+    """
+
+    pass
 
 
 # vi:sts=4 sw=4 et

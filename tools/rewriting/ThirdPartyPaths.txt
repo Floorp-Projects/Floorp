@@ -147,7 +147,7 @@ security/sandbox/chromium-shim/
 testing/gtest/gmock/
 testing/gtest/gtest/
 testing/mochitest/MochiKit/
-testing/mochitest/pywebsocket
+testing/mochitest/pywebsocket3/
 testing/mochitest/tests/MochiKit-1.4.2/
 testing/modules/ajv-4.1.1.js
 testing/modules/sinon-7.2.7.js
