@@ -269,6 +269,8 @@ void ICScript::trace(JSTracer* trc) {
   }
 }
 
+bool ICScript::isInlined() const { return jitScript()->icScript() != this; }
+
 bool ICScript::addInlinedChild(JSContext* cx, UniquePtr<ICScript> child,
                                uint32_t pcOffset) {
   if (!inlinedChildren_) {
@@ -849,9 +851,14 @@ void JitScript::initBytecodeTypeMap(JSScript* script) {
   MOZ_ASSERT(typeMapIndex == script->numBytecodeTypeSets());
 }
 
-InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx) {
+InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx,
+                                                 JSScript* script) {
   if (!inliningRoot_) {
-    inliningRoot_ = js::MakeUnique<InliningRoot>(cx);
+    inliningRoot_ = js::MakeUnique<InliningRoot>(cx, script);
+    if (!inliningRoot_) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
     icScript_.inliningRoot_ = inliningRoot_.get();
   }
   return inliningRoot_.get();

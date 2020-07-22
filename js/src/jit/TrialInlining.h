@@ -41,7 +41,8 @@ namespace jit {
  */
 class InliningRoot {
  public:
-  explicit InliningRoot(JSContext* cx) : inlinedScripts_(cx) {}
+  explicit InliningRoot(JSContext* cx, JSScript* owningScript)
+      : owningScript_(owningScript), inlinedScripts_(cx) {}
 
   FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
 
@@ -53,8 +54,11 @@ class InliningRoot {
 
   void purgeOptimizedStubs(Zone* zone);
 
+  JSScript* owningScript() const { return owningScript_; }
+
  private:
   FallbackICStubSpace fallbackStubSpace_ = {};
+  HeapPtr<JSScript*> owningScript_;
   js::Vector<js::UniquePtr<ICScript>> inlinedScripts_;
 };
 

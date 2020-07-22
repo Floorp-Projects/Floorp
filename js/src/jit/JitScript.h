@@ -99,7 +99,9 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
         warmUpCount_(warmUpCount),
         endOffset_(endOffset) {}
 
-  JitScript* jitScript() { return jitScript_; }
+  JitScript* jitScript() const { return jitScript_; }
+
+  bool isInlined() const;
 
   MOZ_MUST_USE bool initICEntries(JSContext* cx, JSScript* script);
 
@@ -723,7 +725,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   bool hasInliningRoot() const { return !!inliningRoot_; }
   InliningRoot* inliningRoot() const { return inliningRoot_.get(); }
-  InliningRoot* getOrCreateInliningRoot(JSContext* cx);
+  InliningRoot* getOrCreateInliningRoot(JSContext* cx, JSScript* script);
   void clearInliningRoot() { inliningRoot_.reset(); }
 };
 
