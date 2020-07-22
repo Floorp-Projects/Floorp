@@ -2462,31 +2462,32 @@ def _generateCxxStruct(sd):
     # The default copy, move, and assignment constructors, and the default
     # destructor, will do the right thing.
 
-    # bool operator==(const Struct& _o)
-    ovar = ExprVar('_o')
-    opeqeq = MethodDefn(MethodDecl(
-        'operator==',
-        params=[Decl(constreftype, ovar.name)],
-        ret=Type.BOOL,
-        const=True))
-    for f in sd.fields_ipdl_order():
-        ifneq = StmtIf(ExprNot(
-            ExprBinary(ExprCall(f.getMethod()), '==',
-                       ExprCall(f.getMethod(ovar)))))
-        ifneq.addifstmt(StmtReturn.FALSE)
-        opeqeq.addstmt(ifneq)
-    opeqeq.addstmt(StmtReturn.TRUE)
-    struct.addstmts([opeqeq, Whitespace.NL])
+    if sd.comparable:
+        # bool operator==(const Struct& _o)
+        ovar = ExprVar('_o')
+        opeqeq = MethodDefn(MethodDecl(
+            'operator==',
+            params=[Decl(constreftype, ovar.name)],
+            ret=Type.BOOL,
+            const=True))
+        for f in sd.fields_ipdl_order():
+            ifneq = StmtIf(ExprNot(
+                ExprBinary(ExprCall(f.getMethod()), '==',
+                           ExprCall(f.getMethod(ovar)))))
+            ifneq.addifstmt(StmtReturn.FALSE)
+            opeqeq.addstmt(ifneq)
+        opeqeq.addstmt(StmtReturn.TRUE)
+        struct.addstmts([opeqeq, Whitespace.NL])
 
-    # bool operator!=(const Struct& _o)
-    opneq = MethodDefn(MethodDecl(
-        'operator!=',
-        params=[Decl(constreftype, ovar.name)],
-        ret=Type.BOOL,
-        const=True))
-    opneq.addstmt(StmtReturn(ExprNot(ExprCall(ExprVar('operator=='),
-                                              args=[ovar]))))
-    struct.addstmts([opneq, Whitespace.NL])
+        # bool operator!=(const Struct& _o)
+        opneq = MethodDefn(MethodDecl(
+            'operator!=',
+            params=[Decl(constreftype, ovar.name)],
+            ret=Type.BOOL,
+            const=True))
+        opneq.addstmt(StmtReturn(ExprNot(ExprCall(ExprVar('operator=='),
+                                                  args=[ovar]))))
+        struct.addstmts([opneq, Whitespace.NL])
 
     # field1& f1()
     # const field1& f1() const
@@ -2954,42 +2955,43 @@ def _generateCxxUnion(ud):
     ])
     cls.addstmts([opeq, Whitespace.NL])
 
-    # bool operator==(const T&)
-    for c in ud.components:
+    if ud.comparable:
+        # bool operator==(const T&)
+        for c in ud.components:
+            opeqeq = MethodDefn(MethodDecl(
+                'operator==',
+                params=[Decl(c.inType(), rhsvar.name)],
+                ret=Type.BOOL,
+                const=True))
+            opeqeq.addstmt(StmtReturn(ExprBinary(
+                ExprCall(ExprVar(c.getTypeName())), '==', rhsvar)))
+            cls.addstmts([opeqeq, Whitespace.NL])
+
+        # bool operator==(const Union&)
         opeqeq = MethodDefn(MethodDecl(
             'operator==',
-            params=[Decl(c.inType(), rhsvar.name)],
+            params=[Decl(inClsType, rhsvar.name)],
             ret=Type.BOOL,
             const=True))
-        opeqeq.addstmt(StmtReturn(ExprBinary(
-            ExprCall(ExprVar(c.getTypeName())), '==', rhsvar)))
+        iftypesmismatch = StmtIf(ExprBinary(ud.callType(), '!=',
+                                            ud.callType(rhsvar)))
+        iftypesmismatch.addifstmt(StmtReturn.FALSE)
+        opeqeq.addstmts([iftypesmismatch, Whitespace.NL])
+
+        opeqeqswitch = StmtSwitch(ud.callType())
+        for c in ud.components:
+            case = StmtBlock()
+            case.addstmt(StmtReturn(ExprBinary(
+                ExprCall(ExprVar(c.getTypeName())), '==',
+                ExprCall(ExprSelect(rhsvar, '.', c.getTypeName())))))
+            opeqeqswitch.addcase(CaseLabel(c.enum()), case)
+        opeqeqswitch.addcase(
+            DefaultLabel(),
+            StmtBlock([_logicError('unreached'),
+                       StmtReturn.FALSE]))
+        opeqeq.addstmt(opeqeqswitch)
+
         cls.addstmts([opeqeq, Whitespace.NL])
-
-    # bool operator==(const Union&)
-    opeqeq = MethodDefn(MethodDecl(
-        'operator==',
-        params=[Decl(inClsType, rhsvar.name)],
-        ret=Type.BOOL,
-        const=True))
-    iftypesmismatch = StmtIf(ExprBinary(ud.callType(), '!=',
-                                        ud.callType(rhsvar)))
-    iftypesmismatch.addifstmt(StmtReturn.FALSE)
-    opeqeq.addstmts([iftypesmismatch, Whitespace.NL])
-
-    opeqeqswitch = StmtSwitch(ud.callType())
-    for c in ud.components:
-        case = StmtBlock()
-        case.addstmt(StmtReturn(ExprBinary(
-            ExprCall(ExprVar(c.getTypeName())), '==',
-            ExprCall(ExprSelect(rhsvar, '.', c.getTypeName())))))
-        opeqeqswitch.addcase(CaseLabel(c.enum()), case)
-    opeqeqswitch.addcase(
-        DefaultLabel(),
-        StmtBlock([_logicError('unreached'),
-                   StmtReturn.FALSE]))
-    opeqeq.addstmt(opeqeqswitch)
-
-    cls.addstmts([opeqeq, Whitespace.NL])
 
     # accessors for each type: operator T&, operator const T&,
     # T& get(), const T& get()
