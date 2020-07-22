@@ -5702,11 +5702,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_optimize_spreadcall() {
       break;
     }
 
-    // The array has no hole.
-    if (types->hasObjectFlags(constraints(), OBJECT_FLAG_NON_PACKED)) {
-      break;
-    }
-
     // The array's prototype is Array.prototype.
     JSObject* proto;
     if (!types->getCommonPrototype(constraints(), &proto)) {

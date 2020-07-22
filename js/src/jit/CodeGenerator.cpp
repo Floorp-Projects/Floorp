@@ -14432,17 +14432,35 @@ void CodeGenerator::visitFinishBoundFunctionInit(
 }
 
 void CodeGenerator::visitIsPackedArray(LIsPackedArray* lir) {
-  Register array = ToRegister(lir->array());
+  Register obj = ToRegister(lir->object());
   Register output = ToRegister(lir->output());
-  Register elementsTemp = ToRegister(lir->temp());
+  Register temp = ToRegister(lir->temp());
 
-  // Load elements and length.
-  masm.loadPtr(Address(array, NativeObject::offsetOfElements()), elementsTemp);
-  masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), output);
+  // Ensure it's an ArrayObject.
+  Label notPackedArray;
+  masm.branchTestObjClass(Assembler::NotEqual, obj, &ArrayObject::class_, temp,
+                          obj, &notPackedArray);
+
+  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), temp);
 
   // Test length == initializedLength.
-  Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
-  masm.cmp32Set(Assembler::Equal, initLength, output, output);
+  Label done;
+  Address initLength(temp, ObjectElements::offsetOfInitializedLength());
+  masm.load32(Address(temp, ObjectElements::offsetOfLength()), output);
+  masm.branch32(Assembler::NotEqual, initLength, output, &notPackedArray);
+
+  // Test the NON_PACKED flag.
+  Address flags(temp, ObjectElements::offsetOfFlags());
+  masm.branchTest32(Assembler::NonZero, flags,
+                    Imm32(ObjectElements::NON_PACKED), &notPackedArray);
+
+  masm.move32(Imm32(1), output);
+  masm.jump(&done);
+
+  masm.bind(&notPackedArray);
+  masm.move32(Imm32(0), output);
+
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitGetPrototypeOf(LGetPrototypeOf* lir) {

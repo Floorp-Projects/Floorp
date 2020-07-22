@@ -11408,8 +11408,8 @@ class MFinishBoundFunctionInit
 
 class MIsPackedArray : public MUnaryInstruction,
                        public SingleObjectPolicy::Data {
-  explicit MIsPackedArray(MDefinition* array)
-      : MUnaryInstruction(classOpcode, array) {
+  explicit MIsPackedArray(MDefinition* object)
+      : MUnaryInstruction(classOpcode, object) {
     setResultType(MIRType::Boolean);
     setMovable();
   }
@@ -11417,7 +11417,7 @@ class MIsPackedArray : public MUnaryInstruction,
  public:
   INSTRUCTION_HEADER(IsPackedArray)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, array))
+  NAMED_OPERANDS((0, object))
 
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
