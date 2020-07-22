@@ -31,6 +31,7 @@ class TestParameters(unittest.TestCase):
         'message': 'message',
         'moz_build_date': 'moz_build_date',
         'next_version': 'next_version',
+        'optimize_strategies': None,
         'optimize_target_tasks': False,
         'owner': 'owner',
         'phabricator_diff': 'phabricator_diff',
