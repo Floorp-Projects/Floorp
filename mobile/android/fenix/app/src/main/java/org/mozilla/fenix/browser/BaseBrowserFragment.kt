@@ -12,6 +12,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityManager
 import androidx.annotation.CallSuper
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
@@ -96,6 +97,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
+import org.mozilla.fenix.ext.accessibilityManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.hideToolbar
@@ -119,7 +121,7 @@ import java.lang.ref.WeakReference
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, SessionManager.Observer,
-    OnBackLongPressedListener {
+    OnBackLongPressedListener, AccessibilityManager.AccessibilityStateChangeListener {
     private lateinit var browserFragmentStore: BrowserFragmentStore
     private lateinit var browserAnimator: BrowserAnimator
 
@@ -714,6 +716,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         super.onStart()
         requireComponents.core.sessionManager.register(this, this, autoPause = true)
         sitePermissionWifiIntegration.get()?.maybeAddWifiConnectedListener()
+        requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
     }
 
     @CallSuper
@@ -1012,6 +1015,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         super.onDestroyView()
         _browserToolbarView = null
         _browserInteractor = null
+        requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
     }
 
     companion object {
@@ -1019,5 +1023,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
+    }
+
+    override fun onAccessibilityStateChanged(enabled: Boolean) {
+        TODO("Not yet implemented")
     }
 }
