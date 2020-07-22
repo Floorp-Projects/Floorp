@@ -2106,7 +2106,11 @@ fn generate_capture_path(path: *const c_char) -> Option<PathBuf> {
     // storage so that (a) it can be written without requiring permissions
     // and (b) it can be pulled off via `adb pull`. This env var is set
     // in GeckoLoader.java.
+    // When running in Firefox CI, the MOZ_UPLOAD_DIR variable is set to a path
+    // that taskcluster will export artifacts from, so let's put it there.
     let mut path = if let Ok(storage_path) = env::var("PUBLIC_STORAGE") {
+        PathBuf::from(storage_path).join(local_dir)
+    } else if let Ok(storage_path) = env::var("MOZ_UPLOAD_DIR") {
         PathBuf::from(storage_path).join(local_dir)
     } else if let Some(storage_path) = dirs::home_dir() {
         PathBuf::from(storage_path).join(local_dir)
