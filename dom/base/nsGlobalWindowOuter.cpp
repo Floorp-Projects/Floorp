@@ -3918,15 +3918,6 @@ uint64_t nsGlobalWindowOuter::GetMozPaintCountOuter() {
   return presShell ? presShell->GetPaintCount() : 0;
 }
 
-already_AddRefed<MediaQueryList> nsGlobalWindowOuter::MatchMediaOuter(
-    const nsAString& aMediaQueryList, CallerType aCallerType) {
-  if (!mDoc) {
-    return nullptr;
-  }
-
-  return mDoc->MatchMedia(aMediaQueryList, aCallerType);
-}
-
 void nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
                                           CallerType aCallerType,
                                           ErrorResult& aError) {
