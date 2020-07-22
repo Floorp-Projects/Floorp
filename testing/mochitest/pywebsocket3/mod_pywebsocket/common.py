@@ -26,33 +26,16 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """This file must not depend on any module specific to the WebSocket protocol.
 """
 
-
+from __future__ import absolute_import
 from mod_pywebsocket import http_header_util
-
 
 # Additional log level definitions.
 LOGLEVEL_FINE = 9
 
 # Constants indicating WebSocket protocol version.
-VERSION_HIXIE75 = -1
-VERSION_HYBI00 = 0
-VERSION_HYBI01 = 1
-VERSION_HYBI02 = 2
-VERSION_HYBI03 = 2
-VERSION_HYBI04 = 4
-VERSION_HYBI05 = 5
-VERSION_HYBI06 = 6
-VERSION_HYBI07 = 7
-VERSION_HYBI08 = 8
-VERSION_HYBI09 = 8
-VERSION_HYBI10 = 8
-VERSION_HYBI11 = 8
-VERSION_HYBI12 = 8
 VERSION_HYBI13 = 13
 VERSION_HYBI14 = 13
 VERSION_HYBI15 = 13
@@ -78,33 +61,24 @@ OPCODE_CLOSE = 0x8
 OPCODE_PING = 0x9
 OPCODE_PONG = 0xa
 
-# UUIDs used by HyBi 04 and later opening handshake and frame masking.
-WEBSOCKET_ACCEPT_UUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+# UUID for the opening handshake and frame masking.
+WEBSOCKET_ACCEPT_UUID = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
 # Opening handshake header names and expected values.
 UPGRADE_HEADER = 'Upgrade'
 WEBSOCKET_UPGRADE_TYPE = 'websocket'
-WEBSOCKET_UPGRADE_TYPE_HIXIE75 = 'WebSocket'
 CONNECTION_HEADER = 'Connection'
 UPGRADE_CONNECTION_TYPE = 'Upgrade'
 HOST_HEADER = 'Host'
 ORIGIN_HEADER = 'Origin'
-SEC_WEBSOCKET_ORIGIN_HEADER = 'Sec-WebSocket-Origin'
 SEC_WEBSOCKET_KEY_HEADER = 'Sec-WebSocket-Key'
 SEC_WEBSOCKET_ACCEPT_HEADER = 'Sec-WebSocket-Accept'
 SEC_WEBSOCKET_VERSION_HEADER = 'Sec-WebSocket-Version'
 SEC_WEBSOCKET_PROTOCOL_HEADER = 'Sec-WebSocket-Protocol'
 SEC_WEBSOCKET_EXTENSIONS_HEADER = 'Sec-WebSocket-Extensions'
-SEC_WEBSOCKET_DRAFT_HEADER = 'Sec-WebSocket-Draft'
-SEC_WEBSOCKET_KEY1_HEADER = 'Sec-WebSocket-Key1'
-SEC_WEBSOCKET_KEY2_HEADER = 'Sec-WebSocket-Key2'
-SEC_WEBSOCKET_LOCATION_HEADER = 'Sec-WebSocket-Location'
 
 # Extensions
-DEFLATE_FRAME_EXTENSION = 'deflate-frame'
 PERMESSAGE_DEFLATE_EXTENSION = 'permessage-deflate'
-X_WEBKIT_DEFLATE_FRAME_EXTENSION = 'x-webkit-deflate-frame'
-MUX_EXTENSION = 'mux_DO_NOT_USE'
 
 # Status codes
 # Code STATUS_NO_STATUS_RECEIVED, STATUS_ABNORMAL_CLOSURE, and
@@ -151,10 +125,7 @@ def is_control_opcode(opcode):
 
 
 class ExtensionParameter(object):
-    """Holds information about an extension which is exchanged on extension
-    negotiation in opening handshake.
-    """
-
+    """This is exchanged on extension negotiation in opening handshake."""
     def __init__(self, name):
         self._name = name
         # TODO(tyoshino): Change the data structure to more efficient one such
@@ -164,30 +135,37 @@ class ExtensionParameter(object):
         self._parameters = []
 
     def name(self):
+        """Return the extension name."""
         return self._name
 
     def add_parameter(self, name, value):
+        """Add a parameter."""
         self._parameters.append((name, value))
 
     def get_parameters(self):
+        """Return the parameters."""
         return self._parameters
 
     def get_parameter_names(self):
+        """Return the names of the parameters."""
         return [name for name, unused_value in self._parameters]
 
     def has_parameter(self, name):
+        """Test if a parameter exists."""
         for param_name, param_value in self._parameters:
             if param_name == name:
                 return True
         return False
 
     def get_parameter_value(self, name):
+        """Get the value of a specific parameter."""
         for param_name, param_value in self._parameters:
             if param_name == name:
                 return param_value
 
 
 class ExtensionParsingException(Exception):
+    """Exception to handle errors in extension parsing."""
     def __init__(self, name):
         super(ExtensionParsingException, self).__init__(name)
 
@@ -233,21 +211,19 @@ def _parse_extension(state):
 
         try:
             _parse_extension_param(state, extension)
-        except ExtensionParsingException, e:
+        except ExtensionParsingException as e:
             raise ExtensionParsingException(
-                'Failed to parse parameter for %r (%r)' %
-                (extension_token, e))
+                'Failed to parse parameter for %r (%r)' % (extension_token, e))
 
     return extension
 
 
 def parse_extensions(data):
-    """Parses Sec-WebSocket-Extensions header value returns a list of
-    ExtensionParameter objects.
+    """Parse Sec-WebSocket-Extensions header value.
 
+    Returns a list of ExtensionParameter objects.
     Leading LWSes must be trimmed.
     """
-
     state = http_header_util.ParsingState(data)
 
     extension_list = []
@@ -264,21 +240,18 @@ def parse_extensions(data):
         if not http_header_util.consume_string(state, ','):
             raise ExtensionParsingException(
                 'Failed to parse Sec-WebSocket-Extensions header: '
-                'Expected a comma but found %r' %
-                http_header_util.peek(state))
+                'Expected a comma but found %r' % http_header_util.peek(state))
 
         http_header_util.consume_lwses(state)
 
     if len(extension_list) == 0:
-        raise ExtensionParsingException(
-            'No valid extension entry found')
+        raise ExtensionParsingException('No valid extension entry found')
 
     return extension_list
 
 
 def format_extension(extension):
-    """Formats an ExtensionParameter object."""
-
+    """Format an ExtensionParameter object."""
     formatted_params = [extension.name()]
     for param_name, param_value in extension.get_parameters():
         if param_value is None:
@@ -290,8 +263,7 @@ def format_extension(extension):
 
 
 def format_extensions(extension_list):
-    """Formats a list of ExtensionParameter objects."""
-
+    """Format a list of ExtensionParameter objects."""
     formatted_extension_list = []
     for extension in extension_list:
         formatted_extension_list.append(format_extension(extension))

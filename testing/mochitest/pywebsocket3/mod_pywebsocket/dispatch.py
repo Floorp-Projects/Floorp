@@ -26,23 +26,20 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """Dispatch WebSocket request.
 """
 
-
+from __future__ import absolute_import
 import logging
 import os
 import re
+import traceback
 
 from mod_pywebsocket import common
 from mod_pywebsocket import handshake
 from mod_pywebsocket import msgutil
-from mod_pywebsocket import mux
 from mod_pywebsocket import stream
 from mod_pywebsocket import util
-
 
 _SOURCE_PATH_PATTERN = re.compile(r'(?i)_wsh\.py$')
 _SOURCE_SUFFIX = '_wsh.py'
@@ -54,7 +51,6 @@ _PASSIVE_CLOSING_HANDSHAKE_HANDLER_NAME = (
 
 class DispatchException(Exception):
     """Exception in dispatching WebSocket request."""
-
     def __init__(self, name, status=common.HTTP_STATUS_NOT_FOUND):
         super(DispatchException, self).__init__(name)
         self.status = status
@@ -125,7 +121,6 @@ def _enumerate_handler_file_paths(directory):
 
 class _HandlerSuite(object):
     """A handler suite holder class."""
-
     def __init__(self, do_extra_handshake, transfer_data,
                  passive_closing_handshake):
         self.do_extra_handshake = do_extra_handshake
@@ -143,10 +138,13 @@ def _source_handler_file(handler_definition):
 
     global_dic = {}
     try:
-        exec handler_definition in global_dic
+        # This statement is gramatically different in python 2 and 3.
+        # Hence, yapf will complain about this. To overcome this, we disable
+        # yapf for this line.
+        exec(handler_definition, global_dic) # yapf: disable
     except Exception:
         raise DispatchException('Error in sourcing handler:' +
-                                util.get_stack_trace())
+                                traceback.format_exc())
     passive_closing_handshake_handler = None
     try:
         passive_closing_handshake_handler = _extract_handler(
@@ -178,10 +176,10 @@ class Dispatcher(object):
 
     This class maintains a map from resource name to handlers.
     """
-
-    def __init__(
-        self, root_dir, scan_dir=None,
-        allow_handlers_outside_root_dir=True):
+    def __init__(self,
+                 root_dir,
+                 scan_dir=None,
+                 allow_handlers_outside_root_dir=True):
         """Construct an instance.
 
         Args:
@@ -207,11 +205,11 @@ class Dispatcher(object):
                 os.path.realpath(root_dir)):
             raise DispatchException('scan_dir:%s must be a directory under '
                                     'root_dir:%s.' % (scan_dir, root_dir))
-        self._source_handler_files_in_dir(
-            root_dir, scan_dir, allow_handlers_outside_root_dir)
+        self._source_handler_files_in_dir(root_dir, scan_dir,
+                                          allow_handlers_outside_root_dir)
 
-    def add_resource_path_alias(self,
-                                alias_resource_path, existing_resource_path):
+    def add_resource_path_alias(self, alias_resource_path,
+                                existing_resource_path):
         """Add resource path alias.
 
         Once added, request to alias_resource_path would be handled by
@@ -254,17 +252,15 @@ class Dispatcher(object):
         do_extra_handshake_ = handler_suite.do_extra_handshake
         try:
             do_extra_handshake_(request)
-        except handshake.AbortedByUserException, e:
+        except handshake.AbortedByUserException as e:
             # Re-raise to tell the caller of this function to finish this
             # connection without sending any error.
-            self._logger.debug('%s', util.get_stack_trace())
+            self._logger.debug('%s', traceback.format_exc())
             raise
-        except Exception, e:
+        except Exception as e:
             util.prepend_message_to_exception(
-                    '%s raised exception for %s: ' % (
-                            _DO_EXTRA_HANDSHAKE_HANDLER_NAME,
-                            request.ws_resource),
-                    e)
+                '%s raised exception for %s: ' %
+                (_DO_EXTRA_HANDSHAKE_HANDLER_NAME, request.ws_resource), e)
             raise handshake.HandshakeException(e, common.HTTP_STATUS_FORBIDDEN)
 
     def transfer_data(self, request):
@@ -283,47 +279,43 @@ class Dispatcher(object):
 
         # TODO(tyoshino): Terminate underlying TCP connection if possible.
         try:
-            if mux.use_mux(request):
-                mux.start(request, self)
-            else:
-                handler_suite = self.get_handler_suite(request.ws_resource)
-                if handler_suite is None:
-                    raise DispatchException('No handler for: %r' %
-                                            request.ws_resource)
-                transfer_data_ = handler_suite.transfer_data
-                transfer_data_(request)
+            handler_suite = self.get_handler_suite(request.ws_resource)
+            if handler_suite is None:
+                raise DispatchException('No handler for: %r' %
+                                        request.ws_resource)
+            transfer_data_ = handler_suite.transfer_data
+            transfer_data_(request)
 
             if not request.server_terminated:
                 request.ws_stream.close_connection()
         # Catch non-critical exceptions the handler didn't handle.
-        except handshake.AbortedByUserException, e:
-            self._logger.debug('%s', util.get_stack_trace())
+        except handshake.AbortedByUserException as e:
+            self._logger.debug('%s', traceback.format_exc())
             raise
-        except msgutil.BadOperationException, e:
+        except msgutil.BadOperationException as e:
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(
                 common.STATUS_INTERNAL_ENDPOINT_ERROR)
-        except msgutil.InvalidFrameException, e:
+        except msgutil.InvalidFrameException as e:
             # InvalidFrameException must be caught before
             # ConnectionTerminatedException that catches InvalidFrameException.
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(common.STATUS_PROTOCOL_ERROR)
-        except msgutil.UnsupportedFrameException, e:
+        except msgutil.UnsupportedFrameException as e:
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(common.STATUS_UNSUPPORTED_DATA)
-        except stream.InvalidUTF8Exception, e:
+        except stream.InvalidUTF8Exception as e:
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(
                 common.STATUS_INVALID_FRAME_PAYLOAD_DATA)
-        except msgutil.ConnectionTerminatedException, e:
+        except msgutil.ConnectionTerminatedException as e:
             self._logger.debug('%s', e)
-        except Exception, e:
+        except Exception as e:
             # Any other exceptions are forwarded to the caller of this
             # function.
             util.prepend_message_to_exception(
-                '%s raised exception for %s: ' % (
-                    _TRANSFER_DATA_HANDLER_NAME, request.ws_resource),
-                e)
+                '%s raised exception for %s: ' %
+                (_TRANSFER_DATA_HANDLER_NAME, request.ws_resource), e)
             raise
 
     def passive_closing_handshake(self, request):
@@ -348,13 +340,13 @@ class Dispatcher(object):
             resource = resource.split('?', 1)[0]
         handler_suite = self._handler_suite_map.get(resource)
         if handler_suite and fragment:
-            raise DispatchException('Fragment identifiers MUST NOT be used on '
-                                    'WebSocket URIs',
-                                    common.HTTP_STATUS_BAD_REQUEST)
+            raise DispatchException(
+                'Fragment identifiers MUST NOT be used on WebSocket URIs',
+                common.HTTP_STATUS_BAD_REQUEST)
         return handler_suite
 
-    def _source_handler_files_in_dir(
-        self, root_dir, scan_dir, allow_handlers_outside_root_dir):
+    def _source_handler_files_in_dir(self, root_dir, scan_dir,
+                                     allow_handlers_outside_root_dir):
         """Source all the handler source files in the scan_dir directory.
 
         The resource path is determined relative to root_dir.
@@ -374,18 +366,18 @@ class Dispatcher(object):
             if (not allow_handlers_outside_root_dir and
                 (not os.path.realpath(path).startswith(root_realpath))):
                 self._logger.debug(
-                    'Canonical path of %s is not under root directory' %
-                    path)
+                    'Canonical path of %s is not under root directory' % path)
                 continue
             try:
-                handler_suite = _source_handler_file(open(path).read())
-            except DispatchException, e:
+                with open(path) as handler_file:
+                    handler_suite = _source_handler_file(handler_file.read())
+            except DispatchException as e:
                 self._source_warnings.append('%s: %s' % (path, e))
                 continue
             resource = convert(path)
             if resource is None:
-                self._logger.debug(
-                    'Path to resource conversion on %s failed' % path)
+                self._logger.debug('Path to resource conversion on %s failed' %
+                                   path)
             else:
                 self._handler_suite_map[convert(path)] = handler_suite
 

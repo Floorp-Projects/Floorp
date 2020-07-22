@@ -7,6 +7,9 @@ with Files('moz.build'):
 with Files('aom/**'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
+with Files('cups/**'):
+    BUG_COMPONENT = ('Core', 'Printing: Setup')
+
 with Files('dav1d/**'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
