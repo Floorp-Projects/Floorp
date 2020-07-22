@@ -373,6 +373,8 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   nsresult StringToURI(const nsAString& aSpec,
                        mozilla::dom::Document* aDocument, nsIURI** aURI);
 
+  void CreateStaticImageClone(nsImageLoadingContent* aDest) const;
+
   /**
    * Prepare and returns a reference to the "next request". If there's already
    * a _usable_ current request (one with SIZE_AVAILABLE), this request is
