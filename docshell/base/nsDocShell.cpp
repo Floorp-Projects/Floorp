@@ -81,7 +81,6 @@
 #include "mozilla/net/DocumentChannel.h"
 #include "mozilla/net/ParentChannelWrapper.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
-#include "mozilla/dom/RTCCertificate.h"
 #include "ReferrerInfo.h"
 
 #include "nsIApplicationCacheChannel.h"
@@ -227,6 +226,7 @@
 #include "URIUtils.h"
 #include "sslerr.h"
 #include "mozpkix/pkix.h"
+#include "NSSErrorsService.h"
 
 #include "timeline/JavascriptTimelineMarker.h"
 #include "nsDocShellTelemetryUtils.h"
