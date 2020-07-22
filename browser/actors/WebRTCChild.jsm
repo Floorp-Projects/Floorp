@@ -49,7 +49,7 @@ class WebRTCChild extends JSWindowActorChild {
     }
   }
 
-  // This observer is registered in ContentObservers.js to avoid
+  // This observer is called from BrowserProcessChild to avoid
   // loading this .jsm when WebRTC is not in use.
   static observe(aSubject, aTopic, aData) {
     switch (aTopic) {

@@ -44,6 +44,7 @@ FINAL_TARGET_FILES.actors += [
     'AboutTabCrashedParent.jsm',
     'BlockedSiteChild.jsm',
     'BlockedSiteParent.jsm',
+    'BrowserProcessChild.jsm',
     'BrowserTabChild.jsm',
     'BrowserTabParent.jsm',
     'ClickHandlerChild.jsm',
