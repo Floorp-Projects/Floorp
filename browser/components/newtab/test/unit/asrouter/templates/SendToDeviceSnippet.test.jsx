@@ -1,17 +1,11 @@
 import { mount } from "enzyme";
 import React from "react";
 import schema from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet.schema.json";
-import {
-  SendToDeviceSnippet,
-  SendToDeviceScene2Snippet,
-} from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet";
+import { SendToDeviceSnippet } from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet";
 import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
 const DEFAULT_CONTENT = SnippetsTestMessageProvider.getMessages().find(
   msg => msg.template === "send_to_device_snippet"
-).content;
-const DEFAULT_SCENE2_CONTENT = SnippetsTestMessageProvider.getMessages().find(
-  msg => msg.template === "send_to_device_scene2_snippet"
 ).content;
 
 async function testBodyContains(body, key, value) {
@@ -178,54 +172,6 @@ describe("SendToDeviceSnippet", () => {
       assert.ok(testBodyContains(body, "lang", "fr-CA"), "has lang");
       assert.ok(testBodyContains(body, "country", "CA"), "CA");
       assert.ok(testBodyContains(body, "msg_name", "foo"), "has msg_name");
-    });
-  });
-
-  describe("SendToDeviceScene2Snippet", () => {
-    function mountWithProps(content = {}) {
-      const props = {
-        id: "foo123",
-        content: Object.assign({}, DEFAULT_SCENE2_CONTENT, content),
-        onBlock() {},
-        onDismiss: sandbox.stub(),
-        sendUserActionTelemetry: sandbox.stub(),
-        onAction: sandbox.stub(),
-      };
-      return mount(<SendToDeviceScene2Snippet {...props} />);
-    }
-
-    it("should render scene 2", () => {
-      const wrapper = mountWithProps();
-
-      assert.lengthOf(wrapper.find(".scene2Icon"), 1, "Found scene 2 icon");
-      assert.lengthOf(
-        wrapper.find(".scene2Title"),
-        0,
-        "Should not have a large header"
-      );
-    });
-    it("should have block button", () => {
-      const wrapper = mountWithProps();
-
-      assert.lengthOf(
-        wrapper.find(".blockButton"),
-        1,
-        "Found the block button"
-      );
-    });
-    it("should render title text", () => {
-      const wrapper = mountWithProps();
-
-      assert.lengthOf(
-        wrapper.find(".section-title-text"),
-        1,
-        "Found the section title"
-      );
-      assert.lengthOf(
-        wrapper.find(".section-title .icon"),
-        2, // light and dark theme
-        "Found scene 2 title"
-      );
     });
   });
 });

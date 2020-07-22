@@ -5,10 +5,7 @@
 import { EOYSnippet } from "./EOYSnippet/EOYSnippet";
 import { FXASignupSnippet } from "./FXASignupSnippet/FXASignupSnippet";
 import { NewsletterSnippet } from "./NewsletterSnippet/NewsletterSnippet";
-import {
-  SendToDeviceSnippet,
-  SendToDeviceScene2Snippet,
-} from "./SendToDeviceSnippet/SendToDeviceSnippet";
+import { SendToDeviceSnippet } from "./SendToDeviceSnippet/SendToDeviceSnippet";
 import { SimpleBelowSearchSnippet } from "./SimpleBelowSearchSnippet/SimpleBelowSearchSnippet";
 import { SimpleSnippet } from "./SimpleSnippet/SimpleSnippet";
 
@@ -18,7 +15,6 @@ export const SnippetsTemplates = {
   newsletter_snippet: NewsletterSnippet,
   fxa_signup_snippet: FXASignupSnippet,
   send_to_device_snippet: SendToDeviceSnippet,
-  send_to_device_scene2_snippet: SendToDeviceScene2Snippet,
   eoy_snippet: EOYSnippet,
   simple_below_search_snippet: SimpleBelowSearchSnippet,
 };
