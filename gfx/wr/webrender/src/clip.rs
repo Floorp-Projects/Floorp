@@ -914,7 +914,7 @@ impl ClipChainStack {
         maybe_shared_clips: &[ClipInstance],
         spatial_tree: &SpatialTree,
     ) {
-        let mut shared_clips = Vec::new();
+        let mut shared_clips = Vec::with_capacity(maybe_shared_clips.len());
 
         // If there are clips in the shared list for a picture cache, only include
         // them if they are simple, axis-aligned clips (i.e. in the root coordinate
@@ -933,7 +933,7 @@ impl ClipChainStack {
         }
 
         let level = ClipChainLevel {
-            shared_clips: shared_clips.to_vec(),
+            shared_clips,
             first_clip_index: self.clips.len(),
             initial_clip_counts_len: self.clip_counts.len(),
         };
