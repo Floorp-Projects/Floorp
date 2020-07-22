@@ -10416,10 +10416,12 @@ void CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
   masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), length);
 
-  // TODO(Warp) Adjust jit::ArrayPushDense to instead bailout for non-int32.
+  // TODO(Warp): reuse/share the CacheIR implementation when IonBuilder and TI
+  // are gone (bug 1654180).
   if (!IsTypeInferenceEnabled()) {
-    // Bailout if incrementing the length would overflow INT32_MAX.
-    bailoutCmp32(Assembler::Equal, length, Imm32(INT32_MAX), lir->snapshot());
+    // Bailout if the incremented length does not fit in int32.
+    bailoutCmp32(Assembler::AboveOrEqual, length, Imm32(INT32_MAX),
+                 lir->snapshot());
   }
 
 #ifdef DEBUG
