@@ -137,6 +137,7 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/xul',
     '/other-licenses/atk-1.0',
+    '/third_party/cups/include',
     '/widget',
     '/widget/headless',
 ]

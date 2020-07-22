@@ -28,14 +28,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """Memorizing file.
 
 A memorizing file wraps a file and memorizes lines read by readline.
 """
 
-
+from __future__ import absolute_import
 import sys
 
 
@@ -46,8 +44,7 @@ class MemorizingFile(object):
     is good enough for memorizing lines SimpleHTTPServer reads before
     the control reaches WebSocketRequestHandler.
     """
-
-    def __init__(self, file_, max_memorized_lines=sys.maxint):
+    def __init__(self, file_, max_memorized_lines=sys.maxsize):
         """Construct an instance.
 
         Args:
@@ -56,7 +53,6 @@ class MemorizingFile(object):
                 Only the first max_memorized_lines are memorized.
                 Default: sys.maxint.
         """
-
         self._file = file_
         self._memorized_lines = []
         self._max_memorized_lines = max_memorized_lines
@@ -64,6 +60,11 @@ class MemorizingFile(object):
         self._buffered_line = None
 
     def __getattribute__(self, name):
+        """Return a file attribute.
+        
+        Returns the value overridden by this class for some attributes,
+        and forwards the call to _file for the other attributes.
+        """
         if name in ('_file', '_memorized_lines', '_max_memorized_lines',
                     '_buffered', '_buffered_line', 'readline',
                     'get_memorized_lines'):
@@ -77,7 +78,6 @@ class MemorizingFile(object):
         the whole line will be read out from underlying file object by
         subsequent readline calls.
         """
-
         if self._buffered:
             line = self._buffered_line
             self._buffered = False
