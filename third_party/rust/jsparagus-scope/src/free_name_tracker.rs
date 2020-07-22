@@ -9,7 +9,7 @@
 
 use ast::source_atom_set::SourceAtomSetIndex;
 use std::collections::hash_map::RandomState;
-use std::collections::hash_set::Difference;
+use std::collections::hash_set::{Difference, Intersection};
 use std::collections::HashSet;
 
 /// Tracks free names in a scope.
@@ -86,6 +86,13 @@ impl FreeNameTracker {
     /// Names closed over in inner script-scopes, that's not yet defined.
     pub fn closed_over_freevars(&self) -> Difference<'_, SourceAtomSetIndex, RandomState> {
         self.closed_over_names.difference(&self.def_names)
+    }
+
+    /// Names defined in this scope and closed over by inner script-scopes.
+    pub fn defined_and_closed_over_vars(
+        &self,
+    ) -> Intersection<'_, SourceAtomSetIndex, RandomState> {
+        self.def_names.intersection(&self.closed_over_names)
     }
 
     /// Names used in this and inner non-script scopes, that's not yet defined.

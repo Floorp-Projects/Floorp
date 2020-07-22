@@ -4,6 +4,8 @@ import json
 import re
 import unicodedata
 import sys
+import itertools
+import collections
 from contextlib import contextmanager
 
 from ..runtime import (ERROR, ErrorToken, SPECIAL_CASE_TAG)
@@ -88,6 +90,28 @@ def indent(writer):
     yield None
     writer.indent -= 1
 
+def extract_ranges(iterator):
+    """Given a sorted iterator of integer, yield the contiguous ranges"""
+    # Identify contiguous ranges of states.
+    ranges = collections.defaultdict(list)
+    # A sorted list of contiguous integers implies that elements are separated
+    # by 1, as well as their indexes. Thus we can categorize them into buckets
+    # of contiguous integers using the base, which is the value v from which we
+    # remove the index i.
+    for i, v in enumerate(iterator):
+        ranges[v - i].append(v)
+    for l in ranges.values():
+        yield (l[0], l[-1])
+
+def rust_range(riter):
+    """Prettify a list of tuple of (min, max) of matched ranges into Rust
+    syntax."""
+    def minmax_join(rmin, rmax):
+        if rmin == rmax:
+            return str(rmin)
+        else:
+            return "{}..={}".format(rmin, rmax)
+    return " | ".join(minmax_join(rmin, rmax) for rmin, rmax in riter)
 
 class RustActionWriter:
     """Write epsilon state transitions for a given action function."""
@@ -200,18 +224,40 @@ class RustActionWriter:
             if len(state.epsilon) == 1:
                 # This is an attempt to avoid huge unending compilations.
                 _, dest = next(iter(state.epsilon), (None, None))
-                self.write("// parser.top_state() in [{}]", " | ".join(map(str, first_act.states)))
+                pattern = rust_range(extract_ranges(first_act.states))
+                self.write("// parser.top_state() in ({})", pattern)
                 self.write_epsilon_transition(dest)
             else:
                 self.write("match parser.top_state() {")
                 with indent(self):
+                    # Consider the branch which has the largest number of
+                    # potential top-states to be most likely, and therefore the
+                    # default branch to go to if all other fail to match.
+                    default_weight = max(len(act.states) for act, dest in state.edges())
+                    default_states = []
+                    default_dest = None
                     for act, dest in state.edges():
                         assert first_act.check_same_variable(act)
-                        self.write("{} => {{", " | ".join(map(str, act.states)))
+                        if default_dest is None and default_weight == len(act.states):
+                            # This range has the same weight as the default
+                            # branch. Ignore it and use it as the default
+                            # branch which would be generated at the end.
+                            default_states = act.states
+                            default_dest = dest
+                            continue
+                        pattern = rust_range(extract_ranges(act.states))
+                        self.write("{} => {{", pattern)
                         with indent(self):
                             self.write_epsilon_transition(dest)
                         self.write("}")
-                    self.write("_ => panic!(\"Unexpected state value.\")")
+                    # Generate code for the default branch, which got skipped
+                    # while producing the loop.
+                    self.write("_ => {")
+                    with indent(self):
+                        pattern = rust_range(extract_ranges(default_states))
+                        self.write("// {}", pattern)
+                        self.write_epsilon_transition(default_dest)
+                    self.write("}")
                 self.write("}")
         else:
             raise ValueError("Unexpected action type")
