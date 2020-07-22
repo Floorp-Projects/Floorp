@@ -4450,16 +4450,6 @@ impl PrimitiveList {
         self.clusters.is_empty()
     }
 
-    /// Add an existing cluster to this prim list
-    pub fn add_cluster(&mut self, mut cluster: PrimitiveCluster, prim_instances: &[PrimitiveInstance]) {
-        let start = self.prim_instances.len();
-        self.prim_instances.extend_from_slice(&prim_instances[cluster.prim_range()]);
-        let end = self.prim_instances.len();
-
-        cluster.prim_range = start..end;
-        self.clusters.push(cluster);
-    }
-
     /// Merge another primitive list into this one
     pub fn extend(&mut self, mut prim_list: PrimitiveList) {
         let offset = self.prim_instances.len();
@@ -4470,11 +4460,6 @@ impl PrimitiveList {
 
         self.prim_instances.extend(prim_list.prim_instances);
         self.clusters.extend(prim_list.clusters);
-    }
-
-    pub fn clear(&mut self) {
-        self.prim_instances.clear();
-        self.clusters.clear();
     }
 }
 
