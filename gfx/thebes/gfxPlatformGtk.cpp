@@ -81,12 +81,17 @@ gfxPlatformGtk::gfxPlatformGtk() {
   mIsX11Display = gfxPlatform::IsHeadless()
                       ? false
                       : GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  if (XRE_IsParentProcess()) {
 #ifdef MOZ_X11
-  if (mIsX11Display && XRE_IsParentProcess() &&
-      mozilla::Preferences::GetBool("gfx.xrender.enabled")) {
-    gfxVars::SetUseXRender(true);
-  }
+    if (mIsX11Display && mozilla::Preferences::GetBool("gfx.xrender.enabled")) {
+      gfxVars::SetUseXRender(true);
+    }
 #endif
+
+    if (IsWaylandDisplay() || (mIsX11Display && PR_GetEnv("MOZ_X11_EGL"))) {
+      gfxVars::SetUseEGL(true);
+    }
+  }
 
   InitBackendPrefs(GetBackendPrefs());
 
@@ -725,10 +730,11 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 
 #ifdef MOZ_WAYLAND
 bool gfxPlatformGtk::UseDMABufTextures() {
-  return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufTexturesEnabled();
+  return gfxVars::UseEGL() && GetDMABufDevice()->IsDMABufTexturesEnabled();
 }
 bool gfxPlatformGtk::UseDMABufVideoTextures() {
-  return (GetDMABufDevice()->IsDMABufVideoTexturesEnabled() ||
+  return gfxVars::UseEGL() &&
+         (GetDMABufDevice()->IsDMABufVideoTexturesEnabled() ||
           StaticPrefs::media_ffmpeg_vaapi_enabled());
 }
 bool gfxPlatformGtk::UseHardwareVideoDecoding() {
