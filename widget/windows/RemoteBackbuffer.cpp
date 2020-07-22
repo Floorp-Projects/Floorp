@@ -4,10 +4,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteBackbuffer.h"
+#include <algorithm>
+#include <type_traits>
 
 namespace mozilla {
 namespace widget {
 namespace remote_backbuffer {
+
+struct IpcSafeRect {
+  explicit IpcSafeRect(const gfx::IntRect& aRect)
+      : x(aRect.x), y(aRect.y), width(aRect.width), height(aRect.height) {}
+  int32_t x;
+  int32_t y;
+  int32_t width;
+  int32_t height;
+};
 
 enum class ResponseResult {
   Unknown,
@@ -32,6 +43,10 @@ struct BorrowResponseData {
   HANDLE fileMapping;
 };
 
+struct PresentRequestData {
+  IpcSafeRect dirtyRect;
+};
+
 struct PresentResponseData {
   ResponseResult result;
 };
@@ -40,9 +55,14 @@ struct SharedData {
   SharedDataType dataType;
   union {
     BorrowResponseData borrowResponse;
+    PresentRequestData presentRequest;
     PresentResponseData presentResponse;
   } data;
 };
+
+static_assert(std::is_trivially_copyable<SharedData>::value &&
+                  std::is_standard_layout<SharedData>::value,
+              "SharedData must be safe to pass over IPC boundaries");
 
 class SharedImage {
  public:
@@ -207,8 +227,8 @@ class PresentableSharedImage {
     return true;
   }
 
-  bool PresentToWindow(HWND aWindowHandle,
-                       nsTransparencyMode aTransparencyMode) {
+  bool PresentToWindow(HWND aWindowHandle, nsTransparencyMode aTransparencyMode,
+                       const IpcSafeRect& aDirtyRect) {
     if (aTransparencyMode == eTransparencyTransparent) {
       // If our window is a child window or a child-of-a-child, the window
       // that needs to be updated is the top level ancestor of the tree
@@ -224,14 +244,20 @@ class PresentableSharedImage {
           mDeviceContext, &srcPos, 0 /*colorKey*/, &bf, ULW_ALPHA);
     }
 
+    IntRect sharedImageRect{0, 0, mSharedImage.GetWidth(),
+                            mSharedImage.GetHeight()};
+    IntRect dirtyRect{aDirtyRect.x, aDirtyRect.y, aDirtyRect.width,
+                      aDirtyRect.height};
+    IntRect bltRect = dirtyRect.Intersect(sharedImageRect);
+
     HDC windowDC = ::GetDC(aWindowHandle);
     if (!windowDC) {
       return false;
     }
 
-    bool result = ::BitBlt(windowDC, 0 /*dstX*/, 0 /*dstY*/,
-                           mSharedImage.GetWidth(), mSharedImage.GetHeight(),
-                           mDeviceContext, 0 /*srcX*/, 0 /*srcY*/, SRCCOPY);
+    bool result = ::BitBlt(windowDC, bltRect.x /*dstX*/, bltRect.y /*dstY*/,
+                           bltRect.width, bltRect.height, mDeviceContext,
+                           bltRect.x /*srcX*/, bltRect.y /*srcY*/, SRCCOPY);
 
     MOZ_ALWAYS_TRUE(::ReleaseDC(aWindowHandle, windowDC));
 
@@ -403,9 +429,10 @@ void Provider::ThreadMain() {
         break;
       }
       case SharedDataType::PresentRequest: {
+        PresentRequestData requestData = mSharedDataPtr->data.presentRequest;
         PresentResponseData responseData = {};
 
-        HandlePresentRequest(&responseData);
+        HandlePresentRequest(requestData, &responseData);
 
         mSharedDataPtr->dataType = SharedDataType::PresentResponse;
         mSharedDataPtr->data.presentResponse = responseData;
@@ -467,7 +494,8 @@ void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData,
   mBackbuffer = std::move(newBackbuffer);
 }
 
-void Provider::HandlePresentRequest(PresentResponseData* aResponseData) {
+void Provider::HandlePresentRequest(const PresentRequestData& aRequestData,
+                                    PresentResponseData* aResponseData) {
   MOZ_ASSERT(aResponseData);
 
   aResponseData->result = ResponseResult::Error;
@@ -476,7 +504,8 @@ void Provider::HandlePresentRequest(PresentResponseData* aResponseData) {
     return;
   }
 
-  if (!mBackbuffer->PresentToWindow(mWindowHandle, mTransparencyMode)) {
+  if (!mBackbuffer->PresentToWindow(mWindowHandle, mTransparencyMode,
+                                    aRequestData.dirtyRect)) {
     return;
   }
 
@@ -571,8 +600,9 @@ already_AddRefed<gfx::DrawTarget> Client::BorrowDrawTarget() {
   return mBackbuffer->CreateDrawTarget();
 }
 
-bool Client::PresentDrawTarget() {
+bool Client::PresentDrawTarget(const gfx::IntRect& aDirtyRect) {
   mSharedDataPtr->dataType = SharedDataType::PresentRequest;
+  mSharedDataPtr->data.presentRequest.dirtyRect = IpcSafeRect(aDirtyRect);
   MOZ_ALWAYS_TRUE(::SetEvent(mRequestReadyEvent));
   MOZ_ALWAYS_TRUE(::WaitForSingleObject(mResponseReadyEvent, INFINITE) ==
                   WAIT_OBJECT_0);

@@ -14,8 +14,10 @@ namespace mozilla {
 namespace widget {
 namespace remote_backbuffer {
 
+struct IpcRect;
 struct SharedData;
 struct BorrowResponseData;
+struct PresentRequestData;
 struct PresentResponseData;
 class SharedImage;
 class PresentableSharedImage;
@@ -42,7 +44,8 @@ class Provider {
 
   void HandleBorrowRequest(BorrowResponseData* aResponseData,
                            bool aAllowSameBuffer);
-  void HandlePresentRequest(PresentResponseData* aResponseData);
+  void HandlePresentRequest(const PresentRequestData& aRequestData,
+                            PresentResponseData* aResponseData);
 
   HWND mWindowHandle;
   DWORD mTargetProcessId;
@@ -65,7 +68,7 @@ class Client {
   bool Initialize(const RemoteBackbufferHandles& aRemoteHandles);
 
   already_AddRefed<gfx::DrawTarget> BorrowDrawTarget();
-  bool PresentDrawTarget();
+  bool PresentDrawTarget(const gfx::IntRect& aDirtyRect);
 
   Client(const Client&) = delete;
   Client(Client&&) = delete;
