@@ -600,7 +600,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     already_AddRefed<WindowContext> GetParent();
     already_AddRefed<BrowsingContext> GetOpener();
 
-    uint64_t GetOpenerId() const { return mozilla::Get<IDX_OpenerId>(mFields); }
+    uint64_t GetOpenerId() const { return mFields.mOpenerId; }
 
     bool mWindowless = false;
     bool mUseRemoteTabs = false;
@@ -609,7 +609,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     OriginAttributes mOriginAttributes;
     uint64_t mRequestContextId = 0;
 
-    FieldTuple mFields;
+    FieldValues mFields;
   };
 
   // Create an IPCInitializer object for this BrowsingContext.
@@ -652,8 +652,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
-                  uint64_t aBrowsingContextId, Type aType,
-                  FieldTuple&& aFields);
+                  uint64_t aBrowsingContextId, Type aType, FieldValues&& aInit);
 
  private:
   void Attach(bool aFromIPC, ContentParent* aOriginProcess);

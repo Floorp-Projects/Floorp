@@ -252,7 +252,7 @@ class WindowGlobalParent final : public WindowContext,
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,
-                     bool aInProcess, FieldTuple&& aFields);
+                     bool aInProcess, FieldValues&& aInit);
 
   ~WindowGlobalParent();
 

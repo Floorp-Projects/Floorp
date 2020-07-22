@@ -440,8 +440,8 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
 BrowsingContext::BrowsingContext(WindowContext* aParentWindow,
                                  BrowsingContextGroup* aGroup,
                                  uint64_t aBrowsingContextId, Type aType,
-                                 FieldTuple&& aFields)
-    : mFields(std::move(aFields)),
+                                 FieldValues&& aInit)
+    : mFields(std::move(aInit)),
       mType(aType),
       mBrowsingContextId(aBrowsingContextId),
       mGroup(aGroup),
@@ -1974,7 +1974,7 @@ BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
   init.mOriginAttributes = mOriginAttributes;
   init.mHasSessionHistory = mChildSessionHistory != nullptr;
   init.mRequestContextId = mRequestContextId;
-  init.mFields = mFields.Fields();
+  init.mFields = mFields.RawValues();
   return init;
 }
 

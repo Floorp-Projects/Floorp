@@ -45,10 +45,9 @@ WindowGlobalInit WindowGlobalActor::BaseInitializer(
 
   // If any synced fields need to be initialized from our BrowsingContext, we
   // can initialize them here.
-  mozilla::Get<WindowContext::IDX_EmbedderPolicy>(ctx.mFields) =
-      InheritedPolicy(aBrowsingContext);
-  mozilla::Get<WindowContext::IDX_AutoplayPermission>(init.context().mFields) =
-      nsIPermissionManager::UNKNOWN_ACTION;
+  auto& fields = ctx.mFields;
+  fields.mEmbedderPolicy = InheritedPolicy(aBrowsingContext);
+  fields.mAutoplayPermission = nsIPermissionManager::UNKNOWN_ACTION;
   return init;
 }
 
@@ -86,30 +85,24 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
       ->Serialize(init.cookieJarSettings());
   init.httpsOnlyStatus() = doc->HttpsOnlyStatus();
 
-  mozilla::Get<WindowContext::IDX_CookieBehavior>(init.context().mFields) =
-      Some(doc->CookieJarSettings()->GetCookieBehavior());
-  mozilla::Get<WindowContext::IDX_IsOnContentBlockingAllowList>(
-      init.context().mFields) =
+  auto& fields = init.context().mFields;
+  fields.mCookieBehavior = Some(doc->CookieJarSettings()->GetCookieBehavior());
+  fields.mIsOnContentBlockingAllowList =
       doc->CookieJarSettings()->GetIsOnContentBlockingAllowList();
-  mozilla::Get<WindowContext::IDX_IsThirdPartyWindow>(init.context().mFields) =
-      doc->HasThirdPartyChannel();
-  mozilla::Get<WindowContext::IDX_IsThirdPartyTrackingResourceWindow>(
-      init.context().mFields) =
+  fields.mIsThirdPartyWindow = doc->HasThirdPartyChannel();
+  fields.mIsThirdPartyTrackingResourceWindow =
       nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow);
-  mozilla::Get<WindowContext::IDX_IsSecureContext>(init.context().mFields) =
-      aWindow->IsSecureContext();
+  fields.mIsSecureContext = aWindow->IsSecureContext();
 
   auto policy = doc->GetEmbedderPolicy();
   if (policy.isSome()) {
-    mozilla::Get<WindowContext::IDX_EmbedderPolicy>(init.context().mFields) =
-        policy.ref();
+    fields.mEmbedderPolicy = *policy;
   }
 
   // Init Mixed Content Fields
   nsCOMPtr<nsIURI> innerDocURI = NS_GetInnermostURI(doc->GetDocumentURI());
   if (innerDocURI) {
-    mozilla::Get<WindowContext::IDX_IsSecure>(init.context().mFields) =
-        innerDocURI->SchemeIs("https");
+    fields.mIsSecure = innerDocURI->SchemeIs("https");
   }
   nsCOMPtr<nsIChannel> mixedChannel;
   aWindow->GetDocShell()->GetMixedContentChannel(getter_AddRefs(mixedChannel));
@@ -117,8 +110,7 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
   // that the user has overriden mixed content to allow mixed
   // content loads to happen.
   if (mixedChannel && (mixedChannel == doc->GetChannel())) {
-    mozilla::Get<WindowContext::IDX_AllowMixedContent>(init.context().mFields) =
-        true;
+    fields.mAllowMixedContent = true;
   }
 
   nsCOMPtr<nsITransportSecurityInfo> securityInfo;
