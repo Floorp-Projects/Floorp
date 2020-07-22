@@ -243,7 +243,9 @@ class nsPrintJob final : public nsIObserver,
    * (if it has a 'print' style sheet, for example).
    */
   MOZ_CAN_RUN_SCRIPT nsresult
-  ResumePrintAfterResourcesLoaded(bool aCleanupOnError);
+  MaybeResumePrintAfterResourcesLoaded(bool aCleanupOnError);
+
+  bool ShouldResumePrint() const;
 
   nsresult SetRootView(nsPrintObject* aPO, bool& aDoReturn,
                        bool& aDocumentIsTopLevel, nsSize& aAdjSize);
@@ -287,7 +289,6 @@ class nsPrintJob final : public nsIObserver,
   nsPagePrintTimer* mPagePrintTimer = nullptr;
 
   float mScreenDPI = 115.0f;
-  int32_t mLoadCounter = 0;
 
   bool mIsCreatingPrintPreview = false;
   bool mIsDoingPrinting = false;
