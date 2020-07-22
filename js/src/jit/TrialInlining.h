@@ -86,7 +86,7 @@ class MOZ_RAII TrialInliner {
   ICStub* maybeSingleStub(const ICEntry& entry);
   void cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
                          CacheIRWriter& writer);
-  ICScript* createInlinedICScript(JSFunction* target);
+  ICScript* createInlinedICScript(JSFunction* target, BytecodeLocation loc);
   void replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
                      CacheKind kind);
 
