@@ -170,9 +170,6 @@ var State = {
     if (prev.pid != cur.pid) {
       throw new Error("Assertion failed: A process cannot change pid.");
     }
-    if (prev.type != cur.type) {
-      throw new Error("Assertion failed: A process cannot change type.");
-    }
     let prevThreads = new Map();
     for (let thread of prev.threads) {
       prevThreads.set(thread.tid, thread);
@@ -738,14 +735,17 @@ var Control = {
           order = b.totalResidentSize - a.totalResidentSize;
           break;
         case null:
-          // Default order: browser goes first.
-          if (a.type == "browser") {
-            order = -1;
-          } else if (b.type == "browser") {
-            order = 1;
+          // Default order: classify processes by group.
+          order = this._getDisplayGroupRank(a) - this._getDisplayGroupRank(b);
+          if (order == 0) {
+            // Other processes are ordered by origin.
+            order = String(a.name).localeCompare(b.name);
+            if (order == 0) {
+              // If we're running without Fission, many processes will have
+              // the same origin, so differenciate with CPU use.
+              order = b.slopeCpuUser - a.slopeCpuUser;
+            }
           }
-          // Other processes by increasing pid, arbitrarily.
-          order = b.pid - a.pid;
           break;
         default:
           throw new Error("Unsupported order: " + this._sortColumn);
@@ -755,6 +755,32 @@ var Control = {
       }
       return order;
     });
+  },
+
+  // Assign a display rank to a process.
+  //
+  // The `browser` process comes first (rank 0).
+  // Then comes web content (rank 1).
+  // Then come special processes (minus preallocated) (rank 2).
+  // Then come preallocated processes (rank 3).
+  _getDisplayGroupRank({ type }) {
+    switch (type) {
+      // Browser comes first.
+      case "browser":
+        return 0;
+      // Web content comes next.
+      case "web":
+      case "webIsolated":
+      case "webLargeAllocation":
+      case "withCoopCoep":
+        return 1;
+      // Preallocated processes come last.
+      case "preallocated":
+        return 3;
+      // Other special processes before preallocated.
+      default:
+        return 2;
+    }
   },
 };
 
