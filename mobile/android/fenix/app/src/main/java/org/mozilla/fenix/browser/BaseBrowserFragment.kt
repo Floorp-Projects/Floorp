@@ -1026,6 +1026,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     }
 
     override fun onAccessibilityStateChanged(enabled: Boolean) {
-        TODO("Not yet implemented")
+        browserToolbarView.setScrollFlags(enabled)
     }
 }
