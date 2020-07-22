@@ -142,9 +142,8 @@ class Channel {
   // Generates a channel ID that, if passed to the client as a shared secret,
   // will validate that the client's authenticity. On platforms that do not
   // require additional validation this is simply calls
-  // GenerateUniqueRandomChannelID(). For portability the prefix should not
-  // include the \ character.
-  static std::wstring GenerateVerifiedChannelID(const std::wstring& prefix);
+  // GenerateUniqueRandomChannelID().
+  static std::wstring GenerateVerifiedChannelID();
 
 #if defined(MOZ_WIDGET_ANDROID)
   // Used to set the first IPC file descriptor in the child process on Android.

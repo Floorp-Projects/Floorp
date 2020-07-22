@@ -632,18 +632,16 @@ uint32_t Channel::Unsound_NumQueuedMessages() const {
 }
 
 // static
-std::wstring Channel::GenerateVerifiedChannelID(const std::wstring& prefix) {
+std::wstring Channel::GenerateVerifiedChannelID() {
   // Windows pipes can be enumerated by low-privileged processes. So, we
   // append a strong random value after the \ character. This value is not
   // included in the pipe name, but sent as part of the client hello, to
   // prevent hijacking the pipe name to spoof the client.
-  std::wstring id = prefix;
-  if (!id.empty()) id.append(L".");
   int secret;
   do {  // Guarantee we get a non-zero value.
     secret = base::RandInt(0, std::numeric_limits<int>::max());
   } while (secret == 0);
-  id.append(GenerateUniqueRandomChannelID());
+  std::wstring id = GenerateUniqueRandomChannelID();
   return id.append(StringPrintf(L"\\%d", secret));
 }
 
