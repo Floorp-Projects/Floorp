@@ -673,6 +673,40 @@ int WinUtils::GetSystemMetricsForDpi(int nIndex, UINT dpi) {
   }
 }
 
+/* static */
+gfx::MarginDouble WinUtils::GetUnwriteableMarginsForDeviceInInches(HDC aHdc) {
+  if (!aHdc) {
+    return gfx::MarginDouble();
+  }
+
+  int pixelsPerInchY = ::GetDeviceCaps(aHdc, LOGPIXELSY);
+  int marginTop = ::GetDeviceCaps(aHdc, PHYSICALOFFSETY);
+  int printableAreaHeight = ::GetDeviceCaps(aHdc, VERTRES);
+  int physicalHeight = ::GetDeviceCaps(aHdc, PHYSICALHEIGHT);
+
+  double marginTopInch = double(marginTop) / pixelsPerInchY;
+
+  double printableAreaHeightInch = double(printableAreaHeight) / pixelsPerInchY;
+  double physicalHeightInch = double(physicalHeight) / pixelsPerInchY;
+  double marginBottomInch =
+      physicalHeightInch - printableAreaHeightInch - marginTopInch;
+
+  int pixelsPerInchX = ::GetDeviceCaps(aHdc, LOGPIXELSX);
+  int marginLeft = ::GetDeviceCaps(aHdc, PHYSICALOFFSETX);
+  int printableAreaWidth = ::GetDeviceCaps(aHdc, HORZRES);
+  int physicalWidth = ::GetDeviceCaps(aHdc, PHYSICALWIDTH);
+
+  double marginLeftInch = double(marginLeft) / pixelsPerInchX;
+
+  double printableAreaWidthInch = double(printableAreaWidth) / pixelsPerInchX;
+  double physicalWidthInch = double(physicalWidth) / pixelsPerInchX;
+  double marginRightInch =
+      physicalWidthInch - printableAreaWidthInch - marginLeftInch;
+
+  return gfx::MarginDouble(marginTopInch, marginRightInch, marginBottomInch,
+                           marginLeftInch);
+}
+
 #ifdef ACCESSIBILITY
 /* static */
 a11y::Accessible* WinUtils::GetRootAccessibleForHWND(HWND aHwnd) {

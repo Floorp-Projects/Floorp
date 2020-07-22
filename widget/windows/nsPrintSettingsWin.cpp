@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "nsCRT.h"
+#include "WinUtils.h"
 
 // Using paper sizes from wingdi.h and the units given there, plus a little
 // extra research for the ones it doesn't give. Looks like the list hasn't
@@ -264,36 +265,13 @@ nsPrintSettingsWin::GetEffectivePageSize(double* aWidth, double* aHeight) {
 }
 
 void nsPrintSettingsWin::InitUnwriteableMargin(HDC aHdc) {
-  int32_t pixelsPerInchY = GetDeviceCaps(aHdc, LOGPIXELSY);
-  int32_t pixelsPerInchX = GetDeviceCaps(aHdc, LOGPIXELSX);
+  mozilla::gfx::MarginDouble margin =
+      mozilla::widget::WinUtils::GetUnwriteableMarginsForDeviceInInches(aHdc);
 
-  int32_t marginLeft = GetDeviceCaps(aHdc, PHYSICALOFFSETX);
-  int32_t marginTop = GetDeviceCaps(aHdc, PHYSICALOFFSETY);
-
-  double marginLeftInch = double(marginLeft) / pixelsPerInchX;
-  double marginTopInch = double(marginTop) / pixelsPerInchY;
-
-  int32_t printableAreaWidth = GetDeviceCaps(aHdc, HORZRES);
-  int32_t printableAreaHeight = GetDeviceCaps(aHdc, VERTRES);
-
-  double printableAreaWidthInch = double(printableAreaWidth) / pixelsPerInchX;
-  double printableAreaHeightInch = double(printableAreaHeight) / pixelsPerInchY;
-
-  int32_t physicalWidth = GetDeviceCaps(aHdc, PHYSICALWIDTH);
-  int32_t physicalHeight = GetDeviceCaps(aHdc, PHYSICALHEIGHT);
-
-  double physicalWidthInch = double(physicalWidth) / pixelsPerInchX;
-  double physicalHeightInch = double(physicalHeight) / pixelsPerInchY;
-
-  double marginBottomInch =
-      physicalHeightInch - printableAreaHeightInch - marginTopInch;
-  double marginRightInch =
-      physicalWidthInch - printableAreaWidthInch - marginLeftInch;
-
-  mUnwriteableMargin.SizeTo(NS_INCHES_TO_INT_TWIPS(marginTopInch),
-                            NS_INCHES_TO_INT_TWIPS(marginRightInch),
-                            NS_INCHES_TO_INT_TWIPS(marginBottomInch),
-                            NS_INCHES_TO_INT_TWIPS(marginLeftInch));
+  mUnwriteableMargin.SizeTo(NS_INCHES_TO_INT_TWIPS(margin.top),
+                            NS_INCHES_TO_INT_TWIPS(margin.right),
+                            NS_INCHES_TO_INT_TWIPS(margin.bottom),
+                            NS_INCHES_TO_INT_TWIPS(margin.left));
 }
 
 void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
