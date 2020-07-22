@@ -99,13 +99,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
     uint64_t mBrowsingContextId;
 
     FieldTuple mFields;
-
-    bool operator==(const IPCInitializer& aOther) const {
-      return mInnerWindowId == aOther.mInnerWindowId &&
-             mOuterWindowId == aOther.mOuterWindowId &&
-             mBrowsingContextId == aOther.mBrowsingContextId &&
-             mFields == aOther.mFields;
-    }
   };
   IPCInitializer GetIPCInitializer();
 
