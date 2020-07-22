@@ -7,6 +7,7 @@
 .pip-wrapper {
   top: calc(70% - 40px);
   --pip-highlight-width: 2px;
+  --pip-highlight-style: solid rgba(0, 254, 255, 1);
 }
 
 .pip-wrapper[position="left"] > .pip-expanded > .pip-icon-label > .pip-icon {
@@ -19,9 +20,12 @@
   box-sizing: border-box;
 }
 
+.pip-wrapper:not([has-used]) > .pip-small {
+  border: var(--pip-highlight-width) var(--pip-highlight-style);
+}
+
 .pip-expanded {
-  border: var(--pip-highlight-width) solid transparent;
-  border-bottom: 1px solid transparent;
+  border: var(--pip-highlight-width) var(--pip-highlight-style);
   transition: opacity 250ms, scale 200ms, translate 190ms;
   justify-content: left;
 }
@@ -67,10 +71,10 @@
 
 .pip-wrapper.hovering > .pip-expanded {
   box-shadow: none;
-  border: var(--pip-highlight-width) solid rgba(0, 254, 255, 1);
+  border: var(--pip-highlight-width) var(--pip-highlight-style);
   /* Remove bottom border but keep text centred with padding. */
   border-bottom: none;
-  padding-bottom: 1px;
+  padding-bottom: var(--pip-highlight-width);
   pointer-events: none;
 }
 
@@ -102,12 +106,12 @@
   background: rgba(12,12,13,0.65);
   border-bottom-right-radius: 8px;
   border-bottom-left-radius: 8px;
-  border: 2px solid rgba(0, 254, 255, 1);
+  border: var(--pip-highlight-width) var(--pip-highlight-style);
   border-top: 0;
   box-shadow: 0px 4px 4px rgba(12,12,13,0.25);
   opacity: 0;
-  margin-left: -2px;
-  margin-right: -2px;
+  margin-left: calc(-1 * var(--pip-highlight-width));
+  margin-right: calc(-1 * var(--pip-highlight-width));
   width: calc(100% - 24px);
   word-break: break-word;
   pointer-events: none;
