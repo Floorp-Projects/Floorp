@@ -568,6 +568,12 @@ class OSXBootstrapper(BaseBootstrapper):
         self.install_toolchain_artifact(state_dir, checkout_root,
                                         minidump_stackwalk.MACOS_MINIDUMP_STACKWALK)
 
+    def ensure_dump_syms_packages(self, state_dir, checkout_root):
+        from mozboot import dump_syms
+
+        self.install_toolchain_artifact(state_dir, checkout_root,
+                                        dump_syms.MACOS_DUMP_SYMS)
+
     def install_homebrew(self):
         print(PACKAGE_MANAGER_INSTALL % ('Homebrew', 'Homebrew', 'Homebrew', 'brew'))
         bootstrap = urlopen(url=HOMEBREW_BOOTSTRAP, timeout=20).read()
