@@ -3,12 +3,14 @@ import SimpleBelowSearchSnippetSchema from "../../../content-src/asrouter/templa
 import SimpleSnippetSchema from "../../../content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.schema.json";
 import { SnippetsTestMessageProvider } from "../../../lib/SnippetsTestMessageProvider.jsm";
 import SubmitFormSnippetSchema from "../../../content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.schema.json";
+import SubmitFormScene2SnippetSchema from "../../../content-src/asrouter/templates/SubmitFormSnippet/SubmitFormScene2Snippet.schema.json";
 
 const schemas = {
   simple_snippet: SimpleSnippetSchema,
   newsletter_snippet: SubmitFormSnippetSchema,
   fxa_signup_snippet: SubmitFormSnippetSchema,
   send_to_device_snippet: SubmitFormSnippetSchema,
+  send_to_device_scene2_snippet: SubmitFormScene2SnippetSchema,
   eoy_snippet: EOYSnippetSchema,
   simple_below_search_snippet: SimpleBelowSearchSnippetSchema,
 };
