@@ -317,6 +317,14 @@ static nsGlobalWindowOuter* GetOuterWindowForForwarding(
   return;                                                            \
   PR_END_MACRO
 
+#define ENSURE_ACTIVE_DOCUMENT(errorresult, err_rval) \
+  PR_BEGIN_MACRO                                      \
+  if (MOZ_UNLIKELY(!HasActiveDocument())) {           \
+    aError.Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO); \
+    return err_rval;                                  \
+  }                                                   \
+  PR_END_MACRO
+
 #define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
 #define PERMISSION_CHANGED_TOPIC "perm-changed"
@@ -3322,12 +3330,8 @@ void nsGlobalWindowInner::CancelAnimationFrame(int32_t aHandle,
 already_AddRefed<MediaQueryList> nsGlobalWindowInner::MatchMedia(
     const nsAString& aMediaQueryList, CallerType aCallerType,
     ErrorResult& aError) {
-  // FIXME: This whole forward-to-outer and then get a pres
-  // shell/context off the docshell dance is sort of silly; it'd make
-  // more sense to forward to the inner, but it's what everyone else
-  // (GetSelection, GetScrollXY, etc.) does around here.
-  FORWARD_TO_OUTER_OR_THROW(MatchMediaOuter, (aMediaQueryList, aCallerType),
-                            aError, nullptr);
+  ENSURE_ACTIVE_DOCUMENT(aError, nullptr);
+  return mDoc->MatchMedia(aMediaQueryList, aCallerType);
 }
 
 void nsGlobalWindowInner::SetScreenX(int32_t aScreenX, CallerType aCallerType,

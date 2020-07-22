@@ -585,8 +585,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void PrintOuter(mozilla::ErrorResult& aError);
   mozilla::dom::Selection* GetSelectionOuter();
   already_AddRefed<mozilla::dom::Selection> GetSelection() override;
-  already_AddRefed<mozilla::dom::MediaQueryList> MatchMediaOuter(
-      const nsAString& aQuery, mozilla::dom::CallerType aCallerType);
   nsScreen* GetScreen();
   void MoveToOuter(int32_t aXPos, int32_t aYPos,
                    mozilla::dom::CallerType aCallerType,
