@@ -413,6 +413,16 @@ body {
     }
   }
 
+  .tiles-topsites-disclaimer {
+    display: flex;
+    flex-direction: column;
+    padding: 1em;
+    text-align: center;
+    color: var(--grey-subtitle-1);
+    font-size: 12px;
+    line-height: 18px;
+  }
+
   .tiles-topsites-section {
     $host-size: 12px;
     $tile-size: 96px;
@@ -545,7 +555,11 @@ body {
     flex-direction: row;
     justify-content: center;
     margin-top: auto;
-    padding: 32px 0;
+    padding: 32px 0 66px;
+
+    &.has-disclaimer {
+      padding-bottom: 0;
+    }
 
     .indicator {
       width: 60px;

@@ -451,13 +451,14 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   renderTiles() {
     switch (this.props.content.tiles.type) {
       case "topsites":
-        return this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-          text: typeof this.props.content.tiles.tooltip === "object" ? this.props.content.tiles.tooltip : {}
+        return this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: `tiles-container ${this.props.content.tiles.info ? "info" : ""}`
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-          className: `tiles-container ${this.props.content.tiles.tooltip ? "info" : ""}`,
-          title: this.props.content.tiles.tooltip
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-          className: "tiles-topsites-section"
+          className: "tiles-topsites-section",
+          name: "topsites-section",
+          id: "topsites-section",
+          "aria-labelledby": "topsites-disclaimer",
+          role: "region"
         }, this.props.topSites.slice(0, 5).map(({
           icon,
           label,
@@ -475,7 +476,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           } : {}
         }, icon ? "" : label[0].toUpperCase()), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "host"
-        }, label)))))) : null;
+        }, label))))) : null;
 
       case "theme":
         return this.props.content.tiles.data ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -525,6 +526,19 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     return steps;
   }
 
+  renderDisclaimer() {
+    if (this.props.content.tiles && this.props.content.tiles.type === "topsites") {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+        text: this.props.content.disclaimer
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
+        id: "topsites-disclaimer",
+        className: "tiles-topsites-disclaimer"
+      }));
+    }
+
+    return null;
+  }
+
   render() {
     const {
       content
@@ -548,10 +562,10 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       value: "primary_button",
       onClick: this.handleAction
     }))), content.secondary_button && content.secondary_button.position !== "top" ? this.renderSecondaryCTA() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
-      className: "steps",
+      className: content.tiles && content.tiles.type === "topsites" ? "steps has-disclaimer" : "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": `{"current": ${parseInt(this.props.order, 10) + 1}, "total": ${this.props.totalNumberOfScreens}}`
-    }, this.renderStepsIndicator()));
+    }, this.renderStepsIndicator()), this.renderDisclaimer());
   }
 
 }
