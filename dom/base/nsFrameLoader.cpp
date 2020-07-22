@@ -3118,49 +3118,117 @@ void nsFrameLoader::RequestSHistoryUpdate(bool aImmediately) {
   }
 }
 
-void nsFrameLoader::Print(uint64_t aOuterWindowID,
-                          nsIPrintSettings* aPrintSettings,
-                          nsIWebProgressListener* aProgressListener,
-                          ErrorResult& aRv) {
-#if defined(NS_PRINTING)
+#ifdef NS_PRINTING
+class WebProgressListenerToPromise final : public nsIWebProgressListener {
+ public:
+  explicit WebProgressListenerToPromise(Promise* aPromise)
+      : mPromise(aPromise) {}
+
+  NS_DECL_ISUPPORTS
+
+  // NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_IMETHOD OnStateChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
+                           uint32_t aStateFlags, nsresult aStatus) override {
+    if (aStateFlags & nsIWebProgressListener::STATE_STOP &&
+        aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+      mPromise->MaybeResolveWithUndefined();
+      mPromise = nullptr;
+    }
+    return NS_OK;
+  }
+  NS_IMETHOD OnStatusChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
+                            nsresult aStatus,
+                            const char16_t* aMessage) override {
+    if (aStatus != NS_OK) {
+      mPromise->MaybeReject(ErrorResult(aStatus));
+      mPromise = nullptr;
+    }
+    return NS_OK;
+  }
+  NS_IMETHOD OnProgressChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest, int32_t aCurSelfProgress,
+                              int32_t aMaxSelfProgress,
+                              int32_t aCurTotalProgress,
+                              int32_t aMaxTotalProgress) override {
+    return NS_OK;
+  }
+  NS_IMETHOD OnLocationChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest, nsIURI* aLocation,
+                              uint32_t aFlags) override {
+    return NS_OK;
+  }
+  NS_IMETHOD OnSecurityChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest, uint32_t aState) override {
+    return NS_OK;
+  }
+  NS_IMETHOD OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                    nsIRequest* aRequest,
+                                    uint32_t aEvent) override {
+    return NS_OK;
+  }
+
+ private:
+  ~WebProgressListenerToPromise() = default;
+
+  RefPtr<Promise> mPromise;
+};
+
+NS_IMPL_ISUPPORTS(WebProgressListenerToPromise, nsIWebProgressListener)
+#endif
+
+already_AddRefed<Promise> nsFrameLoader::Print(uint64_t aOuterWindowID,
+                                               nsIPrintSettings* aPrintSettings,
+                                               ErrorResult& aRv) {
+  RefPtr<Promise> promise =
+      Promise::Create(GetOwnerDoc()->GetOwnerGlobal(), aRv);
+
+#ifndef NS_PRINTING
+  promise->MaybeReject(ErrorResult(NS_ERROR_NOT_AVAILABLE));
+  return promise.forget();
+#else
+
+  RefPtr<WebProgressListenerToPromise> listener(
+      new WebProgressListenerToPromise(promise));
+
   if (auto* browserParent = GetBrowserParent()) {
     RefPtr<embedding::PrintingParent> printingParent =
         browserParent->Manager()->GetPrintingParent();
 
     embedding::PrintData printData;
     nsresult rv = printingParent->SerializeAndEnsureRemotePrintJob(
-        aPrintSettings, aProgressListener, nullptr, &printData);
+        aPrintSettings, listener, nullptr, &printData);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
+      promise->MaybeReject(ErrorResult(rv));
+      return promise.forget();
     }
 
     bool success = browserParent->SendPrint(aOuterWindowID, printData);
     if (!success) {
-      aRv.Throw(NS_ERROR_FAILURE);
+      promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
     }
-    return;
+    return promise.forget();
   }
 
   nsGlobalWindowOuter* outerWindow =
       nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowID);
   if (NS_WARN_IF(!outerWindow)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
+    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
+    return promise.forget();
   }
 
   nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
       do_GetInterface(ToSupports(outerWindow));
   if (NS_WARN_IF(!webBrowserPrint)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
+    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
+    return promise.forget();
   }
 
-  nsresult rv = webBrowserPrint->Print(aPrintSettings, aProgressListener);
+  nsresult rv = webBrowserPrint->Print(aPrintSettings, listener);
   if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
+    promise->MaybeReject(ErrorResult(rv));
   }
+
+  return promise.forget();
 #endif
 }
 
