@@ -213,7 +213,7 @@ function generateUUID() {
 async function setup(cachedAddons) {
   document
     .getElementById("enrollment-button")
-    .addEventListener("click", async event => {
+    .addEventListener("click", async () => {
       const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
 
       if (pioneerId) {
@@ -229,7 +229,24 @@ async function setup(cachedAddons) {
             await updateStudy(cachedAddon.addon_id);
           }
         }
+        showEnrollmentStatus();
       } else {
+        let dialog = document.querySelector("dialog");
+        dialog.showModal();
+        dialog.scrollTop = 0;
+      }
+    });
+
+  document
+    .getElementById("cancel-dialog-button")
+    .addEventListener("click", () => document.querySelector("dialog").close());
+
+  document
+    .getElementById("accept-dialog-button")
+    .addEventListener("click", async event => {
+      const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+
+      if (!pioneerId) {
         let uuid = generateUUID();
         Services.prefs.setStringPref(PREF_PIONEER_ID, uuid);
         for (const cachedAddon of cachedAddons) {
@@ -238,6 +255,7 @@ async function setup(cachedAddons) {
             await updateStudy(cachedAddon.addon_id);
           }
         }
+        document.querySelector("dialog").close();
       }
       showEnrollmentStatus();
     });
