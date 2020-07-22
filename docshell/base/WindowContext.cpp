@@ -282,14 +282,14 @@ WindowContext::IPCInitializer WindowContext::GetIPCInitializer() {
   init.mInnerWindowId = mInnerWindowId;
   init.mOuterWindowId = mOuterWindowId;
   init.mBrowsingContextId = mBrowsingContext->Id();
-  init.mFields = mFields.Fields();
+  init.mFields = mFields.RawValues();
   return init;
 }
 
 WindowContext::WindowContext(BrowsingContext* aBrowsingContext,
                              uint64_t aInnerWindowId, uint64_t aOuterWindowId,
-                             bool aInProcess, FieldTuple&& aFields)
-    : mFields(std::move(aFields)),
+                             bool aInProcess, FieldValues&& aInit)
+    : mFields(std::move(aInit)),
       mInnerWindowId(aInnerWindowId),
       mOuterWindowId(aOuterWindowId),
       mBrowsingContext(aBrowsingContext),

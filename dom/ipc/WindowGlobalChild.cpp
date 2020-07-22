@@ -140,7 +140,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::CreateDisconnected(
     windowContext =
         WindowGlobalParent::CreateDisconnected(aInit, /* aInProcess */ true);
   } else {
-    dom::WindowContext::FieldTuple fields = aInit.context().mFields;
+    dom::WindowContext::FieldValues fields = aInit.context().mFields;
     windowContext =
         new dom::WindowContext(browsingContext, aInit.context().mInnerWindowId,
                                aInit.context().mOuterWindowId,
