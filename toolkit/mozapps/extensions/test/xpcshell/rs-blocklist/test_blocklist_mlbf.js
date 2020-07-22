@@ -185,3 +185,35 @@ add_task(async function privileged_xpi_not_blocked() {
   Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   await addon.uninstall();
 });
+
+// Langpacks cannot be blocked via the MLBF on Nightly.
+// It can still be blocked by a stash, which is tested in
+// langpack_blocked_by_stash in test_blocklist_mlbf_stashes.js.
+add_task(async function langpack_not_blocked_on_Nightly() {
+  mockMLBF({
+    blocked: ["langpack-klingon@firefox.mozilla.org:1.0"],
+    notblocked: [],
+    generationTime: 1546297200000, // 1 jan 2019 = after the cert's notBefore
+  });
+  await ExtensionBlocklistMLBF._onUpdate();
+
+  await promiseInstallFile(
+    do_get_file("../data/signing_checks/langpack_signed.xpi")
+  );
+  let addon = await promiseAddonByID("langpack-klingon@firefox.mozilla.org");
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
+  if (AppConstants.NIGHTLY_BUILD) {
+    // Langpacks built for Nightly are currently signed by releng and not
+    // submitted to AMO, so we have to ignore the blocks of the MLBF.
+    Assert.equal(
+      addon.blocklistState,
+      Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+      "Langpacks cannot be blocked via the MLBF"
+    );
+  } else {
+    // On non-Nightly, langpacks are submitted through AMO so we will enforce
+    // the MLBF blocklist for them.
+    Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
+  }
+  await addon.uninstall();
+});
