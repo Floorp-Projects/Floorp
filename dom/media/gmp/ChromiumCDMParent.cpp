@@ -284,16 +284,15 @@ bool ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
     return false;
   }
   memcpy(shmem.get<uint8_t>(), aSample->Data(), aSample->Size());
-  GMPEncryptionScheme encryptionScheme =
-      GMPEncryptionScheme::kGMPEncryptionNone;
+  cdm::EncryptionScheme encryptionScheme = cdm::EncryptionScheme::kUnencrypted;
   switch (crypto.mCryptoScheme) {
     case CryptoScheme::None:
       break;  // Default to none
     case CryptoScheme::Cenc:
-      encryptionScheme = GMPEncryptionScheme::kGMPEncryptionCenc;
+      encryptionScheme = cdm::EncryptionScheme::kCenc;
       break;
     case CryptoScheme::Cbcs:
-      encryptionScheme = GMPEncryptionScheme::kGMPEncryptionCbcs;
+      encryptionScheme = cdm::EncryptionScheme::kCbcs;
       break;
     default:
       GMP_LOG_DEBUG(
@@ -304,23 +303,14 @@ bool ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
       break;
   }
 
-  const nsTArray<uint8_t>& iv =
-      encryptionScheme != GMPEncryptionScheme::kGMPEncryptionCbcs
-          ? crypto.mIV
-          : crypto.mConstantIV;
+  const nsTArray<uint8_t>& iv = encryptionScheme != cdm::EncryptionScheme::kCbcs
+                                    ? crypto.mIV
+                                    : crypto.mConstantIV;
   aBuffer = gmp::CDMInputBuffer(
       std::move(shmem), crypto.mKeyId, iv, aSample->mTime.ToMicroseconds(),
       aSample->mDuration.ToMicroseconds(), crypto.mPlainSizes,
       crypto.mEncryptedSizes, crypto.mCryptByteBlock, crypto.mSkipByteBlock,
       encryptionScheme);
-  MOZ_ASSERT(
-      aBuffer.mEncryptionScheme() == GMPEncryptionScheme::kGMPEncryptionNone ||
-          aBuffer.mEncryptionScheme() ==
-              GMPEncryptionScheme::kGMPEncryptionCenc ||
-          aBuffer.mEncryptionScheme() ==
-              GMPEncryptionScheme::kGMPEncryptionCbcs,
-      "aBuffer should use no encryption, cenc, or cbcs, other kinds are not "
-      "yet supported");
   return true;
 }
 
