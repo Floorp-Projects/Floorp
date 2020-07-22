@@ -26,34 +26,19 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""WebSocket utilities."""
 
-
-"""WebSocket utilities.
-"""
-
-
+from __future__ import absolute_import
 import array
 import errno
-
-# Import hash classes from a module available and recommended for each Python
-# version and re-export those symbol. Use sha and md5 module in Python 2.4, and
-# hashlib module in Python 2.6.
-try:
-    import hashlib
-    md5_hash = hashlib.md5
-    sha1_hash = hashlib.sha1
-except ImportError:
-    import md5
-    import sha
-    md5_hash = md5.md5
-    sha1_hash = sha.sha
-
-import StringIO
 import logging
 import os
 import re
+import six
+from six.moves import map
+from six.moves import range
 import socket
-import traceback
+import struct
 import zlib
 
 try:
@@ -62,23 +47,9 @@ except ImportError:
     pass
 
 
-def get_stack_trace():
-    """Get the current stack trace as string.
-
-    This is needed to support Python 2.3.
-    TODO: Remove this when we only support Python 2.4 and above.
-          Use traceback.format_exc instead.
-    """
-
-    out = StringIO.StringIO()
-    traceback.print_exc(file=out)
-    return out.getvalue()
-
-
 def prepend_message_to_exception(message, exc):
     """Prepend message to the exception."""
-
-    exc.args = (message + str(exc),)
+    exc.args = (message + str(exc), )
     return
 
 
@@ -104,7 +75,7 @@ def __translate_interp(interp, cygwin_path):
 
 
 def get_script_interp(script_path, cygwin_path=None):
-    """Gets #!-interpreter command line from the script.
+    r"""Get #!-interpreter command line from the script.
 
     It also fixes command path.  When Cygwin Python is used, e.g. in WebKit,
     it could run "/usr/bin/perl -wT hello.pl".
@@ -133,7 +104,6 @@ def wrap_popen3_for_win(cygwin_path):
       cygwin_path:  path for cygwin binary if command path is needed to be
                     translated.  None if no translation required.
     """
-
     __orig_popen3 = os.popen3
 
     def __wrap_popen3(cmd, mode='t', bufsize=-1):
@@ -147,61 +117,76 @@ def wrap_popen3_for_win(cygwin_path):
 
 
 def hexify(s):
-    return ' '.join(map(lambda x: '%02x' % ord(x), s))
+    return ' '.join(['%02x' % x for x in six.iterbytes(s)])
 
 
 def get_class_logger(o):
-    return logging.getLogger(
-        '%s.%s' % (o.__class__.__module__, o.__class__.__name__))
+    """Return the logging class information."""
+    return logging.getLogger('%s.%s' %
+                             (o.__class__.__module__, o.__class__.__name__))
+
+
+def pack_byte(b):
+    """Pack an integer to network-ordered byte"""
+    return struct.pack('!B', b)
 
 
 class NoopMasker(object):
-    """A masking object that has the same interface as RepeatedXorMasker but
-    just returns the string passed in without making any change.
-    """
+    """A NoOp masking object.
 
+    This has the same interface as RepeatedXorMasker but just returns
+    the string passed in without making any change.
+    """
     def __init__(self):
+        """NoOp."""
         pass
 
     def mask(self, s):
+        """NoOp."""
         return s
 
 
 class RepeatedXorMasker(object):
-    """A masking object that applies XOR on the string given to mask method
-    with the masking bytes given to the constructor repeatedly. This object
-    remembers the position in the masking bytes the last mask method call
-    ended and resumes from that point on the next mask method call.
-    """
+    """A masking object that applies XOR on the string.
 
+    Applies XOR on the byte string given to mask method with the masking bytes
+    given to the constructor repeatedly. This object remembers the position
+    in the masking bytes the last mask method call ended and resumes from
+    that point on the next mask method call.
+    """
     def __init__(self, masking_key):
         self._masking_key = masking_key
         self._masking_key_index = 0
 
     def _mask_using_swig(self, s):
-        masked_data = fast_masking.mask(
-                s, self._masking_key, self._masking_key_index)
-        self._masking_key_index = (
-                (self._masking_key_index + len(s)) % len(self._masking_key))
+        """Perform the mask via SWIG."""
+        masked_data = fast_masking.mask(s, self._masking_key,
+                                        self._masking_key_index)
+        self._masking_key_index = ((self._masking_key_index + len(s)) %
+                                   len(self._masking_key))
         return masked_data
 
     def _mask_using_array(self, s):
-        result = array.array('B')
-        result.fromstring(s)
+        """Perform the mask via python."""
+        if isinstance(s, six.text_type):
+            raise Exception(
+                'Masking Operation should not process unicode strings')
+
+        result = bytearray(s)
 
         # Use temporary local variables to eliminate the cost to access
         # attributes
-        masking_key = map(ord, self._masking_key)
+        masking_key = [c for c in six.iterbytes(self._masking_key)]
         masking_key_size = len(masking_key)
         masking_key_index = self._masking_key_index
 
-        for i in xrange(len(result)):
+        for i in range(len(result)):
             result[i] ^= masking_key[masking_key_index]
             masking_key_index = (masking_key_index + 1) % masking_key_size
 
         self._masking_key_index = masking_key_index
 
-        return result.tostring()
+        return bytes(result)
 
     if 'fast_masking' in globals():
         mask = _mask_using_swig
@@ -224,12 +209,24 @@ class RepeatedXorMasker(object):
 
 
 class _Deflater(object):
-
     def __init__(self, window_bits):
         self._logger = get_class_logger(self)
 
-        self._compress = zlib.compressobj(
-            zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, -window_bits)
+        # Using the smallest window bits of 9 for generating input frames.
+        # On WebSocket spec, the smallest window bit is 8. However, zlib does
+        # not accept window_bit = 8.
+        #
+        # Because of a zlib deflate quirk, back-references will not use the
+        # entire range of 1 << window_bits, but will instead use a restricted
+        # range of (1 << window_bits) - 262. With an increased window_bits = 9,
+        # back-references will be within a range of 250. These can still be
+        # decompressed with window_bits = 8 and the 256-byte window used there.
+        #
+        # Similar disscussions can be found in https://crbug.com/691074
+        window_bits = max(window_bits, 9)
+
+        self._compress = zlib.compressobj(zlib.Z_DEFAULT_COMPRESSION,
+                                          zlib.DEFLATED, -window_bits)
 
     def compress(self, bytes):
         compressed_bytes = self._compress.compress(bytes)
@@ -253,12 +250,11 @@ class _Deflater(object):
 
 
 class _Inflater(object):
-
     def __init__(self, window_bits):
         self._logger = get_class_logger(self)
         self._window_bits = window_bits
 
-        self._unconsumed = ''
+        self._unconsumed = b''
 
         self.reset()
 
@@ -266,19 +262,12 @@ class _Inflater(object):
         if not (size == -1 or size > 0):
             raise Exception('size must be -1 or positive')
 
-        data = ''
+        data = b''
 
         while True:
-            if size == -1:
-                data += self._decompress.decompress(self._unconsumed)
-                # See Python bug http://bugs.python.org/issue12050 to
-                # understand why the same code cannot be used for updating
-                # self._unconsumed for here and else block.
-                self._unconsumed = ''
-            else:
-                data += self._decompress.decompress(
-                    self._unconsumed, size - len(data))
-                self._unconsumed = self._decompress.unconsumed_tail
+            data += self._decompress.decompress(self._unconsumed,
+                                                max(0, size - len(data)))
+            self._unconsumed = self._decompress.unconsumed_tail
             if self._decompress.unused_data:
                 # Encountered a last block (i.e. a block with BFINAL = 1) and
                 # found a new stream (unused_data). We cannot use the same
@@ -323,7 +312,6 @@ class _RFC1979Deflater(object):
     """A compressor class that applies DEFLATE to given byte sequence and
     flushes using the algorithm described in the RFC1979 section 2.1.
     """
-
     def __init__(self, window_bits, no_context_takeover):
         self._deflater = None
         if window_bits is None:
@@ -338,7 +326,7 @@ class _RFC1979Deflater(object):
         if bfinal:
             result = self._deflater.compress_and_finish(bytes)
             # Add a padding block with BFINAL = 0 and BTYPE = 0.
-            result = result + chr(0)
+            result = result + pack_byte(0)
             self._deflater = None
             return result
 
@@ -355,17 +343,18 @@ class _RFC1979Deflater(object):
 
 
 class _RFC1979Inflater(object):
-    """A decompressor class for byte sequence compressed and flushed following
+    """A decompressor class a la RFC1979.
+
+    A decompressor class for byte sequence compressed and flushed following
     the algorithm described in the RFC1979 section 2.1.
     """
-
     def __init__(self, window_bits=zlib.MAX_WBITS):
         self._inflater = _Inflater(window_bits)
 
     def filter(self, bytes):
         # Restore stripped LEN and NLEN field of a non-compressed block added
         # for Z_SYNC_FLUSH.
-        self._inflater.append(bytes + '\x00\x00\xff\xff')
+        self._inflater.append(bytes + b'\x00\x00\xff\xff')
         return self._inflater.decompress(-1)
 
 
@@ -402,7 +391,7 @@ class DeflateSocket(object):
 
             read_data = self._socket.recv(DeflateSocket._RECV_SIZE)
             if not read_data:
-                return ''
+                return b''
             self._inflater.append(read_data)
 
     def sendall(self, bytes):

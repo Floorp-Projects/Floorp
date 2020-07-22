@@ -26,13 +26,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """Common functions and exceptions used by WebSocket opening handshake
 processors.
 """
 
-
+from __future__ import absolute_import
 from mod_pywebsocket import common
 from mod_pywebsocket import http_header_util
 
@@ -55,7 +53,6 @@ class HandshakeException(Exception):
     """This exception will be raised when an error occurred while processing
     WebSocket initial handshake.
     """
-
     def __init__(self, name, status=None):
         super(HandshakeException, self).__init__(name)
         self.status = status
@@ -65,13 +62,12 @@ class VersionException(Exception):
     """This exception will be raised when a version of client request does not
     match with version the server supports.
     """
-
     def __init__(self, name, supported_versions=''):
         """Construct an instance.
 
         Args:
             supported_version: a str object to show supported hybi versions.
-                               (e.g. '8, 13')
+                               (e.g. '13')
         """
         super(VersionException, self).__init__(name)
         self.supported_versions = supported_versions
@@ -111,12 +107,12 @@ def parse_host_header(request):
         return fields[0], get_default_port(request.is_https())
     try:
         return fields[0], int(fields[1])
-    except ValueError, e:
+    except ValueError as e:
         raise HandshakeException('Invalid port number format: %r' % e)
 
 
 def format_header(name, value):
-    return '%s: %s\r\n' % (name, value)
+    return u'%s: %s\r\n' % (name, value)
 
 
 def get_mandatory_header(request, key):
@@ -132,16 +128,17 @@ def validate_mandatory_header(request, key, expected_value, fail_status=None):
     if value.lower() != expected_value.lower():
         raise HandshakeException(
             'Expected %r for header %s but found %r (case-insensitive)' %
-            (expected_value, key, value), status=fail_status)
+            (expected_value, key, value),
+            status=fail_status)
 
 
 def check_request_line(request):
     # 5.1 1. The three character UTF-8 string "GET".
     # 5.1 2. A UTF-8-encoded U+0020 SPACE character (0x20 byte).
-    if request.method != 'GET':
+    if request.method != u'GET':
         raise HandshakeException('Method is not GET: %r' % request.method)
 
-    if request.protocol != 'HTTP/1.1':
+    if request.protocol != u'HTTP/1.1':
         raise HandshakeException('Version is not HTTP/1.1: %r' %
                                  request.protocol)
 
@@ -168,8 +165,8 @@ def parse_token_list(data):
             break
 
         if not http_header_util.consume_string(state, ','):
-            raise HandshakeException(
-                'Expected a comma but found %r' % http_header_util.peek(state))
+            raise HandshakeException('Expected a comma but found %r' %
+                                     http_header_util.peek(state))
 
         http_header_util.consume_lwses(state)
 
