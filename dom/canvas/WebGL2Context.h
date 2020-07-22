@@ -36,7 +36,7 @@ class WebGL2Context final : public WebGLContext {
   void CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
                          uint64_t readOffset, uint64_t writeOffset,
                          uint64_t size) const;
-  void GetBufferSubData(GLenum target, uint64_t srcByteOffset,
+  bool GetBufferSubData(GLenum target, uint64_t srcByteOffset,
                         const Range<uint8_t>& dest) const;
 
   // -------------------------------------------------------------------------

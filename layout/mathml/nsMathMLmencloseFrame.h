@@ -63,10 +63,7 @@ class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual void SetAdditionalComputedStyle(
-      int32_t aIndex, ComputedStyle* aComputedStyle) override;
-  virtual ComputedStyle* GetAdditionalComputedStyle(
-      int32_t aIndex) const override;
+  void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;

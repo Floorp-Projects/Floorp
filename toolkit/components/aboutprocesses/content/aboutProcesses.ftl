@@ -11,7 +11,6 @@ about-processes-column-id = Id
 about-processes-column-type = Type
 about-processes-column-name = Name
 about-processes-column-memory-resident = Memory (Resident)
-about-processes-column-memory-virtual = Memory (Virtual)
 about-processes-column-cpu-user = CPU (User)
 about-processes-column-cpu-kernel = CPU (Kernel)
 about-processes-column-cpu-threads = CPU (Threads)

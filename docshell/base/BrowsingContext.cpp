@@ -2042,6 +2042,32 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserActivationState>) {
   }
 }
 
+void BrowsingContext::DidSet(FieldIndex<IDX_IsActive>, bool aOldValue) {
+  if (!IsTop() || aOldValue == GetIsActive() ||
+      !StaticPrefs::dom_suspend_inactive_enabled()) {
+    return;
+  }
+
+  if (!GetIsActive() && !Group()->GetToplevelsSuspended()) {
+    // If all toplevels in our group are inactive, suspend the group.
+    bool allInactive = true;
+    nsTArray<RefPtr<BrowsingContext>>& toplevels = Group()->Toplevels();
+    for (const auto& context : toplevels) {
+      if (context->GetIsActive()) {
+        allInactive = false;
+        break;
+      }
+    }
+
+    if (allInactive) {
+      Group()->SetToplevelsSuspended(true);
+    }
+  } else if (GetIsActive() && Group()->GetToplevelsSuspended()) {
+    // Unsuspend the group since we now have an active toplevel
+    Group()->SetToplevelsSuspended(false);
+  }
+}
+
 void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
   MOZ_ASSERT(!GetParent(), "Set muted flag on non top-level context!");
   USER_ACTIVATION_LOG("Set audio muted %d for %s browsing context 0x%08" PRIx64,

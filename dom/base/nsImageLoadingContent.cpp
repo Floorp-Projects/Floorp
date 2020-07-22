@@ -119,7 +119,7 @@ nsImageLoadingContent::nsImageLoadingContent()
   mMostRecentRequestChange = TimeStamp::ProcessCreation();
 }
 
-void nsImageLoadingContent::DestroyImageLoadingContent() {
+void nsImageLoadingContent::Destroy() {
   // Cancel our requests so they won't hold stale refs to us
   // NB: Don't ask to discard the images here.
   RejectDecodePromises(NS_ERROR_DOM_IMAGE_INVALID_REQUEST);
@@ -128,8 +128,7 @@ void nsImageLoadingContent::DestroyImageLoadingContent() {
 }
 
 nsImageLoadingContent::~nsImageLoadingContent() {
-  MOZ_ASSERT(!mCurrentRequest && !mPendingRequest,
-             "DestroyImageLoadingContent not called");
+  MOZ_ASSERT(!mCurrentRequest && !mPendingRequest, "Destroy not called");
   MOZ_ASSERT(!mObserverList.mObserver && !mObserverList.mNext,
              "Observers still registered?");
   MOZ_ASSERT(mScriptedObservers.IsEmpty(),

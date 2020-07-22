@@ -287,8 +287,7 @@ struct TypeResolver<mozilla::interceptor::MMPolicyOutOfProcess, InterceptorT> {
   using FuncHookType = FuncHookCrossProcess<InterceptorT, FuncPtrT>;
 };
 
-template <typename VMPolicy = mozilla::interceptor::VMSharingPolicyShared<
-              mozilla::interceptor::MMPolicyInProcess, true>>
+template <typename VMPolicy = mozilla::interceptor::VMSharingPolicyShared>
 class WindowsDllInterceptor final
     : public TypeResolver<typename VMPolicy::MMPolicyT,
                           WindowsDllInterceptor<VMPolicy>> {

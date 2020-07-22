@@ -14,5 +14,5 @@ Triggers and actions
 .. toctree::
   :maxdepth: 2
 
-  SpecialMessageActionSchemas/SpecialMessageActionSchemas.md
-  TriggerActionSchemas/TriggerActionSchemas.md
+  SpecialMessageActionSchemas/index
+  TriggerActionSchemas/index

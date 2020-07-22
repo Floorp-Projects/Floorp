@@ -114,6 +114,8 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
         BrowserChild::GetFrom(static_cast<mozIDOMWindow*>(aWindow));
     MOZ_ASSERT(browserChild);
 
+    MOZ_DIAGNOSTIC_ASSERT(!aWindow->GetBrowsingContext()->IsDiscarded());
+
     ManagedEndpoint<PWindowGlobalParent> endpoint =
         browserChild->OpenPWindowGlobalEndpoint(wgc);
     browserChild->SendNewWindowGlobal(std::move(endpoint), init);

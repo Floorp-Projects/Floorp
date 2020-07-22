@@ -5524,6 +5524,7 @@ impl<'a> Iterator for PrioritizedPropertyIter<'a> {
 pub extern "C" fn Servo_GetComputedKeyframeValues(
     keyframes: &nsTArray<structs::Keyframe>,
     element: &RawGeckoElement,
+    pseudo_type: PseudoStyleType,
     style: &ComputedValues,
     raw_data: &RawServoStyleSet,
     computed_keyframes: &mut nsTArray<structs::ComputedKeyframeValues>,
@@ -5548,6 +5549,9 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
         /* for_smil_animation = */ false,
         &mut conditions,
     );
+
+    let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
+    let restriction = pseudo.and_then(|p| p.property_restriction());
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -5587,6 +5591,11 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
 
                     // 'display' is only animatable from SMIL
                     if property == LonghandId::Display {
+                        return;
+                    }
+
+                    // Skip restricted properties
+                    if restriction.map_or(false, |r| !property.flags().contains(r)) {
                         return;
                     }
 

@@ -9,6 +9,7 @@
 #include <limits>
 
 #include "CanvasUtils.h"
+#include "ClientWebGLContext.h"
 #include "GLBlitHelper.h"
 #include "GLContext.h"
 #include "mozilla/Casting.h"
@@ -30,63 +31,19 @@
 #include "WebGLTexelConversions.h"
 
 namespace mozilla {
+namespace webgl {
 
-static UniquePtr<webgl::TexUnpackBytes> FromView(
-    const WebGLContext* webgl, TexImageTarget target, const uvec3& size,
-    const dom::ArrayBufferView* view, GLuint viewElemOffset,
-    GLuint viewElemLengthOverride) {
-  const bool isClientData = true;
-  const uint8_t* bytes = nullptr;
-  size_t availByteCount = 0;
-  if (view) {
-    const auto range =
-        GetRangeFromView(*view, viewElemOffset, viewElemLengthOverride);
-    if (!range) {
-      webgl->GenerateError(LOCAL_GL_INVALID_OPERATION, "`source` too small.");
-      return nullptr;
-    }
-    bytes = range->begin().get();
-    availByteCount = range->length();
-  }
-  return MakeUnique<webgl::TexUnpackBytes>(webgl, target, size.x, size.y,
-                                           size.z, isClientData, bytes,
-                                           availByteCount);
-}
-
-static UniquePtr<webgl::TexUnpackBytes> FromPboOffset(const WebGLContext* webgl,
-                                                      TexImageTarget target,
-                                                      const uvec3& size,
-                                                      WebGLintptr pboOffset) {
-  if (!webgl->ValidateNonNegative("offset", pboOffset)) return nullptr;
-
-  const auto& buffer =
-      webgl->ValidateBufferSelection(LOCAL_GL_PIXEL_UNPACK_BUFFER);
-  if (!buffer) return nullptr;
-
-  size_t availBufferBytes = buffer->ByteLength();
-  if (size_t(pboOffset) > availBufferBytes) {
-    webgl->ErrorInvalidOperation("Offset is passed end of buffer.");
-    return nullptr;
-  }
-  availBufferBytes -= pboOffset;
-  const bool isClientData = false;
-  const auto ptr = (const uint8_t*)pboOffset;
-  return MakeUnique<webgl::TexUnpackBytes>(webgl, target, size.x, size.y,
-                                           size.z, isClientData, ptr,
-                                           availBufferBytes);
-}
-
-static UniquePtr<webgl::TexUnpackBlob> FromImageBitmap(
-    const WebGLContext* webgl, TexImageTarget target, uvec3 size,
-    const dom::ImageBitmap& imageBitmap, ErrorResult* aRv) {
+Maybe<TexUnpackBlobDesc> FromImageBitmap(const GLenum target, uvec3 size,
+                                         const dom::ImageBitmap& imageBitmap,
+                                         ErrorResult* const out_rv) {
   if (imageBitmap.IsWriteOnly()) {
-    aRv->Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
+    out_rv->Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return {};
   }
 
-  UniquePtr<dom::ImageBitmapCloneData> cloneData = imageBitmap.ToCloneData();
+  const auto cloneData = imageBitmap.ToCloneData();
   if (!cloneData) {
-    return nullptr;
+    return {};
   }
 
   const RefPtr<gfx::DataSourceSurface> surf = cloneData->mSurface;
@@ -102,40 +59,27 @@ static UniquePtr<webgl::TexUnpackBlob> FromImageBitmap(
   // WhatWG "HTML Living Standard" (30 October 2015):
   // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
   // non-premultiplied alpha values."
-  return MakeUnique<webgl::TexUnpackSurface>(
-      webgl, target, size.x, size.y, size.z, surf, cloneData->mAlphaType);
+  return Some(
+      TexUnpackBlobDesc{target, size, cloneData->mAlphaType, {}, {}, {}, surf});
 }
 
-static UniquePtr<webgl::TexUnpackBlob> FromImageData(
-    const WebGLContext* webgl, TexImageTarget target, uvec3 size,
-    const dom::ImageData& imageData, dom::Uint8ClampedArray* scopedArr) {
-  DebugOnly<bool> inited = scopedArr->Init(imageData.GetDataObject());
-  MOZ_ASSERT(inited);
-
+TexUnpackBlobDesc FromImageData(const GLenum target, uvec3 size,
+                                const dom::ImageData& imageData,
+                                dom::Uint8ClampedArray* const scopedArr) {
+  MOZ_RELEASE_ASSERT(scopedArr->Init(imageData.GetDataObject()));
   scopedArr->ComputeState();
-  const DebugOnly<size_t> dataSize = scopedArr->Length();
-  const void* const data = scopedArr->Data();
+  const size_t dataSize = scopedArr->Length();
+  const auto data = reinterpret_cast<uint8_t*>(scopedArr->Data());
 
   const gfx::IntSize imageSize(imageData.Width(), imageData.Height());
   const size_t stride = imageSize.width * 4;
   const gfx::SurfaceFormat surfFormat = gfx::SurfaceFormat::R8G8B8A8;
-
-  // WhatWG "HTML Living Standard" (30 October 2015):
-  // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
-  // non-premultiplied alpha values."
-  const auto alphaType = gfxAlphaType::NonPremult;
-
-  MOZ_ASSERT(dataSize == stride * imageSize.height);
-
-  uint8_t* wrappableData = (uint8_t*)data;
+  MOZ_ALWAYS_TRUE(dataSize == stride * imageSize.height);
 
   const RefPtr<gfx::DataSourceSurface> surf =
-      gfx::Factory::CreateWrappingDataSourceSurface(wrappableData, stride,
-                                                    imageSize, surfFormat);
-  if (!surf) {
-    webgl->ErrorOutOfMemory("OOM in FromImageData.");
-    return nullptr;
-  }
+      gfx::Factory::CreateWrappingDataSourceSurface(data, stride, imageSize,
+                                                    surfFormat);
+  MOZ_ASSERT(surf);
 
   ////
 
@@ -149,19 +93,25 @@ static UniquePtr<webgl::TexUnpackBlob> FromImageData(
 
   ////
 
-  return MakeUnique<webgl::TexUnpackSurface>(webgl, target, size.x, size.y,
-                                             size.z, surf, alphaType);
+  // WhatWG "HTML Living Standard" (30 October 2015):
+  // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
+  // non-premultiplied alpha values."
+  return {target, size, gfxAlphaType::NonPremult, {}, {}, {}, surf};
 }
 
-UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
-    const dom::HTMLCanvasElement& canvas, TexImageTarget target, uvec3 size,
-    const dom::Element& elem, ErrorResult* const out_error) const {
+Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
+                                            const GLenum target, uvec3 size,
+                                            const dom::Element& elem,
+                                            const bool allowBlitImage,
+                                            ErrorResult* const out_error) {
+  const auto& canvas = *webgl.GetCanvas();
+
   if (elem.IsHTMLElement(nsGkAtoms::canvas)) {
-    const dom::HTMLCanvasElement* canvas =
+    const dom::HTMLCanvasElement* srcCanvas =
         static_cast<const dom::HTMLCanvasElement*>(&elem);
-    if (canvas->IsWriteOnly()) {
+    if (srcCanvas->IsWriteOnly()) {
       out_error->Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
+      return {};
     }
   }
 
@@ -172,9 +122,10 @@ UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
                    nsLayoutUtils::SFE_WANT_IMAGE_SURFACE |
                    nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR |
                    nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
-
-  if (mPixelStore.mColorspaceConversion == LOCAL_GL_NONE)
+  const auto& unpacking = webgl.State().mPixelUnpackState;
+  if (unpacking.mColorspaceConversion == LOCAL_GL_NONE) {
     flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
+  }
 
   RefPtr<gfx::DrawTarget> idealDrawTarget = nullptr;  // Don't care for now.
   auto sfer = nsLayoutUtils::SurfaceFromElement(
@@ -185,7 +136,8 @@ UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
   uint32_t elemWidth = 0;
   uint32_t elemHeight = 0;
   layers::Image* layersImage = nullptr;
-  if (!StaticPrefs::webgl_disable_DOM_blit_uploads() && sfer.mLayersImage) {
+
+  if (sfer.mLayersImage && allowBlitImage) {
     layersImage = sfer.mLayersImage;
     elemWidth = layersImage->GetSize().width;
     elemHeight = layersImage->GetSize().height;
@@ -214,9 +166,7 @@ UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
   ////
 
   if (!layersImage && !dataSurf) {
-    const bool isClientData = true;
-    return MakeUnique<webgl::TexUnpackBytes>(this, target, size.x, size.y,
-                                             size.z, isClientData, nullptr, 0);
+    return Some(TexUnpackBlobDesc{target, size, gfxAlphaType::NonPremult});
   }
 
   //////
@@ -230,9 +180,9 @@ UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
     nsIPrincipal* dstPrincipal = canvas.NodePrincipal();
 
     if (!dstPrincipal->Subsumes(srcPrincipal)) {
-      GenerateWarning("Cross-origin elements require CORS.");
+      webgl.EnqueueWarning("Cross-origin elements require CORS.");
       out_error->Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
+      return {};
     }
   }
 
@@ -240,55 +190,25 @@ UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
     // mIsWriteOnly defaults to true, and so will be true even if SFE merely
     // failed. Thus we must test mIsWriteOnly after successfully retrieving an
     // Image or SourceSurface.
-    GenerateWarning("Element is write-only, thus cannot be uploaded.");
+    webgl.EnqueueWarning("Element is write-only, thus cannot be uploaded.");
     out_error->Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
+    return {};
   }
 
   //////
   // Ok, we're good!
 
   if (layersImage) {
-    return MakeUnique<webgl::TexUnpackImage>(
-        this, target, size.x, size.y, size.z, layersImage, sfer.mAlphaType);
+    return Some(
+        TexUnpackBlobDesc{target, size, sfer.mAlphaType, {}, {}, layersImage});
   }
 
   MOZ_ASSERT(dataSurf);
-  return MakeUnique<webgl::TexUnpackSurface>(this, target, size.x, size.y,
-                                             size.z, dataSurf, sfer.mAlphaType);
+  return Some(
+      TexUnpackBlobDesc{target, size, sfer.mAlphaType, {}, {}, {}, dataSurf});
 }
 
-////////////////////////////////////////
-
-UniquePtr<webgl::TexUnpackBlob> WebGLContext::From(
-    const dom::HTMLCanvasElement& canvas, TexImageTarget target,
-    const uvec3& size, const TexImageSource& src,
-    dom::Uint8ClampedArray* const scopedArr) const {
-  if (src.mPboOffset) {
-    return FromPboOffset(this, target, size, *(src.mPboOffset));
-  }
-
-  if (mBoundPixelUnpackBuffer) {
-    ErrorInvalidOperation("PIXEL_UNPACK_BUFFER must be null.");
-    return nullptr;
-  }
-
-  if (src.mImageBitmap) {
-    return FromImageBitmap(this, target, size, *(src.mImageBitmap),
-                           src.mOut_error);
-  }
-
-  if (src.mImageData) {
-    return FromImageData(this, target, size, *(src.mImageData), scopedArr);
-  }
-
-  if (src.mDomElem) {
-    return FromDomElem(canvas, target, size, *(src.mDomElem), src.mOut_error);
-  }
-
-  return FromView(this, target, size, src.mView, src.mViewElemOffset,
-                  src.mViewElemLengthOverride);
-}
+}  // namespace webgl
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -936,21 +856,28 @@ void WebGLTexture::TexStorage(TexTarget target, uint32_t levels,
 // Tex(Sub)Image
 
 // TexSubImage iff `!respectFormat`
-void WebGLTexture::TexImage(GLenum imageTarget, uint32_t level,
-                            GLenum respecFormat, const uvec3& offset,
-                            const uvec3& claimedSize,
-                            const webgl::PackingInfo& pi,
-                            const TexImageSource& src,
-                            const dom::HTMLCanvasElement& canvas) {
-  dom::Uint8ClampedArray scopedArr;
-  const auto blob =
-      mContext->From(canvas, imageTarget, claimedSize, src, &scopedArr);
-  if (!blob) return;
+void WebGLTexture::TexImage(uint32_t level, GLenum respecFormat,
+                            const uvec3& offset, const webgl::PackingInfo& pi,
+                            const webgl::TexUnpackBlobDesc& src) {
+  Maybe<RawBuffer<>> cpuDataView;
+  if (src.cpuData) {
+    cpuDataView = Some(RawBuffer<>{src.cpuData->Data()});
+  }
+  const auto srcViewDesc = webgl::TexUnpackBlobDesc{
+      src.imageTarget, src.size,  src.srcAlphaType, std::move(cpuDataView),
+      src.pboOffset,   src.image, src.surf,         src.unpacking};
+  const auto blob = webgl::TexUnpackBlob::Create(srcViewDesc);
+  if (!blob) {
+    MOZ_ASSERT(false);
+    return;
+  }
 
-  // For DOM element upload entrypoints that have no size arguments, claimedSize
-  // is 0. Use blob size, not claimedSize. (blob size can also be zero, and
-  // that's valid!)
-  const auto size = uvec3{blob->mWidth, blob->mHeight, blob->mDepth};
+  const auto imageTarget = blob->mDesc.imageTarget;
+  auto size = blob->mDesc.size;
+
+  if (!IsTarget3D(imageTarget)) {
+    size.z = 1;
+  }
 
   ////////////////////////////////////
   // Get dest info
@@ -1055,6 +982,12 @@ void WebGLTexture::TexImage(GLenum imageTarget, uint32_t level,
   ////////////////////////////////////
   // Do the thing!
 
+  blob->mDesc.unpacking.Apply(*mContext->gl, mContext->IsWebGL2(), size);
+  const auto revertUnpacking = MakeScopeExit([&]() {
+    const WebGLPixelStore defaultUnpacking;
+    defaultUnpacking.Apply(*mContext->gl, mContext->IsWebGL2(), size);
+  });
+
   Maybe<webgl::ImageInfo> newImageInfo;
   bool isRespec = false;
   if (respecFormat) {
@@ -1063,7 +996,7 @@ void WebGLTexture::TexImage(GLenum imageTarget, uint32_t level,
     newImageInfo = Some(webgl::ImageInfo{dstUsage, size.x, size.y, size.z});
     if (!blob->HasData()) {
       newImageInfo->mUninitializedSlices =
-          Some(std::vector<bool>(blob->mDepth, true));
+          Some(std::vector<bool>(size.z, true));
     }
 
     isRespec = (imageInfo->mWidth != newImageInfo->mWidth ||
@@ -1083,9 +1016,8 @@ void WebGLTexture::TexImage(GLenum imageTarget, uint32_t level,
 
   const bool isSubImage = !respecFormat;
   GLenum glError;
-  if (!blob->TexOrSubImage(isSubImage, isRespec, this, imageTarget, level,
-                           driverUnpackInfo, offset.x, offset.y, offset.z, pi,
-                           &glError)) {
+  if (!blob->TexOrSubImage(isSubImage, isRespec, this, level, driverUnpackInfo,
+                           offset.x, offset.y, offset.z, pi, &glError)) {
     return;
   }
 
@@ -1702,8 +1634,9 @@ static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
     }
 
     if (!isSubImage || zeros) {
-      const ScopedUnpackReset unpackReset(webgl);
       gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
+      const auto revert = MakeScopeExit(
+          [&]() { gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4); });
       if (!isSubImage) {
         error = DoTexImage(gl, target, level, idealUnpack, dstWidth, dstHeight,
                            1, nullptr);

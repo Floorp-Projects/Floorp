@@ -42,6 +42,7 @@ TEST_HARNESS_BINS = [
     'crashinject',
     'fileid',
     'geckodriver',
+    'http3server',
     'minidumpwriter',
     'pk12util',
     'screenshot',

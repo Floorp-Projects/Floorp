@@ -93,7 +93,22 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 - (void)moxPostNotification:(NSString*)notification;
 
 // override
+- (void)moxPostNotification:(NSString*)notification withUserInfo:(NSDictionary*)userInfo;
+
+// override
 - (BOOL)moxBlockSelector:(SEL)selector;
+
+// override
+- (NSArray*)moxUnignoredChildren;
+
+// override
+- (NSArray*)moxChildren;
+
+// override
+- (id<mozAccessible>)moxUnignoredParent;
+
+// override
+- (id<mozAccessible>)moxParent;
 
 // override
 - (id<MOXTextMarkerSupport>)moxTextMarkerDelegate;

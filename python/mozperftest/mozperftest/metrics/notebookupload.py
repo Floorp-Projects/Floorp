@@ -6,7 +6,7 @@ import pathlib
 from mozperftest.layers import Layer
 from mozperftest.metrics.common import filtered_metrics
 from mozperftest.metrics.notebook import PerftestNotebook
-from mozperftest.metrics.utils import is_number
+from mozperftest.metrics.utils import is_number, metric_fields
 
 
 class Notebook(Layer):
@@ -17,6 +17,7 @@ class Notebook(Layer):
 
     arguments = {
         "metrics": {
+            "type": metric_fields,
             "nargs": "*",
             "default": [],
             "help": "The metrics that should be retrieved from the data.",

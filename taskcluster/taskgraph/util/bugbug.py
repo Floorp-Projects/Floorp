@@ -22,7 +22,7 @@ except ImportError:
 
 BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
 RETRY_TIMEOUT = 8 * 60  # seconds
-RETRY_INTERVAL = 10      # seconds
+RETRY_INTERVAL = 10     # seconds
 
 # Preset confidence thresholds.
 CT_LOW = 0.7
@@ -79,7 +79,16 @@ def push_schedules(branch, rev):
     url = BUGBUG_BASE_URL + '/push/{branch}/{rev}/schedules'.format(branch=branch, rev=rev)
     start = monotonic()
     session = get_session()
-    attempts = RETRY_TIMEOUT / RETRY_INTERVAL
+
+    # TODO Sometimes the call can take much longer due to an issue pulling from
+    # mercurial. Double the timeout on try (where there is no fallback) to
+    # compensate. Remove once https://github.com/mozilla/bugbug/issues/1673 is
+    # fixed.
+    timeout = RETRY_TIMEOUT
+    if branch == "try":
+        timeout *= 2
+
+    attempts = timeout / RETRY_INTERVAL
     i = 0
     while i < attempts:
         r = session.get(url)

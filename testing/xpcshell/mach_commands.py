@@ -30,11 +30,6 @@ from xpcshellcommandline import parser_desktop, parser_remote
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-if sys.version_info[0] < 3:
-    unicode_type = unicode
-else:
-    unicode_type = str
-
 
 # This should probably be consolidated with similar classes in other test
 # runners.

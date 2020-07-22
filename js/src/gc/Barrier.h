@@ -1028,7 +1028,6 @@ struct MovableCellHasher<PreBarriered<T>> {
   static bool match(const Key& k, const Lookup& l) {
     return MovableCellHasher<T>::match(k, l);
   }
-  static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
 };
 
 template <typename T>
@@ -1048,7 +1047,6 @@ struct MovableCellHasher<HeapPtr<T>> {
   static bool match(const Key& k, const Lookup& l) {
     return MovableCellHasher<T>::match(k, l);
   }
-  static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
 };
 
 template <typename T>
@@ -1068,7 +1066,6 @@ struct MovableCellHasher<WeakHeapPtr<T>> {
   static bool match(const Key& k, const Lookup& l) {
     return MovableCellHasher<T>::match(k.unbarrieredGet(), l);
   }
-  static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
 };
 
 /* Useful for hashtables with a HeapPtr as key. */

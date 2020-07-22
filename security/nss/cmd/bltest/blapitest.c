@@ -2961,9 +2961,9 @@ get_params(PLArenaPool *arena, bltestParams *params,
         case bltestCAMELLIA_CBC:
 #ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_CBC:
+#endif
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "iv", j);
             load_file_data(arena, &params->sk.iv, filename, bltestBinary);
-#endif
         case bltestDES_ECB:
         case bltestDES_EDE_ECB:
         case bltestRC2_ECB:
@@ -2972,10 +2972,10 @@ get_params(PLArenaPool *arena, bltestParams *params,
         case bltestCAMELLIA_ECB:
 #ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_ECB:
+#endif
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->sk.key, filename, bltestBinary);
             break;
-#endif
 #ifdef NSS_SOFTOKEN_DOES_RC5
         case bltestRC5_ECB:
         case bltestRC5_CBC:

@@ -317,9 +317,15 @@ body {
       margin: 0 6px;
       color: var(--grey-subtitle-1);
       line-height: 28px; }
-  .multistageContainer .tiles-theme-section {
-    display: flex;
+  .multistageContainer .tiles-theme-container {
     margin: 10px auto; }
+  .multistageContainer .tiles-theme-section {
+    display: grid;
+    grid-gap: 21px;
+    grid-template-columns: repeat(3, auto); }
+    @media (max-width: 610px) {
+      .multistageContainer .tiles-theme-section {
+        grid-template-columns: repeat(2, auto); } }
     .multistageContainer .tiles-theme-section .theme {
       display: flex;
       flex-direction: column;
@@ -330,10 +336,7 @@ body {
       background-color: #FFF;
       box-shadow: 0 1px 4px rgba(12, 12, 13, 0.1);
       border-radius: 4px;
-      cursor: pointer;
-      margin-inline-start: 21px; }
-      .multistageContainer .tiles-theme-section .theme:first-child {
-        margin-inline-start: 0; }
+      cursor: pointer; }
       .multistageContainer .tiles-theme-section .theme .icon {
         background-size: cover;
         border-top-left-radius: 4px;
@@ -345,6 +348,8 @@ body {
           background-image: url("chrome://mozapps/content/extensions/firefox-compact-light.svg"); }
         .multistageContainer .tiles-theme-section .theme .icon.dark {
           background-image: url("chrome://mozapps/content/extensions/firefox-compact-dark.svg"); }
+        .multistageContainer .tiles-theme-section .theme .icon.automatic {
+          background-image: url("chrome://mozapps/content/extensions/default-theme.svg"); }
       .multistageContainer .tiles-theme-section .theme .text {
         display: flex;
         font-size: 14px;
@@ -352,6 +357,12 @@ body {
         line-height: 22px;
         margin-inline-start: 12px;
         margin-top: 9px; }
+      .multistageContainer .tiles-theme-section .theme .theme-desc {
+        display: flex;
+        font-size: 12px;
+        line-height: 18px;
+        margin-inline-start: 12px;
+        opacity: 0.5; }
       .multistageContainer .tiles-theme-section .theme.selected {
         outline: 4px solid #0090ED;
         outline-offset: -4px; }

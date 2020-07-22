@@ -62,6 +62,8 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // allows for gecko accessible access outside of the class
 - (mozilla::a11y::AccessibleOrProxy)geckoAccessible;
 
+- (mozilla::a11y::AccessibleOrProxy)geckoDocument;
+
 // override
 - (void)dealloc;
 
@@ -73,6 +75,10 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // Note: when overriding or adding new events, make sure your events aren't
 // filtered out in Platform::ProxyEvent or AccessibleWrap::HandleAccEvent!
 - (void)handleAccessibleEvent:(uint32_t)eventType;
+
+- (void)handleAccessibleTextChangeEvent:(NSString*)change
+                               inserted:(BOOL)isInserted
+                                     at:(int32_t)start;
 
 // internal method to retrieve a child at a given index.
 - (id)childAt:(uint32_t)i;
@@ -88,17 +94,6 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 
 // Invalidate cached state.
 - (void)invalidateState;
-
-// This is called by isAccessibilityElement. If a subclass wants
-// to alter the isAccessibilityElement return value, it should
-// override this and not isAccessibilityElement directly.
-- (BOOL)ignoreWithParent:(mozAccessible*)parent;
-
-// Should the child be ignored. This allows subclasses to determine
-// what kinds of accessibles are valid children. This causes the child
-// to be skipped, but the unignored descendants will be added to the
-// container in the default children getter.
-- (BOOL)ignoreChild:(mozAccessible*)child;
 
 #pragma mark - mozAccessible protocol / widget
 
@@ -195,6 +190,12 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // override
 - (void)moxPerformPress;
 
+// override
+- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent;
+
+// override
+- (BOOL)moxIgnoreChild:(mozAccessible*)child;
+
 #pragma mark -
 
 // makes ourselves "expired". after this point, we might be around if someone
@@ -205,10 +206,6 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 - (BOOL)isExpired;
 
 // ---- NSAccessibility methods ---- //
-
-// whether to include this element in the platform's tree
-// override
-- (BOOL)isAccessibilityElement;
 
 // override
 - (NSString*)description;

@@ -100,6 +100,24 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
   return false;
 }
 
+bool GeckoTextMarker::IsEditableRoot() {
+  uint64_t state =
+      mContainer.IsProxy() ? mContainer.AsProxy()->State() : mContainer.AsAccessible()->State();
+  if ((state & states::EDITABLE) == 0) {
+    return false;
+  }
+
+  AccessibleOrProxy parent = mContainer.Parent();
+  if (parent.IsNull()) {
+    // Not sure when this can happen, but it would technically be an editable root.
+    return true;
+  }
+
+  state = parent.IsProxy() ? parent.AsProxy()->State() : parent.AsAccessible()->State();
+
+  return (state & states::EDITABLE) == 0;
+}
+
 void GeckoTextMarker::NormalizeNext() {
   if (AtEnd()) {
     // If this is the end of the current container, mutate to its parent's
@@ -109,12 +127,14 @@ void GeckoTextMarker::NormalizeNext() {
                                               : mContainer.AsAccessible()->EndOffset();
 
     if (endOffset != 0) {
-      mContainer = mContainer.Parent();
-      mOffset = endOffset;
+      if (!IsEditableRoot()) {
+        mContainer = mContainer.Parent();
+        mOffset = endOffset;
 
-      // Call NormalizeNext recursively to get top-most link if at the end of one,
-      // or innermost link if at the beginning.
-      NormalizeNext();
+        // Call NormalizeNext recursively to get top-most link if at the end of one,
+        // or innermost link if at the beginning.
+        NormalizeNext();
+      }
     }
   } else {
     AccessibleOrProxy link;
@@ -146,12 +166,14 @@ void GeckoTextMarker::NormalizePrevious() {
                                                 : mContainer.AsAccessible()->StartOffset();
 
     if (startOffset != 0) {
-      mContainer = mContainer.Parent();
-      mOffset = startOffset;
+      if (!IsEditableRoot()) {
+        mContainer = mContainer.Parent();
+        mOffset = startOffset;
 
-      // Call NormalizePrevious recursively to get top-most link if at the start of one,
-      // or innermost link if at the end.
-      NormalizePrevious();
+        // Call NormalizePrevious recursively to get top-most link if at the start of one,
+        // or innermost link if at the end.
+        NormalizePrevious();
+      }
     }
   } else {
     AccessibleOrProxy link;

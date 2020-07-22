@@ -239,7 +239,7 @@ class Clobber(MachCommandBase):
                        '-I', 'glob:**.py[cdo]', '-I', 'glob:**/__pycache__',
                        '-I', 'path:third_party/python/']
             elif conditions.is_git(self):
-                cmd = ['git', 'clean', '-d', '-f', '-x', '*.py[cdo]', '*/__pycache__',
+                cmd = ['git', 'clean', '-d', '-f', '-x', '*.py[cdo]', '*/__pycache__/*',
                        'third_party/python/']
             else:
                 # We don't know what is tracked/untracked if we don't have VCS.

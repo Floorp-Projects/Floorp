@@ -408,9 +408,9 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                 nsresult rv =
                     MoveSync(srcPathString, destPathString, noOverwrite);
                 if (NS_FAILED(rv)) {
-                  return IOMoveMozPromise::CreateAndReject(rv, __func__);
+                  return IOMozPromise::CreateAndReject(rv, __func__);
                 }
-                return IOMoveMozPromise::CreateAndResolve(true, __func__);
+                return IOMozPromise::CreateAndResolve(true, __func__);
               })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
@@ -481,9 +481,9 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                 nsresult rv = RemoveSync(path, aOptions.mIgnoreAbsent,
                                          aOptions.mRecursive);
                 if (NS_FAILED(rv)) {
-                  return IORemoveMozPromise::CreateAndReject(rv, __func__);
+                  return IOMozPromise::CreateAndReject(rv, __func__);
                 }
-                return IORemoveMozPromise::CreateAndResolve(true, __func__);
+                return IOMozPromise::CreateAndResolve(true, __func__);
               })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
@@ -510,6 +510,67 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
               default:
                 promise->MaybeRejectWithUnknownError(FormatErrorMessage(
                     aError, "Unexpected error removing file"));
+            }
+          });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::MakeDirectory(
+    GlobalObject& aGlobal, const nsAString& aPath,
+    const MakeDirectoryOptions& aOptions) {
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  // Do the IO on a background thread and return the result to this thread.
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
+
+  // Process arguments.
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
+  }
+
+  InvokeAsync(bg, __func__,
+              [path = nsAutoString(aPath), aOptions]() {
+                nsresult rv = CreateDirectorySync(
+                    path, aOptions.mCreateAncestors, aOptions.mIgnoreExisting);
+                if (NS_FAILED(rv)) {
+                  return IOMozPromise::CreateAndReject(rv, __func__);
+                }
+                return IOMozPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const bool&) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+            promise->MaybeResolveWithUndefined();
+          },
+          [promise = RefPtr(promise)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_ALREADY_EXISTS:
+                promise->MaybeRejectWithNoModificationAllowedError(
+                    "Could not create directory because file already exists");
+                break;
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    "Target path has missing ancestors");
+                break;
+              case NS_ERROR_FILE_NOT_DIRECTORY:
+                promise->MaybeRejectWithOperationError(
+                    "Target exists and is not a directory");
+                break;
+              default:
+                promise->MaybeRejectWithUnknownError(FormatErrorMessage(
+                    aError, "Unexpected error creating directory"));
             }
           });
 
@@ -765,6 +826,44 @@ nsresult IOUtils::RemoveSync(const nsAString& aPath, bool aIgnoreAbsent,
   nsresult rv = file->Remove(aRecursive);
   if (aIgnoreAbsent && IsFileNotFound(rv)) {
     return NS_OK;
+  }
+  return rv;
+}
+
+/* static */
+nsresult IOUtils::CreateDirectorySync(const nsAString& aPath,
+                                      bool aCreateAncestors,
+                                      bool aIgnoreExisting, int32_t aMode) {
+  RefPtr<nsLocalFile> targetFile = new nsLocalFile();
+  MOZ_TRY(targetFile->InitWithPath(aPath));
+
+  // nsIFile::Create will create ancestor directories by default.
+  // If the caller does not want this behaviour, then check and possibly return
+  // an error.
+  if (!aCreateAncestors) {
+    nsCOMPtr<nsIFile> parent;
+    MOZ_TRY(targetFile->GetParent(getter_AddRefs(parent)));
+    bool parentExists;
+    MOZ_TRY(parent->Exists(&parentExists));
+    if (!parentExists) {
+      return NS_ERROR_FILE_NOT_FOUND;
+    }
+  }
+
+  nsresult rv = targetFile->Create(nsIFile::DIRECTORY_TYPE, aMode);
+  if (NS_FAILED(rv) && rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+    // NB: We may report a success only if the target is an existing directory.
+    // We don't want to silence errors that occur if the target is an existing
+    // file, since trying to create a directory where a regular file exists
+    // may be indicative of a logic error.
+    bool isDirectory;
+    MOZ_TRY(targetFile->IsDirectory(&isDirectory));
+    if (!isDirectory) {
+      return NS_ERROR_FILE_NOT_DIRECTORY;
+    }
+    if (aIgnoreExisting) {
+      return NS_OK;
+    }
   }
   return rv;
 }

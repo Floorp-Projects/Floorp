@@ -646,7 +646,9 @@ class nsTableFrame : public nsContainerFrame {
  public:
   // calculate the computed block-size of aFrame including its border and
   // padding given its reflow input.
-  nscoord CalcBorderBoxBSize(const ReflowInput& aReflowInput);
+  nscoord CalcBorderBoxBSize(const ReflowInput& aReflowInput,
+                             const LogicalMargin& aBorderPadding,
+                             nscoord aIntrinsicBorderBoxBSize);
 
  protected:
   // update the  desired block-size of this table taking into account the

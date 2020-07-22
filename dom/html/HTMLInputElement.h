@@ -194,6 +194,8 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void DoneCreatingElement() override;
 
+  virtual void DestroyContent() override;
+
   virtual EventStates IntrinsicState() const override;
 
  public:

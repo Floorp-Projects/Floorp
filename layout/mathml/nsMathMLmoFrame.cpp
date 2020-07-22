@@ -19,9 +19,6 @@ using namespace mozilla;
 // <mo> -- operator, fence, or separator - implementation
 //
 
-// additional ComputedStyle to be used by our MathMLChar.
-#define NS_MATHML_CHAR_STYLE_CONTEXT_INDEX 0
-
 nsIFrame* NS_NewMathMLmoFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsMathMLmoFrame(aStyle, aPresShell->GetPresContext());
 }
@@ -109,11 +106,10 @@ void nsMathMLmoFrame::ProcessTextData() {
   }
 
   // don't bother doing anything special if we don't have a single child
-  nsPresContext* presContext = PresContext();
   if (mFrames.GetLength() != 1) {
     data.Truncate();  // empty data to reset the char
     mMathMLChar.SetData(data);
-    ResolveMathMLCharStyle(presContext, mContent, mComputedStyle, &mMathMLChar);
+    mMathMLChar.SetComputedStyle(Style());
     return;
   }
 
@@ -168,7 +164,7 @@ void nsMathMLmoFrame::ProcessTextData() {
       (mEmbellishData.direction != NS_STRETCH_DIRECTION_UNSUPPORTED);
   if (isMutable) mFlags |= NS_MATHML_OPERATOR_MUTABLE;
 
-  ResolveMathMLCharStyle(presContext, mContent, mComputedStyle, &mMathMLChar);
+  mMathMLChar.SetComputedStyle(Style());
 }
 
 // get our 'form' and lookup in the Operator Dictionary to fetch
@@ -1052,25 +1048,7 @@ nsresult nsMathMLmoFrame::AttributeChanged(int32_t aNameSpaceID,
                                               aModType);
 }
 
-// ----------------------
-// No need to track the ComputedStyle given to our MathML char.
-// the Style System will use these to pass the proper ComputedStyle to our
-// MathMLChar
-ComputedStyle* nsMathMLmoFrame::GetAdditionalComputedStyle(
-    int32_t aIndex) const {
-  switch (aIndex) {
-    case NS_MATHML_CHAR_STYLE_CONTEXT_INDEX:
-      return mMathMLChar.GetComputedStyle();
-    default:
-      return nullptr;
-  }
-}
-
-void nsMathMLmoFrame::SetAdditionalComputedStyle(
-    int32_t aIndex, ComputedStyle* aComputedStyle) {
-  switch (aIndex) {
-    case NS_MATHML_CHAR_STYLE_CONTEXT_INDEX:
-      mMathMLChar.SetComputedStyle(aComputedStyle);
-      break;
-  }
+void nsMathMLmoFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
+  nsMathMLTokenFrame::DidSetComputedStyle(aOldStyle);
+  mMathMLChar.SetComputedStyle(Style());
 }

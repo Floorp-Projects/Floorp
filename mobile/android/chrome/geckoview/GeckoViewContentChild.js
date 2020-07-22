@@ -52,7 +52,6 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       this
     );
     this.messageManager.addMessageListener("GeckoView:RestoreState", this);
-    this.messageManager.addMessageListener("GeckoView:SetActive", this);
     this.messageManager.addMessageListener("GeckoView:UpdateInitData", this);
     this.messageManager.addMessageListener("GeckoView:ZoomToInput", this);
     this.messageManager.addMessageListener("GeckoView:ScrollBy", this);
@@ -281,25 +280,6 @@ class GeckoViewContentChild extends GeckoViewChildModule {
           webProgress.addProgressListener(this.progressFilter, this.flags);
 
           this.loadEntry(loadOptions, restoredHistory);
-        }
-        break;
-
-      case "GeckoView:SetActive":
-        if (content) {
-          if (!aMsg.data.active) {
-            docShell.contentViewer.pausePainting();
-            content.windowUtils.suspendTimeouts();
-            this.timeoutsSuspended = true;
-          } else if (this.timeoutsSuspended) {
-            docShell.contentViewer.resumePainting();
-            content.windowUtils.resumeTimeouts();
-            this.timeoutsSuspended = false;
-          }
-          if (aMsg.data.active) {
-            // Send current viewport-fit to parent.
-            this.lastViewportFit = "";
-            this.notifyParentOfViewportFit();
-          }
         }
         break;
 

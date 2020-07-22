@@ -24,12 +24,32 @@
 // Sends a notification to any observing assistive applications.
 - (void)moxPostNotification:(NSString* _Nonnull)notification;
 
+- (void)moxPostNotification:(NSString* _Nonnull)notification
+               withUserInfo:(NSDictionary* _Nullable)userInfo;
+
 // Return YES if selector should be considered not supported.
 // Used in implementations such as:
 // - accessibilityAttributeNames
 // - accessibilityActionNames
 // - accessibilityIsAttributeSettable
 - (BOOL)moxBlockSelector:(SEL _Nonnull)selector;
+
+// Returns a list of all children, doesn't do ignore filtering.
+- (NSArray* _Nullable)moxChildren;
+
+// Returns our parent, doesn't do ignore filtering.
+- (id<mozAccessible> _Nullable)moxParent;
+
+// This is called by isAccessibilityElement. If a subclass wants
+// to alter the isAccessibilityElement return value, it must
+// override this and not isAccessibilityElement directly.
+- (BOOL)moxIgnoreWithParent:(id<MOXAccessible> _Nullable)parent;
+
+// Should the child be ignored. This allows subclasses to determine
+// what kinds of accessibles are valid children. This causes the child
+// to be skipped, but the unignored descendants will be added to the
+// container in the default children getter.
+- (BOOL)moxIgnoreChild:(id<MOXAccessible> _Nullable)child;
 
 // Return text delegate if it exists.
 - (id<MOXTextMarkerSupport> _Nullable)moxTextMarkerDelegate;
@@ -39,10 +59,10 @@
 #pragma mark - AttributeGetters
 
 // AXChildren
-- (NSArray* _Nullable)moxChildren;
+- (NSArray* _Nullable)moxUnignoredChildren;
 
 // AXParent
-- (id _Nullable)moxParent;
+- (id _Nullable)moxUnignoredParent;
 
 // AXRole
 - (NSString* _Nullable)moxRole;
@@ -301,6 +321,9 @@
 // AttributedStringForRange
 - (NSAttributedString* _Nullable)moxAttributedStringForRange:(NSValue* _Nonnull)range;
 
+// AXCellForColumnAndRow
+- (id _Nullable)moxCellForColumnAndRow:(NSArray* _Nonnull)columnAndRow;
+
 @end
 
 // This protocol maps text marker and text marker range parameters to
@@ -346,5 +369,8 @@
 
 // AXPreviousTextMarkerForTextMarker
 - (id _Nullable)moxPreviousTextMarkerForTextMarker:(id _Nonnull)textMarker;
+
+// AXAttributedStringForTextMarkerRange
+- (NSAttributedString* _Nullable)moxAttributedStringForTextMarkerRange:(id _Nonnull)textMarkerRange;
 
 @end

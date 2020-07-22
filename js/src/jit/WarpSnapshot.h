@@ -374,14 +374,19 @@ class WarpInlinedCall : public WarpOpSnapshot {
 // Template object for JSOp::Rest.
 class WarpRest : public WarpOpSnapshot {
   WarpGCPtr<ArrayObject*> templateObject_;
+  size_t maxInlineElements_;
 
  public:
   static constexpr Kind ThisKind = Kind::WarpRest;
 
-  WarpRest(uint32_t offset, ArrayObject* templateObject)
-      : WarpOpSnapshot(ThisKind, offset), templateObject_(templateObject) {}
+  WarpRest(uint32_t offset, ArrayObject* templateObject,
+           size_t maxInlineElements)
+      : WarpOpSnapshot(ThisKind, offset),
+        templateObject_(templateObject),
+        maxInlineElements_(maxInlineElements) {}
 
   ArrayObject* templateObject() const { return templateObject_; }
+  size_t maxInlineElements() const { return maxInlineElements_; }
 
   void traceData(JSTracer* trc);
 
@@ -481,8 +486,9 @@ using WarpEnvironment =
                      FunctionEnvironment>;
 
 // Snapshot data for a single JSScript.
-class WarpScriptSnapshot : public TempObject,
-                           public mozilla::LinkedListElement<WarpScriptSnapshot> {
+class WarpScriptSnapshot
+    : public TempObject,
+      public mozilla::LinkedListElement<WarpScriptSnapshot> {
   WarpGCPtr<JSScript*> script_;
   WarpEnvironment environment_;
   WarpOpSnapshotList opSnapshots_;
@@ -575,6 +581,7 @@ class WarpSnapshot : public TempObject {
                         const WarpBailoutInfo& bailoutInfo);
 
   WarpScriptSnapshot* rootScript() { return scriptSnapshots_.getFirst(); }
+  const WarpScriptSnapshotList& scripts() const { return scriptSnapshots_; }
 
   LexicalEnvironmentObject* globalLexicalEnv() const {
     return globalLexicalEnv_;

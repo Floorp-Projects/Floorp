@@ -29,10 +29,6 @@ RefPtr<WebGLSync> WebGL2Context::FenceSync(GLenum condition, GLbitfield flags) {
   }
 
   RefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
-
-  const auto& availRunnable = EnsureAvailabilityRunnable();
-  availRunnable->mSyncs.push_back(globj);
-
   return globj;
 }
 
@@ -51,17 +47,6 @@ GLenum WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags,
   if (timeout > kMaxClientWaitSyncTimeoutNS) {
     ErrorInvalidOperation("`timeout` must not exceed %s nanoseconds.",
                           "MAX_CLIENT_WAIT_TIMEOUT_WEBGL");
-    return LOCAL_GL_WAIT_FAILED;
-  }
-
-  const bool canBeAvailable =
-      (sync.mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
-  if (!canBeAvailable) {
-    if (timeout) {
-      GenerateWarning(
-          "Sync object not yet queryable. Please wait for the event"
-          " loop.");
-    }
     return LOCAL_GL_WAIT_FAILED;
   }
 
