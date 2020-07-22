@@ -35,6 +35,7 @@ class DefaultTabTrayControllerTest {
     private val navController: NavController = mockk()
     private val sessionManager: SessionManager = mockk(relaxed = true)
     private val dismissTabTray: (() -> Unit) = mockk(relaxed = true)
+    private val dismissTabTrayAndNavigateHome: ((String) -> Unit) = mockk(relaxed = true)
     private val showUndoSnackbar: ((String, SessionManager.Snapshot) -> Unit) =
         mockk(relaxed = true)
     private val registerCollectionStorageObserver: (() -> Unit) = mockk(relaxed = true)
@@ -78,7 +79,7 @@ class DefaultTabTrayControllerTest {
             activity = activity,
             navController = navController,
             dismissTabTray = dismissTabTray,
-            showUndoSnackbar = showUndoSnackbar,
+            dismissTabTrayAndNavigateHome = dismissTabTrayAndNavigateHome,
             registerCollectionStorageObserver = registerCollectionStorageObserver
         )
     }
@@ -155,12 +156,9 @@ class DefaultTabTrayControllerTest {
     @Test
     fun onCloseAllTabsClicked() {
         controller.onCloseAllTabsClicked(private = false)
-        val snackbarMessage = activity.getString(R.string.snackbar_tabs_closed)
 
         verify {
-            sessionManager.createSessionSnapshot(nonPrivateSession)
-            sessionManager.remove(nonPrivateSession)
-            showUndoSnackbar(snackbarMessage, any())
+            dismissTabTrayAndNavigateHome(any())
         }
     }
 }

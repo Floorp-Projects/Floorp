@@ -22,10 +22,6 @@ import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.selector.normalTabs
-import mozilla.components.browser.state.selector.privateTabs
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
@@ -34,11 +30,11 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.allowUndo
@@ -82,13 +78,24 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         override fun invoke(sessionId: String) {
             requireContext().components.analytics.metrics.track(Event.ClosedExistingTab)
             showUndoSnackbarForTab(sessionId)
-            requireComponents.useCases.tabsUseCases.removeTab(sessionId)
+            removeIfNotLastTab(sessionId)
         }
 
         override fun invoke(session: Session) {
             requireContext().components.analytics.metrics.track(Event.ClosedExistingTab)
             showUndoSnackbarForTab(session.id)
-            requireComponents.useCases.tabsUseCases.removeTab(session)
+            removeIfNotLastTab(session.id)
+        }
+    }
+
+    private fun removeIfNotLastTab(sessionId: String) {
+        // We only want to *immediately* remove a tab if there are more than one in the tab tray
+        // If there is only one, the HomeFragment handles deleting the tab (to better support snackbars)
+        val sessionManager = view?.context?.components?.core?.sessionManager
+        val sessionToRemove = sessionManager?.findSessionById(sessionId)
+
+        if (sessionManager?.sessions?.filter { sessionToRemove?.private == it.private }?.size != 1) {
+            requireComponents.useCases.tabsUseCases.removeTab(sessionId)
         }
     }
 
@@ -127,7 +134,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
                     activity = (activity as HomeActivity),
                     navController = findNavController(),
                     dismissTabTray = ::dismissAllowingStateLoss,
-                    showUndoSnackbar = ::showUndoSnackbar,
+                    dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
                     registerCollectionStorageObserver = ::registerCollectionStorageObserver
                 )
             ),
@@ -177,7 +184,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
 
         consumeFrom(requireComponents.core.store) {
             tabTrayView.updateState(it)
-            navigateHomeIfNeeded(it)
         }
     }
 
@@ -191,10 +197,19 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
 
     private fun showUndoSnackbarForTab(sessionId: String) {
         val sessionManager = view?.context?.components?.core?.sessionManager
+
         val snapshot = sessionManager
             ?.findSessionById(sessionId)?.let {
                 sessionManager.createSessionSnapshot(it)
             } ?: return
+
+        // Check if this is the last tab of this session type
+        val isLastOpenTab = sessionManager.sessions.filter { snapshot.session.private == it.private }.size == 1
+
+        if (isLastOpenTab) {
+            dismissTabTrayAndNavigateHome(sessionId)
+            return
+        }
 
         val state = snapshot.engineSession?.saveState()
         val isSelected = sessionId == requireComponents.core.store.state.selectedTabId ?: false
@@ -205,13 +220,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
             getString(R.string.snackbar_tab_closed)
         }
 
-        // Check if this is the last tab of this session type
-        val isLastOpenTab = sessionManager.sessions.filter { snapshot.session.private == it.private }.size == 1
-        val rootView = if (isLastOpenTab) { requireActivity().getRootView()!! } else { requireView().tabLayout }
-        val anchorView = if (isLastOpenTab) { null } else { snackbarAnchor }
-
-        requireActivity().lifecycleScope.allowUndo(
-            rootView,
+        lifecycleScope.allowUndo(
+            requireView().tabLayout,
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo),
             {
@@ -220,18 +230,14 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
             },
             operation = { },
             elevation = ELEVATION,
-            paddedForBottomToolbar = isLastOpenTab,
-            anchorView = anchorView
+            anchorView = snackbarAnchor
         )
-
-        dismissTabTrayIfNecessary()
     }
 
-    private fun dismissTabTrayIfNecessary() {
-        if (requireComponents.core.sessionManager.sessions.size == 1) {
-            findNavController().popBackStack(R.id.homeFragment, false)
-            dismissAllowingStateLoss()
-        }
+    private fun dismissTabTrayAndNavigateHome(sessionId: String) {
+        val directions = BrowserFragmentDirections.actionGlobalHome(sessionToDelete = sessionId)
+        findNavController().navigate(directions)
+        dismissAllowingStateLoss()
     }
 
     override fun onDestroyView() {
@@ -247,37 +253,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         }
     }
 
-    private fun navigateHomeIfNeeded(state: BrowserState) {
-        val shouldPop = if (tabTrayView.isPrivateModeSelected) {
-            state.privateTabs.isEmpty()
-        } else {
-            state.normalTabs.isEmpty()
-        }
-
-        if (shouldPop) {
-            findNavController().popBackStack(R.id.homeFragment, false)
-        }
-    }
-
     private fun registerCollectionStorageObserver() {
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
-    }
-
-    private fun showUndoSnackbar(snackbarMessage: String, snapshot: SessionManager.Snapshot) {
-        // Warning: removing this definition and using it directly in the onCancel block will fail silently.
-        val sessionManager = view?.context?.components?.core?.sessionManager
-
-        requireActivity().lifecycleScope.allowUndo(
-            requireActivity().getRootView()!!,
-            snackbarMessage,
-            getString(R.string.snackbar_deleted_undo),
-            {
-                sessionManager?.restore(snapshot)
-            },
-            operation = { },
-            elevation = ELEVATION,
-            paddedForBottomToolbar = true
-        )
     }
 
     private fun showCollectionSnackbar(tabSize: Int, isNewCollection: Boolean = false) {

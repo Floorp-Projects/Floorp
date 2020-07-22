@@ -393,38 +393,84 @@ class HomeFragment : Fragment() {
         }
 
         bundleArgs.getString(SESSION_TO_DELETE)?.also {
-            sessionManager.findSessionById(it)?.let { session ->
-                val snapshot = sessionManager.createSessionSnapshot(session)
-                val state = snapshot.engineSession?.saveState()
-                val isSelected =
-                    session.id == requireComponents.core.store.state.selectedTabId ?: false
-
-                val snackbarMessage = if (snapshot.session.private) {
-                    requireContext().getString(R.string.snackbar_private_tab_closed)
-                } else {
-                    requireContext().getString(R.string.snackbar_tab_closed)
-                }
-
-                viewLifecycleOwner.lifecycleScope.allowUndo(
-                    requireView(),
-                    snackbarMessage,
-                    requireContext().getString(R.string.snackbar_deleted_undo),
-                    {
-                        sessionManager.add(
-                            snapshot.session,
-                            isSelected,
-                            engineSessionState = state
-                        )
-                        findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null))
-                    },
-                    operation = { },
-                    anchorView = snackbarAnchorView
-                )
-                requireComponents.useCases.tabsUseCases.removeTab.invoke(session)
+            if (it == ALL_NORMAL_TABS || it == ALL_PRIVATE_TABS) {
+                removeAllTabsAndShowSnackbar(it)
+            } else {
+                removeTabAndShowSnackbar(it)
             }
         }
 
         updateTabCounter(requireComponents.core.store.state)
+    }
+
+    private fun removeAllTabsAndShowSnackbar(sessionCode: String) {
+        val tabs = sessionManager.sessionsOfType(private = sessionCode == ALL_PRIVATE_TABS).toList()
+        val selectedIndex = sessionManager
+            .selectedSession?.let { sessionManager.sessions.indexOf(it) } ?: 0
+
+        val snapshot = tabs
+            .map(sessionManager::createSessionSnapshot)
+            .map {
+                it.copy(
+                    engineSession = null,
+                    engineSessionState = it.engineSession?.saveState()
+                )
+            }
+            .let { SessionManager.Snapshot(it, selectedIndex) }
+
+        tabs.forEach {
+            sessionManager.remove(it)
+        }
+
+        val snackbarMessage = if (sessionCode == ALL_PRIVATE_TABS) {
+            getString(R.string.snackbar_private_tabs_closed)
+        } else {
+            getString(R.string.snackbar_tabs_closed)
+        }
+
+        viewLifecycleOwner.lifecycleScope.allowUndo(
+            requireView(),
+            snackbarMessage,
+            requireContext().getString(R.string.snackbar_deleted_undo),
+            {
+                sessionManager.restore(snapshot)
+            },
+            operation = { },
+            anchorView = snackbarAnchorView
+        )
+    }
+
+    private fun removeTabAndShowSnackbar(sessionId: String) {
+        sessionManager.findSessionById(sessionId)?.let { session ->
+            val snapshot = sessionManager.createSessionSnapshot(session)
+            val state = snapshot.engineSession?.saveState()
+            val isSelected =
+                session.id == requireComponents.core.store.state.selectedTabId ?: false
+
+            sessionManager.remove(session)
+
+            val snackbarMessage = if (snapshot.session.private) {
+                requireContext().getString(R.string.snackbar_private_tab_closed)
+            } else {
+                requireContext().getString(R.string.snackbar_tab_closed)
+            }
+
+            viewLifecycleOwner.lifecycleScope.allowUndo(
+                requireView(),
+                snackbarMessage,
+                requireContext().getString(R.string.snackbar_deleted_undo),
+                {
+                    sessionManager.add(
+                        snapshot.session,
+                        isSelected,
+                        engineSessionState = state
+                    )
+                    findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null))
+                },
+                operation = { },
+                anchorView = snackbarAnchorView
+            )
+        }
     }
 
     override fun onDestroyView() {
@@ -888,6 +934,9 @@ class HomeFragment : Fragment() {
     }
 
     companion object {
+        const val ALL_NORMAL_TABS = "all_normal"
+        const val ALL_PRIVATE_TABS = "all_private"
+
         private const val FOCUS_ON_ADDRESS_BAR = "focusOnAddressBar"
         private const val SESSION_TO_DELETE = "session_to_delete"
         private const val ANIMATION_DELAY = 100L

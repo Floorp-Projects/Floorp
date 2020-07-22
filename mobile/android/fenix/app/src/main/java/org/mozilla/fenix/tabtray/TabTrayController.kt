@@ -6,8 +6,8 @@ package org.mozilla.fenix.tabtray
 
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.prompt.ShareData
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -15,6 +15,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.sessionsOfType
+import org.mozilla.fenix.home.HomeFragment
 
 /**
  * [TabTrayDialogFragment] controller.
@@ -34,7 +35,7 @@ class DefaultTabTrayController(
     private val activity: HomeActivity,
     private val navController: NavController,
     private val dismissTabTray: () -> Unit,
-    private val showUndoSnackbar: (String, SessionManager.Snapshot) -> Unit,
+    private val dismissTabTrayAndNavigateHome: (String) -> Unit,
     private val registerCollectionStorageObserver: () -> Unit
 ) : TabTrayController {
     override fun onNewTabTapped(private: Boolean) {
@@ -89,35 +90,15 @@ class DefaultTabTrayController(
         navController.navigate(directions)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onCloseAllTabsClicked(private: Boolean) {
-        val sessionManager = activity.components.core.sessionManager
-        val tabs = getListOfSessions(private)
-
-        val selectedIndex = sessionManager
-            .selectedSession?.let { sessionManager.sessions.indexOf(it) } ?: 0
-
-        val snapshot = tabs
-            .map(sessionManager::createSessionSnapshot)
-            .map {
-                it.copy(
-                    engineSession = null,
-                    engineSessionState = it.engineSession?.saveState()
-                )
-            }
-            .let { SessionManager.Snapshot(it, selectedIndex) }
-
-        tabs.forEach {
-            sessionManager.remove(it)
-        }
-
-        val snackbarMessage = if (private) {
-            activity.getString(R.string.snackbar_private_tabs_closed)
+        val sessionsToClose = if (private) {
+            HomeFragment.ALL_PRIVATE_TABS
         } else {
-            activity.getString(R.string.snackbar_tabs_closed)
+            HomeFragment.ALL_NORMAL_TABS
         }
 
-        showUndoSnackbar(snackbarMessage, snapshot)
-        dismissTabTray()
+        dismissTabTrayAndNavigateHome(sessionsToClose)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
