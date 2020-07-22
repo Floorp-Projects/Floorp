@@ -116,7 +116,8 @@ class FieldValues : public Base {
   // field count.
   template <typename F>
   static void EachIndex(F&& aCallback) {
-    EachIndexInner(Index<count>(), aCallback);
+    EachIndexInner(std::make_index_sequence<count>(),
+                   std::forward<F>(aCallback));
   }
 
  private:
@@ -126,12 +127,10 @@ class FieldValues : public Base {
   bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
             mozilla::ipc::IProtocol* aActor);
 
-  template <typename F>
-  static void EachIndexInner(Index<0>, F&&) {}
-  template <size_t I, typename F>
-  static void EachIndexInner(Index<I>, F&& aCallback) {
-    aCallback(Index<I - 1>());
-    EachIndexInner(Index<I - 1>(), aCallback);
+  template <typename F, size_t... Indexes>
+  static void EachIndexInner(std::index_sequence<Indexes...> aIndexes,
+                             F&& aCallback) {
+    (aCallback(Index<Indexes>()), ...);
   }
 };
 
