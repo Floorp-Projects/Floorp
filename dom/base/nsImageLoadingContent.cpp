@@ -976,8 +976,8 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 
   // Do the load.
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(eImageLoadType_Normal);
-  nsresult rv = loader->LoadImageWithChannel(aChannel, this, doc,
-                                             aListener, getter_AddRefs(req));
+  nsresult rv = loader->LoadImageWithChannel(aChannel, this, doc, aListener,
+                                             getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     CloneScriptedRequests(req);
     TrackImage(req);
@@ -1103,12 +1103,7 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
 
   // Data documents, or documents from DOMParser shouldn't perform image
   // loading.
-  //
-  // FIXME(emilio): Shouldn't this check be part of
-  // Document::ShouldLoadImages()? Or alternatively check ShouldLoadImages here
-  // instead? (It seems we only check ShouldLoadImages in HTMLImageElement,
-  // which seems wrong...)
-  if (aDocument->IsLoadedAsData() && !aDocument->IsStaticDocument()) {
+  if (aDocument->IsLoadedAsData()) {
     // This is the only codepath on which we can reach SetBlockedRequest while
     // our pending request exists.  Just clear it out here if we do have one.
     ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
@@ -1739,6 +1734,26 @@ void nsImageLoadingContent::UntrackImage(
   }
 }
 
+void nsImageLoadingContent::CreateStaticImageClone(
+    nsImageLoadingContent* aDest) const {
+  aDest->ClearScriptedRequests(CURRENT_REQUEST, NS_BINDING_ABORTED);
+  aDest->mCurrentRequest = nsContentUtils::GetStaticRequest(
+      aDest->GetOurOwnerDoc(), mCurrentRequest);
+  if (aDest->mCurrentRequest) {
+    aDest->CloneScriptedRequests(aDest->mCurrentRequest);
+  }
+  aDest->TrackImage(aDest->mCurrentRequest);
+  aDest->mForcedImageState = mForcedImageState;
+  aDest->mImageBlockingStatus = mImageBlockingStatus;
+  aDest->mLoadingEnabled = mLoadingEnabled;
+  aDest->mStateChangerDepth = mStateChangerDepth;
+  aDest->mIsImageStateForced = mIsImageStateForced;
+  aDest->mLoading = mLoading;
+  aDest->mBroken = mBroken;
+  aDest->mUserDisabled = mUserDisabled;
+  aDest->mSuppressed = mSuppressed;
+}
+
 CORSMode nsImageLoadingContent::GetCORSMode() { return CORS_NONE; }
 
 nsImageLoadingContent::ImageObserver::ImageObserver(
@@ -1839,7 +1854,6 @@ Element* nsImageLoadingContent::FindImageMap() {
 nsLoadFlags nsImageLoadingContent::LoadFlags() {
   auto* image = HTMLImageElement::FromNode(AsContent());
   if (image && image->OwnerDoc()->IsScriptEnabled() &&
-      !image->OwnerDoc()->IsStaticDocument() &&
       image->LoadingState() == HTMLImageElement::Loading::Lazy) {
     // Note that LOAD_BACKGROUND is not about priority of the load, but about
     // whether it blocks the load event (by bypassing the loadgroup).

@@ -5476,12 +5476,6 @@ CallState nsGlobalWindowInner::CallOnInProcessChildren(Method aMethod,
 
 Maybe<ClientInfo> nsGlobalWindowInner::GetClientInfo() const {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mDoc && mDoc->IsStaticDocument()) {
-    if (Maybe<ClientInfo> info = mDoc->GetOriginalDocument()->GetClientInfo()) {
-      return info;
-    }
-  }
-
   Maybe<ClientInfo> clientInfo;
   if (mClientSource) {
     clientInfo.emplace(mClientSource->Info());
@@ -5491,13 +5485,6 @@ Maybe<ClientInfo> nsGlobalWindowInner::GetClientInfo() const {
 
 Maybe<ClientState> nsGlobalWindowInner::GetClientState() const {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mDoc && mDoc->IsStaticDocument()) {
-    if (Maybe<ClientState> state =
-            mDoc->GetOriginalDocument()->GetClientState()) {
-      return state;
-    }
-  }
-
   Maybe<ClientState> clientState;
   if (mClientSource) {
     Result<ClientState, ErrorResult> res = mClientSource->SnapshotState();
@@ -5512,13 +5499,6 @@ Maybe<ClientState> nsGlobalWindowInner::GetClientState() const {
 
 Maybe<ServiceWorkerDescriptor> nsGlobalWindowInner::GetController() const {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mDoc && mDoc->IsStaticDocument()) {
-    if (Maybe<ServiceWorkerDescriptor> controller =
-            mDoc->GetOriginalDocument()->GetController()) {
-      return controller;
-    }
-  }
-
   Maybe<ServiceWorkerDescriptor> controller;
   if (mClientSource) {
     controller = mClientSource->GetController();

@@ -1053,21 +1053,29 @@ void imgRequestProxy::NullOutListener() {
 
 NS_IMETHODIMP
 imgRequestProxy::GetStaticRequest(imgIRequest** aReturn) {
-  RefPtr<imgRequestProxy> proxy =
-      GetStaticRequest(static_cast<Document*>(nullptr));
-  proxy.forget(aReturn);
-  return NS_OK;
+  imgRequestProxy* proxy;
+  nsresult result = GetStaticRequest(nullptr, &proxy);
+  *aReturn = proxy;
+  return result;
 }
 
-already_AddRefed<imgRequestProxy> imgRequestProxy::GetStaticRequest(
-    Document* aLoadingDocument) {
-  MOZ_DIAGNOSTIC_ASSERT(!aLoadingDocument || aLoadingDocument->IsStaticDocument());
+nsresult imgRequestProxy::GetStaticRequest(Document* aLoadingDocument,
+                                           imgRequestProxy** aReturn) {
+  *aReturn = nullptr;
   RefPtr<Image> image = GetImage();
 
   bool animated;
   if (!image || (NS_SUCCEEDED(image->GetAnimated(&animated)) && !animated)) {
     // Early exit - we're not animated, so we don't have to do anything.
-    return do_AddRef(this);
+    NS_ADDREF(*aReturn = this);
+    return NS_OK;
+  }
+
+  // Check for errors in the image. Callers code rely on GetStaticRequest
+  // failing in this case, though with FrozenImage there's no technical reason
+  // for it anymore.
+  if (image->HasError()) {
+    return NS_ERROR_FAILURE;
   }
 
   // We are animated. We need to create a frozen version of this image.
@@ -1082,7 +1090,9 @@ already_AddRefed<imgRequestProxy> imgRequestProxy::GetStaticRequest(
       frozenImage, currentPrincipal, hadCrossOriginRedirects);
   req->Init(nullptr, nullptr, aLoadingDocument, mURI, nullptr);
 
-  return req.forget();
+  NS_ADDREF(*aReturn = req);
+
+  return NS_OK;
 }
 
 void imgRequestProxy::NotifyListener() {
