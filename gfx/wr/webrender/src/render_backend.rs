@@ -785,7 +785,7 @@ impl Document {
         self.hit_tester_is_valid = false;
 
         self.update_tile_caches_for_new_scene(
-            mem::replace(&mut built_scene.tile_caches, FastHashMap::default()),
+            mem::replace(&mut built_scene.tile_cache_config.tile_caches, FastHashMap::default()),
             tile_caches,
             resource_cache,
         );

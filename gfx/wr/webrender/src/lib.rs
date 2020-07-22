@@ -128,6 +128,7 @@ mod spatial_node;
 mod storage;
 mod texture_allocator;
 mod texture_cache;
+mod tile_cache;
 mod util;
 mod visibility;
 

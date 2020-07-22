@@ -9,12 +9,12 @@ use api::units::*;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::composite::CompositorKind;
 use crate::clip::{ClipStore, ClipDataStore};
-use crate::picture::{SliceId, TileCacheParams};
-use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
+use crate::spatial_tree::SpatialTree;
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
-use crate::internal_types::{FastHashMap, FastHashSet};
+use crate::internal_types::FastHashMap;
 use crate::prim_store::{PrimitiveStore, PrimitiveStoreStats, PictureIndex};
+use crate::tile_cache::TileCacheConfig;
 use std::sync::Arc;
 
 /// Stores a map of the animated property bindings for the current display list. These
@@ -278,9 +278,7 @@ pub struct BuiltScene {
     pub config: FrameBuilderConfig,
     pub spatial_tree: SpatialTree,
     pub hit_testing_scene: Arc<HitTestingScene>,
-    pub content_slice_count: usize,
-    pub picture_cache_spatial_nodes: FastHashSet<SpatialNodeIndex>,
-    pub tile_caches: FastHashMap<SliceId, TileCacheParams>,
+    pub tile_cache_config: TileCacheConfig,
 }
 
 impl BuiltScene {
@@ -295,9 +293,7 @@ impl BuiltScene {
             clip_store: ClipStore::new(),
             spatial_tree: SpatialTree::new(),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
-            content_slice_count: 0,
-            picture_cache_spatial_nodes: FastHashSet::default(),
-            tile_caches: FastHashMap::default(),
+            tile_cache_config: TileCacheConfig::new(0),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,

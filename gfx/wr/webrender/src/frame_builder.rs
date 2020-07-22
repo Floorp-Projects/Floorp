@@ -496,7 +496,7 @@ impl FrameBuilder {
         profile_counters
             .total_primitives
             .set(scene.prim_store.prim_count());
-        resource_profile.content_slices.set(scene.content_slice_count);
+        resource_profile.picture_cache_slices.set(scene.tile_cache_config.picture_cache_slice_count);
         resource_cache.begin_frame(stamp);
         gpu_cache.begin_frame(stamp);
 
@@ -526,7 +526,7 @@ impl FrameBuilder {
         let picture_caching_is_enabled =
             scene.config.global_enable_picture_caching &&
             !debug_flags.contains(DebugFlags::DISABLE_PICTURE_CACHING) &&
-            !scene.picture_cache_spatial_nodes.iter().any(|spatial_node_index| {
+            !scene.tile_cache_config.picture_cache_spatial_nodes.iter().any(|spatial_node_index| {
                 let spatial_node = &scene
                     .spatial_tree
                     .spatial_nodes[spatial_node_index.0 as usize];
