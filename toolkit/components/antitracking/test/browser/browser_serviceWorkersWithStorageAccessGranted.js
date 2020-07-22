@@ -110,7 +110,8 @@ add_task(async _ => {
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.testing.enabled", true],
     ],
-    expectedBlockingNotifications: 0,
+    expectedBlockingNotifications:
+      Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications,
     runInPrivateWindow: false,
     iframeSandbox: "allow-scripts allow-same-origin",
     accessRemoval: null,
