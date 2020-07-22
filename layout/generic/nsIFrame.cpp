@@ -8516,7 +8516,12 @@ nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
 }
 
 nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
-  MOZ_ASSERT(aPos && !HasAnyStateBits(NS_FRAME_IS_DIRTY));
+  MOZ_ASSERT(aPos);
+
+  if (NS_WARN_IF(HasAnyStateBits(NS_FRAME_IS_DIRTY))) {
+    // FIXME(Bug 1654362): <caption> currently can remain dirty.
+    return NS_ERROR_UNEXPECTED;
+  }
 
   // Translate content offset to be relative to frame
   int32_t offset = aPos->mStartOffset - GetRangeForFrame(this).start;
