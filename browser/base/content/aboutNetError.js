@@ -105,6 +105,11 @@ function showCertificateErrorReporting() {
   document.getElementById("certificateErrorReporting").style.display = "block";
 }
 
+function showBlockingErrorReporting() {
+  // Display blocking error reporting UI for XFO error and CSP error.
+  document.getElementById("blockingErrorReporting").style.display = "block";
+}
+
 function showPrefChangeContainer() {
   const panel = document.getElementById("prefChangeContainer");
   panel.style.display = "block";
@@ -354,6 +359,8 @@ function initPage() {
     // Add a learn more link
     document.getElementById("learnMoreContainer").style.display = "block";
     learnMoreLink.setAttribute("href", baseURL + "xframe-neterror-page");
+
+    setupBlockingReportingUI();
   }
 
   setNetErrorMessageFromCode();
@@ -452,6 +459,29 @@ function setupErrorUI() {
   }
 }
 
+function setupBlockingReportingUI() {
+  let checkbox = document.getElementById("automaticallyReportBlockingInFuture");
+
+  let reportingAutomatic = RPMGetBoolPref(
+    "security.xfocsp.errorReporting.automatic"
+  );
+  checkbox.checked = !!reportingAutomatic;
+
+  checkbox.addEventListener("change", function({ target: { checked } }) {
+    onSetBlockingReportAutomatic(checked);
+  });
+
+  let reportingEnabled = RPMGetBoolPref(
+    "security.xfocsp.errorReporting.enabled"
+  );
+
+  if (!reportingEnabled) {
+    return;
+  }
+
+  showBlockingErrorReporting();
+}
+
 function onSetAutomatic(checked) {
   let bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED;
   if (checked) {
@@ -467,6 +497,10 @@ function onSetAutomatic(checked) {
       port: parseInt(document.location.port) || -1,
     });
   }
+}
+
+function onSetBlockingReportAutomatic(checked) {
+  RPMSetBoolPref("security.xfocsp.errorReporting.automatic", checked);
 }
 
 async function setNetErrorMessageFromCode() {

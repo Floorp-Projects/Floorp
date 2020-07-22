@@ -112,7 +112,8 @@ body:not(.neterror) #advancedButton {
   display: block;
 }
 
-#certificateErrorReporting {
+#certificateErrorReporting,
+#blockingErrorReporting {
   display: none;
   padding-bottom: 10px;
 }
