@@ -199,48 +199,43 @@ export class WelcomeScreen extends React.PureComponent {
     switch (this.props.content.tiles.type) {
       case "topsites":
         return this.props.topSites ? (
-          <Localized
-            text={
-              typeof this.props.content.tiles.tooltip === "object"
-                ? this.props.content.tiles.tooltip
-                : {}
-            }
+          <div
+            className={`tiles-container ${
+              this.props.content.tiles.info ? "info" : ""
+            }`}
           >
             <div
-              className={`tiles-container ${
-                this.props.content.tiles.tooltip ? "info" : ""
-              }`}
-              title={this.props.content.tiles.tooltip}
+              className="tiles-topsites-section"
+              name="topsites-section"
+              id="topsites-section"
+              aria-labelledby="topsites-disclaimer"
+              role="region"
             >
-              <div className="tiles-topsites-section">
-                {this.props.topSites
-                  .slice(0, 5)
-                  .map(({ icon, label, title }) => (
-                    <div
-                      className="site"
-                      key={icon + label}
-                      aria-label={title ? title : label}
-                      role="img"
-                    >
-                      <div
-                        className="icon"
-                        style={
-                          icon
-                            ? {
-                                backgroundColor: "transparent",
-                                backgroundImage: `url(${icon})`,
-                              }
-                            : {}
-                        }
-                      >
-                        {icon ? "" : label[0].toUpperCase()}
-                      </div>
-                      {label && <div className="host">{label}</div>}
-                    </div>
-                  ))}
-              </div>
+              {this.props.topSites.slice(0, 5).map(({ icon, label, title }) => (
+                <div
+                  className="site"
+                  key={icon + label}
+                  aria-label={title ? title : label}
+                  role="img"
+                >
+                  <div
+                    className="icon"
+                    style={
+                      icon
+                        ? {
+                            backgroundColor: "transparent",
+                            backgroundImage: `url(${icon})`,
+                          }
+                        : {}
+                    }
+                  >
+                    {icon ? "" : label[0].toUpperCase()}
+                  </div>
+                  {label && <div className="host">{label}</div>}
+                </div>
+              ))}
             </div>
-          </Localized>
+          </div>
         ) : null;
       case "theme":
         return this.props.content.tiles.data ? (
@@ -289,6 +284,20 @@ export class WelcomeScreen extends React.PureComponent {
     return steps;
   }
 
+  renderDisclaimer() {
+    if (
+      this.props.content.tiles &&
+      this.props.content.tiles.type === "topsites"
+    ) {
+      return (
+        <Localized text={this.props.content.disclaimer}>
+          <p id="topsites-disclaimer" className="tiles-topsites-disclaimer" />
+        </Localized>
+      );
+    }
+    return null;
+  }
+
   render() {
     const { content } = this.props;
     const hasSecondaryTopCTA =
@@ -319,13 +328,18 @@ export class WelcomeScreen extends React.PureComponent {
           ? this.renderSecondaryCTA()
           : null}
         <nav
-          className="steps"
+          className={
+            content.tiles && content.tiles.type === "topsites"
+              ? "steps has-disclaimer"
+              : "steps"
+          }
           data-l10n-id={"onboarding-welcome-steps-indicator"}
           data-l10n-args={`{"current": ${parseInt(this.props.order, 10) +
             1}, "total": ${this.props.totalNumberOfScreens}}`}
         >
           {this.renderStepsIndicator()}
         </nav>
+        {this.renderDisclaimer()}
       </main>
     );
   }

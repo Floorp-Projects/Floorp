@@ -55,9 +55,10 @@ const TEST_MULTISTAGE_CONTENT = {
       order: 1,
       content: {
         title: "Step 2",
+        disclaimer: "test",
         tiles: {
           type: "topsites",
-          tooltip: "test",
+          info: true,
         },
         primary_button: {
           label: "Next",
@@ -210,6 +211,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
       "main.AW_STEP2",
       "button.secondary",
       "div.tiles-container.info",
+      "p.tiles-topsites-disclaimer",
     ],
     // Unexpected selectors:
     [
