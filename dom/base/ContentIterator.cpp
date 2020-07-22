@@ -196,6 +196,7 @@ class MOZ_STACK_CLASS ContentIteratorBase::Initializer final {
   nsresult Run();
 
  private:
+  void DetermineFirstNode();
   [[nodiscard]] nsresult DetermineLastNode();
 
   bool IsCollapsedNonCharacterRange() const;
@@ -249,8 +250,25 @@ nsresult ContentIteratorBase::Initializer::Run() {
     return NS_OK;
   }
 
-  // Find first node in range.
+  DetermineFirstNode();
+  const nsresult rv = DetermineLastNode();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  };
 
+  // If either first or last is null, they both have to be null!
+  if (!mIterator.mFirst || !mIterator.mLast) {
+    mIterator.mFirst = nullptr;
+    mIterator.mLast = nullptr;
+  }
+
+  mIterator.mCurNode = mIterator.mFirst;
+  mIterator.mIsDone = !mIterator.mCurNode;
+
+  return NS_OK;
+}
+
+void ContentIteratorBase::Initializer::DetermineFirstNode() {
   nsIContent* cChild = nullptr;
 
   // Try to get the child at our starting point. This might return null if
@@ -319,21 +337,6 @@ nsresult ContentIteratorBase::Initializer::Run() {
       }
     }
   }
-  const nsresult rv = DetermineLastNode();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  };
-
-  // If either first or last is null, they both have to be null!
-  if (!mIterator.mFirst || !mIterator.mLast) {
-    mIterator.mFirst = nullptr;
-    mIterator.mLast = nullptr;
-  }
-
-  mIterator.mCurNode = mIterator.mFirst;
-  mIterator.mIsDone = !mIterator.mCurNode;
-
-  return NS_OK;
 }
 
 nsresult ContentIteratorBase::Initializer::DetermineLastNode() {
