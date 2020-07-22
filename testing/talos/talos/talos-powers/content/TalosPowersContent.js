@@ -103,6 +103,13 @@ var TalosPowersParent;
       });
       document.dispatchEvent(event);
     },
+
+    wrCapture() {
+      var event = new CustomEvent("TalosPowersWebRenderCapture", {
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+    },
   };
 
   /**
