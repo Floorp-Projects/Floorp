@@ -8,12 +8,25 @@
 const TEST_URL = URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL("about:blank");
+  await pushPref("devtools.target-switching.enabled", true);
+
+  const { inspector, tab } = await openInspectorForURL("about:blank");
   await selectNode("body", inspector);
+
+  // Note: here we don't want to use the `navigateTo` helper from shared-head.js
+  // because we want to modify the page as early as possible after the
+  // navigation, ideally before the inspector has fully initialized.
+  // See next comments.
+  const browser = tab.linkedBrowser;
+  const onBrowserLoaded = BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.loadURI(browser, TEST_URL);
+  await onBrowserLoaded;
 
   // We do not want to wait for the inspector to be fully ready before testing
   // so we load TEST_URL and just wait for the content window to be done loading
-  await testActor.loadAndWaitForCustomEvent(TEST_URL);
+  await SpecialPowers.spawn(browser, [], async function() {
+    await content.wrappedJSObject.readyPromise;
+  });
 
   // The content doc contains a script that creates iframes and deletes them
   // immediately after. It does this before the load event, after
@@ -21,33 +34,40 @@ add_task(async function() {
   // blank when navigating to that page.
   // At this stage, there should be no iframes in the page anymore.
   ok(
-    !(await testActor.hasNode("iframe")),
+    !(await contentPageHasNode(browser, "iframe")),
     "Iframes added by the content page should have been removed"
   );
 
   // Create/remove an extra one now, after the load event.
   info("Creating and removing an iframe.");
-  testActor.eval(
-    "new " +
-      function() {
-        const iframe = document.createElement("iframe");
-        document.body.appendChild(iframe);
-        iframe.remove();
-      }
-  );
+  await SpecialPowers.spawn(browser, [], async function() {
+    const iframe = content.document.createElement("iframe");
+    content.document.body.appendChild(iframe);
+    iframe.remove();
+  });
 
   ok(
-    !(await testActor.hasNode("iframe")),
+    !(await contentPageHasNode(browser, "iframe")),
     "The after-load iframe should have been removed."
   );
 
   // Assert that the markup-view is displayed and works
-  ok(!(await testActor.hasNode("iframe")), "Iframe has been removed.");
-  is(
-    await testActor.getProperty("#yay", "textContent"),
-    "load",
-    "Load event fired."
-  );
+  ok(!(await contentPageHasNode(browser, "iframe")), "Iframe has been removed");
 
+  const expectedText = await SpecialPowers.spawn(browser, [], async function() {
+    return content.document.querySelector("#yay").textContent;
+  });
+  is(expectedText, "load", "Load event fired.");
+
+  // Smoke test to check that the inspector can still select nodes and hasn't
+  // gone blank.
   await selectNode("#yay", inspector);
 });
+
+function contentPageHasNode(browser, selector) {
+  return SpecialPowers.spawn(browser, [selector], async function(
+    selectorChild
+  ) {
+    return !!content.document.querySelector(selectorChild);
+  });
+}
