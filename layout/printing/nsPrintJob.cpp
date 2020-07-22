@@ -451,9 +451,19 @@ NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener, nsISupportsWeakReference,
                   nsIObserver)
 
 //-------------------------------------------------------
+nsPrintJob::nsPrintJob() = default;
+
 nsPrintJob::~nsPrintJob() {
   Destroy();  // for insurance
   DisconnectPagePrintTimer();
+}
+
+bool nsPrintJob::CheckBeforeDestroy() const {
+  return mPrt && mPrt->mPreparingForPrint;
+}
+
+PresShell* nsPrintJob::GetPrintPreviewPresShell() {
+  return mPrtPreview->mPrintObject->mPresShell;
 }
 
 //-------------------------------------------------------
