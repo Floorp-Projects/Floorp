@@ -266,10 +266,9 @@ add_task(async function testAboutProcesses() {
   let children = row.children;
   let pidContent = children[0].textContent;
   let memoryResidentContent = children[2].textContent;
-  let memoryVirtualContent = children[3].textContent;
-  let cpuUserContent = children[4].textContent;
-  let cpuKernelContent = children[5].textContent;
-  let numberOfThreadsContent = children[6].textContent;
+  let cpuUserContent = children[3].textContent;
+  let cpuKernelContent = children[4].textContent;
+  let numberOfThreadsContent = children[5].textContent;
 
   info("Sanity checks: pid");
   let pid = Number.parseInt(pidContent);
@@ -281,14 +280,6 @@ add_task(async function testAboutProcesses() {
     memoryResidentContent,
     row.process.totalResidentSize,
     row.process.deltaResidentSize,
-    HARDCODED_ASSUMPTIONS_PROCESS
-  );
-
-  info("Sanity checks: memory virtual");
-  testMemory(
-    memoryVirtualContent,
-    row.process.totalVirtualMemorySize,
-    row.process.deltaVirtualMemorySize,
     HARDCODED_ASSUMPTIONS_PROCESS
   );
 
@@ -333,8 +324,8 @@ add_task(async function testAboutProcesses() {
   ) {
     let children = threadRow.children;
     let tidContent = children[0].textContent;
-    let cpuUserContent = children[4].textContent;
-    let cpuKernelContent = children[5].textContent;
+    let cpuUserContent = children[3].textContent;
+    let cpuKernelContent = children[4].textContent;
     ++numberOfThreadsFound;
 
     info("Sanity checks: tid");

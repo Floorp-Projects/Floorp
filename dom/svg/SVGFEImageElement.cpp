@@ -52,7 +52,7 @@ SVGFEImageElement::SVGFEImageElement(
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
 }
 
-SVGFEImageElement::~SVGFEImageElement() { DestroyImageLoadingContent(); }
+SVGFEImageElement::~SVGFEImageElement() { nsImageLoadingContent::Destroy(); }
 
 //----------------------------------------------------------------------
 
@@ -156,6 +156,11 @@ void SVGFEImageElement::UnbindFromTree(bool aNullParent) {
 EventStates SVGFEImageElement::IntrinsicState() const {
   return SVGFEImageElementBase::IntrinsicState() |
          nsImageLoadingContent::ImageState();
+}
+
+void SVGFEImageElement::DestroyContent() {
+  nsImageLoadingContent::Destroy();
+  SVGFEImageElementBase::DestroyContent();
 }
 
 //----------------------------------------------------------------------

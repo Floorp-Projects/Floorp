@@ -2522,7 +2522,7 @@
 # soon as they are fetched.
 - name: dom.script_loader.external_scripts.speculative_omt_parse.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # Speculatively compile non parser inserted scripts
@@ -3388,6 +3388,12 @@
 - name: dom.confirm_repost.testing.always_accept
   type: bool
   value: false
+  mirror: always
+
+# Whether we should suspend inactive tabs or not
+- name: dom.suspend_inactive.enabled
+  type: bool
+  value: @IS_ANDROID@
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -8967,6 +8973,12 @@
   value: false
   mirror: always
 
+# Pref to show warning when submitting from secure to insecure.
+- name: security.warn_submit_secure_to_insecure
+  type: bool
+  value: true
+  mirror: always
+
 # Hardware Origin-bound Second Factor Support
 - name: security.webauth.webauthn
   type: bool
@@ -9622,7 +9634,7 @@
   mirror: always
 
 - name: webgl.force-layers-readback
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
@@ -9672,14 +9684,14 @@
   mirror: always
 
 - name: webgl.power-preference-override
-  type: int32_t
+  type: RelaxedAtomicInt32
   value: 0
   mirror: always
 
 - name: webgl.prefer-16bpp
-  type: bool
+  type: RelaxedAtomicBool
   value: false
-  mirror: never
+  mirror: always
 
 - name: webgl.allow-immediate-queries
   type: RelaxedAtomicBool
@@ -9707,10 +9719,9 @@
   value: true
   mirror: always
 
-# value is 0 for PCQ, 1 for Ipdl
-- name: webgl.prototype.ipc-pcq
-  type: uint32_t
-  value: 0
+- name: webgl.oop.via-pcq
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

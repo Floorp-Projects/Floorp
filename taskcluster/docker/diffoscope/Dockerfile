@@ -25,5 +25,6 @@ RUN apt-get install \
     locale-gen
 
 COPY get_and_diffoscope /builds/worker/bin/get_and_diffoscope
+COPY readelf /builds/worker/bin/readelf
 
 RUN chown -R worker:worker /builds/worker/bin && chmod 755 /builds/worker/bin/*

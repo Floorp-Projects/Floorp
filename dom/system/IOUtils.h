@@ -61,6 +61,10 @@ class IOUtils final {
                                           const nsAString& aPath,
                                           const RemoveOptions& aOptions);
 
+  static already_AddRefed<Promise> MakeDirectory(
+      GlobalObject& aGlobal, const nsAString& aPath,
+      const MakeDirectoryOptions& aOptions);
+
   static bool IsAbsolutePath(const nsAString& aPath);
 
  private:
@@ -82,7 +86,7 @@ class IOUtils final {
   static already_AddRefed<Promise> CreateJSPromise(GlobalObject& aGlobal);
 
   /**
-   * Opens an existing file at |path|.
+   * Opens an existing file at |aPath|.
    *
    * @param path  The location of the file as an absolute path string.
    * @param flags PRIO flags, excluding |PR_CREATE| and |PR_EXCL|.
@@ -91,7 +95,7 @@ class IOUtils final {
       const nsAString& aPath, int32_t aFlags);
 
   /**
-   * Creates a new file at |path|.
+   * Creates a new file at |aPath|.
    *
    * @param aPath  The location of the file as an absolute path string.
    * @param aFlags PRIO flags to be used in addition to |PR_CREATE| and
@@ -114,6 +118,26 @@ class IOUtils final {
   static nsresult RemoveSync(const nsAString& aPath, bool aIgnoreAbsent,
                              bool aRecursive);
 
+  /**
+   * Creates a new directory at |aPath|.
+   *
+   * @param aPath             The location of the file as an absolute path
+   *                          string.
+   * @param aCreateAncestors  If true, create missing ancestor directories as
+   *                          needed. Otherwise, report an error if the target
+   *                          has non-existing ancestor directories.
+   * @param aIgnoreExisting   If true, suppress errors that occur if the target
+   *                          directory already exists. Otherwise, propagate the
+   *                          error if it occurs.
+   * @param aMode             Optional file mode. Defaults to 0777 to allow the
+   *                          system umask to compute the best mode for the new
+   *                          directory.
+   */
+  static nsresult CreateDirectorySync(const nsAString& aPath,
+                                      bool aCreateAncestors,
+                                      bool aIgnoreExisting,
+                                      int32_t aMode = 0777);
+
   using IOReadMozPromise =
       mozilla::MozPromise<nsTArray<uint8_t>, const nsCString,
                           /* IsExclusive */ true>;
@@ -121,13 +145,8 @@ class IOUtils final {
   using IOWriteMozPromise =
       mozilla::MozPromise<uint32_t, const nsCString, /* IsExclusive */ true>;
 
-  using IOMoveMozPromise =
-      mozilla::MozPromise<bool /* ignored */, const nsresult,
-                          /* IsExclusive */ true>;
-
-  using IORemoveMozPromise =
-      mozilla::MozPromise<bool /* ignored */, const nsresult,
-                          /* IsExclusive */ true>;
+  using IOMozPromise = mozilla::MozPromise<bool /* ignored */, const nsresult,
+                                           /* IsExclusive */ true>;
 };
 
 class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {

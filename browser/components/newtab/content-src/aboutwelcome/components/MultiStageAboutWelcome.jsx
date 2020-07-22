@@ -244,22 +244,36 @@ export class WelcomeScreen extends React.PureComponent {
         ) : null;
       case "theme":
         return this.props.content.tiles.data ? (
-          <div className="tiles-theme-section">
-            {this.props.content.tiles.data.map(({ theme, label }) => (
-              <button
-                className="theme"
-                key={theme + label}
-                value={theme}
-                onClick={this.handleAction}
-              >
-                <div className={`icon ${theme}`} />
-                {label && (
-                  <Localized text={label}>
-                    <div className="text" />
+          <div className="tiles-theme-container">
+            <div className="tiles-theme-section">
+              {this.props.content.tiles.data.map(
+                ({ theme, label, tooltip, description }) => (
+                  <Localized
+                    key={theme + label}
+                    text={typeof tooltip === "object" ? tooltip : {}}
+                  >
+                    <button
+                      className="theme"
+                      value={theme}
+                      title={tooltip}
+                      onClick={this.handleAction}
+                    >
+                      <div className={`icon ${theme}`} />
+                      {label && (
+                        <Localized text={label}>
+                          <div className="text" />
+                        </Localized>
+                      )}
+                      {description && (
+                        <Localized text={description}>
+                          <div className="theme-desc" />
+                        </Localized>
+                      )}
+                    </button>
                   </Localized>
-                )}
-              </button>
-            ))}
+                )
+              )}
+            </div>
           </div>
         ) : null;
     }

@@ -620,7 +620,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             if suites and stage:
                 stage(suites)
 
-    def _stage_files(self, bin_name=None):
+    def _stage_files(self, bin_name=None, fail_if_not_exists=True):
         dirs = self.query_abs_dirs()
         abs_app_dir = self.query_abs_app_dir()
 
@@ -632,11 +632,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
         abs_res_extensions_dir = os.path.join(abs_res_dir, 'extensions')
 
         if bin_name:
-            self.info('copying %s to %s' % (os.path.join(dirs['abs_test_bin_dir'],
-                      bin_name), os.path.join(abs_app_dir, bin_name)))
-            shutil.copy2(os.path.join(dirs['abs_test_bin_dir'], bin_name),
-                         os.path.join(abs_app_dir, bin_name))
-
+            src = os.path.join(dirs['abs_test_bin_dir'], bin_name)
+            if os.path.exists(src):
+                self.info('copying %s to %s' % (src, os.path.join(abs_app_dir, bin_name)))
+                shutil.copy2(src, os.path.join(abs_app_dir, bin_name))
+            elif fail_if_not_exists:
+                raise OSError('File %s not found' % src)
         self.copytree(dirs['abs_test_bin_components_dir'],
                       abs_res_components_dir,
                       overwrite='overwrite_if_exists')
@@ -652,6 +653,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
     def _stage_xpcshell(self, suites):
         self._stage_files(self.config['xpcshell_name'])
+        # http3server isn't built for Windows tests or Linux asan/tsan
+        # builds. Only stage if the `http3server_name` config is set and if
+        # the file actually exists.
+        if self.config.get('http3server_name'):
+            self._stage_files(self.config['http3server_name'],
+                              fail_if_not_exists=False)
 
     def _stage_cppunittest(self, suites):
         abs_res_dir = self.query_abs_res_dir()

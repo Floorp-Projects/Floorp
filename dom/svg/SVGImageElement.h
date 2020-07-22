@@ -67,6 +67,8 @@ class SVGImageElement : public SVGImageElementBase,
 
   virtual EventStates IntrinsicState() const override;
 
+  virtual void DestroyContent() override;
+
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
   // SVGGeometryElement methods:

@@ -117,6 +117,12 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   LoopStateStack loopStack_;
   PendingEdgesMap pendingEdges_;
 
+  // These are only initialized when building an inlined script.
+  WarpBuilder* callerBuilder_ = nullptr;
+  MResumePoint* callerResumePoint_ = nullptr;
+  CallInfo* inlineCallInfo_ = nullptr;
+
+  WarpCompilation* warpCompilation() const { return warpCompilation_; }
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
   const WarpScriptSnapshot* scriptSnapshot() const { return scriptSnapshot_; }
@@ -125,6 +131,10 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   void incLoopDepth() { warpCompilation_->incLoopDepth(); }
   void decLoopDepth() { warpCompilation_->decLoopDepth(); }
   PhiVector* iterators() { return warpCompilation_->iterators(); }
+
+  WarpBuilder* callerBuilder() const { return callerBuilder_; }
+  MResumePoint* callerResumePoint() const { return callerResumePoint_; }
+  CallInfo* inlineCallInfo() const { return inlineCallInfo_; }
 
   BytecodeSite* newBytecodeSite(BytecodeLocation loc);
 
@@ -157,7 +167,8 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
 
   MOZ_MUST_USE bool buildPrologue();
   MOZ_MUST_USE bool buildBody();
-  MOZ_MUST_USE bool buildEpilogue();
+
+  MOZ_MUST_USE bool buildInlinePrologue();
 
   MOZ_MUST_USE bool buildIC(BytecodeLocation loc, CacheKind kind,
                             std::initializer_list<MDefinition*> inputs);
@@ -190,6 +201,15 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   bool usesEnvironmentChain() const;
   MDefinition* walkEnvironmentChain(uint32_t numHops);
 
+  MOZ_MUST_USE bool buildInlinedCall(BytecodeLocation loc,
+                                     const WarpInlinedCall* snapshot,
+                                     CallInfo& callInfo);
+
+  MDefinition* patchInlinedReturns(CallInfo& callInfo, MIRGraphReturns& exits,
+                                   MBasicBlock* returnBlock);
+  MDefinition* patchInlinedReturn(CallInfo& callInfo, MBasicBlock* exit,
+                                  MBasicBlock* returnBlock);
+
 #define BUILD_OP(OP, ...) MOZ_MUST_USE bool build_##OP(BytecodeLocation loc);
   FOR_EACH_OPCODE(BUILD_OP)
 #undef BUILD_OP
@@ -197,8 +217,12 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
  public:
   WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen,
               WarpCompilation* warpCompilation);
+  WarpBuilder(WarpBuilder* caller, WarpScriptSnapshot* snapshot,
+              CompileInfo& compileInfo, CallInfo* inlineCallInfo,
+              MResumePoint* callerResumePoint);
 
   MOZ_MUST_USE bool build();
+  MOZ_MUST_USE bool buildInline();
 };
 
 }  // namespace jit

@@ -43,7 +43,8 @@ already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Create() {
   return GetOrCreate(nsContentUtils::GenerateBrowsingContextId());
 }
 
-BrowsingContextGroup::BrowsingContextGroup(uint64_t aId) : mId(aId) {
+BrowsingContextGroup::BrowsingContextGroup(uint64_t aId)
+    : mId(aId), mToplevelsSuspended(false) {
   mTimerEventQueue = ThrottledEventQueue::Create(
       GetMainThreadSerialEventTarget(), "BrowsingContextGroup timer queue");
 
@@ -145,6 +146,26 @@ void BrowsingContextGroup::EnsureSubscribed(ContentParent* aProcess) {
       Unused << aProcess->SendSetupFocusedAndActive(focused, active);
     }
   }
+}
+
+void BrowsingContextGroup::SetToplevelsSuspended(bool aSuspended) {
+  for (const auto& context : mToplevels) {
+    nsPIDOMWindowOuter* outer = context->GetDOMWindow();
+    if (outer) {
+      nsCOMPtr<nsPIDOMWindowInner> inner = outer->GetCurrentInnerWindow();
+      if (inner) {
+        if (aSuspended && !inner->GetWasSuspendedByGroup()) {
+          inner->Suspend();
+          inner->SetWasSuspendedByGroup(true);
+        } else if (!aSuspended && inner->GetWasSuspendedByGroup()) {
+          inner->Resume();
+          inner->SetWasSuspendedByGroup(false);
+        }
+      }
+    }
+  }
+
+  mToplevelsSuspended = aSuspended;
 }
 
 BrowsingContextGroup::~BrowsingContextGroup() {

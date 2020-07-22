@@ -595,6 +595,36 @@ static inline const char* TZContainsAbsolutePath(const char* tzVar) {
 }
 
 /**
+ * Reject the input if it doesn't match the time zone id pattern or legacy time
+ * zone names.
+ *
+ * See <https://github.com/eggert/tz/blob/master/theory.html>.
+ */
+static icu::UnicodeString MaybeTimeZoneId(const char* timeZone) {
+  size_t timeZoneLen = std::strlen(timeZone);
+
+  for (size_t i = 0; i < timeZoneLen; i++) {
+    char c = timeZone[i];
+
+    // According to theory.html, '.' is allowed in time zone ids, but the
+    // accompanying zic.c file doesn't allow it. Assume the source file is
+    // correct and disallow '.' here, too.
+    if (mozilla::IsAsciiAlphanumeric(c) || c == '_' || c == '-' || c == '+') {
+      continue;
+    }
+
+    // Reject leading, trailing, or consecutive '/' characters.
+    if (c == '/' && i > 0 && i + 1 < timeZoneLen && timeZone[i + 1] != '/') {
+      continue;
+    }
+
+    return icu::UnicodeString();
+  }
+
+  return icu::UnicodeString(timeZone, timeZoneLen, US_INV);
+}
+
+/**
  * Given a presumptive path |tz| to a zoneinfo time zone file
  * (e.g. /etc/localtime), attempt to compute the time zone encoded by that
  * path by repeatedly resolving symlinks until a path containing "/zoneinfo/"
@@ -693,30 +723,7 @@ static icu::UnicodeString ReadTimeZoneLink(const char* tz) {
   }
 
   const char* timeZone = timeZoneWithZoneInfo + ZoneInfoPathLength;
-  size_t timeZoneLen = std::strlen(timeZone);
-
-  // Reject the result if it doesn't match the time zone id pattern or
-  // legacy time zone names.
-  // See <https://github.com/eggert/tz/blob/master/theory.html>.
-  for (size_t i = 0; i < timeZoneLen; i++) {
-    char c = timeZone[i];
-
-    // According to theory.html, '.' is allowed in time zone ids, but the
-    // accompanying zic.c file doesn't allow it. Assume the source file is
-    // correct and disallow '.' here, too.
-    if (mozilla::IsAsciiAlphanumeric(c) || c == '_' || c == '-' || c == '+') {
-      continue;
-    }
-
-    // Reject leading, trailing, or consecutive '/' characters.
-    if (c == '/' && i > 0 && i + 1 < timeZoneLen && timeZone[i + 1] != '/') {
-      continue;
-    }
-
-    return icu::UnicodeString();
-  }
-
-  return icu::UnicodeString(timeZone, timeZoneLen, US_INV);
+  return MaybeTimeZoneId(timeZone);
 }
 #endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
 
@@ -748,6 +755,14 @@ void js::DateTimeInfo::internalResyncICUDefaultTimeZone() {
     if (const char* tzlink = TZContainsAbsolutePath(tz)) {
       tzid.setTo(ReadTimeZoneLink(tzlink));
     }
+
+#    ifdef ANDROID
+    // ICU ignores the TZ environment variable on Android. If it doesn't contain
+    // an absolute path, try to parse it as a time zone name.
+    else {
+      tzid.setTo(MaybeTimeZoneId(tz));
+    }
+#    endif
 #  endif /* defined(XP_WIN) */
 
     if (!tzid.isEmpty()) {

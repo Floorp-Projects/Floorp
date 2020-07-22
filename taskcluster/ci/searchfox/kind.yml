@@ -56,6 +56,7 @@ jobs:
                 - linux64-node
                 - linux64-rust
                 - linux64-cbindgen
+                - linux64-dump-syms
                 - linux64-lucetc
                 - wasi-sysroot
 

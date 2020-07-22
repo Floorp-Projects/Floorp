@@ -23,6 +23,7 @@
 using namespace js;
 using namespace js::jit;
 
+// Used for building the outermost script.
 WarpBuilder::WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen,
                          WarpCompilation* warpCompilation)
     : WarpBuilderShared(snapshot, mirGen, nullptr),
@@ -33,6 +34,23 @@ WarpBuilder::WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen,
       script_(snapshot.rootScript()->script()),
       loopStack_(mirGen.alloc()) {
   opSnapshotIter_ = scriptSnapshot_->opSnapshots().getFirst();
+}
+
+// Used for building inlined scripts.
+WarpBuilder::WarpBuilder(WarpBuilder* caller, WarpScriptSnapshot* snapshot,
+                         CompileInfo& compileInfo, CallInfo* inlineCallInfo,
+                         MResumePoint* callerResumePoint)
+    : WarpBuilderShared(caller->snapshot(), caller->mirGen(), nullptr),
+      warpCompilation_(caller->warpCompilation()),
+      graph_(caller->mirGen().graph()),
+      info_(compileInfo),
+      scriptSnapshot_(snapshot),
+      script_(snapshot->script()),
+      loopStack_(caller->mirGen().alloc()),
+      callerBuilder_(caller),
+      callerResumePoint_(callerResumePoint),
+      inlineCallInfo_(inlineCallInfo) {
+  opSnapshotIter_ = snapshot->opSnapshots().getFirst();
 }
 
 BytecodeSite* WarpBuilder::newBytecodeSite(BytecodeLocation loc) {
@@ -280,10 +298,6 @@ bool WarpBuilder::build() {
     return false;
   }
 
-  if (!buildEpilogue()) {
-    return false;
-  }
-
   if (!MPhi::markIteratorPhis(*iterators())) {
     return false;
   }
@@ -292,6 +306,19 @@ bool WarpBuilder::build() {
   MOZ_ASSERT(loopStack_.empty());
   MOZ_ASSERT(loopDepth() == 0);
 
+  return true;
+}
+
+bool WarpBuilder::buildInline() {
+  if (!buildInlinePrologue()) {
+    return false;
+  }
+
+  if (!buildBody()) {
+    return false;
+  }
+
+  MOZ_ASSERT(loopStack_.empty());
   return true;
 }
 
@@ -457,6 +484,75 @@ bool WarpBuilder::buildPrologue() {
   return true;
 }
 
+bool WarpBuilder::buildInlinePrologue() {
+  // Generate entry block.
+  BytecodeLocation startLoc(script_, script_->code());
+  if (!startNewEntryBlock(info().firstStackSlot(), startLoc)) {
+    return false;
+  }
+  current->setCallerResumePoint(callerResumePoint());
+
+  // Connect the entry block to the last block in the caller's graph.
+  MBasicBlock* pred = callerBuilder()->current;
+  MOZ_ASSERT(pred == callerResumePoint()->block());
+
+  pred->end(MGoto::New(alloc(), current));
+  if (!current->addPredecessorWithoutPhis(pred)) {
+    return false;
+  }
+
+  MConstant* undef = constant(UndefinedValue());
+
+  // Initialize env chain slot to Undefined.  It's set later by
+  // |buildEnvironmentChain|.
+  current->initSlot(info().environmentChainSlot(), undef);
+
+  // Initialize |return value| slot.
+  current->initSlot(info().returnValueSlot(), undef);
+
+  // Initialize |arguments| slot if needed.
+  if (info().hasArguments()) {
+    current->initSlot(info().argsObjSlot(), undef);
+  }
+
+  // Initialize |this| slot.
+  current->initSlot(info().thisSlot(), inlineCallInfo()->thisArg());
+
+  // We do not inline functions which need the arguments object.
+  // This means we can use `argSlot` below instead of `argSlotUnchecked`.
+  MOZ_ASSERT(!info().needsArgsObj());
+
+  uint32_t callerArgs = inlineCallInfo()->argc();
+  uint32_t actualArgs = info().nargs();
+  uint32_t passedArgs = std::min<uint32_t>(callerArgs, actualArgs);
+
+  // Initialize actually set arguments.
+  for (uint32_t i = 0; i < passedArgs; i++) {
+    MDefinition* arg = inlineCallInfo()->getArg(i);
+    current->initSlot(info().argSlot(i), arg);
+  }
+
+  // Pass undefined for missing arguments.
+  for (uint32_t i = passedArgs; i < actualArgs; i++) {
+    current->initSlot(info().argSlot(i), undef);
+  }
+
+  // Initialize local slots.
+  if (info().nlocals() > 0) {
+    for (uint32_t i = 0; i < info().nlocals(); i++) {
+      current->initSlot(info().localSlot(i), undef);
+    }
+  }
+
+  MOZ_ASSERT(current->entryResumePoint()->stackDepth() == info().totalSlots());
+
+  if (!buildEnvironmentChain()) {
+    return false;
+  }
+
+  return true;
+}
+
 #ifdef DEBUG
 // In debug builds, after compiling a bytecode op, this class is used to check
 // that all values popped by this opcode either:
@@ -598,8 +694,6 @@ bool WarpBuilder::buildBody() {
   }
 WARP_UNSUPPORTED_OPCODE_LIST(DEF_OP)
 #undef DEF_OP
-
-bool WarpBuilder::buildEpilogue() { return true; }
 
 bool WarpBuilder::build_Nop(BytecodeLocation) { return true; }
 
@@ -784,6 +878,10 @@ bool WarpBuilder::build_Return(BytecodeLocation) {
   MReturn* ret = MReturn::New(alloc(), def);
   current->end(ret);
 
+  if (!graph().addReturn(current)) {
+    return false;
+  }
+
   setTerminatedBlock();
   return true;
 }
@@ -798,6 +896,10 @@ bool WarpBuilder::build_RetRval(BytecodeLocation) {
 
   MReturn* ret = MReturn::New(alloc(), rval);
   current->end(ret);
+
+  if (!graph().addReturn(current)) {
+    return false;
+  }
 
   setTerminatedBlock();
   return true;
@@ -1476,7 +1578,10 @@ bool WarpBuilder::build_MutateProto(BytecodeLocation loc) {
 }
 
 MDefinition* WarpBuilder::getCallee() {
-  // TODO: handle inlined callees when we implement inlining.
+  if (inlineCallInfo()) {
+    return inlineCallInfo()->callee();
+  }
+
   MInstruction* callee = MCallee::New(alloc());
   current->add(callee);
   return callee;
@@ -1675,6 +1780,10 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
                     ignoresReturnValue);
   if (!callInfo.init(current, argc)) {
     return false;
+  }
+
+  if (const auto* inliningSnapshot = getOpSnapshot<WarpInlinedCall>(loc)) {
+    return buildInlinedCall(loc, inliningSnapshot, callInfo);
   }
 
   // TODO: Consider using buildIC for this as well.
@@ -2310,7 +2419,14 @@ bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
     return true;
   }
 
-  // TODO: handle newTarget in inlined functions when we can inline.
+  if (inlineCallInfo()) {
+    if (inlineCallInfo()->constructing()) {
+      current->push(inlineCallInfo()->getNewTarget());
+    } else {
+      pushConstant(UndefinedValue());
+    }
+    return true;
+  }
 
   MNewTarget* ins = MNewTarget::New(alloc());
   current->add(ins);
@@ -2661,10 +2777,72 @@ bool WarpBuilder::build_TableSwitch(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_Rest(BytecodeLocation loc) {
-  // TODO: handle inlined functions once we support inlining.
-
   auto* snapshot = getOpSnapshot<WarpRest>(loc);
   ArrayObject* templateObject = snapshot->templateObject();
+
+  if (inlineCallInfo()) {
+    // If we are inlining, we know the actual arguments.
+    unsigned numActuals = inlineCallInfo()->argc();
+    unsigned numFormals = info().nargs() - 1;
+    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
+
+    // TODO: support pre-tenuring.
+    gc::InitialHeap heap = gc::DefaultHeap;
+
+    // Allocate an array of the correct size.
+    MConstant* templateConst = constant(ObjectValue(*templateObject));
+    MNewArray* newArray;
+    if (numRest > snapshot->maxInlineElements()) {
+      newArray = MNewArray::NewVM(alloc(), /* constraints = */ nullptr, numRest,
+                                  templateConst, heap, loc.toRawBytecode());
+    } else {
+      newArray = MNewArray::New(alloc(), /* constraints = */ nullptr, numRest,
+                                templateConst, heap, loc.toRawBytecode());
+    }
+    current->add(newArray);
+    current->push(newArray);
+
+    if (numRest == 0) {
+      // No more updating to do. (Note that in this one case the length from
+      // the template object is already correct.)
+      return true;
+    }
+
+    MElements* elements = MElements::New(alloc(), newArray);
+    current->add(elements);
+
+    // Unroll the argument copy loop. We don't need to do any bounds or hole
+    // checking here.
+    MConstant* index = nullptr;
+    for (uint32_t i = numFormals; i < numActuals; i++) {
+      if (!alloc().ensureBallast()) {
+        return false;
+      }
+
+      index = MConstant::New(alloc(), Int32Value(i - numFormals));
+      current->add(index);
+
+      MDefinition* arg = inlineCallInfo()->argv()[i];
+      MStoreElement* store = MStoreElement::New(alloc(), elements, index, arg,
+                                                /* needsHoleCheck = */ false);
+      current->add(store);
+      current->add(MPostWriteBarrier::New(alloc(), newArray, arg));
+    }
+
+    // The array's length is incorrectly 0 now, from the template object created
+    // by BaselineCompiler::emit_Rest() before the actual argument count was
+    // known. Set the correct length now that we know that count.
+    MSetArrayLength* length = MSetArrayLength::New(alloc(), elements, index);
+    current->add(length);
+
+    // Update the initialized length for all the (necessarily non-hole)
+    // elements added.
+    MSetInitializedLength* initLength =
+        MSetInitializedLength::New(alloc(), elements, index);
+    current->add(initLength);
+
+    return true;
+  }
 
   MArgumentsLength* numActuals = MArgumentsLength::New(alloc());
   current->add(numActuals);
@@ -2682,9 +2860,6 @@ bool WarpBuilder::build_Rest(BytecodeLocation loc) {
 bool WarpBuilder::build_Try(BytecodeLocation loc) {
   // Note: WarpOracle aborts compilation for try-statements with a 'finally'
   // block.
-
-  // TODO: IonBuilder doesn't support try-catch in inlined functions. This is
-  // most likely not a hard limitation. Re-evaluate this when we can inline.
 
   graph().setHasTryBlock();
 
@@ -2960,4 +3135,127 @@ bool WarpBuilder::buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind) {
   current->push(ins);
 
   return true;
+}
+
+bool WarpBuilder::buildInlinedCall(BytecodeLocation loc,
+                                   const WarpInlinedCall* inlineSnapshot,
+                                   CallInfo& callInfo) {
+  // We transpile the CacheIR to generate the correct guards before inlining.
+  // CacheOp::CallInlinedFunction generates no code. The body of the inlined
+  // function is generated below.
+  if (!TranspileCacheIRToMIR(snapshot(), mirGen(), loc, current,
+                             inlineSnapshot->cacheIRSnapshot(), callInfo)) {
+    return false;
+  }
+
+  jsbytecode* pc = loc.toRawBytecode();
+
+  callInfo.setImplicitlyUsedUnchecked();
+
+  // Create new |this| on the caller-side.
+  if (callInfo.constructing()) {
+    MOZ_CRASH("TODO: inline constructors");
+  }
+
+  // Capture formals in the outer resume point.
+  if (!callInfo.pushCallStack(&mirGen(), current)) {
+    return false;
+  }
+  MResumePoint* outerResumePoint =
+      MResumePoint::New(alloc(), current, pc, MResumePoint::Outer);
+  if (!outerResumePoint) {
+    return false;
+  }
+  current->setOuterResumePoint(outerResumePoint);
+
+  // Pop formals again, except leave |callee| on stack for duration of call.
+  callInfo.popCallStack(current);
+  current->push(callInfo.callee());
+
+  // Build the graph.
+  MIRGraphReturns returns(alloc());
+  AutoAccumulateReturns aar(graph(), returns);
+  WarpBuilder inlineBuilder(this, inlineSnapshot->scriptSnapshot(),
+                            *inlineSnapshot->info(), &callInfo,
+                            outerResumePoint);
+  if (!inlineBuilder.buildInline()) {
+    // Note: Inlining only aborts on OOM.  If inlining would fail for
+    // any other reason, we detect it in advance and don't inline.
+    return false;
+  }
+
+  // We mark scripts as uninlineable in BytecodeAnalysis if we cannot
+  // reach a return statement (without going through a catch/finally).
+  MOZ_ASSERT(!returns.empty());
+
+  // Create return block
+  BytecodeLocation postCall = loc.next();
+  MBasicBlock* prev = current;
+  if (!startNewEntryBlock(prev->stackDepth(), postCall)) {
+    return false;
+  }
+  // Restore previous value of callerResumePoint.
+  current->setCallerResumePoint(callerResumePoint());
+  current->inheritSlots(prev);
+
+  // Pop |callee|.
+  current->pop();
+
+  // Accumulate return values.
+  MDefinition* returnValue = patchInlinedReturns(callInfo, returns, current);
+  if (!returnValue) {
+    return false;
+  }
+  current->push(returnValue);
+
+  // Initialize entry slots
+  if (!current->initEntrySlots(alloc())) {
+    return false;
+  }
+
+  return true;
+}
+
+MDefinition* WarpBuilder::patchInlinedReturns(CallInfo& callInfo,
+                                              MIRGraphReturns& exits,
+                                              MBasicBlock* returnBlock) {
+  if (exits.length() == 1) {
+    return patchInlinedReturn(callInfo, exits[0], returnBlock);
+  }
+
+  // Accumulate multiple returns with a phi.
+  MPhi* phi = MPhi::New(alloc());
+  if (!phi->reserveLength(exits.length())) {
+    return nullptr;
+  }
+
+  for (auto* exit : exits) {
+    MDefinition* rdef = patchInlinedReturn(callInfo, exit, returnBlock);
+    if (!rdef) {
+      return nullptr;
+    }
+    phi->addInput(rdef);
+  }
+  returnBlock->addPhi(phi);
+  return phi;
+}
+
+MDefinition* WarpBuilder::patchInlinedReturn(CallInfo& callInfo,
+                                             MBasicBlock* exit,
+                                             MBasicBlock* returnBlock) {
+  if (callInfo.constructing() || callInfo.isSetter()) {
+    MOZ_CRASH("TODO");
+  }
+
+  // Replace the MReturn in the exit block with an MGoto branching to
+  // the return block.
+  MDefinition* rdef = exit->lastIns()->toReturn()->input();
+  exit->discardLastIns();
+
+  exit->end(MGoto::New(alloc(), returnBlock));
+  if (!returnBlock->addPredecessorWithoutPhis(exit)) {
+    return nullptr;
+  }
+
+  return rdef;
 }

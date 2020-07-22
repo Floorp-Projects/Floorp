@@ -209,11 +209,6 @@ class nsICanvasRenderingContextInternal : public nsISupports,
 
   virtual void OnMemoryPressure() {}
 
-  virtual bool UpdateCompositableHandle(
-      LayerTransactionChild* aLayerTransaction, CompositableHandle aHandle) {
-    return false;
-  }
-
   virtual void OnBeforePaintTransaction() {}
   virtual void OnDidPaintTransaction() {}
   virtual mozilla::layers::PersistentBufferProvider* GetBufferProvider() {

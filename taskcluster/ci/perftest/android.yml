@@ -48,7 +48,7 @@ hw-g5-applink-fenix:
             python3 python/mozperftest/mozperftest/runner.py
             --flavor mobile-browser
             --android
-            --android-app-name org.mozilla.fennec_aurora
+            --android-app-name org.mozilla.fenix
             --android-activity org.mozilla.fenix.IntentReceiverActivity
             --android-clear-logcat
             --android-capture-logcat logcat
@@ -81,7 +81,7 @@ hw-p2-applink-fenix:
             python3 python/mozperftest/mozperftest/runner.py
             --flavor mobile-browser
             --android
-            --android-app-name org.mozilla.fennec_aurora
+            --android-app-name org.mozilla.fenix
             --perfherder-metrics processLaunchToNavStart
             --android-install-apk fenix_nightlysim_multicommit_arm64_v8a
             --android-activity org.mozilla.fenix.IntentReceiverActivity
@@ -179,7 +179,7 @@ hw-g5-main-fenix:
             python3 python/mozperftest/mozperftest/runner.py
             --flavor mobile-browser
             --android
-            --android-app-name org.mozilla.fennec_aurora
+            --android-app-name org.mozilla.fenix
             --android-activity .App
             --android-clear-logcat
             --android-capture-logcat logcat
@@ -187,7 +187,7 @@ hw-g5-main-fenix:
             --androidlog-first-timestamp ".*Start proc.*org\.mozilla\..*\..*App.*"
             --androidlog-second-timestamp ".*Fully drawn.*org\.mozilla\..*"
             --androidlog-subtest-name "MAIN"
-            --android-install-apk fenix_fennec_nightly_armeabi_v7a
+            --android-install-apk fenix_nightly_armeabi_v7a
             --hooks testing/performance/hooks_home_activity.py
             --perfherder
             --perfherder-app fenix
@@ -214,7 +214,7 @@ hw-p2-main-fenix:
             python3 python/mozperftest/mozperftest/runner.py
             --flavor mobile-browser
             --android
-            --android-app-name org.mozilla.fennec_aurora
+            --android-app-name org.mozilla.fenix
             --android-activity .App
             --android-clear-logcat
             --android-capture-logcat logcat
@@ -223,7 +223,7 @@ hw-p2-main-fenix:
             --androidlog-first-timestamp ".*Start proc.*org\.mozilla\..*\..*App.*"
             --androidlog-second-timestamp ".*Fully drawn.*org\.mozilla\..*"
             --androidlog-subtest-name "MAIN"
-            --android-install-apk fenix_fennec_nightly_arm64_v8a
+            --android-install-apk fenix_nightly_arm64_v8a
             --hooks testing/performance/hooks_home_activity.py
             --perfherder
             --perfherder-app fenix

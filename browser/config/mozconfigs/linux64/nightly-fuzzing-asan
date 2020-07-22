@@ -14,6 +14,8 @@ ac_add_options --enable-valgrind
 . $topsrcdir/build/unix/mozconfig.asan
 ac_add_options --disable-elf-hack
 
+export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
+
 # gold is required for libFuzzer to work properly
 ac_add_options --enable-gold
 

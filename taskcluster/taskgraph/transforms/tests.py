@@ -227,6 +227,19 @@ TEST_VARIANTS = {
         'merge': {
             'webrender': True,
         }
+    },
+    'webgl-ipc': {
+        # TODO: After November 1st 2020, verify this variant is still needed.
+        'description': "{description} with WebGL IPC process enabled",
+        'suffix': 'gli',
+        'merge': {
+            'mozharness': {
+                'extra-options': [
+                    '--setpref=webgl.out-of-process=true',
+                ],
+            },
+            'tier': 2
+        }
     }
 }
 

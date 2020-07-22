@@ -724,27 +724,6 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     }
 
     /*
-    ** We do not want timing information to leak the length of k,
-    ** so we compute k*G using an equivalent scalar of fixed
-    ** bit-length.
-    ** Fix based on patch for ECDSA timing attack in the paper
-    ** by Billy Bob Brumley and Nicola Tuveri at
-    **   http://eprint.iacr.org/2011/232
-    **
-    ** How do we convert k to a value of a fixed bit-length?
-    ** k starts off as an integer satisfying 0 <= k < n.  Hence,
-    ** n <= k+n < 2n, which means k+n has either the same number
-    ** of bits as n or one more bit than n.  If k+n has the same
-    ** number of bits as n, the second addition ensures that the
-    ** final value has exactly one more bit than n.  Thus, we
-    ** always end up with a value that exactly one more bit than n.
-    */
-    CHECK_MPI_OK(mp_add(&k, &n, &k));
-    if (mpl_significant_bits(&k) <= mpl_significant_bits(&n)) {
-        CHECK_MPI_OK(mp_add(&k, &n, &k));
-    }
-
-    /*
     ** ANSI X9.62, Section 5.3.2, Step 2
     **
     ** Compute kG
