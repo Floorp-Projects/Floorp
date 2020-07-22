@@ -467,17 +467,65 @@ class nsDisplayHeaderFooter final : public nsPaintedDisplayItem {
   }
 };
 
+static void PaintMarginGuides(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+                              const nsRect& aDirtyRect, nsPoint aPt) {
+  // Set up parameters needed to draw the guides: we draw them in blue,
+  // using 2px-long dashes with 2px separation and a line width of 0.5px.
+  // Drawing is antialiased, so on a non-hidpi screen where the line width is
+  // less than one device pixel, it doesn't disappear but renders fainter
+  // than a solid 1px-wide line would be.
+  // (In many cases, the entire preview is scaled down so that the guides
+  // will be nominally less than 1 dev px even on a hidpi screen, resulting
+  // in lighter antialiased rendering so they don't dominate the page.)
+  ColorPattern pattern(ToDeviceColor(sRGBColor(0.0f, 0.0f, 1.0f)));
+  Float dashes[] = {2.0f, 2.0f};
+  StrokeOptions stroke(/* line width (in CSS px) */ 0.5f,
+                       JoinStyle::MITER_OR_BEVEL, CapStyle::BUTT,
+                       /* mitre limit (default, not used) */ 10.0f,
+                       /* set dash pattern of 2px stroke, 2px gap */
+                       ArrayLength(dashes), dashes,
+                       /* dash offset */ 0.0f);
+  DrawOptions options;
+
+  auto* pageData = static_cast<nsPageFrame*>(aFrame)->GetSharedPageData();
+  MOZ_ASSERT(pageData, "Should have page data by the time we're painting");
+  const nsMargin& margin = pageData->mReflowMargin;
+  int32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
+
+  // Get the frame's rect and inset by the margins to get the edges of the
+  // content area, where we want to draw the guides.
+  // We draw in two stages, first applying the top/bottom margins and drawing
+  // the horizontal guides across the full width of the page.
+  nsRect rect(aPt, aFrame->GetSize());
+  rect.Deflate(nsMargin(margin.top, 0, margin.bottom, 0));
+  Rect r = NSRectToRect(rect, appUnitsPerDevPx);
+  aDrawTarget->StrokeLine(r.TopLeft(), r.TopRight(), pattern, stroke, options);
+  aDrawTarget->StrokeLine(r.BottomLeft(), r.BottomRight(), pattern, stroke,
+                          options);
+
+  // Then reset rect, apply the left/right margins, and draw vertical guides
+  // extending the full height of the page.
+  rect = nsRect(aPt, aFrame->GetSize());
+  rect.Deflate(nsMargin(0, margin.left, 0, margin.right));
+  r = NSRectToRect(rect, appUnitsPerDevPx);
+  aDrawTarget->StrokeLine(r.TopLeft(), r.BottomLeft(), pattern, stroke,
+                          options);
+  aDrawTarget->StrokeLine(r.TopRight(), r.BottomRight(), pattern, stroke,
+                          options);
+}
+
 //------------------------------------------------------------------------------
 void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                    const nsDisplayListSet& aLists) {
   nsDisplayListCollection set(aBuilder);
 
-  if (PresContext()->IsScreen()) {
+  nsPresContext* pc = PresContext();
+  if (pc->IsScreen()) {
     DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
   nsIFrame* child = mFrames.FirstChild();
-  float scale = PresContext()->GetPageScale();
+  float scale = pc->GetPageScale();
   nsRect clipRect(nsPoint(0, 0), child->GetSize());
   // Note: this computation matches how we compute maxSize.height
   // in nsPageFrame::Reflow
@@ -554,7 +602,7 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsRect backgroundRect =
         nsRect(aBuilder->ToReferenceFrame(child), child->GetSize());
 
-    PresContext()->GetPresShell()->AddCanvasBackgroundColorItem(
+    pc->GetPresShell()->AddCanvasBackgroundColorItem(
         aBuilder, &content, child, backgroundRect, NS_RGBA(0, 0, 0, 0));
   }
 
@@ -564,8 +612,23 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   set.Content()->AppendToTop(&content);
 
-  if (PresContext()->IsRootPaginatedDocument()) {
+  if (pc->IsRootPaginatedDocument()) {
     set.Content()->AppendNewToTop<nsDisplayHeaderFooter>(aBuilder, this);
+
+    // For print-preview, show margin guides if requested in the settings.
+    if (pc->Type() == nsPresContext::eContext_PrintPreview) {
+      if (!mPD->mPrintSettings) {
+        mPD->mPrintSettings = pc->GetPrintSettings();
+      }
+      bool showGuides;
+      if (mPD->mPrintSettings &&
+          NS_SUCCEEDED(mPD->mPrintSettings->GetShowMarginGuides(&showGuides)) &&
+          showGuides) {
+        set.Content()->AppendNewToTop<nsDisplayGeneric>(
+            aBuilder, this, PaintMarginGuides, "MarginGuides",
+            DisplayItemType::TYPE_MARGIN_GUIDES);
+      }
+    }
   }
 
   set.MoveTo(aLists);
