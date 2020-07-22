@@ -18,17 +18,10 @@ using mozilla::ipc::IPCResult;
 class StartupCacheParent final : public PStartupCacheParent {
   friend class PStartupCacheParent;
 
- public:
-  explicit StartupCacheParent(bool wantCacheData)
-      : mWantCacheData(wantCacheData) {}
-
  protected:
   IPCResult Recv__delete__(nsTArray<EntryData>&& entries);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-
- private:
-  bool mWantCacheData;
 };
 
 }  // namespace scache

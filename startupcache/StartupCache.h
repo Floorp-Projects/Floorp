@@ -349,6 +349,7 @@ class StartupCache : public nsIMemoryReporter {
   static void InitContentChild(dom::ContentParent& parent);
 
   void AddStartupCacheCmdLineArgs(ipc::GeckoChildProcessHost& procHost,
+                                  const nsACString& aRemoteType,
                                   std::vector<std::string>& aExtraOpts);
   nsresult ParseStartupCacheCmdLineArgs(char* aScacheHandleStr,
                                         char* aScacheSizeStr);

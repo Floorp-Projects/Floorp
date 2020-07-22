@@ -541,7 +541,7 @@ child:
 
     async PScriptCache(FileDescOrError cacheFile, bool wantCacheData);
 
-    async PStartupCache(bool wantCacheData);
+    async PStartupCache();
 
     async RegisterChrome(ChromePackage[] packages, SubstitutionMapping[] substitutions,
                          OverrideMapping[] overrides, nsCString locale, bool reset);

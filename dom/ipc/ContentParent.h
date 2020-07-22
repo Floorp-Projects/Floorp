@@ -922,7 +922,7 @@ class ContentParent final
 
   bool DeallocPScriptCacheParent(PScriptCacheParent* shell);
 
-  PStartupCacheParent* AllocPStartupCacheParent(const bool& wantCacheData);
+  PStartupCacheParent* AllocPStartupCacheParent();
 
   bool DeallocPStartupCacheParent(PStartupCacheParent* shell);
 
