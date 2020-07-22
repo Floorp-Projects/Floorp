@@ -2120,6 +2120,11 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
 
   JitZone* jitZone = cx->zone()->jitZone();
 
+  // The script to invalidate if we are modifying a transpiled IC.
+  JSScript* invalidationScript = icScript->isInlined()
+                                     ? icScript->inliningRoot()->owningScript()
+                                     : outerScript;
+
   // Check if we already have JitCode for this stub.
   CacheIRStubInfo* stubInfo;
   CacheIRStubKey::Lookup lookup(kind, ICStubEngine::Baseline,
@@ -2215,7 +2220,7 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
     // attach. Just return nullptr, the caller should do nothing in this
     // case.
     if (updated) {
-      stub->maybeInvalidateWarp(cx, outerScript);
+      stub->maybeInvalidateWarp(cx, invalidationScript);
       *attached = true;
     } else {
       JitSpew(JitSpew_BaselineICFallback,
@@ -2241,7 +2246,7 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   // about the chain much easier.
   ResetEnteredCounts(stub);
 
-  stub->maybeInvalidateWarp(cx, outerScript);
+  stub->maybeInvalidateWarp(cx, invalidationScript);
 
   switch (stubKind) {
     case BaselineCacheIRStubKind::Regular: {

@@ -96,6 +96,13 @@ inline ICScript* BaselineFrame::icScript() const {
   return script()->jitScript()->icScript();
 }
 
+inline JSScript* BaselineFrame::invalidationScript() const {
+  if (!icScript()->isInlined()) {
+    return script();
+  }
+  return icScript()->inliningRoot()->owningScript();
+}
+
 inline void BaselineFrame::unsetIsDebuggee() {
   MOZ_ASSERT(!script()->isDebuggee());
   flags_ &= ~DEBUGGEE;

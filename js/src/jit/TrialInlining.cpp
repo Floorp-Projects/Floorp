@@ -25,9 +25,13 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
   ICScript* icScript = frame->icScript();
   bool isRecursive = !!icScript->inliningRoot();
 
-  InliningRoot* root = isRecursive
-                           ? icScript->inliningRoot()
-                           : script->jitScript()->getOrCreateInliningRoot(cx);
+  InliningRoot* root =
+      isRecursive ? icScript->inliningRoot()
+                  : script->jitScript()->getOrCreateInliningRoot(cx, script);
+  if (!root) {
+    return false;
+  }
+
   JitSpew(JitSpew_WarpTrialInlining,
           "Trial inlining for %s script %s:%u:%u (%p) (inliningRoot=%p)",
           (isRecursive ? "inner" : "outer"), script->filename(),
@@ -50,7 +54,7 @@ void TrialInliner::cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
 void TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
                                  CacheKind kind) {
   ICFallbackStub* fallbackStub = entry.fallbackStub();
-  fallbackStub->discardStubs(cx(), script_);
+  fallbackStub->discardStubs(cx(), root_->owningScript());
 
   // Note: AttachBaselineCacheIRStub never throws an exception.
   bool attached = false;
@@ -298,6 +302,7 @@ bool InliningRoot::addInlinedScript(UniquePtr<ICScript> icScript) {
 }
 
 void InliningRoot::trace(JSTracer* trc) {
+  TraceEdge(trc, &owningScript_, "inlining-root-owning-script");
   for (auto& inlinedScript : inlinedScripts_) {
     inlinedScript->trace(trc);
   }
