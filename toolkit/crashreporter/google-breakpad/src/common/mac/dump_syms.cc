@@ -286,7 +286,7 @@ string DumpSymbols::Identifier() {
   FileID file_id(object_filename_.c_str());
   unsigned char identifier_bytes[16];
   cpu_type_t cpu_type = selected_object_file_->cputype;
-  cpu_subtype_t cpu_subtype = selected_object_file_->cpusubtype;
+  cpu_subtype_t cpu_subtype = selected_object_file_->cpusubtype & ~CPU_SUBTYPE_MASK;
   if (!file_id.MachoIdentifier(cpu_type, cpu_subtype, identifier_bytes)) {
     fprintf(stderr, "Unable to calculate UUID of mach-o binary %s!\n",
             object_filename_.c_str());
