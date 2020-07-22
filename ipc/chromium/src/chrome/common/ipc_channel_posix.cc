@@ -917,14 +917,10 @@ uint32_t Channel::Unsound_NumQueuedMessages() const {
 }
 
 // static
-std::wstring Channel::GenerateVerifiedChannelID(const std::wstring& prefix) {
+std::wstring Channel::GenerateVerifiedChannelID() {
   // A random name is sufficient validation on posix systems, so we don't need
   // an additional shared secret.
-
-  std::wstring id = prefix;
-  if (!id.empty()) id.append(L".");
-
-  return id.append(GenerateUniqueRandomChannelID());
+  return GenerateUniqueRandomChannelID();
 }
 
 }  // namespace IPC
