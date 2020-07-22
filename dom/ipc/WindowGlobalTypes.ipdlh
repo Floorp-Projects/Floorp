@@ -15,7 +15,7 @@ using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h
 namespace mozilla {
 namespace dom {
 
-uncomparable struct WindowGlobalInit
+struct WindowGlobalInit
 {
   // Fields which are synchronized to other processes are found here.
   WindowContextInitializer context;

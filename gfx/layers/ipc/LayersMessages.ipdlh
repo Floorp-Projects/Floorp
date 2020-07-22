@@ -125,7 +125,7 @@ union TimingFunction {
 
 struct LayerColor { DeviceColor value; };
 
-union Animatable {
+comparable union Animatable {
   null_t;
   float;
   nscolor;
@@ -149,7 +149,7 @@ struct AnimationSegment {
   TimingFunction sampleFn;
 };
 
-struct MotionPathData {
+comparable struct MotionPathData {
   // the transform-origin property for motion in css pixels
   CSSPoint origin;
   // the adjustment for the anchor point of motion path.
@@ -157,7 +157,7 @@ struct MotionPathData {
   RayReferenceData rayReferenceData;
 };
 
-struct PartialPrerenderData {
+comparable struct PartialPrerenderData {
   LayoutDeviceIntRect rect;
   SideBits overflowedSides;
   // the scroll id of the nearest scrollable frame of this partial prerender
@@ -176,7 +176,7 @@ struct PartialPrerenderData {
 
 // Transforms need extra information to correctly convert the list of transform
 // functions to a Matrix4x4 that can be applied directly to the layer.
-struct TransformData {
+comparable struct TransformData {
   // the origin of the frame being transformed in app units
   nsPoint origin;
   // the transform-origin property for the transform in device pixels
@@ -309,7 +309,7 @@ struct LayerAttributes {
 };
 
 // See nsIWidget Configurations
-struct PluginWindowData {
+comparable struct PluginWindowData {
   uintptr_t windowId;
   LayoutDeviceIntRect[] clip;
   LayoutDeviceIntRect bounds;

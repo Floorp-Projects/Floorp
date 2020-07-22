@@ -374,7 +374,7 @@ struct KeyValuePair
     nsString value;
 };
 
-uncomparable union SyncedContextInitializer
+union SyncedContextInitializer
 {
     BrowsingContextInitializer;
     WindowContextInitializer;
