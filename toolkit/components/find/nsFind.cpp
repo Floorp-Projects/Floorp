@@ -283,6 +283,10 @@ struct nsFind::State final {
     // be removed.
     if (aAlreadyMatching && aPrev &&
         !nsContentUtils::IsInSameAnonymousTree(&aNode, aPrev)) {
+      DEBUG_FIND_PRINTF("Skipping due to different anon subtrees: ");
+      DumpNode(aPrev);
+      DEBUG_FIND_PRINTF("Next: ");
+      DumpNode(&aNode);
       return false;
     }
     return true;
@@ -546,8 +550,6 @@ char32_t nsFind::PeekNextChar(State& aState, bool aAlreadyMatching) const {
 #define IsSpace(c) (nsCRT::IsAsciiSpace(c) || (c) == NBSP_CHARCODE)
 #define OVERFLOW_PINDEX (mFindBackward ? pindex < 0 : pindex > patLen)
 #define DONE_WITH_PINDEX (mFindBackward ? pindex <= 0 : pindex >= patLen)
-#define ALMOST_DONE_WITH_PINDEX \
-  (mFindBackward ? pindex <= 0 : pindex >= patLen - 1)
 
 // Take nodes out of the tree with NextNode, until null (NextNode will return 0
 // at the end of our range).
@@ -631,13 +633,44 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
   State state(mFindBackward, *root, *aStartPoint);
   Text* current = nullptr;
 
+  auto EndPartialMatch = [&] {
+    // If we didn't match, go back to the beginning of patStr, and set findex
+    // back to the next char after we started the current match.
+    if (matchAnchorNode) {  // we're ending a partial match
+      findex = matchAnchorOffset;
+      state.mIterOffset = matchAnchorOffset;
+      // +incr will be added to findex when we continue
+
+      // Are we going back to a previous node?
+      if (matchAnchorNode != state.GetCurrentNode()) {
+        frag = nullptr;
+        state.PositionAt(*matchAnchorNode);
+        DEBUG_FIND_PRINTF("Repositioned anchor node\n");
+      }
+      DEBUG_FIND_PRINTF(
+          "Ending a partial match; findex -> %d, mIterOffset -> %d\n", findex,
+          state.mIterOffset);
+    }
+    matchAnchorNode = nullptr;
+    matchAnchorOffset = 0;
+    inWhitespace = false;
+    pindex = mFindBackward ? patLen : 0;
+    DEBUG_FIND_PRINTF("Setting findex back to %d, pindex to %d\n", findex,
+                      pindex);
+  };
+
   while (true) {
-    DEBUG_FIND_PRINTF("Loop ...\n");
+    DEBUG_FIND_PRINTF("Loop (pindex = %d)...\n", pindex);
 
     // If this is our first time on a new node, reset the pointers:
     if (!frag) {
       current = state.GetNextNode(!!matchAnchorNode);
       if (!current) {
+        DEBUG_FIND_PRINTF("Reached the end, matching: %d\n", !!matchAnchorNode);
+        if (matchAnchorNode) {
+          EndPartialMatch();
+          continue;
+        }
         return NS_OK;
       }
 
@@ -721,6 +754,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     if (state.GetCurrentNode() == endNode &&
         ((mFindBackward && findex < static_cast<int32_t>(endOffset)) ||
          (!mFindBackward && findex > static_cast<int32_t>(endOffset)))) {
+      DEBUG_FIND_PRINTF("Reached the end and not in the middle of a match\n");
       return NS_OK;
     }
 
@@ -921,30 +955,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     }
 
     DEBUG_FIND_PRINTF("NOT: %c == %c\n", c, patc);
-
-    // If we didn't match, go back to the beginning of patStr, and set findex
-    // back to the next char after we started the current match.
-    if (matchAnchorNode) {  // we're ending a partial match
-      findex = matchAnchorOffset;
-      state.mIterOffset = matchAnchorOffset;
-      // +incr will be added to findex when we continue
-
-      // Are we going back to a previous node?
-      if (matchAnchorNode != state.GetCurrentNode()) {
-        frag = nullptr;
-        state.PositionAt(*matchAnchorNode);
-        DEBUG_FIND_PRINTF("Repositioned anchor node\n");
-      }
-      DEBUG_FIND_PRINTF(
-          "Ending a partial match; findex -> %d, mIterOffset -> %d\n", findex,
-          state.mIterOffset);
-    }
-    matchAnchorNode = nullptr;
-    matchAnchorOffset = 0;
-    inWhitespace = false;
-    pindex = mFindBackward ? patLen : 0;
-    DEBUG_FIND_PRINTF("Setting findex back to %d, pindex to %d\n", findex,
-                      pindex);
+    EndPartialMatch();
   }
 
   return NS_OK;
