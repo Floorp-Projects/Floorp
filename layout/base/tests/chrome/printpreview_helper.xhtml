@@ -63,6 +63,8 @@ function printpreview(hasMozPrintCallback) {
                        .getService(Ci.nsIPrintSettingsService).globalPrintSettings;
   settings.showPrintProgress = false;
   settings.printBGColors = true;
+  settings.headerStrLeft = "";
+  settings.headerStrRight = "";
   var before = 0;
   var after = 0;
   function beforeprint() { ++before; }
