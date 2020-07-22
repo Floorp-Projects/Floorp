@@ -143,6 +143,10 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
 - (id)moxLeftWordTextMarkerRangeForTextMarker:(id)textMarker {
   GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
+
   geckoTextMarker.NormalizePrevious();
 
   if (geckoTextMarker.mOffset == 0) {
@@ -160,6 +164,10 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
 - (id)moxRightWordTextMarkerRangeForTextMarker:(id)textMarker {
   GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
+
   geckoTextMarker.NormalizeNext();
 
   GeckoTextMarkerRange range = geckoTextMarker.AtEnd()
@@ -171,6 +179,9 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
 - (id)moxNextTextMarkerForTextMarker:(id)textMarker {
   GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
 
   geckoTextMarker.NormalizeNext();
   if (geckoTextMarker.AtEnd()) {
@@ -184,6 +195,9 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
 - (id)moxPreviousTextMarkerForTextMarker:(id)textMarker {
   GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
 
   geckoTextMarker.NormalizePrevious();
   if (geckoTextMarker.mOffset == 0) {
