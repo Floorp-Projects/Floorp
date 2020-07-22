@@ -232,6 +232,9 @@ TEST_VARIANTS = {
         # TODO: After November 1st 2020, verify this variant is still needed.
         'description': "{description} with WebGL IPC process enabled",
         'suffix': 'gli',
+        'replace': {
+            'run-on-projects': [],
+        },
         'merge': {
             'mozharness': {
                 'extra-options': [
