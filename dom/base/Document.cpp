@@ -11136,6 +11136,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
     RefPtr<nsDOMNavigationTiming> timing =
         mTiming->CloneNavigationTime(nsDocShell::Cast(clone->GetDocShell()));
     clone->SetNavigationTiming(timing);
+    clone->SetCsp(mCSP);
   }
 
   // Now ensure that our clone has the same URI, base URI, and principal as us.
