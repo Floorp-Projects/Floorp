@@ -2271,6 +2271,32 @@ security.ui.certerror:
       has_sts: If the error page is for a site with HSTS headers or with a pinned key.
       panel_open: If the advanced panel was open at the time of the interaction.
 
+slow_script_warning:
+  shown:
+    bug_numbers:
+      - 1652613
+    description: >
+      Recorded when a slow script hang is resolved.
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+    expiry_version: "85"
+    notification_emails:
+      - esmyth@mozilla.com
+      - gkruitbosch@mozilla.com
+    # Whether the hung script was for a content or browser process.
+    objects: [
+      "browser",
+      "content",
+    ]
+    extra_keys:
+      end_reason: Why the warning was hidden (user action, the process becoming responsive again, the browser quitting, etc.)
+      wait_count: How many times the user elected to wait.
+      hang_duration: How long we believe the hang continued (ms).
+      uri_type: The kind of script URL that hung.
+      uptime: How long the notification was up (ms).
+
 webrtc.ui:
   share_display:
     objects:
