@@ -31,8 +31,8 @@ static const char* sUpdatePath;
 - (void)awakeFromNib {
   NSWindow* w = [progressBar window];
 
-  [w setTitle:[NSString stringWithUTF8String:sLabels.title]];
-  [progressTextField setStringValue:[NSString stringWithUTF8String:sLabels.info]];
+  [w setTitle:[NSString stringWithUTF8String:sLabels.title.get()]];
+  [progressTextField setStringValue:[NSString stringWithUTF8String:sLabels.info.get()]];
 
   NSRect origTextFrame = [progressTextField frame];
   [progressTextField sizeToFit];
@@ -108,12 +108,6 @@ int ShowProgressUI(bool indeterminate) {
   char path[PATH_MAX];
   SprintfLiteral(path, "%s/updater.ini", sUpdatePath);
   if (ReadStrings(path, &sLabels) != OK) {
-    return -1;
-  }
-
-  // Continue the update without showing the Progress UI if any of the supplied
-  // strings are larger than MAX_TEXT_LEN (Bug 628829).
-  if (!(strlen(sLabels.title) < MAX_TEXT_LEN - 1 && strlen(sLabels.info) < MAX_TEXT_LEN - 1)) {
     return -1;
   }
 

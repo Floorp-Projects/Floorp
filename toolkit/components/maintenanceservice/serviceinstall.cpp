@@ -55,13 +55,13 @@ static int ReadMaintenanceServiceStrings(
   // Read in the maintenance service description string if specified.
   const unsigned int kNumStrings = 1;
   const char* kServiceKeys = "MozillaMaintenanceDescription\0";
-  char serviceStrings[kNumStrings][MAX_TEXT_LEN];
-  int result = ReadStrings(path, kServiceKeys, kNumStrings, serviceStrings);
+  mozilla::UniquePtr<char[]> serviceString;
+  int result = ReadStrings(path, kServiceKeys, kNumStrings, &serviceString);
   if (result != OK) {
-    serviceStrings[0][0] = '\0';
+    results->serviceDescription = mozilla::MakeUnique<char[]>(1);
+    results->serviceDescription.get()[0] = '\0';
   }
-  strncpy(results->serviceDescription, serviceStrings[0], MAX_TEXT_LEN - 1);
-  results->serviceDescription[MAX_TEXT_LEN - 1] = '\0';
+  results->serviceDescription.swap(serviceString);
   return result;
 }
 
@@ -149,24 +149,26 @@ BOOL UpdateServiceDescription(SC_HANDLE serviceHandle) {
 
   MaintenanceServiceStringTable serviceStrings;
   int rv = ReadMaintenanceServiceStrings(updaterINIPath, &serviceStrings);
-  if (rv != OK || !strlen(serviceStrings.serviceDescription)) {
+  if (rv != OK || !strlen(serviceStrings.serviceDescription.get())) {
     LOG_WARN(
         ("updater.ini file does not contain a maintenance "
          "service description."));
     return FALSE;
   }
 
-  WCHAR serviceDescription[MAX_TEXT_LEN];
-  if (!MultiByteToWideChar(
-          CP_UTF8, 0, serviceStrings.serviceDescription, -1, serviceDescription,
-          sizeof(serviceDescription) / sizeof(serviceDescription[0]))) {
+  int bufferSize = MultiByteToWideChar(
+      CP_UTF8, 0, serviceStrings.serviceDescription.get(), -1, nullptr, 0);
+  mozilla::UniquePtr<WCHAR[]> serviceDescription =
+      mozilla::MakeUnique<WCHAR[]>(bufferSize);
+  if (!MultiByteToWideChar(CP_UTF8, 0, serviceStrings.serviceDescription.get(),
+                           -1, serviceDescription.get(), bufferSize)) {
     LOG_WARN(("Could not convert description to wide string format.  (%d)",
               GetLastError()));
     return FALSE;
   }
 
   SERVICE_DESCRIPTIONW descriptionConfig;
-  descriptionConfig.lpDescription = serviceDescription;
+  descriptionConfig.lpDescription = serviceDescription.get();
   if (!ChangeServiceConfig2W(serviceHandle, SERVICE_CONFIG_DESCRIPTION,
                              &descriptionConfig)) {
     LOG_WARN(("Could not change service config.  (%d)", GetLastError()));

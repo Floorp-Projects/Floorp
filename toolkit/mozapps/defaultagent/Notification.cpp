@@ -27,10 +27,6 @@
 
 #define SEVEN_DAYS_IN_SECONDS (7 * 24 * 60 * 60)
 
-// Rename this constant from readstrings.h so it is more clear what it is
-// in this context
-#define MAX_INI_STRING_LEN MAX_TEXT_LEN
-
 // If the notification hasn't been activated or dismissed within 30 minutes,
 // stop waiting for it.
 #define NOTIFICATION_WAIT_TIMEOUT_MS (30 * 60 * 1000)
@@ -113,35 +109,43 @@ struct Strings {
   }
 };
 
-// Gets a string out of the specified INI file. This function should not be used
-// for localized strings.
-// Returns true on success, false on failure
-static bool GetString(const wchar_t* iniPath, const wchar_t* section,
-                      const wchar_t* key,
-                      mozilla::UniquePtr<wchar_t[]>& toastString) {
-  toastString = mozilla::MakeUnique<wchar_t[]>(MAX_INI_STRING_LEN);
-  DWORD stringLength = GetPrivateProfileStringW(
-      section, key, nullptr, toastString.get(), MAX_INI_STRING_LEN, iniPath);
-  if (stringLength <= 0) {
-    LOG_ERROR_MESSAGE(L"Unable to retrieve string: section=%s, key=%s", section,
-                      key);
+// Returns true on success, false on failure.
+static bool ConvertToWide(const mozilla::UniquePtr<char[]>& toConvert,
+                          mozilla::UniquePtr<wchar_t[]>& result) {
+  int bufferSize =
+      MultiByteToWideChar(CP_UTF8, 0, toConvert.get(), -1, nullptr, 0);
+  result = mozilla::MakeUnique<wchar_t[]>(bufferSize);
+  int charsWritten = MultiByteToWideChar(CP_UTF8, 0, toConvert.get(), -1,
+                                         result.get(), bufferSize);
+  if (charsWritten == 0) {
+    LOG_ERROR_MESSAGE(L"Unable to widen string: %#X", GetLastError());
     return false;
   }
   return true;
 }
 
-// Returns true on success, false on failure.
-static bool ConvertToWide(const char* toConvert,
-                          mozilla::UniquePtr<wchar_t[]>& result) {
-  int bufferSize = MultiByteToWideChar(CP_UTF8, 0, toConvert, -1, nullptr, 0);
-  result = mozilla::MakeUnique<wchar_t[]>(bufferSize);
-  int charsWritten =
-      MultiByteToWideChar(CP_UTF8, 0, toConvert, -1, result.get(), bufferSize);
-  if (charsWritten == 0) {
-    LOG_ERROR_MESSAGE(L"Unable to widen localized string: %#X", GetLastError());
+// Gets a string out of the specified INI file.
+// Returns true on success, false on failure
+static bool GetString(const wchar_t* iniPath, const char* section,
+                      const char* key,
+                      mozilla::UniquePtr<wchar_t[]>& toastString) {
+  const unsigned int stringCount = 1;
+
+  size_t keyLen = strlen(key);
+  mozilla::UniquePtr<char[]> keyList = mozilla::MakeUnique<char[]>(keyLen + 2);
+  strcpy(keyList.get(), key);
+  keyList.get()[keyLen + 1] = '\0';
+
+  mozilla::UniquePtr<char[]> narrowString;
+  int result =
+      ReadStrings(iniPath, keyList.get(), stringCount, &narrowString, section);
+  if (result != OK) {
+    LOG_ERROR_MESSAGE(
+        L"Unable to retrieve INI string: section=%S, key=%S, result=%d",
+        section, key, result);
     return false;
   }
-  return true;
+  return ConvertToWide(narrowString, toastString);
 }
 
 // Gets all strings out of the localized INI file.
@@ -172,7 +176,7 @@ static bool GetStrings(Strings& strings) {
       "DefaultBrowserNotificationRemindMeLater\0"
       "DefaultBrowserNotificationMakeFirefoxDefault\0"
       "DefaultBrowserNotificationDontShowAgain\0";
-  char localizedStrings[stringCount][MAX_INI_STRING_LEN];
+  mozilla::UniquePtr<char[]> localizedStrings[stringCount];
   int result = ReadStrings(iniPath.get(), keys, stringCount, localizedStrings);
   if (result != OK) {
     LOG_ERROR_MESSAGE(L"Unable to read localized strings: %d", result);
@@ -183,15 +187,15 @@ static bool GetStrings(Strings& strings) {
          ConvertToWide(localizedStrings[1], strings.initialToast.text2) &&
          ConvertToWide(localizedStrings[2], strings.initialToast.action1) &&
          ConvertToWide(localizedStrings[3], strings.initialToast.action2) &&
-         GetString(iniPath.get(), L"Nonlocalized",
-                   L"InitialToastRelativeImagePath",
+         GetString(iniPath.get(), "Nonlocalized",
+                   "InitialToastRelativeImagePath",
                    strings.initialToast.relImagePath) &&
          ConvertToWide(localizedStrings[0], strings.followupToast.text1) &&
          ConvertToWide(localizedStrings[1], strings.followupToast.text2) &&
          ConvertToWide(localizedStrings[4], strings.followupToast.action1) &&
          ConvertToWide(localizedStrings[3], strings.followupToast.action2) &&
-         GetString(iniPath.get(), L"Nonlocalized",
-                   L"FollowupToastRelativeImagePath",
+         GetString(iniPath.get(), "Nonlocalized",
+                   "FollowupToastRelativeImagePath",
                    strings.followupToast.relImagePath);
 }
 
@@ -507,7 +511,7 @@ bool IsEnglish() {
                installPath.get());
 
   mozilla::UniquePtr<wchar_t[]> firefoxLocale;
-  if (!GetString(iniPath.get(), L"locale", L"locale", firefoxLocale)) {
+  if (!GetString(iniPath.get(), "locale", "locale", firefoxLocale)) {
     return false;
   }
 
