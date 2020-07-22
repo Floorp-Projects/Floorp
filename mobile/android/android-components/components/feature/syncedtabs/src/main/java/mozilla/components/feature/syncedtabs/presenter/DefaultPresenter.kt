@@ -31,6 +31,7 @@ import mozilla.components.service.fxa.sync.SyncStatusObserver
  *
  */
 internal class DefaultPresenter(
+    private val context: Context,
     override val controller: SyncedTabsController,
     override val accountManager: FxaAccountManager,
     override val view: SyncedTabsView,
@@ -38,7 +39,7 @@ internal class DefaultPresenter(
 ) : SyncedTabsPresenter {
 
     @VisibleForTesting
-    internal val eventObserver = SyncedTabsSyncObserver(view.asView().context, view, controller)
+    internal val eventObserver = SyncedTabsSyncObserver(context, view, controller)
     @VisibleForTesting
     internal val accountObserver = SyncedTabsAccountObserver(view, controller)
 
@@ -69,11 +70,12 @@ internal class DefaultPresenter(
         }
 
         // Synced tabs not enabled.
-        if (!isSyncedTabsEngineEnabled(view.asView().context)) {
+        if (!isSyncedTabsEngineEnabled(context)) {
             view.onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
             return
         }
 
+        controller.refreshSyncedTabs()
         controller.syncAccount()
     }
 

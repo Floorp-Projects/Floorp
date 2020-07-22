@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.syncedtabs
 
+import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.feature.syncedtabs.interactor.SyncedTabsInteractor
 import mozilla.components.feature.syncedtabs.presenter.SyncedTabsPresenter
@@ -16,6 +17,7 @@ import org.mockito.Mockito.verify
 
 class SyncedTabsFeatureTest {
 
+    private val context: Context = mock()
     private val storage: SyncedTabsStorage = mock()
     private val accountManager: FxaAccountManager = mock()
     private val view: SyncedTabsView = mock()
@@ -25,6 +27,7 @@ class SyncedTabsFeatureTest {
     private val interactor: SyncedTabsInteractor = mock()
     private val feature: SyncedTabsFeature =
         SyncedTabsFeature(
+            context,
             storage,
             accountManager,
             view,

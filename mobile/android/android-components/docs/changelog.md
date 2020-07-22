@@ -53,6 +53,9 @@ permalink: /changelog/
 * **support-ktx**
   * Add `Activity.reportFullyDrawnSafe`, a function to call `Activity.reportFullyDrawn` while catching crashes under some circumstances.
 
+* **feature-syncedtabs**
+  * ⚠️ **This is a breaking change**: Adds context to the constructor of `SyncedTabsFeature`.
+
 # 50.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v49.0.0...v50.0.0)
