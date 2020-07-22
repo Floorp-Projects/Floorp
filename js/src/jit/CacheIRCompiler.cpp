@@ -1525,13 +1525,14 @@ bool CacheIRCompiler::emitGuardIsObjectOrNull(ValOperandId inputId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardToBoolean(ValOperandId inputId,
-                                         Int32OperandId resultId) {
+bool CacheIRCompiler::emitGuardBooleanToInt32(ValOperandId inputId,
+                                              Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register output = allocator.defineRegister(masm, resultId);
 
   if (allocator.knownType(inputId) == JSVAL_TYPE_BOOLEAN) {
-    Register input = allocator.useRegister(masm, Int32OperandId(inputId.id()));
+    Register input =
+        allocator.useRegister(masm, BooleanOperandId(inputId.id()));
     masm.move32(input, output);
     return true;
   }
@@ -1589,6 +1590,22 @@ bool CacheIRCompiler::emitGuardToBigInt(ValOperandId inputId) {
     return false;
   }
   masm.branchTestBigInt(Assembler::NotEqual, input, failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardToBoolean(ValOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  if (allocator.knownType(inputId) == JSVAL_TYPE_BOOLEAN) {
+    return true;
+  }
+
+  ValueOperand input = allocator.useValueRegister(masm, inputId);
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+  masm.branchTestBoolean(Assembler::NotEqual, input, failure->label());
   return true;
 }
 
@@ -2216,7 +2233,7 @@ bool CacheIRCompiler::emitGuardAndGetNumberFromString(
 }
 
 bool CacheIRCompiler::emitGuardAndGetNumberFromBoolean(
-    Int32OperandId booleanId, NumberOperandId resultId) {
+    BooleanOperandId booleanId, NumberOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register boolean = allocator.useRegister(masm, booleanId);
   ValueOperand output = allocator.defineValueRegister(masm, resultId);
@@ -4542,11 +4559,10 @@ static void EmitDataViewBoundsCheck(MacroAssembler& masm, size_t byteSize,
   }
 }
 
-bool CacheIRCompiler::emitLoadDataViewValueResult(ObjOperandId objId,
-                                                  Int32OperandId offsetId,
-                                                  Int32OperandId littleEndianId,
-                                                  Scalar::Type elementType,
-                                                  bool allowDoubleForUint32) {
+bool CacheIRCompiler::emitLoadDataViewValueResult(
+    ObjOperandId objId, Int32OperandId offsetId,
+    BooleanOperandId littleEndianId, Scalar::Type elementType,
+    bool allowDoubleForUint32) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
@@ -4699,7 +4715,7 @@ bool CacheIRCompiler::emitLoadDataViewValueResult(ObjOperandId objId,
 
 bool CacheIRCompiler::emitStoreDataViewValueResult(
     ObjOperandId objId, Int32OperandId offsetId, uint32_t valueId,
-    Int32OperandId littleEndianId, Scalar::Type elementType) {
+    BooleanOperandId littleEndianId, Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
@@ -6528,6 +6544,14 @@ bool CacheIRCompiler::emitLoadInt32Constant(uint32_t valOffset,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadBooleanConstant(bool val,
+                                              BooleanOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register reg = allocator.defineRegister(masm, resultId);
+  masm.move32(Imm32(val), reg);
+  return true;
+}
+
 bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
                                             StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -6593,7 +6617,7 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   return true;
 }
 
-bool CacheIRCompiler::emitBooleanToString(Int32OperandId inputId,
+bool CacheIRCompiler::emitBooleanToString(BooleanOperandId inputId,
                                           StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register boolean = allocator.useRegister(masm, inputId);

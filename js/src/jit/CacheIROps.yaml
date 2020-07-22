@@ -114,9 +114,9 @@
   shared: true
   transpile: true
   cost_estimate: 1
+  custom_writer: true
   args:
     input: ValId
-    result: Int32Id
 
 - name: GuardToString
   shared: true
@@ -151,6 +151,15 @@
     input: ValId
 
 - name: GuardToInt32
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    input: ValId
+    result: Int32Id
+
+# If the Value is a boolean, convert it to int32.
+- name: GuardBooleanToInt32
   shared: true
   transpile: true
   cost_estimate: 1
@@ -446,7 +455,7 @@
   transpile: false
   cost_estimate: 1
   args:
-    boolean: Int32Id
+    boolean: BooleanId
     result: NumberId
 
 - name: GuardAndGetIterator
@@ -1118,7 +1127,7 @@
   transpile: true
   cost_estimate: 2
   args:
-    input: Int32Id
+    input: BooleanId
     result: StringId
 
 - name: CallScriptedFunction
@@ -1290,7 +1299,7 @@
   args:
     obj: ObjId
     offset: Int32Id
-    littleEndian: Int32Id
+    littleEndian: BooleanId
     elementType: ScalarTypeImm
     allowDoubleForUint32: BoolImm
 
@@ -1302,7 +1311,7 @@
     obj: ObjId
     offset: Int32Id
     value: RawId
-    littleEndian: Int32Id
+    littleEndian: BooleanId
     elementType: ScalarTypeImm
 
 - name: LoadInt32ArrayLengthResult
@@ -1537,6 +1546,14 @@
   args:
     val: RawWordField
     result: Int32Id
+
+- name: LoadBooleanConstant
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    val: BoolImm
+    result: BooleanId
 
 - name: LoadConstantStringResult
   shared: false
