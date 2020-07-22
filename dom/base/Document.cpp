@@ -7564,26 +7564,44 @@ Element* Document::GetAnonRootIfInAnonymousContentContainer(
 }
 
 Maybe<ClientInfo> Document::GetClientInfo() const {
-  nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (inner) {
+  if (const Document* orig = GetOriginalDocument()) {
+    if (Maybe<ClientInfo> info = orig->GetClientInfo()) {
+      return info;
+    }
+  }
+
+  if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
     return inner->GetClientInfo();
   }
+
   return Maybe<ClientInfo>();
 }
 
 Maybe<ClientState> Document::GetClientState() const {
-  nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (inner) {
+  if (const Document* orig = GetOriginalDocument()) {
+    if (Maybe<ClientState> state = orig->GetClientState()) {
+      return state;
+    }
+  }
+
+  if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
     return inner->GetClientState();
   }
+
   return Maybe<ClientState>();
 }
 
 Maybe<ServiceWorkerDescriptor> Document::GetController() const {
-  nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (inner) {
+  if (const Document* orig = GetOriginalDocument()) {
+    if (Maybe<ServiceWorkerDescriptor> controller = orig->GetController()) {
+      return controller;
+    }
+  }
+
+  if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
     return inner->GetController();
   }
+
   return Maybe<ServiceWorkerDescriptor>();
 }
 
@@ -11105,6 +11123,14 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCreatingStaticClone) {
+    if (mOriginalDocument) {
+      clone->mOriginalDocument = mOriginalDocument;
+    } else {
+      clone->mOriginalDocument = const_cast<Document*>(this);
+    }
+    clone->mOriginalDocument->mLatestStaticClone = clone;
+    clone->mOriginalDocument->mStaticCloneCount++;
+
     nsCOMPtr<nsILoadGroup> loadGroup;
 
     // |mDocumentContainer| is the container of the document that is being
@@ -12117,16 +12143,6 @@ already_AddRefed<Document> Document::CreateStaticClone(
 
   nsCOMPtr<Document> clonedDoc = do_QueryInterface(clonedNode);
   if (clonedDoc) {
-    if (IsStaticDocument()) {
-      clonedDoc->mOriginalDocument = mOriginalDocument;
-      mOriginalDocument->mLatestStaticClone = clonedDoc;
-    } else {
-      clonedDoc->mOriginalDocument = this;
-      mLatestStaticClone = clonedDoc;
-    }
-
-    clonedDoc->mOriginalDocument->mStaticCloneCount++;
-
     size_t sheetsCount = SheetCount();
     for (size_t i = 0; i < sheetsCount; ++i) {
       RefPtr<StyleSheet> sheet = SheetAt(i);
