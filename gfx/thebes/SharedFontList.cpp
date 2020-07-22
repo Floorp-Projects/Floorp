@@ -189,10 +189,14 @@ void Family::AddFaces(FontList* aList, const nsTArray<Face::InitData>& aFaces) {
     if (isSimple && !slots[i]) {
       facePtrs[i] = Pointer::Null();
     } else {
+      const auto* initData = isSimple ? slots[i] : &aFaces[i];
       Pointer fp = aList->Alloc(sizeof(Face));
-      auto face = static_cast<Face*>(fp.ToPtr(aList));
-      (void)new (face) Face(aList, isSimple ? *slots[i] : aFaces[i]);
+      auto* face = static_cast<Face*>(fp.ToPtr(aList));
+      (void)new (face) Face(aList, *initData);
       facePtrs[i] = fp;
+      if (initData->mCharMap) {
+        face->SetCharacterMap(aList, initData->mCharMap);
+      }
     }
   }
 
@@ -340,11 +344,19 @@ void Family::SearchAllFontsForChar(FontList* aList,
                                    GlobalFontMatch* aMatchData) {
   const SharedBitSet* charmap =
       static_cast<const SharedBitSet*>(mCharacterMap.ToPtr(aList));
-  if (charmap && !charmap->test(aMatchData->mCh)) {
-    return;
-  }
-  if (!IsInitialized()) {
-    if (!gfxPlatformFontList::PlatformFontList()->InitializeFamily(this)) {
+  if (!charmap) {
+    // If the face list is not yet initialized, or if character maps have
+    // not been loaded, go ahead and do this now (by sending a message to the
+    // parent process, if we're running in a child).
+    // After this, all faces should have their mCharacterMap set up, and the
+    // family's mCharacterMap should also be set; but in the code below we
+    // don't assume this all succeeded, so it still checks.
+    if (!gfxPlatformFontList::PlatformFontList()->InitializeFamily(this,
+                                                                   true)) {
+      return;
+    }
+    charmap = static_cast<const SharedBitSet*>(mCharacterMap.ToPtr(aList));
+    if (charmap && !charmap->test(aMatchData->mCh)) {
       return;
     }
   }
