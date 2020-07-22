@@ -21,6 +21,9 @@ permalink: /changelog/
     * `metrics.yaml` files now support a `data_sensitivity` field to all metrics for specifying the type of data collected in the field.
     * Allow defining which `Activity` to run next when using the `GleanDebugActivity`.
 
+* **feature-syncedtabs**
+  * ⚠️ **This is a breaking change**: Adds context to the constructor of `SyncedTabsFeature`.
+
 # 51.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v50.0.0...v51.0.0)
@@ -58,9 +61,6 @@ permalink: /changelog/
 
 * **support-ktx**
   * Add `Activity.reportFullyDrawnSafe`, a function to call `Activity.reportFullyDrawn` while catching crashes under some circumstances.
-
-* **feature-syncedtabs**
-  * ⚠️ **This is a breaking change**: Adds context to the constructor of `SyncedTabsFeature`.
 
 # 50.0.0
 
