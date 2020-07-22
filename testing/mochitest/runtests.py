@@ -37,7 +37,6 @@ import sys
 import tempfile
 import time
 import traceback
-import urllib2
 import uuid
 import zipfile
 import bisection
@@ -72,7 +71,6 @@ from mochitest_options import (
 from mozprofile import Profile
 from mozprofile.cli import parse_preferences, parse_key_value, KeyValueParseError
 from mozprofile.permissions import ServerLocations
-from urllib import quote_plus as encodeURIComponent
 from mozlog.formatters import TbplFormatter
 from mozlog import commandline, get_proxy_logger
 from mozrunner.utils import get_stack_fixer_function, test_environment
@@ -87,6 +85,8 @@ except ImportError:
     pass
 
 import six
+from six.moves.urllib.parse import quote_plus as encodeURIComponent
+from six.moves.urllib_request import urlopen
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -563,7 +563,7 @@ class MochitestServer(object):
 
     def stop(self):
         try:
-            with closing(urllib2.urlopen(self.shutdownURL)) as c:
+            with closing(urlopen(self.shutdownURL)) as c:
                 c.read()
 
             # TODO: need ProcessHandler.poll()

@@ -20,7 +20,6 @@ py2commands="
     firefox-ui-functional
     geckodriver
     geckodriver-test
-    geckoview-junit
     hazards
     jsapi-tests
     jsshell-bench
