@@ -7,7 +7,7 @@ from argparse import ArgumentParser, SUPPRESS
 from distutils.util import strtobool
 from distutils import spawn
 from itertools import chain
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 import json
 import os
 import tempfile
