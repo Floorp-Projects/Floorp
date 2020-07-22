@@ -62,6 +62,7 @@ add_task(async function run_test() {
           Assert.ok(Number(extra[label]) >= 0);
         }
       }
-    }
+    },
+    true
   );
 });
