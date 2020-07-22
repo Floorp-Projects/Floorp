@@ -83,8 +83,6 @@ class SVGImageElement : public SVGImageElementBase,
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
-
   void MaybeLoadSVGImage();
 
   // WebIDL

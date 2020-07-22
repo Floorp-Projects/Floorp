@@ -1088,9 +1088,6 @@ nsresult HTMLInputElement::Clone(dom::NodeInfo* aNodeInfo,
       }
       break;
     case VALUE_MODE_DEFAULT:
-      if (mType == NS_FORM_INPUT_IMAGE && it->OwnerDoc()->IsStaticDocument()) {
-        CreateStaticImageClone(it);
-      }
       break;
   }
 

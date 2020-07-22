@@ -2627,7 +2627,8 @@ class Document : public nsINode,
   bool ShouldLoadImages() const {
     // We check IsBeingUsedAsImage() so that SVG documents loaded as
     // images can themselves have data: URL image references.
-    return IsCurrentActiveDocument() || IsBeingUsedAsImage();
+    return IsCurrentActiveDocument() || IsBeingUsedAsImage() ||
+           IsStaticDocument();
   }
 
   /**
