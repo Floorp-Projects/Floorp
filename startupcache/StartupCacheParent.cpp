@@ -13,12 +13,6 @@ namespace mozilla {
 namespace scache {
 
 IPCResult StartupCacheParent::Recv__delete__(nsTArray<EntryData>&& entries) {
-  if (!mWantCacheData && entries.Length()) {
-    return IPC_FAIL(this, "UnexpectedScriptData");
-  }
-
-  mWantCacheData = false;
-
   if (entries.Length()) {
     auto* cache = StartupCache::GetSingleton();
     for (auto& entry : entries) {

@@ -358,19 +358,22 @@ void StartupCache::InitContentChild(dom::ContentParent& parent) {
     return;
   }
 
-  auto processType = GetChildProcessType(parent.GetRemoteType());
-  bool wantScriptData = !cache->mInitializedProcesses.contains(processType);
-  cache->mInitializedProcesses += processType;
-  Unused << parent.SendPStartupCacheConstructor(wantScriptData);
+  Unused << parent.SendPStartupCacheConstructor();
 }
 
 void StartupCache::AddStartupCacheCmdLineArgs(
     mozilla::ipc::GeckoChildProcessHost& procHost,
-    std::vector<std::string>& aExtraOpts) {
+    const nsACString& aRemoteType, std::vector<std::string>& aExtraOpts) {
 #ifndef ANDROID
   // Don't send original cache data to new processes if the cache has been
   // invalidated.
   if (!mSharedData.initialized() || gIgnoreDiskCache) {
+    auto processType = GetChildProcessType(aRemoteType);
+    bool wantScriptData = !mInitializedProcesses.contains(processType);
+    mInitializedProcesses += processType;
+    if (!wantScriptData) {
+      aExtraOpts.push_back("-noScache");
+    }
     return;
   }
 
