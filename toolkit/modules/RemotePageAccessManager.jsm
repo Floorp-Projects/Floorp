@@ -91,10 +91,13 @@ let RemotePageAccessManager = {
         "security.ssl.errorReporting.enabled",
         "security.tls.version.enable-deprecated",
         "security.certerrors.tls.version.show-override",
+        "security.xfocsp.errorReporting.automatic",
+        "security.xfocsp.errorReporting.enabled",
       ],
       RPMSetBoolPref: [
         "security.ssl.errorReporting.automatic",
         "security.tls.version.enable-deprecated",
+        "security.xfocsp.errorReporting.automatic",
       ],
       RPMPrefIsLocked: ["security.tls.version.min"],
       RPMAddToHistogram: ["*"],
