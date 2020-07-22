@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ScrollStyles.h"
-#include "mozilla/WritingModes.h"
-#include "nsStyleStruct.h"  // for nsStyleDisplay & nsStyleBackground::Position
+#include "nsStyleStruct.h"  // for nsStyleDisplay
 
 namespace mozilla {
 
