@@ -45,6 +45,7 @@ EXPORTS.mozilla.dom += [
     'JSSlots.h',
     'NonRefcountedDOMObject.h',
     'Nullable.h',
+    'PinnedStringId.h',
     'PrimitiveConversions.h',
     'ReadableStream.h',
     'Record.h',
