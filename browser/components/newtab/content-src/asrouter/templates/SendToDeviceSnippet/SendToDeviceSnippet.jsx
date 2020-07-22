@@ -70,3 +70,7 @@ export const SendToDeviceSnippet = props => {
     />
   );
 };
+
+export const SendToDeviceScene2Snippet = props => {
+  return <SendToDeviceSnippet expandedAlt={true} {...props} />;
+};
