@@ -154,9 +154,9 @@
   shared: true
   transpile: true
   cost_estimate: 1
+  custom_writer: true
   args:
     input: ValId
-    result: Int32Id
 
 # If the Value is a boolean, convert it to int32.
 - name: GuardBooleanToInt32

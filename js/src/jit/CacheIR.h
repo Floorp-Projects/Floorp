@@ -743,6 +743,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return BooleanOperandId(input.id());
   }
 
+  Int32OperandId guardToInt32(ValOperandId input) {
+    guardToInt32_(input);
+    return Int32OperandId(input.id());
+  }
+
   NumberOperandId guardIsNumber(ValOperandId input) {
     guardIsNumber_(input);
     return NumberOperandId(input.id());

@@ -1609,16 +1609,13 @@ bool CacheIRCompiler::emitGuardToBoolean(ValOperandId inputId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardToInt32(ValOperandId inputId,
-                                       Int32OperandId resultId) {
+bool CacheIRCompiler::emitGuardToInt32(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register output = allocator.defineRegister(masm, resultId);
 
   if (allocator.knownType(inputId) == JSVAL_TYPE_INT32) {
-    Register input = allocator.useRegister(masm, Int32OperandId(inputId.id()));
-    masm.move32(input, output);
     return true;
   }
+
   ValueOperand input = allocator.useValueRegister(masm, inputId);
 
   FailurePath* failure;
@@ -1627,7 +1624,6 @@ bool CacheIRCompiler::emitGuardToInt32(ValOperandId inputId,
   }
 
   masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
-  masm.unboxInt32(input, output);
   return true;
 }
 
