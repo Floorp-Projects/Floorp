@@ -1188,6 +1188,7 @@ void ContainerLayer::DefaultComputeEffectiveTransforms(
         checkClipRect = true;
         checkMaskLayers = true;
       } else {
+        contTransform.NudgeToIntegers();
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
         if (!contTransform.PreservesAxisAlignedRectangles()) {
 #else
