@@ -8,9 +8,7 @@ def parse_checksums_file(checksums):
     """
     fileInfo = {}
     for line in checksums.splitlines():
-        hash_, type_, size, file_ = line.split(None, 3)
-        type_ = six.ensure_str(type_)
-        file_ = six.ensure_str(file_)
+        hash_, type_, size, file_ = six.ensure_str(line).split(None, 3)
         size = int(size)
         if size < 0:
             raise ValueError("Found negative value (%d) for size." % size)
