@@ -73,11 +73,13 @@ async function synthKeyAndTestEvent(
   expectedWordAtLeft
 ) {
   let valueChangedEvents = Promise.all([
-    waitForMacEventWithInfo(
-      "AXValueChanged",
-      (iface, data) =>
-        iface.getAttributeValue("AXRole") == "AXWebArea" && !!data
-    ),
+    waitForMacEventWithInfo("AXValueChanged", (iface, data) => {
+      return (
+        iface.getAttributeValue("AXRole") == "AXWebArea" &&
+        !!data &&
+        data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier") == "input"
+      );
+    }),
     waitForMacEventWithInfo(
       "AXValueChanged",
       (iface, data) =>
