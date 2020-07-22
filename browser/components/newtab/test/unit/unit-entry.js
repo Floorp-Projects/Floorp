@@ -430,6 +430,13 @@ const TEST_GLOBAL = {
       };
     },
   },
+  PageThumbs: {
+    addExpirationFilter() {},
+    removeExpirationFilter() {},
+  },
+  gUUIDGenerator: {
+    generateUUID: () => "{foo-123-foo}",
+  },
 };
 overrider.set(TEST_GLOBAL);
 
