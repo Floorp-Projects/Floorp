@@ -208,13 +208,13 @@ def main():
     options = parser.parse_args()
     args = options.args
     if not args:
-        print >>sys.stderr, """Usage: %s <binary>""" % sys.argv[0]
+        print("Usage: %s <binary>" % sys.argv[0])
         sys.exit(1)
     if not options.xre_path:
-        print >>sys.stderr, """Error: --xre-path is required"""
+        print("Error: --xre-path is required")
         sys.exit(1)
     if not options.utility_path:
-        print >>sys.stderr, """Warning: --utility-path is required to process assertion stacks"""
+        print("Warning: --utility-path is required to process assertion stacks")
 
     update_mozinfo()
     prog = os.path.abspath(args[0])

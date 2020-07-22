@@ -18,6 +18,11 @@ namespace mozilla {
 // Range<T> is a tuple containing a pointer and a length.
 template <typename T>
 class Range {
+  template <typename U>
+  friend class Range;
+
+  // Reassignment of RangedPtrs is so (subtly) restrictive that we just make
+  // Range immutable.
   const RangedPtr<T> mStart;
   const RangedPtr<T> mEnd;
 

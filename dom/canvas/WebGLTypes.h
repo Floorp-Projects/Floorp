@@ -18,13 +18,13 @@
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/ipc/Shmem.h"
 #include "gfxTypes.h"
 
 #include "nsTArray.h"
 #include "nsString.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
-//#include "WebGLStrongTypes.h"
 
 // Manual reflection of WebIDL typedefs that are different from their
 // OpenGL counterparts.
@@ -256,6 +256,10 @@ class UniqueBuffer {
   void* mBuffer;
 
  public:
+  static inline UniqueBuffer Alloc(const size_t byteSize) {
+    return {malloc(byteSize)};
+  }
+
   UniqueBuffer() : mBuffer(nullptr) {}
 
   MOZ_IMPLICIT UniqueBuffer(void* buffer) : mBuffer(buffer) {}
@@ -284,9 +288,9 @@ class UniqueBuffer {
 
   void* get() const { return mBuffer; }
 
-  UniqueBuffer(const UniqueBuffer& other) =
+  explicit UniqueBuffer(const UniqueBuffer& other) =
       delete;  // construct using std::move()!
-  void operator=(const UniqueBuffer& other) =
+  UniqueBuffer& operator=(const UniqueBuffer& other) =
       delete;  // assign using std::move()!
 };
 
@@ -344,19 +348,6 @@ struct FloatOrInt final  // For TexParameter[fi] and friends.
     memcpy(this, &x, sizeof(x));
     return *this;
   }
-};
-
-struct WebGLPixelStore final {
-  uint32_t mUnpackImageHeight = 0;
-  uint32_t mUnpackSkipImages = 0;
-  uint32_t mUnpackRowLength = 0;
-  uint32_t mUnpackSkipRows = 0;
-  uint32_t mUnpackSkipPixels = 0;
-  uint32_t mUnpackAlignment = 0;
-  GLenum mColorspaceConversion = 0;
-  bool mFlipY = false;
-  bool mPremultiplyAlpha = false;
-  bool mRequireFastPath = false;
 };
 
 using WebGLTexUnpackVariant =
@@ -610,21 +601,18 @@ enum class LossStatus {
 
 struct CompileResult final {
   bool pending = true;
-  std::string log;
-  std::string translatedSource;
+  nsCString log;
+  nsCString translatedSource;
   bool success = false;
 };
 
 // -
 
-struct OpaqueFramebufferOptions {
+struct OpaqueFramebufferOptions final {
   bool depthStencil = true;
   bool antialias = true;
   uint32_t width = 0;
   uint32_t height = 0;
-
-  OpaqueFramebufferOptions() = default;
-  OpaqueFramebufferOptions(const OpaqueFramebufferOptions&) = default;
 };
 
 // -
@@ -668,7 +656,7 @@ struct LinkActiveInfo final {
 
 struct LinkResult final {
   bool pending = true;
-  std::string log;
+  nsCString log;
   bool success = false;
   LinkActiveInfo active;
   GLenum tfBufferMode = 0;
@@ -686,6 +674,20 @@ struct TypedQuad final {
 struct GetUniformData final {
   alignas(alignof(float)) uint8_t data[4 * 4 * sizeof(float)] = {};
   GLenum type = 0;
+};
+
+struct FrontBufferSnapshotIpc final {
+  uvec2 surfSize = {};
+  mozilla::ipc::Shmem shmem = {};
+};
+
+struct ReadPixelsResult {
+  gfx::IntRect subrect = {};
+  size_t byteStride = 0;
+};
+
+struct ReadPixelsResultIpc final : public ReadPixelsResult {
+  mozilla::ipc::Shmem shmem = {};
 };
 
 struct VertAttribPointerDesc final {
@@ -714,23 +716,13 @@ struct ICRData {
 
 /**
  * Represents a block of memory that it may or may not own.  The
- * inner data type must be trivially copyable by memcpy.  A RawBuffer
- * may be backed by local memory or shared memory.
+ * inner data type must be trivially copyable by memcpy.
  */
-template <typename T = uint8_t, typename nonCV = std::remove_cv_t<T>,
-          std::enable_if_t<std::is_trivially_assignable<nonCV&, nonCV>::value,
-                           int> = 0>
-class RawBuffer {
-  // The SharedMemoryBasic that owns mData, if any.
-  RefPtr<mozilla::ipc::SharedMemoryBasic> mSmem;
-  // Pointer to the raw memory block
-  T* mData = nullptr;
-  // Length is the number of elements of size T in the array
-  size_t mLength = 0;
-  // true if we should delete[] the mData on destruction
-  bool mOwnsData = false;
-
-  friend struct mozilla::webgl::QueueParamTraits<RawBuffer<T>>;
+template <typename T = uint8_t>
+class RawBuffer final {
+  const T* mBegin = nullptr;
+  size_t mLen = 0;
+  UniqueBuffer mOwned;
 
  public:
   using ElementType = T;
@@ -738,66 +730,28 @@ class RawBuffer {
   /**
    * If aTakeData is true, RawBuffer will delete[] the memory when destroyed.
    */
-  RawBuffer(size_t len, T* data, bool aTakeData = false)
-      : mData(data), mLength(len), mOwnsData(aTakeData) {}
+  explicit RawBuffer(const Range<const T>& data, UniqueBuffer&& owned = {})
+      : mBegin(data.begin().get()),
+        mLen(data.length()),
+        mOwned(std::move(owned)) {}
 
-  RawBuffer(size_t len, RefPtr<mozilla::ipc::SharedMemoryBasic>& aSmem)
-      : mSmem(aSmem), mData(aSmem->memory()), mLength(len), mOwnsData(false) {
-    MOZ_ASSERT(mData && mLength);
-  }
+  ~RawBuffer() = default;
 
-  ~RawBuffer() {
-    // If we have a SharedMemoryBasic then it must own mData.
-    MOZ_ASSERT((!mSmem) || (!mOwnsData));
-    if (mOwnsData) {
-      delete[] mData;
-    }
-    if (mSmem) {
-      mSmem->CloseHandle();
-    }
-  }
-
-  auto Length() const { return mLength; }
-
-  T* Data() { return mData; }
-  const T* Data() const { return mData; }
-
-  T& operator[](size_t idx) {
-    MOZ_ASSERT(mData && (idx < mLength));
-    return mData[idx];
-  }
-  const T& operator[](size_t idx) const {
-    MOZ_ASSERT(mData && (idx < mLength));
-    return mData[idx];
-  }
+  Range<const T> Data() const { return {mBegin, mLen}; }
+  const auto& begin() const { return mBegin; };
 
   RawBuffer() = default;
+
   RawBuffer(const RawBuffer&) = delete;
   RawBuffer& operator=(const RawBuffer&) = delete;
 
-  RawBuffer(RawBuffer&& o)
-      : mSmem(o.mSmem),
-        mData(o.mData),
-        mLength(o.mLength),
-        mOwnsData(o.mOwnsData) {
-    o.mSmem = nullptr;
-    o.mData = nullptr;
-    o.mLength = 0;
-    o.mOwnsData = false;
-  }
-
-  RawBuffer& operator=(RawBuffer&& o) {
-    mSmem = o.mSmem;
-    mData = o.mData;
-    mLength = o.mLength;
-    mOwnsData = o.mOwnsData;
-    o.mSmem = nullptr;
-    o.mData = nullptr;
-    o.mLength = 0;
-    o.mOwnsData = false;
-    return *this;
-  }
+  RawBuffer(RawBuffer&&) = default;
+  RawBuffer& operator=(RawBuffer&&) = default;
 };
+
+// -
+
+struct CopyableRange final : public Range<const uint8_t> {};
 
 // -
 
@@ -903,6 +857,17 @@ inline GLenum ImageToTexTarget(const GLenum imageTarget) {
   }
 }
 
+inline bool IsTexTarget3D(const GLenum texTarget) {
+  switch (texTarget) {
+    case LOCAL_GL_TEXTURE_2D_ARRAY:
+    case LOCAL_GL_TEXTURE_3D:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
 // -
 
 namespace dom {
@@ -925,6 +890,74 @@ struct TexImageSource {
   ErrorResult* mOut_error = nullptr;
 };
 
+struct WebGLPixelStore final {
+  uint32_t mUnpackImageHeight = 0;
+  uint32_t mUnpackSkipImages = 0;
+  uint32_t mUnpackRowLength = 0;
+  uint32_t mUnpackSkipRows = 0;
+  uint32_t mUnpackSkipPixels = 0;
+  uint32_t mUnpackAlignment = 4;
+  GLenum mColorspaceConversion =
+      dom::WebGLRenderingContext_Binding::BROWSER_DEFAULT_WEBGL;
+  bool mFlipY = false;
+  bool mPremultiplyAlpha = false;
+  bool mRequireFastPath = false;
+
+  void Apply(gl::GLContext&, bool isWebgl2, const uvec3& uploadSize) const;
+
+  WebGLPixelStore ForUseWith(
+      const GLenum target, const uvec3& uploadSize,
+      const Maybe<gfx::IntSize>& structuredSrcSize) const {
+    auto ret = *this;
+
+    if (!IsTexTarget3D(target)) {
+      ret.mUnpackSkipImages = 0;
+      ret.mUnpackImageHeight = 0;
+    }
+
+    if (structuredSrcSize) {
+      ret.mUnpackRowLength = structuredSrcSize->width;
+    }
+
+    if (!ret.mUnpackRowLength) {
+      ret.mUnpackRowLength = uploadSize.x;
+    }
+    if (!ret.mUnpackImageHeight) {
+      ret.mUnpackImageHeight = uploadSize.y;
+    }
+
+    return ret;
+  }
+};
+
+struct TexImageData final {
+  WebGLPixelStore unpackState;
+
+  Maybe<uint64_t> pboOffset;
+
+  RawBuffer<> data;
+
+  const dom::Element* domElem = nullptr;
+  ErrorResult* out_domElemError = nullptr;
+};
+
+namespace webgl {
+
+struct TexUnpackBlobDesc final {
+  GLenum imageTarget = LOCAL_GL_TEXTURE_2D;
+  uvec3 size;
+  gfxAlphaType srcAlphaType = gfxAlphaType::NonPremult;
+
+  Maybe<RawBuffer<>> cpuData;
+  Maybe<uint64_t> pboOffset;
+  RefPtr<layers::Image> image;
+  RefPtr<gfx::DataSourceSurface> surf;
+
+  WebGLPixelStore unpacking;
+};
+
+}  // namespace webgl
+
 // ---------------------------------------
 // MakeRange
 
@@ -940,12 +973,7 @@ inline Range<const T> MakeRange(const dom::Sequence<T>& seq) {
 
 template <typename T>
 inline Range<const T> MakeRange(const RawBuffer<T>& from) {
-  return {from.Data(), from.Length()};
-}
-
-template <typename T>
-inline Range<T> MakeRange(RawBuffer<T>& from) {
-  return {from.Data(), from.Length()};
+  return from.Data();
 }
 
 // abv = ArrayBufferView
@@ -964,7 +992,7 @@ Maybe<Range<const uint8_t>> GetRangeFromView(const dom::ArrayBufferView& view,
 
 template <typename T>
 RawBuffer<T> RawBufferView(const Range<T>& range) {
-  return {range.length(), range.begin().get()};
+  return RawBuffer<T>{range};
 }
 
 // -
@@ -987,6 +1015,16 @@ uint8_t ElemTypeComponents(GLenum elemType);
 
 inline std::string ToString(const nsACString& text) {
   return {text.BeginReading(), text.Length()};
+}
+
+inline void Memcpy(const RangedPtr<uint8_t>& destBytes,
+                   const RangedPtr<const uint8_t>& srcBytes,
+                   const size_t byteSize) {
+  // Trigger range asserts
+  (void)(srcBytes + byteSize);
+  (void)(destBytes + byteSize);
+
+  memcpy(destBytes.get(), srcBytes.get(), byteSize);
 }
 
 // -

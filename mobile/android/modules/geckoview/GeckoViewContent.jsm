@@ -123,14 +123,7 @@ class GeckoViewContent extends GeckoViewModule {
         this.messageManager.sendAsyncMessage(aEvent, aData);
         break;
       case "GeckoView:SetActive":
-        if (aData.active) {
-          this.browser.docShellIsActive = true;
-        } else {
-          this.browser.docShellIsActive = false;
-        }
-        this.messageManager.sendAsyncMessage("GeckoView:SetActive", {
-          active: aData.active,
-        });
+        this.browser.docShellIsActive = !!aData.active;
         break;
       case "GeckoView:SetFocused":
         if (aData.focused) {

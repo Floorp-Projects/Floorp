@@ -31,7 +31,7 @@
   return mParent;
 }
 
-- (NSArray*)moxChildren {
+- (NSArray*)moxUnignoredChildren {
   if (mChildren) return mChildren;
 
   mChildren = [[NSMutableArray alloc] init];
@@ -206,8 +206,64 @@
   return mColContainers;
 }
 
-- (NSArray*)moxChildren {
-  return [[super moxChildren] arrayByAddingObjectsFromArray:[self moxColumns]];
+- (NSArray*)moxUnignoredChildren {
+  return [[super moxUnignoredChildren] arrayByAddingObjectsFromArray:[self moxColumns]];
+}
+
+- (NSArray*)moxColumnHeaderUIElements {
+  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+
+  uint32_t numCols = 0;
+  TableAccessible* table = nullptr;
+
+  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+    table = mGeckoAccessible.AsAccessible()->AsTable();
+    numCols = table->ColCount();
+  } else {
+    numCols = mGeckoAccessible.AsProxy()->TableColumnCount();
+  }
+
+  NSMutableArray* colHeaders = [[NSMutableArray alloc] initWithCapacity:numCols];
+
+  for (uint32_t i = 0; i < numCols; i++) {
+    AccessibleOrProxy cell;
+    if (table) {
+      cell = table->CellAt(0, i);
+    } else {
+      cell = mGeckoAccessible.AsProxy()->TableCellAt(0, i);
+    }
+
+    if (!cell.IsNull() && cell.Role() == roles::COLUMNHEADER) {
+      mozAccessible* colHeader = GetNativeFromGeckoAccessible(cell);
+      [colHeaders addObject:colHeader];
+    }
+  }
+
+  return colHeaders;
+}
+
+- (id)moxCellForColumnAndRow:(NSArray*)columnAndRow {
+  if (columnAndRow == nil || [columnAndRow count] != 2) {
+    return nil;
+  }
+
+  uint32_t col = [[columnAndRow objectAtIndex:0] unsignedIntValue];
+  uint32_t row = [[columnAndRow objectAtIndex:1] unsignedIntValue];
+
+  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+
+  AccessibleOrProxy cell;
+  if (mGeckoAccessible.IsAccessible()) {
+    cell = mGeckoAccessible.AsAccessible()->AsTable()->CellAt(row, col);
+  } else {
+    cell = mGeckoAccessible.AsProxy()->TableCellAt(row, col);
+  }
+
+  if (cell.IsNull()) {
+    return nil;
+  }
+
+  return GetNativeFromGeckoAccessible(cell);
 }
 
 - (void)invalidateColumns {

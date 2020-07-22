@@ -46,6 +46,7 @@ class WebGLChild;
 }
 
 namespace webgl {
+class AvailabilityRunnable;
 class TexUnpackBlob;
 class TexUnpackBytes;
 }  // namespace webgl
@@ -175,6 +176,7 @@ class ContextGenerationInfo final {
   std::array<float, 4> mBlendColor = {{0, 0, 0, 0}};
   std::array<float, 2> mDepthRange = {{0, 1}};
   webgl::PixelPackState mPixelPackState;
+  WebGLPixelStore mPixelUnpackState;
 
   std::vector<GLenum> mCompressedTextureFormats;
 
@@ -388,14 +390,19 @@ class WebGLProgramJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 // -
 
-class WebGLQueryJS final : public nsWrapperCache, public webgl::ObjectJS {
+class WebGLQueryJS final : public nsWrapperCache,
+                           public webgl::ObjectJS,
+                           public SupportsWeakPtr<WebGLQueryJS> {
   friend class ClientWebGLContext;
+  friend class webgl::AvailabilityRunnable;
 
   GLenum mTarget = 0;  // !IsQuery until Bind
+  bool mCanBeAvailable = false;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQueryJS)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLQueryJS)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLQueryJS)
 
   explicit WebGLQueryJS(const ClientWebGLContext& webgl)
       : webgl::ObjectJS(webgl) {}
@@ -483,14 +490,19 @@ class WebGLShaderJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 // -
 
-class WebGLSyncJS final : public nsWrapperCache, public webgl::ObjectJS {
+class WebGLSyncJS final : public nsWrapperCache,
+                          public webgl::ObjectJS,
+                          public SupportsWeakPtr<WebGLSyncJS> {
   friend class ClientWebGLContext;
+  friend class webgl::AvailabilityRunnable;
 
+  bool mCanBeAvailable = false;
   bool mSignaled = false;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSyncJS)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSyncJS)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLSyncJS)
 
   explicit WebGLSyncJS(const ClientWebGLContext& webgl)
       : webgl::ObjectJS(webgl) {}
@@ -694,6 +706,7 @@ struct TexImageSourceAdapter final : public TexImageSource {
 class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                                  public nsWrapperCache,
                                  public SupportsWeakPtr<ClientWebGLContext> {
+  friend class webgl::AvailabilityRunnable;
   friend class webgl::ObjectJS;
   friend class webgl::ProgramKeepAlive;
   friend class webgl::ShaderKeepAlive;
@@ -731,13 +744,12 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   const RefPtr<ClientWebGLExtensionLoseContext> mExtLoseContext;
 
-  webgl::LossStatus mLossStatus = webgl::LossStatus::Ready;
-  bool mAwaitingRestore = false;
+  mutable std::shared_ptr<webgl::NotLostData> mNotLost;
+  mutable GLenum mNextError = 0;
+  mutable webgl::LossStatus mLossStatus = webgl::LossStatus::Ready;
+  mutable bool mAwaitingRestore = false;
 
   // -
- private:
-  std::shared_ptr<webgl::NotLostData> mNotLost;
-  mutable GLenum mNextError = 0;
 
  public:
   const auto& Limits() const { return mNotLost->info.limits; }
@@ -754,15 +766,23 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   // -
 
+ private:
+  mutable RefPtr<webgl::AvailabilityRunnable> mAvailabilityRunnable;
+
  public:
-  void EmulateLoseContext();
-  void OnContextLoss(webgl::ContextLossReason);
-  void RestoreContext(webgl::LossStatus requiredStatus);
+  webgl::AvailabilityRunnable& EnsureAvailabilityRunnable() const;
+
+  // -
+
+ public:
+  void EmulateLoseContext() const;
+  void OnContextLoss(webgl::ContextLossReason) const;
+  void RestoreContext(webgl::LossStatus requiredStatus) const;
 
  private:
   bool DispatchEvent(const nsAString&) const;
-  void Event_webglcontextlost();
-  void Event_webglcontextrestored();
+  void Event_webglcontextlost() const;
+  void Event_webglcontextrestored() const;
 
   bool CreateHostContext(const uvec2& requestedSize);
   void ThrowEvent_WebGLContextCreationError(const std::string&) const;
@@ -853,6 +873,10 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
     EnqueueErrorImpl(error, text);
   }
 
+  void EnqueueError(const webgl::ErrorInfo& info) const {
+    EnqueueError(info.type, "%s", info.info.c_str());
+  }
+
   template <typename... Args>
   void EnqueueWarning(const char* const format, const Args&... args) const {
     EnqueueError(0, format, args...);
@@ -923,9 +947,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   bool UpdateWebRenderCanvasData(
       nsDisplayListBuilder* aBuilder,
       layers::WebRenderCanvasData* aCanvasData) override;
-
-  bool UpdateCompositableHandle(LayerTransactionChild* aLayerTransaction,
-                                CompositableHandle aHandle) override;
 
   // ------
 
@@ -1026,6 +1047,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void Enable(GLenum cap) const;
   bool IsEnabled(GLenum cap) const;
 
+ private:
+  Maybe<double> GetNumber(GLenum pname);
+  Maybe<std::string> GetString(GLenum pname);
+
+ public:
   void GetParameter(JSContext* cx, GLenum pname,
                     JS::MutableHandle<JS::Value> retval, ErrorResult& rv,
                     bool debug = false);
@@ -1703,6 +1729,10 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   }
 
   // ------------------------ Uniforms and attributes ------------------------
+
+ private:
+  Maybe<double> GetVertexAttribPriv(GLuint index, GLenum pname);
+
  public:
   void GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
                        JS::MutableHandle<JS::Value> retval, ErrorResult& rv);
@@ -2079,61 +2109,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // The cross-process communication mechanism
   // -------------------------------------------------------------------------
  protected:
-  /*
-   template <size_t command, typename... Args>
-   void DispatchAsync(Args&&... aArgs) const {
-     const auto& oop = *mNotLost->outOfProcess;
-     QueueStatus status = oop.mCommandSource->RunAsyncCommand(command,
-   aArgs...);
-     if (!IsSuccess(status)) { if (status == QueueStatus::kOOMError) {
-         JsWarning("Ran out-of-memory during WebGL IPC.");
-       }
-       // Not much to do but shut down.  Since this was a Pcq failure and
-       // may have been catastrophic, we don't try to revive it.  Make sure to
-       // post "webglcontextlost"
-       MOZ_ASSERT_UNREACHABLE(
-           "TODO: Make this shut down the context, actors, everything.");
-     }
-   }
-
-   template <size_t command, typename ReturnType, typename... Args>
-   ReturnType DispatchSync(Args&&... aArgs) const {
-     const auto& oop = *mNotLost->outOfProcess;
-     ReturnType returnValue;
-     QueueStatus status =
-         oop.mCommandSource->RunSyncCommand(command, returnValue, aArgs...);
-
-     if (!IsSuccess(status)) {
-       if (status == QueueStatus::kOOMError) {
-         JsWarning("Ran out-of-memory during WebGL IPC.");
-       }
-       // Not much to do but shut down.  Since this was a Pcq failure and
-       // may have been catastrophic, we don't try to revive it.  Make sure to
-       // post "webglcontextlost"
-       MOZ_ASSERT_UNREACHABLE(
-           "TODO: Make this shut down the context, actors, everything.");
-     }
-     return returnValue;
-   }
-
-   template <size_t command, typename... Args>
-   void DispatchVoidSync(Args&&... aArgs) const {
-     const auto& oop = *mNotLost->outOfProcess;
-     const auto status =
-         oop.mCommandSource->RunVoidSyncCommand(command, aArgs...);
-     if (!IsSuccess(status)) {
-       if (status == QueueStatus::kOOMError) {
-         JsWarning("Ran out-of-memory during WebGL IPC.");
-       }
-       // Not much to do but shut down.  Since this was a Pcq failure and
-       // may have been catastrophic, we don't try to revive it.  Make sure to
-       // post "webglcontextlost"
-       MOZ_ASSERT_UNREACHABLE(
-           "TODO: Make this shut down the context, actors, everything.");
-     }
-   }
-   */
-
   template <typename ReturnType>
   friend struct WebGLClientDispatcher;
 
@@ -2143,25 +2118,14 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   // If we are running WebGL in this process then call the HostWebGLContext
   // method directly.  Otherwise, dispatch over IPC.
-  // template <typename MethodType, MethodType method,
-  //          typename ReturnType = typename
-  //          FunctionTypeTraits<MethodType>::ReturnType, size_t Id =
-  //          WebGLMethodDispatcher::Id<MethodType, method>(), typename... Args>
-  // ReturnType Run(Args&&... aArgs) const;
-  template <
-      typename MethodType, MethodType method,
-      typename ReturnType = typename FunctionTypeTraits<MethodType>::ReturnType,
-      typename... Args>
-  ReturnType Run(Args&&... aArgs) const;
+  template <typename MethodType, MethodType method, typename... Args>
+  void Run(Args&&... aArgs) const;
 
   // -------------------------------------------------------------------------
   // Helpers for DOM operations, composition, actors, etc
   // -------------------------------------------------------------------------
 
  public:
-  WebGLPixelStore GetPixelStore() { return mPixelStore; }
-  const WebGLPixelStore GetPixelStore() const { return mPixelStore; }
-
   // https://immersive-web.github.io/webxr/#xr-compatible
   bool IsXRCompatible() const;
   already_AddRefed<dom::Promise> MakeXRCompatible(ErrorResult& aRv);
@@ -2179,7 +2143,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   bool mResetLayer = true;
   Maybe<const WebGLContextOptions> mInitialOptions;
-  WebGLPixelStore mPixelStore;
   bool mXRCompatible = false;
 };
 

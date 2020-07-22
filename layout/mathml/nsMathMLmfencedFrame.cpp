@@ -105,7 +105,7 @@ void nsMathMLmfencedFrame::CreateFencesAndSeparators(
   if (!value.IsEmpty()) {
     mOpenChar = new nsMathMLChar;
     mOpenChar->SetData(value);
-    ResolveMathMLCharStyle(aPresContext, mContent, mComputedStyle, mOpenChar);
+    mOpenChar->SetComputedStyle(Style());
   }
 
   //////////////
@@ -120,7 +120,7 @@ void nsMathMLmfencedFrame::CreateFencesAndSeparators(
   if (!value.IsEmpty()) {
     mCloseChar = new nsMathMLChar;
     mCloseChar->SetData(value);
-    ResolveMathMLCharStyle(aPresContext, mContent, mComputedStyle, mCloseChar);
+    mCloseChar->SetComputedStyle(Style());
   }
 
   //////////////
@@ -145,8 +145,7 @@ void nsMathMLmfencedFrame::CreateFencesAndSeparators(
           sepChar = value[mSeparatorsCount - 1];
         }
         mSeparatorsChar[i].SetData(sepChar);
-        ResolveMathMLCharStyle(aPresContext, mContent, mComputedStyle,
-                               &mSeparatorsChar[i]);
+        mSeparatorsChar[i].SetComputedStyle(Style());
       }
       mSeparatorsCount = sepCount;
     } else {
@@ -630,60 +629,16 @@ nscoord nsMathMLmfencedFrame::FixInterFrameSpacing(ReflowOutput& aDesiredSize) {
   return gap;
 }
 
-// ----------------------
-// the Style System will use these to pass the proper ComputedStyle to our
-// MathMLChar
-ComputedStyle* nsMathMLmfencedFrame::GetAdditionalComputedStyle(
-    int32_t aIndex) const {
-  int32_t openIndex = -1;
-  int32_t closeIndex = -1;
-  int32_t lastIndex = mSeparatorsCount - 1;
+void nsMathMLmfencedFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
+  nsMathMLContainerFrame::DidSetComputedStyle(aOldStyle);
 
   if (mOpenChar) {
-    lastIndex++;
-    openIndex = lastIndex;
+    mOpenChar->SetComputedStyle(Style());
   }
   if (mCloseChar) {
-    lastIndex++;
-    closeIndex = lastIndex;
+    mCloseChar->SetComputedStyle(Style());
   }
-  if (aIndex < 0 || aIndex > lastIndex) {
-    return nullptr;
-  }
-
-  if (aIndex < mSeparatorsCount) {
-    return mSeparatorsChar[aIndex].GetComputedStyle();
-  } else if (aIndex == openIndex) {
-    return mOpenChar->GetComputedStyle();
-  } else if (aIndex == closeIndex) {
-    return mCloseChar->GetComputedStyle();
-  }
-  return nullptr;
-}
-
-void nsMathMLmfencedFrame::SetAdditionalComputedStyle(
-    int32_t aIndex, ComputedStyle* aComputedStyle) {
-  int32_t openIndex = -1;
-  int32_t closeIndex = -1;
-  int32_t lastIndex = mSeparatorsCount - 1;
-
-  if (mOpenChar) {
-    lastIndex++;
-    openIndex = lastIndex;
-  }
-  if (mCloseChar) {
-    lastIndex++;
-    closeIndex = lastIndex;
-  }
-  if (aIndex < 0 || aIndex > lastIndex) {
-    return;
-  }
-
-  if (aIndex < mSeparatorsCount) {
-    mSeparatorsChar[aIndex].SetComputedStyle(aComputedStyle);
-  } else if (aIndex == openIndex) {
-    mOpenChar->SetComputedStyle(aComputedStyle);
-  } else if (aIndex == closeIndex) {
-    mCloseChar->SetComputedStyle(aComputedStyle);
+  for (int32_t i = 0; i < mSeparatorsCount; ++i) {
+    mSeparatorsChar[i].SetComputedStyle(Style());
   }
 }

@@ -7,6 +7,10 @@ cd /builds/worker
 
 mkdir a b
 
+# /builds/worker/bin contains wrapper binaries to divert what diffoscope
+# needs to use, so it needs to appear first.
+export PATH=/builds/worker/bin:$PATH
+
 # Until https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=879010 is
 # implemented, it's better to first manually extract the data.
 # Plus dmg files are not supported yet.
@@ -26,7 +30,6 @@ case "$ORIG_URL" in
 	for tool in lipo otool; do
 		ln -s $MOZ_FETCHES_DIR/cctools/bin/x86_64-apple-darwin*-$tool bin/$tool
 	done
-	export PATH=$PATH:/builds/worker/bin
 	curl -L "$ORIG_URL" > a.dmg
 	curl -L "$NEW_URL" > b.dmg
 	for i in a b; do

@@ -50,13 +50,6 @@ let whitelist = [
     errorMessage: /Unknown property.*overflow-clip-box/i,
     isFromDevTools: false,
   },
-  // System colors reserved to UA / chrome sheets
-  {
-    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
-    errorMessage: /Expected color but found \u2018-moz.*/i,
-    platforms: ["linux"],
-    isFromDevTools: false,
-  },
   // These variables are declared somewhere else, and error when we load the
   // files directly. They're all marked intermittent because their appearance
   // in the error console seems to not be consistent.
@@ -81,7 +74,15 @@ if (
   });
 }
 
-if (!Services.prefs.getBoolPref("layout.css.file-chooser-button.enabled")) {
+if (Services.prefs.getBoolPref("layout.css.file-chooser-button.enabled")) {
+  // System colors reserved to UA / chrome sheets
+  whitelist.push({
+    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+    errorMessage: /Expected color but found \u2018-moz.*/i,
+    platforms: ["linux"],
+    isFromDevTools: false,
+  });
+} else {
   // Reserved to UA sheets, behind a pref for content.
   whitelist.push({
     sourceName: /(?:res|gre-resources)\/forms\.css$/i,

@@ -1,5 +1,5 @@
 const TEST_URL =
-  "https://example.com/browser/toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/TriggerActionSchemas.md";
+  "https://example.com/browser/toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/index.md";
 
 const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
@@ -53,7 +53,7 @@ add_task(async function test_trigger_docs() {
   for (let triggerName of ASRouterTriggerListeners.keys()) {
     Assert.ok(
       headings.includes(triggerName),
-      `${triggerName} not found in TriggerActionSchemas.md`
+      `${triggerName} not found in TriggerActionSchemas/index.md`
     );
   }
 });

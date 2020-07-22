@@ -1037,6 +1037,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "defaultagent-static"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "url",
+ "viaduct",
+ "winapi 0.3.7",
+ "wineventlog",
+ "wio",
+]
+
+[[package]]
 name = "deflate"
 version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"

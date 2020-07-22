@@ -1,5 +1,4 @@
-// |jit-test| tz-pacific; skip-if: getBuildConfiguration()['android'] 
-//bug 1651686 - disable on android due to intermittent failures
+// |jit-test| tz-pacific
 
 function arrayExists(array, x) {
     for (var i = 0; i < array.length; i++) {

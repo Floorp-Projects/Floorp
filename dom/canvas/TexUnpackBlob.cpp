@@ -18,6 +18,31 @@
 #include "WebGLTexture.h"
 
 namespace mozilla {
+
+void WebGLPixelStore::Apply(gl::GLContext& gl, const bool isWebgl2,
+                            const uvec3& uploadSize) const {
+  gl.fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mUnpackAlignment);
+  if (!isWebgl2) return;
+
+  // Re-simplify. (ANGLE seems to have an issue with imageHeight ==
+  // uploadSize.y)
+  auto rowLength = mUnpackRowLength;
+  auto imageHeight = mUnpackImageHeight;
+  if (rowLength == uploadSize.x) {
+    rowLength = 0;
+  }
+  if (imageHeight == uploadSize.y) {
+    imageHeight = 0;
+  }
+
+  gl.fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
+  gl.fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, imageHeight);
+
+  gl.fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, mUnpackSkipPixels);
+  gl.fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, mUnpackSkipRows);
+  gl.fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, mUnpackSkipImages);
+}
+
 namespace webgl {
 
 static bool IsPIValidForDOM(const webgl::PackingInfo& pi) {
@@ -65,7 +90,7 @@ static bool IsPIValidForDOM(const webgl::PackingInfo& pi) {
   return true;
 }
 
-static bool ValidatePIForDOM(WebGLContext* webgl,
+static bool ValidatePIForDOM(const WebGLContext* const webgl,
                              const webgl::PackingInfo& pi) {
   if (!IsPIValidForDOM(pi)) {
     webgl->ErrorInvalidValue("Format or type is invalid for DOM sources.");
@@ -178,21 +203,33 @@ static WebGLTexelFormat FormatForPackingInfo(const PackingInfo& pi) {
 
 ////////////////////
 
-static bool ValidateUnpackPixels(WebGLContext* webgl, uint32_t fullRows,
-                                 uint32_t tailPixels,
-                                 webgl::TexUnpackBlob* blob) {
-  if (!blob->mWidth || !blob->mHeight || !blob->mDepth) return true;
+static uint32_t ZeroOn2D(const GLenum target, const uint32_t val) {
+  const bool is2d = !IsTexTarget3D(target);
+  if (is2d) return 0;
+  return val;
+}
 
-  const auto usedPixelsPerRow = CheckedUint32(blob->mSkipPixels) + blob->mWidth;
+static bool ValidateUnpackPixels(const WebGLContext* webgl, uint32_t fullRows,
+                                 uint32_t tailPixels,
+                                 webgl::TexUnpackBlob* const blob) {
+  const auto& size = blob->mDesc.size;
+  if (!size.x || !size.y || !size.z) return true;
+
+  const auto& unpacking = blob->mDesc.unpacking;
+
+  // -
+
+  const auto usedPixelsPerRow =
+      CheckedUint32(unpacking.mUnpackSkipPixels) + size.x;
   if (!usedPixelsPerRow.isValid() ||
-      usedPixelsPerRow.value() > blob->mRowLength) {
+      usedPixelsPerRow.value() > unpacking.mUnpackRowLength) {
     webgl->ErrorInvalidOperation(
         "UNPACK_SKIP_PIXELS + width >"
         " UNPACK_ROW_LENGTH.");
     return false;
   }
 
-  if (blob->mHeight > blob->mImageHeight) {
+  if (size.y > unpacking.mUnpackImageHeight) {
     webgl->ErrorInvalidOperation("height > UNPACK_IMAGE_HEIGHT.");
     return false;
   }
@@ -200,14 +237,15 @@ static bool ValidateUnpackPixels(WebGLContext* webgl, uint32_t fullRows,
   //////
 
   // The spec doesn't bound SKIP_ROWS + height <= IMAGE_HEIGHT, unfortunately.
-  auto skipFullRows = CheckedUint32(blob->mSkipImages) * blob->mImageHeight;
-  skipFullRows += blob->mSkipRows;
+  auto skipFullRows =
+      CheckedUint32(unpacking.mUnpackSkipImages) * unpacking.mUnpackImageHeight;
+  skipFullRows += unpacking.mUnpackSkipRows;
 
-  MOZ_ASSERT(blob->mDepth >= 1);
-  MOZ_ASSERT(blob->mHeight >= 1);
-  auto usedFullRows = CheckedUint32(blob->mDepth - 1) * blob->mImageHeight;
-  usedFullRows +=
-      blob->mHeight - 1;  // Full rows in the final image, excluding the tail.
+  // Full rows in the final image, excluding the tail.
+  MOZ_ASSERT(size.y >= 1);
+  MOZ_ASSERT(size.z >= 1);
+  auto usedFullRows = CheckedUint32(size.z - 1) * unpacking.mUnpackImageHeight;
+  usedFullRows += size.y - 1;
 
   const auto fullRowsNeeded = skipFullRows + usedFullRows;
   if (!fullRowsNeeded.isValid()) {
@@ -215,11 +253,14 @@ static bool ValidateUnpackPixels(WebGLContext* webgl, uint32_t fullRows,
     return false;
   }
 
-  if (fullRows > fullRowsNeeded.value()) return true;
+  if (fullRows > fullRowsNeeded.value()) {
+    blob->mNeedsExactUpload = false;
+    return true;
+  }
 
   if (fullRows == fullRowsNeeded.value() &&
       tailPixels >= usedPixelsPerRow.value()) {
-    blob->mNeedsExactUpload = true;
+    MOZ_ASSERT(blob->mNeedsExactUpload);
     return true;
   }
 
@@ -231,15 +272,19 @@ static bool ValidateUnpackPixels(WebGLContext* webgl, uint32_t fullRows,
   return false;
 }
 
-static bool ValidateUnpackBytes(WebGLContext* webgl,
+static bool ValidateUnpackBytes(const WebGLContext* const webgl,
                                 const webgl::PackingInfo& pi,
                                 size_t availByteCount,
-                                webgl::TexUnpackBlob* blob) {
-  if (!blob->mWidth || !blob->mHeight || !blob->mDepth) return true;
+                                webgl::TexUnpackBlob* const blob) {
+  const auto& size = blob->mDesc.size;
+  if (!size.x || !size.y || !size.z) return true;
+  const auto& unpacking = blob->mDesc.unpacking;
 
   const auto bytesPerPixel = webgl::BytesPerPixel(pi);
-  const auto bytesPerRow = CheckedUint32(blob->mRowLength) * bytesPerPixel;
-  const auto rowStride = RoundUpToMultipleOf(bytesPerRow, blob->mAlignment);
+  const auto bytesPerRow =
+      CheckedUint32(unpacking.mUnpackRowLength) * bytesPerPixel;
+  const auto rowStride =
+      RoundUpToMultipleOf(bytesPerRow, unpacking.mUnpackAlignment);
 
   const auto fullRows = availByteCount / rowStride;
   if (!fullRows.isValid()) {
@@ -255,39 +300,39 @@ static bool ValidateUnpackBytes(WebGLContext* webgl,
 
 ////////////////////
 
-static uint32_t ZeroOn2D(TexImageTarget target, uint32_t val) {
-  return (IsTarget3D(target) ? val : 0);
-}
+// static
+std::unique_ptr<TexUnpackBlob> TexUnpackBlob::Create(
+    const TexUnpackBlobDesc& desc) {
+  return std::unique_ptr<TexUnpackBlob>{[&]() -> TexUnpackBlob* {
+    if (!IsTarget3D(desc.imageTarget) && desc.size.z != 1) {
+      MOZ_ASSERT(false);
+      return nullptr;
+    }
 
-static uint32_t FallbackOnZero(uint32_t val, uint32_t fallback) {
-  return (val ? val : fallback);
-}
+    switch (desc.unpacking.mUnpackAlignment) {
+      case 1:
+      case 2:
+      case 4:
+      case 8:
+        break;
+      default:
+        MOZ_ASSERT(false);
+        return nullptr;
+    }
 
-TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
-                             uint32_t rowLength, uint32_t width,
-                             uint32_t height, uint32_t depth,
-                             gfxAlphaType srcAlphaType)
-    : mAlignment(webgl->mPixelStore.mUnpackAlignment),
-      mRowLength(rowLength),
-      mImageHeight(FallbackOnZero(
-          ZeroOn2D(target, webgl->mPixelStore.mUnpackImageHeight), height))
+    if (desc.image) {
+      return new TexUnpackImage(desc);
+    }
+    if (desc.surf) {
+      return new TexUnpackSurface(desc);
+    }
 
-      ,
-      mSkipPixels(webgl->mPixelStore.mUnpackSkipPixels),
-      mSkipRows(webgl->mPixelStore.mUnpackSkipRows),
-      mSkipImages(ZeroOn2D(target, webgl->mPixelStore.mUnpackSkipImages))
-
-      ,
-      mWidth(width),
-      mHeight(height),
-      mDepth(depth)
-
-      ,
-      mSrcAlphaType(srcAlphaType)
-
-      ,
-      mNeedsExactUpload(false) {
-  MOZ_ASSERT_IF(!IsTarget3D(target), mDepth == 1);
+    if (desc.srcAlphaType != gfxAlphaType::NonPremult) {
+      MOZ_ASSERT(false);
+      return nullptr;
+    }
+    return new TexUnpackBytes(desc);
+  }()};
 }
 
 static bool HasColorAndAlpha(const WebGLTexelFormat format) {
@@ -308,22 +353,25 @@ static bool HasColorAndAlpha(const WebGLTexelFormat format) {
 }
 
 bool TexUnpackBlob::ConvertIfNeeded(
-    WebGLContext* webgl, const uint32_t rowLength, const uint32_t rowCount,
-    WebGLTexelFormat srcFormat, const uint8_t* const srcBegin,
-    const ptrdiff_t srcStride, WebGLTexelFormat dstFormat,
-    const ptrdiff_t dstStride, const uint8_t** const out_begin,
+    const WebGLContext* const webgl, const uint32_t rowLength,
+    const uint32_t rowCount, WebGLTexelFormat srcFormat,
+    const uint8_t* const srcBegin, const ptrdiff_t srcStride,
+    WebGLTexelFormat dstFormat, const ptrdiff_t dstStride,
+    const uint8_t** const out_begin,
     UniqueBuffer* const out_anchoredBuffer) const {
   MOZ_ASSERT(srcFormat != WebGLTexelFormat::FormatNotSupportingAnyConversion);
   MOZ_ASSERT(dstFormat != WebGLTexelFormat::FormatNotSupportingAnyConversion);
 
   *out_begin = srcBegin;
 
+  const auto& unpacking = mDesc.unpacking;
+
   if (!rowLength || !rowCount) return true;
 
-  const auto srcIsPremult = (mSrcAlphaType == gfxAlphaType::Premult);
-  const auto& dstIsPremult = webgl->mPixelStore.mPremultiplyAlpha;
+  const auto srcIsPremult = (mDesc.srcAlphaType == gfxAlphaType::Premult);
+  const auto& dstIsPremult = unpacking.mPremultiplyAlpha;
   const auto fnHasPremultMismatch = [&]() {
-    if (mSrcAlphaType == gfxAlphaType::Opaque) return false;
+    if (mDesc.srcAlphaType == gfxAlphaType::Opaque) return false;
 
     if (!HasColorAndAlpha(srcFormat)) return false;
 
@@ -331,8 +379,7 @@ bool TexUnpackBlob::ConvertIfNeeded(
   };
 
   const auto srcOrigin =
-      (webgl->mPixelStore.mFlipY ? gl::OriginPos::TopLeft
-                                 : gl::OriginPos::BottomLeft);
+      (unpacking.mFlipY ? gl::OriginPos::TopLeft : gl::OriginPos::BottomLeft);
   const auto dstOrigin = gl::OriginPos::BottomLeft;
 
   if (srcFormat != dstFormat) {
@@ -399,66 +446,77 @@ static GLenum DoTexOrSubImage(bool isSubImage, gl::GLContext* gl,
 //////////////////////////////////////////////////////////////////////////////////////////
 // TexUnpackBytes
 
-TexUnpackBytes::TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target,
-                               uint32_t width, uint32_t height, uint32_t depth,
-                               bool isClientData, const uint8_t* ptr,
-                               size_t availBytes)
-    : TexUnpackBlob(webgl, target,
-                    FallbackOnZero(webgl->mPixelStore.mUnpackRowLength, width),
-                    width, height, depth, gfxAlphaType::NonPremult),
-      mIsClientData(isClientData),
-      mPtr(ptr),
-      mAvailBytes(availBytes) {}
-
-bool TexUnpackBytes::Validate(WebGLContext* webgl,
+bool TexUnpackBytes::Validate(const WebGLContext* const webgl,
                               const webgl::PackingInfo& pi) {
-  if (mIsClientData && !mPtr) return true;
+  if (!HasData()) return true;
 
-  return ValidateUnpackBytes(webgl, pi, mAvailBytes, this);
+  CheckedInt<size_t> availBytes = 0;
+  if (mDesc.cpuData) {
+    const auto& range = mDesc.cpuData->Data();
+    availBytes = range.length();
+  } else if (mDesc.pboOffset) {
+    const auto& pboOffset = *mDesc.pboOffset;
+
+    const auto& pbo =
+        webgl->ValidateBufferSelection(LOCAL_GL_PIXEL_UNPACK_BUFFER);
+    if (!pbo) return false;  // Might be invalid e.g. due to in-use by TF.
+    availBytes = pbo->ByteLength();
+    availBytes -= pboOffset;
+  } else {
+    MOZ_ASSERT(false, "Must be one of the above");
+  }
+  if (!availBytes.isValid()) {
+    webgl->ErrorInvalidOperation("Offset is passed end of buffer.");
+    return false;
+  }
+
+  return ValidateUnpackBytes(webgl, pi, availBytes.value(), this);
 }
 
 bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
-                                   WebGLTexture* tex, TexImageTarget target,
-                                   GLint level,
+                                   WebGLTexture* tex, GLint level,
                                    const webgl::DriverUnpackInfo* dui,
                                    GLint xOffset, GLint yOffset, GLint zOffset,
                                    const webgl::PackingInfo& pi,
                                    GLenum* const out_error) const {
-  WebGLContext* webgl = tex->mContext;
+  const auto& webgl = tex->mContext;
+  const auto& target = mDesc.imageTarget;
+  const auto& size = mDesc.size;
+  const auto& unpacking = mDesc.unpacking;
 
   const auto format = FormatForPackingInfo(pi);
   const auto bytesPerPixel = webgl::BytesPerPixel(pi);
 
-  const uint8_t* uploadPtr = mPtr;
+  const uint8_t dummy = 0;
+  const uint8_t* uploadPtr = nullptr;
+  if (mDesc.cpuData) {
+    const auto range = mDesc.cpuData->Data();
+    uploadPtr = range.begin().get();
+    if (!uploadPtr) {
+      MOZ_ASSERT(!range.length());
+      uploadPtr = &dummy;
+    }
+  }
+
   UniqueBuffer tempBuffer;
 
   do {
-    if (!mIsClientData || !mPtr) break;
+    if (mDesc.pboOffset || !uploadPtr) break;
 
-    if (!webgl->mPixelStore.mFlipY && !webgl->mPixelStore.mPremultiplyAlpha) {
+    if (!unpacking.mFlipY && !unpacking.mPremultiplyAlpha) {
       break;
-    }
-
-    if (webgl->mPixelStore.mUnpackImageHeight ||
-        webgl->mPixelStore.mUnpackSkipImages ||
-        webgl->mPixelStore.mUnpackRowLength ||
-        webgl->mPixelStore.mUnpackSkipRows ||
-        webgl->mPixelStore.mUnpackSkipPixels) {
-      webgl->ErrorInvalidOperation(
-          "Non-DOM-Element uploads with alpha-premult"
-          " or y-flip do not support subrect selection.");
-      return false;
     }
 
     webgl->GenerateWarning(
         "Alpha-premult and y-flip are deprecated for"
         " non-DOM-Element uploads.");
 
-    const uint32_t rowLength = mWidth;
-    const uint32_t rowCount = mHeight * mDepth;
-    const auto stride =
-        RoundUpToMultipleOf(rowLength * bytesPerPixel, mAlignment);
-    if (!ConvertIfNeeded(webgl, rowLength, rowCount, format, mPtr, stride,
+    const uint32_t rowLength = size.x;
+    const uint32_t rowCount = size.y * size.z;
+    const auto stride = RoundUpToMultipleOf(rowLength * bytesPerPixel,
+                                            unpacking.mUnpackAlignment);
+    const auto srcPtr = uploadPtr;
+    if (!ConvertIfNeeded(webgl, rowLength, rowCount, format, srcPtr, stride,
                          format, stride, &uploadPtr, &tempBuffer)) {
       return false;
     }
@@ -488,7 +546,7 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
 
     *out_error =
         DoTexOrSubImage(isSubImage, gl, target, level, dui, xOffset, yOffset,
-                        zOffset, mWidth, mHeight, mDepth, uploadPtr);
+                        zOffset, size.x, size.y, size.z, uploadPtr);
 
     if (webgl->mBoundPixelUnpackBuffer) {
       gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
@@ -505,7 +563,7 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
     AssertUintParamCorrect(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
     *out_error =
         DoTexOrSubImage(false, gl, target, level, dui, xOffset, yOffset,
-                        zOffset, mWidth, mHeight, mDepth, nullptr);
+                        zOffset, size.x, size.y, size.z, nullptr);
     if (*out_error) return true;
   }
 
@@ -516,32 +574,36 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
 
   // Make our sometimes-implicit values explicit. Also this keeps them constant
   // when we ask for height=mHeight-1 and such.
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mRowLength);
-  gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, mImageHeight);
+  gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, unpacking.mUnpackRowLength);
+  gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, unpacking.mUnpackImageHeight);
 
-  if (mDepth > 1) {
+  if (size.z > 1) {
     *out_error =
         DoTexOrSubImage(true, gl, target, level, dui, xOffset, yOffset, zOffset,
-                        mWidth, mHeight, mDepth - 1, uploadPtr);
+                        size.x, size.y, size.z - 1, uploadPtr);
   }
 
   // Skip the images we uploaded.
-  gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, mSkipImages + mDepth - 1);
+  const auto skipImages = ZeroOn2D(target, unpacking.mUnpackSkipImages);
+  gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, skipImages + size.z - 1);
 
-  if (mHeight > 1) {
-    *out_error = DoTexOrSubImage(true, gl, target, level, dui, xOffset, yOffset,
-                                 zOffset + mDepth - 1, mWidth, mHeight - 1, 1,
-                                 uploadPtr);
+  if (size.y > 1) {
+    *out_error =
+        DoTexOrSubImage(true, gl, target, level, dui, xOffset, yOffset,
+                        zOffset + size.z - 1, size.x, size.y - 1, 1, uploadPtr);
   }
 
   const auto totalSkipRows =
-      CheckedUint32(mSkipImages) * mImageHeight + mSkipRows;
+      CheckedUint32(skipImages) * unpacking.mUnpackImageHeight +
+      unpacking.mUnpackSkipRows;
   const auto totalFullRows =
-      CheckedUint32(mDepth - 1) * mImageHeight + mHeight - 1;
+      CheckedUint32(size.z - 1) * unpacking.mUnpackImageHeight + size.y - 1;
   const auto tailOffsetRows = totalSkipRows + totalFullRows;
 
-  const auto bytesPerRow = CheckedUint32(mRowLength) * bytesPerPixel;
-  const auto rowStride = RoundUpToMultipleOf(bytesPerRow, mAlignment);
+  const auto bytesPerRow =
+      CheckedUint32(unpacking.mUnpackRowLength) * bytesPerPixel;
+  const auto rowStride =
+      RoundUpToMultipleOf(bytesPerRow, unpacking.mUnpackAlignment);
   if (!rowStride.isValid()) {
     MOZ_CRASH("Should be checked earlier.");
   }
@@ -559,20 +621,10 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
                         // Keep skipping pixels though!
 
   *out_error = DoTexOrSubImage(true, gl, target, level, dui, xOffset,
-                               yOffset + mHeight - 1, zOffset + mDepth - 1,
-                               mWidth, 1, 1, uploadPtr);
+                               yOffset + size.y - 1, zOffset + size.z - 1,
+                               size.x, 1, 1, uploadPtr);
 
-  // Reset all our modified state.
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                   webgl->mPixelStore.mUnpackAlignment);
-  gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT,
-                   webgl->mPixelStore.mUnpackImageHeight);
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH,
-                   webgl->mPixelStore.mUnpackRowLength);
-  gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES,
-                   webgl->mPixelStore.mUnpackSkipImages);
-  gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS,
-                   webgl->mPixelStore.mUnpackSkipRows);
+  // Caller will reset all our modified PixelStorei state.
 
   return true;
 }
@@ -581,46 +633,42 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
 ////////////////////////////////////////////////////////////////////////////////
 // TexUnpackImage
 
-TexUnpackImage::TexUnpackImage(const WebGLContext* webgl, TexImageTarget target,
-                               uint32_t width, uint32_t height, uint32_t depth,
-                               layers::Image* image, gfxAlphaType srcAlphaType)
-    : TexUnpackBlob(webgl, target, image->GetSize().width, width, height, depth,
-                    srcAlphaType),
-      mImage(image) {}
-
 TexUnpackImage::~TexUnpackImage() = default;
 
-bool TexUnpackImage::Validate(WebGLContext* webgl,
+bool TexUnpackImage::Validate(const WebGLContext* const webgl,
                               const webgl::PackingInfo& pi) {
   if (!ValidatePIForDOM(webgl, pi)) return false;
 
-  const auto fullRows = mImage->GetSize().height;
+  const auto fullRows = mDesc.image->GetSize().height;
   return ValidateUnpackPixels(webgl, fullRows, 0, this);
 }
 
 bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
-                                   WebGLTexture* tex, TexImageTarget target,
-                                   GLint level,
+                                   WebGLTexture* tex, GLint level,
                                    const webgl::DriverUnpackInfo* dui,
                                    GLint xOffset, GLint yOffset, GLint zOffset,
                                    const webgl::PackingInfo& pi,
                                    GLenum* const out_error) const {
   MOZ_ASSERT_IF(needsRespec, !isSubImage);
 
-  WebGLContext* webgl = tex->mContext;
+  const auto& webgl = tex->mContext;
+  const auto& target = mDesc.imageTarget;
+  const auto& size = mDesc.size;
+  const auto& image = mDesc.image;
+  const auto& unpacking = mDesc.unpacking;
 
-  gl::GLContext* gl = webgl->GL();
+  const auto& gl = webgl->GL();
 
   if (needsRespec) {
     *out_error =
-        DoTexOrSubImage(isSubImage, gl, target.get(), level, dui, xOffset,
-                        yOffset, zOffset, mWidth, mHeight, mDepth, nullptr);
+        DoTexOrSubImage(isSubImage, gl, target, level, dui, xOffset, yOffset,
+                        zOffset, size.x, size.y, size.z, nullptr);
     if (*out_error) return true;
   }
 
   const char* fallbackReason;
   do {
-    if (mDepth != 1) {
+    if (size.z != 1) {
       fallbackReason = "depth is not 1";
       break;
     }
@@ -629,18 +677,17 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
       break;
     }
 
-    if (webgl->mPixelStore.mUnpackSkipPixels ||
-        webgl->mPixelStore.mUnpackSkipRows ||
-        webgl->mPixelStore.mUnpackSkipImages) {
+    if (unpacking.mUnpackSkipPixels || unpacking.mUnpackSkipRows ||
+        unpacking.mUnpackSkipImages) {
       fallbackReason = "non-zero UNPACK_SKIP_* not yet supported";
       break;
     }
 
     const auto fnHasPremultMismatch = [&]() {
-      if (mSrcAlphaType == gfxAlphaType::Opaque) return false;
+      if (mDesc.srcAlphaType == gfxAlphaType::Opaque) return false;
 
-      const bool srcIsPremult = (mSrcAlphaType == gfxAlphaType::Premult);
-      const auto& dstIsPremult = webgl->mPixelStore.mPremultiplyAlpha;
+      const bool srcIsPremult = (mDesc.srcAlphaType == gfxAlphaType::Premult);
+      const auto& dstIsPremult = unpacking.mPremultiplyAlpha;
       if (srcIsPremult == dstIsPremult) return false;
 
       if (dstIsPremult) {
@@ -670,7 +717,7 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
       gl::GLContext::LocalErrorScope errorScope(*gl);
 
       gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                                LOCAL_GL_COLOR_ATTACHMENT0, target.get(),
+                                LOCAL_GL_COLOR_ATTACHMENT0, target,
                                 tex->mGLName, level);
 
       if (errorScope.GetError()) {
@@ -685,11 +732,10 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
       break;
     }
 
-    const gfx::IntSize dstSize(mWidth, mHeight);
     const auto dstOrigin =
-        (webgl->mPixelStore.mFlipY ? gl::OriginPos::TopLeft
-                                   : gl::OriginPos::BottomLeft);
-    if (!gl->BlitHelper()->BlitImageToFramebuffer(mImage, dstSize, dstOrigin)) {
+        (unpacking.mFlipY ? gl::OriginPos::TopLeft : gl::OriginPos::BottomLeft);
+    if (!gl->BlitHelper()->BlitImageToFramebuffer(image, {size.x, size.y},
+                                                  dstOrigin)) {
       fallbackReason = "likely bug: failed to blit";
       break;
     }
@@ -701,9 +747,9 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
 
   const nsPrintfCString perfMsg(
       "Failed to hit GPU-copy fast-path: %s (src type %u)", fallbackReason,
-      uint32_t(mImage->GetFormat()));
+      uint32_t(image->GetFormat()));
 
-  if (webgl->mPixelStore.mRequireFastPath) {
+  if (unpacking.mRequireFastPath) {
     webgl->ErrorInvalidOperation("%s", perfMsg.BeginReading());
     return false;
   }
@@ -711,7 +757,7 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
   webgl->GeneratePerfWarning("%s Falling back to CPU upload.",
                              perfMsg.BeginReading());
 
-  const RefPtr<gfx::SourceSurface> surf = mImage->GetAsSourceSurface();
+  const RefPtr<gfx::SourceSurface> surf = image->GetAsSourceSurface();
 
   RefPtr<gfx::DataSourceSurface> dataSurf;
   if (surf) {
@@ -725,29 +771,22 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
     return false;
   }
 
-  const TexUnpackSurface surfBlob(webgl, target, mWidth, mHeight, mDepth,
-                                  dataSurf, mSrcAlphaType);
-
-  return surfBlob.TexOrSubImage(isSubImage, needsRespec, tex, target, level,
-                                dui, xOffset, yOffset, zOffset, pi, out_error);
+  const TexUnpackBlobDesc newDesc = {
+      target, size, mDesc.srcAlphaType, {}, {}, {}, dataSurf, unpacking};
+  const TexUnpackSurface surfBlob(newDesc);
+  return surfBlob.TexOrSubImage(isSubImage, needsRespec, tex, level, dui,
+                                xOffset, yOffset, zOffset, pi, out_error);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // TexUnpackSurface
 
-TexUnpackSurface::TexUnpackSurface(const WebGLContext* webgl,
-                                   TexImageTarget target, uint32_t width,
-                                   uint32_t height, uint32_t depth,
-                                   gfx::DataSourceSurface* surf,
-                                   gfxAlphaType srcAlphaType)
-    : TexUnpackBlob(webgl, target, surf->GetSize().width, width, height, depth,
-                    srcAlphaType),
-      mSurf(surf) {}
+TexUnpackSurface::~TexUnpackSurface() = default;
 
 //////////
 
-static bool GetFormatForSurf(gfx::SourceSurface* surf,
+static bool GetFormatForSurf(const gfx::SourceSurface* surf,
                              WebGLTexelFormat* const out_texelFormat,
                              uint8_t* const out_bpp) {
   const auto surfFormat = surf->GetFormat();
@@ -796,25 +835,29 @@ static bool GetFormatForSurf(gfx::SourceSurface* surf,
 
 //////////
 
-bool TexUnpackSurface::Validate(WebGLContext* webgl,
+bool TexUnpackSurface::Validate(const WebGLContext* const webgl,
                                 const webgl::PackingInfo& pi) {
   if (!ValidatePIForDOM(webgl, pi)) return false;
 
-  const auto fullRows = mSurf->GetSize().height;
+  const auto fullRows = mDesc.surf->GetSize().height;
   return ValidateUnpackPixels(webgl, fullRows, 0, this);
 }
 
-bool TexUnpackSurface::TexOrSubImage(
-    bool isSubImage, bool needsRespec, WebGLTexture* tex, TexImageTarget target,
-    GLint level, const webgl::DriverUnpackInfo* dui, GLint xOffset,
-    GLint yOffset, GLint zOffset, const webgl::PackingInfo& dstPI,
-    GLenum* const out_error) const {
+bool TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec,
+                                     WebGLTexture* tex, GLint level,
+                                     const webgl::DriverUnpackInfo* dui,
+                                     GLint xOffset, GLint yOffset,
+                                     GLint zOffset,
+                                     const webgl::PackingInfo& dstPI,
+                                     GLenum* const out_error) const {
   const auto& webgl = tex->mContext;
+  const auto& size = mDesc.size;
+  auto& surf = *(mDesc.surf);
 
   ////
 
-  const auto rowLength = mSurf->GetSize().width;
-  const auto rowCount = mSurf->GetSize().height;
+  const auto rowLength = surf.GetSize().width;
+  const auto rowCount = surf.GetSize().height;
 
   const auto& dstBPP = webgl::BytesPerPixel(dstPI);
   const auto dstFormat = FormatForPackingInfo(dstPI);
@@ -823,15 +866,15 @@ bool TexUnpackSurface::TexOrSubImage(
 
   WebGLTexelFormat srcFormat;
   uint8_t srcBPP;
-  if (!GetFormatForSurf(mSurf, &srcFormat, &srcBPP)) {
+  if (!GetFormatForSurf(&surf, &srcFormat, &srcBPP)) {
     webgl->ErrorImplementationBug(
         "GetFormatForSurf failed for"
         " WebGLTexelFormat::%u.",
-        uint32_t(mSurf->GetFormat()));
+        uint32_t(surf.GetFormat()));
     return false;
   }
 
-  gfx::DataSourceSurface::ScopedMap map(mSurf,
+  gfx::DataSourceSurface::ScopedMap map(&surf,
                                         gfx::DataSourceSurface::MapType::READ);
   if (!map.IsMapped()) {
     webgl->ErrorOutOfMemory("Failed to map source surface for upload.");
@@ -882,15 +925,10 @@ bool TexUnpackSurface::TexOrSubImage(
   }
 
   *out_error =
-      DoTexOrSubImage(isSubImage, gl, target.get(), level, dui, xOffset,
-                      yOffset, zOffset, mWidth, mHeight, mDepth, dstBegin);
+      DoTexOrSubImage(isSubImage, gl, mDesc.imageTarget, level, dui, xOffset,
+                      yOffset, zOffset, size.x, size.y, size.z, dstBegin);
 
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                   webgl->mPixelStore.mUnpackAlignment);
-  if (webgl->IsWebGL2()) {
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH,
-                     webgl->mPixelStore.mUnpackRowLength);
-  }
+  // Caller will reset all our modified PixelStorei state.
 
   return true;
 }

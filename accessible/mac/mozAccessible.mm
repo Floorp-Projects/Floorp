@@ -7,6 +7,7 @@
 
 #import "MacUtils.h"
 #import "mozView.h"
+#import "GeckoTextMarker.h"
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
@@ -77,26 +78,7 @@ using namespace mozilla::a11y;
 
 #pragma mark -
 
-- (BOOL)isAccessibilityElement {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  if ([self isExpired]) {
-    return ![self ignoreWithParent:nil];
-  }
-
-  mozAccessible* parent = nil;
-  AccessibleOrProxy p = mGeckoAccessible.Parent();
-
-  if (!p.IsNull()) {
-    parent = GetNativeFromGeckoAccessible(p);
-  }
-
-  return ![self ignoreWithParent:parent];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
-}
-
-- (BOOL)ignoreWithParent:(mozAccessible*)parent {
+- (BOOL)moxIgnoreWithParent:(mozAccessible*)parent {
   if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
     if (acc->IsContent() && acc->GetContent()->IsXULElement()) {
       if (acc->VisibilityState() & states::INVISIBLE) {
@@ -105,10 +87,10 @@ using namespace mozilla::a11y;
     }
   }
 
-  return [parent ignoreChild:self];
+  return [parent moxIgnoreChild:self];
 }
 
-- (BOOL)ignoreChild:(mozAccessible*)child {
+- (BOOL)moxIgnoreChild:(mozAccessible*)child {
   return NO;
 }
 
@@ -183,6 +165,23 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
 - (mozilla::a11y::AccessibleOrProxy)geckoAccessible {
   return mGeckoAccessible;
+}
+
+- (mozilla::a11y::AccessibleOrProxy)geckoDocument {
+  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+
+  if (mGeckoAccessible.IsAccessible()) {
+    if (mGeckoAccessible.AsAccessible()->IsDoc()) {
+      return mGeckoAccessible;
+    }
+    return mGeckoAccessible.AsAccessible()->Document();
+  }
+
+  if (mGeckoAccessible.AsProxy()->IsDoc()) {
+    return mGeckoAccessible;
+  }
+
+  return mGeckoAccessible.AsProxy()->Document();
 }
 
 #pragma mark - MOXAccessible protocol
@@ -266,7 +265,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
   if (!child.IsNull()) {
     mozAccessible* nativeChild = GetNativeFromGeckoAccessible(child);
-    return [nativeChild isAccessibilityElement] ? nativeChild : [nativeChild moxParent];
+    return [nativeChild isAccessibilityElement] ? nativeChild : [nativeChild moxUnignoredParent];
   }
 
   // if we didn't find anything, return ourself or child view.
@@ -292,16 +291,12 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     nativeParent = GetNativeFromGeckoAccessible(mGeckoAccessible.AsAccessible()->RootAccessible());
   }
 
-  if (![nativeParent isAccessibilityElement]) {
-    nativeParent = [nativeParent moxParent];
-  }
-
   return GetObjectOrRepresentedView(nativeParent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-// gets our native children lazily.
+// gets all our native children lazily, including those that are ignored.
 - (NSArray*)moxChildren {
   MOZ_ASSERT(!mGeckoAccessible.IsNull());
 
@@ -315,14 +310,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
       continue;
     }
 
-    if ([nativeChild ignoreWithParent:self]) {
-      // If this child should be ignored get its unignored children.
-      // This will in turn recurse to any unignored descendants if the
-      // child is ignored.
-      [children addObjectsFromArray:[nativeChild moxChildren]];
-    } else {
-      [children addObject:nativeChild];
-    }
+    [children addObject:nativeChild];
   }
 
   return children;
@@ -654,7 +642,7 @@ struct RoleDescrComparator {
   }
 
   if (![self isRoot]) {
-    mozAccessible* parent = (mozAccessible*)[self moxParent];
+    mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
     if (![parent isRoot]) {
       return @(![parent disableChild:self]);
     }
@@ -796,6 +784,43 @@ struct RoleDescrComparator {
 
 - (BOOL)disableChild:(mozAccessible*)child {
   return NO;
+}
+
+enum AXTextEditType {
+  AXTextEditTypeUnknown,
+  AXTextEditTypeDelete,
+  AXTextEditTypeInsert,
+  AXTextEditTypeTyping,
+  AXTextEditTypeDictation,
+  AXTextEditTypeCut,
+  AXTextEditTypePaste,
+  AXTextEditTypeAttributesChange
+};
+
+enum AXTextStateChangeType {
+  AXTextStateChangeTypeUnknown,
+  AXTextStateChangeTypeEdit,
+  AXTextStateChangeTypeSelectionMove,
+  AXTextStateChangeTypeSelectionExtend
+};
+
+- (void)handleAccessibleTextChangeEvent:(NSString*)change
+                               inserted:(BOOL)isInserted
+                                     at:(int32_t)start {
+  GeckoTextMarker startMarker(mGeckoAccessible, start);
+  NSDictionary* userInfo = @{
+    @"AXTextChangeElement" : self,
+    @"AXTextStateChangeType" : @(AXTextStateChangeTypeEdit),
+    @"AXTextChangeValues" : @[ @{
+      @"AXTextChangeValue" : (change ? change : @""),
+      @"AXTextChangeValueStartMarker" : startMarker.CreateAXTextMarker(),
+      @"AXTextEditType" : isInserted ? @(AXTextEditTypeTyping) : @(AXTextEditTypeDelete)
+    } ]
+  };
+
+  mozAccessible* webArea = GetNativeFromGeckoAccessible([self geckoDocument]);
+  [webArea moxPostNotification:NSAccessibilityValueChangedNotification withUserInfo:userInfo];
+  [self moxPostNotification:NSAccessibilityValueChangedNotification withUserInfo:userInfo];
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {

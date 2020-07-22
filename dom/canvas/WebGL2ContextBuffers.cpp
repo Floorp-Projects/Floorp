@@ -78,23 +78,23 @@ void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
   writeBuffer->ResetLastUpdateFenceId();
 }
 
-void WebGL2Context::GetBufferSubData(GLenum target, uint64_t srcByteOffset,
+bool WebGL2Context::GetBufferSubData(GLenum target, uint64_t srcByteOffset,
                                      const Range<uint8_t>& dest) const {
   const FuncScope funcScope(*this, "getBufferSubData");
-  if (IsContextLost()) return;
+  if (IsContextLost()) return false;
 
   const auto& buffer = ValidateBufferSelection(target);
-  if (!buffer) return;
+  if (!buffer) return false;
 
   const auto byteLen = dest.length();
-  if (!buffer->ValidateRange(srcByteOffset, byteLen)) return;
+  if (!buffer->ValidateRange(srcByteOffset, byteLen)) return false;
 
   ////
 
   if (!CheckedInt<GLintptr>(srcByteOffset).isValid() ||
       !CheckedInt<GLsizeiptr>(byteLen).isValid()) {
     ErrorOutOfMemory("offset or size too large for platform.");
-    return;
+    return false;
   }
   const GLsizeiptr glByteLen(byteLen);
 
@@ -144,6 +144,7 @@ void WebGL2Context::GetBufferSubData(GLenum target, uint64_t srcByteOffset,
       gl->fBindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, tfo);
     }
   }
+  return true;
 }
 
 }  // namespace mozilla

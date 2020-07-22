@@ -53,36 +53,6 @@ struct ParamTraits<mozilla::layers::SharedSurfacesMemoryReport::SurfaceEntry>
     : public PlainOldDataSerializer<
           mozilla::layers::SharedSurfacesMemoryReport::SurfaceEntry> {};
 
-template <class KeyType, class DataType>
-struct ParamTraits<std::unordered_map<KeyType, DataType>> {
-  typedef std::unordered_map<KeyType, DataType> paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.size());
-    for (auto i = aParam.begin(); i != aParam.end(); ++i) {
-      WriteParam(aMsg, i->first);
-      WriteParam(aMsg, i->second);
-    }
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    size_t count;
-    if (!ReadParam(aMsg, aIter, &count)) {
-      return false;
-    }
-    for (; count > 0; --count) {
-      KeyType k;
-      DataType v;
-      if (!ReadParam(aMsg, aIter, &k) || !ReadParam(aMsg, aIter, &v)) {
-        return false;
-      }
-      aResult->insert(std::make_pair(std::move(k), std::move(v)));
-    }
-    return true;
-  }
-};
-
 }  // namespace IPC
 
 #endif

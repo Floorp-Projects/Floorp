@@ -48,6 +48,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -738,68 +739,66 @@ void WebGLContext::LinkProgram(WebGLProgram& prog) {
   }
 }
 
-void WebGLContext::PixelStorei(GLenum pname, uint32_t param) {
-  const FuncScope funcScope(*this, "pixelStorei");
-  if (IsContextLost()) return;
-
-  if (IsWebGL2()) {
+Maybe<webgl::ErrorInfo> SetPixelUnpack(const bool isWebgl2,
+                                       WebGLPixelStore* const unpacking,
+                                       const GLenum pname, const GLint param) {
+  if (isWebgl2) {
     uint32_t* pValueSlot = nullptr;
     switch (pname) {
       case LOCAL_GL_UNPACK_IMAGE_HEIGHT:
-        pValueSlot = &mPixelStore.mUnpackImageHeight;
+        pValueSlot = &unpacking->mUnpackImageHeight;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_IMAGES:
-        pValueSlot = &mPixelStore.mUnpackSkipImages;
+        pValueSlot = &unpacking->mUnpackSkipImages;
         break;
 
       case LOCAL_GL_UNPACK_ROW_LENGTH:
-        pValueSlot = &mPixelStore.mUnpackRowLength;
+        pValueSlot = &unpacking->mUnpackRowLength;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_ROWS:
-        pValueSlot = &mPixelStore.mUnpackSkipRows;
+        pValueSlot = &unpacking->mUnpackSkipRows;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_PIXELS:
-        pValueSlot = &mPixelStore.mUnpackSkipPixels;
+        pValueSlot = &unpacking->mUnpackSkipPixels;
         break;
     }
 
     if (pValueSlot) {
-      gl->fPixelStorei(pname, static_cast<int32_t>(param));
-      *pValueSlot = param;
-      return;
+      *pValueSlot = static_cast<uint32_t>(param);
+      return {};
     }
   }
 
   switch (pname) {
-    case UNPACK_FLIP_Y_WEBGL:
-      mPixelStore.mFlipY = bool(param);
-      return;
+    case dom::WebGLRenderingContext_Binding::UNPACK_FLIP_Y_WEBGL:
+      unpacking->mFlipY = bool(param);
+      return {};
 
-    case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-      mPixelStore.mPremultiplyAlpha = bool(param);
-      return;
+    case dom::WebGLRenderingContext_Binding::UNPACK_PREMULTIPLY_ALPHA_WEBGL:
+      unpacking->mPremultiplyAlpha = bool(param);
+      return {};
 
-    case UNPACK_COLORSPACE_CONVERSION_WEBGL:
+    case dom::WebGLRenderingContext_Binding::UNPACK_COLORSPACE_CONVERSION_WEBGL:
       switch (param) {
         case LOCAL_GL_NONE:
-        case BROWSER_DEFAULT_WEBGL:
-          mPixelStore.mColorspaceConversion = param;
-          return;
+        case dom::WebGLRenderingContext_Binding::BROWSER_DEFAULT_WEBGL:
+          break;
 
-        default:
-          ErrorInvalidEnumInfo("colorspace conversion parameter", param);
-          return;
+        default: {
+          const nsPrintfCString text("Bad UNPACK_COLORSPACE_CONVERSION: %s",
+                                     EnumString(param).c_str());
+          return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, ToString(text)});
+        }
       }
+      unpacking->mColorspaceConversion = param;
+      return {};
 
-    case UNPACK_REQUIRE_FASTPATH:
-      if (IsExtensionEnabled(WebGLExtensionID::MOZ_debug)) {
-        mPixelStore.mRequireFastPath = bool(param);
-        return;
-      }
-      break;
+    case dom::MOZ_debug_Binding::UNPACK_REQUIRE_FASTPATH:
+      unpacking->mRequireFastPath = bool(param);
+      return {};
 
     case LOCAL_GL_UNPACK_ALIGNMENT:
       switch (param) {
@@ -807,20 +806,22 @@ void WebGLContext::PixelStorei(GLenum pname, uint32_t param) {
         case 2:
         case 4:
         case 8:
-          mPixelStore.mUnpackAlignment = param;
-          gl->fPixelStorei(pname, static_cast<int32_t>(param));
-          return;
+          break;
 
-        default:
-          ErrorInvalidValue("Invalid pack/unpack alignment value.");
-          return;
+        default: {
+          const nsPrintfCString text(
+              "UNPACK_ALIGNMENT must be [1,2,4,8], was %i", param);
+          return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, ToString(text)});
+        }
       }
+      unpacking->mUnpackAlignment = param;
+      return {};
 
     default:
       break;
   }
-
-  ErrorInvalidEnumInfo("pname", pname);
+  const nsPrintfCString text("Bad `pname`: %s", EnumString(pname).c_str());
+  return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_ENUM, ToString(text)});
 }
 
 bool WebGLContext::DoReadPixelsAndConvert(
@@ -920,18 +921,18 @@ static bool ValidatePackSize(const WebGLContext& webgl,
   return true;
 }
 
-void WebGLContext::ReadPixels(const webgl::ReadPixelsDesc& desc,
-                              const Range<uint8_t>& dest) {
+webgl::ReadPixelsResult WebGLContext::ReadPixelsInto(
+    const webgl::ReadPixelsDesc& desc, const Range<uint8_t>& dest) {
   const FuncScope funcScope(*this, "readPixels");
-  if (IsContextLost()) return;
+  if (IsContextLost()) return {};
 
   if (mBoundPixelPackBuffer) {
     ErrorInvalidOperation("PIXEL_PACK_BUFFER must be null.");
-    return;
+    return {};
   }
 
-  ReadPixelsImpl(desc, reinterpret_cast<uintptr_t>(dest.begin().get()),
-                 dest.length());
+  return ReadPixelsImpl(desc, reinterpret_cast<uintptr_t>(dest.begin().get()),
+                        dest.length());
 }
 
 void WebGLContext::ReadPixelsPbo(const webgl::ReadPixelsDesc& desc,
@@ -1077,22 +1078,22 @@ static bool ValidateReadPixelsFormatAndType(
   return false;
 }
 
-void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
-                                  const uintptr_t dest,
-                                  const uint64_t availBytes) {
+webgl::ReadPixelsResult WebGLContext::ReadPixelsImpl(
+    const webgl::ReadPixelsDesc& desc, const uintptr_t dest,
+    const uint64_t availBytes) {
   const webgl::FormatUsageInfo* srcFormat;
   uint32_t srcWidth;
   uint32_t srcHeight;
-  if (!BindCurFBForColorRead(&srcFormat, &srcWidth, &srcHeight)) return;
+  if (!BindCurFBForColorRead(&srcFormat, &srcWidth, &srcHeight)) return {};
 
   //////
 
-  if (!ValidateReadPixelsFormatAndType(srcFormat, desc.pi, gl, this)) return;
+  if (!ValidateReadPixelsFormatAndType(srcFormat, desc.pi, gl, this)) return {};
 
   uint8_t bytesPerPixel;
   if (!webgl::GetBytesPerPixel(desc.pi, &bytesPerPixel)) {
     ErrorInvalidOperation("Unsupported format and type.");
-    return;
+    return {};
   }
 
   //////
@@ -1102,7 +1103,7 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
 
   if (!ivec2::From(size)) {
     ErrorInvalidValue("width and height must be non-negative.");
-    return;
+    return {};
   }
 
   const auto& packing = desc.packState;
@@ -1110,11 +1111,11 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
   uint32_t bytesNeeded;
   if (!ValidatePackSize(*this, packing, size, bytesPerPixel, &rowStride,
                         &bytesNeeded))
-    return;
+    return {};
 
   if (bytesNeeded > availBytes) {
     ErrorInvalidOperation("buffer too small");
-    return;
+    return {};
   }
 
   ////
@@ -1125,7 +1126,7 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
   if (!Intersect(srcWidth, srcOffset.x, size.x, &readX, &writeX, &rwWidth) ||
       !Intersect(srcHeight, srcOffset.y, size.y, &readY, &writeY, &rwHeight)) {
     ErrorOutOfMemory("Bad subrect selection.");
-    return;
+    return {};
   }
 
   ////////////////
@@ -1141,14 +1142,17 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
   if (!rwWidth || !rwHeight) {
     // Disjoint rects, so we're done already.
     DummyReadFramebufferOperation();
-    return;
+    return {};
   }
   const auto rwSize = *uvec2::From(rwWidth, rwHeight);
+
+  const auto res = webgl::ReadPixelsResult{
+      {{writeX, writeY}, {rwSize.x, rwSize.y}}, rowStride};
 
   if (rwSize == size) {
     DoReadPixelsAndConvert(srcFormat->format, desc, dest, bytesNeeded,
                            rowStride);
-    return;
+    return res;
   }
 
   // Read request contains out-of-bounds pixels. Unfortunately:
@@ -1195,6 +1199,8 @@ void WebGLContext::ReadPixelsImpl(const webgl::ReadPixelsDesc& desc,
       row += rowStride;
     }
   }
+
+  return res;
 }
 
 void WebGLContext::RenderbufferStorageMultisample(WebGLRenderbuffer& rb,

@@ -14,26 +14,26 @@ using namespace mozilla::a11y;
 
 @interface NSObject (MOXAccessible)
 
-// This NSObject conforms to mozAccessible.
+// This NSObject conforms to MOXAccessible.
 // This is needed to we know to mutate the value
 // (get represented view, check isAccessibilityElement)
 // before forwarding it to NSAccessibility.
-- (BOOL)isMozAccessible;
+- (BOOL)isMOXAccessible;
 
 // Same as above, but this checks if the NSObject is an array with
 // mozAccessible conforming objects.
-- (BOOL)hasMozAccessibles;
+- (BOOL)hasMOXAccessibles;
 
 @end
 
 @implementation NSObject (MOXAccessible)
 
-- (BOOL)isMozAccessible {
-  return [self conformsToProtocol:@protocol(mozAccessible)];
+- (BOOL)isMOXAccessible {
+  return [self conformsToProtocol:@protocol(MOXAccessible)];
 }
 
-- (BOOL)hasMozAccessibles {
-  return [self isKindOfClass:[NSArray class]] && [[(NSArray*)self firstObject] isMozAccessible];
+- (BOOL)hasMOXAccessibles {
+  return [self isKindOfClass:[NSArray class]] && [[(NSArray*)self firstObject] isMOXAccessible];
 }
 
 @end
@@ -133,14 +133,13 @@ using namespace mozilla::a11y;
     }
   }
 
-  if ([value isMozAccessible]) {
-    // If this is a mozAccessible, get its represented view and filter it if
+  if ([value isMOXAccessible]) {
+    // If this is a MOXAccessible, get its represented view or filter it if
     // it should be ignored.
-    value = GetObjectOrRepresentedView(value);
-    return [value isAccessibilityElement] ? value : nil;
+    return [value isAccessibilityElement] ? GetObjectOrRepresentedView(value) : nil;
   }
 
-  if ([value hasMozAccessibles]) {
+  if ([value hasMOXAccessibles]) {
     // If this is an array of mozAccessibles, get each element's represented view
     // and remove it from the returned array if it should be ignored.
     NSUInteger arrSize = [value count];
@@ -313,7 +312,20 @@ using namespace mozilla::a11y;
 }
 
 - (BOOL)isAccessibilityElement {
-  return YES;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  if ([self isExpired]) {
+    return YES;
+  }
+
+  id parent = [self moxParent];
+  if (![parent isMOXAccessible]) {
+    return YES;
+  }
+
+  return ![self moxIgnoreWithParent:parent];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 - (BOOL)accessibilityNotifiesWhenDestroyed {
@@ -331,8 +343,12 @@ using namespace mozilla::a11y;
 }
 
 - (void)moxPostNotification:(NSString*)notification {
+  [self moxPostNotification:notification withUserInfo:nil];
+}
+
+- (void)moxPostNotification:(NSString*)notification withUserInfo:(NSDictionary*)userInfo {
   // This sends events via nsIObserverService to be consumed by our mochitests.
-  xpcAccessibleMacInterface::FireEvent(self, notification);
+  xpcAccessibleMacEvent::FireEvent(self, notification, userInfo);
 
   if (gfxPlatform::IsHeadless()) {
     // Using a headless toolkit for tests and whatnot, posting accessibility
@@ -345,10 +361,59 @@ using namespace mozilla::a11y;
     return;
   }
 
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self), notification);
+  if (userInfo) {
+    NSAccessibilityPostNotificationWithUserInfo(GetObjectOrRepresentedView(self), notification,
+                                                userInfo);
+  } else {
+    NSAccessibilityPostNotification(GetObjectOrRepresentedView(self), notification);
+  }
 }
 
 - (BOOL)moxBlockSelector:(SEL)selector {
+  return NO;
+}
+
+- (NSArray*)moxChildren {
+  return @[];
+}
+
+- (NSArray*)moxUnignoredChildren {
+  NSMutableArray* unignoredChildren = [[NSMutableArray alloc] init];
+  NSArray* allChildren = [self moxChildren];
+
+  for (MOXAccessibleBase* nativeChild in allChildren) {
+    if ([nativeChild moxIgnoreWithParent:self]) {
+      // If this child should be ignored get its unignored children.
+      // This will in turn recurse to any unignored descendants if the
+      // child is ignored.
+      [unignoredChildren addObjectsFromArray:[nativeChild moxUnignoredChildren]];
+    } else {
+      [unignoredChildren addObject:nativeChild];
+    }
+  }
+
+  return unignoredChildren;
+}
+
+- (id<mozAccessible>)moxParent {
+  return nil;
+}
+
+- (id<mozAccessible>)moxUnignoredParent {
+  id nativeParent = [self moxParent];
+
+  if (![nativeParent isAccessibilityElement]) {
+    return [nativeParent moxUnignoredParent];
+  }
+
+  return GetObjectOrRepresentedView(nativeParent);
+}
+
+- (BOOL)moxIgnoreWithParent:(MOXAccessibleBase*)parent {
+  return [parent moxIgnoreChild:self];
+}
+
+- (BOOL)moxIgnoreChild:(MOXAccessibleBase*)child {
   return NO;
 }
 

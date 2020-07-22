@@ -586,9 +586,11 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
     UniqueBuffer zeros = calloc(1u, sliceByteCount);
     if (!zeros) return false;
 
-    ScopedUnpackReset scopedReset(webgl);
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);  // Don't bother with
-                                                     // striding it well.
+    // Don't bother with striding it well.
+    // TODO: We shouldn't need to do this for CompressedTexSubImage.
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
+    const auto revert = MakeScopeExit(
+        [&]() { gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4); });
 
     GLenum error = 0;
     for (const auto z : IntegerRange(depth)) {
@@ -628,9 +630,10 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
   UniqueBuffer zeros = calloc(1u, sliceByteCount);
   if (!zeros) return false;
 
-  ScopedUnpackReset scopedReset(webgl);
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                   1);  // Don't bother with striding it well.
+  // Don't bother with striding it well.
+  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
+  const auto revert =
+      MakeScopeExit([&]() { gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4); });
 
   GLenum error = 0;
   for (const auto z : IntegerRange(depth)) {

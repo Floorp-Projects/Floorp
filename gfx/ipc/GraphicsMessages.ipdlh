@@ -35,6 +35,7 @@ struct DevicePrefs
   FeatureStatus advancedLayers;
   FeatureStatus useD2D1;
   FeatureStatus webGPU;
+  FeatureStatus d3d11HwAngle;
 };
 
 struct ContentDeviceData

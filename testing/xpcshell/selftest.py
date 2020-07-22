@@ -12,6 +12,7 @@ import os
 import pprint
 import re
 import shutil
+import six
 import sys
 import tempfile
 import unittest
@@ -529,7 +530,7 @@ class XPCShellTestsTests(unittest.TestCase):
         """
         testlines = []
         for t in tests:
-            testlines.append("[%s]" % (t if isinstance(t, basestring)
+            testlines.append("[%s]" % (t if isinstance(t, six.string_types)
                                        else t[0]))
             if isinstance(t, tuple):
                 testlines.extend(t[1:])

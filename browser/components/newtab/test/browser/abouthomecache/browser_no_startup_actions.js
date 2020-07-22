@@ -45,7 +45,7 @@ add_task(async function test_no_startup_actions() {
       let feed = AboutNewTab.activityStream.store.feeds.get(
         "feeds.discoverystreamfeed"
       );
-      return feed.loaded;
+      return feed?.loaded;
     });
 
     // Wait an additional few seconds for any other actions to get displayed.

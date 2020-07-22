@@ -30,10 +30,7 @@ class nsMathMLmfencedFrame final : public nsMathMLContainerFrame {
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;
 
-  virtual void SetAdditionalComputedStyle(
-      int32_t aIndex, ComputedStyle* aComputedStyle) override;
-  virtual ComputedStyle* GetAdditionalComputedStyle(
-      int32_t aIndex) const override;
+  void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent) override;

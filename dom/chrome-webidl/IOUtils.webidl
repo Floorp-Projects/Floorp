@@ -46,6 +46,12 @@ namespace IOUtils {
    *             remove.
    */
   Promise<void> remove(DOMString path, optional RemoveOptions options = {});
+  /**
+   * Creates a new directory at |path| according to |options|.
+   *
+   * @param path An absolute file path identifying the directory to create.
+   */
+  Promise<void> makeDirectory(DOMString path, optional MakeDirectoryOptions options = {});
 };
 
 /**
@@ -98,4 +104,18 @@ dictionary RemoveOptions {
    * If true, and the target is a directory, recursively remove files.
    */
   boolean recursive = false;
+};
+
+dictionary MakeDirectoryOptions {
+  /**
+   * If true, create the directory and all necessary ancestors if they do not
+   * already exist. If false and any ancestor directories do not exist,
+   * |makeDirectory| will reject with an error.
+   */
+  boolean createAncestors = true;
+  /**
+   * If true, succeed even if the directory already exists (default behavior).
+   * Otherwise, fail if the directory already exists.
+   */
+  boolean ignoreExisting = true;
 };

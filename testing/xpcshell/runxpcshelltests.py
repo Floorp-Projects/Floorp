@@ -104,16 +104,11 @@ def cleanup_encoding(s):
        points, etc.  If it is a byte string, it is assumed to be
        UTF-8, but it may not be *correct* UTF-8.  Return a
        sanitized unicode object."""
-    if six.PY2:
-        ensure = unicode
-    else:
-        ensure = str
-
     if not isinstance(s, six.string_types):
         if isinstance(s, six.binary_type):
             return six.ensure_str(s)
         else:
-            return ensure(s)
+            return six.text_type(s)
     if isinstance(s, six.binary_type):
         s = s.decode('utf-8', 'replace')
     # Replace all C0 and C1 control characters with \xNN escapes.
@@ -1292,11 +1287,13 @@ class XPCShellTests(object):
         if sys.platform == 'win32':
             binSuffix = ".exe"
 
-        http3ServerPath = os.path.join(SCRIPT_DIR, "http3server",
-                                       "http3server" + binSuffix)
-        if build:
-            http3ServerPath = os.path.join(build.topobjdir, "dist", "bin",
+        http3ServerPath = self.http3server
+        if not http3ServerPath:
+            http3ServerPath = os.path.join(SCRIPT_DIR, "http3server",
                                            "http3server" + binSuffix)
+            if build:
+                http3ServerPath = os.path.join(build.topobjdir, "dist", "bin",
+                                               "http3server" + binSuffix)
 
         if not os.path.exists(http3ServerPath):
             self.log.warning("Http3 server not found at " + http3ServerPath +
@@ -1479,6 +1476,7 @@ class XPCShellTests(object):
             self.jsDebuggerInfo = JSDebuggerInfo(port=options['jsDebuggerPort'])
 
         self.xpcshell = options.get('xpcshell')
+        self.http3server = options.get('http3server')
         self.xrePath = options.get('xrePath')
         self.utility_path = options.get('utility_path')
         self.appPath = options.get('appPath')
@@ -1886,12 +1884,13 @@ def main():
     log = commandline.setup_logging("XPCShell", options, {"tbpl": sys.stdout})
 
     if options.xpcshell is None:
-        print >> sys.stderr, """Must provide path to xpcshell using --xpcshell"""
+        log.error("Must provide path to xpcshell using --xpcshell")
+        sys.exit(1)
 
     xpcsh = XPCShellTests(log)
 
     if options.interactive and not options.testPath:
-        print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
+        log.error("Error: You must specify a test filename in interactive mode!")
         sys.exit(1)
 
     if not xpcsh.runTests(options):

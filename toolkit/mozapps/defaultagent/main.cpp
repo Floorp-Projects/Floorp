@@ -18,6 +18,7 @@
 #include "EventLog.h"
 #include "Notification.h"
 #include "Registry.h"
+#include "RemoteSettings.h"
 #include "ScheduledTask.h"
 #include "Telemetry.h"
 
@@ -244,6 +245,7 @@ int wmain(int argc, wchar_t** argv) {
 
   // The uninstall and unregister commands are allowed even if the policy
   // disabling the task is set, so that uninstalls and updates always work.
+  // Similarly, debug commands are always allowed.
   if (!wcscmp(argv[1], L"uninstall") || !wcscmp(argv[1], L"unregister-task")) {
     if (argc < 3 || !argv[2]) {
       return E_INVALIDARG;
@@ -269,8 +271,17 @@ int wmain(int argc, wchar_t** argv) {
       RemoveAllRegistryEntries();
     }
     return RemoveTask(argv[2]);
+  } else if (!wcscmp(argv[1], L"debug-remote-disabled")) {
+    int disabled = IsAgentRemoteDisabled();
+    std::cerr << "default-browser-agent: IsAgentRemoteDisabled: " << disabled
+              << std::endl;
+    return S_OK;
   }
 
+  // We check for disablement by policy because that's assumed to be static.
+  // But we don't check for disablement by remote settings so that
+  // `register-task` and `update-task` can proceed as part of the update
+  // cycle, waiting for remote (re-)enablement.
   if (IsAgentDisabled()) {
     return HRESULT_FROM_WIN32(ERROR_ACCESS_DISABLED_BY_POLICY);
   }
@@ -322,6 +333,12 @@ int wmain(int argc, wchar_t** argv) {
     // So we'll just bail if we can't get the mutex quickly.
     if (!regMutex.Acquire()) {
       return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
+    }
+
+    // Check for remote disable and (re-)enable before (potentially)
+    // updating registry entries and showing notifications.
+    if (IsAgentRemoteDisabled()) {
+      return S_OK;
     }
 
     DefaultBrowserResult defaultBrowserResult = GetDefaultBrowserInfo();

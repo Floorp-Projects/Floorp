@@ -1861,7 +1861,9 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
                                                     Int32OperandId argcId,
                                                     uint32_t icScriptOffset,
                                                     CallFlags flags) {
-  return emitCallFunction(calleeId, argcId, flags, CallKind::Scripted);
+  // We are transpiling to generate the correct guards. Code for the inlined
+  // function itself will be generated in WarpBuilder::buildInlinedCall.
+  return true;
 }
 
 // TODO: rename the MetaTwoByte op when IonBuilder is gone.

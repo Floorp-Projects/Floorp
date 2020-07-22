@@ -46,7 +46,7 @@ const AWTerminate = {
 const LIGHT_WEIGHT_THEMES = {
   DARK: "firefox-compact-dark@mozilla.org",
   LIGHT: "firefox-compact-light@mozilla.org",
-  DEFAULT: "default-theme@mozilla.org",
+  AUTOMATIC: "default-theme@mozilla.org",
 };
 
 async function getImportableSites() {
