@@ -33,6 +33,7 @@ class LoggingWrapper(BytesIO):
         BytesIO.__init__(self)
         self.queue = queue
         self.prefix = prefix
+        self.buffer = self
 
     def write(self, data):
         if isinstance(data, bytes):
