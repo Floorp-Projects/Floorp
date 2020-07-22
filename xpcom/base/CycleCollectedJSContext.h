@@ -10,24 +10,18 @@
 #include <queue>
 
 #include "mozilla/Attributes.h"
-#include "mozilla/DeferredFinalize.h"
-#include "mozilla/LinkedList.h"
-#include "mozilla/mozalloc.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/Promise.h"
-#include "jsapi.h"
 #include "js/GCVector.h"
 #include "js/Promise.h"
 
 #include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 
 class nsCycleCollectionNoteRootCallback;
 class nsIRunnable;
 class nsThread;
-class nsWrapperCache;
 
 namespace mozilla {
 class AutoSlowOperation;
