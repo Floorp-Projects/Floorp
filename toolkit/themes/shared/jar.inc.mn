@@ -109,6 +109,8 @@ toolkit.jar:
   skin/classic/global/media/imagedoc-lightnoise.png        (../../shared/media/imagedoc-lightnoise.png)
   skin/classic/global/media/imagedoc-darknoise.png         (../../shared/media/imagedoc-darknoise.png)
 * skin/classic/global/media/videocontrols.css              (../../shared/media/videocontrols.css)
+  skin/classic/global/media/pictureinpicture-mode-1.css    (../../shared/media/pictureinpicture-mode-1.css)
+  skin/classic/global/media/pictureinpicture-mode-2.css    (../../shared/media/pictureinpicture-mode-2.css)
   skin/classic/global/media/pauseButton.svg                (../../shared/media/pauseButton.svg)
   skin/classic/global/media/playButton.svg                 (../../shared/media/playButton.svg)
   skin/classic/global/media/error.png                      (../../shared/media/error.png)

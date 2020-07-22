@@ -1,0 +1,126 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.w3.org/1999/xhtml");
+
+.pip-wrapper {
+  top: calc(70% - 40px);
+  --pip-highlight-width: 2px;
+}
+
+.pip-wrapper[position="left"] > .pip-expanded > .pip-icon-label > .pip-icon {
+  display: none;
+}
+
+.pip-expanded,
+.pip-small {
+  border: 1px solid rgba(255,255,255,0.1);
+  box-sizing: border-box;
+}
+
+.pip-expanded {
+  border: var(--pip-highlight-width) solid transparent;
+  border-bottom: 1px solid transparent;
+  transition: opacity 250ms, scale 200ms, translate 190ms;
+  justify-content: left;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded {
+  translate: calc(-100% + 48px);
+  transform-origin: right;
+  justify-content: right;
+}
+
+.pip-wrapper:is([small-video],[has-used]) > .pip-expanded,
+.pip-wrapper[position="right"]:not(:is([small-video],[has-used])) > .pip-icon {
+  display: none;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-icon {
+  position: relative;
+  top: 0;
+  left: 0;
+  display: inline-block;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label {
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-icon,
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-label {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-icon {
+  margin-left: var(--pip-toggle-margin);
+  margin-right: var(--pip-toggle-margin);
+}
+
+.pip-wrapper[position="right"] > .pip-expanded > .pip-icon-label > .pip-label {
+  margin-right: var(--pip-toggle-margin);
+}
+
+.pip-wrapper.hovering > .pip-expanded {
+  box-shadow: none;
+  border: var(--pip-highlight-width) solid rgba(0, 254, 255, 1);
+  /* Remove bottom border but keep text centred with padding. */
+  border-bottom: none;
+  padding-bottom: 1px;
+  pointer-events: none;
+}
+
+.pip-wrapper:not(:is([small-video],[has-used])) > .pip-expanded {
+  opacity: 1;
+  scale: 1;
+  pointer-events: auto;
+}
+
+.pip-wrapper:not(:is([small-video],[has-used])).hovering > .pip-expanded {
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+
+.pip-wrapper:not(:is([small-video],[has-used])) > .pip-small {
+  opacity: 0;
+  transition: opacity 200ms;
+}
+
+.pip-explainer {
+  opacity: 0;
+}
+
+.pip-explainer {
+  padding: 6px 16px 8px 8px;
+  translate: 0;
+  transition: opacity 250ms, translate 190ms;
+  transition-timing-function: cubic-bezier(.07,.95,0,1);
+  background: rgba(12,12,13,0.65);
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border: 2px solid rgba(0, 254, 255, 1);
+  border-top: 0;
+  box-shadow: 0px 4px 4px rgba(12,12,13,0.25);
+  opacity: 0;
+  margin-left: -2px;
+  margin-right: -2px;
+  width: calc(100% - 24px);
+  word-break: break-word;
+  pointer-events: none;
+}
+
+.pip-wrapper.hovering > .pip-expanded > .pip-explainer {
+  pointer-events: auto;
+}
+
+.pip-wrapper.hovering > .pip-expanded > .pip-explainer {
+  opacity: 1;
+}
+
+.pip-wrapper.hovering > .pip-expanded > .pip-explainer {
+  translate: 0 calc(40px - var(--pip-highlight-width));
+}

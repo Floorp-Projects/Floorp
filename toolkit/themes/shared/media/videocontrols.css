@@ -618,3 +618,113 @@
   }
 }
 %endif
+
+.pip-wrapper {
+  position: absolute;
+  cursor: pointer;
+  -moz-appearance: none;
+  background: none;
+  border: none;
+  text-align: unset;
+  top: calc(75% - 40px);
+  opacity: 0;
+  transition: opacity 200ms;
+  --pip-icon-size: 24px;
+  --pip-toggle-margin: 8px;
+  --pip-icon-width-with-margins: calc(2 * var(--pip-toggle-margin) + var(--pip-icon-size));
+}
+
+.pip-wrapper[policy="hidden"] {
+  display: none;
+}
+
+.pip-label {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.pip-expanded {
+  font-size: 14px;
+}
+
+.pip-wrapper[medium-video] > .pip-expanded > .pip-icon-label > .pip-label {
+  font-size: 13px;
+}
+
+.pip-wrapper[medium-video] > .pip-expanded {
+  font-size: 11px;
+}
+
+.controlsOverlay.hovering > .pip-wrapper {
+  opacity: 0.8;
+}
+
+.controlsOverlay[hidetoggle="true"].hovering > .pip-wrapper:not(.hovering) {
+  opacity: 0;
+}
+
+.controlsOverlay.hovering > .pip-wrapper.hovering {
+  opacity: 1;
+}
+
+.pip-wrapper[position="right"] {
+  right: 40px;
+}
+
+.pip-wrapper[position="left"] {
+  left: 12px;
+}
+
+.pip-expanded,
+.pip-small,
+.pip-icon,
+.pip-explainer {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.pip-icon {
+  top: 8px;
+  left: 8px;
+  pointer-events: none;
+  background-image: url("chrome://global/skin/media/pictureinpicture.svg");
+  background-size: var(--pip-icon-size) var(--pip-icon-size);
+  -moz-context-properties: fill;
+  fill: #fff;
+  height: var(--pip-icon-size);
+  width: var(--pip-icon-size);
+  background-repeat: no-repeat;
+  background-position: center, center;
+}
+
+.pip-wrapper[position="left"] > .pip-expanded > .pip-icon-label > .pip-label {
+  margin-left: var(--pip-icon-width-with-margins);
+  margin-right: var(--pip-toggle-margin);
+}
+
+.pip-expanded,
+.pip-explainer {
+  user-select: none;
+}
+
+.pip-small {
+  background-color: rgba(12,12,13,0.65);
+  box-shadow: 0px 4px 4px rgba(12,12,13,0.25);
+  width: 40px;
+  height: 40px;
+  border-radius: 25px;
+}
+
+.pip-expanded {
+  display: flex;
+  height: 40px;
+  background-color: rgba(12,12,13,0.9);
+  box-shadow: 0px 4px 4px rgba(12,12,13,0.25);
+  width: max-content;
+  border-radius: 8px;
+  opacity: 0;
+  color: #fff;
+  align-items: center;
+  scale: 0.33 1;
+}

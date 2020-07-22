@@ -241,6 +241,11 @@ var PictureInPicture = {
 
     win.setupPlayer(gNextWindowID.toString(), browser);
     gNextWindowID++;
+
+    Services.prefs.setBoolPref(
+      "media.videocontrols.picture-in-picture.video-toggle.has-used",
+      true
+    );
   },
 
   /**
