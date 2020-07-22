@@ -171,6 +171,29 @@ def filter_release_tasks(task, parameters):
     if task.attributes.get('shipping_phase') not in (None, 'build'):
         return False
 
+    """ No debug on beta/release, keep on ESR with 4 week cycles, beta/release
+    will not be too different from central, but ESR will live for a long time.
+
+    From June 2019 -> June 2020, we found 1 unique regression on ESR debug
+    and 5 unique regressions on beta/release.  Keeping spidermonkey and linux
+    debug finds all but 1 unique regressions (windows found on try) for beta/release.
+    """
+    if parameters['release_type'].startswith('esr'):
+        return True
+
+    # code below here is intended to reduce beta/release debug tasks
+    platform = task.attributes.get('test_platform', '')
+    if 'debug' in platform:
+        if 'linux' not in platform:
+            # filter out mac/windows/android debug
+            return False
+        elif 'spidermonkey' not in platform and '-qr' in platform:
+            # filter out linux tests except -qr and spidermonkey
+            return False
+
+    if task.attributes.get('build_type', '') == 'debug':
+        if 'linux' not in task.attributes.get('build_platform', ''):
+            return False
     return True
 
 
