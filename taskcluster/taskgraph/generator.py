@@ -346,7 +346,7 @@ class TaskGraphGenerator(object):
 
         # this is used for testing experimental optimization strategies
         strategies = os.environ.get('TASKGRAPH_OPTIMIZE_STRATEGIES',
-                                    parameters.get('optimize_strategies'))
+                                    parameters['try_task_config'].get('optimize-strategies'))
         if strategies:
             strategies = find_object(strategies)
 

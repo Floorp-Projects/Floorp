@@ -135,12 +135,8 @@ syntax or reading a project-specific configuration file).
 Optimization
 ------------
 
-``optimize_strategies``
-   A python path of the form ``<module>:<object>`` containing a dictionary of
-   optimization strategies to use, overwriting the defaults.
-
 ``optimize_target_tasks``
-   If true, then target tasks are eligible for optimization.
+    If true, then target tasks are eligible for optimization.
 
 ``do_not_optimize``
    Specify tasks to not optimize out of the graph. This is a list of labels.

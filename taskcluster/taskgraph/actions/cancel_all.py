@@ -12,7 +12,7 @@ import os
 import requests
 
 from taskgraph.util.taskcluster import (
-    list_task_group_incomplete_task_ids,
+    list_task_group_incomplete_tasks,
     cancel_task,
     CONCURRENCY,
 )
@@ -48,8 +48,7 @@ def cancel_all_action(parameters, graph_config, input, task_group_id, task_id):
             raise
 
     own_task_id = os.environ.get('TASK_ID', '')
-    to_cancel = [t for t in list_task_group_incomplete_task_ids(task_group_id) if t != own_task_id]
-
+    to_cancel = [t for t in list_task_group_incomplete_tasks(task_group_id) if t != own_task_id]
     logger.info("Cancelling {} tasks".format(len(to_cancel)))
     with futures.ThreadPoolExecutor(CONCURRENCY) as e:
         cancel_futs = [e.submit(do_cancel_task, t) for t in to_cancel]

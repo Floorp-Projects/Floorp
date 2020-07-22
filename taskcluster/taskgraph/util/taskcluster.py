@@ -306,23 +306,17 @@ def send_email(address, subject, content, link, use_proxy=False):
     })
 
 
-def list_task_group_tasks(task_group_id):
-    """Generate the tasks in a task group"""
+def list_task_group_incomplete_tasks(task_group_id):
+    """Generate the incomplete tasks in a task group"""
     params = {}
     while True:
         url = liburls.api(get_root_url(False), 'queue', 'v1',
                           'task-group/{}/list'.format(task_group_id))
         resp = _do_request(url, force_get=True, params=params).json()
-        for task in resp['tasks']:
-            yield task
+        for task in [t['status'] for t in resp['tasks']]:
+            if task['state'] in ['running', 'pending', 'unscheduled']:
+                yield task['taskId']
         if resp.get('continuationToken'):
             params = {'continuationToken': resp.get('continuationToken')}
         else:
             break
-
-
-def list_task_group_incomplete_task_ids(task_group_id):
-    states = ('running', 'pending', 'unscheduled')
-    for task in [t['status'] for t in list_task_group_tasks(task_group_id)]:
-        if task['state'] in states:
-            yield task['taskId']
