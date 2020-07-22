@@ -122,8 +122,10 @@ SOURCES += [
 if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
         'nsDeviceContextSpecWin.cpp',
+        'nsPaperWin.cpp',
         'nsPrintDialogUtil.cpp',
         'nsPrintDialogWin.cpp',
+        'nsPrinterWin.cpp',
         'nsPrintSettingsServiceWin.cpp',
         'nsPrintSettingsWin.cpp',
     ]
