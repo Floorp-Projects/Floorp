@@ -236,6 +236,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
       aParent ? aParent->GetBrowsingContext() : nullptr;
   RefPtr<WindowContext> parentWC =
       aParent ? aParent->GetWindowContext() : nullptr;
+  BrowsingContext* inherit = parentBC ? parentBC.get() : aOpener;
 
   // Determine which BrowsingContextGroup this context should be created in.
   RefPtr<BrowsingContextGroup> group = aSpecificGroup;
@@ -246,50 +247,42 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     group = BrowsingContextGroup::Select(parentWC, aOpener);
   }
 
-  RefPtr<BrowsingContext> context;
-  if (XRE_IsParentProcess()) {
-    context =
-        new CanonicalBrowsingContext(parentWC, group, id,
-                                     /* aOwnerProcessId */ 0,
-                                     /* aEmbedderProcessId */ 0, aType, {});
-  } else {
-    context = new BrowsingContext(parentWC, group, id, aType, {});
-  }
+  // Configure initial values for synced fields.
+  FieldValues fields;
+  fields.mName = aName;
 
-  // The name and opener fields need to be explicitly initialized. Don't bother
-  // using transactions to set them, as we haven't been attached yet.
-  context->mFields.SetWithoutSyncing<IDX_Name>(aName);
   if (aOpener) {
     MOZ_DIAGNOSTIC_ASSERT(!aParent,
                           "new BC with both initial opener and parent");
-    MOZ_DIAGNOSTIC_ASSERT(aOpener->Group() == context->Group());
-    MOZ_DIAGNOSTIC_ASSERT(aOpener->mType == context->mType);
-    context->mFields.SetWithoutSyncing<IDX_OpenerId>(aOpener->Id());
-    context->mFields.SetWithoutSyncing<IDX_HadOriginalOpener>(true);
+    MOZ_DIAGNOSTIC_ASSERT(aOpener->Group() == group);
+    MOZ_DIAGNOSTIC_ASSERT(aOpener->mType == aType);
+    fields.mOpenerId = aOpener->Id();
+    fields.mHadOriginalOpener = true;
   }
 
   if (aParent) {
-    MOZ_DIAGNOSTIC_ASSERT(parentBC->Group() == context->Group());
-    MOZ_DIAGNOSTIC_ASSERT(parentBC->mType == context->mType);
+    MOZ_DIAGNOSTIC_ASSERT(parentBC->Group() == group);
+    MOZ_DIAGNOSTIC_ASSERT(parentBC->mType == aType);
+    fields.mEmbedderInnerWindowId = aParent->WindowID();
 
-    context->mEmbeddedByThisProcess = true;
-    context->mFields.SetWithoutSyncing<IDX_EmbedderInnerWindowId>(
-        aParent->WindowID());
+    // XXX(farre): Can/Should we check aParent->IsLoading() here? (Bug
+    // 1608448) Check if the parent was itself loading already
+    auto readystate = aParent->GetDocument()->GetReadyStateEnum();
+    fields.mAncestorLoading =
+        parentBC->GetAncestorLoading() ||
+        readystate == Document::ReadyState::READYSTATE_LOADING ||
+        readystate == Document::ReadyState::READYSTATE_INTERACTIVE;
   }
 
-  context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
-      nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
-
-  uint64_t browserId =
+  fields.mBrowserId =
       parentBC ? parentBC->GetBrowserId() : nsContentUtils::GenerateBrowserId();
-  context->mFields.SetWithoutSyncing<IDX_BrowserId>(browserId);
 
+  fields.mOpenerPolicy = nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
   if (aOpener && aOpener->SameOriginWithTop()) {
     // We inherit the opener policy if there is a creator and if the creator's
     // origin is same origin with the creator's top-level origin.
     // If it is cross origin we should not inherit the CrossOriginOpenerPolicy
-    context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
-        aOpener->Top()->GetOpenerPolicy());
+    fields.mOpenerPolicy = aOpener->Top()->GetOpenerPolicy();
   } else if (aOpener) {
     // They are not same origin
     auto topPolicy = aOpener->Top()->GetOpenerPolicy();
@@ -298,61 +291,50 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
                            nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS);
   }
 
-  BrowsingContext* inherit = parentBC ? parentBC.get() : aOpener;
+  nsContentUtils::GenerateUUIDInPlace(fields.mHistoryID);
+  fields.mIsActive = true;
+
+  fields.mFullZoom = parentBC ? parentBC->FullZoom() : 1.0f;
+  fields.mTextZoom = parentBC ? parentBC->TextZoom() : 1.0f;
+
+  bool allowContentRetargeting =
+      inherit ? inherit->GetAllowContentRetargetingOnChildren() : true;
+  fields.mAllowContentRetargeting = allowContentRetargeting;
+  fields.mAllowContentRetargetingOnChildren = allowContentRetargeting;
+
+  // Assume top allows fullscreen for its children unless otherwise stated.
+  // Subframes start with it false unless otherwise noted in SetEmbedderElement.
+  fields.mFullscreenAllowedByOwner = !aParent;
+
+  fields.mAllowPlugins = inherit ? inherit->GetAllowPlugins() : true;
+
+  fields.mDefaultLoadFlags =
+      inherit ? inherit->GetDefaultLoadFlags() : nsIRequest::LOAD_NORMAL;
+
+  fields.mOrientationLock = mozilla::hal::eScreenOrientation_None;
+
+  fields.mUseGlobalHistory = inherit ? inherit->GetUseGlobalHistory() : false;
+
+  fields.mUseErrorPages = true;
+
+  RefPtr<BrowsingContext> context;
+  if (XRE_IsParentProcess()) {
+    context = new CanonicalBrowsingContext(parentWC, group, id,
+                                           /* aOwnerProcessId */ 0,
+                                           /* aEmbedderProcessId */ 0, aType,
+                                           std::move(fields));
+  } else {
+    context =
+        new BrowsingContext(parentWC, group, id, aType, std::move(fields));
+  }
+
+  context->mEmbeddedByThisProcess = XRE_IsParentProcess() || aParent;
   if (inherit) {
     context->mPrivateBrowsingId = inherit->mPrivateBrowsingId;
     context->mUseRemoteTabs = inherit->mUseRemoteTabs;
     context->mUseRemoteSubframes = inherit->mUseRemoteSubframes;
     context->mOriginAttributes = inherit->mOriginAttributes;
   }
-
-  // if our parent has a parent that's loading, we need it too
-  if (aParent) {
-    // XXX(farre): Can/Should we check aParent->IsLoading() here? (Bug
-    // 1608448) Check if the parent was itself loading already
-    auto readystate = aParent->GetDocument()->GetReadyStateEnum();
-    context->mFields.SetWithoutSyncing<IDX_AncestorLoading>(
-        parentBC->GetAncestorLoading() ||
-        readystate == Document::ReadyState::READYSTATE_LOADING ||
-        readystate == Document::ReadyState::READYSTATE_INTERACTIVE);
-  }
-
-  nsContentUtils::GenerateUUIDInPlace(
-      context->mFields.GetNonSyncingReference<IDX_HistoryID>());
-
-  context->mFields.SetWithoutSyncing<IDX_IsActive>(true);
-
-  context->mFields.SetWithoutSyncing<IDX_FullZoom>(
-      parentBC ? parentBC->FullZoom() : 1.0f);
-  context->mFields.SetWithoutSyncing<IDX_TextZoom>(
-      parentBC ? parentBC->TextZoom() : 1.0f);
-
-  const bool allowContentRetargeting =
-      inherit ? inherit->GetAllowContentRetargetingOnChildren() : true;
-  context->mFields.SetWithoutSyncing<IDX_AllowContentRetargeting>(
-      allowContentRetargeting);
-  context->mFields.SetWithoutSyncing<IDX_AllowContentRetargetingOnChildren>(
-      allowContentRetargeting);
-
-  // Assume top allows fullscreen for its children unless otherwise stated.
-  // Subframes start with it false unless otherwise noted in SetEmbedderElement.
-  context->mFields.SetWithoutSyncing<IDX_FullscreenAllowedByOwner>(!aParent);
-
-  const bool allowPlugins = inherit ? inherit->GetAllowPlugins() : true;
-  context->mFields.SetWithoutSyncing<IDX_AllowPlugins>(allowPlugins);
-
-  const auto defaultLoadFlags =
-      inherit ? inherit->GetDefaultLoadFlags() : nsIRequest::LOAD_NORMAL;
-  context->mFields.SetWithoutSyncing<IDX_DefaultLoadFlags>(defaultLoadFlags);
-
-  context->mFields.SetWithoutSyncing<IDX_OrientationLock>(
-      mozilla::hal::eScreenOrientation_None);
-
-  const bool useGlobalHistory =
-      inherit ? inherit->GetUseGlobalHistory() : false;
-  context->mFields.SetWithoutSyncing<IDX_UseGlobalHistory>(useGlobalHistory);
-
-  context->mFields.SetWithoutSyncing<IDX_UseErrorPages>(true);
 
   nsCOMPtr<nsIRequestContextService> rcsvc =
       net::RequestContextService::GetOrCreate();
