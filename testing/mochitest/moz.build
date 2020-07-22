@@ -117,34 +117,28 @@ TEST_HARNESS_FILES.testing.mochitest.embed += [
     'embed/Xm5i5kbIXzc^headers^',
 ]
 
-TEST_HARNESS_FILES.testing.mochitest.pywebsocket += [
-    'pywebsocket/standalone.py',
+TEST_HARNESS_FILES.testing.mochitest.pywebsocket3.mod_pywebsocket += [
+    'pywebsocket3/mod_pywebsocket/__init__.py',
+    'pywebsocket3/mod_pywebsocket/_stream_exceptions.py',
+    'pywebsocket3/mod_pywebsocket/common.py',
+    'pywebsocket3/mod_pywebsocket/dispatch.py',
+    'pywebsocket3/mod_pywebsocket/extensions.py',
+    'pywebsocket3/mod_pywebsocket/fast_masking.i',
+    'pywebsocket3/mod_pywebsocket/http_header_util.py',
+    'pywebsocket3/mod_pywebsocket/memorizingfile.py',
+    'pywebsocket3/mod_pywebsocket/msgutil.py',
+    'pywebsocket3/mod_pywebsocket/request_handler.py',
+    'pywebsocket3/mod_pywebsocket/server_util.py',
+    'pywebsocket3/mod_pywebsocket/standalone.py',
+    'pywebsocket3/mod_pywebsocket/stream.py',
+    'pywebsocket3/mod_pywebsocket/util.py',
+    'pywebsocket3/mod_pywebsocket/websocket_server.py',
 ]
 
-TEST_HARNESS_FILES.testing.mochitest.pywebsocket.mod_pywebsocket += [
-    'pywebsocket/mod_pywebsocket/__init__.py',
-    'pywebsocket/mod_pywebsocket/_stream_base.py',
-    'pywebsocket/mod_pywebsocket/_stream_hixie75.py',
-    'pywebsocket/mod_pywebsocket/_stream_hybi.py',
-    'pywebsocket/mod_pywebsocket/common.py',
-    'pywebsocket/mod_pywebsocket/dispatch.py',
-    'pywebsocket/mod_pywebsocket/extensions.py',
-    'pywebsocket/mod_pywebsocket/fast_masking.i',
-    'pywebsocket/mod_pywebsocket/headerparserhandler.py',
-    'pywebsocket/mod_pywebsocket/http_header_util.py',
-    'pywebsocket/mod_pywebsocket/memorizingfile.py',
-    'pywebsocket/mod_pywebsocket/msgutil.py',
-    'pywebsocket/mod_pywebsocket/mux.py',
-    'pywebsocket/mod_pywebsocket/stream.py',
-    'pywebsocket/mod_pywebsocket/util.py',
-    'pywebsocket/mod_pywebsocket/xhr_benchmark_handler.py',
-]
-
-TEST_HARNESS_FILES.testing.mochitest.pywebsocket.mod_pywebsocket.handshake += [
-    'pywebsocket/mod_pywebsocket/handshake/__init__.py',
-    'pywebsocket/mod_pywebsocket/handshake/_base.py',
-    'pywebsocket/mod_pywebsocket/handshake/hybi.py',
-    'pywebsocket/mod_pywebsocket/handshake/hybi00.py',
+TEST_HARNESS_FILES.testing.mochitest.pywebsocket3.mod_pywebsocket.handshake += [
+    'pywebsocket3/mod_pywebsocket/handshake/__init__.py',
+    'pywebsocket3/mod_pywebsocket/handshake/_base.py',
+    'pywebsocket3/mod_pywebsocket/handshake/hybi.py',
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.dynamic += [
