@@ -164,6 +164,9 @@ pref("security.ssl.errorReporting.enabled", false);
 pref("security.ssl.errorReporting.url", "https://incoming.telemetry.mozilla.org/submit/sslreports/");
 pref("security.ssl.errorReporting.automatic", false);
 
+pref("security.xfocsp.errorReporting.enabled", true);
+pref("security.xfocsp.errorReporting.automatic", false);
+
 // Impose a maximum age on HPKP headers, to avoid sites getting permanently
 // blacking themselves out by setting a bad pin.  (60 days by default)
 // https://tools.ietf.org/html/rfc7469#section-4.1
