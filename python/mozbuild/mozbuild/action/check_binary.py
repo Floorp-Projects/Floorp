@@ -77,25 +77,18 @@ def at_least_one(iter):
 
 
 # Iterates the symbol table on ELF binaries.
-def iter_elf_symbols(binary):
+def iter_elf_symbols(target, binary, all=False):
     ty = get_type(binary)
     # Static libraries are ar archives. Assume they are ELF.
     if ty == UNKNOWN and open(binary, 'rb').read(8) == b'!<arch>\n':
         ty = ELF
     assert ty == ELF
-    for line in get_output(buildconfig.substs['LLVM_OBJDUMP'], '-t',
-                           binary):
-        m = ADDR_RE.match(line)
-        if not m:
+    for line in get_output(target['readelf'], '--syms' if all else '--dyn-syms', binary):
+        data = line.split()
+        if not (len(data) >= 8 and data[0].endswith(':') and data[0][:-1].isdigit()):
             continue
-        addr = int(m.group(0), 16)
-        # The second "column" is 7 one-character items that can be
-        # whitespaces. We don't have use for their value, so just skip
-        # those.
-        rest = line[m.end() + 9:].split()
-        # The number of remaining colums may vary. In every case, the
-        # symbol name is last.
-        name = rest[-1]
+        n, addr, size, type, bind, vis, index, name = data[:8]
+
         if '@' in name:
             name, ver = name.rsplit('@', 1)
             while name.endswith('@'):
@@ -103,10 +96,12 @@ def iter_elf_symbols(binary):
         else:
             ver = None
         yield {
-            'addr': addr,
-            'size': int(rest[1], 16) if ty == ELF else 0,
+            'addr': int(addr, 16),
+            # readelf output may contain decimal values or hexadecimal
+            # values prefixed with 0x for the size. Let python autodetect.
+            'size': int(size, 0),
             'name': name,
-            'version': ver or None,
+            'version': ver,
         }
 
 
@@ -129,7 +124,7 @@ def check_binary_compat(target, binary):
 
     unwanted = {}
     try:
-        for sym in at_least_one(iter_elf_symbols(binary)):
+        for sym in at_least_one(iter_elf_symbols(target, binary)):
             # Only check versions on undefined symbols
             if sym['addr'] != 0:
                 continue
@@ -235,7 +230,7 @@ def check_networking(target, binary):
     bad_occurences_names = set()
 
     try:
-        for sym in at_least_one(iter_elf_symbols(binary)):
+        for sym in at_least_one(iter_elf_symbols(target, binary, all=True)):
             if sym['addr'] == 0 and sym['name'] in networking_functions:
                 bad_occurences_names.add(sym['name'])
     except Empty:
