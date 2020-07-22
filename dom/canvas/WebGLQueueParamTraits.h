@@ -199,7 +199,11 @@ struct QueueParamTraits<std::vector<U>> {
   static QueueStatus Write(ProducerView<V>& aProducerView, const T& aArg) {
     auto status = aProducerView.WriteParam(aArg.size());
     if (!status) return status;
-    status = aProducerView.Write(aArg.data(), aArg.data() + aArg.size());
+
+    for (const auto& cur : aArg) {
+      status = aProducerView.WriteParam(cur);
+      if (!status) return status;
+    }
     return status;
   }
 
@@ -208,9 +212,12 @@ struct QueueParamTraits<std::vector<U>> {
     size_t size;
     auto status = aConsumerView.ReadParam(&size);
     if (!status) return status;
-
     aArg->resize(size);
-    status = aConsumerView.Read(aArg->data(), aArg->data() + size);
+
+    for (auto& cur : *aArg) {
+      status = aConsumerView.ReadParam(&cur);
+      if (!status) return status;
+    }
     return status;
   }
 };
