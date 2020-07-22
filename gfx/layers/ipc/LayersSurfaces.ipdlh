@@ -21,18 +21,18 @@ using mozilla::layers::MaybeVideoBridgeSource from "mozilla/layers/VideoBridgeUt
 namespace mozilla {
 namespace layers {
 
-struct SurfaceDescriptorFileMapping {
+comparable struct SurfaceDescriptorFileMapping {
   WindowsHandle handle;
   SurfaceFormat format;
   IntSize size;
 };
 
-struct SurfaceDescriptorDIB {
+comparable struct SurfaceDescriptorDIB {
   // gfxWindowsSurface*
   uintptr_t surface;
 };
 
-struct SurfaceDescriptorD3D10 {
+comparable struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
   SurfaceFormat format;
   IntSize size;
@@ -40,7 +40,7 @@ struct SurfaceDescriptorD3D10 {
   ColorRange colorRange;
 };
 
-struct SurfaceDescriptorDXGIYCbCr {
+comparable struct SurfaceDescriptorDXGIYCbCr {
   WindowsHandle handleY;
   WindowsHandle handleCb;
   WindowsHandle handleCr;
@@ -52,14 +52,14 @@ struct SurfaceDescriptorDXGIYCbCr {
   ColorRange colorRange;
 };
 
-struct SurfaceDescriptorMacIOSurface {
+comparable struct SurfaceDescriptorMacIOSurface {
   uint32_t surfaceId;
   double scaleFactor;
   bool isOpaque;
   YUVColorSpace yUVColorSpace;
 };
 
-struct SurfaceDescriptorDMABuf {
+comparable struct SurfaceDescriptorDMABuf {
   uint32_t bufferType;
   uint64_t modifier;
   uint32_t flags;
@@ -75,7 +75,7 @@ struct SurfaceDescriptorDMABuf {
   FileDescriptor[] refCount;
 };
 
-struct SurfaceTextureDescriptor {
+comparable struct SurfaceTextureDescriptor {
   uint64_t handle;
   IntSize size;
   SurfaceFormat format;
@@ -83,20 +83,20 @@ struct SurfaceTextureDescriptor {
   bool ignoreTransform;
 };
 
-struct SurfaceDescriptorAndroidHardwareBuffer {
+comparable struct SurfaceDescriptorAndroidHardwareBuffer {
   FileDescriptor handle;
   IntSize size;
   SurfaceFormat format;
 };
 
-struct EGLImageDescriptor {
+comparable struct EGLImageDescriptor {
   uintptr_t image; // `EGLImage` is a `void*`.
   uintptr_t fence;
   IntSize size;
   bool hasAlpha;
 };
 
-struct SurfaceDescriptorSharedGLTexture {
+comparable struct SurfaceDescriptorSharedGLTexture {
   uint32_t texture;
   uint32_t target;
   uintptr_t fence;
@@ -105,37 +105,37 @@ struct SurfaceDescriptorSharedGLTexture {
 };
 
 
-union RemoteDecoderVideoSubDescriptor {
+comparable union RemoteDecoderVideoSubDescriptor {
   SurfaceDescriptorD3D10;
   SurfaceDescriptorDXGIYCbCr;
   SurfaceDescriptorDMABuf;
   null_t;
 };
 
-struct SurfaceDescriptorRemoteDecoder {
+comparable struct SurfaceDescriptorRemoteDecoder {
   uint64_t handle;
   RemoteDecoderVideoSubDescriptor subdesc;
   MaybeVideoBridgeSource source;
 };
 
-struct SurfaceDescriptorPlugin {
+comparable struct SurfaceDescriptorPlugin {
   uint64_t id;
   SurfaceDescriptorD3D10 pluginSurf;
   SurfaceDescriptorD3D10 displaySurf;
 };
 
-union SurfaceDescriptorGPUVideo {
+comparable union SurfaceDescriptorGPUVideo {
   SurfaceDescriptorRemoteDecoder;
   SurfaceDescriptorPlugin;
 };
 
-struct RGBDescriptor {
+comparable struct RGBDescriptor {
   IntSize size;
   SurfaceFormat format;
   bool hasIntermediateBuffer;
 };
 
-struct YCbCrDescriptor {
+comparable struct YCbCrDescriptor {
   IntSize ySize;
   uint32_t yStride;
   IntSize cbCrSize;
@@ -150,22 +150,22 @@ struct YCbCrDescriptor {
   bool hasIntermediateBuffer;
 };
 
-union BufferDescriptor {
+comparable union BufferDescriptor {
   RGBDescriptor;
   YCbCrDescriptor;
 };
 
-union MemoryOrShmem {
+comparable union MemoryOrShmem {
   uintptr_t;
   Shmem;
 };
 
-struct SurfaceDescriptorBuffer {
+comparable struct SurfaceDescriptorBuffer {
   BufferDescriptor desc;
   MemoryOrShmem data;
 };
 
-struct SurfaceDescriptorShared
+comparable struct SurfaceDescriptorShared
 {
   IntSize size;
   int32_t stride;
@@ -173,11 +173,11 @@ struct SurfaceDescriptorShared
   Handle handle;
 };
 
-struct SurfaceDescriptorRecorded {
+comparable struct SurfaceDescriptorRecorded {
   uintptr_t drawTarget;
 };
 
-union SurfaceDescriptor {
+comparable union SurfaceDescriptor {
   SurfaceDescriptorBuffer;
   SurfaceDescriptorDIB;
   SurfaceDescriptorD3D10;
