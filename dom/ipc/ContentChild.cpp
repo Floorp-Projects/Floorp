@@ -1926,8 +1926,7 @@ mozilla::ipc::IPCResult ContentChild::RecvPScriptCacheConstructor(
   return IPC_OK();
 }
 
-scache::PStartupCacheChild* ContentChild::AllocPStartupCacheChild(
-    const bool& wantCacheData) {
+scache::PStartupCacheChild* ContentChild::AllocPStartupCacheChild() {
   return new scache::StartupCacheChild();
 }
 
@@ -1938,8 +1937,8 @@ bool ContentChild::DeallocPStartupCacheChild(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPStartupCacheConstructor(
-    scache::PStartupCacheChild* actor, const bool& wantCacheData) {
-  static_cast<scache::StartupCacheChild*>(actor)->Init(wantCacheData);
+    scache::PStartupCacheChild* actor) {
+  static_cast<scache::StartupCacheChild*>(actor)->Init();
   return IPC_OK();
 }
 

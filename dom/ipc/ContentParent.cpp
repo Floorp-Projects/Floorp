@@ -2289,7 +2289,8 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
 
   auto startupCache = mozilla::scache::StartupCache::GetSingleton();
   if (startupCache) {
-    startupCache->AddStartupCacheCmdLineArgs(*mSubprocess, extraArgs);
+    startupCache->AddStartupCacheCmdLineArgs(*mSubprocess, GetRemoteType(),
+                                             extraArgs);
   }
 
   // Register ContentParent as an observer for changes to any pref
@@ -3822,9 +3823,8 @@ bool ContentParent::DeallocPScriptCacheParent(PScriptCacheParent* cache) {
   return true;
 }
 
-PStartupCacheParent* ContentParent::AllocPStartupCacheParent(
-    const bool& wantCacheData) {
-  return new scache::StartupCacheParent(wantCacheData);
+PStartupCacheParent* ContentParent::AllocPStartupCacheParent() {
+  return new scache::StartupCacheParent();
 }
 
 bool ContentParent::DeallocPStartupCacheParent(PStartupCacheParent* cache) {

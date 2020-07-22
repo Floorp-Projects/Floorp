@@ -26,15 +26,12 @@ class StartupCacheChild final : public PStartupCacheChild {
  public:
   StartupCacheChild() = default;
 
-  void Init(bool wantCacheData);
+  void Init();
 
  protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void SendEntriesAndFinalize(StartupCache::Table& entries);
-
- private:
-  bool mWantCacheData = false;
 };
 
 }  // namespace scache

@@ -86,6 +86,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
   char* prefMapSize = nullptr;
   char* scacheHandle = nullptr;
   char* scacheSize = nullptr;
+  bool wantsScache = true;
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> profileDir;
 #endif
@@ -151,6 +152,8 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
         return false;
       }
       scacheSize = aArgv[i];
+    } else if (strcmp(aArgv[i], "-noScache") == 0) {
+      wantsScache = false;
     } else if (strcmp(aArgv[i], "-safeMode") == 0) {
       gSafeMode = true;
 
@@ -187,8 +190,10 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  Unused << mozilla::scache::StartupCache::InitChildSingleton(scacheHandle,
-                                                              scacheSize);
+  if (wantsScache) {
+    Unused << mozilla::scache::StartupCache::InitChildSingleton(scacheHandle,
+                                                                scacheSize);
+  }
 
   mContent.Init(IOThreadChild::message_loop(), ParentPid(), *parentBuildID,
                 IOThreadChild::TakeChannel(), *childID, *isForBrowser);
