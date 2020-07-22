@@ -45,6 +45,7 @@ class nsPageFrame final : public nsContainerFrame {
   void SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages);
 
   void SetSharedPageData(nsSharedPageData* aPD);
+  nsSharedPageData* GetSharedPageData() const { return mPD; }
 
   // We must allow Print Preview UI to have a background, no matter what the
   // user's settings
