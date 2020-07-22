@@ -9,6 +9,7 @@ development process and source code documentation.
    :maxdepth: 1
 
    contribution_quickref
+   pocket-guide-shipping-firefox
    editor
    reviews
 
