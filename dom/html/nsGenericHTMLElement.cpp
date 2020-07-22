@@ -16,7 +16,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEditor.h"
-#include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 #include "nscore.h"
@@ -687,13 +686,6 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
       if (aValue && !aValue->Equals(EmptyString(), eIgnoreCase)) {
         SetFlags(NODE_HAS_ACCESSKEY);
         RegAccessKey();
-      }
-    } else if (aName == nsGkAtoms::inert &&
-               StaticPrefs::html5_inert_enabled()) {
-      if (aValue) {
-        AddStates(NS_EVENT_STATE_MOZINERT);
-      } else {
-        RemoveStates(NS_EVENT_STATE_MOZINERT);
       }
     } else if (aName == nsGkAtoms::name) {
       if (aValue && !aValue->Equals(EmptyString(), eIgnoreCase)) {

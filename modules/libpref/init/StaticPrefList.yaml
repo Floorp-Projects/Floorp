@@ -4566,12 +4566,6 @@
 # Prefs starting with "html5."
 #---------------------------------------------------------------------------
 
-# Turn HTML:inert on or off.
-- name: html5.inert.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Toggle which thread the HTML5 parser uses for stream parsing.
 - name: html5.offmainthread
   type: bool
