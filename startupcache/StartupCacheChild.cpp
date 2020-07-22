@@ -41,7 +41,10 @@ void StartupCacheChild::SendEntriesAndFinalize(StartupCache::Table& entries) {
 
     auto data = dataArray.AppendElement();
 
-    data->key() = key;
+    MOZ_ASSERT(strnlen(key.get(), kStartupCacheKeyLengthCap) <
+                   kStartupCacheKeyLengthCap,
+               "StartupCache key over the size limit.");
+    data->key() = nsCString(key.get());
     if (value.mFlags.contains(StartupCacheEntryFlags::AddedThisSession)) {
       data->data().AppendElements(
           reinterpret_cast<const uint8_t*>(value.mData.get()),
