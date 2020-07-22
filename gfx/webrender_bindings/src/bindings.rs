@@ -1571,27 +1571,6 @@ pub extern "C" fn wr_window_new(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_create_document(
-    root_dh: &mut DocumentHandle,
-    out_handle: &mut *mut DocumentHandle,
-    doc_size: DeviceIntSize,
-    layer: i8,
-    document_id: u32,
-) {
-    assert!(unsafe { is_in_compositor_thread() });
-
-    root_dh.ensure_hit_tester();
-
-    *out_handle = Box::into_raw(Box::new(DocumentHandle::new(
-        root_dh.api.create_sender().create_api_by_client(next_namespace_id()),
-        root_dh.hit_tester.clone(),
-        doc_size,
-        layer,
-        document_id,
-    )));
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn wr_api_delete_document(dh: &mut DocumentHandle) {
     dh.api.delete_document(dh.document_id);
 }
@@ -2034,30 +2013,6 @@ pub extern "C" fn wr_api_send_transaction(dh: &mut DocumentHandle, transaction: 
     let new_txn = make_transaction(is_async);
     let txn = mem::replace(transaction, new_txn);
     dh.api.send_transaction(dh.document_id, txn);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_api_send_transactions(
-    document_handles: *const *mut DocumentHandle,
-    transactions: *const *mut Transaction,
-    transaction_count: usize,
-    is_async: bool,
-) {
-    if transaction_count == 0 {
-        return;
-    }
-    let mut out_transactions = Vec::with_capacity(transaction_count);
-    let mut out_documents = Vec::with_capacity(transaction_count);
-    for i in 0..transaction_count {
-        let txn = &mut **transactions.offset(i as isize);
-        debug_assert!(!txn.is_empty());
-        let new_txn = make_transaction(is_async);
-        out_transactions.push(mem::replace(txn, new_txn));
-        out_documents.push((**document_handles.offset(i as isize)).document_id);
-    }
-    (**document_handles)
-        .api
-        .send_transactions(out_documents, out_transactions);
 }
 
 #[no_mangle]
