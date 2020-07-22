@@ -376,6 +376,14 @@ body {
       .multistageContainer .tiles-container.info:hover, .multistageContainer .tiles-container.info:focus {
         background-color: rgba(217, 217, 227, 0.3);
         border-radius: 4px; }
+  .multistageContainer .tiles-topsites-disclaimer {
+    display: flex;
+    flex-direction: column;
+    padding: 1em;
+    text-align: center;
+    color: var(--grey-subtitle-1);
+    font-size: 12px;
+    line-height: 18px; }
   .multistageContainer .tiles-topsites-section {
     display: grid;
     grid-gap: 24px;
@@ -461,7 +469,9 @@ body {
     flex-direction: row;
     justify-content: center;
     margin-top: auto;
-    padding: 32px 0; }
+    padding: 32px 0 66px; }
+    .multistageContainer .steps.has-disclaimer {
+      padding-bottom: 0; }
     .multistageContainer .steps .indicator {
       width: 60px;
       height: 4px;
