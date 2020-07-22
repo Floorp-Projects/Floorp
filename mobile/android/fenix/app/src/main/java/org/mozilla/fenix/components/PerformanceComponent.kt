@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.components
 
-import org.mozilla.fenix.utils.RunWhenReadyQueue
+import mozilla.components.support.utils.RunWhenReadyQueue
 
 /**
  * Component group for all functionality related to performance.

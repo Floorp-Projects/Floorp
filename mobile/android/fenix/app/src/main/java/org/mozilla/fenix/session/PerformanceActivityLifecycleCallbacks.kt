@@ -7,11 +7,11 @@ package org.mozilla.fenix.session
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 import org.mozilla.fenix.settings.account.AuthIntentReceiverActivity
-import org.mozilla.fenix.utils.RunWhenReadyQueue
 import org.mozilla.fenix.widget.VoiceSearchActivity
 
 /**

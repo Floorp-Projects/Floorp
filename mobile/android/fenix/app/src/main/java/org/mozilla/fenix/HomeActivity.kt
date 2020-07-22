@@ -52,6 +52,7 @@ import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
+import mozilla.components.support.utils.RunWhenReadyQueue
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
@@ -97,7 +98,6 @@ import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.trackingprotectionexceptions.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.utils.BrowsersCache
-import org.mozilla.fenix.utils.RunWhenReadyQueue
 
 /**
  * The main activity of the application. The application is primarily a single Activity (this one)
