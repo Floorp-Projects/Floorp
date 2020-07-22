@@ -72,6 +72,10 @@ PER_PROJECT_PARAMETERS = {
         'target_tasks_method': 'graphics_tasks',
     },
 
+    'autoland': {
+        'optimize_strategies': 'taskgraph.optimize:project.autoland',
+    },
+
     'mozilla-central': {
         'target_tasks_method': 'default',
         'release_type': 'nightly',
