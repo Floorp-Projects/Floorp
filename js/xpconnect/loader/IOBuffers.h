@@ -121,11 +121,6 @@ class PreallocatedOutputBuffer {
 
   size_t remainingCapacity() { return data.length() - cursor_; }
 
-  size_t cursor() const { return cursor_; }
-
-  const uint8_t* Get() const { return data.begin().get(); }
-
- private:
   bool checkCapacity(size_t size) {
     if (size > remainingCapacity()) {
       error_ = true;
@@ -133,6 +128,11 @@ class PreallocatedOutputBuffer {
     return !error_;
   }
 
+  size_t cursor() const { return cursor_; }
+
+  const uint8_t* Get() const { return data.begin().get(); }
+
+ private:
   bool error_ = false;
 
  public:
@@ -199,11 +199,6 @@ class InputBuffer {
 
   size_t remainingCapacity() { return data.length() - cursor_; }
 
-  size_t cursor() const { return cursor_; }
-
-  const uint8_t* Get() const { return data.begin().get(); }
-
- private:
   bool checkCapacity(size_t size) {
     if (size > remainingCapacity()) {
       error_ = true;
@@ -211,6 +206,11 @@ class InputBuffer {
     return !error_;
   }
 
+  size_t cursor() const { return cursor_; }
+
+  const uint8_t* Get() const { return data.begin().get(); }
+
+ private:
   bool error_ = false;
 
  public:

@@ -11,7 +11,6 @@
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
-#include "nsTStringHasher.h"  // mozilla::DefaultHasher<nsCString>
 #include "nsZipArchive.h"
 #include "nsITimer.h"
 #include "nsIMemoryReporter.h"
@@ -105,6 +104,11 @@ static const int kStartupCacheFd = 11;
 static const int kStartupCacheEntryNotRequested = INT_MAX;
 static const int kStartupcacheEntryNotInSharedData = -1;
 
+// Keys must be of length `kStartupCacheKeyLengthCap - 1` or shorter, which
+// will bring them to `kStartupCacheKeyLengthCap` or shorter with a null
+// terminator.
+static const int kStartupCacheKeyLengthCap = 1024;
+
 // StartupCache entries can be backed by a buffer which they allocate as
 // soon as they are requested, into which they decompress the contents out
 // of the memory mapped file, *or* they can be backed by a contiguous buffer
@@ -131,8 +135,8 @@ class MaybeOwnedCharPtr {
     }
   }
 
-  MaybeOwnedCharPtr(const MaybeOwnedCharPtr& other);
-  MaybeOwnedCharPtr& operator=(const MaybeOwnedCharPtr& other);
+  // MaybeOwnedCharPtr(const MaybeOwnedCharPtr& other);
+  // MaybeOwnedCharPtr& operator=(const MaybeOwnedCharPtr& other);
 
   MaybeOwnedCharPtr(MaybeOwnedCharPtr&& other)
       : mPtr(std::exchange(other.mPtr, nullptr)),
@@ -150,9 +154,11 @@ class MaybeOwnedCharPtr {
     return *this;
   }
 
+  operator char*() const { return mPtr; }
+
   explicit operator bool() const { return !!mPtr; }
 
-  char* get() { return mPtr; }
+  char* get() const { return mPtr; }
 
   explicit MaybeOwnedCharPtr(char* aBytes) : mPtr(aBytes), mOwned(false) {}
 
@@ -161,6 +167,24 @@ class MaybeOwnedCharPtr {
 
   explicit MaybeOwnedCharPtr(size_t size)
       : mPtr(new char[size]), mOwned(true) {}
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    if (!mOwned) {
+      return 0;
+    }
+    return mallocSizeOf(mPtr);
+  }
+};
+
+struct StartupCacheKeyHasher {
+  using Key = MaybeOwnedCharPtr;
+  using Lookup = const char*;
+
+  static HashNumber hash(const Lookup& aLookup) { return HashString(aLookup); }
+
+  static bool match(const Key& aKey, const Lookup& aLookup) {
+    return strcmp(aKey.get(), aLookup) == 0;
+  }
 };
 
 enum class StartupCacheEntryFlags {
@@ -204,7 +228,7 @@ struct StartupCacheEntry {
         mFlags(aFlags) {}
 
   struct Comparator {
-    using Value = std::pair<const nsCString*, StartupCacheEntry*>;
+    using Value = std::pair<const MaybeOwnedCharPtr*, StartupCacheEntry*>;
 
     bool Equals(const Value& a, const Value& b) const {
       // This is a bit ugly. Here and below, just note that we want entries
@@ -258,7 +282,8 @@ class StartupCache : public nsIMemoryReporter {
   friend class StartupCacheChild;
 
  public:
-  using Table = HashMap<nsCString, StartupCacheEntry>;
+  using Table =
+      HashMap<MaybeOwnedCharPtr, StartupCacheEntry, StartupCacheKeyHasher>;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
