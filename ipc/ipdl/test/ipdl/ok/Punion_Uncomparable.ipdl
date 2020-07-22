@@ -1,0 +1,11 @@
+uncomparable union Basic {
+    int;
+    double;
+};
+
+sync protocol Punion_Basic {
+
+parent:
+    sync Msg(Basic p) returns (Basic r);
+
+};
