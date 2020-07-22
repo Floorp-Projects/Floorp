@@ -1837,8 +1837,19 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
   // XXX(johns): In these cases, we refuse to touch our content and just
   //   remain unloaded, as per legacy behavior. It would make more sense to
   //   load fallback content initially and refuse to ever change state again.
-  if (doc->IsBeingUsedAsImage() || doc->IsLoadedAsData()) {
+  if (doc->IsBeingUsedAsImage()) {
     return NS_OK;
+  }
+
+  if (doc->IsLoadedAsData() && !doc->IsStaticDocument()) {
+    return NS_OK;
+  }
+  if (doc->IsStaticDocument()) {
+    // We only allow image loads in static documents, but we need to let the
+    // eType_Loading state go through too while we do so.
+    if (mType != eType_Image && mType != eType_Loading) {
+      return NS_OK;
+    }
   }
 
   LOG(("OBJLC [%p]: LoadObject called, notify %u, forceload %u, channel %p",
@@ -2590,8 +2601,6 @@ nsPluginFrame* nsObjectLoadingContent::GetExistingFrame() {
 
 void nsObjectLoadingContent::CreateStaticClone(
     nsObjectLoadingContent* aDest) const {
-  nsImageLoadingContent::CreateStaticImageClone(aDest);
-
   aDest->mType = mType;
   nsObjectLoadingContent* thisObj = const_cast<nsObjectLoadingContent*>(this);
   if (thisObj->mPrintFrame.IsAlive()) {

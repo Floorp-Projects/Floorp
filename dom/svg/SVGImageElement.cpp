@@ -306,12 +306,5 @@ SVGElement::StringAttributesInfo SVGImageElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-nsresult SVGImageElement::CopyInnerTo(Element* aDest) {
-  if (aDest->OwnerDoc()->IsStaticDocument()) {
-    CreateStaticImageClone(static_cast<SVGImageElement*>(aDest));
-  }
-  return SVGImageElementBase::CopyInnerTo(aDest);
-}
-
 }  // namespace dom
 }  // namespace mozilla
