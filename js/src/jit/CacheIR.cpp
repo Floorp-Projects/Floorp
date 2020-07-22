@@ -5175,14 +5175,13 @@ AttachDecision CallIRGenerator::tryAttachDataViewGet(HandleFunction callee,
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   Int32OperandId int32OffsetId = writer.guardToInt32Index(offsetId);
 
-  // TODO(Warp): add BooleanOperandId (bug 1647602).
-  Int32OperandId boolLittleEndianId;
+  BooleanOperandId boolLittleEndianId;
   if (argc_ > 1) {
     ValOperandId littleEndianId =
         writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
     boolLittleEndianId = writer.guardToBoolean(littleEndianId);
   } else {
-    boolLittleEndianId = writer.loadInt32Constant(0);
+    boolLittleEndianId = writer.loadBooleanConstant(false);
   }
 
   writer.loadDataViewValueResult(objId, int32OffsetId, boolLittleEndianId, type,
@@ -5258,14 +5257,13 @@ AttachDecision CallIRGenerator::tryAttachDataViewSet(HandleFunction callee,
       writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
   OperandId numericValueId = emitNumericGuard(valueId, type);
 
-  // TODO(Warp): add BooleanOperandId (bug 1647602).
-  Int32OperandId boolLittleEndianId;
+  BooleanOperandId boolLittleEndianId;
   if (argc_ > 2) {
     ValOperandId littleEndianId =
         writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
     boolLittleEndianId = writer.guardToBoolean(littleEndianId);
   } else {
-    boolLittleEndianId = writer.loadInt32Constant(0);
+    boolLittleEndianId = writer.loadBooleanConstant(false);
   }
 
   writer.storeDataViewValueResult(objId, int32OffsetId, numericValueId,
@@ -7336,10 +7334,12 @@ AttachDecision CompareIRGenerator::tryAttachInt32(ValOperandId lhsId,
     return AttachDecision::NoAction;
   }
 
-  Int32OperandId lhsIntId = lhsVal_.isBoolean() ? writer.guardToBoolean(lhsId)
-                                                : writer.guardToInt32(lhsId);
-  Int32OperandId rhsIntId = rhsVal_.isBoolean() ? writer.guardToBoolean(rhsId)
-                                                : writer.guardToInt32(rhsId);
+  Int32OperandId lhsIntId = lhsVal_.isBoolean()
+                                ? writer.guardBooleanToInt32(lhsId)
+                                : writer.guardToInt32(lhsId);
+  Int32OperandId rhsIntId = rhsVal_.isBoolean()
+                                ? writer.guardBooleanToInt32(rhsId)
+                                : writer.guardToInt32(rhsId);
 
   // Strictly different types should have been handed by
   // tryAttachStrictDifferentTypes
@@ -7621,7 +7621,7 @@ AttachDecision CompareIRGenerator::tryAttachBoolStringOrNumber(
 
   auto createGuards = [&](HandleValue v, ValOperandId vId) {
     if (v.isBoolean()) {
-      Int32OperandId boolId = writer.guardToBoolean(vId);
+      BooleanOperandId boolId = writer.guardToBoolean(vId);
       return writer.guardAndGetNumberFromBoolean(boolId);
     }
     if (v.isString()) {
@@ -7654,7 +7654,7 @@ AttachDecision CompareIRGenerator::tryAttachBigIntInt32(ValOperandId lhsId,
 
   auto createGuards = [&](HandleValue v, ValOperandId vId) {
     if (v.isBoolean()) {
-      return writer.guardToBoolean(vId);
+      return writer.guardBooleanToInt32(vId);
     }
     MOZ_ASSERT(v.isInt32());
     return writer.guardToInt32(vId);
@@ -8367,7 +8367,7 @@ AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
       return writer.guardToInt32(id);
     }
     if (val.isBoolean()) {
-      return writer.guardToBoolean(id);
+      return writer.guardBooleanToInt32(id);
     }
     MOZ_ASSERT(val.isDouble());
     NumberOperandId numId = writer.guardIsNumber(id);
@@ -8490,7 +8490,7 @@ AttachDecision BinaryArithIRGenerator::tryAttachInt32() {
       return writer.guardToInt32(id);
     }
     MOZ_ASSERT(v.isBoolean());
-    return writer.guardToBoolean(id);
+    return writer.guardBooleanToInt32(id);
   };
 
   Int32OperandId lhsIntId = guardToInt32(lhsId, lhs_);
@@ -8587,8 +8587,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringBooleanConcat() {
       return writer.guardToString(id);
     }
     MOZ_ASSERT(v.isBoolean());
-    Int32OperandId intId = writer.guardToBoolean(id);
-    return writer.booleanToString(intId);
+    BooleanOperandId boolId = writer.guardToBoolean(id);
+    return writer.booleanToString(boolId);
   };
 
   StringOperandId lhsStrId = guardToString(lhsId, lhs_);

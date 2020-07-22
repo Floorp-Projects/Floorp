@@ -126,6 +126,12 @@ class BigIntOperandId : public OperandId {
   explicit BigIntOperandId(uint16_t id) : OperandId(id) {}
 };
 
+class BooleanOperandId : public OperandId {
+ public:
+  BooleanOperandId() = default;
+  explicit BooleanOperandId(uint16_t id) : OperandId(id) {}
+};
+
 class Int32OperandId : public OperandId {
  public:
   Int32OperandId() = default;
@@ -144,6 +150,8 @@ class TypedOperandId : public OperandId {
       : OperandId(id.id()), type_(JSVAL_TYPE_SYMBOL) {}
   MOZ_IMPLICIT TypedOperandId(BigIntOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_BIGINT) {}
+  MOZ_IMPLICIT TypedOperandId(BooleanOperandId id)
+      : OperandId(id.id()), type_(JSVAL_TYPE_BOOLEAN) {}
   MOZ_IMPLICIT TypedOperandId(Int32OperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_INT32) {}
   MOZ_IMPLICIT TypedOperandId(ValueTagOperandId val)
@@ -730,6 +738,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return BigIntOperandId(input.id());
   }
 
+  BooleanOperandId guardToBoolean(ValOperandId input) {
+    guardToBoolean_(input);
+    return BooleanOperandId(input.id());
+  }
+
   NumberOperandId guardIsNumber(ValOperandId input) {
     guardIsNumber_(input);
     return NumberOperandId(input.id());
@@ -939,6 +952,10 @@ class MOZ_RAII CacheIRReader {
 
   BigIntOperandId bigIntOperandId() {
     return BigIntOperandId(buffer_.readByte());
+  }
+
+  BooleanOperandId booleanOperandId() {
+    return BooleanOperandId(buffer_.readByte());
   }
 
   Int32OperandId int32OperandId() { return Int32OperandId(buffer_.readByte()); }
