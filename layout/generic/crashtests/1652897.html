@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script>
+// DO NOT move this script to the end of this file
+// as the bug depends on this specific tree structure
+document.addEventListener("DOMContentLoaded", () => {
+  window.getSelection().selectAllChildren(document.body)
+  window.getSelection().modify('extend','left','word')
+});
+</script>
+<table>
+<caption>
+<caption>
