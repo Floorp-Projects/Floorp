@@ -317,8 +317,6 @@ class InterpreterFrame {
   jsbytecode* prevpc_;
   Value* prevsp_;
 
-  void* unused;
-
   /*
    * For an eval-in-frame DEBUGGER_EVAL frame, the frame in whose scope
    * we're evaluating code. Iteration treats this as our previous frame.
