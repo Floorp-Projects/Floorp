@@ -77,6 +77,9 @@ class UAWidgetsChild extends JSWindowActorChild {
           "media.videocontrols.picture-in-picture.video-toggle.enabled",
           "media.videocontrols.picture-in-picture.video-toggle.always-show",
           "media.videocontrols.picture-in-picture.video-toggle.min-video-secs",
+          "media.videocontrols.picture-in-picture.video-toggle.mode",
+          "media.videocontrols.picture-in-picture.video-toggle.position",
+          "media.videocontrols.picture-in-picture.video-toggle.has-used",
         ];
         break;
       case "input":
