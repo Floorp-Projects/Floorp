@@ -457,19 +457,29 @@
       </vbox>
     </hbox>
   </vbox>
-  <hbox id="masterPasswordRow">
-    <checkbox id="useMasterPassword"
-              data-l10n-id="forms-primary-pw-use"
-              flex="1"/>
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <button id="changeMasterPassword"
-              is="highlightable-button"
-              class="accessory-button"
-              search-l10n-ids="forms-master-pw-change.label"
-              data-l10n-id="forms-primary-pw-change"/>
+  <vbox>
+    <hbox id="masterPasswordRow" align="center">
+      <checkbox id="useMasterPassword"
+                data-l10n-id="forms-primary-pw-use"
+                class="tail-with-learn-more"/>
+      <label id="primaryPasswordLearnMoreLink" class="learnMore" is="text-link"
+             flex="1"
+             data-l10n-id="forms-primary-pw-learn-more-link"/>
+      <spacer flex="1"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="changeMasterPassword"
+                is="highlightable-button"
+                class="accessory-button"
+                search-l10n-ids="forms-master-pw-change.label"
+                data-l10n-id="forms-primary-pw-change"/>
+      </hbox>
     </hbox>
-  </hbox>
+    <description class="indent tip-caption"
+                 data-l10n-id="forms-primary-pw-former-name"
+                 data-l10n-attrs="hidden"
+                 flex="1"/>
+  </vbox>
   <!--
     Those two strings are meant to be invisible and will be used exclusively to provide
     localization for an alert window.
