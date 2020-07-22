@@ -72,10 +72,6 @@ PER_PROJECT_PARAMETERS = {
         'target_tasks_method': 'graphics_tasks',
     },
 
-    'autoland': {
-        'optimize_strategies': 'taskgraph.optimize:project.autoland',
-    },
-
     'mozilla-central': {
         'target_tasks_method': 'default',
         'release_type': 'nightly',
@@ -322,6 +318,7 @@ def get_decision_parameters(graph_config, options):
     parameters['filters'] = [
         'target_tasks_method',
     ]
+    parameters['optimize_target_tasks'] = True
     parameters['existing_tasks'] = {}
     parameters['do_not_optimize'] = []
     parameters['build_number'] = 1
@@ -330,8 +327,6 @@ def get_decision_parameters(graph_config, options):
     parameters['message'] = try_syntax_from_message(commit_message)
     parameters['hg_branch'] = get_hg_revision_branch(GECKO, revision=parameters['head_rev'])
     parameters['next_version'] = None
-    parameters['optimize_strategies'] = None
-    parameters['optimize_target_tasks'] = True
     parameters['phabricator_diff'] = None
     parameters['release_type'] = ''
     parameters['release_eta'] = ''

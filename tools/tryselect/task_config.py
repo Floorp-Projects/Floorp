@@ -20,6 +20,7 @@ from textwrap import dedent
 
 import mozpack.path as mozpath
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
+from taskgraph.util.python_path import find_object
 
 from .tasks import resolve_tests_by_suite
 
@@ -313,6 +314,37 @@ class GeckoProfile(TryConfig):
             }
 
 
+class OptimizeStrategies(TryConfig):
+
+    arguments = [
+        [['--strategy'],
+         {'default': None,
+          'help': 'Override the default optimization strategy. Valid values '
+                  'are the experimental strategies defined at the bottom of '
+                  '`taskcluster/taskgraph/optimize/__init__.py`.'
+          }],
+    ]
+
+    def try_config(self, strategy, **kwargs):
+        if strategy:
+            if ':' not in strategy:
+                strategy = "taskgraph.optimize:tryselect.{}".format(strategy)
+
+            try:
+                obj = find_object(strategy)
+            except (ImportError, AttributeError):
+                print("error: invalid module path '{}'".format(strategy))
+                sys.exit(1)
+
+            if not isinstance(obj, dict):
+                print("error: object at '{}' must be a dict".format(strategy))
+                sys.exit(1)
+
+            return {
+                'optimize-strategies': strategy,
+            }
+
+
 class Browsertime(TryConfig):
     arguments = [
         [['--browsertime'],
@@ -429,5 +461,6 @@ all_task_configs = {
     'pernosco': Pernosco,
     'rebuild': Rebuild,
     'routes': Routes,
+    'strategy': OptimizeStrategies,
     'worker-overrides': WorkerOverrides,
 }
