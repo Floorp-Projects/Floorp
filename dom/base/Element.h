@@ -1251,7 +1251,8 @@ class Element : public FragmentOrElement {
       ShadowRootMode aMode);
 
   // Attach UA Shadow Root if it is not attached.
-  void AttachAndSetUAShadowRoot();
+  enum class NotifyUAWidgetSetup : bool { No, Yes };
+  void AttachAndSetUAShadowRoot(NotifyUAWidgetSetup = NotifyUAWidgetSetup::Yes);
 
   // Dispatch an event to UAWidgetsChild, triggering construction
   // or onchange callback on the existing widget.

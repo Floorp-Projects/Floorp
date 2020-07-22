@@ -4222,7 +4222,6 @@ nsresult HTMLInputElement::BindToTree(BindContext& aContext, nsINode& aParent) {
       IsInComposedDoc()) {
     // Construct Shadow Root so web content can be hidden in the DOM.
     AttachAndSetUAShadowRoot();
-    NotifyUAWidgetSetupOrChange();
   }
 
   if (mType == NS_FORM_INPUT_PASSWORD) {
@@ -4487,7 +4486,6 @@ void HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify) {
     } else if (mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) {
       // Switch to date/time type.
       AttachAndSetUAShadowRoot();
-      NotifyUAWidgetSetupOrChange();
     }
   }
 }
