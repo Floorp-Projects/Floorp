@@ -12,6 +12,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Unused.h"
 #include "nsProxyRelease.h"
 #include "nsStreamUtils.h"
 
@@ -361,6 +362,7 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aStream);
 
+  // Acquire |mMutex| in order to safely inspect |mState| and use |mGlobal|.
   Maybe<MutexAutoLock> lock;
   lock.emplace(mMutex);
 
@@ -369,6 +371,11 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     return NS_OK;
   }
 
+  // Perform a microtask checkpoint after all actions are completed.  Note that
+  // |mMutex| *must not* be held when the checkpoint occurs -- hence, far down,
+  // the |lock.reset()|.  (|MutexAutoUnlock| as RAII wouldn't work for this task
+  // because its destructor would reacquire |mMutex| before these objects'
+  // destructors run.)
   nsAutoMicroTask mt;
   AutoEntryScript aes(mGlobal, "fetch body data available");
 
@@ -405,10 +412,15 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
   mState = eWriting;
 
+  // Release the mutex before the call below (which could execute JS), as well
+  // as before the microtask checkpoint queued up above occurs.
   lock.reset();
 
-  DebugOnly<bool> ok =
-      JS::ReadableStreamUpdateDataAvailableFromSource(cx, stream, size);
+  Unused << JS::ReadableStreamUpdateDataAvailableFromSource(cx, stream, size);
+
+  // The previous call can execute JS (even up to running a nested event loop),
+  // so |mState| can't be asserted to have any particular value, even if the
+  // previous call succeeds.
 
   return NS_OK;
 }
