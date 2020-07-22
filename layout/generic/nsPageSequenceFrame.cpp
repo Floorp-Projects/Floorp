@@ -57,7 +57,7 @@ nsPageSequenceFrame::nsPageSequenceFrame(ComputedStyle* aStyle,
   nscoord halfInch = PresContext()->CSSTwipsToAppUnits(NS_INCHES_TO_TWIPS(0.5));
   mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
 
-  mPageData = new nsSharedPageData();
+  mPageData = MakeUnique<nsSharedPageData>();
   mPageData->mHeadFootFont =
       *PresContext()
            ->Document()
@@ -71,10 +71,7 @@ nsPageSequenceFrame::nsPageSequenceFrame(ComputedStyle* aStyle,
   SetPageNumberFormat("pageofpages", "%1$d of %2$d", false);
 }
 
-nsPageSequenceFrame::~nsPageSequenceFrame() {
-  delete mPageData;
-  ResetPrintCanvasList();
-}
+nsPageSequenceFrame::~nsPageSequenceFrame() { ResetPrintCanvasList(); }
 
 NS_QUERYFRAME_HEAD(nsPageSequenceFrame)
   NS_QUERYFRAME_ENTRY(nsPageSequenceFrame)
@@ -255,7 +252,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     nsIFrame* kidFrame = e.get();
     // Set the shared data into the page frame before reflow
     nsPageFrame* pf = static_cast<nsPageFrame*>(kidFrame);
-    pf->SetSharedPageData(mPageData);
+    pf->SetSharedPageData(mPageData.get());
 
     // Reflow the page
     ReflowInput kidReflowInput(
