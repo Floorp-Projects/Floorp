@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`AddonInstallationDialogFragment(addonCollectionProvider: `[`AddonCollectionProvider`](../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md)`)`
+`AddonInstallationDialogFragment()`
 
 A dialog that shows [Addon](../../mozilla.components.feature.addons/-addon/index.md) installation confirmation.
 

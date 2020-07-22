@@ -2,7 +2,7 @@
 
 # SyncedTabsFeature
 
-`class SyncedTabsFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsFeature.kt#L37)
+`class SyncedTabsFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsFeature.kt#L38)
 
 Feature implementation that will keep a [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) notified with other synced device tabs for
 the Firefox Sync account.
@@ -31,12 +31,13 @@ the Firefox Sync account.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SyncedTabsFeature(storage: `[`SyncedTabsStorage`](../../mozilla.components.feature.syncedtabs.storage/-synced-tabs-storage/index.md)`, accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, view: `[`SyncedTabsView`](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md)`, lifecycleOwner: LifecycleOwner, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO, onTabClicked: (`[`Tab`](../../mozilla.components.browser.storage.sync/-tab/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, controller: `[`SyncedTabsController`](../../mozilla.components.feature.syncedtabs.controller/-synced-tabs-controller/index.md)` = DefaultController(
+| [&lt;init&gt;](-init-.md) | `SyncedTabsFeature(context: <ERROR CLASS>, storage: `[`SyncedTabsStorage`](../../mozilla.components.feature.syncedtabs.storage/-synced-tabs-storage/index.md)`, accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, view: `[`SyncedTabsView`](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md)`, lifecycleOwner: LifecycleOwner, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO, onTabClicked: (`[`Tab`](../../mozilla.components.browser.storage.sync/-tab/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, controller: `[`SyncedTabsController`](../../mozilla.components.feature.syncedtabs.controller/-synced-tabs-controller/index.md)` = DefaultController(
         storage,
         accountManager,
         view,
         coroutineContext
     ), presenter: `[`SyncedTabsPresenter`](../../mozilla.components.feature.syncedtabs.presenter/-synced-tabs-presenter/index.md)` = DefaultPresenter(
+        context,
         controller,
         accountManager,
         view,

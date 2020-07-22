@@ -2,4 +2,4 @@
 
 # ENTER_BACKGROUND
 
-`const val ENTER_BACKGROUND: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L22)
+`const val ENTER_BACKGROUND: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L23)
