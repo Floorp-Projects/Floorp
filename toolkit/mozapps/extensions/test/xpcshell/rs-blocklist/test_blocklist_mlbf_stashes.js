@@ -110,6 +110,40 @@ add_task(async function privileged_addon_blocked_by_stash() {
   // via the MLBF, but that is already covered by test_blocklist_mlbf.js ).
 });
 
+// To complement langpack_not_blocked_on_Nightly in test_blocklist_mlbf.js,
+// verify that langpacks can still be blocked through stashes.
+add_task(async function langpack_blocked_by_stash() {
+  const langpack_addon = {
+    id: "@blocked",
+    type: "locale",
+    version: "1",
+    signedDate: new Date(0), // = the MLBF's generationTime.
+    signedState: AddonManager.SIGNEDSTATE_SIGNED,
+  };
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(langpack_addon),
+    Ci.nsIBlocklistService.STATE_BLOCKED,
+    "Langpack add-ons can still be blocked by a stash"
+  );
+
+  // For comparison, when an add-on is only blocked by a MLBF, the block
+  // decision is ignored on Nightly (but blocked on non-Nightly).
+  langpack_addon.id = "@onlyblockedbymlbf";
+  if (AppConstants.NIGHTLY_BUILD) {
+    Assert.equal(
+      await Blocklist.getAddonBlocklistState(langpack_addon),
+      Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+      "Langpack add-ons cannot be blocked via a MLBF on Nightly"
+    );
+  } else {
+    Assert.equal(
+      await Blocklist.getAddonBlocklistState(langpack_addon),
+      Ci.nsIBlocklistService.STATE_BLOCKED,
+      "Langpack add-ons can be blocked via a MLBF on non-Nightly"
+    );
+  }
+});
+
 // Tests that invalid stash entries are ignored.
 add_task(async function invalid_stashes() {
   await AddonTestUtils.loadBlocklistRawData({
