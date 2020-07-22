@@ -8,7 +8,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.appcompat.app.AppCompatActivity
@@ -43,18 +42,6 @@ class WebAppLauncherActivity : AppCompatActivity() {
 
             finish()
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val currTime = SystemClock.elapsedRealtimeNanos()
-        emitForegroundTimingFact(currTime)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        val currTime = SystemClock.elapsedRealtimeNanos()
-        emitBackgroundTimingFact(currTime)
     }
 
     override fun onDestroy() {
@@ -96,7 +83,6 @@ class WebAppLauncherActivity : AppCompatActivity() {
 
         try {
             startActivity(intent)
-            emitHomescreenIconTapFact()
         } catch (e: ActivityNotFoundException) {
             logger.error("Packages does not handle ACTION_VIEW_PWA intent. Can't launch as web app.", e)
             // Fall back to normal browser

@@ -53,19 +53,31 @@ private fun emitPwaFact(
     ).collect()
 }
 
-internal fun emitHomescreenIconTapFact() =
+/**
+ * Facts emitted for telemetry related to [PwaFeature].
+ * The user installs a PWA shortcut.
+ */
+internal fun emitPwaInstallFact() =
+        emitPwaFact(
+                Action.CLICK,
+                ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT
+        )
+
+/**
+ * Facts emitted for telemetry related to [PwaFeature].
+ * The user tapped the PWA icon on the homescreen.
+ */
+fun emitHomescreenIconTapFact() =
     emitPwaFact(
         Action.CLICK,
         ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP
     )
 
-internal fun emitPwaInstallFact() =
-    emitPwaFact(
-        Action.CLICK,
-        ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT
-    )
-
-internal fun emitForegroundTimingFact(timingNs: Long) =
+/**
+ * Facts emitted for telemetry related to [PwaFeature].
+ * The current system time when the app is foregrounded.
+ */
+fun emitForegroundTimingFact(timingNs: Long) =
     emitPwaFact(
         Action.INTERACTION,
         ProgressiveWebAppFacts.Items.ENTER_FOREGROUND,
@@ -74,7 +86,11 @@ internal fun emitForegroundTimingFact(timingNs: Long) =
         )
     )
 
-internal fun emitBackgroundTimingFact(timingNs: Long) =
+/**
+ * Facts emitted for telemetry related to [PwaFeature].
+ * The current system time when the app is backgrounded.
+ */
+fun emitBackgroundTimingFact(timingNs: Long) =
     emitPwaFact(
         Action.INTERACTION,
         ProgressiveWebAppFacts.Items.ENTER_BACKGROUND,
