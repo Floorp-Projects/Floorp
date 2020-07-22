@@ -1665,6 +1665,15 @@ this.ExtensionBlocklistMLBF = {
       return null;
     }
 
+    if (AppConstants.NIGHTLY_BUILD && addon.type === "locale") {
+      // Only Mozilla can create langpacks with a valid signature.
+      // Langpacks for Release, Beta and ESR are submitted to AMO.
+      // DevEd does not support external langpacks (bug 1563923), only builtins.
+      //   (and built-in addons are not subjected to the blocklist).
+      // Langpacks for Nightly are not known to AMO, so the MLBF cannot be used.
+      return null;
+    }
+
     return this._createBlockEntry(addon);
   },
 
