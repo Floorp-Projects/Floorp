@@ -34,7 +34,7 @@ add_task(async function() {
   const hud2 = await openConsole(tab2);
   is(
     findMessage(hud2, TEST_IFRAME_URI),
-    null,
+    undefined,
     "iframe network request is not displayed in tab2"
   );
 });

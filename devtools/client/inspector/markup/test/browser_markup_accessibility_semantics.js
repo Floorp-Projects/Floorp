@@ -47,7 +47,7 @@ add_task(async function() {
     "Default active descendant should be set to body"
   );
   is(
-    bodyContainer.tagLine.getAttribute("aria-level"),
+    parseInt(bodyContainer.tagLine.getAttribute("aria-level"), 10),
     TOP_CONTAINER_LEVEL - 1,
     "Body container tagLine should have nested level up to date"
   );
@@ -59,7 +59,7 @@ add_task(async function() {
       "Child container tagLine elements should have tree item semantics"
     );
     is(
-      treeitem.getAttribute("aria-level"),
+      parseInt(treeitem.getAttribute("aria-level"), 10),
       TOP_CONTAINER_LEVEL,
       "Child container tagLine should have nested level up to date"
     );
@@ -123,7 +123,7 @@ add_task(async function() {
   );
   const listItemContainer = await getContainerForSelector("dt", inspector);
   is(
-    listItemContainer.tagLine.getAttribute("aria-level"),
+    parseInt(listItemContainer.tagLine.getAttribute("aria-level"), 10),
     TOP_CONTAINER_LEVEL + 1,
     "Grand child container tagLine should have nested level up to date"
   );

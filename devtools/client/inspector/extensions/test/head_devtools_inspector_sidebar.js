@@ -65,7 +65,7 @@ function waitForObjectInspector(panelDoc, waitForNodeWithType = "object") {
 async function testSetExtensionPageSidebarPanel(panelDoc, expectedURL) {
   const selector = "iframe.inspector-extension-sidebar-page";
   const iframesCount = await ContentTaskUtils.waitForCondition(() => {
-    return panelDoc.querySelectorAll(selector).length > 0;
+    return panelDoc.querySelectorAll(selector).length;
   }, "Wait for the extension page iframe");
 
   is(

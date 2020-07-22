@@ -165,6 +165,6 @@ function testNavigatingHistoryInUI(hud) {
   // restores this.
   for (let i = INPUT_HISTORY_COUNT - 1; i >= 0; i--) {
     EventUtils.synthesizeKey("KEY_ArrowUp");
-    is(getInputValue(hud), i, "Pressing up restores last input");
+    is(getInputValue(hud), i.toString(), "Pressing up restores last input");
   }
 }

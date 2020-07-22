@@ -62,7 +62,7 @@ add_task(async function() {
 
   is(
     findMessage(hud2, "bTimer started"),
-    null,
+    undefined,
     "No message is printed to " + "the console when the timer starts"
   );
 

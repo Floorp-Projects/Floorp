@@ -148,7 +148,8 @@ async function testKeyboardInteraction(tree, win) {
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
 
   let [data, attachment] = await event.promise;
-  is(data, "level1", "Correct item was selected after pressing down");
+  is(data.length, 1, "Correct level item was selected after keydown");
+  is(data[0], "level1", "Correct item was selected after pressing down");
   ok(!attachment, "null attachment was emitted");
   ok(node.classList.contains("theme-selected"), "Node has selected class");
   ok(node.hasAttribute("expanded"), "Node is expanded now");

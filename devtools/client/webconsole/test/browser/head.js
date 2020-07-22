@@ -569,8 +569,8 @@ async function checkClickOnNode(
     ok(line, `source line found ("${line}")`);
 
     is(
-      dbg._selectors.getSelectedLocation(dbg._getState()).line,
-      line,
+      parseInt(dbg._selectors.getSelectedLocation(dbg._getState()).line, 10),
+      parseInt(line, 10),
       "expected source line"
     );
   }
@@ -579,8 +579,8 @@ async function checkClickOnNode(
     ok(column, `source column found ("${column}")`);
 
     is(
-      dbg._selectors.getSelectedLocation(dbg._getState()).column,
-      column,
+      parseInt(dbg._selectors.getSelectedLocation(dbg._getState()).column, 10),
+      parseInt(column, 10),
       "expected source column"
     );
   }

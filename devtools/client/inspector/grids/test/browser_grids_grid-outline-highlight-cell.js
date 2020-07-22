@@ -53,9 +53,9 @@ add_task(async function() {
       const { showGridCell } = options;
       const { gridFragmentIndex, rowNumber, columnNumber } = showGridCell;
 
-      is(gridFragmentIndex, 0, "Should be the first grid fragment index.");
-      is(rowNumber, 1, "Should be the first grid row.");
-      is(columnNumber, 1, "Should be the first grid column.");
+      is(gridFragmentIndex, "0", "Should be the first grid fragment index.");
+      is(rowNumber, "1", "Should be the first grid row.");
+      is(columnNumber, "1", "Should be the first grid column.");
     }
   );
   EventUtils.synthesizeMouse(

@@ -51,7 +51,7 @@ add_task(async function() {
   clickElement(dbg, "gutter", 5);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   bp = findBreakpoint(dbg, "simple2", 5);
-  is(bp, null, "breakpoint was removed");
+  is(bp, undefined, "breakpoint was removed");
   await assertEditorBreakpoint(dbg, 5);
 
   info("Adding a condition to a breakpoint");
@@ -82,7 +82,7 @@ add_task(async function() {
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeCondition);
   await waitForBreakpointWithoutCondition(dbg, "simple2", 5);
   bp = findBreakpoint(dbg, "simple2", 5);
-  is(bp.options.condition, undefined, "breakpoint condition removed");
+  is(bp.options.condition, null, "breakpoint condition removed");
 
   info('Add "log point"');
   await setLogPoint(dbg, 5, "44");

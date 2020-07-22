@@ -198,8 +198,8 @@ async function compareAppliedStylesWithUI(inspector, view, filter) {
   entries.forEach((entry, i) => {
     const elementStyleRule = elementStyle.rules[i];
     is(
-      elementStyleRule.inherited,
-      entry.inherited,
+      !!elementStyleRule.inherited,
+      !!entry.inherited,
       "Same inherited (" + entry.inherited + ")"
     );
     is(

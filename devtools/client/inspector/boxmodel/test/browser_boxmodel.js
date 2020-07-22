@@ -22,15 +22,15 @@ var res1 = [
   },
   {
     selector: ".boxmodel-position.boxmodel-top > span",
-    value: 42,
+    value: "42",
   },
   {
     selector: ".boxmodel-position.boxmodel-left > span",
-    value: 42,
+    value: "42",
   },
   {
     selector: ".boxmodel-margin.boxmodel-top > span",
-    value: 30,
+    value: "30",
   },
   {
     selector: ".boxmodel-margin.boxmodel-left > span",
@@ -38,7 +38,7 @@ var res1 = [
   },
   {
     selector: ".boxmodel-margin.boxmodel-bottom > span",
-    value: 30,
+    value: "30",
   },
   {
     selector: ".boxmodel-margin.boxmodel-right > span",
@@ -46,35 +46,35 @@ var res1 = [
   },
   {
     selector: ".boxmodel-padding.boxmodel-top > span",
-    value: 20,
+    value: "20",
   },
   {
     selector: ".boxmodel-padding.boxmodel-left > span",
-    value: 20,
+    value: "20",
   },
   {
     selector: ".boxmodel-padding.boxmodel-bottom > span",
-    value: 20,
+    value: "20",
   },
   {
     selector: ".boxmodel-padding.boxmodel-right > span",
-    value: 20,
+    value: "20",
   },
   {
     selector: ".boxmodel-border.boxmodel-top > span",
-    value: 10,
+    value: "10",
   },
   {
     selector: ".boxmodel-border.boxmodel-left > span",
-    value: 10,
+    value: "10",
   },
   {
     selector: ".boxmodel-border.boxmodel-bottom > span",
-    value: 10,
+    value: "10",
   },
   {
     selector: ".boxmodel-border.boxmodel-right > span",
-    value: 10,
+    value: "10",
   },
 ];
 
@@ -93,15 +93,15 @@ var res2 = [
   },
   {
     selector: ".boxmodel-position.boxmodel-top > span",
-    value: 50,
+    value: "50",
   },
   {
     selector: ".boxmodel-position.boxmodel-left > span",
-    value: 42,
+    value: "42",
   },
   {
     selector: ".boxmodel-margin.boxmodel-top > span",
-    value: 30,
+    value: "30",
   },
   {
     selector: ".boxmodel-margin.boxmodel-left > span",
@@ -109,7 +109,7 @@ var res2 = [
   },
   {
     selector: ".boxmodel-margin.boxmodel-bottom > span",
-    value: 30,
+    value: "30",
   },
   {
     selector: ".boxmodel-margin.boxmodel-right > span",
@@ -117,35 +117,35 @@ var res2 = [
   },
   {
     selector: ".boxmodel-padding.boxmodel-top > span",
-    value: 20,
+    value: "20",
   },
   {
     selector: ".boxmodel-padding.boxmodel-left > span",
-    value: 20,
+    value: "20",
   },
   {
     selector: ".boxmodel-padding.boxmodel-bottom > span",
-    value: 20,
+    value: "20",
   },
   {
     selector: ".boxmodel-padding.boxmodel-right > span",
-    value: 50,
+    value: "50",
   },
   {
     selector: ".boxmodel-border.boxmodel-top > span",
-    value: 10,
+    value: "10",
   },
   {
     selector: ".boxmodel-border.boxmodel-left > span",
-    value: 10,
+    value: "10",
   },
   {
     selector: ".boxmodel-border.boxmodel-bottom > span",
-    value: 10,
+    value: "10",
   },
   {
     selector: ".boxmodel-border.boxmodel-right > span",
-    value: 10,
+    value: "10",
   },
 ];
 
