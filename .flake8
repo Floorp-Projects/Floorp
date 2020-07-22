@@ -75,7 +75,7 @@ exclude =
     security/nss/,
     testing/marionette/harness/marionette_harness/runner/mixins,
     testing/marionette/harness/marionette_harness/tests,
-    testing/mochitest/pywebsocket,
+    testing/mochitest/pywebsocket3,
     testing/mozharness/configs/test/test_malformed.py,
     tools/lint/test/files,
     tools/infer/test/*.configure,

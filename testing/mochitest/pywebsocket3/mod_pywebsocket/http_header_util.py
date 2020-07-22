@@ -26,15 +26,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """Utilities for parsing and formatting headers that follow the grammar defined
 in HTTP RFC http://www.ietf.org/rfc/rfc2616.txt.
 """
 
-
-import urlparse
-
+from __future__ import absolute_import
+import six.moves.urllib.parse
 
 _SEPARATORS = '()<>@,;:\\"/[]?={} \t'
 
@@ -52,7 +49,6 @@ def _is_ctl(c):
 
 
 class ParsingState(object):
-
     def __init__(self, data):
         self.data = data
         self.head = 0
@@ -218,7 +214,7 @@ def quote_if_necessary(s):
 def parse_uri(uri):
     """Parse absolute URI then return host, port and resource."""
 
-    parsed = urlparse.urlsplit(uri)
+    parsed = six.moves.urllib.parse.urlsplit(uri)
     if parsed.scheme != 'wss' and parsed.scheme != 'ws':
         # |uri| must be a relative URI.
         # TODO(toyoshim): Should validate |uri|.
@@ -230,9 +226,12 @@ def parse_uri(uri):
     port = None
     try:
         port = parsed.port
-    except ValueError, e:
-        # port property cause ValueError on invalid null port description like
-        # 'ws://host:/path'.
+    except ValueError:
+        # The port property cause ValueError on invalid null port descriptions
+        # like 'ws://host:INVALID_PORT/path', where the assigned port is not
+        # *DIGIT. For python 3.6 and later, ValueError also raises when
+        # assigning invalid port numbers such as 'ws://host:-1/path'. Earlier
+        # versions simply return None and ignore invalid port attributes.
         return None, None, None
 
     if port is None:
@@ -250,14 +249,6 @@ def parse_uri(uri):
         path += '#' + parsed.fragment
 
     return parsed.hostname, port, path
-
-
-try:
-    urlparse.uses_netloc.index('ws')
-except ValueError, e:
-    # urlparse in Python2.5.1 doesn't have 'ws' and 'wss' entries.
-    urlparse.uses_netloc.append('ws')
-    urlparse.uses_netloc.append('wss')
 
 
 # vi:sts=4 sw=4 et

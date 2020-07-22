@@ -1,4 +1,4 @@
-# Copyright 2012, Google Inc.
+# Copyright 2011, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """This file provides classes and helper functions for parsing/building frames
 of the WebSocket protocol (RFC 6455).
 
@@ -35,30 +33,33 @@ Specification:
 http://tools.ietf.org/html/rfc6455
 """
 
-
 from collections import deque
 import logging
 import os
 import struct
 import time
+import socket
+import six
 
 from mod_pywebsocket import common
 from mod_pywebsocket import util
-from mod_pywebsocket._stream_base import BadOperationException
-from mod_pywebsocket._stream_base import ConnectionTerminatedException
-from mod_pywebsocket._stream_base import InvalidFrameException
-from mod_pywebsocket._stream_base import InvalidUTF8Exception
-from mod_pywebsocket._stream_base import StreamBase
-from mod_pywebsocket._stream_base import UnsupportedFrameException
-
+from mod_pywebsocket._stream_exceptions import BadOperationException
+from mod_pywebsocket._stream_exceptions import ConnectionTerminatedException
+from mod_pywebsocket._stream_exceptions import InvalidFrameException
+from mod_pywebsocket._stream_exceptions import InvalidUTF8Exception
+from mod_pywebsocket._stream_exceptions import UnsupportedFrameException
 
 _NOOP_MASKER = util.NoopMasker()
 
 
 class Frame(object):
-
-    def __init__(self, fin=1, rsv1=0, rsv2=0, rsv3=0,
-                 opcode=None, payload=''):
+    def __init__(self,
+                 fin=1,
+                 rsv1=0,
+                 rsv2=0,
+                 rsv3=0,
+                 opcode=None,
+                 payload=b''):
         self.fin = fin
         self.rsv1 = rsv1
         self.rsv2 = rsv2
@@ -90,11 +91,11 @@ def create_length_header(length, mask):
     if length < 0:
         raise ValueError('length must be non negative integer')
     elif length <= 125:
-        return chr(mask_bit | length)
+        return util.pack_byte(mask_bit | length)
     elif length < (1 << 16):
-        return chr(mask_bit | 126) + struct.pack('!H', length)
+        return util.pack_byte(mask_bit | 126) + struct.pack('!H', length)
     elif length < (1 << 63):
-        return chr(mask_bit | 127) + struct.pack('!Q', length)
+        return util.pack_byte(mask_bit | 127) + struct.pack('!Q', length)
     else:
         raise ValueError('Payload is too big for one frame')
 
@@ -115,12 +116,12 @@ def create_header(opcode, payload_length, fin, rsv1, rsv2, rsv3, mask):
     if (fin | rsv1 | rsv2 | rsv3) & ~1:
         raise ValueError('FIN bit and Reserved bit parameter must be 0 or 1')
 
-    header = ''
+    header = b''
 
     first_byte = ((fin << 7)
                   | (rsv1 << 6) | (rsv2 << 5) | (rsv3 << 4)
                   | opcode)
-    header += chr(first_byte)
+    header += util.pack_byte(first_byte)
     header += create_length_header(payload_length, mask)
 
     return header
@@ -140,22 +141,27 @@ def _filter_and_format_frame_object(frame, mask, frame_filters):
     for frame_filter in frame_filters:
         frame_filter.filter(frame)
 
-    header = create_header(
-        frame.opcode, len(frame.payload), frame.fin,
-        frame.rsv1, frame.rsv2, frame.rsv3, mask)
+    header = create_header(frame.opcode, len(frame.payload), frame.fin,
+                           frame.rsv1, frame.rsv2, frame.rsv3, mask)
     return _build_frame(header, frame.payload, mask)
 
 
-def create_binary_frame(
-    message, opcode=common.OPCODE_BINARY, fin=1, mask=False, frame_filters=[]):
+def create_binary_frame(message,
+                        opcode=common.OPCODE_BINARY,
+                        fin=1,
+                        mask=False,
+                        frame_filters=[]):
     """Creates a simple binary frame with no extension, reserved bit."""
 
     frame = Frame(fin=fin, opcode=opcode, payload=message)
     return _filter_and_format_frame_object(frame, mask, frame_filters)
 
 
-def create_text_frame(
-    message, opcode=common.OPCODE_TEXT, fin=1, mask=False, frame_filters=[]):
+def create_text_frame(message,
+                      opcode=common.OPCODE_TEXT,
+                      fin=1,
+                      mask=False,
+                      frame_filters=[]):
     """Creates a simple text frame with no extension, reserved bit."""
 
     encoded_message = message.encode('utf-8')
@@ -163,7 +169,8 @@ def create_text_frame(
                                frame_filters)
 
 
-def parse_frame(receive_bytes, logger=None,
+def parse_frame(receive_bytes,
+                logger=None,
                 ws_version=common.VERSION_HYBI_LATEST,
                 unmask_receive=True):
     """Parses a frame. Returns a tuple containing each header field and
@@ -189,23 +196,21 @@ def parse_frame(receive_bytes, logger=None,
 
     logger.log(common.LOGLEVEL_FINE, 'Receive the first 2 octets of a frame')
 
-    received = receive_bytes(2)
-
-    first_byte = ord(received[0])
+    first_byte = ord(receive_bytes(1))
     fin = (first_byte >> 7) & 1
     rsv1 = (first_byte >> 6) & 1
     rsv2 = (first_byte >> 5) & 1
     rsv3 = (first_byte >> 4) & 1
     opcode = first_byte & 0xf
 
-    second_byte = ord(received[1])
+    second_byte = ord(receive_bytes(1))
     mask = (second_byte >> 7) & 1
     payload_length = second_byte & 0x7f
 
-    logger.log(common.LOGLEVEL_FINE,
-               'FIN=%s, RSV1=%s, RSV2=%s, RSV3=%s, opcode=%s, '
-               'Mask=%s, Payload_length=%s',
-               fin, rsv1, rsv2, rsv3, opcode, mask, payload_length)
+    logger.log(
+        common.LOGLEVEL_FINE, 'FIN=%s, RSV1=%s, RSV2=%s, RSV3=%s, opcode=%s, '
+        'Mask=%s, Payload_length=%s', fin, rsv1, rsv2, rsv3, opcode, mask,
+        payload_length)
 
     if (mask == 1) != unmask_receive:
         raise InvalidFrameException(
@@ -222,36 +227,32 @@ def parse_frame(receive_bytes, logger=None,
                    'Receive 8-octet extended payload length')
 
         extended_payload_length = receive_bytes(8)
-        payload_length = struct.unpack(
-            '!Q', extended_payload_length)[0]
+        payload_length = struct.unpack('!Q', extended_payload_length)[0]
         if payload_length > 0x7FFFFFFFFFFFFFFF:
-            raise InvalidFrameException(
-                'Extended payload length >= 2^63')
+            raise InvalidFrameException('Extended payload length >= 2^63')
         if ws_version >= 13 and payload_length < 0x10000:
             valid_length_encoding = False
             length_encoding_bytes = 8
 
-        logger.log(common.LOGLEVEL_FINE,
-                   'Decoded_payload_length=%s', payload_length)
+        logger.log(common.LOGLEVEL_FINE, 'Decoded_payload_length=%s',
+                   payload_length)
     elif payload_length == 126:
         logger.log(common.LOGLEVEL_FINE,
                    'Receive 2-octet extended payload length')
 
         extended_payload_length = receive_bytes(2)
-        payload_length = struct.unpack(
-            '!H', extended_payload_length)[0]
+        payload_length = struct.unpack('!H', extended_payload_length)[0]
         if ws_version >= 13 and payload_length < 126:
             valid_length_encoding = False
             length_encoding_bytes = 2
 
-        logger.log(common.LOGLEVEL_FINE,
-                   'Decoded_payload_length=%s', payload_length)
+        logger.log(common.LOGLEVEL_FINE, 'Decoded_payload_length=%s',
+                   payload_length)
 
     if not valid_length_encoding:
         logger.warning(
             'Payload length is not encoded using the minimal number of '
-            'bytes (%d is encoded using %d bytes)',
-            payload_length,
+            'bytes (%d is encoded using %d bytes)', payload_length,
             length_encoding_bytes)
 
     if mask == 1:
@@ -272,8 +273,7 @@ def parse_frame(receive_bytes, logger=None,
 
     if logger.isEnabledFor(common.LOGLEVEL_FINE):
         logger.log(
-            common.LOGLEVEL_FINE,
-            'Done receiving payload data at %s MB/s',
+            common.LOGLEVEL_FINE, 'Done receiving payload data at %s MB/s',
             payload_length / (time.time() - receive_start) / 1000 / 1000)
     logger.log(common.LOGLEVEL_FINE, 'Unmask payload data')
 
@@ -283,17 +283,15 @@ def parse_frame(receive_bytes, logger=None,
     unmasked_bytes = masker.mask(raw_payload_bytes)
 
     if logger.isEnabledFor(common.LOGLEVEL_FINE):
-        logger.log(
-            common.LOGLEVEL_FINE,
-            'Done unmasking payload data at %s MB/s',
-            payload_length / (time.time() - unmask_start) / 1000 / 1000)
+        logger.log(common.LOGLEVEL_FINE,
+                   'Done unmasking payload data at %s MB/s',
+                   payload_length / (time.time() - unmask_start) / 1000 / 1000)
 
     return opcode, unmasked_bytes, fin, rsv1, rsv2, rsv3
 
 
 class FragmentedFrameBuilder(object):
     """A stateful class to send a message as fragments."""
-
     def __init__(self, mask, frame_filters=[], encode_utf8=True):
         """Constructs an instance."""
 
@@ -331,11 +329,11 @@ class FragmentedFrameBuilder(object):
             fin = 0
 
         if binary or not self._encode_utf8:
-            return create_binary_frame(
-                payload_data, opcode, fin, self._mask, self._frame_filters)
+            return create_binary_frame(payload_data, opcode, fin, self._mask,
+                                       self._frame_filters)
         else:
-            return create_text_frame(
-                payload_data, opcode, fin, self._mask, self._frame_filters)
+            return create_text_frame(payload_data, opcode, fin, self._mask,
+                                     self._frame_filters)
 
 
 def _create_control_frame(opcode, body, mask, frame_filters):
@@ -348,9 +346,8 @@ def _create_control_frame(opcode, body, mask, frame_filters):
         raise BadOperationException(
             'Payload data size of control frames must be 125 bytes or less')
 
-    header = create_header(
-        frame.opcode, len(frame.payload), frame.fin,
-        frame.rsv1, frame.rsv2, frame.rsv3, mask)
+    header = create_header(frame.opcode, len(frame.payload), frame.fin,
+                           frame.rsv1, frame.rsv2, frame.rsv3, mask)
     return _build_frame(header, frame.payload, mask)
 
 
@@ -363,21 +360,21 @@ def create_pong_frame(body, mask=False, frame_filters=[]):
 
 
 def create_close_frame(body, mask=False, frame_filters=[]):
-    return _create_control_frame(
-        common.OPCODE_CLOSE, body, mask, frame_filters)
+    return _create_control_frame(common.OPCODE_CLOSE, body, mask,
+                                 frame_filters)
 
 
 def create_closing_handshake_body(code, reason):
-    body = ''
+    body = b''
     if code is not None:
-        if (code > common.STATUS_USER_PRIVATE_MAX or
-            code < common.STATUS_NORMAL_CLOSURE):
+        if (code > common.STATUS_USER_PRIVATE_MAX
+                or code < common.STATUS_NORMAL_CLOSURE):
             raise BadOperationException('Status code is out of range')
-        if (code == common.STATUS_NO_STATUS_RECEIVED or
-            code == common.STATUS_ABNORMAL_CLOSURE or
-            code == common.STATUS_TLS_HANDSHAKE):
+        if (code == common.STATUS_NO_STATUS_RECEIVED
+                or code == common.STATUS_ABNORMAL_CLOSURE
+                or code == common.STATUS_TLS_HANDSHAKE):
             raise BadOperationException('Status code is reserved pseudo '
-                'code')
+                                        'code')
         encoded_reason = reason.encode('utf-8')
         body = struct.pack('!H', code) + encoded_reason
     return body
@@ -385,7 +382,6 @@ def create_closing_handshake_body(code, reason):
 
 class StreamOptions(object):
     """Holds option values to configure Stream objects."""
-
     def __init__(self):
         """Constructs StreamOptions."""
 
@@ -402,11 +398,10 @@ class StreamOptions(object):
         self.unmask_receive = True
 
 
-class Stream(StreamBase):
+class Stream(object):
     """A class for parsing/building frames of the WebSocket protocol
     (RFC 6455).
     """
-
     def __init__(self, request, options):
         """Constructs an instance.
 
@@ -414,11 +409,10 @@ class Stream(StreamBase):
             request: mod_python request.
         """
 
-        StreamBase.__init__(self, request)
-
         self._logger = util.get_class_logger(self)
 
         self._options = options
+        self._request = request
 
         self._request.client_terminated = False
         self._request.server_terminated = False
@@ -434,6 +428,71 @@ class Stream(StreamBase):
 
         self._ping_queue = deque()
 
+    def _read(self, length):
+        """Reads length bytes from connection. In case we catch any exception,
+        prepends remote address to the exception message and raise again.
+
+        Raises:
+            ConnectionTerminatedException: when read returns empty string.
+        """
+
+        try:
+            read_bytes = self._request.connection.read(length)
+            if not read_bytes:
+                raise ConnectionTerminatedException(
+                    'Receiving %d byte failed. Peer (%r) closed connection' %
+                    (length, (self._request.connection.remote_addr, )))
+            return read_bytes
+        except IOError as e:
+            # Also catch an IOError because mod_python throws it.
+            raise ConnectionTerminatedException(
+                'Receiving %d byte failed. IOError (%s) occurred' %
+                (length, e))
+
+    def _write(self, bytes_to_write):
+        """Writes given bytes to connection. In case we catch any exception,
+        prepends remote address to the exception message and raise again.
+        """
+
+        try:
+            self._request.connection.write(bytes_to_write)
+        except Exception as e:
+            util.prepend_message_to_exception(
+                'Failed to send message to %r: ' %
+                (self._request.connection.remote_addr, ), e)
+            raise
+
+    def receive_bytes(self, length):
+        """Receives multiple bytes. Retries read when we couldn't receive the
+        specified amount. This method returns byte strings.
+
+        Raises:
+            ConnectionTerminatedException: when read returns empty string.
+        """
+
+        read_bytes = []
+        while length > 0:
+            new_read_bytes = self._read(length)
+            read_bytes.append(new_read_bytes)
+            length -= len(new_read_bytes)
+        return b''.join(read_bytes)
+
+    def _read_until(self, delim_char):
+        """Reads bytes until we encounter delim_char. The result will not
+        contain delim_char.
+
+        Raises:
+            ConnectionTerminatedException: when read returns empty string.
+        """
+
+        read_bytes = []
+        while True:
+            ch = self._read(1)
+            if ch == delim_char:
+                break
+            read_bytes.append(ch)
+        return b''.join(read_bytes)
+
     def _receive_frame(self):
         """Receives a frame and return data in the frame as a tuple containing
         each header field and payload separately.
@@ -443,7 +502,6 @@ class Stream(StreamBase):
                 string.
             InvalidFrameException: when the frame contains invalid data.
         """
-
         def _receive_bytes(length):
             return self.receive_bytes(length)
 
@@ -455,8 +513,12 @@ class Stream(StreamBase):
     def _receive_frame_as_frame_object(self):
         opcode, unmasked_bytes, fin, rsv1, rsv2, rsv3 = self._receive_frame()
 
-        return Frame(fin=fin, rsv1=rsv1, rsv2=rsv2, rsv3=rsv3,
-                     opcode=opcode, payload=unmasked_bytes)
+        return Frame(fin=fin,
+                     rsv1=rsv1,
+                     rsv2=rsv2,
+                     rsv3=rsv3,
+                     opcode=opcode,
+                     payload=unmasked_bytes)
 
     def receive_filtered_frame(self):
         """Receives a frame and applies frame filters and message filters.
@@ -472,8 +534,8 @@ class Stream(StreamBase):
             raise InvalidFrameException(
                 'Segmented frames must not be received via '
                 'receive_filtered_frame()')
-        if (frame.opcode != common.OPCODE_TEXT and
-            frame.opcode != common.OPCODE_BINARY):
+        if (frame.opcode != common.OPCODE_TEXT
+                and frame.opcode != common.OPCODE_BINARY):
             raise InvalidFrameException(
                 'Control frames must not be received via '
                 'receive_filtered_frame()')
@@ -501,9 +563,9 @@ class Stream(StreamBase):
             raise BadOperationException(
                 'Requested send_message after sending out a closing handshake')
 
-        if binary and isinstance(message, unicode):
+        if binary and isinstance(message, six.text_type):
             raise BadOperationException(
-                'Message for binary frame must be instance of str')
+                'Message for binary frame must not be instance of Unicode')
 
         for message_filter in self._options.outgoing_message_filters:
             message = message_filter.filter(message, end, binary)
@@ -521,15 +583,14 @@ class Stream(StreamBase):
             while True:
                 end_for_this_frame = end
                 bytes_to_write = len(message) - bytes_written
-                if (MAX_PAYLOAD_DATA_SIZE > 0 and
-                    bytes_to_write > MAX_PAYLOAD_DATA_SIZE):
+                if (MAX_PAYLOAD_DATA_SIZE > 0
+                        and bytes_to_write > MAX_PAYLOAD_DATA_SIZE):
                     end_for_this_frame = False
                     bytes_to_write = MAX_PAYLOAD_DATA_SIZE
 
                 frame = self._writer.build(
                     message[bytes_written:bytes_written + bytes_to_write],
-                    end_for_this_frame,
-                    binary)
+                    end_for_this_frame, binary)
                 self._write(frame)
 
                 bytes_written += bytes_to_write
@@ -538,7 +599,7 @@ class Stream(StreamBase):
                 # at least one frame is sent.
                 if len(message) <= bytes_written:
                     break
-        except ValueError, e:
+        except ValueError as e:
             raise BadOperationException(e)
 
     def _get_message_from_frame(self, frame):
@@ -566,7 +627,7 @@ class Stream(StreamBase):
             if frame.fin:
                 # End of fragmentation frame
                 self._received_fragments.append(frame.payload)
-                message = ''.join(self._received_fragments)
+                message = b''.join(self._received_fragments)
                 self._received_fragments = []
                 return message
             else:
@@ -620,21 +681,18 @@ class Stream(StreamBase):
         # - 3 or more octet of application data: both code and reason
         if len(message) == 0:
             self._logger.debug('Received close frame (empty body)')
-            self._request.ws_close_code = (
-                common.STATUS_NO_STATUS_RECEIVED)
+            self._request.ws_close_code = common.STATUS_NO_STATUS_RECEIVED
         elif len(message) == 1:
             raise InvalidFrameException(
                 'If a close frame has status code, the length of '
                 'status code must be 2 octet')
         elif len(message) >= 2:
-            self._request.ws_close_code = struct.unpack(
-                '!H', message[0:2])[0]
+            self._request.ws_close_code = struct.unpack('!H', message[0:2])[0]
             self._request.ws_close_reason = message[2:].decode(
                 'utf-8', 'replace')
-            self._logger.debug(
-                'Received close frame (code=%d, reason=%r)',
-                self._request.ws_close_code,
-                self._request.ws_close_reason)
+            self._logger.debug('Received close frame (code=%d, reason=%r)',
+                               self._request.ws_close_code,
+                               self._request.ws_close_reason)
 
         # As we've received a close frame, no more data is coming over the
         # socket. We can now safely close the socket without worrying about
@@ -645,15 +703,13 @@ class Stream(StreamBase):
                 'Received ack for server-initiated closing handshake')
             return
 
-        self._logger.debug(
-            'Received client-initiated closing handshake')
+        self._logger.debug('Received client-initiated closing handshake')
 
         code = common.STATUS_NORMAL_CLOSURE
         reason = ''
         if hasattr(self._request, '_dispatcher'):
             dispatcher = self._request._dispatcher
-            code, reason = dispatcher.passive_closing_handshake(
-                self._request)
+            code, reason = dispatcher.passive_closing_handshake(self._request)
             if code is None and reason is not None and len(reason) > 0:
                 self._logger.warning(
                     'Handler specified reason despite code being None')
@@ -677,7 +733,7 @@ class Stream(StreamBase):
             if handler:
                 handler(self._request, message)
                 return
-        except AttributeError, e:
+        except AttributeError:
             pass
         self._send_pong(message)
 
@@ -704,7 +760,7 @@ class Stream(StreamBase):
                     break
                 else:
                     inflight_pings.append(expected_body)
-            except IndexError, e:
+            except IndexError:
                 # The received pong was unsolicited pong. Keep the
                 # ping queue as is.
                 self._ping_queue = inflight_pings
@@ -715,7 +771,7 @@ class Stream(StreamBase):
             handler = self._request.on_pong_handler
             if handler:
                 handler(self._request, message)
-        except AttributeError, e:
+        except AttributeError:
             pass
 
     def receive_message(self):
@@ -746,15 +802,14 @@ class Stream(StreamBase):
 
         while True:
             # mp_conn.read will block if no bytes are available.
-            # Timeout is controlled by TimeOut directive of Apache.
 
             frame = self._receive_frame_as_frame_object()
 
             # Check the constraint on the payload size for control frames
             # before extension processes the frame.
             # See also http://tools.ietf.org/html/rfc6455#section-5.5
-            if (common.is_control_opcode(frame.opcode) and
-                len(frame.payload) > 125):
+            if (common.is_control_opcode(frame.opcode)
+                    and len(frame.payload) > 125):
                 raise InvalidFrameException(
                     'Payload data size of control frames must be 125 bytes or '
                     'less')
@@ -780,7 +835,7 @@ class Stream(StreamBase):
                 # CHARACTER.
                 try:
                     return message.decode('utf-8')
-                except UnicodeDecodeError, e:
+                except UnicodeDecodeError as e:
                     raise InvalidUTF8Exception(e)
             elif self._original_opcode == common.OPCODE_BINARY:
                 return message
@@ -792,20 +847,23 @@ class Stream(StreamBase):
             elif self._original_opcode == common.OPCODE_PONG:
                 self._process_pong_message(message)
             else:
-                raise UnsupportedFrameException(
-                    'Opcode %d is not supported' % self._original_opcode)
+                raise UnsupportedFrameException('Opcode %d is not supported' %
+                                                self._original_opcode)
 
     def _send_closing_handshake(self, code, reason):
         body = create_closing_handshake_body(code, reason)
         frame = create_close_frame(
-            body, mask=self._options.mask_send,
+            body,
+            mask=self._options.mask_send,
             frame_filters=self._options.outgoing_frame_filters)
 
         self._request.server_terminated = True
 
         self._write(frame)
 
-    def close_connection(self, code=common.STATUS_NORMAL_CLOSURE, reason='',
+    def close_connection(self,
+                         code=common.STATUS_NORMAL_CLOSURE,
+                         reason='',
                          wait_response=True):
         """Closes a WebSocket connection. Note that this method blocks until
         it receives acknowledgement to the closing handshake.
@@ -837,17 +895,17 @@ class Stream(StreamBase):
                     'close reason must not be specified if code is None')
             reason = ''
         else:
-            if not isinstance(reason, str) and not isinstance(reason, unicode):
+            if not isinstance(reason, bytes) and not isinstance(
+                    reason, six.text_type):
                 raise BadOperationException(
-                    'close reason must be an instance of str or unicode')
+                    'close reason must be an instance of bytes or unicode')
 
         self._send_closing_handshake(code, reason)
-        self._logger.debug(
-            'Initiated closing handshake (code=%r, reason=%r)',
-            code, reason)
+        self._logger.debug('Initiated closing handshake (code=%r, reason=%r)',
+                           code, reason)
 
-        if (code == common.STATUS_GOING_AWAY or
-            code == common.STATUS_PROTOCOL_ERROR) or not wait_response:
+        if (code == common.STATUS_GOING_AWAY
+                or code == common.STATUS_PROTOCOL_ERROR) or not wait_response:
             # It doesn't make sense to wait for a close frame if the reason is
             # protocol error or that the server is going away. For some of
             # other reasons, it might not make sense to wait for a close frame,
@@ -866,20 +924,18 @@ class Stream(StreamBase):
         # TODO: 3. close the WebSocket connection.
         # note: mod_python Connection (mp_conn) doesn't have close method.
 
-    def send_ping(self, body=''):
-        frame = create_ping_frame(
-            body,
-            self._options.mask_send,
-            self._options.outgoing_frame_filters)
+    def send_ping(self, body, binary=False):
+        if not binary and isinstance(body, six.text_type):
+            body = body.encode('UTF-8')
+        frame = create_ping_frame(body, self._options.mask_send,
+                                  self._options.outgoing_frame_filters)
         self._write(frame)
 
         self._ping_queue.append(body)
 
     def _send_pong(self, body):
-        frame = create_pong_frame(
-            body,
-            self._options.mask_send,
-            self._options.outgoing_frame_filters)
+        frame = create_pong_frame(body, self._options.mask_send,
+                                  self._options.outgoing_frame_filters)
         self._write(frame)
 
     def get_last_received_opcode(self):

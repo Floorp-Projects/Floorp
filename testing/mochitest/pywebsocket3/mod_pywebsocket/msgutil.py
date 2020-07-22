@@ -26,8 +26,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """Message related utilities.
 
 Note: request.connection.write/read are used in this module, even though
@@ -37,16 +35,15 @@ request.write/read are not suitable because they don't allow direct raw
 bytes writing/reading.
 """
 
-
-import Queue
+from __future__ import absolute_import
+import six.moves.queue
 import threading
 
-
 # Export Exception symbols from msgutil for backward compatibility
-from mod_pywebsocket._stream_base import ConnectionTerminatedException
-from mod_pywebsocket._stream_base import InvalidFrameException
-from mod_pywebsocket._stream_base import BadOperationException
-from mod_pywebsocket._stream_base import UnsupportedFrameException
+from mod_pywebsocket._stream_exceptions import ConnectionTerminatedException
+from mod_pywebsocket._stream_exceptions import InvalidFrameException
+from mod_pywebsocket._stream_exceptions import BadOperationException
+from mod_pywebsocket._stream_exceptions import UnsupportedFrameException
 
 
 # An API for handler to send/receive WebSocket messages.
@@ -95,7 +92,7 @@ def receive_message(request):
     return request.ws_stream.receive_message()
 
 
-def send_ping(request, body=''):
+def send_ping(request, body):
     request.ws_stream.send_ping(body)
 
 
@@ -109,7 +106,6 @@ class MessageReceiver(threading.Thread):
     because pyOpenSSL used by the server raises a fatal error if the socket
     is accessed from multiple threads.
     """
-
     def __init__(self, request, onmessage=None):
         """Construct an instance.
 
@@ -124,7 +120,7 @@ class MessageReceiver(threading.Thread):
 
         threading.Thread.__init__(self)
         self._request = request
-        self._queue = Queue.Queue()
+        self._queue = six.moves.queue.Queue()
         self._onmessage = onmessage
         self._stop_requested = False
         self.setDaemon(True)
@@ -157,7 +153,7 @@ class MessageReceiver(threading.Thread):
         """
         try:
             message = self._queue.get_nowait()
-        except Queue.Empty:
+        except six.moves.queue.Empty:
             message = None
         return message
 
@@ -181,7 +177,6 @@ class MessageSender(threading.Thread):
     because pyOpenSSL used by the server raises a fatal error if the socket
     is accessed from multiple threads.
     """
-
     def __init__(self, request):
         """Construct an instance.
 
@@ -190,7 +185,7 @@ class MessageSender(threading.Thread):
         """
         threading.Thread.__init__(self)
         self._request = request
-        self._queue = Queue.Queue()
+        self._queue = six.moves.queue.Queue()
         self.setDaemon(True)
         self.start()
 
