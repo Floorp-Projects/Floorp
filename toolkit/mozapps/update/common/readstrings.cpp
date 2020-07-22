@@ -123,12 +123,13 @@ static int find_key(const char* keyList, char* key) {
  * @param keyList    List of zero-delimited keys ending with two zero characters
  * @param numStrings Number of strings to read into results buffer - must be
  *                   equal to the number of keys
- * @param results    Two-dimensional array of strings to be filled in the same
- *                   order as the keys provided
+ * @param results    Array of strings. Array's length must be equal to
+ *                   numStrings. Each string will be populated with the value
+ *                   corresponding to the key with the same index in keyList.
  * @param section    Optional name of the section to read; defaults to "Strings"
  */
 int ReadStrings(const NS_tchar* path, const char* keyList,
-                unsigned int numStrings, char results[][MAX_TEXT_LEN],
+                unsigned int numStrings, mozilla::UniquePtr<char[]>* results,
                 const char* section) {
   AutoFILE fp(NS_tfopen(path, OPEN_MODE));
 
@@ -216,8 +217,10 @@ int ReadStrings(const NS_tchar* path, const char* keyList,
 
     int keyIndex = find_key(keyList, key);
     if (keyIndex >= 0 && (unsigned int)keyIndex < numStrings) {
-      strncpy(results[keyIndex], token, MAX_TEXT_LEN - 1);
-      results[keyIndex][MAX_TEXT_LEN - 1] = '\0';
+      size_t valueSize = strlen(token) + 1;
+      results[keyIndex] = mozilla::MakeUnique<char[]>(valueSize);
+
+      strcpy(results[keyIndex].get(), token);
       read++;
     }
   }
@@ -230,14 +233,14 @@ int ReadStrings(const NS_tchar* path, const char* keyList,
 int ReadStrings(const NS_tchar* path, StringTable* results) {
   const unsigned int kNumStrings = 2;
   const char* kUpdaterKeys = "Title\0Info\0";
-  char updater_strings[kNumStrings][MAX_TEXT_LEN];
+  mozilla::UniquePtr<char[]> updater_strings[kNumStrings];
 
   int result = ReadStrings(path, kUpdaterKeys, kNumStrings, updater_strings);
 
-  strncpy(results->title, updater_strings[0], MAX_TEXT_LEN - 1);
-  results->title[MAX_TEXT_LEN - 1] = '\0';
-  strncpy(results->info, updater_strings[1], MAX_TEXT_LEN - 1);
-  results->info[MAX_TEXT_LEN - 1] = '\0';
+  if (result == OK) {
+    results->title.swap(updater_strings[0]);
+    results->info.swap(updater_strings[1]);
+  }
 
   return result;
 }
