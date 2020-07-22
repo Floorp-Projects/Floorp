@@ -9,6 +9,8 @@ about-processes-title = Process Manager
 
 about-processes-shutdown-process =
     .title = Kill process
+about-processes-shutdown-browser =
+    .title = Kill the entire browser
 
 ## Column headers
 

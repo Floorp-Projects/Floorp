@@ -260,6 +260,9 @@ var View = {
   appendProcessRow(data, isOpen) {
     let row = document.createElement("tr");
     row.classList.add("process");
+    if (data.type == "browser") {
+      row.classList.add("browser");
+    }
 
     // Column: pid / twisty image
     {
@@ -354,10 +357,17 @@ var View = {
     } else {
       // Otherwise, let's display the kill button.
       killButton.classList.add("close-icon");
-      document.l10n.setAttributes(
-        killButton,
-        "about-processes-shutdown-process"
-      );
+      if (data.type == "browser") {
+        document.l10n.setAttributes(
+          killButton,
+          "about-processes-shutdown-browser"
+        );
+      } else {
+        document.l10n.setAttributes(
+          killButton,
+          "about-processes-shutdown-process"
+        );
+      }
     }
     this._fragment.appendChild(row);
     return row;

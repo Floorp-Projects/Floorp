@@ -178,7 +178,7 @@ td {
 
 .killing {
   opacity: 0.3;
-  transition-property: "opacity";
+  transition-property: opacity;
   transition-duration: 1s;
 }
 
@@ -197,3 +197,9 @@ tr:-moz-any([selected], :hover) > .close-icon {
 .close-icon:hover {
   background-color: var(--in-content-button-background);
 }
+.browser > .close-icon:hover {
+  background-color: red;
+  transition-property: background-color;
+  transition-duration: 1s;
+}
+
