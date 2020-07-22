@@ -486,6 +486,8 @@ def get_tool(config, key):
 # This function is intended to be called on the final build directory when
 # building clang-tidy. Also clang-format binaries are included that can be used
 # in conjunction with clang-tidy.
+# As a separate binary we also ship clangd for the language server protocol that
+# can be used as a plugin in `vscode`.
 # Its job is to remove all of the files which won't be used for clang-tidy or
 # clang-format to reduce the download size.  Currently when this function
 # finishes its job, it will leave final_dir with a layout like this:
@@ -495,6 +497,7 @@ def get_tool(config, key):
 #     clang-apply-replacements
 #     clang-format
 #     clang-tidy
+#     clangd
 #   include/
 #     * (nothing will be deleted here)
 #   lib/
@@ -518,10 +521,8 @@ def prune_final_dir_for_clang_tidy(final_dir, osx_cross_compile):
         if not os.path.isdir(f):
             raise Exception("Expected %s to be a directory" % f)
 
-    # In bin/, only keep clang-tidy and clang-apply-replacements. The last one
-    # is used to auto-fix some of the issues detected by clang-tidy.
-    re_clang_tidy = re.compile(
-        r"^clang-(apply-replacements|format|tidy)(\.exe)?$", re.I)
+    kept_binaries = ['clang-apply-replacements', 'clang-format', 'clang-tidy', 'clangd']
+    re_clang_tidy = re.compile(r"^(" + "|".join(kept_binaries) + r")(\.exe)?$", re.I)
     for f in glob.glob("%s/bin/*" % final_dir):
         if re_clang_tidy.search(os.path.basename(f)) is None:
             delete(f)
