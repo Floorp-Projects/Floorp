@@ -77,7 +77,6 @@ describe("TelemetryFeed", () => {
       getSetting() {},
     };
     sandbox.spy(global.Cu, "reportError");
-    globals.set("gUUIDGenerator", { generateUUID: () => FAKE_UUID });
     globals.set("AboutNewTab", {
       newTabURLOverridden: false,
       newTabURL: "",
