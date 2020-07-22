@@ -37,8 +37,6 @@ class RTCDTMFSender : public DOMEventTargetHelper, public nsITimerCallback {
   void GetToneBuffer(nsAString& aOutToneBuffer);
   IMPL_EVENT_HANDLER(tonechange)
 
-  nsPIDOMWindowInner* GetParentObject() const;
-
   void StopPlayout();
 
  private:
@@ -46,7 +44,6 @@ class RTCDTMFSender : public DOMEventTargetHelper, public nsITimerCallback {
 
   void StartPlayout(uint32_t aDelay);
 
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<TransceiverImpl> mTransceiver;
   RefPtr<AudioSessionConduit> mConduit;
   nsString mToneBuffer;

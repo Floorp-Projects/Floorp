@@ -16,7 +16,7 @@ namespace mozilla {
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(RTCDTMFSender, DOMEventTargetHelper, mWindow,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(RTCDTMFSender, DOMEventTargetHelper,
                                    mTransceiver, mSendTimer)
 
 NS_IMPL_ADDREF_INHERITED(RTCDTMFSender, DOMEventTargetHelper)
@@ -32,7 +32,8 @@ LazyLogModule gDtmfLog("RTCDTMFSender");
 RTCDTMFSender::RTCDTMFSender(nsPIDOMWindowInner* aWindow,
                              TransceiverImpl* aTransceiver,
                              AudioSessionConduit* aConduit)
-    : mWindow(aWindow), mTransceiver(aTransceiver), mConduit(aConduit) {}
+    : DOMEventTargetHelper(aWindow), mTransceiver(aTransceiver),
+      mConduit(aConduit) {}
 
 JSObject* RTCDTMFSender::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -144,8 +145,6 @@ nsresult RTCDTMFSender::Notify(nsITimer* timer) {
 void RTCDTMFSender::GetToneBuffer(nsAString& aOutToneBuffer) {
   aOutToneBuffer = mToneBuffer;
 }
-
-nsPIDOMWindowInner* RTCDTMFSender::GetParentObject() const { return mWindow; }
 
 }  // namespace dom
 }  // namespace mozilla
