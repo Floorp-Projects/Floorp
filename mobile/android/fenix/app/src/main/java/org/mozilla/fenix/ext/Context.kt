@@ -9,6 +9,7 @@ import android.content.Context
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityManager
 import androidx.annotation.StringRes
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.locale.LocaleManager
@@ -81,3 +82,10 @@ fun Context.getStringWithArgSafe(@StringRes resId: Int, formatArg: String): Stri
         return format(localizedContext.getString(resId), formatArg)
     }
 }
+
+/**
+ * Used to obtain a reference to an AccessibilityManager
+ * @return accessibilityManager
+ */
+val Context.accessibilityManager: AccessibilityManager get() =
+    getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
