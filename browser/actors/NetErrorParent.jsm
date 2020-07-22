@@ -17,6 +17,10 @@ const { SessionStore } = ChromeUtils.import(
 );
 const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
+const { TelemetryController } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryController.jsm"
+);
+
 const PREF_SSL_IMPACT_ROOTS = [
   "security.tls.version.",
   "security.ssl3.",
@@ -112,6 +116,40 @@ class NetErrorParent extends JSWindowActorParent {
       Ci.nsISecurityReporter
     );
     errorReporter.reportTLSError(securityInfo, host, port);
+  }
+
+  async ReportBlockingError(bcID, scheme, host, port, path, xfoAndCspInfo) {
+    // For reporting X-Frame-Options error and CSP: frame-ancestors errors, We
+    // are collecting 4 pieces of information.
+    // 1. The X-Frame-Options in the response header.
+    // 2. The CSP: frame-ancestors in the response header.
+    // 3. The URI of the frame who triggers this error.
+    // 4. The top-level URI which loads the frame.
+    //
+    // We will exclude the query strings from the reporting URIs.
+    //
+    // More details about the data we send can be found in
+    // https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/xfocsp-error-report-ping.html
+    //
+
+    let topBC = BrowsingContext.get(bcID).top;
+    let topURI = topBC.currentWindowGlobal.documentURI;
+
+    // Get the URLs without query strings.
+    let frame_uri = `${scheme}//${host}${port == -1 ? "" : ":" + port}${path}`;
+    let top_uri = `${topURI.scheme}//${topURI.hostPort}${topURI.filePath}`;
+
+    TelemetryController.submitExternalPing(
+      "xfocsp-error-report",
+      {
+        ...xfoAndCspInfo,
+        frame_hostname: host,
+        top_hostname: topURI.host,
+        frame_uri,
+        top_uri,
+      },
+      { addClientId: false, addEnvironment: false }
+    );
   }
 
   /**
@@ -283,6 +321,16 @@ class NetErrorParent extends JSWindowActorParent {
           this.browsingContext.id,
           message.data.host,
           message.data.port
+        );
+        break;
+      case "ReportBlockingError":
+        this.ReportBlockingError(
+          this.browsingContext.id,
+          message.data.scheme,
+          message.data.host,
+          message.data.port,
+          message.data.path,
+          message.data.xfoAndCspInfo
         );
         break;
 

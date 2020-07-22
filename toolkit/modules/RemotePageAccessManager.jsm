@@ -81,6 +81,7 @@ let RemotePageAccessManager = {
         "Browser:SSLErrorGoBack",
         "Browser:PrimeMitm",
         "Browser:ResetEnterpriseRootsPref",
+        "ReportBlockingError",
       ],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
@@ -101,6 +102,7 @@ let RemotePageAccessManager = {
       ],
       RPMPrefIsLocked: ["security.tls.version.min"],
       RPMAddToHistogram: ["*"],
+      RPMGetHttpResponseHeader: ["*"],
     },
     "about:newinstall": {
       RPMGetUpdateChannel: ["*"],

@@ -29,6 +29,7 @@ class NetErrorChild extends RemotePageChild {
       "RPMPrefIsLocked",
       "RPMAddToHistogram",
       "RPMRecordTelemetryEvent",
+      "RPMGetHttpResponseHeader",
     ];
     this.exportFunctions(exportableFunctions);
   }
@@ -81,5 +82,25 @@ class NetErrorChild extends RemotePageChild {
 
   RPMRecordTelemetryEvent(category, event, object, value, extra) {
     Services.telemetry.recordEvent(category, event, object, value, extra);
+  }
+
+  // Get the header from the http response of the failed channel. This function
+  // is used in the 'about:neterror' page.
+  RPMGetHttpResponseHeader(responseHeader) {
+    let channel = this.contentWindow.docShell.failedChannel;
+    if (!channel) {
+      return "";
+    }
+
+    let httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+    if (!httpChannel) {
+      return "";
+    }
+
+    try {
+      return httpChannel.getResponseHeader(responseHeader);
+    } catch (e) {}
+
+    return "";
   }
 }
