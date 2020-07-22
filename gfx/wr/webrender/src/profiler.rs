@@ -709,7 +709,7 @@ pub struct ResourceProfileCounters {
     pub image_templates: ResourceProfileCounter,
     pub texture_cache: TextureCacheProfileCounters,
     pub gpu_cache: GpuCacheProfileCounters,
-    pub content_slices: IntProfileCounter,
+    pub picture_cache_slices: IntProfileCounter,
 }
 
 #[derive(Clone)]
@@ -807,8 +807,8 @@ impl BackendProfileCounters {
                     Some(expected::NUM_IMAGE_TEMPLATES),
                     Some(expected::IMAGE_TEMPLATES_MB),
                 ),
-                content_slices: IntProfileCounter::new(
-                    "Content Slices",
+                picture_cache_slices: IntProfileCounter::new(
+                    "Picture Cache Slices",
                     None,
                 ),
                 texture_cache: TextureCacheProfileCounters::new(),
@@ -1536,7 +1536,7 @@ impl Profiler {
                 &renderer_profile.vertices,
                 &renderer_profile.rendered_picture_cache_tiles,
                 &renderer_profile.texture_data_uploaded,
-                &backend_profile.resources.content_slices,
+                &backend_profile.resources.picture_cache_slices,
                 &self.ipc_time,
                 &self.backend_time,
                 &self.renderer_time,
@@ -1568,7 +1568,7 @@ impl Profiler {
                 &renderer_profile.rendered_picture_cache_tiles,
                 &renderer_profile.total_picture_cache_tiles,
                 &renderer_profile.texture_data_uploaded,
-                &backend_profile.resources.content_slices,
+                &backend_profile.resources.picture_cache_slices,
                 &backend_profile.resources.texture_cache.shared_bytes,
                 &backend_profile.resources.texture_cache.standalone_bytes,
             ],
