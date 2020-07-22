@@ -248,8 +248,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
 
   // Tile the pages vertically
   ReflowOutput kidSize(aReflowInput);
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    nsIFrame* kidFrame = e.get();
+  for (nsIFrame* kidFrame : mFrames) {
     // Set the shared data into the page frame before reflow
     nsPageFrame* pf = static_cast<nsPageFrame*>(kidFrame);
     pf->SetSharedPageData(mPageData.get());
@@ -305,11 +304,11 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
 
   // Set Page Number Info
   int32_t pageNum = 1;
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    MOZ_ASSERT(e.get()->IsPageFrame(),
+  for (nsIFrame* child : mFrames) {
+    MOZ_ASSERT(child->IsPageFrame(),
                "only expecting nsPageFrame children. Other children will make "
                "this static_cast bogus & probably violate other assumptions");
-    nsPageFrame* pf = static_cast<nsPageFrame*>(e.get());
+    nsPageFrame* pf = static_cast<nsPageFrame*>(child);
     pf->SetPageNumInfo(pageNum, pageTot);
     pageNum++;
   }
@@ -501,10 +500,9 @@ void nsPageSequenceFrame::DetermineWhetherToPrintPage() {
 
 nsIFrame* nsPageSequenceFrame::GetCurrentPageFrame() {
   int32_t i = 1;
-  for (nsFrameList::Enumerator childFrames(mFrames); !childFrames.AtEnd();
-       childFrames.Next()) {
+  for (nsIFrame* child : mFrames) {
     if (i == mPageNum) {
-      return childFrames.get();
+      return child;
     }
     ++i;
   }
