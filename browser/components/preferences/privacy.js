@@ -1986,6 +1986,12 @@ var gPrivacyPane = {
     checkbox.disabled =
       (noMP && !Services.policies.isAllowed("createMasterPassword")) ||
       (!noMP && !Services.policies.isAllowed("removeMasterPassword"));
+
+    let learnMoreLink = document.getElementById("primaryPasswordLearnMoreLink");
+    let learnMoreURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "primary-password-stored-logins";
+    learnMoreLink.setAttribute("href", learnMoreURL);
   },
 
   /**
