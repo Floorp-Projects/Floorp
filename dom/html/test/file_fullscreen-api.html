@@ -314,8 +314,11 @@ function testNamespaces(followupTestFn) {
         ok(document.fullscreen, "Document should be in fullscreen");
         is(document.fullscreenElement, elem,
            `Element named '${test.name}' in this namespace should be allowed: ${test.ns}`);
-        addFullscreenChangeContinuation("exit", runNextNamespaceTest);
-        document.body.removeChild(elem);
+        addFullscreenChangeContinuation("exit", () => {
+          document.body.removeChild(elem);
+          runNextNamespaceTest();
+        });
+        document.exitFullscreen();
       });
     } else {
       addFullscreenErrorContinuation(() => {
