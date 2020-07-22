@@ -207,9 +207,7 @@ UNIFIED_SOURCES += [
     'nsHTMLFormatConverter.cpp',
     'nsIWidgetListener.cpp',
     'nsNativeBasicTheme.cpp',
-    'nsPaper.cpp',
     'nsPrimitiveHelpers.cpp',
-    'nsPrinter.cpp',
     'nsPrintSettingsImpl.cpp',
     'nsSoundProxy.cpp',
     'nsTransferable.cpp',
@@ -243,6 +241,13 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
         'nsPrintSession.cpp',
         'nsPrintSettingsService.cpp',
     ]
+
+    # The Windows sub-directory has its own implemenation of these.
+    if toolkit != 'windows':
+        UNIFIED_SOURCES += [
+            'nsPaper.cpp',
+            'nsPrinter.cpp',
+        ]
 
 # nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers
 # nsBaseDragService.cpp moved out of UNIFIED to fix xgill crash (bug 1259850) after moving widget/ContentHelper -> apz/util/TouchActionHelper
