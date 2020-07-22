@@ -1046,6 +1046,8 @@ struct FunctionParametersScopeBuilder {
     script_index: ScriptStencilIndex,
 
     has_direct_eval: bool,
+
+    is_arrow: bool,
 }
 
 impl FunctionParametersScopeBuilder {
@@ -1084,6 +1086,7 @@ impl FunctionParametersScopeBuilder {
             scope_index,
             script_index,
             has_direct_eval: false,
+            is_arrow,
         }
     }
 
@@ -1406,6 +1409,7 @@ impl FunctionParametersScopeBuilder {
             function_max_var_names_count,
             enclosing,
             self.script_index,
+            self.is_arrow,
         );
 
         // FunctionDeclarationInstantiation ( func, argumentsList )
@@ -1883,11 +1887,28 @@ impl ScopeKindStack {
 #[derive(Debug)]
 struct ScopeBuilderStack {
     stack: Vec<ScopeBuilder>,
+
+    /// Stack of lists of names that is
+    ///   1. defined in the scope
+    ///   2. closed over by inner script
+    ///
+    /// Each list is delimited by `None`, for each scope.
+    ///
+    /// The order of scopes is depth-first post-order, and the order of names
+    /// inside each scope is in not defined.
+    ///
+    /// When entering a function, empty list is pushed to this stack, and
+    /// when leaving each function, top-most list is popped, and
+    /// added to gcthings of the function, and this list is reset to empty.
+    closed_over_bindings_for_lazy: Vec<Vec<Option<SourceAtomSetIndex>>>,
 }
 
 impl ScopeBuilderStack {
     fn new() -> Self {
-        Self { stack: Vec::new() }
+        Self {
+            stack: Vec::new(),
+            closed_over_bindings_for_lazy: Vec::new(),
+        }
     }
 
     fn innermost_var<'a>(&'a mut self) -> &'a mut ScopeBuilder {
@@ -2012,6 +2033,18 @@ impl ScopeBuilderStack {
             Some(outer) => {
                 let inner_base = inner.base();
                 let outer_base = outer.base_mut();
+
+                match self.closed_over_bindings_for_lazy.last_mut() {
+                    Some(bindings) => {
+                        for name in inner_base.name_tracker.defined_and_closed_over_vars() {
+                            bindings.push(Some(*name));
+                        }
+                        bindings.push(None);
+                    }
+                    None => {
+                        // We're leaving lexical scope in top-level script.
+                    }
+                }
 
                 // When construct such as `eval`, `with` and `delete` access
                 // name dynamically in inner scopes, we have to propagate this
@@ -2202,7 +2235,7 @@ impl FunctionScriptStencilBuilder {
     {
         let loc = params.get_loc();
         let params_start = loc.start;
-        self.current_mut().set_to_string_starts(params_start);
+        self.current_mut().set_source_starts(params_start);
     }
 
     fn on_non_rest_parameter(&mut self) {
@@ -2217,30 +2250,36 @@ impl FunctionScriptStencilBuilder {
         fun.set_has_rest();
     }
 
-    /// Add all closed over bindings of the current function,
-    /// that is calculated by `parameter_scope_builder`.
     fn add_closed_over_bindings(
         &mut self,
-        parameter_scope_builder: &FunctionParametersScopeBuilder,
+        mut closed_over_bindings_for_lazy: Vec<Option<SourceAtomSetIndex>>,
     ) {
-        let closed_over_freevars: HashSet<SourceAtomSetIndex> = parameter_scope_builder
-            .base
-            .name_tracker
-            .closed_over_freevars()
-            .cloned()
-            .collect();
-        let used_freevars: HashSet<SourceAtomSetIndex> = parameter_scope_builder
-            .base
-            .name_tracker
-            .used_freevars()
-            .cloned()
-            .collect();
-        let all_freevars = closed_over_freevars.union(&used_freevars);
+        // Remove trailing `None`s.
+        loop {
+            match closed_over_bindings_for_lazy.last() {
+                Some(Some(_)) => {
+                    // The last item isn't None.
+                    break;
+                }
+
+                Some(None) => {
+                    // The last item is None, remove it
+                    closed_over_bindings_for_lazy.pop();
+                }
+
+                None => {
+                    // List is empty.
+                    break;
+                }
+            }
+        }
 
         let current = self.current_mut();
-
-        for name in all_freevars {
-            current.push_closed_over_bindings(*name);
+        for name in closed_over_bindings_for_lazy {
+            match name {
+                Some(name) => current.push_closed_over_bindings(name),
+                None => current.push_closed_over_bindings_delimiter(),
+            }
         }
     }
 }
@@ -2616,6 +2655,10 @@ impl ScopeDataMapBuilder {
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
+        self.builder_stack
+            .closed_over_bindings_for_lazy
+            .push(Vec::new());
+
         self.function_stencil_builder.on_function_parameters(params);
 
         let index = self.scopes.allocate();
@@ -2697,8 +2740,12 @@ impl ScopeDataMapBuilder {
         let parameter_scope_builder = self.builder_stack.pop_function_parameters();
         let enclosing = self.builder_stack.current_scope_index();
 
-        self.function_stencil_builder
-            .add_closed_over_bindings(&parameter_scope_builder);
+        self.function_stencil_builder.add_closed_over_bindings(
+            self.builder_stack
+                .closed_over_bindings_for_lazy
+                .pop()
+                .expect("Vector should be pushed by before_function_parameters"),
+        );
 
         let function_scope_index = parameter_scope_builder.scope_index;
         let var_scope_index = body_scope_builder.var_scope_index;
