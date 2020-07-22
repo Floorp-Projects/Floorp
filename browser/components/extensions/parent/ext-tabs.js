@@ -1426,12 +1426,46 @@ this.tabs = class extends ExtensionAPI {
                   printSettings.footerStrRight = pageSettings.footerRight;
                 }
 
-                activeTab.linkedBrowser
-                  .print(activeTab.linkedBrowser.outerWindowID, printSettings)
-                  .then(() => resolve(retval == 0 ? "saved" : "replaced"))
-                  .catch(() =>
-                    resolve(retval == 0 ? "not_saved" : "not_replaced")
-                  );
+                let printProgressListener = {
+                  onLocationChange(webProgress, request, location, flags) {},
+                  onProgressChange(
+                    webProgress,
+                    request,
+                    curSelfProgress,
+                    maxSelfProgress,
+                    curTotalProgress,
+                    maxTotalProgress
+                  ) {},
+                  onSecurityChange(webProgress, request, state) {},
+                  onContentBlockingEvent(webProgress, request, event) {},
+                  onStateChange(webProgress, request, flags, status) {
+                    if (
+                      flags & Ci.nsIWebProgressListener.STATE_STOP &&
+                      flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT
+                    ) {
+                      resolve(retval == 0 ? "saved" : "replaced");
+                    }
+                  },
+                  onStatusChange: function(
+                    webProgress,
+                    request,
+                    status,
+                    message
+                  ) {
+                    if (status != 0) {
+                      resolve(retval == 0 ? "not_saved" : "not_replaced");
+                    }
+                  },
+                  QueryInterface: ChromeUtils.generateQI([
+                    "nsIWebProgressListener",
+                  ]),
+                };
+
+                activeTab.linkedBrowser.print(
+                  activeTab.linkedBrowser.outerWindowID,
+                  printSettings,
+                  printProgressListener
+                );
               } else {
                 // Cancel clicked (retval == 1)
                 resolve("canceled");

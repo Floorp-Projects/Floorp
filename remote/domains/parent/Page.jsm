@@ -617,24 +617,41 @@ class Page extends Domain {
       printSettings.orientation = Ci.nsIPrintSettings.kLandscapeOrientation;
     }
 
-    const { linkedBrowser } = this.session.target.tab;
-
-    await linkedBrowser.print(linkedBrowser.outerWindowID, printSettings);
-
-    // Bug 1603739 - With e10s enabled the promise returned by print() resolves
-    // too early, which means the file hasn't been completely written.
     await new Promise(resolve => {
-      const DELAY_CHECK_FILE_COMPLETELY_WRITTEN = 100;
+      // Bug 1603739 - With e10s enabled the WebProgressListener states
+      // STOP too early, which means the file hasn't been completely written.
+      const waitForFileWritten = () => {
+        const DELAY_CHECK_FILE_COMPLETELY_WRITTEN = 100;
 
-      let lastSize = 0;
-      const timerId = setInterval(async () => {
-        const fileInfo = await OS.File.stat(filePath);
-        if (lastSize > 0 && fileInfo.size == lastSize) {
-          clearInterval(timerId);
-          resolve();
-        }
-        lastSize = fileInfo.size;
-      }, DELAY_CHECK_FILE_COMPLETELY_WRITTEN);
+        let lastSize = 0;
+        const timerId = setInterval(async () => {
+          const fileInfo = await OS.File.stat(filePath);
+          if (lastSize > 0 && fileInfo.size == lastSize) {
+            clearInterval(timerId);
+            resolve();
+          }
+          lastSize = fileInfo.size;
+        }, DELAY_CHECK_FILE_COMPLETELY_WRITTEN);
+      };
+
+      const printProgressListener = {
+        onStateChange(webProgress, request, flags, status) {
+          if (
+            flags & Ci.nsIWebProgressListener.STATE_STOP &&
+            flags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
+          ) {
+            waitForFileWritten();
+          }
+        },
+        QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener"]),
+      };
+
+      const { tab } = this.session.target;
+      tab.linkedBrowser.print(
+        tab.linkedBrowser.outerWindowID,
+        printSettings,
+        printProgressListener
+      );
     });
 
     const fp = await OS.File.open(filePath);
