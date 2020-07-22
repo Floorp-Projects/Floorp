@@ -33,12 +33,12 @@ a variety of different ``selectors`` which are implemented as a subcommands. See
 <selectors/index>` for available list.
 
 If no subcommand is specified, ``mach try`` will a subcommand to dispatch to. By default this is
-the ``syntax`` selector. In other words, these commands are equivalent:
+the ``auto`` selector. In other words, these commands are equivalent:
 
 .. code-block:: shell
 
     $ mach try
-    $ mach try syntax
+    $ mach try auto
 
 You can choose to use a different default selector by configuring your ``~/.mozbuild/machrc`` file:
 
