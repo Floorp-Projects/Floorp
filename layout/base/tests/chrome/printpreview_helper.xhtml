@@ -405,20 +405,36 @@ async function runTest10() {
   requestAnimationFrame(function() { setTimeout(runTest11); } );
 }
 
-async function compareFiles(src1, src2) {
+async function compareFiles(src1, src2, options = {}) {
+  const BASE = "https://example.org/chrome/layout/base/tests/chrome/";
+
   info(`Comparing ${src1} with ${src2}`);
   const iframeElement = document.getElementsByTagName("iframe")[0];
+
+  let messagePromise = null;
+  if (options.waitForMessage) {
+    messagePromise = new Promise(resolve => {
+      iframeElement.addEventListener("message", resolve, { capture: true, once: true });
+    });
+  }
+
   await new Promise((resolve) => {
     iframeElement.addEventListener("load", resolve, { capture: true, once: true });
-    iframeElement.setAttribute("src", src1);
+    iframeElement.setAttribute("src", BASE + src1);
   });
+
+  if (messagePromise) {
+    info("awaiting for message to arrive");
+    await messagePromise;
+  }
+
   await printpreview();
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
   await new Promise((resolve) => {
     iframeElement.addEventListener("load", resolve, { capture: true, once: true });
-    iframeElement.setAttribute("src", src2);
+    iframeElement.setAttribute("src", BASE + src2);
   });
 
   await printpreview();
@@ -470,6 +486,11 @@ async function runTest15() {
 // Various image tests.
 async function runTest16() {
   await compareFiles("printpreview_images.html", "printpreview_images_ref.html");
+  requestAnimationFrame(function() { setTimeout(runTest17); } );
+}
+
+async function runTest17() {
+  await compareFiles("printpreview_images_sw.html", "printpreview_images_sw_ref.html", { waitForMessage: true });
   finish();
 }
 

@@ -2809,7 +2809,7 @@ class Document : public nsINode,
    * If this document is a static clone, this returns the original
    * document.
    */
-  Document* GetOriginalDocument() {
+  Document* GetOriginalDocument() const {
     MOZ_ASSERT(!mOriginalDocument || !mOriginalDocument->GetOriginalDocument());
     return mOriginalDocument;
   }
