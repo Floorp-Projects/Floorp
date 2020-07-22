@@ -7,7 +7,7 @@
 #ifndef READSTRINGS_H__
 #define READSTRINGS_H__
 
-#define MAX_TEXT_LEN 600
+#include "mozilla/UniquePtr.h"
 
 #ifdef XP_WIN
 #  include <windows.h>
@@ -16,13 +16,9 @@ typedef WCHAR NS_tchar;
 typedef char NS_tchar;
 #endif
 
-#ifndef NULL
-#  define NULL 0
-#endif
-
 struct StringTable {
-  char title[MAX_TEXT_LEN];
-  char info[MAX_TEXT_LEN];
+  mozilla::UniquePtr<char[]> title;
+  mozilla::UniquePtr<char[]> info;
 };
 
 /**
@@ -35,7 +31,7 @@ int ReadStrings(const NS_tchar* path, StringTable* results);
  * given .ini
  */
 int ReadStrings(const NS_tchar* path, const char* keyList,
-                unsigned int numStrings, char results[][MAX_TEXT_LEN],
+                unsigned int numStrings, mozilla::UniquePtr<char[]>* results,
                 const char* section = nullptr);
 
 #endif  // READSTRINGS_H__

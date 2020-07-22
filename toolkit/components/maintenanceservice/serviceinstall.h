@@ -15,5 +15,5 @@ DWORD SetUserAccessServiceDACL(SC_HANDLE hService, PACL& pNewAcl,
                                PSECURITY_DESCRIPTOR psd);
 
 struct MaintenanceServiceStringTable {
-  char serviceDescription[MAX_TEXT_LEN];
+  mozilla::UniquePtr<char[]> serviceDescription;
 };

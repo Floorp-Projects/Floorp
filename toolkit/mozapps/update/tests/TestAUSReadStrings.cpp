@@ -95,7 +95,7 @@ int NS_main(int argc, NS_tchar** argv) {
                argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval == OK) {
-    if (strcmp(testStrings.title,
+    if (strcmp(testStrings.title.get(),
                "Title Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B"
                "\xD1\x82\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB5 "
                "\xCE\x94\xCE\xBF\xCE\xBA\xCE\xB9\xCE\xBC\xCE\xAE "
@@ -106,7 +106,7 @@ int NS_main(int argc, NS_tchar** argv) {
       fail("%s | Title ini value incorrect (check 3)", TEST_NAME);
     }
 
-    if (strcmp(testStrings.info,
+    if (strcmp(testStrings.info.get(),
                "Info Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B"
                "\xD1\x82\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB5 "
                "\xCE\x94\xCE\xBF\xCE\xBA\xCE\xB9\xCE\xBC\xCE\xAE "
@@ -156,13 +156,50 @@ int NS_main(int argc, NS_tchar** argv) {
   retval =
       ReadStrings(inifile, "Title\0", 1, &testStrings.title, "BogusSection2");
   if (retval == OK) {
-    if (strcmp(testStrings.title, "Bogus Title") != 0) {
+    if (strcmp(testStrings.title.get(), "Bogus Title") != 0) {
       rv = 27;
       fail("%s | Title ini value incorrect (check 9)", TEST_NAME);
     }
   } else {
     fail("%s | ReadStrings returned %i (check 8)", TEST_NAME, retval);
     rv = 28;
+  }
+
+  // Test reading an exceedingly long string
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings4.ini"),
+               argv[0]);
+  retval = ReadStrings(inifile, "LongValue\0", 1, &testStrings.title);
+  const char* expectedValue =
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam id "
+      "ipsum condimentum, faucibus ante porta, vehicula metus. Nunc nec luctus "
+      "lorem. Nunc mattis viverra nisl, eu ornare dui feugiat id. Aenean "
+      "commodo ligula porttitor elit aliquam, ut luctus nunc aliquam. In eu "
+      "eros at nunc pulvinar porta. Praesent porta felis vitae massa "
+      "sollicitudin, a vestibulum dolor rutrum. Aenean finibus, felis ac "
+      "dictum hendrerit, ligula arcu semper enim, rhoncus consequat arcu orci "
+      "nec est. Sed auctor hendrerit rhoncus. Maecenas dignissim lorem et "
+      "tellus maximus, sit amet pretium urna imperdiet. Duis ut libero "
+      "volutpat, rhoncus mi non, placerat lacus. Nunc id tortor in quam "
+      "lacinia luctus. Nam eu maximus ipsum, eu bibendum enim. Ut iaculis "
+      "maximus ipsum in condimentum. Aliquam tellus nulla, congue quis pretium "
+      "a, posuere quis ligula. Donec vel quam ipsum. Pellentesque congue urna "
+      "eget porttitor pulvinar. Proin non risus lacus. Vestibulum molestie et "
+      "ligula sit amet pellentesque. Phasellus luctus auctor lorem, vel "
+      "dapibus ante iaculis sed. Cras ligula ex, vehicula a dui vel, posuere "
+      "fermentum elit. Vestibulum et nisi at libero maximus interdum a non ex. "
+      "Ut ut leo in metus convallis porta a et libero. Pellentesque fringilla "
+      "dolor sit amet eleifend fermentum. Quisque blandit dolor facilisis "
+      "purus vulputate sodales eget ac arcu. Nulla pulvinar feugiat accumsan. "
+      "Phasellus auctor nisl eget diam auctor, sit amet imperdiet mauris "
+      "condimentum. In a risus ut felis lobortis facilisis.";
+  if (retval == OK) {
+    if (strcmp(testStrings.title.get(), expectedValue) != 0) {
+      rv = 29;
+      fail("%s | LongValue ini value incorrect (check 10)", TEST_NAME);
+    }
+  } else {
+    fail("%s | ReadStrings returned %i (check 11)", TEST_NAME, retval);
+    rv = 30;
   }
 
   if (rv == 0) {

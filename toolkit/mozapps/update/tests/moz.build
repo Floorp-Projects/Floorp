@@ -98,6 +98,7 @@ FINAL_TARGET_FILES += [
     'TestAUSReadStrings1.ini',
     'TestAUSReadStrings2.ini',
     'TestAUSReadStrings3.ini',
+    'TestAUSReadStrings4.ini',
 ]
 
 FINAL_TARGET_PP_FILES += [

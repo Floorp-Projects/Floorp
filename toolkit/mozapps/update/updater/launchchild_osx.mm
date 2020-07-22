@@ -52,15 +52,15 @@ void LaunchMacPostProcess(const char* aAppBundle) {
   }
 
   int readResult;
-  char values[2][MAX_TEXT_LEN];
+  mozilla::UniquePtr<char[]> values[2];
   readResult =
       ReadStrings([iniPath UTF8String], "ExeRelPath\0ExeArg\0", 2, values, "PostUpdateMac");
   if (readResult) {
     return;
   }
 
-  NSString* exeRelPath = [NSString stringWithUTF8String:values[0]];
-  NSString* exeArg = [NSString stringWithUTF8String:values[1]];
+  NSString* exeRelPath = [NSString stringWithUTF8String:values[0].get()];
+  NSString* exeArg = [NSString stringWithUTF8String:values[1].get()];
   if (!exeArg || !exeRelPath) {
     return;
   }
@@ -75,15 +75,15 @@ void LaunchMacPostProcess(const char* aAppBundle) {
   NSString* exeFullPath = [NSString stringWithUTF8String:aAppBundle];
   exeFullPath = [exeFullPath stringByAppendingPathComponent:exeRelPath];
 
-  char optVals[1][MAX_TEXT_LEN];
-  readResult = ReadStrings([iniPath UTF8String], "ExeAsync\0", 1, optVals, "PostUpdateMac");
+  mozilla::UniquePtr<char[]> optVal;
+  readResult = ReadStrings([iniPath UTF8String], "ExeAsync\0", 1, &optVal, "PostUpdateMac");
 
   NSTask* task = [[NSTask alloc] init];
   [task setLaunchPath:exeFullPath];
   [task setArguments:[NSArray arrayWithObject:exeArg]];
   [task launch];
   if (!readResult) {
-    NSString* exeAsync = [NSString stringWithUTF8String:optVals[0]];
+    NSString* exeAsync = [NSString stringWithUTF8String:optVal.get()];
     if ([exeAsync isEqualToString:@"false"]) {
       [task waitUntilExit];
     }
