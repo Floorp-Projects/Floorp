@@ -46,6 +46,13 @@ void StartupCacheChild::SendEntriesAndFinalize(StartupCache::Table& entries) {
   }
 
   Send__delete__(this, dataArray);
+
+  for (auto iter = entries.iter(); !iter.done(); iter.next()) {
+    auto& value = iter.get().value();
+    if (!value.mFlags.contains(StartupCacheEntryFlags::DoNotFree)) {
+      value.mData = nullptr;
+    }
+  }
 }
 
 void StartupCacheChild::ActorDestroy(ActorDestroyReason aWhy) {
