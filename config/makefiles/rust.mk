@@ -302,13 +302,15 @@ $(RUST_LIBRARY_FILE): force-cargo-library-build
 # When we are building in --enable-release mode; we add an additional check to confirm
 # that we are not importing any networking-related functions in rust code. This reduces
 # the chance of proxy bypasses originating from rust code.
-# The check only works when rust code is built with -Clto.
+# The check only works when rust code is built with -Clto but without MOZ_LTO_RUST.
 # Sanitizers and sancov also fail because compiler-rt hooks network functions.
 ifndef MOZ_PROFILE_GENERATE
 ifeq ($(OS_ARCH), Linux)
 ifeq (,$(rustflags_sancov)$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN))
+ifndef MOZ_LTO_RUST
 ifneq (,$(filter -Clto,$(cargo_rustc_flags)))
 	$(call py_action,check_binary,--target --networking $@)
+endif
 endif
 endif
 endif
