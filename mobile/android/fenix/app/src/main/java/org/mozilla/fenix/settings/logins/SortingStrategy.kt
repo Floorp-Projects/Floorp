@@ -4,20 +4,19 @@
 
 package org.mozilla.fenix.settings.logins
 
-import android.content.Context
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import org.mozilla.fenix.ext.urlToTrimmedHost
 
 sealed class SortingStrategy {
     abstract operator fun invoke(logins: List<SavedLogin>): List<SavedLogin>
-    abstract val appContext: Context
 
-    data class Alphabetically(override val appContext: Context) : SortingStrategy() {
+    data class Alphabetically(private val publicSuffixList: PublicSuffixList) : SortingStrategy() {
         override fun invoke(logins: List<SavedLogin>): List<SavedLogin> {
-            return logins.sortedBy { it.origin.urlToTrimmedHost(appContext) }
+            return logins.sortedBy { it.origin.urlToTrimmedHost(publicSuffixList) }
         }
     }
 
-    data class LastUsed(override val appContext: Context) : SortingStrategy() {
+    object LastUsed : SortingStrategy() {
         override fun invoke(logins: List<SavedLogin>): List<SavedLogin> {
             return logins.sortedByDescending { it.timeLastUsed }
         }

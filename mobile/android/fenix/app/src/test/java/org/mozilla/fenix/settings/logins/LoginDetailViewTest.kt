@@ -6,7 +6,6 @@ package org.mozilla.fenix.settings.logins
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import io.mockk.mockk
 import kotlinx.android.synthetic.main.fragment_login_detail.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -31,7 +30,7 @@ class LoginDetailViewTest {
             timeLastUsed = 100L
         ),
         searchedForText = null,
-        sortingStrategy = SortingStrategy.LastUsed(mockk()),
+        sortingStrategy = SortingStrategy.LastUsed,
         highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
         duplicateLogins = listOf()
     )

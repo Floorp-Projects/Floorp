@@ -10,6 +10,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.logins.controller.LoginsListController
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
@@ -39,7 +40,7 @@ class SavedLoginsInteractorTest {
 
     @Test
     fun `GIVEN a change in sorting strategy, WHEN the interactor is called for it, THEN it should just delegate the controller`() {
-        val sortingStrategy: SortingStrategy = SortingStrategy.Alphabetically(testContext)
+        val sortingStrategy = SortingStrategy.Alphabetically(testContext.components.publicSuffixList)
 
         interactor.onSortingStrategyChanged(sortingStrategy)
 

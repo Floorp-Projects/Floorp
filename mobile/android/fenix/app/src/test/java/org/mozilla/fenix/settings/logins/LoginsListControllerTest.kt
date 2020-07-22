@@ -13,6 +13,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.logins.controller.LoginsListController
@@ -23,7 +24,8 @@ import org.mozilla.fenix.utils.Settings
 class LoginsListControllerTest {
     private val store: LoginsFragmentStore = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
-    private val sortingStrategy: SortingStrategy = SortingStrategy.Alphabetically(testContext)
+    private val publicSuffixList = testContext.components.publicSuffixList
+    private val sortingStrategy: SortingStrategy = SortingStrategy.Alphabetically(publicSuffixList)
     private val navController: NavController = mockk(relaxed = true)
     private val browserNavigator: (String, Boolean, BrowserDirection) -> Unit = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
@@ -43,9 +45,7 @@ class LoginsListControllerTest {
         verifyAll {
             store.dispatch(
                 LoginsAction.SortLogins(
-                    SortingStrategy.Alphabetically(
-                        testContext
-                    )
+                    SortingStrategy.Alphabetically(publicSuffixList)
                 )
             )
             settings.savedLoginsSortingStrategy = sortingStrategy

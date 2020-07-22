@@ -6,12 +6,12 @@ package org.mozilla.fenix.settings.logins.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
-import android.view.Menu
-import android.view.MenuInflater
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
@@ -31,17 +31,18 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
-import org.mozilla.fenix.settings.logins.controller.LoginsListController
 import org.mozilla.fenix.settings.logins.LoginsListState
-import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
-import org.mozilla.fenix.settings.logins.view.SavedLoginsListView
 import org.mozilla.fenix.settings.logins.SortingStrategy
+import org.mozilla.fenix.settings.logins.controller.LoginsListController
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
+import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
+import org.mozilla.fenix.settings.logins.view.SavedLoginsListView
 
 @SuppressWarnings("TooManyFunctions")
 class SavedLoginsFragment : Fragment() {
@@ -228,16 +229,14 @@ class SavedLoginsFragment : Fragment() {
                     SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort -> {
                         savedLoginsInteractor.onSortingStrategyChanged(
                             SortingStrategy.Alphabetically(
-                                requireContext().applicationContext
+                                requireComponents.publicSuffixList
                             )
                         )
                     }
 
                     SavedLoginsSortingStrategyMenu.Item.LastUsedSort -> {
                         savedLoginsInteractor.onSortingStrategyChanged(
-                            SortingStrategy.LastUsed(
-                                requireContext().applicationContext
-                            )
+                            SortingStrategy.LastUsed
                         )
                     }
                 }

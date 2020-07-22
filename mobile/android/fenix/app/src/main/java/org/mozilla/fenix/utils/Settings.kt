@@ -831,12 +831,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         get() {
             return when (savedLoginsSortingStrategyString) {
                 SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY -> SortingStrategy.Alphabetically(
-                    appContext
+                    appContext.components.publicSuffixList
                 )
-                SavedLoginsFragment.SORTING_STRATEGY_LAST_USED -> SortingStrategy.LastUsed(
-                    appContext
-                )
-                else -> SortingStrategy.Alphabetically(appContext)
+                SavedLoginsFragment.SORTING_STRATEGY_LAST_USED -> SortingStrategy.LastUsed
+                else -> SortingStrategy.Alphabetically(appContext.components.publicSuffixList)
             }
         }
         set(value) {

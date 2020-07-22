@@ -29,7 +29,7 @@ class LoginsFragmentStoreTest {
         loginList = emptyList(),
         filteredItems = emptyList(),
         searchedForText = null,
-        sortingStrategy = SortingStrategy.LastUsed(mockk()),
+        sortingStrategy = SortingStrategy.LastUsed,
         highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
         duplicateLogins = listOf()
     )
@@ -88,7 +88,7 @@ class LoginsFragmentStoreTest {
 
     @Test
     fun `SortLogins action`() {
-        val lastUsed = SortingStrategy.LastUsed(mockk())
+        val lastUsed = SortingStrategy.LastUsed
         val store = LoginsFragmentStore(baseState.copy(
             isLoading = true,
             searchedForText = null,
@@ -108,7 +108,7 @@ class LoginsFragmentStoreTest {
 
     @Test
     fun `SortLogins action with search text`() {
-        val lastUsed = SortingStrategy.LastUsed(mockk())
+        val lastUsed = SortingStrategy.LastUsed
         val store = LoginsFragmentStore(baseState.copy(
             isLoading = true,
             searchedForText = "example",

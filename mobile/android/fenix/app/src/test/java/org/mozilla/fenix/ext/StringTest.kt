@@ -24,7 +24,7 @@ class StringTest {
     @Test
     fun `Url To Trimmed Host`() {
         val urlTest = "http://www.example.com:1080/docs/resource1.html"
-        val new = urlTest.urlToTrimmedHost(testContext)
+        val new = urlTest.urlToTrimmedHost(publicSuffixList)
         assertEquals(new, "example")
     }
 

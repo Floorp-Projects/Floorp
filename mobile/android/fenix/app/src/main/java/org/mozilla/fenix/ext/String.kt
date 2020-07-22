@@ -94,8 +94,8 @@ private fun Uri.isIpv6(): Boolean {
 /**
  * Trim a host's prefix and suffix
  */
-fun String.urlToTrimmedHost(context: Context): String = runBlocking {
-    urlToTrimmedHost(context.components.publicSuffixList).await()
+fun String.urlToTrimmedHost(publicSuffixList: PublicSuffixList): String = runBlocking {
+    urlToTrimmedHost(publicSuffixList).await()
 }
 
 /**
