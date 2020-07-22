@@ -160,6 +160,7 @@ var State = {
       type: cur.type,
       origin: cur.origin || "",
       threads: null,
+      displayRank: Control._getDisplayGroupRank(cur.type),
     };
     if (!prev) {
       result.threads = cur.threads.map(data =>
@@ -644,14 +645,27 @@ var Control = {
     this._openItems = new Set();
 
     counters = this._sortProcesses(counters);
+    let previousRow = null;
+    let previousProcess = null;
     for (let process of counters) {
       let isOpen = openItems.has(process.pid);
-      let row = View.appendProcessRow(process, isOpen);
-      row.process = process;
+      let processRow = View.appendProcessRow(process, isOpen);
+      processRow.process = process;
+      let latestRow = processRow;
       if (isOpen) {
         this._openItems.add(process.pid);
-        this._showChildren(row);
+        latestRow = this._showChildren(processRow);
       }
+      if (
+        this._sortColumn == null &&
+        previousProcess &&
+        previousProcess.displayRank != process.displayRank
+      ) {
+        // Add a separation between successive categories of processes.
+        previousRow.classList.add("separate-from-next-process-group");
+      }
+      previousProcess = process;
+      previousRow = latestRow;
     }
 
     await View.commit();
@@ -659,11 +673,13 @@ var Control = {
   _showChildren(row) {
     let process = row.process;
     this._sortThreads(process.threads);
+    let elt = row;
     for (let thread of process.threads) {
       // Enrich `elt` with a property `thread`, used for testing.
-      let elt = View.appendThreadRow(thread);
+      elt = View.appendThreadRow(thread);
       elt.thread = thread;
     }
+    return elt;
   },
   _sortThreads(threads) {
     return threads.sort((a, b) => {
@@ -736,7 +752,7 @@ var Control = {
           break;
         case null:
           // Default order: classify processes by group.
-          order = this._getDisplayGroupRank(a) - this._getDisplayGroupRank(b);
+          order = a.displayRank - b.displayRank;
           if (order == 0) {
             // Other processes are ordered by origin.
             order = String(a.name).localeCompare(b.name);
@@ -763,7 +779,7 @@ var Control = {
   // Then comes web content (rank 1).
   // Then come special processes (minus preallocated) (rank 2).
   // Then come preallocated processes (rank 3).
-  _getDisplayGroupRank({ type }) {
+  _getDisplayGroupRank(type) {
     switch (type) {
       // Browser comes first.
       case "browser":

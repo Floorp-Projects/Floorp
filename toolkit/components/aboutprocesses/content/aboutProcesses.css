@@ -167,3 +167,12 @@ td {
 #process-tbody > tr.thread {
   font-size-adjust: 0.5;
 }
+
+/*
+  Show a the separation between process groups.
+ */
+
+#process-tbody > tr.separate-from-next-process-group {
+  border-bottom: dotted 1px var(--in-content-box-border-color);
+  margin-bottom: -1px;
+}
