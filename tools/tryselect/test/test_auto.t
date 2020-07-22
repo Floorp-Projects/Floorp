@@ -12,12 +12,13 @@ Test auto selector
   Calculated try_task_config.json:
   {
       "parameters": {
-          "optimize_strategies": "taskgraph.optimize:tryselect.bugbug_debug_disperse",
           "optimize_target_tasks": true,
           "target_tasks_method": "try_auto",
           "test_manifest_loader": "bugbug",
           "try_mode": "try_auto",
-          "try_task_config": {}
+          "try_task_config": {
+              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_debug_disperse"
+          }
       },
       "version": 2
   }
@@ -31,12 +32,13 @@ Test auto selector
   Calculated try_task_config.json:
   {
       "parameters": {
-          "optimize_strategies": "taskgraph.optimize:tryselect.bugbug_debug_disperse",
           "optimize_target_tasks": true,
           "target_tasks_method": "try_auto",
           "test_manifest_loader": "bugbug",
           "try_mode": "try_auto",
-          "try_task_config": {}
+          "try_task_config": {
+              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_debug_disperse"
+          }
       },
       "version": 2
   }
@@ -49,12 +51,13 @@ Test auto selector
   Calculated try_task_config.json:
   {
       "parameters": {
-          "optimize_strategies": "taskgraph.optimize:tryselect.bugbug_debug_disperse",
           "optimize_target_tasks": true,
           "target_tasks_method": "try_auto",
           "test_manifest_loader": "bugbug",
           "try_mode": "try_auto",
-          "try_task_config": {}
+          "try_task_config": {
+              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_debug_disperse"
+          }
       },
       "version": 2
   }

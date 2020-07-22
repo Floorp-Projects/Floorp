@@ -45,6 +45,14 @@ TASK_CONFIG_TESTS = {
         (['--rebuild', '1'], SystemExit),
         (['--rebuild', '21'], SystemExit),
     ],
+    'strategy': [
+        ([], None),
+        (['--strategy', 'seta'], {'optimize-strategies': 'taskgraph.optimize:tryselect.seta'}),
+        (['--strategy', 'taskgraph.optimize:experimental.seta'], {'optimize-strategies': 'taskgraph.optimize:experimental.seta'}),  # noqa
+        (['--strategy', 'taskgraph.optimize:tryselect'], SystemExit),
+        (['--strategy', 'foo'], SystemExit),
+        (['--strategy', 'foo:bar'], SystemExit),
+    ],
     'worker-overrides': [
         ([], None),
         (['--worker-override', 'alias=worker/pool'],
