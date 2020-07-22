@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/OriginAttributes.h"
 #include "SessionStorage.h"
 #include "SessionStorageCache.h"
 #include "SessionStorageObserver.h"
@@ -393,6 +394,12 @@ nsresult SessionStorageManager::Observe(
 
   return NS_OK;
 }
+
+RefPtr<BrowsingContext> SessionStorageManager::GetBrowsingContext() const {
+  return mBrowsingContext;
+}
+
+SessionStorageManager::OriginRecord::~OriginRecord() = default;
 
 }  // namespace dom
 }  // namespace mozilla

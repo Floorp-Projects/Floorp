@@ -7,20 +7,19 @@
 #ifndef mozilla_dom_MediaKeyNeededEvent_h__
 #define mozilla_dom_MediaKeyNeededEvent_h__
 
-#include "mozilla/dom/MediaEncryptedEventBinding.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
-#include "nsCOMPtr.h"
+#include <cstdint>
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/TypedArray.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "js/TypeDecls.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
+struct MediaKeyNeededEventInit;
 
 class MediaEncryptedEvent final : public Event {
  public:

@@ -7,9 +7,17 @@
 #ifndef mozilla_dom_MessageEvent_h_
 #define mozilla_dom_MessageEvent_h_
 
+#include "js/RootingAPI.h"
+#include "js/Value.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/BasicEvents.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {

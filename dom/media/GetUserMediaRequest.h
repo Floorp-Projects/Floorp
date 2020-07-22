@@ -5,12 +5,16 @@
 #ifndef GetUserMediaRequest_h__
 #define GetUserMediaRequest_h__
 
-#include "mozilla/ErrorResult.h"
+#include <cstdint>
+#include "js/RootingAPI.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
-#include "nsISupportsImpl.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsString.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "nsPIDOMWindow.h"
+
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {

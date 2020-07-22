@@ -23,6 +23,7 @@ namespace dom {
 class BrowsingContext;
 class WindowContext;
 class ContentParent;
+class DocGroup;
 
 // A BrowsingContextGroup represents the Unit of Related Browsing Contexts in
 // the standard.

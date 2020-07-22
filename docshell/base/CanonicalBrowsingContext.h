@@ -31,6 +31,7 @@ class DocumentLoadListener;
 namespace dom {
 
 class BrowserParent;
+struct LoadURIOptions;
 class MediaController;
 class SessionHistoryInfo;
 class SessionHistoryEntry;

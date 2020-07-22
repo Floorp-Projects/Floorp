@@ -7,13 +7,19 @@
 #ifndef mozilla_dom_TestingDeprecatedInterface_h
 #define mozilla_dom_TestingDeprecatedInterface_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "js/RootingAPI.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
 #include "nsWrapperCache.h"
+
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
+class GlobalObject;
 
 class TestingDeprecatedInterface final : public nsISupports,
                                          public nsWrapperCache {

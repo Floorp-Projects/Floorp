@@ -16,27 +16,24 @@
 #include "mozilla/Tuple.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/LocationBase.h"
 #include "mozilla/dom/MaybeDiscarded.h"
-#include "mozilla/dom/FeaturePolicyUtils.h"
-#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/ScreenOrientationBinding.h"
 #include "mozilla/dom/SyncedContext.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsID.h"
 #include "nsIDocShell.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "nsILoadInfo.h"
 #include "nsILoadContext.h"
+#include "nsThreadUtils.h"
 
 class nsDocShellLoadState;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
-class nsILoadInfo;
 class nsIPrincipal;
 class nsOuterWindowProxy;
 class PickleIterator;
@@ -66,8 +63,7 @@ class ContentParent;
 class Element;
 template <typename>
 struct Nullable;
-template <typename T>
-class Sequence;
+class SessionStorageManager;
 class StructuredCloneHolder;
 class WindowContext;
 struct WindowPostMessageOptions;

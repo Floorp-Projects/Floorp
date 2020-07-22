@@ -6,13 +6,8 @@
 #ifndef WEBGL_CONTEXT_UTILS_H_
 #define WEBGL_CONTEXT_UTILS_H_
 
-#include "WebGLContext.h"
-
-#include "mozilla/Assertions.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/TypedArray.h"
-
 #include "WebGLStrongTypes.h"
+#include "WebGLTypes.h"
 
 namespace mozilla {
 
