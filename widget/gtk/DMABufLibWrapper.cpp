@@ -8,6 +8,7 @@
 #include "DMABufLibWrapper.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/gfx/gfxVars.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -161,14 +162,16 @@ bool nsDMABufDevice::IsDMABufEnabled() {
 
   mIsDMABufConfigured = true;
   bool isDMABufUsed =
+      gfx::gfxVars::UseEGL() &&
+      (
 #ifdef NIGHTLY_BUILD
-      StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() ||
-      StaticPrefs::widget_dmabuf_textures_enabled() ||
+          StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() ||
+          StaticPrefs::widget_dmabuf_textures_enabled() ||
 #endif
-      StaticPrefs::widget_dmabuf_webgl_enabled() ||
-      StaticPrefs::media_ffmpeg_dmabuf_textures_enabled() ||
-      StaticPrefs::media_ffmpeg_vaapi_enabled() ||
-      StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled();
+          StaticPrefs::widget_dmabuf_webgl_enabled() ||
+          StaticPrefs::media_ffmpeg_dmabuf_textures_enabled() ||
+          StaticPrefs::media_ffmpeg_vaapi_enabled() ||
+          StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled());
 
   if (!isDMABufUsed) {
     // Disabled by user, just quit.
