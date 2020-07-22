@@ -3745,6 +3745,19 @@ bool CacheIRCompiler::emitIsObjectResult(ValOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitIsPackedArrayResult(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  Register outputScratch = output.valueReg().scratchReg();
+  masm.setIsPackedArray(obj, outputScratch, scratch);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, outputScratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitIsCallableResult(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

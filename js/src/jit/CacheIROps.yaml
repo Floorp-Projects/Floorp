@@ -862,6 +862,13 @@
   args:
     input: ValId
 
+- name: IsPackedArrayResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: IsCallableResult
   shared: true
   transpile: true
