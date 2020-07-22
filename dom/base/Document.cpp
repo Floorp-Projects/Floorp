@@ -9730,6 +9730,39 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // width or height.
       CSSSize displaySize = ScreenSize(aDisplaySize) / defaultScale;
 
+      // Our min and max width and height values are mostly as specified by
+      // the viewport declaration, but we make an exception for max width.
+      // Max width, if auto, and if there's no initial-scale, will be set
+      // to a default size. This is to support legacy site design with no
+      // viewport declaration, and to do that using the same scheme as
+      // Chrome does, in order to maintain web compatibility. Since the
+      // default size has a complicated calculation, we fixup the maxWidth
+      // value after setting it, above.
+      if (maxWidth == nsViewportInfo::Auto && !mValidScaleFloat) {
+        BrowsingContext* bc = GetBrowsingContext();
+        nsIDocShell* docShell = GetDocShell();
+        if (docShell &&
+            docShell->GetTouchEventsOverride() ==
+                nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED &&
+            bc && bc->InRDMPane()) {
+          // If RDM and touch simulation are active, then use the simulated
+          // screen width to accomodate for cases where the screen width is
+          // larger than the desktop viewport default.
+          maxWidth = nsViewportInfo::Max(
+              displaySize.width, StaticPrefs::browser_viewport_desktopWidth());
+        } else {
+          maxWidth = StaticPrefs::browser_viewport_desktopWidth();
+        }
+        // Divide by fullZoom to stretch CSS pixel size of viewport in order
+        // to keep device pixel size unchanged after full zoom applied.
+        // See bug 974242.
+        maxWidth /= fullZoom;
+
+        // We set minWidth to ExtendToZoom, which will cause our later width
+        // calculation to expand to maxWidth, if scale restrictions allow it.
+        minWidth = nsViewportInfo::ExtendToZoom;
+      }
+
       // Resolve device-width and device-height first.
       if (maxWidth == nsViewportInfo::DeviceSize) {
         maxWidth = displaySize.width;
@@ -9784,43 +9817,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // https://drafts.csswg.org/css-device-adapt/#resolve-width
       if (width == nsViewportInfo::Auto) {
         if (height == nsViewportInfo::Auto || aDisplaySize.height == 0) {
-          // What we do in this situation deviates somewhat from the spec. We
-          // want to consider the case where no viewport information has been
-          // provided, in which case we want to assume that the document is not
-          // optimized for aDisplaySize, and we should instead force a useful
-          // size.
-          if (mViewportType == NoValidContent) {
-            // If we don't have any applicable viewport width constraints, this
-            // is most likely a desktop page written without mobile devices in
-            // mind. We use the desktop mode viewport for those pages by
-            // default, because a narrow viewport based on typical mobile device
-            // screen sizes (especially in portrait mode) will frequently break
-            // the layout of such pages. To keep text readable in that case, we
-            // rely on font inflation instead.
-
-            BrowsingContext* bc = GetBrowsingContext();
-            nsIDocShell* docShell = GetDocShell();
-            if (docShell &&
-                docShell->GetTouchEventsOverride() ==
-                    nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED &&
-                bc && bc->InRDMPane()) {
-              // If RDM and touch simulation are active, then use the simulated
-              // screen width to accomodate for cases where the screen width is
-              // larger than the desktop viewport default.
-              width = nsViewportInfo::Max(
-                  displaySize.width,
-                  StaticPrefs::browser_viewport_desktopWidth());
-            } else {
-              width = StaticPrefs::browser_viewport_desktopWidth();
-            }
-            // Divide by fullZoom to stretch CSS pixel size of viewport in order
-            // to keep device pixel size unchanged after full zoom applied.
-            // See bug 974242.
-            width /= fullZoom;
-          } else {
-            // Some viewport information was provided; follow the spec.
-            width = displaySize.width;
-          }
+          width = displaySize.width;
         } else {
           width = height * aDisplaySize.width / aDisplaySize.height;
         }
