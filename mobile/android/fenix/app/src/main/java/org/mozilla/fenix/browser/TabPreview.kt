@@ -11,15 +11,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.doOnNextLayout
 import androidx.core.view.updateLayoutParams
 import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
 import kotlinx.android.synthetic.main.tab_preview.view.*
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
-import mozilla.components.support.images.ext.loadIntoView
+import mozilla.components.support.images.ImageLoadRequest
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
+import kotlin.math.max
 
 class TabPreview @JvmOverloads constructor(
     context: Context,
@@ -60,6 +62,9 @@ class TabPreview @JvmOverloads constructor(
     }
 
     fun loadPreviewThumbnail(thumbnailId: String) {
-        thumbnailLoader.loadIntoView(previewThumbnail, thumbnailId)
+        doOnNextLayout {
+            val thumbnailSize = max(previewThumbnail.height, previewThumbnail.width)
+            thumbnailLoader.loadIntoView(previewThumbnail, ImageLoadRequest(thumbnailId, thumbnailSize))
+        }
     }
 }
