@@ -119,6 +119,7 @@ bool GeckoTextMarker::IsEditableRoot() {
 }
 
 void GeckoTextMarker::NormalizeNext() {
+  MOZ_ASSERT(!mContainer.IsNull());
   if (AtEnd()) {
     // If this is the end of the current container, mutate to its parent's
     // end offset.
@@ -159,6 +160,7 @@ void GeckoTextMarker::NormalizeNext() {
 }
 
 void GeckoTextMarker::NormalizePrevious() {
+  MOZ_ASSERT(!mContainer.IsNull());
   if (mOffset == 0) {
     // If we are at the beginning of a container, mutate to its parent's start offset.
     bool unused;
@@ -210,6 +212,7 @@ uint32_t GeckoTextMarker::CharacterCount(const AccessibleOrProxy& aContainer) {
 }
 
 GeckoTextMarkerRange GeckoTextMarker::WordRange() {
+  MOZ_ASSERT(!mContainer.IsNull());
   int32_t wordstart_start = 0, wordstart_end = 0, wordend_start = 0, wordend_end = 0;
   nsAutoString unused;
   if (mContainer.IsProxy()) {
