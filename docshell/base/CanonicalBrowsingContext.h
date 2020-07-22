@@ -208,7 +208,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
                            uint64_t aBrowsingContextId,
                            uint64_t aOwnerProcessId,
                            uint64_t aEmbedderProcessId, Type aType,
-                           FieldTuple&& aFields);
+                           FieldValues&& aInit);
 
  private:
   friend class BrowsingContext;

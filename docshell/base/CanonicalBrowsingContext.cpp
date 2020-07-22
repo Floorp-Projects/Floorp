@@ -54,9 +54,9 @@ CanonicalBrowsingContext::CanonicalBrowsingContext(WindowContext* aParentWindow,
                                                    uint64_t aOwnerProcessId,
                                                    uint64_t aEmbedderProcessId,
                                                    BrowsingContext::Type aType,
-                                                   FieldTuple&& aFields)
+                                                   FieldValues&& aInit)
     : BrowsingContext(aParentWindow, aGroup, aBrowsingContextId, aType,
-                      std::move(aFields)),
+                      std::move(aInit)),
       mProcessId(aOwnerProcessId),
       mEmbedderProcessId(aEmbedderProcessId) {
   // You are only ever allowed to create CanonicalBrowsingContexts in the

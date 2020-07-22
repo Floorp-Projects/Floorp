@@ -98,7 +98,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
     uint64_t mOuterWindowId;
     uint64_t mBrowsingContextId;
 
-    FieldTuple mFields;
+    FieldValues mFields;
   };
   IPCInitializer GetIPCInitializer();
 
@@ -112,7 +112,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
  protected:
   WindowContext(BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
-                uint64_t aOuterWindowId, bool aInProcess, FieldTuple&& aFields);
+                uint64_t aOuterWindowId, bool aInProcess,
+                FieldValues&& aFields);
   virtual ~WindowContext();
 
   virtual void Init();

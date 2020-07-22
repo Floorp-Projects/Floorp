@@ -58,9 +58,9 @@ namespace dom {
 
 WindowGlobalParent::WindowGlobalParent(
     CanonicalBrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
-    uint64_t aOuterWindowId, bool aInProcess, FieldTuple&& aFields)
+    uint64_t aOuterWindowId, bool aInProcess, FieldValues&& aInit)
     : WindowContext(aBrowsingContext, aInnerWindowId, aOuterWindowId,
-                    aInProcess, std::move(aFields)),
+                    aInProcess, std::move(aInit)),
       mIsInitialDocument(false),
       mHasBeforeUnload(false),
       mSandboxFlags(0),
@@ -83,7 +83,7 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
       GetByInnerWindowId(aInit.context().mInnerWindowId);
   MOZ_RELEASE_ASSERT(!wgp, "Creating duplicate WindowGlobalParent");
 
-  FieldTuple fields(aInit.context().mFields);
+  FieldValues fields(aInit.context().mFields);
   wgp = new WindowGlobalParent(browsingContext, aInit.context().mInnerWindowId,
                                aInit.context().mOuterWindowId, aInProcess,
                                std::move(fields));
