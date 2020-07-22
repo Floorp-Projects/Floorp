@@ -23,9 +23,11 @@ namespace IPC {
 
 class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
  public:
+  using ChannelId = Channel::ChannelId;
+
   // Mirror methods of Channel, see ipc_channel.h for description.
-  ChannelImpl(const std::wstring& channel_id, Mode mode, Listener* listener);
-  ChannelImpl(const std::wstring& channel_id, HANDLE server_pipe, Mode mode,
+  ChannelImpl(const ChannelId& channel_id, Mode mode, Listener* listener);
+  ChannelImpl(const ChannelId& channel_id, HANDLE server_pipe, Mode mode,
               Listener* listener);
   ~ChannelImpl() {
     if (pipe_ != INVALID_HANDLE_VALUE) {
@@ -53,9 +55,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   void OutputQueuePush(mozilla::UniquePtr<Message> msg);
   void OutputQueuePop();
 
-  const std::wstring PipeName(const std::wstring& channel_id,
-                              int32_t* secret) const;
-  bool CreatePipe(const std::wstring& channel_id, Mode mode);
+  const ChannelId PipeName(const ChannelId& channel_id, int32_t* secret) const;
+  bool CreatePipe(const ChannelId& channel_id, Mode mode);
   bool EnqueueHelloMessage();
 
   bool ProcessConnection();
