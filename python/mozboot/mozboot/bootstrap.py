@@ -887,14 +887,9 @@ def _install_glean():
     If the current python instance is a virtualenv, then glean is installed
     directly.
     If not, then glean is installed to the Python user install directory.
+    Upgrades glean if it's out-of-date.
     """
-    try:
-        import glean  # noqa: F401
-        return  # Glean is already installed, we can skip the installation
-    except ImportError:
-        pass
-
-    pip_call = [sys.executable, '-m', 'pip', 'install', 'glean_sdk']
+    pip_call = [sys.executable, '-m', 'pip', 'install', 'glean_sdk~=31.5.0']
     if not os.environ.get('VIRTUAL_ENV'):
         # If the user is already using a virtual environment before they invoked
         # `mach bootstrap`, then we shouldn't add the "--user" flag. This is because
