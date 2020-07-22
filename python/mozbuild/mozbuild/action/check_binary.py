@@ -154,11 +154,17 @@ def iter_readelf_dynamic(target, binary):
             yield data[1].rstrip(')').lstrip('('), data[2]
 
 
-def check_dep_versions(target, binary, lib, prefix, max_version):
+def check_binary_compat(target, binary):
     if get_type(binary) != ELF:
         raise Skip()
-    unwanted = []
-    prefix = prefix + '_'
+    checks = (
+        ('libstdc++', 'GLIBCXX_', STDCXX_MAX_VERSION),
+        ('libstdc++', 'CXXABI_', CXXABI_MAX_VERSION),
+        ('libgcc', 'GCC_', LIBGCC_MAX_VERSION),
+        ('libc', 'GLIBC_', GLIBC_MAX_VERSION),
+    )
+
+    unwanted = {}
     try:
         for sym in at_least_one(iter_symbols(binary)):
             # Only check versions on undefined symbols
@@ -169,33 +175,22 @@ def check_dep_versions(target, binary, lib, prefix, max_version):
             if not sym['version']:
                 continue
 
-            if sym['version'].startswith(prefix):
-                version = Version(sym['version'][len(prefix):])
-                if version > max_version:
-                    unwanted.append(sym)
+            for _, prefix, max_version in checks:
+                if sym['version'].startswith(prefix):
+                    version = Version(sym['version'][len(prefix):])
+                    if version > max_version:
+                        unwanted.setdefault(prefix, []).append(sym)
     except Empty:
         raise RuntimeError('Could not parse llvm-objdump output?')
     if unwanted:
-        raise RuntimeError('\n'.join([
-            'We do not want these {} symbol versions to be used:'.format(lib)
-        ] + [
-            ' {} ({})'.format(s['name'], s['version']) for s in unwanted
-        ]))
-
-
-def check_stdcxx(target, binary):
-    check_dep_versions(
-        target, binary, 'libstdc++', 'GLIBCXX', STDCXX_MAX_VERSION)
-    check_dep_versions(
-        target, binary, 'libstdc++', 'CXXABI', CXXABI_MAX_VERSION)
-
-
-def check_libgcc(target, binary):
-    check_dep_versions(target, binary, 'libgcc', 'GCC', LIBGCC_MAX_VERSION)
-
-
-def check_glibc(target, binary):
-    check_dep_versions(target, binary, 'libc', 'GLIBC', GLIBC_MAX_VERSION)
+        error = []
+        for lib, prefix, _ in checks:
+            if prefix in unwanted:
+                error.append(
+                    'We do not want these {} symbol versions to be used:'.format(lib))
+                error.extend(
+                    ' {} ({})'.format(s['name'], s['version']) for s in unwanted[prefix])
+        raise RuntimeError('\n'.join(error))
 
 
 def check_textrel(target, binary):
@@ -303,9 +298,7 @@ def checks(target, binary):
         target = HOST
     checks = []
     if target['MOZ_LIBSTDCXX_VERSION']:
-        checks.append(check_stdcxx)
-        checks.append(check_libgcc)
-        checks.append(check_glibc)
+        checks.append(check_binary_compat)
 
     # Disabled for local builds because of readelf performance: See bug 1472496
     if not buildconfig.substs.get('DEVELOPER_OPTIONS'):
