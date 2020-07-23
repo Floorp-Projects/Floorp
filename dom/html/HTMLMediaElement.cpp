@@ -417,6 +417,12 @@ class HTMLMediaElement::MediaControlKeyListener final
     }
 
     NotifyPlaybackStateChanged(MediaPlaybackState::eStarted);
+    // If owner has started playing before the listener starts, we should update
+    // the playing state as well. Eg. media starts inaudily and becomes audible
+    // later.
+    if (!Owner()->Paused()) {
+      NotifyMediaStartedPlaying();
+    }
     return true;
   }
 
@@ -7876,12 +7882,6 @@ void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
       !mMediaControlKeyListener->Start()) {
     return;
   }
-
-  // If `mPaused` was being changed at the time the listener didn't start, then
-  // this method won't be called. Eg. if the media becomes audible after it has
-  // been playing for a while. Therefore, we have to manually update playback
-  // state after starting listener.
-  NotifyMediaControlPlaybackStateChanged();
 }
 
 void HTMLMediaElement::StopListeningMediaControlKeyIfNeeded() {
