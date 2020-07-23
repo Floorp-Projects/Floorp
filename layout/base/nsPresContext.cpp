@@ -161,11 +161,9 @@ static bool IsVisualCharset(NotNull<const Encoding*> aCharset) {
 }
 
 nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
-    : mType(aType),
-      mPresShell(nullptr),
+    : mPresShell(nullptr),
       mDocument(aDocument),
       mMedium(aType == eContext_Galley ? nsGkAtoms::screen : nsGkAtoms::print),
-      mInflationDisabledForShrinkWrap(false),
       mSystemFontScale(1.0),
       mTextZoom(1.0),
       mEffectiveTextZoom(1.0),
@@ -179,16 +177,18 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPageScale(0.0),
       mPPScale(1.0f),
       mViewportScrollOverrideElement(nullptr),
-      mViewportScrollStyles(StyleOverflow::Auto, StyleOverflow::Auto),
-      // mImageAnimationMode is initialised below, in constructor body
-      mImageAnimationModePref(imgIContainer::kNormalAnimMode),
-      mInterruptChecksToSkip(0),
-      mNextFrameRateMultiplier(0),
       mElementsRestyled(0),
       mFramesConstructed(0),
       mFramesReflowed(0),
-      mInteractionTimeEnabled(true),
       mChangeHintForPrefChange(nsChangeHint(0)),
+      mInterruptChecksToSkip(0),
+      mNextFrameRateMultiplier(0),
+      mViewportScrollStyles(StyleOverflow::Auto, StyleOverflow::Auto),
+      // mImageAnimationMode is initialised below, in constructor body
+      mImageAnimationModePref(imgIContainer::kNormalAnimMode),
+      mType(aType),
+      mInflationDisabledForShrinkWrap(false),
+      mInteractionTimeEnabled(true),
       mHasPendingInterrupt(false),
       mPendingInterruptFromTest(false),
       mInterruptsEnabled(false),

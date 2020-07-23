@@ -140,7 +140,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
   NS_DECL_CYCLE_COLLECTION_CLASS(nsPresContext)
 
-  enum nsPresContextType {
+  enum nsPresContextType : uint8_t {
     eContext_Galley,        // unpaginated screen presentation
     eContext_PrintPreview,  // paginated screen presentation
     eContext_Print,         // paginated printer presentation
@@ -1142,7 +1142,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
 
-  nsPresContextType mType;
   // the PresShell owns a strong reference to the nsPresContext, and is
   // responsible for nulling this pointer before it is destroyed
   mozilla::PresShell* MOZ_NON_OWNING_REF mPresShell;  // [WEAK]
@@ -1162,19 +1161,11 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   const nsStaticAtom* mMedium;
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
+
   // TODO(emilio): Maybe lazily create and put under a UniquePtr if this grows a
   // lot?
   MediaEmulationData mMediaEmulationData;
 
- public:
-  // The following are public member variables so that we can use them
-  // with mozilla::AutoToggle or mozilla::AutoRestore.
-
-  // Should we disable font size inflation because we're inside of
-  // shrink-wrapping calculations on an inflation container?
-  bool mInflationDisabledForShrinkWrap;
-
- protected:
   float mSystemFontScale;    // Internal text zoom factor, defaults to 1.0
   float mTextZoom;           // Text zoom, defaults to 1.0
   float mEffectiveTextZoom;  // Text zoom * system font scale
@@ -1220,15 +1211,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // fullscreen elements, it happens in the fullscreen-specific cleanup invoked
   // by Element::UnbindFromTree().)
   mozilla::dom::Element* MOZ_NON_OWNING_REF mViewportScrollOverrideElement;
-  ScrollStyles mViewportScrollStyles;
-
-  uint16_t mImageAnimationMode;
-  uint16_t mImageAnimationModePref;
-
-  uint32_t mInterruptChecksToSkip;
-
-  // During page load we use slower frame rate.
-  uint32_t mNextFrameRateMultiplier;
 
   // Counters for tests and tools that want to detect frame construction
   // or reflow.
@@ -1240,6 +1222,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   mozilla::Maybe<TransactionId> mFirstContentfulPaintTransactionId;
 
+  mozilla::UniquePtr<mozilla::MediaFeatureChange>
+      mPendingMediaFeatureValuesChange;
+
   // Time of various first interaction types, used to report time from
   // first paint of the top level content pres shell to first interaction.
   mozilla::TimeStamp mFirstNonBlankPaintTime;
@@ -1248,13 +1233,33 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   mozilla::TimeStamp mFirstMouseMoveTime;
   mozilla::TimeStamp mFirstScrollTime;
 
-  bool mInteractionTimeEnabled;
-
   // last time we did a full style flush
   mozilla::TimeStamp mLastStyleUpdateForAllAnimations;
 
   nsChangeHint mChangeHintForPrefChange;
 
+  uint32_t mInterruptChecksToSkip;
+
+  // During page load we use slower frame rate.
+  uint32_t mNextFrameRateMultiplier;
+
+  ScrollStyles mViewportScrollStyles;
+
+  uint16_t mImageAnimationMode;
+  uint16_t mImageAnimationModePref;
+
+  nsPresContextType mType;
+
+ public:
+  // The following are public member variables so that we can use them
+  // with mozilla::AutoToggle or mozilla::AutoRestore.
+
+  // Should we disable font size inflation because we're inside of
+  // shrink-wrapping calculations on an inflation container?
+  bool mInflationDisabledForShrinkWrap;
+
+ protected:
+  unsigned mInteractionTimeEnabled : 1;
   unsigned mHasPendingInterrupt : 1;
   unsigned mPendingInterruptFromTest : 1;
   unsigned mInterruptsEnabled : 1;
@@ -1315,9 +1320,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 #ifdef DEBUG
   unsigned mInitialized : 1;
 #endif
-
-  mozilla::UniquePtr<mozilla::MediaFeatureChange>
-      mPendingMediaFeatureValuesChange;
 
  protected:
   virtual ~nsPresContext();
