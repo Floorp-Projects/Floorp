@@ -865,25 +865,29 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   await registerBrowsers;
   await browserListening;
 
-  // Register the JSWindowActor pair as used by Marionette
-  ChromeUtils.registerWindowActor("MarionetteFrame", {
-    kind: "JSWindowActor",
-    parent: {
-      moduleURI: "chrome://marionette/content/actors/MarionetteFrameParent.jsm",
-    },
-    child: {
-      moduleURI: "chrome://marionette/content/actors/MarionetteFrameChild.jsm",
-      events: {
-        beforeunload: { capture: true },
-        DOMContentLoaded: { mozSystemGroup: true },
-        pagehide: { mozSystemGroup: true },
-        pageshow: { mozSystemGroup: true },
+  if (MarionettePrefs.useActors) {
+    // Register the JSWindowActor pair as used by Marionette
+    ChromeUtils.registerWindowActor("MarionetteFrame", {
+      kind: "JSWindowActor",
+      parent: {
+        moduleURI:
+          "chrome://marionette/content/actors/MarionetteFrameParent.jsm",
       },
-    },
+      child: {
+        moduleURI:
+          "chrome://marionette/content/actors/MarionetteFrameChild.jsm",
+        events: {
+          beforeunload: { capture: true },
+          DOMContentLoaded: { mozSystemGroup: true },
+          pagehide: { mozSystemGroup: true },
+          pageshow: { mozSystemGroup: true },
+        },
+      },
 
-    allFrames: true,
-    includeChrome: true,
-  });
+      allFrames: true,
+      includeChrome: true,
+    });
+  }
 
   if (this.mainFrame) {
     this.mainFrame.focus();
@@ -2951,7 +2955,9 @@ GeckoDriver.prototype.deleteSession = function() {
     }
   }
 
-  ChromeUtils.unregisterWindowActor("MarionetteFrame");
+  if (MarionettePrefs.useActors) {
+    ChromeUtils.unregisterWindowActor("MarionetteFrame");
+  }
 
   // reset frame to the top-most frame, and clear reference to chrome window
   this.curFrame = null;
