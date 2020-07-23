@@ -102,6 +102,17 @@ const TEST_CASES = [
     expectUsernameDropmarker: true,
     expectedValues: ["new_username1", "new_username2"],
   },
+  {
+    description: "non-un/pw fields also prompt doorhanger updates",
+    modifiedFields: [
+      { [PASSWORD_SELECTOR]: "myPassword" },
+      { [USERNAME_SELECTOR]: "new_username1" },
+      { [SEARCH_SELECTOR]: "search" },
+      { [CAPTCHA_SELECTOR]: "captcha" },
+    ],
+    expectUsernameDropmarker: true,
+    expectedValues: ["new_username1", "search", "captcha"],
+  },
   // {
   //   description: "duplicated saved/page usernames should TODO https://mozilla.invisionapp.com/share/XGXL6WZVKFJ#/screens/420547613/comments",
   // },
