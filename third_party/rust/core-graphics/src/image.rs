@@ -24,10 +24,10 @@ pub enum CGImageAlphaInfo {
 #[repr(C)]
 pub enum CGImageByteOrderInfo {
     CGImageByteOrderMask = 0x7000,
-    CGImageByteOrder16Little = (1 << 12),
-    CGImageByteOrder32Little = (2 << 12),
-    CGImageByteOrder16Big = (3 << 12),
-    CGImageByteOrder32Big = (4 << 12)
+    CGImageByteOrder16Little = 1 << 12,
+    CGImageByteOrder32Little = 2 << 12,
+    CGImageByteOrder16Big = 3 << 12,
+    CGImageByteOrder32Big = 4 << 12
 }
 
 foreign_type! {

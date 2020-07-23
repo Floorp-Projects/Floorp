@@ -4,7 +4,7 @@ use libloading::{Symbol, Library};
 const LIBPATH: &'static str = concat!(env!("OUT_DIR"), "/libtest_helpers.dll");
 
 fn make_helpers() {
-    static ONCE: ::std::sync::Once = ::std::sync::ONCE_INIT;
+    static ONCE: ::std::sync::Once = ::std::sync::Once::new();
     ONCE.call_once(|| {
         let mut outpath = String::from(if let Some(od) = option_env!("OUT_DIR") { od } else { return });
         let rustc = option_env!("RUSTC").unwrap_or_else(|| { "rustc".into() });
@@ -85,25 +85,29 @@ fn interior_null_fails() {
 }
 
 #[test]
-#[should_panic]
 fn test_incompatible_type() {
     make_helpers();
     let lib = Library::new(LIBPATH).unwrap();
     unsafe {
-        let _ = lib.get::<()>(b"test_identity_u32\0");
+        assert!(match lib.get::<()>(b"test_identity_u32\0") {
+           Err(libloading::Error::IncompatibleSize) => true,
+           _ => false,
+        })
     }
 }
 
 #[test]
-#[should_panic]
 fn test_incompatible_type_named_fn() {
     make_helpers();
-    unsafe fn get<'a, T>(l: &'a Library, _: T) -> libloading::Result<Symbol<'a, T>> {
+    unsafe fn get<'a, T>(l: &'a Library, _: T) -> Result<Symbol<'a, T>, libloading::Error> {
         l.get::<T>(b"test_identity_u32\0")
     }
     let lib = Library::new(LIBPATH).unwrap();
     unsafe {
-        let _ = get(&lib, test_incompatible_type_named_fn);
+        assert!(match get(&lib, test_incompatible_type_named_fn) {
+           Err(libloading::Error::IncompatibleSize) => true,
+           _ => false,
+        })
     }
 }
 

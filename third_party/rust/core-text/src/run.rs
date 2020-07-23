@@ -83,6 +83,25 @@ impl CTRun {
         }
     }
 
+    pub fn string_indices(&self) -> Cow<[CFIndex]> {
+        unsafe {
+            // CTRunGetStringIndicesPtr can return null under some not understood circumstances.
+            // If it does the Apple documentation tells us to allocate our own buffer and call
+            // CTRunGetStringIndices
+            let count = CTRunGetGlyphCount(self.0);
+            let indices_ptr = CTRunGetStringIndicesPtr(self.0);
+            if !indices_ptr.is_null() {
+                Cow::from(slice::from_raw_parts(indices_ptr, count as usize))
+            } else {
+                let mut vec = Vec::with_capacity(count as usize);
+                // "If the length of the range is set to 0, then the copy operation will continue
+                // from the start index of the range to the end of the run"
+                CTRunGetStringIndices(self.0, CFRange::init(0, 0), vec.as_mut_ptr());
+                vec.set_len(count as usize);
+                Cow::from(vec)
+            }
+        }
+    }
 }
 
 #[test]
@@ -95,7 +114,7 @@ fn create_runs() {
     string.replace_str(&CFString::new("Food"), CFRange::init(0, 0));
     let len = string.char_len();
     unsafe {
-        string.set_attribute(CFRange::init(0, len), kCTFontAttributeName, font::new_from_name("Helvetica", 16.).unwrap());
+        string.set_attribute(CFRange::init(0, len), kCTFontAttributeName, &font::new_from_name("Helvetica", 16.).unwrap());
     }
     let line = CTLine::new_with_attributed_string(string.as_concrete_TypeRef());
     let runs = line.glyph_runs();
@@ -113,6 +132,9 @@ fn create_runs() {
         assert_eq!(glyphs.len(), 4);
         assert_ne!(glyphs[0], glyphs[1]);
         assert_eq!(glyphs[1], glyphs[2]);
+
+        let indices = run.string_indices();
+        assert_eq!(indices.as_ref(), &[0, 1, 2, 3]);
     }
 }
 
@@ -123,6 +145,8 @@ extern {
     fn CTRunGetGlyphCount(run: CTRunRef) -> CFIndex;
     fn CTRunGetPositionsPtr(run: CTRunRef) -> *const CGPoint;
     fn CTRunGetPositions(run: CTRunRef, range: CFRange, buffer: *const CGPoint);
+    fn CTRunGetStringIndicesPtr(run: CTRunRef) -> *const CFIndex;
+    fn CTRunGetStringIndices(run: CTRunRef, range: CFRange, buffer: *const CFIndex);
     fn CTRunGetGlyphsPtr(run: CTRunRef) -> *const CGGlyph;
     fn CTRunGetGlyphs(run: CTRunRef, range: CFRange, buffer: *const CGGlyph);
 }
