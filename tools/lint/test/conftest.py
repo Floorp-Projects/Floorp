@@ -9,13 +9,14 @@ from mozbuild.base import MozbuildObject
 from mozlint.pathutils import findobject
 from mozlint.parser import Parser
 from mozlint.result import ResultSummary
+from mozpack import path
 
 import pytest
 
-here = os.path.abspath(os.path.dirname(__file__))
+here = path.abspath(path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
-lintdir = os.path.dirname(here)
+lintdir = path.dirname(here)
 sys.path.insert(0, lintdir)
 logger = logging.getLogger("mozlint")
 
@@ -35,7 +36,7 @@ def pytest_generate_tests(metafunc):
             )
 
         name = metafunc.module.LINTER
-        config_path = os.path.join(lintdir, "{}.yml".format(name))
+        config_path = path.join(lintdir, "{}.yml".format(name))
         parser = Parser(build.topsrcdir)
         configs = parser.parse(config_path)
         config_names = {config["name"] for config in configs}
@@ -63,7 +64,7 @@ def root(request):
         pytest.fail(
             "'root' fixture used from a module that didn't set the LINTER variable"
         )
-    return os.path.join(here, "files", request.module.LINTER)
+    return path.join(here, "files", request.module.LINTER)
 
 
 @pytest.fixture(scope="module")
@@ -78,7 +79,7 @@ def paths(root):
     def _inner(*paths):
         if not paths:
             return [root]
-        return [os.path.normpath(os.path.join(root, p)) for p in paths]
+        return [path.normpath(path.join(root, p)) for p in paths]
 
     return _inner
 
