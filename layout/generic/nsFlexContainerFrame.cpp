@@ -21,6 +21,7 @@
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsDisplayList.h"
+#include "nsFieldSetFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
@@ -4811,10 +4812,19 @@ nsFlexContainerFrame* nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
     nsFlexContainerFrame* flexFrame = nullptr;
 
     if (aFrame) {
-      nsIFrame* contentFrame = aFrame->GetContentInsertionFrame();
-      if (contentFrame && (contentFrame->IsFlexContainerFrame())) {
-        flexFrame = static_cast<nsFlexContainerFrame*>(contentFrame);
+      nsIFrame* inner = aFrame;
+      if (MOZ_UNLIKELY(aFrame->IsFieldSetFrame())) {
+        inner = static_cast<nsFieldSetFrame*>(aFrame)->GetInner();
       }
+      // Since "Get" methods like GetInner and GetContentInsertionFrame can
+      // return null, we check the return values before dereferencing. Our
+      // calling pattern makes this unlikely, but we're being careful.
+      nsIFrame* insertionFrame =
+          inner ? inner->GetContentInsertionFrame() : nullptr;
+      nsIFrame* possibleFlexFrame = insertionFrame ? insertionFrame : aFrame;
+      flexFrame = possibleFlexFrame->IsFlexContainerFrame()
+                      ? static_cast<nsFlexContainerFrame*>(possibleFlexFrame)
+                      : nullptr;
     }
     return flexFrame;
   };
