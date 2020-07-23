@@ -69,6 +69,9 @@ Object.defineProperty(window, "AboutLoginsUtils", {
         login1.password == login2.password
       );
     },
+    fileImportEnabled: SpecialPowers.getBoolPref(
+      "signon.management.page.fileImport.enabled"
+    ),
     masterPasswordEnabled: false,
   },
 });

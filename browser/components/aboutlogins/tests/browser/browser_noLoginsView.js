@@ -76,9 +76,14 @@ add_task(async function test_no_logins_class() {
         "When logged in the message should update"
       );
 
+      let importClass = Services.prefs.getBoolPref(
+        "signon.management.page.fileImport.enabled"
+      )
+        ? ".intro-import-text.file-import"
+        : ".intro-import-text.no-file-import";
       is(
         ContentTaskUtils.is_hidden(
-          loginIntro.shadowRoot.querySelector(".intro-import-text")
+          loginIntro.shadowRoot.querySelector(importClass)
         ),
         aPlatform == "linux",
         "the import link should be hidden on Linux builds"
@@ -87,7 +92,7 @@ add_task(async function test_no_logins_class() {
         // End the test now for Linux since the link is hidden.
         return;
       }
-      loginIntro.shadowRoot.querySelector(".intro-import-text > a").click();
+      loginIntro.shadowRoot.querySelector(importClass + " > a").click();
       info("waiting for MigrationWizard to open");
     }
   );
