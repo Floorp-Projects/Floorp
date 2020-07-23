@@ -357,6 +357,7 @@
 #include "ThirdPartyUtil.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5Parser.h"
+#include "nsTableWrapperFrame.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS (1 << 1)
@@ -12519,29 +12520,26 @@ bool Document::IsPotentiallyScrollable(HTMLBodyElement* aBody) {
   // We rely on correct frame information here, so need to flush frames.
   FlushPendingNotifications(FlushType::Frames);
 
-  // An element is potentially scrollable if all of the following conditions are
-  // true:
+  // An element that is the HTML body element is potentially scrollable if all
+  // of the following conditions are true:
 
   // The element has an associated CSS layout box.
-  nsIFrame* bodyFrame = aBody->GetPrimaryFrame();
+  nsIFrame* bodyFrame = nsLayoutUtils::GetStyleFrame(aBody);
   if (!bodyFrame) {
     return false;
   }
 
-  // The element is not the HTML body element, or it is and the root element's
-  // used value of the overflow-x or overflow-y properties is not visible.
+  // The element's parent element's computed value of the overflow-x or
+  // overflow-y properties is neither visible nor clip.
   MOZ_ASSERT(aBody->GetParent() == aBody->OwnerDoc()->GetRootElement());
-  nsIFrame* parentFrame = aBody->GetParent()->GetPrimaryFrame();
-  if (parentFrame &&
-      parentFrame->StyleDisplay()->mOverflowX == StyleOverflow::Visible &&
-      parentFrame->StyleDisplay()->mOverflowY == StyleOverflow::Visible) {
+  nsIFrame* parentFrame = nsLayoutUtils::GetStyleFrame(aBody->GetParent());
+  if (parentFrame && !parentFrame->StyleDisplay()->IsScrollableOverflow()) {
     return false;
   }
 
-  // The element's used value of the overflow-x or overflow-y properties is not
-  // visible.
-  if (bodyFrame->StyleDisplay()->mOverflowX == StyleOverflow::Visible &&
-      bodyFrame->StyleDisplay()->mOverflowY == StyleOverflow::Visible) {
+  // The element's computed value of the overflow-x or overflow-y properties is
+  // neither visible nor clip.
+  if (!bodyFrame->StyleDisplay()->IsScrollableOverflow()) {
     return false;
   }
 
