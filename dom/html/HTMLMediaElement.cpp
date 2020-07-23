@@ -2007,7 +2007,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSetMediaKeysDOMPromise)
   if (tmp->mMediaControlKeyListener) {
     tmp->StopListeningMediaControlKeyIfNeeded();
-    tmp->mMediaControlKeyListener = nullptr;
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -4155,7 +4154,8 @@ HTMLMediaElement::HTMLMediaElement(
       mErrorSink(new ErrorSink(this)),
       mAudioChannelWrapper(new AudioChannelAgentCallback(this)),
       mSink(std::pair(nsString(), RefPtr<AudioDeviceInfo>())),
-      mShowPoster(IsVideo()) {
+      mShowPoster(IsVideo()),
+      mMediaControlKeyListener(new MediaControlKeyListener(this)) {
   MOZ_ASSERT(mMainThreadEventTarget);
   MOZ_ASSERT(mAbstractMainThread);
   // Please don't add anything to this constructor or the initialization
@@ -4756,10 +4756,7 @@ nsresult HTMLMediaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   NotifyDecoderActivityChanges();
-  if (mMediaControlKeyListener) {
-    mMediaControlKeyListener->UpdateOwnerBrowsingContextIfNeeded();
-  }
-
+  mMediaControlKeyListener->UpdateOwnerBrowsingContextIfNeeded();
   return rv;
 }
 
@@ -7400,9 +7397,7 @@ void HTMLMediaElement::NotifyAudioPlaybackChanged(
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->NotifyAudioPlaybackChanged(aReason);
   }
-  if (mMediaControlKeyListener) {
-    mMediaControlKeyListener->UpdateMediaAudibleState(IsAudible());
-  }
+  mMediaControlKeyListener->UpdateMediaAudibleState(IsAudible());
   // only request wake lock for audible media.
   UpdateWakeLock();
 }
@@ -7853,7 +7848,7 @@ void HTMLMediaElement::ClearResumeDelayedMediaPlaybackAgentIfNeeded() {
 }
 
 void HTMLMediaElement::NotifyMediaControlPlaybackStateChanged() {
-  if (!mMediaControlKeyListener || !mMediaControlKeyListener->IsStarted()) {
+  if (!mMediaControlKeyListener->IsStarted()) {
     return;
   }
   if (mPaused) {
@@ -7874,10 +7869,6 @@ void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
     return;
   }
 
-  if (!mMediaControlKeyListener) {
-    mMediaControlKeyListener = new MediaControlKeyListener(this);
-  }
-
   if (mMediaControlKeyListener->IsStarted() ||
       !mMediaControlKeyListener->Start()) {
     return;
@@ -7885,14 +7876,14 @@ void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
 }
 
 void HTMLMediaElement::StopListeningMediaControlKeyIfNeeded() {
-  if (mMediaControlKeyListener && mMediaControlKeyListener->IsStarted()) {
+  if (mMediaControlKeyListener->IsStarted()) {
     mMediaControlKeyListener->Stop();
   }
 }
 
 void HTMLMediaElement::UpdateMediaControlAfterPictureInPictureModeChanged() {
   // Hasn't started to connect with media control, no need to update anything.
-  if (!mMediaControlKeyListener || !mMediaControlKeyListener->IsStarted()) {
+  if (!mMediaControlKeyListener->IsStarted()) {
     return;
   }
   if (IsBeingUsedInPictureInPictureMode()) {
