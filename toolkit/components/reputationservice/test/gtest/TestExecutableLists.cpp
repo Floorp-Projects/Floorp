@@ -9,6 +9,10 @@
 // PLEASE read the comment in ApplicationReputation.cpp before modifying this
 // list.
 static const char* const kTestFileExtensions[] = {
+    ".accda",   // MS Access database
+    ".accdb",   // MS Access database
+    ".accde",   // MS Access database
+    ".accdr",   // MS Access database
     ".action",  // Nac script
     ".ad",      // Windows (ignored for app rep)
     ".ade",     // MS Access
