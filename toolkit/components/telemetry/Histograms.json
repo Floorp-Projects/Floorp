@@ -11271,6 +11271,18 @@
     ],
     "description": "Percentage of the entries with the given content type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
   },
+  "SHELLEXECUTEBYEXPLORER_DURATION_MS" : {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["tkikuchi@mozilla.com"],
+    "bug_numbers": [1654100],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 20,
+    "description": "Time spent executing a downloaded file via explorer.exe (ms)",
+    "operating_systems": ["windows"]
+  },
   "SSL_TLS13_INTOLERANCE_REASON_PRE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
