@@ -700,7 +700,8 @@ cubeb_stream_prefs GetDefaultStreamPrefs() {
 
 bool RouteOutputAsVoice() { return sRouteOutputAsVoice; }
 
-long datacb(cubeb_stream*, void*, const void*, void*, long nframes) {
+long datacb(cubeb_stream*, void*, const void*, void* out_buffer, long nframes) {
+  PodZero(static_cast<float*>(out_buffer), nframes * 2);
   return nframes;
 }
 
