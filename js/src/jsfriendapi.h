@@ -473,18 +473,17 @@ extern JS_FRIEND_API bool ZoneGlobalsAreAllGray(JS::Zone* zone);
 extern JS_FRIEND_API bool IsCompartmentZoneSweepingOrCompacting(
     JS::Compartment* comp);
 
-using GCThingCallback = void (*)(void*, JS::GCCellPtr);
+using IterateGCThingCallback = void (*)(void*, JS::GCCellPtr,
+                                        const JS::AutoRequireNoGC&);
 
-extern JS_FRIEND_API void VisitGrayWrapperTargets(JS::Zone* zone,
-                                                  GCThingCallback callback,
-                                                  void* closure);
+extern JS_FRIEND_API void VisitGrayWrapperTargets(
+    JS::Zone* zone, IterateGCThingCallback callback, void* closure);
 
 /**
  * Invoke cellCallback on every gray JSObject in the given zone.
  */
-extern JS_FRIEND_API void IterateGrayObjects(JS::Zone* zone,
-                                             GCThingCallback cellCallback,
-                                             void* data);
+extern JS_FRIEND_API void IterateGrayObjects(
+    JS::Zone* zone, IterateGCThingCallback cellCallback, void* data);
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
 // Trace the heap and check there are no black to gray edges. These are

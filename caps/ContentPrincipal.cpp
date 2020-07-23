@@ -357,7 +357,8 @@ ContentPrincipal::SetDomain(nsIURI* aDomain) {
 
   // Set the changed-document-domain flag on compartments containing realms
   // using this principal.
-  auto cb = [](JSContext*, void*, JS::Handle<JS::Realm*> aRealm) {
+  auto cb = [](JSContext*, void*, JS::Realm* aRealm,
+               const JS::AutoRequireNoGC& nogc) {
     JS::Compartment* comp = JS::GetCompartmentForRealm(aRealm);
     xpc::SetCompartmentChangedDocumentDomain(comp);
   };
