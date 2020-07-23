@@ -21,7 +21,7 @@ except ImportError:
     from time import time as monotonic
 
 BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
-RETRY_TIMEOUT = 8 * 60  # seconds
+RETRY_TIMEOUT = 9 * 60  # seconds
 RETRY_INTERVAL = 10     # seconds
 
 # Preset confidence thresholds.
@@ -80,13 +80,12 @@ def push_schedules(branch, rev):
     start = monotonic()
     session = get_session()
 
-    # TODO Sometimes the call can take much longer due to an issue pulling from
-    # mercurial. Double the timeout on try (where there is no fallback) to
-    # compensate. Remove once https://github.com/mozilla/bugbug/issues/1673 is
-    # fixed.
+    # On try there is no fallback and pulling is slower, so we allow bugbug more
+    # time to compute the results.
+    # See https://github.com/mozilla/bugbug/issues/1673.
     timeout = RETRY_TIMEOUT
     if branch == "try":
-        timeout *= 2
+        timeout += int(timeout / 3)
 
     attempts = timeout / RETRY_INTERVAL
     i = 0
