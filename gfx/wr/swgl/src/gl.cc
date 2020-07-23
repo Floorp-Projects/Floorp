@@ -44,6 +44,8 @@
 
 using namespace glsl;
 
+constexpr I32 VertexShaderImpl::gl_VertexID;
+
 struct IntRect {
   int x0;
   int y0;
