@@ -32,7 +32,7 @@ function prefValue(value, what) {
 async function runTest(test) {
   await SpecialPowers.pushPrefEnv({set: [
     [ "urlclassifier.features.fingerprinting.blacklistHosts", prefValue(test.config[0], "example.com") ],
-    [ "urlclassifier.features.fingerprinting.whitelistHosts", prefValue(test.config[1], "mochi.test") ],
+    [ "urlclassifier.features.fingerprinting.whitelistHosts", prefValue(test.config[1], "mochi.test,mochi.xorigin-test") ],
     [ "urlclassifier.features.fingerprinting.blacklistTables", prefValue(test.config[0], "mochitest1-track-simple") ],
     [ "urlclassifier.features.fingerprinting.whitelistTables", "" ],
     [ "privacy.trackingprotection.enabled", false ],
