@@ -648,9 +648,12 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 #urlbar[actionoverride] > #urlbar-input-container > #urlbar-label-box,
-#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]):not([searchmode]) > #urlbar-input-container > #urlbar-label-box,
 #urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
-#urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-extension {
+#urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
+#urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-label-box,
+#urlbar:not([searchmode]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
+#urlbar[breakout-extend] > #urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode {
   display: none;
 }
 
