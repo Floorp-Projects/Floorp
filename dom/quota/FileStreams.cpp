@@ -13,11 +13,13 @@ BEGIN_QUOTA_NAMESPACE
 
 template <class FileStreamBase>
 NS_IMETHODIMP FileQuotaStream<FileStreamBase>::SetEOF() {
-  QM_TRY(FileStreamBase::SetEOF());
+  nsresult rv = FileStreamBase::SetEOF();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mQuotaObject) {
     int64_t offset;
-    QM_TRY(FileStreamBase::Tell(&offset));
+    nsresult rv = FileStreamBase::Tell(&offset);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     DebugOnly<bool> res =
         mQuotaObject->MaybeUpdateSize(offset, /* aTruncate */ true);
@@ -29,7 +31,8 @@ NS_IMETHODIMP FileQuotaStream<FileStreamBase>::SetEOF() {
 
 template <class FileStreamBase>
 NS_IMETHODIMP FileQuotaStream<FileStreamBase>::Close() {
-  QM_TRY(FileStreamBase::Close());
+  nsresult rv = FileStreamBase::Close();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mQuotaObject = nullptr;
 
@@ -46,7 +49,8 @@ nsresult FileQuotaStream<FileStreamBase>::DoOpen() {
       mPersistenceType, mGroup, mOrigin, mClientType,
       FileStreamBase::mOpenParams.localFile);
 
-  QM_TRY(FileStreamBase::DoOpen());
+  nsresult rv = FileStreamBase::DoOpen();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mQuotaObject && (FileStreamBase::mOpenParams.ioFlags & PR_TRUNCATE)) {
     DebugOnly<bool> res =
@@ -60,9 +64,12 @@ nsresult FileQuotaStream<FileStreamBase>::DoOpen() {
 template <class FileStreamBase>
 NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
     const char* aBuf, uint32_t aCount, uint32_t* _retval) {
+  nsresult rv;
+
   if (FileQuotaStreamWithWrite::mQuotaObject) {
     int64_t offset;
-    QM_TRY(FileStreamBase::Tell(&offset));
+    rv = FileStreamBase::Tell(&offset);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     MOZ_ASSERT(INT64_MAX - offset >= int64_t(aCount));
 
@@ -73,7 +80,8 @@ NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
     }
   }
 
-  QM_TRY(FileStreamBase::Write(aBuf, aCount, _retval));
+  rv = FileStreamBase::Write(aBuf, aCount, _retval);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -84,9 +92,8 @@ already_AddRefed<FileInputStream> CreateFileInputStream(
     int32_t aIOFlags, int32_t aPerm, int32_t aBehaviorFlags) {
   RefPtr<FileInputStream> stream =
       new FileInputStream(aPersistenceType, aGroup, aOrigin, aClientType);
-
-  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
-
+  nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+  NS_ENSURE_SUCCESS(rv, nullptr);
   return stream.forget();
 }
 
@@ -96,9 +103,8 @@ already_AddRefed<FileOutputStream> CreateFileOutputStream(
     int32_t aIOFlags, int32_t aPerm, int32_t aBehaviorFlags) {
   RefPtr<FileOutputStream> stream =
       new FileOutputStream(aPersistenceType, aGroup, aOrigin, aClientType);
-
-  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
-
+  nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+  NS_ENSURE_SUCCESS(rv, nullptr);
   return stream.forget();
 }
 
@@ -108,9 +114,8 @@ already_AddRefed<FileStream> CreateFileStream(
     int32_t aIOFlags, int32_t aPerm, int32_t aBehaviorFlags) {
   RefPtr<FileStream> stream =
       new FileStream(aPersistenceType, aGroup, aOrigin, aClientType);
-
-  QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags), nullptr);
-
+  nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+  NS_ENSURE_SUCCESS(rv, nullptr);
   return stream.forget();
 }
 

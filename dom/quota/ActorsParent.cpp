@@ -2389,24 +2389,23 @@ int64_t GetLastModifiedTime(nsIFile* aFile, bool aPersistent) {
   return timestamp;
 }
 
-bool FileAlreadyExists(nsresult aValue) {
-  return aValue == NS_ERROR_FILE_ALREADY_EXISTS;
-}
-
 nsresult EnsureDirectory(nsIFile* aDirectory, bool* aCreated) {
   AssertIsOnIOThread();
 
-  bool exists;
-  QM_TRY_VAR(exists, ToResult(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755),
-                              FileAlreadyExists));
-
-  if (exists) {
+  nsresult rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
+  if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
     bool isDirectory;
-    QM_TRY(aDirectory->IsDirectory(&isDirectory));
-    QM_TRY(OkIf(isDirectory), NS_ERROR_UNEXPECTED);
+    rv = aDirectory->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(isDirectory, NS_ERROR_UNEXPECTED);
+
+    *aCreated = false;
+  } else {
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aCreated = true;
   }
 
-  *aCreated = !exists;
   return NS_OK;
 }
 
@@ -4706,12 +4705,13 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
   }
 
   nsString path;
-  QM_TRY(aFile->GetPath(path), nullptr);
+  nsresult rv = aFile->GetPath(path);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
 #ifdef DEBUG
   nsCOMPtr<nsIFile> directory;
-  nsresult rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                                      getter_AddRefs(directory));
+  rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
+                             getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -4740,10 +4740,12 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
 
   if (aFileSize == -1) {
     bool exists;
-    QM_TRY(aFile->Exists(&exists), nullptr);
+    rv = aFile->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     if (exists) {
-      QM_TRY(aFile->GetFileSize(&fileSize), nullptr);
+      rv = aFile->GetFileSize(&fileSize);
+      NS_ENSURE_SUCCESS(rv, nullptr);
     } else {
       fileSize = 0;
     }
@@ -4897,7 +4899,8 @@ nsresult QuotaManager::GetDirectoryForOrigin(PersistenceType aPersistenceType,
   nsAutoCString originSanitized(aASCIIOrigin);
   SanitizeOriginString(originSanitized);
 
-  QM_TRY(directory->Append(NS_ConvertASCIItoUTF16(originSanitized)));
+  nsresult rv = directory->Append(NS_ConvertASCIItoUTF16(originSanitized));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   directory.forget(aDirectory);
   return NS_OK;
@@ -4930,15 +4933,17 @@ nsresult QuotaManager::GetDirectoryMetadata2(
   MOZ_ASSERT(mStorageConnection);
 
   nsCOMPtr<nsIBinaryInputStream> binaryStream;
-  QM_TRY(GetBinaryInputStream(aDirectory,
-                              nsLiteralString(METADATA_V2_FILE_NAME),
-                              getter_AddRefs(binaryStream)));
+  nsresult rv =
+      GetBinaryInputStream(aDirectory, nsLiteralString(METADATA_V2_FILE_NAME),
+                           getter_AddRefs(binaryStream));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t timestamp;
-  QM_TRY(binaryStream->Read64(&timestamp));
+  rv = binaryStream->Read64(&timestamp);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   bool persisted;
-  nsresult rv = binaryStream->ReadBoolean(&persisted);
+  rv = binaryStream->ReadBoolean(&persisted);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4962,10 +4967,12 @@ nsresult QuotaManager::GetDirectoryMetadata2(
   }
 
   nsCString group;
-  QM_TRY(binaryStream->ReadCString(group));
+  rv = binaryStream->ReadCString(group);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString origin;
-  QM_TRY(binaryStream->ReadCString(origin));
+  rv = binaryStream->ReadCString(origin);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Currently unused (used to be isApp).
   bool dummy;
@@ -5344,7 +5351,8 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
   MOZ_ASSERT(aIndexedDBDir);
 
   bool isDirectory;
-  QM_TRY(aIndexedDBDir->IsDirectory(&isDirectory));
+  nsresult rv = aIndexedDBDir->IsDirectory(&isDirectory);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isDirectory) {
     NS_WARNING("indexedDB entry is not a directory!");
@@ -5358,16 +5366,17 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
 
   nsCOMPtr<nsIFile> persistentStorageDir = persistentStorageDirOrErr.unwrap();
 
-  QM_TRY(
-      persistentStorageDir->Append(nsLiteralString(PERSISTENT_DIRECTORY_NAME)));
+  rv = persistentStorageDir->Append(nsLiteralString(PERSISTENT_DIRECTORY_NAME));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
-  QM_TRY(persistentStorageDir->Exists(&exists));
+  rv = persistentStorageDir->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (exists) {
     QM_WARNING("Deleting old <profile>/indexedDB directory!");
 
-    nsresult rv = aIndexedDBDir->Remove(/* aRecursive */ true);
+    rv = aIndexedDBDir->Remove(/* aRecursive */ true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5376,7 +5385,8 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
   }
 
   nsCOMPtr<nsIFile> storageDir;
-  QM_TRY(persistentStorageDir->GetParent(getter_AddRefs(storageDir)));
+  rv = persistentStorageDir->GetParent(getter_AddRefs(storageDir));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // MoveTo() is atomic if the move happens on the same volume which should
   // be our case, so even if we crash in the middle of the operation nothing
@@ -5384,8 +5394,9 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
   // However there's a theoretical possibility that the indexedDB directory
   // is on different volume, but it should be rare enough that we don't have
   // to worry about it.
-  QM_TRY(aIndexedDBDir->MoveTo(storageDir,
-                               nsLiteralString(PERSISTENT_DIRECTORY_NAME)));
+  rv = aIndexedDBDir->MoveTo(storageDir,
+                             nsLiteralString(PERSISTENT_DIRECTORY_NAME));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -7415,7 +7426,8 @@ nsresult QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsCString origin;
-  QM_TRY(aPrincipal->GetOrigin(origin));
+  nsresult rv = aPrincipal->GetOrigin(origin);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (origin.EqualsLiteral(kChromeOrigin)) {
     NS_WARNING("Non-chrome principal can't use chrome origin!");
@@ -7431,7 +7443,8 @@ nsresult QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
 
   if (aGroup) {
     nsCString baseDomain;
-    QM_TRY(aPrincipal->GetBaseDomain(baseDomain));
+    rv = aPrincipal->GetBaseDomain(baseDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     MOZ_ASSERT(!baseDomain.IsEmpty());
 
@@ -7454,12 +7467,13 @@ nsresult QuotaManager::GetInfoFromWindow(nsPIDOMWindowOuter* aWindow,
   MOZ_ASSERT(aWindow);
 
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
-  QM_TRY(OkIf(sop), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(sop, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
-  QM_TRY(OkIf(principal), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
-  QM_TRY(GetInfoFromPrincipal(principal, aSuffix, aGroup, aOrigin));
+  nsresult rv = GetInfoFromPrincipal(principal, aSuffix, aGroup, aOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -7775,11 +7789,11 @@ void QuotaManager::CheckTemporaryStorageLimits() {
 void QuotaManager::DeleteFilesForOrigin(PersistenceType aPersistenceType,
                                         const nsACString& aOrigin) {
   nsCOMPtr<nsIFile> directory;
-  QM_TRY(GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                               getter_AddRefs(directory)),
-         QM_VOID);
+  nsresult rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
+                                      getter_AddRefs(directory));
+  NS_ENSURE_SUCCESS_VOID(rv);
 
-  nsresult rv = directory->Remove(true);
+  rv = directory->Remove(true);
   if (rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
       rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
     // This should never fail if we've closed all storage connections
