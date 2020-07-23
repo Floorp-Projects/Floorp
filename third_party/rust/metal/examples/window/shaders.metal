@@ -3,8 +3,8 @@
 using namespace metal;
 
 typedef struct {
-	packed_float2 position;
-	packed_float3 color;
+	float2 position;
+	float3 color;
 } vertex_t;
 
 struct ColorInOut {
@@ -13,14 +13,14 @@ struct ColorInOut {
 };
 
 // vertex shader function
-vertex ColorInOut triangle_vertex(const device vertex_t* vertex_array [[ buffer(0) ]],
+vertex ColorInOut triangle_vertex(device vertex_t* vertex_array [[ buffer(0) ]],
                                    unsigned int vid [[ vertex_id ]])
 {
     ColorInOut out;
 
     auto device const &v = vertex_array[vid];
     out.position = float4(v.position.x, v.position.y, 0.0, 1.0);
-    out.color = float4(v.color.x, v.color.y, v.color.z, 0.2);
+    out.color = float4(v.color.x, v.color.y, v.color.z, 1.0);
 
     return out;
 }

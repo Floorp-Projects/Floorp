@@ -34,7 +34,7 @@ dwrote = "0.11"
 winapi = "0.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.9"
-core-graphics = "0.22"
+core-foundation = "0.7"
+core-graphics = "0.19"
 foreign-types = "0.3.0"
 

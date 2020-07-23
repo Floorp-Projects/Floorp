@@ -7,7 +7,7 @@
 
 use super::*;
 
-use cocoa_foundation::foundation::{NSInteger, NSRange, NSUInteger};
+use cocoa::foundation::{NSInteger, NSRange, NSUInteger};
 
 use std::ops::Range;
 
@@ -22,7 +22,6 @@ pub enum MTLPrimitiveType {
 }
 
 #[repr(u64)]
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLIndexType {
     UInt16 = 0,
@@ -114,13 +113,6 @@ pub struct MTLDrawIndexedPrimitivesIndirectArguments {
     pub baseInstance: u32,
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct VertexAmplificationViewMapping {
-    pub renderTargetArrayIndexOffset: u32,
-    pub viewportArrayIndexOffset: u32,
-}
-
 pub enum MTLCommandEncoder {}
 
 foreign_obj_type! {
@@ -145,7 +137,9 @@ impl CommandEncoderRef {
     }
 
     pub fn end_encoding(&self) {
-        unsafe { msg_send![self, endEncoding] }
+        unsafe {
+            msg_send![self, endEncoding]
+        }
     }
 
     pub fn insert_debug_signpost(&self, name: &str) {
@@ -163,7 +157,9 @@ impl CommandEncoderRef {
     }
 
     pub fn pop_debug_group(&self) {
-        unsafe { msg_send![self, popDebugGroup] }
+        unsafe {
+            msg_send![self, popDebugGroup]
+        }
     }
 }
 
@@ -259,16 +255,6 @@ impl RenderCommandEncoderRef {
         }
     }
 
-    pub fn set_vertex_amplification_count(
-        &self,
-        count: NSUInteger,
-        view_mappings: Option<&[VertexAmplificationViewMapping]>,
-    ) {
-        unsafe {
-            msg_send! [self, setVertexAmplificationCount: count viewMappings: view_mappings.map_or(std::ptr::null(), |vm| vm.as_ptr())]
-        }
-    }
-
     // Specifying Resources for a Vertex Shader Function
 
     pub fn set_vertex_bytes(
@@ -301,7 +287,11 @@ impl RenderCommandEncoderRef {
         }
     }
 
-    pub fn set_vertex_buffer_offset(&self, index: NSUInteger, offset: NSUInteger) {
+    pub fn set_vertex_buffer_offset(
+        &self,
+        index: NSUInteger,
+        offset: NSUInteger,
+    ) {
         unsafe {
             msg_send![self,
                 setVertexBufferOffset:offset
@@ -423,7 +413,11 @@ impl RenderCommandEncoderRef {
         }
     }
 
-    pub fn set_fragment_buffer_offset(&self, index: NSUInteger, offset: NSUInteger) {
+    pub fn set_fragment_buffer_offset(
+        &self,
+        index: NSUInteger,
+        offset: NSUInteger,
+    ) {
         unsafe {
             msg_send![self,
                 setFragmentBufferOffset:offset
@@ -1037,7 +1031,12 @@ impl ArgumentEncoderRef {
         }
     }
 
-    pub fn set_buffer(&self, at_index: NSUInteger, buffer: &BufferRef, offset: NSUInteger) {
+    pub fn set_buffer(
+        &self,
+        at_index: NSUInteger,
+        buffer: &BufferRef,
+        offset: NSUInteger,
+    ) {
         unsafe {
             msg_send![self,
                 setBuffer: buffer

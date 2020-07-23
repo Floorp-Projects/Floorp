@@ -70,12 +70,12 @@ pub type CTFontTableTag = u32;
 
 pub type CTFontTableOptions = u32;
 pub const kCTFontTableOptionsNoOptions: CTFontTableOptions = 0;
-pub const kCTFontTableOptionsExcludeSynthetic: CTFontTableOptions = 1 << 0;
+pub const kCTFontTableOptionsExcludeSynthetic: CTFontTableOptions = (1 << 0);
 
 pub type CTFontOptions = CFOptionFlags;
 pub const kCTFontOptionsDefault: CTFontOptions = 0;
-pub const kCTFontOptionsPreventAutoActivation: CTFontOptions = 1 << 0;
-pub const kCTFontOptionsPreferSystemFont: CTFontOptions = 1 << 2;
+pub const kCTFontOptionsPreventAutoActivation: CTFontOptions = (1 << 0);
+pub const kCTFontOptionsPreferSystemFont: CTFontOptions = (1 << 2);
 
 #[repr(C)]
 pub struct __CTFont(c_void);
