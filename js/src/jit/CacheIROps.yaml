@@ -1342,7 +1342,7 @@
 
 - name: LoadDataViewValueResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     obj: ObjId
@@ -1353,7 +1353,7 @@
 
 - name: StoreDataViewValueResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     obj: ObjId
