@@ -426,7 +426,12 @@ class HTMLMediaElement::MediaControlKeyListener final
     return true;
   }
 
-  void Stop() {
+  /**
+   * Stop listening to the media control keys which would make media not be able
+   * to be controlled via pressing media control keys. If we haven't started
+   * listening to the media control keys, then nothing would happen.
+   */
+  void StopIfNeeded() {
     MOZ_ASSERT(NS_IsMainThread());
     if (!IsStarted()) {
       // We have already been stopped, do not notify stop twice.
@@ -539,7 +544,7 @@ class HTMLMediaElement::MediaControlKeyListener final
     // `eStart` to the new browsing context. If the media was playing before,
     // we would also notify `ePlayed`.
     bool wasInPlayingState = mState == MediaPlaybackState::ePlayed;
-    Stop();
+    StopIfNeeded();
     Unused << Start();
     if (wasInPlayingState) {
       NotifyMediaStartedPlaying();
@@ -2006,7 +2011,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSeekDOMPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSetMediaKeysDOMPromise)
   if (tmp->mMediaControlKeyListener) {
-    tmp->StopListeningMediaControlKeyIfNeeded();
+    tmp->mMediaControlKeyListener->StopIfNeeded();
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -2340,7 +2345,7 @@ void HTMLMediaElement::AbortExistingLoads() {
   // resume a paused media element.
   ClearResumeDelayedMediaPlaybackAgentIfNeeded();
 
-  StopListeningMediaControlKeyIfNeeded();
+  mMediaControlKeyListener->StopIfNeeded();
 
   // We may have changed mPaused, mAutoplaying, and other
   // things which can affect AddRemoveSelfReference
@@ -4267,7 +4272,7 @@ HTMLMediaElement::~HTMLMediaElement() {
     mResumeDelayedPlaybackAgent = nullptr;
   }
 
-  StopListeningMediaControlKeyIfNeeded();
+  mMediaControlKeyListener->StopIfNeeded();
   mMediaControlKeyListener = nullptr;
 
   WakeLockRelease();
@@ -6526,7 +6531,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
     mEventDeliveryPaused = true;
     // We won't want to resume media element from the bfcache.
     ClearResumeDelayedMediaPlaybackAgentIfNeeded();
-    StopListeningMediaControlKeyIfNeeded();
+    mMediaControlKeyListener->StopIfNeeded();
   } else {
     if (!mPaused) {
       mCurrentLoadPlayTime.Start();
@@ -7872,12 +7877,6 @@ void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
   if (mMediaControlKeyListener->IsStarted() ||
       !mMediaControlKeyListener->Start()) {
     return;
-  }
-}
-
-void HTMLMediaElement::StopListeningMediaControlKeyIfNeeded() {
-  if (mMediaControlKeyListener->IsStarted()) {
-    mMediaControlKeyListener->Stop();
   }
 }
 
