@@ -41,6 +41,7 @@ static const char* const kTestFileExtensions[] = {
     ".cab",            // Windows archive
     ".caction",        // Automator action
     ".cdr",            // Mac disk image
+    ".cer",            // Signed certificate file
     ".cfg",            // Windows
     ".chi",            // Windows Help
     ".chm",            // Windows Help

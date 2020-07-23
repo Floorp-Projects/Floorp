@@ -41,6 +41,7 @@ const char* const sExecutableExts[] = {
   ".asp",
   ".bas",
   ".bat",
+  ".cer",         // Signed certificate file
   ".chm",
   ".cmd",
   ".com",

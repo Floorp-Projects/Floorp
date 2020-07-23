@@ -196,6 +196,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".cab",        // Windows archive
     ".caction",    // Automator action
     ".cdr",        // Mac disk image
+    //".cer", exec // Signed certificate file
     ".cfg",        // Windows
     ".chi",        // Windows Help
     //".chm", exec // Windows Help
