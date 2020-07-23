@@ -850,7 +850,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
     bool safeMode = false;
     xr->GetInSafeMode(&safeMode);
     if (safeMode) {
-      useBaselineInterp = false;
       useBaselineJit = false;
       useIon = false;
       useJitForTrustedPrincipals = false;
