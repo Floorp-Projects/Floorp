@@ -573,6 +573,63 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
                     aError, "Unexpected error creating directory"));
             }
           });
+  return promise.forget();
+}
+
+already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
+                                        const nsAString& aPath) {
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  // Do the IO on a background thread and return the result to this thread.
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
+
+  // Process arguments.
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
+  }
+
+  InvokeAsync(
+      bg, __func__,
+      [path = nsAutoString(aPath)]() {
+        MOZ_ASSERT(!NS_IsMainThread());
+
+        auto rv = StatSync(path);
+        if (rv.isErr()) {
+          return IOStatMozPromise::CreateAndReject(rv.propagateErr(), __func__);
+        }
+        return IOStatMozPromise::CreateAndResolve(rv.unwrap(), __func__);
+      })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const InternalFileInfo& aInfo) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+            FileInfo jsResult;
+            jsResult.mPath.Construct(aInfo.mPath);
+            jsResult.mType.Construct(aInfo.mType);
+            jsResult.mSize.Construct(aInfo.mSize);
+            jsResult.mLastModified.Construct(aInfo.mLastModified);
+            promise->MaybeResolve(jsResult);
+          },
+          [promise = RefPtr(promise)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    "Target file does not exist");
+                break;
+              default:
+                promise->MaybeRejectWithUnknownError(FormatErrorMessage(
+                    aError, "Unexpected error accessing file"));
+            }
+          });
 
   return promise.forget();
 }
@@ -866,6 +923,41 @@ nsresult IOUtils::CreateDirectorySync(const nsAString& aPath,
     }
   }
   return rv;
+}
+
+Result<IOUtils::InternalFileInfo, nsresult> IOUtils::StatSync(
+    const nsAString& aPath) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  RefPtr<nsLocalFile> file = new nsLocalFile();
+  MOZ_TRY(file->InitWithPath(aPath));
+
+  InternalFileInfo info;
+  info.mPath = nsString(aPath);
+
+  info.mType = FileType::Regular;
+  bool isRegular;
+  MOZ_TRY(file->IsFile(&isRegular));
+  if (!isRegular) {
+    bool isDir;
+    MOZ_TRY(file->IsDirectory(&isDir));
+    if (isDir) {
+      info.mType = FileType::Directory;
+    } else {
+      info.mType = FileType::Other;
+    }
+  }
+
+  int64_t size = -1;
+  if (info.mType == FileType::Regular) {
+    MOZ_TRY(file->GetFileSize(&size));
+  }
+  info.mSize = size;
+  PRTime lastModified = 0;
+  MOZ_TRY(file->GetLastModifiedTime(&lastModified));
+  info.mLastModified = static_cast<int64_t>(lastModified);
+
+  return info;
 }
 
 NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);

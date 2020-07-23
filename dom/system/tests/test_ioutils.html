@@ -115,10 +115,10 @@
       info("Test creating and removing an empty directory");
       const tmpDirName = OS.Path.join(tmpDir, "test_ioutils_create_and_remove.tmp.d");
       await window.IOUtils.makeDirectory(tmpDirName);
-      ok(await OS.File.exists(tmpDirName), `Expected directory ${tmpDirName} to exist`);
+      ok(await dirExists(tmpDirName), `Expected directory ${tmpDirName} to exist`);
 
       await window.IOUtils.remove(tmpDirName);
-      ok(!await OS.File.exists(tmpDirName), "IOUtils::remove can remove empty directories");
+      ok(!await dirExists(tmpDirName), "IOUtils::remove can remove empty directories");
     });
 
     add_task(async function test_remove_non_existing() {
@@ -162,7 +162,7 @@
 
       await window.IOUtils.remove(tmpParentDir, { recursive: true });
       ok(
-        !await OS.File.exists(tmpParentDir),
+        !await dirExists(tmpParentDir),
         "IOUtils::remove can recursively remove a directory"
       );
     });
@@ -474,7 +474,7 @@
       const dest = OS.Path.join(destDir, "dest.tmp");
       await createFile(tmpFileName);
       // Test.
-      ok(!await OS.File.exists(destDir), "Expected path not to exist");
+      ok(!await fileOrDirExists(destDir), "Expected path not to exist");
       await window.IOUtils.move(tmpFileName, dest);
       ok(
         !await fileExists(tmpFileName) && await fileExists(dest),
@@ -485,7 +485,7 @@
       info("Test move and rename to existing directory.")
       await createFile(tmpFileName);
       // Test.
-      ok(await OS.File.exists(destDir), "Expected path to exist");
+      ok(await dirExists(destDir), `Expected ${destDir} to be a directory`);
       await window.IOUtils.move(tmpFileName, dest);
       ok(
         !await fileExists(tmpFileName)
@@ -498,7 +498,7 @@
       await createFile(tmpFileName);
       // Test.
       await window.IOUtils.move(tmpFileName, destDir);
-      ok(await OS.File.exists(destDir), "Expected path to exist");
+      ok(await dirExists(destDir), `Expected ${destDir} to be a directory`);
       ok(
         !await fileExists(tmpFileName)
         && await fileExists(OS.Path.join(destDir, OS.Path.basename(tmpFileName))),
@@ -518,7 +518,7 @@
       // Test.
       await window.IOUtils.move(srcDir, destDir);
       ok(
-        !await OS.File.exists(srcDir) && await OS.File.exists(destDir),
+        !await fileOrDirExists(srcDir) && await dirExists(destDir),
         "IOUtils::move can rename directories"
       );
 
@@ -530,9 +530,9 @@
       await window.IOUtils.move(srcDir, destDir);
       const destFile = OS.Path.join(destDir, OS.Path.basename(srcDir), "file.tmp");
       ok(
-        !await OS.File.exists(srcDir)
-        && await OS.File.exists(destDir)
-        && await OS.File.exists(OS.Path.join(destDir, OS.Path.basename(srcDir)))
+        !await fileOrDirExists(srcDir)
+        && await dirExists(destDir)
+        && await dirExists(OS.Path.join(destDir, OS.Path.basename(srcDir)))
         && await fileHasTextContents(destFile, "foo"),
         "IOUtils::move can move a directory and its contents into another one"
       )
@@ -572,6 +572,64 @@
 
       // Clean up.
       await cleanup(destFile, srcDir);
+    });
+
+    add_task(async function test_stat() {
+      info("Test attempt to stat a regular empty file");
+      const emptyFileName = OS.Path.join(tmpDir, "test_stat_empty.tmp");
+      await createFile(emptyFileName);
+
+      const emptyFileInfo = await window.IOUtils.stat(emptyFileName);
+      is(emptyFileInfo.size, 0, "IOUtils::stat can get correct (empty) file size");
+      is(emptyFileInfo.path, emptyFileName, "IOUtils::stat result contains the path");
+      is(emptyFileInfo.type, "regular", "IOUtils::stat can stat regular (empty) files");
+      Assert.less(
+        (emptyFileInfo.lastModified - new Date().valueOf()),
+        1000, // Allow for 1 second deviation in case of slow tests.
+        "IOUtils::stat can get the last modification date for a regular file"
+      );
+
+      info("Test attempt to stat a regular binary file");
+      const tempFileName = OS.Path.join(tmpDir, "test_stat_binary.tmp");
+      const bytes = Uint8Array.of(...new Array(50).keys());
+      await createFile(tempFileName, bytes);
+
+      const fileInfo = await window.IOUtils.stat(tempFileName);
+      is(fileInfo.size, 50, "IOUtils::stat can get correct file size");
+      is(fileInfo.path, tempFileName, "IOUtils::stat result contains the path");
+      is(fileInfo.type, "regular", "IOUtils::stat can stat regular files");
+      Assert.less(
+        (fileInfo.lastModified - new Date().valueOf()),
+        1000, // Allow for 1 second deviation in case of slow tests.
+        "IOUtils::stat can get the last modification date for a regular file"
+      );
+
+      info("Test attempt to stat a directory");
+      const tempDirName = OS.Path.join(tmpDir, "test_stat_dir.tmp.d");
+      await OS.File.makeDir(tempDirName);
+
+      const dirInfo = await window.IOUtils.stat(tempDirName);
+      is(dirInfo.size, -1, "IOUtils::stat reports -1 size for directories")
+      is(fileInfo.path, tempFileName, "IOUtils::stat result contains the path");
+      is(fileInfo.type, "regular", "IOUtils::stat can stat directories");
+      Assert.less(
+        (fileInfo.lastModified - new Date().valueOf()),
+        1000, // Allow for 1 second deviation in case of slow tests.
+        "IOUtils::stat can get the last modification date for a regular file"
+      );
+
+      await cleanup(emptyFileName, tempFileName, tempFileName)
+    });
+
+    add_task(async function test_stat_failures() {
+      info("Test attempt to stat a non-existing file");
+      const notExistsFile = OS.Path.join(tmpDir, "test_stat_not_exists.tmp");
+
+      await Assert.rejects(
+        window.IOUtils.stat(notExistsFile),
+        /Target file does not exist/,
+        "IOUtils::stat throws if the target file does not exist"
+      );
     });
 
 
@@ -618,17 +676,35 @@
 
     async function fileExists(file) {
       try {
-        await window.IOUtils.read(file);
+        let { type } = await window.IOUtils.stat(file);
+        return type === "regular";
       } catch (ex) {
         return false;
       }
-      return true;
+    }
+
+    async function dirExists(dir) {
+      try {
+        let { type } = await window.IOUtils.stat(dir);
+        return type === "directory";
+      } catch (ex) {
+        return false;
+      }
+    }
+
+    async function fileOrDirExists(location) {
+      try {
+        await window.IOUtils.stat(location);
+        return true;
+      } catch (ex) {
+        return false;
+      }
     }
 
     async function cleanup(...files) {
       for (const file of files) {
         await window.IOUtils.remove(file, { ignoreAbsent: true, recursive: true });
-        const exists = await fileExists(file);
+        const exists = await fileOrDirExists(file);
         ok(!exists, `Removed temporary file: ${file}`);
       }
     }
