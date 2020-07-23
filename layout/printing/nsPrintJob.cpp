@@ -2010,7 +2010,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
     return NS_ERROR_FAILURE;
   }
 
-  // If we're printing selection then remove the unselected nodes from our
+  // If we're printing selection then remove the nonselected nodes from our
   // cloned document.
   int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
   printData->mPrintSettings->GetPrintRange(&printRangeType);
@@ -2193,51 +2193,39 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteNonSelectedNodes(
   nsINode* bodyNode = aDoc.GetBodyElement();
   nsINode* startNode = bodyNode;
   uint32_t startOffset = 0;
-  uint32_t ellipsisOffset = 0;
 
   for (nsRange* origRange : *printRanges) {
     // New end is start of original range.
     nsINode* endNode = origRange->GetStartContainer();
-
-    // If we're no longer in the same text node reset the ellipsis offset.
-    if (endNode != startNode) {
-      ellipsisOffset = 0;
-    }
-    uint32_t endOffset = origRange->StartOffset() + ellipsisOffset;
+    uint32_t endOffset = origRange->StartOffset();
 
     // Create the range that we want to remove. Note that if startNode or
     // endNode are null nsRange::Create() will fail and we won't remove
     // that section.
-    RefPtr<nsRange> unselectedRange = nsRange::Create(
+    RefPtr<nsRange> nonselectedRange = nsRange::Create(
         startNode, startOffset, endNode, endOffset, IgnoreErrors());
 
-    if (unselectedRange && !unselectedRange->Collapsed()) {
-      selection->AddRangeAndSelectFramesAndNotifyListeners(*unselectedRange,
+    if (nonselectedRange && !nonselectedRange->Collapsed()) {
+      selection->AddRangeAndSelectFramesAndNotifyListeners(*nonselectedRange,
                                                            IgnoreErrors());
       // Unless we've already added an ellipsis at the start, if we ended mid
       // text node then add ellipsis.
       Text* text = endNode->GetAsText();
-      if (!ellipsisOffset && text && endOffset && endOffset < text->Length()) {
+      if (startNode != endNode && text && endOffset &&
+          endOffset < text->Length()) {
         text->InsertData(endOffset, kEllipsis, IgnoreErrors());
-        ellipsisOffset += kEllipsis.Length();
       }
     }
 
     // Next new start is end of original range.
     startNode = origRange->GetEndContainer();
-
-    // If we're no longer in the same text node reset the ellipsis offset.
-    if (startNode != endNode) {
-      ellipsisOffset = 0;
-    }
-    startOffset = origRange->EndOffset() + ellipsisOffset;
+    startOffset = origRange->EndOffset();
 
     // If the next node will start mid text node then add ellipsis.
     Text* text = startNode ? startNode->GetAsText() : nullptr;
     if (text && startOffset && startOffset < text->Length()) {
       text->InsertData(startOffset, kEllipsis, IgnoreErrors());
       startOffset += kEllipsis.Length();
-      ellipsisOffset += kEllipsis.Length();
     }
   }
 
