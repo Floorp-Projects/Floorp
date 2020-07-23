@@ -116,7 +116,7 @@ public final class GeckoSurface extends Surface {
         if (GeckoSurfaceTexture.lookup(mHandle) != null) {
             throw new AssertionError("texture#" + mHandle + " already in use.");
         }
-        GeckoSurfaceTexture texture = GeckoSurfaceTexture.acquire(false, mHandle);
+        GeckoSurfaceTexture texture = GeckoSurfaceTexture.acquire(GeckoSurfaceTexture.isSingleBufferSupported(), mHandle);
         texture.setDefaultBufferSize(width, height);
         texture.track(mHandle);
         mSyncSurface = new GeckoSurface(texture);
