@@ -100,7 +100,7 @@ void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset, bool aIsSele
   if (aIsSelectionCollapsed) {
     // If selection is collapsed, invalidate selection.
     MOXTextMarkerDelegate* delegate = [MOXTextMarkerDelegate getOrCreateForDoc:aTarget->Document()];
-    [delegate invalidateSelection];
+    [delegate setSelectionFrom:aTarget at:aOffset to:aTarget at:aOffset];
   }
 
   if (wrapper) {
