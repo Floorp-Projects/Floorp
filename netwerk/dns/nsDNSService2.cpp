@@ -684,9 +684,8 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
     }
   }
   if (!name || !strcmp(name, kPrefNetworkProxySOCKS)) {
-    if (NS_SUCCEEDED(Preferences::GetUint(kPrefNetworkProxySOCKS, &tmpint))) {
-      nsAutoCString socks;
-      Preferences::GetCString(kPrefNetworkProxySOCKS, socks);
+    nsAutoCString socks;
+    if (NS_SUCCEEDED(Preferences::GetCString(kPrefNetworkProxySOCKS, socks))) {
       mHasSocksProxy = !socks.IsEmpty();
     }
   }
@@ -826,7 +825,12 @@ nsDNSService::SetPrefetchEnabled(bool inVal) {
   return NS_OK;
 }
 
-bool nsDNSService::DNSForbiddenByActiveProxy(const nsACString& aHostname) {
+bool nsDNSService::DNSForbiddenByActiveProxy(const nsACString& aHostname,
+                                             uint32_t flags) {
+  if (flags & nsIDNSService::RESOLVE_IGNORE_SOCKS_DNS) {
+    return false;
+  }
+
   // We should avoid doing DNS when a proxy is in use.
   PRNetAddr tempAddr;
   if (StaticPrefs::network_proxy_type() ==
@@ -912,7 +916,7 @@ nsresult nsDNSService::AsyncResolveInternal(
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (DNSForbiddenByActiveProxy(aHostname)) {
+  if (DNSForbiddenByActiveProxy(aHostname, flags)) {
     // nsHostResolver returns NS_ERROR_UNKNOWN_HOST for lots of reasons.
     // We use a different error code to differentiate this failure and to make
     // it clear(er) where this error comes from.
@@ -1220,7 +1224,7 @@ nsresult nsDNSService::ResolveInternal(
     flags |= RESOLVE_OFFLINE;
   }
 
-  if (DNSForbiddenByActiveProxy(aHostname)) {
+  if (DNSForbiddenByActiveProxy(aHostname, flags)) {
     return NS_ERROR_UNKNOWN_PROXY_HOST;
   }
 
