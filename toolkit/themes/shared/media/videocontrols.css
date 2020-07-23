@@ -728,3 +728,9 @@
   align-items: center;
   scale: 0.33 1;
 }
+
+@media (prefers-reduced-motion) {
+  .pip-wrapper {
+    transition: none;
+  }
+}

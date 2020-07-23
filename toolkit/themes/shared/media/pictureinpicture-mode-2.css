@@ -128,3 +128,11 @@
 .pip-wrapper.hovering > .pip-expanded > .pip-explainer {
   translate: 0 calc(40px - var(--pip-highlight-width));
 }
+
+@media (prefers-reduced-motion) {
+  .pip-expanded,
+  .pip-wrapper:not(:is([small-video],[has-used])) > .pip-small,
+  .pip-explainer {
+    transition: none;
+  }
+}
