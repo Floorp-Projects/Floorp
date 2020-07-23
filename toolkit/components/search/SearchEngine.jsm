@@ -1166,15 +1166,12 @@ class SearchEngine {
     this._orderHint = json._orderHint || null;
     this._telemetryId = json._telemetryId || null;
     this._definedAlias = json._definedAlias || null;
-    if (json.filePath) {
-      this._filePath = json.filePath;
-    }
-    if (json.extensionID) {
-      this._extensionID = json.extensionID;
-    }
-    if (json.extensionLocale) {
-      this._locale = json.extensionLocale;
-    }
+    // These changed keys in Firefox 80, maintain the old keys
+    // for backwards compatibility.
+    this._filePath = json.filePath || json._filePath || null;
+    this._extensionID = json.extensionID || json._extensionID || null;
+    this._locale = json.extensionLocale || json._locale || null;
+
     for (let i = 0; i < json._urls.length; ++i) {
       let url = json._urls[i];
       let engineURL = new EngineURL(
@@ -1204,49 +1201,40 @@ class SearchEngine {
       };
     }
 
-    var json = {
-      _name: this._name,
-      _shortName: this._shortName,
-      _loadPath: this._loadPath,
-      description: this.description,
-      __searchForm: this.__searchForm,
-      _iconURL: this._iconURL,
-      _iconMapObj: this._iconMapObj,
-      _metaData: this._metaData,
-      _urls: this._urls,
-      _isAppProvided: this._isAppProvided,
-      _orderHint: this._orderHint,
-      _telemetryId: this._telemetryId,
-    };
+    const fieldsToCopy = [
+      "_name",
+      "_shortName",
+      "_loadPath",
+      "description",
+      "__searchForm",
+      "_iconURL",
+      "_iconMapObj",
+      "_metaData",
+      "_urls",
+      "_isAppProvided",
+      "_orderHint",
+      "_telemetryId",
+      "_updateInterval",
+      "_updateURL",
+      "_iconUpdateURL",
+      "_filePath",
+      "_extensionID",
+      "_locale",
+      "_definedAlias",
+    ];
 
-    if (this._updateInterval) {
-      json._updateInterval = this._updateInterval;
+    let json = {};
+    for (const field of fieldsToCopy) {
+      if (field in this) {
+        json[field] = this[field];
+      }
     }
-    if (this._updateURL) {
-      json._updateURL = this._updateURL;
-    }
-    if (this._iconUpdateURL) {
-      json._iconUpdateURL = this._iconUpdateURL;
-    }
+
     if (!this._hasPreferredIcon) {
       json._hasPreferredIcon = this._hasPreferredIcon;
     }
     if (this.queryCharset != SearchUtils.DEFAULT_QUERY_CHARSET) {
       json.queryCharset = this.queryCharset;
-    }
-    if (this._filePath) {
-      // File path is stored so that we can remove legacy xml files
-      // from the profile if the user removes the engine.
-      json.filePath = this._filePath;
-    }
-    if (this._extensionID) {
-      json.extensionID = this._extensionID;
-    }
-    if (this._locale) {
-      json.extensionLocale = this._locale;
-    }
-    if (this._definedAlias) {
-      json._definedAlias = this._definedAlias;
     }
 
     return json;

@@ -79,7 +79,7 @@
         }
       ],
       "queryCharset": "UTF-8",
-      "extensionID": "test-addon-id@mozilla.org"
+      "_extensionID": "test-addon-id@mozilla.org"
     }
   ]
 }
