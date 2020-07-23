@@ -173,13 +173,13 @@ var PrintUtils = {
 
     // Set the title so that the print dialog can pick it up and
     // use it to generate the filename for save-to-PDF.
-    printSettings.title = this._originalTitle;
+    printSettings.title = this._originalTitle || topBrowser.contentTitle;
 
     if (this._shouldSimplify) {
       // The generated document for simplified print preview has "about:blank"
       // as its URL. We need to set docURL here so that the print header/footer
       // can be given the original document's URL.
-      printSettings.docURL = this._originalURL;
+      printSettings.docURL = this._originalURL || topBrowser.currentURI.spec;
     }
 
     // At some point we should handle the Promise that this returns (report
@@ -734,6 +734,9 @@ var PrintUtils = {
     this.ensureProgressDialogClosed();
 
     this._listener.onExit();
+
+    this._originalTitle = "";
+    this._originalURL = "";
   },
 
   logTelemetry(ID) {
