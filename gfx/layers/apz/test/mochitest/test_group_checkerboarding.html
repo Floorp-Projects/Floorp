@@ -18,6 +18,11 @@
         ["apz.minimap.enabled", true], // helps to debug these tests
       ];
 
+      var px_ratio_1_prefs = [
+        ...prefs,
+        ["layout.css.devPixelsPerPx", 1.0],
+      ];
+
       var zoom_and_pan_prefs = [
         ...prefs,
         ...getPrefs("TOUCH_EVENTS:PAN"),
@@ -27,6 +32,7 @@
       var subtests = [
         { file: "helper_checkerboard_apzforcedisabled.html", prefs },
         { file: "helper_checkerboard_scrollinfo.html", prefs },
+        { file: "helper_horizontal_checkerboard.html", "prefs": px_ratio_1_prefs },
       ];
 
       let isWindows = navigator.platform.indexOf("Win") == 0;
