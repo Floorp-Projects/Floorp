@@ -31,14 +31,9 @@ button[default="true"]:not(:hover):active {
 }
 
 .button-text {
-  margin: 1px 0;
-  margin-inline-start: 3px;
-  margin-inline-end: 2px;
+  margin-block: 1px;
+  margin-inline: 3px 2px;
   text-align: center;
-}
-
-.button-icon {
-  margin-inline-start: 1px;
 }
 
 button[type="default"] {

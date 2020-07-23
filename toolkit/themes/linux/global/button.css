@@ -23,12 +23,9 @@ button {
   -moz-default-appearance: button-focus;
 }
 
-.button-icon {
-  margin-inline-end: 2px;
-}
-
 .button-text {
   margin: 0;
+  margin-inline-start: 2px;
   text-align: center;
 }
 

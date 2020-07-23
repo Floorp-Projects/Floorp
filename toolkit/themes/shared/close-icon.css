@@ -25,3 +25,8 @@
   width: 20px;
   height: 20px;
 }
+
+.close-icon > .button-box > .button-text,
+.close-icon > .toolbarbutton-text {
+  display: none;
+}
