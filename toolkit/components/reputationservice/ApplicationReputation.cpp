@@ -515,6 +515,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".xml",     // MS Excel
     ".xnk",     // MS Exchange
     ".xrm-ms",  // Windows
+    ".xsd",     // XML schema definition
     ".xsl",     // XML Stylesheet
     //".xxe",
     ".xz",     // Linux archive (xz)
