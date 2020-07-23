@@ -264,11 +264,10 @@ check::
 	@echo "Starting 'mach python-test' with -j$(cores)"
 	@$(topsrcdir)/mach --log-no-times python-test -j$(cores) --subsuite default
 	@echo "Finished 'mach python-test' successfully"
-ifeq (,$(MOZ_ASAN)$(MOZ_TSAN))  # No tests run here for asan/tsan builds.
 	@echo "Starting 'mach python-test' with --python $(PYTHON3) -j$(cores)"
 	@$(topsrcdir)/mach --log-no-times python-test --python python3 -j$(cores) --subsuite default
 	@echo "Finished 'mach python-test' with py3 successfully"
-endif
+
 
 .PHONY: \
   reftest \
