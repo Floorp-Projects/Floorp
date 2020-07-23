@@ -196,6 +196,24 @@ TEST_VARIANTS = {
             },
         },
     },
+    'fission-xorigin': {
+        'description': "{description} with cross-origin and fission enabled",
+        'filterfn': fission_filter,
+        'suffix': 'fis-xorig',
+        'replace': {
+            'e10s': True,
+        },
+        'merge': {
+            # Ensures the default state is to not run anywhere.
+            'fission-run-on-projects': [],
+            'mozharness': {
+                'extra-options': ['--setpref=fission.autostart=true',
+                                  '--setpref=dom.serviceWorkers.parent_intercept=true',
+                                  '--setpref=browser.tabs.documentchannel=true',
+                                  '--enable-xorigin-tests'],
+            },
+        },
+    },
     'socketprocess': {
         'description': "{description} with socket process enabled",
         'suffix': 'spi',
@@ -1344,7 +1362,8 @@ def handle_fission_attributes(config, tasks):
         for attr in ('run-on-projects', 'tier'):
             fission_attr = task.pop('fission-{}'.format(attr), None)
 
-            if task['attributes'].get('unittest_variant') != 'fission' or fission_attr is None:
+            if (task['attributes'].get('unittest_variant') != 'fission-xorigin' and
+                task['attributes'].get('unittest_variant') != 'fission') or fission_attr is None:
                 continue
 
             task[attr] = fission_attr
