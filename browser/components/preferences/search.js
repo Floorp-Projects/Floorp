@@ -639,7 +639,7 @@ EngineStore.prototype = {
 
   _cloneEngine(aEngine) {
     var clonedObj = {};
-    for (let i of ["name", "alias", "iconURI"]) {
+    for (let i of ["name", "alias", "iconURI", "hidden"]) {
       clonedObj[i] = aEngine[i];
     }
     clonedObj.originalEngine = aEngine;
