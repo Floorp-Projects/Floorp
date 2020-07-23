@@ -13,12 +13,13 @@ def test_lint_black(lint, paths):
     results = lint(paths())
     assert len(results) == 2
 
-    assert "EOF" in results[0].message
+    print(results)
     assert results[0].level == "error"
-    assert results[0].relpath == "invalid.py"
+    assert results[0].relpath == "bad.py"
 
+    assert "EOF" in results[1].message
     assert results[1].level == "error"
-    assert results[1].relpath == "bad.py"
+    assert results[1].relpath == "invalid.py"
 
 
 if __name__ == "__main__":
