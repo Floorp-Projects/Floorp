@@ -10,9 +10,11 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.browser.toolbar.MAX_URI_LENGTH
@@ -26,12 +28,14 @@ import mozilla.components.support.images.loader.ImageLoader
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getMediaStateForSession
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
-import org.mozilla.fenix.ext.toTab
+import org.mozilla.fenix.utils.Do
 import kotlin.math.max
 
 /**
@@ -40,8 +44,11 @@ import kotlin.math.max
 class TabTrayViewHolder(
     itemView: View,
     private val imageLoader: ImageLoader,
-    val getSelectedTabId: () -> String? = { itemView.context.components.core.store.state.selectedTabId }
+    private val store: BrowserStore = itemView.context.components.core.store,
+    private val metrics: MetricController = itemView.context.components.analytics.metrics,
+    val getSelectedTabId: () -> String? = { store.state.selectedTabId }
 ) : TabViewHolder(itemView) {
+
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton =
         itemView.findViewById(R.id.mozac_browser_tabstray_close)
@@ -79,16 +86,15 @@ class TabTrayViewHolder(
 
         // Media state
         playPauseButtonView.increaseTapArea(PLAY_PAUSE_BUTTON_EXTRA_DPS)
-        val session = itemView.context?.components?.core?.sessionManager?.findSessionById(tab.id)
         with(playPauseButtonView) {
             invalidate()
-            when (session?.toTab(itemView.context)?.mediaState) {
+            Do exhaustive when (store.state.getMediaStateForSession(tab.id)) {
                 MediaState.State.PAUSED -> {
                     showAndEnable()
                     contentDescription =
                         context.getString(R.string.mozac_feature_media_notification_action_play)
                     setImageDrawable(
-                        androidx.appcompat.content.res.AppCompatResources.getDrawable(
+                        AppCompatResources.getDrawable(
                             context,
                             R.drawable.tab_tray_play_with_background
                         )
@@ -100,7 +106,7 @@ class TabTrayViewHolder(
                     contentDescription =
                         context.getString(R.string.mozac_feature_media_notification_action_pause)
                     setImageDrawable(
-                        androidx.appcompat.content.res.AppCompatResources.getDrawable(
+                        AppCompatResources.getDrawable(
                             context,
                             R.drawable.tab_tray_pause_with_background
                         )
@@ -115,16 +121,15 @@ class TabTrayViewHolder(
         }
 
         playPauseButtonView.setOnClickListener {
-            val mState = session?.toTab(itemView.context)?.mediaState
-            when (mState) {
+            Do exhaustive when (store.state.getMediaStateForSession(tab.id)) {
                 MediaState.State.PLAYING -> {
-                    itemView.context.components.analytics.metrics.track(Event.TabMediaPause)
-                    itemView.context.components.core.store.state.media.pauseIfPlaying()
+                    metrics.track(Event.TabMediaPause)
+                    store.state.media.pauseIfPlaying()
                 }
 
                 MediaState.State.PAUSED -> {
-                    itemView.context.components.analytics.metrics.track(Event.TabMediaPlay)
-                    itemView.context.components.core.store.state.media.playIfPaused()
+                    metrics.track(Event.TabMediaPlay)
+                    store.state.media.playIfPaused()
                 }
 
                 MediaState.State.NONE -> throw AssertionError(
@@ -189,7 +194,7 @@ class TabTrayViewHolder(
     }
 
     internal fun updateAccessibilityRowIndex(item: View, newIndex: Int) {
-        item.setAccessibilityDelegate(object : View.AccessibilityDelegate() {
+        item.accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(
                 host: View?,
                 info: AccessibilityNodeInfo?
@@ -208,7 +213,7 @@ class TabTrayViewHolder(
                     }
                 }
             }
-        })
+        }
     }
 
     companion object {

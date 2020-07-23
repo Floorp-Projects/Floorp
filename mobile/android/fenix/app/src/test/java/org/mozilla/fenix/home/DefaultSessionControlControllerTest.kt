@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
@@ -43,6 +44,7 @@ class DefaultSessionControlControllerTest {
     private val navController: NavController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
+    private val store: BrowserStore = mockk(relaxed = true)
     private val engine: Engine = mockk(relaxed = true)
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
     private val topSiteStorage: TopSiteStorage = mockk(relaxed = true)

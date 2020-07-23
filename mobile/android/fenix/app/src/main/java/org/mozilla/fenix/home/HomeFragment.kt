@@ -60,9 +60,11 @@ import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -90,9 +92,7 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.resetPoliciesAfter
-import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
@@ -145,6 +145,8 @@ class HomeFragment : Fragment() {
 
     private val sessionManager: SessionManager
         get() = requireComponents.core.sessionManager
+    private val store: BrowserStore
+        get() = requireComponents.core.store
 
     private lateinit var homeAppBarOffSetListener: AppBarLayout.OnOffsetChangedListener
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
@@ -774,10 +776,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun getNumberOfSessions(private: Boolean = browsingModeManager.mode.isPrivate): Int {
-        return sessionManager.sessionsOfType(private = private).count()
-    }
-
     private fun registerCollectionStorageObserver() {
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
@@ -789,7 +787,9 @@ class HomeFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val recyclerView = sessionControlView!!.view
                 delay(ANIM_SCROLL_DELAY)
-                val tabsSize = getNumberOfSessions()
+                val tabsSize = store.state
+                    .getNormalOrPrivateTabs(browsingModeManager.mode.isPrivate)
+                    .size
 
                 var indexOfCollection = tabsSize + NON_TAB_ITEM_NUM
                 changedCollection?.let { changedCollection ->
@@ -885,14 +885,6 @@ class HomeFragment : Fragment() {
                 .setText(string)
                 .setAnchorView(snackbarAnchorView)
                 .show()
-        }
-    }
-
-    private fun List<Session>.toTabs(): List<Tab> {
-        val selected = sessionManager.selectedSession
-
-        return map {
-            it.toTab(requireContext(), it == selected)
         }
     }
 

@@ -64,7 +64,6 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
@@ -111,11 +110,6 @@ class DefaultBrowserToolbarControllerTest {
         MockKAnnotations.init(this)
 
         mockkStatic(
-            "org.mozilla.fenix.ext.SessionKt"
-        )
-        every { any<Session>().toTab(any()) } returns currentSessionAsTab
-
-        mockkStatic(
             "org.mozilla.fenix.settings.deletebrowsingdata.DeleteAndQuitKt"
         )
         every { deleteAndQuit(any(), any(), any()) } just Runs
@@ -138,7 +132,6 @@ class DefaultBrowserToolbarControllerTest {
 
     @After
     fun tearDown() {
-        unmockkStatic("org.mozilla.fenix.ext.SessionKt")
         unmockkStatic("org.mozilla.fenix.settings.deletebrowsingdata.DeleteAndQuitKt")
     }
 

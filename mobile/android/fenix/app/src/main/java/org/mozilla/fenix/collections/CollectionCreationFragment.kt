@@ -17,14 +17,16 @@ import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.ext.getMediaStateForSession
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.toTab
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.Tab
 
 @ExperimentalCoroutinesApi
@@ -47,12 +49,11 @@ class CollectionCreationFragment : DialogFragment() {
         val view = inflater.inflate(R.layout.fragment_create_collection, container, false)
         val args: CollectionCreationFragmentArgs by navArgs()
 
-        val sessionManager = requireComponents.core.sessionManager
         val store = requireComponents.core.store
         val publicSuffixList = requireComponents.publicSuffixList
-        val tabs = sessionManager.getTabs(args.tabIds, store, publicSuffixList)
+        val tabs = store.state.getTabs(args.tabIds, publicSuffixList)
         val selectedTabs = if (args.selectedTabIds != null) {
-            sessionManager.getTabs(args.selectedTabIds, store, publicSuffixList).toSet()
+            store.state.getTabs(args.selectedTabIds, publicSuffixList).toSet()
         } else {
             if (tabs.size == 1) setOf(tabs.first()) else emptySet()
         }
@@ -112,14 +113,30 @@ class CollectionCreationFragment : DialogFragment() {
     }
 }
 
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-fun SessionManager.getTabs(
+@VisibleForTesting
+internal fun BrowserState.getTabs(
     tabIds: Array<String>?,
-    store: BrowserStore,
     publicSuffixList: PublicSuffixList
 ): List<Tab> {
     return tabIds
-        ?.mapNotNull { this.findSessionById(it) }
-        ?.map { it.toTab(store, publicSuffixList) }
-        ?: emptyList()
+        ?.mapNotNull { id -> findTab(id) }
+        ?.map { it.toTab(this, publicSuffixList) }
+        .orEmpty()
+}
+
+private fun TabSessionState.toTab(
+    state: BrowserState,
+    publicSuffixList: PublicSuffixList,
+    selected: Boolean? = null
+): Tab {
+    val url = readerState.activeUrl ?: content.url
+    return Tab(
+        sessionId = this.id,
+        url = url,
+        hostname = url.toShortUrl(publicSuffixList),
+        title = content.title,
+        selected = selected,
+        icon = content.icon,
+        mediaState = state.getMediaStateForSession(this.id)
+    )
 }
