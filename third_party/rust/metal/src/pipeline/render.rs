@@ -7,7 +7,7 @@
 
 use super::*;
 
-use cocoa::foundation::NSUInteger;
+use cocoa_foundation::foundation::NSUInteger;
 use objc::runtime::{NO, YES};
 
 #[repr(u64)]
@@ -260,6 +260,14 @@ impl RenderPipelineDescriptorRef {
         unsafe { msg_send![self, setSampleCount: count] }
     }
 
+    pub fn max_vertex_amplification_count(&self) -> NSUInteger {
+        unsafe { msg_send![self, maxVertexAmplificationCount] }
+    }
+
+    pub fn set_max_vertex_amplification_count(&self, count: NSUInteger) {
+        unsafe { msg_send![self, setMaxVertexAmplificationCount: count] }
+    }
+
     pub fn is_alpha_to_coverage_enabled(&self) -> bool {
         unsafe {
             match msg_send![self, isAlphaToCoverageEnabled] {
@@ -404,7 +412,10 @@ foreign_obj_type! {
 }
 
 impl RenderPipelineColorAttachmentDescriptorArrayRef {
-    pub fn object_at(&self, index: NSUInteger) -> Option<&RenderPipelineColorAttachmentDescriptorRef> {
+    pub fn object_at(
+        &self,
+        index: NSUInteger,
+    ) -> Option<&RenderPipelineColorAttachmentDescriptorRef> {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 

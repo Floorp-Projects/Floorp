@@ -16,7 +16,6 @@ use string::{CFString};
 
 use core_foundation_sys::base::{kCFAllocatorDefault, Boolean};
 use std::fmt;
-use std::mem::MaybeUninit;
 use std::ptr;
 use std::path::{Path, PathBuf};
 

@@ -5,7 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use cocoa::foundation::NSUInteger;
+use cocoa_foundation::foundation::NSUInteger;
 
 #[repr(u64)]
 #[allow(non_camel_case_types)]
@@ -131,7 +131,11 @@ impl VertexBufferLayoutDescriptorArrayRef {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 
-    pub fn set_object_at(&self, index: NSUInteger, layout: Option<&VertexBufferLayoutDescriptorRef>) {
+    pub fn set_object_at(
+        &self,
+        index: NSUInteger,
+        layout: Option<&VertexBufferLayoutDescriptorRef>,
+    ) {
         unsafe {
             msg_send![self, setObject:layout
                    atIndexedSubscript:index]
@@ -195,7 +199,11 @@ impl VertexAttributeDescriptorArrayRef {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 
-    pub fn set_object_at(&self, index: NSUInteger, attribute: Option<&VertexAttributeDescriptorRef>) {
+    pub fn set_object_at(
+        &self,
+        index: NSUInteger,
+        attribute: Option<&VertexAttributeDescriptorRef>,
+    ) {
         unsafe {
             msg_send![self, setObject:attribute
                    atIndexedSubscript:index]

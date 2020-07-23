@@ -7,13 +7,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::os::raw::c_void;
+use super::frame::{CTFrame, CTFrameRef};
 use core_foundation::attributed_string::CFAttributedStringRef;
 use core_foundation::base::{CFRange, CFTypeID, TCFType};
+use core_foundation::dictionary::CFDictionaryRef;
+use core_graphics::geometry::CGSize;
 use core_graphics::path::{CGPath, CGPathRef};
 use foreign_types::{ForeignType, ForeignTypeRef};
+use std::os::raw::c_void;
 use std::ptr::null;
-use super::frame::{CTFrameRef, CTFrame};
 
 #[repr(C)]
 pub struct __CTFramesetter(c_void);
@@ -37,15 +39,43 @@ impl CTFramesetter {
     pub fn create_frame(&self, string_range: CFRange, path: &CGPathRef) -> CTFrame {
         unsafe {
             let ptr = CTFramesetterCreateFrame(
-                self.as_concrete_TypeRef(), string_range, path.as_ptr(), null());
+                self.as_concrete_TypeRef(),
+                string_range,
+                path.as_ptr(),
+                null(),
+            );
 
             CTFrame::wrap_under_create_rule(ptr)
+        }
+    }
+
+    /// Suggest an appropriate frame size for displaying a text range.
+    ///
+    /// Returns a tuple containing an appropriate size (that should be smaller
+    /// than the provided constraints) as well as the range of text that fits in
+    /// this frame.
+    pub fn suggest_frame_size_with_constraints(
+        &self,
+        string_range: CFRange,
+        frame_attributes: CFDictionaryRef,
+        constraints: CGSize,
+    ) -> (CGSize, CFRange) {
+        unsafe {
+            let mut fit_range = CFRange::init(0, 0);
+            let size = CTFramesetterSuggestFrameSizeWithConstraints(
+                self.as_concrete_TypeRef(),
+                string_range,
+                frame_attributes,
+                constraints,
+                &mut fit_range,
+            );
+            (size, fit_range)
         }
     }
 }
 
 #[link(name = "CoreText", kind = "framework")]
-extern {
+extern "C" {
     fn CTFramesetterGetTypeID() -> CFTypeID;
     fn CTFramesetterCreateWithAttributedString(string: CFAttributedStringRef) -> CTFramesetterRef;
     fn CTFramesetterCreateFrame(
@@ -54,4 +84,11 @@ extern {
         path: *mut <CGPath as ForeignType>::CType,
         attributes: *const c_void,
     ) -> CTFrameRef;
+    fn CTFramesetterSuggestFrameSizeWithConstraints(
+        framesetter: CTFramesetterRef,
+        string_range: CFRange,
+        frame_attributes: CFDictionaryRef,
+        constraints: CGSize,
+        fitRange: *mut CFRange,
+    ) -> CGSize;
 }

@@ -2,33 +2,12 @@ use crate::instance::Instance;
 use crate::prelude::*;
 use crate::vk;
 use crate::RawPtr;
-use libloading::Library;
 use std::error::Error;
 use std::fmt;
-use std::io;
 use std::mem;
 use std::os::raw::c_char;
 use std::os::raw::c_void;
 use std::ptr;
-use std::sync::Arc;
-
-#[cfg(windows)]
-const LIB_PATH: &str = "vulkan-1.dll";
-
-#[cfg(all(
-    unix,
-    not(any(target_os = "macos", target_os = "ios", target_os = "android"))
-))]
-const LIB_PATH: &str = "libvulkan.so.1";
-
-#[cfg(target_os = "android")]
-const LIB_PATH: &str = "libvulkan.so";
-
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-const LIB_PATH: &str = "libvulkan.dylib";
-
-/// Function loader
-pub type Entry = EntryCustom<Arc<Library>>;
 
 /// Function loader
 #[derive(Clone)]
@@ -39,21 +18,6 @@ pub struct EntryCustom<L> {
     entry_fn_1_2: vk::EntryFnV1_2,
     lib: L,
 }
-
-#[derive(Debug)]
-pub enum LoadingError {
-    LibraryLoadError(io::Error),
-}
-
-impl fmt::Display for LoadingError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            LoadingError::LibraryLoadError(e) => write!(f, "{}", e),
-        }
-    }
-}
-
-impl Error for LoadingError {}
 
 #[derive(Clone, Debug)]
 pub enum InstanceError {
@@ -208,46 +172,11 @@ impl<L> EntryV1_2 for EntryCustom<L> {
     }
 }
 
-impl EntryCustom<Arc<Library>> {
-    /// ```rust,no_run
-    /// use ash::{vk, Entry, version::EntryV1_0};
-    /// # fn main() -> Result<(), Box<std::error::Error>> {
-    /// let entry = Entry::new()?;
-    /// let app_info = vk::ApplicationInfo {
-    ///     api_version: vk::make_version(1, 0, 0),
-    ///     ..Default::default()
-    /// };
-    /// let create_info = vk::InstanceCreateInfo {
-    ///     p_application_info: &app_info,
-    ///     ..Default::default()
-    /// };
-    /// let instance = unsafe { entry.create_instance(&create_info, None)? };
-    /// # Ok(()) }
-    /// ```
-    pub fn new() -> Result<Entry, LoadingError> {
-        Self::new_custom(
-            || {
-                Library::new(&LIB_PATH)
-                    .map_err(LoadingError::LibraryLoadError)
-                    .map(Arc::new)
-            },
-            |vk_lib, name| unsafe {
-                vk_lib
-                    .get(name.to_bytes_with_nul())
-                    .map(|symbol| *symbol)
-                    .unwrap_or(ptr::null_mut())
-            },
-        )
-    }
-}
-
 impl<L> EntryCustom<L> {
-    pub fn new_custom<Open, Load>(open: Open, mut load: Load) -> Result<Self, LoadingError>
+    pub fn new_custom<Load>(mut lib: L, mut load: Load) -> Self
     where
-        Open: FnOnce() -> Result<L, LoadingError>,
         Load: FnMut(&mut L, &::std::ffi::CStr) -> *const c_void,
     {
-        let mut lib = open()?;
         let static_fn = vk::StaticFn::load(|name| load(&mut lib, name));
 
         let entry_fn_1_0 = vk::EntryFnV1_0::load(|name| unsafe {
@@ -262,13 +191,13 @@ impl<L> EntryCustom<L> {
             mem::transmute(static_fn.get_instance_proc_addr(vk::Instance::null(), name.as_ptr()))
         });
 
-        Ok(EntryCustom {
+        EntryCustom {
             static_fn,
             entry_fn_1_0,
             entry_fn_1_1,
             entry_fn_1_2,
             lib,
-        })
+        }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateInstanceVersion.html>"]
