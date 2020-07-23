@@ -26,8 +26,9 @@ build_generator = None
 
 def before_iterations(kw):
     global build_generator
-
-    if "fenix_nightlysim_multicommit" not in kw.get("android_install_apk")[0]:
+    install_list = kw.get("android_install_apk")
+    if (len(install_list) == 0 or
+        all(["fenix_nightlysim_multicommit" not in apk for apk in install_list])):
         return
 
     # Get the builds to test
