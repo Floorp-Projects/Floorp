@@ -137,6 +137,15 @@ async function getImportableLogins(formOrigin) {
 }
 
 class LoginManagerParent extends JSWindowActorParent {
+  possibleValues = {
+    // This is stored at the parent (i.e., frame) scope because the LoginManagerPrompter
+    // is shared across all frames.
+    //
+    // It is mutated to update values without forcing us to set a new doorhanger.
+    usernames: new Set(),
+    passwords: new Set(),
+  };
+
   // This is used by tests to listen to form submission.
   static setListenerForTests(listener) {
     gListenerForTests = listener;
@@ -241,6 +250,12 @@ class LoginManagerParent extends JSWindowActorParent {
       return origin;
     });
     switch (msg.name) {
+      case "PasswordManager:updateDoorhangerSuggestions": {
+        this.possibleValues.usernames = data.possibleValues.usernames;
+        this.possibleValues.passwords = data.possibleValues.passwords;
+        break;
+      }
+
       case "PasswordManager:findLogins": {
         return this.sendLoginDataToChild(
           context.origin,
@@ -684,7 +699,6 @@ class LoginManagerParent extends JSWindowActorParent {
       newPasswordField,
       oldPasswordField,
       dismissedPrompt,
-      possibleValues,
     }
   ) {
     function recordLoginUse(login) {
@@ -849,7 +863,7 @@ class LoginManagerParent extends JSWindowActorParent {
           notifySaved,
           autoSavedStorageGUID,
           autoFilledLoginGuid,
-          possibleValues
+          this.possibleValues
         );
       } else if (!existingLogin.username && formLogin.username) {
         log("...empty username update, prompting to change.");
@@ -862,7 +876,7 @@ class LoginManagerParent extends JSWindowActorParent {
           notifySaved,
           autoSavedStorageGUID,
           autoFilledLoginGuid,
-          possibleValues
+          this.possibleValues
         );
       } else {
         recordLoginUse(existingLogin);
@@ -878,7 +892,7 @@ class LoginManagerParent extends JSWindowActorParent {
       dismissedPrompt,
       notifySaved,
       autoFilledLoginGuid,
-      possibleValues
+      this.possibleValues
     );
   }
 
@@ -900,8 +914,6 @@ class LoginManagerParent extends JSWindowActorParent {
    * @param {Object?} options.usernameField
    * @param {Element?} options.oldPasswordField
    * @param {boolean} [options.triggeredByFillingGenerated = false]
-   * @param {Set<String>} possibleValues.usernames
-   * @param {Set<String>} possibleValues.passwords
    */
   async _onPasswordEditedOrGenerated(
     browser,
@@ -913,10 +925,6 @@ class LoginManagerParent extends JSWindowActorParent {
       usernameField = null,
       oldPasswordField,
       triggeredByFillingGenerated = false,
-      possibleValues = {
-        usernames: new Set(),
-        passwords: new Set(),
-      },
     }
   ) {
     log(
@@ -1225,7 +1233,7 @@ class LoginManagerParent extends JSWindowActorParent {
           notifySaved,
           autoSavedStorageGUID, // autoSavedLoginGuid
           autoFilledLoginGuid,
-          possibleValues
+          this.possibleValues
         );
       } else if (!existingLogin.username && formLogin.username) {
         log("...empty username update, prompting to change.");
@@ -1237,7 +1245,7 @@ class LoginManagerParent extends JSWindowActorParent {
           notifySaved,
           autoSavedStorageGUID, // autoSavedLoginGuid
           autoFilledLoginGuid,
-          possibleValues
+          this.possibleValues
         );
       } else {
         log("_onPasswordEditedOrGenerated: No change to existing login");
@@ -1257,7 +1265,7 @@ class LoginManagerParent extends JSWindowActorParent {
             notifySaved,
             autoSavedStorageGUID, // autoSavedLoginGuid
             autoFilledLoginGuid,
-            possibleValues
+            this.possibleValues
           );
         }
       }
@@ -1270,7 +1278,7 @@ class LoginManagerParent extends JSWindowActorParent {
       true, // dismissed prompt
       notifySaved,
       autoFilledLoginGuid,
-      possibleValues
+      this.possibleValues
     );
   }
 
