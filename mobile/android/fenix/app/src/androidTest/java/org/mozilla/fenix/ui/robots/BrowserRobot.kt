@@ -366,7 +366,7 @@ class BrowserRobot {
         }
 
         fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
-
+            mDevice.waitForIdle(waitingTime)
             navURLBar().click()
 
             NavigationToolbarRobot().interact()

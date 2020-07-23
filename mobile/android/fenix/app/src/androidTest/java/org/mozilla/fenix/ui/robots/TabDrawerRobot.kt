@@ -29,6 +29,8 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.anyOf
+import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -179,10 +181,21 @@ private fun tabMediaControlButton() = onView(withId(R.id.play_pause_button))
 
 private fun closeTabButton() = onView(withId(R.id.mozac_browser_tabstray_close))
 private fun assertCloseTabsButton(title: String) =
-    onView(allOf(withId(R.id.mozac_browser_tabstray_close), withContentDescription("Close tab $title")))
+    onView(
+        allOf(
+            withId(R.id.mozac_browser_tabstray_close),
+            withContentDescription("Close tab $title")
+        )
+    )
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun normalBrowsingButton() = onView(withContentDescription("Open tabs"))
+private fun normalBrowsingButton() = onView(
+    anyOf(
+        withContentDescription(containsString("open tabs. Tap to switch tabs.")),
+        withContentDescription(containsString("open tab. Tap to switch tabs."))
+    )
+)
+
 private fun privateBrowsingButton() = onView(withContentDescription("Private tabs"))
 private fun newTabButton() = onView(withId(R.id.new_tab_button))
 private fun threeDotMenu() = onView(withId(R.id.tab_tray_overflow))
