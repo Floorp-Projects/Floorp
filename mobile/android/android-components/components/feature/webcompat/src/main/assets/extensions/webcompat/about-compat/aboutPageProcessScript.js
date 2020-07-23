@@ -4,16 +4,19 @@
 
 "use strict";
 
+// Note: This script is used only when a static registration for our
+// component is not already present in the libxul binary.
+
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 const classID = Components.ID("{97bf9550-2a7b-11e9-b56e-0800200c9a66}");
 
 if (!Cm.isCIDRegistered(classID)) {
-  const { XPCOMUtils } = ChromeUtils.import(
-    "resource://gre/modules/XPCOMUtils.jsm"
+  const { ComponentUtils } = ChromeUtils.import(
+    "resource://gre/modules/ComponentUtils.jsm"
   );
 
-  const factory = XPCOMUtils.generateSingletonFactory(function() {
+  const factory = ComponentUtils.generateSingletonFactory(function() {
     const { AboutCompat } = ChromeUtils.import(
       "resource://webcompat/AboutCompat.jsm"
     );
