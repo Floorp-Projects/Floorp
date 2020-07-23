@@ -290,14 +290,21 @@ pub fn update_primitive_visibility(
 
             let (is_passthrough, prim_local_rect, prim_shadowed_rect) = match prim_instance.kind {
                 PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                    if !store.pictures[pic_index.0].is_visible() {
+                    let (is_visible, is_passthrough) = {
+                        let pic = &store.pictures[pic_index.0];
+                        (pic.is_visible(), pic.raster_config.is_none())
+                    };
+
+                    if !is_visible {
                         continue;
                     }
 
-                    frame_state.clip_chain_stack.push_clip(
-                        prim_instance.clip_chain_id,
-                        frame_state.clip_store,
-                    );
+                    if is_passthrough {
+                        frame_state.clip_chain_stack.push_clip(
+                            prim_instance.clip_chain_id,
+                            frame_state.clip_store,
+                        );
+                    }
 
                     let pic_surface_rect = update_primitive_visibility(
                         store,
@@ -309,7 +316,9 @@ pub fn update_primitive_visibility(
                         tile_caches,
                     );
 
-                    frame_state.clip_chain_stack.pop_clip();
+                    if is_passthrough {
+                        frame_state.clip_chain_stack.pop_clip();
+                    }
 
                     let pic = &store.pictures[pic_index.0];
 
@@ -339,7 +348,7 @@ pub fn update_primitive_visibility(
                         }
                     }
 
-                    (pic.raster_config.is_none(), pic.precise_local_rect, shadow_rect)
+                    (is_passthrough, pic.precise_local_rect, shadow_rect)
                 }
                 _ => {
                     let prim_data = &frame_state.data_stores.as_common_data(&prim_instance);
