@@ -110,6 +110,8 @@ pub fn prepare_primitives(
                 tile_caches,
             ) {
                 frame_state.profile_counters.visible_primitives.inc();
+            } else {
+                prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
             }
         }
     }
@@ -162,8 +164,6 @@ fn prepare_prim_for_render(
                         if prim_instance.is_chased() {
                             println!("\tculled for carrying an invisible composite filter");
                         }
-
-                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
 
                         return false;
                     }
