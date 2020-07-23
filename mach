@@ -35,7 +35,6 @@ py2commands="
     reftest
     talos-test
     taskcluster-load-image
-    taskgraph
     telemetry-tests-client
     test
     tps-build
