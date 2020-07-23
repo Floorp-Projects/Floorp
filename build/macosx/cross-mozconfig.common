@@ -30,6 +30,7 @@ mk_add_options "export REAL_DSYMUTIL=$MOZ_FETCHES_DIR/llvm-dsymutil/bin/dsymutil
 export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
 export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
 export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus
+export DUMP_SYMS="$MOZ_FETCHES_DIR/dump_syms/dump_syms"
 
 export HOST_CFLAGS="-g"
 export HOST_CXXFLAGS="-g"

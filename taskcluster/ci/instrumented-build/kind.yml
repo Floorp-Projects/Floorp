@@ -129,6 +129,7 @@ jobs:
                 - linux64-rust-macos
                 - linux64-rust-size
                 - linux64-cbindgen
+                - linux64-dump-syms
                 - linux64-nasm
                 - linux64-node
                 - linux64-lucetc
