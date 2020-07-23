@@ -19,24 +19,24 @@ def test_basic(lint, config, paths):
     assert results[0].relpath == "test1/bad.rs"
     assert "tools/lint/test/files/clippy/test1/bad.rs" in results[0].path
 
-    assert "value assigned to `b` is never read" in results[1].message
-    assert results[1].level == "warning"
+    assert "this looks like you are trying to swap `a` and `b`" in results[1].message
+    assert results[1].level == "error"
     assert results[1].relpath == "test1/bad.rs"
+    assert results[1].rule == "clippy::almost_swapped"
+    assert "or maybe you should use `std::mem::replace`" in results[1].hint
 
-    assert "this looks like you are trying to swap `a` and `b`" in results[2].message
-    assert results[2].level == "error"
+    assert "value assigned to `b` is never read" in results[2].message
+    assert results[2].level == "warning"
     assert results[2].relpath == "test1/bad.rs"
-    assert results[2].rule == "clippy::almost_swapped"
-    assert "or maybe you should use `std::mem::replace`" in results[2].hint
 
-    assert "variable does not need to be mutable" in results[6].message
+    assert "variable does not need to be mutable" in results[5].message
+    assert results[5].relpath == "test1/bad2.rs"
+    assert results[5].rule == "unused_mut"
+
+    assert "this range is empty so" in results[6].message
+    assert results[6].level == "error"
     assert results[6].relpath == "test1/bad2.rs"
-    assert results[6].rule == "unused_mut"
-
-    assert "this range is empty so this for loop will never run" in results[7].message
-    assert results[7].level == "error"
-    assert results[7].relpath == "test1/bad2.rs"
-    assert results[7].rule == "clippy::reverse_range_loop"
+    assert results[6].rule == "clippy::reversed_empty_ranges"
 
 
 def test_error(lint, config, paths):
@@ -61,9 +61,9 @@ def test_file_and_path_provided(lint, config, paths):
     assert "tools/lint/test/files/clippy/test1/bad.rs" in results[0].path
     assert "value assigned to `a` is never read" in results[0].message
     assert results[8].level == "warning"
-    assert results[8].lineno == 9
-    assert results[8].column == 9
-    assert results[8].rule == "unused_assignments"
+    assert results[8].lineno == 1
+    assert results[8].column == 4
+    assert results[8].rule == "dead_code"
     assert results[8].relpath == "test2/src/bad_1.rs"
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[8].path
     for r in results:
@@ -78,9 +78,9 @@ def test_file_provided(lint, config, paths):
     print(results)
     assert len(results) > 8
     assert results[0].level == "warning"
-    assert results[0].lineno == 9
-    assert results[0].column == 9
-    assert results[0].rule == "unused_assignments"
+    assert results[0].lineno == 1
+    assert results[0].column == 4
+    assert results[0].rule == "dead_code"
     assert results[0].relpath == "test2/src/bad_1.rs"
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[0].path
     for r in results:
