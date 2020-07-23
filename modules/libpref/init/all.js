@@ -3729,7 +3729,7 @@ pref("signon.autologin.proxy",              false);
 #endif
 pref("signon.formlessCapture.enabled",      true);
 pref("signon.generation.available",               true);
-pref("signon.backup.enabled",               false);
+pref("signon.backup.enabled",               true);
 pref("signon.generation.confidenceThreshold",     "0.75");
 pref("signon.generation.enabled",                 true);
 pref("signon.passwordEditCapture.enabled",        false);
