@@ -118,6 +118,10 @@ def lint(config, root):
             logger, {"lintname": config.get("name"), "pid": os.getpid()}
         )
         results = func(paths, config, root=root, **lintargs)
+
+        if isinstance(results, (list, tuple)):
+            results = sorted(results)
+
         if not collapse_results:
             return results
 
