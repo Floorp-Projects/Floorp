@@ -564,6 +564,8 @@
     <string name="bookmark_select_folder">בחירת תיקייה</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">האם ברצונך למחוק תיקייה זו?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">‏%s ימחק את הפריטים שנבחרו.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">נמחק %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -619,8 +621,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">נמחק %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">הסימניות נמחקו</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">בתהליך מחיקת התיקיות שנבחרו</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ביטול</string>
 
@@ -711,6 +715,8 @@
     <string name="create_collection_save_to_collection_tab_selected">לשונית אחת נבחרה</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">הלשוניות נשמרו!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">האוסף נשמר!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">הלשונית נשמרה!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -817,6 +823,10 @@
     <string name="qr_scanner_dialog_negative">לחסום</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">האם ברצונך למחוק את %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">מחיקת לשונית זו תמחק את האוסף כולו. באפשרותך ליצור אוספים חדשים בכל עת.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">למחוק את %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">מחיקה</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1207,6 +1217,8 @@
     <string name="preferences_passwords_exceptions_description_empty">כניסות וססמאות שאינן שמורות יופיעו כאן.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">כניסות וססמאות לא יישמרו עבור אתרים אלו.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">מחיקת כל החריגות</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">חיפוש כניסות</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1243,6 +1255,8 @@
     <string name="saved_login_copy_username">העתקת שם משתמש</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">העתקת אתר</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">פתיחת אתר בדפדפן</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">הצגת ססמה</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

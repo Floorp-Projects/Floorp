@@ -343,6 +343,8 @@
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetria</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Donadas tecnicas e d’utilizacion</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Donadas marketing</string>
     <!-- Title for experiments preferences -->
@@ -362,6 +364,8 @@
     <string name="preferences_sync">Activar la sincronizacion</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Connexion</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">S’identificar per se reconnectar</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Suprimir lo compte</string>
 
@@ -557,6 +561,8 @@
     <string name="bookmark_select_folder">Seleccionar un dossièr</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Volètz vertadièrament suprimir aqueste dorsièr ?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s suprimirà los elements seleccionats.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s suprimit</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -611,9 +617,11 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s suprimit</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Marcapagina suprimit</string>
 
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Supression dels dossièrs seleccionats</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANULLAR</string>
 
@@ -622,6 +630,10 @@
     <string name="permissions_header">Permissions</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Anar als paramètres</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Accès rapid als paramètres</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Recomandat</string>
     <!-- button that allows editing site permissions settings -->
@@ -804,6 +816,8 @@
     <string name="qr_scanner_dialog_negative">REFUSAR</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Volètz vertadièrament suprimir %1$s ?</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Suprimir %1$s ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Suprimir</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1120,6 +1134,8 @@
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Per ne saber mai sus Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepcions</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Suprimir totas las excepcions</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Recercar d’identificants</string>
     <!-- Option to sort logins list A-Z, alphabetically -->

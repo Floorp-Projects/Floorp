@@ -577,6 +577,8 @@
     <string name="bookmark_select_folder">Map selektearje</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Binne jo wis dat jo dizze map fuortsmite wolle?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s sil de selektearre items fuortsmite.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s fuortsmiten</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -631,8 +633,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s fuortsmiten</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Blêdwizers fuortsmiten</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Selektearre mappen fuortsmite</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">UNGEDIEN MEITSJE</string>
 
@@ -725,6 +729,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d ljepblêd selektearre</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Ljepblêden bewarre!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Kolleksje bewarre!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Ljepblêd bewarre!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -831,6 +837,10 @@
 
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Binne jo wis dat jo %1$s fuortsmite wolle?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">As jo dit ljepblêd fuortsmite, wurdt de hiele kolleksje fuortsmiten. Jo kinne op elk momint nije kolleksjes meitsje.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s fuortsmite?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Fuortsmite</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -886,8 +896,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Smyt automatysk navigaasjegegevens fuort wannear\'t jo yn it haadmenu ‘Ofslute’ selektearje</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Smyt automatysk navigaasjegegevens fuort wannear\'t jo yn it haadmenu ‘Ofslute’ selektearje</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Navigaasjeskiednis</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ofslute</string>
 
@@ -1233,6 +1241,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Net-bewarre oanmeldingen en wachtwurden wurde hjir werjûn.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Oanmeldingen en wachtwurden wurde foar dizze websites net bewarre. </string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Alle útsûnderingen fuortsmite</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Oanmeldingen sykje</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1271,6 +1281,8 @@
     <string name="saved_login_copy_username">Brûkersnamme kopiearje</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Website kopiearje</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Website iepenje yn browser</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Wachtwurd toane</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

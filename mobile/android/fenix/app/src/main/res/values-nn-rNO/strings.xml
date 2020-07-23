@@ -148,14 +148,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skann</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Snarvegar</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Innstillingar for søkjemotor</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Søk med</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Denne gong, søk med:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Fyll inn lenke frå utklippstavla</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -265,8 +259,6 @@
 
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Fjernfeilsøking via USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Vis søkjesnarvegar</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Vis søkjeforslag</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -581,6 +573,8 @@
 
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Er du sikker på at du vil slette denne mappa?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s vil slette dei valde elementa.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Sletta %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -636,8 +630,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Sletta %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Bokmerke sletta</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Slettar valde mapper</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANGRE</string>
 
@@ -732,6 +728,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d fane vald</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Faner lagra!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Samling lagra!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Fane lagra!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -838,6 +836,10 @@
     <string name="qr_scanner_dialog_negative">AVSLÅ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Er du sikker på at du vil slette %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Dersom du slettar denne fana, blir heile samlinga sletta. Du kan når som helst lage nye samlingar.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Vil du slette %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Slett</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1112,7 +1114,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Berre i tilpassa faner</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptominarar</string>
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptoutvinnarar</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
     <string name="enhanced_tracking_protection_blocked">Blokkert</string>
@@ -1127,7 +1129,7 @@
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokkerer informasjonskapslar som annonsenettverk og analyseselskap brukar for å samanstille aktiviteten din på nettet på tvers av nettstadar.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_title">Kryptominarar</string>
+    <string name="etp_cryptominers_title">Kryptoutvinnarar</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">Hindrar vondsinna skript i å få tilgang til eininga di for å utvinne digitale valutaer.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
@@ -1215,7 +1217,7 @@
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Spør om å lagre</string>
     <!-- Preference option for never saving passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_never_save">Aldri lagre</string>
+    <string name="preferences_passwords_save_logins_never_save">Lagre aldri</string>
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">Autofyll</string>
     <!-- Preference for syncing saved logins in Fenix -->
@@ -1240,6 +1242,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Innloggingar og passord som ikkje er lagra vil visast her.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Innloggingar og passord vil ikkje bli lagra for desse nettstadane.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Slett alle unntak</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Søk innloggingar</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1279,6 +1283,8 @@
     <string name="saved_login_copy_username">Kopier brukarnamn</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopier nettstad</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Opne nettstad i nettlesaren</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Vis passord</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1455,4 +1461,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, eg forstår det</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Snarvegar</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Søk med</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Denne gong, søk med:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Vis søkjesnarvegar</string>
+    </resources>

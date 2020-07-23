@@ -150,14 +150,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Сканувати</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Ярлики</string>
-
+    <string name="search_engines_shortcut_button">Засіб пошуку</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Налаштування пошукових засобів</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Шукати з</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Цього разу шукати з:</string>
+    <string name="search_engines_search_with">Цього разу шукати з:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Заповнити посилання з буфера обміну</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -268,8 +265,8 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Віддалене зневадження через USB</string>
 
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Посилання на пошукові засоби</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Показати засоби пошуку</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Показувати пошукові пропозиції</string>
 
@@ -586,6 +583,8 @@
     <string name="bookmark_select_folder">Обрати теку</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Ви впевнені, що хочете видалити цю теку?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s видалить вибрані елементи.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s видалено</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -641,8 +640,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s видалено</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Закладки видалено</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Видалення вибраних тек</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ВІДНОВИТИ</string>
 
@@ -736,6 +737,8 @@
     <string name="create_collection_save_to_collection_tab_selected">Вибрано %d вкладку</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Вкладки збережено!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Збірку збережено!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Вкладка збережена!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -842,6 +845,10 @@
     <string name="qr_scanner_dialog_negative">ЗАБОРОНИТИ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Ви дійсно хочете видалити %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Видалення цієї вкладки видалить всю збірку. Ви можете створити нові збірки будь-коли.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Видалити %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Видалити</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1246,6 +1253,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Не збережені паролі з’являтимуться тут.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Паролі для цих сайтів не зберігатимуться.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Видалити всі винятки</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Шукати паролі</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1285,6 +1294,8 @@
     <string name="saved_login_copy_username">Копіювати ім’я користувача</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Копіювати сайт</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Відкрити сайт у браузері</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Показати пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1460,4 +1471,14 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Гаразд, зрозуміло</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Ярлики</string>
+
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Шукати з</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Цього разу шукати з:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Посилання на пошукові засоби</string>
+    </resources>

@@ -582,6 +582,8 @@
     <string name="bookmark_select_folder">సంచయపు ఎంపిక</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">మీరు నిజంగానే ఈ సంచయాన్ని తొలగించాలనుకుంటున్నారా?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">ఎంచుకున్న అంశాలను %s తొలగిస్తుంది.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s తొలగించబడింది</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -638,9 +640,11 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s తొలగించబడింది</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">ఇష్టాంశాలు తొలగించబడ్డాయి</string>
 
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">ఎంచుకున్న సంచయాలను తొలగిస్తూంది</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">చర్య రద్దు</string>
 
@@ -736,6 +740,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d ట్యాబు ఎంచుకున్నారు</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">ట్యాబులు భద్రమయ్యాయి!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">సేకరణ భద్రమయ్యింది!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">ట్యాబు భద్రమయింది!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -840,6 +846,10 @@
     <string name="qr_scanner_dialog_negative">తిరస్కరించు</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">మీరు నిజంగానే %1$s‌ను తొలగించాలనుకుంటున్నారా?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">ఈ  ట్యాబును తొలగిస్తే మొత్తం సేకరణ పోతుంది. కొత్త సేకరణలను మీరు ఎప్పుడైనా సృష్టించుకోవచ్చు.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s‌ని తొలగించాలా?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">తొలగించు</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1250,6 +1260,8 @@
     <string name="preferences_passwords_exceptions_description_empty">భద్రపరచని ప్రవేశాలు, సంకేతపదాలు ఇక్కడ కనిపిస్తాయి.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">ఈ సైట్ల ప్రవేశాలు, సంకేతపదాలు భద్రపరచబడవు.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">మినహాయింపులన్నీ తొలగించు</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">ప్రవేశాలను వెతకండి</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1289,6 +1301,8 @@
     <string name="saved_login_copy_username">వాడుకరి పేరుని కాపీచెయ్యి</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">సైటును కాపీచెయ్యి</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">సైటును విహారిణిలో తెరువు</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">సంకేతపదాన్ని చూపించు</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

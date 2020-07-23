@@ -589,6 +589,8 @@
     <string name="bookmark_select_folder">Ordner auswählen</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Soll dieser Ordner wirklich gelöscht werden?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s wird die ausgewählten Elemente löschen.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s gelöscht</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -646,8 +648,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s gelöscht</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Lesezeichen gelöscht</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Ausgewählte Ordner werden gelöscht</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">RÜCKGÄNGIG</string>
 
@@ -751,6 +755,8 @@
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Tabs gespeichert</string>
 
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Sammlung gespeichert!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Tab gespeichert</string>
 
@@ -862,6 +868,10 @@
     <string name="qr_scanner_dialog_negative">VERWEIGERN</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Soll %1$s wirklich gelöscht werden?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Durch Löschen dieses Tabs wird die gesamte Sammlung gelöscht. Sie können jederzeit neue Sammlungen erstellen.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s löschen?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Löschen</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1263,6 +1273,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Zugangsdaten und Passwörter, die nicht gespeichert werden, werden hier angezeigt.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Zugangsdaten und Passwörter werden für diese Websites nicht gespeichert.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Alle Ausnahmen löschen</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Zugangsdaten durchsuchen</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1301,6 +1313,8 @@
     <string name="saved_login_copy_username">Benutzernamen kopieren</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Website kopieren</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Website im Browser öffnen</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Passwort anzeigen</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

@@ -580,6 +580,8 @@
     <string name="bookmark_select_folder">Selecionar pasta</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Tem a certeza que deseja eliminar esta pasta?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s irá excluir os itens selecionados.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Eliminada %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -634,8 +636,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s eliminado</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Marcadores eliminados</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">A eliminar as pastas selecionadas</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANULAR</string>
 
@@ -729,6 +733,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d separador selecionado</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Separadores guardados!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Coleção guardada!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Separador guardado!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -834,6 +840,10 @@
     <string name="qr_scanner_dialog_negative">NEGAR</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Tem a certeza que pretende eliminar %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">A eliminação deste separador irá eliminar toda a coleção. Pode criar coleções novas a qualquer momento.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Eliminar %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Eliminar</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -889,8 +899,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Exclui automaticamente os dados de navegação quando seleciona &quot;Sair&quot; no menu principal</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Exclui automaticamente os dados de navegação quando seleciona \&quot;Sair\&quot; no menu principal</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Histórico de navegação</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Sair</string>
 
@@ -1239,6 +1247,8 @@
     <string name="preferences_passwords_exceptions_description_empty">As credenciais e palavras-passe que não estão guardadas serão mostradas aqui.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">As credenciais e palavras-passe não serão guardadas para estes sites.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Eliminar todas as exceções</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Pesquisar credenciais</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1278,6 +1288,8 @@
     <string name="saved_login_copy_username">Copiar nome de utilizador</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar site</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Abrir site no navegador</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Mostrar palavra-passe</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->

@@ -151,13 +151,11 @@
     <string name="search_scan_button">Skann</string>
 
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Snarveier</string>
+    <string name="search_engines_shortcut_button">Søkemotor</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Innstillinger for søkemotor</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Søk med</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Denne gangen, søk med:</string>
+    <string name="search_engines_search_with">Denne gangen, søk med:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Fyll inn lenke fra utklippstavlen</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -265,8 +263,8 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Fjernfeilsøking via USB</string>
 
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Vis søkesnarveier</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Vis søkemotorer</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Vis søkeforslag</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1232,7 +1230,7 @@
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Spør om å lagre</string>
     <!-- Preference option for never saving passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_never_save">Aldri lagre</string>
+    <string name="preferences_passwords_save_logins_never_save">Lagre aldri</string>
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">Autofyll</string>
     <!-- Preference for syncing saved logins in Fenix -->
@@ -1479,4 +1477,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, jeg skjønner</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Snarveier</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Søk med</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Denne gangen, søk med:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Vis søkesnarveier</string>
+    </resources>
