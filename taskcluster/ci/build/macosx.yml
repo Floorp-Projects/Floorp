@@ -21,6 +21,7 @@ job-defaults:
             - linux64-binutils
             - linux64-cctools-port
             - linux64-clang-macosx-cross
+            - linux64-dump-syms
             - linux64-hfsplus
             - linux64-libdmg
             - linux64-llvm-dsymutil
