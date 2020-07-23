@@ -116,7 +116,7 @@ function prefBlacklistValue(value) {
 }
 
 function prefWhitelistValue(value) {
-  return value ? "mochi.test" : "";
+  return value ? "mochi.test,mochi.xorigin-test" : "";
 }
 
 async function runTest(test, expectedFlag, expectedTrackingResource, prefs) {
