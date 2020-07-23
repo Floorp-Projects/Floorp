@@ -132,6 +132,12 @@ function _validateTestCase(tc) {
   }
 }
 
+async function _setPrefs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["signon.capture.inputChanges.enabled", true]],
+  });
+}
+
 function _addSavedLogin(username) {
   Services.logins.addLogin(
     LoginTestUtils.testData.formLogin({
@@ -162,6 +168,7 @@ function _getSuggestedValues(document) {
 }
 
 add_task(async function test_edit_password() {
+  await _setPrefs();
   for (let testCase of TEST_CASES) {
     info("Test case: " + JSON.stringify(testCase));
     _validateTestCase(testCase);
