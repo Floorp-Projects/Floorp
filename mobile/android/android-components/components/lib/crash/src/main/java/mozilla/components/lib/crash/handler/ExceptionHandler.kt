@@ -17,7 +17,8 @@ private const val TAG = "ExceptionHandler"
  */
 class ExceptionHandler(
     private val context: Context,
-    private val crashReporter: CrashReporter
+    private val crashReporter: CrashReporter,
+    private val defaultExceptionHandler: Thread.UncaughtExceptionHandler? = null
 ) : Thread.UncaughtExceptionHandler {
     private var crashing = false
 
@@ -39,6 +40,8 @@ class ExceptionHandler(
                     breadcrumbs = crashReporter.crashBreadcrumbs.toSortedArrayList()
                 )
             )
+
+            defaultExceptionHandler?.uncaughtException(thread, throwable)
         } finally {
             terminateProcess()
         }
