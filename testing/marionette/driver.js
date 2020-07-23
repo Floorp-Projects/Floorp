@@ -2253,9 +2253,14 @@ GeckoDriver.prototype.getElementAttribute = async function(cmd) {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  let id = assert.string(cmd.parameters.id);
-  let name = assert.string(cmd.parameters.name);
-  let webEl = WebElement.fromUUID(id, this.context);
+  const id = assert.string(cmd.parameters.id);
+  const name = assert.string(cmd.parameters.name);
+  const webEl = WebElement.fromUUID(id, this.context);
+
+  if (MarionettePrefs.useActors) {
+    const actor = await this.getActor();
+    return actor.getElementAttribute(webEl, name);
+  }
 
   switch (this.context) {
     case Context.Chrome:
@@ -2294,9 +2299,14 @@ GeckoDriver.prototype.getElementProperty = async function(cmd) {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  let id = assert.string(cmd.parameters.id);
-  let name = assert.string(cmd.parameters.name);
-  let webEl = WebElement.fromUUID(id, this.context);
+  const id = assert.string(cmd.parameters.id);
+  const name = assert.string(cmd.parameters.name);
+  const webEl = WebElement.fromUUID(id, this.context);
+
+  if (MarionettePrefs.useActors) {
+    const actor = await this.getActor();
+    return actor.getElementProperty(webEl, name);
+  }
 
   switch (this.context) {
     case Context.Chrome:
