@@ -15,8 +15,6 @@ export default class LoginIntro extends HTMLElement {
 
     this._importText = shadowRoot.querySelector(".intro-import-text");
     this._importText.addEventListener("click", this);
-
-    this.addEventListener("AboutLoginsUtilsReady", this);
   }
 
   focus() {
@@ -25,13 +23,7 @@ export default class LoginIntro extends HTMLElement {
   }
 
   handleEvent(event) {
-    if (event.type == "AboutLoginsUtilsReady") {
-      let supportURL =
-        window.AboutLoginsUtils.supportBaseURL + "firefox-lockwise";
-      this.shadowRoot
-        .querySelector(".intro-help-link")
-        .setAttribute("href", supportURL);
-    } else if (
+    if (
       event.currentTarget.classList.contains("intro-import-text") &&
       event.target.localName == "a"
     ) {
@@ -62,6 +54,11 @@ export default class LoginIntro extends HTMLElement {
       .classList.toggle("logged-in", syncState.loggedIn);
 
     this._importText.hidden = !window.AboutLoginsUtils.importVisible;
+    let supportURL =
+      window.AboutLoginsUtils.supportBaseURL + "firefox-lockwise";
+    this.shadowRoot
+      .querySelector(".intro-help-link")
+      .setAttribute("href", supportURL);
   }
 }
 customElements.define("login-intro", LoginIntro);
