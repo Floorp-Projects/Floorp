@@ -20,6 +20,7 @@ struct SlowScriptData
   TabId tabId;
   nsCString filename;
   nsString addonId;
+  double duration;
 };
 
 struct PluginHangData
