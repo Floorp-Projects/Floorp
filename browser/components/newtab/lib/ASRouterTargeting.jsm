@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const SEARCH_REGION_PREF = "browser.search.region";
 const FXA_ENABLED_PREF = "identity.fxaccounts.enabled";
 const DISTRIBUTION_ID_PREF = "distribution.id";
 const DISTRIBUTION_ID_CHINA_REPACK = "MozillaOnline";
@@ -25,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  Region: "resource://gre/modules/Region.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -74,12 +74,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "devtoolsSelfXSSCount",
   "devtools.selfxss.count",
   0
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "browserSearchRegion",
-  SEARCH_REGION_PREF,
-  ""
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -482,7 +476,7 @@ const TargetingGetters = {
     return parseInt(AppConstants.MOZ_APP_VERSION.match(/\d+/), 10);
   },
   get region() {
-    return browserSearchRegion;
+    return Region.home || "";
   },
   get needsUpdate() {
     return QueryCache.queries.CheckBrowserNeedsUpdate.get();

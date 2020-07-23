@@ -79,6 +79,27 @@ describe("ActivityStream", () => {
     it("should call .store.uninit", () => {
       assert.calledOnce(as.store.uninit);
     });
+    it("should call removeObserver", () => {
+      sandbox.stub(global.Services.obs, "removeObserver");
+      as.geo = "";
+      as.uninit();
+      assert.calledWith(
+        global.Services.obs.removeObserver,
+        as,
+        global.Region.REGION_TOPIC
+      );
+    });
+  });
+  describe("#observe", () => {
+    it("should call _updateDynamicPrefs from observe", () => {
+      sandbox.stub(as, "_updateDynamicPrefs");
+      as.observe(
+        undefined,
+        global.Region.REGION_TOPIC,
+        global.Region.REGION_UPDATED
+      );
+      assert.calledOnce(as._updateDynamicPrefs);
+    });
   });
   describe("feeds", () => {
     it("should create a NewTabInit feed", () => {
@@ -183,8 +204,7 @@ describe("ActivityStream", () => {
   });
   describe("_updateDynamicPrefs Discovery Stream", () => {
     it("should be true with expected en-US geo and locale", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
+      sandbox.stub(global.Region, "home").returns("US");
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
@@ -196,8 +216,7 @@ describe("ActivityStream", () => {
       );
     });
     it("should be true with expected en-CA geo and locale", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("CA");
+      sandbox.stub(global.Region, "home").returns("CA");
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-CA");
@@ -209,8 +228,7 @@ describe("ActivityStream", () => {
       );
     });
     it("should be true with expected de geo and locale", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("DE");
+      sandbox.stub(global.Region, "home").returns("DE");
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "de-DE");
@@ -222,12 +240,11 @@ describe("ActivityStream", () => {
       );
     });
     it("should enable spocs based on region based pref", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       const getStringPrefStub = sandbox.stub(
         global.Services.prefs,
         "getStringPref"
       );
-      getStringPrefStub.withArgs("browser.search.region").returns("CA");
+      sandbox.stub(global.Region, "home").returns("CA");
       getStringPrefStub
         .withArgs(
           "browser.newtabpage.activity-stream.discoverystream.region-spocs-config"
@@ -248,10 +265,8 @@ describe("ActivityStream", () => {
   describe("discoverystream.region-basic-layout config", () => {
     let getStringPrefStub;
     beforeEach(() => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
-      getStringPrefStub.withArgs("browser.search.region").returns("CA");
-
+      sandbox.stub(global.Region, "home").get(() => "CA");
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-CA");
@@ -287,12 +302,7 @@ describe("ActivityStream", () => {
     let getStringPrefStub;
     let getBoolPrefStub;
     let appLocaleAsBCP47Stub;
-    let prefHasUserValueStub;
     beforeEach(() => {
-      prefHasUserValueStub = sandbox.stub(
-        global.Services.prefs,
-        "prefHasUserValue"
-      );
       getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
       appLocaleAsBCP47Stub = sandbox.stub(
         global.Services.locale,
@@ -304,10 +314,9 @@ describe("ActivityStream", () => {
         .withArgs("browser.newtabpage.activity-stream.feeds.section.topstories")
         .returns(true);
 
-      prefHasUserValueStub.returns(true);
       appLocaleAsBCP47Stub.get(() => "en-US");
 
-      getStringPrefStub.withArgs("browser.search.region").returns("US");
+      sandbox.stub(global.Region, "home").returns("US");
 
       getStringPrefStub
         .withArgs(
@@ -316,16 +325,15 @@ describe("ActivityStream", () => {
         .returns("US,CA");
     });
     it("should be false with no geo/locale", () => {
-      prefHasUserValueStub.returns(false);
       appLocaleAsBCP47Stub.get(() => "");
-      getStringPrefStub.withArgs("browser.search.region").returns("");
+      sandbox.stub(global.Region, "home").returns("");
 
       as._updateDynamicPrefs();
 
       assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should be false with unexpected geo", () => {
-      getStringPrefStub.withArgs("browser.search.region").returns("NOGEO");
+      sandbox.stub(global.Region, "home").get(() => "NOGEO");
 
       as._updateDynamicPrefs();
 
@@ -343,12 +351,12 @@ describe("ActivityStream", () => {
       assert.isTrue(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should be false after expected geo and locale then unexpected", () => {
-      getStringPrefStub
-        .withArgs("browser.search.region")
+      sandbox
+        .stub(global.Region, "home")
         .onFirstCall()
-        .returns("US")
+        .get(() => "US")
         .onSecondCall()
-        .returns("NOGEO");
+        .get(() => "NOGEO");
 
       as._updateDynamicPrefs();
       as._updateDynamicPrefs();
@@ -357,7 +365,7 @@ describe("ActivityStream", () => {
     });
     it("should be true with updated pref change", () => {
       appLocaleAsBCP47Stub.get(() => "en-GB");
-      getStringPrefStub.withArgs("browser.search.region").returns("GB");
+      sandbox.stub(global.Region, "home").returns("GB");
       getStringPrefStub
         .withArgs(
           "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
@@ -376,10 +384,16 @@ describe("ActivityStream", () => {
 
       // Have addObserver cause prefHasUserValue to now return true then observe
       sandbox
-        .stub(global.Services.prefs, "addObserver")
+        .stub(global.Services.obs, "addObserver")
         .callsFake((pref, obs) => {
-          sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-          setTimeout(() => obs.observe(null, "nsPref:changed", pref)); // eslint-disable-line max-nested-callbacks
+          setTimeout(() => {
+            Services.obs.notifyObservers(
+              null,
+              "browser-region",
+              "region-updated",
+              "US"
+            );
+          });
         });
     });
     afterEach(() => clock.restore());
@@ -436,11 +450,11 @@ describe("ActivityStream", () => {
     let stub;
 
     beforeEach(() => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      stub = sandbox.stub(global.Services.prefs, "getStringPref");
+      stub = sandbox.stub(global.Region, "home");
     });
 
     it("should be an empty string when no geo is available", () => {
+      stub.get(() => "");
       as._updateDynamicPrefs();
       assert.equal(
         PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,
@@ -449,7 +463,7 @@ describe("ActivityStream", () => {
     });
 
     it("should be 'baidu' in China", () => {
-      stub.returns("CN");
+      stub.get(() => "CN");
       as._updateDynamicPrefs();
       assert.equal(
         PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,
@@ -460,7 +474,7 @@ describe("ActivityStream", () => {
     it("should be 'yandex' in Russia, Belarus, Kazakhstan, and Turkey", () => {
       const geos = ["BY", "KZ", "RU", "TR"];
       for (const geo of geos) {
-        stub.returns(geo);
+        stub.get(() => geo);
         as._updateDynamicPrefs();
         assert.equal(
           PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,
@@ -485,7 +499,7 @@ describe("ActivityStream", () => {
       // A selection of other geos
       const geos = ["BR", "CA", "ES", "ID", "IN"];
       for (const geo of geos) {
-        stub.returns(geo);
+        stub.get(() => geo);
         as._updateDynamicPrefs();
         assert.equal(
           PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,

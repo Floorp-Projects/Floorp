@@ -42,6 +42,11 @@ ChromeUtils.defineModuleGetter(
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "Region",
+  "resource://gre/modules/Region.jsm"
+);
 
 // ASRouterTargeting.isMatch
 add_task(async function should_do_correct_targeting() {
@@ -735,8 +740,7 @@ add_task(async function check_firefox_version() {
 });
 
 add_task(async function check_region() {
-  await SpecialPowers.pushPrefEnv({ set: [["browser.search.region", "DE"]] });
-
+  Region._setHomeRegion("DE", false);
   const message = { id: "foo", targeting: "region in ['DE']" };
   is(
     await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
