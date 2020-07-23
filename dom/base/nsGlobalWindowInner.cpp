@@ -4720,8 +4720,7 @@ void nsGlobalWindowInner::FireOfflineStatusEventIfChanged() {
 
 nsGlobalWindowInner::SlowScriptResponse
 nsGlobalWindowInner::ShowSlowScriptDialog(JSContext* aCx,
-                                          const nsString& aAddonId,
-                                          const double aDuration) {
+                                          const nsString& aAddonId) {
   nsresult rv;
 
   if (Preferences::GetBool("dom.always_stop_slow_scripts")) {
@@ -4769,8 +4768,7 @@ nsGlobalWindowInner::ShowSlowScriptDialog(JSContext* aCx,
     nsIDocShell* docShell = GetDocShell();
     nsCOMPtr<nsIBrowserChild> child =
         docShell ? docShell->GetBrowserChild() : nullptr;
-    action =
-        monitor->NotifySlowScript(child, filename.get(), aAddonId, aDuration);
+    action = monitor->NotifySlowScript(child, filename.get(), aAddonId);
     if (action == ProcessHangMonitor::Terminate) {
       return KillSlowScript;
     }

@@ -70,8 +70,7 @@ class ProcessHangMonitor final : public nsIObserver {
   };
   SlowScriptAction NotifySlowScript(nsIBrowserChild* aBrowserChild,
                                     const char* aFileName,
-                                    const nsString& aAddonId,
-                                    const double aDuration);
+                                    const nsString& aAddonId);
 
   void NotifyPluginHang(uint32_t aPluginId);
 
