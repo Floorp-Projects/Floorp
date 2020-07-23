@@ -160,7 +160,11 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             BrowserToolbar.Button(
                 ContextCompat.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 requireContext().getString(R.string.voice_search_content_description),
-                visible = { requireContext().settings().shouldShowVoiceSearch && speechIsAvailable() },
+                visible = {
+                    currentSearchEngine.searchEngine.identifier.contains("google") &&
+                        speechIsAvailable() &&
+                        requireContext().settings().shouldShowVoiceSearch
+                },
                 listener = ::launchVoiceSearch
             )
         )
