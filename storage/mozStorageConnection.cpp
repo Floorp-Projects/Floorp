@@ -1815,6 +1815,7 @@ Connection::ExecuteAsync(
   for (uint32_t i = 0; i < aStatements.Length(); i++) {
     nsCOMPtr<StorageBaseStatementInternal> stmt =
         do_QueryInterface(aStatements[i]);
+    NS_ENSURE_STATE(stmt);
 
     // Obtain our StatementData.
     StatementData data;
