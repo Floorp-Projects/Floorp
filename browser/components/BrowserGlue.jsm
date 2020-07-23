@@ -1419,6 +1419,14 @@ BrowserGlue.prototype = {
     averageTime = totalTime / samples;
 
     Services.telemetry.scalarSet("browser.startup.average_time", averageTime);
+    Services.telemetry.scalarSet(
+      "browser.startup.slow_startup_notified",
+      false
+    );
+    Services.telemetry.scalarSet(
+      "browser.startup.too_new_for_notification",
+      false
+    );
 
     if (
       samples >= Services.prefs.getIntPref("browser.slowStartup.maxSamples")
