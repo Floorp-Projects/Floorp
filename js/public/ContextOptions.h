@@ -216,12 +216,7 @@ class JS_PUBLIC_API ContextOptions {
 
   void disableOptionsForSafeMode() {
     setAsmJS(false);
-    setWasm(false);
     setWasmBaseline(false);
-    setWasmIon(false);
-    setWasmGc(false);
-    setWasmMultiValue(false);
-    setWasmSimd(false);
   }
 
  private:
