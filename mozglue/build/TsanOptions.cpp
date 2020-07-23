@@ -309,6 +309,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:sctp_close\n"
          "race:sctp_iterator_work\n"
 
+         // See bug 1653618
+         "race:sctp_handle_tick\n"
+         "race:sctp_handle_sack\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
