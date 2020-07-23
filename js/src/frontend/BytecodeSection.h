@@ -34,7 +34,7 @@
 #include "js/Value.h"                   // JS::Vector
 #include "js/Vector.h"                  // Vector
 #include "vm/Opcodes.h"                 // JSOpLength_JumpTarget
-#include "vm/SharedStencil.h"           // TryNote, ScopeNote
+#include "vm/SharedStencil.h"           // TryNote, ScopeNote, GCThingIndex
 #include "vm/StencilEnums.h"            // TryNoteKind
 
 namespace js {
@@ -50,17 +50,17 @@ struct MOZ_STACK_CLASS GCThingList {
   ScriptThingsVector vector;
 
   // Index of the first scope in the vector.
-  mozilla::Maybe<uint32_t> firstScopeIndex;
+  mozilla::Maybe<GCThingIndex> firstScopeIndex;
 
   explicit GCThingList(JSContext* cx, CompilationInfo& compilationInfo)
       : compilationInfo(compilationInfo), vector(cx) {}
 
-  MOZ_MUST_USE bool append(JSAtom* atom, uint32_t* index) {
-    *index = vector.length();
+  MOZ_MUST_USE bool append(JSAtom* atom, GCThingIndex* index) {
+    *index = GCThingIndex(vector.length());
     return vector.append(mozilla::AsVariant(std::move(atom)));
   }
-  MOZ_MUST_USE bool append(ScopeIndex scope, uint32_t* index) {
-    *index = vector.length();
+  MOZ_MUST_USE bool append(ScopeIndex scope, GCThingIndex* index) {
+    *index = GCThingIndex(vector.length());
     if (!vector.append(mozilla::AsVariant(scope))) {
       return false;
     }
@@ -69,22 +69,23 @@ struct MOZ_STACK_CLASS GCThingList {
     }
     return true;
   }
-  MOZ_MUST_USE bool append(BigIntLiteral* literal, uint32_t* index) {
-    *index = vector.length();
+  MOZ_MUST_USE bool append(BigIntLiteral* literal, GCThingIndex* index) {
+    *index = GCThingIndex(vector.length());
     return vector.append(mozilla::AsVariant(literal->index()));
   }
-  MOZ_MUST_USE bool append(RegExpLiteral* literal, uint32_t* index) {
-    *index = vector.length();
+  MOZ_MUST_USE bool append(RegExpLiteral* literal, GCThingIndex* index) {
+    *index = GCThingIndex(vector.length());
     return vector.append(mozilla::AsVariant(literal->index()));
   }
-  MOZ_MUST_USE bool append(ObjLiteralCreationData&& objlit, uint32_t* index) {
-    *index = vector.length();
+  MOZ_MUST_USE bool append(ObjLiteralCreationData&& objlit,
+                           GCThingIndex* index) {
+    *index = GCThingIndex(vector.length());
     return vector.append(mozilla::AsVariant(std::move(objlit)));
   }
-  MOZ_MUST_USE bool append(FunctionBox* funbox, uint32_t* index);
+  MOZ_MUST_USE bool append(FunctionBox* funbox, GCThingIndex* index);
 
-  MOZ_MUST_USE bool appendEmptyGlobalScope(uint32_t* index) {
-    *index = vector.length();
+  MOZ_MUST_USE bool appendEmptyGlobalScope(GCThingIndex* index) {
+    *index = GCThingIndex(vector.length());
     EmptyGlobalScopeType emptyGlobalScope;
     if (!vector.append(mozilla::AsVariant(emptyGlobalScope))) {
       return false;
@@ -131,7 +132,7 @@ struct CGScopeNoteList {
   Vector<ScopeNote> list;
   explicit CGScopeNoteList(JSContext* cx) : list(cx) {}
 
-  MOZ_MUST_USE bool append(uint32_t scopeIndex, BytecodeOffset offset,
+  MOZ_MUST_USE bool append(GCThingIndex scopeIndex, BytecodeOffset offset,
                            uint32_t parent);
   void recordEnd(uint32_t index, BytecodeOffset offset);
   void recordEndFunctionBodyVar(uint32_t index);

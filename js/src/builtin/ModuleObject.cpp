@@ -26,6 +26,7 @@
 #include "vm/PlainObject.h"         // js::PlainObject
 #include "vm/PromiseObject.h"       // js::PromiseObject
 #include "vm/SelfHosting.h"
+#include "vm/SharedStencil.h"  // js::GCThingIndex
 
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
@@ -1018,7 +1019,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   RootedFunction fun(cx);
   RootedPropertyName name(cx);
 
-  for (uint32_t funIndex : *funDecls) {
+  for (GCThingIndex funIndex : *funDecls) {
     fun.set(self->script()->getFunction(funIndex));
     obj = Lambda(cx, fun, env);
     if (!obj) {

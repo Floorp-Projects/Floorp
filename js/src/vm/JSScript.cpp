@@ -878,7 +878,7 @@ static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
   MOZ_TRY(xdr->codeUint32(&isd->mainOffset));
   MOZ_TRY(xdr->codeUint32(&isd->nfixed));
   MOZ_TRY(xdr->codeUint32(&isd->nslots));
-  MOZ_TRY(xdr->codeUint32(&isd->bodyScopeIndex));
+  MOZ_TRY(xdr->codeUint32(&isd->bodyScopeIndex.index));
   MOZ_TRY(xdr->codeUint32(&isd->numICEntries));
   MOZ_TRY(xdr->codeUint16(&isd->funLength));
   MOZ_TRY(xdr->codeUint16(&isd->numBytecodeTypeSets));
@@ -896,7 +896,7 @@ static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
   }
 
   for (ScopeNote& elem : isd->scopeNotes()) {
-    MOZ_TRY(xdr->codeUint32(&elem.index));
+    MOZ_TRY(xdr->codeUint32(&elem.index.index));
     MOZ_TRY(xdr->codeUint32(&elem.start));
     MOZ_TRY(xdr->codeUint32(&elem.length));
     MOZ_TRY(xdr->codeUint32(&elem.parent));
@@ -4299,7 +4299,7 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
     }
   }
 
-  MOZ_ASSERT(src->bodyScopeIndex() == 0);
+  MOZ_ASSERT(src->bodyScopeIndex() == GCThingIndex::outermostScopeIndex());
   Rooted<GCVector<Scope*>> scopes(cx, GCVector<Scope*>(cx));
   Rooted<GlobalScope*> original(cx, &src->bodyScope()->as<GlobalScope>());
   GlobalScope* clone = GlobalScope::clone(cx, original, scopeKind);
@@ -4335,13 +4335,13 @@ JSScript* js::CloneScriptIntoFunction(
   Rooted<GCVector<Scope*>> scopes(cx, GCVector<Scope*>(cx));
   RootedScope original(cx);
   RootedScope enclosingClone(cx);
-  for (uint32_t i = 0; i <= src->bodyScopeIndex(); i++) {
-    original = src->getScope(i);
+  for (uint32_t i = 0; i <= src->bodyScopeIndex().index; i++) {
+    original = src->getScope(GCThingIndex(i));
 
     if (i == 0) {
       enclosingClone = enclosingScope;
     } else {
-      MOZ_ASSERT(src->getScope(i - 1) == original->enclosing());
+      MOZ_ASSERT(src->getScope(GCThingIndex(i - 1)) == original->enclosing());
       enclosingClone = scopes[i - 1];
     }
 
@@ -4393,7 +4393,7 @@ void CopySpan(const SourceSpan& source, TargetSpan target) {
 /* static */
 js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
     JSContext* cx, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
-    uint32_t bodyScopeIndex, uint32_t numICEntries,
+    GCThingIndex bodyScopeIndex, uint32_t numICEntries,
     uint32_t numBytecodeTypeSets, bool isFunction, uint16_t funLength,
     mozilla::Span<const jsbytecode> code, mozilla::Span<const SrcNote> notes,
     mozilla::Span<const uint32_t> resumeOffsets,

@@ -23,6 +23,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/TIOracle.h"
+#include "vm/SharedStencil.h"  // GCThingIndex
 
 namespace js {
 
@@ -636,7 +637,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_lambda_arrow(JSFunction* fun);
   AbortReasonOr<Ok> jsop_funwithproto(JSFunction* fun);
   AbortReasonOr<Ok> jsop_setfunname(uint8_t prefixKind);
-  AbortReasonOr<Ok> jsop_pushlexicalenv(uint32_t index);
+  AbortReasonOr<Ok> jsop_pushlexicalenv(GCThingIndex index);
   AbortReasonOr<Ok> jsop_copylexicalenv(bool copySlots);
   AbortReasonOr<Ok> jsop_functionthis();
   AbortReasonOr<Ok> jsop_globalthis();

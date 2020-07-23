@@ -152,6 +152,7 @@ using RecyclableNameMap =
 
 using DeclaredNameMap = RecyclableNameMap<DeclaredNameInfo>;
 using NameLocationMap = RecyclableNameMap<NameLocation>;
+// Cannot use GCThingIndex here because it's not trivial type.
 using AtomIndexMap = RecyclableNameMap<uint32_t>;
 
 template <typename RepresentativeTable>

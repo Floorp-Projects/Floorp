@@ -331,7 +331,8 @@ bool EmitterScope::internEmptyGlobalScopeAsBody(BytecodeEmitter* bce) {
   Scope* scope = &bce->cx->global()->emptyGlobalScope();
   hasEnvironment_ = scope->hasEnvironment();
 
-  bce->bodyScopeIndex = bce->perScriptData().gcThingList().length();
+  bce->bodyScopeIndex =
+      GCThingIndex(bce->perScriptData().gcThingList().length());
   return bce->perScriptData().gcThingList().appendEmptyGlobalScope(
       &scopeIndex_);
 }
@@ -352,9 +353,10 @@ bool EmitterScope::internScopeCreationData(BytecodeEmitter* bce,
 template <typename ScopeCreator>
 bool EmitterScope::internBodyScopeCreationData(BytecodeEmitter* bce,
                                                ScopeCreator createScope) {
-  MOZ_ASSERT(bce->bodyScopeIndex == UINT32_MAX,
+  MOZ_ASSERT(bce->bodyScopeIndex == ScopeNote::NoScopeIndex,
              "There can be only one body scope");
-  bce->bodyScopeIndex = bce->perScriptData().gcThingList().length();
+  bce->bodyScopeIndex =
+      GCThingIndex(bce->perScriptData().gcThingList().length());
   return internScopeCreationData(bce, createScope);
 }
 
@@ -776,7 +778,8 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
   }
 
   // See: JSScript::outermostScope.
-  MOZ_ASSERT(bce->bodyScopeIndex == 0, "Global scope must be index 0");
+  MOZ_ASSERT(bce->bodyScopeIndex == GCThingIndex::outermostScopeIndex(),
+             "Global scope must be index 0");
 
   // Resolve binding names and emit Def{Var,Let,Const} prologue ops.
   if (globalsc->bindings) {

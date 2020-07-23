@@ -38,7 +38,7 @@
 #include "vm/Runtime.h"   // ReportOutOfMemory
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
 #include "vm/ScopeKind.h"      // ScopeKind
-#include "vm/SharedStencil.h"  // ImmutableScriptFlags
+#include "vm/SharedStencil.h"  // ImmutableScriptFlags, GCThingIndex
 #include "vm/StencilEnums.h"   // ImmutableScriptFlagsEnum
 
 class JS_PUBLIC_API JSTracer;
@@ -330,7 +330,7 @@ class ScopeCreationData {
 class EmptyGlobalScopeType {};
 
 // See JSOp::Lambda for interepretation of this index.
-using FunctionDeclaration = uint32_t;
+using FunctionDeclaration = GCThingIndex;
 using FunctionDeclarationVector = Vector<FunctionDeclaration>;
 
 // Common type for ImportEntry / ExportEntry / ModuleRequest within frontend. We

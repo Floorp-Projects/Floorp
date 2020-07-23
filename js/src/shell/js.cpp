@@ -3082,7 +3082,7 @@ static MOZ_MUST_USE bool ScopeNotes(JSContext* cx, HandleScript script,
         return false;
       }
     } else {
-      if (!sp->jsprintf("%8u ", note.index)) {
+      if (!sp->jsprintf("%8u ", note.index.index)) {
         return false;
       }
     }

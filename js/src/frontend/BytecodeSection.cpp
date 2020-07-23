@@ -21,9 +21,9 @@
 using namespace js;
 using namespace js::frontend;
 
-bool GCThingList::append(FunctionBox* funbox, uint32_t* index) {
+bool GCThingList::append(FunctionBox* funbox, GCThingIndex* index) {
   // Append the function to the vector and return the index in *index.
-  *index = vector.length();
+  *index = GCThingIndex(vector.length());
 
   return vector.append(mozilla::AsVariant(funbox->index()));
 }
@@ -133,7 +133,7 @@ bool CGTryNoteList::append(TryNoteKind kind, uint32_t stackDepth,
   return list.append(note);
 }
 
-bool CGScopeNoteList::append(uint32_t scopeIndex, BytecodeOffset offset,
+bool CGScopeNoteList::append(GCThingIndex scopeIndex, BytecodeOffset offset,
                              uint32_t parent) {
   ScopeNote note;
   note.index = scopeIndex;
