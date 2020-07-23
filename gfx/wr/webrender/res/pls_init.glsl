@@ -14,7 +14,7 @@
 PER_INSTANCE in vec4 aRect;
 
 void main(void) {
-    vec2 pos = aRect.xy + aPosition.xy * aRect.zw;
+    vec2 pos = aRect.xy + quad_position() * aRect.zw;
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }
 #endif

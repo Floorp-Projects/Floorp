@@ -408,13 +408,7 @@ pub(crate) mod desc {
     use crate::device::{VertexAttribute, VertexAttributeKind, VertexDescriptor};
 
     pub const PRIM_INSTANCES: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aData",
@@ -425,13 +419,7 @@ pub(crate) mod desc {
     };
 
     pub const BLUR: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aBlurRenderTaskAddress",
@@ -452,13 +440,7 @@ pub(crate) mod desc {
     };
 
     pub const LINE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskRect",
@@ -489,13 +471,7 @@ pub(crate) mod desc {
     };
 
     pub const GRADIENT: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskRect",
@@ -545,13 +521,7 @@ pub(crate) mod desc {
     };
 
     pub const BORDER: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskOrigin",
@@ -602,13 +572,7 @@ pub(crate) mod desc {
     };
 
     pub const SCALE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aScaleTargetRect",
@@ -629,13 +593,7 @@ pub(crate) mod desc {
     };
 
     pub const CLIP: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTransformIds",
@@ -692,13 +650,7 @@ pub(crate) mod desc {
     };
 
     pub const RESOLVE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aRect",
@@ -709,13 +661,7 @@ pub(crate) mod desc {
     };
 
     pub const SVG_FILTER: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aFilterRenderTaskAddress",
@@ -840,13 +786,7 @@ pub(crate) mod desc {
     };
 
     pub const COMPOSITE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aDeviceRect",
@@ -892,13 +832,7 @@ pub(crate) mod desc {
     };
 
     pub const CLEAR: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[],
         instance_attributes: &[
             VertexAttribute {
                 name: "aRect",
@@ -2374,23 +2308,10 @@ impl Renderer {
             None
         };
 
-        let x0 = 0.0;
-        let y0 = 0.0;
-        let x1 = 1.0;
-        let y1 = 1.0;
-
-        let quad_indices: [u16; 6] = [0, 1, 2, 2, 1, 3];
-        let quad_vertices = [
-            PackedVertex { pos: [x0, y0] },
-            PackedVertex { pos: [x1, y0] },
-            PackedVertex { pos: [x0, y1] },
-            PackedVertex { pos: [x1, y1] },
-        ];
-
+        let quad_indices = [0u16, 1, 2, 2, 1, 3];
         let prim_vao = device.create_vao(&desc::PRIM_INSTANCES);
         device.bind_vao(&prim_vao);
         device.update_vao_indices(&prim_vao, &quad_indices, VertexUsageHint::Static);
-        device.update_vao_main_vertices(&prim_vao, &quad_vertices, VertexUsageHint::Static);
 
         let blur_vao = device.create_vao_with_new_instances(&desc::BLUR, &prim_vao);
         let clip_vao = device.create_vao_with_new_instances(&desc::CLIP, &prim_vao);
@@ -4451,6 +4372,30 @@ impl Renderer {
                     continue;
                 }
 
+                // Handle special case readback for composites.
+                if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
+                    // composites can't be grouped together because
+                    // they may overlap and affect each other.
+                    debug_assert_eq!(batch.instances.len(), 1);
+                    if !self.device.get_capabilities().supports_fbo_readback_with_no_vertex_attributes {
+                        match self.gpu_cache_texture.bus {
+                            GpuCacheBus::Scatter { ref vao, ref program, .. } => {
+                                self.device.bind_program(program);
+                                self.device.bind_custom_vao(vao);
+                            }
+                            GpuCacheBus::PixelBuffer { .. } => panic!("Glitches ahead if we go this way!"),
+                        }
+                    }
+                    self.handle_readback_composite(
+                        draw_target,
+                        uses_scissor,
+                        &render_tasks[source_id],
+                        &render_tasks[task_id],
+                        &render_tasks[backdrop_id],
+                    );
+                }
+
+                let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
                 let mut shaders = shaders_rc.borrow_mut();
                 let shader = shaders.get(
                     &batch.key,
@@ -4507,21 +4452,6 @@ impl Renderer {
                     prev_blend_mode = batch.key.blend_mode;
                 }
 
-                // Handle special case readback for composites.
-                if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
-                    // composites can't be grouped together because
-                    // they may overlap and affect each other.
-                    debug_assert_eq!(batch.instances.len(), 1);
-                    self.handle_readback_composite(
-                        draw_target,
-                        uses_scissor,
-                        &render_tasks[source_id],
-                        &render_tasks[task_id],
-                        &render_tasks[backdrop_id],
-                    );
-                }
-
-                let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
                 shader.bind(
                     &mut self.device,
                     projection,

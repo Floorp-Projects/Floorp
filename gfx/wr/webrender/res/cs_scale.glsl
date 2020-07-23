@@ -22,8 +22,9 @@ void main(void) {
     vUvRect = vec4(src_rect.p0 + vec2(0.5),
                    src_rect.p0 + src_rect.size - vec2(0.5)) / texture_size.xyxy;
 
-    vec2 pos = aScaleTargetRect.xy + aScaleTargetRect.zw * aPosition.xy;
-    vUv.xy = (src_rect.p0 + src_rect.size * aPosition.xy) / texture_size;
+    vec2 quad_pos = quad_position();
+    vec2 pos = aScaleTargetRect.xy + aScaleTargetRect.zw * quad_pos;
+    vUv.xy = (src_rect.p0 + src_rect.size * quad_pos) / texture_size;
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }

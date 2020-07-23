@@ -82,9 +82,10 @@ void main(void) {
             vParams = vec4(0.0);
     }
 
-    vLocalPos = mix(aPosition.xy, aPosition.yx, aAxisSelect) * size;
+    vec2 quad_pos = quad_position();
+    vLocalPos = mix(quad_pos.xy, quad_pos.yx, aAxisSelect) * size;
 
-    gl_Position = uTransform * vec4(aTaskRect.xy + aTaskRect.zw * aPosition.xy, 0.0, 1.0);
+    gl_Position = uTransform * vec4(aTaskRect.xy + aTaskRect.zw * quad_pos, 0.0, 1.0);
 }
 #endif
 

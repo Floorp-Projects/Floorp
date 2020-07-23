@@ -64,7 +64,8 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       vec2 task_origin,
                                       vec2 screen_origin,
                                       float device_pixel_scale) {
-    vec2 device_pos = screen_origin + sub_rect.p0 + aPosition.xy * sub_rect.size;
+    vec2 quad_pos = quad_position();
+    vec2 device_pos = screen_origin + sub_rect.p0 + quad_pos * sub_rect.size;
     vec2 world_pos = device_pos / device_pixel_scale;
 
     vec4 pos = prim_transform.m * vec4(world_pos, 0.0, 1.0);
@@ -81,7 +82,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     // We can therefore simplify this when the clip construction is rewritten
     // to only affect the areas touched by a clip.
     vec4 vertex_pos = vec4(
-        task_origin + sub_rect.p0 + aPosition.xy * sub_rect.size,
+        task_origin + sub_rect.p0 + quad_pos * sub_rect.size,
         0.0,
         1.0
     );
