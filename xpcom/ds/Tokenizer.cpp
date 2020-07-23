@@ -6,6 +6,7 @@
 
 #include "Tokenizer.h"
 
+#include "mozilla/ScopeExit.h"
 #include "nsUnicharUtils.h"
 #include <algorithm>
 
@@ -86,6 +87,10 @@ bool TTokenizer<TChar>::Check(const typename base::TokenType aTokenType,
 
 template <typename TChar>
 bool TTokenizer<TChar>::Check(const typename base::Token& aToken) {
+#ifdef DEBUG
+  base::Validate(aToken);
+#endif
+
   if (!base::HasInput()) {
     base::mHasFailed = true;
     return false;
@@ -157,6 +162,44 @@ bool TTokenizer<TChar>::CheckChar(bool (*aClassifier)(const TChar aChar)) {
   ++base::mCursor;
   base::mHasFailed = false;
   return true;
+}
+
+template <typename TChar>
+bool TTokenizer<TChar>::CheckPhrase(const typename base::TAString& aPhrase) {
+  if (!base::HasInput()) {
+    return false;
+  }
+
+  typedef typename base::TAString::const_char_iterator Cursor;
+
+  TTokenizer<TChar> pattern(aPhrase);
+  MOZ_ASSERT(!pattern.CheckEOF(),
+             "This will return true but won't shift the Tokenizer's cursor");
+
+  return [&](Cursor cursor, Cursor rollback) mutable {
+    while (true) {
+      if (pattern.CheckEOF()) {
+        base::mHasFailed = false;
+        mRollback = cursor;
+        return true;
+      }
+
+      typename base::Token t1, t2;
+      Unused << Next(t1);
+      Unused << pattern.Next(t2);
+      if (t1.Type() == t2.Type() && t1.Fragment().Equals(t2.Fragment())) {
+        continue;
+      }
+
+      break;
+    }
+
+    base::mHasFailed = true;
+    base::mPastEof = false;
+    base::mCursor = cursor;
+    mRollback = rollback;
+    return false;
+  }(base::mCursor, mRollback);
 }
 
 template <typename TChar>
@@ -587,6 +630,25 @@ void TokenizerBase<TChar>::AssignFragment(
     typename TAString::const_char_iterator end) {
   aToken.AssignFragment(begin, end);
 }
+
+#ifdef DEBUG
+
+template <typename TChar>
+void TokenizerBase<TChar>::Validate(Token const& aToken) {
+  if (aToken.Type() == TOKEN_WORD) {
+    typename TAString::const_char_iterator c = aToken.AsString().BeginReading();
+    typename TAString::const_char_iterator e = aToken.AsString().EndReading();
+
+    if (c < e) {
+      MOZ_ASSERT(IsWordFirst(*c));
+      while (++c < e) {
+        MOZ_ASSERT(IsWord(*c));
+      }
+    }
+  }
+}
+
+#endif
 
 // TokenizerBase::Token
 

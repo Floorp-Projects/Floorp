@@ -339,7 +339,6 @@ TEST(Tokenizer, EndingAfterNumber)
 
   Tokenizer p("123"_ns);
 
-  EXPECT_FALSE(p.CheckWord("123"));
   EXPECT_TRUE(p.Check(Tokenizer::Token::Number(123)));
   EXPECT_TRUE(p.CheckEOF());
 }
@@ -1412,5 +1411,30 @@ TEST(Tokenizer, ReadIntegers)
 
   EXPECT_TRUE(t.ReadSignedInteger(&signed_value32));
   EXPECT_TRUE(signed_value32 == -2147483647L);
+  EXPECT_TRUE(t.CheckEOF());
+}
+
+TEST(Tokenizer, CheckPhrase)
+{
+  Tokenizer t("foo bar baz");
+
+  EXPECT_TRUE(t.CheckPhrase("foo "));
+
+  EXPECT_FALSE(t.CheckPhrase("barr"));
+  EXPECT_FALSE(t.CheckPhrase("BAR BAZ"));
+  EXPECT_FALSE(t.CheckPhrase("bar baz "));
+  EXPECT_FALSE(t.CheckPhrase("b"));
+  EXPECT_FALSE(t.CheckPhrase("ba"));
+  EXPECT_FALSE(t.CheckPhrase("??"));
+
+  EXPECT_TRUE(t.CheckPhrase("bar baz"));
+
+  t.Rollback();
+  EXPECT_TRUE(t.CheckPhrase("bar"));
+  EXPECT_TRUE(t.CheckPhrase(" baz"));
+
+  t.Rollback();
+  EXPECT_FALSE(t.CheckPhrase("\tbaz"));
+  EXPECT_TRUE(t.CheckPhrase(" baz"));
   EXPECT_TRUE(t.CheckEOF());
 }
