@@ -93,11 +93,9 @@ void PluginWindowEvent::Init(WeakPtr<nsPluginNativeWindowWin> aRef, HWND aWnd,
  *  nsPluginNativeWindow Windows specific class declaration
  */
 
-class nsPluginNativeWindowWin
-    : public nsPluginNativeWindow,
-      public SupportsWeakPtr<nsPluginNativeWindowWin> {
+class nsPluginNativeWindowWin : public nsPluginNativeWindow,
+                                public SupportsWeakPtr {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsPluginNativeWindowWin)
   nsPluginNativeWindowWin();
 
   virtual nsresult CallSetWindow(

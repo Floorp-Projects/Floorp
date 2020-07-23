@@ -120,7 +120,7 @@ class nsDocShell final : public nsDocLoader,
                          public nsILoadContext,
                          public nsINetworkInterceptController,
                          public nsIDeprecationWarner,
-                         public mozilla::SupportsWeakPtr<nsDocShell> {
+                         public mozilla::SupportsWeakPtr {
  public:
   enum InternalLoad : uint32_t {
     INTERNAL_LOAD_FLAGS_NONE = 0x0,
@@ -179,7 +179,6 @@ class nsDocShell final : public nsDocLoader,
     nsWeakPtr mWeakPtr;
   };
 
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsDocShell)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDocShell, nsDocLoader)
   NS_DECL_NSIDOCSHELL

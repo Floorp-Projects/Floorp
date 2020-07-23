@@ -103,7 +103,7 @@ enum class StreamCaptureBehavior : uint8_t {
 class HTMLMediaElement : public nsGenericHTMLElement,
                          public MediaDecoderOwner,
                          public PrincipalChangeObserver<MediaStreamTrack>,
-                         public SupportsWeakPtr<HTMLMediaElement>,
+                         public SupportsWeakPtr,
                          public nsStubMutationObserver {
  public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -134,7 +134,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
     RefPtr<DOMMediaStream> mFinishWhenEndedAttrStream;
   };
 
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HTMLMediaElement)
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   CORSMode GetCORSMode() { return mCORSMode; }

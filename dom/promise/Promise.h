@@ -35,7 +35,7 @@ class PromiseInit;
 class PromiseNativeHandler;
 class PromiseDebugging;
 
-class Promise : public SupportsWeakPtr<Promise> {
+class Promise : public SupportsWeakPtr {
   friend class PromiseTask;
   friend class PromiseWorkerProxy;
   friend class PromiseWorkerProxyRunnable;
@@ -43,7 +43,6 @@ class Promise : public SupportsWeakPtr<Promise> {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Promise)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Promise)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Promise)
 
   enum PropagateUserInteraction {
     eDontPropagateUserInteraction,

@@ -158,7 +158,7 @@ class ImageMetadata;
 class SourceBuffer;
 
 class RasterImage final : public ImageResource,
-                          public SupportsWeakPtr<RasterImage>
+                          public SupportsWeakPtr
 #ifdef DEBUG
     ,
                           public imgIContainerDebug
@@ -168,7 +168,6 @@ class RasterImage final : public ImageResource,
   virtual ~RasterImage();
 
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(RasterImage)
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_IMGICONTAINER
 #ifdef DEBUG

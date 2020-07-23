@@ -39,10 +39,8 @@ class Document;
  *
  * This class is designed to be used only on the main thread.
  */
-class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
-                      public nsISupports {
+class PreloaderBase : public SupportsWeakPtr, public nsISupports {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PreloaderBase)
   PreloaderBase() = default;
 
   // Called by resource loaders to register this preload in the document's

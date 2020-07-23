@@ -53,9 +53,8 @@ LogModule* GetSpeechRecognitionLog();
 class SpeechRecognition final : public DOMEventTargetHelper,
                                 public nsIObserver,
                                 public DOMMediaStream::TrackListener,
-                                public SupportsWeakPtr<SpeechRecognition> {
+                                public SupportsWeakPtr {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SpeechRecognition)
   explicit SpeechRecognition(nsPIDOMWindowInner* aOwnerWindow);
 
   NS_DECL_ISUPPORTS_INHERITED

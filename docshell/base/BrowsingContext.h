@@ -513,8 +513,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   Nullable<WindowProxyHolder> GetWindow();
 
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(BrowsingContext)
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BrowsingContext)
   NS_DECL_NSILOADCONTEXT

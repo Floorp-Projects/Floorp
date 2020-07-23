@@ -66,7 +66,7 @@ struct LockedOutstandingContexts final {
  * nsICanvasRenderingContextInternal DOM class.  That is the
  * ClientWebGLContext.
  */
-class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
+class HostWebGLContext final : public SupportsWeakPtr {
   friend class WebGLContext;
   friend class WebGLMemoryTracker;
 
@@ -77,8 +77,6 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   }
 
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HostWebGLContext)
-
   struct RemotingData final {
     dom::WebGLParent& mParent;
     UniquePtr<HostWebGLCommandSinkP> mCommandSinkP;
