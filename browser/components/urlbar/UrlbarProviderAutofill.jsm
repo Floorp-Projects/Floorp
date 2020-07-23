@@ -301,6 +301,10 @@ class ProviderAutofill extends UrlbarProvider {
   async isActive(queryContext) {
     let instance = this.queryInstance;
 
+    // This is usually reset on canceling or completing the query, but since we
+    // query in isActive, it may not have been canceled by the previous call.
+    this._autofillResult = null;
+
     // First of all, check for the autoFill pref.
     if (!UrlbarPrefs.get("autoFill")) {
       return false;
@@ -400,7 +404,7 @@ class ProviderAutofill extends UrlbarProvider {
 
     this._autofillResult.heuristic = true;
     addCallback(this, this._autofillResult);
-    delete this._autofillResult;
+    this._autofillResult = null;
   }
 
   /**
@@ -408,7 +412,7 @@ class ProviderAutofill extends UrlbarProvider {
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
-    delete this._autofillResult;
+    this._autofillResult = null;
   }
 
   /**
