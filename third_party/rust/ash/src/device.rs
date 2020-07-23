@@ -111,20 +111,25 @@ pub trait DeviceV1_2: DeviceV1_1 {
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkResetQueryPool.html>"]
     unsafe fn reset_query_pool(
         &self,
+        device: vk::Device,
         query_pool: vk::QueryPool,
         first_query: u32,
         query_count: u32,
     ) {
         self.fp_v1_2()
-            .reset_query_pool(self.handle(), query_pool, first_query, query_count);
+            .reset_query_pool(device, query_pool, first_query, query_count);
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreCounterValue.html>"]
-    unsafe fn get_semaphore_counter_value(&self, semaphore: vk::Semaphore) -> VkResult<u64> {
+    unsafe fn get_semaphore_counter_value(
+        &self,
+        device: vk::Device,
+        semaphore: vk::Semaphore,
+    ) -> VkResult<u64> {
         let mut value = 0;
-        let err_code =
-            self.fp_v1_2()
-                .get_semaphore_counter_value(self.handle(), semaphore, &mut value);
+        let err_code = self
+            .fp_v1_2()
+            .get_semaphore_counter_value(device, semaphore, &mut value);
         match err_code {
             vk::Result::SUCCESS => Ok(value),
             _ => Err(err_code),
@@ -134,12 +139,11 @@ pub trait DeviceV1_2: DeviceV1_1 {
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitSemaphores.html>"]
     unsafe fn wait_semaphores(
         &self,
+        device: vk::Device,
         wait_info: &vk::SemaphoreWaitInfo,
         timeout: u64,
     ) -> VkResult<()> {
-        let err_code = self
-            .fp_v1_2()
-            .wait_semaphores(self.handle(), wait_info, timeout);
+        let err_code = self.fp_v1_2().wait_semaphores(device, wait_info, timeout);
         match err_code {
             vk::Result::SUCCESS => Ok(()),
             _ => Err(err_code),
@@ -147,8 +151,12 @@ pub trait DeviceV1_2: DeviceV1_1 {
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSignalSemaphore.html>"]
-    unsafe fn signal_semaphore(&self, signal_info: &vk::SemaphoreSignalInfo) -> VkResult<()> {
-        let err_code = self.fp_v1_2().signal_semaphore(self.handle(), signal_info);
+    unsafe fn signal_semaphore(
+        &self,
+        device: vk::Device,
+        signal_info: &vk::SemaphoreSignalInfo,
+    ) -> VkResult<()> {
+        let err_code = self.fp_v1_2().signal_semaphore(device, signal_info);
         match err_code {
             vk::Result::SUCCESS => Ok(()),
             _ => Err(err_code),
@@ -158,25 +166,30 @@ pub trait DeviceV1_2: DeviceV1_1 {
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferDeviceAddress.html>"]
     unsafe fn get_buffer_device_address(
         &self,
+        device: vk::Device,
         info: &vk::BufferDeviceAddressInfo,
     ) -> vk::DeviceAddress {
-        self.fp_v1_2()
-            .get_buffer_device_address(self.handle(), info)
+        self.fp_v1_2().get_buffer_device_address(device, info)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferOpaqueCaptureAddress.html>"]
-    unsafe fn get_buffer_opaque_capture_address(&self, info: &vk::BufferDeviceAddressInfo) -> u64 {
+    unsafe fn get_buffer_opaque_capture_address(
+        &self,
+        device: vk::Device,
+        info: &vk::BufferDeviceAddressInfo,
+    ) -> u64 {
         self.fp_v1_2()
-            .get_buffer_opaque_capture_address(self.handle(), info)
+            .get_buffer_opaque_capture_address(device, info)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceMemoryOpaqueCaptureAddress.html>"]
     unsafe fn get_device_memory_opaque_capture_address(
         &self,
+        device: vk::Device,
         info: &vk::DeviceMemoryOpaqueCaptureAddressInfo,
     ) -> u64 {
         self.fp_v1_2()
-            .get_device_memory_opaque_capture_address(self.handle(), info)
+            .get_device_memory_opaque_capture_address(device, info)
     }
 }
 
@@ -2134,7 +2147,6 @@ pub struct Device {
     device_fn_1_1: vk::DeviceFnV1_1,
     device_fn_1_2: vk::DeviceFnV1_2,
 }
-
 impl Device {
     pub unsafe fn load(instance_fn: &vk::InstanceFnV1_0, device: vk::Device) -> Self {
         let device_fn_1_0 = vk::DeviceFnV1_0::load(|name| {

@@ -500,12 +500,16 @@ fn compute_output_latency(stm: &AudioUnitStream, host_time: u64) -> u32 {
     let audio_output_time = host_time_to_ns(host_time);
     let output_hw_rate = stm.core_stream_data.output_hw_rate as u64;
     let fixed_latency_ns =
-        (stm.output_device_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / output_hw_rate;
-    // The total output latency is the timestamp difference + the stream latency + the hardware
-    // latency.
-    let total_output_latency_ns = fixed_latency_ns + audio_output_time.saturating_sub(now);
+        (stm.current_output_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / output_hw_rate;
+    let total_output_latency_ns = if audio_output_time < now {
+        0
+    } else {
+        // The total output latency is the timestamp difference + the stream latency + the hardware
+        // latency.
+        (audio_output_time - now) + fixed_latency_ns
+    };
 
-    (total_output_latency_ns * output_hw_rate / NS2S) as u32
+    ((total_output_latency_ns * output_hw_rate) / NS2S) as u32
 }
 
 fn compute_input_latency(stm: &AudioUnitStream, host_time: u64) -> u32 {
@@ -515,12 +519,16 @@ fn compute_input_latency(stm: &AudioUnitStream, host_time: u64) -> u32 {
     let audio_input_time = host_time_to_ns(host_time);
     let input_hw_rate = stm.core_stream_data.input_hw_rate as u64;
     let fixed_latency_ns =
-        (stm.input_device_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / input_hw_rate;
-    // The total input latency is the timestamp difference + the stream latency +
-    // the hardware latency.
-    let total_input_latency_ns = now.saturating_sub(audio_input_time) + fixed_latency_ns;
+        (stm.current_input_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / input_hw_rate;
+    let total_input_latency_ns = if audio_input_time > now {
+        0
+    } else {
+        // The total input latency is the timestamp difference + the stream latency +
+        // the hardware latency.
+        (now - audio_input_time) + fixed_latency_ns
+    };
 
-    (total_input_latency_ns * input_hw_rate / NS2S) as u32
+    ((total_input_latency_ns * input_hw_rate) / NS2S) as u32
 }
 
 extern "C" fn audiounit_output_callback(
@@ -2835,7 +2843,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 return Err(Error::error());
             }
 
-            stream.input_device_latency_frames.store(
+            stream.current_input_latency_frames.store(
                 get_fixed_latency(self.input_device.id, DeviceType::INPUT),
                 Ordering::SeqCst,
             );
@@ -2848,7 +2856,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 return Err(Error::error());
             }
 
-            stream.output_device_latency_frames.store(
+            stream.current_output_latency_frames.store(
                 get_fixed_latency(self.output_device.id, DeviceType::OUTPUT),
                 Ordering::SeqCst,
             );
@@ -2864,7 +2872,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 &mut size,
             ) == NO_ERR
             {
-                stream.output_device_latency_frames.fetch_add(
+                stream.current_output_latency_frames.fetch_add(
                     (unit_s * self.output_desc.mSampleRate) as u32,
                     Ordering::SeqCst,
                 );
@@ -3141,10 +3149,8 @@ struct AudioUnitStream<'ctx> {
     destroy_pending: AtomicBool,
     // Latency requested by the user.
     latency_frames: u32,
-    // Fixed latency, characteristic of the device.
-    output_device_latency_frames: AtomicU32,
-    input_device_latency_frames: AtomicU32,
-    // Total latency: the latency of the device + the OS latency
+    current_output_latency_frames: AtomicU32,
+    current_input_latency_frames: AtomicU32,
     total_output_latency_frames: AtomicU32,
     total_input_latency_frames: AtomicU32,
     // This is true if a device change callback is currently running.
@@ -3176,8 +3182,8 @@ impl<'ctx> AudioUnitStream<'ctx> {
             reinit_pending: AtomicBool::new(false),
             destroy_pending: AtomicBool::new(false),
             latency_frames,
-            output_device_latency_frames: AtomicU32::new(0),
-            input_device_latency_frames: AtomicU32::new(0),
+            current_output_latency_frames: AtomicU32::new(0),
+            current_input_latency_frames: AtomicU32::new(0),
             total_output_latency_frames: AtomicU32::new(0),
             total_input_latency_frames: AtomicU32::new(0),
             switching_device: AtomicBool::new(false),
@@ -3460,14 +3466,14 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         Err(Error::not_supported())
     }
     fn position(&mut self) -> Result<u64> {
-        let total_output_latency_frames =
-            u64::from(self.total_output_latency_frames.load(Ordering::SeqCst));
+        let current_output_latency_frames =
+            u64::from(self.current_output_latency_frames.load(Ordering::SeqCst));
         let frames_played = self.frames_played.load(Ordering::SeqCst);
-        if total_output_latency_frames != 0 {
-            let position = if total_output_latency_frames > frames_played {
+        if current_output_latency_frames != 0 {
+            let position = if current_output_latency_frames > frames_played {
                 0
             } else {
-                frames_played - total_output_latency_frames
+                frames_played - current_output_latency_frames
             };
             return Ok(position);
         }

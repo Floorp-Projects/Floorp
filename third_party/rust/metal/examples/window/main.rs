@@ -7,16 +7,23 @@
 
 extern crate objc;
 
-use cocoa::{appkit::NSView, base::id as cocoa_id, foundation::NSRange};
+use cocoa::{
+    appkit::{NSView},
+    base::id as cocoa_id,
+    foundation::{NSRange},
+};
 
-use metal::*;
+use core_graphics::geometry::CGSize;
 use objc::runtime::YES;
-use std::mem;
+use metal::*;
 use winit::platform::macos::WindowExtMacOS;
+use std::mem;
 
 use winit::{
-    event::{Event, WindowEvent},
-    event_loop::ControlFlow,
+    event::{
+        Event, WindowEvent,
+    },
+    event_loop::ControlFlow
 };
 
 fn prepare_pipeline_state<'a>(device: &DeviceRef, library: &LibraryRef) -> RenderPipelineState {
@@ -26,19 +33,11 @@ fn prepare_pipeline_state<'a>(device: &DeviceRef, library: &LibraryRef) -> Rende
     let pipeline_state_descriptor = RenderPipelineDescriptor::new();
     pipeline_state_descriptor.set_vertex_function(Some(&vert));
     pipeline_state_descriptor.set_fragment_function(Some(&frag));
-    let attachment = pipeline_state_descriptor
+    pipeline_state_descriptor
         .color_attachments()
         .object_at(0)
-        .unwrap();
-    attachment.set_pixel_format(MTLPixelFormat::BGRA8Unorm);
-
-    attachment.set_blending_enabled(true);
-    attachment.set_rgb_blend_operation(metal::MTLBlendOperation::Add);
-    attachment.set_alpha_blend_operation(metal::MTLBlendOperation::Add);
-    attachment.set_source_rgb_blend_factor(metal::MTLBlendFactor::SourceAlpha);
-    attachment.set_source_alpha_blend_factor(metal::MTLBlendFactor::SourceAlpha);
-    attachment.set_destination_rgb_blend_factor(metal::MTLBlendFactor::OneMinusSourceAlpha);
-    attachment.set_destination_alpha_blend_factor(metal::MTLBlendFactor::OneMinusSourceAlpha);
+        .unwrap()
+        .set_pixel_format(MTLPixelFormat::BGRA8Unorm);
 
     device
         .new_render_pipeline_state(&pipeline_state_descriptor)
@@ -62,7 +61,7 @@ fn main() {
 
     let window = winit::window::WindowBuilder::new()
         .with_inner_size(size)
-        .with_title("Metal Window Example".to_string())
+        .with_title("Metal".to_string())
         .build(&events_loop)
         .unwrap();
 
@@ -82,10 +81,9 @@ fn main() {
     let draw_size = window.inner_size();
     layer.set_drawable_size(CGSize::new(draw_size.width as f64, draw_size.height as f64));
 
-    let library_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("examples/window/shaders.metallib");
-
-    let library = device.new_library_with_file(library_path).unwrap();
+    let library = device
+        .new_library_with_file("examples/window/shaders.metallib")
+        .unwrap();
     let pipeline_state = prepare_pipeline_state(&device, &library);
     let command_queue = device.new_command_queue();
     //let nc: () = msg_send![command_queue.0, setExecutionEnabled:true];
@@ -113,29 +111,51 @@ fn main() {
                 WindowEvent::Resized(size) => {
                     layer.set_drawable_size(CGSize::new(size.width as f64, size.height as f64));
                 }
-                _ => (),
-            },
+                _ => ()
+            }
             Event::MainEventsCleared => {
                 window.request_redraw();
             }
             Event::RedrawRequested(_) => {
+                let drawable = match layer.next_drawable() {
+                    Some(drawable) => drawable,
+                    None => return,
+                };
+
+                let render_pass_descriptor = RenderPassDescriptor::new();
+                let _a = prepare_render_pass_descriptor(&render_pass_descriptor, drawable.texture());
+
+                let command_buffer = command_queue.new_command_buffer();
+                let encoder = command_buffer.new_render_command_encoder(&render_pass_descriptor);
+                encoder.set_render_pipeline_state(&pipeline_state);
+                encoder.set_vertex_buffer(0, Some(&vbuf), 0);
+                encoder.draw_primitives(MTLPrimitiveType::Triangle, 0, 3);
+                encoder.end_encoding();
+
+                render_pass_descriptor
+                    .color_attachments()
+                    .object_at(0)
+                    .unwrap()
+                    .set_load_action(MTLLoadAction::DontCare);
+
+                let encoder = command_buffer.new_render_command_encoder(&render_pass_descriptor);
                 let p = vbuf.contents();
                 let vertex_data = [
                     0.0f32,
                     0.5,
                     1.0,
+                    0.0 - r,
                     0.0,
-                    0.0,
-                    -0.5 + (r.cos() / 2. + 0.5),
+                    -0.5,
                     -0.5,
                     0.0,
-                    1.0,
+                    1.0 - r,
                     0.0,
-                    0.5 - (r.cos() / 2. + 0.5),
-                    -0.5,
+                    0.5,
+                    0.5,
                     0.0,
                     0.0,
-                    1.0,
+                    1.0 + r,
                 ];
 
                 unsafe {
@@ -145,23 +165,11 @@ fn main() {
                         (vertex_data.len() * mem::size_of::<f32>()) as usize,
                     );
                 }
-
                 vbuf.did_modify_range(NSRange::new(
                     0 as u64,
                     (vertex_data.len() * mem::size_of::<f32>()) as u64,
                 ));
 
-                let drawable = match layer.next_drawable() {
-                    Some(drawable) => drawable,
-                    None => return,
-                };
-
-                let render_pass_descriptor = RenderPassDescriptor::new();
-
-                prepare_render_pass_descriptor(&render_pass_descriptor, drawable.texture());
-
-                let command_buffer = command_queue.new_command_buffer();
-                let encoder = command_buffer.new_render_command_encoder(&render_pass_descriptor);
                 encoder.set_render_pipeline_state(&pipeline_state);
                 encoder.set_vertex_buffer(0, Some(&vbuf), 0);
                 encoder.draw_primitives(MTLPrimitiveType::Triangle, 0, 3);
@@ -171,7 +179,7 @@ fn main() {
                 command_buffer.commit();
 
                 r += 0.01f32;
-            }
+            },
             _ => {}
         }
     });

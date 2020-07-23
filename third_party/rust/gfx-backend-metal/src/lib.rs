@@ -64,14 +64,15 @@ use hal::{
 };
 use range_alloc::RangeAllocator;
 
-use cocoa_foundation::foundation::NSInteger;
+use cocoa::foundation::NSInteger;
+use core_graphics::base::CGFloat;
+use core_graphics::geometry::CGRect;
 #[cfg(feature = "dispatch")]
 use dispatch;
 use foreign_types::ForeignTypeRef;
 use lazy_static::lazy_static;
 use metal::MTLFeatureSet;
 use metal::MTLLanguageVersion;
-use metal::{CGFloat, CGSize};
 use objc::{
     declare::ClassDecl,
     runtime::{Class, Object, Sel, BOOL, YES},
@@ -100,40 +101,6 @@ pub type GraphicsCommandPool = CommandPool;
 //TODO: investigate why exactly using `u8` here is slower (~5% total).
 /// A type representing Metal binding's resource index.
 type ResourceIndex = u32;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default)]
-pub struct CGPoint {
-    pub x: CGFloat,
-    pub y: CGFloat,
-}
-
-impl CGPoint {
-    #[inline]
-    pub fn new(x: CGFloat, y: CGFloat) -> CGPoint {
-        CGPoint {
-            x,
-            y,
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default)]
-pub struct CGRect {
-    pub origin: CGPoint,
-    pub size: CGSize
-}
-
-impl CGRect {
-    #[inline]
-    pub fn new(origin: CGPoint, size: CGSize) -> CGRect {
-        CGRect {
-            origin,
-            size,
-        }
-    }
-}
 
 /// Method of recording one-time-submit command buffers.
 #[derive(Clone, Debug, Hash, PartialEq)]
@@ -357,7 +324,7 @@ unsafe impl Sync for GfxManagedMetalLayerDelegate {}
 impl Instance {
     #[cfg(target_os = "ios")]
     unsafe fn create_from_uiview(&self, uiview: *mut c_void) -> window::SurfaceInner {
-        let view: cocoa_foundation::base::id = mem::transmute(uiview);
+        let view: cocoa::base::id = mem::transmute(uiview);
         if view.is_null() {
             panic!("window does not have a valid contentView");
         }
@@ -379,9 +346,9 @@ impl Instance {
             new_layer
         };
 
-        let window: cocoa_foundation::base::id = msg_send![view, window];
+        let window: cocoa::base::id = msg_send![view, window];
         if !window.is_null() {
-            let screen: cocoa_foundation::base::id = msg_send![window, screen];
+            let screen: cocoa::base::id = msg_send![window, screen];
             assert!(!screen.is_null(), "window is not attached to a screen");
 
             let scale_factor: CGFloat = msg_send![screen, nativeScale];
@@ -394,7 +361,7 @@ impl Instance {
 
     #[cfg(target_os = "macos")]
     unsafe fn create_from_nsview(&self, nsview: *mut c_void) -> window::SurfaceInner {
-        let view: cocoa_foundation::base::id = mem::transmute(nsview);
+        let view: cocoa::base::id = mem::transmute(nsview);
         if view.is_null() {
             panic!("window does not have a valid contentView");
         }
@@ -423,7 +390,7 @@ impl Instance {
             let bounds: CGRect = msg_send![view, bounds];
             let () = msg_send![layer, setBounds: bounds];
 
-            let window: cocoa_foundation::base::id = msg_send![view, window];
+            let window: cocoa::base::id = msg_send![view, window];
             if !window.is_null() {
                 let scale_factor: CGFloat = msg_send![window, backingScaleFactor];
                 let () = msg_send![layer, setContentsScale: scale_factor];

@@ -467,7 +467,7 @@ impl d::Device<B> for Device {
             s_type: vk::StructureType::MEMORY_ALLOCATE_INFO,
             p_next: ptr::null(),
             allocation_size: size,
-            memory_type_index: self.get_ash_memory_type_index(mem_type),
+            memory_type_index: mem_type.0 as _,
         };
 
         let result = self.shared.raw.allocate_memory(&info, None);
@@ -1333,7 +1333,7 @@ impl d::Device<B> for Device {
         Requirements {
             size: req.size,
             alignment: req.alignment,
-            type_mask: self.filter_memory_requirements(req.memory_type_bits),
+            type_mask: req.memory_type_bits as _,
         }
     }
 
@@ -1440,7 +1440,7 @@ impl d::Device<B> for Device {
         Requirements {
             size: req.size,
             alignment: req.alignment,
-            type_mask: self.filter_memory_requirements(req.memory_type_bits),
+            type_mask: req.memory_type_bits as _,
         }
     }
 
@@ -2040,7 +2040,7 @@ impl d::Device<B> for Device {
         config: SwapchainConfig,
         provided_old_swapchain: Option<w::Swapchain>,
     ) -> Result<(w::Swapchain, Vec<n::Image>), hal::window::CreationError> {
-        let functor = khr::Swapchain::new(&surface.raw.instance.inner, &self.shared.raw);
+        let functor = khr::Swapchain::new(&surface.raw.instance.0, &self.shared.raw);
 
         let old_swapchain = match provided_old_swapchain {
             Some(osc) => osc.raw,
@@ -2271,38 +2271,9 @@ impl d::Device<B> for Device {
 }
 
 impl Device {
-    /// We only work with a subset of Ash-exposed memory types that we know.
-    /// This function filters an ash mask into our mask.
-    fn filter_memory_requirements(&self, ash_mask: u32) -> u64 {
-        let mut hal_index = 0;
-        let mut mask = 0;
-        for ash_index in 0 .. 32 {
-            if self.valid_ash_memory_types & (1 << ash_index) != 0 {
-                if ash_mask & (1 << ash_index) != 0 {
-                    mask |= 1 << hal_index;
-                }
-                hal_index += 1;
-            }
-        }
-        mask
-    }
-
-    fn get_ash_memory_type_index(&self, hal_type: MemoryTypeId) -> u32 {
-        let mut hal_count = hal_type.0;
-        for ash_index in 0 .. 32 {
-            if self.valid_ash_memory_types & (1 << ash_index) != 0 {
-                if hal_count == 0 {
-                    return ash_index;
-                }
-                hal_count -= 1;
-            }
-        }
-        panic!("Unable to get Ash memory type for {:?}", hal_type);
-    }
-
     unsafe fn set_object_name(&self, object_type: vk::ObjectType, object_handle: u64, name: &str) {
         let instance = &self.shared.instance;
-        if let Some(DebugMessenger::Utils(ref debug_utils_ext, _)) = instance.debug_messenger {
+        if let Some(DebugMessenger::Utils(ref debug_utils_ext, _)) = instance.1 {
             // Append a null terminator to the string while avoiding allocating memory
             static mut NAME_BUF: [u8; 64] = [0u8; 64];
             std::ptr::copy_nonoverlapping(
