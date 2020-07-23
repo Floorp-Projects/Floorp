@@ -1456,32 +1456,37 @@ SearchService.prototype = {
         e => e._extensionID == engine._extensionID
       );
 
-      if (inUseEngines?.length == 1 && inUseEngines?.[0] != engine) {
-        // As `this._engines` is indexed by name, we can sometimes have the
-        // situation that we have added an engine earlier in this function,
-        // but we need to remove the sister engine here, e.g. eBay has the
-        // same name for both US and GB, but has a different domain.
+      if (inUseEngines.length <= 1) {
+        if (inUseEngines.length == 1 && inUseEngines[0] == engine) {
+          // No other engines are using this extension ID.
+
+          // The internal remove is done first to avoid a call to removeEngine
+          // which could adjust the sort order when we don't want it to.
+          this._internalRemoveEngine(engine);
+
+          let addon = await AddonManager.getAddonByID(engine._extensionID);
+          if (addon) {
+            // AddonManager won't call removeEngine if an engine with the
+            // WebExtension id doesn't exist in the search service.
+            await addon.uninstall();
+          }
+        }
+        // For the case where `inUseEngines[0] != engine`:
+        // This is a situation where there was an engine added earlier in this
+        // function with the same name.
+        // For example, eBay has the same name for both US and GB, but has
+        // a different domain and uses a different locale of the same
+        // WebExtension.
         // The result of this is the earlier addition has already replaced
-        // the engine in `this._engines`, so all we need to do here is to
-        // pretend the old engine was removed.
-        SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.REMOVED);
-        continue;
-      } else if (inUseEngines?.length > 1) {
+        // the engine in `this._engines` (which is indexed by name), so all that
+        // needs to be done here is to pretend the old engine was removed
+        // which is notified below.
+      } else {
         // More than one engine is using this extension ID, so we don't want to
         // remove the add-on.
         this._internalRemoveEngine(engine);
-        SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.REMOVED);
-      } else {
-        // No other engines are using this, so we can just remove the add-on.
-        let addon = await AddonManager.getAddonByID(engine._extensionID);
-        if (addon) {
-          // Pretend this engine is no longer app-provided, so that when
-          // the add-on uninstall calls removeEngine, we properly remove it,
-          // rather than trying to hide it.
-          engine._isAppProvided = false;
-          await addon.uninstall();
-        }
       }
+      SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.REMOVED);
     }
 
     this._dontSetUseDBForOrder = false;
