@@ -346,10 +346,8 @@
         height = lastRowRect.bottom - firstRowRect.top + this._rlbPadding;
       }
 
-      let currentHeight = this.richlistbox.getBoundingClientRect().height;
-      if (height <= currentHeight) {
-        this._collapseUnusedItems();
-      }
+      this._collapseUnusedItems();
+
       this.richlistbox.style.removeProperty("height");
       // We need to get the ceiling of the calculated value to ensure that the box fully contains
       // all of its contents and doesn't cause a scrollbar since nsIBoxObject only expects a
