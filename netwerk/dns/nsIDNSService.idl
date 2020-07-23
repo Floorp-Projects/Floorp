@@ -405,6 +405,12 @@ interface nsIDNSService : nsISupports
 %}
 
     /**
+     * Force resolution even when SOCKS proxy with DNS forwarding is configured.
+     * Only to be used for the proxy host resolution.
+     */
+    const unsigned long RESOLVE_IGNORE_SOCKS_DNS = 1 << 13;
+
+    /**
      * This ure dns request types that are currently supported.
      * RESOLVE_TYPE_DEFAULT is standard A/AAAA lookup
      * The others (currently only TXT supported) are wireformat types

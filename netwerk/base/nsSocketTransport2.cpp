@@ -1048,6 +1048,12 @@ nsresult nsSocketTransport::ResolveHost() {
   dnsFlags |= nsIDNSService::GetFlagsFromTRRMode(
       nsISocketTransport::GetTRRModeFromFlags(mConnectionFlags));
 
+  // When we get here, we are not resolving using any configured proxy likely
+  // because of individual proxy setting on the request or because the host is
+  // excluded from proxying.  Hence, force resolution despite global proxy-DNS
+  // configuration.
+  dnsFlags |= nsIDNSService::RESOLVE_IGNORE_SOCKS_DNS;
+
   NS_ASSERTION(!(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
                    !(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
                "Setting both RESOLVE_DISABLE_IPV6 and RESOLVE_DISABLE_IPV4");
