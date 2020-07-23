@@ -1930,7 +1930,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // We use MediaControlKeyListener to listen media control key, by which we
   // would play or pause media element.
   void StartListeningMediaControlKeyIfNeeded();
-  void StopListeningMediaControlKeyIfNeeded();
   RefPtr<MediaControlKeyListener> mMediaControlKeyListener;
 
   // Return true if the media element is being used in picture in picture mode.
