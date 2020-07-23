@@ -715,9 +715,12 @@ class SearchOneOffs {
   }
 
   handleSearchCommand(aEvent, aEngine, aForceNewTab) {
+    if (this._view?.oneOffsCommandHandler(aEvent, aEngine)) {
+      return;
+    }
+
     let where = "current";
     let params;
-
     // Open ctrl/cmd clicks on one-off buttons in a new background tab.
     if (aForceNewTab) {
       where = "tab";
@@ -1118,6 +1121,10 @@ class SearchOneOffs {
   }
 
   _on_click(event) {
+    if (this._view?.oneOffsClickHandler(event)) {
+      return;
+    }
+
     if (event.button == 2) {
       return; // ignore right clicks.
     }
