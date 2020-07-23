@@ -33,8 +33,7 @@ let duplicate = async function(delta, msg, cb) {
 
   duplicateTabIn(gBrowser.selectedTab, "tab", delta);
 
-  let tab = gBrowser.selectedTab;
-  await BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
+  await BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored");
 
   let endIndex = await promiseGetIndex(gBrowser.selectedBrowser);
   is(endIndex, startIndex + delta, msg);
