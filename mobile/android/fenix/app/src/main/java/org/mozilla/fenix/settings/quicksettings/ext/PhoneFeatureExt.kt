@@ -17,7 +17,15 @@ import org.mozilla.fenix.utils.Settings
 fun PhoneFeature.shouldBeVisible(
     sitePermissions: SitePermissions?,
     settings: Settings
-) = getStatus(sitePermissions, settings) != SitePermissions.Status.NO_DECISION
+): Boolean {
+    // We have to check if the site have a site permission exception,
+    // if it doesn't the feature shouldn't be visible
+    return if (sitePermissions == null) {
+        false
+    } else {
+        getStatus(sitePermissions, settings) != SitePermissions.Status.NO_DECISION
+    }
+}
 
 /**
  * Common [PhoneFeature] extensions used for **quicksettings**.

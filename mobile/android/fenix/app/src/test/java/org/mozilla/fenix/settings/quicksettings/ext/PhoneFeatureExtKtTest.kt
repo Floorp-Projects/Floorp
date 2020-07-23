@@ -27,6 +27,8 @@ class PhoneFeatureExtKtTest {
         assertFalse(PhoneFeature.CAMERA.shouldBeVisible(noDecisionForPermission, mockk()))
         assertTrue(PhoneFeature.CAMERA.shouldBeVisible(userAllowedPermission, mockk()))
         assertTrue(PhoneFeature.CAMERA.shouldBeVisible(userBlockedPermission, mockk()))
+        // The site doesn't have a site permission exception
+        assertFalse(PhoneFeature.CAMERA.shouldBeVisible(null, mockk()))
     }
 
     @Test
