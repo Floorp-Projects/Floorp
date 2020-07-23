@@ -243,6 +243,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".eml",         // MS Outlook
     //".exe", exec // Windows executable
     //".fat",
+    //".fileloc", exec  // Apple finder internet location data file
     ".fon",  // Windows font
     //".fxp", exec // MS FoxPro
     ".gadget",  // Windows
@@ -483,6 +484,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".vsx",  exec  // MS Visio
     //".vtx",  exec  // MS Visio
     //".wav",
+    //".webloc",  // MacOS website location file
     //".webp",
     ".website",   // Windows
     ".wflow",     // Automator action
