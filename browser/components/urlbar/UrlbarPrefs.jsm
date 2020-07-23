@@ -77,6 +77,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the urlbar displays a permanent search button.
   ["experimental.searchButton", false],
 
+  // Whether we style the search mode indicator's close button on hover.
+  ["experimental.searchModeIndicatorHover", false],
+
   // When true, `javascript:` URLs are not included in search results.
   ["filter.javascript", true],
 
