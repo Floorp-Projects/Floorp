@@ -19,10 +19,8 @@ button {
 }
 
 .button-box {
-  padding-top: 2px;
-  padding-bottom: 3px;
-  padding-inline-start: 4px;
-  padding-inline-end: 5px;
+  padding-block: 2px 3px;
+  padding-inline: 4px 5px;
 }
 
 .button-text {
