@@ -28,6 +28,10 @@
 /* static */
 const char* const sExecutableExts[] = {
     // clang-format off
+  ".accda",       // MS Access database
+  ".accdb",       // MS Access database
+  ".accde",       // MS Access database
+  ".accdr",       // MS Access database
   ".ad",
   ".ade",         // access project extension
   ".adp",
