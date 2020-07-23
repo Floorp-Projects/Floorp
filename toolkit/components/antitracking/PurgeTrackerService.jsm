@@ -287,17 +287,24 @@ PurgeTrackerService.prototype = {
       "privacy.purge_trackers.enabled",
       false
     );
-    // Only purge if ETP is enabled.
+
+    // Purge cookie jars for following cookie behaviors.
+    //   * BEHAVIOR_REJECT_FOREIGN
+    //   * BEHAVIOR_LIMIT_FOREIGN
+    //   * BEHAVIOR_REJECT_TRACKER (ETP)
+    //   * BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN (dFPI)
     let cookieBehavior = Services.cookies.cookieBehavior;
 
-    let etpActive =
+    let activeWithCookieBehavior =
+      cookieBehavior == Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN ||
+      cookieBehavior == Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN ||
       cookieBehavior == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ||
       cookieBehavior ==
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 
-    if (!etpActive || !purgeEnabled) {
+    if (!activeWithCookieBehavior || !purgeEnabled) {
       logger.log(
-        `returning early, etpActive: ${etpActive}, purgeEnabled: ${purgeEnabled}`
+        `returning early, activeWithCookieBehavior: ${activeWithCookieBehavior}, purgeEnabled: ${purgeEnabled}`
       );
       this.resetPurgeList();
       return;
