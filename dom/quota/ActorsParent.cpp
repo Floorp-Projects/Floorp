@@ -2389,23 +2389,24 @@ int64_t GetLastModifiedTime(nsIFile* aFile, bool aPersistent) {
   return timestamp;
 }
 
+bool FileAlreadyExists(nsresult aValue) {
+  return aValue == NS_ERROR_FILE_ALREADY_EXISTS;
+}
+
 nsresult EnsureDirectory(nsIFile* aDirectory, bool* aCreated) {
   AssertIsOnIOThread();
 
-  nsresult rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-  if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+  bool exists;
+  QM_TRY_VAR(exists, ToResult(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755),
+                              FileAlreadyExists));
+
+  if (exists) {
     bool isDirectory;
-    rv = aDirectory->IsDirectory(&isDirectory);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(isDirectory, NS_ERROR_UNEXPECTED);
-
-    *aCreated = false;
-  } else {
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *aCreated = true;
+    QM_TRY(aDirectory->IsDirectory(&isDirectory));
+    QM_TRY(OkIf(isDirectory), NS_ERROR_UNEXPECTED);
   }
 
+  *aCreated = !exists;
   return NS_OK;
 }
 
