@@ -150,3 +150,17 @@ TEST(QuotaCommon_TryVar, Failure_NoErr)
 
   EXPECT_FALSE(flag);
 }
+
+TEST(QuotaCommon_OkIf, True)
+{
+  auto res = OkIf(true);
+
+  EXPECT_TRUE(res.isOk());
+}
+
+TEST(QuotaCommon_SuccessIf, False)
+{
+  auto res = OkIf(false);
+
+  EXPECT_TRUE(res.isErr());
+}
