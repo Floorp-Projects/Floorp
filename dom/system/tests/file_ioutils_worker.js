@@ -69,7 +69,7 @@ self.onmessage = async function(msg) {
 
     await self.IOUtils.move(src, dest);
     ok(
-      !OS.File.exists(src) && OS.File.exists(dest),
+      !(await fileExists(src)) && (await fileExists(dest)),
       "IOUtils::move can move files from a worker"
     );
 
@@ -90,8 +90,26 @@ self.onmessage = async function(msg) {
   async function cleanup(...files) {
     for (const file of files) {
       await self.IOUtils.remove(file, { ignoreAbsent: true, recursive: true });
-      const exists = OS.File.exists(file);
+      const exists = await fileOrDirExists(file);
       ok(!exists, `Removed temporary file: ${file}`);
+    }
+  }
+
+  async function fileOrDirExists(location) {
+    try {
+      await self.IOUtils.stat(location);
+      return true;
+    } catch (ex) {
+      return false;
+    }
+  }
+
+  async function fileExists(location) {
+    try {
+      let { type } = await self.IOUtils.stat(location);
+      return type === "regular";
+    } catch (ex) {
+      return false;
     }
   }
 };

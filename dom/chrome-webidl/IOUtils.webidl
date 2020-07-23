@@ -52,6 +52,15 @@ namespace IOUtils {
    * @param path An absolute file path identifying the directory to create.
    */
   Promise<void> makeDirectory(DOMString path, optional MakeDirectoryOptions options = {});
+  /**
+   * Obtains information about a file, such as size, modification dates, etc.
+   *
+   * @param path An absolute file path identifying the file or directory to
+   *             inspect.
+   *
+   * @see FileInfo
+   */
+  Promise<FileInfo> stat(DOMString path);
 };
 
 /**
@@ -118,4 +127,35 @@ dictionary MakeDirectoryOptions {
    * Otherwise, fail if the directory already exists.
    */
   boolean ignoreExisting = true;
+};
+
+/**
+ * Types of files that are recognized by the |IOUtils.stat| method.
+ */
+enum FileType { "regular", "directory", "other" };
+
+/**
+ * Basic metadata about a file.
+ */
+dictionary FileInfo {
+  /**
+   * The absolute path to the file on disk, as known when this file info was
+   * obtained.
+   */
+  DOMString path;
+  /**
+   * Identifies if the file at |path| is a regular file, directory, or something
+   * something else.
+   */
+  FileType type;
+  /**
+   * If this represents a regular file, the size of the file in bytes.
+   * Otherwise, -1.
+   */
+  long long size;
+  /**
+   * The timestamp of the last file modification, represented in milliseconds
+   * since Epoch (1970-01-01T00:00:00.000Z).
+   */
+  long long lastModified;
 };
