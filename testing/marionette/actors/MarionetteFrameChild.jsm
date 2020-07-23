@@ -75,6 +75,12 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:findElements":
           result = await this.findElements(data);
           break;
+        case "MarionetteFrameParent:getElementAttribute":
+          result = await this.getElementAttribute(data);
+          break;
+        case "MarionetteFrameParent:getElementProperty":
+          result = await this.getElementProperty(data);
+          break;
       }
 
       return { data: evaluate.toJSON(result) };
@@ -120,5 +126,31 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const container = { frame: this.content };
     const el = await element.find(container, strategy, selector, opts);
     return this.seenEls.addAll(el);
+  }
+
+  /**
+   * Get the value of an attribute for the given element.
+   */
+  async getElementAttribute(options = {}) {
+    const { name, webEl } = options;
+    const el = this.seenEls.get(webEl);
+
+    if (element.isBooleanAttribute(el, name)) {
+      if (el.hasAttribute(name)) {
+        return "true";
+      }
+      return null;
+    }
+    return el.getAttribute(name);
+  }
+
+  /**
+   * Get the value of a property for the given element.
+   */
+  async getElementProperty(options = {}) {
+    const { name, webEl } = options;
+    const el = this.seenEls.get(webEl);
+
+    return typeof el[name] != "undefined" ? el[name] : null;
   }
 }
