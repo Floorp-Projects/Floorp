@@ -63,7 +63,7 @@
 
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
-        <li>Site geçici olarak kapalı olabilir veya çok meşgul olabilir. Birkaç dakika sonra yeniden deneyin.</li>
+        <li>Site geçici olarak kapalı veya çok meşgul olabilir. Birkaç dakika sonra yeniden deneyin.</li>
         <li>Hiçbir sayfa açılmıyorsa cihazınızın mobil internet veya Wi-Fi bağlantısını kontrol edin.</li>
       </ul>]]></string>
 
