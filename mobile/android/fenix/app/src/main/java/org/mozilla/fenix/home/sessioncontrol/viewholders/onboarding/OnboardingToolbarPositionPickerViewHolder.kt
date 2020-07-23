@@ -10,6 +10,7 @@ import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.OnboardingToolbarPosition.Position
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
@@ -29,10 +30,9 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         radioBottomToolbar.addIllustration(view.toolbar_bottom_image)
 
         val settings = view.context.components.settings
-        radio = if (settings.shouldUseBottomToolbar) {
-            radioBottomToolbar
-        } else {
-            radioTopToolbar
+        radio = when (settings.toolbarPosition) {
+            ToolbarPosition.BOTTOM -> radioBottomToolbar
+            ToolbarPosition.TOP -> radioTopToolbar
         }
         radio.updateRadioValue(true)
 

@@ -83,6 +83,7 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.FenixTipManager
 import org.mozilla.fenix.components.tips.providers.MigrationTipProvider
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
@@ -120,12 +121,9 @@ class HomeFragment : Fragment() {
     }
 
     private val snackbarAnchorView: View?
-        get() {
-            return if (requireContext().settings().shouldUseBottomToolbar) {
-                toolbarLayout
-            } else {
-                null
-            }
+        get() = when (requireContext().settings().toolbarPosition) {
+            ToolbarPosition.BOTTOM -> toolbarLayout
+            ToolbarPosition.TOP -> null
         }
 
     private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
@@ -253,45 +251,45 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateLayout(view: View) {
-        val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
-
-        if (!shouldUseBottomToolbar) {
-            view.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.MATCH_PARENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-            )
-                .apply {
+        when (view.context.settings().toolbarPosition) {
+            ToolbarPosition.TOP -> {
+                view.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(
+                    ConstraintLayout.LayoutParams.MATCH_PARENT,
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
                     gravity = Gravity.TOP
                 }
 
-            ConstraintSet().apply {
-                clone(view.toolbarLayout)
-                clear(view.bottom_bar.id, BOTTOM)
-                clear(view.bottomBarShadow.id, BOTTOM)
-                connect(view.bottom_bar.id, TOP, PARENT_ID, TOP)
-                connect(view.bottomBarShadow.id, TOP, view.bottom_bar.id, BOTTOM)
-                connect(view.bottomBarShadow.id, BOTTOM, PARENT_ID, BOTTOM)
-                applyTo(view.toolbarLayout)
+                ConstraintSet().apply {
+                    clone(view.toolbarLayout)
+                    clear(view.bottom_bar.id, BOTTOM)
+                    clear(view.bottomBarShadow.id, BOTTOM)
+                    connect(view.bottom_bar.id, TOP, PARENT_ID, TOP)
+                    connect(view.bottomBarShadow.id, TOP, view.bottom_bar.id, BOTTOM)
+                    connect(view.bottomBarShadow.id, BOTTOM, PARENT_ID, BOTTOM)
+                    applyTo(view.toolbarLayout)
+                }
+
+                view.bottom_bar.background = resources.getDrawable(
+                    ThemeManager.resolveAttribute(R.attr.bottomBarBackgroundTop, requireContext()),
+                    null
+                )
+
+                view.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                    topMargin = HEADER_MARGIN.dpToPx(resources.displayMetrics)
+                }
+
+                createNewAppBarListener(HEADER_MARGIN.dpToPx(resources.displayMetrics).toFloat())
+                view.homeAppBar.addOnOffsetChangedListener(
+                    homeAppBarOffSetListener
+                )
             }
-
-            view.bottom_bar.background = resources.getDrawable(
-                ThemeManager.resolveAttribute(R.attr.bottomBarBackgroundTop, requireContext()),
-                null
-            )
-
-            view.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = HEADER_MARGIN.dpToPx(resources.displayMetrics)
+            ToolbarPosition.BOTTOM -> {
+                createNewAppBarListener(0F)
+                view.homeAppBar.addOnOffsetChangedListener(
+                    homeAppBarOffSetListener
+                )
             }
-
-            createNewAppBarListener(HEADER_MARGIN.dpToPx(resources.displayMetrics).toFloat())
-            view.homeAppBar.addOnOffsetChangedListener(
-                homeAppBarOffSetListener
-            )
-        } else {
-            createNewAppBarListener(0F)
-            view.homeAppBar.addOnOffsetChangedListener(
-                homeAppBarOffSetListener
-            )
         }
     }
 

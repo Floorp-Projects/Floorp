@@ -29,6 +29,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature
@@ -462,6 +463,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         // Default accessibility users to top toolbar
         default = !touchExplorationIsEnabled && !switchServiceIsEnabled
     )
+
+    val toolbarPosition: ToolbarPosition
+        get() = if (shouldUseBottomToolbar) ToolbarPosition.BOTTOM else ToolbarPosition.TOP
 
     /**
      * Check each active accessibility service to see if it can perform gestures, if any can,

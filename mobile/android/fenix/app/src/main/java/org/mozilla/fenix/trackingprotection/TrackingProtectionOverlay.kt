@@ -13,7 +13,6 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.*
@@ -22,6 +21,7 @@ import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.utils.Settings
 
@@ -63,10 +63,10 @@ class TrackingProtectionOverlay(
 
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.tracking_protection_onboarding_popup, null)
-        val isBottomToolbar = settings.shouldUseBottomToolbar
+        val toolbarPosition = settings.toolbarPosition
 
-        layout.drop_down_triangle.isGone = isBottomToolbar
-        layout.pop_up_triangle.isVisible = isBottomToolbar
+        layout.drop_down_triangle.isVisible = toolbarPosition == ToolbarPosition.TOP
+        layout.pop_up_triangle.isVisible = toolbarPosition == ToolbarPosition.BOTTOM
 
         layout.onboarding_message.text =
             context.getString(
@@ -91,11 +91,7 @@ class TrackingProtectionOverlay(
 
         val xOffset = triangleMarginStartPx + triangleWidthPx / 2
 
-        val gravity = if (isBottomToolbar) {
-            Gravity.START or Gravity.BOTTOM
-        } else {
-            Gravity.START or Gravity.TOP
-        }
+        val gravity = Gravity.START or toolbarPosition.androidGravity
 
         trackingOnboardingDialog.apply {
             setContentView(layout)

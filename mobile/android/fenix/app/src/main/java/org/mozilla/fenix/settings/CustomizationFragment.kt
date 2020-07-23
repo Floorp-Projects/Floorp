@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -122,8 +123,9 @@ class CustomizationFragment : PreferenceFragmentCompat() {
             ))
         }
 
-        topPreference.setCheckedWithoutClickListener(!requireContext().settings().shouldUseBottomToolbar)
-        bottomPreference.setCheckedWithoutClickListener(requireContext().settings().shouldUseBottomToolbar)
+        val toolbarPosition = requireContext().settings().toolbarPosition
+        topPreference.setCheckedWithoutClickListener(toolbarPosition == ToolbarPosition.TOP)
+        bottomPreference.setCheckedWithoutClickListener(toolbarPosition == ToolbarPosition.BOTTOM)
 
         addToRadioGroup(topPreference, bottomPreference)
     }

@@ -15,6 +15,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -34,7 +35,7 @@ class OnboardingToolbarPositionPickerViewHolderTest {
 
     @Test
     fun `bottom illustration should select corresponding radio button`() {
-        every { settings.shouldUseBottomToolbar } returns false
+        every { settings.toolbarPosition } returns ToolbarPosition.TOP
         OnboardingToolbarPositionPickerViewHolder(view)
         assertTrue(view.toolbar_top_radio_button.isChecked)
         assertFalse(view.toolbar_bottom_radio_button.isChecked)
@@ -46,7 +47,7 @@ class OnboardingToolbarPositionPickerViewHolderTest {
 
     @Test
     fun `top illustration should select corresponding radio button`() {
-        every { settings.shouldUseBottomToolbar } returns true
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
         OnboardingToolbarPositionPickerViewHolder(view)
         assertFalse(view.toolbar_top_radio_button.isChecked)
         assertTrue(view.toolbar_bottom_radio_button.isChecked)

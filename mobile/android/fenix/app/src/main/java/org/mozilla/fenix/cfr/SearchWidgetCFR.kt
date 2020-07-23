@@ -11,7 +11,6 @@ import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
 import kotlinx.android.synthetic.main.search_widget_cfr.view.*
@@ -21,6 +20,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.SearchWidgetCreator
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -50,18 +50,14 @@ class SearchWidgetCFR(
         val searchWidgetCFRDialog = Dialog(context)
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.search_widget_cfr, null)
-        val isBottomToolbar = settings.shouldUseBottomToolbar
+        val toolbarPosition = settings.toolbarPosition
 
-        layout.drop_down_triangle.isGone = isBottomToolbar
-        layout.pop_up_triangle.isVisible = isBottomToolbar
+        layout.drop_down_triangle.isVisible = toolbarPosition == ToolbarPosition.TOP
+        layout.pop_up_triangle.isVisible = toolbarPosition == ToolbarPosition.BOTTOM
 
         val toolbar = getToolbar()
 
-        val gravity = if (isBottomToolbar) {
-            Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
-        } else {
-            Gravity.CENTER_HORIZONTAL or Gravity.TOP
-        }
+        val gravity = Gravity.CENTER_HORIZONTAL or toolbarPosition.androidGravity
 
         layout.cfr_neg_button.setOnClickListener {
             metrics.track(Event.SearchWidgetCFRNotNowPressed)

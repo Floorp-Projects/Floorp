@@ -113,10 +113,9 @@ class TabCounterToolbarButton(
         )
 
         return BrowserMenuBuilder(
-            if (context.settings().shouldUseBottomToolbar) {
-                menuItems.reversed()
-            } else {
-                menuItems
+            when (context.settings().toolbarPosition) {
+                ToolbarPosition.BOTTOM -> menuItems.reversed()
+                ToolbarPosition.TOP -> menuItems
             }
         ).build(context)
     }

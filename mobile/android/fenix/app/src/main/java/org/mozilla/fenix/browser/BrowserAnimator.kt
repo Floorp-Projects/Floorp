@@ -21,6 +21,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineView
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.settings
 import java.lang.ref.WeakReference
 
@@ -155,12 +156,15 @@ class BrowserAnimator(
         fun getToolbarNavOptions(context: Context): NavOptions {
             val navOptions = NavOptions.Builder()
 
-            if (!context.settings().shouldUseBottomToolbar) {
-                navOptions.setEnterAnim(R.anim.fade_in)
-                navOptions.setExitAnim(R.anim.fade_out)
-            } else {
-                navOptions.setEnterAnim(R.anim.fade_in_up)
-                navOptions.setExitAnim(R.anim.fade_out_down)
+            when (context.settings().toolbarPosition) {
+                ToolbarPosition.TOP -> {
+                    navOptions.setEnterAnim(R.anim.fade_in)
+                    navOptions.setExitAnim(R.anim.fade_out)
+                }
+                ToolbarPosition.BOTTOM -> {
+                    navOptions.setEnterAnim(R.anim.fade_in_up)
+                    navOptions.setExitAnim(R.anim.fade_out_down)
+                }
             }
 
             return navOptions.build()

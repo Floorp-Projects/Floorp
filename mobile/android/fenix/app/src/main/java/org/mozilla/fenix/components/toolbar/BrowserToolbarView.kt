@@ -17,6 +17,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
@@ -59,7 +60,7 @@ interface BrowserToolbarViewInteractor {
 @SuppressWarnings("LargeClass")
 class BrowserToolbarView(
     private val container: ViewGroup,
-    private val shouldUseBottomToolbar: Boolean,
+    private val toolbarPosition: ToolbarPosition,
     private val interactor: BrowserToolbarViewInteractor,
     private val customTabSession: Session?,
     private val lifecycleOwner: LifecycleOwner
@@ -71,9 +72,9 @@ class BrowserToolbarView(
     private val settings = container.context.settings()
 
     @LayoutRes
-    private val toolbarLayout = when {
-        settings.shouldUseBottomToolbar -> R.layout.component_bottom_browser_toolbar
-        else -> R.layout.component_browser_top_toolbar
+    private val toolbarLayout = when (settings.toolbarPosition) {
+        ToolbarPosition.BOTTOM -> R.layout.component_bottom_browser_toolbar
+        ToolbarPosition.TOP -> R.layout.component_browser_top_toolbar
     }
 
     private val layout = LayoutInflater.from(container.context)
@@ -144,7 +145,7 @@ class BrowserToolbarView(
         with(container.context) {
             val sessionManager = components.core.sessionManager
 
-            if (!shouldUseBottomToolbar) {
+            if (toolbarPosition == ToolbarPosition.TOP) {
                 val offsetChangedListener =
                     AppBarLayout.OnOffsetChangedListener { _: AppBarLayout?, verticalOffset: Int ->
                         interactor.onScrolled(verticalOffset)
@@ -167,10 +168,9 @@ class BrowserToolbarView(
                     false
                 }
 
-                display.progressGravity = if (shouldUseBottomToolbar) {
-                    DisplayToolbar.Gravity.TOP
-                } else {
-                    DisplayToolbar.Gravity.BOTTOM
+                display.progressGravity = when (toolbarPosition) {
+                    ToolbarPosition.BOTTOM -> DisplayToolbar.Gravity.TOP
+                    ToolbarPosition.TOP -> DisplayToolbar.Gravity.BOTTOM
                 }
 
                 val primaryTextColor = ContextCompat.getColor(
@@ -207,7 +207,7 @@ class BrowserToolbarView(
                     this,
                     sessionManager,
                     customTabSession?.id,
-                    shouldReverseItems = !shouldUseBottomToolbar,
+                    shouldReverseItems = toolbarPosition == ToolbarPosition.TOP,
                     onItemTapped = {
                         interactor.onBrowserToolbarMenuItemTapped(it)
                     }
@@ -216,7 +216,7 @@ class BrowserToolbarView(
                 menuToolbar = DefaultToolbarMenu(
                     context = this,
                     hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
-                    shouldReverseItems = !shouldUseBottomToolbar,
+                    shouldReverseItems = toolbarPosition == ToolbarPosition.TOP,
                     onItemTapped = { interactor.onBrowserToolbarMenuItemTapped(it) },
                     lifecycleOwner = lifecycleOwner,
                     sessionManager = sessionManager,
@@ -254,12 +254,15 @@ class BrowserToolbarView(
     }
 
     fun expand() {
-        if (settings.shouldUseBottomToolbar) {
-            (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
-                (behavior as BrowserToolbarBottomBehavior).forceExpand(view)
+        when (settings.toolbarPosition) {
+            ToolbarPosition.BOTTOM -> {
+                (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                    (behavior as BrowserToolbarBottomBehavior).forceExpand(view)
+                }
             }
-        } else if (!settings.shouldUseBottomToolbar) {
-            layout.app_bar?.setExpanded(true)
+            ToolbarPosition.TOP -> {
+                layout.app_bar?.setExpanded(true)
+            }
         }
     }
 
@@ -268,30 +271,27 @@ class BrowserToolbarView(
      * Note that the bottom toolbar has a feature flag for being dynamic, so it may not get flags set.
      */
     fun setScrollFlags(shouldDisableScroll: Boolean = false) {
-        if (view.context.settings().shouldUseBottomToolbar) {
-            if (view.layoutParams is CoordinatorLayout.LayoutParams) {
-                (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
+        when (settings.toolbarPosition) {
+            ToolbarPosition.BOTTOM -> {
+                (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
                     behavior = BrowserToolbarBottomBehavior(view.context, null)
                 }
             }
-
-            return
-        }
-
-        val params = view.layoutParams as AppBarLayout.LayoutParams
-
-        params.scrollFlags = when (view.context.settings().shouldUseFixedTopToolbar || shouldDisableScroll) {
-            true -> {
-                // Force expand the toolbar so the user is not stuck with a hidden toolbar
-                expand()
-                0
+            ToolbarPosition.TOP -> {
+                view.updateLayoutParams<AppBarLayout.LayoutParams> {
+                    scrollFlags = if (settings.shouldUseFixedTopToolbar || shouldDisableScroll) {
+                        // Force expand the toolbar so the user is not stuck with a hidden toolbar
+                        expand()
+                        0
+                    } else {
+                        SCROLL_FLAG_SCROLL or
+                            SCROLL_FLAG_ENTER_ALWAYS or
+                            SCROLL_FLAG_SNAP or
+                            SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
+                    }
+                }
             }
-            false -> {
-                SCROLL_FLAG_SCROLL or SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SNAP or SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
-            }
         }
-
-        view.layoutParams = params
     }
 
     companion object {

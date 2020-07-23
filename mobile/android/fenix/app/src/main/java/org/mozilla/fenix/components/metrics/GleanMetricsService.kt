@@ -50,6 +50,7 @@ import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.GleanMetrics.UserSpecifiedSearchEngines
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.BrowsersCache
@@ -724,10 +725,9 @@ class GleanMetricsService(private val context: Context) : MetricsService {
             }
 
             toolbarPosition.set(
-                if (context.settings().shouldUseBottomToolbar) {
-                    Event.ToolbarPositionChanged.Position.BOTTOM.name
-                } else {
-                    Event.ToolbarPositionChanged.Position.TOP.name
+                when (context.settings().toolbarPosition) {
+                    ToolbarPosition.BOTTOM -> Event.ToolbarPositionChanged.Position.BOTTOM.name
+                    ToolbarPosition.TOP -> Event.ToolbarPositionChanged.Position.TOP.name
                 }
             )
         }
