@@ -3,7 +3,7 @@ comparable struct S {
     double d;
 };
 
-sync protocol PStruct {
+sync protocol PStructComparable {
 parent:
     sync test(S s) returns (S ss);
     async __delete__();
