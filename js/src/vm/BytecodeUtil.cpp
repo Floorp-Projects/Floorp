@@ -1416,7 +1416,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
 
     case JOF_SCOPE: {
-      RootedScope scope(cx, script->getScope(GET_UINT32_INDEX(pc)));
+      RootedScope scope(cx, script->getScope(pc));
       UniqueChars bytes;
       if (!ToDisassemblySource(cx, scope, &bytes)) {
         return 0;
@@ -1442,7 +1442,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
 
     case JOF_ATOM: {
-      RootedValue v(cx, StringValue(script->getAtom(GET_UINT32_INDEX(pc))));
+      RootedValue v(cx, StringValue(script->getAtom(pc)));
       UniqueChars bytes = ToDisassemblySource(cx, v);
       if (!bytes) {
         return 0;
@@ -1482,7 +1482,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         break;
       }
 
-      JSObject* obj = script->getObject(GET_UINT32_INDEX(pc));
+      JSObject* obj = script->getObject(pc);
       {
         RootedValue v(cx, ObjectValue(*obj));
         UniqueChars bytes = ToDisassemblySource(cx, v);
@@ -1570,7 +1570,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       break;
 
     case JOF_CLASS_CTOR: {
-      uint32_t atomIndex = 0;
+      GCThingIndex atomIndex;
       uint32_t classStartOffset = 0, classEndOffset = 0;
       GetClassConstructorOperands(pc, &atomIndex, &classStartOffset,
                                   &classEndOffset);
@@ -1883,7 +1883,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::NewArray:
       return write("[]");
     case JSOp::RegExp: {
-      RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
+      RootedObject obj(cx, script->getObject(pc));
       JSString* str = obj->as<RegExpObject>().toString(cx);
       if (!str) {
         return false;
@@ -1891,7 +1891,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       return write(str);
     }
     case JSOp::NewArrayCopyOnWrite: {
-      RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
+      RootedObject obj(cx, script->getObject(pc));
       Handle<ArrayObject*> aobj = obj.as<ArrayObject>();
       if (!write("[")) {
         return false;
@@ -1912,7 +1912,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       return write("]");
     }
     case JSOp::Object: {
-      JSObject* obj = script->getObject(GET_UINT32_INDEX(pc));
+      JSObject* obj = script->getObject(pc);
       RootedValue objv(cx, ObjectValue(*obj));
       JSString* str = ValueToSource(cx, objv);
       if (!str) {

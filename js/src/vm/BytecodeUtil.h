@@ -25,6 +25,7 @@
 #include "vm/BytecodeFormatFlags.h"  // JOF_*
 #include "vm/Opcodes.h"
 #include "vm/Printer.h"
+#include "vm/SharedStencil.h"  // js::GCThingIndex
 
 /*
  * JS operation bytecodes.
@@ -144,14 +145,16 @@ static MOZ_ALWAYS_INLINE void SET_JUMP_OFFSET(jsbytecode* pc, int32_t off) {
   SET_INT32(pc, off);
 }
 
-static const unsigned UINT32_INDEX_LEN = 4;
+static const unsigned GCTHING_INDEX_LEN = 4;
 
-static MOZ_ALWAYS_INLINE uint32_t GET_UINT32_INDEX(const jsbytecode* pc) {
-  return GET_UINT32(pc);
+static MOZ_ALWAYS_INLINE js::GCThingIndex GET_GCTHING_INDEX(
+    const jsbytecode* pc) {
+  return js::GCThingIndex(GET_UINT32(pc));
 }
 
-static MOZ_ALWAYS_INLINE void SET_UINT32_INDEX(jsbytecode* pc, uint32_t index) {
-  SET_UINT32(pc, index);
+static MOZ_ALWAYS_INLINE void SET_GCTHING_INDEX(jsbytecode* pc,
+                                                js::GCThingIndex index) {
+  SET_UINT32(pc, index.index);
 }
 
 // Index limit is determined by SrcNote::FourByteOffsetFlag, see
@@ -198,6 +201,8 @@ static inline void SET_RESUMEINDEX(jsbytecode* pc, uint32_t resumeIndex) {
   SET_UINT24(pc, resumeIndex);
 }
 
+static const unsigned ICINDEX_LEN = 4;
+
 static inline uint32_t GET_ICINDEX(const jsbytecode* pc) {
   return GET_UINT32(pc);
 }
@@ -233,23 +238,23 @@ static inline bool IsBackedgeForLoopHead(jsbytecode* pc, jsbytecode* loopHead) {
 }
 
 static inline void SetClassConstructorOperands(jsbytecode* pc,
-                                               uint32_t atomIndex,
+                                               js::GCThingIndex atomIndex,
                                                uint32_t sourceStart,
                                                uint32_t sourceEnd) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::ClassConstructor ||
              JSOp(*pc) == JSOp::DerivedConstructor);
-  SET_UINT32(pc, atomIndex);
+  SET_GCTHING_INDEX(pc, atomIndex);
   SET_UINT32(pc + 4, sourceStart);
   SET_UINT32(pc + 8, sourceEnd);
 }
 
 static inline void GetClassConstructorOperands(jsbytecode* pc,
-                                               uint32_t* atomIndex,
+                                               js::GCThingIndex* atomIndex,
                                                uint32_t* sourceStart,
                                                uint32_t* sourceEnd) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::ClassConstructor ||
              JSOp(*pc) == JSOp::DerivedConstructor);
-  *atomIndex = GET_UINT32(pc);
+  *atomIndex = GET_GCTHING_INDEX(pc);
   *sourceStart = GET_UINT32(pc + 4);
   *sourceEnd = GET_UINT32(pc + 8);
 }

@@ -262,19 +262,13 @@ class CompileInfo {
 
   // Script accessors based on PC.
 
-  JSAtom* getAtom(jsbytecode* pc) const {
-    return script_->getAtom(GET_UINT32_INDEX(pc));
-  }
+  JSAtom* getAtom(jsbytecode* pc) const { return script_->getAtom(pc); }
 
-  PropertyName* getName(jsbytecode* pc) const {
-    return script_->getName(GET_UINT32_INDEX(pc));
-  }
+  PropertyName* getName(jsbytecode* pc) const { return script_->getName(pc); }
 
   inline RegExpObject* getRegExp(jsbytecode* pc) const;
 
-  JSObject* getObject(jsbytecode* pc) const {
-    return script_->getObject(GET_UINT32_INDEX(pc));
-  }
+  JSObject* getObject(jsbytecode* pc) const { return script_->getObject(pc); }
 
   inline JSFunction* getFunction(jsbytecode* pc) const;
 

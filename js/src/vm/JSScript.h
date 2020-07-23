@@ -47,7 +47,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
-#include "vm/SharedStencil.h"
+#include "vm/SharedStencil.h"  // js::GCThingIndex
 #include "vm/Time.h"
 
 namespace JS {
@@ -1924,8 +1924,9 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
 
     MOZ_ASSERT(data_, "Script doesn't seem to be compiled");
 
-    size_t outermostScopeIndex = 0;
-    return gcthings()[outermostScopeIndex].as<Scope>().enclosing();
+    return gcthings()[js::GCThingIndex::outermostScopeIndex()]
+        .as<Scope>()
+        .enclosing();
   }
   void setEnclosingScope(Scope* enclosingScope);
   Scope* releaseEnclosingScope();
@@ -2393,7 +2394,7 @@ class JSScript : public js::BaseScript {
   inline bool hasGlobal(const js::GlobalObject* global) const;
   js::GlobalObject& uninlinedGlobal() const;
 
-  uint32_t bodyScopeIndex() const {
+  js::GCThingIndex bodyScopeIndex() const {
     return immutableScriptData()->bodyScopeIndex;
   }
 
@@ -2402,8 +2403,7 @@ class JSScript : public js::BaseScript {
   js::Scope* outermostScope() const {
     // The body scope may not be the outermost scope in the script when
     // the decl env scope is present.
-    size_t index = 0;
-    return getScope(index);
+    return getScope(js::GCThingIndex::outermostScopeIndex());
   }
 
   bool functionHasExtraBodyVarScope() const {
@@ -2543,17 +2543,17 @@ class JSScript : public js::BaseScript {
     return immutableScriptData()->notes();
   }
 
-  JSAtom* getAtom(size_t index) const {
+  JSAtom* getAtom(js::GCThingIndex index) const {
     return &gcthings()[index].as<JSString>().asAtom();
   }
 
   JSAtom* getAtom(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC<uint32_t>(pc));
+    MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_ATOM);
-    return getAtom(GET_UINT32_INDEX(pc));
+    return getAtom(GET_GCTHING_INDEX(pc));
   }
 
-  js::PropertyName* getName(size_t index) {
+  js::PropertyName* getName(js::GCThingIndex index) {
     return getAtom(index)->asPropertyName();
   }
 
@@ -2561,17 +2561,17 @@ class JSScript : public js::BaseScript {
     return getAtom(pc)->asPropertyName();
   }
 
-  JSObject* getObject(size_t index) const {
+  JSObject* getObject(js::GCThingIndex index) const {
     MOZ_ASSERT(gcthings()[index].asCell()->isTenured());
     return &gcthings()[index].as<JSObject>();
   }
 
   JSObject* getObject(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC<uint32_t>(pc));
-    return getObject(GET_UINT32_INDEX(pc));
+    MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
+    return getObject(GET_GCTHING_INDEX(pc));
   }
 
-  js::Scope* getScope(size_t index) const {
+  js::Scope* getScope(js::GCThingIndex index) const {
     return &gcthings()[index].as<js::Scope>();
   }
 
@@ -2579,27 +2579,27 @@ class JSScript : public js::BaseScript {
     // This method is used to get a scope directly using a JSOp with an
     // index. To search through ScopeNotes to look for a Scope using pc,
     // use lookupScope.
-    MOZ_ASSERT(containsPC<uint32_t>(pc));
+    MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_SCOPE,
                "Did you mean to use lookupScope(pc)?");
-    return getScope(GET_UINT32_INDEX(pc));
+    return getScope(GET_GCTHING_INDEX(pc));
   }
 
-  inline JSFunction* getFunction(size_t index) const;
+  inline JSFunction* getFunction(js::GCThingIndex index) const;
   inline JSFunction* getFunction(jsbytecode* pc) const;
 
-  inline js::RegExpObject* getRegExp(size_t index) const;
+  inline js::RegExpObject* getRegExp(js::GCThingIndex index) const;
   inline js::RegExpObject* getRegExp(jsbytecode* pc) const;
 
-  js::BigInt* getBigInt(size_t index) const {
+  js::BigInt* getBigInt(js::GCThingIndex index) const {
     MOZ_ASSERT(gcthings()[index].asCell()->isTenured());
     return &gcthings()[index].as<js::BigInt>();
   }
 
   js::BigInt* getBigInt(jsbytecode* pc) const {
-    MOZ_ASSERT(containsPC<uint32_t>(pc));
+    MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
     MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_BIGINT);
-    return getBigInt(GET_UINT32_INDEX(pc));
+    return getBigInt(GET_GCTHING_INDEX(pc));
   }
 
   // The following 3 functions find the static scope just before the

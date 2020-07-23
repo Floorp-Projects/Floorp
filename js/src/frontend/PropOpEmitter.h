@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "js/TypeDecls.h"
+#include "vm/SharedStencil.h"  // GCThingIndex
 
 namespace js {
 namespace frontend {
@@ -124,7 +125,7 @@ class MOZ_STACK_CLASS PropOpEmitter {
   ObjKind objKind_;
 
   // The index for the property name's atom.
-  uint32_t propAtomIndex_ = 0;
+  GCThingIndex propAtomIndex_;
 
   // Whether the property name is `length` or not.
   bool isLength_ = false;

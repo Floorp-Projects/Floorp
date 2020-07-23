@@ -2275,7 +2275,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return jsop_setfunname(GET_UINT8(pc));
 
     case JSOp::PushLexicalEnv:
-      return jsop_pushlexicalenv(GET_UINT32_INDEX(pc));
+      return jsop_pushlexicalenv(GET_GCTHING_INDEX(pc));
 
     case JSOp::PopLexicalEnv:
       current->setEnvironmentChain(walkEnvironmentChain(1));
@@ -11821,7 +11821,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_setfunname(uint8_t prefixKind) {
   return resumeAfter(ins);
 }
 
-AbortReasonOr<Ok> IonBuilder::jsop_pushlexicalenv(uint32_t index) {
+AbortReasonOr<Ok> IonBuilder::jsop_pushlexicalenv(GCThingIndex index) {
   MOZ_ASSERT(usesEnvironmentChain());
 
   LexicalScope* scope = &script()->getScope(index)->as<LexicalScope>();
