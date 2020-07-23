@@ -431,13 +431,6 @@ interface nsISHEntry : nsISupports
     [infallible] readonly attribute unsigned long long bfcacheID;
 
     /**
-     * synchronizeLayoutHistoryState() can be used to synchronize
-     * layoutHistoryState object to the parent process in case session history
-     * lives there. With in-process session history this method is no-op.
-     */
-    void synchronizeLayoutHistoryState();
-
-    /**
      * Sync up the docshell and session history trees for subframe navigation.
      *
      * @param aEntry                    new entry

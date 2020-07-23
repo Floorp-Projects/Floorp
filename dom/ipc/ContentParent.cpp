@@ -116,6 +116,7 @@
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
+#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/URLClassifierParent.h"
@@ -6846,6 +6847,12 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryUpdate(
     Unused << aParent->SendHistoryCommitIndexAndLength(aContext, aIndex,
                                                        aLength, aChangeID);
   });
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSynchronizeLayoutHistoryState(
+    uint64_t aSessionHistoryEntryID, nsILayoutHistoryState* aState) {
+  SessionHistoryEntry::UpdateLayoutHistoryState(aSessionHistoryEntryID, aState);
   return IPC_OK();
 }
 
