@@ -5,7 +5,9 @@
 package org.mozilla.fenix.browser
 
 import androidx.lifecycle.LifecycleOwner
+import io.mockk.MockKAnnotations
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.session.Session
@@ -18,15 +20,16 @@ import org.mozilla.fenix.utils.Settings
 
 class UriOpenedObserverTest {
 
-    private val settings: Settings = mockk(relaxed = true)
-    private val owner: LifecycleOwner = mockk(relaxed = true)
-    private val sessionManager: SessionManager = mockk(relaxed = true)
-    private val metrics: MetricController = mockk()
-    private val ads: AdsTelemetry = mockk()
+    @MockK(relaxed = true) private lateinit var settings: Settings
+    @MockK(relaxed = true) private lateinit var owner: LifecycleOwner
+    @MockK(relaxed = true) private lateinit var sessionManager: SessionManager
+    @MockK private lateinit var metrics: MetricController
+    @MockK private lateinit var ads: AdsTelemetry
     private lateinit var observer: UriOpenedObserver
 
     @Before
     fun setup() {
+        MockKAnnotations.init(this)
         observer = UriOpenedObserver(settings, owner, sessionManager, metrics, ads)
     }
 
@@ -37,6 +40,14 @@ class UriOpenedObserverTest {
 
     @Test
     fun `registers single session observer`() {
+        every { sessionManager.sessions } returns listOf(
+            mockk {
+                every { private } returns false
+            },
+            mockk {
+                every { private } returns true
+            }
+        )
         val session: Session = mockk(relaxed = true)
 
         observer.onSessionAdded(session)
@@ -47,6 +58,8 @@ class UriOpenedObserverTest {
 
         observer.onSessionRemoved(session)
         verify { session.unregister(observer.singleSessionObserver) }
+
+        verify { settings.setOpenTabsCount(1) }
     }
 
     @Test

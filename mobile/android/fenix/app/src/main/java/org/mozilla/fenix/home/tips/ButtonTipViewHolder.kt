@@ -1,23 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.home.tips
 
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.button_tip_item.view.*
+import androidx.core.view.isVisible
+import kotlinx.android.synthetic.main.button_tip_item.*
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.TipType
 import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
+import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.view.ViewHolder
 
 class ButtonTipViewHolder(
-    val view: View,
-    val interactor: SessionControlInteractor
-) : RecyclerView.ViewHolder(view) {
+    view: View,
+    private val interactor: SessionControlInteractor,
+    private val metrics: MetricController = view.context.components.analytics.metrics,
+    private val settings: Settings = view.context.components.settings
+) : ViewHolder(view) {
+
     var tip: Tip? = null
 
     fun bind(tip: Tip) {
@@ -25,44 +34,39 @@ class ButtonTipViewHolder(
 
         this.tip = tip
 
-        view.apply {
-            context.components.analytics.metrics.track(Event.TipDisplayed(tip.identifier))
+        metrics.track(Event.TipDisplayed(tip.identifier))
 
-            tip_header_text.text = tip.title
-            tip_description_text.text = tip.description
-            tip_button.text = tip.type.text
+        tip_header_text.text = tip.title
+        tip_description_text.text = tip.description
+        tip_button.text = tip.type.text
 
-            if (tip.learnMoreURL == null) {
-                tip_learn_more.visibility = View.GONE
-            } else {
-                tip_learn_more.addUnderline()
+        tip_learn_more.isVisible = tip.learnMoreURL != null
+        if (tip.learnMoreURL != null) {
+            tip_learn_more.addUnderline()
 
-                tip_learn_more.setOnClickListener {
-                    (context as HomeActivity).openToBrowserAndLoad(
-                        searchTermOrURL = tip.learnMoreURL,
-                        newTab = true,
-                        from = BrowserDirection.FromHome
-                    )
-                }
-            }
-
-            tip_button.setOnClickListener {
-                tip.type.action.invoke()
-                context.components.analytics.metrics.track(
-                    Event.TipPressed(tip.identifier)
+            tip_learn_more.setOnClickListener {
+                (itemView.context as HomeActivity).openToBrowserAndLoad(
+                    searchTermOrURL = tip.learnMoreURL,
+                    newTab = true,
+                    from = BrowserDirection.FromHome
                 )
             }
+        }
 
-            tip_close.setOnClickListener {
-                context.components.analytics.metrics.track(Event.TipClosed(tip.identifier))
+        tip_button.setOnClickListener {
+            tip.type.action.invoke()
+            metrics.track(Event.TipPressed(tip.identifier))
+        }
 
-                context.settings().preferences
-                    .edit()
-                    .putBoolean(tip.identifier, false)
-                    .apply()
+        tip_close.setOnClickListener {
+            metrics.track(Event.TipClosed(tip.identifier))
 
-                interactor.onCloseTip(tip)
-            }
+            settings.preferences
+                .edit()
+                .putBoolean(tip.identifier, false)
+                .apply()
+
+            interactor.onCloseTip(tip)
         }
     }
 

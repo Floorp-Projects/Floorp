@@ -4,12 +4,16 @@
 
 package org.mozilla.fenix.browser.readermode
 
+import android.content.res.ColorStateList
 import android.view.View
+import android.widget.Button
+import android.widget.RadioButton
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import io.mockk.verifyAll
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -19,6 +23,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -76,5 +81,41 @@ class DefaultReaderModeControllerTest {
         controller.showControls()
         verify { readerViewFeature.showControls() }
         verify { readerViewControlsBar wasNot Called }
+    }
+
+    @Test
+    fun testShowControlsPrivateTab() {
+        val controller = DefaultReaderModeController(
+            featureWrapper,
+            readerViewControlsBar,
+            isPrivate = true
+        )
+
+        val decrease = mockk<Button>(relaxUnitFun = true)
+        val increase = mockk<Button>(relaxUnitFun = true)
+        val serif = mockk<RadioButton>(relaxUnitFun = true)
+        val sansSerif = mockk<RadioButton>(relaxUnitFun = true)
+
+        every {
+            readerViewControlsBar.findViewById<Button>(R.id.mozac_feature_readerview_font_size_decrease)
+        } returns decrease
+        every {
+            readerViewControlsBar.findViewById<Button>(R.id.mozac_feature_readerview_font_size_increase)
+        } returns increase
+        every {
+            readerViewControlsBar.findViewById<RadioButton>(R.id.mozac_feature_readerview_font_serif)
+        } returns serif
+        every {
+            readerViewControlsBar.findViewById<RadioButton>(R.id.mozac_feature_readerview_font_sans_serif)
+        } returns sansSerif
+
+        controller.showControls()
+        verify { readerViewFeature.showControls() }
+        verifyAll {
+            decrease.setTextColor(any<ColorStateList>())
+            increase.setTextColor(any<ColorStateList>())
+            serif.setTextColor(any<ColorStateList>())
+            sansSerif.setTextColor(any<ColorStateList>())
+        }
     }
 }
