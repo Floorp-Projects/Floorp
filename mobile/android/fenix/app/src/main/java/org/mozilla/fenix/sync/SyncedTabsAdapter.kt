@@ -8,16 +8,15 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import mozilla.components.concept.sync.Device as SyncDevice
-import mozilla.components.browser.storage.sync.Tab as SyncTab
+import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import org.mozilla.fenix.sync.SyncedTabsViewHolder.DeviceViewHolder
 import org.mozilla.fenix.sync.SyncedTabsViewHolder.TabViewHolder
+import mozilla.components.browser.storage.sync.Tab as SyncTab
+import mozilla.components.concept.sync.Device as SyncDevice
 
 class SyncedTabsAdapter(
     private val listener: (SyncTab) -> Unit
-) : ListAdapter<SyncedTabsAdapter.AdapterItem, SyncedTabsViewHolder>(
-    DiffCallback
-) {
+) : ListAdapter<SyncedTabsAdapter.AdapterItem, SyncedTabsViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SyncedTabsViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
@@ -30,23 +29,35 @@ class SyncedTabsAdapter(
     }
 
     override fun onBindViewHolder(holder: SyncedTabsViewHolder, position: Int) {
-        val item = when (holder) {
-            is DeviceViewHolder -> getItem(position) as AdapterItem.Device
-            is TabViewHolder -> getItem(position) as AdapterItem.Tab
-        }
-        holder.bind(item, listener)
+        holder.bind(getItem(position), listener)
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when (getItem(position)) {
-            is AdapterItem.Device -> DeviceViewHolder.LAYOUT_ID
-            is AdapterItem.Tab -> TabViewHolder.LAYOUT_ID
+    override fun getItemViewType(position: Int) = when (getItem(position)) {
+        is AdapterItem.Device -> DeviceViewHolder.LAYOUT_ID
+        is AdapterItem.Tab -> TabViewHolder.LAYOUT_ID
+    }
+
+    fun updateData(syncedTabs: List<SyncedDeviceTabs>) {
+        val allDeviceTabs = mutableListOf<AdapterItem>()
+
+        syncedTabs.forEach { (device, tabs) ->
+            if (tabs.isNotEmpty()) {
+                allDeviceTabs.add(AdapterItem.Device(device))
+                tabs.mapTo(allDeviceTabs) { AdapterItem.Tab(it) }
+            }
         }
+
+        submitList(allDeviceTabs)
     }
 
     private object DiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
         override fun areItemsTheSame(oldItem: AdapterItem, newItem: AdapterItem) =
-            areContentsTheSame(oldItem, newItem)
+            when (oldItem) {
+                is AdapterItem.Device ->
+                    newItem is AdapterItem.Device && oldItem.device.id == newItem.device.id
+                is AdapterItem.Tab ->
+                    oldItem == newItem
+            }
 
         @Suppress("DiffUtilEquals")
         override fun areContentsTheSame(oldItem: AdapterItem, newItem: AdapterItem) =

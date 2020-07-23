@@ -10,10 +10,10 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.component_sync_tabs.view.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.R
@@ -43,15 +43,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
             // We may still be displaying a "loading" spinner, hide it.
             stopLoading()
 
-            val stringResId = when (error) {
-                SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE -> R.string.synced_tabs_connect_another_device
-                SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE -> R.string.synced_tabs_enable_tab_syncing
-                SyncedTabsView.ErrorType.SYNC_UNAVAILABLE -> R.string.synced_tabs_connect_to_sync_account
-                SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION -> R.string.synced_tabs_reauth
-                SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> R.string.synced_tabs_no_tabs
-            }
-
-            sync_tabs_status.text = context.getText(stringResId)
+            sync_tabs_status.text = context.getText(stringResourceForError(error))
 
             synced_tabs_list.visibility = View.GONE
             sync_tabs_status.visibility = View.VISIBLE
@@ -65,19 +57,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
             synced_tabs_list.visibility = View.VISIBLE
             sync_tabs_status.visibility = View.GONE
 
-            val allDeviceTabs = emptyList<SyncedTabsAdapter.AdapterItem>().toMutableList()
-
-            syncedTabs.forEach { (device, tabs) ->
-                if (tabs.isEmpty()) {
-                    return@forEach
-                }
-
-                val deviceTabs = tabs.map { SyncedTabsAdapter.AdapterItem.Tab(it) }
-
-                allDeviceTabs += listOf(SyncedTabsAdapter.AdapterItem.Device(device)) + deviceTabs
-            }
-
-            adapter.submitList(allDeviceTabs)
+            adapter.updateData(syncedTabs)
         }
     }
 
@@ -109,6 +89,14 @@ class SyncedTabsLayout @JvmOverloads constructor(
             SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE,
             SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE,
             SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> true
+        }
+
+        internal fun stringResourceForError(error: SyncedTabsView.ErrorType) = when (error) {
+            SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE -> R.string.synced_tabs_connect_another_device
+            SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE -> R.string.synced_tabs_enable_tab_syncing
+            SyncedTabsView.ErrorType.SYNC_UNAVAILABLE -> R.string.synced_tabs_connect_to_sync_account
+            SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION -> R.string.synced_tabs_reauth
+            SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> R.string.synced_tabs_no_tabs
         }
     }
 }
