@@ -103,10 +103,6 @@ class AboutLoginsChild extends JSWindowActorChild {
             cloneFunctions: true,
           }
         );
-        let aboutLoginsUtilsReadyEvent = new win.CustomEvent(
-          "AboutLoginsUtilsReady"
-        );
-        win.dispatchEvent(aboutLoginsUtilsReadyEvent);
         break;
       }
       case "AboutLoginsCopyLoginDetail": {
