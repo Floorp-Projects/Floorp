@@ -91,13 +91,13 @@ nsTArray<nsString> GetInputSourceProfile(VRControllerType aType) {
       profile.AppendElement(id);
       break;
     case VRControllerType::PicoG2:
-      id.AssignLiteral("pico-g-v2");
+      id.AssignLiteral("pico-g2");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-touchpad");
       profile.AppendElement(id);
       break;
     case VRControllerType::PicoNeo2:
-      id.AssignLiteral("pico-neo-v2");
+      id.AssignLiteral("pico-neo2");
       profile.AppendElement(id);
       id.AssignLiteral("generic-trigger-squeeze-thumbstick");
       profile.AppendElement(id);
