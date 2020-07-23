@@ -952,12 +952,6 @@ void nsSHEntry::EvictContentViewer() {
 }
 
 NS_IMETHODIMP
-nsSHEntry::SynchronizeLayoutHistoryState() {
-  // No-op on purpose. See nsISHEntry.idl
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSHEntry::SetContentViewer(nsIContentViewer* aViewer) {
   return GetState()->SetContentViewer(aViewer);
 }

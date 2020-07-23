@@ -128,6 +128,7 @@ using mozilla::ContentBlocking::StorageAccessPromptChoices from "mozilla/Content
 using JSActorMessageKind from "mozilla/dom/JSActor.h";
 using JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
 using mozilla::PermissionDelegateHandler::DelegatedPermissionList from "mozilla/PermissionDelegateIPCUtils.h";
+using refcounted class nsILayoutHistoryState from "nsILayoutHistoryState.h";
 
 union ChromeRegistryItem
 {
@@ -919,6 +920,10 @@ parent:
      */
     async SessionHistoryUpdate(MaybeDiscardedBrowsingContext aTopContext,
                                int32_t aIndex, int32_t aLength, nsID aChangeID);
+
+    async SynchronizeLayoutHistoryState(uint64_t aSessionHistoryEntryID,
+                                        nsILayoutHistoryState aState);
+
 
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 

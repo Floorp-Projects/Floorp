@@ -2950,9 +2950,19 @@ nsDocShell::GetCurrentSHEntry(nsISHEntry** aEntry, bool* aOSHE) {
 }
 
 NS_IMETHODIMP nsDocShell::SynchronizeLayoutHistoryState() {
-  if (mOSHE) {
-    mOSHE->SynchronizeLayoutHistoryState();
+  if (mActiveEntry && mActiveEntry->GetLayoutHistoryState()) {
+    if (XRE_IsContentProcess()) {
+      dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+      if (contentChild) {
+        contentChild->SendSynchronizeLayoutHistoryState(
+            mActiveEntry->Id(), mActiveEntry->GetLayoutHistoryState());
+      }
+    } else {
+      SessionHistoryEntry::UpdateLayoutHistoryState(
+          mActiveEntry->Id(), mActiveEntry->GetLayoutHistoryState());
+    }
   }
+
   return NS_OK;
 }
 
@@ -11681,6 +11691,9 @@ NS_IMETHODIMP
 nsDocShell::SetLayoutHistoryState(nsILayoutHistoryState* aLayoutHistoryState) {
   if (mOSHE) {
     mOSHE->SetLayoutHistoryState(aLayoutHistoryState);
+  }
+  if (mActiveEntry) {
+    mActiveEntry->SetLayoutHistoryState(aLayoutHistoryState);
   }
   return NS_OK;
 }

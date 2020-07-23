@@ -1694,7 +1694,8 @@ nsDocumentViewer::Destroy() {
     // and shEntry has no window state at this point we'll be ok; we just won't
     // cache ourselves.
     shEntry->SyncPresentationState();
-    shEntry->SynchronizeLayoutHistoryState();
+    // XXX Synchronize layout history state to parent once bfcache is supported
+    //     in session-history-in-parent.
 
     // Shut down accessibility for the document before we start to tear it down.
 #ifdef ACCESSIBILITY

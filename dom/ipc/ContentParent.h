@@ -1329,6 +1329,9 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext, const int32_t& aIndex,
       const int32_t& aLength, const nsID& aChangeID);
 
+  mozilla::ipc::IPCResult RecvSynchronizeLayoutHistoryState(
+      uint64_t aSessionHistoryEntryID, nsILayoutHistoryState* aState);
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
