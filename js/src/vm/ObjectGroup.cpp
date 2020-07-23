@@ -1529,8 +1529,7 @@ ArrayObject* ObjectGroup::getOrFixupCopyOnWriteObject(JSContext* cx,
 
   // Make sure that the template object for script/pc has a type indicating
   // that the object and its copies have copy on write elements.
-  RootedArrayObject obj(
-      cx, &script->getObject(GET_UINT32_INDEX(pc))->as<ArrayObject>());
+  RootedArrayObject obj(cx, &script->getObject(pc)->as<ArrayObject>());
   MOZ_ASSERT(obj->denseElementsAreCopyOnWrite());
 
   {
@@ -1572,8 +1571,7 @@ ArrayObject* ObjectGroup::getCopyOnWriteObject(JSScript* script,
   // COPY_ON_WRITE flag. We don't assert this here, due to a corner case
   // where this property doesn't hold. See jsop_newarray_copyonwrite in
   // IonBuilder.
-  ArrayObject* obj =
-      &script->getObject(GET_UINT32_INDEX(pc))->as<ArrayObject>();
+  ArrayObject* obj = &script->getObject(pc)->as<ArrayObject>();
   MOZ_ASSERT(obj->denseElementsAreCopyOnWrite());
 
   return obj;

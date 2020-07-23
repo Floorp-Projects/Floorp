@@ -189,7 +189,7 @@ bool FunctionEmitter::emitAsmJSModule() {
 
 bool FunctionEmitter::emitFunction() {
   // Make the function object a literal in the outer script's pool.
-  uint32_t index;
+  GCThingIndex index;
   if (!bce_->perScriptData().gcThingList().append(funbox_, &index)) {
     return false;
   }
@@ -224,7 +224,7 @@ bool FunctionEmitter::emitFunction() {
   //                [stack]
 }
 
-bool FunctionEmitter::emitNonHoisted(unsigned index) {
+bool FunctionEmitter::emitNonHoisted(GCThingIndex index) {
   // Non-hoisted functions simply emit their respective op.
 
   //                [stack]
@@ -242,7 +242,7 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
 
   if (syntaxKind_ == FunctionSyntaxKind::DerivedClassConstructor) {
     //              [stack] PROTO
-    if (!bce_->emitIndexOp(JSOp::FunWithProto, index)) {
+    if (!bce_->emitGCIndexOp(JSOp::FunWithProto, index)) {
       //            [stack] FUN
       return false;
     }
@@ -253,7 +253,7 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
   // constructor. Emit the single instruction (without location info).
   JSOp op = syntaxKind_ == FunctionSyntaxKind::Arrow ? JSOp::LambdaArrow
                                                      : JSOp::Lambda;
-  if (!bce_->emitIndexOp(op, index)) {
+  if (!bce_->emitGCIndexOp(op, index)) {
     //              [stack] FUN
     return false;
   }
@@ -261,7 +261,7 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
   return true;
 }
 
-bool FunctionEmitter::emitHoisted(unsigned index) {
+bool FunctionEmitter::emitHoisted(GCThingIndex index) {
   MOZ_ASSERT(syntaxKind_ == FunctionSyntaxKind::Statement);
 
   //                [stack]
@@ -275,7 +275,7 @@ bool FunctionEmitter::emitHoisted(unsigned index) {
     return false;
   }
 
-  if (!bce_->emitIndexOp(JSOp::Lambda, index)) {
+  if (!bce_->emitGCIndexOp(JSOp::Lambda, index)) {
     //              [stack] FUN
     return false;
   }
@@ -293,7 +293,7 @@ bool FunctionEmitter::emitHoisted(unsigned index) {
   return true;
 }
 
-bool FunctionEmitter::emitTopLevelFunction(unsigned index) {
+bool FunctionEmitter::emitTopLevelFunction(GCThingIndex index) {
   //                [stack]
 
   if (bce_->sc->isModuleContext()) {
@@ -307,7 +307,7 @@ bool FunctionEmitter::emitTopLevelFunction(unsigned index) {
   MOZ_ASSERT(syntaxKind_ == FunctionSyntaxKind::Statement);
   MOZ_ASSERT(bce_->inPrologue());
 
-  if (!bce_->emitIndexOp(JSOp::Lambda, index)) {
+  if (!bce_->emitGCIndexOp(JSOp::Lambda, index)) {
     //              [stack] FUN
     return false;
   }

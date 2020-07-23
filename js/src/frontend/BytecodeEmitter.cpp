@@ -345,7 +345,7 @@ bool BytecodeEmitter::emitJumpTargetOp(JSOp op, BytecodeOffset* off) {
   uint32_t numEntries = bytecodeSection().numICEntries();
 
   size_t n = GetOpLength(op) - 1;
-  MOZ_ASSERT(GetOpLength(op) >= 1 + UINT32_INDEX_LEN);
+  MOZ_ASSERT(GetOpLength(op) >= 1 + ICINDEX_LEN);
 
   if (!emitN(op, n, off)) {
     return false;
@@ -687,7 +687,7 @@ bool NonLocalExitControl::leaveScope(EmitterScope* es) {
   // As we pop each scope due to the non-local jump, emit notes that
   // record the extent of the enclosing scope. These notes will have
   // their ends recorded in ~NonLocalExitControl().
-  uint32_t enclosingScopeIndex = ScopeNote::NoScopeIndex;
+  GCThingIndex enclosingScopeIndex = ScopeNote::NoScopeIndex;
   if (es->enclosingInFrame()) {
     enclosingScopeIndex = es->enclosingInFrame()->index();
   }
@@ -864,10 +864,10 @@ ScopeIndex BytecodeEmitter::innermostScopeIndex() const {
   return innermostEmitterScope()->scopeIndex(this);
 }
 
-bool BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index) {
+bool BytecodeEmitter::emitGCIndexOp(JSOp op, GCThingIndex index) {
   MOZ_ASSERT(checkStrictOrSloppy(op));
 
-  constexpr size_t OpLength = 1 + UINT32_INDEX_LEN;
+  constexpr size_t OpLength = 1 + GCTHING_INDEX_LEN;
   MOZ_ASSERT(GetOpLength(op) == OpLength);
 
   BytecodeOffset offset;
@@ -877,7 +877,7 @@ bool BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index) {
 
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(op);
-  SET_UINT32_INDEX(code, index);
+  SET_GCTHING_INDEX(code, index);
   bytecodeSection().updateDepth(offset);
   return true;
 }
@@ -898,7 +898,7 @@ bool BytecodeEmitter::emitAtomOp(JSOp op, JSAtom* atom,
     op = JSOp::Length;
   }
 
-  uint32_t index;
+  GCThingIndex index;
   if (!makeAtomIndex(atom, &index)) {
     return false;
   }
@@ -906,7 +906,7 @@ bool BytecodeEmitter::emitAtomOp(JSOp op, JSAtom* atom,
   return emitAtomOp(op, index, shouldInstrument);
 }
 
-bool BytecodeEmitter::emitAtomOp(JSOp op, uint32_t atomIndex,
+bool BytecodeEmitter::emitAtomOp(JSOp op, GCThingIndex atomIndex,
                                  ShouldInstrument shouldInstrument) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
@@ -915,29 +915,29 @@ bool BytecodeEmitter::emitAtomOp(JSOp op, uint32_t atomIndex,
     return false;
   }
 
-  return emitIndexOp(op, atomIndex);
+  return emitGCIndexOp(op, atomIndex);
 }
 
-bool BytecodeEmitter::emitInternedScopeOp(uint32_t index, JSOp op) {
+bool BytecodeEmitter::emitInternedScopeOp(GCThingIndex index, JSOp op) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_SCOPE);
   MOZ_ASSERT(index < perScriptData().gcThingList().length());
-  return emitIndexOp(op, index);
+  return emitGCIndexOp(op, index);
 }
 
-bool BytecodeEmitter::emitInternedObjectOp(uint32_t index, JSOp op) {
+bool BytecodeEmitter::emitInternedObjectOp(GCThingIndex index, JSOp op) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
   MOZ_ASSERT(index < perScriptData().gcThingList().length());
-  return emitIndexOp(op, index);
+  return emitGCIndexOp(op, index);
 }
 
-bool BytecodeEmitter::emitObjectPairOp(uint32_t index1, uint32_t index2,
+bool BytecodeEmitter::emitObjectPairOp(GCThingIndex index1, GCThingIndex index2,
                                        JSOp op) {
   MOZ_ASSERT(index1 + 1 == index2, "object pair indices must be adjacent");
   return emitInternedObjectOp(index1, op);
 }
 
-bool BytecodeEmitter::emitRegExp(uint32_t index) {
-  return emitIndexOp(JSOp::RegExp, index);
+bool BytecodeEmitter::emitRegExp(GCThingIndex index) {
+  return emitGCIndexOp(JSOp::RegExp, index);
 }
 
 bool BytecodeEmitter::emitLocalOp(JSOp op, uint32_t slot) {
@@ -1621,7 +1621,7 @@ void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
   va_end(args);
 }
 
-bool BytecodeEmitter::iteratorResultShape(uint32_t* shape) {
+bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
   // Use |NoValues| to keep the flags consistent with their usage for normal
   // object literal creation, where |NoValues| is always used in conjunction
   // with |NewObject|.
@@ -1648,11 +1648,11 @@ bool BytecodeEmitter::iteratorResultShape(uint32_t* shape) {
 }
 
 bool BytecodeEmitter::emitPrepareIteratorResult() {
-  uint32_t shape;
+  GCThingIndex shape;
   if (!iteratorResultShape(&shape)) {
     return false;
   }
-  return emitIndexOp(JSOp::NewObject, shape);
+  return emitGCIndexOp(JSOp::NewObject, shape);
 }
 
 bool BytecodeEmitter::emitFinishIteratorResult(bool done) {
@@ -1865,8 +1865,9 @@ bool BytecodeEmitter::emitNameIncDec(UnaryNode* incDec) {
 
 bool BytecodeEmitter::emitElemOpBase(JSOp op,
                                      ShouldInstrument shouldInstrument) {
+  GCThingIndex unused;
   if (shouldInstrument != ShouldInstrument::No &&
-      !emitInstrumentationForOpcode(op, 0)) {
+      !emitInstrumentationForOpcode(op, unused)) {
     return false;
   }
 
@@ -4570,7 +4571,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
 }
 
 bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
-                                              uint32_t* arrayIndex) {
+                                              GCThingIndex* arrayIndex) {
   uint32_t count = cookedOrRaw->count();
   ParseNode* pn = cookedOrRaw->head();
 
@@ -4603,12 +4604,12 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
-  uint32_t cookedIndex;
+  GCThingIndex cookedIndex;
   if (!emitCallSiteObjectArray(callSiteObj, &cookedIndex)) {
     return false;
   }
 
-  uint32_t rawIndex;
+  GCThingIndex rawIndex;
   if (!emitCallSiteObjectArray(callSiteObj->rawNodes(), &rawIndex)) {
     return false;
   }
@@ -5024,11 +5025,11 @@ bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
 }
 
 bool BytecodeEmitter::emitBigIntOp(BigIntLiteral* bigint) {
-  uint32_t index;
+  GCThingIndex index;
   if (!perScriptData().gcThingList().append(bigint, &index)) {
     return false;
   }
-  return emitIndexOp(JSOp::BigInt, index);
+  return emitGCIndexOp(JSOp::BigInt, index);
 }
 
 bool BytecodeEmitter::emitIterator() {
@@ -8767,8 +8768,8 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     }
   }
 
-  uint32_t gcThingIndex = 0;
-  if (!perScriptData().gcThingList().append(std::move(data), &gcThingIndex)) {
+  GCThingIndex index;
+  if (!perScriptData().gcThingList().append(std::move(data), &index)) {
     return false;
   }
 
@@ -8777,7 +8778,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
   JSOp op = singleton
                 ? JSOp::Object
                 : isInnerSingleton ? JSOp::NewObjectWithGroup : JSOp::NewObject;
-  if (!emitIndexOp(op, gcThingIndex)) {
+  if (!emitGCIndexOp(op, index)) {
     //              [stack] OBJ
     return false;
   }
@@ -8820,8 +8821,8 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
     }
   }
 
-  uint32_t gcThingIndex = 0;
-  if (!perScriptData().gcThingList().append(std::move(data), &gcThingIndex)) {
+  GCThingIndex index;
+  if (!perScriptData().gcThingList().append(std::move(data), &index)) {
     return false;
   }
 
@@ -8830,7 +8831,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   // the user, so it's safe to bake the object into the bytecode. But first we
   // need to make sure this won't interfere with XDR, cf. the
   // `RealmBehaviors::singletonsAsTemplates_` flag.
-  if (!emitIndexOp(JSOp::NewObject, gcThingIndex)) {
+  if (!emitGCIndexOp(JSOp::NewObject, index)) {
     //              [stack] OBJ
     return false;
   }
@@ -8846,21 +8847,20 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
   }
   data.writer().beginObject(flags);
 
-  uint32_t index = 0;
   data.writer().beginDenseArrayElements();
-  for (ParseNode* elem = arrayHead; elem; elem = elem->pn_next, index++) {
+  for (ParseNode* elem = arrayHead; elem; elem = elem->pn_next) {
     if (!emitObjLiteralValue(&data, elem)) {
       return false;
     }
   }
 
-  uint32_t gcThingIndex = 0;
-  if (!perScriptData().gcThingList().append(std::move(data), &gcThingIndex)) {
+  GCThingIndex index;
+  if (!perScriptData().gcThingList().append(std::move(data), &index)) {
     return false;
   }
 
   JSOp op = isCow ? JSOp::NewArrayCopyOnWrite : JSOp::Object;
-  if (!emitIndexOp(op, gcThingIndex)) {
+  if (!emitGCIndexOp(op, index)) {
     //              [stack] OBJ
     return false;
   }
@@ -10172,7 +10172,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationSlow(
 }
 
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationForOpcodeSlow(
-    JSOp op, uint32_t atomIndex) {
+    JSOp op, GCThingIndex atomIndex) {
   MOZ_ASSERT(instrumentationKinds);
 
   switch (op) {
@@ -10697,7 +10697,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::RegExpExpr: {
-      uint32_t index;
+      GCThingIndex index;
       if (!perScriptData().gcThingList().append(&pn->as<RegExpLiteral>(),
                                                 &index)) {
         return false;

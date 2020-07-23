@@ -20,7 +20,7 @@ inline RegExpObject* CompileInfo::getRegExp(jsbytecode* pc) const {
 }
 
 inline JSFunction* CompileInfo::getFunction(jsbytecode* pc) const {
-  return script_->getFunction(GET_UINT32_INDEX(pc));
+  return script_->getFunction(pc);
 }
 
 InlineScriptTree* InlineScriptTree::New(TempAllocator* allocator,

@@ -19,6 +19,7 @@
 #include "frontend/ParseContext.h"
 #include "frontend/SharedContext.h"
 #include "js/TypeDecls.h"
+#include "vm/SharedStencil.h"  // GCThingIndex
 
 namespace js {
 
@@ -56,7 +57,7 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   // The index in the BytecodeEmitter's interned scope vector, otherwise
   // ScopeNote::NoScopeIndex.
-  uint32_t scopeIndex_;
+  GCThingIndex scopeIndex_;
 
   // If kind is Lexical, Catch, or With, the index in the BytecodeEmitter's
   // block scope note list. Otherwise ScopeNote::NoScopeNote.
@@ -123,7 +124,7 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   MOZ_MUST_USE bool leave(BytecodeEmitter* bce, bool nonLocal = false);
 
-  uint32_t index() const {
+  GCThingIndex index() const {
     MOZ_ASSERT(scopeIndex_ != ScopeNote::NoScopeIndex,
                "Did you forget to intern a Scope?");
     return scopeIndex_;

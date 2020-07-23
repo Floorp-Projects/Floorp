@@ -34,14 +34,14 @@
 #include "js/RegExpFlags.h"        // JS::RegExpFlag, JS::RegExpFlags
 #include "js/RootingAPI.h"         // JS::Handle, JS::Rooted
 #include "js/TypeDecls.h"  // Rooted{Script,Value,String,Object}, JS*:HandleVector, JS::MutableHandleVector
-#include "js/UniquePtr.h"      // js::UniquePtr
-#include "js/Utility.h"        // JS::UniqueTwoByteChars, StringBufferArena
-#include "vm/JSAtom.h"         // AtomizeUTF8Chars
-#include "vm/JSScript.h"       // JSScript
-#include "vm/Scope.h"          // BindingName
-#include "vm/ScopeKind.h"      // ScopeKind
-#include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote
-#include "vm/StringType.h"     // JSAtom
+#include "js/UniquePtr.h"  // js::UniquePtr
+#include "js/Utility.h"    // JS::UniqueTwoByteChars, StringBufferArena
+#include "vm/JSAtom.h"     // AtomizeUTF8Chars
+#include "vm/JSScript.h"   // JSScript
+#include "vm/Scope.h"      // BindingName
+#include "vm/ScopeKind.h"  // ScopeKind
+#include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote, GCThingIndex
+#include "vm/StringType.h"  // JSAtom
 
 #include "vm/JSContext-inl.h"  // AutoKeepAtoms (used by BytecodeCompiler)
 
@@ -241,7 +241,7 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
   }
   for (size_t i = 0; i < smooshScriptData.scope_notes.len; i++) {
     SmooshScopeNote& scopeNote = smooshScriptData.scope_notes.data[i];
-    scopeNotes[i].index = scopeNote.index;
+    scopeNotes[i].index = GCThingIndex(scopeNote.index);
     scopeNotes[i].start = scopeNote.start;
     scopeNotes[i].length = scopeNote.length;
     scopeNotes[i].parent = scopeNote.parent;
@@ -253,7 +253,7 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
 
   return ImmutableScriptData::new_(
       cx, smooshScriptData.main_offset, smooshScriptData.nfixed,
-      smooshScriptData.nslots, smooshScriptData.body_scope_index,
+      smooshScriptData.nslots, GCThingIndex(smooshScriptData.body_scope_index),
       smooshScriptData.num_ic_entries, smooshScriptData.num_bytecode_type_sets,
       isFunction, funLength,
       mozilla::MakeSpan(smooshScriptData.bytecode.data,

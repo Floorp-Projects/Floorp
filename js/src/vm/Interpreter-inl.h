@@ -15,6 +15,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"  // JSDVG_SEARCH_STACK
 #include "vm/Realm.h"
+#include "vm/SharedStencil.h"  // GCThingIndex
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GlobalObject-inl.h"
@@ -738,7 +739,7 @@ static inline ArrayObject* ProcessCallSiteObjOperation(JSContext* cx,
   RootedArrayObject cso(cx, &script->getObject(pc)->as<ArrayObject>());
 
   if (cso->isExtensible()) {
-    RootedObject raw(cx, script->getObject(GET_UINT32_INDEX(pc) + 1));
+    RootedObject raw(cx, script->getObject(GET_GCTHING_INDEX(pc).next()));
     MOZ_ASSERT(raw->is<ArrayObject>());
 
     RootedValue rawValue(cx, ObjectValue(*raw));

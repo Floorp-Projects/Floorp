@@ -21,6 +21,7 @@
 #include "vm/ObjectGroup.h"            // TenuredObject
 #include "vm/Opcodes.h"                // JSOp
 #include "vm/Runtime.h"                // JSAtomState (cx->parserNames())
+#include "vm/SharedStencil.h"          // GCThingIndex
 
 #include "gc/ObjectKind-inl.h"  // GetGCObjectKind
 #include "vm/JSAtom-inl.h"      // AtomToId
@@ -636,7 +637,7 @@ bool ClassEmitter::emitInitDefaultConstructor(uint32_t classStart,
     }
   }
 
-  uint32_t atomIndex;
+  GCThingIndex atomIndex;
   if (!bce_->makeAtomIndex(className, &atomIndex)) {
     return false;
   }
