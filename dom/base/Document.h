@@ -469,7 +469,7 @@ class Document : public nsINode,
                  public nsIApplicationCacheContainer,
                  public nsStubMutationObserver,
                  public DispatcherTrait,
-                 public SupportsWeakPtr<Document> {
+                 public SupportsWeakPtr {
   friend class DocumentOrShadowRoot;
 
  protected:
@@ -493,8 +493,6 @@ class Document : public nsINode,
    * Called when XPCOM shutdown.
    */
   static void Shutdown();
-
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Document)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
 

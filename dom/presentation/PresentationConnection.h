@@ -22,18 +22,16 @@ namespace dom {
 class Blob;
 class PresentationConnectionList;
 
-class PresentationConnection final
-    : public DOMEventTargetHelper,
-      public nsIPresentationSessionListener,
-      public nsIRequest,
-      public SupportsWeakPtr<PresentationConnection> {
+class PresentationConnection final : public DOMEventTargetHelper,
+                                     public nsIPresentationSessionListener,
+                                     public nsIRequest,
+                                     public SupportsWeakPtr {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationConnection,
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONSESSIONLISTENER
   NS_DECL_NSIREQUEST
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PresentationConnection)
 
   static already_AddRefed<PresentationConnection> Create(
       nsPIDOMWindowInner* aWindow, const nsAString& aId, const nsAString& aUrl,

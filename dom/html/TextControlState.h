@@ -131,12 +131,10 @@ class HTMLInputElement;
 
 class RestoreSelectionState;
 
-class TextControlState final : public SupportsWeakPtr<TextControlState> {
+class TextControlState final : public SupportsWeakPtr {
  public:
   typedef dom::Element Element;
   typedef dom::HTMLInputElement HTMLInputElement;
-
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(TextControlState)
 
   static TextControlState* Construct(TextControlElement* aOwningElement);
 

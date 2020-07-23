@@ -130,11 +130,8 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannelConnection)
 
-  class DataConnectionListener
-      : public SupportsWeakPtr<DataConnectionListener> {
+  class DataConnectionListener : public SupportsWeakPtr {
    public:
-    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(
-        DataChannelConnection::DataConnectionListener)
     virtual ~DataConnectionListener() = default;
 
     // Called when a new DataChannel has been opened by the other side.

@@ -3300,8 +3300,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             inherits.append(Inherit(p.managerInterfaceType(), viz='public'))
 
         if hasAsyncReturns:
-            inherits.append(Inherit(Type('SupportsWeakPtr', T=ExprVar(self.clsname)),
-                                    viz='public'))
+            inherits.append(Inherit(Type('SupportsWeakPtr'), viz='public'))
             self.hdrfile.addthing(CppDirective('include', '"mozilla/WeakPtr.h"'))
 
         if ptype.isToplevel() and self.side == 'parent':
@@ -3314,15 +3313,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.clsname,
             inherits=inherits,
             abstract=True)
-
-        if hasAsyncReturns:
-            self.cls.addstmts([
-                Label.PUBLIC,
-                Whitespace('', indent=True),
-                ExprCall(ExprVar('MOZ_DECLARE_WEAKREFERENCE_TYPENAME'),
-                         [ExprVar(self.clsname)]),
-                Whitespace.NL
-            ])
 
         self.cls.addstmt(Label.PRIVATE)
         friends = _FindFriends().findFriends(ptype)

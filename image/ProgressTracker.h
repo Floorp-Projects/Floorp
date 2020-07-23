@@ -99,11 +99,10 @@ class ObserverTable : public nsDataHashtable<nsPtrHashKey<IProgressObserver>,
  * argument, and the notifications will be replayed to the observer
  * asynchronously.
  */
-class ProgressTracker : public mozilla::SupportsWeakPtr<ProgressTracker> {
+class ProgressTracker : public mozilla::SupportsWeakPtr {
   virtual ~ProgressTracker() {}
 
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ProgressTracker)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProgressTracker)
 
   ProgressTracker();

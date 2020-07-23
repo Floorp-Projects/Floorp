@@ -333,7 +333,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   /**
    * Return the prescontext we were initialized with
    */
-  nsPresContext* GetPresContext() const { return mPresContext; }
+  nsPresContext* GetPresContext() const;
 
   /**
    * PBackgroundChild actor is created asynchronously in content process.

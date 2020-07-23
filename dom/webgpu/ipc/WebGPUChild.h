@@ -25,8 +25,7 @@ struct WGPUTextureViewDescriptor;
 struct TextureInfo;
 typedef MozPromise<RawId, Maybe<ipc::ResponseRejectReason>, true> RawIdPromise;
 
-class WebGPUChild final : public PWebGPUChild,
-                          public SupportsWeakPtr<WebGPUChild> {
+class WebGPUChild final : public PWebGPUChild {
  public:
   friend class layers::CompositorBridgeChild;
 

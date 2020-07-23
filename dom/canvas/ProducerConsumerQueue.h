@@ -51,7 +51,7 @@ class PcqConsumer;
  * }
  * Implementations of abstract methods will typically just forward to IProtocol.
  */
-class PcqActor : public SupportsWeakPtr<PcqActor> {
+class PcqActor : public SupportsWeakPtr {
   // The IProtocol part of `this`.
   IProtocol* mProtocol;
 
@@ -82,8 +82,6 @@ class PcqActor : public SupportsWeakPtr<PcqActor> {
   }
 
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PcqActor)
-
   Shmem::SharedMemory* LookupSharedMemory(int32_t aId) {
     return mProtocol->LookupSharedMemory(aId);
   }

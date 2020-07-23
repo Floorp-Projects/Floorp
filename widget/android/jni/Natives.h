@@ -53,19 +53,18 @@ namespace jni {
  *   a single thread. To attach a Java instance to a C++ instance, pass in a
  *   mozilla::SupportsWeakPtr pointer to the C++ class (i.e. MyClass*).
  *
- *   class MyClass : public SupportsWeakPtr<MyClass>
+ *   class MyClass : public SupportsWeakPtr
  *                 , public MyJavaClass::Natives<MyClass>
  *   {
  *       // ...
  *
  *   public:
- *       MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MyClass)
  *       using MyJavaClass::Natives<MyClass>::DisposeNative;
  *
  *       void AttachTo(const MyJavaClass::LocalRef& instance)
  *       {
  *           MyJavaClass::Natives<MyClass>::AttachNative(
- *                   instance, static_cast<SupportsWeakPtr<MyClass>*>(this));
+ *                   instance, static_cast<SupportsWeakPtr*>(this));
  *
  *           // "instance" does NOT own "this", so the C++ object
  *           // lifetime is separate from the Java object lifetime.
@@ -128,7 +127,7 @@ enum NativePtrType { OWNING, WEAK, REFPTR };
 template <class Impl>
 class NativePtrPicker {
   template <class I>
-  static std::enable_if_t<std::is_base_of<SupportsWeakPtr<I>, I>::value,
+  static std::enable_if_t<std::is_base_of<SupportsWeakPtr, I>::value,
                           char (&)[NativePtrType::WEAK]>
   Test(char);
 
@@ -768,7 +767,7 @@ class NativeImpl {
  protected:
   // Associate a C++ instance with a Java instance.
   static void AttachNative(const typename Cls::LocalRef& instance,
-                           SupportsWeakPtr<Impl>* ptr) {
+                           SupportsWeakPtr* ptr) {
     static_assert(NativePtrPicker<Impl>::value == NativePtrType::WEAK,
                   "Use another AttachNative for non-WeakPtr usage");
     return NativePtr<Impl>::Set(instance, static_cast<Impl*>(ptr));
