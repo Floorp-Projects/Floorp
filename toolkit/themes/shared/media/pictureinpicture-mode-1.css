@@ -54,3 +54,10 @@
 .pip-icon-label > .pip-icon {
   display: none;
 }
+
+@media (prefers-reduced-motion) {
+  .pip-expanded,
+  .pip-wrapper.hovering:not([small-video]) > .pip-small {
+    transition: none;
+  }
+}
