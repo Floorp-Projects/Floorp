@@ -85,6 +85,7 @@ static const char* const kTestFileExtensions[] = {
     ".efi",            // Firmware
     ".eml",            // MS Outlook
     ".exe",            // Windows executable
+    ".fileloc",        // Apple finder internet location data file
     ".fon",            // Windows font
     ".fxp",            // MS FoxPro
     ".gadget",         // Windows
@@ -255,6 +256,7 @@ static const char* const kTestFileExtensions[] = {
     ".vsw",       // MS Visio
     ".vsx",       // MS Visio
     ".vtx",       // MS Visio
+    ".webloc",    // MacOS website location file
     ".website",   // Windows
     ".wflow",     // Automator action
     ".wim",       // Windows Imaging

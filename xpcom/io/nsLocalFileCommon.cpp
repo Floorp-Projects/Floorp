@@ -49,6 +49,7 @@ const char* const sExecutableExts[] = {
   ".crt",
   ".der",
   ".exe",
+  ".fileloc",     // Apple finder internet location data file
   ".fxp",         // FoxPro compiled app
   ".hlp",
   ".hta",
@@ -119,6 +120,7 @@ const char* const sExecutableExts[] = {
   ".vsw",
   ".vsx",
   ".vtx",
+  ".webloc",       // MacOS website location file
   ".ws",
   ".wsc",
   ".wsf",
