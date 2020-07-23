@@ -185,6 +185,14 @@ pub extern "C" fn neqo_http3conn_process_output(conn: &mut NeqoHttp3Conn) -> u64
             }
             Output::Callback(to) => {
                 let timeout = to.as_millis() as u64;
+                // Necko resolution is in milliseconds whereas neqo resolution
+                // is in nanoseconds. If we called process_output too soon due
+                // to this difference, we might do few unnecessary loops until
+                // we waste the remaining time. To avoid it, we return 1ms when
+                // the timeout is less than 1ms.
+                if timeout == 0 {
+                    break 1;
+                }
                 break timeout;
             }
             Output::None => break std::u64::MAX,
