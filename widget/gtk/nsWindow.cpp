@@ -7487,20 +7487,14 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     gtk_widget_reparent(GTK_WIDGET(mContainer), tmpWindow);
     gtk_widget_unrealize(GTK_WIDGET(mShell));
 
-    // Available as of GTK 3.10+
-    static auto sGtkWindowSetTitlebar = (void (*)(GtkWindow*, GtkWidget*))dlsym(
-        RTLD_DEFAULT, "gtk_window_set_titlebar");
-    MOZ_ASSERT(sGtkWindowSetTitlebar,
-               "Missing gtk_window_set_titlebar(), old Gtk+ library?");
-
     if (aState) {
       // Add a hidden titlebar widget to trigger CSD, but disable the default
       // titlebar.  GtkFixed is a somewhat random choice for a simple unused
       // widget. gtk_window_set_titlebar() takes ownership of the titlebar
       // widget.
-      sGtkWindowSetTitlebar(GTK_WINDOW(mShell), gtk_fixed_new());
+      gtk_window_set_titlebar(GTK_WINDOW(mShell), gtk_fixed_new());
     } else {
-      sGtkWindowSetTitlebar(GTK_WINDOW(mShell), nullptr);
+      gtk_window_set_titlebar(GTK_WINDOW(mShell), nullptr);
     }
 
     /* A workaround for https://bugzilla.gnome.org/show_bug.cgi?id=791081
