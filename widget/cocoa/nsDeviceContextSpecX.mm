@@ -20,6 +20,7 @@
 
 #include "nsCocoaUtils.h"
 #include "nsCRT.h"
+#include "nsCUPSShim.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFileMac.h"
 #include "nsPaper.h"
@@ -41,6 +42,8 @@ using mozilla::gfx::PrintTargetSkPDF;
 using mozilla::gfx::SurfaceFormat;
 
 static LazyLogModule sDeviceContextSpecXLog("DeviceContextSpecX");
+
+static nsCUPSShim sCupsShim;
 
 /**
  * Retrieves the list of available paper options for a given printer name.
@@ -286,6 +289,11 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
     } else {
       Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE, u"unknown"_ns, 1);
     }
+  }
+
+  // Initialize the CUPS shim, if it wasn't already.
+  if (!sCupsShim.IsInitialized()) {
+    sCupsShim.Init();
   }
 
   return NS_OK;
