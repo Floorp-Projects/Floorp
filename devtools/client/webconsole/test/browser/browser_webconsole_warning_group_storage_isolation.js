@@ -12,7 +12,8 @@ const TEST_PATH = "browser/devtools/client/webconsole/test/browser/";
 const TEST_FILE = TEST_PATH + "test-warning-groups.html";
 const TEST_URI = "http://example.com/" + TEST_FILE;
 
-const PARTITIONED_URL = "http://example.org/" + TEST_PATH + "cookieSetter.html";
+const PARTITIONED_URL =
+  "https://example.org/" + TEST_PATH + "cookieSetter.html";
 
 const STORAGE_ISOLATION_GROUP_LABEL =
   `Partitioned cookie or storage access was provided to “<URL>” because it is ` +
