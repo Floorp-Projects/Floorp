@@ -66,10 +66,6 @@ async function loadCacheFile(cacheFile) {
         engine._isAppProvided = engine._isBuiltin;
         delete engine._isBuiltin;
       }
-      if ("extensionID" in engine) {
-        engine._extensionID = engine.extensionID;
-        delete engine.extensionID;
-      }
     }
   }
 }
