@@ -549,6 +549,28 @@ nsIntPoint nsWindow::GetWindowOrigin() {
   return mWindowOrigin.value();
 }
 
+void nsWindow::InvalidateWindowOrigin() {
+  if (!mGdkWindow) {
+    return;
+  }
+
+  mWindowOrigin = Nothing();
+
+  // The window origin is in a coordinate space relative to the root window.
+  // In addition GDK_CONFIGURE events are not issued for windows which type
+  // is GDK_WINDOW_CHILD.
+  // We have to invalidate the cached window origin of child windows when
+  // the parent moves.
+  GList* children = gdk_window_get_children(mGdkWindow);
+  for (GList* list = children; list; list = list->next) {
+    RefPtr<nsWindow> childWindow = get_window_for_gdk_window(GDK_WINDOW(list->data));
+    if (childWindow) {
+      childWindow->InvalidateWindowOrigin();
+    }
+  }
+  g_list_free(children);
+}
+
 nsIWidgetListener* nsWindow::GetListener() {
   return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
 }
@@ -2975,7 +2997,7 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   //   Override-redirect windows are children of the root window so parent
   //   coordinates are root coordinates.
 
-  mWindowOrigin = Nothing();
+  InvalidateWindowOrigin();
 
   LOG(("configure event [%p] %d %d %d %d\n", (void*)this, aEvent->x, aEvent->y,
        aEvent->width, aEvent->height));

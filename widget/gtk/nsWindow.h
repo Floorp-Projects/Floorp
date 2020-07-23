@@ -443,6 +443,7 @@ class nsWindow final : public nsBaseWidget {
   void MaybeDispatchResized();
 
   nsIntPoint GetWindowOrigin();
+  void InvalidateWindowOrigin();
 
   virtual void RegisterTouchWindow() override;
   virtual bool CompositorInitiallyPaused() override {
