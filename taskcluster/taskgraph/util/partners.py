@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 
 from taskgraph.util.attributes import release_level
 from taskgraph.util.schema import resolve_keyed_by
+import six
 
 # Suppress chatty requests logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -353,13 +354,13 @@ def _fix_subpartner_locales(orig_config, all_locales):
 def fix_partner_config(orig_config):
     pc = {}
     with open(LOCALES_FILE, 'r') as fh:
-        all_locales = json.load(fh).keys()
+        all_locales = list(json.load(fh).keys())
     # l10n-changesets.json doesn't include en-US, but the repack list does
     if 'en-US' not in all_locales:
         all_locales.append('en-US')
-    for kind, kind_config in orig_config.iteritems():
-        for partner, partner_config in kind_config.iteritems():
-            for subpartner, subpartner_config in partner_config.iteritems():
+    for kind, kind_config in six.iteritems(orig_config):
+        for partner, partner_config in six.iteritems(kind_config):
+            for subpartner, subpartner_config in six.iteritems(partner_config):
                 # get rid of empty subpartner configs
                 if not subpartner_config:
                     continue
