@@ -109,11 +109,10 @@ class TabTrayViewHolderTest {
         assertEquals("Pause", playPauseButtonView.contentDescription)
     }
 
-    private fun createViewHolder(getSelectedTabId: () -> String? = { null }) = TabTrayViewHolder(
+    private fun createViewHolder() = TabTrayViewHolder(
         view,
         imageLoader = imageLoader,
         store = store,
-        metrics = metrics,
-        getSelectedTabId = getSelectedTabId
+        metrics = metrics
     )
 }

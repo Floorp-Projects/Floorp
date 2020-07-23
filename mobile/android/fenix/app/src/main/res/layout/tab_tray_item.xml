@@ -7,7 +7,9 @@
     android:id="@+id/tab_item"
     android:layout_width="match_parent"
     android:layout_height="88dp"
-    android:focusable="true">
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:selectableItemBackground">
 
     <ImageButton
         android:id="@+id/play_pause_button"
@@ -36,18 +38,38 @@
 
         <ImageView
             android:id="@+id/default_tab_thumbnail"
-            android:src="@drawable/mozac_ic_globe"
-            android:tint="?tabTrayThumbnailIcon"
-            android:padding="22dp"
-            android:importantForAccessibility="no"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:padding="22dp"
+            app:srcCompat="@drawable/mozac_ic_globe"
+            app:tint="?tabTrayThumbnailIcon" />
 
         <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
             android:id="@+id/mozac_browser_tabstray_thumbnail"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:contentDescription="@string/mozac_browser_tabstray_open_tab" />
+
+        <View
+            android:id="@+id/selected_mask"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/tab_tray_selected_mask_normal_theme"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/checkmark"
+            android:contentDescription="@string/tab_tray_multiselect_selected_content_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:background="@drawable/favicon_background"
+            android:backgroundTint="@color/accent_normal_theme"
+            android:elevation="1dp"
+            android:padding="10dp"
+            android:visibility="gone"
+            app:srcCompat="@drawable/mozac_ic_check" />
 
     </androidx.cardview.widget.CardView>
 
@@ -88,10 +110,10 @@
         android:layout_height="match_parent"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/close_tab"
-        android:tint="@color/tab_tray_item_text_normal_theme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/mozac_ic_close" />
+        app:srcCompat="@drawable/mozac_ic_close"
+        app:tint="@color/tab_tray_item_text_normal_theme" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

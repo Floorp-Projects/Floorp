@@ -11,3 +11,12 @@ import mozilla.components.browser.session.SessionManager
  */
 fun SessionManager.sessionsOfType(private: Boolean) =
     sessions.asSequence().filter { it.private == private }
+
+/**
+ * @return the number of currently active sessions that are neither custom nor private
+ */
+fun SessionManager.normalSessionSize(): Int {
+    return this.sessions.filter { session ->
+        (!session.isCustomTabSession() && !session.private)
+    }.size
+}

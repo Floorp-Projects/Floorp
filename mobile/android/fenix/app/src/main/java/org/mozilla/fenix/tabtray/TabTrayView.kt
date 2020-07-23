@@ -9,15 +9,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
+import androidx.annotation.IdRes
 import androidx.cardview.widget.CardView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_tabstray.*
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter.*
@@ -30,6 +33,7 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -51,15 +55,19 @@ class TabTrayView(
     val fabView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray_fab, container, true)
 
+    private val hasAccessibilityEnabled = container.context.settings().accessibilityServicesEnabled
+
     val view = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray, container, true)
 
-    val isPrivateModeSelected: Boolean get() = view.tab_layout.selectedTabPosition == PRIVATE_TAB_ID
+    private val isPrivateModeSelected: Boolean get() = view.tab_layout.selectedTabPosition == PRIVATE_TAB_ID
 
     private val behavior = BottomSheetBehavior.from(view.tab_wrapper)
 
     private val tabTrayItemMenu: TabTrayItemMenu
     private var menu: BrowserMenu? = null
+
+    private var tabsTouchHelper: TabsTouchHelper
 
     private var hasLoaded = false
 
@@ -68,8 +76,6 @@ class TabTrayView(
 
     init {
         container.context.components.analytics.metrics.track(Event.TabsTrayOpened)
-
-        val hasAccessibilityEnabled = view.context.settings().accessibilityServicesEnabled
 
         toggleFabText(isPrivate)
 
@@ -126,8 +132,10 @@ class TabTrayView(
             }
             adapter = tabsAdapter
 
-            TabsTouchHelper(tabsAdapter).attachToRecyclerView(this)
+            tabsTouchHelper = TabsTouchHelper(tabsAdapter)
+            tabsTouchHelper.attachToRecyclerView(this)
 
+            tabsAdapter.tabTrayInteractor = interactor
             tabsAdapter.onTabsUpdated = {
                 if (hasAccessibilityEnabled) {
                     tabsAdapter.notifyDataSetChanged()
@@ -158,7 +166,7 @@ class TabTrayView(
                     is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsClicked(
                         isPrivateModeSelected
                     )
-                    is TabTrayItemMenu.Item.SaveToCollection -> interactor.onSaveToCollectionClicked()
+                    is TabTrayItemMenu.Item.SaveToCollection -> interactor.onEnterMultiselect()
                     is TabTrayItemMenu.Item.CloseAllTabs -> interactor.onCloseAllTabsClicked(
                         isPrivateModeSelected
                     )
@@ -179,6 +187,10 @@ class TabTrayView(
                 }
         }
 
+        adjustNewTabButtonsForNormalMode()
+    }
+
+    private fun adjustNewTabButtonsForNormalMode() {
         view.tab_tray_new_tab.apply {
             isVisible = hasAccessibilityEnabled
             setOnClickListener {
@@ -214,7 +226,7 @@ class TabTrayView(
         toggleFabText(isPrivateModeSelected)
         filterTabs.invoke(isPrivateModeSelected)
 
-        updateState(view.context.components.core.store.state)
+        updateUINormalMode(view.context.components.core.store.state)
         scrollToTab(view.context.components.core.store.state.selectedTabId)
 
         if (isPrivateModeSelected) {
@@ -230,32 +242,168 @@ class TabTrayView(
     override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/
     }
 
-    fun updateState(state: BrowserState) {
-        view.let {
-            val hasNoTabs = if (isPrivateModeSelected) {
-                state.privateTabs.isEmpty()
-            } else {
-                state.normalTabs.isEmpty()
-            }
+    var mode: TabTrayDialogFragmentState.Mode = TabTrayDialogFragmentState.Mode.Normal
+        private set
 
-            view.tab_tray_empty_view.isVisible = hasNoTabs
-            if (hasNoTabs) {
-                view.tab_tray_empty_view.text = if (isPrivateModeSelected) {
-                    view.context.getString(R.string.no_private_tabs_description)
-                } else {
-                    view.context?.getString(R.string.no_open_tabs_description)
+    fun updateState(state: TabTrayDialogFragmentState) {
+        val oldMode = mode
+
+        if (oldMode::class != state.mode::class && view.context.settings().accessibilityServicesEnabled) {
+            view.announceForAccessibility(
+                if (state.mode == TabTrayDialogFragmentState.Mode.Normal) view.context.getString(
+                    R.string.tab_tray_exit_multiselect_content_description
+                ) else view.context.getString(R.string.tab_tray_enter_multiselect_content_description)
+            )
+        }
+
+        mode = state.mode
+        when (state.mode) {
+            TabTrayDialogFragmentState.Mode.Normal -> {
+                view.tabsTray.apply {
+                    tabsTouchHelper.attachToRecyclerView(this)
+                }
+
+                toggleUIMultiselect(multiselect = false)
+
+                updateUINormalMode(state.browserState)
+            }
+            is TabTrayDialogFragmentState.Mode.MultiSelect -> {
+                // Disable swipe to delete while in multiselect
+                tabsTouchHelper.attachToRecyclerView(null)
+
+                toggleUIMultiselect(multiselect = true)
+
+                fabView.new_tab_button.isVisible = false
+                view.tab_tray_new_tab.isVisible = false
+                view.collect_multi_select.isVisible = state.mode.selectedItems.size > 0
+
+                view.multiselect_title.text = view.context.getString(
+                    R.string.tab_tray_multi_select_title,
+                    state.mode.selectedItems.size
+                )
+                view.collect_multi_select.setOnClickListener {
+                    interactor.onSaveToCollectionClicked(state.mode.selectedItems)
+                }
+                view.exit_multi_select.setOnClickListener {
+                    interactor.onBackPressed()
                 }
             }
+        }
 
-            view.tabsTray.visibility = if (hasNoTabs) {
-                View.INVISIBLE
-            } else {
-                View.VISIBLE
+        if (oldMode.selectedItems != state.mode.selectedItems) {
+            val unselectedItems = oldMode.selectedItems - state.mode.selectedItems
+
+            state.mode.selectedItems.union(unselectedItems).forEach { item ->
+                if (view.context.settings().accessibilityServicesEnabled) {
+                    view.announceForAccessibility(
+                        if (unselectedItems.contains(item)) view.context.getString(
+                            R.string.tab_tray_item_unselected_multiselect_content_description,
+                            item.title
+                        ) else view.context.getString(
+                            R.string.tab_tray_item_selected_multiselect_content_description,
+                            item.title
+                        )
+                    )
+                }
+                updateTabsForSelectionChanged(item.id)
             }
-            view.tab_tray_overflow.isVisible = !hasNoTabs
+        }
+    }
 
-            counter_text.text = "${state.normalTabs.size}"
-            updateTabCounterContentDescription(state.normalTabs.size)
+    private fun ConstraintLayout.setChildWPercent(percentage: Float, @IdRes childId: Int) {
+        this.findViewById<View>(childId)?.let {
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(this)
+            constraintSet.constrainPercentWidth(it.id, percentage)
+            constraintSet.applyTo(this)
+            it.requestLayout()
+        }
+    }
+
+    private fun updateUINormalMode(browserState: BrowserState) {
+        val hasNoTabs = if (isPrivateModeSelected) {
+            browserState.privateTabs.isEmpty()
+        } else {
+            browserState.normalTabs.isEmpty()
+        }
+
+        view.tab_tray_empty_view.isVisible = hasNoTabs
+        if (hasNoTabs) {
+            view.tab_tray_empty_view.text = if (isPrivateModeSelected) {
+                view.context.getString(R.string.no_private_tabs_description)
+            } else {
+                view.context?.getString(R.string.no_open_tabs_description)
+            }
+        }
+
+        view.tabsTray.visibility = if (hasNoTabs) {
+            View.INVISIBLE
+        } else {
+            View.VISIBLE
+        }
+        view.tab_tray_overflow.isVisible = !hasNoTabs
+
+        counter_text.text = "${browserState.normalTabs.size}"
+        updateTabCounterContentDescription(browserState.normalTabs.size)
+
+        adjustNewTabButtonsForNormalMode()
+    }
+
+    private fun toggleUIMultiselect(multiselect: Boolean) {
+        view.multiselect_title.isVisible = multiselect
+        view.collect_multi_select.isVisible = multiselect
+        view.exit_multi_select.isVisible = multiselect
+
+        view.topBar.setBackgroundColor(
+            ContextCompat.getColor(
+                view.context,
+                if (multiselect) R.color.accent_normal_theme else R.color.foundation_normal_theme
+            )
+        )
+
+        val displayMetrics = view.context.resources.displayMetrics
+
+        view.handle.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            height =
+                if (multiselect) MULTISELECT_HANDLE_HEIGHT.dpToPx(displayMetrics) else NORMAL_HANDLE_HEIGHT.dpToPx(
+                    displayMetrics
+                )
+            topMargin = if (multiselect) 0.dpToPx(displayMetrics) else NORMAL_TOP_MARGIN.dpToPx(
+                displayMetrics
+            )
+        }
+
+        view.tab_wrapper.setChildWPercent(
+            if (multiselect) 1F else NORMAL_HANDLE_PERCENT_WIDTH,
+            view.handle.id
+        )
+
+        view.handle.setBackgroundColor(
+            ContextCompat.getColor(
+                view.context,
+                if (multiselect) R.color.accent_normal_theme else R.color.secondary_text_normal_theme
+            )
+        )
+
+        view.tab_layout.isVisible = !multiselect
+        view.tab_tray_empty_view.isVisible = !multiselect
+        view.tab_tray_overflow.isVisible = !multiselect
+        view.tab_layout.isVisible = !multiselect
+    }
+
+    private fun updateTabsForSelectionChanged(itemId: String) {
+        view.tabsTray.apply {
+            val tabs = if (isPrivateModeSelected) {
+                view.context.components.core.store.state.privateTabs
+            } else {
+                view.context.components.core.store.state.normalTabs
+            }
+
+            val selectedBrowserTabIndex = tabs.indexOfFirst { it.id == itemId }
+
+            this.adapter?.notifyItemChanged(
+                selectedBrowserTabIndex, true
+            )
         }
     }
 
@@ -293,6 +441,10 @@ class TabTrayView(
         }
     }
 
+    fun onBackPressed(): Boolean {
+        return interactor.onBackPressed()
+    }
+
     fun scrollToTab(sessionId: String?) {
         view.tabsTray.apply {
             val tabs = if (isPrivateModeSelected) {
@@ -314,6 +466,10 @@ class TabTrayView(
         private const val EXPAND_AT_SIZE = 3
         private const val SLIDE_OFFSET = 0
         private const val SELECTION_DELAY = 500
+        private const val MULTISELECT_HANDLE_HEIGHT = 11
+        private const val NORMAL_HANDLE_HEIGHT = 3
+        private const val NORMAL_TOP_MARGIN = 8
+        private const val NORMAL_HANDLE_PERCENT_WIDTH = 0.1F
     }
 }
 

@@ -100,6 +100,10 @@
     <style name="NormalTheme" parent="NormalThemeBase" />
 
     <style name="BaseDialogStyle" parent="Theme.MaterialComponents.Dialog.Alert">
+        <item name="colorControlNormal">?primaryText</item>
+        <item name="textColorAlertDialogListItem">?primaryText</item>
+        <item name="android:titleTextStyle">@style/HeaderTextStyle</item>
+        <item name="android:windowTitleStyle">@style/HeaderTextStyle</item>
         <item name="dialogCornerRadius">@dimen/tab_corner_radius</item>
         <item name="android:colorBackground">?above</item>
         <item name="colorAccent">?accent</item>

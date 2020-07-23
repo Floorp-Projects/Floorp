@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabtray
 
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.concept.tabstray.Tab
 import org.junit.Test
 
 class TabTrayFragmentInteractorTest {
@@ -38,8 +39,9 @@ class TabTrayFragmentInteractorTest {
 
     @Test
     fun onSaveToCollectionClicked() {
-        interactor.onSaveToCollectionClicked()
-        verify { controller.onSaveToCollectionClicked() }
+        val tab = Tab("1234", "mozilla.org")
+        interactor.onSaveToCollectionClicked(setOf(tab))
+        verify { controller.onSaveToCollectionClicked(setOf(tab)) }
     }
 
     @Test
@@ -49,5 +51,44 @@ class TabTrayFragmentInteractorTest {
 
         interactor.onCloseAllTabsClicked(private = true)
         verify { controller.onCloseAllTabsClicked(true) }
+    }
+
+    @Test
+    fun onBackPressed() {
+        interactor.onBackPressed()
+        verify { controller.handleBackPressed() }
+    }
+
+    @Test
+    fun onModeRequested() {
+        interactor.onModeRequested()
+        verify { controller.onModeRequested() }
+    }
+
+    @Test
+    fun onOpenTab() {
+        val tab = Tab("1234", "mozilla.org")
+        interactor.onOpenTab(tab)
+        verify { controller.handleOpenTab(tab) }
+    }
+
+    @Test
+    fun onAddSelectedTab() {
+        val tab = Tab("1234", "mozilla.org")
+        interactor.onAddSelectedTab(tab)
+        verify { controller.handleAddSelectedTab(tab) }
+    }
+
+    @Test
+    fun onRemoveSelectedTab() {
+        val tab = Tab("1234", "mozilla.org")
+        interactor.onRemoveSelectedTab(tab)
+        verify { controller.handleRemoveSelectedTab(tab) }
+    }
+
+    @Test
+    fun onEnterMultiselect() {
+        interactor.onEnterMultiselect()
+        verify { controller.handleEnterMultiselect() }
     }
 }

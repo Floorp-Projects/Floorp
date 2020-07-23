@@ -211,41 +211,6 @@ class DefaultCollectionCreationControllerTest {
     }
 
     @Test
-    fun `GIVEN list of collections WHEN default collection number is required THEN return next default number`() {
-        val collections = mutableListOf<TabCollection>(
-            mockk {
-                every { title } returns "Collection 1"
-            },
-            mockk {
-                every { title } returns "Collection 2"
-            },
-            mockk {
-                every { title } returns "Collection 3"
-            }
-        )
-        state = state.copy(tabCollections = collections)
-        assertEquals(4, controller.getDefaultCollectionNumber())
-
-        collections.add(mockk {
-            every { title } returns "Collection 5"
-        })
-        state = state.copy(tabCollections = collections)
-        assertEquals(6, controller.getDefaultCollectionNumber())
-
-        collections.add(mockk {
-            every { title } returns "Random name"
-        })
-        state = state.copy(tabCollections = collections)
-        assertEquals(6, controller.getDefaultCollectionNumber())
-
-        collections.add(mockk {
-            every { title } returns "Collection 10 10"
-        })
-        state = state.copy(tabCollections = collections)
-        assertEquals(6, controller.getDefaultCollectionNumber())
-    }
-
-    @Test
     fun `WHEN adding a new collection THEN dispatch NameCollection step changed`() {
         controller.addNewCollection()
 
@@ -273,27 +238,6 @@ class DefaultCollectionCreationControllerTest {
         controller.saveTabsToCollection(ArrayList())
 
         verify { store.dispatch(CollectionCreationAction.StepChanged(SaveCollectionStep.SelectCollection, 2)) }
-    }
-
-    @Test
-    fun `normalSessionSize only counts non-private non-custom sessions`() {
-        val normal1 = mockSession()
-        val normal2 = mockSession()
-        val normal3 = mockSession()
-
-        val private1 = mockSession(isPrivate = true)
-        val private2 = mockSession(isPrivate = true)
-
-        val custom1 = mockSession(isCustom = true)
-        val custom2 = mockSession(isCustom = true)
-        val custom3 = mockSession(isCustom = true)
-
-        val privateCustom = mockSession(isPrivate = true, isCustom = true)
-
-        every { sessionManager.sessions } returns listOf(normal1, private1, private2, custom1,
-            normal2, normal3, custom2, custom3, privateCustom)
-
-        assertEquals(3, controller.normalSessionSize(sessionManager))
     }
 
     private fun mockSession(

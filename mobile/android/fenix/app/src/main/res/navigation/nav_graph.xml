@@ -109,7 +109,12 @@
     <dialog
         android:id="@+id/tabTrayDialogFragment"
         android:name="org.mozilla.fenix.tabtray.TabTrayDialogFragment"
-        tools:layout="@layout/fragment_tab_tray_dialog" />
+        tools:layout="@layout/fragment_tab_tray_dialog">
+        <argument
+            android:name="enterMultiselect"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </dialog>
 
     <fragment
         android:id="@+id/homeFragment"
@@ -374,13 +379,13 @@
         android:id="@+id/syncedTabsFragment"
         android:name="org.mozilla.fenix.sync.SyncedTabsFragment"
         android:label="@string/synced_tabs"
-        tools:layout="@layout/fragment_synced_tabs"/>
+        tools:layout="@layout/fragment_synced_tabs" />
 
     <fragment
         android:id="@+id/loginExceptionsFragment"
         android:name="org.mozilla.fenix.loginexceptions.LoginExceptionsFragment"
         android:label="@string/preferences_passwords_exceptions"
-        tools:layout="@layout/fragment_exceptions"/>
+        tools:layout="@layout/fragment_exceptions" />
 
     <fragment
         android:id="@+id/loginDetailFragment"

@@ -46,8 +46,7 @@ class TabTrayViewHolder(
     itemView: View,
     private val imageLoader: ImageLoader,
     private val store: BrowserStore = itemView.context.components.core.store,
-    private val metrics: MetricController = itemView.context.components.analytics.metrics,
-    val getSelectedTabId: () -> String? = { store.state.selectedTabId }
+    private val metrics: MetricController = itemView.context.components.analytics.metrics
 ) : TabViewHolder(itemView) {
 
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
@@ -71,9 +70,6 @@ class TabTrayViewHolder(
         styling: TabsTrayStyling,
         observable: Observable<TabsTray.Observer>
     ) {
-        // This is a hack to workaround a bug in a-c.
-        // https://github.com/mozilla-mobile/android-components/issues/7186
-        val isSelected2 = tab.id == getSelectedTabId()
         this.tab = tab
 
         // Basic text
@@ -82,7 +78,7 @@ class TabTrayViewHolder(
         updateCloseButtonDescription(tab.title)
 
         // Drawables and theme
-        updateBackgroundColor(isSelected2)
+        updateBackgroundColor(isSelected)
 
         if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
@@ -142,10 +138,6 @@ class TabTrayViewHolder(
                     "Play/Pause button clicked without play/pause state."
                 )
             }
-        }
-
-        itemView.setOnClickListener {
-            observable.notifyObservers { onTabSelected(tab) }
         }
 
         closeView.setOnClickListener {

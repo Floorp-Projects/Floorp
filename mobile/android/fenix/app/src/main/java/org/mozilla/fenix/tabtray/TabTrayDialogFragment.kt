@@ -4,23 +4,31 @@
 
 package org.mozilla.fenix.tabtray
 
+import android.app.Dialog
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
@@ -28,24 +36,34 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getDefaultCollectionNumber
+import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.normalSessionSize
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.tabtray.TabTrayDialogFragmentState.Mode
 import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class TabTrayDialogFragment : AppCompatDialogFragment() {
+class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
+    private val args by navArgs<TabTrayDialogFragmentArgs>()
+
     private val tabsFeature = ViewBoundFeatureWrapper<TabsFeature>()
     private var _tabTrayView: TabTrayView? = null
     private val tabTrayView: TabTrayView
         get() = _tabTrayView!!
+    private lateinit var tabTrayDialogStore: TabTrayDialogFragmentStore
 
     private val snackbarAnchor: View?
         get() = if (tabTrayView.fabView.new_tab_button.isVisible) tabTrayView.fabView.new_tab_button
@@ -72,6 +90,14 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
             requireContext().components.analytics.metrics.track(Event.OpenedExistingTab)
             requireComponents.useCases.tabsUseCases.selectTab(session)
             navigateToBrowser()
+        }
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return object : Dialog(requireContext(), this.theme) {
+            override fun onBackPressed() {
+                this@TabTrayDialogFragment.onBackPressed()
+            }
         }
     }
 
@@ -109,7 +135,18 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_tab_tray_dialog, container, false)
+    ): View? {
+        tabTrayDialogStore = StoreProvider.get(this) {
+            TabTrayDialogFragmentStore(
+                TabTrayDialogFragmentState(
+                    requireComponents.core.store.state,
+                    if (args.enterMultiselect) Mode.MultiSelect(setOf()) else Mode.Normal
+                )
+            )
+        }
+
+        return inflater.inflate(R.layout.fragment_tab_tray_dialog, container, false)
+    }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -140,7 +177,11 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
                     navController = findNavController(),
                     dismissTabTray = ::dismissAllowingStateLoss,
                     dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
-                    registerCollectionStorageObserver = ::registerCollectionStorageObserver
+                    registerCollectionStorageObserver = ::registerCollectionStorageObserver,
+                    tabTrayDialogFragmentStore = tabTrayDialogStore,
+                    selectTabUseCase = selectTabUseCase,
+                    showChooseCollectionDialog = ::showChooseCollectionDialog,
+                    showAddNewCollectionDialog = ::showAddNewCollectionDialog
                 )
             ),
             isPrivate = isPrivate,
@@ -188,6 +229,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         }
 
         consumeFrom(requireComponents.core.store) {
+            tabTrayDialogStore.dispatch(TabTrayDialogFragmentAction.BrowserStateChanged(it))
+        }
+
+        consumeFrom(tabTrayDialogStore) {
             tabTrayView.updateState(it)
         }
     }
@@ -209,7 +254,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
             } ?: return
 
         // Check if this is the last tab of this session type
-        val isLastOpenTab = sessionManager.sessions.filter { snapshot.session.private == it.private }.size == 1
+        val isLastOpenTab =
+            sessionManager.sessions.filter { snapshot.session.private == it.private }.size == 1
 
         if (isLastOpenTab) {
             dismissTabTrayAndNavigateHome(sessionId)
@@ -295,21 +341,101 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         }
     }
 
+    override fun onBackPressed(): Boolean {
+        if (!tabTrayView.onBackPressed()) {
+            dismiss()
+        }
+        return true
+    }
+
+    private fun showChooseCollectionDialog(sessionList: List<Session>) {
+        context?.let {
+            val tabCollectionStorage = it.components.core.tabCollectionStorage
+            val collections =
+                tabCollectionStorage.cachedTabCollections.map { it.title }.toTypedArray()
+            val customLayout =
+                LayoutInflater.from(it).inflate(R.layout.add_new_collection_dialog, null)
+            val list = customLayout.findViewById<RecyclerView>(R.id.recycler_view)
+            list.layoutManager = LinearLayoutManager(it)
+
+            val builder = AlertDialog.Builder(it).setTitle(R.string.tab_tray_select_collection)
+                .setView(customLayout)
+                .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                    val selectedCollection =
+                        (list.adapter as CollectionsAdapter).getSelectedCollection()
+                    val collection = tabCollectionStorage.cachedTabCollections[selectedCollection]
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        tabCollectionStorage.addTabsToCollection(collection, sessionList)
+                        it.metrics.track(
+                            Event.CollectionTabsAdded(
+                                it.components.core.sessionManager.normalSessionSize(),
+                                sessionList.size
+                            )
+                        )
+                        launch(Main) {
+                            tabTrayDialogStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
+                            dialog.dismiss()
+                        }
+                    }
+                }.setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                    tabTrayDialogStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
+                    dialog.cancel()
+                }
+
+            val dialog = builder.create()
+            val adapter =
+                CollectionsAdapter(arrayOf(it.getString(R.string.tab_tray_add_new_collection)) + collections) {
+                    dialog.dismiss()
+                    showAddNewCollectionDialog(sessionList)
+                }
+            list.adapter = adapter
+            dialog.show()
+        }
+    }
+
+    private fun showAddNewCollectionDialog(sessionList: List<Session>) {
+        context?.let {
+            val tabCollectionStorage = it.components.core.tabCollectionStorage
+            val customLayout =
+                LayoutInflater.from(it).inflate(R.layout.name_collection_dialog, null)
+            val collectionNameEditText: EditText =
+                customLayout.findViewById(R.id.collection_name)
+            collectionNameEditText.setText(
+                it.getString(
+                    R.string.create_collection_default_name,
+                    tabCollectionStorage.cachedTabCollections.getDefaultCollectionNumber()
+                )
+            )
+
+            AlertDialog.Builder(it).setTitle(R.string.tab_tray_add_new_collection)
+                .setView(customLayout).setPositiveButton(android.R.string.ok) { dialog, _ ->
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        tabCollectionStorage.createCollection(
+                            collectionNameEditText.text.toString(),
+                            sessionList
+                        )
+                        it.metrics.track(
+                            Event.CollectionSaved(
+                                it.components.core.sessionManager.normalSessionSize(),
+                                sessionList.size
+                            )
+                        )
+                        launch(Main) {
+                            tabTrayDialogStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
+                            dialog.dismiss()
+                        }
+                    }
+                }.setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                    tabTrayDialogStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
+                    dialog.cancel()
+                }.create().show().also {
+                    collectionNameEditText.setSelection(0, collectionNameEditText.text.length)
+                    collectionNameEditText.showKeyboard()
+                }
+        }
+    }
+
     companion object {
         private const val ELEVATION = 80f
-        private const val FRAGMENT_TAG = "tabTrayDialogFragment"
-
-        fun show(fragmentManager: FragmentManager) {
-            // If we've killed the fragmentManager. Let's not try to show the tabs tray.
-            if (fragmentManager.isDestroyed) {
-                return
-            }
-
-            // We want to make sure we don't accidentally show the dialog twice if
-            // a user somehow manages to trigger `show()` twice before we present the dialog.
-            if (fragmentManager.findFragmentByTag(FRAGMENT_TAG) == null) {
-                TabTrayDialogFragment().showNow(fragmentManager, FRAGMENT_TAG)
-            }
-        }
     }
 }

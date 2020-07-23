@@ -101,7 +101,6 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.HELP
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
-import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
@@ -920,7 +919,10 @@ class HomeFragment : Fragment() {
     }
 
     private fun openTabTray() {
-        TabTrayDialogFragment.show(parentFragmentManager)
+        findNavController().nav(
+            R.id.homeFragment,
+            HomeFragmentDirections.actionGlobalTabTrayDialogFragment()
+        )
     }
 
     private fun updateTabCounter(browserState: BrowserState) {

@@ -192,8 +192,12 @@ class DefaultSessionControlController(
         metrics.track(Event.CollectionTabRemoved)
 
         if (collection.tabs.size == 1) {
-            val title = activity.resources.getString(R.string.delete_tab_and_collection_dialog_title, collection.title)
-            val message = activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
+            val title = activity.resources.getString(
+                R.string.delete_tab_and_collection_dialog_title,
+                collection.title
+            )
+            val message =
+                activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
             showDeleteCollectionPrompt(collection, title, message)
         } else {
             viewLifecycleScope.launch(Dispatchers.IO) {
@@ -208,7 +212,8 @@ class DefaultSessionControlController(
     }
 
     override fun handleDeleteCollectionTapped(collection: TabCollection) {
-        val message = activity.resources.getString(R.string.tab_collection_dialog_message, collection.title)
+        val message =
+            activity.resources.getString(R.string.tab_collection_dialog_message, collection.title)
         showDeleteCollectionPrompt(collection, null, message)
     }
 
@@ -254,8 +259,12 @@ class DefaultSessionControlController(
 
     override fun handleSelectTopSite(url: String, isDefault: Boolean) {
         metrics.track(Event.TopSiteOpenInNewTab)
-        if (isDefault) { metrics.track(Event.TopSiteOpenDefault) }
-        if (url == SupportUtils.POCKET_TRENDING_URL) { metrics.track(Event.PocketTopSiteClicked) }
+        if (isDefault) {
+            metrics.track(Event.TopSiteOpenDefault)
+        }
+        if (url == SupportUtils.POCKET_TRENDING_URL) {
+            metrics.track(Event.PocketTopSiteClicked)
+        }
         addTabUseCase.invoke(
             url = url,
             selectTab = true,
@@ -297,6 +306,13 @@ class DefaultSessionControlController(
         fragmentStore.dispatch(HomeFragmentAction.RemoveTip(tip))
     }
 
+    private fun showTabTrayCollectionCreation() {
+        val directions = HomeFragmentDirections.actionGlobalTabTrayDialogFragment(
+            enterMultiselect = true
+        )
+        navController.nav(R.id.homeFragment, directions)
+    }
+
     private fun showCollectionCreationFragment(
         step: SaveCollectionStep,
         selectedTabIds: Array<String>? = null,
@@ -322,7 +338,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleCreateCollection() {
-        showCollectionCreationFragment(step = SaveCollectionStep.SelectTabs)
+        showTabTrayCollectionCreation()
     }
 
     private fun showShareFragment(data: List<ShareData>) {

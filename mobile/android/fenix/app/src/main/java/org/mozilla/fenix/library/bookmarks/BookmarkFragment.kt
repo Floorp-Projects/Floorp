@@ -51,7 +51,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
-import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.utils.allowUndo
 
 /**
@@ -240,7 +239,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     private fun showTabTray() {
         invokePendingDeletion()
-        TabTrayDialogFragment.show(parentFragmentManager)
+        navigate(BookmarkFragmentDirections.actionGlobalTabTrayDialogFragment())
     }
 
     private fun navigate(directions: NavDirections) {

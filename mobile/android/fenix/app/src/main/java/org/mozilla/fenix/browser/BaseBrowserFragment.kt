@@ -107,7 +107,6 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.SharedViewModel
-import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
@@ -231,7 +230,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
                 topSiteStorage = requireComponents.core.topSiteStorage,
                 onTabCounterClicked = {
-                    TabTrayDialogFragment.show(parentFragmentManager)
+                    findNavController().nav(
+                        R.id.browserFragment,
+                        BrowserFragmentDirections.actionGlobalTabTrayDialogFragment()
+                    )
                 },
                 onCloseTab = {
                     val snapshot = sessionManager.createSessionSnapshot(it)

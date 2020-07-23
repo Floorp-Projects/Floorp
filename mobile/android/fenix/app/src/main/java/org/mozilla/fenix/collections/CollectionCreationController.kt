@@ -15,6 +15,8 @@ import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.getDefaultCollectionNumber
+import org.mozilla.fenix.ext.normalSessionSize
 import org.mozilla.fenix.home.Tab
 
 interface CollectionCreationController {
@@ -92,7 +94,7 @@ class DefaultCollectionCreationController(
         }
 
         metrics.track(
-            Event.CollectionSaved(normalSessionSize(sessionManager), sessionBundle.size)
+            Event.CollectionSaved(sessionManager.normalSessionSize(), sessionBundle.size)
         )
     }
 
@@ -134,7 +136,7 @@ class DefaultCollectionCreationController(
         }
 
         metrics.track(
-            Event.CollectionTabsAdded(normalSessionSize(sessionManager), sessionBundle.size)
+            Event.CollectionTabsAdded(sessionManager.normalSessionSize(), sessionBundle.size)
         )
     }
 
@@ -146,7 +148,7 @@ class DefaultCollectionCreationController(
                 } else {
                     SaveCollectionStep.SelectCollection
                 },
-                defaultCollectionNumber = getDefaultCollectionNumber()
+                defaultCollectionNumber = store.state.tabCollections.getDefaultCollectionNumber()
             )
         )
     }
@@ -155,24 +157,9 @@ class DefaultCollectionCreationController(
         store.dispatch(
             CollectionCreationAction.StepChanged(
                 SaveCollectionStep.NameCollection,
-                getDefaultCollectionNumber()
+                store.state.tabCollections.getDefaultCollectionNumber()
             )
         )
-    }
-
-    /**
-     * Returns the new default name recommendation for a collection
-     *
-     * Algorithm: Go through all collections, make a list of their names and keep only the default ones.
-     * Then get the numbers from all these default names, compute the maximum number and add one.
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun getDefaultCollectionNumber(): Int {
-        return (store.state.tabCollections
-            .map { it.title }
-            .filter { it.matches(Regex("Collection\\s\\d+")) }
-            .map { Integer.valueOf(it.split(" ")[DEFAULT_COLLECTION_NUMBER_POSITION]) }
-            .max() ?: 0) + DEFAULT_INCREMENT_VALUE
     }
 
     override fun addTabToSelection(tab: Tab) {
@@ -208,15 +195,5 @@ class DefaultCollectionCreationController(
             }
             SaveCollectionStep.SelectTabs, SaveCollectionStep.RenameCollection -> null
         }
-    }
-
-    /**
-     * @return the number of currently active sessions that are neither custom nor private
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun normalSessionSize(sessionManager: SessionManager): Int {
-        return sessionManager.sessions.filter { session ->
-            (!session.isCustomTabSession() && !session.private)
-        }.size
     }
 }

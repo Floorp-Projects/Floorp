@@ -44,7 +44,6 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
-import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -207,7 +206,10 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
     private fun showTabTray() {
         invokePendingDeletion()
-        TabTrayDialogFragment.show(parentFragmentManager)
+        findNavController().nav(
+            R.id.historyFragment,
+            HistoryFragmentDirections.actionGlobalTabTrayDialogFragment()
+        )
     }
 
     private fun getMultiSelectSnackBarMessage(historyItems: Set<HistoryItem>): String {
@@ -259,7 +261,10 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                         launch(Main) {
                             viewModel.invalidate()
                             historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
-                            showSnackBar(requireView(), getString(R.string.preferences_delete_browsing_data_snackbar))
+                            showSnackBar(
+                                requireView(),
+                                getString(R.string.preferences_delete_browsing_data_snackbar)
+                            )
                         }
                     }
 
