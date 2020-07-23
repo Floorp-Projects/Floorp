@@ -54,6 +54,11 @@ mochitest-plain:
     schedules-component: mochitest-plain
     loopback-video: true
     tier: default
+    variants:
+        by-test-platform:
+            linux1804-64/opt: ['fission-xorigin']
+            linux1804-64/debug: ['fission-xorigin']
+            default: ['fission']
     chunks:
         by-test-platform:
             android-em-7.*: 4

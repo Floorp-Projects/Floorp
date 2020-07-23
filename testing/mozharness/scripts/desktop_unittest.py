@@ -169,6 +169,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             "help": "Repeat the tests the given number of times. Supported "
                     "by mochitest, reftest, crashtest, ignored otherwise."}
          ],
+        [["--enable-xorigin-tests"], {
+            "action": "store_true",
+            "dest": "enable_xorigin_tests",
+            "default": False,
+            "help": "Run tests in a cross origin iframe."}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -433,6 +439,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
             if c['enable_webrender']:
                 base_cmd.append('--enable-webrender')
+
+            if c['enable_xorigin_tests']:
+                base_cmd.append('--enable-xorigin-tests')
 
             if c['extra_prefs']:
                 base_cmd.extend(['--setpref={}'.format(p) for p in c['extra_prefs']])
