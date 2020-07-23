@@ -278,7 +278,7 @@ def _populate_nightly_history(product, branch, maxbuilds=4, maxsearch=10):
 
 def _populate_release_history(product, branch, partial_updates):
     builds = dict()
-    for version, release in partial_updates.iteritems():
+    for version, release in six.iteritems(partial_updates):
         prev_release_blob = '{product}-{version}-build{build_number}'.format(
             product=product, version=version, build_number=release['buildNumber']
         )
