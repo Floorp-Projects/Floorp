@@ -9,17 +9,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
 import kotlinx.android.synthetic.main.fragment_tabstray.tabsTray
 import kotlinx.android.synthetic.main.fragment_tabstray.toolbar
+import mozilla.components.browser.tabstray.TabsAdapter
+import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.samples.browser.ext.components
 
 /**
  * A fragment for displaying the tabs tray.
  */
 class TabsTrayFragment : Fragment(), UserInteractionHandler {
-    private var tabsFeature: TabsFeature? = null
+    private val tabsFeature: ViewBoundFeatureWrapper<TabsFeature> = ViewBoundFeatureWrapper()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         inflater.inflate(R.layout.fragment_tabstray, container, false)
@@ -43,13 +47,21 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
             true
         }
 
-        tabsFeature = TabsFeature(
-            tabsTray,
-            components.store,
-            components.tabsUseCases.selectTab,
-            components.tabsUseCases.removeTab,
-            closeTabsTray = ::closeTabsTray
-        ).also { lifecycle.addObserver(it) }
+        val tabsAdapter = createTabsAdapter()
+        tabsTray.adapter = tabsAdapter
+        tabsTray.layoutManager = GridLayoutManager(context, 2)
+
+        tabsFeature.set(
+            feature = TabsFeature(
+                tabsTray = tabsAdapter,
+                store = components.store,
+                selectTabUseCase = components.tabsUseCases.selectTab,
+                removeTabUseCase = components.tabsUseCases.removeTab,
+                closeTabsTray = ::closeTabsTray
+            ),
+            owner = this,
+            view = view
+        )
     }
 
     override fun onBackPressed(): Boolean {
@@ -62,5 +74,10 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
             replace(R.id.container, BrowserFragment.create())
             commit()
         }
+    }
+
+    private fun createTabsAdapter(): TabsAdapter {
+        val thumbnailLoader = ThumbnailLoader(components.thumbnailStorage)
+        return TabsAdapter(thumbnailLoader)
     }
 }

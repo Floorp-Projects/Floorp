@@ -10,6 +10,5 @@
         <attr name="tabsTraySelectedItemBackgroundColor" format="reference|color" />
         <attr name="tabsTraySelectedItemTextColor" format="reference|color" />
         <attr name="tabsTraySelectedItemUrlTextColor" format="reference|color" />
-        <attr name="tabsTrayItemElevation" format="reference|dimension" />
     </declare-styleable>
 </resources>

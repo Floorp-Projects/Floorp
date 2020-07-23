@@ -24,6 +24,11 @@ permalink: /changelog/
 * **feature-syncedtabs**
   * ⚠️ **This is a breaking change**: Adds context to the constructor of `SyncedTabsFeature`.
 
+* **browser-tabstray**
+  * ⚠️ **This is a breaking change**: The `BrowserTabsTray` is now deprecated. Using a `RecyclerView` directly is now recommended.
+  * ⚠️ **This is a breaking change**: `ViewHolderProvider` no longer has a second param.
+  * ⚠️ **This is a breaking change**: `TabsAdapter` has a `styling` field `TabsTrayStyling`.
+
 # 51.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v50.0.0...v51.0.0)

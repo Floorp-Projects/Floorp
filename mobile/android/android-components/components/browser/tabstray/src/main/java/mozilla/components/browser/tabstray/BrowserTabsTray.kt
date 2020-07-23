@@ -12,14 +12,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.tabstray.TabsTray
 
-const val DEFAULT_ITEM_BACKGROUND_COLOR = 0xFFFFFFFF.toInt()
-const val DEFAULT_ITEM_BACKGROUND_SELECTED_COLOR = 0xFFFF45A1FF.toInt()
-const val DEFAULT_ITEM_TEXT_COLOR = 0xFF111111.toInt()
-const val DEFAULT_ITEM_TEXT_SELECTED_COLOR = 0xFFFFFFFF.toInt()
-
 /**
  * A customizable tabs tray for browsers.
  */
+@Deprecated("Use a RecyclerView directly instead; styling can be passed to the TabsAdapter. " +
+    "This class will be removed in a future release.")
 class BrowserTabsTray @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -30,17 +27,9 @@ class BrowserTabsTray @JvmOverloads constructor(
 ) : RecyclerView(context, attrs, defStyleAttr),
     TabsTray by tabsAdapter {
 
-    internal val styling: TabsTrayStyling
-
     init {
-        tabsAdapter.tabsTray = this
-
-        layoutManager = layout
-        adapter = tabsAdapter
-        itemDecoration?.let { addItemDecoration(it) }
-
         val attr = context.obtainStyledAttributes(attrs, R.styleable.BrowserTabsTray, defStyleAttr, 0)
-        styling = TabsTrayStyling(
+        val tabsTrayStyling = TabsTrayStyling(
             attr.getColor(R.styleable.BrowserTabsTray_tabsTrayItemBackgroundColor, DEFAULT_ITEM_BACKGROUND_COLOR),
             attr.getColor(R.styleable.BrowserTabsTray_tabsTraySelectedItemBackgroundColor,
                 DEFAULT_ITEM_BACKGROUND_SELECTED_COLOR),
@@ -48,10 +37,17 @@ class BrowserTabsTray @JvmOverloads constructor(
             attr.getColor(R.styleable.BrowserTabsTray_tabsTraySelectedItemTextColor, DEFAULT_ITEM_TEXT_SELECTED_COLOR),
             attr.getColor(R.styleable.BrowserTabsTray_tabsTrayItemUrlTextColor, DEFAULT_ITEM_TEXT_COLOR),
             attr.getColor(R.styleable.BrowserTabsTray_tabsTraySelectedItemUrlTextColor,
-                DEFAULT_ITEM_TEXT_SELECTED_COLOR),
-            attr.getDimensionPixelSize(R.styleable.BrowserTabsTray_tabsTrayItemElevation, 0).toFloat()
+                DEFAULT_ITEM_TEXT_SELECTED_COLOR)
         )
         attr.recycle()
+
+        itemDecoration?.let { addItemDecoration(it) }
+
+        adapter = tabsAdapter.apply {
+            styling = tabsTrayStyling
+        }
+
+        layoutManager = layout
     }
 
     /**
@@ -61,13 +57,3 @@ class BrowserTabsTray @JvmOverloads constructor(
         return this
     }
 }
-
-internal data class TabsTrayStyling(
-    val itemBackgroundColor: Int,
-    val selectedItemBackgroundColor: Int,
-    val itemTextColor: Int,
-    val selectedItemTextColor: Int,
-    val itemUrlTextColor: Int,
-    val selectedItemUrlTextColor: Int,
-    val itemElevation: Float
-)
