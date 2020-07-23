@@ -168,6 +168,12 @@ class TokenizerBase {
                              typename TAString::const_char_iterator begin,
                              typename TAString::const_char_iterator end);
 
+#ifdef DEBUG
+  // This is called from inside Tokenizer methods to make sure the token is
+  // valid.
+  void Validate(Token const& aToken);
+#endif
+
   // true iff we have already read the EOF token
   bool mPastEof;
   // true iff the last Check*() call has returned false, reverts to true on
@@ -328,6 +334,16 @@ class TTokenizer : public TokenizerBase<TChar> {
   [[nodiscard]] bool CheckWord(const TChar (&aWord)[N]) {
     return Check(
         base::Token::Word(typename base::TDependentString(aWord, N - 1)));
+  }
+  /**
+   * Helper to check for a string compound of multiple tokens like "foo bar".
+   * The match is binary-exact, a white space or a delimiter character in the
+   * phrase must match exactly the characters in the input.
+   */
+  [[nodiscard]] bool CheckPhrase(const typename base::TAString& aPhrase);
+  template <uint32_t N>
+  [[nodiscard]] bool CheckPhrase(const TChar (&aPhrase)[N]) {
+    return CheckPhrase(typename base::TDependentString(aPhrase, N - 1));
   }
   /**
    * Checks \r, \n or \r\n.
