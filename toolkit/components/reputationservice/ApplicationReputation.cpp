@@ -159,6 +159,10 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".001",
     //".7z",
     //".ace",
+    //".accda", exec       // MS Access database
+    //".accdb", exec       // MS Access database
+    //".accde", exec       // MS Access database
+    //".accdr", exec       // MS Access database
     ".action",  // Mac script
     //".ad", exec // Windows
     //".ade", exec  // MS Access
