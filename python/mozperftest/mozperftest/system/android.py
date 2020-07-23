@@ -18,6 +18,10 @@ _FENIX_NIGHTLY_BUILDS = (
     "/artifacts/public/build/{architecture}/geckoNightly/target.apk"
 )
 _GV_BUILDS = "gecko.v2.mozilla-central.nightly.latest.mobile.android-"
+_REFBROW_BUILDS = (
+    "mobile.v2.reference-browser.nightly.latest.{architecture}"
+    "/artifacts/public/target.{architecture}.apk"
+)
 
 _PERMALINKS = {
     "fenix_nightly_armeabi_v7a": _ROOT_URL
@@ -33,6 +37,10 @@ _PERMALINKS = {
     "gve_nightly_api16": _ROOT_URL
     + _GV_BUILDS
     + "api-16-opt/artifacts/public/build/geckoview_example.apk",
+    "refbrow_nightly_aarch64": _ROOT_URL
+    + _REFBROW_BUILDS.format(architecture="arm64-v8a"),
+    "refbrow_nightly_api16": _ROOT_URL
+    + _REFBROW_BUILDS.format(architecture="armeabi-v7a"),
 }
 
 

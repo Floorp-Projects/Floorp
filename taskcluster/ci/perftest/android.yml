@@ -164,6 +164,66 @@ hw-p2-applink-gv:
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_applink.js
 
+android-hw-g5-applink-refbrow:
+    worker-type: t-bitbar-gw-perf-g5
+    description: Run applink perftest on the Reference Browser on a G5
+    treeherder:
+        symbol: perftest(applink-refbrow)
+    platform: android-hw-g5-7-0-arm7-api-16/opt
+    attributes:
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $GECKO_PATH &&
+            python3 python/mozperftest/mozperftest/runner.py
+            --flavor mobile-browser
+            --android
+            --android-app-name org.mozilla.reference.browser
+            --android-activity org.mozilla.reference.browser.IntentReceiverActivity
+            --android-clear-logcat
+            --android-capture-logcat logcat
+            --android-perf-tuning
+            --perfherder-metrics processLaunchToNavStart
+            --android-install-apk refbrow_nightly_api16
+            --hooks testing/performance/hooks_applink.py
+            --perfherder
+            --perfherder-app refbrow
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --browsertime-iterations 14
+            --output $MOZ_FETCHES_DIR/../artifacts
+            testing/performance/perftest_applink.js
+
+android-hw-p2-applink-refbrow:
+    worker-type: t-bitbar-gw-perf-p2
+    description: Run applink perftest on the Reference Browser on a Pixel 2
+    treeherder:
+        symbol: perftest(applink-refbrow)
+    platform: android-hw-p2-8-0-android-aarch64/opt
+    attributes:
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $GECKO_PATH &&
+            python3 python/mozperftest/mozperftest/runner.py
+            --flavor mobile-browser
+            --android
+            --android-app-name org.mozilla.reference.browser
+            --android-activity org.mozilla.reference.browser.IntentReceiverActivity
+            --android-clear-logcat
+            --android-capture-logcat logcat
+            --android-perf-tuning
+            --perfherder-metrics processLaunchToNavStart
+            --android-install-apk refbrow_nightly_aarch64
+            --hooks testing/performance/hooks_applink.py
+            --perfherder
+            --perfherder-app refbrow
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --browsertime-iterations 14
+            --output $MOZ_FETCHES_DIR/../artifacts
+            testing/performance/perftest_applink.js
+
 hw-g5-main-fenix:
     worker-type: t-bitbar-gw-perf-g5
     description: Run main (home activity) perftest on Fenix on a G5
