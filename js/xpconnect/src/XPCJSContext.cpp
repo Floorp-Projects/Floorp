@@ -619,8 +619,7 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
   // This is at least the second interrupt callback we've received since
   // returning to the event loop. See how long it's been, and what the limit
   // is.
-  TimeStamp now = TimeStamp::NowLoRes();
-  TimeDuration duration = now - self->mSlowScriptCheckpoint;
+  TimeDuration duration = TimeStamp::NowLoRes() - self->mSlowScriptCheckpoint;
   int32_t limit;
 
   nsString addonId;
@@ -645,13 +644,13 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     return true;
   }
 
-  self->mSlowScriptCheckpoint = now;
   self->mSlowScriptActualWait += duration;
 
   // In order to guard against time changes or laptops going to sleep, we
   // don't trigger the slow script warning until (limit/2) seconds have
   // elapsed twice.
   if (!self->mSlowScriptSecondHalf) {
+    self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
     self->mSlowScriptSecondHalf = true;
     return true;
   }
@@ -701,8 +700,8 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
   }
 
   // Show the prompt to the user, and kill if requested.
-  nsGlobalWindowInner::SlowScriptResponse response = win->ShowSlowScriptDialog(
-      cx, addonId, self->mSlowScriptActualWait.ToMilliseconds());
+  nsGlobalWindowInner::SlowScriptResponse response =
+      win->ShowSlowScriptDialog(cx, addonId);
   if (response == nsGlobalWindowInner::KillSlowScript) {
     if (Preferences::GetBool("dom.global_stop_script", true)) {
       xpc::Scriptability::Get(global).Block();
@@ -736,7 +735,7 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
   }
 
   // The user chose to continue the script. Reset the timer, and disable this
-  // machinery with a pref if the user opted out of future slow-script dialogs.
+  // machinery with a pref of the user opted out of future slow-script dialogs.
   if (response != nsGlobalWindowInner::ContinueSlowScriptAndKeepNotifying) {
     self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
   }

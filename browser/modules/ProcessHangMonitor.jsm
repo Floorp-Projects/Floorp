@@ -39,19 +39,13 @@ var ProcessHangMonitor = {
 
   /**
    * Collection of hang reports that haven't expired or been dismissed
-   * by the user. These are nsIHangReports. They are mapped to objects
-   * containing:
-   * - notificationTime: when (Cu.now()) we first showed a notification
-   * - waitCount: how often the user asked to wait for the script to finish
-   * - lastReportFromChild: when (Cu.now()) we last got hang info from the
-   *   child.
+   * by the user. These are nsIHangReports.
    */
-  _activeReports: new Map(),
+  _activeReports: new Set(),
 
   /**
    * Collection of hang reports that have been suppressed for a short
-   * period of time. Value is an object like in _activeReports, but also
-   * including a `timer` prop, which is an nsITimer for when the wait time
+   * period of time. Value is an nsITimer for when the wait time
    * expires.
    */
   _pausedReports: new Map(),
@@ -65,7 +59,6 @@ var ProcessHangMonitor = {
     Services.obs.addObserver(this, "quit-application-granted");
     Services.obs.addObserver(this, "xpcom-shutdown");
     Services.ww.registerNotification(this);
-    Services.telemetry.setEventRecordingEnabled("slow_script_warning", true);
   },
 
   /**
@@ -94,7 +87,6 @@ var ProcessHangMonitor = {
         report.endStartingDebugger();
       }
 
-      this._recordTelemetryForReport(report, "debugging");
       report.beginStartingDebugger();
 
       let svc = Cc["@mozilla.org/dom/slow-script-debug;1"].getService(
@@ -126,7 +118,6 @@ var ProcessHangMonitor = {
 
     switch (report.hangType) {
       case report.SLOW_SCRIPT:
-        this._recordTelemetryForReport(report, "user-aborted");
         this.terminateScript(win);
         break;
       case report.PLUGIN_HANG:
@@ -147,7 +138,6 @@ var ProcessHangMonitor = {
 
     switch (report.hangType) {
       case report.SLOW_SCRIPT:
-        this._recordTelemetryForReport(report, "user-aborted");
         this.terminateGlobal(win);
         break;
     }
@@ -157,10 +147,9 @@ var ProcessHangMonitor = {
    * Terminate whatever is causing this report, be it an add-on, page script,
    * or plug-in. This is done without updating any report notifications.
    */
-  stopHang(report, endReason, backupInfo) {
+  stopHang(report) {
     switch (report.hangType) {
       case report.SLOW_SCRIPT: {
-        this._recordTelemetryForReport(report, endReason, backupInfo);
         if (report.addonId) {
           report.terminateGlobal();
         } else {
@@ -184,10 +173,6 @@ var ProcessHangMonitor = {
     if (!report) {
       return;
     }
-    // Update the other info we keep.
-    let reportInfo = this._activeReports.get(report);
-    reportInfo.waitCount++;
-
     // Remove the report from the active list.
     this.removeActiveReport(report);
 
@@ -200,13 +185,13 @@ var ProcessHangMonitor = {
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(
       () => {
-        for (let [stashedReport, pausedInfo] of this._pausedReports) {
-          if (pausedInfo.timer === timer) {
+        for (let [stashedReport, otherTimer] of this._pausedReports) {
+          if (otherTimer === timer) {
             this.removePausedReport(stashedReport);
 
             // We're still hung, so move the report back to the active
             // list and update the UI.
-            this._activeReports.set(report, pausedInfo);
+            this._activeReports.add(report);
             this.updateWindows();
             break;
           }
@@ -216,8 +201,7 @@ var ProcessHangMonitor = {
       timer.TYPE_ONE_SHOT
     );
 
-    reportInfo.timer = timer;
-    this._pausedReports.set(report, reportInfo);
+    this._pausedReports.set(report, timer);
 
     // remove the browser notification associated with this hang
     this.updateWindows();
@@ -292,7 +276,7 @@ var ProcessHangMonitor = {
    */
   onQuitApplicationGranted() {
     this._shuttingDown = true;
-    this.stopAllHangs("quit-application-granted");
+    this.stopAllHangs();
     this.updateWindows();
   },
 
@@ -309,7 +293,7 @@ var ProcessHangMonitor = {
           // the hang.
         }
         if (!hungBrowserWindow || hungBrowserWindow == win) {
-          this.stopHang(report, "window-closed");
+          this.stopHang(report);
           return true;
         }
       } else if (report.hangType == report.PLUGIN_HANG) {
@@ -338,15 +322,15 @@ var ProcessHangMonitor = {
     this.updateWindows();
   },
 
-  stopAllHangs(endReason) {
+  stopAllHangs() {
     for (let report of this._activeReports) {
-      this.stopHang(report, endReason);
+      this.stopHang(report);
     }
 
-    this._activeReports = new Map();
+    this._activeReports = new Set();
 
     for (let [pausedReport] of this._pausedReports) {
-      this.stopHang(pausedReport, endReason);
+      this.stopHang(pausedReport);
       this.removePausedReport(pausedReport);
     }
   },
@@ -356,7 +340,7 @@ var ProcessHangMonitor = {
    */
   findActiveReport(browser) {
     let frameLoader = browser.frameLoader;
-    for (let report of this._activeReports.keys()) {
+    for (let report of this._activeReports) {
       if (report.isReportForBrowser(frameLoader)) {
         return report;
       }
@@ -378,72 +362,6 @@ var ProcessHangMonitor = {
   },
 
   /**
-   * Tell telemetry about the report.
-   */
-  _recordTelemetryForReport(report, endReason, backupInfo) {
-    let info =
-      this._activeReports.get(report) ||
-      this._pausedReports.get(report) ||
-      backupInfo;
-    if (!info) {
-      return;
-    }
-    try {
-      // Only report slow script hangs.
-      if (report.hangType != report.SLOW_SCRIPT) {
-        return;
-      }
-      let uri_type;
-      if (report.addonId) {
-        uri_type = "extension";
-      } else if (report.scriptFileName?.startsWith("debugger")) {
-        uri_type = "devtools";
-      } else {
-        try {
-          let url = new URL(report.scriptFileName);
-          if (url.protocol == "chrome:" || url.protocol == "resource:") {
-            uri_type = "browser";
-          } else {
-            uri_type = "content";
-          }
-        } catch (ex) {
-          Cu.reportError(ex);
-          uri_type = "unknown";
-        }
-      }
-      let uptime = 0;
-      if (info.notificationTime) {
-        uptime = Cu.now() - info.notificationTime;
-      }
-      uptime = "" + uptime;
-      // We combine the duration of the hang in the content process with the
-      // time since we were last told about the hang in the parent. This is
-      // not the same as the time we showed a notification, as we only do that
-      // for the currently selected browser. It's as messy as it is because
-      // there is no cross-process monotonically increasing timestamp we can
-      // use. :-(
-      let hangDuration =
-        report.hangDuration + Cu.now() - info.lastReportFromChild;
-      Services.telemetry.recordEvent(
-        "slow_script_warning",
-        "shown",
-        "content",
-        null,
-        {
-          end_reason: endReason,
-          hang_duration: "" + hangDuration,
-          n_tab_deselect: "" + info.deselectCount,
-          uri_type,
-          uptime,
-          wait_count: "" + info.waitCount,
-        }
-      );
-    } catch (ex) {
-      Cu.reportError(ex);
-    }
-  },
-
-  /**
    * Remove an active hang report from the active list and cancel the timer
    * associated with it.
    */
@@ -457,8 +375,10 @@ var ProcessHangMonitor = {
    * associated with it.
    */
   removePausedReport(report) {
-    let info = this._pausedReports.get(report);
-    info?.timer?.cancel();
+    let timer = this._pausedReports.get(report);
+    if (timer) {
+      timer.cancel();
+    }
     this._pausedReports.delete(report);
   },
 
@@ -475,7 +395,7 @@ var ProcessHangMonitor = {
     // we have no opportunity to ask the user whether or not they want
     // to stop the hang or wait, so we'll opt for stopping the hang.
     if (!e.hasMoreElements()) {
-      this.stopAllHangs("no-windows-left");
+      this.stopAllHangs();
       return;
     }
 
@@ -498,10 +418,6 @@ var ProcessHangMonitor = {
     let report = this.findActiveReport(win.gBrowser.selectedBrowser);
 
     if (report) {
-      let info = this._activeReports.get(report);
-      if (info && !info.notificationTime) {
-        info.notificationTime = Cu.now();
-      }
       this.showNotification(win, report);
     } else {
       this.hideNotification(win);
@@ -639,16 +555,8 @@ var ProcessHangMonitor = {
 
     // If a new tab is selected or if a tab changes remoteness, then
     // we may need to show or hide a hang notification.
+
     if (event.type == "TabSelect" || event.type == "TabRemotenessChange") {
-      if (event.type == "TabSelect" && event.detail.previousTab) {
-        // If we've got a notification, check the previous tab's report and
-        // indicate the user switched tabs while the notification was up.
-        let r = this.findActiveReport(event.detail.previousTab.linkedBrowser);
-        if (r) {
-          let info = this._activeReports.get(r);
-          info.deselectCount++;
-        }
-      }
       this.updateWindow(win);
     }
   },
@@ -658,17 +566,13 @@ var ProcessHangMonitor = {
    * before, show a notification for it in all open XUL windows.
    */
   reportHang(report) {
-    let now = Cu.now();
     if (this._shuttingDown) {
-      this.stopHang(report, "shutdown-in-progress", {
-        lastReportFromChild: now,
-      });
+      this.stopHang(report);
       return;
     }
 
     // If this hang was already reported reset the timer for it.
     if (this._activeReports.has(report)) {
-      this._activeReports.get(report).lastReportFromChild = now;
       // if this report is in active but doesn't have a notification associated
       // with it, display a notification.
       this.updateWindows();
@@ -677,7 +581,6 @@ var ProcessHangMonitor = {
 
     // If this hang was already reported and paused by the user ignore it.
     if (this._pausedReports.has(report)) {
-      this._pausedReports.get(report).lastReportFromChild = now;
       return;
     }
 
@@ -692,17 +595,11 @@ var ProcessHangMonitor = {
       Services.telemetry.getHistogramById("PLUGIN_HANG_NOTICE_COUNT").add();
     }
 
-    this._activeReports.set(report, {
-      deselectCount: 0,
-      lastReportFromChild: now,
-      waitCount: 0,
-    });
+    this._activeReports.add(report);
     this.updateWindows();
   },
 
   clearHang(report) {
-    this._recordTelemetryForReport(report, "cleared");
-
     this.removeActiveReport(report);
     this.removePausedReport(report);
     report.userCanceled();
