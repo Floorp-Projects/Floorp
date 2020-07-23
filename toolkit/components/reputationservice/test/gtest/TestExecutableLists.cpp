@@ -285,6 +285,7 @@ static const char* const kTestFileExtensions[] = {
     ".xml",     // MS Excel
     ".xnk",     // MS Exchange
     ".xrm-ms",  // Windows
+    ".xsd",     // XML schema definition
     ".xsl",     // XML Stylesheet
     ".xz",      // Linux archive (xz)
     ".z",       // InstallShield
