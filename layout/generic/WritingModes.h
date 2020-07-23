@@ -316,9 +316,9 @@ class WritingMode {
     // orientation and bit 0 of a LogicalAxis value indicating the inline axis,
     // so that it can correctly form mozilla::PhysicalAxis values using bit
     // manipulation.
-    static_assert(NS_STYLE_WRITING_MODE_HORIZONTAL_TB == 0 &&
-                      NS_STYLE_WRITING_MODE_VERTICAL_RL == 1 &&
-                      NS_STYLE_WRITING_MODE_VERTICAL_LR == 3 &&
+    static_assert(uint8_t(StyleWritingModeProperty::HorizontalTb) == 0 &&
+                      uint8_t(StyleWritingModeProperty::VerticalRl) == 1 &&
+                      uint8_t(StyleWritingModeProperty::VerticalLr) == 3 &&
                       eLogicalAxisBlock == 0 && eLogicalAxisInline == 1 &&
                       eAxisVertical == 0 && eAxisHorizontal == 1,
                   "unexpected writing-mode, logical axis or physical axis "
@@ -327,8 +327,8 @@ class WritingMode {
   }
 
   mozilla::PhysicalAxis PhysicalAxis(LogicalAxis aAxis) const {
-    // This will set wm to either NS_STYLE_WRITING_MODE_HORIZONTAL_TB or
-    // NS_STYLE_WRITING_MODE_VERTICAL_RL, and not the other two (real
+    // This will set wm to either StyleWritingModel::HorizontalTB or
+    // StyleWritingModeProperty::VerticalRL, and not the other two (real
     // and hypothetical) values.  But this is fine; we only need to
     // distinguish between vertical and horizontal in
     // PhysicalAxisForLogicalAxis.
@@ -338,7 +338,7 @@ class WritingMode {
 
   static mozilla::Side PhysicalSideForBlockAxis(uint8_t aWritingModeValue,
                                                 LogicalEdge aEdge) {
-    // indexes are NS_STYLE_WRITING_MODE_* values, which are the same as these
+    // indexes are StyleWritingModeProperty values, which are the same as these
     // two-bit values:
     //   bit 0 = the StyleWritingMode::VERTICAL value
     //   bit 1 = the StyleWritingMode::VERTICAL_LR value
@@ -349,9 +349,9 @@ class WritingMode {
         {eSideLeft, eSideRight},  // vertical-lr
     };
 
-    // Ignore the SIDEWAYS_MASK bit of the writing-mode value, as this has no
+    // Ignore the SidewaysMask bit of the writing-mode value, as this has no
     // effect on the side mappings.
-    aWritingModeValue &= ~NS_STYLE_WRITING_MODE_SIDEWAYS_MASK;
+    aWritingModeValue &= ~kWritingModeSidewaysMask;
 
     // What's left of the writing-mode should be in the range 0-3:
     NS_ASSERTION(aWritingModeValue < 4, "invalid aWritingModeValue value");

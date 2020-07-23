@@ -76,8 +76,8 @@ static bool IsIsolateControl(char16_t aChar) {
 // Returns 0 if no override control character is implied by this style.
 static char16_t GetBidiOverride(ComputedStyle* aComputedStyle) {
   const nsStyleVisibility* vis = aComputedStyle->StyleVisibility();
-  if ((vis->mWritingMode == NS_STYLE_WRITING_MODE_VERTICAL_RL ||
-       vis->mWritingMode == NS_STYLE_WRITING_MODE_VERTICAL_LR) &&
+  if ((vis->mWritingMode == StyleWritingModeProperty::VerticalRl ||
+       vis->mWritingMode == StyleWritingModeProperty::VerticalLr) &&
       vis->mTextOrientation == StyleTextOrientation::Upright) {
     return kLRO;
   }

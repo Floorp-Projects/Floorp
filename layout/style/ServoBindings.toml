@@ -164,6 +164,7 @@ rusty-enums = [
     "mozilla::StyleBlend",
     "mozilla::StyleMaskComposite",
     "mozilla::StyleControlCharacterVisibility",
+    "mozilla::StyleWritingModeProperty",
 ]
 whitelist-vars = [
     "NS_ATTRVALUE_.*",
