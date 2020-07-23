@@ -45,7 +45,7 @@ job-defaults:
         env:
             GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
             GOOGLE_PROJECT: moz-android-components-230120
-        max-run-time: 7200
+        max-run-time: 2400
 
 
 jobs:
