@@ -231,6 +231,11 @@ const TEST_GLOBAL = {
     // eslint-disable-next-line object-shorthand
     File: function() {}, // NB: This is a function/constructor
   },
+  Region: {
+    home: "US",
+    REGION_TOPIC: "browser-region",
+    REGION_UPDATED: "region-updated",
+  },
   Services: {
     dirsvc: {
       get: () => ({ parent: { parent: { path: "appPath" } } }),
