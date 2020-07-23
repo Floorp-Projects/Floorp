@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-fields)
+// |reftest| shell-option(--enable-private-fields) skip-if(!this.hasOwnProperty("TypedObject")||!xulRuntime.shell) -- requires typed objects and the shell option
 
 class Base {
   constructor(o) {
