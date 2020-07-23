@@ -311,7 +311,21 @@ class UrlbarController {
         break;
       case KeyEvent.DOM_VK_RETURN:
         if (executeAction) {
-          this.input.handleCommand(event);
+          if (
+            this.view.oneOffsRefresh &&
+            this.view.oneOffSearchButtons.selectedButton?.engine
+          ) {
+            this.input.setSearchMode(
+              this.view.oneOffSearchButtons.selectedButton.engine
+            );
+            this.view.oneOffSearchButtons.selectedButton = null;
+            this.input.startQuery({
+              allowAutofill: false,
+              event,
+            });
+          } else {
+            this.input.handleCommand(event);
+          }
         }
         event.preventDefault();
         break;
@@ -379,8 +393,23 @@ class UrlbarController {
       case KeyEvent.DOM_VK_END:
         this.view.removeAccessibleFocus();
         break;
-      case KeyEvent.DOM_VK_DELETE:
       case KeyEvent.DOM_VK_BACK_SPACE:
+        if (
+          this.input.searchMode &&
+          this.input.selectionStart == 0 &&
+          this.input.selectionEnd == 0 &&
+          !event.shiftKey
+        ) {
+          this.input.setSearchMode(null);
+          if (this.input.value) {
+            this.input.startQuery({
+              allowAutofill: false,
+              event,
+            });
+          }
+        }
+      // Fall through.
+      case KeyEvent.DOM_VK_DELETE:
         if (!this.view.isOpen) {
           break;
         }
