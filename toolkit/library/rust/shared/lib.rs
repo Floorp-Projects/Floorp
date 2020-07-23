@@ -41,6 +41,7 @@ extern crate netwerk_helper;
 extern crate nserror;
 extern crate nsstring;
 extern crate prefs_parser;
+extern crate processtools;
 #[cfg(feature = "gecko_profiler")]
 extern crate profiler_helper;
 extern crate rsdparsa_capi;
