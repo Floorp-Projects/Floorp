@@ -1278,6 +1278,7 @@ class XPCShellTests(object):
                     self.log.info(msg)
             dumpOutput(proc.stdout, "stdout")
             dumpOutput(proc.stderr, "stderr")
+        self.nodeProc = {}
 
     def startHttp3Server(self):
         """
@@ -1356,6 +1357,7 @@ class XPCShellTests(object):
                     self.log.info(msg)
             dumpOutput(proc.stdout, "stdout")
             dumpOutput(proc.stderr, "stderr")
+        self.http3ServerProc = {}
 
     def buildXpcsRunArgs(self):
         """
