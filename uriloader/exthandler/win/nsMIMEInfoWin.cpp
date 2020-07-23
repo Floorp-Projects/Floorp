@@ -22,6 +22,7 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/UrlmonHeaderOnlyUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 
@@ -73,16 +74,20 @@ nsresult nsMIMEInfoWin::ShellExecuteWithIFile(nsIFile* aExecutable, int aArgc,
   // It does not work in a special environment such as Citrix.  In such a case
   // we fall back to launching an application as a child process.  We need to
   // find a way to handle the combination of these interop issues.
-  mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
-      execPathBStr, assembledArgs.get(), verbDefault, workingDir, showCmd);
-  if (shellExecuteOk.isErr()) {
-    // No need to pass assembledArgs to LaunchWithIProcess.  aArgv will be
-    // processed in nsProcess::RunProcess.
-    return LaunchWithIProcess(aExecutable, aArgc,
-                              reinterpret_cast<const char16_t**>(aArgv));
+  {
+    Telemetry::AutoTimer<Telemetry::SHELLEXECUTEBYEXPLORER_DURATION_MS> timer;
+    mozilla::LauncherVoidResult shellExecuteOk =
+        mozilla::ShellExecuteByExplorer(execPathBStr, assembledArgs.get(),
+                                        verbDefault, workingDir, showCmd);
+    if (shellExecuteOk.isOk()) {
+      return NS_OK;
+    }
   }
 
-  return NS_OK;
+  // No need to pass assembledArgs to LaunchWithIProcess.  aArgv will be
+  // processed in nsProcess::RunProcess.
+  return LaunchWithIProcess(aExecutable, aArgc,
+                            reinterpret_cast<const char16_t**>(aArgv));
 }
 
 NS_IMETHODIMP
@@ -322,11 +327,14 @@ nsresult nsMIMEInfoWin::LoadUriInternal(nsIURI* aURL) {
     // ShellExecuteByExplorer.  Thus we skip it and go straight to
     // ShellExecuteExW for Thunderbird.
 #ifndef MOZ_THUNDERBIRD
-    mozilla::LauncherVoidResult shellExecuteOk =
-        mozilla::ShellExecuteByExplorer(validatedUri.inspect(), args, verb,
-                                        workingDir, showCmd);
-    if (shellExecuteOk.isOk()) {
-      return NS_OK;
+    {
+      Telemetry::AutoTimer<Telemetry::SHELLEXECUTEBYEXPLORER_DURATION_MS> timer;
+      mozilla::LauncherVoidResult shellExecuteOk =
+          mozilla::ShellExecuteByExplorer(validatedUri.inspect(), args, verb,
+                                          workingDir, showCmd);
+      if (shellExecuteOk.isOk()) {
+        return NS_OK;
+      }
     }
 #endif  // MOZ_THUNDERBIRD
 
