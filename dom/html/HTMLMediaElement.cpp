@@ -466,9 +466,10 @@ class HTMLMediaElement::MediaControlKeyListener final
     }
   }
 
+  // This method can be called before the listener starts, which would cache
+  // the audible state and update after the listener starts.
   void UpdateMediaAudibleState(bool aIsOwnerAudible) {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(IsStarted());
     if (mIsOwnerAudible == aIsOwnerAudible) {
       return;
     }
@@ -7393,7 +7394,7 @@ void HTMLMediaElement::NotifyAudioPlaybackChanged(
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->NotifyAudioPlaybackChanged(aReason);
   }
-  if (mMediaControlKeyListener && mMediaControlKeyListener->IsStarted()) {
+  if (mMediaControlKeyListener) {
     mMediaControlKeyListener->UpdateMediaAudibleState(IsAudible());
   }
   // only request wake lock for audible media.
