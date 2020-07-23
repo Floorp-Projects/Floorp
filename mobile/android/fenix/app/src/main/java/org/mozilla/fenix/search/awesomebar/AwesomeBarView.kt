@@ -106,6 +106,7 @@ class AwesomeBarView(
                 components.core.store,
                 selectTabUseCase,
                 components.core.icons,
+                getDrawable(context, R.drawable.ic_search_results_tab),
                 excludeSelectedSession = true
             )
 
@@ -122,6 +123,7 @@ class AwesomeBarView(
                 bookmarksStorage = components.core.bookmarksStorage,
                 loadUrlUseCase = loadUrlUseCase,
                 icons = components.core.icons,
+                indicatorIcon = getDrawable(context, R.drawable.ic_search_results_bookmarks),
                 engine = engineForSpeculativeConnects
             )
 

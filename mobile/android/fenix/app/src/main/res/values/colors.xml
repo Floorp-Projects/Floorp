@@ -71,6 +71,8 @@
     <color name="prompt_login_edit_text_cursor_color_light_theme">#312a64</color>
     <color name="readermode_start_gradient_normal_theme">#FF9059ff</color>
     <color name="readermode_end_gradient_normal_theme">#FF0250bb</color>
+    <color name="search_suggestion_indicator_icon_color_light_theme">#008787</color>
+    <color name="search_suggestion_indicator_icon_bookmark_color_light_theme">#0060df</color>
 
     <!-- Tab Tray -->
     <color name="tab_tray_item_text_light_theme">@color/ink_80</color>
@@ -132,6 +134,8 @@
     <color name="add_on_private_browsing_exterior_circle_background_dark_theme">@color/accent_dark_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_dark_theme">#FFFFFF</color>
     <color name="prompt_login_edit_text_cursor_color_dark_theme">#9059ff</color>
+    <color name="search_suggestion_indicator_icon_color_dark_theme">#2ac3a2</color>
+    <color name="search_suggestion_indicator_icon_bookmark_color_dark_theme">#0090ed</color>
 
     <!-- Tab Tray -->
     <color name="tab_tray_item_text_dark_theme">@color/light_grey_05</color>
@@ -238,6 +242,8 @@
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/add_on_private_browsing_exterior_circle_background_light_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/add_on_private_browsing_interior_icon_background_light_theme</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/prompt_login_edit_text_cursor_color_light_theme</color>
+    <color name="search_suggestion_indicator_icon_color_normal_theme">@color/search_suggestion_indicator_icon_color_light_theme</color>
+    <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/search_suggestion_indicator_icon_bookmark_color_light_theme</color>
 
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_light_theme</color>
