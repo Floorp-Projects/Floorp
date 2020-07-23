@@ -1,50 +1,5 @@
 //! Project changelog
 
-// TODO: for the next breaking release rename `Error::LoadLibraryW` to `Error::LoadLibraryExW`.
-
-/// Release 0.6.2 (2020-05-06)
-///
-/// * Fixed building of this library on Illumos.
-pub mod r0_6_2 {}
-
-/// Release 0.6.1 (2020-04-15)
-///
-/// * Introduced a new method [`os::windows::Library::load_with_flags`];
-/// * Added support for the Illumos triple.
-///
-/// [`os::windows::Library::load_with_flags`]: ../../os/windows/struct.Library.html#method.load_with_flags
-pub mod r0_6_1 {}
-
-/// Release 0.6.0 (2020-04-05)
-///
-/// * Introduced a new method [`os::unix::Library::get_singlethreaded`];
-/// * Added (untested) support for building when targetting Redox and Fuchsia;
-/// * The APIs exposed by this library no longer panic and instead return an `Err` when it used
-///   to panic.
-///
-/// ## Breaking changes
-///
-/// * Minimum required (stable) version of Rust to build this library is now 1.40.0;
-/// * This crate now implements a custom [`Error`] type and all APIs now return this type rather
-///   than returning the `std::io::Error`;
-/// * `libloading::Result` has been removed;
-/// * Removed the dependency on the C compiler to build this library on UNIX-like platforms.
-///   `libloading` used to utilize a snippet written in C to work-around the unlikely possibility
-///   of the target having a thread-unsafe implementation of the `dlerror` function. The effect of
-///   the work-around was very opportunistic: it would not work if the function was called by
-///   forgoing `libloading`.
-///
-///   Starting with 0.6.0, [`Library::get`] on platforms where `dlerror` is not MT-safe (such as
-///   FreeBSD, DragonflyBSD or NetBSD) will unconditionally return an error when the underlying
-///   `dlsym` returns a null pointer. For the use-cases where loading null pointers is necessary
-///   consider using [`os::unix::Library::get_singlethreaded`] instead.
-///
-/// [`Library::get`]: ../../struct.Library.html#method.get
-/// [`os::unix::Library::get_singlethreaded`]: ../../os/unix/struct.Library.html#method.get_singlethreaded
-/// [`Error`]: ../../enum.Error.html
-pub mod r0_6_0 {}
-
-
 /// Release 0.5.2 (2019-07-07)
 ///
 /// * Added API to convert OS-specific `Library` and `Symbol` conversion to underlying resources.

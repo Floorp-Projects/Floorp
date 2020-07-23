@@ -480,46 +480,6 @@ pub trait CommandBuffer<B: Backend>: fmt::Debug + Any + Send + Sync {
         stride: u32,
     );
 
-    /// Functions identically to `draw_indirect()`, except the amount of draw
-    /// calls are specified by the u32 in `count_buffer` at `count_buffer_offset`.
-    /// There is a limit of `max_draw_count` invocations.
-    ///
-    /// Each draw command in the buffer is a series of 4 `u32` values specifying,
-    /// in order, the number of vertices to draw, the number of instances to draw,
-    /// the index of the first vertex to draw, and the instance ID of the first
-    /// instance to draw.
-    unsafe fn draw_indirect_count(
-        &mut self,
-        _buffer: &B::Buffer,
-        _offset: buffer::Offset,
-        _count_buffer: &B::Buffer,
-        _count_buffer_offset: buffer::Offset,
-        _max_draw_count: u32,
-        _stride: u32
-    ) {
-        unimplemented!("Backend doesn't support draw_indirect_count");
-    }
-
-    /// Functions identically to `draw_indexed_indirect()`, except the amount of draw
-    /// calls are specified by the u32 in `count_buffer` at `count_buffer_offset`.
-    /// There is a limit of `max_draw_count` invocations.
-    ///
-    /// Each draw command in the buffer is a series of 5 values specifying,
-    /// in order, the number of indices, the number of instances, the first index,
-    /// the vertex offset, and the first instance.  All are `u32`'s except
-    /// the vertex offset, which is an `i32`.
-    unsafe fn draw_indexed_indirect_count(
-        &mut self,
-        _buffer: &B::Buffer,
-        _offset: buffer::Offset,
-        _count_buffer: &B::Buffer,
-        _count_buffer_offset: buffer::Offset,
-        _max_draw_count: u32,
-        _stride: u32
-    ) {
-        unimplemented!("Backend doesn't support draw_indexed_indirect_count");
-    }
-
     /// Signals an event once all specified stages of the shader pipeline have completed.
     unsafe fn set_event(&mut self, event: &B::Event, stages: pso::PipelineStage);
 

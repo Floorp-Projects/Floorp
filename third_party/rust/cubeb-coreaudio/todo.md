@@ -19,6 +19,8 @@
 - Same as `{input, output}_desc`, `{input, output}_hw_rate`, ...etc
 - It would much clearer if we have a `struct X` to wrap all the above stuff and use `input_x` and `output_x` in `CoreStreamData`
 
+### Generics
+
 ## Separate the stream implementation from the interface
 
 The goal is to separate the audio stream into two parts(modules).
@@ -103,7 +105,7 @@ and create a new one. It's easier than the current implementation.
 
 - Implement `From` trait for `enum cubeb_device_type` so we can use `devtype.into()` to get `ffi::CUBEB_DEVICE_TYPE_*`.
 - Implement `to_owned` in [`StreamParamsRef`][cubeb-rs-stmparamsref]
-- Check the passed parameters like what [cubeb.c does][cubeb-stm-check]!
+- Check the passed parameters like what [cubeb.c][cubeb] does!
   - Check the input `StreamParams` parameters properly, or we will set a invalid format into `AudioUnit`.
   - For example, for a duplex stream, the format of the input stream and output stream should be same.
       Using different stream formats will cause memory corruption
@@ -113,7 +115,6 @@ and create a new one. It's easier than the current implementation.
 
 [cubeb-rs]: https://github.com/djg/cubeb-rs "cubeb-rs"
 [cubeb-rs-stmparamsref]: https://github.com/djg/cubeb-rs/blob/78ed9459b8ac2ca50ea37bb72f8a06847eb8d379/cubeb-core/src/stream.rs#L61 "StreamParamsRef"
-[cubeb-stm-check]: https://github.com/kinetiknz/cubeb/blob/a971bf1a045b0e5dcaffd2a15c3255677f43cd2d/src/cubeb.c#L70-L108
 
 ## Test
 

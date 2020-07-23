@@ -7,8 +7,16 @@
 
 use super::*;
 
-use cocoa_foundation::foundation::NSUInteger;
+use cocoa::foundation::NSUInteger;
 use objc::runtime::{NO, YES};
+
+#[repr(u64)]
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum MTLIndexType {
+    UInt16 = 0,
+    UInt32 = 1,
+}
 
 #[repr(u64)]
 #[allow(non_camel_case_types)]
@@ -310,11 +318,7 @@ impl BufferLayoutDescriptorArrayRef {
         unsafe { msg_send![self, objectAtIndexedSubscript: index] }
     }
 
-    pub fn set_object_at(
-        &self,
-        index: NSUInteger,
-        buffer_desc: Option<&BufferLayoutDescriptorRef>,
-    ) {
+    pub fn set_object_at(&self, index: NSUInteger, buffer_desc: Option<&BufferLayoutDescriptorRef>) {
         unsafe { msg_send![self, setObject:buffer_desc atIndexedSubscript:index] }
     }
 }

@@ -72,7 +72,7 @@ impl RayTracing {
         &self,
         info: &vk::AccelerationStructureMemoryRequirementsInfoKHR,
     ) -> vk::MemoryRequirements2KHR {
-        let mut requirements = Default::default();
+        let mut requirements = mem::zeroed();
         self.ray_tracing_fn
             .get_acceleration_structure_memory_requirements_khr(
                 self.handle,

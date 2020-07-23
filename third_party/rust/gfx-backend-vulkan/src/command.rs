@@ -829,40 +829,6 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .cmd_draw_indexed_indirect(self.raw, buffer.raw, offset, draw_count, stride)
     }
 
-    unsafe fn draw_indirect_count(
-        &mut self,
-        buffer: &n::Buffer,
-        offset: buffer::Offset,
-        count_buffer: &n::Buffer,
-        count_buffer_offset: buffer::Offset,
-        max_draw_count: DrawCount,
-        stride: u32
-    ) {
-        self.device
-            .extension_fns
-            .draw_indirect_count
-            .as_ref()
-            .expect("Feature DRAW_INDIRECT_COUNT must be enabled to call draw_indirect_count")
-            .cmd_draw_indirect_count(self.raw, buffer.raw, offset, count_buffer.raw, count_buffer_offset, max_draw_count, stride);
-    }
-
-    unsafe fn draw_indexed_indirect_count(
-        &mut self,
-        buffer: &n::Buffer,
-        offset: buffer::Offset,
-        count_buffer: &n::Buffer,
-        count_buffer_offset: buffer::Offset,
-        max_draw_count: DrawCount,
-        stride: u32
-    ) {
-        self.device
-            .extension_fns
-            .draw_indirect_count
-            .as_ref()
-            .expect("Feature DRAW_INDIRECT_COUNT must be enabled to call draw_indexed_indirect_count")
-            .cmd_draw_indexed_indirect_count(self.raw, buffer.raw, offset, count_buffer.raw, count_buffer_offset, max_draw_count, stride);
-    }
-
     unsafe fn set_event(&mut self, event: &n::Event, stage_mask: pso::PipelineStage) {
         self.device.raw.cmd_set_event(
             self.raw,
