@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import attr
+
 from ..result import Issue
 
 
@@ -25,7 +27,7 @@ class CompactFormatter(object):
             for err in errors:
                 assert isinstance(err, Issue)
 
-                d = {s: getattr(err, s) for s in err.__slots__}
+                d = attr.asdict(err)
                 d["column"] = ", col %s" % d["column"] if d["column"] else ""
                 d['level'] = d['level'].capitalize()
                 d['rule'] = d['rule'] or d['linter']
