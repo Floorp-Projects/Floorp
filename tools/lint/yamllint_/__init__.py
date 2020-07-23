@@ -4,10 +4,12 @@
 
 import re
 import os
-import subprocess
+import sys
 from collections import defaultdict
 
-from mozfile import which
+from mozbuild.base import MozbuildObject
+
+topsrcdir = MozbuildObject.from_environment().topsrcdir
 
 from mozlint import result
 from mozlint.pathutils import get_ancestors_by_name
@@ -40,38 +42,10 @@ class YAMLLintProcess(LintProcess):
         results.append(result.from_config(self.config, **res))
 
 
-def get_yamllint_binary(mc_root):
-    """
-    Returns the path of the first yamllint binary available
-    if not found returns None
-    """
-    binary = os.environ.get("YAMLLINT")
-    if binary:
-        return binary
+def get_yamllint_version():
+    from yamllint import APP_VERSION
 
-    # yamllint is vendored in mozilla-central: let's use this
-    # if no environment variable is found.
-    return os.path.join(mc_root, "third_party", "python", "yamllint", "yamllint")
-
-
-def get_yamllint_version(binary):
-    return subprocess.check_output(
-        [which("python"), binary, "--version"],
-        universal_newlines=True,
-        stderr=subprocess.STDOUT,
-    )
-
-
-def _run_pip(*args):
-    """
-    Helper function that runs pip with subprocess
-    """
-    try:
-        subprocess.check_output(["pip"] + list(args), stderr=subprocess.STDOUT)
-        return True
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        return False
+    return APP_VERSION
 
 
 def run_process(config, cmd):
@@ -95,11 +69,18 @@ def gen_yamllint_args(cmdargs, paths=None, conf_file=None):
 def lint(files, config, **lintargs):
     log = lintargs["log"]
 
-    binary = get_yamllint_binary(lintargs["root"])
+    log.debug("Version: {}".format(get_yamllint_version()))
 
-    log.debug("Version: {}".format(get_yamllint_version(binary)))
-
-    cmdargs = [which("python"), binary, "-f", "parsable"]
+    cmdargs = [
+        sys.executable,
+        os.path.join(topsrcdir, "mach"),
+        "python",
+        "--",
+        "-m",
+        "yamllint",
+        "-f",
+        "parsable",
+    ]
     log.debug("Command: {}".format(" ".join(cmdargs)))
 
     config = config.copy()
