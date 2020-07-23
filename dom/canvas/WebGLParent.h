@@ -22,12 +22,11 @@ class SurfaceDescriptor;
 
 namespace dom {
 
-class WebGLParent : public PWebGLParent, public SupportsWeakPtr<WebGLParent> {
+class WebGLParent : public PWebGLParent, public SupportsWeakPtr {
   friend PWebGLParent;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLParent, override);
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLParent)
   using OtherSideActor = WebGLChild;
 
   mozilla::ipc::IPCResult RecvInitialize(

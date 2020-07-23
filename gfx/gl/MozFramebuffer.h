@@ -15,14 +15,12 @@
 namespace mozilla {
 namespace gl {
 
-class DepthAndStencilBuffer final
-    : public SupportsWeakPtr<DepthAndStencilBuffer> {
+class DepthAndStencilBuffer final : public SupportsWeakPtr {
   const WeakPtr<GLContext> mWeakGL;
   const gfx::IntSize mSize;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DepthAndStencilBuffer)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(DepthAndStencilBuffer)
 
   const GLuint mDepthRB;
   const GLuint mStencilRB;

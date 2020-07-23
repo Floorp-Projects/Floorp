@@ -296,7 +296,7 @@ class nsWindow::NativePtr<Impl>::Locked final : private MutexAutoLock {
 
 class nsWindow::GeckoViewSupport final
     : public GeckoSession::Window::Natives<GeckoViewSupport>,
-      public SupportsWeakPtr<GeckoViewSupport> {
+      public SupportsWeakPtr {
   nsWindow& window;
 
   // We hold a WeakRef because we want to allow the
@@ -307,9 +307,6 @@ class nsWindow::GeckoViewSupport final
 
  public:
   typedef GeckoSession::Window::Natives<GeckoViewSupport> Base;
-  typedef SupportsWeakPtr<GeckoViewSupport> SupportsWeakPtr;
-
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GeckoViewSupport);
 
   template <typename Functor>
   static void OnNativeCall(Functor&& aCall) {

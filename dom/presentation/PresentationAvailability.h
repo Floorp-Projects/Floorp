@@ -19,13 +19,12 @@ class Promise;
 class PresentationAvailability final
     : public DOMEventTargetHelper,
       public nsIPresentationAvailabilityListener,
-      public SupportsWeakPtr<PresentationAvailability> {
+      public SupportsWeakPtr {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationAvailability,
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONAVAILABILITYLISTENER
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PresentationAvailability)
 
   static already_AddRefed<PresentationAvailability> Create(
       nsPIDOMWindowInner* aWindow, const nsTArray<nsString>& aUrls,

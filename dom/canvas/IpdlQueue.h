@@ -305,13 +305,12 @@ class SyncConsumerActor : public AsyncConsumerActor<Derived> {
 };
 
 template <typename _Actor>
-class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
+class IpdlProducer final : public SupportsWeakPtr {
   nsTArray<uint8_t> mSerializedData;
   WeakPtr<_Actor> mActor;
   uint64_t mId;
 
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(IpdlProducer<_Actor>)
   using Actor = _Actor;
   using SelfType = IpdlProducer<Actor>;
 
@@ -443,9 +442,8 @@ class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
 };
 
 template <typename _Actor>
-class IpdlConsumer final : public SupportsWeakPtr<IpdlConsumer<_Actor>> {
+class IpdlConsumer final : public SupportsWeakPtr {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(IpdlConsumer<_Actor>)
   using Actor = _Actor;
   using SelfType = IpdlConsumer<Actor>;
 

@@ -32,15 +32,12 @@ struct FlushedCmdInfo final {
   size_t flushedCmdBytes = 0;
 };
 
-class WebGLChild final : public PWebGLChild,
-                         public SupportsWeakPtr<WebGLChild> {
+class WebGLChild final : public PWebGLChild, public SupportsWeakPtr {
   const WeakPtr<ClientWebGLContext> mContext;
   webgl::RaiiShmem mPendingCmdsShmem;
   size_t mPendingCmdsPos = 0;
   FlushedCmdInfo mFlushedCmdInfo;
-
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLChild)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLChild, override);
   using OtherSideActor = WebGLParent;
 

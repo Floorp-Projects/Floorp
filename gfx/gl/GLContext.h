@@ -189,10 +189,8 @@ enum class GLRenderer {
   Other
 };
 
-class GLContext : public GenericAtomicRefCounted,
-                  public SupportsWeakPtr<GLContext> {
+class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLContext)
   static MOZ_THREAD_LOCAL(uintptr_t) sCurrentContext;
 
   const GLContextDesc mDesc;

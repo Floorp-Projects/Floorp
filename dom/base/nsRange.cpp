@@ -953,6 +953,8 @@ void nsRange::RegisterSelection(Selection& aSelection) {
   RegisterClosestCommonInclusiveAncestor(commonAncestor);
 }
 
+Selection* nsRange::GetSelection() const { return mSelection; }
+
 void nsRange::UnregisterSelection() {
   mSelection = nullptr;
 

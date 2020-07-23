@@ -89,12 +89,11 @@ struct LocationInfo final {
 // -
 
 struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
-                                 public SupportsWeakPtr<LinkedProgramInfo>,
+                                 public SupportsWeakPtr,
                                  public CacheInvalidator {
   friend class mozilla::WebGLProgram;
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(LinkedProgramInfo)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(LinkedProgramInfo)
 
   //////
 

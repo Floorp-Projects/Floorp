@@ -98,14 +98,12 @@ struct CompositorAnimationIdsForEpoch {
   nsTArray<uint64_t> mIds;
 };
 
-class WebRenderBridgeParent final
-    : public PWebRenderBridgeParent,
-      public CompositorVsyncSchedulerOwner,
-      public CompositableParentManager,
-      public layers::FrameRecorder,
-      public SupportsWeakPtr<WebRenderBridgeParent> {
+class WebRenderBridgeParent final : public PWebRenderBridgeParent,
+                                    public CompositorVsyncSchedulerOwner,
+                                    public CompositableParentManager,
+                                    public layers::FrameRecorder,
+                                    public SupportsWeakPtr {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebRenderBridgeParent)
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const wr::PipelineId& aPipelineId,
                         widget::CompositorWidget* aWidget,

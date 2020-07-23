@@ -203,7 +203,7 @@ struct BufferAndIndex final {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
+class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   friend class ScopedDrawCallWrapper;
   friend class ScopedDrawWithTransformFeedback;
   friend class ScopedFakeVertexAttrib0;
@@ -319,8 +319,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   mutable FuncScope* mFuncScope = nullptr;
 
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLContext)
-
   static RefPtr<WebGLContext> Create(HostWebGLContext&,
                                      const webgl::InitContextDesc&,
                                      webgl::InitContextResult* out);

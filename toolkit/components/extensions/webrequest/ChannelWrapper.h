@@ -110,11 +110,10 @@ struct ChannelHolder {
 class WebRequestChannelEntry;
 
 class ChannelWrapper final : public DOMEventTargetHelper,
-                             public SupportsWeakPtr<ChannelWrapper>,
+                             public SupportsWeakPtr,
                              public LinkedListElement<ChannelWrapper>,
                              private detail::ChannelHolder {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ChannelWrapper)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ChannelWrapper,
                                                          DOMEventTargetHelper)

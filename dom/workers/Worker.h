@@ -24,13 +24,11 @@ struct PostMessageOptions;
 struct WorkerOptions;
 class WorkerPrivate;
 
-class Worker : public DOMEventTargetHelper, public SupportsWeakPtr<Worker> {
+class Worker : public DOMEventTargetHelper, public SupportsWeakPtr {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Worker,
                                                          DOMEventTargetHelper)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Worker)
-
   static already_AddRefed<Worker> Constructor(const GlobalObject& aGlobal,
                                               const nsAString& aScriptURL,
                                               const WorkerOptions& aOptions,

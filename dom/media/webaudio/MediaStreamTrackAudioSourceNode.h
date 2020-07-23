@@ -42,14 +42,13 @@ class MediaStreamTrackAudioSourceNodeEngine final : public AudioNodeEngine {
 class MediaStreamTrackAudioSourceNode
     : public AudioNode,
       public PrincipalChangeObserver<MediaStreamTrack>,
-      public SupportsWeakPtr<MediaStreamTrackAudioSourceNode> {
+      public SupportsWeakPtr {
  public:
   static already_AddRefed<MediaStreamTrackAudioSourceNode> Create(
       AudioContext& aContext,
       const MediaStreamTrackAudioSourceOptions& aOptions, ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MediaStreamTrackAudioSourceNode)
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrackAudioSourceNode,
                                            AudioNode)
 

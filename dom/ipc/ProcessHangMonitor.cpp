@@ -233,12 +233,10 @@ class HangMonitoredProcess final : public nsIHangReport {
 };
 
 class HangMonitorParent : public PProcessHangMonitorParent,
-                          public SupportsWeakPtr<HangMonitorParent> {
+                          public SupportsWeakPtr {
  public:
   explicit HangMonitorParent(ProcessHangMonitor* aMonitor);
   ~HangMonitorParent() override;
-
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HangMonitorParent)
 
   void Bind(Endpoint<PProcessHangMonitorParent>&& aEndpoint);
 

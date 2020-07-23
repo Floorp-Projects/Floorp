@@ -51,8 +51,7 @@ class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration {
   RefPtr<DeclarationBlock> mDecls;
 };
 
-class CSSStyleRule final : public BindingStyleRule,
-                           public SupportsWeakPtr<CSSStyleRule> {
+class CSSStyleRule final : public BindingStyleRule, public SupportsWeakPtr {
  public:
   CSSStyleRule(already_AddRefed<RawServoStyleRule> aRawRule, StyleSheet* aSheet,
                css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
@@ -61,8 +60,6 @@ class CSSStyleRule final : public BindingStyleRule,
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CSSStyleRule,
                                                          css::Rule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
-
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(CSSStyleRule)
 
   uint32_t GetSelectorCount() override;
   nsresult GetSelectorText(uint32_t aSelectorIndex, nsAString& aText) override;

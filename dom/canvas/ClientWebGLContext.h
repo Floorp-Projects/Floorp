@@ -392,7 +392,7 @@ class WebGLProgramJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 class WebGLQueryJS final : public nsWrapperCache,
                            public webgl::ObjectJS,
-                           public SupportsWeakPtr<WebGLQueryJS> {
+                           public SupportsWeakPtr {
   friend class ClientWebGLContext;
   friend class webgl::AvailabilityRunnable;
 
@@ -402,7 +402,6 @@ class WebGLQueryJS final : public nsWrapperCache,
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQueryJS)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLQueryJS)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLQueryJS)
 
   explicit WebGLQueryJS(const ClientWebGLContext& webgl)
       : webgl::ObjectJS(webgl) {}
@@ -492,7 +491,7 @@ class WebGLShaderJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 class WebGLSyncJS final : public nsWrapperCache,
                           public webgl::ObjectJS,
-                          public SupportsWeakPtr<WebGLSyncJS> {
+                          public SupportsWeakPtr {
   friend class ClientWebGLContext;
   friend class webgl::AvailabilityRunnable;
 
@@ -502,7 +501,6 @@ class WebGLSyncJS final : public nsWrapperCache,
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSyncJS)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSyncJS)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLSyncJS)
 
   explicit WebGLSyncJS(const ClientWebGLContext& webgl)
       : webgl::ObjectJS(webgl) {}
@@ -705,14 +703,11 @@ struct TexImageSourceAdapter final : public TexImageSource {
  */
 class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                                  public nsWrapperCache,
-                                 public SupportsWeakPtr<ClientWebGLContext> {
+                                 public SupportsWeakPtr {
   friend class webgl::AvailabilityRunnable;
   friend class webgl::ObjectJS;
   friend class webgl::ProgramKeepAlive;
   friend class webgl::ShaderKeepAlive;
-
- public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ClientWebGLContext)
 
   // ----------------------------- Lifetime and DOM ---------------------------
  public:

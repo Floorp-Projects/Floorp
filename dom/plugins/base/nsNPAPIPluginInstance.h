@@ -77,16 +77,14 @@ class nsNPAPITimer {
   bool needUnschedule;
 };
 
-class nsNPAPIPluginInstance final
-    : public nsIAudioChannelAgentCallback,
-      public mozilla::SupportsWeakPtr<nsNPAPIPluginInstance> {
+class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
+                                    public mozilla::SupportsWeakPtr {
  private:
   typedef mozilla::PluginLibrary PluginLibrary;
 
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsNPAPIPluginInstance)
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 

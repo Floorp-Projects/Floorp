@@ -14,14 +14,11 @@
 namespace mozilla {
 class WebGLContext;
 
-class WebGLContextLossHandler final
-    : public SupportsWeakPtr<WebGLContextLossHandler> {
+class WebGLContextLossHandler final : public SupportsWeakPtr {
   RefPtr<Runnable> mRunnable;
   Atomic<bool> mTimerIsScheduled;
 
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLContextLossHandler)
-
   explicit WebGLContextLossHandler(WebGLContext* webgl);
   ~WebGLContextLossHandler();
 

@@ -64,10 +64,9 @@ using mozilla::Unused;  // <snicker>
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class nsGeolocationRequest final
-    : public ContentPermissionRequestBase,
-      public nsIGeolocationUpdate,
-      public SupportsWeakPtr<nsGeolocationRequest> {
+class nsGeolocationRequest final : public ContentPermissionRequestBase,
+                                   public nsIGeolocationUpdate,
+                                   public SupportsWeakPtr {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIGEOLOCATIONUPDATE
@@ -85,8 +84,6 @@ class nsGeolocationRequest final
   // nsIContentPermissionRequest
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD Cancel(void) override;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD Allow(JS::HandleValue choices) override;
-
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsGeolocationRequest)
 
   void Shutdown();
 

@@ -27,10 +27,8 @@ namespace {
  * Note that the MessageLoop owns this object and will delete it after it calls
  * Run().  Tread lightly.
  */
-class MessageLoopIdleTask : public Runnable,
-                            public SupportsWeakPtr<MessageLoopIdleTask> {
+class MessageLoopIdleTask : public Runnable, public SupportsWeakPtr {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MessageLoopIdleTask)
   MessageLoopIdleTask(nsIRunnable* aTask, uint32_t aEnsureRunsAfterMS);
   NS_IMETHOD Run() override;
 

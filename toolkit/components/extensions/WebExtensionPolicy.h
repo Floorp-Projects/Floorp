@@ -36,11 +36,10 @@ class WebExtensionContentScript;
 
 class WebExtensionPolicy final : public nsISupports,
                                  public nsWrapperCache,
-                                 public SupportsWeakPtr<WebExtensionPolicy> {
+                                 public SupportsWeakPtr {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebExtensionPolicy)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebExtensionPolicy)
 
   using ScriptArray = nsTArray<RefPtr<WebExtensionContentScript>>;
 
