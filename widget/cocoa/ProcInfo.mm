@@ -89,6 +89,21 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
             continue;
           }
 
+          // Deallocate the thread list.
+          // Note that this deallocation is entirely undocumented, so the following code is based
+          // on guesswork and random examples found on the web.
+          auto guardThreadCount = MakeScopeExit([&] {
+            if (threadList == nullptr) {
+              return;
+            }
+            // Free each thread to avoid leaks.
+            for (mach_msg_type_number_t i = 0; i < threadCount; i++) {
+              mach_port_deallocate(mach_task_self(), threadList[i]);
+            }
+            vm_deallocate(mach_task_self(), /* address */ (vm_address_t)threadList,
+                          /* size */ sizeof(thread_t) * threadCount);
+          });
+
           mach_msg_type_number_t count;
 
           for (mach_msg_type_number_t i = 0; i < threadCount; i++) {
