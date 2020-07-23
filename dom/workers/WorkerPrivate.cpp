@@ -997,8 +997,8 @@ class WorkerJSContextStats final : public JS::RuntimeStats {
 
   const nsCString& Path() const { return mRtPath; }
 
-  virtual void initExtraZoneStats(JS::Zone* aZone,
-                                  JS::ZoneStats* aZoneStats) override {
+  virtual void initExtraZoneStats(JS::Zone* aZone, JS::ZoneStats* aZoneStats,
+                                  const JS::AutoRequireNoGC& nogc) override {
     MOZ_ASSERT(!aZoneStats->extra);
 
     // ReportJSRuntimeExplicitTreeStats expects that
@@ -1012,8 +1012,9 @@ class WorkerJSContextStats final : public JS::RuntimeStats {
     aZoneStats->extra = extras;
   }
 
-  virtual void initExtraRealmStats(JS::Handle<JS::Realm*> aRealm,
-                                   JS::RealmStats* aRealmStats) override {
+  virtual void initExtraRealmStats(JS::Realm* aRealm,
+                                   JS::RealmStats* aRealmStats,
+                                   const JS::AutoRequireNoGC& nogc) override {
     MOZ_ASSERT(!aRealmStats->extra);
 
     // ReportJSRuntimeExplicitTreeStats expects that

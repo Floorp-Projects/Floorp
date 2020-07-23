@@ -548,14 +548,15 @@ JS_FRIEND_API bool js::IsCompartmentZoneSweepingOrCompacting(
 }
 
 JS_FRIEND_API void js::VisitGrayWrapperTargets(Zone* zone,
-                                               GCThingCallback callback,
+                                               IterateGCThingCallback callback,
                                                void* closure) {
+  JS::AutoSuppressGCAnalysis nogc;
+
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
     for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
       JSObject* target = e.front().key();
       if (target->isMarkedGray()) {
-        JS::AutoSuppressGCAnalysis nogc;
-        callback(closure, JS::GCCellPtr(target));
+        callback(closure, JS::GCCellPtr(target), nogc);
       }
     }
   }
@@ -1156,16 +1157,17 @@ static char MarkDescriptor(gc::Cell* thing) {
   return 'W';
 }
 
-static void DumpHeapVisitZone(JSRuntime* rt, void* data, Zone* zone) {
+static void DumpHeapVisitZone(JSRuntime* rt, void* data, Zone* zone,
+                              const JS::AutoRequireNoGC& nogc) {
   DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(data);
   fprintf(dtrc->output, "# zone %p\n", (void*)zone);
 }
 
-static void DumpHeapVisitRealm(JSContext* cx, void* data,
-                               Handle<Realm*> realm) {
+static void DumpHeapVisitRealm(JSContext* cx, void* data, Realm* realm,
+                               const JS::AutoRequireNoGC& nogc) {
   char name[1024];
   if (auto nameCallback = cx->runtime()->realmNameCallback) {
-    nameCallback(cx, realm, name, sizeof(name));
+    nameCallback(cx, realm, name, sizeof(name), nogc);
   } else {
     strcpy(name, "<unknown>");
   }
@@ -1176,14 +1178,16 @@ static void DumpHeapVisitRealm(JSContext* cx, void* data,
 }
 
 static void DumpHeapVisitArena(JSRuntime* rt, void* data, gc::Arena* arena,
-                               JS::TraceKind traceKind, size_t thingSize) {
+                               JS::TraceKind traceKind, size_t thingSize,
+                               const JS::AutoRequireNoGC& nogc) {
   DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(data);
   fprintf(dtrc->output, "# arena allockind=%u size=%u\n",
           unsigned(arena->getAllocKind()), unsigned(thingSize));
 }
 
 static void DumpHeapVisitCell(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
-                              size_t thingSize) {
+                              size_t thingSize,
+                              const JS::AutoRequireNoGC& nogc) {
   DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(data);
   char cellDesc[1024 * 32];
   JS_GetTraceThingInfo(cellDesc, sizeof(cellDesc), dtrc, cellptr.asCell(),

@@ -872,7 +872,7 @@ JS_PUBLIC_API void JS::SetRealmNameCallback(JSContext* cx,
   cx->runtime()->realmNameCallback = callback;
 }
 
-JS_PUBLIC_API JSObject* JS::GetRealmGlobalOrNull(Handle<JS::Realm*> realm) {
+JS_PUBLIC_API JSObject* JS::GetRealmGlobalOrNull(JS::Realm* realm) {
   return realm->maybeGlobal();
 }
 
