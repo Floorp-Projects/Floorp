@@ -2053,16 +2053,18 @@ GeckoDriver.prototype.multiAction = async function(cmd) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.findElement = async function(cmd) {
-  const win = assert.open(this.getCurrentWindow());
-  await this._handleUserPrompts();
+  const { element: el, using, value } = cmd.parameters;
 
-  let { using, value } = cmd.parameters;
   if (!SUPPORTED_STRATEGIES.has(using)) {
     throw new InvalidSelectorError(`Strategy not supported: ${using}`);
   }
+
+  const win = assert.open(this.getCurrentWindow());
+  await this._handleUserPrompts();
+
   let startNode;
-  if (typeof cmd.parameters.element != "undefined") {
-    startNode = WebElement.fromUUID(cmd.parameters.element, this.context);
+  if (typeof el != "undefined") {
+    startNode = WebElement.fromUUID(el, this.context);
   }
 
   let opts = {
@@ -2070,6 +2072,11 @@ GeckoDriver.prototype.findElement = async function(cmd) {
     timeout: this.timeouts.implicit,
     all: false,
   };
+
+  if (MarionettePrefs.useActors) {
+    const actor = await this.getActor();
+    return actor.findElement(using, value, opts);
+  }
 
   switch (this.context) {
     case Context.Chrome:
@@ -2097,16 +2104,18 @@ GeckoDriver.prototype.findElement = async function(cmd) {
  *     Value the client is looking for.
  */
 GeckoDriver.prototype.findElements = async function(cmd) {
-  const win = assert.open(this.getCurrentWindow());
-  await this._handleUserPrompts();
+  const { element: el, using, value } = cmd.parameters;
 
-  let { using, value } = cmd.parameters;
   if (!SUPPORTED_STRATEGIES.has(using)) {
     throw new InvalidSelectorError(`Strategy not supported: ${using}`);
   }
+
+  const win = assert.open(this.getCurrentWindow());
+  await this._handleUserPrompts();
+
   let startNode;
-  if (typeof cmd.parameters.element != "undefined") {
-    startNode = WebElement.fromUUID(cmd.parameters.element, this.context);
+  if (typeof el != "undefined") {
+    startNode = WebElement.fromUUID(el, this.context);
   }
 
   let opts = {
@@ -2114,6 +2123,11 @@ GeckoDriver.prototype.findElements = async function(cmd) {
     timeout: this.timeouts.implicit,
     all: true,
   };
+
+  if (MarionettePrefs.useActors) {
+    const actor = await this.getActor();
+    return actor.findElements(using, value, opts);
+  }
 
   switch (this.context) {
     case Context.Chrome:
