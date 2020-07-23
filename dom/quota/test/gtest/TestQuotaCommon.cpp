@@ -164,3 +164,47 @@ TEST(QuotaCommon_SuccessIf, False)
 
   EXPECT_TRUE(res.isErr());
 }
+
+TEST(QuotaCommon_ToResult, SuccessEnforcer_Success)
+{
+  bool flag = false;
+
+  auto res = ToResult(NS_OK, [&](auto aValue) {
+    flag = true;
+
+    return false;
+  });
+
+  EXPECT_TRUE(res.isOk());
+  EXPECT_FALSE(res.unwrap());
+  EXPECT_FALSE(flag);
+}
+
+TEST(QuotaCommon_ToResult, SuccessEnforcer_Failure_EnforcerReturnsTrue)
+{
+  bool flag = false;
+
+  auto res = ToResult(NS_ERROR_FAILURE, [&](auto aValue) {
+    flag = true;
+
+    return true;
+  });
+
+  EXPECT_TRUE(res.isOk());
+  EXPECT_TRUE(res.unwrap());
+  EXPECT_TRUE(flag);
+}
+
+TEST(QuotaCommon_ToResult, SuccessEnforcer_Failure_EnforcerReturnsFalse)
+{
+  bool flag = false;
+
+  auto res = ToResult(NS_ERROR_FAILURE, [&](auto aValue) {
+    flag = true;
+
+    return false;
+  });
+
+  EXPECT_TRUE(res.isErr());
+  EXPECT_TRUE(flag);
+}
