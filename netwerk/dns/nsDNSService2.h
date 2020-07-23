@@ -73,7 +73,7 @@ class nsDNSService final : public nsPIDNSService,
                            const mozilla::OriginAttributes& aOriginAttributes,
                            nsIDNSRecord** result);
 
-  bool DNSForbiddenByActiveProxy(const nsACString& aHostname);
+  bool DNSForbiddenByActiveProxy(const nsACString& aHostname, uint32_t flags);
 
   RefPtr<nsHostResolver> mResolver;
   nsCOMPtr<nsIIDNService> mIDN;
