@@ -51,6 +51,7 @@ treeherder:
         'M': 'Mochitests'
         'M-1proc': 'Mochitests without e10s'
         'M-fis': 'Mochitests with fission enabled'
+        'M-fis-xorig': 'Mochitests with cross-origin and fission enabled'
         'M-gli': 'Mochitests with WebGL over IPC'
         'M-spi': 'Mochitests with socket process'
         'M-spi-1proc': 'Mochitests with socket process without e10s'
