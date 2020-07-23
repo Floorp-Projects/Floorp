@@ -654,11 +654,6 @@ void Statistics::formatJsonDescription(JSONPrinter& json) const {
   // Firefox Profiler:
   //   https://github.com/firefox-devtools/profiler
 
-  // The timestamp used to be passed in by the telemetry code.  The profiler
-  // doesn't use this field but its type system expects it.  TODO: delete this
-  // field (https://bugzilla.mozilla.org/show_bug.cgi?id=1654155).
-  json.property("timestamp", 0);
-
   TimeDuration total, longest;
   gcDuration(&total, &longest);
   json.property("max_pause", longest, JSONPrinter::MILLISECONDS);
