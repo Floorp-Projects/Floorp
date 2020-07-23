@@ -163,6 +163,7 @@ class UrlbarInput {
     this._searchModeIndicatorClose = this._searchModeIndicator.querySelector(
       "#urlbar-search-mode-indicator-close"
     );
+    this._searchModeLabel = this.querySelector("#urlbar-label-search-mode");
     this._toolbar = this.textbox.closest("toolbar");
 
     XPCOMUtils.defineLazyGetter(this, "valueFormatter", () => {
@@ -1177,8 +1178,8 @@ class UrlbarInput {
     } else {
       // TODO: Support non-RESULT_SOURCE.SEARCH search modes (bug 1647896).
     }
-
     this._searchModeIndicatorTitle.textContent = indicatorTitle;
+    this._searchModeLabel.textContent = indicatorTitle;
   }
 
   // Getters and Setters below.
