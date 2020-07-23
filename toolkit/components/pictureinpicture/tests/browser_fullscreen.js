@@ -32,13 +32,13 @@ add_task(async () => {
           browser
         );
 
-        let args = { videoID, TOGGLE_ID };
+        let args = { videoID, toggleID: DEFAULT_TOGGLE_STYLES.rootID };
 
         await promiseFullscreenExited(window, async () => {
           await SpecialPowers.spawn(browser, [args], async args => {
-            let { videoID, TOGGLE_ID } = args;
+            let { videoID, toggleID } = args;
             let video = this.content.document.getElementById(videoID);
-            let toggle = video.openOrClosedShadowRoot.getElementById(TOGGLE_ID);
+            let toggle = video.openOrClosedShadowRoot.getElementById(toggleID);
             ok(
               ContentTaskUtils.is_hidden(toggle),
               "Toggle should be hidden in fullscreen mode."
@@ -78,11 +78,12 @@ add_task(async () => {
           browser
         );
 
-        let args = { videoID, TOGGLE_ID };
+        let args = { videoID, toggleID: DEFAULT_TOGGLE_STYLES.rootID };
+
         await SpecialPowers.spawn(browser, [args], async args => {
-          let { videoID, TOGGLE_ID } = args;
+          let { videoID, toggleID } = args;
           let video = this.content.document.getElementById(videoID);
-          let toggle = video.openOrClosedShadowRoot.getElementById(TOGGLE_ID);
+          let toggle = video.openOrClosedShadowRoot.getElementById(toggleID);
           ok(
             ContentTaskUtils.is_hidden(toggle),
             "Toggle should be hidden in fullscreen mode."

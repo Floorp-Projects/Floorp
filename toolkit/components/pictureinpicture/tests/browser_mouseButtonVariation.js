@@ -41,11 +41,7 @@ add_task(async () => {
       );
 
       info("Waiting for toggle to become visible");
-      await toggleOpacityReachesThreshold(
-        browser,
-        videoID,
-        HOVER_VIDEO_OPACITY
-      );
+      await toggleOpacityReachesThreshold(browser, videoID, "hoverVideo");
 
       let toggleClientRect = await getToggleClientRect(browser, videoID);
 
