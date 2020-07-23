@@ -180,7 +180,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPPScale(1.0f),
       mViewportScrollOverrideElement(nullptr),
       mViewportScrollStyles(StyleOverflow::Auto, StyleOverflow::Auto),
-      mExistThrottledUpdates(false),
       // mImageAnimationMode is initialised below, in constructor body
       mImageAnimationModePref(imgIContainer::kNormalAnimMode),
       mInterruptChecksToSkip(0),

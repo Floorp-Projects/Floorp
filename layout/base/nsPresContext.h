@@ -1033,15 +1033,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   void SetUsesExChUnits(bool aValue) { mUsesExChUnits = aValue; }
 
-  // true if there are OMTA transition updates for the current document which
-  // have been throttled, and therefore some style information may not be up
-  // to date
-  bool ExistThrottledUpdates() const { return mExistThrottledUpdates; }
-
-  void SetExistThrottledUpdates(bool aExistThrottledUpdates) {
-    mExistThrottledUpdates = aExistThrottledUpdates;
-  }
-
   bool IsDeviceSizePageSize();
 
   bool HasWarnedAboutPositionedTableParts() const {
@@ -1230,8 +1221,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // by Element::UnbindFromTree().)
   mozilla::dom::Element* MOZ_NON_OWNING_REF mViewportScrollOverrideElement;
   ScrollStyles mViewportScrollStyles;
-
-  bool mExistThrottledUpdates;
 
   uint16_t mImageAnimationMode;
   uint16_t mImageAnimationModePref;
