@@ -478,7 +478,8 @@ void XPCWrappedNativeScope::AddSizeOfIncludingThis(
   scopeSizeInfo->mScopeAndMapSize +=
       mWrappedNativeProtoMap->SizeOfIncludingThis(scopeSizeInfo->mMallocSizeOf);
 
-  auto realmCb = [](JSContext*, void* aData, JS::Handle<JS::Realm*> aRealm) {
+  auto realmCb = [](JSContext*, void* aData, JS::Realm* aRealm,
+                    const JS::AutoRequireNoGC& nogc) {
     auto* scopeSizeInfo = static_cast<ScopeSizeInfo*>(aData);
     JSObject* global = GetRealmGlobalOrNull(aRealm);
     if (global && dom::HasProtoAndIfaceCache(global)) {

@@ -198,7 +198,8 @@ class CycleCollectedJSRuntime {
 
   void TraverseZone(JS::Zone* aZone, nsCycleCollectionTraversalCallback& aCb);
 
-  static void TraverseObjectShim(void* aData, JS::GCCellPtr aThing);
+  static void TraverseObjectShim(void* aData, JS::GCCellPtr aThing,
+                                 const JS::AutoRequireNoGC& nogc);
 
   void TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb);
 

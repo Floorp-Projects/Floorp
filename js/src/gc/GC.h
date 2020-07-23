@@ -71,11 +71,15 @@ extern unsigned NotifyGCPreSwap(JSObject* a, JSObject* b);
 
 extern void NotifyGCPostSwap(JSObject* a, JSObject* b, unsigned preResult);
 
-using IterateChunkCallback = void (*)(JSRuntime*, void*, gc::Chunk*);
-using IterateZoneCallback = void (*)(JSRuntime*, void*, JS::Zone*);
+using IterateChunkCallback = void (*)(JSRuntime*, void*, gc::Chunk*,
+                                      const JS::AutoRequireNoGC&);
+using IterateZoneCallback = void (*)(JSRuntime*, void*, JS::Zone*,
+                                     const JS::AutoRequireNoGC&);
 using IterateArenaCallback = void (*)(JSRuntime*, void*, gc::Arena*,
-                                      JS::TraceKind, size_t);
-using IterateCellCallback = void (*)(JSRuntime*, void*, JS::GCCellPtr, size_t);
+                                      JS::TraceKind, size_t,
+                                      const JS::AutoRequireNoGC&);
+using IterateCellCallback = void (*)(JSRuntime*, void*, JS::GCCellPtr, size_t,
+                                     const JS::AutoRequireNoGC&);
 
 /*
  * This function calls |zoneCallback| on every zone, |realmCallback| on

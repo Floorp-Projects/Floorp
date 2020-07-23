@@ -19,6 +19,7 @@
 #include "jspubtd.h"
 
 #include "js/AllocPolicy.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/TracingAPI.h"
 #include "js/Utility.h"
@@ -846,9 +847,10 @@ struct RuntimeStats {
 
   mozilla::MallocSizeOf mallocSizeOf_;
 
-  virtual void initExtraRealmStats(JS::Handle<JS::Realm*> realm,
-                                   RealmStats* rstats) = 0;
-  virtual void initExtraZoneStats(JS::Zone* zone, ZoneStats* zstats) = 0;
+  virtual void initExtraRealmStats(JS::Realm* realm, RealmStats* rstats,
+                                   const JS::AutoRequireNoGC& nogc) = 0;
+  virtual void initExtraZoneStats(JS::Zone* zone, ZoneStats* zstats,
+                                  const JS::AutoRequireNoGC& nogc) = 0;
 
 #undef FOR_EACH_SIZE
 };

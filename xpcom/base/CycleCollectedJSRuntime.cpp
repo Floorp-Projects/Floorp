@@ -436,7 +436,8 @@ bool TraversalTracer::onChild(const JS::GCCellPtr& aThing) {
   return true;
 }
 
-static void NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing) {
+static void NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing,
+                                       const JS::AutoRequireNoGC& nogc) {
   TraversalTracer* trc = static_cast<TraversalTracer*>(aData);
   trc->onChild(aThing);
 }
@@ -926,8 +927,8 @@ void CycleCollectedJSRuntime::TraverseZone(
 }
 
 /* static */
-void CycleCollectedJSRuntime::TraverseObjectShim(void* aData,
-                                                 JS::GCCellPtr aThing) {
+void CycleCollectedJSRuntime::TraverseObjectShim(
+    void* aData, JS::GCCellPtr aThing, const JS::AutoRequireNoGC& nogc) {
   TraverseObjectShimClosure* closure =
       static_cast<TraverseObjectShimClosure*>(aData);
 

@@ -469,8 +469,7 @@ void LCovRealm::writeRealmName(JS::Realm* realm) {
     {
       // Hazard analysis cannot tell that the callback does not GC.
       JS::AutoSuppressGCAnalysis nogc;
-      Rooted<Realm*> rootedRealm(cx, realm);
-      (*cx->runtime()->realmNameCallback)(cx, rootedRealm, name, sizeof(name));
+      (*cx->runtime()->realmNameCallback)(cx, realm, name, sizeof(name), nogc);
     }
     for (char* s = name; s < name + sizeof(name) && *s; s++) {
       if (('a' <= *s && *s <= 'z') || ('A' <= *s && *s <= 'Z') ||

@@ -8,6 +8,7 @@
 #define js_Realm_h
 
 #include "jspubtd.h"
+#include "js/GCAPI.h"
 #include "js/GCPolicyAPI.h"
 #include "js/TypeDecls.h"  // forward-declaration of JS::Realm
 
@@ -84,8 +85,9 @@ typedef void (*DestroyRealmCallback)(JSFreeOp* fop, Realm* realm);
 extern JS_PUBLIC_API void SetDestroyRealmCallback(
     JSContext* cx, DestroyRealmCallback callback);
 
-typedef void (*RealmNameCallback)(JSContext* cx, Handle<Realm*> realm,
-                                  char* buf, size_t bufsize);
+using RealmNameCallback = void (*)(JSContext* cx, Realm* realm, char* buf,
+                                   size_t bufsize,
+                                   const JS::AutoRequireNoGC& nogc);
 
 // Set the callback SpiderMonkey calls to get the name of a realm, for
 // diagnostic output.
@@ -94,7 +96,7 @@ extern JS_PUBLIC_API void SetRealmNameCallback(JSContext* cx,
 
 // Get the global object for the given realm. This only returns nullptr during
 // GC, between collecting the global object and destroying the Realm.
-extern JS_PUBLIC_API JSObject* GetRealmGlobalOrNull(Handle<Realm*> realm);
+extern JS_PUBLIC_API JSObject* GetRealmGlobalOrNull(Realm* realm);
 
 // Initialize standard JS class constructors, prototypes, and any top-level
 // functions and constants associated with the standard classes (e.g. isNaN

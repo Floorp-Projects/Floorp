@@ -2044,7 +2044,8 @@ class JSMainRuntimeRealmsReporter final : public nsIMemoryReporter {
     js::Vector<nsCString, 0, js::SystemAllocPolicy> paths;
   };
 
-  static void RealmCallback(JSContext* cx, void* vdata, Handle<Realm*> realm) {
+  static void RealmCallback(JSContext* cx, void* vdata, Realm* realm,
+                            const JS::AutoRequireNoGC& nogc) {
     // silently ignore OOM errors
     Data* data = static_cast<Data*>(vdata);
     nsCString path;
@@ -2147,8 +2148,8 @@ class XPCJSRuntimeStats : public JS::RuntimeStats {
     }
   }
 
-  virtual void initExtraZoneStats(JS::Zone* zone,
-                                  JS::ZoneStats* zStats) override {
+  virtual void initExtraZoneStats(JS::Zone* zone, JS::ZoneStats* zStats,
+                                  const JS::AutoRequireNoGC& nogc) override {
     xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
     extras->pathPrefix.AssignLiteral("explicit/js-non-window/zones/");
 
@@ -2174,8 +2175,8 @@ class XPCJSRuntimeStats : public JS::RuntimeStats {
     zStats->extra = extras;
   }
 
-  virtual void initExtraRealmStats(Handle<Realm*> realm,
-                                   JS::RealmStats* realmStats) override {
+  virtual void initExtraRealmStats(Realm* realm, JS::RealmStats* realmStats,
+                                   const JS::AutoRequireNoGC& nogc) override {
     xpc::RealmStatsExtras* extras = new xpc::RealmStatsExtras;
     nsCString rName;
     GetRealmName(realm, rName, &mAnonymizeID, /* replaceSlashes = */ true);
@@ -2661,8 +2662,9 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
   }
 }
 
-static void GetRealmNameCallback(JSContext* cx, Handle<Realm*> realm, char* buf,
-                                 size_t bufsize) {
+static void GetRealmNameCallback(JSContext* cx, Realm* realm, char* buf,
+                                 size_t bufsize,
+                                 const JS::AutoRequireNoGC& nogc) {
   nsCString name;
   // This is called via the JSAPI and isn't involved in memory reporting, so
   // we don't need to anonymize realm names.
