@@ -17,8 +17,9 @@
       await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
 
       let info = getViewportInfo(800, 480);
-      is(info.width, 800, "width should be the display width");
-      is(info.height, 480, "height should be the display height");
+      is(info.width, 980, "without specified width, we get default width");
+      is(info.height, 588, "without specified width, and invalid specified height, " +
+                           "height is scaled in aspect ratio to default width");
     });
   </script>
 </body>
