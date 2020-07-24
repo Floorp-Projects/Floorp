@@ -30,6 +30,10 @@ class UAWidgetsChild extends JSWindowActorChild {
     }
   }
 
+  unwrap(obj) {
+    return Cu.isXrayWrapper(obj) ? obj.wrappedJSObject : obj;
+  }
+
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "UAWidgetSetupOrChange":
@@ -50,6 +54,16 @@ class UAWidgetsChild extends JSWindowActorChild {
     let { widget } = this.widgets.get(aElement);
 
     if (typeof widget.onchange == "function") {
+      if (
+        this.unwrap(aElement.openOrClosedShadowRoot) !=
+        this.unwrap(widget.shadowRoot)
+      ) {
+        Cu.reportError(
+          "Getting a UAWidgetSetupOrChange event without the ShadowRoot. " +
+            "Torn down already?"
+        );
+        return;
+      }
       try {
         widget.onchange();
       } catch (ex) {
@@ -107,7 +121,8 @@ class UAWidgetsChild extends JSWindowActorChild {
     let shadowRoot = aElement.openOrClosedShadowRoot;
     if (!shadowRoot) {
       Cu.reportError(
-        "Getting a UAWidgetSetupOrChange event without the Shadow Root."
+        "Getting a UAWidgetSetupOrChange event without the Shadow Root. " +
+          "Torn down already?"
       );
       return;
     }
@@ -129,6 +144,9 @@ class UAWidgetsChild extends JSWindowActorChild {
     let widget = new sandbox[widgetName](shadowRoot, prefs);
     if (!isSystemPrincipal) {
       widget = widget.wrappedJSObject;
+    }
+    if (this.unwrap(widget.shadowRoot) != this.unwrap(shadowRoot)) {
+      Cu.reportError("Widgets should expose their shadow root.");
     }
     this.widgets.set(aElement, { widget, widgetName });
     try {
