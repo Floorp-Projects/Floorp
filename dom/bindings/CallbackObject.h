@@ -140,14 +140,12 @@ class CallbackObject : public nsISupports {
   enum ExceptionHandling {
     // Report any exception and don't throw it to the caller code.
     eReportExceptions,
+    // Throw any exception to the caller code and don't report it.
+    eRethrowExceptions,
     // Throw an exception to the caller code if the thrown exception is a
     // binding object for a DOMException from the caller's scope, otherwise
     // report it.
-    eRethrowContentExceptions,
-    // Throw exceptions to the caller code, unless the caller realm is
-    // provided, the exception is not a DOMException from the caller
-    // realm, and the caller realm does not subsume our unwrapped callback.
-    eRethrowExceptions
+    eRethrowContentExceptions
   };
 
   // Append a UTF-8 string to aOutString that describes the callback function,
@@ -351,7 +349,7 @@ class CallbackObject : public nsISupports {
     JSContext* mCx;
 
     // Caller's realm. This will only have a sensible value if
-    // mExceptionHandling == eRethrowContentExceptions or eRethrowExceptions.
+    // mExceptionHandling == eRethrowContentExceptions.
     JS::Realm* mRealm;
 
     // And now members whose construction/destruction order we need to control.
