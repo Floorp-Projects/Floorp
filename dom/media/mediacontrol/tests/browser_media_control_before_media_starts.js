@@ -43,9 +43,42 @@ add_task(async function testMediaEntersPIPMode() {
   await BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testMutedMediaEntersPIPMode() {
+  info(`open media page and mute video`);
+  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  await muteMedia(tab, testVideoId);
+
+  info(`trigger PIP mode`);
+  const winPIP = await triggerPictureInPicture(tab.linkedBrowser, testVideoId);
+
+  info(`press 'play' and wait until media starts`);
+  await generateMediaControlKeyEvent("play");
+  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
+
+  info(`remove tab`);
+  await BrowserTestUtils.closeWindow(winPIP);
+  await BrowserTestUtils.removeTab(tab);
+});
+
 add_task(async function testMediaEntersFullScreen() {
   info(`open media page`);
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+
+  info(`make video fullscreen`);
+  await enableFullScreen(tab, testVideoId);
+
+  info(`press 'play' and wait until media starts`);
+  await generateMediaControlKeyEvent("play");
+  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
+
+  info(`remove tab`);
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function testMutedMediaEntersFullScreen() {
+  info(`open media page and mute video`);
+  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  await muteMedia(tab, testVideoId);
 
   info(`make video fullscreen`);
   await enableFullScreen(tab, testVideoId);
@@ -85,14 +118,15 @@ add_task(async function testMediaInIframeEntersFullScreen() {
 
   info(`press 'play' and wait until media starts`);
   await generateMediaControlKeyEvent("play");
-  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
+
+  info(`full screen media in inframe should be started`);
+  await waitUntilIframeMediaStartedPlaying(tab);
+
+  info(`media not in fullscreen should keep paused`);
+  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove iframe that contains fullscreen video`);
   await removeIframeFromDocument(tab);
-
-  info(`press 'pause' which should still affect video in the main frame`);
-  await generateMediaControlKeyEvent("pause");
-  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -101,6 +135,12 @@ add_task(async function testMediaInIframeEntersFullScreen() {
 /**
  * The following are helper functions.
  */
+function muteMedia(tab, videoId) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [videoId], videoId => {
+    content.document.getElementById(videoId).muted = true;
+  });
+}
+
 function enableFullScreen(tab, elementId) {
   return SpecialPowers.spawn(tab.linkedBrowser, [elementId], elementId => {
     return new Promise(r => {
@@ -136,6 +176,20 @@ function enableMediaFullScreenInIframe(tab) {
           "entered-fullscreen",
           `media in iframe entered fullscreen`
         );
+        r();
+      };
+    });
+  });
+}
+
+function waitUntilIframeMediaStartedPlaying(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [IFRAME_URL], async url => {
+    info(`check if media in iframe starts playing`);
+    const iframe = content.document.getElementById("iframe");
+    iframe.contentWindow.postMessage("check-playing", "*");
+    return new Promise(r => {
+      content.onmessage = event => {
+        is(event.data, "checked-playing", `media in iframe is playing`);
         r();
       };
     });
