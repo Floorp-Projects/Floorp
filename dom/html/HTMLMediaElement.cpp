@@ -6618,6 +6618,14 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
   AddRemoveSelfReference();
 }
 
+void HTMLMediaElement::NotifyFullScreenChanged() {
+  if (IsInFullScreen()) {
+    StartMediaControlKeyListenerIfNeeded();
+    MOZ_ASSERT(mMediaControlKeyListener->IsStarted(),
+               "Failed to start the listener when entering fullscreen!");
+  }
+}
+
 void HTMLMediaElement::AddRemoveSelfReference() {
   // XXX we could release earlier here in many situations if we examined
   // which event listeners are attached. Right now we assume there is a
@@ -7868,7 +7876,16 @@ void HTMLMediaElement::NotifyMediaControlPlaybackStateChanged() {
   }
 }
 
+bool HTMLMediaElement::IsInFullScreen() const {
+  return State().HasState(NS_EVENT_STATE_FULLSCREEN);
+}
+
 bool HTMLMediaElement::ShouldStartMediaControlKeyListener() const {
+  if (IsInFullScreen()) {
+    MEDIACONTROL_LOG("Start listener because of being used in fullscreen");
+    return true;
+  }
+
   // In order to filter out notification-ish sound, we use this pref to set the
   // eligible media duration to prevent showing media control for those short
   // sound.

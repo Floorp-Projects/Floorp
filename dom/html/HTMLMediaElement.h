@@ -258,6 +258,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    */
   void NotifyOwnerDocumentActivityChanged();
 
+  // Called when the media element enters or leaves the fullscreen.
+  void NotifyFullScreenChanged();
+
+  bool IsInFullScreen() const;
+
   // From PrincipalChangeObserver<MediaStreamTrack>.
   void PrincipalChanged(MediaStreamTrack* aTrack) override;
 

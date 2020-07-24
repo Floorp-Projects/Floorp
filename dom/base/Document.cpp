@@ -13423,6 +13423,9 @@ static void NotifyFullScreenChangedForMediaControl(Element* aElement,
   if (!aElement->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video)) {
     return;
   }
+  HTMLMediaElement* mediaElem = HTMLMediaElement::FromNodeOrNull(aElement);
+  mediaElem->NotifyFullScreenChanged();
+
   RefPtr<BrowsingContext> bc = aElement->OwnerDoc()->GetBrowsingContext();
   if (!bc) {
     return;
