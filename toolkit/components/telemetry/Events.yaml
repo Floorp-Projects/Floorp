@@ -2294,6 +2294,7 @@ slow_script_warning:
       end_reason: Why the warning was hidden (user action, the process becoming responsive again, the browser quitting, etc.)
       wait_count: How many times the user elected to wait.
       hang_duration: How long we believe the hang continued (ms).
+      n_tab_deselect: How many times the user switched away from a tab affected by this hang.
       uri_type: The kind of script URL that hung.
       uptime: How long the notification was up (ms).
 
