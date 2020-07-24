@@ -1291,8 +1291,6 @@ pref("prompts.tab_modal.enabled", true);
 // This is a fallback value for when prompt callers do not specify a modalType.
 pref("prompts.defaultModalType", 3);
 
-pref("browser.topsites.useRemoteSetting", false);
-
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
