@@ -391,7 +391,8 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
                                        undefined);
 
 #ifdef NIGHTLY_BUILD
-    formatOpt.fractionalSecondDigits = GetNumberOption(options, "fractionalSecondDigits", 0, 3, 0);
+    formatOpt.fractionalSecondDigits = GetNumberOption(options, "fractionalSecondDigits", 1, 3,
+                                                       undefined);
 #endif
 
     // Steps 23-24 provided by ICU - see comment after this function.
@@ -420,6 +421,9 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     if (dateStyle !== undefined || timeStyle !== undefined) {
       var optionsList = [
           "weekday", "era", "year", "month", "day", "hour", "minute", "second", "timeZoneName",
+#ifdef NIGHTLY_BUILD
+          "fractionalSecondDigits",
+#endif
       ];
 
       for (var i = 0; i < optionsList.length; i++) {
@@ -429,13 +433,6 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
                              dateStyle !== undefined ? "dateStyle" : "timeStyle");
           }
       }
-
-#ifdef NIGHTLY_BUILD
-      if (formatOpt.fractionalSecondDigits !== 0) {
-          ThrowTypeError(JSMSG_INVALID_DATETIME_OPTION, "fractionalSecondDigits",
-                         dateStyle !== undefined ? "dateStyle" : "timeStyle");
-      }
-#endif
     }
 
     // Steps 26-28 provided by ICU, more or less - see comment after this function.

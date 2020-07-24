@@ -647,10 +647,6 @@ skip script test262/language/expressions/class/elements/private-fields-proxy-def
 skip script test262/language/statements/class/elements/static-private-fields-proxy-default-handler-throws.js
 skip script test262/language/statements/class/elements/privatefield-on-proxy.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1653292
-skip script test262/intl402/DateTimeFormat/prototype/formatToParts/fractionalSecondDigits.js
-skip script test262/intl402/DateTimeFormat/prototype/formatRangeToParts/fractionalSecondDigits.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
