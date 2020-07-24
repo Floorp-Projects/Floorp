@@ -284,11 +284,14 @@ const DoHController = {
       ? Heuristics.DISABLE_DOH
       : Heuristics.ENABLE_DOH;
 
-    results.evaluateReason = evaluateReason;
+    let resultsForTelemetry = {
+      evaluateReason,
+      steeredProvider: "",
+    };
 
     if (results.steeredProvider) {
       gDNSService.setDetectedTrrURI(results.steeredProvider.uri);
-      results.steeredProvider = results.steeredProvider.name;
+      resultsForTelemetry.steeredProvider = results.steeredProvider.name;
     }
 
     if (decision === Heuristics.DISABLE_DOH) {
@@ -297,12 +300,41 @@ const DoHController = {
       await this.setState("enabled");
     }
 
+    // For telemetry, we group the heuristics results into three categories.
+    // Only heuristics with a DISABLE_DOH result are included.
+    // Each category is finally included in the event as a comma-separated list.
+    let canaries = [];
+    let filtering = [];
+    let enterprise = [];
+
+    for (let [heuristicName, result] of Object.entries(results)) {
+      if (result !== Heuristics.DISABLE_DOH) {
+        continue;
+      }
+
+      if (["canary", "zscalerCanary"].includes(heuristicName)) {
+        canaries.push(heuristicName);
+      } else if (
+        ["browserParent", "google", "youtube"].includes(heuristicName)
+      ) {
+        filtering.push(heuristicName);
+      } else if (
+        ["policy", "modifiedRoots", "thirdPartyRoots"].includes(heuristicName)
+      ) {
+        enterprise.push(heuristicName);
+      }
+    }
+
+    resultsForTelemetry.canaries = canaries.join(",");
+    resultsForTelemetry.filtering = filtering.join(",");
+    resultsForTelemetry.enterprise = enterprise.join(",");
+
     Services.telemetry.recordEvent(
       HEURISTICS_TELEMETRY_CATEGORY,
-      "evaluate",
+      "evaluate_v2",
       "heuristics",
       decision,
-      results
+      resultsForTelemetry
     );
   },
 

@@ -2128,6 +2128,33 @@ pictureinpicture:
     release_channel_collection: opt-out
 
 doh:
+  evaluate_v2:
+    methods: ["evaluate_v2"]
+    objects: ["heuristics"]
+    bug_numbers:
+      - 1573840
+      - 1631609
+      - 1603779
+      - 1654714
+    description: >
+      Results of DoH heuristics at startup and after network changes.
+    expiry_version: never
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - nhnt11@mozilla.com
+      - ddamjanovic@mozilla.com
+      - seceng-telemetry@mozilla.com
+      - necko@mozilla.com
+    products:
+      - firefox
+    extra_keys:
+      canaries: Comma-separated list of canaries that were detected (canary,zscalerCanary)
+      filtering: Comma-separated list of detected parental controls/content filtering (browserParent,google,youtube)
+      enterprise: Comma-separated list of detected enterprise config (policy,modifiedRoots,thirdPartyRoots)
+      steeredProvider: Whether we detected a steering provider
+      evaluateReason: The reason for running heuristics - startup or netchange
   evaluate:
     methods: ["evaluate"]
     objects: ["heuristics"]
@@ -2136,7 +2163,7 @@ doh:
       - 1631609
       - 1603779
     description: >
-      Results of DoH heuristics at startup and after network changes.
+      Results of DoH heuristics at startup and after network changes. OLD FORMAT: here for documentation
     expiry_version: never
     record_in_processes:
       - main
