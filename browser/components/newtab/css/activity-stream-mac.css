@@ -4032,6 +4032,10 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       width: 100%; }
       .SubmitFormSnippet.scene2Alt .section-header .icon {
         margin-inline-end: 0; }
+    .SubmitFormSnippet.scene2Alt .section-title a {
+      color: var(--newtab-section-header-text-color);
+      font-weight: inherit;
+      text-decoration: none; }
     .SubmitFormSnippet.scene2Alt .innerWrapper {
       padding: 0 0 16px; }
 

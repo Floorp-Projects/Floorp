@@ -396,6 +396,7 @@ const MESSAGES = () => [
       section_title_icon:
         "https://snippets.cdn.mozilla.net/media/icons/094b0707-ab65-4b2e-99a1-a84122b6ab26.png",
       section_title_text: "Messages from Firefox",
+      section_title_url: "https://support.mozilla.org/kb",
 
       scene2_button_label: "Send",
       scene2_disclaimer_html:

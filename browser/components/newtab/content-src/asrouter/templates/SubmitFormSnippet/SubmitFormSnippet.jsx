@@ -210,6 +210,12 @@ export class SubmitFormSnippet extends React.PureComponent {
     event.target.setCustomValidity(hasError);
   }
 
+  wrapSectionHeader(url) {
+    return function(children) {
+      return <a href={url}>{children}</a>;
+    };
+  }
+
   renderInput() {
     const placholder =
       this.props.content.scene2_email_placeholder_text ||
@@ -317,7 +323,10 @@ export class SubmitFormSnippet extends React.PureComponent {
       return (
         <div className="section-header">
           <h3 className="section-title">
-            <ConditionalWrapper condition={sectionTitleURL}>
+            <ConditionalWrapper
+              wrap={this.wrapSectionHeader(sectionTitleURL)}
+              condition={sectionTitleURL}
+            >
               <span
                 className="icon icon-small-spacer icon-light-theme"
                 style={{ backgroundImage: `url("${sectionTitleIconLight}")` }}

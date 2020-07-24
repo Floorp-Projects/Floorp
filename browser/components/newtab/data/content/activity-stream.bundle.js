@@ -12335,7 +12335,7 @@ const ConditionalWrapper = ({
   condition,
   wrap,
   children
-}) => condition ? wrap(children) : children;
+}) => condition && wrap ? wrap(children) : children;
 
 /* harmony default export */ var ConditionalWrapper_ConditionalWrapper = (ConditionalWrapper);
 // EXTERNAL MODULE: ./content-src/asrouter/components/RichText/RichText.jsx
@@ -13040,6 +13040,14 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
     event.target.setCustomValidity(hasError);
   }
 
+  wrapSectionHeader(url) {
+    return function (children) {
+      return external_React_default.a.createElement("a", {
+        href: url
+      }, children);
+    };
+  }
+
   renderInput() {
     const placholder = this.props.content.scene2_email_placeholder_text || this.props.content.scene2_input_placeholder;
     return external_React_default.a.createElement("input", {
@@ -13121,6 +13129,7 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
       }, external_React_default.a.createElement("h3", {
         className: "section-title"
       }, external_React_default.a.createElement(ConditionalWrapper_ConditionalWrapper, {
+        wrap: this.wrapSectionHeader(sectionTitleURL),
         condition: sectionTitleURL
       }, external_React_default.a.createElement("span", {
         className: "icon icon-small-spacer icon-light-theme",
