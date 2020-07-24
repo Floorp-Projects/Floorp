@@ -378,8 +378,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
             downloadFeature.onDownloadStopped = { downloadState, _, downloadJobStatus ->
                 // If the download is just paused, don't show any in-app notification
-                if (downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED ||
-                    downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED
+                if (downloadJobStatus == DownloadState.Status.COMPLETED ||
+                    downloadJobStatus == DownloadState.Status.FAILED
                 ) {
 
                     saveDownloadDialogState(
@@ -391,7 +391,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     val dynamicDownloadDialog = DynamicDownloadDialog(
                         container = view.browserLayout,
                         downloadState = downloadState,
-                        didFail = downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED,
+                        didFail = downloadJobStatus == DownloadState.Status.FAILED,
                         tryAgain = downloadFeature::tryAgain,
                         onCannotOpenFile = {
                             FenixSnackbar.make(
@@ -616,12 +616,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private fun saveDownloadDialogState(
         sessionId: String?,
         downloadState: DownloadState,
-        downloadJobStatus: AbstractFetchDownloadService.DownloadJobStatus
+        downloadJobStatus: DownloadState.Status
     ) {
         sessionId?.let { id ->
             sharedViewModel.downloadDialogState[id] = Pair(
                 downloadState,
-                downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED
+                downloadJobStatus == DownloadState.Status.FAILED
             )
         }
     }
