@@ -24,6 +24,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.internal.ActionContainer
+import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.toolbar.Toolbar
 
 /**
@@ -373,13 +374,24 @@ class DisplayToolbar internal constructor(
         }
 
     /**
-     * Sets a BrowserMenuBuilder that will be used to create a menu when the menu button is clicked.
-     * The menu button will only be visible if a builder has been set.
+     * Sets a [BrowserMenuBuilder] that will be used to create a menu when the menu button is clicked.
+     * The menu button will only be visible if a builder or controller has been set.
      */
     var menuBuilder: BrowserMenuBuilder?
         get() = views.menu.menuBuilder
         set(value) {
             views.menu.menuBuilder = value
+        }
+
+    /**
+     * Sets a [MenuController] that will be used to create a menu when the menu button is clicked.
+     * The menu button will only be visible if a builder or controller has been set.
+     * If both a [menuBuilder] and controller are present, only the controller will be used.
+     */
+    var menuController: MenuController?
+        get() = views.menu.menuController
+        set(value) {
+            views.menu.menuController = value
         }
 
     /**

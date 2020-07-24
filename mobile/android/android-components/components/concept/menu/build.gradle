@@ -26,6 +26,7 @@ dependencies {
 
     implementation Dependencies.androidx_annotation
     implementation Dependencies.androidx_appcompat
+    implementation project(':support-base')
     implementation project(':support-ktx')
 
     testImplementation Dependencies.androidx_test_junit

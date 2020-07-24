@@ -27,7 +27,9 @@ dependencies {
     api project(':support-base')
 
     implementation project(':concept-engine')
+    implementation project(':concept-menu')
     implementation project(':browser-menu')
+    implementation project(':browser-menu2')
     implementation project(':ui-icons')
     implementation project(':ui-colors')
     implementation project(':support-ktx')

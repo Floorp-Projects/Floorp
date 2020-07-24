@@ -2,7 +2,8 @@
 
 A generic menu with customizable items primarily for browser toolbars.
 
-This replaces the [browser-menu](../menu) component.
+This replaces the [browser-menu](../menu) component with a new API using immutable objects,
+designed to work well with [lib-state](../../lib/state).
 
 ## Usage
 
@@ -15,27 +16,33 @@ implementation "org.mozilla.components:browser-menu2:{latest-version}"
 ```
 
 ### MenuController
+The menu controller is used to control the items in the menu as well as displaying the menu popup.
+
 Sample code can be found in [Sample Toolbar app](https://github.com/mozilla-mobile/android-components/tree/master/samples/toolbar).
 
-There are multiple properties that you customize of the menu browser by just adding them into your dimens.xml file.
+There are multiple properties that you customize of the browser menu by just adding them into your dimens.xml file.
 
 ```xml
 <resources xmlns:tools="http://schemas.android.com/tools">
 
    <!--Change how rounded the corners of the menu should be-->
-    <dimen name="mozac_browser_menu_corner_radius" tools:ignore="UnusedResources">4dp</dimen>
+    <dimen name="mozac_browser_menu2_corner_radius" tools:ignore="UnusedResources">4dp</dimen>
 
     <!--Change how much shadow the menu should have-->
-    <dimen name="mozac_browser_menu_elevation" tools:ignore="UnusedResources">4dp</dimen>
+    <dimen name="mozac_browser_menu2_elevation" tools:ignore="UnusedResources">4dp</dimen>
 
-    <!--Change the width of the menu-->
-    <dimen name="mozac_browser_menu_width" tools:ignore="UnusedResources">250dp</dimen>
+    <!--Change the width of the menu - can also be set in MenuController#show()-->
+    <dimen name="mozac_browser_menu2_width" tools:ignore="UnusedResources">250dp</dimen>
 
     <!--Change the top and bottom padding of the menu-->
-    <dimen name="mozac_browser_menu_padding_vertical" tools:ignore="UnusedResources">8dp</dimen>
+    <dimen name="mozac_browser_menu2_padding_vertical" tools:ignore="UnusedResources">8dp</dimen>
 
 </resources>
 ```
+
+Options displayed in the menu are configured by using a list of `MenuCandidate` objects.
+The list of options can be sent to the menu by calling `MenuController#submitList()`.
+To change the displayed options, simply call `submitList` again with a new list.
 
 ## License
 

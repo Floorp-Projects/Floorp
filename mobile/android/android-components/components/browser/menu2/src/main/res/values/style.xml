@@ -4,6 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
 
+    <style name="Mozac.Browser.Menu2" parent="">
+        <item name="cardBackgroundColor">@color/mozac_browser_menu2_background</item>
+    </style>
+
     <!-- Item Divider -->
     <style name="Mozac.Browser.Menu2.Candidate.Divider" parent="">
         <item name="android:background">?android:attr/listDivider</item>
