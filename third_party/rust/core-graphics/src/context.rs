@@ -9,9 +9,10 @@
 
 use base::CGFloat;
 use color_space::CGColorSpace;
-use core_foundation::base::{ToVoid, CFRelease, CFRetain, CFTypeID};
+use core_foundation::base::{CFTypeID, TCFType};
 use font::{CGFont, CGGlyph};
-use geometry::CGPoint;
+use geometry::{CGPoint, CGSize};
+use gradient::{CGGradient, CGGradientDrawingOptions};
 use color::CGColor;
 use path::CGPathRef;
 use libc::{c_int, size_t};
@@ -66,6 +67,7 @@ pub enum CGTextDrawingMode {
     CGTextInvisible,
     CGTextFillClip,
     CGTextStrokeClip,
+    CGTextFillStrokeClip,
     CGTextClip
 }
 
@@ -95,11 +97,21 @@ pub enum CGPathDrawingMode {
     CGPathEOFillStroke,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum CGInterpolationQuality {
+    CGInterpolationQualityDefault,
+    CGInterpolationQualityNone,
+    CGInterpolationQualityLow,
+    CGInterpolationQualityMedium,
+    CGInterpolationQualityHigh,
+}
+
 foreign_type! {
     #[doc(hidden)]
     type CType = ::sys::CGContext;
-    fn drop = |cs| CFRelease(cs as *mut _);
-    fn clone = |p| CFRetain(p as *const _) as *mut _;
+    fn drop = |cs| CGContextRelease(cs);
+    fn clone = |p| CGContextRetain(p);
     pub struct CGContext;
     pub struct CGContextRef;
 }
@@ -109,6 +121,22 @@ impl CGContext {
         unsafe {
             CGContextGetTypeID()
         }
+    }
+
+    /// Creates a `CGContext` instance from an existing [`CGContextRef`] pointer. 
+    /// 
+    /// This funtion will internally call [`CGRetain`] and hence there is no need to call it explicitly.
+    /// 
+    /// This function is particularly useful for cases when the context is not instantiated/managed
+    /// by the caller, but it's retrieve via other means (e.g., by calling the method [`NSGraphicsContext::CGContext`]
+    /// in a cocoa application).
+    /// 
+    /// [`CGContextRef`]: https://developer.apple.com/documentation/coregraphics/cgcontextref
+    /// [`CGRetain`]: https://developer.apple.com/documentation/coregraphics/1586506-cgcontextretain
+    /// [`NSGraphicsContext::CGContext`]: https://developer.apple.com/documentation/appkit/nsgraphicscontext/1535352-currentcontext
+    pub unsafe fn from_existing_context_ptr(ctx: *mut ::sys::CGContext) -> CGContext {
+        CGContextRetain(ctx);
+        Self::from_ptr(ctx)
     }
 
     pub fn create_bitmap_context(data: Option<*mut c_void>,
@@ -174,7 +202,7 @@ impl CGContextRef {
 
     pub fn set_fill_color(&self, color: &CGColor) {
         unsafe {
-            CGContextSetFillColorWithColor(self.as_ptr(), color.to_void());
+            CGContextSetFillColorWithColor(self.as_ptr(), color.as_concrete_TypeRef());
         }
     }
 
@@ -427,6 +455,12 @@ impl CGContextRef {
         }
     }
 
+    pub fn clip_to_mask(&self, rect: CGRect, image: &CGImage) {
+        unsafe {
+            CGContextClipToMask(self.as_ptr(), rect, image.as_ptr())
+        }
+    }
+
     pub fn replace_path_with_stroked_path(&self) {
         unsafe {
             CGContextReplacePathWithStrokedPath(self.as_ptr())
@@ -448,6 +482,19 @@ impl CGContextRef {
     pub fn stroke_line_segments(&self, points: &[CGPoint]) {
         unsafe {
             CGContextStrokeLineSegments(self.as_ptr(), points.as_ptr(), points.len())
+        }
+    }
+
+    pub fn set_interpolation_quality(&self, quality: CGInterpolationQuality) {
+        unsafe {
+            CGContextSetInterpolationQuality(self.as_ptr(), quality);
+        }
+    }
+
+    pub fn get_interpolation_quality(&self) -> CGInterpolationQuality {
+        unsafe {
+            CGContextGetInterpolationQuality(self.as_ptr())
+
         }
     }
 
@@ -481,6 +528,12 @@ impl CGContextRef {
     pub fn set_text_matrix(&self, t: &CGAffineTransform) {
         unsafe {
             CGContextSetTextMatrix(self.as_ptr(), *t)
+        }
+    }
+
+    pub fn set_text_position(&self, x: CGFloat, y: CGFloat) {
+        unsafe {
+            CGContextSetTextPosition(self.as_ptr(), x, y)
         }
     }
 
@@ -535,6 +588,30 @@ impl CGContextRef {
             CGContextConcatCTM(self.as_ptr(), transform)
         }
     }
+
+    pub fn draw_linear_gradient(&self, gradient: &CGGradient, start_point: CGPoint, end_point: CGPoint, options: CGGradientDrawingOptions) {
+        unsafe {
+            CGContextDrawLinearGradient(self.as_ptr(), gradient.as_ptr(), start_point, end_point, options);
+        }
+    }
+
+    pub fn draw_radial_gradient(&self, gradient: &CGGradient, start_center: CGPoint, start_radius: CGFloat, end_center: CGPoint, end_radius: CGFloat, options: CGGradientDrawingOptions) {
+        unsafe {
+            CGContextDrawRadialGradient(self.as_ptr(), gradient.as_ptr(), start_center, start_radius, end_center, end_radius, options);
+        }
+    }
+
+    pub fn set_shadow(&self, offset: CGSize, blur: CGFloat) {
+        unsafe {
+            CGContextSetShadow(self.as_ptr(), offset, blur);
+        }
+    }
+
+    pub fn set_shadow_with_color(&self, offset: CGSize, blur: CGFloat, color: &CGColor) {
+        unsafe {
+            CGContextSetShadowWithColor(self.as_ptr(), offset, blur, color.as_concrete_TypeRef());
+        }
+    }
 }
 
 #[test]
@@ -564,6 +641,9 @@ fn create_bitmap_context_test() {
 
 #[link(name = "CoreGraphics", kind = "framework")]
 extern {
+    fn CGContextRetain(c: ::sys::CGContextRef) -> ::sys::CGContextRef;
+    fn CGContextRelease(c: ::sys::CGContextRef);
+
     fn CGBitmapContextCreate(data: *mut c_void,
                              width: size_t,
                              height: size_t,
@@ -595,7 +675,7 @@ extern {
     fn CGContextSetShouldSubpixelPositionFonts(c: ::sys::CGContextRef,
                                                shouldSubpixelPositionFonts: bool);
     fn CGContextSetTextDrawingMode(c: ::sys::CGContextRef, mode: CGTextDrawingMode);
-    fn CGContextSetFillColorWithColor(c: ::sys::CGContextRef, color: *const c_void);
+    fn CGContextSetFillColorWithColor(c: ::sys::CGContextRef, color: ::sys::CGColorRef);
     fn CGContextSetLineCap(c: ::sys::CGContextRef, cap: CGLineCap);
     fn CGContextSetLineDash(c: ::sys::CGContextRef, phase: CGFloat, lengths: *const CGFloat, count: size_t);
     fn CGContextSetLineJoin(c: ::sys::CGContextRef, join: CGLineJoin);
@@ -657,6 +737,7 @@ extern {
     fn CGContextClipToRects(context: ::sys::CGContextRef,
                             rects: *const CGRect,
                             count: size_t);
+    fn CGContextClipToMask(ctx: ::sys::CGContextRef, rect: CGRect, mask: ::sys::CGImageRef);
     fn CGContextReplacePathWithStrokedPath(context: ::sys::CGContextRef);
     fn CGContextFillEllipseInRect(context: ::sys::CGContextRef,
                                   rect: CGRect);
@@ -666,9 +747,12 @@ extern {
                                     points: *const CGPoint,
                                     count: size_t);
     fn CGContextDrawImage(c: ::sys::CGContextRef, rect: CGRect, image: ::sys::CGImageRef);
+    fn CGContextSetInterpolationQuality(c: ::sys::CGContextRef, quality: CGInterpolationQuality);
+    fn CGContextGetInterpolationQuality(c: ::sys::CGContextRef) -> CGInterpolationQuality;
     fn CGContextSetFont(c: ::sys::CGContextRef, font: ::sys::CGFontRef);
     fn CGContextSetFontSize(c: ::sys::CGContextRef, size: CGFloat);
     fn CGContextSetTextMatrix(c: ::sys::CGContextRef, t: CGAffineTransform);
+    fn CGContextSetTextPosition(c: ::sys::CGContextRef, x: CGFloat, y: CGFloat);
     fn CGContextShowGlyphsAtPositions(c: ::sys::CGContextRef,
                                       glyphs: *const CGGlyph,
                                       positions: *const CGPoint,
@@ -681,5 +765,11 @@ extern {
     fn CGContextRotateCTM(c: ::sys::CGContextRef, angle: CGFloat);
     fn CGContextGetCTM(c: ::sys::CGContextRef) -> CGAffineTransform;
     fn CGContextConcatCTM(c: ::sys::CGContextRef, transform: CGAffineTransform);
+
+    fn CGContextDrawLinearGradient(c: ::sys::CGContextRef, gradient: ::sys::CGGradientRef, startPoint: CGPoint, endPoint: CGPoint, options: CGGradientDrawingOptions);
+    fn CGContextDrawRadialGradient(c: ::sys::CGContextRef, gradient: ::sys::CGGradientRef,  startCenter: CGPoint, startRadius: CGFloat, endCenter:CGPoint, endRadius:CGFloat, options: CGGradientDrawingOptions);
+
+    fn CGContextSetShadow(c: ::sys::CGContextRef, offset: CGSize, blur: CGFloat);
+    fn CGContextSetShadowWithColor(c: ::sys::CGContextRef, offset: CGSize, blur: CGFloat, color: ::sys::CGColorRef);
 }
 

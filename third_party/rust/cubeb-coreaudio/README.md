@@ -1,6 +1,6 @@
 # cubeb-coreaudio-rs
 
-[![Build Status](https://api.travis-ci.com/ChunMinChang/cubeb-coreaudio-rs.svg?branch=trailblazer)](https://travis-ci.com/github/ChunMinChang/cubeb-coreaudio-rs)
+[![Build Status](https://travis-ci.com/ChunMinChang/cubeb-coreaudio-rs.svg?branch=trailblazer)](https://travis-ci.com/ChunMinChang/cubeb-coreaudio-rs)
 
 *Rust* implementation of [Cubeb][cubeb] on [the MacOS platform][cubeb-au].
 

@@ -7,7 +7,7 @@
 
 use super::*;
 
-use cocoa::foundation::NSUInteger;
+use cocoa_foundation::foundation::NSUInteger;
 
 pub enum MTLHeap {}
 
