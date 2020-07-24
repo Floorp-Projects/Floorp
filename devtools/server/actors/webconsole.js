@@ -1405,7 +1405,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       }
 
       matches = result.matches || new Set();
-      matchProp = result.matchProp;
+      matchProp = result.matchProp || "";
       isElementAccess = result.isElementAccess;
 
       // We consider '$' as alphanumeric because it is used in the names of some
@@ -1415,7 +1415,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
       // We only return commands and keywords when we are not dealing with a property or
       // element access.
-      if (!lastNonAlphaIsDot && !isElementAccess) {
+      if (matchProp && !lastNonAlphaIsDot && !isElementAccess) {
         this._getWebConsoleCommandsCache().forEach(n => {
           // filter out `screenshot` command as it is inaccessible without the `:` prefix
           if (n !== "screenshot" && n.startsWith(result.matchProp)) {

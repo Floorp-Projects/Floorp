@@ -271,7 +271,11 @@ function JSPropertyProvider({
     };
   }
 
-  const firstProp = properties.shift().trim();
+  let firstProp = properties.shift();
+  if (typeof firstProp == "string") {
+    firstProp = firstProp.trim();
+  }
+
   if (firstProp === "this") {
     // Special case for 'this' - try to get the Object from the Environment.
     // No problem if it throws, we will just not autocomplete.
@@ -367,7 +371,6 @@ function shouldInputBeAutocompleted(inputAnalysisState) {
 
   // There was an error analysing the string.
   if (err) {
-    console.error("Failed to analyze input string", err);
     return false;
   }
 
