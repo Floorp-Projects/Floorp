@@ -313,7 +313,7 @@ class StorageUI {
         storageTypes.indexedDB.hosts = newHosts;
       }
 
-      this.populateStorageTree(storageTypes);
+      await this.populateStorageTree(storageTypes);
     } catch (e) {
       if (!this._toolbox || this._toolbox._destroyer) {
         // The toolbox is in the process of being destroyed... in this case throwing here
@@ -864,8 +864,22 @@ class StorageUI {
    *        List of storages and their corresponding hosts returned by the
    *        StorageFront.listStores call.
    */
-  populateStorageTree(storageTypes) {
+  async populateStorageTree(storageTypes) {
     this.storageTypes = {};
+
+    // When can we expect the "store-objects-updated" event?
+    //   -> TreeWidget setter `selectedItem` emits a "select" event
+    //   -> on tree "select" event, this module calls `onHostSelect`
+    //   -> finally `onHostSelect` calls `fetchStorageObjects`, which will emit
+    //      "store-objects-updated" at the end of the method.
+    // So if the selection changed, we can wait for "store-objects-updated",
+    // which is emitted at the end of `fetchStorageObjects`.
+    const onStoresObjectsUpdated = this.once("store-objects-updated");
+
+    // Save the initially selected item to check if tree.selected was updated,
+    // see comment above.
+    const initialSelectedItem = this.tree.selectedItem;
+
     for (const type in storageTypes) {
       // Ignore `from` field, which is just a protocol.js implementation
       // artifact.
@@ -901,6 +915,10 @@ class StorageUI {
           this.tree.selectedItem = [type, host];
         }
       }
+    }
+
+    if (initialSelectedItem !== this.tree.selectedItem) {
+      await onStoresObjectsUpdated;
     }
   }
 
