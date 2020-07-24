@@ -34,4 +34,5 @@ extern {
     pub fn CFBundleCopyExecutableURL(bundle: CFBundleRef) -> CFURLRef;
     pub fn CFBundleCopyPrivateFrameworksURL(bundle: CFBundleRef) -> CFURLRef;
     pub fn CFBundleCopySharedSupportURL(bundle: CFBundleRef) -> CFURLRef;
+    pub fn CFBundleCopyBundleURL(bundle: CFBundleRef) -> CFURLRef;
 }

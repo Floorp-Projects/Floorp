@@ -243,6 +243,7 @@ impl TCFType for CFType {
 
     #[inline]
     unsafe fn wrap_under_get_rule(reference: CFTypeRef) -> CFType {
+        assert!(!reference.is_null(), "Attempted to create a NULL object.");
         let reference: CFTypeRef = CFRetain(reference);
         TCFType::wrap_under_create_rule(reference)
     }
@@ -254,6 +255,7 @@ impl TCFType for CFType {
 
     #[inline]
     unsafe fn wrap_under_create_rule(obj: CFTypeRef) -> CFType {
+        assert!(!obj.is_null(), "Attempted to create a NULL object.");
         CFType(obj)
     }
 

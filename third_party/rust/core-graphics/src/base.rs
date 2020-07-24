@@ -12,21 +12,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
 
-use libc;
-
-#[cfg(any(target_arch = "x86",
-          target_arch = "arm",
-          target_arch = "aarch64"))]
-pub type boolean_t = libc::c_int;
-#[cfg(target_arch = "x86_64")]
-pub type boolean_t = libc::c_uint;
-
-#[cfg(target_pointer_width = "64")]
-pub type CGFloat = libc::c_double;
-#[cfg(not(target_pointer_width = "64"))]
-pub type CGFloat = libc::c_float;
-
-pub type CGError = i32;
+pub use core_graphics_types::base::*;
 
 pub const kCGImageAlphaNone: u32 = 0;
 pub const kCGImageAlphaPremultipliedLast: u32 = 1;
@@ -36,11 +22,11 @@ pub const kCGImageAlphaFirst: u32 = 4;
 pub const kCGImageAlphaNoneSkipLast: u32 = 5;
 pub const kCGImageAlphaNoneSkipFirst: u32 = 6;
 
-pub const kCGBitmapByteOrderDefault: u32 = (0 << 12);
-pub const kCGBitmapByteOrder16Little: u32 = (1 << 12);
-pub const kCGBitmapByteOrder32Little: u32 = (2 << 12);
-pub const kCGBitmapByteOrder16Big: u32 = (3 << 12);
-pub const kCGBitmapByteOrder32Big: u32 = (4 << 12);
+pub const kCGBitmapByteOrderDefault: u32 = 0 << 12;
+pub const kCGBitmapByteOrder16Little: u32 = 1 << 12;
+pub const kCGBitmapByteOrder32Little: u32 = 2 << 12;
+pub const kCGBitmapByteOrder16Big: u32 = 3 << 12;
+pub const kCGBitmapByteOrder32Big: u32 = 4 << 12;
 
 pub const kCGRenderingIntentDefault: u32 = 0;
 pub const kCGRenderingIntentAbsoluteColorimetric: u32 = 1;

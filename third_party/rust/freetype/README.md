@@ -1,3 +1,3 @@
 # rust-freetype
 
-[Documentation](http://doc.servo.org/freetype/)
+[Documentation](https://doc.servo.org/freetype/)
