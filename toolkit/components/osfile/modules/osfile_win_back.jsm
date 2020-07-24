@@ -52,11 +52,11 @@
      */
     // FIXME: Both |init| and |aDeclareFFI| are deprecated, we should remove them
     let init = function init(aDeclareFFI) {
-      let declareFFI; // eslint-disable-line no-unused-vars
+      let declareFFI;
       if (aDeclareFFI) {
         declareFFI = aDeclareFFI.bind(null, libc);
       } else {
-        declareFFI = SysAll.declareFFI;
+        declareFFI = SysAll.declareFFI; // eslint-disable-line no-unused-vars
       }
       let declareLazyFFI = SharedAll.declareLazyFFI; // eslint-disable-line no-unused-vars
 
