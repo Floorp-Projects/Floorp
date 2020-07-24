@@ -104,7 +104,7 @@ job-defaults:
     worker:
         chain-of-trust: true
         docker-image: {in-tree: base}
-        max-run-time: 7200
+        max-run-time: 1200
 
 
 overriden-jobs:

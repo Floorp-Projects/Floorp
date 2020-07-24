@@ -30,7 +30,7 @@ job-defaults:
     worker-type: b-android
     worker:
         docker-image: {in-tree: base}
-        max-run-time: 7200
+        max-run-time: 600
 
 jobs:
     compare-locales:

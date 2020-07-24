@@ -29,7 +29,7 @@ linux64-android-sdk-linux-repack:
         symbol: TL(android-sdk-linux)
     worker:
         docker-image: {in-tree: base}
-        max-run-time: 1800
+        max-run-time: 600
 
 
 linux64-android-gradle-dependencies:
@@ -55,4 +55,4 @@ linux64-android-gradle-dependencies:
         env:
             # TODO do no hardcode
             ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
-        max-run-time: 14400
+        max-run-time: 9600
