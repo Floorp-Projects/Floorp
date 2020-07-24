@@ -46,7 +46,7 @@ awsy:
 
 awsy-tp6:
     description: "Are we slim yet - tp6 pageset"
-    variants:	
+    variants:
         by-test-platform:
             windows10-64-shippable-qr/opt: []  # temporary disable on win
             default: ['fission']
