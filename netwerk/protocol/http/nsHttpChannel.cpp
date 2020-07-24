@@ -1604,6 +1604,7 @@ nsresult EnsureMIMEOfScript(nsHttpChannel* aChannel, nsIURI* aURI,
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
     case nsIContentPolicy::TYPE_INTERNAL_MODULE:
     case nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD:
+    case nsIContentPolicy::TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT:
       AccumulateCategorical(
           Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::script_load);
       break;

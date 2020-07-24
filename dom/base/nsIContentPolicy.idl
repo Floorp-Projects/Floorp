@@ -398,6 +398,14 @@ interface nsIContentPolicy : nsISupports
    */
   const nsContentPolicyType TYPE_INTERNAL_FONT_PRELOAD = 51;
 
+  /**
+   * Indicates the load of a (Firefox-internal) script through ChromeUtils
+   *
+   * This will be mapped to TYPE_SCRIPT before being passed to content policy
+   * implementations.
+  */
+  const nsContentPolicyType TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT = 52;
+
   /* When adding new content types, please update
    * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
    * DoContentSecurityChecks, all nsIContentPolicy implementations, the
