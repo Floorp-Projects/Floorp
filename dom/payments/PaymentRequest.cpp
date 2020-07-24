@@ -832,7 +832,7 @@ already_AddRefed<Promise> PaymentRequest::Abort(ErrorResult& aRv) {
   }
 
   if (mState != eInteractive) {
-    aRv.ThrowInvalidStateError(
+    aRv.ThrowSecurityError(
         "The PaymentRequest's state should be 'Interactive'");
     return nullptr;
   }
