@@ -27,7 +27,7 @@ class RuleCache : public PivotRule {
       : mRule(aRule), mPreFilter{0} {}
   ~RuleCache() {}
 
-  virtual uint16_t Match(Accessible* aAccessible) override;
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
 
  private:
   nsCOMPtr<nsIAccessibleTraversalRule> mRule;
@@ -204,11 +204,17 @@ nsAccessiblePivot::MoveNext(nsIAccessibleTraversalRule* aRule,
 
   Pivot pivot(GetActiveRoot());
   RuleCache rule(aRule);
-
-  if (Accessible* newPos =
-          pivot.Next(anchor, rule, (aArgc > 1) ? aIncludeStart : false)) {
-    *aResult = MovePivotInternal(newPos, nsIAccessiblePivot::REASON_NEXT,
+  AccessibleOrProxy wrappedAnchor = AccessibleOrProxy(anchor);
+  AccessibleOrProxy newPos =
+      pivot.Next(wrappedAnchor, rule, (aArgc > 1) ? aIncludeStart : false);
+  if (!newPos.IsNull() && newPos.IsAccessible()) {
+    *aResult = MovePivotInternal(newPos.AsAccessible(),
+                                 nsIAccessiblePivot::REASON_NEXT,
                                  (aArgc > 2) ? aIsFromUserInput : true);
+  } else if (newPos.IsProxy()) {
+    // we shouldn't ever end up with a proxy here, but if we do for some
+    // reason something is wrong. we should still return OK if we're null
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -232,11 +238,17 @@ nsAccessiblePivot::MovePrevious(nsIAccessibleTraversalRule* aRule,
 
   Pivot pivot(GetActiveRoot());
   RuleCache rule(aRule);
-
-  if (Accessible* newPos =
-          pivot.Prev(anchor, rule, (aArgc > 1) ? aIncludeStart : false)) {
-    *aResult = MovePivotInternal(newPos, nsIAccessiblePivot::REASON_PREV,
+  AccessibleOrProxy wrappedAnchor = AccessibleOrProxy(anchor);
+  AccessibleOrProxy newPos =
+      pivot.Prev(wrappedAnchor, rule, (aArgc > 1) ? aIncludeStart : false);
+  if (!newPos.IsNull() && newPos.IsAccessible()) {
+    *aResult = MovePivotInternal(newPos.AsAccessible(),
+                                 nsIAccessiblePivot::REASON_PREV,
                                  (aArgc > 2) ? aIsFromUserInput : true);
+  } else if (newPos.IsProxy()) {
+    // we shouldn't ever end up with a proxy here, but if we do for some
+    // reason something is wrong. we should still return OK if we're null
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -254,10 +266,15 @@ nsAccessiblePivot::MoveFirst(nsIAccessibleTraversalRule* aRule,
 
   Pivot pivot(GetActiveRoot());
   RuleCache rule(aRule);
-
-  if (Accessible* newPos = pivot.First(rule)) {
-    *aResult = MovePivotInternal(newPos, nsIAccessiblePivot::REASON_FIRST,
+  AccessibleOrProxy newPos = pivot.First(rule);
+  if (!newPos.IsNull() && newPos.IsAccessible()) {
+    *aResult = MovePivotInternal(newPos.AsAccessible(),
+                                 nsIAccessiblePivot::REASON_FIRST,
                                  (aArgc > 0) ? aIsFromUserInput : true);
+  } else if (newPos.IsProxy()) {
+    // we shouldn't ever end up with a proxy here, but if we do for some
+    // reason something is wrong. we should still return OK if we're null
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -275,10 +292,15 @@ nsAccessiblePivot::MoveLast(nsIAccessibleTraversalRule* aRule,
 
   Pivot pivot(root);
   RuleCache rule(aRule);
-
-  if (Accessible* newPos = pivot.Last(rule)) {
-    *aResult = MovePivotInternal(newPos, nsIAccessiblePivot::REASON_LAST,
+  AccessibleOrProxy newPos = pivot.Last(rule);
+  if (!newPos.IsNull() && newPos.IsAccessible()) {
+    *aResult = MovePivotInternal(newPos.AsAccessible(),
+                                 nsIAccessiblePivot::REASON_LAST,
                                  (aArgc > 0) ? aIsFromUserInput : true);
+  } else if (newPos.IsProxy()) {
+    // we shouldn't ever end up with a proxy here, but if we do for some
+    // reason something is wrong. we should still return OK if we're null
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -295,8 +317,8 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
   Pivot pivot(GetActiveRoot());
 
   int32_t newStart = mStartOffset, newEnd = mEndOffset;
-  if (Accessible* newPos =
-          pivot.NextText(mPosition, &newStart, &newEnd, aBoundary)) {
+  Accessible* newPos = pivot.NextText(mPosition, &newStart, &newEnd, aBoundary);
+  if (newPos) {
     *aResult = true;
     int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
     Accessible* oldPos = mPosition;
@@ -322,8 +344,8 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
   Pivot pivot(GetActiveRoot());
 
   int32_t newStart = mStartOffset, newEnd = mEndOffset;
-  if (Accessible* newPos =
-          pivot.PrevText(mPosition, &newStart, &newEnd, aBoundary)) {
+  Accessible* newPos = pivot.PrevText(mPosition, &newStart, &newEnd, aBoundary);
+  if (newPos) {
     *aResult = true;
     int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
     Accessible* oldPos = mPosition;
@@ -354,10 +376,16 @@ nsAccessiblePivot::MoveToPoint(nsIAccessibleTraversalRule* aRule, int32_t aX,
   RuleCache rule(aRule);
   Pivot pivot(root);
 
-  Accessible* newPos = pivot.AtPoint(aX, aY, rule);
-  if (newPos || !aIgnoreNoMatch) {
-    *aResult = MovePivotInternal(newPos, nsIAccessiblePivot::REASON_POINT,
+  AccessibleOrProxy newPos = pivot.AtPoint(aX, aY, rule);
+  if ((!newPos.IsNull() && newPos.IsAccessible()) ||
+      !aIgnoreNoMatch) {  // TODO does this need a proxy check?
+    *aResult = MovePivotInternal(newPos.AsAccessible(),
+                                 nsIAccessiblePivot::REASON_POINT,
                                  (aArgc > 0) ? aIsFromUserInput : true);
+  } else if (newPos.IsProxy()) {
+    // we shouldn't ever end up with a proxy here, but if we do for some
+    // reason something is wrong. we should still return OK if we're null
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -427,7 +455,7 @@ bool nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
   return true;
 }
 
-uint16_t RuleCache::Match(Accessible* aAccessible) {
+uint16_t RuleCache::Match(const AccessibleOrProxy& aAccOrProxy) {
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
   if (!mAcceptRoles) {
@@ -439,10 +467,15 @@ uint16_t RuleCache::Match(Accessible* aAccessible) {
   }
 
   if (mPreFilter) {
-    uint64_t state = aAccessible->State();
+    uint64_t state;
+    if (aAccOrProxy.IsAccessible()) {
+      state = aAccOrProxy.AsAccessible()->State();
+    } else {
+      state = aAccOrProxy.AsProxy()->State();
+    }
 
     if ((nsIAccessibleTraversalRule::PREFILTER_PLATFORM_PRUNED & mPreFilter) &&
-        nsAccUtils::MustPrune(aAccessible)) {
+        nsAccUtils::MustPrune(aAccOrProxy)) {
       result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
     }
 
@@ -458,9 +491,10 @@ uint16_t RuleCache::Match(Accessible* aAccessible) {
         !(state & states::FOCUSABLE))
       return result;
 
-    if ((nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) &&
+    if (aAccOrProxy.IsAccessible() &&
+        (nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) &&
         !(state & states::OPAQUE1)) {
-      nsIFrame* frame = aAccessible->GetFrame();
+      nsIFrame* frame = aAccOrProxy.AsAccessible()->GetFrame();
       if (frame->StyleEffects()->mOpacity == 0.0f) {
         return result | nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
       }
@@ -468,7 +502,7 @@ uint16_t RuleCache::Match(Accessible* aAccessible) {
   }
 
   if (mAcceptRoles->Length() > 0) {
-    uint32_t accessibleRole = aAccessible->Role();
+    uint32_t accessibleRole = aAccOrProxy.Role();
     bool matchesRole = false;
     for (uint32_t idx = 0; idx < mAcceptRoles->Length(); idx++) {
       matchesRole = mAcceptRoles->ElementAt(idx) == accessibleRole;
@@ -481,7 +515,7 @@ uint16_t RuleCache::Match(Accessible* aAccessible) {
   }
 
   uint16_t matchResult = nsIAccessibleTraversalRule::FILTER_IGNORE;
-  DebugOnly<nsresult> rv = mRule->Match(ToXPC(aAccessible), &matchResult);
+  DebugOnly<nsresult> rv = mRule->Match(ToXPC(aAccOrProxy), &matchResult);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   return result | matchResult;
