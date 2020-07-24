@@ -1,12 +1,10 @@
-Metadata-Version: 1.2
+Metadata-Version: 1.1
 Name: appdirs
-Version: 1.4.4
+Version: 1.4.3
 Summary: A small Python module for determining appropriate platform-specific dirs, e.g. a "user data dir".
 Home-page: http://github.com/ActiveState/appdirs
-Author: Trent Mick
-Author-email: trentm@gmail.com
-Maintainer: Jeff Rouse
-Maintainer-email: jr@its.to
+Author: Trent Mick; Sridhar Ratnakumar; Jeff Rouse
+Author-email: trentm@gmail.com; github@srid.name; jr@its.to
 License: MIT
 Description: 
         .. image:: https://secure.travis-ci.org/ActiveState/appdirs.png
@@ -152,15 +150,6 @@ Description:
         appdirs Changelog
         =================
         
-        appdirs 1.4.4
-        -------------
-        - [PR #92] Don't import appdirs from setup.py
-        
-        Project officially classified as Stable which is important
-        for inclusion in other distros such as ActivePython.
-        
-        First of several incremental releases to catch up on maintenance.
-        
         appdirs 1.4.3
         -------------
         - [PR #76] Python 3.6 invalid escape sequence deprecation fixes
@@ -245,18 +234,19 @@ Description:
         
 Keywords: application directory log cache user
 Platform: UNKNOWN
-Classifier: Development Status :: 5 - Production/Stable
+Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
 Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
 Classifier: Programming Language :: Python :: 3.4
 Classifier: Programming Language :: Python :: 3.5
 Classifier: Programming Language :: Python :: 3.6
-Classifier: Programming Language :: Python :: 3.7
-Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Classifier: Programming Language :: Python :: Implementation :: CPython
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
