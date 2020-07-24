@@ -3850,7 +3850,20 @@ static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
     return true;
   }
 
-  const nsRect overflow = aChild->InkOverflowRect();
+  nsRect overflow = aChild->InkOverflowRect();
+
+  // On mobile, there may be a dynamic toolbar. The root content document's
+  // root scroll frame's ink overflow rect does not include the toolbar
+  // height, but if the toolbar is hidden, we still want to be able to target
+  // content underneath the toolbar, so expand the overflow rect here to
+  // allow display list building to descend into the scroll frame.
+  if (aBuilder->IsForEventDelivery() &&
+      aChild == aChild->PresShell()->GetRootScrollFrame() &&
+      aChild->PresContext()->IsRootContentDocumentCrossProcess() &&
+      aChild->PresContext()->HasDynamicToolbar()) {
+    overflow.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
+        aChild->PresContext(), overflow.Size()));
+  }
 
   if (aDirty.Intersects(overflow)) {
     return true;
