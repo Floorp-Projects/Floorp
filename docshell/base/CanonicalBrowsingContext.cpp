@@ -572,6 +572,28 @@ void CanonicalBrowsingContext::Stop(uint32_t aStopFlags) {
   }
 }
 
+// While process switching, we need to check if any of our ancestors are
+// discarded or no longer current, in which case the process switch needs to be
+// aborted.
+static bool AncestorsAreCurrent(CanonicalBrowsingContext* aContext) {
+  if (aContext->IsDiscarded()) {
+    return false;
+  }
+
+  RefPtr<WindowGlobalParent> ancestorWindow(aContext->GetParentWindowContext());
+  while (ancestorWindow) {
+    // If our ancestor window is no longer the current window, or if any of our
+    // ancestors have been discarded, return `false` to abort the process
+    // switch.
+    if (ancestorWindow->IsCached() || ancestorWindow->IsDiscarded() ||
+        ancestorWindow->GetBrowsingContext()->IsDiscarded()) {
+      return false;
+    }
+    ancestorWindow = ancestorWindow->GetParentWindowContext();
+  }
+  return true;
+}
+
 void CanonicalBrowsingContext::PendingRemotenessChange::ProcessReady() {
   if (!mPromise) {
     return;
@@ -596,6 +618,12 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
 
   RefPtr<CanonicalBrowsingContext> target(mTarget);
   if (target->IsDiscarded()) {
+    Cancel(NS_ERROR_FAILURE);
+    return;
+  }
+
+  if (!AncestorsAreCurrent(target)) {
+    NS_WARNING("Ancestor context is no longer current");
     Cancel(NS_ERROR_FAILURE);
     return;
   }
@@ -849,6 +877,11 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
                         "Cannot replace BrowsingContext for subframes");
   MOZ_DIAGNOSTIC_ASSERT(aSpecificGroupId == 0 || aReplaceBrowsingContext,
                         "Cannot specify group ID unless replacing BC");
+
+  if (!AncestorsAreCurrent(this)) {
+    NS_WARNING("An ancestor context is no longer current");
+    return RemotenessPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
 
   // Ensure our embedder hasn't been destroyed already.
   RefPtr<WindowGlobalParent> embedderWindowGlobal = GetEmbedderWindowGlobal();
