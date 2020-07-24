@@ -10,6 +10,10 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
   {}
 );
 
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+
 var FormAutofillHandler, OSKeyStore;
 add_task(async function setup() {
   ({ FormAutofillHandler } = ChromeUtils.import(
@@ -490,6 +494,10 @@ function do_test(testcases, testFn) {
       let testcase = tc;
       add_task(async function() {
         info("Starting testcase: " + testcase.description);
+
+        Services.telemetry.clearEvents();
+        Services.telemetry.setEventRecordingEnabled("creditcard", true);
+
         let ccNumber = testcase.profileData["cc-number"];
         if (ccNumber) {
           testcase.profileData[
@@ -546,6 +554,13 @@ function do_test(testcases, testFn) {
           "Check if filledRecordGUID is set correctly"
         );
         await Promise.all(promises);
+
+        if (testcase.expectedResult["cc-number"]) {
+          TelemetryTestUtils.assertNumberOfEvents(1, {
+            category: "creditcard",
+            method: "detected",
+          });
+        }
       });
     })();
   }
