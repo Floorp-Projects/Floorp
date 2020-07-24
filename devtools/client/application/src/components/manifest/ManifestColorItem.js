@@ -8,7 +8,7 @@ const {
   createFactory,
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
-const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 
 const Types = require("devtools/client/application/src/types/index");
 const ManifestItem = createFactory(
@@ -36,7 +36,8 @@ class ManifestColorItem extends PureComponent {
       value = value.slice(0, 7);
     }
 
-    return span(
+    /* div instead of span because CSS `direction` works with block elements */
+    return div(
       {
         className: "manifest-item__color",
         style: { "--color-value": value },
