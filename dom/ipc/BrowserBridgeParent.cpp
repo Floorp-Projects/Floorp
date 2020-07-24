@@ -58,7 +58,7 @@ nsresult BrowserBridgeParent::InitWithProcess(
 
   // Ensure that our content process is subscribed to our newly created
   // BrowsingContextGroup.
-  browsingContext->Group()->EnsureSubscribed(aContentParent);
+  browsingContext->Group()->EnsureHostProcess(aContentParent);
   browsingContext->SetOwnerProcessId(aContentParent->ChildID());
 
   // Construct the BrowserParent object for our subframe.
