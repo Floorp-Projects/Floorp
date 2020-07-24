@@ -1,14 +1,14 @@
 "use strict";
 
 module.exports = {
-  "env": {
-    "browser": false,
-    "mocha": true,
+  env: {
+    browser: false,
+    mocha: true,
   },
 
-  "globals": {
+  globals: {
     // document and window are injected via jsdom-global.
-    "document": false,
-    "window": false,
-  }
-}
+    document: false,
+    window: false,
+  },
+};
