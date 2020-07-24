@@ -10,6 +10,7 @@
 // else we could use nsRange.h and nsIFind.h.
 #include "nsFind.h"
 
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPIDOMWindow.h"
@@ -447,6 +448,11 @@ nsresult nsWebBrowserFind::GetSearchLimits(nsRange* aSearchRange,
   RefPtr<const nsRange> range;
   nsCOMPtr<nsINode> node;
   uint32_t offset;
+
+  // Prevent the security checks in nsRange from getting into effect for the
+  // purposes of determining the search range. These ranges will never be
+  // exposed to content.
+  mozilla::dom::AutoNoJSAPI nojsapi;
 
   // Forward, not wrapping: SelEnd to DocEnd
   if (!mFindBackwards && !aWrap) {
