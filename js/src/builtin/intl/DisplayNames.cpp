@@ -107,7 +107,7 @@ static const JSPropertySpec displayNames_properties[] = {
 static bool DisplayNames(JSContext* cx, unsigned argc, Value* vp);
 
 const ClassSpec DisplayNamesObject::classSpec_ = {
-    GenericCreateConstructor<DisplayNames, 0, gc::AllocKind::FUNCTION>,
+    GenericCreateConstructor<DisplayNames, 2, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<DisplayNamesObject>,
     displayNames_static_methods,
     nullptr,
@@ -176,6 +176,11 @@ static bool DisplayNames(JSContext* cx, const CallArgs& args,
     }
   }
 
+  // TypeError anyway, but this gives a better error message.
+  if (!args.requireAtLeast(cx, "DisplayNames", 2)) {
+    return false;
+  }
+
   Rooted<DisplayNamesObject*> displayNames(cx);
   displayNames = NewObjectWithClassProto<DisplayNamesObject>(cx, proto);
   if (!displayNames) {
@@ -231,7 +236,7 @@ bool js::AddDisplayNamesConstructor(JSContext* cx, HandleObject intl) {
 
 bool js::AddMozDisplayNamesConstructor(JSContext* cx, HandleObject intl) {
   RootedObject ctor(cx, GlobalObject::createConstructor(
-                            cx, MozDisplayNames, cx->names().DisplayNames, 0));
+                            cx, MozDisplayNames, cx->names().DisplayNames, 2));
   if (!ctor) {
     return false;
   }
