@@ -25,6 +25,9 @@ const ManifestColorItem = createFactory(
 const ManifestIconItem = createFactory(
   require("devtools/client/application/src/components/manifest/ManifestIconItem")
 );
+const ManifestUrlItem = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestUrlItem")
+);
 const ManifestItem = createFactory(
   require("devtools/client/application/src/components/manifest/ManifestItem")
 );
@@ -78,6 +81,8 @@ class Manifest extends PureComponent {
         // we cannot use them as unique IDs
         domKey = index;
         return ManifestIconItem({ label: key, key: domKey, value });
+      case MANIFEST_MEMBER_VALUE_TYPES.URL:
+        return ManifestUrlItem({ label: key, key: domKey, value });
       case MANIFEST_MEMBER_VALUE_TYPES.STRING:
       default:
         return ManifestItem({ label: key, key: domKey }, value);

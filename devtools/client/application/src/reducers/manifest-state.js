@@ -49,6 +49,9 @@ function _processRawManifestMembers(rawManifest) {
 
   function getValueTypeForMember(key) {
     switch (key) {
+      case "start_url":
+      case "scope":
+        return MANIFEST_MEMBER_VALUE_TYPES.URL;
       case "theme_color":
       case "background_color":
         return MANIFEST_MEMBER_VALUE_TYPES.COLOR;
