@@ -21,6 +21,7 @@ from moztest.resolve import (
 )
 
 from taskgraph import GECKO
+from taskgraph.util.backstop import is_backstop
 from taskgraph.util.bugbug import CT_LOW, push_schedules
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -212,6 +213,10 @@ class BugbugLoader(DefaultLoader):
     @memoize
     def get_manifests(self, suite, mozinfo):
         manifests = super(BugbugLoader, self).get_manifests(suite, mozinfo)
+
+        # Don't prune any manifests if we're on a backstop push.
+        if is_backstop(self.params):
+            return manifests
 
         data = push_schedules(self.params['project'], self.params['head_rev'])
         bugbug_manifests = {m for m, c in data.get('groups', {}).items()
