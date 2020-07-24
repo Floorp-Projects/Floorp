@@ -30,9 +30,9 @@ object FeatureFlags {
     val tabTray = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables swipe on toolbar to switch tabs
+     * Enables gestures on the browser chrome that depend on a [SwipeGestureLayout]
      */
-    val swipeToSwitchTabs = Config.channel.isNightlyOrDebug
+    val browserChromeGestures = Config.channel.isNightlyOrDebug
 
     /**
      * Enables viewing tab history

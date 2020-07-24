@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.browser_gesture_wrapper.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -74,7 +75,9 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val components = context.components
 
         return super.initializeUI(view)?.also {
-            if (FeatureFlags.swipeToSwitchTabs) {
+            // We need to wrap this whole thing in an if here because gestureLayout will not exist
+            // if the feature flag is off
+            if (FeatureFlags.browserChromeGestures) {
                 gestureLayout.addGestureListener(
                     ToolbarGestureHandler(
                         activity = requireActivity(),
