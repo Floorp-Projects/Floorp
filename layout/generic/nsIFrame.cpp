@@ -6284,7 +6284,7 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
       "have unconstrained inline-size; this should only result from "
       "very large sizes, not attempts at intrinsic inline-size "
       "calculation");
-  MOZ_ASSERT(aContainingBlockISize >= 0, "inline-size less than zero");
+  NS_ASSERTION(aContainingBlockISize >= 0, "inline-size less than zero");
 
   nscoord result = aCoord.Resolve(aContainingBlockISize);
   // The result of a calc() expression might be less than 0; we
