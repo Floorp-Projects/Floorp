@@ -552,15 +552,6 @@ var FormAutofillContent = {
       return;
     }
 
-    records.creditCard.forEach(record => {
-      Services.telemetry.recordEvent(
-        "creditcard",
-        "submitted",
-        "cc_form",
-        record.flowId
-      );
-    });
-
     this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
   },
 
@@ -836,13 +827,6 @@ var FormAutofillContent = {
     this.debug(
       "Popup has opened, automatic =",
       formFillController.passwordPopupAutomaticallyOpened
-    );
-
-    Services.telemetry.recordEvent(
-      "creditcard",
-      "popup_shown",
-      "cc_form",
-      this.activeSection.flowId
     );
   },
 

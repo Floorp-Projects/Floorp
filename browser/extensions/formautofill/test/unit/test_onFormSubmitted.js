@@ -1,9 +1,5 @@
 "use strict";
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
-
 var FormAutofillContent;
 add_task(async function setup() {
   ({ FormAutofillContent } = ChromeUtils.import(
@@ -636,9 +632,6 @@ TESTCASES.forEach(testcase => {
   add_task(async function check_records_saving_is_called_correctly() {
     info("Starting testcase: " + testcase.description);
 
-    Services.telemetry.clearEvents();
-    Services.telemetry.setEventRecordingEnabled("creditcard", true);
-
     let form = MOCK_DOC.getElementById("form1");
     form.reset();
     for (let key in testcase.formValue) {
@@ -666,31 +659,11 @@ TESTCASES.forEach(testcase => {
       "Check expected onFormSubmit.called"
     );
     if (FormAutofillContent._onFormSubmit.called) {
-      let ccFlowIds = [];
-      for (let ccRecord of FormAutofillContent._onFormSubmit.args[0][0]
-        .creditCard) {
-        ccFlowIds.push(ccRecord.flowId);
-        delete ccRecord.flowId;
-      }
       Assert.deepEqual(
         FormAutofillContent._onFormSubmit.args[0][0],
         testcase.expectedResult.records
       );
-
-      let expected = ccFlowIds.map(flowId => {
-        return {
-          method: "submitted",
-          object: "cc_form",
-          value: flowId,
-          extra: undefined,
-        };
-      });
-      TelemetryTestUtils.assertEvents(expected, {
-        category: "creditcard",
-        method: "submitted",
-      });
     }
-
     FormAutofillContent._onFormSubmit.restore();
   });
 });
