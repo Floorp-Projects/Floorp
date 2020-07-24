@@ -16,28 +16,20 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
+  Heuristics: "resource:///modules/DoHHeuristics.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
+});
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "ExtensionStorageIDB",
-  "resource://gre/modules/ExtensionStorageIDB.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "Heuristics",
-  "resource:///modules/DoHHeuristics.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
+  "kDebounceTimeout",
+  "doh-rollout.network-debounce-timeout",
+  1000
 );
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -277,16 +269,55 @@ const DoHController = {
     this._heuristicsAreEnabled = true;
   },
 
+  _lastHeuristicsRunTimestamp: 0,
   async runHeuristics(evaluateReason) {
+    let start = Date.now();
+    // If this function is called in quick succession, _lastHeuristicsRunTimestamp
+    // might be refreshed while we are still awaiting Heuristics.run() below.
+    this._lastHeuristicsRunTimestamp = start;
+
     let results = await Heuristics.run();
+
+    if (
+      !gNetworkLinkService.isLinkUp ||
+      this._lastDebounceTimestamp > start ||
+      this._lastHeuristicsRunTimestamp > start ||
+      gCaptivePortalService.state == gCaptivePortalService.LOCKED_PORTAL
+    ) {
+      // If the network is currently down or there was a debounce triggered
+      // while we were running heuristics, it means the network fluctuated
+      // during this heuristics run. We simply discard the results in this case.
+      // Same thing if there was another heuristics run triggered or if we have
+      // detected a locked captive portal while this one was ongoing.
+      return;
+    }
 
     let decision = Object.values(results).includes(Heuristics.DISABLE_DOH)
       ? Heuristics.DISABLE_DOH
       : Heuristics.ENABLE_DOH;
 
+    let getCaptiveStateString = () => {
+      switch (gCaptivePortalService.state) {
+        case gCaptivePortalService.NOT_CAPTIVE:
+          return "not_captive";
+        case gCaptivePortalService.UNLOCKED_PORTAL:
+          return "unlocked";
+        case gCaptivePortalService.LOCKED_PORTAL:
+          return "locked";
+        default:
+          return "unknown";
+      }
+    };
+
     let resultsForTelemetry = {
       evaluateReason,
       steeredProvider: "",
+      captiveState: getCaptiveStateString(),
+      // NOTE: This might not yet be available after a network change. We mainly
+      // care about the startup case though - we want to look at whether the
+      // heuristics result is consistent for networkIDs often seen at startup.
+      // TODO: Use this data to implement cached results to use early at startup.
+      networkID: gNetworkLinkService.networkID,
     };
 
     if (results.steeredProvider) {
@@ -492,7 +523,41 @@ const DoHController = {
     }
   },
 
-  async onConnectionChanged() {
+  // Connection change events are debounced to allow the network to settle.
+  // We wait for the network to be up for a period of kDebounceTimeout before
+  // handling the change. The timer is canceled when the network goes down and
+  // restarted the first time we learn that it went back up.
+  _debounceTimer: null,
+  _cancelDebounce() {
+    if (!this._debounceTimer) {
+      return;
+    }
+
+    clearTimeout(this._debounceTimer);
+    this._debounceTimer = null;
+  },
+
+  _lastDebounceTimestamp: 0,
+  onConnectionChanged() {
+    if (!gNetworkLinkService.isLinkUp) {
+      // Network is down - reset debounce timer.
+      this._cancelDebounce();
+      return;
+    }
+
+    if (this._debounceTimer) {
+      // Already debouncing - nothing to do.
+      return;
+    }
+
+    this._lastDebounceTimestamp = Date.now();
+    this._debounceTimer = setTimeout(() => {
+      this._cancelDebounce();
+      this.onConnectionChangedDebounced();
+    }, kDebounceTimeout);
+  },
+
+  async onConnectionChangedDebounced() {
     if (!gNetworkLinkService.isLinkUp) {
       return;
     }
@@ -508,6 +573,11 @@ const DoHController = {
   },
 
   async onConnectivityAvailable() {
+    if (this._debounceTimer) {
+      // Already debouncing - nothing to do.
+      return;
+    }
+
     await this.runHeuristics("connectivity");
   },
 };
