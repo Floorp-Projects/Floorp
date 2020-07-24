@@ -204,7 +204,7 @@ bool DCLayerTree::MaybeUpdateDebugVisualRedrawRegions() {
   return true;
 }
 
-void DCLayerTree::CompositorBeginFrame() {}
+void DCLayerTree::CompositorBeginFrame() { mCurrentFrame++; }
 
 void DCLayerTree::CompositorEndFrame() {
   auto start = TimeStamp::Now();
@@ -239,6 +239,24 @@ void DCLayerTree::CompositorEndFrame() {
   auto end = TimeStamp::Now();
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::COMPOSITE_SWAP_TIME,
                                  (end - start).ToMilliseconds() * 10.);
+
+  // Remove any framebuffers that haven't been
+  // used in the last 60 frames.
+  //
+  // This should use nsTArray::RemoveElementsBy once
+  // CachedFrameBuffer is able to properly destroy
+  // itself in the destructor.
+  const auto gl = GetGLContext();
+  for (uint32_t i = 0, len = mFrameBuffers.Length(); i < len; ++i) {
+    auto& fb = mFrameBuffers[i];
+    if ((mCurrentFrame - fb.lastFrameUsed) > 60) {
+      gl->fDeleteRenderbuffers(1, &fb.depthRboId);
+      gl->fDeleteFramebuffers(1, &fb.fboId);
+      mFrameBuffers.UnorderedRemoveElementAt(i);
+      --i;  // Examine the element again, if necessary.
+      --len;
+    }
+  }
 }
 
 void DCLayerTree::Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset,
@@ -354,6 +372,7 @@ GLuint DCLayerTree::GetOrCreateFbo(int aWidth, int aHeight) {
   for (auto it = mFrameBuffers.begin(); it != mFrameBuffers.end(); ++it) {
     if (it->width == aWidth && it->height == aHeight) {
       fboId = it->fboId;
+      it->lastFrameUsed = mCurrentFrame;
       break;
     }
   }
@@ -383,7 +402,8 @@ GLuint DCLayerTree::GetOrCreateFbo(int aWidth, int aHeight) {
     frame_buffer_info.height = aHeight;
     frame_buffer_info.fboId = fboId;
     frame_buffer_info.depthRboId = depthRboId;
-    mFrameBuffers.push_back(frame_buffer_info);
+    frame_buffer_info.lastFrameUsed = mCurrentFrame;
+    mFrameBuffers.AppendElement(frame_buffer_info);
   }
 
   return fboId;
