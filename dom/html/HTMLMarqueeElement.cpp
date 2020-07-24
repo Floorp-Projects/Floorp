@@ -53,7 +53,6 @@ nsresult HTMLMarqueeElement::BindToTree(BindContext& aContext,
 
   if (IsInComposedDoc()) {
     AttachAndSetUAShadowRoot();
-    NotifyUAWidgetSetupOrChange();
   }
 
   return rv;
