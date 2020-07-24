@@ -139,12 +139,14 @@ class DCLayerTree {
     int height;
     GLuint fboId;
     GLuint depthRboId;
+    int lastFrameUsed;
   };
 
   // A cache of FBOs, containing a depth buffer allocated to a specific size.
   // TODO(gw): Might be faster as a hashmap? The length is typically much less
   // than 10.
-  std::vector<CachedFrameBuffer> mFrameBuffers;
+  nsTArray<CachedFrameBuffer> mFrameBuffers;
+  int mCurrentFrame = 0;
 
   bool mPendingCommit;
 };
