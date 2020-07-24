@@ -114,9 +114,9 @@ for (let [locale, localeTests] of Object.entries(tests)) {
   assertEq(dn2.of("AA"), "AA");
   assertEq(dn3.of("AA"), undefined);
 
-  // The returned fallback is in the same case as the input code.
-  assertEq(dn1.of("aa"), "aa");
-  assertEq(dn2.of("aa"), "aa");
+  // The returned fallback is in canonical case.
+  assertEq(dn1.of("aa"), "AA");
+  assertEq(dn2.of("aa"), "AA");
   assertEq(dn3.of("aa"), undefined);
 }
 

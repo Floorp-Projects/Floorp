@@ -24,6 +24,7 @@
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
+#include "builtin/String.h"
 #include "gc/AllocKind.h"
 #include "gc/FreeOp.h"
 #include "gc/Rooting.h"
@@ -263,6 +264,8 @@ bool js::AddMozDisplayNamesConstructor(JSContext* cx, HandleObject intl) {
 
 enum class DisplayNamesStyle { Long, Short, Narrow };
 
+enum class DisplayNamesFallback { None, Code };
+
 static ULocaleDisplayNames* NewULocaleDisplayNames(
     JSContext* cx, const char* locale, DisplayNamesStyle displayStyle) {
   UErrorCode status = U_ZERO_ERROR;
@@ -330,7 +333,8 @@ static void ReportInvalidOptionError(JSContext* cx, const char* type,
 
 static JSString* GetLanguageDisplayName(
     JSContext* cx, Handle<DisplayNamesObject*> displayNames, const char* locale,
-    DisplayNamesStyle displayStyle, HandleLinearString languageStr) {
+    DisplayNamesStyle displayStyle, DisplayNamesFallback fallback,
+    HandleLinearString languageStr) {
   bool ok;
   intl::LanguageTag tag(cx);
   JS_TRY_VAR_OR_RETURN_NULL(
@@ -343,8 +347,6 @@ static JSString* GetLanguageDisplayName(
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  // FIXME: spec issue - language tag canonicalisation not performed:
-  // https://github.com/tc39/proposal-intl-displaynames/issues/70
   if (!tag.canonicalizeBaseName(cx)) {
     return nullptr;
   }
@@ -360,8 +362,8 @@ static JSString* GetLanguageDisplayName(
     return nullptr;
   }
 
-  return CallICU(cx, [ldn, &languageChars](UChar* chars, uint32_t size,
-                                           UErrorCode* status) {
+  JSString* str = CallICU(cx, [ldn, &languageChars](UChar* chars, uint32_t size,
+                                                    UErrorCode* status) {
     int32_t res =
         uldn_localeDisplayName(ldn, languageChars.get(), chars, size, status);
 
@@ -373,12 +375,28 @@ static JSString* GetLanguageDisplayName(
     }
     return res;
   });
+  if (!str) {
+    return nullptr;
+  }
+
+  // Return the canonicalized input when no localized language name was found.
+  if (str->empty() && fallback == DisplayNamesFallback::Code) {
+    return NewStringCopyZ<CanGC>(cx, languageChars.get());
+  }
+
+  return str;
+}
+
+template <typename CharT>
+static JSString* NewStringCopy(JSContext* cx, mozilla::Span<const CharT> span) {
+  return NewStringCopyN<CanGC>(cx, span.data(), span.size());
 }
 
 static JSString* GetScriptDisplayName(JSContext* cx,
                                       Handle<DisplayNamesObject*> displayNames,
                                       const char* locale,
                                       DisplayNamesStyle displayStyle,
+                                      DisplayNamesFallback fallback,
                                       HandleLinearString scriptStr) {
   intl::ScriptSubtag script;
   if (!intl::ParseStandaloneScriptTag(scriptStr, script)) {
@@ -393,8 +411,6 @@ static JSString* GetScriptDisplayName(JSContext* cx,
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  // FIXME: spec issue - language tag canonicalisation not performed:
-  // https://github.com/tc39/proposal-intl-displaynames/issues/70
   if (!tag.canonicalizeBaseName(cx)) {
     return nullptr;
   }
@@ -412,19 +428,30 @@ static JSString* GetScriptDisplayName(JSContext* cx,
       return nullptr;
     }
 
-    return CallICU(cx, [locale, &scriptChars](UChar* chars, uint32_t size,
-                                              UErrorCode* status) {
-      int32_t res =
-          uloc_getDisplayScript(scriptChars.get(), locale, chars, size, status);
+    JSString* str =
+        CallICU(cx, [locale, &scriptChars](UChar* chars, uint32_t size,
+                                           UErrorCode* status) {
+          int32_t res = uloc_getDisplayScript(scriptChars.get(), locale, chars,
+                                              size, status);
 
-      // |uloc_getDisplayScript| reports U_USING_DEFAULT_WARNING when no display
-      // name was found.
-      if (*status == U_USING_DEFAULT_WARNING) {
-        *status = U_ZERO_ERROR;
-        res = 0;
-      }
-      return res;
-    });
+          // |uloc_getDisplayScript| reports U_USING_DEFAULT_WARNING when no
+          // display name was found.
+          if (*status == U_USING_DEFAULT_WARNING) {
+            *status = U_ZERO_ERROR;
+            res = 0;
+          }
+          return res;
+        });
+    if (!str) {
+      return nullptr;
+    }
+
+    // Return the canonicalized input when no localized script name was found.
+    if (str->empty() && fallback == DisplayNamesFallback::Code) {
+      return NewStringCopy(cx, tag.script().span());
+    }
+
+    return str;
   }
 
   // Note: ICU requires the script subtag to be in canonical case.
@@ -441,8 +468,8 @@ static JSString* GetScriptDisplayName(JSContext* cx,
     return nullptr;
   }
 
-  return CallICU(cx, [ldn, scriptChars](UChar* chars, uint32_t size,
-                                        UErrorCode* status) {
+  JSString* str = CallICU(cx, [ldn, scriptChars](UChar* chars, uint32_t size,
+                                                 UErrorCode* status) {
     int32_t res = uldn_scriptDisplayName(ldn, scriptChars, chars, size, status);
 
     // |uldn_scriptDisplayName| reports U_ILLEGAL_ARGUMENT_ERROR when no display
@@ -453,12 +480,23 @@ static JSString* GetScriptDisplayName(JSContext* cx,
     }
     return res;
   });
+  if (!str) {
+    return nullptr;
+  }
+
+  // Return the canonicalized input when no localized script name was found.
+  if (str->empty() && fallback == DisplayNamesFallback::Code) {
+    return NewStringCopy(cx, tag.script().span());
+  }
+
+  return str;
 }
 
 static JSString* GetRegionDisplayName(JSContext* cx,
                                       Handle<DisplayNamesObject*> displayNames,
                                       const char* locale,
                                       DisplayNamesStyle displayStyle,
+                                      DisplayNamesFallback fallback,
                                       HandleLinearString regionStr) {
   intl::RegionSubtag region;
   if (!intl::ParseStandaloneRegionTag(regionStr, region)) {
@@ -473,8 +511,6 @@ static JSString* GetRegionDisplayName(JSContext* cx,
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  // FIXME: spec issue - language tag canonicalisation not performed:
-  // https://github.com/tc39/proposal-intl-displaynames/issues/70
   if (!tag.canonicalizeBaseName(cx)) {
     return nullptr;
   }
@@ -494,8 +530,8 @@ static JSString* GetRegionDisplayName(JSContext* cx,
     return nullptr;
   }
 
-  return CallICU(cx, [ldn, regionChars](UChar* chars, uint32_t size,
-                                        UErrorCode* status) {
+  JSString* str = CallICU(cx, [ldn, regionChars](UChar* chars, uint32_t size,
+                                                 UErrorCode* status) {
     int32_t res = uldn_regionDisplayName(ldn, regionChars, chars, size, status);
 
     // |uldn_regionDisplayName| reports U_ILLEGAL_ARGUMENT_ERROR when no display
@@ -506,10 +542,21 @@ static JSString* GetRegionDisplayName(JSContext* cx,
     }
     return res;
   });
+  if (!str) {
+    return nullptr;
+  }
+
+  // Return the canonicalized input when no localized region name was found.
+  if (str->empty() && fallback == DisplayNamesFallback::Code) {
+    return NewStringCopy(cx, tag.region().span());
+  }
+
+  return str;
 }
 
 static JSString* GetCurrencyDisplayName(JSContext* cx, const char* locale,
                                         DisplayNamesStyle displayStyle,
+                                        DisplayNamesFallback fallback,
                                         HandleLinearString currencyStr) {
   // Inlined implementation of `IsWellFormedCurrencyCode ( currency )`.
   if (currencyStr->length() != 3) {
@@ -552,6 +599,11 @@ static JSString* GetCurrencyDisplayName(JSContext* cx, const char* locale,
   MOZ_ASSERT(length >= 0);
 
   if (status == U_USING_DEFAULT_WARNING) {
+    // Return the canonicalized input when no localized currency name was found.
+    if (fallback == DisplayNamesFallback::Code) {
+      // Canonical case for currency is upper case.
+      return js::StringToUpperCase(cx, currencyStr);
+    }
     return cx->emptyString();
   }
 
@@ -860,11 +912,12 @@ static JSString* GetDateTimeFieldDisplayName(JSContext* cx, const char* locale,
 }
 
 /**
- * intl_ComputeDisplayName(displayNames, locale, calendar, style, type, code)
+ * intl_ComputeDisplayName(displayNames, locale, calendar, style, fallback,
+ *                         type, code)
  */
 bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 6);
+  MOZ_ASSERT(args.length() == 7);
 
   Rooted<DisplayNamesObject*> displayNames(
       cx, &args[0].toObject().as<DisplayNamesObject>());
@@ -879,7 +932,7 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedLinearString code(cx, args[5].toString()->ensureLinear(cx));
+  RootedLinearString code(cx, args[6].toString()->ensureLinear(cx));
   if (!code) {
     return false;
   }
@@ -901,7 +954,22 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  JSLinearString* type = args[4].toString()->ensureLinear(cx);
+  DisplayNamesFallback displayFallback;
+  {
+    JSLinearString* fallback = args[4].toString()->ensureLinear(cx);
+    if (!fallback) {
+      return false;
+    }
+
+    if (StringEqualsLiteral(fallback, "none")) {
+      displayFallback = DisplayNamesFallback::None;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(fallback, "code"));
+      displayFallback = DisplayNamesFallback::Code;
+    }
+  }
+
+  JSLinearString* type = args[5].toString()->ensureLinear(cx);
   if (!type) {
     return false;
   }
@@ -909,15 +977,16 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
   JSString* result;
   if (StringEqualsLiteral(type, "language")) {
     result = GetLanguageDisplayName(cx, displayNames, locale.get(),
-                                    displayStyle, code);
+                                    displayStyle, displayFallback, code);
   } else if (StringEqualsLiteral(type, "script")) {
     result = GetScriptDisplayName(cx, displayNames, locale.get(), displayStyle,
-                                  code);
+                                  displayFallback, code);
   } else if (StringEqualsLiteral(type, "region")) {
     result = GetRegionDisplayName(cx, displayNames, locale.get(), displayStyle,
-                                  code);
+                                  displayFallback, code);
   } else if (StringEqualsLiteral(type, "currency")) {
-    result = GetCurrencyDisplayName(cx, locale.get(), displayStyle, code);
+    result = GetCurrencyDisplayName(cx, locale.get(), displayStyle,
+                                    displayFallback, code);
   } else if (StringEqualsLiteral(type, "weekday")) {
     result = GetWeekdayDisplayName(cx, displayNames, locale.get(), calendar,
                                    displayStyle, code);
@@ -938,6 +1007,12 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  args.rval().setString(result);
+  if (!result->empty()) {
+    args.rval().setString(result);
+  } else if (displayFallback == DisplayNamesFallback::Code) {
+    args.rval().setString(code);
+  } else {
+    args.rval().setUndefined();
+  }
   return true;
 }

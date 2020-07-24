@@ -119,7 +119,18 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     //     opt: // opt object computed in InitializeDisplayNames
     //       {
     //         localeMatcher: "lookup" / "best fit",
+    //
+    //         ca: string matching a Unicode extension type, // optional
     //       }
+    //
+    //     localeMatcher: "lookup" / "best fit",
+    //
+    //     style: "narrow" / "short" / "long",
+    //
+    //     type: "language" / "region" / "script" / "currency" / "weekday" /
+    //           "month" / "quarter" / "dayPeriod" / "dateTimeField"
+    //
+    //     fallback: "code" / "none",
     //
     //     mozExtensions: true / false,
     //   }
@@ -219,33 +230,16 @@ function Intl_DisplayNames_of(code) {
       return callFunction(CallDisplayNamesMethodIfWrapped, this, "Intl_DisplayNames_of");
   }
 
+  code = ToString(code);
+
   var internals = getDisplayNamesInternals(displayNames);
 
   // Unpack the internals object to avoid a slow runtime to selfhosted JS call
   // in |intl_ComputeDisplayName()|.
-  var {locale, calendar = "", style, type} = internals;
+  var {locale, calendar = "", style, type, fallback} = internals;
 
-  code = ToString(code);
-
-  // Steps 5-7.
-  var name = intl_ComputeDisplayName(displayNames, locale, calendar, style, type, code);
-
-  // Step 8.
-  // This implementation returns the empty string instead of undefined if no
-  // result was found.
-  if (name !== "") {
-      return name;
-  }
-
-  // Step 9.
-  if (internals.fallback === "code") {
-      // TODO: spec should require case normalisation:
-      // https://github.com/tc39/proposal-intl-displaynames/issues/72
-      return code;
-  }
-
-  // Step 10.
-  return undefined;
+  // Steps 5-10.
+  return intl_ComputeDisplayName(displayNames, locale, calendar, style, fallback, type, code);
 }
 
 /**
