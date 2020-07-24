@@ -11,7 +11,7 @@ const {
   MANIFEST_MEMBER_VALUE_TYPES,
 } = require("devtools/client/application/src/constants.js");
 
-const { ICON, COLOR, STRING } = MANIFEST_MEMBER_VALUE_TYPES;
+const { ICON, COLOR, STRING, URL } = MANIFEST_MEMBER_VALUE_TYPES;
 
 const {
   manifestReducer,
@@ -49,11 +49,15 @@ const MANIFEST_PROCESSING = [
     source: {
       name: "Foo",
       background_color: "#FF0000",
+      start_url: "https://example.com/?q=foo",
+      scope: "https://example.com",
     },
     processed: {
       identity: [{ key: "name", value: "Foo", type: STRING }],
       presentation: [
         { key: "background_color", value: "#FF0000", type: COLOR },
+        { key: "start_url", value: "https://example.com/?q=foo", type: URL },
+        { key: "scope", value: "https://example.com", type: URL },
       ],
     },
   },

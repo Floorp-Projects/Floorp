@@ -16,6 +16,7 @@ const {
   MANIFEST_ICON_MEMBERS,
   MANIFEST_STRING_MEMBERS,
   MANIFEST_UNKNOWN_TYPE_MEMBERS,
+  MANIFEST_URL_MEMBERS,
   MANIFEST_NO_ISSUES,
   MANIFEST_WITH_ISSUES,
 } = require("devtools/client/application/test/node/fixtures/data/constants");
@@ -40,8 +41,13 @@ describe("Manifest", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders the expected snapshop for a manifest with icon members", () => {
+  it("renders the expected snapshot for a manifest with icon members", () => {
     const wrapper = shallow(Manifest(MANIFEST_ICON_MEMBERS));
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders the expected snapshot for a manifest with url members", () => {
+    const wrapper = shallow(Manifest(MANIFEST_URL_MEMBERS));
     expect(wrapper).toMatchSnapshot();
   });
 

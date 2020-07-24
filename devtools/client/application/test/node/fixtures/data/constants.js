@@ -257,6 +257,16 @@ const MANIFEST_UNKNOWN_TYPE_MEMBERS = {
   validation: [],
 };
 
+// props for a manifest with url values
+const MANIFEST_URL_MEMBERS = {
+  icons: [],
+  identity: [],
+  presentation: [
+    { key: "start_url", value: "https://example.com/", type: "url" },
+    { key: "scope", value: "https://example.com/", type: "url" },
+  ],
+};
+
 const MANIFEST_WITH_ISSUES = {
   icons: [],
   identity: [{ key: "name", value: "foo", type: "string" }],
@@ -298,4 +308,5 @@ module.exports = {
   MANIFEST_ICON_MEMBERS,
   MANIFEST_STRING_MEMBERS,
   MANIFEST_UNKNOWN_TYPE_MEMBERS,
+  MANIFEST_URL_MEMBERS,
 };

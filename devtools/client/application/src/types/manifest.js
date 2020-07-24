@@ -37,6 +37,11 @@ const manifestItemIcon = {
   }).isRequired,
 };
 
+const manifestItemUrl = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+};
+
 const manifestMemberColor = {
   key: manifestItemColor.label,
   value: manifestItemColor.value,
@@ -77,6 +82,7 @@ module.exports = {
   // specific manifest items
   manifestItemColor,
   manifestItemIcon,
+  manifestItemUrl,
   // manifest issues
   manifestIssue,
   manifestIssueArray,

@@ -39,6 +39,7 @@ const MANIFEST_MEMBER_VALUE_TYPES = {
   COLOR: "color",
   ICON: "icon",
   STRING: "string",
+  URL: "url",
 };
 
 const MANIFEST_ISSUE_LEVELS = {
