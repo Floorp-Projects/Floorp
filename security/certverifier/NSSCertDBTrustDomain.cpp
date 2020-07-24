@@ -45,6 +45,10 @@
 #include "secerr.h"
 #include "secder.h"
 
+#ifdef MOZ_WIDGET_COCOA
+#  include "nsCocoaFeatures.h"
+#endif
+
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-AppleGoogleDigiCertData.inc"
 #include "TrustOverride-StartComAndWoSignData.inc"
@@ -1599,6 +1603,12 @@ bool LoadUserModuleAt(const char* moduleName, const char* libraryName,
 const char* kOSClientCertsModuleName = "OS Client Cert Module";
 
 bool LoadOSClientCertsModule(const nsCString& dir) {
+#ifdef MOZ_WIDGET_COCOA
+  // osclientcerts requires macOS 10.14 or later
+  if (!nsCocoaFeatures::OnMojaveOrLater()) {
+    return false;
+  }
+#endif
   return LoadUserModuleAt(kOSClientCertsModuleName, "osclientcerts", dir);
 }
 
