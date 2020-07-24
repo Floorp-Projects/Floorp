@@ -10,8 +10,6 @@
 
 var EXPORTED_SYMBOLS = ["FormAutofillHandler"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -60,10 +58,6 @@ XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
-});
-
-XPCOMUtils.defineLazyServiceGetters(this, {
-  gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
 
 this.log = null;
@@ -333,8 +327,6 @@ class FormAutofillSection {
    *
    * @param {Object} profile
    *        A profile to be filled in.
-   * @returns {boolean}
-   *          True if successful, false if failed
    */
   async autofillFields(profile) {
     let focusedDetail = this._focusedDetail;
@@ -344,7 +336,7 @@ class FormAutofillSection {
 
     if (!(await this.prepareFillingProfile(profile))) {
       log.debug("profile cannot be filled", profile);
-      return false;
+      return;
     }
     log.debug("profile in autofillFields:", profile);
 
@@ -401,7 +393,6 @@ class FormAutofillSection {
       }
     }
     focusedInput.focus({ preventScroll: true });
-    return true;
   }
 
   /**
@@ -576,9 +567,6 @@ class FormAutofillSection {
       record: {},
       untouchedFields: [],
     };
-    if (this.flowId) {
-      data.flowId = this.flowId;
-    }
 
     details.forEach(detail => {
       let element = detail.elementWeakRef.get();
@@ -635,15 +623,6 @@ class FormAutofillSection {
         }
 
         this._changeFieldState(targetFieldDetail, FIELD_STATES.NORMAL);
-
-        if (isCreditCardField) {
-          Services.telemetry.recordEvent(
-            "creditcard",
-            "filled_modified",
-            "cc_form",
-            this.flowId
-          );
-        }
 
         let isAutofilled = false;
         let dimFieldDetails = [];
@@ -921,29 +900,6 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
 
     this.handler = handler;
 
-    // Identifier used to correlate events relating to the same form
-    this.flowId = gUUIDGenerator.generateUUID().toString();
-    log.debug("Creating new credit card section with flowId =", this.flowId);
-
-    // Record which fields could be identified
-    let identified = new Set();
-    fieldDetails.forEach(detail => identified.add(detail.fieldName));
-    Services.telemetry.recordEvent(
-      "creditcard",
-      "detected",
-      "cc_form",
-      this.flowId,
-      {
-        cc_name_found: identified.has("cc-name") ? "true" : "false",
-        cc_number_found: identified.has("cc-number") ? "true" : "false",
-        cc_exp_found:
-          identified.has("cc-exp") ||
-          (identified.has("cc-exp-month") && identified.has("cc-exp-year"))
-            ? "true"
-            : "false",
-      }
-    );
-
     // For valid sections, check whether the section is in an
     // <iframe>; and, if so, watch for the <iframe> to pagehide.
     // If the section is invalid, then the superclass constructor
@@ -1157,54 +1113,6 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
 
       profile["cc-number"] = decrypted;
     }
-    return true;
-  }
-
-  async autofillFields(profile) {
-    if (!(await super.autofillFields(profile))) {
-      return false;
-    }
-
-    // Calculate values for telemetry
-    let extra = {
-      cc_name: "unavailable",
-      cc_number: "unavailable",
-      cc_exp: "unavailable",
-    };
-
-    for (let fieldDetail of this.fieldDetails) {
-      let element = fieldDetail.elementWeakRef.get();
-      let state = profile[fieldDetail.fieldName] ? "filled" : "not_filled";
-
-      if (
-        fieldDetail.state == FIELD_STATES.NORMAL &&
-        (ChromeUtils.getClassName(element) == "HTMLSelectElement" ||
-          (ChromeUtils.getClassName(element) == "HTMLInputElement" &&
-            element.value.length))
-      ) {
-        state = "user_filled";
-      }
-      switch (fieldDetail.fieldName) {
-        case "cc-name":
-          extra.cc_name = state;
-          break;
-        case "cc-number":
-          extra.cc_number = state;
-          break;
-        case "cc-exp":
-        case "cc-exp-month":
-        case "cc-exp-year":
-          extra.cc_exp = state;
-          break;
-      }
-    }
-    Services.telemetry.recordEvent(
-      "creditcard",
-      "filled",
-      "cc_form",
-      this.flowId,
-      extra
-    );
     return true;
   }
 }
