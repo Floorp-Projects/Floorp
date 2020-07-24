@@ -54,6 +54,13 @@ const LOGIN = TestData.formLogin({
   password: "LOGIN is used only for its origin",
 });
 
+function _setPrefs() {
+  Services.prefs.setBoolPref("signon.capture.inputChanges.enabled", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("signon.capture.inputChanges.enabled");
+  });
+}
+
 function _saveLogins(logins) {
   logins
     .map(loginData => {
@@ -118,6 +125,7 @@ async function _test(testCase) {
 }
 
 add_task(async function test_LoginManagerPrompter_getUsernameSuggestions() {
+  _setPrefs();
   for (let tc of TEST_CASES) {
     await _test(tc);
   }
