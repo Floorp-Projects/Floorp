@@ -2155,6 +2155,8 @@ doh:
       enterprise: Comma-separated list of detected enterprise config (policy,modifiedRoots,thirdPartyRoots)
       steeredProvider: Whether we detected a steering provider
       evaluateReason: The reason for running heuristics - startup or netchange
+      networkID: An ID representing the network on which heuristics were run, unique to this client
+      captiveState: The Captive Portal Service state - unknown, not_captive, locked, or unlocked
   evaluate:
     methods: ["evaluate"]
     objects: ["heuristics"]
