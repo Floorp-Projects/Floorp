@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="run()">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  try {
+    let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
+      Ci.nsIPrinterList
+    );
+
+    printerList.printers.forEach(printer => {
+      info(`Listing basic attributes for ${printer.name}:`);
+      info(`* supportsDuplex: ${printer.supportsDuplex}`);
+    })
+
+    ok(true, "Retrieved printer basic attributes successfully.");
+  } catch (e) {
+    ok(false, "Error thrown while retrieved printer basic attributes.");
+    Cu.reportError(e);
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
