@@ -510,6 +510,7 @@ export default class LoginItem extends HTMLElement {
         }
         if (!this.hasPendingChanges()) {
           this._toggleEditing(false);
+          this.render();
           return;
         }
         let loginUpdates = this._loginFromForm();
