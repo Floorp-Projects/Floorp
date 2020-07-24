@@ -13,6 +13,10 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
+// TODO: Maybe move this to mfbt/MacroArgs.h
+#define MOZ_ARG_4(a1, a2, a3, a4, ...) a4
+#define MOZ_ARG_5(a1, a2, a3, a4, a5, ...) a5
+
 #define BEGIN_QUOTA_NAMESPACE \
   namespace mozilla {         \
   namespace dom {             \
@@ -51,6 +55,251 @@
 #else
 #  define WARN_IF_FILE_IS_UNKNOWN(_file) Result<bool, nsresult>(false)
 #endif
+
+/**
+ * There are multiple ways to handle unrecoverable conditions:
+ * 1. Using NS_ENSURE_* macros
+ *
+ * Mainly:
+ * - NS_ENSURE_SUCCESS
+ * - NS_ENSURE_SUCCESS_VOID
+ * - NS_ENSURE_TRUE
+ * - NS_ENSURE_TRUE_VOID
+ *
+ * Typical use cases:
+ *
+ * nsresult MyFunc1(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   NS_ENSURE_SUCCESS(rv, rv);
+ *   NS_ENSURE_TRUE(exists, NS_ERROR_FAILURE);
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc2(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+ *   NS_ENSURE_TRUE(exists, NS_ERROR_UNEXPECTED);
+ *
+ *   return NS_OK;
+ * }
+ *
+ * void MyFunc3(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   NS_ENSURE_SUCCESS_VOID(rv);
+ *   NS_ENSURE_TRUE_VOID(exists);
+ * }
+ *
+ * 2. Using NS_WARN_IF macro with own control flow handling
+ *
+ * Typical use cases:
+ *
+ * nsresult MyFunc1(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   if (NS_WARN_IF(NS_FAILED(rv)) {
+ *     return rv;
+ *   }
+ *   if (NS_WARN_IF(!exists) {
+ *     return NS_ERROR_FAILURE;
+ *   }
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc2(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   if (NS_WARN_IF(NS_FAILED(rv)) {
+ *     return NS_ERROR_UNEXPECTED;
+ *   }
+ *   if (NS_WARN_IF(!exists) {
+ *     return NS_ERROR_UNEXPECTED;
+ *   }
+ *
+ *   return NS_OK;
+ * }
+ *
+ * void MyFunc3(nsIFile& aFile) {
+ *   bool exists;
+ *   nsresult rv = aFile.Exists(&exists);
+ *   if (NS_WARN_IF(NS_FAILED(rv)) {
+ *     return;
+ *   }
+ *   if (NS_WARN_IF(!exists) {
+ *     return;
+ *   }
+ * }
+ *
+ * 3. Using MOZ_TRY/MOZ_TRY_VAR macros
+ *
+ * Typical use cases:
+ *
+ * nsresult MyFunc1(nsIFile& aFile) {
+ *   bool exists;
+ *   MOZ_TRY(aFile.Exists(&exists));
+ *   // Note, exists can't be checked directly using MOZ_TRY without the Result
+ *   // extension defined in quota manager
+ *   MOZ_TRY(OkIf(exists), NS_ERROR_FAILURE);
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc2(nsIFile& aFile) {
+ *   // MOZ_TRY can't return a custom return value
+ *
+ *   return NS_OK;
+ * }
+ *
+ * void MyFunc3(nsIFile& aFile) {
+ *   // MOZ_TRY can't return void
+ * }
+ *
+ * 4. Using QM_TRY/QM_TRY_VAR macros (Quota manager specific, defined below)
+ *
+ * Typical use cases:
+ *
+ * nsresult MyFunc1(nsIFile& aFile) {
+ *   bool exists;
+ *   QM_TRY(aFile.Exists(&exists));
+ *   QM_TRY(OkIf(exists), NS_ERROR_FAILURE);
+ *
+ *   return NS_OK;
+ * }
+ *
+ * nsresult MyFunc2(nsIFile& aFile) {
+ *   bool exists;
+ *   QM_TRY(aFile.Exists(&exists), NS_ERROR_UNEXPECTED);
+ *   QM_TRY(OkIf(exists), NS_ERROR_UNEXPECTED);
+ *
+ *   return NS_OK;
+ * }
+ *
+ * void MyFunc3(nsIFile& aFile) {
+ *   bool exists;
+ *   QM_TRY(aFile.Exists(&exists), QM_VOID);
+ *   QM_TRY(OkIf(exists), QM_VOID);
+ * }
+ *
+ * QM_TRY/QM_TRY_VAR is like MOZ_TRY/MOZ_TRY_VAR but if an error occurs it
+ * additionally calls a generic function HandleError to handle the error and it
+ * can be used to return custom return values as well.
+ * HandleError currently only warns in debug builds, it will report to the
+ * browser console and telemetry in the future.
+ * The other advantage of QM_TRY/QM_TRY_VAR is that a local nsresult is not
+ * needed at all in all cases, all calls can be wrapped directly. If an error
+ * occurs, the warning contains a concrete call instead of the rv local
+ * variable. For example:
+ *
+ * 1. WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80004005
+ * (NS_ERROR_FAILURE): file XYZ, line N
+ *
+ * 2. WARNING: 'NS_FAILED(rv)', file XYZ, line N
+ *
+ * 3. Nothing (MOZ_TRY doesn't warn)
+ *
+ * 4. WARNING: Error: 'aFile.Exists(&exists)', file XYZ, line N
+ *
+ * It's highly recommended to use QM_TRY/QM_TRY_VAR in new code for quota
+ * manager and quota clients. Existing code should be incrementally converted
+ * as needed.
+ *
+ * QM_TRY_VOID/QM_TRY_VAR_VOID is not defined on purpose since it's possible to
+ * use QM_TRY/QM_TRY_VAR even in void functions. However, QM_TRY(Task(), )
+ * would look odd so it's recommended to use a dummy define QM_VOID that
+ * evaluates to nothing instead: QM_TRY(Task(), QM_VOID)
+ */
+
+#define QM_VOID
+
+// QM_TRY_MISSING_ARGS, QM_TRY_PROPAGATE_ERR and QM_TRY_CUSTOM_RET_VAR macros
+// are implementation details of QM_TRY and shouldn't be used directly.
+#define QM_TRY_MISSING_ARGS(...)                                 \
+  do {                                                           \
+    static_assert(false, "Did you forget arguments to QM_TRY?"); \
+  } while (0)
+
+// Handles the one arg case when the eror is propagated.
+#define QM_TRY_PROPAGATE_ERR(expr)                                            \
+  do {                                                                        \
+    auto mozTryTempResult_ = ::mozilla::ToResult(expr);                       \
+    if (MOZ_UNLIKELY(mozTryTempResult_.isErr())) {                            \
+      mozilla::dom::quota::HandleError(nsLiteralCString(#expr),               \
+                                       nsLiteralCString(__FILE__), __LINE__); \
+      return mozTryTempResult_.propagateErr();                                \
+    }                                                                         \
+  } while (0)
+
+// Handles the two args case when a custom return value needs to be returned
+#define QM_TRY_CUSTOM_RET_VAR(expr, customRetVal)                             \
+  do {                                                                        \
+    auto mozTryTempResult_ = ::mozilla::ToResult(expr);                       \
+    if (MOZ_UNLIKELY(mozTryTempResult_.isErr())) {                            \
+      mozilla::dom::quota::HandleError(nsLiteralCString(#expr),               \
+                                       nsLiteralCString(__FILE__), __LINE__); \
+      return customRetVal;                                                    \
+    }                                                                         \
+  } while (0)
+
+/**
+ * QM_TRY(expr[, customRetVal]) is the C++ equivalent of Rust's `try!(expr);`.
+ * First, it evaluates expr, which must produce a Result value. On success, it
+ * discards the result altogether. On error, it calls HandleError and returns
+ * an error Result from the enclosing function or a custom return value (if the
+ * second arg was passed).
+ */
+#define QM_TRY(...)                                              \
+  MOZ_ARG_4(, ##__VA_ARGS__, QM_TRY_CUSTOM_RET_VAR(__VA_ARGS__), \
+            QM_TRY_PROPAGATE_ERR(__VA_ARGS__),                   \
+            QM_TRY_MISSING_ARGS(__VA_ARGS__))
+
+// QM_TRY_VAR_MISSING_ARGS, QM_TRY_VAR_PROPAGATE_ERR and
+// QM_TRY_VAR_CUSTOM_RET_VAR macros are implementation details of QM_TRY_VAR
+// and shouldn't be used directly.
+#define QM_TRY_VAR_MISSING_ARGS(...)                                 \
+  do {                                                               \
+    static_assert(false, "Did you forget arguments to QM_TRY_VAR?"); \
+  } while (0)
+
+// Handles the two args case when the eror is propagated.
+#define QM_TRY_VAR_PROPAGATE_ERR(target, expr)                                \
+  do {                                                                        \
+    auto mozTryVarTempResult_ = (expr);                                       \
+    if (MOZ_UNLIKELY(mozTryVarTempResult_.isErr())) {                         \
+      mozilla::dom::quota::HandleError(nsLiteralCString(#expr),               \
+                                       nsLiteralCString(__FILE__), __LINE__); \
+      return mozTryVarTempResult_.propagateErr();                             \
+    }                                                                         \
+    (target) = mozTryVarTempResult_.unwrap();                                 \
+  } while (0)
+
+// Handles the three args case when a custom return value needs to be returned
+#define QM_TRY_VAR_CUSTOM_RET_VAR(target, expr, customRetVal)                 \
+  do {                                                                        \
+    auto mozTryVarTempResult_ = (expr);                                       \
+    if (MOZ_UNLIKELY(mozTryVarTempResult_.isErr())) {                         \
+      mozilla::dom::quota::HandleError(nsLiteralCString(#expr),               \
+                                       nsLiteralCString(__FILE__), __LINE__); \
+      return customRetVal;                                                    \
+    }                                                                         \
+    (target) = mozTryVarTempResult_.unwrap();                                 \
+  } while (0)
+
+/**
+ * QM_TRY_VAR(target, expr[, customRetVal]) is the C++ equivalent of Rust's
+ * `target = try!(expr);`. First, it evaluates expr, which must produce a
+ * Result value. On success, the result's success value is assigned to target.
+ * On error, it calls HandleError and returns the error result or a custom
+ * return value (if the third arg was passed). |target| must be an lvalue.
+ */
+#define QM_TRY_VAR(...)                                              \
+  MOZ_ARG_5(, ##__VA_ARGS__, QM_TRY_VAR_CUSTOM_RET_VAR(__VA_ARGS__), \
+            QM_TRY_VAR_PROPAGATE_ERR(__VA_ARGS__),                   \
+            QM_TRY_VAR_MISSING_ARGS(__VA_ARGS__),                    \
+            QM_TRY_VAR_MISSING_ARGS(__VA_ARGS__))
 
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
@@ -201,6 +450,9 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            const char* aSourceFile,
                                            int32_t aSourceLine);
 #endif
+
+void HandleError(const nsLiteralCString& aExpr,
+                 const nsLiteralCString& aSourceFile, int32_t aSourceLine);
 
 }  // namespace quota
 }  // namespace dom
