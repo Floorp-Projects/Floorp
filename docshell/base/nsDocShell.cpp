@@ -2659,7 +2659,7 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner) {
           do_QueryReferent(mBrowserChild);
       MOZ_RELEASE_ASSERT(
           oldBrowserChild == newBrowserChild,
-          "Cannot cahnge BrowserChild during nsDocShell lifetime!");
+          "Cannot change BrowserChild during nsDocShell lifetime!");
     } else {
       mBrowserChild = do_GetWeakReference(newBrowserChild);
     }
