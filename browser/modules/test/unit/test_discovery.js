@@ -126,7 +126,8 @@ add_task(async function test_discovery() {
     equal(cookie.host, uri.host, "cookie exists for host");
     return true;
   });
-  ClientID.resetClientID();
+  await ClientID.removeClientIDs();
+  await ClientID.getClientID();
   await changed;
 
   // Make sure disabling telemetry disables discovery.
