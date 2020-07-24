@@ -649,22 +649,26 @@ function GetOption(options, property, type, values, fallback) {
 function DefaultNumberOption(value, minimum, maximum, fallback) {
     assert(typeof minimum === "number" && (minimum | 0) === minimum, "DefaultNumberOption");
     assert(typeof maximum === "number" && (maximum | 0) === maximum, "DefaultNumberOption");
-    assert(typeof fallback === "number" && (fallback | 0) === fallback, "DefaultNumberOption");
-    assert(minimum <= fallback && fallback <= maximum, "DefaultNumberOption");
+    assert(fallback === undefined || (typeof fallback === "number" && (fallback | 0) === fallback),
+           "DefaultNumberOption");
+    assert(fallback === undefined || (minimum <= fallback && fallback <= maximum),
+           "DefaultNumberOption");
 
     // Step 1.
-    if (value !== undefined) {
-        value = ToNumber(value);
-        if (Number_isNaN(value) || value < minimum || value > maximum)
-            ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, value);
-
-        // Apply bitwise-or to convert -0 to +0 per ES2017, 5.2 and to ensure
-        // the result is an int32 value.
-        return std_Math_floor(value) | 0;
-    }
+    if (value === undefined)
+        return fallback;
 
     // Step 2.
-    return fallback;
+    value = ToNumber(value);
+
+    // Step 3.
+    if (Number_isNaN(value) || value < minimum || value > maximum)
+        ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, value);
+
+    // Step 4.
+    // Apply bitwise-or to convert -0 to +0 per ES2017, 5.2 and to ensure the
+    // result is an int32 value.
+    return std_Math_floor(value) | 0;
 }
 
 /**
