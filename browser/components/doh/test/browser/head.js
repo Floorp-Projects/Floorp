@@ -181,7 +181,7 @@ async function checkHeuristicsTelemetry(
     return events && events.length;
   });
   events = events.filter(
-    e => e[1] == "doh" && e[2] == "evaluate" && e[3] == "heuristics"
+    e => e[1] == "doh" && e[2] == "evaluate_v2" && e[3] == "heuristics"
   );
   is(events.length, 1, "Found the expected heuristics event.");
   is(events[0][4], decision, "The event records the expected decision");
@@ -207,7 +207,7 @@ function ensureNoHeuristicsTelemetry() {
     return;
   }
   events = events.filter(
-    e => e[1] == "doh" && e[2] == "evaluate" && e[3] == "heuristics"
+    e => e[1] == "doh" && e[2] == "evaluate_v2" && e[3] == "heuristics"
   );
   is(events.length, 0, "Found no heuristics events.");
 }
