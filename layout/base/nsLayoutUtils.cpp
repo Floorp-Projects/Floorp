@@ -2834,14 +2834,28 @@ const nsIFrame* nsLayoutUtils::FindNearestCommonAncestorFrameWithinBlock(
   int n1 = 1;
   int n2 = 1;
 
-  for (auto f = f1->GetParent(); !f->IsBlockFrameOrSubclass();
-       f = f->GetParent()) {
+  for (auto f = f1->GetParent();;) {
+    NS_ASSERTION(f, "All text frames should have a block ancestor");
+    if (!f) {
+      return nullptr;
+    }
+    if (f->IsBlockFrameOrSubclass()) {
+      break;
+    }
     ++n1;
+    f = f->GetParent();
   }
 
-  for (auto f = f2->GetParent(); !f->IsBlockFrameOrSubclass();
-       f = f->GetParent()) {
+  for (auto f = f2->GetParent();;) {
+    NS_ASSERTION(f, "All text frames should have a block ancestor");
+    if (!f) {
+      return nullptr;
+    }
+    if (f->IsBlockFrameOrSubclass()) {
+      break;
+    }
     ++n2;
+    f = f->GetParent();
   }
 
   if (n1 > n2) {
