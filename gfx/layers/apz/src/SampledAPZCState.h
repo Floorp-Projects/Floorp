@@ -51,6 +51,8 @@ class SampledAPZCState {
   CSSToParentLayerScale2D mZoom;
   // An optional payload that rides along with the sampled state.
   Maybe<CompositionPayload> mScrollPayload;
+
+  void RemoveFractionalAsyncDelta();
 };
 
 }  // namespace layers
