@@ -23,6 +23,7 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_MODULE:
     case nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD:
     case nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS:
+    case nsIContentPolicy::TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT:
     case nsIContentPolicy::TYPE_SCRIPT:
       return "script"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_WORKER:
