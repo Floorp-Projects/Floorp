@@ -190,6 +190,110 @@ add_task(async function test_login_item() {
         "Entering edit mode"
       );
       await Promise.resolve();
+      let usernameInput = loginItem.shadowRoot.querySelector(
+        "input[name='username']"
+      );
+      let passwordInput = loginItem._passwordInput;
+      let passwordDisplayInput = loginItem._passwordDisplayInput;
+
+      ok(loginItem.dataset.editing, "LoginItem should be in 'edit' mode");
+      is(
+        passwordInput.type,
+        "password",
+        "Password should still be hidden before revealed in edit mode"
+      );
+
+      let revealCheckbox = loginItem.shadowRoot.querySelector(
+        ".reveal-password-checkbox"
+      );
+      revealCheckbox.click();
+      ok(
+        revealCheckbox.checked,
+        "reveal-checkbox should be checked after clicking"
+      );
+
+      is(
+        passwordInput.type,
+        "text",
+        "Password should be shown as text when revealed in edit mode"
+      );
+      let saveChangesButton = loginItem.shadowRoot.querySelector(
+        ".save-changes-button"
+      );
+
+      saveChangesButton.click();
+
+      await ContentTaskUtils.waitForCondition(() => {
+        let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+        return !editButton.disabled;
+      }, "Waiting to exit edit mode");
+
+      ok(
+        !revealCheckbox.checked,
+        "reveal-checkbox should be unchecked after saving changes"
+      );
+      ok(
+        !loginItem.dataset.editing,
+        "LoginItem should not be in 'edit' mode after saving"
+      );
+      is(
+        passwordInput.type,
+        "password",
+        "Password should be hidden after exiting edit mode"
+      );
+      is(
+        usernameInput.value,
+        login.username,
+        "Username change should be reverted"
+      );
+      is(
+        passwordInput.value,
+        login.password,
+        "Password change should be reverted"
+      );
+      is(
+        passwordDisplayInput.value,
+        " ".repeat(login.password.length),
+        "Password change should be reverted for display"
+      );
+      ok(
+        !passwordInput.hasAttribute("value"),
+        "Password shouldn't be exposed in @value"
+      );
+      is(
+        passwordInput.style.width,
+        login.password.length + "ch",
+        "Password field width shouldn't have changed"
+      );
+      is(
+        passwordDisplayInput.style.width,
+        login.password.length + "ch",
+        "Password field width shouldn't have changed"
+      );
+    }
+  );
+  reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
+    loginResult: true,
+  });
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    editButton.click();
+  });
+  info("waiting for oskeystore auth #4");
+  await reauthObserved;
+  await SpecialPowers.spawn(
+    browser,
+    [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
+    async login => {
+      let loginItem = Cu.waiveXrays(
+        content.document.querySelector("login-item")
+      );
+      await ContentTaskUtils.waitForCondition(
+        () => loginItem.dataset.editing,
+        "Entering edit mode"
+      );
+      await Promise.resolve();
 
       let revealCheckbox = loginItem.shadowRoot.querySelector(
         ".reveal-password-checkbox"
@@ -257,7 +361,7 @@ add_task(async function test_login_item() {
     let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
   });
-  info("waiting for oskeystore auth #4");
+  info("waiting for oskeystore auth #5");
   await reauthObserved;
   await SpecialPowers.spawn(
     browser,
