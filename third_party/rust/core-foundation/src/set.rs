@@ -42,3 +42,12 @@ impl CFSet {
         }
     }
 }
+
+impl<T> CFSet<T> {
+    /// Get the number of elements in the CFSet
+    pub fn len(&self) -> usize {
+        unsafe {
+            CFSetGetCount(self.0) as usize
+        }
+    }
+}
