@@ -457,10 +457,9 @@ static JSString* GetScriptDisplayName(JSContext* cx,
   // Note: ICU requires the script subtag to be in canonical case.
   const intl::ScriptSubtag& canonicalScript = tag.script();
 
-  char scriptChars[intl::LanguageTagLimits::ScriptLength + 1];
+  char scriptChars[intl::LanguageTagLimits::ScriptLength + 1] = {};
   std::copy_n(canonicalScript.span().data(), canonicalScript.length(),
               scriptChars);
-  scriptChars[canonicalScript.length()] = '\0';
 
   ULocaleDisplayNames* ldn =
       GetOrCreateLocaleDisplayNames(cx, displayNames, locale, displayStyle);
@@ -519,10 +518,9 @@ static JSString* GetRegionDisplayName(JSContext* cx,
   // Note: ICU requires the region subtag to be in canonical case.
   const intl::RegionSubtag& canonicalRegion = tag.region();
 
-  char regionChars[intl::LanguageTagLimits::RegionLength + 1];
+  char regionChars[intl::LanguageTagLimits::RegionLength + 1] = {};
   std::copy_n(canonicalRegion.span().data(), canonicalRegion.length(),
               regionChars);
-  regionChars[canonicalRegion.length()] = '\0';
 
   ULocaleDisplayNames* ldn =
       GetOrCreateLocaleDisplayNames(cx, displayNames, locale, displayStyle);
