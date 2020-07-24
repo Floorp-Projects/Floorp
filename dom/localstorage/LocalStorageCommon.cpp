@@ -140,5 +140,20 @@ nsresult GenerateOriginKey2(const PrincipalInfo& aPrincipalInfo,
 
 LogModule* GetLocalStorageLogger() { return gLogger; }
 
+namespace localstorage {
+
+void HandleError(const nsLiteralCString& aExpr,
+                 const nsLiteralCString& aSourceFile, int32_t aSourceLine) {
+#ifdef DEBUG
+  NS_DebugBreak(NS_DEBUG_WARNING, "Error", aExpr.get(), aSourceFile.get(),
+                aSourceLine);
+
+#endif
+
+  // TODO: Report to browser console
+}
+
+}  // namespace localstorage
+
 }  // namespace dom
 }  // namespace mozilla
