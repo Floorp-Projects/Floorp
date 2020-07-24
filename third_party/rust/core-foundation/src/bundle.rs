@@ -9,10 +9,8 @@
 
 //! Core Foundation Bundle Type
 
-use core_foundation_sys::base::kCFAllocatorDefault;
 pub use core_foundation_sys::bundle::*;
-use core_foundation_sys::url::kCFURLPOSIXPathStyle;
-use std::path::PathBuf;
+use core_foundation_sys::base::kCFAllocatorDefault;
 
 use base::{CFType, TCFType};
 use url::CFURL;
@@ -79,24 +77,6 @@ impl CFBundle {
                 Some(TCFType::wrap_under_create_rule(exe_url))
             }
         }
-    }
-
-    /// Bundle's own location
-    pub fn bundle_url(&self) -> Option<CFURL> {
-        unsafe {
-            let bundle_url = CFBundleCopyBundleURL(self.0);
-            if bundle_url.is_null() {
-                None
-            } else {
-                Some(TCFType::wrap_under_create_rule(bundle_url))
-            }
-        }
-    }
-
-    /// Bundle's own location
-    pub fn path(&self) -> Option<PathBuf> {
-        let url = self.bundle_url()?;
-        Some(PathBuf::from(url.get_file_system_path(kCFURLPOSIXPathStyle).to_string()))
     }
 
     pub fn private_frameworks_url(&self) -> Option<CFURL> {

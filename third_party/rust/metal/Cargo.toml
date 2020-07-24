@@ -13,9 +13,8 @@
 [package]
 edition = "2018"
 name = "metal"
-version = "0.20.0"
+version = "0.18.0"
 authors = ["GFX Developers"]
-exclude = ["guide/**/*", "examples/texture/**/*", "tests/**/*", "Cargo.lock", "target/**/*"]
 description = "Rust bindings for Metal"
 homepage = "https://github.com/gfx-rs/metal-rs"
 documentation = "https://docs.rs/crate/metal"
@@ -30,9 +29,6 @@ default-target = "x86_64-apple-darwin"
 name = "window"
 
 [[example]]
-name = "headless-render"
-
-[[example]]
 name = "library"
 
 [[example]]
@@ -43,10 +39,6 @@ name = "caps"
 
 [[example]]
 name = "argument-buffer"
-
-[[example]]
-name = "circle"
-path = "examples/circle/main.rs"
 
 [[example]]
 name = "compute"
@@ -68,8 +60,11 @@ version = "1"
 [dependencies.block]
 version = "0.1.5"
 
-[dependencies.cocoa-foundation]
-version = "0.1"
+[dependencies.cocoa]
+version = "0.20"
+
+[dependencies.core-graphics]
+version = "0.19"
 
 [dependencies.foreign-types]
 version = "0.3"
@@ -80,15 +75,6 @@ version = "0.4"
 [dependencies.objc]
 version = "0.2.4"
 features = ["objc_exception"]
-[dev-dependencies.cocoa]
-version = "0.23"
-
-[dev-dependencies.cty]
-version = "0.2.1"
-
-[dev-dependencies.png]
-version = "0.16"
-
 [dev-dependencies.sema]
 version = "0.1.4"
 

@@ -41,7 +41,7 @@ impl CFAttributedString {
 declare_TCFType!{
     CFMutableAttributedString, CFMutableAttributedStringRef
 }
-impl_TCFType!(CFMutableAttributedString, CFMutableAttributedStringRef, CFAttributedStringGetTypeID);
+impl_TCFType!(CFMutableAttributedString, CFMutableAttributedStringRef, CFMutableAttributedStringGetTypeID);
 
 impl CFMutableAttributedString {
     #[inline]
@@ -70,7 +70,7 @@ impl CFMutableAttributedString {
     }
 
     #[inline]
-    pub fn set_attribute<T: TCFType>(&mut self, range: CFRange, name: CFStringRef, value: &T) {
+    pub fn set_attribute<T: TCFType>(&mut self, range: CFRange, name: CFStringRef, value: T) {
         unsafe {
             CFAttributedStringSetAttribute(
                 self.0, range, name, value.as_CFTypeRef());
@@ -81,18 +81,5 @@ impl CFMutableAttributedString {
 impl Default for CFMutableAttributedString {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn attributed_string_type_id_comparison() {
-        // CFMutableAttributedString TypeID must be equal to CFAttributedString TypeID.
-        // Compilation must not fail.
-        assert_eq!(<CFAttributedString as TCFType>::type_id(), <CFMutableAttributedString as TCFType>::type_id());
     }
 }

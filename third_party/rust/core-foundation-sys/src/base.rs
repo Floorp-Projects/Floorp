@@ -107,9 +107,6 @@ impl<T> TCFTypeRef for *mut T {
     }
 }
 
-/// Constant used by some functions to indicate failed searches.
-pub static kCFNotFound: CFIndex = -1;
-
 extern {
     /*
      * CFBase.h

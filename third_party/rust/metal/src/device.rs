@@ -6,8 +6,8 @@
 // copied, modified, or distributed except according to those terms.
 
 use block::{Block, ConcreteBlock};
-use cocoa_foundation::base::id;
-use cocoa_foundation::foundation::NSUInteger;
+use cocoa::base::id;
+use cocoa::foundation::NSUInteger;
 use foreign_types::ForeignType;
 use objc::runtime::{Object, BOOL, NO, YES};
 
@@ -1485,16 +1485,6 @@ impl DeviceRef {
         }
     }
 
-    pub fn supports_vertex_amplification_count(&self, count: NSUInteger) -> bool {
-        unsafe {
-            match msg_send![self, supportsVertexAmplificationCount: count] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
-    }
-
     pub fn supports_sample_count(&self, count: NSUInteger) -> bool {
         unsafe {
             match msg_send![self, supportsTextureSampleCount: count] {
@@ -1535,8 +1525,8 @@ impl DeviceRef {
         src: &str,
         options: &CompileOptionsRef,
     ) -> Result<Library, String> {
-        use cocoa_foundation::base::nil as cocoa_nil;
-        use cocoa_foundation::foundation::NSString as cocoa_NSString;
+        use cocoa::base::nil as cocoa_nil;
+        use cocoa::foundation::NSString as cocoa_NSString;
 
         unsafe {
             let source = cocoa_NSString::alloc(cocoa_nil).init_str(src);
@@ -1563,8 +1553,8 @@ impl DeviceRef {
     }
 
     pub fn new_library_with_file<P: AsRef<Path>>(&self, file: P) -> Result<Library, String> {
-        use cocoa_foundation::base::nil as cocoa_nil;
-        use cocoa_foundation::foundation::NSString as cocoa_NSString;
+        use cocoa::base::nil as cocoa_nil;
+        use cocoa::foundation::NSString as cocoa_NSString;
 
         unsafe {
             let filename =
@@ -1646,18 +1636,16 @@ impl DeviceRef {
         }
     }
 
-    pub fn new_compute_pipeline_state(
+    pub unsafe fn new_compute_pipeline_state(
         &self,
         descriptor: &ComputePipelineDescriptorRef,
     ) -> Result<ComputePipelineState, String> {
-        unsafe {
-            let pipeline_state: *mut MTLComputePipelineState = try_objc! { err =>
-                msg_send![self, newComputePipelineStateWithDescriptor:descriptor
-                                                                error:&mut err]
-            };
+        let pipeline_state: *mut MTLComputePipelineState = try_objc! { err =>
+            msg_send![self, newComputePipelineStateWithDescriptor:descriptor
+                                                            error:&mut err]
+        };
 
-            Ok(ComputePipelineState::from_ptr(pipeline_state))
-        }
+        Ok(ComputePipelineState::from_ptr(pipeline_state))
     }
 
     pub fn new_buffer(&self, length: u64, options: MTLResourceOptions) -> Buffer {
