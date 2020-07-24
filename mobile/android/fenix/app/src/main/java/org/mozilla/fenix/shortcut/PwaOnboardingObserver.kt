@@ -6,7 +6,6 @@ package org.mozilla.fenix.shortcut
 
 import androidx.navigation.NavController
 import mozilla.components.browser.session.Session
-import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.WebAppUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -22,8 +21,8 @@ class PwaOnboardingObserver(
     private val webAppUseCases: WebAppUseCases
 ) : Session.Observer {
 
-    override fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) {
-        if (webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
+    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+        if (!loading && webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
             settings.incrementVisitedInstallableCount()
             if (settings.shouldShowPwaOnboarding) {
                 val directions =
