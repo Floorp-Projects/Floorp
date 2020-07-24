@@ -2,30 +2,34 @@
 
 # TabsAdapter
 
-`open class TabsAdapter : Adapter<`[`TabViewHolder`](../-tab-view-holder/index.md)`>, `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabsAdapter.kt#L27)
+`open class TabsAdapter : Adapter<`[`TabViewHolder`](../-tab-view-holder/index.md)`>, `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabsAdapter.kt#L29)
 
 RecyclerView adapter implementation to display a list/grid of tabs.
 
 ### Parameters
 
-`delegate` - TabsTray.Observer registry to allow `TabsAdapter` to conform to `Observable<TabsTray.Observer>`.
+`thumbnailLoader` - an implementation of an [ImageLoader](../../mozilla.components.support.images.loader/-image-loader/index.md) for loading thumbnail images in the tabs tray.
 
 `viewHolderProvider` - a function that creates a `TabViewHolder`.
+
+`delegate` - TabsTray.Observer registry to allow `TabsAdapter` to conform to `Observable<TabsTray.Observer>`.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TabsAdapter(thumbnailLoader: `[`ImageLoader`](../../mozilla.components.support.images.loader/-image-loader/index.md)`? = null, viewHolderProvider: `[`ViewHolderProvider`](../-view-holder-provider.md)` = { parent, tabsTray ->
+| [&lt;init&gt;](-init-.md) | `TabsAdapter(thumbnailLoader: `[`ImageLoader`](../../mozilla.components.support.images.loader/-image-loader/index.md)`? = null, viewHolderProvider: `[`ViewHolderProvider`](../-view-holder-provider.md)` = { parent ->
         DefaultTabViewHolder(
-                LayoutInflater.from(parent.context).inflate(
-                        R.layout.mozac_browser_tabstray_item,
-                        parent,
-                        false),
-                tabsTray,
-                thumbnailLoader
+            LayoutInflater.from(parent.context).inflate(R.layout.mozac_browser_tabstray_item, parent, false),
+            thumbnailLoader
         )
     }, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`> = ObserverRegistry())`<br>RecyclerView adapter implementation to display a list/grid of tabs. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [styling](styling.md) | `var styling: `[`TabsTrayStyling`](../-tabs-tray-styling/index.md) |
 
 ### Functions
 

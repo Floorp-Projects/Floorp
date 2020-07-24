@@ -22,7 +22,7 @@ An abstract ViewHolder implementation for "tab" items.
 
 | Name | Summary |
 |---|---|
-| [bind](bind.md) | `abstract fun bind(tab: `[`Tab`](../../mozilla.components.concept.tabstray/-tab/index.md)`, isSelected: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, observable: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Binds the ViewHolder to the `Tab`. |
+| [bind](bind.md) | `abstract fun bind(tab: `[`Tab`](../../mozilla.components.concept.tabstray/-tab/index.md)`, isSelected: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, styling: `[`TabsTrayStyling`](../-tabs-tray-styling/index.md)`, observable: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Binds the ViewHolder to the `Tab`. |
 
 ### Extension Functions
 

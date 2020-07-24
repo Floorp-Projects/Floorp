@@ -2,7 +2,8 @@
 
 # BrowserTabsTray
 
-`class BrowserTabsTray : RecyclerView, `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/BrowserTabsTray.kt#L23)
+`class ~~BrowserTabsTray~~ : RecyclerView, `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/BrowserTabsTray.kt#L20)
+**Deprecated:** Use a RecyclerView directly instead; styling can be passed to the TabsAdapter. This class will be removed in a future release.
 
 A customizable tabs tray for browsers.
 
