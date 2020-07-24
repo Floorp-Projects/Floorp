@@ -6,8 +6,11 @@
 #include "nsPrinter.h"
 
 nsPrinter::nsPrinter(const nsAString& aName,
-                     const nsTArray<RefPtr<nsIPaper>>& aPaperList)
-    : mName(aName), mPaperList(aPaperList.Clone()) {}
+                     const nsTArray<RefPtr<nsIPaper>>& aPaperList,
+                     const bool aSupportsDuplex)
+    : mName(aName),
+      mPaperList(aPaperList.Clone()),
+      mSupportsDuplex(aSupportsDuplex) {}
 
 NS_IMPL_ISUPPORTS(nsPrinter, nsIPrinter);
 
@@ -20,5 +23,12 @@ nsPrinter::GetName(nsAString& aName) {
 NS_IMETHODIMP
 nsPrinter::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
   aPaperList.Assign(mPaperList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrinter::GetSupportsDuplex(bool* aSupportsDuplex) {
+  MOZ_ASSERT(aSupportsDuplex);
+  *aSupportsDuplex = mSupportsDuplex;
   return NS_OK;
 }

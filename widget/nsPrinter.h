@@ -17,13 +17,15 @@ class nsPrinter final : public nsIPrinter {
   NS_DECL_NSIPRINTER
   nsPrinter() = delete;
   nsPrinter(const nsAString& aName,
-            const nsTArray<RefPtr<nsIPaper>>& aPaperList);
+            const nsTArray<RefPtr<nsIPaper>>& aPaperList,
+            const bool aSupportsDuplex = false);
 
  private:
   ~nsPrinter() = default;
 
   nsString mName;
   nsTArray<RefPtr<nsIPaper>> mPaperList;
+  bool mSupportsDuplex = false;
 };
 
 #endif /* nsPrinter_h__ */

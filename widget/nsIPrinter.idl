@@ -18,4 +18,9 @@ interface nsIPrinter : nsISupports
    * The list of available paper sizes.
    */
   readonly attribute Array<nsIPaper> paperList;
+
+  /**
+   * Whether this printer supports duplex printing.
+   */
+  readonly attribute boolean supportsDuplex;
 };

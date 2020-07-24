@@ -119,3 +119,18 @@ nsPrinterWin::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
   aPaperList.Assign(mPaperList);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPrinterWin::GetSupportsDuplex(bool* aSupportsDuplex) {
+  MOZ_ASSERT(aSupportsDuplex);
+
+  if (mSupportsDuplex.isNothing()) {
+    // Note: this is a blocking call, which could be slow.
+    mSupportsDuplex =
+        Some(::DeviceCapabilitiesW(mName.get(), nullptr, DC_DUPLEX, nullptr,
+                                   nullptr) == 1);
+  }
+
+  *aSupportsDuplex = mSupportsDuplex.value();
+  return NS_OK;
+}
