@@ -929,8 +929,26 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
   if (aRemoteType.IsEmpty()) {
     change->ProcessReady();
   } else {
+    // Try to predict which BrowsingContextGroup will be used for the final load
+    // in this BrowsingContext. This has to be accurate if switching into an
+    // existing group, as it will control what pool of processes will be used
+    // for process selection.
+    //
+    // It's _technically_ OK to provide a group here if we're actually going to
+    // switch into a brand new group, though it's sub-optimal, as it can
+    // restrict the set of processes we're using.
+    RefPtr<BrowsingContextGroup> finalGroup;
+    if (aSpecificGroupId) {
+      // If we have a specific group, we're going to end up loading in it.
+      finalGroup = BrowsingContextGroup::GetOrCreate(aSpecificGroupId);
+    } else if (!aReplaceBrowsingContext) {
+      // If we're not replacing, we'll end up back in this group.
+      finalGroup = Group();
+    }
+
     change->mContentParent = ContentParent::GetNewOrUsedLaunchingBrowserProcess(
         /* aRemoteType = */ aRemoteType,
+        /* aGroup = */ finalGroup,
         /* aPriority = */ hal::PROCESS_PRIORITY_FOREGROUND,
         /* aPreferUsed = */ false);
     if (!change->mContentParent) {

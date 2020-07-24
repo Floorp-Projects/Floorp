@@ -379,7 +379,7 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
   uint64_t originId = 0;
   if (aOriginProcess) {
     originId = aOriginProcess->ChildID();
-    aGroup->EnsureSubscribed(aOriginProcess);
+    aGroup->EnsureHostProcess(aOriginProcess);
   }
 
   MOZ_LOG(GetLog(), LogLevel::Debug,
