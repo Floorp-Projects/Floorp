@@ -1062,7 +1062,27 @@
       "label": "Entrust_Root_Certification_Authority___G4",
       "binNumber": 211,
       "sha256Fingerprint": "2zUX0fZzKi1auXxTPscHee4ycKYvtKxCODckYObwHog="
+    },
+    {
+      "label": "Microsoft_ECC_Root_Certificate_Authority_2017",
+      "binNumber": 212,
+      "sha256Fingerprint": "NY3znXZK+eG3ZunJct81LuFc+sInr2rR1w6OSm7cugI="
+    },
+    {
+      "label": "Microsoft_RSA_Root_Certificate_Authority_2017",
+      "binNumber": 213,
+      "sha256Fingerprint": "x0H3D0sqjYi/LnHBQSLvU+8Q66DPpeZM+iD0GIUwc+A="
+    },
+    {
+      "label": "e_Szigno_Root_CA_2017",
+      "binNumber": 214,
+      "sha256Fingerprint": "vrALMIObm8MsMuREeQWVBkHyZCGxXtCJGYtRiuLqG5k="
+    },
+    {
+      "label": "OU_certSIGN_ROOT_CA_G2_O_CERTSIGN_SA_C_RO",
+      "binNumber": 215,
+      "sha256Fingerprint": "ZXz+L6c/qjhGJXHzMqI2Okb85wIJUXEHAs37tu7aMwU="
     }
   ],
-  "maxBin": 211
+  "maxBin": 215
 }
