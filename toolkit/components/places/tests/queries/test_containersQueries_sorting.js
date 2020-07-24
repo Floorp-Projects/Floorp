@@ -362,16 +362,6 @@ function test_result_sortingMode_change(
       ) {
         // Date containers are always sorted by date descending.
         check_children_sorting(root, Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-      } else if (
-        aResultType.value ==
-          Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
-        (aOriginalSortingMode.value ==
-          Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
-          aOriginalSortingMode.value ==
-            Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)
-      ) {
-        // Site containers don't have a good time property to sort by.
-        check_children_sorting(root, Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
       } else {
         check_children_sorting(root, aOriginalSortingMode.value);
       }

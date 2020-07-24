@@ -16,7 +16,7 @@
   } else if (opener) {
     frameType = "auxiliary";
     testWindow = opener;
-  } else if (parent != window) {
+  } else if (parent == window) {
     frameType = "top-level";
   } else {
     postResult(false, "Unexpected frameType");
