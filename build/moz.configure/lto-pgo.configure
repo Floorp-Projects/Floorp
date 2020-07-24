@@ -229,7 +229,10 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
             # instruction sets.
         else:
             num_cores = multiprocessing.cpu_count()
-            cflags.append("-flto")
+            if len(value) and value[0].lower() == 'full':
+                cflags.append("-flto")
+            else:
+                cflags.append("-flto=thin")
             cflags.append("-flifetime-dse=1")
 
             ldflags.append("-flto=%s" % num_cores)
