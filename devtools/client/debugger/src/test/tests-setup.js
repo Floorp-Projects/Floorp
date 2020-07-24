@@ -133,6 +133,7 @@ beforeEach(async () => {
   clearHistory();
   clearDocuments();
   prefs.projectDirectoryRoot = "";
+  prefs.projectDirectoryRootName = "";
   prefs.expressions = [];
 
   // Ensures window.dbg is there to track telemetry
