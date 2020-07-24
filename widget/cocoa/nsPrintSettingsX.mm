@@ -399,20 +399,17 @@ nsPrintSettingsX::SetToFileName(const nsAString& aToFileName) {
   if (!aToFileName.IsEmpty()) {
     NSURL* jobSavingURL = [NSURL fileURLWithPath:nsCocoaUtils::ToNSString(aToFileName)];
     if (jobSavingURL) {
-      // XXX We never seem to get here since aToFileName is always empty on Mac
-      // (see https://bugzilla.mozilla.org/show_bug.cgi?id=117233#c19 ).
       // Note: the PMPrintSettingsSetJobName call in nsPrintDialogServiceX::Show
       // seems to mean that we get a sensible file name pre-populated in the
       // dialog there, although our aToFileName is expected to be a full path,
       // and it's less clear where the rest of the path (the directory to save
       // to) in nsPrintDialogServiceX::Show comes from (perhaps from the use
       // of `sharedPrintInfo` to initialize new nsPrintSettingsX objects).
-      // Note: we could use [mPrintInfo setJobDisposition:NSPrintSaveJob] here
-      // instead of setting NSPrintJobDisposition on the dict, but there
-      // doesn't appear to be similar a method to actually set the URL (the
-      // file path).
+      // Note: we do not set NSPrintJobDisposition on the dict, as that would
+      // cause "silent" print jobs to invisibly go to a file instead of the
+      // printer. It's up to the print UI to determine if it should be saved
+      // to a file instead.
       NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
-      [printInfoDict setObject:NSPrintSaveJob forKey:NSPrintJobDisposition];
       [printInfoDict setObject:jobSavingURL forKey:NSPrintJobSavingURL];
     }
     mToFileName = aToFileName;
