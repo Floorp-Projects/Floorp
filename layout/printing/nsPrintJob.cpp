@@ -13,6 +13,7 @@
 #include "nsQueryObject.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Selection.h"
@@ -661,7 +662,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     mPrtPreview = nullptr;
   }
 
-  if (aWebProgressListener != nullptr) {
+  if (aWebProgressListener) {
     printData->mPrintProgressListeners.AppendObject(aWebProgressListener);
   }
 
@@ -707,7 +708,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // cause our print/print-preview operation to finish. In this case, we
   // should immediately return an error code so that the root caller knows
   // it shouldn't continue to do anything with this instance.
-  if (mIsDestroying || (mIsCreatingPrintPreview && !mIsCreatingPrintPreview)) {
+  if (mIsDestroying) {
     return NS_ERROR_FAILURE;
   }
 
@@ -719,12 +720,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // if they don't pass in a PrintSettings, then get the Global PS
   printData->mPrintSettings = aPrintSettings;
   if (!printData->mPrintSettings) {
-    rv = GetGlobalPrintSettings(getter_AddRefs(printData->mPrintSettings));
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(GetGlobalPrintSettings(getter_AddRefs(printData->mPrintSettings)));
   }
 
-  rv = EnsureSettingsHasPrinterNameSet(printData->mPrintSettings);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(EnsureSettingsHasPrinterNameSet(printData->mPrintSettings));
 
   printData->mPrintSettings->SetIsCancelled(false);
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
@@ -889,13 +888,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = devspec->Init(nullptr, printData->mPrintSettings,
-                     mIsCreatingPrintPreview);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(devspec->Init(nullptr, printData->mPrintSettings,
+                        mIsCreatingPrintPreview));
 
   printData->mPrintDC = new nsDeviceContext();
-  rv = printData->mPrintDC->InitForPrinting(devspec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(printData->mPrintDC->InitForPrinting(devspec));
 
   if (XRE_IsParentProcess() && !printData->mPrintDC->IsSyncPagePrinting()) {
     RefPtr<nsPrintJob> self(this);
@@ -909,9 +906,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     printData->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
   }
 
-  if (NS_FAILED(EnablePOsForPrinting())) {
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_TRY(EnablePOsForPrinting());
 
   // Attach progressListener to catch network requests.
   mDidLoadDataForPrinting = false;
@@ -1656,14 +1651,11 @@ nsresult nsPrintJob::ReflowDocList(const UniquePtr<nsPrintObject>& aPO,
 
   UpdateZoomRatio(aPO.get(), aSetPixelScale);
 
-  nsresult rv;
   // Reflow the PO
-  rv = ReflowPrintObject(aPO);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(ReflowPrintObject(aPO));
 
   for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-    rv = ReflowDocList(kid, aSetPixelScale);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(ReflowDocList(kid, aSetPixelScale));
   }
   return NS_OK;
 }
@@ -1680,18 +1672,16 @@ void nsPrintJob::FirePrintPreviewUpdateEvent() {
 }
 
 nsresult nsPrintJob::InitPrintDocConstruction(bool aHandleError) {
-  nsresult rv;
   // Guarantee that mPrt->mPrintObject won't be deleted.  It's owned by mPrt.
   // So, we should grab it with local variable.
   RefPtr<nsPrintData> printData = mPrt;
 
-  rv = ReflowDocList(printData->mPrintObject, DoSetPixelScale());
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(ReflowDocList(printData->mPrintObject, DoSetPixelScale()));
 
   FirePrintPreviewUpdateEvent();
 
   MaybeResumePrintAfterResourcesLoaded(aHandleError);
-  return rv;
+  return NS_OK;
 }
 
 bool nsPrintJob::ShouldResumePrint() const {
@@ -1996,13 +1986,11 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   aPO->mPresContext->SetBackgroundImageDraw(printBGColors);
 
   // init it with the DC
-  nsresult rv = aPO->mPresContext->Init(printData->mPrintDC);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(aPO->mPresContext->Init(printData->mPrintDC));
 
   aPO->mViewManager = new nsViewManager();
 
-  rv = aPO->mViewManager->Init(printData->mPrintDC);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(aPO->mViewManager->Init(printData->mPrintDC));
 
   aPO->mPresShell =
       aPO->mDocument->CreatePresShell(aPO->mPresContext, aPO->mViewManager);
@@ -2022,7 +2010,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   bool documentIsTopLevel = false;
   nsSize adjSize;
 
-  rv = SetRootView(aPO.get(), doReturn, documentIsTopLevel, adjSize);
+  nsresult rv = SetRootView(aPO.get(), doReturn, documentIsTopLevel, adjSize);
 
   if (NS_FAILED(rv) || doReturn) {
     return rv;
@@ -2057,17 +2045,14 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
         aPO->mViewManager, aPO->mPresContext, aPO->mPresShell.get());
   }
 
-  rv = aPO->mPresShell->Initialize();
-
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(aPO->mPresShell->Initialize());
   NS_ASSERTION(aPO->mPresShell, "Presshell should still be here");
 
   // Process the reflow event Initialize posted
   RefPtr<PresShell> presShell = aPO->mPresShell;
   presShell->FlushPendingNotifications(FlushType::Layout);
 
-  rv = UpdateSelectionAndShrinkPrintObject(aPO.get(), documentIsTopLevel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(UpdateSelectionAndShrinkPrintObject(aPO.get(), documentIsTopLevel));
 
 #ifdef EXTENDED_DEBUG_PRINTING
   if (MOZ_LOG_TEST(gPrintingLog, DUMP_LAYOUT_LEVEL)) {
