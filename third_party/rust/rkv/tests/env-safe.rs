@@ -12,13 +12,16 @@
 // deprecates `clippy::cyclomatic_complexity`.
 #![allow(clippy::complexity)]
 
-use std::fs;
-use std::str;
-use std::sync::{
-    Arc,
-    RwLock,
+use std::{
+    fs,
+    path::Path,
+    str,
+    sync::{
+        Arc,
+        RwLock,
+    },
+    thread,
 };
-use std::thread;
 
 use byteorder::{
     ByteOrder,
@@ -26,14 +29,14 @@ use byteorder::{
 };
 use tempfile::Builder;
 
-use rkv::backend::{
-    BackendEnvironmentBuilder,
-    SafeMode,
-    SafeModeDatabase,
-    SafeModeEnvironment,
-    SafeModeRwTransaction,
-};
 use rkv::{
+    backend::{
+        BackendEnvironmentBuilder,
+        SafeMode,
+        SafeModeDatabase,
+        SafeModeEnvironment,
+        SafeModeRwTransaction,
+    },
     Rkv,
     SingleStore,
     StoreError,
@@ -63,7 +66,7 @@ fn test_open_fails_safe() {
 
     let pb = nope.to_path_buf();
     match Rkv::new::<SafeMode>(nope.as_path()).err() {
-        Some(StoreError::DirectoryDoesNotExistError(p)) => {
+        Some(StoreError::UnsuitableEnvironmentPath(p)) => {
             assert_eq!(pb, p);
         },
         _ => panic!("expected error"),
@@ -96,9 +99,36 @@ fn test_open_from_builder_safe() {
 }
 
 #[test]
+fn test_open_from_builder_with_dir_safe_1() {
+    let root = Builder::new().prefix("test_open_from_builder_safe").tempdir().expect("tempdir");
+    println!("Root path: {:?}", root.path());
+
+    let mut builder = Rkv::environment_builder::<SafeMode>();
+    builder.set_max_dbs(2);
+    builder.set_make_dir_if_needed(true);
+
+    let k = Rkv::from_builder(root.path(), builder).expect("rkv");
+    check_rkv(&k);
+}
+
+#[test]
+#[should_panic(expected = "rkv: UnsuitableEnvironmentPath(\"bogus\")")]
+fn test_open_from_builder_with_dir_safe_2() {
+    let root = Path::new("bogus");
+    println!("Root path: {:?}", root);
+    assert!(!root.is_dir());
+
+    let mut builder = Rkv::environment_builder::<SafeMode>();
+    builder.set_max_dbs(2);
+
+    let k = Rkv::from_builder(root, builder).expect("rkv");
+    check_rkv(&k);
+}
+
+#[test]
 #[should_panic(expected = "opened: DbsFull")]
-fn test_open_with_capacity_safe() {
-    let root = Builder::new().prefix("test_open_with_capacity").tempdir().expect("tempdir");
+fn test_create_with_capacity_safe_1() {
+    let root = Builder::new().prefix("test_create_with_capacity_safe").tempdir().expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -106,7 +136,101 @@ fn test_open_with_capacity_safe() {
     let k = Rkv::with_capacity::<SafeMode>(root.path(), 1).expect("rkv");
     check_rkv(&k);
 
+    // This errors with "opened: DbsFull" because we specified a capacity of one (database),
+    // and check_rkv already opened one (plus the default database, which doesn't count
+    // against the limit).
     let _zzz = k.open_single("zzz", StoreOptions::create()).expect("opened");
+}
+
+#[test]
+fn test_create_with_capacity_safe_2() {
+    let root = Builder::new().prefix("test_create_with_capacity_safe").tempdir().expect("tempdir");
+    println!("Root path: {:?}", root.path());
+    fs::create_dir_all(root.path()).expect("dir created");
+    assert!(root.path().is_dir());
+
+    let k = Rkv::with_capacity::<SafeMode>(root.path(), 1).expect("rkv");
+    check_rkv(&k);
+
+    // This doesn't error with "opened: DbsFull" because even though we specified a capacity
+    // of one (database), and check_rkv already opened one, the default database doesn't
+    // count against the limit).
+    let _zzz = k.open_single(None, StoreOptions::create()).expect("opened");
+}
+
+#[test]
+#[should_panic(expected = "opened: SafeModeError(DbNotFoundError)")]
+fn test_open_with_capacity_safe_1() {
+    let root = Builder::new().prefix("test_open_with_capacity_safe").tempdir().expect("tempdir");
+    println!("Root path: {:?}", root.path());
+    fs::create_dir_all(root.path()).expect("dir created");
+    assert!(root.path().is_dir());
+
+    let k = Rkv::with_capacity::<SafeMode>(root.path(), 1).expect("rkv");
+    check_rkv(&k);
+
+    let _zzz = k.open_single("zzz", StoreOptions::default()).expect("opened");
+}
+
+#[test]
+fn test_open_with_capacity_safe_2() {
+    let root = Builder::new().prefix("test_open_with_capacity_safe").tempdir().expect("tempdir");
+    println!("Root path: {:?}", root.path());
+    fs::create_dir_all(root.path()).expect("dir created");
+    assert!(root.path().is_dir());
+
+    let k = Rkv::with_capacity::<SafeMode>(root.path(), 1).expect("rkv");
+    check_rkv(&k);
+
+    let _zzz = k.open_single(None, StoreOptions::default()).expect("opened");
+}
+
+#[test]
+fn test_list_dbs_safe_1() {
+    let root = Builder::new().prefix("test_list_dbs_safe").tempdir().expect("tempdir");
+    println!("Root path: {:?}", root.path());
+    fs::create_dir_all(root.path()).expect("dir created");
+    assert!(root.path().is_dir());
+
+    let k = Rkv::with_capacity::<SafeMode>(root.path(), 1).expect("rkv");
+    check_rkv(&k);
+
+    let mut dbs = k.get_dbs().unwrap();
+    dbs.sort();
+    assert_eq!(dbs, vec![None, Some("s".to_owned())]);
+}
+
+#[test]
+fn test_list_dbs_safe_2() {
+    let root = Builder::new().prefix("test_list_dbs_safe").tempdir().expect("tempdir");
+    println!("Root path: {:?}", root.path());
+    fs::create_dir_all(root.path()).expect("dir created");
+    assert!(root.path().is_dir());
+
+    let k = Rkv::with_capacity::<SafeMode>(root.path(), 2).expect("rkv");
+    check_rkv(&k);
+
+    let _ = k.open_single("zzz", StoreOptions::create()).expect("opened");
+
+    let mut dbs = k.get_dbs().unwrap();
+    dbs.sort();
+    assert_eq!(dbs, vec![None, Some("s".to_owned()), Some("zzz".to_owned())]);
+}
+
+#[test]
+fn test_list_dbs_safe_3() {
+    let root = Builder::new().prefix("test_list_dbs_safe").tempdir().expect("tempdir");
+    println!("Root path: {:?}", root.path());
+    fs::create_dir_all(root.path()).expect("dir created");
+    assert!(root.path().is_dir());
+
+    let k = Rkv::with_capacity::<SafeMode>(root.path(), 0).expect("rkv");
+
+    let _ = k.open_single(None, StoreOptions::create()).expect("opened");
+
+    let mut dbs = k.get_dbs().unwrap();
+    dbs.sort();
+    assert_eq!(dbs, vec![None]);
 }
 
 #[test]
@@ -276,9 +400,9 @@ fn test_multi_put_get_del_safe() {
     {
         let mut iter = multistore.get(&writer, "str1").unwrap();
         let (id, val) = iter.next().unwrap().unwrap();
-        assert_eq!((id, val), (&b"str1"[..], Some(Value::Str("str1 bar"))));
+        assert_eq!((id, val), (&b"str1"[..], Value::Str("str1 bar")));
         let (id, val) = iter.next().unwrap().unwrap();
-        assert_eq!((id, val), (&b"str1"[..], Some(Value::Str("str1 foo"))));
+        assert_eq!((id, val), (&b"str1"[..], Value::Str("str1 foo")));
     }
     writer.commit().unwrap();
 
@@ -609,22 +733,22 @@ fn test_iter_safe() {
     let mut iter = sk.iter_start(&reader).unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "bar");
-    assert_eq!(val, Some(Value::Bool(true)));
+    assert_eq!(val, Value::Bool(true));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "baz");
-    assert_eq!(val, Some(Value::Str("héllo, yöu")));
+    assert_eq!(val, Value::Str("héllo, yöu"));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "foo");
-    assert_eq!(val, Some(Value::I64(1234)));
+    assert_eq!(val, Value::I64(1234));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "héllò, töűrîst");
-    assert_eq!(val, Some(Value::Str("Emil.RuleZ!")));
+    assert_eq!(val, Value::Str("Emil.RuleZ!"));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 
     // Iterators don't loop.  Once one returns None, additional calls
@@ -636,10 +760,10 @@ fn test_iter_safe() {
     let mut iter = sk.iter_from(&reader, "moo").unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 
     // Reader.iter_from() works as expected when the given key is a prefix
@@ -647,10 +771,10 @@ fn test_iter_safe() {
     let mut iter = sk.iter_from(&reader, "no").unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 }
 
@@ -746,84 +870,84 @@ fn test_multiple_store_iter_safe() {
     let mut iter = s1.iter_start(&reader).unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "bar");
-    assert_eq!(val, Some(Value::Bool(true)));
+    assert_eq!(val, Value::Bool(true));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "baz");
-    assert_eq!(val, Some(Value::Str("héllo, yöu")));
+    assert_eq!(val, Value::Str("héllo, yöu"));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "foo");
-    assert_eq!(val, Some(Value::I64(1234)));
+    assert_eq!(val, Value::I64(1234));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "héllò, töűrîst");
-    assert_eq!(val, Some(Value::Str("Emil.RuleZ!")));
+    assert_eq!(val, Value::Str("Emil.RuleZ!"));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 
     // Iterate through the whole store in "s2"
     let mut iter = s2.iter_start(&reader).unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "bar");
-    assert_eq!(val, Some(Value::Bool(true)));
+    assert_eq!(val, Value::Bool(true));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "baz");
-    assert_eq!(val, Some(Value::Str("héllo, yöu")));
+    assert_eq!(val, Value::Str("héllo, yöu"));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "foo");
-    assert_eq!(val, Some(Value::I64(1234)));
+    assert_eq!(val, Value::I64(1234));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "héllò, töűrîst");
-    assert_eq!(val, Some(Value::Str("Emil.RuleZ!")));
+    assert_eq!(val, Value::Str("Emil.RuleZ!"));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 
     // Iterate from a given key in "s1"
     let mut iter = s1.iter_from(&reader, "moo").unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 
     // Iterate from a given key in "s2"
     let mut iter = s2.iter_from(&reader, "moo").unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 
     // Iterate from a given prefix in "s1"
     let mut iter = s1.iter_from(&reader, "no").unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 
     // Iterate from a given prefix in "s2"
     let mut iter = s2.iter_from(&reader, "no").unwrap();
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "noo");
-    assert_eq!(val, Some(Value::F64(1234.0.into())));
+    assert_eq!(val, Value::F64(1234.0.into()));
     let (key, val) = iter.next().unwrap().unwrap();
     assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-    assert_eq!(val, Some(Value::Str("米克規則")));
+    assert_eq!(val, Value::Str("米克規則"));
     assert!(iter.next().is_none());
 }
 

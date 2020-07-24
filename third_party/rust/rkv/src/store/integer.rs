@@ -10,21 +10,25 @@
 
 use std::marker::PhantomData;
 
-use crate::backend::{
-    BackendDatabase,
-    BackendRwTransaction,
+use crate::{
+    backend::{
+        BackendDatabase,
+        BackendRwTransaction,
+    },
+    error::StoreError,
+    readwrite::{
+        Readable,
+        Writer,
+    },
+    store::{
+        keys::{
+            Key,
+            PrimitiveInt,
+        },
+        single::SingleStore,
+    },
+    value::Value,
 };
-use crate::error::StoreError;
-use crate::readwrite::{
-    Readable,
-    Writer,
-};
-use crate::store::keys::{
-    Key,
-    PrimitiveInt,
-};
-use crate::store::single::SingleStore;
-use crate::value::Value;
 
 type EmptyResult = Result<(), StoreError>;
 
@@ -77,11 +81,12 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use tempfile::Builder;
-
     use super::*;
     use crate::*;
+
+    use std::fs;
+
+    use tempfile::Builder;
 
     #[test]
     fn test_integer_keys() {
@@ -310,11 +315,12 @@ mod tests {
 
 #[cfg(test)]
 mod tests_safe {
-    use std::fs;
-    use tempfile::Builder;
-
     use super::*;
     use crate::*;
+
+    use std::fs;
+
+    use tempfile::Builder;
 
     #[test]
     fn test_integer_keys() {
