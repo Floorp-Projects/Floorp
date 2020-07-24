@@ -1927,9 +1927,16 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   MozPromiseRequestHolder<ResumeDelayedPlaybackAgent::ResumePromise>
       mResumePlaybackRequest;
 
-  // We use MediaControlKeyListener to listen media control key, by which we
-  // would play or pause media element.
-  void StartListeningMediaControlKeyIfNeeded();
+  // Return true if the media qualifies for being controlled by media control
+  // keys.
+  bool ShouldStartMediaControlKeyListener() const;
+
+  // Start the listener if media fits the requirement of being able to be
+  // controlled be media control keys.
+  void StartMediaControlKeyListenerIfNeeded();
+
+  // It's used to listen media control key, by which we would play or pause
+  // media element.
   RefPtr<MediaControlKeyListener> mMediaControlKeyListener;
 
   // Return true if the media element is being used in picture in picture mode.
