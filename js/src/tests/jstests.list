@@ -631,6 +631,12 @@ fails-if(!xulRuntime.shell) script test262/built-ins/TypedArray/prototype/set/ty
 skip script test262/intl402/DisplayNames/proto-from-ctor-realm.js
 skip script test262/intl402/DisplayNames/prototype/resolvedOptions/return-object.js
 
+# Can also be enabled when Intl.DisplayNames is no longer installed through addIntlExtras.
+# addIntlExtras exposes the mozIntl.DisplayNames constructor, which supports date-time types. This
+# tests expects that date-time types throw a TypeError.
+# https://github.com/tc39/proposal-intl-displaynames/issues/75
+skip script test262/intl402/DisplayNames/options-type-invalid-throws.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1648202
 skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
 
@@ -640,9 +646,6 @@ skip script test262/language/expressions/class/elements/static-private-fields-pr
 skip script test262/language/expressions/class/elements/private-fields-proxy-default-handler-throws.js
 skip script test262/language/statements/class/elements/static-private-fields-proxy-default-handler-throws.js
 skip script test262/language/statements/class/elements/privatefield-on-proxy.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1653291
-skip script test262/intl402/DisplayNames/options-type-invalid-throws.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1653292
 skip script test262/intl402/DateTimeFormat/prototype/formatToParts/fractionalSecondDigits.js
@@ -671,12 +674,10 @@ skip script test262/harness/detachArrayBuffer.js
 # https://github.com/tc39/ecma402/issues/402
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
 
-# https://github.com/tc39/test262/pull/2680
-skip script test262/built-ins/Atomics/exchange/nonshared-int-views.js
-
-# Tests not yet updated for https://github.com/tc39/proposal-intl-DateTimeFormat-formatRange/issues/15
-skip script test262/intl402/DateTimeFormat/prototype/formatRange/date-undefined-throws.js
-skip script test262/intl402/DateTimeFormat/prototype/formatRangeToParts/date-undefined-throws.js
+# Tests not yet updated for https://github.com/tc39/proposal-intl-displaynames/pull/83
+skip script test262/intl402/DisplayNames/locales-length-tolength-throws.js
+skip script test262/intl402/DisplayNames/locales-length-poison-throws.js
+skip script test262/intl402/DisplayNames/length.js
 
 
 ##############################################
