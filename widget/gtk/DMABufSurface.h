@@ -128,7 +128,7 @@ class DMABufSurface {
 
  protected:
   virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
-  bool FenceCreate(int aFd);
+  bool FenceImportFromFd();
 
   void GlobalRefCountImport(int aFd);
   void GlobalRefCountDelete();
@@ -154,6 +154,7 @@ class DMABufSurface {
   void* mMappedRegionData[DMABUF_BUFFER_PLANES];
   uint32_t mMappedRegionStride[DMABUF_BUFFER_PLANES];
 
+  int mSyncFd;
   EGLSyncKHR mSync;
   RefPtr<mozilla::gl::GLContext> mGL;
 
