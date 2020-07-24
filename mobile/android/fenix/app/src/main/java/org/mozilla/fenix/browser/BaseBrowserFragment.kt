@@ -244,7 +244,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     }
 
                     viewLifecycleOwner.lifecycleScope.allowUndo(
-                        requireView(),
+                        requireView().browserLayout,
                         snackbarMessage,
                         requireContext().getString(R.string.snackbar_deleted_undo),
                         {
