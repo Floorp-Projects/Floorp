@@ -348,6 +348,17 @@ namespace mozilla {
 
 class LogModule;
 
+struct NotOk {};
+
+// Allow MOZ_TRY/QM_TRY to handle `bool` values by wrapping them with OkIf.
+// TODO: Maybe move this to mfbt/ResultExtensions.h
+inline Result<Ok, NotOk> OkIf(bool aValue) {
+  if (aValue) {
+    return Ok();
+  }
+  return Err(NotOk());
+}
+
 namespace dom {
 namespace quota {
 
