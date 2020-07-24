@@ -18,7 +18,7 @@ The full documentation is available `here <https://mozilla.github.io/glean_parse
 Requirements
 ------------
 
-- Python 3.5 (or later)
+- Python 3.6 (or later)
 
 The following library requirements are installed automatically when glean_parser
 is installed by `pip`.
@@ -30,13 +30,9 @@ is installed by `pip`.
 - jsonschema
 - PyYAML
 
-Additionally on Python 3.6 and 3.5:
+Additionally on Python 3.6:
 
 - iso8601
-
-And on Python 3.5:
-
-- pep487
 
 Usage
 -----
