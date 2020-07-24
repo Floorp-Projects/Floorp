@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <stdint.h>  // for UINT32_MAX, uintptr_t
+#include "IndexedDBCommon.h"
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
@@ -21,6 +22,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"
@@ -483,9 +485,8 @@ nsresult Key::DecodeJSValInternal(const EncodedDataType*& aPos,
     uint32_t index = 0;
     JS::Rooted<JS::Value> val(aCx);
     while (aPos < aEnd && *aPos - aTypeOffset != eTerminator) {
-      nsresult rv = DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset, &val,
-                                        aRecursionDepth + 1);
-      NS_ENSURE_SUCCESS(rv, rv);
+      IDB_TRY(DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset, &val,
+                                  aRecursionDepth + 1));
 
       aTypeOffset = 0;
 
