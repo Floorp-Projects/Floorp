@@ -142,24 +142,22 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
   // Functions that (a) implement distinguished amounts, and (b) are outside of
   // this module.
   struct AmountFns {
-    mozilla::InfallibleAmountFn mJSMainRuntimeGCHeap;
-    mozilla::InfallibleAmountFn mJSMainRuntimeTemporaryPeak;
-    mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsSystem;
-    mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsUser;
-    mozilla::InfallibleAmountFn mJSMainRuntimeRealmsSystem;
-    mozilla::InfallibleAmountFn mJSMainRuntimeRealmsUser;
+    mozilla::InfallibleAmountFn mJSMainRuntimeGCHeap = nullptr;
+    mozilla::InfallibleAmountFn mJSMainRuntimeTemporaryPeak = nullptr;
+    mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsSystem = nullptr;
+    mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsUser = nullptr;
+    mozilla::InfallibleAmountFn mJSMainRuntimeRealmsSystem = nullptr;
+    mozilla::InfallibleAmountFn mJSMainRuntimeRealmsUser = nullptr;
 
-    mozilla::InfallibleAmountFn mImagesContentUsedUncompressed;
+    mozilla::InfallibleAmountFn mImagesContentUsedUncompressed = nullptr;
 
-    mozilla::InfallibleAmountFn mStorageSQLite;
+    mozilla::InfallibleAmountFn mStorageSQLite = nullptr;
 
-    mozilla::InfallibleAmountFn mLowMemoryEventsVirtual;
-    mozilla::InfallibleAmountFn mLowMemoryEventsCommitSpace;
-    mozilla::InfallibleAmountFn mLowMemoryEventsPhysical;
+    mozilla::InfallibleAmountFn mLowMemoryEventsVirtual = nullptr;
+    mozilla::InfallibleAmountFn mLowMemoryEventsCommitSpace = nullptr;
+    mozilla::InfallibleAmountFn mLowMemoryEventsPhysical = nullptr;
 
-    mozilla::InfallibleAmountFn mGhostWindows;
-
-    AmountFns() { mozilla::PodZero(this); }
+    mozilla::InfallibleAmountFn mGhostWindows = nullptr;
   };
   AmountFns mAmountFns;
 
@@ -176,10 +174,8 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
 
   // Functions that measure per-tab memory consumption.
   struct SizeOfTabFns {
-    mozilla::JSSizeOfTabFn mJS;
-    mozilla::NonJSSizeOfTabFn mNonJS;
-
-    SizeOfTabFns() { mozilla::PodZero(this); }
+    mozilla::JSSizeOfTabFn mJS = nullptr;
+    mozilla::NonJSSizeOfTabFn mNonJS = nullptr;
   };
   SizeOfTabFns mSizeOfTabFns;
 
