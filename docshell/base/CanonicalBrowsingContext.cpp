@@ -631,16 +631,11 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
                             mContentParent ? u"true"_ns : u"false"_ns,
                             /* notify */ true);
 
-    RefPtr<BrowsingContextGroup> specificGroup;
-    if (mSpecificGroupId != 0) {
-      specificGroup = BrowsingContextGroup::GetOrCreate(mSpecificGroupId);
-    }
-
     // The process has been created, hand off to nsFrameLoaderOwner to finish
     // the process switch.
     ErrorResult error;
     frameLoaderOwner->ChangeRemotenessToProcess(
-        mContentParent, mReplaceBrowsingContext, specificGroup, error);
+        mContentParent, mReplaceBrowsingContext, mSpecificGroup, error);
     if (error.Failed()) {
       Cancel(error.StealNSResult());
       return;
@@ -815,6 +810,12 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
     mContentParent = nullptr;
   }
 
+  // If we were given a specific group, stop keeping that group alive manually.
+  if (mSpecificGroup) {
+    mSpecificGroup->RemoveKeepAlive();
+    mSpecificGroup = nullptr;
+  }
+
   mPromise = nullptr;
   mTarget = nullptr;
   mPrepareToChangePromise = nullptr;
@@ -822,16 +823,15 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
 
 CanonicalBrowsingContext::PendingRemotenessChange::PendingRemotenessChange(
     CanonicalBrowsingContext* aTarget, RemotenessPromise::Private* aPromise,
-    uint64_t aPendingSwitchId, bool aReplaceBrowsingContext,
-    uint64_t aSpecificGroupId)
+    uint64_t aPendingSwitchId, bool aReplaceBrowsingContext)
     : mTarget(aTarget),
       mPromise(aPromise),
       mPendingSwitchId(aPendingSwitchId),
-      mSpecificGroupId(aSpecificGroupId),
       mReplaceBrowsingContext(aReplaceBrowsingContext) {}
 
 CanonicalBrowsingContext::PendingRemotenessChange::~PendingRemotenessChange() {
-  MOZ_ASSERT(!mPromise && !mTarget,
+  MOZ_ASSERT(!mPromise && !mTarget && !mContentParent && !mSpecificGroup &&
+                 !mPrepareToChangePromise,
              "should've already been Cancel() or Complete()-ed");
 }
 
@@ -903,10 +903,17 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
 
   // Switching to remote. Wait for new process to launch before switch.
   auto promise = MakeRefPtr<RemotenessPromise::Private>(__func__);
-  RefPtr<PendingRemotenessChange> change =
-      new PendingRemotenessChange(this, promise, aPendingSwitchId,
-                                  aReplaceBrowsingContext, aSpecificGroupId);
+  RefPtr<PendingRemotenessChange> change = new PendingRemotenessChange(
+      this, promise, aPendingSwitchId, aReplaceBrowsingContext);
   mPendingRemotenessChange = change;
+
+  // If a specific BrowsingContextGroup ID was specified for this load, make
+  // sure to keep it alive until the process switch is completed.
+  if (aSpecificGroupId) {
+    change->mSpecificGroup =
+        BrowsingContextGroup::GetOrCreate(aSpecificGroupId);
+    change->mSpecificGroup->AddKeepAlive();
+  }
 
   // Call `prepareToChangeRemoteness` in parallel with starting a new process
   // for <browser> loads.
@@ -937,14 +944,8 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
     // It's _technically_ OK to provide a group here if we're actually going to
     // switch into a brand new group, though it's sub-optimal, as it can
     // restrict the set of processes we're using.
-    RefPtr<BrowsingContextGroup> finalGroup;
-    if (aSpecificGroupId) {
-      // If we have a specific group, we're going to end up loading in it.
-      finalGroup = BrowsingContextGroup::GetOrCreate(aSpecificGroupId);
-    } else if (!aReplaceBrowsingContext) {
-      // If we're not replacing, we'll end up back in this group.
-      finalGroup = Group();
-    }
+    BrowsingContextGroup* finalGroup =
+        aReplaceBrowsingContext ? change->mSpecificGroup.get() : Group();
 
     change->mContentParent = ContentParent::GetNewOrUsedLaunchingBrowserProcess(
         /* aRemoteType = */ aRemoteType,
