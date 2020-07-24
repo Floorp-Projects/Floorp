@@ -73,6 +73,7 @@ object Glean {
     /**
      * Get whether or not Glean is allowed to record and upload data.
      */
+    @Suppress("DEPRECATION")
     fun getUploadEnabled(): Boolean {
         return GleanCore.getUploadEnabled()
     }
