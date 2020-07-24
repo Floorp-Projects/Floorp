@@ -114,71 +114,19 @@ var PrintUtils = {
   },
 
   /**
-   * Retrieve the template for the tab modal print UI. The element
-   * could be inside of a template tag, so we'll want to unwrap it
-   * the first time it's accessed.
-   */
-  _tabModalTemplate() {
-    let template = document.getElementById("printTabModalTemplate");
-    if (template.localName == "template") {
-      template.replaceWith(template.content);
-      return document.getElementById("printTabModalTemplate");
-    }
-    return template;
-  },
-
-  /**
    * Opens the tab modal version of the print UI for the current tab.
    *
    * @param aBrowsingContext
    *        The BrowsingContext of the window to print.
    */
   _openTabModalPrint(aBrowsingContext) {
-    const { SubDialog } = ChromeUtils.import(
-      "resource://gre/modules/SubDialog.jsm"
-    );
-
-    let container = gBrowser.getBrowserContainer(
-      aBrowsingContext.embedderElement
-    );
-    if (container.querySelector(".printDialogContainer")) {
-      // Don't open another dialog if we're already printing.
-      return;
-    }
-
-    let dialog = new SubDialog({
-      id: `printModal${aBrowsingContext.id}`,
-      template: this._tabModalTemplate(),
-      parentElement: container,
-    });
-
-    // Store some Promises on the overlay for use in the tests.
-    dialog._overlay._ready = dialog._frameCreated;
-    let resolveDialogClosed;
-    dialog._overlay._closed = new Promise(
-      resolve => (resolveDialogClosed = resolve)
-    );
-
-    // Move the overlay so it overlaps the chrome and content.
-    container.prepend(dialog._overlay);
-
-    dialog.open(
-      `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`,
-      null,
-      null,
-      async () => {
-        // Cleanup the overlay since a new one will be created the next time
-        // a print is initiated for this tab.
-        let overlay = dialog._overlay;
-        await dialog._closingPromise;
-        overlay.remove();
-
-        // Cleanup all our references to the dialog.
-        dialog = null;
-        overlay._dialog = null;
-
-        // Let the tests know the dialog has been closed.
-        resolveDialogClosed();
+    let printPath = "chrome://global/content/print.html";
+    gBrowser.loadOneTab(
+      `${printPath}?browsingContextId=${aBrowsingContext.id}`,
+      {
+        inBackground: false,
+        relatedToCurrent: true,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       }
     );
   },
@@ -290,7 +238,7 @@ var PrintUtils = {
    */
   printPreview(aListenerObj) {
     if (PRINT_TAB_MODAL) {
-      this._openTabModalPrint(gBrowser.selectedBrowser.browsingContext);
+      this._openTabModalPrint(aListenerObj.getSourceBrowser().browsingContext);
       return;
     }
 
