@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div class="before">
+  mozilla before
+</div>
+<input value="mozilla">
+<div class="after">
+  mozilla after
+</div>
+<script>
+function selectionContainedWithin(selector) {
+  for (let node = getSelection().anchorNode; node; node = node.parentNode) {
+    if (node.matches && node.matches(selector))
+      return true;
+  }
+  return false;
+}
+
+test(function () {
+  let input = document.querySelector("input");
+  input.focus();
+  assert_true(window.find("mozilla"), "Found the string, didn't throw");
+  assert_true(selectionContainedWithin(".after"), "Should've found the following node");
+  assert_true(!window.find("mozilla"), "No more matches forward");
+  assert_true(window.find("mozilla", /* caseSensitive = */ false, /* backwards = */ true), "Should find stuff backwards");
+  assert_true(selectionContainedWithin(".before"), "Should've found the node before the input (should not return the NAC range)");
+}, "window.find() doesn't throw if focused on an <input>");
+</script>
