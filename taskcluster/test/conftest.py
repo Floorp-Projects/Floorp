@@ -44,20 +44,21 @@ def create_tgg(responses, datadir):
         mock_requests = {}
 
         # bugbug /push/schedules
-        url = BUGBUG_BASE_URL + "/push/{project}/{head_rev}/schedules".format(**tgg.parameters)
+        url = BUGBUG_BASE_URL + "/push/{project}/{head_rev}/schedules".format(
+            **tgg.parameters
+        )
         mock_requests[url] = "bugbug-push-schedules.json"
 
         # files changed
-        url = "{head_repository}/json-automationrelevance/{head_rev}".format(**tgg.parameters)
+        url = "{head_repository}/json-automationrelevance/{head_rev}".format(
+            **tgg.parameters
+        )
         mock_requests[url] = "automationrelevance.json"
 
         for url, filename in mock_requests.items():
             with open(os.path.join(datadir, filename)) as fh:
                 responses.add(
-                    responses.GET,
-                    url,
-                    json=json.load(fh),
-                    status=200,
+                    responses.GET, url, json=json.load(fh), status=200,
                 )
 
         # Still allow other real requests.
@@ -70,7 +71,6 @@ def create_tgg(responses, datadir):
 
 @pytest.fixture(scope="session")
 def filter_tasks():
-
     def inner(graph, func):
         return filter(func, graph.tasks.values())
 

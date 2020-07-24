@@ -19,7 +19,11 @@ pytestmark = pytest.mark.slow
 def tgg(create_tgg):
     params = TRY_AUTO_PARAMETERS.copy()
     params.update(
-        {"head_repository": "https://hg.mozilla.org/try", "project": "try", "target_kind": "test"}
+        {
+            "head_repository": "https://hg.mozilla.org/try",
+            "project": "try",
+            "target_kind": "test",
+        }
     )
     tgg = create_tgg(overrides=params)
     return tgg
@@ -60,22 +64,29 @@ def test_only_important_manifests(params, full_task_graph, filter_tasks):
         if attr("unittest_suite") in CHUNK_SUITES_BLACKLIST:
             assert not attr("test_manifests")
         else:
-            unimportant = [t for t in attr("test_manifests") if t not in important_manifests]
+            unimportant = [
+                t for t in attr("test_manifests") if t not in important_manifests
+            ]
             assert unimportant == []
 
 
-@pytest.mark.xfail(reason="Bug 1641131 - shippable builds still showing up due to dependencies")
+@pytest.mark.xfail(
+    reason="Bug 1641131 - shippable builds still showing up due to dependencies"
+)
 def test_no_shippable_builds(tgg, filter_tasks):
     optimized_task_graph = tgg.optimized_task_graph
     # We can still sometimes get macosx64-shippable builds with |mach try
     # auto| due to TV tasks (since there is no 'opt' alternative for
     # macosx). Otherwise there shouldn't be any other shippable builds.
-    tasks = [t.label for t in filter_tasks(
-        optimized_task_graph,
-        lambda t: t.kind == "build"
-        and "shippable" in t.attributes["build_platform"]
-        and t.attributes["build_platform"] != "macosx64-shippable",
-    )]
+    tasks = [
+        t.label
+        for t in filter_tasks(
+            optimized_task_graph,
+            lambda t: t.kind == "build"
+            and "shippable" in t.attributes["build_platform"]
+            and t.attributes["build_platform"] != "macosx64-shippable",
+        )
+    ]
 
     assert tasks == []
 
