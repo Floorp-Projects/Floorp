@@ -359,6 +359,55 @@ inline Result<Ok, NotOk> OkIf(bool aValue) {
   return Err(NotOk());
 }
 
+/**
+ * Allow MOZ_TRY/QM_TRY to handle `nsresult` values and optionally enforce
+ * success for some special values.
+ * This is useful in cases when a specific error shouldn't abort execution of a
+ * function and we need to distinguish between a normal success and a forced
+ * success.
+ *
+ * Typical use case:
+ *
+ * nsresult MyFunc(nsIFile& aDirectory) {
+ *   bool exists;
+ *   QM_TRY_VAR(exists,
+ *              ToResult(aDirectory.Create(nsIFile::DIRECTORY_TYPE, 0755),
+ *                       [](auto aValue) {
+ *                         return aValue == NS_ERROR_FILE_ALREADY_EXISTS;
+ *                       }));
+ *
+ *   if (exists) {
+ *     QM_TRY(aDirectory.IsDirectory(&isDirectory));
+ *     QM_TRY(isDirectory, NS_ERROR_UNEXPECTED);
+ *   }
+ *
+ *   return NS_OK;
+ * }
+ *
+ * TODO: Maybe move this to mfbt/ResultExtensions.h
+ */
+
+class Okish {
+  const bool mEnforced;
+
+ public:
+  explicit Okish(bool aEnforced) : mEnforced(aEnforced) {}
+
+  MOZ_IMPLICIT operator bool() const { return mEnforced; }
+};
+
+template <typename SuccessEnforcer>
+Result<Okish, nsresult> ToResult(nsresult aValue,
+                                 const SuccessEnforcer& aSuccessEnforcer) {
+  if (NS_SUCCEEDED(aValue)) {
+    return Okish(/* aEnforced */ false);
+  }
+  if (aSuccessEnforcer(aValue)) {
+    return Okish(/* aEnforced */ true);
+  }
+  return Err(aValue);
+}
+
 namespace dom {
 namespace quota {
 
