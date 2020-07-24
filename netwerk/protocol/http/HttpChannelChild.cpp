@@ -2135,6 +2135,13 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
+  // Resume the suspension in ConnectParent.
+  auto eventQueueResumeGuard = MakeScopeExit([&] {
+    MOZ_ASSERT(mSuspendForWaitCompleteRedirectSetup);
+    mEventQ->Resume();
+    mSuspendForWaitCompleteRedirectSetup = false;
+  });
+
   if (mShouldParentIntercept) {
     // This is a redirected channel, and the corresponding parent channel has
     // started AsyncOpen but was intercepted and suspended. We must tear it down
@@ -2178,11 +2185,6 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
 
   // add ourselves to the load group.
   if (mLoadGroup) mLoadGroup->AddRequest(this, nullptr);
-
-  // Resume the suspension in ConnectParent.
-  MOZ_ASSERT(mSuspendForWaitCompleteRedirectSetup);
-  mEventQ->Resume();
-  mSuspendForWaitCompleteRedirectSetup = false;
 
   // We already have an open IPDL connection to the parent. If on-modify-request
   // listeners or load group observers canceled us, let the parent handle it
