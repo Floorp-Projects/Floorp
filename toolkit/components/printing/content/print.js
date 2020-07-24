@@ -57,7 +57,9 @@ const PrintUI = {
           });
           break;
         case "cancel":
-          window.close();
+          console.log(
+            "TODO: trigger any teardown, exit the print preview and close the tab-modal"
+          );
           break;
       }
     }
