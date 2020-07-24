@@ -985,13 +985,18 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
 
 static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun_ctx,nr_socket *sock, nr_stun_server_request *req, int *dont_free, int *error)
   {
-    nr_ice_component *comp=cb_arg;
+    nr_ice_component *pcomp=cb_arg;
     nr_transport_addr local_addr;
     int r,_status;
 
-    if(comp->state==NR_ICE_COMPONENT_FAILED) {
+    if(pcomp->state==NR_ICE_COMPONENT_FAILED) {
       *error=400;
       ABORT(R_REJECTED);
+    }
+
+    if (pcomp->local_component->stream->obsolete) {
+      /* Don't do any triggered check stuff in thiis case. */
+      return 0;
     }
 
     /* Find the candidate pair that this maps to */
@@ -1000,7 +1005,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
       ABORT(r);
     }
 
-    if (r=nr_ice_component_process_incoming_check(comp, &local_addr, req, error))
+    if (r=nr_ice_component_process_incoming_check(pcomp, &local_addr, req, error))
       ABORT(r);
 
     _status=0;
