@@ -358,6 +358,7 @@ devtools.jar:
     content/application/src/components/manifest/ManifestJsonLink.css (application/src/components/manifest/ManifestJsonLink.css)
     content/application/src/components/manifest/ManifestLoader.css (application/src/components/manifest/ManifestLoader.css)
     content/application/src/components/manifest/ManifestSection.css (application/src/components/manifest/ManifestSection.css)
+    content/application/src/components/manifest/ManifestUrlItem.css (application/src/components/manifest/ManifestUrlItem.css)
     content/application/src/components/routing/PageSwitcher.css (application/src/components/routing/PageSwitcher.css)
     content/application/src/components/routing/Sidebar.css (application/src/components/routing/Sidebar.css)
     content/application/src/components/routing/SidebarItem.css (application/src/components/routing/SidebarItem.css)

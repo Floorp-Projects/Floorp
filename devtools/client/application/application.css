@@ -20,6 +20,7 @@
 @import "chrome://devtools/content/application/src/components/manifest/ManifestJsonLink.css";
 @import "chrome://devtools/content/application/src/components/manifest/ManifestLoader.css";
 @import "chrome://devtools/content/application/src/components/manifest/ManifestSection.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestUrlItem.css";
 @import "chrome://devtools/content/application/src/components/routing/PageSwitcher.css";
 @import "chrome://devtools/content/application/src/components/routing/Sidebar.css";
 @import "chrome://devtools/content/application/src/components/routing/SidebarItem.css";

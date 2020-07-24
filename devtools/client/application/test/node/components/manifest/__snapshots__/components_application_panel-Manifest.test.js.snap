@@ -133,7 +133,57 @@ exports[`Manifest does render the issues section when the manifest is not valid 
 </article>
 `;
 
-exports[`Manifest renders the expected snapshop for a manifest with icon members 1`] = `
+exports[`Manifest renders the expected snapshot for a manifest with color members 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody>
+        <ManifestColorItem
+          key="background_color"
+          label="background_color"
+          value="red"
+        />
+        <ManifestColorItem
+          key="theme_color"
+          label="theme_color"
+          value="rgb(0, 0, 0)"
+        />
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshot for a manifest with icon members 1`] = `
 <article
   className="js-manifest"
 >
@@ -198,56 +248,6 @@ exports[`Manifest renders the expected snapshop for a manifest with icon members
           }
         />
       </tbody>
-    </table>
-  </ManifestSection>
-</article>
-`;
-
-exports[`Manifest renders the expected snapshot for a manifest with color members 1`] = `
-<article
-  className="js-manifest"
->
-  <Localized
-    id="manifest-view-header"
-  >
-    <h1
-      className="app-page__title"
-    />
-  </Localized>
-  <ManifestJsonLink />
-  <ManifestSection
-    key="manifest-section-1"
-    title="manifest-item-identity"
-  >
-    <table>
-      <tbody />
-    </table>
-  </ManifestSection>
-  <ManifestSection
-    key="manifest-section-2"
-    title="manifest-item-presentation"
-  >
-    <table>
-      <tbody>
-        <ManifestColorItem
-          key="background_color"
-          label="background_color"
-          value="red"
-        />
-        <ManifestColorItem
-          key="theme_color"
-          label="theme_color"
-          value="rgb(0, 0, 0)"
-        />
-      </tbody>
-    </table>
-  </ManifestSection>
-  <ManifestSection
-    key="manifest-section-3"
-    title="manifest-item-icons"
-  >
-    <table>
-      <tbody />
     </table>
   </ManifestSection>
 </article>
@@ -332,6 +332,56 @@ exports[`Manifest renders the expected snapshot for a manifest with unknown type
   >
     <table>
       <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshot for a manifest with url members 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody>
+        <ManifestUrlItem
+          key="start_url"
+          label="start_url"
+          value="https://example.com/"
+        />
+        <ManifestUrlItem
+          key="scope"
+          label="scope"
+          value="https://example.com/"
+        />
+      </tbody>
     </table>
   </ManifestSection>
   <ManifestSection
