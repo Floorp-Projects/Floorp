@@ -310,7 +310,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 feature = ContextMenuFeature(
                     fragmentManager = parentFragmentManager,
                     store = store,
-                    candidates = getContextMenuCandidates(context, view),
+                    candidates = getContextMenuCandidates(context, view.browserLayout),
                     engineView = view.engineView,
                     useCases = context.components.useCases.contextMenuUseCases,
                     tabId = customTabSessionId
