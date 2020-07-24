@@ -979,8 +979,8 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
 /*static*/
 already_AddRefed<ContentParent>
 ContentParent::GetNewOrUsedLaunchingBrowserProcess(
-    Element* aFrameElement, const nsACString& aRemoteType,
-    ProcessPriority aPriority, bool aPreferUsed) {
+    const nsACString& aRemoteType, ProcessPriority aPriority,
+    bool aPreferUsed) {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
           ("GetNewOrUsedProcess for type %s",
            PromiseFlatCString(aRemoteType).get()));
@@ -991,8 +991,7 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
       contentParents.Length() >= maxContentParents) {
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("GetNewOrUsedProcess: returning Large Used process"));
-    return GetNewOrUsedLaunchingBrowserProcess(aFrameElement,
-                                               DEFAULT_REMOTE_TYPE, aPriority,
+    return GetNewOrUsedLaunchingBrowserProcess(DEFAULT_REMOTE_TYPE, aPriority,
                                                /*aPreferUsed =*/false);
   }
 
@@ -1040,13 +1039,12 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
 
 /*static*/
 RefPtr<ContentParent::LaunchPromise>
-ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
-                                               const nsACString& aRemoteType,
+ContentParent::GetNewOrUsedBrowserProcessAsync(const nsACString& aRemoteType,
                                                ProcessPriority aPriority,
                                                bool aPreferUsed) {
   // Obtain a `ContentParent` launched asynchronously.
-  RefPtr<ContentParent> contentParent = GetNewOrUsedLaunchingBrowserProcess(
-      aFrameElement, aRemoteType, aPriority, aPreferUsed);
+  RefPtr<ContentParent> contentParent =
+      GetNewOrUsedLaunchingBrowserProcess(aRemoteType, aPriority, aPreferUsed);
   if (!contentParent) {
     // In case of launch error, stop here.
     return LaunchPromise::CreateAndReject(LaunchError(), __func__);
@@ -1056,10 +1054,10 @@ ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
 
 /*static*/
 already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
-    Element* aFrameElement, const nsACString& aRemoteType,
-    ProcessPriority aPriority, bool aPreferUsed) {
-  RefPtr<ContentParent> contentParent = GetNewOrUsedLaunchingBrowserProcess(
-      aFrameElement, aRemoteType, aPriority, aPreferUsed);
+    const nsACString& aRemoteType, ProcessPriority aPriority,
+    bool aPreferUsed) {
+  RefPtr<ContentParent> contentParent =
+      GetNewOrUsedLaunchingBrowserProcess(aRemoteType, aPriority, aPreferUsed);
   if (!contentParent || !contentParent->WaitForLaunchSync(aPriority)) {
     // In case of launch error, stop here.
     return nullptr;
@@ -1154,24 +1152,6 @@ already_AddRefed<ContentParent> ContentParent::GetNewOrUsedJSPluginProcess(
   sJSPluginContentParents->Put(aPluginID, p);
 
   return p.forget();
-}
-
-/*static*/
-ProcessPriority ContentParent::GetInitialProcessPriority(
-    Element* aFrameElement) {
-  // Frames with mozapptype == critical which are expecting a system message
-  // get FOREGROUND_HIGH priority.
-
-  if (!aFrameElement) {
-    return PROCESS_PRIORITY_FOREGROUND;
-  }
-
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(aFrameElement);
-  if (!browserFrame) {
-    return PROCESS_PRIORITY_FOREGROUND;
-  }
-
-  return PROCESS_PRIORITY_FOREGROUND;
 }
 
 #if defined(XP_WIN)
@@ -1318,7 +1298,6 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     remoteType = DEFAULT_REMOTE_TYPE;
   }
 
-  ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
   TabId tabId(nsContentUtils::GenerateTabId());
 
   nsIDocShell* docShell = GetOpenerDocShellHelper(aFrameElement);
@@ -1341,11 +1320,11 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     constructorSender = aOpenerContentParent;
   } else {
     if (aContext.IsJSPlugin()) {
-      constructorSender =
-          GetNewOrUsedJSPluginProcess(aContext.JSPluginId(), initialPriority);
+      constructorSender = GetNewOrUsedJSPluginProcess(
+          aContext.JSPluginId(), PROCESS_PRIORITY_FOREGROUND);
     } else {
       constructorSender = GetNewOrUsedBrowserProcess(
-          aFrameElement, remoteType, initialPriority, isPreloadBrowser);
+          remoteType, PROCESS_PRIORITY_FOREGROUND, isPreloadBrowser);
     }
     if (!constructorSender) {
       return nullptr;
