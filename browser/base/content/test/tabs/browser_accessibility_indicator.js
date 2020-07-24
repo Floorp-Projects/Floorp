@@ -108,7 +108,7 @@ add_task(async function test_accessibility_indicator() {
   info(
     "Enable accessibility and ensure the indicator is shown in all windows."
   );
-  let accService = await initAccessibilityService(); // eslint-disable-line no-unused-vars
+  let accService = await initAccessibilityService();
   testIndicatorState(window, true, true);
   testIndicatorState(newWin, true, true);
 
@@ -135,7 +135,7 @@ add_task(async function test_accessibility_indicator() {
   info(
     "Disable accessibility and ensure the indicator is hidden in all windows."
   );
-  accService = undefined;
+  accService = undefined; // eslint-disable-line no-unused-vars
   forceGC();
   await shutdownAccessibilityService();
   testIndicatorState(window, true, false);
