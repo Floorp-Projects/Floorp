@@ -46,13 +46,13 @@
           <label class="protections-popup-tp-switch-off-header"
                  role="heading"
                  aria-level="2" data-l10n-id="protections-panel-etp-off-header"></label>
-          <label id="protections-popup-tp-switch-breakage-link"
-                 class="text-link"
-                 onclick="gProtectionsHandler.showSiteNotWorkingView(); gProtectionsHandler.recordClick('sitenotworking_link');" data-l10n-id="protections-panel-site-not-working"></label>
-          <label id="protections-popup-tp-switch-breakage-fixed-link"
-                 class="text-link"
+          <label id="protections-popup-tp-switch-breakage-link">
+              <p class="text-link"
+                 onclick="gProtectionsHandler.showSiteNotWorkingView(); gProtectionsHandler.recordClick('sitenotworking_link');" data-l10n-id="protections-panel-site-not-working"></p></label>
+          <label id="protections-popup-tp-switch-breakage-fixed-link">
+              <p class="text-link"
                  onclick="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('sitenotworking_link', 'sitefixed');"
-                 data-l10n-id="protections-panel-sitefixedsendreport-label"></label>
+                 data-l10n-id="protections-panel-sitefixedsendreport-label"></p></label>
         </vbox>
         <vbox class="protections-popup-tp-switch-box">
           <toolbarbutton id="protections-popup-tp-switch"
@@ -202,9 +202,9 @@
               <html:li data-l10n-id="protections-panel-site-not-working-view-issue-list-videos"></html:li>
             </html:ul>
           </label>
-          <label id="protections-popup-siteNotWorkingView-sendReport"
-            onclick="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('send_report_link');"
-            class="text-link" data-l10n-id="protections-panel-site-not-working-view-send-report"></label>
+          <label id="protections-popup-siteNotWorkingView-sendReport">
+              <p onclick="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('send_report_link');"
+            class="text-link" data-l10n-id="protections-panel-site-not-working-view-send-report"></p></label>
         </vbox>
     </panelview>
 
