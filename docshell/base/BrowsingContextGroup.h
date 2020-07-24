@@ -70,6 +70,13 @@ class BrowsingContextGroup final : public nsWrapperCache {
   // BrowsingContextGroup, if possible.
   ContentParent* GetHostProcess(const nsACString& aRemoteType);
 
+  // When a BrowsingContext is being discarded, we may want to keep the
+  // corresponding BrowsingContextGroup alive until the other process
+  // acknowledges the BrowsingContext has been discarded. A `KeepAlive` will be
+  // added to the `BrowsingContextGroup`, delaying destruction.
+  void AddKeepAlive();
+  void RemoveKeepAlive();
+
   bool GetToplevelsSuspended() { return mToplevelsSuspended; }
   void SetToplevelsSuspended(bool aSuspended);
 
@@ -147,9 +154,16 @@ class BrowsingContextGroup final : public nsWrapperCache {
   explicit BrowsingContextGroup(uint64_t aId);
   ~BrowsingContextGroup();
 
-  void UnsubscribeAllContentParents();
+  void MaybeDestroy();
+  void Destroy();
 
   uint64_t mId;
+
+  uint32_t mKeepAliveCount = 0;
+
+#ifdef DEBUG
+  bool mDestroyed = false;
+#endif
 
   // A BrowsingContextGroup contains a series of {Browsing,Window}Context
   // objects. They are addressed using a hashtable to avoid linear lookup when
