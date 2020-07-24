@@ -114,6 +114,11 @@ export const prefs = new PrefsHelper("devtools", {
   fileSearchRegexMatch: ["Bool", "debugger.file-search-regex-match"],
   debuggerPrefsSchemaVersion: ["Int", "debugger.prefs-schema-version"],
   projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""],
+  projectDirectoryRootName: [
+    "Char",
+    "debugger.project-directory-root-name",
+    "",
+  ],
   skipPausing: ["Bool", "debugger.skip-pausing"],
   mapScopes: ["Bool", "debugger.map-scopes-enabled"],
   logActions: ["Bool", "debugger.log-actions"],
