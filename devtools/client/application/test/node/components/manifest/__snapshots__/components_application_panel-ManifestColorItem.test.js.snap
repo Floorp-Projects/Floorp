@@ -4,7 +4,7 @@ exports[`ManifestColorItem does not strip translucent alpha from the displayed c
 <ManifestItem
   label="foo"
 >
-  <span
+  <div
     className="manifest-item__color"
     style={
       Object {
@@ -13,7 +13,7 @@ exports[`ManifestColorItem does not strip translucent alpha from the displayed c
     }
   >
     #00FF00FA
-  </span>
+  </div>
 </ManifestItem>
 `;
 
@@ -21,7 +21,7 @@ exports[`ManifestColorItem renders the expected snapshot for a populated color i
 <ManifestItem
   label="foo"
 >
-  <span
+  <div
     className="manifest-item__color"
     style={
       Object {
@@ -30,7 +30,7 @@ exports[`ManifestColorItem renders the expected snapshot for a populated color i
     }
   >
     #ff0000
-  </span>
+  </div>
 </ManifestItem>
 `;
 
@@ -44,7 +44,7 @@ exports[`ManifestColorItem strips opaque alpha from the displayed color 1`] = `
 <ManifestItem
   label="foo"
 >
-  <span
+  <div
     className="manifest-item__color"
     style={
       Object {
@@ -53,6 +53,6 @@ exports[`ManifestColorItem strips opaque alpha from the displayed color 1`] = `
     }
   >
     #00FF00
-  </span>
+  </div>
 </ManifestItem>
 `;
