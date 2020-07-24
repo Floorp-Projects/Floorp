@@ -401,19 +401,22 @@ class HTMLMediaElement::MediaControlKeyListener final
     MOZ_ASSERT(aElement);
   }
 
-  // Return false if the listener can't be started. Otherwise, return true.
-  bool Start() {
+  /**
+   * Start listening to the media control keys which would make media being able
+   * to be controlled via pressing media control keys.
+   */
+  void Start() {
     MOZ_ASSERT(NS_IsMainThread());
     if (IsStarted()) {
       // We have already been started, do not notify start twice.
-      return true;
+      return;
     }
 
     // Fail to init media agent, we are not able to notify the media controller
     // any update and also are not able to receive media control key events.
     if (!InitMediaAgent()) {
-      MEDIACONTROL_LOG("Fail to init content media agent!");
-      return false;
+      MEDIACONTROL_LOG("Failed to start due to not able to init media agent!");
+      return;
     }
 
     NotifyPlaybackStateChanged(MediaPlaybackState::eStarted);
@@ -423,7 +426,6 @@ class HTMLMediaElement::MediaControlKeyListener final
     if (!Owner()->Paused()) {
       NotifyMediaStartedPlaying();
     }
-    return true;
   }
 
   /**
@@ -545,7 +547,7 @@ class HTMLMediaElement::MediaControlKeyListener final
     // we would also notify `ePlayed`.
     bool wasInPlayingState = mState == MediaPlaybackState::ePlayed;
     StopIfNeeded();
-    Unused << Start();
+    Start();
     if (wasInPlayingState) {
       NotifyMediaStartedPlaying();
     }
@@ -5535,8 +5537,6 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     mDefaultPlaybackStartPosition = 0.0;
   }
 
-  StartListeningMediaControlKeyIfNeeded();
-
   mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
 }
 
@@ -6555,7 +6555,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
         !AutoplayPolicy::IsAllowedToPlay(*this)) {
       MaybeNotifyAutoplayBlocked();
     }
-    StartListeningMediaControlKeyIfNeeded();
+    StartMediaControlKeyListenerIfNeeded();
   }
   if (StaticPrefs::media_testing_only_events()) {
     auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
@@ -7402,7 +7402,12 @@ void HTMLMediaElement::NotifyAudioPlaybackChanged(
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->NotifyAudioPlaybackChanged(aReason);
   }
-  mMediaControlKeyListener->UpdateMediaAudibleState(IsAudible());
+  // We would start the listener after media becomes audible.
+  const bool isAudible = IsAudible();
+  if (isAudible && !mMediaControlKeyListener->IsStarted()) {
+    StartMediaControlKeyListenerIfNeeded();
+  }
+  mMediaControlKeyListener->UpdateMediaAudibleState(isAudible);
   // only request wake lock for audible media.
   UpdateWakeLock();
 }
@@ -7863,7 +7868,7 @@ void HTMLMediaElement::NotifyMediaControlPlaybackStateChanged() {
   }
 }
 
-void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
+bool HTMLMediaElement::ShouldStartMediaControlKeyListener() const {
   // In order to filter out notification-ish sound, we use this pref to set the
   // eligible media duration to prevent showing media control for those short
   // sound.
@@ -7871,13 +7876,27 @@ void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
       StaticPrefs::media_mediacontrol_eligible_media_duration_s()) {
     MEDIACONTROL_LOG("Not listening because media's duration %f is too short.",
                      Duration());
-    return;
+    return false;
   }
 
-  if (mMediaControlKeyListener->IsStarted() ||
-      !mMediaControlKeyListener->Start()) {
+  // This includes cases such like `video is muted`, `video has zero volume`,
+  // `video's audio track is still inaudible` and `tab is muted by audio channel
+  // (tab sound indicator)`, all these cases would make media inaudible.
+  // `ComputedVolume()` would return the final volume applied the affection made
+  // by audio channel, which is used to detect if the tab is muted by audio
+  // channel.
+  if (!IsAudible() || ComputedVolume() == 0.0f) {
+    MEDIACONTROL_LOG("Not listening because media is inaudible");
+    return false;
+  }
+  return true;
+}
+
+void HTMLMediaElement::StartMediaControlKeyListenerIfNeeded() {
+  if (!ShouldStartMediaControlKeyListener()) {
     return;
   }
+  mMediaControlKeyListener->Start();
 }
 
 void HTMLMediaElement::UpdateMediaControlAfterPictureInPictureModeChanged() {
