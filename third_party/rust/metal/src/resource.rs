@@ -5,7 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use cocoa::foundation::NSUInteger;
+use super::DeviceRef;
+use cocoa_foundation::foundation::NSUInteger;
 
 #[repr(u64)]
 #[allow(non_camel_case_types)]
@@ -36,9 +37,9 @@ pub enum MTLStorageMode {
 }
 
 pub const MTLResourceCPUCacheModeShift: NSUInteger = 0;
-pub const MTLResourceCPUCacheModeMask: NSUInteger = (0xf << MTLResourceCPUCacheModeShift);
+pub const MTLResourceCPUCacheModeMask: NSUInteger = 0xf << MTLResourceCPUCacheModeShift;
 pub const MTLResourceStorageModeShift: NSUInteger = 4;
-pub const MTLResourceStorageModeMask: NSUInteger = (0xf << MTLResourceStorageModeShift);
+pub const MTLResourceStorageModeMask: NSUInteger = 0xf << MTLResourceStorageModeShift;
 
 bitflags! {
     #[allow(non_upper_case_globals)]
@@ -77,6 +78,10 @@ foreign_obj_type! {
 }
 
 impl ResourceRef {
+    pub fn device(&self) -> &DeviceRef {
+        unsafe { msg_send![self, device] }
+    }
+
     pub fn label(&self) -> &str {
         unsafe {
             let label = msg_send![self, label];
@@ -101,5 +106,10 @@ impl ResourceRef {
 
     pub fn set_purgeable_state(&self, state: MTLPurgeableState) -> MTLPurgeableState {
         unsafe { msg_send![self, setPurgeableState: state] }
+    }
+
+    /// Only available on macOS 10.13+ & iOS 10.11+
+    pub fn allocated_size(&self) -> NSUInteger {
+        unsafe { msg_send![self, allocatedSize] }
     }
 }

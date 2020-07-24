@@ -9,10 +9,10 @@ use crate::{
 
 use hal::{format, image, window as w};
 
-use core_graphics::base::CGFloat;
-use core_graphics::geometry::{CGRect, CGSize};
+use crate::CGRect;
 use foreign_types::{ForeignType, ForeignTypeRef};
 use metal;
+use metal::{CGFloat, CGSize};
 use objc::rc::autoreleasepool;
 use objc::runtime::Object;
 use parking_lot::{Mutex, MutexGuard};

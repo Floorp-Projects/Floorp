@@ -19,13 +19,13 @@ static_prefs = { path = "../../../../modules/libpref/init/static_prefs" }
 profiler_helper = { path = "../../../../tools/profiler/rust-helper", optional = true }
 mozurl = { path = "../../../../netwerk/base/mozurl" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
-cubeb-coreaudio = { git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs", rev = "4cdbceadae88c77dfc77183b7edda183f32cd28c", optional = true }
+cubeb-coreaudio = { git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs", rev = "260be23d1166a22e2ff6a89844efaca8bb4b61e2", optional = true }
 cubeb-pulse = { git = "https://github.com/djg/cubeb-pulse-rs", rev="3224e2dee65c0726c448484d4c3c43956b9330ec", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.7", optional = true, features=["gecko-in-tree"] }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 audioipc-client = { path = "../../../../media/audioipc/client", optional = true }
 audioipc-server = { path = "../../../../media/audioipc/server", optional = true }
-authenticator = "0.2.13"
+authenticator = "0.2.15"
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
 gecko_logger = { path = "../../../../xpcom/rust/gecko_logger" }
 rsdparsa_capi = { path = "../../../../media/webrtc/signaling/src/sdp/rsdparsa_capi" }

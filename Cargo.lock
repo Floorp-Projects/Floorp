@@ -64,11 +64,11 @@ checksum = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
 
 [[package]]
 name = "ash"
-version = "0.30.0"
+version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69daec0742947f33a85931fa3cb0ce5f07929159dcbd1f0cbb5b2912e2978509"
+checksum = "c69a8137596e84c22d57f3da1b5de1d4230b1742a710091c85f4d7ce50f00f38"
 dependencies = [
- "libloading",
+ "libloading 0.6.2",
 ]
 
 [[package]]
@@ -180,9 +180,9 @@ dependencies = [
 
 [[package]]
 name = "authenticator"
-version = "0.2.13"
+version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6cc4e983ae4499095b965b8c0c57596ae718fe551d2b04aa2c19c777a02e05a4"
+checksum = "27f4b43192679f52f6cfe741f982190e3f677f2176fd444d5af8d48d84390433"
 dependencies = [
  "bitflags",
  "boxfnonce",
@@ -574,7 +574,7 @@ checksum = "f92986241798376849e1a007827041fed9bb36195822c2049d18e174420e0534"
 dependencies = [
  "glob",
  "libc",
- "libloading",
+ "libloading 0.5.2",
 ]
 
 [[package]]
@@ -609,15 +609,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "cocoa"
-version = "0.20.0"
+name = "cocoa-foundation"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a4736c86d51bd878b474400d9ec888156f4037015f5d09794fab9f26eab1ad4"
+checksum = "7ade49b65d560ca58c403a479bb396592b155c0185eada742ee323d1d68d6318"
 dependencies = [
  "bitflags",
  "block",
  "core-foundation",
- "core-graphics",
+ "core-graphics-types",
  "foreign-types",
  "libc",
  "objc",
@@ -657,9 +657,9 @@ checksum = "6ff9c56c9fb2a49c05ef0e431485a22400af20d33226dc0764d891d09e724127"
 
 [[package]]
 name = "core-foundation"
-version = "0.7.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57d24c7a13c43e870e37c1556b74555437870a04514f7685f5b354e090567171"
+checksum = "3b5ed8e7e76c45974e15e41bfa8d5b0483cd90191639e01d8f5f1e606299d3fb"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -667,15 +667,28 @@ dependencies = [
 
 [[package]]
 name = "core-foundation-sys"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3a71ab494c0b5b860bdc8407ae08978052417070c2ced38573a9157ad75b8ac"
+checksum = "9a21fa21941700a3cd8fcb4091f361a6a712fac632f85d9f487cc892045d55c6"
 
 [[package]]
 name = "core-graphics"
-version = "0.19.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59e78b2e0aaf43f08e7ae0d6bc96895ef72ff0921c7d4ff4762201b2dba376dd"
+checksum = "f6082396a349fa49674ba1bda4077332a18bf150e8fa75745ece07085e29a113"
+dependencies = [
+ "bitflags",
+ "core-foundation",
+ "core-graphics-types",
+ "foreign-types",
+ "libc",
+]
+
+[[package]]
+name = "core-graphics-types"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e92f5d519093a4178296707dbaa3880eae85a5ef5386675f361a1cf25376e93c"
 dependencies = [
  "bitflags",
  "core-foundation",
@@ -685,9 +698,9 @@ dependencies = [
 
 [[package]]
 name = "core-text"
-version = "15.0.0"
+version = "19.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "131b3fd1f8bd5db9f2b398fa4fdb6008c64afc04d447c306ac2c7e98fba2a61d"
+checksum = "04dfae50af11e72657fe7174cddb1ecddc5398037f7f6f39533ad69207c9a4e2"
 dependencies = [
  "core-foundation",
  "core-graphics",
@@ -707,7 +720,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=4cdbceadae88c77dfc77183b7edda183f32cd28c#4cdbceadae88c77dfc77183b7edda183f32cd28c"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=260be23d1166a22e2ff6a89844efaca8bb4b61e2#260be23d1166a22e2ff6a89844efaca8bb4b61e2"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -945,7 +958,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=4cdbceadae88c77dfc77183b7edda183f32cd28c#4cdbceadae88c77dfc77183b7edda183f32cd28c"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=260be23d1166a22e2ff6a89844efaca8bb4b61e2#260be23d1166a22e2ff6a89844efaca8bb4b61e2"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -988,7 +1001,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc7ed48e89905e5e146bcc1951cc3facb9e44aea9adf5dc01078cda1bd24b662"
 dependencies = [
  "bitflags",
- "libloading",
+ "libloading 0.5.2",
  "winapi 0.3.7",
 ]
 
@@ -1487,9 +1500,9 @@ checksum = "5ebc04f19019fff1f2d627b5581574ead502f80c48c88900575a46e0840fe5d0"
 
 [[package]]
 name = "freetype"
-version = "0.4.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b659e75b7a7338fe75afd7f909fc2b71937845cffb6ebe54ba2e50f13d8e903d"
+checksum = "bee38378a9e3db1cc693b4f88d166ae375338a0ff75cb8263e1c601d51f35dc6"
 dependencies = [
  "libc",
 ]
@@ -1734,7 +1747,7 @@ dependencies = [
  "bitflags",
  "gfx-auxil",
  "gfx-hal",
- "libloading",
+ "libloading 0.5.2",
  "log",
  "parking_lot",
  "range-alloc",
@@ -1775,16 +1788,15 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-metal"
-version = "0.5.2"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "205f3ca8e74ed814ea2c0206d47d8925077673cab2e21f9b12d48ff781cf87ee"
+checksum = "92804d20b194de6c84cb4bec14ec6a6dcae9c51f0a9186817fb412a590131ae6"
 dependencies = [
  "arrayvec",
  "bitflags",
  "block",
- "cocoa",
+ "cocoa-foundation",
  "copyless",
- "core-graphics",
  "foreign-types",
  "gfx-auxil",
  "gfx-hal",
@@ -1802,14 +1814,14 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-vulkan"
-version = "0.5.6"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45ff36feae801fa23d29acd74082603a0145a697a23595757dd4e78828ab33da"
+checksum = "aec9c919cfc236d2c36aaa38609c1906a92f2df99a3c7f53022b01936f98275a"
 dependencies = [
  "arrayvec",
  "ash",
  "byteorder",
- "core-graphics",
+ "core-graphics-types",
  "gfx-hal",
  "lazy_static",
  "log",
@@ -1833,9 +1845,9 @@ dependencies = [
 
 [[package]]
 name = "gfx-hal"
-version = "0.5.0"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc96180204064c9493e0fe4a9efeb721e0ac59fe8e1906d0c659142a93114fb1"
+checksum = "a18534b23d4c262916231511309bc1f307c74cda8dcb68b93a10ca213a22814b"
 dependencies = [
  "bitflags",
  "raw-window-handle",
@@ -2553,6 +2565,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "libloading"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2cadb8e769f070c45df05c78c7520eb4cd17061d4ab262e43cfc68b4d00ac71c"
+dependencies = [
+ "winapi 0.3.7",
+]
+
+[[package]]
 name = "libsqlite3-sys"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2700,7 +2721,7 @@ dependencies = [
  "getrandom",
  "lazy_static",
  "libc",
- "libloading",
+ "libloading 0.5.2",
  "lucet-module",
  "memoffset",
  "nix",
@@ -2833,14 +2854,13 @@ dependencies = [
 
 [[package]]
 name = "metal"
-version = "0.18.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e198a0ee42bdbe9ef2c09d0b9426f3b2b47d90d93a4a9b0395c4cea605e92dc0"
+checksum = "5c4e8a431536529327e28c9ba6992f2cb0c15d4222f0602a16e6d7695ff3bccf"
 dependencies = [
  "bitflags",
  "block",
- "cocoa",
- "core-graphics",
+ "cocoa-foundation",
  "foreign-types",
  "log",
  "objc",
@@ -3419,7 +3439,7 @@ dependencies = [
  "core-foundation",
  "env_logger",
  "lazy_static",
- "libloading",
+ "libloading 0.5.2",
  "log",
  "pkcs11",
  "rental",
@@ -3641,7 +3661,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c20593a99fe08068cbe2b59001527f36021d6ad53ac5f2d8793fcf2fe94015a0"
 dependencies = [
- "libloading",
+ "libloading 0.5.2",
  "num-bigint",
 ]
 

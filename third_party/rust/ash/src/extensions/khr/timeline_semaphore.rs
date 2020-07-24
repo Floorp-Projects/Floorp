@@ -27,7 +27,7 @@ impl TimelineSemaphore {
         vk::KhrTimelineSemaphoreFn::name()
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#vkGetSemaphoreCounterValueKHR>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreCounterValue.html>"]
     pub unsafe fn get_semaphore_counter_value(
         &self,
         device: vk::Device,
@@ -44,7 +44,7 @@ impl TimelineSemaphore {
         }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#vkWaitSemaphoresKHR>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitSemaphores.html>"]
     pub unsafe fn wait_semaphores(
         &self,
         device: vk::Device,
@@ -61,7 +61,7 @@ impl TimelineSemaphore {
         }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#vkSignalSemaphoreKHR>"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSignalSemaphore.html>"]
     pub unsafe fn signal_semaphore(
         &self,
         device: vk::Device,
