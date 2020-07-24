@@ -121,9 +121,17 @@ this.Screenshots = {
     if (!this._shouldGetScreenshots()) {
       return;
     }
+    // __sharedCache may not exist yet for links from default top sites that
+    // don't have a default tippy top icon.
+    // eslint-disable-next-line no-unsanitized/property
+    link.__sharedCache ??= {
+      updateLink(prop, val) {
+        link[prop] = val;
+      },
+    };
+    const cache = link.__sharedCache;
     // Nothing to do if we already have a pending screenshot or
     // if a previous request failed and returned null.
-    const cache = link.__sharedCache;
     if (cache.fetchingScreenshot || link[property] !== undefined) {
       return;
     }
