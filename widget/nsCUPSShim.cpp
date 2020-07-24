@@ -48,6 +48,9 @@ bool nsCUPSShim::Init() {
   }
 
   if (!(CUPS_SHIM_LOAD(mCupsAddOption, cupsAddOption) &&
+        CUPS_SHIM_LOAD(mCupsCheckDestSupported, cupsCheckDestSupported) &&
+        CUPS_SHIM_LOAD(mCupsCopyDestInfo, cupsCopyDestInfo) &&
+        CUPS_SHIM_LOAD(mCupsFreeDestInfo, cupsFreeDestInfo) &&
         CUPS_SHIM_LOAD(mCupsFreeDests, cupsFreeDests) &&
         CUPS_SHIM_LOAD(mCupsGetDest, cupsGetDest) &&
         CUPS_SHIM_LOAD(mCupsGetDests, cupsGetDests) &&

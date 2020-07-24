@@ -301,6 +301,7 @@ if toolkit == 'gtk':
     ]
 if toolkit in ('gtk', 'cocoa'):
     UNIFIED_SOURCES += [
+        'CUPSPrinter.cpp',
         'nsCUPSShim.cpp'
     ]
 
