@@ -6502,12 +6502,13 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 namespace {
 
 /*
- * Temporarily disable barriers during GC slices.
+ * Manage barriers: disable during GC slices, and enable during an incremental
+ * GC for all zones that are marking.
  */
-class AutoDisableBarriers {
+class AutoUpdateBarriers {
  public:
-  explicit AutoDisableBarriers(GCRuntime* gc);
-  ~AutoDisableBarriers();
+  explicit AutoUpdateBarriers(GCRuntime* gc);
+  ~AutoUpdateBarriers();
 
  private:
   GCRuntime* gc;
@@ -6515,13 +6516,13 @@ class AutoDisableBarriers {
 
 } /* anonymous namespace */
 
-AutoDisableBarriers::AutoDisableBarriers(GCRuntime* gc) : gc(gc) {
+AutoUpdateBarriers::AutoUpdateBarriers(GCRuntime* gc) : gc(gc) {
   for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
     /*
      * Clear needsIncrementalBarrier early so we don't do any write
      * barriers during GC. We don't need to update the Ion barriers (which
      * is expensive) because Ion code doesn't run during GC. If need be,
-     * we'll update the Ion barriers in ~AutoDisableBarriers.
+     * we'll update the Ion barriers in ~AutoUpdateBarriers.
      */
     if (zone->isGCMarking()) {
       MOZ_ASSERT(zone->needsIncrementalBarrier());
@@ -6531,7 +6532,7 @@ AutoDisableBarriers::AutoDisableBarriers(GCRuntime* gc) : gc(gc) {
   }
 }
 
-AutoDisableBarriers::~AutoDisableBarriers() {
+AutoUpdateBarriers::~AutoUpdateBarriers() {
   /* We can't use GCZonesIter if this is the end of the last slice. */
   for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
     MOZ_ASSERT(!zone->needsIncrementalBarrier());
@@ -6556,7 +6557,7 @@ static bool ShouldSweepOnBackgroundThread(JS::GCReason reason) {
 void GCRuntime::incrementalSlice(SliceBudget& budget,
                                  const MaybeInvocationKind& gckind,
                                  JS::GCReason reason, AutoGCSession& session) {
-  AutoDisableBarriers disableBarriers(this);
+  AutoUpdateBarriers updateBarriers(this);
   AutoSetThreadIsPerformingGC performingGC;
 
   bool destroyingRuntime = (reason == JS::GCReason::DESTROY_RUNTIME);
