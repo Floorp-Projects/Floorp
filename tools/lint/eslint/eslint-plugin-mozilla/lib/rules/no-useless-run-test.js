@@ -53,12 +53,12 @@ module.exports = function(context) {
             return fixer.removeRange([
               // If there's no startNode, we fall back to zero, i.e. start of
               // file.
-              startNode ? startNode.end + 1 : 0,
+              startNode ? startNode.range[1] + 1 : 0,
               // We know the function is a block and it'll end with }. Normally
               // there's a new line after that, so just advance past it. This
               // may be slightly not dodgy in some cases, but covers the existing
               // cases.
-              node.end + 1,
+              node.range[1] + 1,
             ]);
           },
           message:
