@@ -779,14 +779,14 @@ var Impl = {
             this._log.trace(
               "Upload enabled, but got canary client ID. Resetting."
             );
-            await ClientID.removeClientIDs();
-            this._clientID = await ClientID.getClientID();
+            this._clientID = await ClientID.resetClientID();
           } else if (!uploadEnabled && this._clientID != Utils.knownClientID) {
             this._log.trace(
               "Upload disabled, but got a valid client ID. Setting canary client ID."
             );
-            await ClientID.setCanaryClientIDs();
-            this._clientID = await ClientID.getClientID();
+            this._clientID = await ClientID.setClientID(
+              TelemetryUtils.knownClientID
+            );
           }
 
           await TelemetrySend.setup(this._testMode);
@@ -999,12 +999,10 @@ var Impl = {
       this._clientID = null;
 
       // Generate a new client ID and make sure this module uses the new version
-      let p = (async () => {
-        await ClientID.removeClientIDs();
-        let id = await ClientID.getClientID();
+      let p = ClientID.resetClientID().then(id => {
         this._clientID = id;
         Telemetry.scalarSet("telemetry.data_upload_optin", true);
-      })();
+      });
 
       this._shutdownBarrier.client.addBlocker(
         "TelemetryController: resetting client ID after data upload was enabled",
@@ -1032,20 +1030,19 @@ var Impl = {
         // 4. Reset session and subsession counter
         TelemetrySession.resetSubsessionCounter();
 
-        // 5. Collect any additional identifiers we want to send in the
-        // deletion request.
+        // 5. Set ClientID to a known value
+        let oldClientId = await ClientID.getClientID();
+        this._clientID = await ClientID.setClientID(
+          TelemetryUtils.knownClientID
+        );
+
+        // 6. Send the deletion-request ping.
+        this._log.trace("_onUploadPrefChange - Sending deletion-request ping.");
         const scalars = Telemetry.getSnapshotForScalars(
           "deletion-request",
           /* clear */ true
         );
 
-        // 6. Set ClientID to a known value
-        let oldClientId = await ClientID.getClientID();
-        await ClientID.setCanaryClientIDs();
-        this._clientID = await ClientID.getClientID();
-
-        // 7. Send the deletion-request ping.
-        this._log.trace("_onUploadPrefChange - Sending deletion-request ping.");
         this.submitExternalPing(
           PING_TYPE_DELETION_REQUEST,
           { scalars },
