@@ -43,10 +43,10 @@ import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.service.digitalassetlinks.RelationChecker
-import mozilla.components.service.digitalassetlinks.api.DigitalAssetLinksApi
+import mozilla.components.service.digitalassetlinks.local.StatementApi
+import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.mozilla.fenix.AppRequestInterceptor
-import org.mozilla.fenix.BuildConfig.DIGITAL_ASSET_LINKS_TOKEN
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -147,7 +147,7 @@ class Core(private val context: Context) {
      * The [RelationChecker] checks Digital Asset Links relationships for Trusted Web Activities.
      */
     val relationChecker: RelationChecker by lazy {
-        DigitalAssetLinksApi(client, DIGITAL_ASSET_LINKS_TOKEN)
+        StatementRelationChecker(StatementApi(client))
     }
 
     /**

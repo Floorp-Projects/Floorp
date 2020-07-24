@@ -45,7 +45,6 @@ def add_shippable_secrets(config, tasks):
             } for key, target_file in (
                 ('adjust', '.adjust_token'),
                 ('firebase', 'app/src/{}/res/values/firebase.xml'.format(gradle_build_type)),
-                ('digital_asset_links', '.digital_asset_links_token'),
                 ('leanplum', '.leanplum_token'),
                 ('sentry_dsn', '.sentry_token'),
                 ('mls', '.mls_token'),
@@ -56,7 +55,6 @@ def add_shippable_secrets(config, tasks):
                 "path": target_file,
             } for fake_value, target_file in (
                 ("faketoken", ".adjust_token"),
-                ("faketoken", ".digital_asset_links_token"),
                 ("fake:token", ".leanplum_token"),  # : is used by leanplum
                 ("faketoken", ".mls_token"),
                 ("https://fake@sentry.prod.mozaws.net/368", ".sentry_token"),
