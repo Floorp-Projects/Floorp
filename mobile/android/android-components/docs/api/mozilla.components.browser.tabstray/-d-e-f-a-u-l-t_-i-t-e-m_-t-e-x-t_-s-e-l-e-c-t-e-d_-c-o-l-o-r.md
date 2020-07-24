@@ -2,4 +2,4 @@
 
 # DEFAULT_ITEM_TEXT_SELECTED_COLOR
 
-`const val DEFAULT_ITEM_TEXT_SELECTED_COLOR: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/BrowserTabsTray.kt#L18)
+`const val DEFAULT_ITEM_TEXT_SELECTED_COLOR: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabsTrayStyling.kt#L10)
