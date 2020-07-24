@@ -227,5 +227,25 @@ describe("SendToDeviceSnippet", () => {
         "Found scene 2 title"
       );
     });
+    it("should wrap the header in an anchor tag if condition is defined", () => {
+      const sectionTitleProp = {
+        section_title_url: "https://support.mozilla.org",
+      };
+      let wrapper = mountWithProps(sectionTitleProp);
+
+      const element = wrapper.find(".section-title a");
+      assert.lengthOf(element, 1);
+    });
+    it("should render a header without an anchor", () => {
+      const sectionTitleProp = {
+        section_title_url: undefined,
+      };
+      let wrapper = mountWithProps(sectionTitleProp);
+      assert.lengthOf(wrapper.find(".section-title a"), 0);
+      assert.equal(
+        wrapper.find(".section-title").instance().innerText,
+        DEFAULT_SCENE2_CONTENT.section_title_text
+      );
+    });
   });
 });

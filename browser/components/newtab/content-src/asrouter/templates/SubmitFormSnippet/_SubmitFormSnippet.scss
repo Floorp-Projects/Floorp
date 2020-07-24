@@ -148,6 +148,12 @@
       }
     }
 
+    .section-title a {
+      color: var(--newtab-section-header-text-color);
+      font-weight: inherit;
+      text-decoration: none;
+    }
+
     .innerWrapper {
       padding: 0 0 16px;
     }

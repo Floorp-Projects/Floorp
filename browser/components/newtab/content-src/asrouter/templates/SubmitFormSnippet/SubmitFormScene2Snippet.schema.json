@@ -39,6 +39,12 @@
       "type": "string",
       "description": "Section title text. section_title_icon must also be specified to display."
     },
+    "section_title_url": {
+      "allOf": [
+        {"$ref": "#/definitions/link_url"},
+        {"description": "A url, section_title_text links to this"}
+      ]
+    },
     "scene2_title": {
       "allOf": [
         {"$ref": "#/definitions/plainText"},
