@@ -41,7 +41,8 @@ import org.mozilla.fenix.settings.SupportUtils
 import java.util.Locale
 
 @SuppressWarnings("LargeClass", "TooManyFunctions")
-class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListener {
+class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
+    CompoundButton.OnCheckedChangeListener {
     private var availableEngines: List<SearchEngine> = listOf()
     private var selectedIndex: Int = -1
     private val engineViews = mutableListOf<View>()
@@ -60,14 +61,6 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
         }
 
         selectedIndex = if (availableEngines.isEmpty()) CUSTOM_INDEX else FIRST_INDEX
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_add_search_engine, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
