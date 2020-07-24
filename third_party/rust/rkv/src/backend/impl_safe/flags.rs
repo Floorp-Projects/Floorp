@@ -14,18 +14,16 @@ use serde_derive::{
     Serialize,
 };
 
-use crate::backend::{
-    common::{
-        DatabaseFlags,
-        EnvironmentFlags,
-        WriteFlags,
-    },
-    traits::{
-        BackendDatabaseFlags,
-        BackendEnvironmentFlags,
-        BackendFlags,
-        BackendWriteFlags,
-    },
+use crate::backend::common::{
+    DatabaseFlags,
+    EnvironmentFlags,
+    WriteFlags,
+};
+use crate::backend::traits::{
+    BackendDatabaseFlags,
+    BackendEnvironmentFlags,
+    BackendFlags,
+    BackendWriteFlags,
 };
 
 bitflags! {
@@ -94,10 +92,9 @@ impl Into<DatabaseFlagsImpl> for DatabaseFlags {
             DatabaseFlags::REVERSE_KEY => unimplemented!(),
             #[cfg(feature = "db-dup-sort")]
             DatabaseFlags::DUP_SORT => DatabaseFlagsImpl::DUP_SORT,
-            #[cfg(feature = "db-dup-sort")]
-            DatabaseFlags::DUP_FIXED => unimplemented!(),
             #[cfg(feature = "db-int-key")]
             DatabaseFlags::INTEGER_KEY => DatabaseFlagsImpl::INTEGER_KEY,
+            DatabaseFlags::DUP_FIXED => unimplemented!(),
             DatabaseFlags::INTEGER_DUP => unimplemented!(),
             DatabaseFlags::REVERSE_DUP => unimplemented!(),
         }

@@ -1,0 +1,48 @@
+language: rust
+sudo: false
+
+cache: cargo
+
+rust:
+  - 1.37.0
+  - stable
+  - beta
+  - nightly
+
+os:
+  - linux
+  - osx
+
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
+before_script:
+  # We install a known-to-have-rustfmt version of the nightly toolchain
+  # in order to run the nightly version of rustfmt, which supports rules
+  # that we depend upon. When updating, pick a suitable nightly version
+  # from https://rust-lang.github.io/rustup-components-history/
+  - rustup toolchain install nightly-2019-09-11
+  - rustup component add rustfmt --toolchain nightly-2019-09-11
+  - rustup component add clippy --toolchain nightly-2019-09-11
+  # Use official clang in order to test out building on osx.
+  - if [[ "$TRAVIS_OS_NAME" = "osx" ]]; then
+      brew update;
+      brew install llvm;
+      export PATH="/usr/local/opt/llvm/bin:$PATH";
+      export LDFLAGS="-L/usr/local/opt/llvm/lib";
+      export CPPFLAGS="-I/usr/local/opt/llvm/include";
+    fi
+
+script:
+  - cargo +nightly-2019-09-11 fmt --all -- --check
+  - CC="clang" cargo +nightly-2019-09-11 clippy --all-features -- -D warnings
+  - cargo build --verbose
+  - export RUST_BACKTRACE=1
+  - cargo test --all --verbose
+  - cargo test --lib --no-default-features --verbose
+  - cargo test --lib --no-default-features --features "db-dup-sort" --verbose
+  - cargo test --lib --no-default-features --features "db-int-key" --verbose
+  - cargo test --release --all --verbose
+  - ./run-all-examples.sh

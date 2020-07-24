@@ -8,20 +8,18 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::{
-    borrow::Cow,
-    collections::HashMap,
-    fs,
-    path::{
-        Path,
-        PathBuf,
-    },
-    sync::{
-        Arc,
-        RwLock,
-        RwLockReadGuard,
-        RwLockWriteGuard,
-    },
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::fs;
+use std::path::{
+    Path,
+    PathBuf,
+};
+use std::sync::Arc;
+use std::sync::{
+    RwLock,
+    RwLockReadGuard,
+    RwLockWriteGuard,
 };
 
 use id_arena::Arena;
@@ -54,12 +52,11 @@ pub struct EnvironmentBuilderImpl {
     max_readers: Option<usize>,
     max_dbs: Option<usize>,
     map_size: Option<usize>,
-    make_dir: bool,
 }
 
 impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
-    type Environment = EnvironmentImpl;
     type Error = ErrorImpl;
+    type Environment = EnvironmentImpl;
     type Flags = EnvironmentFlagsImpl;
 
     fn new() -> EnvironmentBuilderImpl {
@@ -68,7 +65,6 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
             max_readers: None,
             max_dbs: None,
             map_size: None,
-            make_dir: false,
         }
     }
 
@@ -95,20 +91,7 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
         self
     }
 
-    fn set_make_dir_if_needed(&mut self, make_dir: bool) -> &mut Self {
-        self.make_dir = make_dir;
-        self
-    }
-
     fn open(&self, path: &Path) -> Result<Self::Environment, Self::Error> {
-        // Technically NO_SUB_DIR should change these checks here, but they're both currently
-        // unimplemented with this storage backend.
-        if !path.is_dir() {
-            if !self.make_dir {
-                return Err(ErrorImpl::UnsuitableEnvironmentPath(path.into()));
-            }
-            fs::create_dir_all(path)?;
-        }
         let mut env = EnvironmentImpl::new(path, self.flags, self.max_readers, self.max_dbs, self.map_size)?;
         env.read_from_disk()?;
         Ok(env)
@@ -205,18 +188,13 @@ impl EnvironmentImpl {
 }
 
 impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
-    type Database = DatabaseImpl;
     type Error = ErrorImpl;
+    type Database = DatabaseImpl;
     type Flags = DatabaseFlagsImpl;
+    type Stat = StatImpl;
     type Info = InfoImpl;
     type RoTransaction = RoTransactionImpl<'e>;
     type RwTransaction = RwTransactionImpl<'e>;
-    type Stat = StatImpl;
-
-    fn get_dbs(&self) -> Result<Vec<Option<String>>, Self::Error> {
-        let dbs = self.dbs.read().map_err(|_| ErrorImpl::EnvPoisonError)?;
-        Ok(dbs.keys().map(|key| key.to_owned()).collect())
-    }
 
     fn open_db(&self, name: Option<&str>) -> Result<Self::Database, Self::Error> {
         if Arc::strong_count(&self.ro_txns) > 1 {
@@ -237,7 +215,7 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
         let key = name.map(String::from);
         let mut dbs = self.dbs.write().map_err(|_| ErrorImpl::EnvPoisonError)?;
         let mut arena = self.arena.write().map_err(|_| ErrorImpl::EnvPoisonError)?;
-        if dbs.keys().filter_map(|k| k.as_ref()).count() >= self.max_dbs && name != None {
+        if dbs.keys().filter_map(|k| k.as_ref()).count() >= self.max_dbs {
             return Err(ErrorImpl::DbsFull);
         }
         let id = dbs.entry(key).or_insert_with(|| DatabaseImpl(arena.alloc(Database::new(Some(flags), None))));
@@ -269,21 +247,8 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
         unimplemented!()
     }
 
-    fn load_ratio(&self) -> Result<Option<f32>, Self::Error> {
-        warn!("`load_ratio()` is irrelevant for this storage backend.");
-        Ok(None)
-    }
-
     fn set_map_size(&self, size: usize) -> Result<(), Self::Error> {
-        warn!("`set_map_size({})` is ignored by this storage backend.", size);
+        warn!("Ignoring `set_map_size({})`", size);
         Ok(())
-    }
-
-    fn get_files_on_disk(&self) -> Vec<PathBuf> {
-        // Technically NO_SUB_DIR and NO_LOCK should change this output, but
-        // they're both currently unimplemented with this storage backend.
-        let mut db_filename = self.path.clone();
-        db_filename.push(DEFAULT_DB_FILENAME);
-        return vec![db_filename];
     }
 }

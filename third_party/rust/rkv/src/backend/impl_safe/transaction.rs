@@ -8,10 +8,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::{
-    collections::HashMap,
-    sync::Arc,
-};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 use super::{
     snapshot::Snapshot,
@@ -47,8 +45,8 @@ impl<'t> RoTransactionImpl<'t> {
 }
 
 impl<'t> BackendRoTransaction for RoTransactionImpl<'t> {
-    type Database = DatabaseImpl;
     type Error = ErrorImpl;
+    type Database = DatabaseImpl;
 
     fn get(&self, db: &Self::Database, key: &[u8]) -> Result<&[u8], Self::Error> {
         let snapshot = self.snapshots.get(db).ok_or_else(|| ErrorImpl::DbIsForeignError)?;
@@ -88,8 +86,8 @@ impl<'t> RwTransactionImpl<'t> {
 }
 
 impl<'t> BackendRwTransaction for RwTransactionImpl<'t> {
-    type Database = DatabaseImpl;
     type Error = ErrorImpl;
+    type Database = DatabaseImpl;
     type Flags = WriteFlagsImpl;
 
     fn get(&self, db: &Self::Database, key: &[u8]) -> Result<&[u8], Self::Error> {

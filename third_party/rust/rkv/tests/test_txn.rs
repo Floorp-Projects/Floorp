@@ -13,13 +13,13 @@ use std::fs;
 
 use tempfile::Builder;
 
+use rkv::backend::{
+    Lmdb,
+    LmdbDatabase,
+    LmdbRoCursor,
+    LmdbRwTransaction,
+};
 use rkv::{
-    backend::{
-        Lmdb,
-        LmdbDatabase,
-        LmdbRoCursor,
-        LmdbRwTransaction,
-    },
     Readable,
     Rkv,
     StoreOptions,
@@ -33,10 +33,10 @@ use rkv::{
 ///     value: String,
 ///     date: String,
 /// }
-/// We would like to index all of the fields so that we can search for the struct not only
-/// by ID but also by value and date.  When we index the fields individually in their own
-/// tables, it is important that we run all operations within a single transaction to
-/// ensure coherence of the indices.
+/// We would like to index all of the fields so that we can search for the struct not only by ID
+/// but also by value and date.  When we index the fields individually in their own tables, it
+/// is important that we run all operations within a single transaction to ensure coherence of
+/// the indices.
 /// This test features helper functions for reading and writing the parts of the struct.
 /// Note that the reader functions take `Readable` because they might run within a Read
 /// Transaction or a Write Transaction.  The test demonstrates fetching values via both.
@@ -97,11 +97,9 @@ where
     store
         .get(txn, field)
         .expect("get iterator")
-        .map(|id| {
-            match id.expect("field") {
-                (_, Value::U64(id)) => id,
-                _ => panic!("getting value in iter"),
-            }
+        .map(|id| match id.expect("field") {
+            (_, Some(Value::U64(id))) => id,
+            _ => panic!("getting value in iter"),
         })
         .collect::<Vec<u64>>()
 }
