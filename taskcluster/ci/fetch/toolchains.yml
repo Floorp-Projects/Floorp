@@ -492,3 +492,10 @@ sonatype-nexus:
         artifact-name: sonatype-nexus.tar.zst
         strip-components: 1
         add-prefix: sonatype-nexus/
+
+makecab:
+    description: makecab source code
+    fetch:
+        type: git
+        repo: https://github.com/luser/rust-makecab/
+        revision: d2bc6797648b7a834782714a55d339d2fd4e58c8

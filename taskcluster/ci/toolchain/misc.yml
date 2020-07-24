@@ -305,3 +305,16 @@ win64-winchecksec:
         toolchain:
             - linux64-clang-win-cross
             - linux64-liblowercase
+
+linux64-makecab:
+    description: "makecab toolchain build"
+    treeherder:
+        symbol: TL(cab)
+    run:
+        script: build-makecab.sh
+        toolchain-artifact: public/build/makecab.tar.zst
+    fetches:
+        fetch:
+            - makecab
+        toolchain:
+            - linux64-rust-1.41
