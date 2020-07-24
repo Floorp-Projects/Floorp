@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Storage: "resource://normandy/lib/Storage.jsm",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
+  TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
@@ -539,8 +540,9 @@ var RecipeRunner = {
     }
 
     const context = this.getFilterContext(recipe);
+    const targetingContext = new TargetingContext();
     try {
-      if (await FilterExpressions.eval(recipe.filter_expression, context)) {
+      if (await targetingContext.eval(recipe.filter_expression, context)) {
         yield BaseAction.suitability.FILTER_MATCH;
       } else {
         yield BaseAction.suitability.FILTER_MISMATCH;
