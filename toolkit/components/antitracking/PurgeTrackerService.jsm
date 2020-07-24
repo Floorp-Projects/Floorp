@@ -56,14 +56,6 @@ PurgeTrackerService.prototype = {
   // We can only know asynchronously if a host is matched by the tracking
   // protection list, so we cache the result for faster future lookups.
   _trackingState: new Map(),
-  /**
-   * We use this collator to compare strings as if they were numbers.
-   * Timestamps are saved as strings since the number is too large for an int.
-   **/
-  collator: new Intl.Collator(undefined, {
-    numeric: true,
-    sensitivity: "base",
-  }),
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
@@ -354,22 +346,7 @@ PurgeTrackerService.prototype = {
     let maybeClearPrincipals = new Map();
 
     // TODO We only need the host name and creationTime, this gives too much info. See bug 1610373.
-    let cookies = Services.cookies.cookies;
-
-    // ensure we have only cookies that have a greater or equal creationTime than the saved creationTime.
-    // TODO only get cookies that fulfill this condition. See bug 1610373.
-    cookies = cookies.filter(cookie => {
-      return (
-        cookie.creationTime &&
-        this.collator.compare(cookie.creationTime, saved_date) > 0
-      );
-    });
-
-    // ensure the cookies are sorted by creationTime oldest to newest.
-    // TODO get cookies in this order. See bug 1610373.
-    cookies.sort((a, b) =>
-      this.collator.compare(a.creationTime, b.creationTime)
-    );
+    let cookies = Services.cookies.getCookiesSince(saved_date);
     cookies = cookies.slice(0, MAX_PURGE_COUNT);
 
     for (let cookie of cookies) {
