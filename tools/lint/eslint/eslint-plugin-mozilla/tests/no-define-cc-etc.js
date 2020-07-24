@@ -22,12 +22,12 @@ function invalidCode(code, varNames) {
   }
   return {
     code,
-    errors: varNames.map(name => [
-      {
+    errors: varNames.map(name => {
+      return {
         message: `${name} is now defined in global scope, a separate definition is no longer necessary.`,
         type: "VariableDeclarator",
-      },
-    ]),
+      };
+    }),
   };
 }
 
