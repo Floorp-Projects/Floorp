@@ -8,9 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345367
   <title>Test for Bug 1345367</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript">
-
-  "use strict";
+  <script>
   SimpleTest.waitForExplicitFinish();
 
   var gUrl = SimpleTest.getTestFileURL('GeneralChromeScript.js');
@@ -29,61 +27,61 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345367
     },
   };
 
-  function testBeforeShow() {
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
-      payRequest.abort().then((result) => {
-        ok(false, "Should throw 'InvalidStateError', but got resolved.");
-        resolve();
-      }).catch((err) => {
-        is(err.name, "InvalidStateError",
-          "Expected 'InvalidStateError', but got '" + err.name + "'");
-        resolve();
-      });
-    });
+  async function testBeforeShow() {
+    const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+    try {
+      await payRequest.abort();
+      ok(false, "Should throw 'InvalidStateError', but got resolved.");
+    } catch (err) {
+      console.log(err)
+      is(err.name, "InvalidStateError", "Expected 'InvalidStateError', but got '" + err.name + "'");
+    }
   }
 
-  function testAfterShow() {
-     const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-
-     return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
-      const acceptPromise = payRequest.show();
-      payRequest.abort().then((abortResult) => {
-        is(abortResult, undefined, "Should be resolved with undefined.");
-        resolve();
-      }).catch( (err) => {
-        ok(false, "Expected no error, but got '" + err.name + "'.");
-        resolve();
-      }).finally(handler.destruct);
-    });
+  async function testAfterShow() {
+    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+    const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
+    const acceptPromise = payRequest.show();
+    try {
+      const abortResult = await payRequest.abort();
+      is(abortResult, undefined, "Should be resolved with undefined.");
+    } catch (err) {
+      ok(false, "Expected no error, but got '" + err.name + "'.");
+    } finally {
+      handler.destruct();
+    }
   }
 
   function teardown() {
-    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
-      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
-      gScript.destroy();
-      SimpleTest.finish();
+    return new Promise(resolve => {
+      gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+        gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+        gScript.destroy();
+        resolve();
+      });
+      gScript.sendAsyncMessage("teardown");
     });
-    gScript.sendAsyncMessage("teardown");
   }
 
-  function runTests() {
-    testBeforeShow()
-    .then(testAfterShow)
-    .then(teardown)
-    .catch( e => {
+  async function runTests() {
+    try{
+      await testBeforeShow();
+      await testAfterShow();
+    } catch(e) {
       ok(false, "Unexpected error: " + e.name);
-      SimpleTest.finish();
-    });
+    } finally {
+      await teardown();
+    }
   }
 
-  window.addEventListener('load', function() {
-    SpecialPowers.pushPrefEnv({
+  window.addEventListener('load', async () => {
+    await SpecialPowers.pushPrefEnv({
       'set': [
         ['dom.payments.request.enabled', true],
       ]
-    }, runTests);
+    });
+    await runTests();
+    SimpleTest.finish();
   });
 
   </script>
