@@ -1,7 +1,7 @@
 # Vorbis
 
+[![GitLab Build Status](https://gitlab.xiph.org/xiph/vorbis/badges/master/pipeline.svg)](https://gitlab.xiph.org/xiph/vorbis/-/pipelines)
 [![Travis Build Status](https://travis-ci.org/xiph/vorbis.svg?branch=master)](https://travis-ci.org/xiph/vorbis)
-[![Jenkins Build Status](https://mf4.xiph.org/jenkins/job/libvorbis/badge/icon)](https://mf4.xiph.org/jenkins/job/libvorbis/)
 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/github/xiph/vorbis?branch=master&svg=true)](https://ci.appveyor.com/project/rillian/vorbis)
 
 Vorbis is a general purpose audio and music encoding format
@@ -17,7 +17,7 @@ This package contains:
 
 - libvorbis, a BSD-style license software implementation of
   the Vorbis specification by the Xiph.Org Foundation
-  (https://www.xiph.org/)
+  (https://xiph.org/)
 
 - libvorbisfile, a BSD-style license convenience library
   built on Vorbis designed to simplify common uses
@@ -58,19 +58,17 @@ Directory:
 
 ## Contact ##
 
-The Ogg homepage is located at 'https://www.xiph.org/ogg/'.
-Vorbis's homepage is located at 'https://www.xiph.org/vorbis/'.
+The Ogg homepage is located at 'https://xiph.org/ogg/'.
+Vorbis's homepage is located at 'https://xiph.org/vorbis/'.
 Up to date technical documents, contact information, source code and
 pre-built utilities may be found there.
-
-The user website for Ogg Vorbis software and audio is http://vorbis.com/
 
 ## Building ##
 
 #### Building from master ####
 
 Development source is under git revision control at
-https://git.xiph.org/vorbis.git. You will also need the
+https://gitlab.xiph.org/xiph/vorbis.git. You will also need the
 newest versions of autoconf, automake, libtool and pkg-config in
 order to compile Vorbis from development source. A configure script
 is provided for you in the source tarball distributions.
@@ -107,8 +105,8 @@ after normal configuring:
 
 ## Building with CMake ##
 
-Ogg supports building using [CMake](http://www.cmake.org/). CMake is a meta build system that generates native projects for each platform.
-To generate projects just run cmake replacing `YOUR-PROJECT-GENERATOR` with a proper generator from a list [here](http://www.cmake.org/cmake/help/v3.2/manual/cmake-generators.7.html):
+Ogg supports building using [CMake](https://cmake.org/). CMake is a meta build system that generates native projects for each platform.
+To generate projects just run cmake replacing `YOUR-PROJECT-GENERATOR` with a proper generator from a list [here](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html):
 
     cmake -G YOUR-PROJECT-GENERATOR .
 
@@ -145,5 +143,5 @@ USE, DISTRIBUTION AND REPRODUCTION OF THIS LIBRARY SOURCE IS
 GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE
 IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.
 
-THE OggVorbis SOURCE CODE IS COPYRIGHT (C) 1994-2018
-by the Xiph.Org Foundation https://www.xiph.org/
+THE OggVorbis SOURCE CODE IS COPYRIGHT (C) 1994-2020
+by the Xiph.Org Foundation https://xiph.org/
