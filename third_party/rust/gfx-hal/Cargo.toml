@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gfx-hal"
-version = "0.5.0"
+version = "0.5.3"
 authors = ["The Gfx-rs Developers"]
 description = "gfx-rs hardware abstraction layer"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -39,6 +39,8 @@ version = "0.3"
 version = "1"
 features = ["serde_derive"]
 optional = true
+[dev-dependencies.gfx-backend-empty]
+version = "0.5"
 
 [features]
 unstable = []

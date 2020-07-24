@@ -95,6 +95,7 @@ macro_rules! impl_TCFType {
 
             #[inline]
             unsafe fn wrap_under_get_rule(reference: $ty_ref) -> Self {
+                assert!(!reference.is_null(), "Attempted to create a NULL object.");
                 let reference = $crate::base::CFRetain(reference as *const ::std::os::raw::c_void) as $ty_ref;
                 $crate::base::TCFType::wrap_under_create_rule(reference)
             }
@@ -106,6 +107,7 @@ macro_rules! impl_TCFType {
 
             #[inline]
             unsafe fn wrap_under_create_rule(reference: $ty_ref) -> Self {
+                assert!(!reference.is_null(), "Attempted to create a NULL object.");
                 // we need one PhantomData for each type parameter so call ourselves
                 // again with @Phantom $p to produce that
                 $ty(reference $(, impl_TCFType!(@Phantom $p))*)

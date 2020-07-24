@@ -22,7 +22,7 @@ use hal::{
 use range_alloc::RangeAllocator;
 
 use arrayvec::ArrayVec;
-use cocoa::foundation::NSRange;
+use cocoa_foundation::foundation::NSRange;
 use metal;
 use parking_lot::{Mutex, RwLock};
 use spirv_cross::{msl, spirv};

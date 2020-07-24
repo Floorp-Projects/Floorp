@@ -141,6 +141,53 @@ impl CFString {
     }
 }
 
+impl<'a> PartialEq<&'a str> for CFString {
+    fn eq(&self, other: &&str) -> bool {
+        unsafe {
+            let temp = CFStringCreateWithBytesNoCopy(kCFAllocatorDefault,
+                                                           other.as_ptr(),
+                                                           other.len().to_CFIndex(),
+                                                           kCFStringEncodingUTF8,
+                                                           false as Boolean,
+                                                           kCFAllocatorNull);
+            self.eq(&CFString::wrap_under_create_rule(temp))
+        }
+    }
+}
+
+impl<'a> PartialEq<CFString> for &'a str {
+    #[inline]
+    fn eq(&self, other: &CFString) -> bool {
+        other.eq(self)
+    }
+}
+
+impl PartialEq<CFString> for String {
+    #[inline]
+    fn eq(&self, other: &CFString) -> bool {
+        other.eq(&self.as_str())
+    }
+}
+
+impl PartialEq<String> for CFString {
+    #[inline]
+    fn eq(&self, other: &String) -> bool {
+        self.eq(&other.as_str())
+    }
+}
+
+#[test]
+fn str_cmp() {
+    let cfstr = CFString::new("hello");
+    assert_eq!("hello", cfstr);
+    assert_eq!(cfstr, "hello");
+    assert_ne!(cfstr, "wrong");
+    assert_ne!("wrong", cfstr);
+    let hello = String::from("hello");
+    assert_eq!(hello, cfstr);
+    assert_eq!(cfstr, hello);
+}
+
 #[test]
 fn string_and_back() {
     let original = "The quick brown fox jumped over the slow lazy dog.";
