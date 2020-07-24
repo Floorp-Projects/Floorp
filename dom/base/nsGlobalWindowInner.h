@@ -482,7 +482,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     KillScriptGlobal
   };
   SlowScriptResponse ShowSlowScriptDialog(JSContext* aCx,
-                                          const nsString& aAddonId);
+                                          const nsString& aAddonId,
+                                          const double aDuration);
 
   // Inner windows only.
   void AddGamepad(uint32_t aIndex, mozilla::dom::Gamepad* aGamepad);
