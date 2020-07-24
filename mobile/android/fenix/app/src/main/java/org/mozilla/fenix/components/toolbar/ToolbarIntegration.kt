@@ -6,10 +6,10 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.lifecycle.LifecycleOwner
 import com.airbnb.lottie.LottieCompositionFactory
 import com.airbnb.lottie.LottieDrawable
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.concept.engine.Engine
@@ -68,13 +68,14 @@ abstract class ToolbarIntegration(
     }
 }
 
+@Suppress("LongParameterList")
 class DefaultToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
     toolbarMenu: ToolbarMenu,
     domainAutocompleteProvider: DomainAutocompleteProvider,
     historyStorage: HistoryStorage,
-    sessionManager: SessionManager,
+    lifecycleOwner: LifecycleOwner,
     sessionId: String? = null,
     isPrivate: Boolean,
     interactor: BrowserToolbarViewInteractor,
@@ -135,10 +136,11 @@ class DefaultToolbarIntegration(
         val onTabCounterMenuItemTapped = { item: TabCounterMenuItem ->
             interactor.onTabCounterMenuItemTapped(item)
         }
-        val tabsAction = TabCounterToolbarButton(sessionManager, isPrivate, onTabCounterMenuItemTapped) {
-            toolbar.hideKeyboard()
-            interactor.onTabCounterClicked()
-        }
+        val tabsAction =
+            TabCounterToolbarButton(lifecycleOwner, isPrivate, onTabCounterMenuItemTapped) {
+                toolbar.hideKeyboard()
+                interactor.onTabCounterClicked()
+            }
         toolbar.addBrowserAction(tabsAction)
 
         val engineForSpeculativeConnects = if (!isPrivate) engine else null

@@ -57,6 +57,7 @@ interface BrowserToolbarViewInteractor {
     fun onScrolled(offset: Int)
     fun onReaderModePressed(enabled: Boolean)
 }
+
 @SuppressWarnings("LargeClass")
 class BrowserToolbarView(
     private val container: ViewGroup,
@@ -243,7 +244,7 @@ class BrowserToolbarView(
                     menuToolbar,
                     ShippedDomainsProvider().also { it.initialize(this) },
                     components.core.historyStorage,
-                    components.core.sessionManager,
+                    lifecycleOwner,
                     sessionId = null,
                     isPrivate = sessionManager.selectedSession?.private ?: false,
                     interactor = interactor,

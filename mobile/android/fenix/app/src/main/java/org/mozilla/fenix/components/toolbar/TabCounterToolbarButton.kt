@@ -8,17 +8,21 @@ import android.content.Context
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 import java.lang.ref.WeakReference
@@ -26,8 +30,9 @@ import java.lang.ref.WeakReference
 /**
  * A [Toolbar.Action] implementation that shows a [TabCounter].
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class TabCounterToolbarButton(
-    private val sessionManager: SessionManager,
+    private val lifecycleOwner: LifecycleOwner,
     private val isPrivate: Boolean,
     private val onItemTapped: (TabCounterMenuItem) -> Unit = {},
     private val showTabs: () -> Unit
@@ -35,7 +40,11 @@ class TabCounterToolbarButton(
     private var reference: WeakReference<TabCounter> = WeakReference<TabCounter>(null)
 
     override fun createView(parent: ViewGroup): View {
-        sessionManager.register(sessionManagerObserver, view = parent)
+        parent.context.components.core.store.flowScoped(lifecycleOwner) { flow ->
+            flow.map { state -> state.getNormalOrPrivateTabs(isPrivate).size }
+                .ifChanged()
+                .collect { tabs -> updateCount(tabs) }
+        }
 
         val view = TabCounter(parent.context).apply {
             reference = WeakReference(this)
@@ -50,10 +59,11 @@ class TabCounterToolbarButton(
 
             addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View?) {
-                    setCount(sessionManager.sessionsOfType(private = isPrivate).count())
+                    setCount(context.components.core.store.state.getNormalOrPrivateTabs(isPrivate).size)
                 }
 
-                override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
+                override fun onViewDetachedFromWindow(v: View?) { /* no-op */
+                }
             })
         }
 
@@ -70,12 +80,8 @@ class TabCounterToolbarButton(
 
     override fun bind(view: View) = Unit
 
-    private fun updateCount() {
-        val count = sessionManager.sessionsOfType(private = isPrivate).count()
-
-        reference.get()?.let {
-            it.setCountWithAnimation(count)
-        }
+    private fun updateCount(count: Int) {
+        reference.get()?.setCountWithAnimation(count)
     }
 
     private fun getTabContextMenu(context: Context): BrowserMenu {
@@ -118,23 +124,5 @@ class TabCounterToolbarButton(
                 ToolbarPosition.TOP -> menuItems
             }
         ).build(context)
-    }
-
-    private val sessionManagerObserver = object : SessionManager.Observer {
-        override fun onSessionAdded(session: Session) {
-            updateCount()
-        }
-
-        override fun onSessionRemoved(session: Session) {
-            updateCount()
-        }
-
-        override fun onSessionsRestored() {
-            updateCount()
-        }
-
-        override fun onAllSessionsRemoved() {
-            updateCount()
-        }
     }
 }
