@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
+  TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(this, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
@@ -581,12 +582,13 @@ class _ASRouter {
       // Notify all tabs of messages that have become invalid after pref change
       const invalidMessages = [];
       const context = this._getMessagesContext();
+      const targetingContext = new TargetingContext(context);
 
       for (const msg of this.state.messages.filter(this.isUnblockedMessage)) {
         if (!msg.targeting) {
           continue;
         }
-        const isMatch = await ASRouterTargeting.isMatch(msg.targeting, context);
+        const isMatch = await targetingContext.evalWithDefault(msg.targeting);
         if (!isMatch) {
           invalidMessages.push(msg.id);
         }
@@ -1105,7 +1107,7 @@ class _ASRouter {
     });
   }
 
-  _handleTargetingError(type, error, message) {
+  _handleTargetingError(error, message) {
     Cu.reportError(error);
     if (this.dispatchToAS) {
       this.dispatchToAS(
@@ -1113,7 +1115,6 @@ class _ASRouter {
           message_id: message.id,
           action: "asrouter_undesired_event",
           event: "TARGETING_EXPRESSION_ERROR",
-          event_context: type,
         })
       );
     }
@@ -1147,10 +1148,11 @@ class _ASRouter {
 
   async evaluateExpression(target, { expression, context }) {
     const channel = target || this.messageChannel;
+    const targetingContext = new TargetingContext(context);
     let evaluationStatus;
     try {
       evaluationStatus = {
-        result: await ASRouterTargeting.isMatch(expression, context),
+        result: await targetingContext.evalWithDefault(expression),
         success: true,
       };
     } catch (e) {
