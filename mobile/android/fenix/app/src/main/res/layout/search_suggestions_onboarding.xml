@@ -50,12 +50,13 @@
         android:id="@+id/learn_more"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:minHeight="48dp"
         android:text="@string/exceptions_empty_message_learn_more_link"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="?attr/accentHighContrast"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@id/allow"
-        app:layout_constraintEnd_toEndOf="@id/title"
+        app:layout_constraintEnd_toStartOf="@id/dismiss"
         app:layout_constraintStart_toStartOf="@id/title"
         app:layout_constraintTop_toBottomOf="@id/text"
         tools:textColor="@color/accent_high_contrast_private_theme"/>
@@ -67,9 +68,9 @@
         android:layout_height="wrap_content"
         android:padding="12dp"
         android:text="@string/search_suggestions_onboarding_allow_button"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="@id/title"
-        app:layout_constraintTop_toBottomOf="@id/learn_more" />
+        app:layout_constraintTop_toBottomOf="@id/text" />
 
     <TextView
         android:id="@+id/dismiss"
