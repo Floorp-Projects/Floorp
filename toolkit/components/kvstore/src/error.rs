@@ -7,7 +7,7 @@ use nserror::{
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED,
 };
 use nsstring::nsCString;
-use rkv::{MigrateError, StoreError};
+use rkv::{migrate::MigrateError, StoreError};
 use std::{io::Error as IoError, str::Utf8Error, string::FromUtf16Error, sync::PoisonError};
 
 #[derive(Debug, Fail)]

@@ -11,14 +11,14 @@ use std::fs;
 
 use tempfile::Builder;
 
+use rkv::backend::{
+    BackendStat,
+    Lmdb,
+    LmdbDatabase,
+    LmdbEnvironment,
+    LmdbRwTransaction,
+};
 use rkv::{
-    backend::{
-        BackendStat,
-        Lmdb,
-        LmdbDatabase,
-        LmdbEnvironment,
-        LmdbRwTransaction,
-    },
     Manager,
     Rkv,
     StoreOptions,
@@ -35,7 +35,7 @@ fn getput<'w, 's>(store: MultiStore, writer: &'w mut Writer, ids: &'s mut Vec<St
         // this is a multi-valued database, so get returns an iterator
         let mut iter = store.get(writer, k).unwrap();
         while let Some(Ok((_key, val))) = iter.next() {
-            if let Value::Str(s) = val {
+            if let Value::Str(s) = val.unwrap() {
                 ids.push(s.to_owned());
             } else {
                 panic!("didn't get a string back!");

@@ -8,24 +8,21 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::{
-    io,
-    path::{
-        Path,
-        PathBuf,
-    },
+use std::io;
+use std::path::{
+    Path,
+    PathBuf,
 };
 
 use url::Url;
 
-use crate::{
-    error::StoreError,
-    value::Value,
-};
+use crate::error::StoreError;
+use crate::value::Value;
 
-pub(crate) fn read_transform(value: Result<&[u8], StoreError>) -> Result<Value, StoreError> {
+pub(crate) fn read_transform(value: Result<&[u8], StoreError>) -> Result<Option<Value>, StoreError> {
     match value {
-        Ok(bytes) => Value::from_tagged_slice(bytes).map_err(StoreError::DataError),
+        Ok(bytes) => Value::from_tagged_slice(bytes).map(Some).map_err(StoreError::DataError),
+        Err(StoreError::KeyValuePairNotFound) => Ok(None),
         Err(e) => Err(e),
     }
 }
@@ -39,8 +36,8 @@ where
     let canonical = path.into().canonicalize()?;
 
     Ok(if cfg!(target_os = "windows") {
-        let map_err = |_| io::Error::new(io::ErrorKind::Other, "path canonicalization error");
-        Url::from_file_path(&canonical).and_then(|url| url.to_file_path()).map_err(map_err)?
+        let url = Url::from_file_path(&canonical).map_err(|_| io::Error::new(io::ErrorKind::Other, "passing error"))?;
+        url.to_file_path().map_err(|_| io::Error::new(io::ErrorKind::Other, "path canonicalization error"))?
     } else {
         canonical
     })

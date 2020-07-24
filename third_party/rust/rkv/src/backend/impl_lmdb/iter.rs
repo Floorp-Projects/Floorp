@@ -36,6 +36,6 @@ impl<'i, C> BackendIter<'i> for IterImpl<'i, C> {
 
     #[allow(clippy::type_complexity)]
     fn next(&mut self) -> Option<Result<(&'i [u8], &'i [u8]), Self::Error>> {
-        self.iter.next().map(|e| e.map_err(ErrorImpl::LmdbError))
+        self.iter.next().map(|e| e.map_err(ErrorImpl))
     }
 }

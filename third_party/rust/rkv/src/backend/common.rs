@@ -27,10 +27,9 @@ pub enum DatabaseFlags {
     REVERSE_KEY,
     #[cfg(feature = "db-dup-sort")]
     DUP_SORT,
-    #[cfg(feature = "db-dup-sort")]
-    DUP_FIXED,
     #[cfg(feature = "db-int-key")]
     INTEGER_KEY,
+    DUP_FIXED,
     INTEGER_DUP,
     REVERSE_DUP,
 }
