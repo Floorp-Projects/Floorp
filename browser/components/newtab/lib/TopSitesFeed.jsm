@@ -94,6 +94,9 @@ for (let searchProvider of ["amazon", "google"]) {
   );
 }
 
+const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
+const REMOTE_SETTING_OVERRIDE_PREF = "browser.topsites.default";
+
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
   return url;
@@ -125,15 +128,15 @@ this.TopSitesFeed = class TopSitesFeed {
 
   init() {
     // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
-    this.refreshDefaults(
-      this.store.getState().Prefs.values[DEFAULT_SITES_PREF]
-    );
+    this._readDefaults();
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     this.refresh({ broadcast: true, isStartup: true });
     Services.obs.addObserver(this, "browser-search-engine-modified");
     for (let [pref] of SEARCH_TILE_OVERRIDE_PREFS) {
       Services.prefs.addObserver(pref, this);
     }
+    Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
+    Services.prefs.addObserver(REMOTE_SETTING_OVERRIDE_PREF, this);
   }
 
   uninit() {
@@ -142,29 +145,64 @@ this.TopSitesFeed = class TopSitesFeed {
     for (let [pref] of SEARCH_TILE_OVERRIDE_PREFS) {
       Services.prefs.removeObserver(pref, this);
     }
+    Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
+    Services.prefs.removeObserver(REMOTE_SETTING_OVERRIDE_PREF, this);
   }
 
   observe(subj, topic, data) {
-    // We should update the current top sites if the search engine has been changed since
-    // the search engine that gets filtered out of top sites has changed.
-    if (
-      topic === "browser-search-engine-modified" &&
-      data === "engine-default" &&
-      this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF]
-    ) {
-      delete this._currentSearchHostname;
-      this._currentSearchHostname = getShortURLForCurrentSearch();
-      this.refresh({ broadcast: true });
-    } else if (
-      topic === "nsPref:changed" &&
-      SEARCH_TILE_OVERRIDE_PREFS.has(data)
-    ) {
-      this.refresh({ broadcast: true });
+    switch (topic) {
+      case "browser-search-engine-modified":
+        // We should update the current top sites if the search engine has been changed since
+        // the search engine that gets filtered out of top sites has changed.
+        if (
+          data === "engine-default" &&
+          this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF]
+        ) {
+          delete this._currentSearchHostname;
+          this._currentSearchHostname = getShortURLForCurrentSearch();
+          this.refresh({ broadcast: true });
+        }
+        break;
+      case "nsPref:changed":
+        if (
+          data === REMOTE_SETTING_DEFAULTS_PREF ||
+          data === REMOTE_SETTING_OVERRIDE_PREF
+        ) {
+          this._readDefaults();
+          this.refresh({ broadcast: true });
+        } else if (SEARCH_TILE_OVERRIDE_PREFS.has(data)) {
+          this.refresh({ broadcast: true });
+        }
+        break;
     }
   }
 
   _dedupeKey(site) {
     return site && site.hostname;
+  }
+
+  /**
+   * _readDefaults - sets DEFAULT_TOP_SITES
+   */
+  _readDefaults() {
+    this._useRemoteSetting = Services.prefs.getBoolPref(
+      REMOTE_SETTING_DEFAULTS_PREF
+    );
+
+    if (!this._useRemoteSetting) {
+      this.refreshDefaults(
+        this.store.getState().Prefs.values[DEFAULT_SITES_PREF]
+      );
+      return;
+    }
+
+    let sites;
+    try {
+      sites = Services.prefs.getStringPref(REMOTE_SETTING_OVERRIDE_PREF);
+    } catch (e) {}
+    // Placeholder for the actual remote setting (bug 1653937).
+    sites ??= "https://mozilla.org,https://firefox.com";
+    this.refreshDefaults(sites);
   }
 
   refreshDefaults(sites) {
@@ -884,7 +922,9 @@ this.TopSitesFeed = class TopSitesFeed {
       case at.PREF_CHANGED:
         switch (action.data.name) {
           case DEFAULT_SITES_PREF:
-            this.refreshDefaults(action.data.value);
+            if (!this._useRemoteSetting) {
+              this.refreshDefaults(action.data.value);
+            }
             break;
           case ROWS_PREF:
           case FILTER_DEFAULT_SEARCH_PREF:
@@ -906,7 +946,9 @@ this.TopSitesFeed = class TopSitesFeed {
         }
         break;
       case at.PREFS_INITIAL_VALUES:
-        this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);
+        if (!this._useRemoteSetting) {
+          this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);
+        }
         break;
       case at.TOP_SITES_PIN:
         this.pin(action);
