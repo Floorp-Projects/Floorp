@@ -24,35 +24,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-// Sqlite result row index constants.
-const QUERYINDEX = {
-  QUERYTYPE: 0,
-  URL: 1,
-  TITLE: 2,
-  BOOKMARKED: 3,
-  BOOKMARKTITLE: 4,
-  TAGS: 5,
-  VISITCOUNT: 6,
-  TYPED: 7,
-  PLACEID: 8,
-  SWITCHTAB: 9,
-  FRECENCY: 10,
-};
-
-// Result row indexes for originQuery()
-const QUERYINDEX_ORIGIN = {
-  AUTOFILLED_VALUE: 1,
-  URL: 2,
-  FRECENCY: 3,
-};
-
-// Result row indexes for urlQuery()
-const QUERYINDEX_URL = {
-  URL: 1,
-  STRIPPED_URL: 2,
-  FRECENCY: 3,
-};
-
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
 const QUERYTYPE = {
@@ -89,48 +60,42 @@ const SQL_AUTOFILL_FRECENCY_THRESHOLD = `host_frecency >= (
     SELECT value FROM autofill_frecency_threshold
   )`;
 
-function originQuery({ select = "", where = "", having = "" }) {
-  return `${SQL_AUTOFILL_WITH}
-            SELECT :query_type,
-                   fixed_up_host || '/',
-                   IFNULL(:prefix, prefix) || moz_origins.host || '/',
-                   frecency,
-                   bookmarked,
-                   id
-            FROM (
-              SELECT host,
-                     host AS fixed_up_host,
-                     TOTAL(frecency) AS host_frecency,
-                     (
-                       SELECT TOTAL(foreign_count) > 0
-                       FROM moz_places
-                       WHERE moz_places.origin_id = moz_origins.id
-                     ) AS bookmarked
-                     ${select}
-              FROM moz_origins
-              WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
-                    ${where}
-              GROUP BY host
-              HAVING ${having}
-              UNION ALL
-              SELECT host,
-                     fixup_url(host) AS fixed_up_host,
-                     TOTAL(frecency) AS host_frecency,
-                     (
-                       SELECT TOTAL(foreign_count) > 0
-                       FROM moz_places
-                       WHERE moz_places.origin_id = moz_origins.id
-                     ) AS bookmarked
-                     ${select}
-              FROM moz_origins
-              WHERE host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'
-                    ${where}
-              GROUP BY host
-              HAVING ${having}
-            ) AS grouped_hosts
-            JOIN moz_origins ON moz_origins.host = grouped_hosts.host
-            ORDER BY frecency DESC, id DESC
-            LIMIT 1 `;
+function originQuery(where) {
+  // `frecency`, `bookmarked` and `visited` are partitioned by the fixed host,
+  // without `www.`. `host_prefix` instead is partitioned by full host, because
+  // we assume a prefix may not work regardless of `www.`.
+  let selectVisited = where.includes("visited")
+    ? `MAX(EXISTS(
+      SELECT 1 FROM moz_places WHERE origin_id = o.id AND visit_count > 0
+    )) OVER (PARTITION BY fixup_url(host)) > 0`
+    : "0";
+  return `/* do not warn (bug no): cannot use an index to sort */
+    ${SQL_AUTOFILL_WITH},
+    origins(id, prefix, host_prefix, host, fixed, host_frecency, frecency, bookmarked, visited) AS (
+      SELECT
+      id,
+      prefix,
+      first_value(prefix) OVER (PARTITION BY host ORDER BY frecency DESC),
+      host,
+      fixup_url(host),
+      TOTAL(frecency) OVER (PARTITION BY fixup_url(host)),
+      frecency,
+      MAX(EXISTS(
+        SELECT 1 FROM moz_places WHERE origin_id = o.id AND foreign_count > 0
+      )) OVER (PARTITION BY fixup_url(host)),
+      ${selectVisited}
+      FROM moz_origins o
+      WHERE (host BETWEEN :searchString AND :searchString || X'FFFF')
+         OR (host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF')
+    )
+    SELECT :query_type AS query_type,
+           iif(instr(:searchString, "www."), host, fixed) || '/' AS host_fixed,
+           ifnull(:prefix, host_prefix) || host || '/' AS url
+    FROM origins
+    ${where}
+    ORDER BY frecency DESC, id DESC
+    LIMIT 1
+  `;
 }
 
 function urlQuery(where1, where2) {
@@ -139,9 +104,9 @@ function urlQuery(where1, where2) {
   // rows as possible.  Keep in mind that we run this query every time the user
   // types a key when the urlbar value looks like a URL with a path.
   return `/* do not warn (bug no): cannot use an index to sort */
-            SELECT :query_type,
+            SELECT :query_type AS query_type,
                    url,
-                   :strippedURL,
+                   :strippedURL AS stripped_url,
                    frecency,
                    foreign_count > 0 AS bookmarked,
                    visit_count > 0 AS visited,
@@ -150,9 +115,9 @@ function urlQuery(where1, where2) {
             WHERE rev_host = :revHost
                   ${where1}
             UNION ALL
-            SELECT :query_type,
+            SELECT :query_type AS query_type,
                    url,
-                   :strippedURL,
+                   :strippedURL AS stripped_url,
                    frecency,
                    foreign_count > 0 AS bookmarked,
                    visit_count > 0 AS visited,
@@ -164,42 +129,29 @@ function urlQuery(where1, where2) {
             LIMIT 1 `;
 }
 // Queries
-const QUERY_ORIGIN_HISTORY_BOOKMARK = originQuery({
-  having: `bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
-});
+const QUERY_ORIGIN_HISTORY_BOOKMARK = originQuery(
+  `WHERE bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`
+);
 
-const QUERY_ORIGIN_PREFIX_HISTORY_BOOKMARK = originQuery({
-  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
-});
+const QUERY_ORIGIN_PREFIX_HISTORY_BOOKMARK = originQuery(
+  `WHERE prefix BETWEEN :prefix AND :prefix || X'FFFF'
+     AND (bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD})`
+);
 
-const QUERY_ORIGIN_HISTORY = originQuery({
-  select: `, (
-        SELECT TOTAL(visit_count) > 0
-        FROM moz_places
-        WHERE moz_places.origin_id = moz_origins.id
-       ) AS visited`,
-  having: `visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
-});
+const QUERY_ORIGIN_HISTORY = originQuery(
+  `WHERE visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`
+);
 
-const QUERY_ORIGIN_PREFIX_HISTORY = originQuery({
-  select: `, (
-        SELECT TOTAL(visit_count) > 0
-        FROM moz_places
-        WHERE moz_places.origin_id = moz_origins.id
-       ) AS visited`,
-  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
-});
+const QUERY_ORIGIN_PREFIX_HISTORY = originQuery(
+  `WHERE prefix BETWEEN :prefix AND :prefix || X'FFFF'
+     AND visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`
+);
 
-const QUERY_ORIGIN_BOOKMARK = originQuery({
-  having: `bookmarked`,
-});
+const QUERY_ORIGIN_BOOKMARK = originQuery(`WHERE bookmarked`);
 
-const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery({
-  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `bookmarked`,
-});
+const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery(
+  `WHERE prefix BETWEEN :prefix AND :prefix || X'FFFF' AND bookmarked`
+);
 
 const QUERY_URL_HISTORY_BOOKMARK = urlQuery(
   `AND (bookmarked OR frecency > 20)
@@ -550,18 +502,16 @@ class ProviderAutofill extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext
    */
   _onResultRow(row, cancel, queryContext) {
-    let queryType = row.getResultByIndex(QUERYINDEX.QUERYTYPE);
+    let queryType = row.getResultByName("query_type");
     let autofilledValue, finalCompleteValue;
     switch (queryType) {
       case QUERYTYPE.AUTOFILL_ORIGIN:
-        autofilledValue = row.getResultByIndex(
-          QUERYINDEX_ORIGIN.AUTOFILLED_VALUE
-        );
-        finalCompleteValue = row.getResultByIndex(QUERYINDEX_ORIGIN.URL);
+        autofilledValue = row.getResultByName("host_fixed");
+        finalCompleteValue = row.getResultByName("url");
         break;
       case QUERYTYPE.AUTOFILL_URL:
-        let url = row.getResultByIndex(QUERYINDEX_URL.URL);
-        let strippedURL = row.getResultByIndex(QUERYINDEX_URL.STRIPPED_URL);
+        let url = row.getResultByName("url");
+        let strippedURL = row.getResultByName("stripped_url");
         // We autofill urls to-the-next-slash.
         // http://mozilla.org/foo/bar/baz will be autofilled to:
         //  - http://mozilla.org/f[oo/]
@@ -690,7 +640,7 @@ class ProviderAutofill extends UrlbarProvider {
       [query, params] = this._getUrlQuery(queryContext);
     }
 
-    // _getrlQuery doesn't always return a query.
+    // _getUrlQuery doesn't always return a query.
     if (query) {
       await conn.executeCached(query, params, (row, cancel) => {
         this._onResultRow(row, cancel, queryContext);
