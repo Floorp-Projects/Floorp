@@ -9,6 +9,12 @@ const { TelemetryController } = ChromeUtils.import(
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
 add_task(async function setup() {
   // We need to set this pref to `true` in order to collect add-ons Telemetry
@@ -24,7 +30,7 @@ add_task(async function setup() {
   });
 
   await TelemetryController.testSetup();
-  await ExtensionTestUtils.startAddonManager();
+  await AddonTestUtils.promiseStartupManager();
 });
 
 add_task(async function test_ping_payload_and_environment() {
