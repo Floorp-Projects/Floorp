@@ -317,6 +317,27 @@ StorageActors.defaults = function(typeName, observationTopics) {
       return {
         actor: this.actorID,
         hosts: hosts,
+        traits: this._getTraits(),
+      };
+    },
+
+    // Share getTraits for child classes overriding form()
+    _getTraits() {
+      return {
+        // The hasSupportsTraits can be removed when Firefox 80 hits the release
+        // channel. Allows the client to know if the various supportsXXX traits
+        // are defined or if actorHasMethod should be used instead.
+        hasSupportsTraits: true,
+        // The supportsXXX traits are not related to backward compatibility
+        // Different storage actor types implement different APIs, the traits
+        // help the client to know what is supported or not.
+        supportsAddItem: typeof this.addItem === "function",
+        // Note: supportsRemoveItem and supportsRemoveAll are always defined
+        // for all actors. See Bug 1655001.
+        supportsRemoveItem: typeof this.removeItem === "function",
+        supportsRemoveAll: typeof this.removeAll === "function",
+        supportsRemoveAllSessionCookies:
+          typeof this.removeAllSessionCookies === "function",
       };
     },
 
@@ -2121,6 +2142,7 @@ StorageActors.createActor(
       return {
         actor: this.actorID,
         hosts: hosts,
+        traits: this._getTraits(),
       };
     },
 
@@ -2627,6 +2649,7 @@ StorageActors.createActor(
       return {
         actor: this.actorID,
         hosts: hosts,
+        traits: this._getTraits(),
       };
     },
 

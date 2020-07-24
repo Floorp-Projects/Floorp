@@ -15,6 +15,7 @@ for (const childSpec of Object.values(childSpecs)) {
     form(form) {
       this.actorID = form.actor;
       this.hosts = form.hosts;
+      this.traits = form.traits || {};
       return null;
     }
   }

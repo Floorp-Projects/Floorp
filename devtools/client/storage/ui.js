@@ -779,23 +779,7 @@ class StorageUI {
           }
         }
 
-        const target = this.currentTarget;
-        this.actorSupportsAddItem = await target.actorHasMethod(
-          type,
-          "addItem"
-        );
-        this.actorSupportsRemoveItem = await target.actorHasMethod(
-          type,
-          "removeItem"
-        );
-        this.actorSupportsRemoveAll = await target.actorHasMethod(
-          type,
-          "removeAll"
-        );
-        this.actorSupportsRemoveAllSessionCookies = await target.actorHasMethod(
-          type,
-          "removeAllSessionCookies"
-        );
+        await this._readSupportsTraits(type);
 
         await this.resetColumns(type, host, subType);
       }
@@ -814,6 +798,41 @@ class StorageUI {
       this.emit("store-objects-updated");
     } catch (ex) {
       console.error(ex);
+    }
+  }
+
+  /**
+   * Read the current supports traits for the provided storage type and update
+   * the actorSupports flags on the UI instance.
+   *
+   * Note: setting actorSupportsXYZ properties on the UI instance is incorrect
+   * because the value depends on each storage type. See Bug 1654998.
+   */
+  async _readSupportsTraits(type) {
+    const { traits } = this.storageTypes[type];
+    if (traits.hasSupportsTraits) {
+      this.actorSupportsAddItem = traits.supportsAddItem;
+      this.actorSupportsRemoveItem = traits.supportsRemoveItem;
+      this.actorSupportsRemoveAll = traits.supportsRemoveAll;
+      this.actorSupportsRemoveAllSessionCookies =
+        traits.supportsRemoveAllSessionCookies;
+    } else {
+      // Backward compatibility. This branch can be removed when Firefox 80 is
+      // on the release channel.
+      const target = this.currentTarget;
+      this.actorSupportsAddItem = await target.actorHasMethod(type, "addItem");
+      this.actorSupportsRemoveItem = await target.actorHasMethod(
+        type,
+        "removeItem"
+      );
+      this.actorSupportsRemoveAll = await target.actorHasMethod(
+        type,
+        "removeAll"
+      );
+      this.actorSupportsRemoveAllSessionCookies = await target.actorHasMethod(
+        type,
+        "removeAllSessionCookies"
+      );
     }
   }
 
