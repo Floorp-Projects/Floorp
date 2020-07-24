@@ -18,9 +18,9 @@ use geometry::CGRect;
 
 use foreign_types::ForeignType;
 
-use libc::{self, c_int, size_t};
+use libc::{c_int, size_t};
 
-pub type CGGlyph = libc::c_ushort;
+pub use core_graphics_types::base::CGGlyph;
 
 foreign_type! {
     #[doc(hidden)]

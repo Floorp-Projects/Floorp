@@ -52,5 +52,4 @@ extern {
         value: CFTypeRef,
     );
 
-    pub fn CFMutableAttributedStringGetTypeID() -> CFTypeID;
 }
