@@ -3997,28 +3997,6 @@
     "n_buckets": 50,
     "description": "Time in resolve queue waiting to getaddrinfo (msec)"
   },
-  "DNS_TRR_RACE2": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "categorical",
-    "labels": ["TRRFasterBy100", "TRRFasterBy50", "TRRFaster", "NativeFaster", "NativeFasterBy50",
-               "NativeFasterBy100"],
-    "bug_numbers": [1434852],
-    "description": "DNS: TRR parallel resolve racing results"
-  },
-  "DNS_TRR_COMPARE": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "categorical",
-    "labels": ["BothWorked", "NativeWorked", "TRRWorked", "BothFailed"],
-    "bug_numbers": [1460589],
-    "releaseChannelCollection": "opt-out",
-    "description": "DNS: success distribution when both native and TRR were used"
-  },
   "TRR_SKIP_REASON_TRR_FIRST": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
@@ -4106,16 +4084,6 @@
     "bug_numbers": [1497438, 1640867],
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com"]
-  },
-  "DNS_TRR_REDIRECTED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "81",
-    "kind": "categorical",
-    "labels": ["Redirected", "None"],
-    "description": "How often TRR (Trusted Recursive Resolver) requests are redirected",
-    "bug_numbers": [1624996],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
   },
   "DNS_LOOKUP_ALGORITHM": {
     "record_in_processes": ["main"],

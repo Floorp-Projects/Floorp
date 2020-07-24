@@ -2703,7 +2703,6 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
   rv = NS_OK;
 
   uint32_t httpStatus = mResponseHead->Status();
-  bool trrRequestRedirected = false;
 
   // handle different server response categories.  Note that we handle
   // caching or not caching of error pages in
@@ -2752,11 +2751,6 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
 #if 0
     case 305: // disabled as a security measure (see bug 187996).
 #endif
-      if (mIsTRRServiceChannel) {
-        trrRequestRedirected = true;
-        Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_DNS_TRR_REDIRECTED::Redirected);
-      }
       // don't store the response body for redirects
       MaybeInvalidateCacheEntryForSubsequentGet();
       PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse4);
@@ -2856,11 +2850,6 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
       rv = ProcessNormal();
       MaybeInvalidateCacheEntryForSubsequentGet();
       break;
-  }
-
-  if (mIsTRRServiceChannel && !trrRequestRedirected) {
-    Telemetry::AccumulateCategorical(
-        Telemetry::LABELS_DNS_TRR_REDIRECTED::None);
   }
 
   UpdateCacheDisposition(false, false);
