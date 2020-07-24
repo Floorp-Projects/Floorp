@@ -42,7 +42,6 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
@@ -107,7 +106,6 @@ import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
 import java.lang.ref.WeakReference
-import kotlin.math.abs
 import kotlin.math.min
 
 @ExperimentalCoroutinesApi
@@ -127,7 +125,6 @@ class HomeFragment : Fragment() {
         }
 
     private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
-    private var homeAppBarOffset = 0
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
@@ -148,7 +145,6 @@ class HomeFragment : Fragment() {
     private val store: BrowserStore
         get() = requireComponents.core.store
 
-    private lateinit var homeAppBarOffSetListener: AppBarLayout.OnOffsetChangedListener
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var homeFragmentStore: HomeFragmentStore
     private var _sessionControlInteractor: SessionControlInteractor? = null
@@ -218,7 +214,6 @@ class HomeFragment : Fragment() {
             )
         )
         updateLayout(view)
-        setOffset(view)
         sessionControlView = SessionControlView(
             view.sessionControlRecyclerView,
             sessionControlInteractor,
@@ -280,17 +275,8 @@ class HomeFragment : Fragment() {
                 view.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin = HEADER_MARGIN.dpToPx(resources.displayMetrics)
                 }
-
-                createNewAppBarListener(HEADER_MARGIN.dpToPx(resources.displayMetrics).toFloat())
-                view.homeAppBar.addOnOffsetChangedListener(
-                    homeAppBarOffSetListener
-                )
             }
             ToolbarPosition.BOTTOM -> {
-                createNewAppBarListener(0F)
-                view.homeAppBar.addOnOffsetChangedListener(
-                    homeAppBarOffSetListener
-                )
             }
         }
     }
@@ -446,7 +432,6 @@ class HomeFragment : Fragment() {
         _sessionControlInteractor = null
         sessionControlView = null
         bundleArgs.clear()
-        requireView().homeAppBar.removeOnOffsetChangedListener(homeAppBarOffSetListener)
         requireActivity().window.clearFlags(FLAG_SECURE)
     }
 
@@ -561,7 +546,6 @@ class HomeFragment : Fragment() {
                 )
             )
         }
-        calculateNewOffset()
     }
 
     private fun recommendPrivateBrowsingShortcut() {
@@ -886,30 +870,6 @@ class HomeFragment : Fragment() {
                 .setAnchorView(snackbarAnchorView)
                 .show()
         }
-    }
-
-    private fun calculateNewOffset() {
-        homeAppBarOffset = ((homeAppBar.layoutParams as CoordinatorLayout.LayoutParams)
-            .behavior as AppBarLayout.Behavior).topAndBottomOffset
-    }
-
-    private fun setOffset(currentView: View) {
-        if (homeAppBarOffset <= 0) {
-            (currentView.homeAppBar.layoutParams as CoordinatorLayout.LayoutParams)
-                .behavior = AppBarLayout.Behavior().apply {
-                topAndBottomOffset = this@HomeFragment.homeAppBarOffset
-            }
-        } else {
-            currentView.homeAppBar.setExpanded(false)
-        }
-    }
-
-    private fun createNewAppBarListener(margin: Float) {
-        homeAppBarOffSetListener =
-            AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
-                val reduceScrollRanged = appBarLayout.totalScrollRange.toFloat() - margin
-                appBarLayout.alpha = 1.0f - abs(verticalOffset / reduceScrollRanged)
-            }
     }
 
     private fun openTabTray() {
