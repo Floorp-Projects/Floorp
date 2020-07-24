@@ -87,6 +87,10 @@ Ready to contribute? Here's how to set up `glean_parser` for local development.
 
     $ pip install -r requirements_dev.txt
 
+   If using Python 3.5:
+
+    $ pip install -r requirements_dev_35.txt
+
    Optionally, if you want to ensure that the generated Kotlin code lints correctly, install a Java SDK, and then run::
 
      $ make install-kotlin-linters
@@ -113,7 +117,7 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 3.6, 3.7 and 3.8 (The CI system will take care of testing all of these Python versions).
+3. The pull request should work for Python 3.5, 3.6, 3.7 and 3.8 (The CI system will take care of testing all of these Python versions).
 4. The pull request should update the changelog in `HISTORY.rst`.
 
 Tips
@@ -129,11 +133,11 @@ Deploying
 
 A reminder for the maintainers on how to deploy.
 
-Get a clean main branch with all of the changes from `upstream`::
+Get a clean master branch with all of the changes from `upstream`::
 
-  $ git checkout main
+  $ git checkout master
   $ git fetch upstream
-  $ git rebase upstream/main
+  $ git rebase upstream/master
 
 - Update the header with the new version and date in HISTORY.rst.
 
@@ -143,9 +147,10 @@ Get a clean main branch with all of the changes from `upstream`::
 
 - Push the changes upstream::
 
-  $ git push upstream main
+  $ git push upstream master
 
-- Wait for [continuous integration to pass](https://circleci.com/gh/mozilla/glean/tree/main) on main.
+- Wait for [continuous integration to
+  pass](https://circleci.com/gh/mozilla/glean/tree/master) on master.
 
 - Make the release on GitHub using [this link](https://github.com/mozilla/glean_parser/releases/new)
 
