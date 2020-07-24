@@ -144,18 +144,15 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     var requestedLocales = CanonicalizeLocaleList(locales);
     lazyDisplayNamesData.requestedLocales = requestedLocales;
 
-    // Steps 4-5.
-    if (options === undefined)
-        options = std_Object_create(null);
-    else
-        options = ToObject(options);
+    // Step 4.
+    options = ToObject(options);
 
-    // Step 6.
+    // Step 5.
     var opt = new Record();
     lazyDisplayNamesData.opt = opt;
     lazyDisplayNamesData.mozExtensions = mozExtensions;
 
-    // Steps 8-9.
+    // Steps 7-8.
     var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
     opt.localeMatcher = matcher;
 
@@ -169,21 +166,26 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
         opt.ca = calendar;
     }
 
-    // Step 11.
+    // Step 10.
     var style = GetOption(options, "style", "string", ["narrow", "short", "long"], "long");
 
-    // Step 12.
+    // Step 11.
     lazyDisplayNamesData.style = style;
 
-    // Step 13.
+    // Step 12.
     var type;
     if (mozExtensions) {
         type = GetOption(options, "type", "string",
                          ["language", "region", "script", "currency", "weekday", "month",
-                          "quarter", "dayPeriod", "dateTimeField"], "language");
+                          "quarter", "dayPeriod", "dateTimeField"], undefined);
     } else {
         type = GetOption(options, "type", "string",
-                         ["language", "region", "script", "currency"], "language");
+                         ["language", "region", "script", "currency"], undefined);
+    }
+
+    // Step 13.
+    if (type === undefined) {
+        ThrowTypeError(JSMSG_UNDEFINED_TYPE);
     }
 
     // Step 14.
