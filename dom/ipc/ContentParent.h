@@ -614,7 +614,11 @@ class ContentParent final
   // HTTP(S) or FTP channel for a content process.  It is a useful place
   // to start to kick off work as early as possible in response to such
   // document loads.
-  nsresult AboutToLoadHttpFtpDocumentForChild(nsIChannel* aChannel);
+  // aShouldWaitForPermissionCookieUpdate is set to true if main thread IPCs for
+  // updating permissions/cookies are sent.
+  nsresult AboutToLoadHttpFtpDocumentForChild(
+      nsIChannel* aChannel,
+      bool* aShouldWaitForPermissionCookieUpdate = nullptr);
 
   // Send Blob URLs for this aPrincipal if they are not already known to this
   // content process and mark the process to receive any new/revoked Blob URLs

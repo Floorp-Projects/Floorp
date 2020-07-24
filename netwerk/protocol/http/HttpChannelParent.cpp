@@ -1408,18 +1408,19 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
              "HttpChannelParent getting OnStartRequest from a different "
              "HttpBaseChannel instance");*/
 
-  // Send down any permissions which are relevant to this URL if we are
+  HttpChannelOnStartRequestArgs args;
+
+  // Send down any permissions/cookies which are relevant to this URL if we are
   // performing a document load. We can't do that if mIPCClosed is set.
   if (!mIPCClosed) {
     PContentParent* pcp = Manager()->Manager();
     MOZ_ASSERT(pcp, "We should have a manager if our IPC isn't closed");
     DebugOnly<nsresult> rv =
         static_cast<ContentParent*>(pcp)->AboutToLoadHttpFtpDocumentForChild(
-            chan);
+            chan, &args.shouldWaitForOnStartRequestSent());
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  HttpChannelOnStartRequestArgs args;
   args.multiPartID() = multiPartID;
   args.isLastPartOfMultiPart() = isLastPartOfMultiPart;
 
@@ -1536,18 +1537,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     cleanedUpRequestHeaders.ClearHeader(nsHttp::Cookie);
     cleanedUpRequest = true;
   }
-
-  bool isDocument = chan->IsDocument();
-  if (!isDocument) {
-    rv = chan->GetIsMainDocumentChannel(&isDocument);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsLoadFlags loadflags;
-  chan->GetLoadFlags(&loadflags);
-  bool documentNeedsCookie = loadflags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
-
-  args.shouldWaitForOnStartRequestSent() = isDocument || documentNeedsCookie;
 
   rv = NS_OK;
 
