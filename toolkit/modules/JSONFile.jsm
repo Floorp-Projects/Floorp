@@ -268,7 +268,8 @@ JSONFile.prototype = {
         }
       }
 
-      if (this._options.backupTo) {
+      let backupFile = new FileUtils.File(this._options.backupTo);
+      if (this._options.backupTo && backupFile.exists()) {
         // Restore the original file from the backup here so fresh writes to empty
         // json files don't happen at any time in the future compromising the backup
         // in the process.
@@ -368,14 +369,13 @@ JSONFile.prototype = {
           Cu.reportError(e2);
         }
       }
-
-      if (this._options.backupTo) {
+      let backupFile = new FileUtils.File(this._options.backupTo);
+      if (this._options.backupTo && backupFile.exists()) {
         // Restore the original file from the backup here so fresh writes to empty
         // json files don't happen at any time in the future compromising the backup
         // in the process.
         try {
           let basename = OS.Path.basename(this.path);
-          let backupFile = new FileUtils.File(this._options.backupTo);
           backupFile.copyTo(null, basename);
         } catch (e) {
           Cu.reportError(e);
@@ -383,7 +383,7 @@ JSONFile.prototype = {
 
         try {
           // We still read from the backup file here instead of the original file in case
-          // access to the original file is blocked. For eg. by anti-virus softwares on
+          // access to the original file is blocked. For e.g. by anti-virus softwares on
           // the user's computer.
           // This reads the file and automatically detects the UTF-8 encoding.
           let inputStream = new FileInputStream(
