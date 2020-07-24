@@ -201,10 +201,15 @@ export function clearProjectDirectoryRoot(cx: Context): UIAction {
     type: "SET_PROJECT_DIRECTORY_ROOT",
     cx,
     url: "",
+    name: "",
   };
 }
 
-export function setProjectDirectoryRoot(cx: Context, newRoot: string) {
+export function setProjectDirectoryRoot(
+  cx: Context,
+  newRoot: string,
+  newName: string
+) {
   return ({ dispatch, getState }: ThunkArgs) => {
     const threadActor = startsWithThreadActor(getState(), newRoot);
 
@@ -232,6 +237,7 @@ export function setProjectDirectoryRoot(cx: Context, newRoot: string) {
       type: "SET_PROJECT_DIRECTORY_ROOT",
       cx,
       url: newRoot,
+      name: newName,
     });
   };
 }

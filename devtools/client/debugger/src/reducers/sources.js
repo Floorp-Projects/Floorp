@@ -145,6 +145,7 @@ export type SourcesState = {
   pendingSelectedLocation?: PendingSelectedLocation,
   selectedLocation: ?SourceLocation,
   projectDirectoryRoot: string,
+  projectDirectoryRootName: string,
   chromeAndExtensionsEnabled: boolean,
   focusedItem: ?FocusItem,
   tabsBlackBoxed: any,
@@ -166,6 +167,7 @@ export function initialSourcesState(
     selectedLocation: undefined,
     pendingSelectedLocation: prefs.pendingSelectedLocation,
     projectDirectoryRoot: prefs.projectDirectoryRoot,
+    projectDirectoryRootName: prefs.projectDirectoryRootName,
     chromeAndExtensionsEnabled: prefs.chromeAndExtensionsEnabled,
     focusedItem: null,
     tabsBlackBoxed: state?.tabsBlackBoxed ?? [],
@@ -253,7 +255,8 @@ function update(
       break;
 
     case "SET_PROJECT_DIRECTORY_ROOT":
-      return updateProjectDirectoryRoot(state, action.url);
+      const { url, name } = action;
+      return updateProjectDirectoryRoot(state, url, name);
 
     case "SET_ORIGINAL_BREAKABLE_LINES": {
       const { breakableLines, sourceId } = action;
@@ -411,14 +414,19 @@ function removeSourceActors(state: SourcesState, action): SourcesState {
 /*
  * Update sources when the project directory root changes
  */
-function updateProjectDirectoryRoot(state: SourcesState, root: string) {
+function updateProjectDirectoryRoot(
+  state: SourcesState,
+  root: string,
+  name: string
+) {
   // Only update prefs when projectDirectoryRoot isn't a thread actor,
   // because when debugger is reopened, thread actor will change. See bug 1596323.
   if (actorType(root) !== "thread") {
     prefs.projectDirectoryRoot = root;
+    prefs.projectDirectoryRootName = name;
   }
 
-  return updateRootRelativeValues(state, undefined, root);
+  return updateRootRelativeValues(state, undefined, root, name);
 }
 
 /* Checks if a path is a thread actor or not
@@ -432,7 +440,8 @@ function actorType(actor: string): ?string {
 function updateRootRelativeValues(
   state: SourcesState,
   sources?: $ReadOnlyArray<Source>,
-  projectDirectoryRoot?: string = state.projectDirectoryRoot
+  projectDirectoryRoot?: string = state.projectDirectoryRoot,
+  projectDirectoryRootName?: string = state.projectDirectoryRootName
 ): SourcesState {
   const wrappedIdsOrIds: $ReadOnlyArray<Source> | Array<string> = sources
     ? sources
@@ -441,6 +450,7 @@ function updateRootRelativeValues(
   state = {
     ...state,
     projectDirectoryRoot,
+    projectDirectoryRootName,
   };
 
   const relativeURLUpdates = wrappedIdsOrIds.map(wrappedIdOrId => {
@@ -876,6 +886,10 @@ export function getSelectedSourceId(state: OuterState) {
 
 export function getProjectDirectoryRoot(state: OuterState): string {
   return state.sources.projectDirectoryRoot;
+}
+
+export function getProjectDirectoryRootName(state: OuterState): string {
+  return state.sources.projectDirectoryRootName;
 }
 
 const queryAllDisplayedSources: ShallowQuery<

@@ -164,7 +164,7 @@ class SourceTreeItem extends Component<Props, State> {
 
       if (features.root) {
         const { path } = item;
-        const { cx, projectRoot } = this.props;
+        const { cx, depth, projectRoot } = this.props;
 
         if (projectRoot.endsWith(path)) {
           menuOptions.push({
@@ -179,7 +179,12 @@ class SourceTreeItem extends Component<Props, State> {
             label: setDirectoryRootLabel,
             accesskey: setDirectoryRootKey,
             disabled: false,
-            click: () => this.props.setProjectDirectoryRoot(cx, path),
+            click: () =>
+              this.props.setProjectDirectoryRoot(
+                cx,
+                path,
+                this.renderItemName(depth)
+              ),
           });
         }
       }

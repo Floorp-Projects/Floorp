@@ -6,69 +6,35 @@
 
 import React from "react";
 import { shallow } from "enzyme";
-import { showMenu } from "devtools-contextmenu";
 
-import { copyToTheClipboard } from "../../../utils/clipboard";
 import PrimaryPanes from "..";
 
-jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
-jest.mock("../../../utils/clipboard", () => ({
-  copyToTheClipboard: jest.fn(),
-}));
-
 describe("PrimaryPanes", () => {
-  afterEach(() => {
-    (copyToTheClipboard: any).mockClear();
-    showMenu.mockClear();
+  it("should not render the directory root header if the directory root has not been set.", () => {
+    const { component } = render();
+    expect(component).toMatchSnapshot();
   });
 
-  describe("with custom root", () => {
-    it("renders custom root source list", async () => {
-      const { component } = render({
-        projectRoot: "mdn.com",
-      });
-      expect(component).toMatchSnapshot();
+  it("should render the directory root header if the directory root has been set.", () => {
+    const { component } = render({
+      projectRootName: "mdn.com",
     });
-
-    it("calls clearProjectDirectoryRoot on click", async () => {
-      const { component, props } = render({
-        projectRoot: "mdn",
-      });
-      component.find(".sources-clear-root").simulate("click");
-      expect(props.clearProjectDirectoryRoot).toHaveBeenCalled();
-    });
-
-    it("renders empty custom root source list", async () => {
-      const { component } = render({
-        projectRoot: "custom",
-        sources: {},
-      });
-      expect(component).toMatchSnapshot();
-    });
+    expect(component).toMatchSnapshot();
   });
 
-  describe("with a thread set to root", () => {
-    it("uses the thread name as root label", () => {
-      const { component } = render({
-        projectRoot: "FakeThread",
-        threads: [
-          {
-            actor: "FakeThread",
-            name: "Main Thread",
-            type: "mainThread",
-            url: "http://a",
-          },
-        ],
-      });
-      expect(component).toMatchSnapshot();
+  it("should call clearProjectDirectoryRoot if .sources-clear-root has been clicked.", () => {
+    const { component, props } = render({
+      projectRootName: "mdn.com",
     });
+    component.find(".sources-clear-root").simulate("click");
+    expect(props.clearProjectDirectoryRoot).toHaveBeenCalled();
   });
 });
 
 function generateDefaults(overrides) {
   return {
     horizontal: false,
-    projectRoot: "",
+    projectRootName: "",
     sourceSearchOn: false,
     setPrimaryPaneTab: jest.fn(),
     setActiveSearch: jest.fn(),
