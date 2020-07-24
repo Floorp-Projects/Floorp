@@ -6458,11 +6458,6 @@ bool nsGlobalWindowOuter::FindOuter(const nsAString& aString,
                                     ErrorResult& aError) {
   Unused << aShowDialog;
 
-  if (Preferences::GetBool("dom.disable_window_find", false)) {
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return false;
-  }
-
   nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mDocShell));
   if (!finder) {
     aError.Throw(NS_ERROR_NOT_AVAILABLE);
