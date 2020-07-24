@@ -87,9 +87,15 @@ module.exports = function(config) {
               branches: 75,
             },
             "lib/TopSitesFeed.jsm": {
-              statements: 96,
-              lines: 96,
+              statements: 94,
+              lines: 94,
               functions: 97,
+              branches: 84,
+            },
+            "lib/Screenshots.jsm": {
+              statements: 94,
+              lines: 94,
+              functions: 100,
               branches: 84,
             },
             "lib/*.jsm": {
