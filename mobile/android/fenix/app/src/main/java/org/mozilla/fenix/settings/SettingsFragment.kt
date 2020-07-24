@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -13,16 +12,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
 import androidx.preference.Preference
-import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
@@ -41,19 +37,19 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.ext.toRoundedDrawable
-import org.mozilla.fenix.settings.account.AccountAuthErrorPreference
-import org.mozilla.fenix.settings.account.AccountPreference
+import org.mozilla.fenix.settings.account.AccountUiView
 import kotlin.system.exitProcess
 
 @Suppress("LargeClass", "TooManyFunctions")
 class SettingsFragment : PreferenceFragmentCompat() {
 
+    private lateinit var accountUiView: AccountUiView
+
     private val accountObserver = object : AccountObserver {
         private fun updateAccountUi(profile: Profile? = null) {
             val context = context ?: return
             lifecycleScope.launch {
-                updateAccountUIState(
+                accountUiView.updateAccountUIState(
                     context = context,
                     profile = profile
                         ?: context.components.backgroundServices.accountManager.accountProfile()
@@ -75,6 +71,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        accountUiView = AccountUiView(
+            fragment = this,
+            accountManager = requireComponents.backgroundServices.accountManager,
+            httpClient = requireComponents.core.client,
+            updateFxASyncOverrideMenu = ::updateFxASyncOverrideMenu
+        )
+
         // Observe account changes to keep the UI up-to-date.
         requireComponents.backgroundServices.accountManager.register(
             accountObserver,
@@ -88,7 +91,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         // For example, if user is signed-in, and we don't perform this call in onCreate, we'll briefly
         // display a "Sign In" preference, which will then get replaced by the correct account information
         // once this call is ran in onResume shortly after.
-        updateAccountUIState(
+        accountUiView.updateAccountUIState(
             requireContext(),
             requireComponents.backgroundServices.accountManager.accountProfile()
         )
@@ -162,7 +165,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         setupPreferences()
 
         if (shouldUpdateAccountUIState) {
-            updateAccountUIState(
+            accountUiView.updateAccountUIState(
                 requireContext(),
                 requireComponents.backgroundServices.accountManager.accountProfile()
             )
@@ -295,9 +298,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        preferenceRemoteDebugging?.setOnPreferenceChangeListener { preference, newValue ->
+        preferenceRemoteDebugging?.setOnPreferenceChangeListener<Boolean> { preference, newValue ->
             preference.context.settings().preferences.edit()
-                .putBoolean(preference.key, newValue as Boolean).apply()
+                .putBoolean(preference.key, newValue).apply()
             requireComponents.core.engine.settings.remoteDebuggingEnabled = newValue
             true
         }
@@ -375,68 +378,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             scrollBarSize = 0
             delay(SCROLL_INDICATOR_DELAY)
             scrollBarSize = originalSize
-        }
-    }
-
-    /**
-     * Updates the UI to reflect current account state.
-     * Possible conditions are logged-in without problems, logged-out, and logged-in but needs to re-authenticate.
-     */
-    private fun updateAccountUIState(context: Context, profile: Profile?) {
-        val preferenceSignIn =
-            requirePreference<Preference>(R.string.pref_key_sign_in)
-        val preferenceFirefoxAccount =
-            requirePreference<AccountPreference>(R.string.pref_key_account)
-        val preferenceFirefoxAccountAuthError =
-            requirePreference<AccountAuthErrorPreference>(R.string.pref_key_account_auth_error)
-        val accountPreferenceCategory =
-            requirePreference<PreferenceCategory>(R.string.pref_key_account_category)
-
-        val accountManager = requireComponents.backgroundServices.accountManager
-        val account = accountManager.authenticatedAccount()
-
-        updateFxASyncOverrideMenu()
-
-        // Signed-in, no problems.
-        if (account != null && !accountManager.accountNeedsReauth()) {
-            preferenceSignIn.isVisible = false
-
-            profile?.avatar?.url?.let { avatarUrl ->
-                lifecycleScope.launch(Main) {
-                    val roundedDrawable =
-                        avatarUrl.toRoundedDrawable(context, requireComponents.core.client)
-                    preferenceFirefoxAccount.icon =
-                        roundedDrawable ?: AppCompatResources.getDrawable(
-                            context,
-                            R.drawable.ic_account
-                        )
-                }
-            }
-            preferenceSignIn.onPreferenceClickListener = null
-            preferenceFirefoxAccountAuthError.isVisible = false
-            preferenceFirefoxAccount.isVisible = true
-            accountPreferenceCategory.isVisible = true
-
-            preferenceFirefoxAccount.displayName = profile?.displayName
-            preferenceFirefoxAccount.email = profile?.email
-
-            // Signed-in, need to re-authenticate.
-        } else if (account != null && accountManager.accountNeedsReauth()) {
-            preferenceFirefoxAccount.isVisible = false
-            preferenceFirefoxAccountAuthError.isVisible = true
-            accountPreferenceCategory.isVisible = true
-
-            preferenceSignIn.isVisible = false
-            preferenceSignIn.onPreferenceClickListener = null
-
-            preferenceFirefoxAccountAuthError.email = profile?.email
-
-            // Signed-out.
-        } else {
-            preferenceSignIn.isVisible = true
-            preferenceFirefoxAccount.isVisible = false
-            preferenceFirefoxAccountAuthError.isVisible = false
-            accountPreferenceCategory.isVisible = false
         }
     }
 

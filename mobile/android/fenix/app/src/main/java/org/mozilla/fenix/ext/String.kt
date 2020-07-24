@@ -4,13 +4,11 @@
 
 package org.mozilla.fenix.ext
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Patterns
 import android.webkit.URLUtil
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -113,16 +111,6 @@ fun String.simplifiedUrl(): String {
         }
     }
     return afterScheme
-}
-
-/**
- * Gets a rounded drawable from a URL if possible, else null.
- */
-suspend fun String.toRoundedDrawable(context: Context, client: Client) = bitmapForUrl(this, client)?.let { bitmap ->
-    RoundedBitmapDrawableFactory.create(context.resources, bitmap).also {
-        it.isCircular = true
-        it.setAntiAlias(true)
-    }
 }
 
 suspend fun bitmapForUrl(url: String, client: Client): Bitmap? = withContext(Dispatchers.IO) {
