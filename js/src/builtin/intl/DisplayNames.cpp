@@ -610,6 +610,47 @@ static JSString* GetCurrencyDisplayName(JSContext* cx, const char* locale,
   return NewStringCopyN<CanGC>(cx, name, size_t(length));
 }
 
+#ifdef DEBUG
+static bool IsStandaloneMonth(UDateFormatSymbolType symbolType) {
+  switch (symbolType) {
+    case UDAT_STANDALONE_MONTHS:
+    case UDAT_STANDALONE_SHORT_MONTHS:
+    case UDAT_STANDALONE_NARROW_MONTHS:
+      return true;
+
+    case UDAT_ERAS:
+    case UDAT_MONTHS:
+    case UDAT_SHORT_MONTHS:
+    case UDAT_WEEKDAYS:
+    case UDAT_SHORT_WEEKDAYS:
+    case UDAT_AM_PMS:
+    case UDAT_LOCALIZED_CHARS:
+    case UDAT_ERA_NAMES:
+    case UDAT_NARROW_MONTHS:
+    case UDAT_NARROW_WEEKDAYS:
+    case UDAT_STANDALONE_WEEKDAYS:
+    case UDAT_STANDALONE_SHORT_WEEKDAYS:
+    case UDAT_STANDALONE_NARROW_WEEKDAYS:
+    case UDAT_QUARTERS:
+    case UDAT_SHORT_QUARTERS:
+    case UDAT_STANDALONE_QUARTERS:
+    case UDAT_STANDALONE_SHORT_QUARTERS:
+    case UDAT_SHORTER_WEEKDAYS:
+    case UDAT_STANDALONE_SHORTER_WEEKDAYS:
+    case UDAT_CYCLIC_YEARS_WIDE:
+    case UDAT_CYCLIC_YEARS_ABBREVIATED:
+    case UDAT_CYCLIC_YEARS_NARROW:
+    case UDAT_ZODIAC_NAMES_WIDE:
+    case UDAT_ZODIAC_NAMES_ABBREVIATED:
+    case UDAT_ZODIAC_NAMES_NARROW:
+      return false;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("unenumerated, undocumented symbol type");
+  return false;
+}
+#endif
+
 static ListObject* GetDateTimeDisplayNames(
     JSContext* cx, Handle<DisplayNamesObject*> displayNames, const char* locale,
     HandleLinearString calendar, UDateFormatSymbolType symbolType,
@@ -661,7 +702,7 @@ static ListObject* GetDateTimeDisplayNames(
 
   RootedValue value(cx);
   for (uint32_t i = 0; i < indices.size(); i++) {
-    uint32_t index = indices[i];
+    int32_t index = indices[i];
     JSString* name =
         CallICU(cx, [fmt, symbolType, index](UChar* chars, int32_t size,
                                              UErrorCode* status) {
@@ -670,6 +711,10 @@ static ListObject* GetDateTimeDisplayNames(
     if (!name) {
       return nullptr;
     }
+
+    // Everything except Undecimber should always have a non-empty name.
+    MOZ_ASSERT_IF(!IsStandaloneMonth(symbolType) || index != UCAL_UNDECIMBER,
+                  !name->empty());
 
     value.setString(name);
     if (!names->append(cx, value)) {
@@ -687,15 +732,20 @@ static JSString* GetWeekdayDisplayName(JSContext* cx,
                                        HandleLinearString calendar,
                                        DisplayNamesStyle displayStyle,
                                        HandleLinearString code) {
-  double weekday;
-  if (!StringToNumber(cx, code, &weekday)) {
-    return nullptr;
-  }
+  uint8_t weekday;
+  {
+    double d;
+    if (!StringToNumber(cx, code, &d)) {
+      return nullptr;
+    }
 
-  // Inlined implementation of `IsValidWeekdayCode ( weekday )`.
-  if (!IsInteger(weekday) || weekday < 1 || weekday > 7) {
-    ReportInvalidOptionError(cx, "weekday", weekday);
-    return nullptr;
+    // Inlined implementation of `IsValidWeekdayCode ( weekday )`.
+    if (!IsInteger(d) || d < 1 || d > 7) {
+      ReportInvalidOptionError(cx, "weekday", d);
+      return nullptr;
+    }
+
+    weekday = uint8_t(d);
   }
 
   UDateFormatSymbolType symbolType;
@@ -726,24 +776,27 @@ static JSString* GetWeekdayDisplayName(JSContext* cx,
   }
   MOZ_ASSERT(names->length() == mozilla::ArrayLength(indices));
 
-  return names->get(int32_t(weekday) - 1).toString();
+  return names->get(weekday - 1).toString();
 }
 
-static JSString* GetMonthDisplayName(JSContext* cx,
-                                     Handle<DisplayNamesObject*> displayNames,
-                                     const char* locale,
-                                     HandleLinearString calendar,
-                                     DisplayNamesStyle displayStyle,
-                                     HandleLinearString code) {
-  double month;
-  if (!StringToNumber(cx, code, &month)) {
-    return nullptr;
-  }
+static JSString* GetMonthDisplayName(
+    JSContext* cx, Handle<DisplayNamesObject*> displayNames, const char* locale,
+    HandleLinearString calendar, DisplayNamesStyle displayStyle,
+    DisplayNamesFallback fallback, HandleLinearString code) {
+  uint8_t month;
+  {
+    double d;
+    if (!StringToNumber(cx, code, &d)) {
+      return nullptr;
+    }
 
-  // Inlined implementation of `IsValidMonthCode ( month )`.
-  if (!IsInteger(month) || month < 1 || month > 13) {
-    ReportInvalidOptionError(cx, "month", month);
-    return nullptr;
+    // Inlined implementation of `IsValidMonthCode ( month )`.
+    if (!IsInteger(d) || d < 1 || d > 13) {
+      ReportInvalidOptionError(cx, "month", d);
+      return nullptr;
+    }
+
+    month = uint8_t(d);
   }
 
   UDateFormatSymbolType symbolType;
@@ -775,7 +828,11 @@ static JSString* GetMonthDisplayName(JSContext* cx,
   }
   MOZ_ASSERT(names->length() == mozilla::ArrayLength(indices));
 
-  return names->get(int32_t(month) - 1).toString();
+  JSString* str = names->get(month - 1).toString();
+  if (str->empty() && fallback == DisplayNamesFallback::Code) {
+    return cx->staticStrings().getInt(month);
+  }
+  return str;
 }
 
 static JSString* GetQuarterDisplayName(JSContext* cx,
@@ -784,15 +841,20 @@ static JSString* GetQuarterDisplayName(JSContext* cx,
                                        HandleLinearString calendar,
                                        DisplayNamesStyle displayStyle,
                                        HandleLinearString code) {
-  double quarter;
-  if (!StringToNumber(cx, code, &quarter)) {
-    return nullptr;
-  }
+  uint8_t quarter;
+  {
+    double d;
+    if (!StringToNumber(cx, code, &d)) {
+      return nullptr;
+    }
 
-  // Inlined implementation of `IsValidQuarterCode ( quarter )`.
-  if (!IsInteger(quarter) || quarter < 1 || quarter > 4) {
-    ReportInvalidOptionError(cx, "quarter", quarter);
-    return nullptr;
+    // Inlined implementation of `IsValidQuarterCode ( quarter )`.
+    if (!IsInteger(d) || d < 1 || d > 4) {
+      ReportInvalidOptionError(cx, "quarter", d);
+      return nullptr;
+    }
+
+    quarter = uint8_t(d);
   }
 
   UDateFormatSymbolType symbolType;
@@ -819,7 +881,7 @@ static JSString* GetQuarterDisplayName(JSContext* cx,
   }
   MOZ_ASSERT(names->length() == mozilla::ArrayLength(indices));
 
-  return names->get(int32_t(quarter) - 1).toString();
+  return names->get(quarter - 1).toString();
 }
 
 static JSString* GetDayPeriodDisplayName(
@@ -905,10 +967,13 @@ static JSString* GetDateTimeFieldDisplayName(JSContext* cx, const char* locale,
     return nullptr;
   }
 
-  return intl::CallICU(cx, [dtpg, field, width](UChar* chars, uint32_t size,
-                                                UErrorCode* status) {
+  JSString* str = intl::CallICU(cx, [dtpg, field, width](UChar* chars,
+                                                         uint32_t size,
+                                                         UErrorCode* status) {
     return udatpg_getFieldDisplayName(dtpg, field, width, chars, size, status);
   });
+  MOZ_ASSERT_IF(str, !str->empty());
+  return str;
 }
 
 /**
@@ -992,7 +1057,7 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
                                    displayStyle, code);
   } else if (StringEqualsLiteral(type, "month")) {
     result = GetMonthDisplayName(cx, displayNames, locale.get(), calendar,
-                                 displayStyle, code);
+                                 displayStyle, displayFallback, code);
   } else if (StringEqualsLiteral(type, "quarter")) {
     result = GetQuarterDisplayName(cx, displayNames, locale.get(), calendar,
                                    displayStyle, code);
