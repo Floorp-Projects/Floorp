@@ -8,6 +8,7 @@ black:
         - taskcluster/taskgraph/actions/scriptworker_canary.py
         - taskcluster/taskgraph/test/conftest.py
         - taskcluster/taskgraph/transforms/scriptworker_canary.py
+        - taskcluster/test
         - testing/condprofile/condprof
         - tools/crashreporter/system-symbols
         - tools/lint/
