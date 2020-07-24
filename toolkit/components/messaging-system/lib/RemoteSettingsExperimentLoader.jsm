@@ -20,7 +20,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   ExperimentManager:
     "resource://messaging-system/experiments/ExperimentManager.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
@@ -107,24 +106,20 @@ class _RemoteSettingsExperimentLoader {
    * @returns {Promise<boolean>} Should we process the recipe?
    */
   async checkTargeting(recipe, customContext = {}) {
-    const context = TargetingContext.combineContexts(
-      customContext,
-      ASRouterTargeting.Environment
-    );
     const { targeting } = recipe;
     if (!targeting) {
       log.debug("No targeting for recipe, so it matches automatically");
       return true;
     }
     log.debug("Testing targeting expression:", targeting);
-    const targetingContext = new TargetingContext(context);
-    let result = false;
-    try {
-      result = await targetingContext.evalWithDefault(targeting);
-    } catch (e) {
-      log.debug("Targeting failed because of an error");
-      Cu.reportError(e);
-    }
+    const result = await ASRouterTargeting.isMatch(
+      targeting,
+      customContext,
+      err => {
+        log.debug("Targeting failed because of an error");
+        Cu.reportError(err);
+      }
+    );
     return Boolean(result);
   }
 
