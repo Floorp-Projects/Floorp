@@ -1,8 +1,8 @@
-status = [ "Build" ]
+status = [ "continuous-integration/travis-ci/push" ]
 
-# As of May 2020 we can expect CI to take roughly 3 minutes based on
-# Based on https://github.com/chinedufn/metal-rs/actions/runs/94020785
+# Based on <https://travis-ci.org/gfx-rs/metal-rs/builds/289529648>,
+# we can expect a build to spend four hours in Travis CI's queue.
 #
-# We round this up to a timeout of 5 minutes to account for any potential future
-# inconsistencies in CI run times.
-timeout-sec = 300
+# This gives the build five hours to run, with four hours to sit
+# and one hour to actually work.
+timeout-sec = 18000

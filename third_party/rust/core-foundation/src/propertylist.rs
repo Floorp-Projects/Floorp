@@ -121,7 +121,6 @@ impl CFPropertyList {
 
     #[inline]
     pub unsafe fn wrap_under_get_rule(reference: CFPropertyListRef) -> CFPropertyList {
-        assert!(!reference.is_null(), "Attempted to create a NULL object.");
         let reference = CFRetain(reference);
         CFPropertyList(reference)
     }
@@ -148,7 +147,6 @@ impl CFPropertyList {
 
     #[inline]
     pub unsafe fn wrap_under_create_rule(obj: CFPropertyListRef) -> CFPropertyList {
-        assert!(!obj.is_null(), "Attempted to create a NULL object.");
         CFPropertyList(obj)
     }
 
@@ -264,7 +262,7 @@ pub mod test {
         let boo = CFString::from_static_string("Boo");
         let foo = CFString::from_static_string("Foo");
         let tru = CFBoolean::true_value();
-        let n42 = CFNumber::from(1i64<<33);
+        let n42 = CFNumber::from(42);
 
         let dict1 = CFDictionary::from_CFType_pairs(&[(bar.as_CFType(), boo.as_CFType()),
                                                       (baz.as_CFType(), tru.as_CFType()),

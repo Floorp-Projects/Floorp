@@ -7,7 +7,7 @@
 
 use super::*;
 
-use cocoa_foundation::foundation::NSUInteger;
+use cocoa::foundation::NSUInteger;
 use foreign_types::ForeignType;
 use objc::runtime::{Object, NO, YES};
 use std::ffi::CStr;
@@ -199,10 +199,6 @@ foreign_obj_type! {
 }
 
 impl LibraryRef {
-    pub fn device(&self) -> &DeviceRef {
-        unsafe { msg_send![self, device] }
-    }
-
     pub fn label(&self) -> &str {
         unsafe {
             let label = msg_send![self, label];

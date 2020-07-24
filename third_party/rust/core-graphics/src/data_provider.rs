@@ -50,17 +50,17 @@ impl CGDataProvider {
     ///
     /// The `CGDataProvider` object takes ownership of the reference. Once the data provider
     /// is destroyed, the reference count of the buffer is automatically decremented.
-    pub fn from_buffer<T: AsRef<[u8]> + Sync + Send>(buffer: Arc<T>) -> Self {
+    pub fn from_buffer(buffer: Arc<Vec<u8>>) -> Self {
         unsafe {
-            let ptr = (*buffer).as_ref().as_ptr() as *const c_void;
-            let len = (*buffer).as_ref().len() as size_t;
-            let info = Arc::into_raw(buffer) as *mut c_void;
-            let result = CGDataProviderCreateWithData(info, ptr, len, Some(release::<T>));
+            let ptr = (*buffer).as_ptr() as *const c_void;
+            let len = buffer.len() as size_t;
+            let info = mem::transmute::<Arc<Vec<u8>>, *mut c_void>(buffer);
+            let result = CGDataProviderCreateWithData(info, ptr, len, Some(release));
             return CGDataProvider::from_ptr(result);
         }
 
-        unsafe extern "C" fn release<T>(info: *mut c_void, _: *const c_void, _: size_t) {
-            drop(Arc::from_raw(info))
+        unsafe extern "C" fn release(info: *mut c_void, _: *const c_void, _: size_t) {
+            drop(mem::transmute::<*mut c_void, Arc<Vec<u8>>>(info))
         }
     }
 
@@ -104,42 +104,6 @@ pub trait CustomData {
     /// Returns the length of this custom data. This value must not change during the lifespan of
     /// this CustomData.
     unsafe fn len(&self) -> usize;
-}
-
-#[test]
-fn test_data_provider() {
-    let l = vec![5];
-    CGDataProvider::from_buffer(Arc::new(l));
-
-    let l = vec![5];
-    CGDataProvider::from_buffer(Arc::new(l.into_boxed_slice()));
-
-    // Make sure the buffer is actually dropped
-    use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
-    struct VecWrapper {
-        inner: Vec<u8>,
-        dropped: Arc<AtomicBool>,
-    }
-
-    impl Drop for VecWrapper {
-        fn drop(&mut self) {
-            self.dropped.store(true, SeqCst)
-        }
-    }
-
-    impl std::convert::AsRef<[u8]> for VecWrapper {
-        fn as_ref(&self) -> &[u8] {
-            &self.inner
-        }
-    }
-
-    let dropped = Arc::new(AtomicBool::default());
-    let l = Arc::new(VecWrapper {inner: vec![5], dropped: dropped.clone() });
-    let m = l.clone();
-    drop(CGDataProvider::from_buffer(l));
-    assert!(!dropped.load(SeqCst));
-    drop(m);
-    assert!(dropped.load(SeqCst))
 }
 
 #[link(name = "CoreGraphics", kind = "framework")]

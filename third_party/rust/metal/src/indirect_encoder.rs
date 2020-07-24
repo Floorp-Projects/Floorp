@@ -1,6 +1,9 @@
 use super::*;
 
-use cocoa_foundation::foundation::{NSRange, NSUInteger};
+use cocoa::foundation::{
+    NSUInteger,
+    NSRange
+};
 
 bitflags! {
     #[allow(non_upper_case_globals)]
@@ -24,11 +27,19 @@ foreign_obj_type! {
 
 impl IndirectCommandBufferDescriptorRef {
     pub fn command_types(&self) -> MTLIndirectCommandType {
-        unsafe { msg_send![self, commandTypes] }
+        unsafe {
+            msg_send![self,
+                commandTypes
+            ]
+        }
     }
 
     pub fn set_command_types(&self, types: MTLIndirectCommandType) {
-        unsafe { msg_send![self, setCommandTypes: types] }
+        unsafe {
+            msg_send![self,
+                setCommandTypes: types
+            ]
+        }
     }
 
     pub fn inherit_buffer(&self) -> bool {
@@ -42,7 +53,9 @@ impl IndirectCommandBufferDescriptorRef {
     }
 
     pub fn set_inherit_buffer(&self, inherit: bool) {
-        unsafe { msg_send![self, setInheritBuffer: inherit] }
+        unsafe {
+            msg_send![self, setInheritBuffer: inherit]
+        }
     }
 
     pub fn inherit_pipeline_state(&self) -> bool {
@@ -56,31 +69,57 @@ impl IndirectCommandBufferDescriptorRef {
     }
 
     pub fn set_inherit_pipeline_state(&self, inherit: bool) {
-        unsafe { msg_send![self, setInheritPipelineState: inherit] }
+        unsafe {
+            msg_send![self, setInheritPipelineState: inherit]
+        }
     }
 
     pub fn max_vertex_buffer_bind_count(&self) -> NSUInteger {
-        unsafe { msg_send![self, maxVertexBufferBindCount] }
+        unsafe {
+            msg_send![self,
+                maxVertexBufferBindCount
+            ]
+        }
     }
 
     pub fn set_max_vertex_buffer_bind_count(&self, count: NSUInteger) {
-        unsafe { msg_send![self, setMaxVertexBufferBindCount: count] }
+        unsafe {
+            msg_send![self,
+                setMaxVertexBufferBindCount: count
+            ]
+        }
     }
 
     pub fn max_fragment_buffer_bind_count(&self) -> NSUInteger {
-        unsafe { msg_send![self, maxFragmentBufferBindCount] }
+        unsafe {
+            msg_send![self,
+                maxFragmentBufferBindCount
+            ]
+        }
     }
 
     pub fn set_max_fragment_buffer_bind_count(&self, count: NSUInteger) {
-        unsafe { msg_send![self, setMaxFragmentBufferBindCount: count] }
+        unsafe {
+            msg_send![self,
+                setMaxFragmentBufferBindCount: count
+            ]
+        }
     }
 
     pub fn max_kernel_buffer_bind_count(&self) -> NSUInteger {
-        unsafe { msg_send![self, maxKernelBufferBindCount] }
+        unsafe {
+            msg_send![self,
+                maxKernelBufferBindCount
+            ]
+        }
     }
 
     pub fn set_max_kernel_buffer_bind_count(&self, count: NSUInteger) {
-        unsafe { msg_send![self, setMaxKernelBufferBindCount: count] }
+        unsafe {
+            msg_send![self,
+                setMaxKernelBufferBindCount: count
+            ]
+        }
     }
 }
 
@@ -95,22 +134,44 @@ foreign_obj_type! {
 
 impl IndirectCommandBufferRef {
     pub fn size(&self) -> NSUInteger {
-        unsafe { msg_send![self, size] }
+        unsafe {
+            msg_send![self,
+                size
+            ]
+        }
     }
 
-    pub fn indirect_render_command_at_index(&self, index: NSUInteger) -> &IndirectRenderCommandRef {
-        unsafe { msg_send![self, indirectRenderCommandAtIndex: index] }
+    pub fn indirect_render_command_at_index(
+        &self,
+        index: NSUInteger
+    ) -> &IndirectRenderCommandRef {
+        unsafe {
+            msg_send![self,
+                indirectRenderCommandAtIndex: index
+            ]
+        }
     }
 
     pub fn indirect_compute_command_at_index(
         &self,
-        index: NSUInteger,
+        index: NSUInteger
     ) -> &IndirectComputeCommandRef {
-        unsafe { msg_send![self, indirectComputeCommandAtIndex: index] }
+        unsafe {
+            msg_send![self,
+                indirectComputeCommandAtIndex: index
+            ]
+        }
     }
 
-    pub fn reset_with_range(&self, range: NSRange) {
-        unsafe { msg_send![self, resetWithRange: range] }
+    pub fn reset_with_range(
+        &self,
+        range: NSRange
+    ) {
+        unsafe {
+            msg_send![self,
+                resetWithRange: range
+            ]
+        }
     }
 }
 
@@ -163,7 +224,7 @@ impl IndirectRenderCommandRef {
         vertex_start: NSUInteger,
         vertex_count: NSUInteger,
         instance_count: NSUInteger,
-        base_instance: NSUInteger,
+        base_instance: NSUInteger
     ) {
         unsafe {
             msg_send![self,
@@ -185,7 +246,7 @@ impl IndirectRenderCommandRef {
         index_buffer_offset: NSUInteger,
         instance_count: NSUInteger,
         base_vertex: NSUInteger,
-        base_instance: NSUInteger,
+        base_instance: NSUInteger
     ) {
         unsafe {
             msg_send![self,
@@ -212,7 +273,7 @@ impl IndirectRenderCommandRef {
         base_instance: NSUInteger,
         tesselation_factor_buffer: &BufferRef,
         tesselation_factor_buffer_offset: NSUInteger,
-        tesselation_factor_buffer_instance_stride: NSUInteger,
+        tesselation_factor_buffer_instance_stride: NSUInteger
     ) {
         unsafe {
             msg_send![self,
@@ -243,7 +304,7 @@ impl IndirectRenderCommandRef {
         base_instance: NSUInteger,
         tesselation_factor_buffer: &BufferRef,
         tesselation_factor_buffer_offset: NSUInteger,
-        tesselation_factor_buffer_instance_stride: NSUInteger,
+        tesselation_factor_buffer_instance_stride: NSUInteger
     ) {
         unsafe {
             msg_send![self,
@@ -264,7 +325,11 @@ impl IndirectRenderCommandRef {
     }
 
     pub fn reset(&self) {
-        unsafe { msg_send![self, reset] }
+        unsafe {
+            msg_send![self,
+                reset
+            ]
+        }
     }
 }
 
@@ -277,7 +342,10 @@ foreign_obj_type! {
 }
 
 impl IndirectComputeCommandRef {
-    pub fn set_compute_pipeline_state(&self, state: &ComputePipelineStateRef) {
+    pub fn set_compute_pipeline_state(
+        &self,
+        state: &ComputePipelineStateRef
+    ) {
         unsafe { msg_send![self, setComputePipelineState: state] }
     }
 
@@ -296,7 +364,11 @@ impl IndirectComputeCommandRef {
         }
     }
 
-    pub fn set_threadgroup_memory_length(&self, index: NSUInteger, length: NSUInteger) {
+    pub fn set_threadgroup_memory_length(
+        &self,
+        index: NSUInteger,
+        length: NSUInteger
+    ) {
         unsafe {
             msg_send![self,
                 setThreadgroupMemoryLength: length
@@ -306,21 +378,33 @@ impl IndirectComputeCommandRef {
     }
 
     pub fn set_stage_in_region(&self, region: MTLRegion) {
-        unsafe { msg_send![self, setStageInRegion: region] }
+        unsafe {
+            msg_send![self,
+                setStageInRegion: region
+            ]
+        }
     }
 
     pub fn set_barrier(&self) {
-        unsafe { msg_send![self, setBarrier] }
+        unsafe {
+            msg_send![self,
+                setBarrier
+            ]
+        }
     }
 
     pub fn clear_barrier(&self) {
-        unsafe { msg_send![self, clearBarrier] }
+        unsafe {
+            msg_send![self,
+                clearBarrier
+            ]
+        }
     }
 
     pub fn concurrent_dispatch_threadgroups(
         &self,
         thread_groups_per_grid: MTLSize,
-        threads_per_threadgroup: MTLSize,
+        threads_per_threadgroup: MTLSize
     ) {
         unsafe {
             msg_send![self,
@@ -333,7 +417,7 @@ impl IndirectComputeCommandRef {
     pub fn concurrent_dispatch_threads(
         &self,
         thread_groups_per_grid: MTLSize,
-        threads_per_threadgroup: MTLSize,
+        threads_per_threadgroup: MTLSize
     ) {
         unsafe {
             msg_send![self,
@@ -344,6 +428,10 @@ impl IndirectComputeCommandRef {
     }
 
     pub fn reset(&self) {
-        unsafe { msg_send![self, reset] }
+        unsafe {
+            msg_send![self,
+                reset
+            ]
+        }
     }
 }

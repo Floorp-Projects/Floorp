@@ -18,7 +18,7 @@ use crate::{
 
 use arrayvec::ArrayVec;
 use auxil::{spirv_cross_specialize_ast, FastHashMap};
-use cocoa_foundation::foundation::{NSRange, NSUInteger};
+use cocoa::foundation::{NSRange, NSUInteger};
 use copyless::VecHelper;
 use foreign_types::{ForeignType, ForeignTypeRef};
 use hal::{
@@ -442,13 +442,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 hal::Features::empty()
             }
             | hal::Features::SHADER_CLIP_DISTANCE
-            | if self.shared.private_caps.msl_version >= metal::MTLLanguageVersion::V2_0 {
-                hal::Features::TEXTURE_DESCRIPTOR_ARRAY |
-                hal::Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING |
-                hal::Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING
-            } else {
-                hal::Features::empty()
-            }
             //| hal::Features::SAMPLER_MIRROR_CLAMP_EDGE
             | hal::Features::NDC_Y_UP
     }
