@@ -317,7 +317,7 @@ class _ExperimentManager {
    * that will not enroll the user in the experiment
    */
   async generateTestIds({ slug, branches, namespace, start, count, total }) {
-    const branchValues = { notInExperiment: null };
+    const branchValues = {};
 
     if (!slug || !namespace) {
       throw new Error(`slug, namespace not in expected format`);
