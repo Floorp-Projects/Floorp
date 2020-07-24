@@ -262,9 +262,9 @@
       "type": "object",
       "title": "Region Parameters",
       "description": "A map of regions to an array of parameter overrides",
-      "patternProperties" {
+      "patternProperties": {
         "^([a-z][a-z]|default)$": {
-          "type": "array"
+          "type": "array",
           "title": "Parameter Overrides",
           "description": "A array of objects - map of parameter name to the parameter value.",
           "items": {
@@ -298,7 +298,7 @@
           "type": "string",
           "title": "WebExtension Id",
           "description": "The identifier (local part) of the associated WebExtension should be of the format example@search.mozilla.org",
-          "pattern": "^[a-z0-9-._]*@search.mozilla.org$"
+          "pattern": "^[a-zA-Z0-9-._]*@search.mozilla.org$"
         },
         "locale": {
           "type": "string",
@@ -414,7 +414,7 @@
         "experiment": {
           "type": "string",
           "title": "Experiment",
-          "description": "The experiment this section is associated with, if blank it is associate with any configuration."
+          "description": "The experiment this section is associated with, if blank it is associated with any configuration."
         }
       }
     }
