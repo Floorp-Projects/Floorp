@@ -432,6 +432,7 @@ var ProcessHangMonitor = {
         {
           end_reason: endReason,
           hang_duration: "" + hangDuration,
+          n_tab_deselect: "" + info.deselectCount,
           uri_type,
           uptime,
           wait_count: "" + info.waitCount,
@@ -638,8 +639,18 @@ var ProcessHangMonitor = {
 
     // If a new tab is selected or if a tab changes remoteness, then
     // we may need to show or hide a hang notification.
-
     if (event.type == "TabSelect" || event.type == "TabRemotenessChange") {
+      if (event.type == "TabSelect" && event.detail.previousTab) {
+        // If we've got a notification, check the previous tab's report and
+        // indicate the user switched tabs while the notification was up.
+        let r =
+          this.findActiveReport(event.detail.previousTab.linkedBrowser) ||
+          this.findPausedReport(event.detail.previousTab.linkedBrowser);
+        if (r) {
+          let info = this._activeReports.get(r) || this._pausedReports.get(r);
+          info.deselectCount++;
+        }
+      }
       this.updateWindow(win);
     }
   },
@@ -684,6 +695,7 @@ var ProcessHangMonitor = {
     }
 
     this._activeReports.set(report, {
+      deselectCount: 0,
       lastReportFromChild: now,
       waitCount: 0,
     });
