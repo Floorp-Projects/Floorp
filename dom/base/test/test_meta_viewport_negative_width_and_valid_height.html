@@ -17,8 +17,7 @@
       await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
 
       let info = getViewportInfo(800, 480);
-      is(info.width, 400, "width should be 400 which is the result of " +
-                          "display width * viewport height / display height");
+      is(info.width, 980, "width should be default when specified width is invalid");
       is(info.height, 240, "height should be 240");
     });
   </script>
