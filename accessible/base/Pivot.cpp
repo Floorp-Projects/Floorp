@@ -21,18 +21,21 @@ using namespace mozilla::a11y;
 // Pivot
 ////////////////////////////////////////////////////////////////////////////////
 
-Pivot::Pivot(Accessible* aRoot) : mRoot(aRoot) { MOZ_COUNT_CTOR(Pivot); }
+Pivot::Pivot(const AccessibleOrProxy& aRoot) : mRoot(aRoot) {
+  MOZ_COUNT_CTOR(Pivot);
+}
 
 Pivot::~Pivot() { MOZ_COUNT_DTOR(Pivot); }
 
-Accessible* Pivot::AdjustStartPosition(Accessible* aAnchor, PivotRule& aRule,
-                                       uint16_t* aFilterResult) {
-  Accessible* matched = aAnchor;
+AccessibleOrProxy Pivot::AdjustStartPosition(AccessibleOrProxy& aAnchor,
+                                             PivotRule& aRule,
+                                             uint16_t* aFilterResult) {
+  AccessibleOrProxy matched = aAnchor;
   *aFilterResult = aRule.Match(aAnchor);
 
   if (aAnchor != mRoot) {
-    for (Accessible* temp = aAnchor->Parent(); temp && temp != mRoot;
-         temp = temp->Parent()) {
+    for (AccessibleOrProxy temp = aAnchor.Parent();
+         !temp.IsNull() && temp != mRoot; temp = temp.Parent()) {
       uint16_t filtered = aRule.Match(temp);
       if (filtered & nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE) {
         *aFilterResult = filtered;
@@ -44,111 +47,119 @@ Accessible* Pivot::AdjustStartPosition(Accessible* aAnchor, PivotRule& aRule,
   return matched;
 }
 
-Accessible* Pivot::SearchBackward(Accessible* aAnchor, PivotRule& aRule,
-                                  bool aSearchCurrent) {
-  // Initial position could be unset, in that case return null.
-  if (!aAnchor) {
-    return nullptr;
+AccessibleOrProxy Pivot::SearchBackward(AccessibleOrProxy& aAnchor,
+                                        PivotRule& aRule, bool aSearchCurrent) {
+  // Initial position could be unset, in that case return null AoP.
+  if (aAnchor.IsNull()) {
+    return aAnchor;
   }
 
   uint16_t filtered = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
-  Accessible* accessible = AdjustStartPosition(aAnchor, aRule, &filtered);
+  AccessibleOrProxy accOrProxy = AdjustStartPosition(aAnchor, aRule, &filtered);
 
   if (aSearchCurrent && (filtered & nsIAccessibleTraversalRule::FILTER_MATCH)) {
-    return accessible;
+    return accOrProxy;
   }
 
-  while (accessible != mRoot) {
-    Accessible* parent = accessible->Parent();
-    int32_t idxInParent = accessible->IndexInParent();
+  while (accOrProxy != mRoot) {
+    AccessibleOrProxy parent = accOrProxy.Parent();
+    int32_t idxInParent = accOrProxy.IndexInParent();
     while (idxInParent > 0) {
-      if (!(accessible = parent->GetChildAt(--idxInParent))) {
+      accOrProxy = parent.ChildAt(--idxInParent);
+      if (accOrProxy.IsNull()) {
         continue;
       }
 
-      filtered = aRule.Match(accessible);
+      filtered = aRule.Match(accOrProxy);
 
-      Accessible* lastChild = nullptr;
+      AccessibleOrProxy lastChild = accOrProxy.LastChild();
       while (!(filtered & nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE) &&
-             (lastChild = accessible->LastChild())) {
-        parent = accessible;
-        accessible = lastChild;
-        idxInParent = accessible->IndexInParent();
-        filtered = aRule.Match(accessible);
+             !lastChild.IsNull()) {
+        parent = accOrProxy;
+        accOrProxy = lastChild;
+        idxInParent = accOrProxy.IndexInParent();
+        filtered = aRule.Match(accOrProxy);
+        lastChild = accOrProxy.LastChild();
       }
 
       if (filtered & nsIAccessibleTraversalRule::FILTER_MATCH) {
-        return accessible;
+        return accOrProxy;
       }
     }
 
-    if (!(accessible = parent)) {
+    if (accOrProxy != parent) {
       break;
     }
 
-    filtered = aRule.Match(accessible);
+    filtered = aRule.Match(accOrProxy);
 
     if (filtered & nsIAccessibleTraversalRule::FILTER_MATCH) {
-      return accessible;
+      return accOrProxy;
     }
   }
 
-  return nullptr;
+  return AccessibleOrProxy();
 }
 
-Accessible* Pivot::SearchForward(Accessible* aAnchor, PivotRule& aRule,
-                                 bool aSearchCurrent) {
+AccessibleOrProxy Pivot::SearchForward(AccessibleOrProxy& aAnchor,
+                                       PivotRule& aRule, bool aSearchCurrent) {
   // Initial position could be not set, in that case begin search from root.
-  Accessible* accessible = aAnchor ? aAnchor : mRoot;
+  AccessibleOrProxy accOrProxy = !aAnchor.IsNull() ? aAnchor : mRoot;
 
   uint16_t filtered = nsIAccessibleTraversalRule::FILTER_IGNORE;
-  accessible = AdjustStartPosition(accessible, aRule, &filtered);
+  accOrProxy = AdjustStartPosition(accOrProxy, aRule, &filtered);
   if (aSearchCurrent && (filtered & nsIAccessibleTraversalRule::FILTER_MATCH)) {
-    return accessible;
+    return accOrProxy;
   }
 
   while (true) {
-    Accessible* firstChild = nullptr;
+    AccessibleOrProxy firstChild = accOrProxy.FirstChild();
     while (!(filtered & nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE) &&
-           (firstChild = accessible->FirstChild())) {
-      accessible = firstChild;
-      filtered = aRule.Match(accessible);
+           !firstChild.IsNull()) {
+      accOrProxy = firstChild;
+      filtered = aRule.Match(accOrProxy);
 
       if (filtered & nsIAccessibleTraversalRule::FILTER_MATCH) {
-        return accessible;
+        return accOrProxy;
       }
+      firstChild = accOrProxy.FirstChild();
     }
 
-    Accessible* sibling = nullptr;
-    Accessible* temp = accessible;
+    AccessibleOrProxy sibling = AccessibleOrProxy();
+    AccessibleOrProxy temp = accOrProxy;
     do {
       if (temp == mRoot) {
         break;
       }
 
-      sibling = temp->NextSibling();
+      sibling = temp.NextSibling();
 
-      if (sibling) {
+      if (!sibling.IsNull()) {
         break;
       }
-    } while ((temp = temp->Parent()));
+      temp = temp.Parent();
+    } while (!temp.IsNull());
 
-    if (!sibling) {
+    if (sibling.IsNull()) {
       break;
     }
 
-    accessible = sibling;
-    filtered = aRule.Match(accessible);
+    accOrProxy = sibling;
+    filtered = aRule.Match(accOrProxy);
     if (filtered & nsIAccessibleTraversalRule::FILTER_MATCH) {
-      return accessible;
+      return accOrProxy;
     }
   }
 
-  return nullptr;
+  return AccessibleOrProxy();
 }
 
+// TODO: This method does not work for proxy accessibles
 HyperTextAccessible* Pivot::SearchForText(Accessible* aAnchor, bool aBackward) {
+  if (!mRoot.IsAccessible()) {
+    return nullptr;
+  }
   Accessible* accessible = aAnchor;
   while (true) {
     Accessible* child = nullptr;
@@ -164,7 +175,7 @@ HyperTextAccessible* Pivot::SearchForText(Accessible* aAnchor, bool aBackward) {
     Accessible* sibling = nullptr;
     Accessible* temp = accessible;
     do {
-      if (temp == mRoot) {
+      if (temp == mRoot.AsAccessible()) {
         break;
       }
 
@@ -196,35 +207,40 @@ HyperTextAccessible* Pivot::SearchForText(Accessible* aAnchor, bool aBackward) {
   return nullptr;
 }
 
-Accessible* Pivot::Next(Accessible* aAnchor, PivotRule& aRule,
-                        bool aIncludeStart) {
+AccessibleOrProxy Pivot::Next(AccessibleOrProxy& aAnchor, PivotRule& aRule,
+                              bool aIncludeStart) {
   return SearchForward(aAnchor, aRule, aIncludeStart);
 }
 
-Accessible* Pivot::Prev(Accessible* aAnchor, PivotRule& aRule,
-                        bool aIncludeStart) {
+AccessibleOrProxy Pivot::Prev(AccessibleOrProxy& aAnchor, PivotRule& aRule,
+                              bool aIncludeStart) {
   return SearchBackward(aAnchor, aRule, aIncludeStart);
 }
 
-Accessible* Pivot::First(PivotRule& aRule) {
+AccessibleOrProxy Pivot::First(PivotRule& aRule) {
   return SearchForward(mRoot, aRule, true);
 }
 
-Accessible* Pivot::Last(PivotRule& aRule) {
-  Accessible* lastAccessible = mRoot;
+AccessibleOrProxy Pivot::Last(PivotRule& aRule) {
+  AccessibleOrProxy lastAccOrProxy = mRoot;
 
   // First go to the last accessible in pre-order
-  while (lastAccessible->HasChildren()) {
-    lastAccessible = lastAccessible->LastChild();
+  while (lastAccOrProxy.HasChildren()) {
+    lastAccOrProxy = lastAccOrProxy.LastChild();
   }
 
   // Search backwards from last accessible and find the last occurrence in the
   // doc
-  return SearchBackward(lastAccessible, aRule, true);
+  return SearchBackward(lastAccOrProxy, aRule, true);
 }
 
+// TODO: This method does not work for proxy accessibles
 Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
                             int32_t* aEndOffset, int32_t aBoundaryType) {
+  if (!mRoot.IsAccessible()) {
+    return nullptr;
+  }
+
   int32_t tempStart = *aStartOffset, tempEnd = *aEndOffset;
   Accessible* tempPosition = aAnchor;
 
@@ -272,7 +288,7 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
     // If there's no more text on the current node, try to find the next text
     // node; if there isn't one, bail out.
     if (tempEnd == static_cast<int32_t>(text->CharacterCount())) {
-      if (tempPosition == mRoot) {
+      if (tempPosition == mRoot.AsAccessible()) {
         return nullptr;
       }
 
@@ -357,8 +373,13 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
   }
 }
 
+// TODO: This method does not work for proxy accessibles
 Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
                             int32_t* aEndOffset, int32_t aBoundaryType) {
+  if (!mRoot.IsAccessible()) {
+    return nullptr;
+  }
+
   int32_t tempStart = *aStartOffset, tempEnd = *aEndOffset;
   Accessible* tempPosition = aAnchor;
 
@@ -411,7 +432,7 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
     // If there's no more text on the current node, try to find the previous
     // text node; if there isn't one, bail out.
     if (tempStart == 0) {
-      if (tempPosition == mRoot) {
+      if (tempPosition == mRoot.AsAccessible()) {
         return nullptr;
       }
 
@@ -507,20 +528,24 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
   }
 }
 
-Accessible* Pivot::AtPoint(int32_t aX, int32_t aY, PivotRule& aRule) {
-  Accessible* match = nullptr;
-  Accessible* child = mRoot->ChildAtPoint(aX, aY, Accessible::eDeepestChild);
-  while (child && mRoot != child) {
+AccessibleOrProxy Pivot::AtPoint(int32_t aX, int32_t aY, PivotRule& aRule) {
+  AccessibleOrProxy match = AccessibleOrProxy();
+  AccessibleOrProxy child =
+      mRoot.ChildAtPoint(aX, aY, Accessible::eDeepestChild);
+  while (!child.IsNull() && (mRoot != child)) {
     uint16_t filtered = aRule.Match(child);
 
     // Ignore any matching nodes that were below this one
     if (filtered & nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE) {
-      match = nullptr;
+      match = AccessibleOrProxy();
     }
 
     // Match if no node below this is a match
-    if ((filtered & nsIAccessibleTraversalRule::FILTER_MATCH) && !match) {
-      nsIntRect childRect = child->Bounds();
+    if ((filtered & nsIAccessibleTraversalRule::FILTER_MATCH) &&
+        match.IsNull()) {
+      nsIntRect childRect = child.IsAccessible()
+                                ? child.AsAccessible()->Bounds()
+                                : child.AsProxy()->Bounds();
       // Double-check child's bounds since the deepest child may have been out
       // of bounds. This assures we don't return a false positive.
       if (childRect.Contains(aX, aY)) {
@@ -528,7 +553,7 @@ Accessible* Pivot::AtPoint(int32_t aX, int32_t aY, PivotRule& aRule) {
       }
     }
 
-    child = child->Parent();
+    child = child.Parent();
   }
 
   return match;
@@ -538,14 +563,28 @@ Accessible* Pivot::AtPoint(int32_t aX, int32_t aY, PivotRule& aRule) {
 
 PivotRoleRule::PivotRoleRule(mozilla::a11y::role aRole) : mRole(aRole) {}
 
-uint16_t PivotRoleRule::Match(Accessible* aAccessible) {
+uint16_t PivotRoleRule::Match(const AccessibleOrProxy& aAccOrProxy) {
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
-  if (nsAccUtils::MustPrune(aAccessible)) {
+  if (nsAccUtils::MustPrune(aAccOrProxy)) {
     result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
   }
 
-  if (aAccessible->Role() == mRole) {
+  if (aAccOrProxy.Role() == mRole) {
+    result |= nsIAccessibleTraversalRule::FILTER_MATCH;
+  }
+
+  return result;
+}
+
+// Match All Rule
+
+uint16_t PivotMatchAllRule::Match(const AccessibleOrProxy& aAccOrProxy) {
+  uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
+
+  if (nsAccUtils::MustPrune(aAccOrProxy)) {
+    result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  } else {
     result |= nsIAccessibleTraversalRule::FILTER_MATCH;
   }
 
