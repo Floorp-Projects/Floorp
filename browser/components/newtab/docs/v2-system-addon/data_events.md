@@ -1482,23 +1482,3 @@ Unlike other Activity Stream pings, this is a Firefox Events telemetry event, an
   }
 }
 ```
-
-### Experiment attribute errors
-
-This records whether issues were encountered with any of the targeting attributes used in the experiment enrollment or message targeting.
-Two different types of events are sent: `attribute_error` and `attribute_timeout` along with the attribute that caused it.
-
-```js
-[
-  "messaging_experiments",
-  "targeting",
-  "attribute_error", // event
-  "foo" // attribute
-],
-[
-  "messaging_experiments",
-  "targeting",
-  "attribute_timeout", // event
-  "bar" // attribute
-]
-```
