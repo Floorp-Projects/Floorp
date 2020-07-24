@@ -15,6 +15,7 @@ EXPORTS.mozilla.dom.cache += [
     'AutoUtils.h',
     'Cache.h',
     'CacheChild.h',
+    'CacheCommon.h',
     'CacheOpChild.h',
     'CacheOpParent.h',
     'CacheParent.h',
