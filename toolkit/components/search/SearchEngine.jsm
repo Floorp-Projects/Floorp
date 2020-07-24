@@ -1165,6 +1165,7 @@ class SearchEngine {
     this._metaData = json._metaData || {};
     this._orderHint = json._orderHint || null;
     this._telemetryId = json._telemetryId || null;
+    this._definedAlias = json._definedAlias || null;
     if (json.filePath) {
       this._filePath = json.filePath;
     }
@@ -1243,6 +1244,9 @@ class SearchEngine {
     }
     if (this._locale) {
       json.extensionLocale = this._locale;
+    }
+    if (this._definedAlias) {
+      json._definedAlias = this._definedAlias;
     }
 
     return json;
