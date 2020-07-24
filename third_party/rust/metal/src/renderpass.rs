@@ -7,10 +7,10 @@
 
 use super::*;
 
-use cocoa_foundation::foundation::NSUInteger;
+use cocoa::foundation::NSUInteger;
 
 #[repr(u64)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum MTLLoadAction {
     DontCare = 0,
     Load = 1,
@@ -18,7 +18,7 @@ pub enum MTLLoadAction {
 }
 
 #[repr(u64)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum MTLStoreAction {
     DontCare = 0,
     Store = 1,
@@ -29,18 +29,18 @@ pub enum MTLStoreAction {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct MTLClearColor {
-    pub red: f64,
-    pub green: f64,
-    pub blue: f64,
-    pub alpha: f64,
+    red: f64,
+    green: f64,
+    blue: f64,
+    alpha: f64,
 }
 
 impl MTLClearColor {
     #[inline]
     pub fn new(red: f64, green: f64, blue: f64, alpha: f64) -> Self {
-        Self {
+        MTLClearColor {
             red,
             green,
             blue,

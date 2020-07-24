@@ -11,7 +11,6 @@ use std::os::raw::c_void;
 
 use base::{CFAllocatorRef, CFTypeID};
 use date::{CFTimeInterval, CFAbsoluteTime};
-use string::CFStringRef;
 
 #[repr(C)]
 pub struct __CFTimeZone(c_void);
@@ -25,5 +24,4 @@ extern {
     pub fn CFTimeZoneGetSecondsFromGMT(tz: CFTimeZoneRef, time: CFAbsoluteTime) -> CFTimeInterval;
 
     pub fn CFTimeZoneGetTypeID() -> CFTypeID;
-    pub fn CFTimeZoneGetName(tz: CFTimeZoneRef) -> CFStringRef;
 }

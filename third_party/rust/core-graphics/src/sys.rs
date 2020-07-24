@@ -23,9 +23,6 @@ pub type CGFontRef = *mut CGFont;
 pub enum CGContext {}
 pub type CGContextRef = *mut CGContext;
 
-pub enum CGGradient {}
-pub type CGGradientRef = *mut CGGradient;
-
 #[cfg(target_os = "macos")]
 mod macos {
 	pub enum CGEvent {}

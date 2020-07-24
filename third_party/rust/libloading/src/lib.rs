@@ -25,7 +25,7 @@
 //! ```no_run
 //! extern crate libloading as lib;
 //!
-//! fn call_dynamic() -> Result<u32, Box<dyn std::error::Error>> {
+//! fn call_dynamic() -> lib::Result<u32> {
 //!     let lib = lib::Library::new("/path/to/liblibrary.so")?;
 //!     unsafe {
 //!         let func: lib::Symbol<unsafe extern fn() -> u32> = lib.get(b"my_func")?;
@@ -45,12 +45,12 @@ use std::marker;
 use self::os::unix as imp;
 #[cfg(windows)]
 use self::os::windows as imp;
-pub use self::error::Error;
 
 pub mod os;
 pub mod changelog;
 mod util;
-mod error;
+
+pub type Result<T> = ::std::io::Result<T>;
 
 /// A loaded dynamic library.
 pub struct Library(imp::Library);
@@ -114,7 +114,7 @@ impl Library {
     /// let _ = Library::new("../awesome.module").unwrap();
     /// let _ = Library::new("libsomelib.so.1").unwrap();
     /// ```
-    pub fn new<P: AsRef<OsStr>>(filename: P) -> Result<Library, Error> {
+    pub fn new<P: AsRef<OsStr>>(filename: P) -> Result<Library> {
         imp::Library::new(filename).map(From::from)
     }
 
@@ -133,15 +133,9 @@ impl Library {
     ///
     /// ## Platform-specific behaviour
     ///
-    /// On Linux and Windows, a TLS variable acts just like any regular global variable. OS X uses
+    /// On Linux and Windows, a TLS variable acts just like any regular static variable. OS X uses
     /// some sort of lazy initialization scheme, which makes loading TLS variables this way
     /// impossible. Using a TLS variable loaded this way on OS X is undefined behaviour.
-    ///
-    /// On POSIX implementations where the `dlerror` function is not confirmed to be MT-safe (such
-    /// as FreeBSD), this function will unconditionally return an error the underlying `dlsym` call
-    /// returns a null pointer. There are rare situations where `dlsym` returns a genuine null
-    /// pointer without it being an error. If loading a null pointer is something you care about,
-    /// consider using the [`os::unix::Library::get_singlethreaded`] call.
     ///
     /// ## Examples
     ///
@@ -174,20 +168,8 @@ impl Library {
     ///     **awesome_variable = 42.0;
     /// };
     /// ```
-    pub unsafe fn get<'lib, T>(&'lib self, symbol: &[u8]) -> Result<Symbol<'lib, T>, Error> {
+    pub unsafe fn get<'lib, T>(&'lib self, symbol: &[u8]) -> Result<Symbol<'lib, T>> {
         self.0.get(symbol).map(|from| Symbol::from_raw(from, self))
-    }
-
-    /// Unload the library.
-    ///
-    /// This method might be a no-op, depending on the flags with which the `Library` was opened,
-    /// what library was opened or other platform specifics.
-    ///
-    /// You only need to call this if you are interested in handling any errors that may arise when
-    /// library is unloaded. Otherwise the implementation of `Drop` for `Library` will close the
-    /// library and ignore the errors were they arise.
-    pub fn close(self) -> Result<(), Error> {
-        self.0.close()
     }
 }
 

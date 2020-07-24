@@ -14,7 +14,6 @@ use core_foundation_sys::base::kCFAllocatorDefault;
 
 use base::TCFType;
 use date::{CFDate, CFTimeInterval};
-use string::CFString;
 
 #[cfg(feature = "with-chrono")]
 use chrono::{FixedOffset, NaiveDateTime};
@@ -68,14 +67,6 @@ impl CFTimeZone {
     #[cfg(feature = "with-chrono")]
     pub fn from_offset(offset: FixedOffset) -> CFTimeZone {
         CFTimeZone::new(offset.local_minus_utc() as f64)
-    }
-
-    /// The timezone database ID that identifies the time zone. E.g. "America/Los_Angeles" or
-    /// "Europe/Paris".
-    pub fn name(&self) -> CFString {
-        unsafe {
-            CFString::wrap_under_get_rule(CFTimeZoneGetName(self.0))
-        }
     }
 }
 

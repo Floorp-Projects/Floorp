@@ -10,7 +10,7 @@ edition = "2018"
 
 [features]
 default = ["freetype-lib"]
-freetype-lib = ["freetype/freetype-sys"]
+freetype-lib = ["freetype/servo-freetype-sys"]
 profiler = ["tracy-rs/enable_profiler"]
 debugger = ["ws", "serde_json", "serde", "image_loader", "base64"]
 capture = ["api/serialize", "ron", "serde", "smallvec/serde"]
@@ -61,13 +61,13 @@ mozangle = "0.3.1"
 rand = "0.4"
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
-freetype = { version = "0.7", default-features = false }
+freetype = { version = "0.4", default-features = false }
 libc = "0.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.11"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.9"
-core-graphics = "0.22"
-core-text = { version = "19", default-features = false }
+core-foundation = "0.7"
+core-graphics = "0.19"
+core-text = { version = "15", default-features = false }
