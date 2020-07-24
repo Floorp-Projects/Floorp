@@ -17,6 +17,7 @@ describe("#CachedTargetingGetter", () => {
   let clock;
   let frecentStub;
   let topsitesCache;
+  let globals;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     clock = sinon.useFakeTimers();
@@ -26,11 +27,25 @@ describe("#CachedTargetingGetter", () => {
     );
     sandbox.stub(global.Cu, "reportError");
     topsitesCache = new CachedTargetingGetter("getTopFrecentSites");
+    globals = new GlobalOverrider();
+    globals.set(
+      "TargetingContext",
+      class {
+        static combineContexts(...args) {
+          return sinon.stub();
+        }
+
+        evalWithDefault(expr) {
+          return sinon.stub();
+        }
+      }
+    );
   });
 
   afterEach(() => {
     sandbox.restore();
     clock.restore();
+    globals.restore();
   });
 
   it("should only make a request every 6 hours", async () => {
@@ -188,26 +203,6 @@ describe("#CachedTargetingGetter", () => {
       assert.equal(arg_m3.id, m2.id);
     });
   });
-  describe("combineContexts", () => {
-    it("should combine the properties of the two objects", () => {
-      const joined = ASRouterTargeting.combineContexts(
-        {
-          get foo() {
-            return "foo";
-          },
-        },
-        {
-          get bar() {
-            return "bar";
-          },
-        }
-      );
-      const proxy = new Proxy({}, joined);
-
-      assert.equal(proxy.foo, "foo");
-      assert.equal(proxy.bar, "bar");
-    });
-  });
 });
 describe("#CacheListAttachedOAuthClients", () => {
   const twoHours = 2 * 60 * 60 * 1000;
@@ -262,34 +257,55 @@ describe("ASRouterTargeting", () => {
   let evalStub;
   let sandbox;
   let clock;
+  let globals;
+  let fakeTargetingContext;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    evalStub = sandbox.stub(global.FilterExpressions, "eval");
     sandbox.replace(ASRouterTargeting, "Environment", {});
     clock = sinon.useFakeTimers();
+    fakeTargetingContext = {
+      combineContexts: sandbox.stub(),
+      evalWithDefault: sandbox.stub().resolves(),
+    };
+    globals = new GlobalOverrider();
+    globals.set(
+      "TargetingContext",
+      class {
+        static combineContexts(...args) {
+          return fakeTargetingContext.combineContexts.apply(sandbox, args);
+        }
+
+        evalWithDefault(expr) {
+          return fakeTargetingContext.evalWithDefault(expr);
+        }
+      }
+    );
+    evalStub = fakeTargetingContext.evalWithDefault;
   });
   afterEach(() => {
     clock.restore();
     sandbox.restore();
+    globals.restore();
   });
   it("should cache evaluation result", async () => {
     evalStub.resolves(true);
+    let targetingContext = new global.TargetingContext();
 
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl1" },
-      {},
+      targetingContext,
       sandbox.stub(),
       true
     );
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl2" },
-      {},
+      targetingContext,
       sandbox.stub(),
       true
     );
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl1" },
-      {},
+      targetingContext,
       sandbox.stub(),
       true
     );
@@ -298,22 +314,23 @@ describe("ASRouterTargeting", () => {
   });
   it("should not cache evaluation result", async () => {
     evalStub.resolves(true);
+    let targetingContext = new global.TargetingContext();
 
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl" },
-      {},
+      targetingContext,
       sandbox.stub(),
       false
     );
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl" },
-      {},
+      targetingContext,
       sandbox.stub(),
       false
     );
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl" },
-      {},
+      targetingContext,
       sandbox.stub(),
       false
     );
@@ -322,23 +339,24 @@ describe("ASRouterTargeting", () => {
   });
   it("should expire cache entries", async () => {
     evalStub.resolves(true);
+    let targetingContext = new global.TargetingContext();
 
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl" },
-      {},
+      targetingContext,
       sandbox.stub(),
       true
     );
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl" },
-      {},
+      targetingContext,
       sandbox.stub(),
       true
     );
     clock.tick(5 * 60 * 1000 + 1);
     await ASRouterTargeting.checkMessageTargeting(
       { targeting: "jexl" },
-      {},
+      targetingContext,
       sandbox.stub(),
       true
     );
