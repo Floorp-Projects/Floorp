@@ -48,6 +48,7 @@ UNIFIED_SOURCES += [
     'AutoUtils.cpp',
     'Cache.cpp',
     'CacheChild.cpp',
+    'CacheCommon.cpp',
     'CacheOpChild.cpp',
     'CacheOpParent.cpp',
     'CacheParent.cpp',
