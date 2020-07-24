@@ -6379,13 +6379,21 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateBrowsingContext(
   RefPtr<BrowsingContextGroup> group =
       BrowsingContextGroup::GetOrCreate(aGroupId);
   if (parent && parent->Group() != group) {
-    return IPC_FAIL(this, "Parent is not in the given group");
+    if (parent->Group()->Id() != aGroupId) {
+      return IPC_FAIL(this, "Parent has different group ID");
+    } else {
+      return IPC_FAIL(this, "Parent has different group object");
+    }
   }
   if (opener && opener->Group() != group) {
-    return IPC_FAIL(this, "Opener is not in the given group");
+    if (opener->Group()->Id() != aGroupId) {
+      return IPC_FAIL(this, "Opener has different group ID");
+    } else {
+      return IPC_FAIL(this, "Opener has different group object");
+    }
   }
   if (!parent && !opener && !group->Toplevels().IsEmpty()) {
-    return IPC_FAIL(this, "Unrelated context must be created in a new group");
+    return IPC_FAIL(this, "Unrelated context from child in stale group");
   }
 
   BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
