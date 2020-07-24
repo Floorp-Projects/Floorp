@@ -1889,35 +1889,42 @@ static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
 #define kDesktopMutterSchema "org.gnome.mutter"
 #define kDesktopDynamicWorkspacesKey "dynamic-workspaces"
 
-static bool DesktopUsesDynamicWorkspaces(GdkWindow* gdk_window) {
-  nsAutoCString wmName;
-  if (GetWindowManagerName(gdk_window, wmName)) {
-    if (wmName.EqualsLiteral("bspwm")) {
-      return true;
-    }
-
-    if (wmName.EqualsLiteral("i3")) {
-      return true;
-    }
+static bool WorkspaceManagementDisabled(GdkWindow* gdk_window) {
+  if (Preferences::GetBool("widget.disable-workspace-management", false)) {
+    return true;
   }
 
   static const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  if (!currentDesktop || !strstr(currentDesktop, "GNOME")) {
-    return false;
+  if (currentDesktop && strstr(currentDesktop, "GNOME")) {
+    // Gnome uses dynamic workspaces by default so disable workspace management
+    // in that case.
+    bool usesDynamicWorkspaces = true;
+    nsCOMPtr<nsIGSettingsService> gsettings =
+        do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+    if (gsettings) {
+      nsCOMPtr<nsIGSettingsCollection> mutterSettings;
+      gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopMutterSchema),
+                                        getter_AddRefs(mutterSettings));
+      if (mutterSettings) {
+        bool usesDynamicWorkspaces;
+        if (NS_SUCCEEDED(mutterSettings->GetBoolean(
+                nsLiteralCString(kDesktopDynamicWorkspacesKey),
+                &usesDynamicWorkspaces))) {
+        }
+      }
+    }
+    return usesDynamicWorkspaces;
   }
 
-  nsCOMPtr<nsIGSettingsService> gsettings =
-      do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
-  if (gsettings) {
-    nsCOMPtr<nsIGSettingsCollection> mutterSettings;
-    gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopMutterSchema),
-                                      getter_AddRefs(mutterSettings));
-    if (mutterSettings) {
-      bool usesDynamicWorkspaces;
-      if (NS_SUCCEEDED(mutterSettings->GetBoolean(
-              nsLiteralCString(kDesktopDynamicWorkspacesKey),
-              &usesDynamicWorkspaces))) {
-        return usesDynamicWorkspaces;
+  // When XDG_CURRENT_DESKTOP is missing, try to get window manager name.
+  if (!currentDesktop) {
+    nsAutoCString wmName;
+    if (GetWindowManagerName(gdk_window, wmName)) {
+      if (wmName.EqualsLiteral("bspwm")) {
+        return true;
+      }
+      if (wmName.EqualsLiteral("i3")) {
+        return true;
       }
     }
   }
@@ -1937,7 +1944,7 @@ void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
     return;
   }
 
-  if (DesktopUsesDynamicWorkspaces(gdk_window)) {
+  if (WorkspaceManagementDisabled(gdk_window)) {
     return;
   }
 
