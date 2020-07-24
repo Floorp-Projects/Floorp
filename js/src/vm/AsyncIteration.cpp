@@ -674,8 +674,8 @@ bool GlobalObject::initAsyncIteratorHelperProto(JSContext* cx,
   }
 
   RootedObject asyncIteratorHelperProto(
-      cx, GlobalObject::createBlankPrototypeInheriting(cx, &PlainObject::class_,
-                                                       asyncIterProto));
+      cx, GlobalObject::createBlankPrototypeInheriting(
+              cx, &AsyncIteratorHelperPrototypeClass, asyncIterProto));
   if (!asyncIteratorHelperProto) {
     return false;
   }
