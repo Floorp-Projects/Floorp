@@ -167,3 +167,12 @@ type = "boolean"
 bug-numbers = [1651607]
 is-public = true
 default-value = false
+
+[graphics-desktop-zooming]
+title = "experimental-features-graphics-desktop-zooming"
+description = "experimental-features-graphics-desktop-zooming-description"
+restart-required = true
+preference = "apz.allow_zooming"
+type = "boolean"
+bug-numbers = [1245183]
+is-public = true
