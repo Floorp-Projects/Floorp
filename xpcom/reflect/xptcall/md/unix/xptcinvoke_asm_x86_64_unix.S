@@ -5,21 +5,16 @@
 # Darwin gives a leading '_' to symbols defined in C code.
 #ifdef XP_DARWIN
 #define SYM(x) _ ## x
-#define CFI_STARTPROC
-#define CFI_ENDPROC
-#define CFI_DEF_CFA_OFFSET(offset)
-#define CFI_OFFSET(reg, offset)
-#define CFI_DEF_CFA_REGISTER(reg)
-#define CFI_DEF_CFA(reg, offset)
 #else
 #define SYM(x) x
+#endif
+
 #define CFI_STARTPROC .cfi_startproc
 #define CFI_ENDPROC .cfi_endproc
 #define CFI_DEF_CFA_OFFSET(offset) .cfi_def_cfa_offset offset
 #define CFI_OFFSET(reg, offset) .cfi_offset reg, offset
 #define CFI_DEF_CFA_REGISTER(reg) .cfi_def_cfa_register reg
 #define CFI_DEF_CFA(reg, offset) .cfi_def_cfa reg, offset
-#endif
 
 .intel_syntax noprefix
 
