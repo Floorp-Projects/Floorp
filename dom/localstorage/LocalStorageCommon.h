@@ -183,7 +183,15 @@
  */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsString.h"
+
+// LocalStorage equivalent of QM_TRY.
+#define LS_TRY(...) QM_TRY_META(mozilla::dom::localstorage, ##__VA_ARGS__)
+
+// LocalStorage equivalent of QM_TRY_VAR.
+#define LS_TRY_VAR(...) \
+  QM_TRY_VAR_META(mozilla::dom::localstorage, ##__VA_ARGS__)
 
 namespace mozilla {
 
@@ -242,6 +250,13 @@ nsresult GenerateOriginKey2(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                             nsACString& aOriginKey);
 
 LogModule* GetLocalStorageLogger();
+
+namespace localstorage {
+
+void HandleError(const nsLiteralCString& aExpr,
+                 const nsLiteralCString& aSourceFile, int32_t aSourceLine);
+
+}  // namespace localstorage
 
 }  // namespace dom
 }  // namespace mozilla
