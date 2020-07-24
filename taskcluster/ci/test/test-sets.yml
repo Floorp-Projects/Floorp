@@ -420,6 +420,7 @@ macosx1014-64-tests:
 macosx1014-64-qr-tests:
     - crashtest
     - reftest
+    - web-platform-tests-reftest
 
 macosx64-talos:
     - talos-bcv
