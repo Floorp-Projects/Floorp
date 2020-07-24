@@ -922,26 +922,6 @@ messaging_experiments:
       branches: >
         A semicolon separated string for all the qualified branch ID(s).
         e.g. "control;variant_01;treatment_02".
-  targeting:
-    objects:
-      - attribute_error
-      - attribute_timeout
-    methods:
-      - targeting
-    release_channel_collection: opt-out
-    products:
-      - firefox
-    record_in_processes:
-      - main
-    description: >
-      Record generic JEXL errors that result from issues with experiment or
-      message targeting expressions. The value field contains the namespace and
-      attribute name that caused the error.
-    bug_numbers:
-      - 1644743
-    notification_emails:
-      - ujet@mozilla.com
-    expiry_version: never
 
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.

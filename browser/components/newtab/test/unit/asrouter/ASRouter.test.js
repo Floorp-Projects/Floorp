@@ -71,7 +71,6 @@ describe("ASRouter", () => {
   let FakeToolbarPanelHub;
   let FakeMomentsPageHub;
   let personalizedCfrScores;
-  let fakeTargetingContext;
 
   function createFakeStorage() {
     const getStub = sandbox.stub();
@@ -169,10 +168,6 @@ describe("ASRouter", () => {
       uninit: sandbox.stub(),
       executeAction: sandbox.stub(),
     };
-    fakeTargetingContext = {
-      combineContexts: sandbox.stub(),
-      evalWithDefault: sandbox.stub().resolves(),
-    };
     globals.set({
       // Testing framework doesn't know how to `defineLazyModuleGetter` so we're
       // importing these modules into the global scope ourselves.
@@ -214,15 +209,6 @@ describe("ASRouter", () => {
       },
       SpecialMessageActions: {
         handleAction: sandbox.stub(),
-      },
-      TargetingContext: class {
-        static combineContexts(...args) {
-          return fakeTargetingContext.combineContexts.apply(sandbox, args);
-        }
-
-        evalWithDefault(expr) {
-          return fakeTargetingContext.evalWithDefault(expr);
-        }
       },
     });
     await createRouterAndInit();
@@ -486,7 +472,7 @@ describe("ASRouter", () => {
         messages: [messageTargeted, messageNotTargeted],
         providers: [{ id: "snippets" }],
       });
-      fakeTargetingContext.evalWithDefault.resolves(false);
+      sandbox.stub(ASRouterTargeting, "isMatch").resolves(false);
 
       await Router.onPrefChange("services.sync.username");
 
@@ -566,7 +552,7 @@ describe("ASRouter", () => {
     beforeEach(async () => {
       stub = sandbox.stub();
       stub.resolves("foo");
-      fakeTargetingContext.evalWithDefault.callsFake(stub);
+      sandbox.stub(ASRouterTargeting, "isMatch").callsFake(stub);
     });
     afterEach(() => {
       sandbox.restore();
@@ -3502,7 +3488,9 @@ describe("ASRouter", () => {
       sandbox.stub(Router, "loadMessagesFromAllProviders");
     });
     it("should dispatch an event when a targeting expression throws an error", async () => {
-      fakeTargetingContext.evalWithDefault.rejects("unit test error");
+      sandbox
+        .stub(global.FilterExpressions, "eval")
+        .returns(Promise.reject(new Error("fake error")));
       await Router.setState({
         messages: [
           {
