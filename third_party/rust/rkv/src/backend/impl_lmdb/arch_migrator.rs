@@ -8,68 +8,53 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-//! A utility for migrating data from one LMDB environment to another.
-//! Notably, this tool can migrate data from an enviroment created with
-//! a different bit-depth than the current rkv consumer, which enables
-//! the consumer to retrieve data from an environment that can't be read
-//! directly using the rkv APIs.
+//! A utility for migrating data from one LMDB environment to another. Notably, this tool
+//! can migrate data from an enviroment created with a different bit-depth than the
+//! current rkv consumer, which enables the consumer to retrieve data from an environment
+//! that can't be read directly using the rkv APIs.
 //!
-//! The utility supports both 32-bit and 64-bit LMDB source environments,
-//! and it automatically migrates data in both the default database
-//! and any named (sub) databases.  It also migrates the source environment's
-//! "map size" and "max DBs" configuration options to the destination
-//! environment.
+//! The utility supports both 32-bit and 64-bit LMDB source environments, and it
+//! automatically migrates data in both the default database and any named (sub)
+//! databases.  It also migrates the source environment's "map size" and "max DBs"
+//! configuration options to the destination environment.
 //!
-//! The destination environment must be at the rkv consumer's bit depth
-//! and should be empty of data.  It can be an empty directory, in which case
-//! the utility will create a new LMDB environment within the directory.
+//! The destination environment must be at the rkv consumer's bit depth and should be
+//! empty of data.  It can be an empty directory, in which case the utility will create a
+//! new LMDB environment within the directory.
 //!
 //! The tool currently has these limitations:
 //!
 //! 1. It doesn't support migration from environments created with
-//!    `EnvironmentFlags::NO_SUB_DIR`.  To migrate such an environment,
-//!    create a temporary directory, copy the environment's data file
-//!    to a file called data.mdb in the temporary directory, then migrate
-//!    the temporary directory as the source environment.
-//! 2. It doesn't support migration from databases created with
-//!    `DatabaseFlags::DUP_SORT` (with or without `DatabaseFlags::DUP_FIXED`).
-//! 3. It doesn't account for existing data in the destination environment,
-//!    which means that it can overwrite data (causing data loss) or fail
-//!    to migrate data if the destination environment contains existing data.
+//!     `EnvironmentFlags::NO_SUB_DIR`.  To migrate such an environment, create a
+//!     temporary directory, copy the environment's data file to a file called data.mdb in
+//!     the temporary directory, then migrate the temporary directory as the source
+//!     environment.
+//! 2. It doesn't support migration from databases created with DatabaseFlags::DUP_SORT`
+//!     (with or without `DatabaseFlags::DUP_FIXED`).
+//! 3. It doesn't account for existing data in the destination environment, which means
+//!     that it can overwrite data (causing data loss) or fail to migrate data if the
+//!     destination environment contains existing data.
 //!
 //! ## Basic Usage
 //!
-//! Call `Migrator::new()` with the path to the source environment to create
-//! a `Migrator` instance; then call the instance's `migrate()` method
-//! with the path to the destination environment to migrate data from the source
-//! to the destination environment.  For example, this snippet migrates data
-//! from the tests/envs/ref_env_32 environment to a new environment
-//! in a temporary directory:
+//! Call `Migrator::new()` with the path to the source environment to create a `Migrator`
+//! instance; then call the instance's `migrate()` method with the path to the destination
+//! environment to migrate data from the source to the destination environment.  For
+//! example, this snippet migrates data from the tests/envs/ref_env_32 environment to a
+//! new environment in a temporary directory:
 //!
 //! ```
-//! use rkv::migrate::Migrator;
+//! use rkv::migrator::LmdbArchMigrator as Migrator;
 //! use std::path::Path;
 //! use tempfile::tempdir;
 //! let mut migrator = Migrator::new(Path::new("tests/envs/ref_env_32")).unwrap();
 //! migrator.migrate(&tempdir().unwrap().path()).unwrap();
 //! ```
 //!
-//! Both `Migrator::new()` and `migrate()` return a `MigrateResult` that is
-//! either an `Ok()` result or an `Err<MigrateError>`, where `MigrateError`
-//! is an enum whose variants identify specific kinds of migration failures.
+//! Both `Migrator::new()` and `migrate()` return a `MigrateResult` that is either an
+//! `Ok()` result or an `Err<MigrateError>`, where `MigrateError` is an enum whose
+//! variants identify specific kinds of migration failures.
 
-pub use crate::error::MigrateError;
-use bitflags::bitflags;
-use byteorder::{
-    LittleEndian,
-    ReadBytesExt,
-};
-use lmdb::{
-    DatabaseFlags,
-    Environment,
-    Transaction,
-    WriteFlags,
-};
 use std::{
     collections::{
         BTreeMap,
@@ -92,12 +77,25 @@ use std::{
     str,
 };
 
+use bitflags::bitflags;
+use byteorder::{
+    LittleEndian,
+    ReadBytesExt,
+};
+use lmdb::{
+    DatabaseFlags,
+    Environment,
+    Transaction,
+    WriteFlags,
+};
+
+pub use super::arch_migrator_error::MigrateError;
+
 const PAGESIZE: u16 = 4096;
 
-// The magic number is 0xBEEFC0DE, which is 0xDEC0EFBE in little-endian.
-// It appears at offset 12 on 32-bit systems and 16 on 64-bit systems.
-// We don't support big-endian migration, but presumably we could do so
-// by detecting the order of the bytes.
+// The magic number is 0xBEEFC0DE, which is 0xDEC0EFBE in little-endian. It appears at
+// offset 12 on 32-bit systems and 16 on 64-bit systems. We don't support big-endian
+// migration, but presumably we could do so by detecting the order of the bytes.
 const MAGIC: [u8; 4] = [0xDE, 0xC0, 0xEF, 0xBE];
 
 pub type MigrateResult<T> = Result<T, MigrateError>;
@@ -126,9 +124,8 @@ bitflags! {
     }
 }
 
-// The bit depth of the executable that created an LMDB environment.
-// The Migrator determines this automatically based on the location of
-// the magic number in the data.mdb file.
+// The bit depth of the executable that created an LMDB environment. The Migrator
+// determines this automatically based on the location of the magic number in data.mdb.
 #[derive(Clone, Copy, PartialEq)]
 enum Bits {
     U32,
@@ -369,8 +366,8 @@ impl Page {
     }
 
     fn parse_leaf_node(cursor: &mut Cursor<&[u8]>, bits: Bits) -> MigrateResult<LeafNode> {
-        // The order of the mn_lo and mn_hi fields is endian-dependent and would
-        // be reversed in an LMDB environment created on a big-endian system.
+        // The order of the mn_lo and mn_hi fields is endian-dependent and would be
+        // reversed in an LMDB environment created on a big-endian system.
         let mn_lo = cursor.read_u16::<LittleEndian>()?;
         let mn_hi = cursor.read_u16::<LittleEndian>()?;
 
@@ -385,7 +382,6 @@ impl Page {
         let mv_size = Self::leaf_node_size(mn_lo, mn_hi);
         if mn_flags.contains(NodeFlags::BIGDATA) {
             let overflow_pgno = cursor.read_uint::<LittleEndian>(bits.size())?;
-
             Ok(LeafNode::BigData {
                 mn_lo,
                 mn_hi,
@@ -402,7 +398,6 @@ impl Page {
             let mut cursor = std::io::Cursor::new(&value[..]);
             let db = Database::new(&mut cursor, bits)?;
             validate_page_num(db.md_root, bits)?;
-
             Ok(LeafNode::SubData {
                 mn_lo,
                 mn_hi,
@@ -417,7 +412,6 @@ impl Page {
             let start = usize::try_from(cursor.position())?;
             let end = usize::try_from(cursor.position() + u64::from(mv_size))?;
             let value = cursor.get_ref()[start..end].to_vec();
-
             Ok(LeafNode::Regular {
                 mn_lo,
                 mn_hi,
@@ -449,15 +443,15 @@ impl Page {
     }
 
     fn parse_branch_node(cursor: &mut Cursor<&[u8]>, bits: Bits) -> MigrateResult<BranchNode> {
-        // The order of the mn_lo and mn_hi fields is endian-dependent and would
-        // be reversed in an LMDB environment created on a big-endian system.
+        // The order of the mn_lo and mn_hi fields is endian-dependent and would be
+        // reversed in an LMDB environment created on a big-endian system.
         let mn_lo = cursor.read_u16::<LittleEndian>()?;
         let mn_hi = cursor.read_u16::<LittleEndian>()?;
 
         let mn_flags = cursor.read_u16::<LittleEndian>()?;
 
-        // Branch nodes overload the mn_lo, mn_hi, and mn_flags fields
-        // to store the page number, so we derive the number from those fields.
+        // Branch nodes overload the mn_lo, mn_hi, and mn_flags fields to store the page
+        // number, so we derive the number from those fields.
         let mp_pgno = Self::branch_node_page_num(mn_lo, mn_hi, mn_flags, bits);
 
         let mn_ksize = cursor.read_u16::<LittleEndian>()?;
@@ -502,10 +496,10 @@ pub struct Migrator {
 }
 
 impl Migrator {
-    /// Create a new Migrator for the LMDB environment at the given path.
-    /// This tries to open the data.mdb file in the environment and determine
-    /// the bit depth of the executable that created it, so it can fail
-    /// and return an Err if the file can't be opened or the depth determined.
+    /// Create a new Migrator for the LMDB environment at the given path. This tries to
+    /// open the data.mdb file in the environment and determine the bit depth of the
+    /// executable that created it, so it can fail and return an Err if the file can't be
+    /// opened or the depth determined.
     pub fn new(path: &Path) -> MigrateResult<Migrator> {
         let mut path = PathBuf::from(path);
         path.push("data.mdb");
@@ -533,20 +527,18 @@ impl Migrator {
         })
     }
 
-    /// Dump the data in one of the databases in the LMDB environment.
-    /// If the `database` paremeter is None, then we dump the data in the main
-    /// database.  If it's the name of a subdatabase, then we dump the data
-    /// in that subdatabase.
+    /// Dump the data in one of the databases in the LMDB environment. If the `database`
+    /// paremeter is None, then we dump the data in the main database.  If it's the name
+    /// of a subdatabase, then we dump the data in that subdatabase.
     ///
-    /// Note that the output isn't identical to that of the mdb_dump utility,
-    /// since mdb_dump includes subdatabase key/value pairs when dumping
-    /// the main database, and those values are architecture-dependent, since
-    /// they contain pointer-sized data.
-    ///
-    /// If we wanted to support identical output, we could parameterize
-    /// inclusion of subdatabase pairs in get_pairs() and include them
-    /// when dumping data, while continuing to exclude them when migrating
+    /// Note that the output isn't identical to that of the `mdb_dump` utility, since
+    /// `mdb_dump` includes subdatabase key/value pairs when dumping the main database,
+    /// and those values are architecture-dependent, since they contain pointer-sized
     /// data.
+    ///
+    /// If we wanted to support identical output, we could parameterize inclusion of
+    /// subdatabase pairs in get_pairs() and include them when dumping data, while
+    /// continuing to exclude them when migrating data.
     pub fn dump<T: Write>(&mut self, database: Option<&str>, mut out: T) -> MigrateResult<()> {
         let meta_data = self.get_meta_data()?;
         let root_page_num = meta_data.mm_dbs.main.md_root;
@@ -593,20 +585,18 @@ impl Migrator {
         Ok(())
     }
 
-    /// Migrate all data in all of databases in the existing LMDB environment
-    /// to a new environment.  This includes all key/value pairs in the main
-    /// database that aren't metadata about subdatabases and all key/value pairs
-    /// in all subdatabases.
+    /// Migrate all data in all of databases in the existing LMDB environment to a new
+    /// environment.  This includes all key/value pairs in the main database that aren't
+    /// metadata about subdatabases and all key/value pairs in all subdatabases.
     ///
-    /// We also set the map size and maximum databases of the new environment
-    /// to their values for the existing environment.  But we don't set
-    /// other metadata, and we don't check that the new environment is empty
-    /// before migrating data.
+    /// We also set the map size and maximum databases of the new environment to their
+    /// values for the existing environment.  But we don't set other metadata, and we
+    /// don't check that the new environment is empty before migrating data.
     ///
-    /// Thus it's possible for this to overwrite existing data or fail
-    /// to migrate data if the new environment isn't empty.  It's the consumer's
-    /// responsibility to ensure that data can be safely migrated to the new
-    /// environment.  In general, this means that environment should be empty.
+    /// Thus it's possible for this to overwrite existing data or fail to migrate data if
+    /// the new environment isn't empty.  It's the consumer's responsibility to ensure
+    /// that data can be safely migrated to the new environment.  In general, this means
+    /// that environment should be empty.
     pub fn migrate(&mut self, dest: &Path) -> MigrateResult<()> {
         let meta_data = self.get_meta_data()?;
         let root_page_num = meta_data.mm_dbs.main.md_root;
@@ -619,24 +609,23 @@ impl Migrator {
             .set_max_dbs(subdbs.len() as u32)
             .open(dest)?;
 
-        // Create the databases before we open a read-write transaction,
-        // since database creation requires its own read-write transaction,
-        // which would hang while awaiting completion of an existing one.
+        // Create the databases before we open a read-write transaction, since database
+        // creation requires its own read-write transaction, which would hang while
+        // awaiting completion of an existing one.
         env.create_db(None, meta_data.mm_dbs.main.md_flags)?;
         for (subdb_name, subdb_info) in &subdbs {
             env.create_db(Some(str::from_utf8(&subdb_name)?), subdb_info.md_flags)?;
         }
 
-        // Now open the read-write transaction that we'll use to migrate
-        // all the data.
+        // Now open the read-write transaction that we'll use to migrate all the data.
         let mut txn = env.begin_rw_txn()?;
 
         // Migrate the main database.
         let pairs = self.get_pairs(root_page)?;
         let db = env.open_db(None)?;
         for (key, value) in pairs {
-            // If we knew that the target database was empty, we could
-            // specify WriteFlags::APPEND to speed up the migration.
+            // If we knew that the target database was empty, we could specify
+            // WriteFlags::APPEND to speed up the migration.
             txn.put(db, &key, &value, WriteFlags::empty())?;
         }
 
@@ -646,8 +635,8 @@ impl Migrator {
             let pairs = self.get_pairs(root_page)?;
             let db = env.open_db(Some(str::from_utf8(&subdb_name)?))?;
             for (key, value) in pairs {
-                // If we knew that the target database was empty, we could
-                // specify WriteFlags::APPEND to speed up the migration.
+                // If we knew that the target database was empty, we could specify
+                // WriteFlags::APPEND to speed up the migration.
                 txn.put(db, &key, &value, WriteFlags::empty())?;
             }
         }
@@ -716,9 +705,9 @@ impl Migrator {
                                 overflow_pgno,
                                 ..
                             } => {
-                                // XXX perhaps we could reduce memory consumption
-                                // during a migration by waiting to read big data
-                                // until it's time to write it to the new database.
+                                // Perhaps we could reduce memory consumption during a
+                                // migration by waiting to read big data until it's time
+                                // to write it to the new database.
                                 let value = self.read_data(
                                     *overflow_pgno * u64::from(PAGESIZE) + page_header_size(self.bits),
                                     *mv_size as usize,
@@ -728,16 +717,15 @@ impl Migrator {
                             LeafNode::SubData {
                                 ..
                             } => {
-                                // We don't include subdatabase leaves in pairs,
-                                // since there's no architecture-neutral
-                                // representation of them, and in any case they're
-                                // meta-data that should get recreated when we
-                                // migrate the subdatabases themselves.
+                                // We don't include subdatabase leaves in pairs, since
+                                // there's no architecture-neutral representation of them,
+                                // and in any case they're meta-data that should get
+                                // recreated when we migrate the subdatabases themselves.
                                 //
                                 // If we wanted to create identical dumps to those
-                                // produced by mdb_dump, however, we could allow
-                                // consumers to specify that they'd like to include
-                                // these records.
+                                // produced by `mdb_dump`, however, we could allow
+                                // consumers to specify that they'd like to include these
+                                // records.
                             },
                         };
                     }
@@ -787,26 +775,17 @@ impl Migrator {
 
 #[cfg(test)]
 mod tests {
-    use super::MigrateResult;
-    use super::Migrator;
-    use crate::error::MigrateError;
+    use super::*;
+
+    use std::{
+        env,
+        fs,
+        mem::size_of,
+    };
+
     use lmdb::{
         Environment,
         Error as LmdbError,
-    };
-    use std::{
-        env,
-        fs::{
-            self,
-            File,
-        },
-        io::{
-            Read,
-            Seek,
-            SeekFrom,
-        },
-        mem::size_of,
-        path::PathBuf,
     };
     use tempfile::{
         tempdir,
@@ -823,15 +802,17 @@ mod tests {
         loop {
             match ref_file.read(ref_buf) {
                 Err(err) => panic!(err),
-                Ok(ref_len) => match new_file.read(new_buf) {
-                    Err(err) => panic!(err),
-                    Ok(new_len) => {
-                        assert_eq!(ref_len, new_len);
-                        if ref_len == 0 {
-                            break;
-                        };
-                        assert_eq!(ref_buf[0..ref_len], new_buf[0..new_len]);
-                    },
+                Ok(ref_len) => {
+                    match new_file.read(new_buf) {
+                        Err(err) => panic!(err),
+                        Ok(new_len) => {
+                            assert_eq!(ref_len, new_len);
+                            if ref_len == 0 {
+                                break;
+                            };
+                            assert_eq!(ref_buf[0..ref_len], new_buf[0..new_len]);
+                        },
+                    }
                 },
             }
         }
@@ -1017,8 +998,8 @@ mod tests {
         // Compare the new dump file to the reference dump file.
         compare_files(&mut ref_dump_file, &mut new_dump_file)?;
 
-        // Overwrite the old env's files with the new env's files and confirm
-        // that it's now possible to open the old env with LMDB.
+        // Overwrite the old env's files with the new env's files and confirm that it's now
+        // possible to open the old env with LMDB.
         fs::copy(new_env.path().join("data.mdb"), old_env.path().join("data.mdb"))?;
         fs::copy(new_env.path().join("lock.mdb"), old_env.path().join("lock.mdb"))?;
         assert!(Environment::new().open(&old_env.path()).is_ok());
