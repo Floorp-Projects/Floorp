@@ -501,13 +501,22 @@ class HTMLMediaElement::MediaControlKeyListener final
 
   void SetPictureInPictureModeEnabled(bool aIsEnabled) {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(IsStarted());
     if (mIsPictureInPictureEnabled == aIsEnabled) {
       return;
     }
+    // PIP state changes might happen before the listener starts or stops where
+    // we haven't call `InitMediaAgent()` yet. Eg. Reset the PIP video's src,
+    // then cancel the PIP. In addition, not like playback and audible state
+    // which should be restricted to update via the same agent in order to keep
+    // those states correct in each `ContextMediaInfo`, PIP state can be updated
+    // through any browsing context, so we would use `ContentMediaAgent::Get()`
+    // directly to update PIP state.
     mIsPictureInPictureEnabled = aIsEnabled;
-    mControlAgent->SetIsInPictureInPictureMode(mOwnerBrowsingContextId,
-                                               mIsPictureInPictureEnabled);
+    if (RefPtr<IMediaInfoUpdater> updater =
+            ContentMediaAgent::Get(GetCurrentBrowsingContext())) {
+      updater->SetIsInPictureInPictureMode(mOwnerBrowsingContextId,
+                                           mIsPictureInPictureEnabled);
+    }
   }
 
   void HandleMediaKey(MediaControlKey aKey) override {
@@ -7881,6 +7890,11 @@ bool HTMLMediaElement::IsInFullScreen() const {
 }
 
 bool HTMLMediaElement::ShouldStartMediaControlKeyListener() const {
+  if (IsBeingUsedInPictureInPictureMode()) {
+    MEDIACONTROL_LOG("Start listener because of being used in PiP mode");
+    return true;
+  }
+
   if (IsInFullScreen()) {
     MEDIACONTROL_LOG("Start listener because of being used in fullscreen");
     return true;
@@ -7917,11 +7931,12 @@ void HTMLMediaElement::StartMediaControlKeyListenerIfNeeded() {
 }
 
 void HTMLMediaElement::UpdateMediaControlAfterPictureInPictureModeChanged() {
-  // Hasn't started to connect with media control, no need to update anything.
-  if (!mMediaControlKeyListener->IsStarted()) {
-    return;
-  }
   if (IsBeingUsedInPictureInPictureMode()) {
+    // When media enters PIP mode, we should ensure that the listener has been
+    // started because we always want to control PIP video.
+    StartMediaControlKeyListenerIfNeeded();
+    MOZ_ASSERT(mMediaControlKeyListener->IsStarted(),
+               "Failed to start listener when entering PIP mode");
     mMediaControlKeyListener->SetPictureInPictureModeEnabled(true);
   } else {
     mMediaControlKeyListener->SetPictureInPictureModeEnabled(false);
