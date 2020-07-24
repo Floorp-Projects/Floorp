@@ -21,6 +21,15 @@ window.onmessage = event => {
       // Retry until the element successfully enters fullscreen.
       video.requestFullscreen();
     }
+  } else if (event.data == "check-playing") {
+    if (!video.paused) {
+      w.postMessage("checked-playing", "*");
+    } else {
+      video.onplaying = () => {
+        video.onplaying = null;
+        w.postMessage("checked-playing", "*");
+      }
+    }
   }
 }
 
