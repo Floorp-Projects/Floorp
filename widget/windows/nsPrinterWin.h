@@ -8,6 +8,7 @@
 
 #include "nsIPrinter.h"
 
+#include "mozilla/Maybe.h"
 #include "nsIPaper.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
@@ -26,6 +27,7 @@ class nsPrinterWin final : public nsIPrinter {
 
   nsString mName;
   nsTArray<RefPtr<nsIPaper>> mPaperList;
+  Maybe<bool> mSupportsDuplex;
 };
 
 #endif  // nsPrinterWin_h_
