@@ -8,10 +8,7 @@ extern crate crossbeam_utils;
 extern crate cstr;
 #[macro_use]
 extern crate failure;
-#[macro_use]
-extern crate lazy_static;
 extern crate libc;
-extern crate lmdb;
 extern crate log;
 extern crate moz_task;
 extern crate nserror;
@@ -23,7 +20,6 @@ extern crate thin_vec;
 extern crate xpcom;
 
 mod error;
-mod manager;
 mod owned_value;
 mod task;
 
@@ -37,7 +33,8 @@ use moz_task::{
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_AGGREGATION, NS_OK};
 use nsstring::{nsACString, nsCString};
 use owned_value::{owned_to_variant, variant_to_owned};
-use rkv::{OwnedValue, Rkv, SingleStore};
+use rkv::backend::{SafeModeDatabase, SafeModeEnvironment};
+use rkv::OwnedValue;
 use std::{
     ptr,
     sync::{Arc, RwLock},
@@ -57,6 +54,8 @@ use xpcom::{
     nsIID, xpcom, xpcom_method, RefPtr,
 };
 
+type Rkv = rkv::Rkv<SafeModeEnvironment>;
+type SingleStore = rkv::SingleStore<SafeModeDatabase>;
 type KeyValuePairResult = Result<(String, OwnedValue), KeyValueError>;
 
 #[no_mangle]
