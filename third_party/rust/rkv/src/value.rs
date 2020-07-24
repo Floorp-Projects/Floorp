@@ -24,9 +24,10 @@ use uuid::{
 
 use crate::error::DataError;
 
-/// We define a set of types, associated with simple integers, to annotate values stored
-/// in LMDB. This is to avoid an accidental 'cast' from a value of one type to another.
-/// For this reason we don't simply use `deserialize` from the `bincode` crate.
+/// We define a set of types, associated with simple integers, to annotate values
+/// stored in LMDB. This is to avoid an accidental 'cast' from a value of one type
+/// to another. For this reason we don't simply use `deserialize` from the `bincode`
+/// crate.
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq)]
 pub enum Type {
@@ -128,11 +129,9 @@ impl<'v> Value<'v> {
     fn from_type_and_data(t: Type, data: &'v [u8]) -> Result<Value<'v>, DataError> {
         if t == Type::Uuid {
             return deserialize(data)
-                .map_err(|e| {
-                    DataError::DecodingError {
-                        value_type: t,
-                        err: e,
-                    }
+                .map_err(|e| DataError::DecodingError {
+                    value_type: t,
+                    err: e,
                 })
                 .map(uuid)?;
         }
@@ -151,11 +150,9 @@ impl<'v> Value<'v> {
                 unreachable!()
             },
         }
-        .map_err(|e| {
-            DataError::DecodingError {
-                value_type: t,
-                err: e,
-            }
+        .map_err(|e| DataError::DecodingError {
+            value_type: t,
+            err: e,
         })
     }
 
@@ -224,6 +221,8 @@ impl<'v> From<&'v OwnedValue> for Value<'v> {
 
 #[cfg(test)]
 mod tests {
+    use ordered_float::OrderedFloat;
+
     use super::*;
 
     #[test]

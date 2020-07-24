@@ -8,18 +8,14 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::{
-    env::args,
-    io,
-    path::Path,
-};
+use std::env::args;
+use std::io;
+use std::path::Path;
 
-use rkv::migrator::{
-    LmdbArchMigrateError,
-    LmdbArchMigrator,
-};
+use rkv::migrate::Migrator;
+use rkv::MigrateError;
 
-fn main() -> Result<(), LmdbArchMigrateError> {
+fn main() -> Result<(), MigrateError> {
     let mut cli_args = args();
     let mut db_name = None;
     let mut env_path = None;
@@ -47,8 +43,8 @@ fn main() -> Result<(), LmdbArchMigrateError> {
     }
 
     let env_path = env_path.ok_or("must provide a path to the LMDB environment")?;
-    let mut migrator = LmdbArchMigrator::new(Path::new(&env_path))?;
-    migrator.dump(db_name.as_deref(), io::stdout()).unwrap();
+    let mut migrator: Migrator = Migrator::new(Path::new(&env_path))?;
+    migrator.dump(db_name.as_ref().map(String::as_str), io::stdout()).unwrap();
 
     Ok(())
 }

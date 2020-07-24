@@ -14,7 +14,7 @@ moz_task = { path = "../../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 rental = "0.5.5"
-rkv = { version = "0.14.1", default-features = false }
+rkv = { git = "https://github.com/mozilla/rkv", rev="e3c3388e6632cf55e08d773b32e58b1cab9b2731", default-features = false }
 rust_cascade = "0.6.0"
 sha2 = "^0.8"
 storage_variant = { path = "../../../../storage/variant" }

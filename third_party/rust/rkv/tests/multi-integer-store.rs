@@ -8,15 +8,14 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 #![cfg(all(feature = "db-dup-sort", feature = "db-int-key"))]
-#![allow(clippy::many_single_char_names)]
 
 use std::fs;
 
 use serde_derive::Serialize;
 use tempfile::Builder;
 
+use rkv::backend::Lmdb;
 use rkv::{
-    backend::Lmdb,
     PrimitiveInt,
     Rkv,
     StoreOptions,
@@ -42,7 +41,7 @@ fn test_multi_integer_keys() {
                 .get(&writer, $key)
                 .expect("read")
                 .map(|result| result.expect("ok"))
-                .map(|(_, v)| v)
+                .map(|(_, v)| v.expect("multi read"))
                 .collect::<Vec<Value>>();
             assert_eq!(vals, vec![Value::Str("hello1"), Value::Str("hello2"), Value::Str("hello3")]);
             writer.commit().expect("committed");
@@ -52,7 +51,7 @@ fn test_multi_integer_keys() {
                 .get(&reader, $key)
                 .expect("read")
                 .map(|result| result.expect("ok"))
-                .map(|(_, v)| v)
+                .map(|(_, v)| v.expect("multi read"))
                 .collect::<Vec<Value>>();
             assert_eq!(vals, vec![Value::Str("hello1"), Value::Str("hello2"), Value::Str("hello3")]);
         }};

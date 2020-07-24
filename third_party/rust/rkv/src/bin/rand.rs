@@ -14,19 +14,17 @@
 //! the number of key/value pairs to create via the `-n <number>` flag
 //! (for which the default value is 50).
 
-use std::{
-    env::args,
-    fs,
-    fs::File,
-    io::Read,
-    path::Path,
-};
+use std::env::args;
+use std::fs;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 
+use rkv::backend::{
+    BackendEnvironmentBuilder,
+    Lmdb,
+};
 use rkv::{
-    backend::{
-        BackendEnvironmentBuilder,
-        Lmdb,
-    },
     Rkv,
     StoreOptions,
     Value,
@@ -80,7 +78,7 @@ fn main() {
     // of the pairs (assuming maximum key and value sizes).
     builder.set_map_size((511 + 65535) * num_pairs * 2);
     let rkv = Rkv::from_builder(Path::new(&path), builder).expect("Rkv");
-    let store = rkv.open_single(database.as_deref(), StoreOptions::create()).expect("opened");
+    let store = rkv.open_single(database.as_ref().map(|x| x.as_str()), StoreOptions::create()).expect("opened");
     let mut writer = rkv.write().expect("writer");
 
     // Generate random values for the number of keys and key/value lengths.

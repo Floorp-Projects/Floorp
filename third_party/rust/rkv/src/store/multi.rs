@@ -10,22 +10,20 @@
 
 use std::marker::PhantomData;
 
-use crate::{
-    backend::{
-        BackendDatabase,
-        BackendFlags,
-        BackendIter,
-        BackendRoCursor,
-        BackendRwTransaction,
-    },
-    error::StoreError,
-    helpers::read_transform,
-    readwrite::{
-        Readable,
-        Writer,
-    },
-    value::Value,
+use crate::backend::{
+    BackendDatabase,
+    BackendFlags,
+    BackendIter,
+    BackendRoCursor,
+    BackendRwTransaction,
 };
+use crate::error::StoreError;
+use crate::helpers::read_transform;
+use crate::readwrite::{
+    Readable,
+    Writer,
+};
+use crate::value::Value;
 
 type EmptyResult = Result<(), StoreError>;
 
@@ -49,8 +47,7 @@ where
         }
     }
 
-    /// Provides a cursor to all of the values for the duplicate entries that match this
-    /// key
+    /// Provides a cursor to all of the values for the duplicate entries that match this key
     pub fn get<'r, R, I, C, K>(&self, reader: &'r R, k: K) -> Result<Iter<'r, I>, StoreError>
     where
         R: Readable<'r, Database = D, RoCursor = C>,
@@ -123,16 +120,14 @@ impl<'i, I> Iterator for Iter<'i, I>
 where
     I: BackendIter<'i>,
 {
-    type Item = Result<(&'i [u8], Value<'i>), StoreError>;
+    type Item = Result<(&'i [u8], Option<Value<'i>>), StoreError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {
             None => None,
-            Some(Ok((key, bytes))) => {
-                match read_transform(Ok(bytes)) {
-                    Ok(val) => Some(Ok((key, val))),
-                    Err(err) => Some(Err(err)),
-                }
+            Some(Ok((key, bytes))) => match read_transform(Ok(bytes)) {
+                Ok(val) => Some(Ok((key, val))),
+                Err(err) => Some(Err(err)),
             },
             Some(Err(err)) => Some(Err(err.into())),
         }

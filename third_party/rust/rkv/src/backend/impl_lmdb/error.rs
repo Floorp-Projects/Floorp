@@ -8,55 +8,32 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::{
-    fmt,
-    io,
-    path::PathBuf,
-};
+use std::fmt;
 
-use crate::{
-    backend::traits::BackendError,
-    error::StoreError,
-};
+use crate::backend::traits::BackendError;
+use crate::error::StoreError;
 
 #[derive(Debug)]
-pub enum ErrorImpl {
-    LmdbError(lmdb::Error),
-    UnsuitableEnvironmentPath(PathBuf),
-    IoError(io::Error),
-}
+pub struct ErrorImpl(pub(crate) lmdb::Error);
 
 impl BackendError for ErrorImpl {}
 
 impl fmt::Display for ErrorImpl {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ErrorImpl::LmdbError(e) => e.fmt(fmt),
-            ErrorImpl::UnsuitableEnvironmentPath(_) => write!(fmt, "UnsuitableEnvironmentPath"),
-            ErrorImpl::IoError(e) => e.fmt(fmt),
-        }
+        self.0.fmt(fmt)
     }
 }
 
 impl Into<StoreError> for ErrorImpl {
     fn into(self) -> StoreError {
-        match self {
-            ErrorImpl::LmdbError(lmdb::Error::Corrupted) => StoreError::DatabaseCorrupted,
-            ErrorImpl::LmdbError(lmdb::Error::NotFound) => StoreError::KeyValuePairNotFound,
-            ErrorImpl::LmdbError(lmdb::Error::BadValSize) => StoreError::KeyValuePairBadSize,
-            ErrorImpl::LmdbError(lmdb::Error::Invalid) => StoreError::FileInvalid,
-            ErrorImpl::LmdbError(lmdb::Error::MapFull) => StoreError::MapFull,
-            ErrorImpl::LmdbError(lmdb::Error::DbsFull) => StoreError::DbsFull,
-            ErrorImpl::LmdbError(lmdb::Error::ReadersFull) => StoreError::ReadersFull,
-            ErrorImpl::LmdbError(error) => StoreError::LmdbError(error),
-            ErrorImpl::UnsuitableEnvironmentPath(path) => StoreError::UnsuitableEnvironmentPath(path),
-            ErrorImpl::IoError(error) => StoreError::IoError(error),
+        match self.0 {
+            lmdb::Error::NotFound => StoreError::KeyValuePairNotFound,
+            lmdb::Error::BadValSize => StoreError::KeyValuePairBadSize,
+            lmdb::Error::Invalid => StoreError::FileInvalid,
+            lmdb::Error::MapFull => StoreError::MapFull,
+            lmdb::Error::DbsFull => StoreError::DbsFull,
+            lmdb::Error::ReadersFull => StoreError::ReadersFull,
+            _ => StoreError::LmdbError(self.0),
         }
-    }
-}
-
-impl From<io::Error> for ErrorImpl {
-    fn from(e: io::Error) -> ErrorImpl {
-        ErrorImpl::IoError(e)
     }
 }

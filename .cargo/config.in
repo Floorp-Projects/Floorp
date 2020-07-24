@@ -7,6 +7,11 @@ branch = "r0.13.1"
 git = "https://github.com/shravanrn/nix/"
 replace-with = "vendored-sources"
 
+[source."https://github.com/mozilla/rkv"]
+git = "https://github.com/mozilla/rkv"
+replace-with = "vendored-sources"
+rev = "e3c3388e6632cf55e08d773b32e58b1cab9b2731"
+
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
