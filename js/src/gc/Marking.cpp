@@ -793,33 +793,73 @@ void GCMarker::forgetWeakMap(WeakMapBase* map, Zone* zone) {
 // 'delegate' is no longer the delegate of 'key'.
 void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
   JS::Zone* zone = delegate->zone();
+  if (!zone->needsIncrementalBarrier()) {
+    MOZ_ASSERT(!zone->gcWeakKeys(delegate).get(delegate),
+               "non-collecting zone should not have populated gcWeakKeys");
+    return;
+  }
   auto p = zone->gcWeakKeys(delegate).get(delegate);
-  if (p) {
-    p->value.eraseIf([this, key](const WeakMarkable& markable) -> bool {
-      if (markable.key != key) {
-        return false;
-      }
-      markable.weakmap->postSeverDelegate(this, key);
-      return true;
-    });
+  if (!p) {
+    return;
+  }
+
+  // Remove all <weakmap, key> pairs associated with this delegate and key, and
+  // call postSeverDelegate on each of the maps found to record the key
+  // instead.
+  //
+  // But be careful: if key and delegate are in different compartments but the
+  // same zone, then the same gcWeakKeys table will be mutated by both the
+  // eraseIf and the postSeverDelegate, so we cannot nest them.
+  js::Vector<WeakMapBase*, 10, SystemAllocPolicy> severedKeyMaps;
+  p->value.eraseIf(
+      [key, &severedKeyMaps](const WeakMarkable& markable) -> bool {
+        if (markable.key != key) {
+          return false;
+        }
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!severedKeyMaps.append(markable.weakmap)) {
+          oomUnsafe.crash("OOM while recording all weakmaps with severed key");
+        }
+        return true;
+      });
+
+  for (WeakMapBase* weakmap : severedKeyMaps) {
+    if (weakmap->zone()->needsIncrementalBarrier()) {
+      weakmap->postSeverDelegate(this, key);
+    }
   }
 }
 
 // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
 void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
+  if (!key->zone()->needsIncrementalBarrier() ||
+      !delegate->zone()->needsIncrementalBarrier())
+  {
+    MOZ_ASSERT(!key->zone()->gcWeakKeys(key).get(key),
+               "non-collecting zone should not have populated gcWeakKeys");
+    return;
+  }
   auto p = key->zone()->gcWeakKeys(key).get(key);
-  if (p) {
-    p->value.eraseIf(
-        [this, key, delegate](const WeakMarkable& markable) -> bool {
-          if (markable.key != key) {
-            return false;
-          }
-          if (markable.weakmap->zone()->needsIncrementalBarrier() &&
-              delegate->zone()->needsIncrementalBarrier()) {
-            markable.weakmap->postRestoreDelegate(this, key, delegate);
-          }
-          return true;
-        });
+  if (!p) {
+    return;
+  }
+
+  js::Vector<WeakMapBase*, 10, SystemAllocPolicy> maps;
+  p->value.eraseIf([key, &maps](const WeakMarkable& markable) -> bool {
+    if (markable.key != key) {
+      return false;
+    }
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!maps.append(markable.weakmap)) {
+      oomUnsafe.crash("OOM while recording all weakmaps with severed key");
+    }
+    return true;
+  });
+
+  for (WeakMapBase* weakmap : maps) {
+    if (weakmap->zone()->needsIncrementalBarrier()) {
+      weakmap->postRestoreDelegate(this, key, delegate);
+    }
   }
 }
 
