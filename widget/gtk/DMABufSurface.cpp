@@ -140,6 +140,7 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
       mGbmBufferObject(),
       mMappedRegion(),
       mMappedRegionStride(),
+      mSyncFd(-1),
       mSync(0),
       mGlobalRefCountFd(0),
       mUID(0) {
@@ -178,6 +179,11 @@ already_AddRefed<DMABufSurface> DMABufSurface::CreateDMABufSurface(
 void DMABufSurface::FenceDelete() {
   auto* egl = gl::GLLibraryEGL::Get();
 
+  if (mSyncFd > 0) {
+    close(mSyncFd);
+    mSyncFd = -1;
+  }
+
   if (mSync) {
     // We can't call this unless we have the ext, but we will always have
     // the ext if we have something to destroy.
@@ -215,6 +221,10 @@ void DMABufSurface::FenceSet() {
 void DMABufSurface::FenceWait() {
   auto* egl = gl::GLLibraryEGL::Get();
 
+  if (!mSync && mSyncFd > 0) {
+    FenceImportFromFd();
+  }
+
   // Wait on the fence, because presumably we're going to want to read this
   // surface
   if (mSync) {
@@ -222,14 +232,15 @@ void DMABufSurface::FenceWait() {
   }
 }
 
-bool DMABufSurface::FenceCreate(int aFd) {
-  MOZ_ASSERT(aFd > 0);
-
+bool DMABufSurface::FenceImportFromFd() {
   auto* egl = gl::GLLibraryEGL::Get();
-  const EGLint attribs[] = {LOCAL_EGL_SYNC_NATIVE_FENCE_FD_ANDROID, aFd,
+  const EGLint attribs[] = {LOCAL_EGL_SYNC_NATIVE_FENCE_FD_ANDROID, mSyncFd,
                             LOCAL_EGL_NONE};
   mSync = egl->fCreateSync(egl->Display(), LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID,
                            attribs);
+  close(mSyncFd);
+  mSyncFd = -1;
+
   if (!mSync) {
     MOZ_ASSERT(false, "Failed to create GLFence!");
     return false;
@@ -407,10 +418,7 @@ void DMABufSurfaceRGBA::ImportSurfaceDescriptor(
   }
 
   if (desc.fence().Length() > 0) {
-    int fd = desc.fence()[0].ClonePlatformHandle().release();
-    if (!FenceCreate(fd)) {
-      close(fd);
-    }
+    mSyncFd = desc.fence()[0].ClonePlatformHandle().release();
   }
 
   if (desc.refCount().Length() > 0) {
@@ -872,10 +880,7 @@ void DMABufSurfaceYUV::ImportSurfaceDescriptor(
   }
 
   if (aDesc.fence().Length() > 0) {
-    int fd = aDesc.fence()[0].ClonePlatformHandle().release();
-    if (!FenceCreate(fd)) {
-      close(fd);
-    }
+    mSyncFd = aDesc.fence()[0].ClonePlatformHandle().release();
   }
 
   if (aDesc.refCount().Length() > 0) {
