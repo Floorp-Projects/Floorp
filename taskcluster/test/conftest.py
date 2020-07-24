@@ -12,6 +12,7 @@ from responses import RequestsMock
 
 from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import parameters_loader
+from taskgraph.util.backstop import PUSH_ENDPOINT
 from taskgraph.util.bugbug import BUGBUG_BASE_URL
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -19,7 +20,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 @pytest.fixture(scope="session")
 def responses():
-    with RequestsMock() as rsps:
+    with RequestsMock(assert_all_requests_are_fired=False) as rsps:
         yield rsps
 
 
@@ -54,6 +55,13 @@ def create_tgg(responses, datadir):
             **tgg.parameters
         )
         mock_requests[url] = "automationrelevance.json"
+
+        url = PUSH_ENDPOINT.format(
+            head_repository=tgg.parameters["head_repository"],
+            push_id_start=int(tgg.parameters["pushlog_id"]) - 2,
+            push_id_end=int(tgg.parameters["pushlog_id"]) - 1,
+        )
+        mock_requests[url] = "pushes.json"
 
         for url, filename in mock_requests.items():
             with open(os.path.join(datadir, filename)) as fh:
