@@ -27,11 +27,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIPurgeTrackerService"
 );
 
-add_task(async function setup() {
-  Services.prefs.setIntPref(
-    "network.cookie.cookieBehavior",
-    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
-  );
+async function setupTest(aCookieBehavior) {
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", aCookieBehavior);
   Services.prefs.setBoolPref("privacy.purge_trackers.enabled", true);
   Services.prefs.setCharPref("privacy.purge_trackers.logging.level", "Debug");
   Services.prefs.setStringPref(
@@ -41,13 +38,13 @@ add_task(async function setup() {
 
   // Enables us to test localStorage in xpcshell.
   Services.prefs.setBoolPref("dom.storage.client_validation", false);
-});
+}
 
 /**
  * Test that cookies indexedDB and localStorage are purged if the cookie is found
  * on the tracking list and does not have an Interaction Permission.
  */
-add_task(async function() {
+async function testIndexedDBAndLocalStorage() {
   await UrlClassifierTestUtils.addTestTrackers();
 
   PermissionTestUtils.add(
@@ -132,12 +129,12 @@ add_task(async function() {
   }
 
   UrlClassifierTestUtils.cleanupTestTrackers();
-});
+}
 
 /**
  * Test that trackers are treated based on their base domain, not origin.
  */
-add_task(async function() {
+async function testBaseDomain() {
   await UrlClassifierTestUtils.addTestTrackers();
 
   let associatedOrigins = [
@@ -184,13 +181,13 @@ add_task(async function() {
   }
 
   UrlClassifierTestUtils.cleanupTestTrackers();
-});
+}
 
 /**
  * Test that trackers are not cleared if they are associated
  * with an entry on the entity list that has user interaction.
  */
-add_task(async function() {
+async function testUserInteraction() {
   Services.prefs.setBoolPref(
     "privacy.purge_trackers.consider_entity_list",
     true
@@ -248,12 +245,12 @@ add_task(async function() {
 
   Services.prefs.clearUserPref("privacy.purge_trackers.consider_entity_list");
   UrlClassifierTestUtils.cleanupTestTrackers();
-});
+}
 
 /**
  * Test that quota storage (even without cookies) is considered when purging trackers.
  */
-add_task(async function() {
+async function testQuotaStorage() {
   await UrlClassifierTestUtils.addTestTrackers();
 
   let testCases = [
@@ -372,13 +369,13 @@ add_task(async function() {
   }
 
   UrlClassifierTestUtils.cleanupTestTrackers();
-});
+}
 
 /**
  * Test that we correctly delete cookies and storage for sites
  * with an expired interaction permission.
  */
-add_task(async function() {
+async function testExpiredInteractionPermission() {
   await UrlClassifierTestUtils.addTestTrackers();
 
   PermissionTestUtils.add(
@@ -461,4 +458,22 @@ add_task(async function() {
   }
 
   UrlClassifierTestUtils.cleanupTestTrackers();
+}
+
+add_task(async function() {
+  const cookieBehaviors = [
+    Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
+    Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+  ];
+
+  for (let cookieBehavior of cookieBehaviors) {
+    await setupTest(cookieBehavior);
+    await testIndexedDBAndLocalStorage();
+    await testBaseDomain();
+    await testUserInteraction();
+    await testQuotaStorage();
+    await testExpiredInteractionPermission();
+  }
 });
