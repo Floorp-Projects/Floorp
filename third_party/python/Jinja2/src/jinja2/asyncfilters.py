@@ -26,16 +26,17 @@ async def async_select_or_reject(args, kwargs, modfunc, lookup_attr):
 
 def dualfilter(normal_filter, async_filter):
     wrap_evalctx = False
-    if getattr(normal_filter, "environmentfilter", False) is True:
+    if getattr(normal_filter, "environmentfilter", False):
 
         def is_async(args):
             return args[0].is_async
 
         wrap_evalctx = False
     else:
-        has_evalctxfilter = getattr(normal_filter, "evalcontextfilter", False) is True
-        has_ctxfilter = getattr(normal_filter, "contextfilter", False) is True
-        wrap_evalctx = not has_evalctxfilter and not has_ctxfilter
+        if not getattr(normal_filter, "evalcontextfilter", False) and not getattr(
+            normal_filter, "contextfilter", False
+        ):
+            wrap_evalctx = True
 
         def is_async(args):
             return args[0].environment.is_async

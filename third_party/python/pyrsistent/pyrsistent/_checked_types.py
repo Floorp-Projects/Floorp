@@ -274,7 +274,7 @@ class CheckedPVector(PythonPVector, CheckedType):
     A CheckedPVector is a PVector which allows specifying type and invariant checks.
 
     >>> class Positives(CheckedPVector):
-    ...     __type__ = (int, float)
+    ...     __type__ = (long, int)
     ...     __invariant__ = lambda n: (n >= 0, 'Negative')
     ...
     >>> Positives([1, 2, 3])
@@ -361,7 +361,7 @@ class CheckedPSet(PSet, CheckedType):
     A CheckedPSet is a PSet which allows specifying type and invariant checks.
 
     >>> class Positives(CheckedPSet):
-    ...     __type__ = (int, float)
+    ...     __type__ = (long, int)
     ...     __invariant__ = lambda n: (n >= 0, 'Negative')
     ...
     >>> Positives([1, 2, 3])

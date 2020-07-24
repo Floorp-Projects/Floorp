@@ -33,9 +33,9 @@ class PMap(object):
     >>> m2 = m1.set('c', 3)
     >>> m3 = m2.remove('a')
     >>> m1
-    pmap({'b': 3, 'a': 1})
+    pmap({'a': 1, 'b': 3})
     >>> m2
-    pmap({'c': 3, 'b': 3, 'a': 1})
+    pmap({'a': 1, 'c': 3, 'b': 3})
     >>> m3
     pmap({'c': 3, 'b': 3})
     >>> m3['c']
@@ -173,11 +173,11 @@ class PMap(object):
         >>> m2 = m1.set('a', 3)
         >>> m3 = m1.set('c' ,4)
         >>> m1
-        pmap({'b': 2, 'a': 1})
+        pmap({'a': 1, 'b': 2})
         >>> m2
-        pmap({'b': 2, 'a': 3})
+        pmap({'a': 3, 'b': 2})
         >>> m3
-        pmap({'c': 4, 'b': 2, 'a': 1})
+        pmap({'a': 1, 'c': 4, 'b': 2})
         """
         return self.evolver().set(key, val).persistent()
 
@@ -215,7 +215,7 @@ class PMap(object):
 
         >>> m1 = m(a=1, b=2)
         >>> m1.update(m(a=2, c=3), {'a': 17, 'd': 35})
-        pmap({'c': 3, 'b': 2, 'a': 17, 'd': 35})
+        pmap({'a': 17, 'c': 3, 'b': 2, 'd': 35})
         """
         return self.update_with(lambda l, r: r, *maps)
 
@@ -227,7 +227,7 @@ class PMap(object):
         >>> from operator import add
         >>> m1 = m(a=1, b=2)
         >>> m1.update_with(add, m(a=2))
-        pmap({'b': 2, 'a': 3})
+        pmap({'a': 3, 'b': 2})
 
         The reverse behaviour of the regular merge. Keep the leftmost element instead of the rightmost.
 
@@ -381,7 +381,7 @@ class PMap(object):
         The underlying pmap remains the same:
 
         >>> m1
-        pmap({'b': 2, 'a': 1})
+        pmap({'a': 1, 'b': 2})
 
         The changes are kept in the evolver. An updated pmap can be created using the
         persistent() function on the evolver.
@@ -442,7 +442,7 @@ def pmap(initial={}, pre_size=0):
     will be inserted into the map eventually since it will reduce the number of reallocations required.
 
     >>> pmap({'a': 13, 'b': 14})
-    pmap({'b': 14, 'a': 13})
+    pmap({'a': 13, 'b': 14})
     """
     if not initial:
         return _EMPTY_PMAP
@@ -455,6 +455,6 @@ def m(**kwargs):
     Creates a new persitent map. Inserts all key value arguments into the newly created map.
 
     >>> m(a=13, b=14)
-    pmap({'b': 14, 'a': 13})
+    pmap({'a': 13, 'b': 14})
     """
     return pmap(kwargs)

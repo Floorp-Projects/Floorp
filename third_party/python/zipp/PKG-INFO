@@ -1,27 +1,21 @@
 Metadata-Version: 2.1
 Name: zipp
-Version: 3.1.0
+Version: 1.2.0
 Summary: Backport of pathlib-compatible object wrapper for zip files
 Home-page: https://github.com/jaraco/zipp
 Author: Jason R. Coombs
 Author-email: jaraco@jaraco.com
 License: UNKNOWN
 Description: .. image:: https://img.shields.io/pypi/v/zipp.svg
-           :target: `PyPI link`_
+           :target: https://pypi.org/project/zipp
         
         .. image:: https://img.shields.io/pypi/pyversions/zipp.svg
-           :target: `PyPI link`_
-        
-        .. _PyPI link: https://pypi.org/project/zipp
-        
-        .. image:: https://dev.azure.com/jaraco/zipp/_apis/build/status/jaraco.zipp?branchName=master
-           :target: https://dev.azure.com/jaraco/zipp/_build/latest?definitionId=1&branchName=master
         
         .. image:: https://img.shields.io/travis/jaraco/zipp/master.svg
            :target: https://travis-ci.org/jaraco/zipp
         
         .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-           :target: https://github.com/psf/black
+           :target: https://github.com/ambv/black
            :alt: Code style: Black
         
         .. image:: https://img.shields.io/appveyor/ci/jaraco/zipp/master.svg
@@ -38,8 +32,8 @@ Platform: UNKNOWN
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3 :: Only
-Requires-Python: >=3.6
+Requires-Python: >=2.7
 Provides-Extra: testing
 Provides-Extra: docs
