@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
+import collections
 import os
 import re
 
@@ -29,6 +30,7 @@ class FrameworkGatherer(object):
         self._yaml_path = yaml_path
         self._suite_list = {}
         self._test_list = {}
+        self._urls = {}
         self._manifest_path = ""
         self._manifest = None
 
@@ -117,7 +119,7 @@ class RaptorGatherer(FrameworkGatherer):
 
         return self._suite_list
 
-    def _get_subtests_from_ini(self, manifest_path):
+    def _get_subtests_from_ini(self, manifest_path, suite_name):
         """
         Returns a list of (sub)tests from an ini file containing the test definitions.
 
@@ -126,7 +128,17 @@ class RaptorGatherer(FrameworkGatherer):
         """
         test_manifest = TestManifest([manifest_path], strict=False)
         test_list = test_manifest.active_tests(exists=False, disabled=False)
-        subtest_list = {subtest["name"]: subtest["manifest"] for subtest in test_list}
+        subtest_list = {}
+        for subtest in test_list:
+            subtest_list[subtest["name"]] = subtest["manifest"]
+            self._urls[subtest["name"]] = {
+                "type": suite_name,
+                "url": subtest["test_url"],
+            }
+
+        self._urls = collections.OrderedDict(
+            sorted(self._urls.items(), key=lambda t: len(t[0]))
+        )
 
         return subtest_list
 
@@ -152,13 +164,34 @@ class RaptorGatherer(FrameworkGatherer):
             if not self._test_list.get(suite_name):
                 self._test_list[suite_name] = {}
             for i, manifest_path in enumerate(manifest_paths, 1):
-                subtest_list = self._get_subtests_from_ini(manifest_path)
+                subtest_list = self._get_subtests_from_ini(manifest_path, suite_name)
                 self._test_list[suite_name].update(subtest_list)
 
         return self._test_list
 
-    def build_test_description(self, title, test_description=""):
-        return ["* " + title + " (" + test_description + ")"]
+    def build_test_description(self, title, test_description="", suite_name=""):
+        matcher = set()
+        for name, val in self._urls.items():
+            if title == name and suite_name == val["type"]:
+                matcher.add(val["url"])
+                break
+
+        if len(matcher) == 0:
+            for name, val in self._urls.items():
+                if title in name and suite_name == val["type"]:
+                    matcher.add(val["url"])
+                    break
+
+        return [
+            "* `"
+            + title
+            + " ("
+            + test_description
+            + ") "
+            + "<"
+            + matcher.pop()
+            + ">`__"
+        ]
 
 
 class MozperftestGatherer(FrameworkGatherer):
