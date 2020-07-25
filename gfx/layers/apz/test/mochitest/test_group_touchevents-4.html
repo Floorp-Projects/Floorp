@@ -21,7 +21,9 @@ var subtests = [
   {"file": "helper_bug1506497_touch_action_fixed_on_fixed.html", "prefs": touch_action_prefs},
   {"file": "helper_bug1637113_main_thread_hit_test.html", "prefs": [["apz.allow_zooming", true]]},
   {"file": "helper_bug1638458_contextmenu.html", "prefs": [["apz.allow_zooming", true]]},
-  {"file": "helper_bug1638441_fixed_pos_hit_test.html", "prefs": [["apz.allow_zooming", true]]}
+  {"file": "helper_bug1638441_fixed_pos_hit_test.html", "prefs": [["apz.allow_zooming", true]]},
+  {"file": "helper_bug1637135_narrow_viewport.html", "prefs": [["apz.allow_zooming", true],
+                                                               ["dom.meta-viewport.enabled", true]]}
   // Add new subtests here. If this starts timing out because it's taking too
   // long, create a test_group_touchevents-5.html file. Refer to 1423011#c57
   // for more details.
