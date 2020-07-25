@@ -14,6 +14,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
+import android.widget.LinearLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -270,7 +271,7 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
         res: Resources
     ): View {
         val wrapper = layoutInflater
-            .inflate(R.layout.search_engine_radio_button, null) as ConstraintLayout
+            .inflate(R.layout.search_engine_radio_button, null) as LinearLayout
         wrapper.setOnClickListener { wrapper.radio_button.isChecked = true }
         wrapper.radio_button.setOnCheckedChangeListener(this)
         wrapper.engine_text.text = engine.name

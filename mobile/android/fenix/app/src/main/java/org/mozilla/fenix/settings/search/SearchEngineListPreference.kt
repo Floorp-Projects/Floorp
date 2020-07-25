@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
+import android.widget.LinearLayout
 import android.widget.RadioGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
@@ -119,7 +120,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
     ): View {
         val isCustomSearchEngine = CustomSearchEngineStore.isCustomSearchEngine(context, engine.identifier)
 
-        val wrapper = layoutInflater.inflate(itemResId, null) as ConstraintLayout
+        val wrapper = layoutInflater.inflate(itemResId, null) as LinearLayout
         wrapper.setOnClickListener { wrapper.radio_button.isChecked = true }
         wrapper.radio_button.setOnCheckedChangeListener(this)
         wrapper.engine_text.text = engine.name
