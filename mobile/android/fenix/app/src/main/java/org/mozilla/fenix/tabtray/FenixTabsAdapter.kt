@@ -6,10 +6,12 @@ package org.mozilla.fenix.tabtray
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import androidx.core.view.isVisible
 import kotlinx.android.synthetic.main.tab_tray_item.view.*
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.TabsAdapter
+import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.support.images.loader.ImageLoader
 import org.mozilla.fenix.R
@@ -57,11 +59,8 @@ class FenixTabsAdapter(
             onBindViewHolder(holder, position)
             return
         }
-        // Otherwise, item needs to be checked or unchecked
-        val shouldBeChecked =
-            mode is TabTrayDialogFragmentState.Mode.MultiSelect && selectedItems.contains(holder.tab)
-        holder.itemView.checkmark.isVisible = shouldBeChecked
-        holder.itemView.selected_mask.isVisible = shouldBeChecked
+
+        holder.tab?.let { showCheckedIfSelected(it, holder.itemView) }
     }
 
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
@@ -70,6 +69,8 @@ class FenixTabsAdapter(
         (holder as TabTrayViewHolder).updateAccessibilityRowIndex(holder.itemView, newIndex)
 
         holder.tab?.let { tab ->
+            showCheckedIfSelected(tab, holder.itemView)
+
             val tabIsPrivate =
                 context.components.core.sessionManager.findSessionById(tab.id)?.private == true
             if (!tabIsPrivate) {
@@ -96,5 +97,12 @@ class FenixTabsAdapter(
                 }
             }
         }
+    }
+
+    private fun showCheckedIfSelected(tab: Tab, view: View) {
+        val shouldBeChecked =
+            mode is TabTrayDialogFragmentState.Mode.MultiSelect && selectedItems.contains(tab)
+        view.checkmark.isVisible = shouldBeChecked
+        view.selected_mask.isVisible = shouldBeChecked
     }
 }
