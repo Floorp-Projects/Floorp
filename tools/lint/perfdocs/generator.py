@@ -98,7 +98,9 @@ class Generator(object):
                     documentation.extend(
                         self._verifier._gatherer.framework_gatherers[
                             yaml_content["name"]
-                        ].build_test_description(test_name, tests[test_name])
+                        ].build_test_description(
+                            test_name, tests[test_name], suite_name
+                        )
                     )
                 documentation.append("")
 
