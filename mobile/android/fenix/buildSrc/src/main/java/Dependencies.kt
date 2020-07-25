@@ -62,6 +62,7 @@ object Deps {
     const val osslicenses_library = "com.google.android.gms:play-services-oss-licenses:${Versions.osslicenses_library}"
 
     const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${Versions.mozilla_android_components}"
+    const val mozilla_concept_menu = "org.mozilla.components:concept-menu:${Versions.mozilla_android_components}"
     const val mozilla_concept_push = "org.mozilla.components:concept-push:${Versions.mozilla_android_components}"
     const val mozilla_concept_tabstray = "org.mozilla.components:concept-tabstray:${Versions.mozilla_android_components}"
     const val mozilla_concept_toolbar = "org.mozilla.components:concept-toolbar:${Versions.mozilla_android_components}"
@@ -81,6 +82,7 @@ object Deps {
     const val mozilla_browser_thumbnails = "org.mozilla.components:browser-thumbnails:${Versions.mozilla_android_components}"
     const val mozilla_browser_toolbar = "org.mozilla.components:browser-toolbar:${Versions.mozilla_android_components}"
     const val mozilla_browser_menu = "org.mozilla.components:browser-menu:${Versions.mozilla_android_components}"
+    const val mozilla_browser_menu2 = "org.mozilla.components:browser-menu2:${Versions.mozilla_android_components}"
     const val mozilla_browser_errorpages = "org.mozilla.components:browser-errorpages:${Versions.mozilla_android_components}"
     const val mozilla_browser_storage_sync = "org.mozilla.components:browser-storage-sync:${Versions.mozilla_android_components}"
 

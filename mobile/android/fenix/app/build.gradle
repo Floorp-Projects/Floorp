@@ -398,6 +398,7 @@ dependencies {
     implementation Deps.leanplum_fcm
 
     implementation Deps.mozilla_concept_engine
+    implementation Deps.mozilla_concept_menu
     implementation Deps.mozilla_concept_push
     implementation Deps.mozilla_concept_storage
     implementation Deps.mozilla_concept_sync
