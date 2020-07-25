@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1637113
   <iframe id="subframe" srcdoc="<div id='target' style='width:100px;height:100px;'>" width="100px" height="100px"></iframe>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   let utils = SpecialPowers.getDOMWindowUtils(window);
 
   // Reproducing the bug requires three ingredients:
@@ -30,11 +30,13 @@ function* test(testDriver) {
   //  3. An event that's dispatched in the iframe's document.
   // We make the first two happen by doing a large visual scroll that will
   // also drag the layout viewport with it part of the way.
-  window.visualViewport.addEventListener("scroll", testDriver, { once: true });
+  let visualScrollPromise = new Promise(resolve => {
+    window.visualViewport.addEventListener("scroll", resolve, { once: true });
+  });
   utils.scrollToVisual(0, 900, utils.UPDATE_TYPE_MAIN_THREAD,
                        utils.SCROLL_MODE_INSTANT);
-  yield;  // wait for visual viewport "scroll" event
-  yield waitForApzFlushedRepaints(testDriver);
+  await visualScrollPromise;
+  await promiseApzFlushedRepaints();
 
   let target = subframe.contentWindow.document.getElementById("target");
   // To get an event that's dispatched in the iframe's document,
@@ -44,17 +46,23 @@ function* test(testDriver) {
   // The mouse-down causes the iframe to "capture" the mouse, which
   // leads the mouse-up to be dispatched in the iframe's document
   // instead. We listen for the mouse-up.
-  target.addEventListener("mouseup", testDriver);
+  let mouseUpEvent = null;
+  let mouseUpPromise = new Promise(resolve => {
+    target.addEventListener("mouseup", function(e) {
+      mouseUpEvent = e;
+      resolve();
+    });
+  });
 
   synthesizeNativeTap(target, 10, 10);
+  await mouseUpPromise;
 
-  yield;  // wait for "mouseup" event listener to fire
-  ok(true, "mouseup event fired on target");
+  is(mouseUpEvent.target, target, "mouseup event targeted the correct element");
 }
 
 SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone);
 
   </script>
