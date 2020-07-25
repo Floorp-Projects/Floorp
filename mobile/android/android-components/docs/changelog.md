@@ -16,11 +16,20 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: Removed `ImageLoader.loadIntoView(view: ImageView, id: String)` extension function.
 
 * **service-glean**
-  * Glean was updated to v31.5.0
+  * Glean was updated to v31.6.0
     * Implement ping tagging (i.e. the `X-Source-Tags` header) ([#1074](https://github.com/mozilla/glean/pull/1074)). Note that this is not yet implemented for iOS.
     * String values that are too long now record `invalid_overflow` rather than `invalid_value` through the Glean error reporting mechanism. This affects the string, event and string list metrics.
     * `metrics.yaml` files now support a `data_sensitivity` field to all metrics for specifying the type of data collected in the field.
     * Allow defining which `Activity` to run next when using the `GleanDebugActivity`.
+    * Implement JWE metric type ([#1073](https://github.com/mozilla/glean/pull/1073), [#1062](https://github.com/mozilla/glean/pull/1062)).
+    * DEPRECATION: `getUploadEnabled` is deprecated (respectively `get_upload_enabled` in Python) ([#1046](https://github.com/mozilla/glean/pull/1046))
+      * Due to Glean's asynchronous initialization the return value can be incorrect.
+        Applications should not rely on Glean's internal state.
+        Upload enabled status should be tracked by the application and communicated to Glean if it changes.
+        Note: The method was removed from the C# and Python implementation.
+    * Update `glean_parser` to `v1.28.1`
+      * The `glean_parser` linting was leading consumers astray by incorrectly suggesting that `deletion-request` be instead `deletion_request` when used for `send_in_pings`. This was causing metrics intended for the `deletion-request` ping to not be included when it was collected and submitted. Consumers that are sending metrics in the `deletion-request` ping will need to update the `send_in_pings` value in their metrics.yaml to correct this.
+      * Fixes a bug in doc rendering.
 
 * **feature-syncedtabs**
   * ⚠️ **This is a breaking change**: Adds context to the constructor of `SyncedTabsFeature`.
@@ -40,7 +49,7 @@ permalink: /changelog/
   * Added support for the new `MenuController` interface for menu2.
     When a menu controller is added to a toolbar, it will be used in place of the `BrowserMenuBuilder`.
     The builder will supply items to the `MenuController` in `invalidateMenu` if it is kept.
-
+      
 * **feature-containers**
   * Adds a `ContainerMiddleware` that connects container browser actions with the `ContainerStorage`.
 
