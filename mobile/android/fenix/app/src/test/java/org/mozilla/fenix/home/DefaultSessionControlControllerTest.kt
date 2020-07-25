@@ -12,8 +12,9 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
@@ -24,13 +25,19 @@ import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.searchEngineManager
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.utils.Settings
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -44,7 +51,6 @@ class DefaultSessionControlControllerTest {
     private val navController: NavController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
-    private val store: BrowserStore = mockk(relaxed = true)
     private val engine: Engine = mockk(relaxed = true)
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
     private val topSiteStorage: TopSiteStorage = mockk(relaxed = true)
@@ -55,6 +61,10 @@ class DefaultSessionControlControllerTest {
     private val showTabTray: () -> Unit = mockk(relaxed = true)
     private val showDeleteCollectionPrompt: (tabCollection: TabCollection, title: String?, message: String) -> Unit =
         mockk(relaxed = true)
+    private val searchEngine = mockk<SearchEngine>(relaxed = true)
+    private val searchEngineManager = mockk<SearchEngineManager>(relaxed = true)
+    private val settings: Settings = mockk(relaxed = true)
+    private val analytics: Analytics = mockk(relaxed = true)
 
     private lateinit var controller: DefaultSessionControlController
 
@@ -70,6 +80,13 @@ class DefaultSessionControlControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
         }
+        every { activity.components.settings } returns settings
+        every { activity.components.search.provider.getDefaultEngine(activity) } returns searchEngine
+        every { activity.settings() } returns settings
+        every { activity.searchEngineManager } returns searchEngineManager
+        every { searchEngineManager.defaultSearchEngine } returns searchEngine
+        every { activity.components.analytics } returns analytics
+        every { analytics.metrics } returns metrics
 
         controller = DefaultSessionControlController(
             activity = activity,
@@ -155,7 +172,10 @@ class DefaultSessionControlControllerTest {
         }
         val tab = mockk<ComponentTab>()
         every {
-            activity.resources.getString(R.string.delete_tab_and_collection_dialog_title, "Collection")
+            activity.resources.getString(
+                R.string.delete_tab_and_collection_dialog_title,
+                "Collection"
+            )
         } returns "Delete Collection?"
         every {
             activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
@@ -252,11 +272,13 @@ class DefaultSessionControlControllerTest {
         controller.handleSelectTopSite(topSiteUrl, true)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenDefault) }
-        verify { tabsUseCases.addTab.invoke(
-            topSiteUrl,
-            selectTab = true,
-            startLoading = true
-        ) }
+        verify {
+            tabsUseCases.addTab.invoke(
+                topSiteUrl,
+                selectTab = true,
+                startLoading = true
+            )
+        }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
     }
 
@@ -266,11 +288,13 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSiteUrl, false)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
-        verify { tabsUseCases.addTab.invoke(
-            topSiteUrl,
-            selectTab = true,
-            startLoading = true
-        ) }
+        verify {
+            tabsUseCases.addTab.invoke(
+                topSiteUrl,
+                selectTab = true,
+                startLoading = true
+            )
+        }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
     }
 
@@ -337,6 +361,45 @@ class DefaultSessionControlControllerTest {
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_tabTrayDialogFragment },
+                null
+            )
+        }
+    }
+
+    @Test
+    fun handlePasteAndGo() {
+        controller.handlePasteAndGo("text")
+
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = "text",
+                newTab = true,
+                from = BrowserDirection.FromHome,
+                engine = searchEngine
+            )
+            settings.incrementActiveSearchCount()
+            metrics.track(any<Event.PerformedSearch>())
+        }
+
+        controller.handlePasteAndGo("https://mozilla.org")
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = "https://mozilla.org",
+                newTab = true,
+                from = BrowserDirection.FromHome,
+                engine = searchEngine
+            )
+            metrics.track(any<Event.EnteredUrl>())
+        }
+    }
+
+    @Test
+    fun handlePaste() {
+        controller.handlePaste("text")
+
+        verify {
+            navController.navigate(
+                match<NavDirections> { it.actionId == R.id.action_global_search },
                 null
             )
         }

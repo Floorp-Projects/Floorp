@@ -98,4 +98,16 @@ class SessionControlInteractorTest {
         interactor.onAddTabsToCollectionTapped()
         verify { controller.handleCreateCollection() }
     }
+
+    @Test
+    fun onPaste() {
+        interactor.onPaste("text")
+        verify { controller.handlePaste("text") }
+    }
+
+    @Test
+    fun onPasteAndGo() {
+        interactor.onPasteAndGo("text")
+        verify { controller.handlePasteAndGo("text") }
+    }
 }

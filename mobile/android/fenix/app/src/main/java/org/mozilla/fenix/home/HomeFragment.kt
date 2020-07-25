@@ -103,6 +103,7 @@ import org.mozilla.fenix.settings.SupportUtils.SumoTopic.HELP
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
+import org.mozilla.fenix.utils.ToolbarPopupWindow
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
 import java.lang.ref.WeakReference
@@ -338,6 +339,16 @@ class HomeFragment : Fragment() {
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
+        view.toolbar_wrapper.setOnLongClickListener {
+            ToolbarPopupWindow.show(
+                WeakReference(view),
+                handlePasteAndGo = sessionControlInteractor::onPasteAndGo,
+                handlePaste = sessionControlInteractor::onPaste,
+                copyVisible = false
+            )
+            true
+        }
+
         view.tab_button.setOnClickListener {
             openTabTray()
         }
@@ -465,7 +476,11 @@ class HomeFragment : Fragment() {
                         isSelected,
                         engineSessionState = state
                     )
-                    findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null))
+                    findNavController().navigate(
+                        HomeFragmentDirections.actionHomeFragmentToBrowserFragment(
+                            null
+                        )
+                    )
                 },
                 operation = { },
                 anchorView = snackbarAnchorView

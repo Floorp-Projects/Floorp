@@ -15,6 +15,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.ext.restore
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -24,9 +25,13 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.sessionsOfType
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -120,7 +125,20 @@ interface SessionControlController {
      */
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
 
+    /**
+     * @see [TipInteractor.onCloseTip]
+     */
     fun handleCloseTip(tip: Tip)
+
+    /**
+     * @see [ToolbarInteractor.onPasteAndGo]
+     */
+    fun handlePasteAndGo(clipboardText: String)
+
+    /**
+     * @see [ToolbarInteractor.onPaste]
+     */
+    fun handlePaste(clipboardText: String)
 
     /**
      * @see [CollectionInteractor.onAddTabsToCollectionTapped]
@@ -344,6 +362,39 @@ class DefaultSessionControlController(
     private fun showShareFragment(data: List<ShareData>) {
         val directions = HomeFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
+        )
+        navController.nav(R.id.homeFragment, directions)
+    }
+
+    override fun handlePasteAndGo(clipboardText: String) {
+        activity.openToBrowserAndLoad(
+            searchTermOrURL = clipboardText,
+            newTab = true,
+            from = BrowserDirection.FromHome,
+            engine = activity.components.search.provider.getDefaultEngine(activity)
+        )
+
+        val event = if (clipboardText.isUrl()) {
+            Event.EnteredUrl(false)
+        } else {
+            val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.ACTION
+            activity.settings().incrementActiveSearchCount()
+            searchAccessPoint.let { sap ->
+                MetricsUtils.createSearchEvent(
+                    activity.components.search.provider.getDefaultEngine(activity),
+                    activity,
+                    sap
+                )
+            }
+        }
+
+        event?.let { activity.metrics.track(it) }
+    }
+
+    override fun handlePaste(clipboardText: String) {
+        val directions = HomeFragmentDirections.actionGlobalSearch(
+            sessionId = null,
+            pastedText = clipboardText
         )
         navController.nav(R.id.homeFragment, directions)
     }

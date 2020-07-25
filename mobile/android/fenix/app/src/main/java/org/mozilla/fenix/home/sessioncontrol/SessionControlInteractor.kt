@@ -95,6 +95,18 @@ interface CollectionInteractor {
     fun onAddTabsToCollectionTapped()
 }
 
+interface ToolbarInteractor {
+    /**
+     * Navigates to browser with clipboard text.
+     */
+    fun onPasteAndGo(clipboardText: String)
+
+    /**
+     * Navigates to search with clipboard text.
+     */
+    fun onPaste(clipboardText: String)
+}
+
 /**
  * Interface for onboarding related actions in the [SessionControlInteractor].
  */
@@ -163,7 +175,8 @@ interface TopSiteInteractor {
 @SuppressWarnings("TooManyFunctions")
 class SessionControlInteractor(
     private val controller: SessionControlController
-) : CollectionInteractor, OnboardingInteractor, TopSiteInteractor, TipInteractor, TabSessionInteractor {
+) : CollectionInteractor, OnboardingInteractor, TopSiteInteractor, TipInteractor,
+    TabSessionInteractor, ToolbarInteractor {
     override fun onCollectionAddTabTapped(collection: TabCollection) {
         controller.handleCollectionAddTabTapped(collection)
     }
@@ -234,5 +247,13 @@ class SessionControlInteractor(
 
     override fun onPrivateBrowsingLearnMoreClicked() {
         controller.handlePrivateBrowsingLearnMoreClicked()
+    }
+
+    override fun onPasteAndGo(clipboardText: String) {
+        controller.handlePasteAndGo(clipboardText)
+    }
+
+    override fun onPaste(clipboardText: String) {
+        controller.handlePaste(clipboardText)
     }
 }
