@@ -399,6 +399,22 @@ bool gfxPlatformFontList::FamilyInList(const nsACString& aName,
   return BinarySearchIf(aList, 0, aCount, cmp, &result);
 }
 
+void gfxPlatformFontList::CheckFamilyList(const char* aList[], size_t aCount) {
+#ifdef DEBUG
+  MOZ_ASSERT(aCount > 0, "empty font family list?");
+  const char* a = aList[0];
+  uint32_t aLen = strlen(a);
+  for (size_t i = 1; i < aCount; ++i) {
+    const char* b = aList[i];
+    uint32_t bLen = strlen(b);
+    MOZ_ASSERT(nsCaseInsensitiveUTF8StringComparator(a, b, aLen, bLen) < 0,
+               "incorrectly sorted font family list!");
+    a = b;
+    aLen = bLen;
+  }
+#endif
+}
+
 bool gfxPlatformFontList::AddWithLegacyFamilyName(const nsACString& aLegacyName,
                                                   gfxFontEntry* aFontEntry,
                                                   FontVisibility aVisibility) {
