@@ -143,47 +143,18 @@ void nsWaylandDisplay::SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf) {
   mDmabuf = aDmabuf;
 }
 
-GbmFormat* nsWaylandDisplay::GetGbmFormat(bool aHasAlpha) {
-  GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
-  return format->mIsSupported ? format : nullptr;
-}
-
-GbmFormat* nsWaylandDisplay::GetExactGbmFormat(int aFormat) {
-  if (aFormat == mARGBFormat.mFormat) {
-    return &mARGBFormat;
-  } else if (aFormat == mXRGBFormat.mFormat) {
-    return &mXRGBFormat;
-  }
-
-  return nullptr;
-}
-
-void nsWaylandDisplay::AddFormatModifier(bool aHasAlpha, int aFormat,
-                                         uint32_t mModifierHi,
-                                         uint32_t mModifierLo) {
-  GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
-  format->mIsSupported = true;
-  format->mHasAlpha = aHasAlpha;
-  format->mFormat = aFormat;
-  format->mModifiersCount++;
-  format->mModifiers =
-      (uint64_t*)realloc(format->mModifiers,
-                         format->mModifiersCount * sizeof(*format->mModifiers));
-  format->mModifiers[format->mModifiersCount - 1] =
-      ((uint64_t)mModifierHi << 32) | mModifierLo;
-}
-
 static void dmabuf_modifiers(void* data,
                              struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
                              uint32_t format, uint32_t modifier_hi,
                              uint32_t modifier_lo) {
-  auto display = reinterpret_cast<nsWaylandDisplay*>(data);
   switch (format) {
     case GBM_FORMAT_ARGB8888:
-      display->AddFormatModifier(true, format, modifier_hi, modifier_lo);
+      GetDMABufDevice()->AddFormatModifier(true, format, modifier_hi,
+                                           modifier_lo);
       break;
     case GBM_FORMAT_XRGB8888:
-      display->AddFormatModifier(false, format, modifier_hi, modifier_lo);
+      GetDMABufDevice()->AddFormatModifier(false, format, modifier_hi,
+                                           modifier_lo);
       break;
     default:
       break;
@@ -254,7 +225,11 @@ static void global_registry_handler(void* data, wl_registry* registry,
         wl_registry_bind(registry, id, &zwp_linux_dmabuf_v1_interface, 3));
     LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
     display->SetDmabuf(dmabuf);
-    zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
+    // Get formats for main thread display only
+    if (display->IsMainThreadDisplay()) {
+      GetDMABufDevice()->ResetFormatsModifiers();
+      zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
+    }
   } else if (strcmp(interface, "wl_drm") == 0) {
     LOGDMABUF(("wl_drm is available."));
   }
@@ -359,8 +334,6 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
       mIdleInhibitManager(nullptr),
       mRegistry(nullptr),
       mDmabuf(nullptr),
-      mXRGBFormat({true, false, GBM_FORMAT_ARGB8888, nullptr, 0}),
-      mARGBFormat({true, true, GBM_FORMAT_XRGB8888, nullptr, 0}),
       mExplicitSync(false) {
   if (!aLighWrapper) {
     mRegistry = wl_display_get_registry(mDisplay);

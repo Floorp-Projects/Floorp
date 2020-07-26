@@ -305,17 +305,13 @@ DMABufSurfaceRGBA::~DMABufSurfaceRGBA() { ReleaseSurface(); }
 
 bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
                                int aDMABufSurfaceFlags) {
-  nsWaylandDisplay* display = WaylandDisplayGet();
-  if (!display) {
-    return false;
-  }
   MOZ_ASSERT(mGbmBufferObject[0] == nullptr, "Already created?");
 
   mSurfaceFlags = aDMABufSurfaceFlags;
   mWidth = aWidth;
   mHeight = aHeight;
 
-  mGmbFormat = display->GetGbmFormat(mSurfaceFlags & DMABUF_ALPHA);
+  mGmbFormat = GetDMABufDevice()->GetGbmFormat(mSurfaceFlags & DMABUF_ALPHA);
   if (!mGmbFormat) {
     // Requested DRM format is not supported.
     return false;
@@ -402,7 +398,7 @@ void DMABufSurfaceRGBA::ImportSurfaceDescriptor(
   mHeight = desc.height()[0];
   mBufferModifier = desc.modifier();
   if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {
-    mGmbFormat = WaylandDisplayGet()->GetExactGbmFormat(desc.format()[0]);
+    mGmbFormat = GetDMABufDevice()->GetExactGbmFormat(desc.format()[0]);
   } else {
     mDrmFormats[0] = desc.format()[0];
   }
@@ -776,8 +772,8 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
   return true;
 }
 
-bool DMABufSurfaceYUV::CreateYUVPlane(nsWaylandDisplay* display, int aPlane,
-                                      int aWidth, int aHeight, int aDrmFormat) {
+bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane, int aWidth, int aHeight,
+                                      int aDrmFormat) {
   mWidth[aPlane] = aWidth;
   mHeight[aPlane] = aHeight;
   mDrmFormats[aPlane] = aDrmFormat;
@@ -837,17 +833,12 @@ bool DMABufSurfaceYUV::UpdateYUVData(void** aPixelData, int* aLineSizes) {
 
 bool DMABufSurfaceYUV::Create(int aWidth, int aHeight, void** aPixelData,
                               int* aLineSizes) {
-  nsWaylandDisplay* display = WaylandDisplayGet();
-  if (!display) {
-    return false;
-  }
-
   mBufferPlaneCount = 2;
 
-  if (!CreateYUVPlane(display, 0, aWidth, aHeight, GBM_FORMAT_R8)) {
+  if (!CreateYUVPlane(0, aWidth, aHeight, GBM_FORMAT_R8)) {
     return false;
   }
-  if (!CreateYUVPlane(display, 1, aWidth >> 1, aHeight >> 1, GBM_FORMAT_GR88)) {
+  if (!CreateYUVPlane(1, aWidth >> 1, aHeight >> 1, GBM_FORMAT_GR88)) {
     return false;
   }
 
