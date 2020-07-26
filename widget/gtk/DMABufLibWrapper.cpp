@@ -149,7 +149,9 @@ int nsDMABufDevice::GetGbmDeviceFd() {
 }
 
 nsDMABufDevice::nsDMABufDevice()
-    : mGbmDevice(nullptr),
+    : mXRGBFormat({true, false, GBM_FORMAT_ARGB8888, nullptr, 0}),
+      mARGBFormat({true, true, GBM_FORMAT_XRGB8888, nullptr, 0}),
+      mGbmDevice(nullptr),
       mGbmFd(-1),
       mGdmConfigured(false),
       mIsDMABufEnabled(false),
@@ -211,6 +213,47 @@ bool nsDMABufDevice::IsDRMVAAPIDisplayEnabled() {
   return IsDMABufEnabled() &&
          StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled();
 }
+
+GbmFormat* nsDMABufDevice::GetGbmFormat(bool aHasAlpha) {
+  GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
+  return format->mIsSupported ? format : nullptr;
+}
+
+GbmFormat* nsDMABufDevice::GetExactGbmFormat(int aFormat) {
+  if (aFormat == mARGBFormat.mFormat) {
+    return &mARGBFormat;
+  } else if (aFormat == mXRGBFormat.mFormat) {
+    return &mXRGBFormat;
+  }
+
+  return nullptr;
+}
+
+void nsDMABufDevice::AddFormatModifier(bool aHasAlpha, int aFormat,
+                                       uint32_t mModifierHi,
+                                       uint32_t mModifierLo) {
+  GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
+  format->mIsSupported = true;
+  format->mHasAlpha = aHasAlpha;
+  format->mFormat = aFormat;
+  format->mModifiersCount++;
+  format->mModifiers =
+      (uint64_t*)realloc(format->mModifiers,
+                         format->mModifiersCount * sizeof(*format->mModifiers));
+  format->mModifiers[format->mModifiersCount - 1] =
+      ((uint64_t)mModifierHi << 32) | mModifierLo;
+}
+
+void nsDMABufDevice::ResetFormatsModifiers() {
+  mARGBFormat.mModifiersCount = 0;
+  free(mARGBFormat.mModifiers);
+  mARGBFormat.mModifiers = nullptr;
+
+  mXRGBFormat.mModifiersCount = 0;
+  free(mXRGBFormat.mModifiers);
+  mXRGBFormat.mModifiers = nullptr;
+}
+
 nsDMABufDevice* GetDMABufDevice() {
   static nsDMABufDevice gDMABufDevice;
   return &gDMABufDevice;

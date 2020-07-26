@@ -118,6 +118,14 @@ class nsGbmLib {
   static bool sLibLoaded;
 };
 
+struct GbmFormat {
+  bool mIsSupported;
+  bool mHasAlpha;
+  int mFormat;
+  uint64_t* mModifiers;
+  int mModifiersCount;
+};
+
 class nsDMABufDevice {
  public:
   nsDMABufDevice();
@@ -133,8 +141,17 @@ class nsDMABufDevice {
   bool IsDMABufWebGLEnabled();
   bool IsDRMVAAPIDisplayEnabled();
 
+  GbmFormat* GetGbmFormat(bool aHasAlpha);
+  GbmFormat* GetExactGbmFormat(int aFormat);
+  void ResetFormatsModifiers();
+  void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
+                         uint32_t mModifierLo);
+
  private:
   bool Configure();
+
+  GbmFormat mXRGBFormat;
+  GbmFormat mARGBFormat;
 
   gbm_device* mGbmDevice;
   int mGbmFd;
