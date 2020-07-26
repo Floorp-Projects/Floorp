@@ -52,8 +52,8 @@ static const char* kBaseFonts[] = {
   "Microsoft YaHei UI",
   "Microsoft YaHei UI Light",
   "Microsoft Yi Baiti",
-  "MingLiU_HKSCS-ExtB",
   "MingLiU-ExtB",
+  "MingLiU_HKSCS-ExtB",
   "Mongolian Baiti",
   "MS Gothic",
   "MS PGothic",
@@ -155,11 +155,11 @@ static const char* kLangPackFonts[] = {
   "Levenim MT",  // Hebrew Supplemental Fonts
   "LilyUPC",  // Thai Supplemental Fonts
   "Mangal",  // Devanagari Supplemental Fonts
-  "Meiryo UI",  // Japanese Supplemental Fonts
   "Meiryo",  // Japanese Supplemental Fonts
+  "Meiryo UI",  // Japanese Supplemental Fonts
   "Microsoft Uighur",  // Arabic Script Supplemental Fonts
-  "MingLiU_HKSCS",  // Chinese (Traditional) Supplemental Fonts
   "MingLiU",  // Chinese (Traditional) Supplemental Fonts
+  "MingLiU_HKSCS",  // Chinese (Traditional) Supplemental Fonts
   "Miriam",  // Hebrew Supplemental Fonts
   "MoolBoran",  // Khmer Supplemental Fonts
   "MS Mincho",  // Japanese Supplemental Fonts
@@ -178,12 +178,12 @@ static const char* kLangPackFonts[] = {
   "Simplified Arabic",  // Arabic Script Supplemental Fonts
   "Traditional Arabic",  // Arabic Script Supplemental Fonts
   "Tunga",  // Kannada Supplemental Fonts
+  "UD Digi Kyokasho",  // Japanese Supplemental Fonts
   "UD Digi Kyokasho N-R",  // Japanese Supplemental Fonts
   "UD Digi Kyokasho NK-B",  // Japanese Supplemental Fonts
   "UD Digi Kyokasho NK-R",  // Japanese Supplemental Fonts
   "UD Digi Kyokasho NP-B",  // Japanese Supplemental Fonts
   "UD Digi Kyokasho NP-R",  // Japanese Supplemental Fonts
-  "UD Digi Kyokasho",  // Japanese Supplemental Fonts
   "Urdu Typesetting",  // Arabic Script Supplemental Fonts
   "Utsaah",  // Devanagari Supplemental Fonts
   "Vani",  // Telugu Supplemental Fonts
