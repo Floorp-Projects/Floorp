@@ -22,14 +22,6 @@
 namespace mozilla {
 namespace widget {
 
-struct GbmFormat {
-  bool mIsSupported;
-  bool mHasAlpha;
-  int mFormat;
-  uint64_t* mModifiers;
-  int mModifiersCount;
-};
-
 // Our general connection to Wayland display server,
 // holds our display connection and runs event loop.
 // We have a global nsWaylandDisplay object for each thread,
@@ -66,6 +58,8 @@ class nsWaylandDisplay {
     return mIdleInhibitManager;
   }
 
+  bool IsMainThreadDisplay() { return mEventQueue == nullptr; }
+
   void SetShm(wl_shm* aShm);
   void SetCompositor(wl_compositor* aCompositor);
   void SetSubcompositor(wl_subcompositor* aSubcompositor);
@@ -81,11 +75,6 @@ class nsWaylandDisplay {
   void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
   zwp_linux_dmabuf_v1* GetDmabuf() { return mDmabuf; };
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
-  GbmFormat* GetGbmFormat(bool aHasAlpha);
-  GbmFormat* GetExactGbmFormat(int aFormat);
-
-  void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
-                         uint32_t mModifierLo);
 
  private:
   MessageLoop* mThreadLoop;
@@ -102,8 +91,6 @@ class nsWaylandDisplay {
   zwp_idle_inhibit_manager_v1* mIdleInhibitManager;
   wl_registry* mRegistry;
   zwp_linux_dmabuf_v1* mDmabuf;
-  GbmFormat mXRGBFormat;
-  GbmFormat mARGBFormat;
   bool mExplicitSync;
 };
 
