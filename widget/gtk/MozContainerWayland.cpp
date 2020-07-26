@@ -146,11 +146,8 @@ void moz_container_wayland_add_initial_draw_callback(
 }
 
 wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget) {
-  static auto sGdkWaylandWindowGetWlSurface = (wl_surface * (*)(GdkWindow*))
-      dlsym(RTLD_DEFAULT, "gdk_wayland_window_get_wl_surface");
-
   GdkWindow* window = gtk_widget_get_window(aWidget);
-  wl_surface* surface = sGdkWaylandWindowGetWlSurface(window);
+  wl_surface* surface = gdk_wayland_window_get_wl_surface(window);
 
   LOGWAYLAND(("moz_gtk_widget_get_wl_surface [%p] wl_surface %p ID %d\n",
               (void*)aWidget, (void*)surface,

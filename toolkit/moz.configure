@@ -276,7 +276,7 @@ add_old_configure_assignment('MOZ_X11', True, when=toolkit_gtk)
 # Wayland support
 # ==============================================================
 wayland_headers = pkg_check_modules(
-    'MOZ_WAYLAND', 'gtk+-wayland-3.0 >= 3.10 xkbcommon >= 0.4.1 libdrm >= 2.4',
+    'MOZ_WAYLAND', 'gtk+-wayland-3.0 >= 3.14 xkbcommon >= 0.4.1 libdrm >= 2.4',
     allow_missing=depends(full_toolkit)(lambda t: t == 'cairo-gtk3'),
     when=depends(full_toolkit)(lambda t: t in ('cairo-gtk3', 'cairo-gtk3-wayland')))
 

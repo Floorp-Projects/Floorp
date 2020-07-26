@@ -796,15 +796,8 @@ WaylandGLSurface::~WaylandGLSurface() {
 // static
 EGLSurface GLContextEGL::CreateWaylandBufferSurface(
     GLLibraryEGL* const egl, EGLConfig config, mozilla::gfx::IntSize& pbsize) {
-  // Available as of GTK 3.8+
-  static auto sGdkWaylandDisplayGetWlCompositor =
-      (wl_compositor * (*)(GdkDisplay*))
-          dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_compositor");
-
-  if (!sGdkWaylandDisplayGetWlCompositor) return nullptr;
-
   struct wl_compositor* compositor =
-      sGdkWaylandDisplayGetWlCompositor(gdk_display_get_default());
+      gdk_wayland_display_get_wl_compositor(gdk_display_get_default());
   struct wl_surface* wlsurface = wl_compositor_create_surface(compositor);
   struct wl_egl_window* eglwindow =
       wl_egl_window_create(wlsurface, pbsize.width, pbsize.height);
