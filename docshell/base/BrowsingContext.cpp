@@ -379,7 +379,7 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
   uint64_t originId = 0;
   if (aOriginProcess) {
     originId = aOriginProcess->ChildID();
-    aGroup->EnsureHostProcess(aOriginProcess);
+    aGroup->EnsureSubscribed(aOriginProcess);
   }
 
   MOZ_LOG(GetLog(), LogLevel::Debug,
@@ -642,38 +642,29 @@ void BrowsingContext::Detach(bool aFromIPC) {
     mGroup->Toplevels().RemoveElement(this);
   }
 
-  auto callSendDiscard = [&](auto* aActor) {
-    // Hold a strong reference to ourself, and keep our BrowsingContextGroup
-    // alive, until the responses comes back to ensure we don't die while
-    // messages relating to this context are in-flight.
-    //
-    // When the callback is called, the keepalive on our group will be
-    // destroyed, and the reference to the BrowsingContext will be dropped,
-    // which may cause it to be fully destroyed.
-    mGroup->AddKeepAlive();
-    auto callback = [self = RefPtr{this}](auto) {
-      self->mGroup->RemoveKeepAlive();
-    };
-
-    aActor->SendDiscardBrowsingContext(this, callback, callback);
-  };
-
-  if (XRE_IsParentProcess()) {
-    Group()->EachParent([&](ContentParent* aParent) {
-      // Only the embedder process is allowed to initiate a BrowsingContext
-      // detach, so if we've gotten here, the host process already knows we've
-      // been detached, and there's no need to tell it again.
-      //
-      // If the owner process is not the same as the embedder process, its
-      // BrowsingContext will be detached when its nsWebBrowser instance is
-      // destroyed.
-      if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID()) &&
-          !Canonical()->IsOwnedByProcess(aParent->ChildID())) {
-        callSendDiscard(aParent);
-      }
-    });
-  } else if (!aFromIPC) {
-    callSendDiscard(ContentChild::GetSingleton());
+  {
+    // Hold a strong reference to ourself until the responses comes back to
+    // ensure we don't die while messages relating to this context are
+    // in-flight.
+    RefPtr<BrowsingContext> self(this);
+    auto callback = [self](auto) {};
+    if (XRE_IsParentProcess()) {
+      Group()->EachParent([&](ContentParent* aParent) {
+        // Only the embedder process is allowed to initiate a BrowsingContext
+        // detach, so if we've gotten here, the host process already knows we've
+        // been detached, and there's no need to tell it again.
+        // If the owner process is not the same as the embedder process, its
+        // BrowsingContext will be detached when its nsWebBrowser instance is
+        // destroyed.
+        if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID()) &&
+            !Canonical()->IsOwnedByProcess(aParent->ChildID())) {
+          aParent->SendDiscardBrowsingContext(this, callback, callback);
+        }
+      });
+    } else if (!aFromIPC) {
+      ContentChild::GetSingleton()->SendDiscardBrowsingContext(this, callback,
+                                                               callback);
+    }
   }
 
   mGroup->Unregister(this);

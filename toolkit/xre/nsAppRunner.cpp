@@ -847,7 +847,7 @@ nsXULAppInfo::EnsureContentProcess() {
   if (!XRE_IsParentProcess()) return NS_ERROR_NOT_AVAILABLE;
 
   RefPtr<ContentParent> unused =
-      ContentParent::GetNewOrUsedBrowserProcess(DEFAULT_REMOTE_TYPE);
+      ContentParent::GetNewOrUsedBrowserProcess(nullptr, DEFAULT_REMOTE_TYPE);
   return NS_OK;
 }
 
