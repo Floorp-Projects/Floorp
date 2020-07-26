@@ -68,10 +68,9 @@ void main(void) {
     vec2 dest_origin = dest_task.common_data.task_rect.p0 -
                        dest_task.content_origin;
 
-    vec2 quad_pos = quad_position();
     vec2 local_pos = bilerp(geometry.local[0], geometry.local[1],
                             geometry.local[3], geometry.local[2],
-                            quad_pos.y, quad_pos.x);
+                            aPosition.y, aPosition.x);
     vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
 
     vec4 final_pos = vec4(
