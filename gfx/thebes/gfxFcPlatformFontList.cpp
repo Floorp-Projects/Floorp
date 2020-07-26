@@ -1263,6 +1263,11 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
       mFcSubstituteCache(64),
       mLastConfig(nullptr),
       mAlwaysUseFontconfigGenerics(true) {
+  CheckFamilyList(kBaseFonts_Ubuntu_20_04,
+                  ArrayLength(kBaseFonts_Ubuntu_20_04));
+  CheckFamilyList(kLangFonts_Ubuntu_20_04,
+                  ArrayLength(kLangFonts_Ubuntu_20_04));
+  CheckFamilyList(kBaseFonts_Fedora_32, ArrayLength(kBaseFonts_Fedora_32));
   mLastConfig = FcConfigGetCurrent();
   if (XRE_IsParentProcess()) {
     // if the rescan interval is set, start the timer

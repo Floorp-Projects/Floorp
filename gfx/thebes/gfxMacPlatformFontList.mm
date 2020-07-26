@@ -811,6 +811,8 @@ void gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList* aPlat
 
 gfxMacPlatformFontList::gfxMacPlatformFontList()
     : gfxPlatformFontList(false), mDefaultFont(nullptr), mUseSizeSensitiveSystemFont(false) {
+  CheckFamilyList(kBaseFonts, ArrayLength(kBaseFonts));
+
 #ifdef MOZ_BUNDLED_FONTS
   ActivateBundledFonts();
 #endif
