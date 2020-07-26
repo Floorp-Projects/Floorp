@@ -659,11 +659,16 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
                             mContentParent ? u"true"_ns : u"false"_ns,
                             /* notify */ true);
 
+    RefPtr<BrowsingContextGroup> specificGroup;
+    if (mSpecificGroupId != 0) {
+      specificGroup = BrowsingContextGroup::GetOrCreate(mSpecificGroupId);
+    }
+
     // The process has been created, hand off to nsFrameLoaderOwner to finish
     // the process switch.
     ErrorResult error;
     frameLoaderOwner->ChangeRemotenessToProcess(
-        mContentParent, mReplaceBrowsingContext, mSpecificGroup, error);
+        mContentParent, mReplaceBrowsingContext, specificGroup, error);
     if (error.Failed()) {
       Cancel(error.StealNSResult());
       return;
@@ -838,12 +843,6 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
     mContentParent = nullptr;
   }
 
-  // If we were given a specific group, stop keeping that group alive manually.
-  if (mSpecificGroup) {
-    mSpecificGroup->RemoveKeepAlive();
-    mSpecificGroup = nullptr;
-  }
-
   mPromise = nullptr;
   mTarget = nullptr;
   mPrepareToChangePromise = nullptr;
@@ -851,15 +850,16 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
 
 CanonicalBrowsingContext::PendingRemotenessChange::PendingRemotenessChange(
     CanonicalBrowsingContext* aTarget, RemotenessPromise::Private* aPromise,
-    uint64_t aPendingSwitchId, bool aReplaceBrowsingContext)
+    uint64_t aPendingSwitchId, bool aReplaceBrowsingContext,
+    uint64_t aSpecificGroupId)
     : mTarget(aTarget),
       mPromise(aPromise),
       mPendingSwitchId(aPendingSwitchId),
+      mSpecificGroupId(aSpecificGroupId),
       mReplaceBrowsingContext(aReplaceBrowsingContext) {}
 
 CanonicalBrowsingContext::PendingRemotenessChange::~PendingRemotenessChange() {
-  MOZ_ASSERT(!mPromise && !mTarget && !mContentParent && !mSpecificGroup &&
-                 !mPrepareToChangePromise,
+  MOZ_ASSERT(!mPromise && !mTarget,
              "should've already been Cancel() or Complete()-ed");
 }
 
@@ -936,17 +936,10 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
 
   // Switching to remote. Wait for new process to launch before switch.
   auto promise = MakeRefPtr<RemotenessPromise::Private>(__func__);
-  RefPtr<PendingRemotenessChange> change = new PendingRemotenessChange(
-      this, promise, aPendingSwitchId, aReplaceBrowsingContext);
+  RefPtr<PendingRemotenessChange> change =
+      new PendingRemotenessChange(this, promise, aPendingSwitchId,
+                                  aReplaceBrowsingContext, aSpecificGroupId);
   mPendingRemotenessChange = change;
-
-  // If a specific BrowsingContextGroup ID was specified for this load, make
-  // sure to keep it alive until the process switch is completed.
-  if (aSpecificGroupId) {
-    change->mSpecificGroup =
-        BrowsingContextGroup::GetOrCreate(aSpecificGroupId);
-    change->mSpecificGroup->AddKeepAlive();
-  }
 
   // Call `prepareToChangeRemoteness` in parallel with starting a new process
   // for <browser> loads.
@@ -969,20 +962,9 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
   if (aRemoteType.IsEmpty()) {
     change->ProcessReady();
   } else {
-    // Try to predict which BrowsingContextGroup will be used for the final load
-    // in this BrowsingContext. This has to be accurate if switching into an
-    // existing group, as it will control what pool of processes will be used
-    // for process selection.
-    //
-    // It's _technically_ OK to provide a group here if we're actually going to
-    // switch into a brand new group, though it's sub-optimal, as it can
-    // restrict the set of processes we're using.
-    BrowsingContextGroup* finalGroup =
-        aReplaceBrowsingContext ? change->mSpecificGroup.get() : Group();
-
     change->mContentParent = ContentParent::GetNewOrUsedLaunchingBrowserProcess(
+        /* aFrameElement = */ nullptr,
         /* aRemoteType = */ aRemoteType,
-        /* aGroup = */ finalGroup,
         /* aPriority = */ hal::PROCESS_PRIORITY_FOREGROUND,
         /* aPreferUsed = */ false);
     if (!change->mContentParent) {

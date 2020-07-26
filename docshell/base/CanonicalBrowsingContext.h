@@ -223,7 +223,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     PendingRemotenessChange(CanonicalBrowsingContext* aTarget,
                             RemotenessPromise::Private* aPromise,
                             uint64_t aPendingSwitchId,
-                            bool aReplaceBrowsingContext);
+                            bool aReplaceBrowsingContext,
+                            uint64_t aSpecificGroupId);
 
     void Cancel(nsresult aRv);
 
@@ -239,9 +240,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     RefPtr<RemotenessPromise::Private> mPromise;
     RefPtr<GenericPromise> mPrepareToChangePromise;
     RefPtr<ContentParent> mContentParent;
-    RefPtr<BrowsingContextGroup> mSpecificGroup;
 
     uint64_t mPendingSwitchId;
+    uint64_t mSpecificGroupId;
     bool mReplaceBrowsingContext;
   };
 
