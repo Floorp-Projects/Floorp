@@ -476,8 +476,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   static bool FamilyInList(const nsACString& aName, const char* aList[],
                            size_t aCount);
-  // Check list is correctly sorted (in debug build only; no-op on release).
-  static void CheckFamilyList(const char* aList[], size_t aCount);
 
   class InitOtherFamilyNamesRunnable : public mozilla::CancelableRunnable {
    public:

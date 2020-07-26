@@ -52,8 +52,8 @@ static const char* kBaseFonts[] = {
   "Microsoft YaHei UI",
   "Microsoft YaHei UI Light",
   "Microsoft Yi Baiti",
-  "MingLiU-ExtB",
   "MingLiU_HKSCS-ExtB",
+  "MingLiU-ExtB",
   "Mongolian Baiti",
   "MS Gothic",
   "MS PGothic",
@@ -155,11 +155,11 @@ static const char* kLangPackFonts[] = {
   "Levenim MT",  // Hebrew Supplemental Fonts
   "LilyUPC",  // Thai Supplemental Fonts
   "Mangal",  // Devanagari Supplemental Fonts
-  "Meiryo",  // Japanese Supplemental Fonts
   "Meiryo UI",  // Japanese Supplemental Fonts
+  "Meiryo",  // Japanese Supplemental Fonts
   "Microsoft Uighur",  // Arabic Script Supplemental Fonts
-  "MingLiU",  // Chinese (Traditional) Supplemental Fonts
   "MingLiU_HKSCS",  // Chinese (Traditional) Supplemental Fonts
+  "MingLiU",  // Chinese (Traditional) Supplemental Fonts
   "Miriam",  // Hebrew Supplemental Fonts
   "MoolBoran",  // Khmer Supplemental Fonts
   "MS Mincho",  // Japanese Supplemental Fonts
