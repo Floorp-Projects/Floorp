@@ -852,10 +852,7 @@ void gfxDWriteFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 ////////////////////////////////////////////////////////////////////////////////
 // gfxDWriteFontList
 
-gfxDWriteFontList::gfxDWriteFontList() : mForceGDIClassicMaxFontSize(0.0) {
-  CheckFamilyList(kBaseFonts, ArrayLength(kBaseFonts));
-  CheckFamilyList(kLangPackFonts, ArrayLength(kLangPackFonts));
-}
+gfxDWriteFontList::gfxDWriteFontList() : mForceGDIClassicMaxFontSize(0.0) {}
 
 // bug 602792 - CJK systems default to large CJK fonts which cause excessive
 //   I/O strain during cold startup due to dwrite caching bugs.  Default to
