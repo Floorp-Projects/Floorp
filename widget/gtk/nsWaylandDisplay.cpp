@@ -20,10 +20,7 @@ wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
     }
   }
 
-  // Available as of GTK 3.8+
-  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay*))
-      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
-  return sGdkWaylandDisplayGetWlDisplay(aGdkDisplay);
+  return gdk_wayland_display_get_wl_display(aGdkDisplay);
 }
 
 // nsWaylandDisplay needs to be created for each calling thread(main thread,
