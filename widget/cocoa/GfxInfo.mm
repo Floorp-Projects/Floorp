@@ -383,14 +383,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::OSX, DeviceFamily::All, nsIGfxInfo::FEATURE_GL_SWIZZLE,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_MAC_GPU_SWITCHING_NO_SWIZZLE");
 
-    // When we draw without per-vertex attributes, Intel GPUs screw up scissored clears.
-    // see https://bugzilla.mozilla.org/show_bug.cgi?id=1652763
-    // We are blocking it on all devices in order to support GPU switching.
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::All,
-                                   nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS,
-                                   nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-                                   "FEATURE_FAILURE_MAC_INTEL_NO_SCISSORED_CLEARS");
-
 #ifdef EARLY_BETA_OR_EARLIER
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::IntelRolloutWebRender,
                                    nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,

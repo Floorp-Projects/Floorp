@@ -77,12 +77,11 @@ void main(void) {
                    src_rect.p0 + blur_task.blur_region - vec2(0.5));
     vUvRect /= texture_size.xyxy;
 
-    vec2 quad_pos = quad_position();
-    vec2 pos = target_rect.p0 + target_rect.size * quad_pos;
+    vec2 pos = target_rect.p0 + target_rect.size * aPosition.xy;
 
     vec2 uv0 = src_rect.p0 / texture_size;
     vec2 uv1 = (src_rect.p0 + src_rect.size) / texture_size;
-    vUv.xy = mix(uv0, uv1, quad_pos);
+    vUv.xy = mix(uv0, uv1, aPosition.xy);
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }

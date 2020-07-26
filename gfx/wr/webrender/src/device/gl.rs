@@ -300,19 +300,14 @@ impl VertexDescriptor {
         }
     }
 
-    fn bind(&self, gl: &dyn gl::Gl, vertex_buf: VBOId, instance_buf: VBOId) {
-        if !self.vertex_attributes.is_empty() {
-            Self::bind_attributes(
-                self.vertex_attributes,
-                0,
-                0, gl, vertex_buf);
-        }
+    fn bind(&self, gl: &dyn gl::Gl, main: VBOId, instance: VBOId) {
+        Self::bind_attributes(self.vertex_attributes, 0, 0, gl, main);
 
         if !self.instance_attributes.is_empty() {
             Self::bind_attributes(
                 self.instance_attributes,
                 self.vertex_attributes.len(),
-                1, gl, instance_buf,
+                1, gl, instance,
             );
         }
     }
@@ -960,11 +955,6 @@ pub struct Capabilities {
     pub supports_nonzero_pbo_offsets: bool,
     /// Whether the driver supports specifying the texture usage up front.
     pub supports_texture_usage: bool,
-    /// Whether we are able to use `glBlitFramebuffers` when the active VAO
-    /// doesn't have the first attribute enabled with the divisor of 0.
-    /// This is buggy on Intel macOS, seen at least on:
-    /// - Intel 530 and Intel Iris 550 on macOS 10.15.6
-    pub supports_fbo_readback_with_no_vertex_attributes: bool,
     /// The name of the renderer, as reported by GL
     pub renderer_name: String,
 }
@@ -1516,7 +1506,6 @@ impl Device {
             ext_pixel_local_storage;
 
         let is_adreno = renderer_name.starts_with("Adreno");
-        let is_intel = renderer_name.starts_with("Intel");
 
         // KHR_blend_equation_advanced renders incorrectly on Adreno
         // devices. This has only been confirmed up to Adreno 5xx, and has been
@@ -1571,8 +1560,6 @@ impl Device {
         // On AMD Macs there is a driver bug which causes some texture uploads
         // from a non-zero offset within a PBO to fail. See bug 1603783.
         let supports_nonzero_pbo_offsets = !is_macos;
-        // On Intel macs, reading back FBO contents is glitchy if we use no vertex attributes.
-        let supports_fbo_readback_with_no_vertex_attributes = !(is_macos && is_intel);
 
         Device {
             gl,
@@ -1593,7 +1580,6 @@ impl Device {
                 supports_texture_swizzle,
                 supports_nonzero_pbo_offsets,
                 supports_texture_usage,
-                supports_fbo_readback_with_no_vertex_attributes,
                 renderer_name,
             },
 
@@ -1707,31 +1693,21 @@ impl Device {
         self.optimal_pbo_stride
     }
 
-    pub fn reset_state_textures(&mut self) {
+    pub fn reset_state(&mut self) {
         for i in 0 .. self.bound_textures.len() {
             self.bound_textures[i] = 0;
             self.gl.active_texture(gl::TEXTURE0 + i as gl::GLuint);
             self.gl.bind_texture(gl::TEXTURE_2D, 0);
         }
-    }
 
-    pub fn reset_state_vao(&mut self) {
         self.bound_vao = 0;
         self.gl.bind_vertex_array(0);
-    }
 
-    pub fn reset_state_fbo(&mut self) {
         self.bound_read_fbo = self.default_read_fbo;
         self.gl.bind_framebuffer(gl::READ_FRAMEBUFFER, self.bound_read_fbo.0);
 
         self.bound_draw_fbo = self.default_draw_fbo;
         self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, self.bound_draw_fbo.0);
-    }
-
-    pub fn reset_state(&mut self) {
-        self.reset_state_textures();
-        self.reset_state_vao();
-        self.reset_state_fbo();
     }
 
     #[cfg(debug_assertions)]
@@ -3348,7 +3324,7 @@ impl Device {
         );
     }
 
-    pub fn draw_triangles_u16(&mut self, first_index: i32, index_count: i32) {
+    pub fn draw_triangles_u16(&mut self, first_vertex: i32, index_count: i32) {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
@@ -3357,11 +3333,11 @@ impl Device {
             gl::TRIANGLES,
             index_count,
             gl::UNSIGNED_SHORT,
-            first_index as u32 * 2,
+            first_vertex as u32 * 2,
         );
     }
 
-    pub fn draw_triangles_u32(&mut self, first_index: i32, index_count: i32) {
+    pub fn draw_triangles_u32(&mut self, first_vertex: i32, index_count: i32) {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
@@ -3370,7 +3346,7 @@ impl Device {
             gl::TRIANGLES,
             index_count,
             gl::UNSIGNED_INT,
-            first_index as u32 * 4,
+            first_vertex as u32 * 4,
         );
     }
 

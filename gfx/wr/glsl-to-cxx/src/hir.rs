@@ -3547,14 +3547,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         "gl_Position",
         SymDecl::Global(StorageClass::Out, None, Type::new(Vec4), RunClass::Vector),
     );
-    state.declare(
-        "gl_VertexID",
-        SymDecl::Global(StorageClass::In, None, Type::new(Int), RunClass::Vector),
-    );
-    state.declare(
-        "gl_InstanceID",
-        SymDecl::Global(StorageClass::In, None, Type::new(Int), RunClass::Scalar),
-    );
 
     TranslationUnit(tu.0.map(state, translate_external_declaration))
 }

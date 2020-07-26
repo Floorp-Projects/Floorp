@@ -46,8 +46,6 @@ struct VertexShaderImpl {
   LoadAttribsFunc load_attribs_func = nullptr;
   RunPrimitiveFunc run_primitive_func = nullptr;
 
-  static constexpr I32 gl_VertexID = { 0, 1, 3, 2 };
-  int gl_InstanceID;
   vec4 gl_Position;
 
   void set_uniform_1i(int index, int value) {
@@ -66,7 +64,6 @@ struct VertexShaderImpl {
 
   ALWAYS_INLINE void load_attribs(VertexAttrib* attribs, uint32_t start,
                                   int instance, int count) {
-    gl_InstanceID = instance;
     (*load_attribs_func)(this, attribs, start, instance, count);
   }
 
