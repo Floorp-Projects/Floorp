@@ -94,6 +94,7 @@ const char* gInaccessibleProperties[] = {
     "-moz-context-properties",
     "-moz-control-character-visibility",
     "-moz-default-appearance",
+    "-moz-inert",
     "-moz-list-reversed",  // parsed by UA sheets only
     "-moz-script-level",   // parsed by UA sheets only
     "-moz-script-size-multiplier",

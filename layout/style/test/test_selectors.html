@@ -1137,6 +1137,7 @@ function runTests() {
     test_unbalanced_unparseable(":-moz-handler-crashed");
 
     // We're not in a UA sheet, so this should be invalid.
+    test_balanced_unparseable(":-moz-inert");
     test_balanced_unparseable(":-moz-native-anonymous");
     test_balanced_unparseable(":-moz-table-border-nonzero");
 
