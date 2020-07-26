@@ -908,14 +908,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   MOZ_TRY(EnablePOsForPrinting());
 
-  // Attach progressListener to catch network requests.
-  mDidLoadDataForPrinting = false;
-
-  nsCOMPtr<nsIWebProgress> webProgress =
-      do_QueryInterface(printData->mPrintObject->mDocShell);
-  webProgress->AddProgressListener(static_cast<nsIWebProgressListener*>(this),
-                                   nsIWebProgress::NOTIFY_STATE_REQUEST);
-
   if (mIsCreatingPrintPreview) {
     bool notifyOnInit = false;
     ShowPrintProgress(false, notifyOnInit);
@@ -1675,6 +1667,14 @@ nsresult nsPrintJob::InitPrintDocConstruction(bool aHandleError) {
   // Guarantee that mPrt->mPrintObject won't be deleted.  It's owned by mPrt.
   // So, we should grab it with local variable.
   RefPtr<nsPrintData> printData = mPrt;
+
+  // Attach progressListener to catch network requests.
+  mDidLoadDataForPrinting = false;
+
+  nsCOMPtr<nsIWebProgress> webProgress =
+      do_QueryInterface(printData->mPrintObject->mDocShell);
+  webProgress->AddProgressListener(static_cast<nsIWebProgressListener*>(this),
+                                   nsIWebProgress::NOTIFY_STATE_REQUEST);
 
   MOZ_TRY(ReflowDocList(printData->mPrintObject, DoSetPixelScale()));
 
