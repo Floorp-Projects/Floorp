@@ -1524,7 +1524,7 @@ nsresult nsStandardURL::SetSpecWithEncoding(const nsACString& input,
     return NS_ERROR_MALFORMED_URI;
   }
 
-  // Make a backup of the curent URL
+  // Make a backup of the current URL
   nsStandardURL prevURL(false, false);
   prevURL.CopyMembers(this, eHonorRef, EmptyCString());
   Clear();
