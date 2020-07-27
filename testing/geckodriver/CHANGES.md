@@ -7,13 +7,54 @@ All notable changes to this program is documented in this file.
 0.27.0
 ------
 
+### Known problems
+
+- _macOS 10.15 (Catalina):_
+
+  Due to the requirement from Apple that all programs must be
+  notarized, geckodriver will not work on Catalina if you manually
+  download it through another notarized program, such as Firefox.
+
+  Whilst we are working on a repackaging fix for this problem, you
+  can find more details on how to work around this issue in the
+  [macOS notarization] section of the documentation.
+
 ### Added
 
-- To set environment variables for the launched Firefox, it is now
-  possible to add an `env` object on `moz:firefoxOptions`
+- To set environment variables for the launched Firefox for Android,
+  it is now possible to add an `env` object on `moz:firefoxOptions`
+  (note: this is not supported for Firefox Desktop)
 
-0.26.0
-------
+- Support for print-to-PDF
+
+  The newly standardised WebDriver [Print] endpoint provides a way to
+  render pages to a paginated PDF representation. This endpoint is
+  supported by geckodriver when using Firefox version ≥78.
+
+- Support for same-site cookies
+
+  Cookies can now be set with a `same-site` parameter, and the value
+  of that parameter will be returned when cookies are
+  retrieved. Requires Firefox version ≥79. Thanks to [Peter Major] for
+  the patch.
+
+### Fixed
+
+- _Android:_
+
+  * Firefox running on Android devices can now be controlled from a
+    Windows host.
+
+  * Setups with multiple connected Android devices are now supported.
+
+  * Improved cleanup of configuration files. This prevents crashes if
+    the application is started manually after launching it through
+    geckodriver.
+
+- Windows and Linux binaries are again statically linked.
+
+0.26.0  (2019-10-12, `e9783a644016'`)
+------------------------------------
 
 Note that with this release the minimum recommended Firefox version
 has changed to Firefox ≥60.
@@ -1335,6 +1376,7 @@ and greater.
 [Minimize Window]: https://w3c.github.io/webdriver/webdriver-spec.html#minimize-window
 [New Session]: https://w3c.github.io/webdriver/webdriver-spec.html#new-session
 [New Window]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Commands/New_Window
+[Print]: https://w3c.github.io/webdriver/webdriver-spec.html#print
 [Send Alert Text]: https://w3c.github.io/webdriver/webdriver-spec.html#send-alert-text
 [Set Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#set-timeouts
 [Set Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#set-window-rect
@@ -1350,6 +1392,7 @@ and greater.
 [Kriti Singh]: https://github.com/kritisingh1
 [Mike Pennisi]: https://github.com/jugglinmike
 [Nupur Baghel]: https://github.com/nupurbaghel
+[Peter Major]: https://github.com/aldaris
 [Shivam Singhal]: https://github.com/championshuttler
 [Sven Jost]: https://github/mythsunwind
 [Vlad Filippov]: https://github.com/vladikoff
