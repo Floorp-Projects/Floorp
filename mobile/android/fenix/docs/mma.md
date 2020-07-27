@@ -246,6 +246,16 @@ Here is the list of current Events sent, which can be found here in the code bas
     <td>The user has installed an addon from the addon management page.</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/12136#issuecomment-651922547">#12136</a></td>
   </tr>
+  <tr>
+    <td>`E_Search_Widget_Added`</td>
+    <td>The user has installed the search widget to their homescreen.</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/13003">#13003</a></td>
+  </tr>
+  <tr>
+    <td>`E_Changed_Default_To_Fenix`</td>
+    <td>The user has changed their default browser to Fenix while Fenix was in the background and then resumed the app</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/13003">#13003</a></td>
+  </tr>
 </table>
 
 Deep links

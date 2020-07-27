@@ -10,8 +10,6 @@ import android.widget.Switch
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.utils.BrowsersCache
 
 class DefaultBrowserPreference @JvmOverloads constructor(

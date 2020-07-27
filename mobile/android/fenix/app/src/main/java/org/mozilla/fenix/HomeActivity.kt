@@ -248,7 +248,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         // Launch this on a background thread so as not to affect startup performance
         lifecycleScope.launch(IO) {
-            if (settings().wasDefaultBrowserOnLastPause != settings().isDefaultBrowser()) {
+            if (
+                settings().isDefaultBrowser() &&
+                settings().wasDefaultBrowserOnLastPause != settings().isDefaultBrowser()
+            ) {
                 metrics.track(Event.ChangedToDefaultBrowser)
             }
         }
@@ -259,7 +262,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
 
-        if (settings().wasDefaultBrowserOnLastPause != settings().isDefaultBrowser()) {
+        if (settings().wasDefaultBrowserOnLastPause != settings().isDefaultBrowser()
+        ) {
             settings().wasDefaultBrowserOnLastPause = settings().isDefaultBrowser()
         }
 
