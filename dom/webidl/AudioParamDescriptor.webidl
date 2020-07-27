@@ -14,12 +14,8 @@
 dictionary AudioParamDescriptor {
     required DOMString name;
     float defaultValue = 0;
-    // FIXME: we use 3.402823466e38 instead of 3.4028235e38 to workaround a bug
-    // in Visual Studio compiler (see bug 1501709 for more information).
-    // We should put back 3.4028235e38 once MSVC support is dropped (i.e. once
-    // bug 1512504 is fixed)
-    float minValue = -3.402823466e38;
-    float maxValue = 3.402823466e38;
+    float minValue = -3.4028235e38;
+    float maxValue = 3.4028235e38;
     // AutomationRate for AudioWorklet is not needed until bug 1504984 is
     // implemented
     // AutomationRate automationRate = "a-rate";
