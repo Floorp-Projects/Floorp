@@ -84,7 +84,7 @@ class EagerEvaluation extends Component {
     const result = terminalEagerResult.getGrip
       ? terminalEagerResult.getGrip()
       : terminalEagerResult;
-    const isError = result?.class && result.class === "Error";
+    const { isError } = result || {};
 
     return REPS.Rep({
       key: "rep",

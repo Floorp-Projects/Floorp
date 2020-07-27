@@ -255,6 +255,7 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "Object",
             "ownProperties": {
@@ -344,6 +345,7 @@ rawPackets.set(`console.dirxml(window)`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "ObjectWithURL",
             "url": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html"
@@ -387,6 +389,7 @@ rawPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "ArrayLike",
             "length": 3,
@@ -435,6 +438,7 @@ rawPackets.set(`console.log('myregex', /a.b.c/)`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "displayString": "/a.b.c/"
         },
         "actorID": "server0.conn0.child1/obj38"
@@ -474,6 +478,7 @@ rawPackets.set(`console.table(['red', 'green', 'blue']);`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": null,
           "ownProperties": {
             "0": {
@@ -534,6 +539,7 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "Object",
             "ownProperties": {
@@ -690,6 +696,7 @@ rawPackets.set(`console.log('mymap')`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "MapLike",
             "size": 2,
@@ -743,6 +750,7 @@ rawPackets.set(`console.log('myset')`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "ArrayLike",
             "length": 2,
@@ -838,6 +846,7 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "Object",
             "ownProperties": {
@@ -865,6 +874,7 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "ArrayLike",
             "length": 3,
@@ -1026,6 +1036,7 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "Object",
             "ownProperties": {
@@ -1199,6 +1210,7 @@ rawPackets.set(`console.table(['a', 'b', 'c'])`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": null,
           "ownProperties": {
             "0": {
@@ -1588,6 +1600,7 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isError": false,
           "preview": {
             "kind": "Object",
             "ownProperties": {

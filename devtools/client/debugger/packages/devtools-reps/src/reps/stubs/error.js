@@ -7,6 +7,7 @@ stubs.set("SimpleError", {
   type: "object",
   actor: "server1.conn1.child1/obj1020",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -23,6 +24,7 @@ stubs.set("MultilineStackError", {
   type: "object",
   actor: "server1.conn1.child1/obj1021",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -42,6 +44,7 @@ stubs.set("ErrorWithoutStacktrace", {
   type: "object",
   actor: "server1.conn1.child1/obj1020",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -54,6 +57,7 @@ stubs.set("EvalError", {
   type: "object",
   actor: "server1.conn1.child1/obj1022",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -70,6 +74,7 @@ stubs.set("InternalError", {
   type: "object",
   actor: "server1.conn1.child1/obj1023",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -86,6 +91,7 @@ stubs.set("RangeError", {
   type: "object",
   actor: "server1.conn1.child1/obj1024",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -102,6 +108,7 @@ stubs.set("ReferenceError", {
   type: "object",
   actor: "server1.conn1.child1/obj1025",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -118,6 +125,7 @@ stubs.set("SyntaxError", {
   type: "object",
   actor: "server1.conn1.child1/obj1026",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -134,6 +142,7 @@ stubs.set("TypeError", {
   type: "object",
   actor: "server1.conn1.child1/obj1027",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -150,6 +159,7 @@ stubs.set("URIError", {
   type: "object",
   actor: "server1.conn1.child1/obj1028",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -194,6 +204,7 @@ stubs.set("base-loader Error", {
   type: "object",
   actor: "server1.conn1.child1/obj1020",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -214,6 +225,7 @@ stubs.set("longString stack Error", {
   type: "object",
   actor: "server1.conn2.child1/obj33",
   class: "Error",
+  isError: true,
   extensible: true,
   frozen: false,
   sealed: false,
@@ -239,6 +251,7 @@ stubs.set("longString stack Error - cut-off location", {
   type: "object",
   actor: "server1.conn1.child1/obj33",
   class: "Error",
+  isError: true,
   extensible: true,
   frozen: false,
   sealed: false,
@@ -265,6 +278,7 @@ stubs.set("Error with V8-like stack", {
   type: "object",
   actor: "server1.conn1.child1/obj1020",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -281,6 +295,7 @@ stubs.set("Error with invalid stack", {
   type: "object",
   actor: "server1.conn1.child1/obj1020",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",
@@ -297,6 +312,7 @@ stubs.set("Error with undefined-grip stack", {
   type: "object",
   actor: "server0.conn0.child1/obj88",
   class: "Error",
+  isError: true,
   extensible: true,
   frozen: false,
   sealed: false,
@@ -318,6 +334,7 @@ stubs.set("Error with undefined-grip name", {
   type: "object",
   actor: "server0.conn0.child1/obj88",
   class: "Error",
+  isError: true,
   extensible: true,
   frozen: false,
   sealed: false,
@@ -339,6 +356,7 @@ stubs.set("Error with undefined-grip message", {
   type: "object",
   actor: "server0.conn0.child1/obj88",
   class: "Error",
+  isError: true,
   extensible: true,
   frozen: false,
   sealed: false,
@@ -357,6 +375,7 @@ stubs.set("Error with stack having frames with multiple @", {
   type: "object",
   actor: "server1.conn1.child1/obj1021",
   class: "Error",
+  isError: true,
   ownPropertyLength: 4,
   preview: {
     kind: "Error",

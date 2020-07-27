@@ -88,11 +88,12 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
       "_grip": {
         "type": "object",
         "actor": "server0.conn4.child2/obj25",
-        "class": "Error",
+        "class": "ReferenceError",
         "ownPropertyLength": 4,
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": true,
         "preview": {
           "kind": "Error",
           "name": "ReferenceError",
@@ -169,11 +170,12 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
       "_grip": {
         "type": "object",
         "actor": "server0.conn4.child2/obj26",
-        "class": "Error",
+        "class": "SyntaxError",
         "ownPropertyLength": 4,
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": true,
         "preview": {
           "kind": "Error",
           "name": "SyntaxError",
@@ -259,6 +261,7 @@ rawPackets.set(`TypeError longString message`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": true,
         "preview": {
           "kind": "Error",
           "name": "Error",
@@ -808,6 +811,7 @@ rawPackets.set(`throw Object`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": false,
         "preview": {
           "kind": "Object",
           "ownProperties": {
@@ -891,6 +895,7 @@ rawPackets.set(`throw Error Object`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": true,
         "preview": {
           "kind": "Error",
           "name": "Error",
@@ -968,6 +973,7 @@ rawPackets.set(`throw Error Object with custom name`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": true,
         "preview": {
           "kind": "Error",
           "name": "JuicyError",
@@ -1452,6 +1458,7 @@ rawPackets.set(`Promise reject Object`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": false,
         "preview": {
           "kind": "Object",
           "ownProperties": {
@@ -1535,6 +1542,7 @@ rawPackets.set(`Promise reject Error Object`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": true,
         "preview": {
           "kind": "Error",
           "name": "Error",
@@ -1612,6 +1620,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": true,
         "preview": {
           "kind": "Error",
           "name": "JuicyError",
