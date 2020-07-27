@@ -20,6 +20,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
+        lastUri: String?,
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,
@@ -27,7 +28,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         isSubframeRequest: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         return appContext.components.services.accountsAuthFeature.interceptor.onLoadRequest(
-            engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation, isSubframeRequest
+            engineSession, uri, lastUri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation, isSubframeRequest
         )
     }
 }
