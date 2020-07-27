@@ -44,20 +44,6 @@ void nsSearchControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsTextControlFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-already_AddRefed<Element> nsSearchControlFrame::MakeAnonymousElement(
-    Element* aParent, nsAtom* aTagName, PseudoStyleType aPseudoType) {
-  // Get the NodeInfoManager and tag necessary to create the anonymous divs.
-  Document* doc = mContent->OwnerDoc();
-  RefPtr<Element> resultElement = doc->CreateHTMLElement(aTagName);
-  resultElement->SetPseudoElementType(aPseudoType);
-
-  if (aParent) {
-    aParent->AppendChildTo(resultElement, false);
-  }
-
-  return resultElement.forget();
-}
-
 nsresult nsSearchControlFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
   // We create an anonymous tree for our input element that is structured as
@@ -74,8 +60,7 @@ nsresult nsSearchControlFrame::CreateAnonymousContent(
   // nsSearchControlFrame::DestroyFrom.
 
   // Create the anonymous outer wrapper:
-  mOuterWrapper = MakeAnonymousElement(
-      nullptr, nsGkAtoms::div, PseudoStyleType::mozComplexControlWrapper);
+  mOuterWrapper = MakeAnonElement(PseudoStyleType::mozComplexControlWrapper);
 
   aElements.AppendElement(mOuterWrapper);
 
@@ -92,8 +77,8 @@ nsresult nsSearchControlFrame::CreateAnonymousContent(
   }
 
   // Create the ::-moz-search-clear-button pseudo-element:
-  mClearButton = MakeAnonymousElement(mOuterWrapper, nsGkAtoms::button,
-                                      PseudoStyleType::mozSearchClearButton);
+  mClearButton = MakeAnonElement(PseudoStyleType::mozSearchClearButton,
+                                 mOuterWrapper, nsGkAtoms::button);
 
   // Update clear button visibility based on value
   UpdateClearButtonState();
