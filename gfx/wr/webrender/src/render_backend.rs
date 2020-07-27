@@ -616,8 +616,8 @@ impl Document {
                 let node = self.scene.spatial_tree.spatial_nodes.iter_mut()
                     .find(|node| node.is_transform_bound_to_property(animation_id));
                 if let Some(node) = node {
-                    if node.is_async_zooming != is_zooming {
-                        node.is_async_zooming = is_zooming;
+                    if node.is_async_zooming() != is_zooming {
+                        node.set_async_zooming(is_zooming);
                         self.frame_is_valid = false;
                     }
                 }

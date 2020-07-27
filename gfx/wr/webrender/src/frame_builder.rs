@@ -530,7 +530,7 @@ impl FrameBuilder {
                 let spatial_node = &scene
                     .spatial_tree
                     .spatial_nodes[spatial_node_index.0 as usize];
-                spatial_node.is_ancestor_or_self_zooming
+                spatial_node.is_ancestor_or_self_zooming()
             });
 
         let mut composite_state = CompositeState::new(

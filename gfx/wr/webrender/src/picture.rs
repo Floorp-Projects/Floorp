@@ -4677,7 +4677,7 @@ impl PicturePrimitive {
     /// change in zoom level, as that would be too expensive.
     pub fn get_raster_space(&self, spatial_tree: &SpatialTree) -> RasterSpace {
         let spatial_node = &spatial_tree.spatial_nodes[self.spatial_node_index.0 as usize];
-        if spatial_node.is_ancestor_or_self_zooming {
+        if spatial_node.is_ancestor_or_self_zooming() {
             let scale_factors = spatial_tree
                 .get_relative_transform(self.spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
                 .scale_factors();
@@ -6025,7 +6025,7 @@ impl PicturePrimitive {
             let spatial_node = &frame_context
                 .spatial_tree
                 .spatial_nodes[cluster.spatial_node_index.0 as usize];
-            if !spatial_node.invertible {
+            if !spatial_node.is_invertible() {
                 continue;
             }
 
