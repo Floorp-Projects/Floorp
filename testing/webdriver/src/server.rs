@@ -8,6 +8,7 @@ use std::thread;
 use bytes::Bytes;
 use http::{self, Method, StatusCode};
 use tokio::net::TcpListener;
+use url::{Host, Url};
 use warp::{self, Buf, Filter, Rejection};
 
 use crate::command::{WebDriverCommand, WebDriverMessage};
@@ -186,7 +187,7 @@ where
         let mut listener = rt
             .handle()
             .enter(|| TcpListener::from_std(listener).unwrap());
-        let wroutes = build_warp_routes(&extension_routes, msg_send.clone());
+        let wroutes = build_warp_routes(address, &extension_routes, msg_send.clone());
         let fut = warp::serve(wroutes).run_incoming(listener.incoming());
         rt.block_on(fut);
     })?;
@@ -204,22 +205,30 @@ where
 }
 
 fn build_warp_routes<U: 'static + WebDriverExtensionRoute + Send + Sync>(
+    address: SocketAddr,
     ext_routes: &[(Method, &'static str, U)],
     chan: Sender<DispatchMessage<U>>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = Rejection> + Clone {
     let chan = Arc::new(Mutex::new(chan));
     let mut std_routes = standard_routes::<U>();
     let (method, path, res) = std_routes.pop().unwrap();
-    let mut wroutes = build_route(method, path, res, chan.clone());
+    let mut wroutes = build_route(address, method, path, res, chan.clone());
     for (method, path, res) in std_routes {
         wroutes = wroutes
-            .or(build_route(method, path, res.clone(), chan.clone()))
+            .or(build_route(
+                address,
+                method,
+                path,
+                res.clone(),
+                chan.clone(),
+            ))
             .unify()
             .boxed()
     }
     for (method, path, res) in ext_routes {
         wroutes = wroutes
             .or(build_route(
+                address,
                 method.clone(),
                 path,
                 Route::Extension(res.clone()),
@@ -232,6 +241,7 @@ fn build_warp_routes<U: 'static + WebDriverExtensionRoute + Send + Sync>(
 }
 
 fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
+    address: SocketAddr,
     method: Method,
     path: &'static str,
     route: Route<U>,
@@ -279,16 +289,37 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
         .and(warp::path::end())
         .and(warp::path::full())
         .and(warp::method())
+        .and(warp::header::optional::<String>("origin"))
         .and(warp::header::optional::<String>("content-type"))
         .and(warp::body::bytes())
         .map(
             move |params,
                   full_path: warp::path::FullPath,
                   method,
+                  origin_header: Option<String>,
                   content_type_header: Option<String>,
                   body: Bytes| {
                 if method == Method::HEAD {
                     return warp::reply::with_status("".into(), StatusCode::OK);
+                }
+                if let Some(origin) = origin_header {
+                    let mut valid_host = false;
+                    let host_url = Url::parse(&origin).ok();
+                    let host = host_url.as_ref().and_then(|x| x.host().to_owned());
+                    if let Some(host) = host {
+                        valid_host = match host {
+                            Host::Domain("localhost") => true,
+                            Host::Domain(_) => false,
+                            Host::Ipv4(x) => address.is_ipv4() && x == address.ip(),
+                            Host::Ipv6(x) => address.is_ipv6() && x == address.ip(),
+                        };
+                    }
+                    if !valid_host {
+                        return warp::reply::with_status(
+                            "Invalid origin".to_string(),
+                            StatusCode::BAD_REQUEST,
+                        );
+                    }
                 }
                 if method == Method::POST {
                     // Disallow CORS-safelisted request headers
