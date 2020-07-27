@@ -558,6 +558,8 @@ impl SpatialTree {
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
     ) -> SpatialNodeIndex {
+        let parent_is_identity = self.spatial_nodes[parent_index.0 as usize].is_identity();
+
         let node = SpatialNode::new_scroll_frame(
             pipeline_id,
             parent_index,
@@ -567,6 +569,7 @@ impl SpatialTree {
             scroll_sensitivity,
             frame_kind,
             external_scroll_offset,
+            parent_is_identity,
         );
         self.add_spatial_node(node)
     }
@@ -580,6 +583,9 @@ impl SpatialTree {
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
     ) -> SpatialNodeIndex {
+        let parent_is_identity = parent_index.map_or(true, |parent_index| {
+            self.spatial_nodes[parent_index.0 as usize].is_identity()
+        });
         let node = SpatialNode::new_reference_frame(
             parent_index,
             transform_style,
@@ -587,6 +593,7 @@ impl SpatialTree {
             kind,
             origin_in_parent_reference_frame,
             pipeline_id,
+            parent_is_identity,
         );
         self.add_spatial_node(node)
     }
