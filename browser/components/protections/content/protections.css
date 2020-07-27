@@ -132,6 +132,7 @@ h2 {
 .etp-card.custom-not-blocking #protection-settings,
 #manage-protections,
 .etp-card .icon.dark,
+.proxy-card .icon.dark,
 a.hidden,
 .loading .card-body,
 .lockwise-card.hidden,
@@ -181,11 +182,13 @@ a.hidden,
     --hover-grey-link: var(--grey-30)
   }
 
-  .etp-card .icon.dark {
+  .etp-card .icon.dark,
+  .proxy-card .icon.dark {
     display: block;
   }
 
-  .etp-card .icon.light {
+  .etp-card .icon.light,
+  .proxy-card .icon.light {
     display: none;
   }
 }
