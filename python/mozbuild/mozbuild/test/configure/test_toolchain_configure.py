@@ -1798,13 +1798,6 @@ class RustTest(BaseConfigureTest):
 
         self.assertEqual(
             self.get_rust_target('arm-unknown-linux-androideabi',
-                                 version='1.32.0',
-                                 arm_target=ReadOnlyNamespace(
-                                     arm_arch=7, fpu='neon', thumb2=True, float_abi='softfp')),
-            'armv7-linux-androideabi')
-
-        self.assertEqual(
-            self.get_rust_target('arm-unknown-linux-androideabi',
                                  arm_target=ReadOnlyNamespace(
                                      arm_arch=7, fpu='neon', thumb2=False, float_abi='softfp')),
             'armv7-linux-androideabi')
@@ -1820,13 +1813,6 @@ class RustTest(BaseConfigureTest):
                                  arm_target=ReadOnlyNamespace(
                                      arm_arch=7, fpu='neon', thumb2=True, float_abi='hard')),
             'thumbv7neon-unknown-linux-gnueabihf')
-
-        self.assertEqual(
-            self.get_rust_target('armv7-unknown-linux-gnueabihf',
-                                 version='1.32.0',
-                                 arm_target=ReadOnlyNamespace(
-                                     arm_arch=7, fpu='neon', thumb2=True, float_abi='hard')),
-            'armv7-unknown-linux-gnueabihf')
 
         self.assertEqual(
             self.get_rust_target('armv7-unknown-linux-gnueabihf',
