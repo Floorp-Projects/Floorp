@@ -36,7 +36,8 @@ Before contributing, please review our [Community Participation Guidelines](http
 
 ### Accepted RFCs
 
-* [0001 - Introducing a lightweight RFC]({{ site.baseurl }}/rfc/0001-rfc-process)
+* [0001 - Introducing a lightweight RFC process]({{ site.baseurl }}/rfc/0001-rfc-process)
+* [0002 - Moving search state to BrowserState and introducing a SearchMiddleware]({{ site.baseurl }}/rfc/0002-browser-search-rewrite)
 
 ### Presentations
 
