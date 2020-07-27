@@ -777,7 +777,7 @@ bool GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
   char16_t* beginChar = (char16_t*)data;
   if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
     str.AssignLiteral("UTF-16");
-    LOGCLIP(("ConvertHTMLtoUCS2: Charset of HTML is UTF-16\n"));
+    LOGCLIP(("GetHTMLCharset: Charset of HTML is UTF-16\n"));
     return true;
   }
   // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
@@ -803,10 +803,10 @@ bool GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
   if (valueStart != valueEnd) {
     str = Substring(valueStart, valueEnd);
     ToUpperCase(str);
-    LOGCLIP(("ConvertHTMLtoUCS2: Charset of HTML = %s\n", str.get()));
+    LOGCLIP(("GetHTMLCharset: Charset of HTML = %s\n", str.get()));
     return true;
   }
   str.AssignLiteral("UNKNOWN");
-  LOGCLIP(("ConvertHTMLtoUCS2: Failed to get HTML Charset!\n"));
+  LOGCLIP(("GetHTMLCharset: Failed to get HTML Charset!\n"));
   return false;
 }
