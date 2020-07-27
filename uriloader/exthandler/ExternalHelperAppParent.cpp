@@ -20,6 +20,7 @@
 #include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "nsQueryObject.h"
 
 #include "mozilla/Unused.h"
 
@@ -95,9 +96,11 @@ void ExternalHelperAppParent::Init(
 
   helperAppService->CreateListener(aMimeContentType, this, aContext, aForceSave,
                                    nullptr, getter_AddRefs(mListener));
-
-  if (mListener && aShouldCloseWindow) {
-    mListener->SetShouldCloseWindow();
+  if (aShouldCloseWindow) {
+    RefPtr<nsExternalAppHandler> handler = do_QueryObject(mListener);
+    if (handler) {
+      handler->SetShouldCloseWindow();
+    }
   }
 }
 

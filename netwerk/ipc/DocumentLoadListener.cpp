@@ -249,12 +249,12 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
 
   nsresult TryExternalHelperApp(nsIExternalHelperAppService* aHelperAppService,
                                 nsIChannel* aChannel) override {
-    RefPtr<nsExternalAppHandler> handler;
+    RefPtr<nsIStreamListener> listener;
     nsresult rv = aHelperAppService->CreateListener(
         mContentType, aChannel, mBrowsingContext, false, nullptr,
-        getter_AddRefs(handler));
+        getter_AddRefs(listener));
     if (NS_SUCCEEDED(rv)) {
-      m_targetStreamListener = handler;
+      m_targetStreamListener = listener;
     }
     return rv;
   }

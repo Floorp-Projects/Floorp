@@ -97,7 +97,7 @@ class ExternalHelperAppParent
   void Delete();
 
  private:
-  RefPtr<nsExternalAppHandler> mListener;
+  RefPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   bool mPending;

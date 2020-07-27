@@ -37,6 +37,13 @@ class nsITransfer;
 class nsIPrincipal;
 class MaybeCloseWindowHelper;
 
+#define EXTERNAL_APP_HANDLER_IID                     \
+  {                                                  \
+    0x50eb7479, 0x71ff, 0x4ef8, {                    \
+      0xb3, 0x1e, 0x3b, 0x59, 0xc8, 0xab, 0xb9, 0x24 \
+    }                                                \
+  }
+
 /**
  * The helper app service. Responsible for handling content that Mozilla
  * itself can not handle
@@ -213,6 +220,8 @@ class nsExternalAppHandler final : public nsIStreamListener,
   NS_DECL_NSICANCELABLE
   NS_DECL_NSIBACKGROUNDFILESAVEROBSERVER
   NS_DECL_NSINAMED
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(EXTERNAL_APP_HANDLER_IID)
 
   /**
    * @param aMIMEInfo       MIMEInfo object, representing the type of the
@@ -471,5 +480,6 @@ class nsExternalAppHandler final : public nsIStreamListener,
 
   RefPtr<nsExternalHelperAppService> mExtProtSvc;
 };
+NS_DEFINE_STATIC_IID_ACCESSOR(nsExternalAppHandler, EXTERNAL_APP_HANDLER_IID)
 
 #endif  // nsExternalHelperAppService_h__

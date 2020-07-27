@@ -15,11 +15,6 @@ interface nsIWebProgressListener2;
 interface nsIInterfaceRequestor;
 webidl BrowsingContext;
 
-[ptr] native ExternalAppHandlerPtr(nsExternalAppHandler);
-%{C++
-class nsExternalAppHandler;
-%}
-
 /**
  * The external helper app service is used for finding and launching
  * platform specific external applications for a given mime content type.
@@ -67,7 +62,7 @@ interface nsIExternalHelperAppService : nsISupports
    *  in which case dialogs will be parented to aContentContext.
    * @return A nsIStreamListener which the caller should pump the data into.
    */
-  [noscript] ExternalAppHandlerPtr createListener (in ACString aMimeContentType,
+  nsIStreamListener createListener (in ACString aMimeContentType,
                                                    in nsIRequest aRequest,
                                                    in BrowsingContext aContentContext,
                                                    in boolean aForceSave,
