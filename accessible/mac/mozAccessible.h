@@ -78,6 +78,7 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 
 - (void)handleAccessibleTextChangeEvent:(NSString*)change
                                inserted:(BOOL)isInserted
+                            inContainer:(const mozilla::a11y::AccessibleOrProxy&)container
                                      at:(int32_t)start;
 
 // internal method to retrieve a child at a given index.

@@ -114,13 +114,20 @@ async function synthKeyAndTestValueChanged(
   synthKey,
   synthEvent,
   expectedId,
+  expectedTextSelectionId,
   expectedChangeValue,
   expectedEditType,
   expectedWordAtLeft
 ) {
   let valueChangedEvents = Promise.all([
-    waitForMacEventWithInfo("AXSelectedTextChanged", matchWebArea(expectedId)),
-    waitForMacEventWithInfo("AXSelectedTextChanged", matchInput(expectedId)),
+    waitForMacEventWithInfo(
+      "AXSelectedTextChanged",
+      matchWebArea(expectedTextSelectionId)
+    ),
+    waitForMacEventWithInfo(
+      "AXSelectedTextChanged",
+      matchInput(expectedTextSelectionId)
+    ),
     waitForMacEventWithInfo("AXValueChanged", matchWebArea(expectedId)),
     waitForMacEventWithInfo("AXValueChanged", matchInput(expectedId)),
   ]);
@@ -146,94 +153,109 @@ async function synthKeyAndTestValueChanged(
   );
 }
 
+async function focusIntoInputAndType(accDoc, inputId, innerContainerId) {
+  let selectionId = innerContainerId ? innerContainerId : inputId;
+  let input = getNativeInterface(accDoc, inputId);
+  ok(!input.getAttributeValue("AXFocused"), "input is not focused");
+  ok(input.isAttributeSettable("AXFocused"), "input is focusable");
+  let events = Promise.all([
+    waitForMacEvent(
+      "AXFocusedUIElementChanged",
+      iface => iface.getAttributeValue("AXDOMIdentifier") == inputId
+    ),
+    waitForMacEventWithInfo("AXSelectedTextChanged", matchWebArea(selectionId)),
+    waitForMacEventWithInfo("AXSelectedTextChanged", matchInput(selectionId)),
+  ]);
+  input.setAttributeValue("AXFocused", true);
+  await events;
+
+  async function testTextInput(
+    synthKey,
+    expectedChangeValue,
+    expectedWordAtLeft
+  ) {
+    await synthKeyAndTestValueChanged(
+      synthKey,
+      null,
+      inputId,
+      selectionId,
+      expectedChangeValue,
+      AXTextEditTypeTyping,
+      expectedWordAtLeft
+    );
+  }
+
+  await testTextInput("h", "h", "h");
+  await testTextInput("e", "e", "he");
+  await testTextInput("l", "l", "hel");
+  await testTextInput("l", "l", "hell");
+  await testTextInput("o", "o", "hello");
+  await testTextInput(" ", " ", "hello");
+  // You would expect this to be useless but this is what VO
+  // consumes. I guess it concats the inserted text data to the
+  // word to the left of the marker.
+  await testTextInput("w", "w", " ");
+  await testTextInput("o", "o", "wo");
+  await testTextInput("r", "r", "wor");
+  await testTextInput("l", "l", "worl");
+  await testTextInput("d", "d", "world");
+
+  async function testTextDelete(expectedChangeValue, expectedWordAtLeft) {
+    await synthKeyAndTestValueChanged(
+      "KEY_Backspace",
+      null,
+      inputId,
+      selectionId,
+      expectedChangeValue,
+      AXTextEditTypeDelete,
+      expectedWordAtLeft
+    );
+  }
+
+  await testTextDelete("d", "worl");
+  await testTextDelete("l", "wor");
+
+  await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, selectionId, "");
+  await synthKeyAndTestSelectionChanged(
+    "KEY_ArrowLeft",
+    { shiftKey: true },
+    selectionId,
+    "o"
+  );
+  await synthKeyAndTestSelectionChanged(
+    "KEY_ArrowLeft",
+    { shiftKey: true },
+    selectionId,
+    "wo"
+  );
+  await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, selectionId, "");
+  await synthKeyAndTestSelectionChanged(
+    "KEY_Home",
+    { shiftKey: true },
+    selectionId,
+    "hello "
+  );
+  await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, selectionId, "");
+  await synthKeyAndTestSelectionChanged(
+    "KEY_ArrowRight",
+    { shiftKey: true, altKey: true },
+    selectionId,
+    "hello"
+  );
+}
+
 // Test text input
 addAccessibleTask(
   `<a href="#">link</a> <input id="input">`,
   async (browser, accDoc) => {
-    let input = getNativeInterface(accDoc, "input");
-    ok(!input.getAttributeValue("AXFocused"), "input is not focused");
-    ok(input.isAttributeSettable("AXFocused"), "input is focusable");
-    let events = Promise.all([
-      waitForMacEvent(
-        "AXFocusedUIElementChanged",
-        iface => iface.getAttributeValue("AXDOMIdentifier") == "input"
-      ),
-      waitForMacEventWithInfo("AXSelectedTextChanged", matchWebArea("input")),
-      waitForMacEventWithInfo("AXSelectedTextChanged", matchInput("input")),
-    ]);
-    input.setAttributeValue("AXFocused", true);
-    await events;
+    await focusIntoInputAndType(accDoc, "input");
+  }
+);
 
-    async function testTextInput(
-      synthKey,
-      expectedChangeValue,
-      expectedWordAtLeft
-    ) {
-      await synthKeyAndTestValueChanged(
-        synthKey,
-        null,
-        "input",
-        expectedChangeValue,
-        AXTextEditTypeTyping,
-        expectedWordAtLeft
-      );
-    }
-
-    await testTextInput("h", "h", "h");
-    await testTextInput("e", "e", "he");
-    await testTextInput("l", "l", "hel");
-    await testTextInput("l", "l", "hell");
-    await testTextInput("o", "o", "hello");
-    await testTextInput(" ", " ", "hello");
-    // You would expect this to be useless but this is what VO
-    // consumes. I guess it concats the inserted text data to the
-    // word to the left of the marker.
-    await testTextInput("w", "w", " ");
-    await testTextInput("o", "o", "wo");
-    await testTextInput("r", "r", "wor");
-    await testTextInput("l", "l", "worl");
-    await testTextInput("d", "d", "world");
-
-    async function testTextDelete(expectedChangeValue, expectedWordAtLeft) {
-      await synthKeyAndTestValueChanged(
-        "KEY_Backspace",
-        null,
-        "input",
-        expectedChangeValue,
-        AXTextEditTypeDelete,
-        expectedWordAtLeft
-      );
-    }
-
-    await testTextDelete("d", "worl");
-    await testTextDelete("l", "wor");
-
-    await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, "input", "");
-    await synthKeyAndTestSelectionChanged(
-      "KEY_ArrowLeft",
-      { shiftKey: true },
-      "input",
-      "o"
-    );
-    await synthKeyAndTestSelectionChanged(
-      "KEY_ArrowLeft",
-      { shiftKey: true },
-      "input",
-      "wo"
-    );
-    await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, "input", "");
-    await synthKeyAndTestSelectionChanged(
-      "KEY_Home",
-      { shiftKey: true },
-      "input",
-      "hello "
-    );
-    await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, "input", "");
-    await synthKeyAndTestSelectionChanged(
-      "KEY_ArrowRight",
-      { shiftKey: true, altKey: true },
-      "input",
-      "hello"
-    );
+// Test content editable
+addAccessibleTask(
+  `<div id="input" contentEditable="true" tabindex="0" role="textbox" aria-multiline="true"><div id="inner"><br /></div></div>`,
+  async (browser, accDoc) => {
+    await focusIntoInputAndType(accDoc, "input", "inner");
   }
 );

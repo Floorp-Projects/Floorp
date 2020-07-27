@@ -123,6 +123,16 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       eventTarget = selEvent->Widget();
       break;
     }
+    case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
+    case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
+      Accessible* acc = aEvent->GetAccessible();
+      // If there is a text input ancestor, use it as the event source.
+      while (acc && GetTypeFromRole(acc->Role()) != [mozTextAccessible class]) {
+        acc = acc->Parent();
+      }
+      eventTarget = acc ? acc : aEvent->GetAccessible();
+      break;
+    }
     default:
       eventTarget = aEvent->GetAccessible();
       break;
@@ -179,6 +189,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       AccTextChangeEvent* tcEvent = downcast_accEvent(aEvent);
       [nativeAcc handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(tcEvent->ModifiedText())
                                         inserted:tcEvent->IsTextInserted()
+                                     inContainer:aEvent->GetAccessible()
                                               at:tcEvent->GetStartOffset()];
       break;
     }
