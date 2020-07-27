@@ -39,6 +39,7 @@ use webrender::{
     NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, WrShaders, ONE_TIME_USAGE_HINT,
 };
+use wr_malloc_size_of::MallocSizeOfOps;
 
 #[cfg(target_os = "macos")]
 use core_foundation::string::CFString;
@@ -1611,8 +1612,15 @@ pub extern "C" fn wr_api_set_debug_flags(dh: &mut DocumentHandle, flags: DebugFl
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_api_accumulate_memory_report(dh: &mut DocumentHandle, report: &mut MemoryReport) {
-    *report += dh.api.report_memory();
+pub unsafe extern "C" fn wr_api_accumulate_memory_report(
+    dh: &mut DocumentHandle,
+    report: &mut MemoryReport,
+    // we manually expand VoidPtrToSizeFn here because cbindgen otherwise fails to fold the Option<fn()>
+    // https://github.com/eqrion/cbindgen/issues/552
+    size_of_op: unsafe extern "C" fn(ptr: *const c_void) -> usize,
+    enclosing_size_of_op: Option<unsafe extern "C" fn(ptr: *const c_void) -> usize>) {
+    let ops = MallocSizeOfOps::new(size_of_op, enclosing_size_of_op);
+    *report += dh.api.report_memory(ops);
 }
 
 #[no_mangle]

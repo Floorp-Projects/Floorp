@@ -566,7 +566,8 @@ void WebRenderAPI::NotifyMemoryPressure() {
 }
 
 void WebRenderAPI::AccumulateMemoryReport(MemoryReport* aReport) {
-  wr_api_accumulate_memory_report(mDocHandle, aReport);
+  wr_api_accumulate_memory_report(mDocHandle, aReport, &WebRenderMallocSizeOf,
+                                  &WebRenderMallocEnclosingSizeOf);
 }
 
 void WebRenderAPI::WakeSceneBuilder() { wr_api_wake_scene_builder(mDocHandle); }
