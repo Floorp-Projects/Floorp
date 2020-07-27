@@ -159,8 +159,7 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool privateFields =
-      cx->realm()->creationOptions().getPrivateClassFieldsEnabled();
+  bool privateFields = cx->options().privateClassFields();
   if (!JS_SetProperty(cx, info, "privateFields",
                       privateFields ? TrueHandleValue : FalseHandleValue)) {
     return false;
