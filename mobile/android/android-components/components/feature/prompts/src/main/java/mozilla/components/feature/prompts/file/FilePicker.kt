@@ -45,6 +45,12 @@ internal class FilePicker(
      */
     private var captureUri: Uri? = null
 
+    /**
+     * Cache of the current request to be used after permission is granted.
+     */
+    @VisibleForTesting
+    internal var currentRequest: PromptRequest? = null
+
     @Suppress("ComplexMethod")
     fun handleFileRequest(promptRequest: File, requestPermissions: Boolean = true) {
         // Track which permissions are needed.
@@ -89,7 +95,7 @@ internal class FilePicker(
 
             container.startActivityForResult(chooser, FILE_PICKER_ACTIVITY_REQUEST_CODE)
         } else {
-            onNeedToRequestPermissions(neededPermissions.toTypedArray())
+            askAndroidPermissionsForRequest(neededPermissions, promptRequest)
         }
     }
 
@@ -128,6 +134,7 @@ internal class FilePicker(
         } else {
             onPermissionsDenied()
         }
+        currentRequest = null
     }
 
     /**
@@ -140,9 +147,9 @@ internal class FilePicker(
      */
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun onPermissionsGranted() {
-        store.consumePromptFrom(sessionId) { promptRequest ->
-            handleFileRequest(promptRequest as File, requestPermissions = false)
-        }
+        // Try again handling the original request which we've cached before.
+        // Actually consuming it will be done in onActivityResult once the user returns from the file picker.
+        handleFileRequest(currentRequest as File, requestPermissions = false)
     }
 
     /**
@@ -151,6 +158,7 @@ internal class FilePicker(
      */
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun onPermissionsDenied() {
+        // Nothing left to do. Consume / cleanup the requests.
         store.consumePromptFrom(sessionId) { request ->
             if (request is File) request.onDismiss()
         }
@@ -184,6 +192,12 @@ internal class FilePicker(
 
     private fun saveCaptureUriIfPresent(intent: Intent) =
         intent.getParcelableExtra<Uri>(EXTRA_OUTPUT)?.let { captureUri = it }
+
+    @VisibleForTesting
+    fun askAndroidPermissionsForRequest(permissions: List<String>, request: File) {
+        currentRequest = request
+        onNeedToRequestPermissions(permissions.toTypedArray())
+    }
 
     companion object {
         const val FILE_PICKER_ACTIVITY_REQUEST_CODE = 7113

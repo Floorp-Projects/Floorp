@@ -29,6 +29,8 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.whenever
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -39,6 +41,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 
 @RunWith(AndroidJUnit4::class)
 class FilePickerTest {
@@ -84,19 +87,20 @@ class FilePickerTest {
     }
 
     @Test
-    fun `handleFilePickerRequest without the required permission will call onNeedToRequestPermissions`() {
+    fun `handleFilePickerRequest without the required permission will call askAndroidPermissionsForRequest`() {
         var onRequestPermissionWasCalled = false
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        filePicker = FilePicker(fragment, store) {
+        filePicker = spy(FilePicker(fragment, store) {
             onRequestPermissionWasCalled = true
-        }
+        })
 
         doReturn(context).`when`(fragment).context
 
         filePicker.handleFileRequest(request)
 
         assertTrue(onRequestPermissionWasCalled)
+        verify(filePicker).askAndroidPermissionsForRequest(any(), eq(request))
         verify(fragment, never()).startActivityForResult(Intent(), 1)
     }
 
@@ -122,13 +126,17 @@ class FilePickerTest {
 
     @Test
     fun `onPermissionsGranted will forward call to filePickerRequest`() {
-        val selected = prepareSelectedSession(request)
         stubContext()
         filePicker = spy(filePicker)
+        filePicker.currentRequest = request
+
         filePicker.onPermissionsGranted()
 
-        verify(filePicker).handleFileRequest(any(), eq(false))
-        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
+        // The original prompt that started the request permission flow is persisted in the store
+        // That should not be accesses / modified in any way.
+        verifyZeroInteractions(store)
+        // After the permission is granted we should retry picking a file based on the original request.
+        verify(filePicker).handleFileRequest(eq(request), eq(false))
     }
 
     @Test
@@ -224,7 +232,10 @@ class FilePickerTest {
 
     @Test
     fun `onRequestPermissionsResult with FILE_PICKER_REQUEST and PERMISSION_GRANTED will call onPermissionsGranted`() {
+        stubContext()
         filePicker = spy(filePicker)
+        filePicker.currentRequest = request
+
         filePicker.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_GRANTED })
 
         verify(filePicker).onPermissionsGranted()
@@ -236,6 +247,20 @@ class FilePickerTest {
         filePicker.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_DENIED })
 
         verify(filePicker).onPermissionsDenied()
+    }
+
+    @Test
+    fun `askAndroidPermissionsForRequest should cache the current request and then ask for permissions`() {
+        val permissions = listOf("PermissionA")
+        var permissionsRequested = emptyArray<String>()
+        filePicker = spy(FilePicker(fragment, store, null) { requested ->
+            permissionsRequested = requested
+        })
+
+        filePicker.askAndroidPermissionsForRequest(permissions, request)
+
+        assertEquals(request, filePicker.currentRequest)
+        assertArrayEquals(permissions.toTypedArray(), permissionsRequested)
     }
 
     private fun prepareSelectedSession(request: PromptRequest? = null): TabSessionState {
