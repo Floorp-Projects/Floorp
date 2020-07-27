@@ -49,11 +49,11 @@ impl<'a> FirefoxCapabilities<'a> {
             .and_then(|x| x.as_str())
             .map(PathBuf::from)
             .or_else(|| self.fallback_binary.cloned())
-            .or_else(firefox_default_path);
+            .or_else(firefox_default_path)
     }
 
-    fn version(&mut self, binary: Option<&Path>) -> Option<String> {
-        if let Some(binary) = binary {
+    fn version(&mut self) -> Option<String> {
+        if let Some(ref binary) = self.chosen_binary {
             if let Some(value) = self.version_cache.get(binary) {
                 return Some((*value).clone());
             }
@@ -67,8 +67,7 @@ impl<'a> FirefoxCapabilities<'a> {
                 });
             if let Some(ref version) = rv {
                 debug!("Found version {}", version);
-                self.version_cache
-                    .insert(binary.to_path_buf(), version.clone());
+                self.version_cache.insert(binary.clone(), version.clone());
             } else {
                 debug!("Failed to get binary version");
             }
@@ -78,11 +77,11 @@ impl<'a> FirefoxCapabilities<'a> {
         }
     }
 
-    fn version_from_binary(&self, binary: &Path) -> Option<String> {
-        let version_regexp = Regex::new(r#"Mozilla Firefox [0-9]+\.[0-9]+(?:[a-z][0-9]+)?"#)
-            .expect("Error parsing version regexp");
+    fn version_from_binary(&self, binary: &PathBuf) -> Option<String> {
+        let version_regexp =
+            Regex::new(r#"\d+\.\d+(?:[a-z]\d+)?"#).expect("Error parsing version regexp");
         let output = Command::new(binary)
-            .args(&["--version"])
+            .args(&["-version"])
             .stdout(Stdio::piped())
             .spawn()
             .and_then(|child| child.wait_with_output())
@@ -115,8 +114,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
     }
 
     fn browser_version(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
-        let binary = self.chosen_binary.clone();
-        Ok(self.version(binary.as_ref().map(|x| x.as_ref())))
+        Ok(self.version())
     }
 
     fn platform_name(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
@@ -132,8 +130,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
     }
 
     fn accept_insecure_certs(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
-        let binary = self.chosen_binary.clone();
-        let version_str = self.version(binary.as_ref().map(|x| x.as_ref()));
+        let version_str = self.version();
         if let Some(x) = version_str {
             Ok(Version::from_str(&*x)
                 .or_else(|x| Err(convert_version_error(x)))?
@@ -167,7 +164,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
-    fn validate_custom(&mut self, name: &str, value: &Value) -> WebDriverResult<()> {
+    fn validate_custom(&self, name: &str, value: &Value) -> WebDriverResult<()> {
         if !name.starts_with("moz:") {
             return Ok(());
         }
@@ -183,6 +180,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                         "androidActivity"
                         | "androidDeviceSerial"
                         | "androidPackage"
+                        | "binary"
                         | "profile" => {
                             if !value.is_string() {
                                 return Err(WebDriverError::new(
@@ -203,21 +201,6 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                                 return Err(WebDriverError::new(
                                     ErrorStatus::InvalidArgument,
                                     format!("{} entry is not a string", &**key),
-                                ));
-                            }
-                        }
-                        "binary" => {
-                            if let Some(binary) = value.as_str() {
-                                if self.version(Some(Path::new(binary))).is_none() {
-                                    return Err(WebDriverError::new(
-                                        ErrorStatus::InvalidArgument,
-                                        format!("{} is not a Firefox executable", &**key),
-                                    ));
-                                }
-                            } else {
-                                return Err(WebDriverError::new(
-                                    ErrorStatus::InvalidArgument,
-                                    format!("{} is not a string", &**key),
                                 ));
                             }
                         }
