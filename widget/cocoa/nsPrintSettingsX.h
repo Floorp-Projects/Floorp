@@ -85,6 +85,8 @@ class nsPrintSettingsX : public nsPrintSettings {
   // Set the printer name using the native PrintInfo data.
   void SetPrinterNameFromPrintInfo();
 
+  void SetDispositionSaveToFile();
+
  protected:
   virtual ~nsPrintSettingsX();
 
