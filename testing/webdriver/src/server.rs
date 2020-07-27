@@ -315,9 +315,10 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
                         };
                     }
                     if !valid_host {
+                        let err = WebDriverError::new(ErrorStatus::UnknownError, "Invalid Origin");
                         return warp::reply::with_status(
-                            "Invalid origin".to_string(),
-                            StatusCode::BAD_REQUEST,
+                            serde_json::to_string(&err).unwrap(),
+                            StatusCode::INTERNAL_SERVER_ERROR,
                         );
                     }
                 }
@@ -333,19 +334,27 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
                         Some("application/x-www-form-urlencoded")
                         | Some("multipart/form-data")
                         | Some("text/plain") => {
+                            let err = WebDriverError::new(
+                                ErrorStatus::UnknownError,
+                                "Invalid Content-Type",
+                            );
                             return warp::reply::with_status(
-                                "Invalid content-type".to_string(),
-                                StatusCode::BAD_REQUEST,
-                            )
+                                serde_json::to_string(&err).unwrap(),
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                            );
                         }
                         Some(_) | None => {}
                     }
                 }
                 let body = String::from_utf8(body.bytes().to_vec());
                 if body.is_err() {
+                    let err = WebDriverError::new(
+                        ErrorStatus::UnknownError,
+                        "Request body wasn't valid UTF-8",
+                    );
                     return warp::reply::with_status(
-                        "The body wasn't valid UTF-8".to_string(),
-                        StatusCode::BAD_REQUEST,
+                        serde_json::to_string(&err).unwrap(),
+                        StatusCode::INTERNAL_SERVER_ERROR,
                     );
                 }
                 let body = body.unwrap();
