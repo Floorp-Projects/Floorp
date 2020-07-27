@@ -17,6 +17,7 @@ extern crate thin_vec;
 extern crate tracy_rs;
 extern crate uuid;
 extern crate webrender;
+extern crate wr_malloc_size_of;
 
 #[macro_use]
 extern crate log;
