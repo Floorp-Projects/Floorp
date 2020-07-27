@@ -8,4 +8,3 @@ perfdocs:
     support-files: []
     type: structured_log
     payload: perfdocs:lint
-    setup: perfdocs:setup

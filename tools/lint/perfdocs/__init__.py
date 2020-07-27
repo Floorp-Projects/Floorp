@@ -4,16 +4,9 @@
 import os
 
 from perfdocs import perfdocs
-from mozlint.util import pip
 
 here = os.path.abspath(os.path.dirname(__file__))
 PERFDOCS_REQUIREMENTS_PATH = os.path.join(here, "requirements.txt")
-
-
-def setup(root, **lintargs):
-    if not pip.reinstall_program(PERFDOCS_REQUIREMENTS_PATH):
-        print("Cannot install requirements.")
-        return 1
 
 
 def lint(paths, config, logger, fix=False, **lintargs):
