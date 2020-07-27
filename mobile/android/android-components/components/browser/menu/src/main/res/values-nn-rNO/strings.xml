@@ -4,4 +4,8 @@
     <string name="mozac_browser_menu_button">Meny</string>
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">Utheva</string>
-    </resources>
+    <!-- Label for add-ons submenu section -->
+    <string name="mozac_browser_menu_addons">Tillegg</string>
+    <!-- Label for add-ons sub menu item for add-ons manager -->
+    <string name="mozac_browser_menu_addons_manager">Tilleggshandterar</string>
+</resources>

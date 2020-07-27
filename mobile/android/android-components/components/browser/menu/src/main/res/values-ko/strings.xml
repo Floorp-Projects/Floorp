@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_menu_button">메뉴</string>
+    <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
+    <string name="mozac_browser_menu_highlighted">강조 표시됨</string>
+    <!-- Label for add-ons submenu section -->
+    <string name="mozac_browser_menu_addons">부가 기능</string>
+    <!-- Label for add-ons sub menu item for add-ons manager -->
+    <string name="mozac_browser_menu_addons_manager">부가 기능 관리자</string>
+</resources>

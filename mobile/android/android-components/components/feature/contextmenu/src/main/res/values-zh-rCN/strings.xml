@@ -39,10 +39,14 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">切换</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">在外部应用中打开链接</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
-    <string name="mozac_selection_context_menu_search">用 %s 搜索</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
-    <string name="mozac_selection_context_menu_search_privately">用 %s 隐私搜索</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
+    <string name="mozac_selection_context_menu_search_2">搜索</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
+    <string name="mozac_selection_context_menu_search_privately_2">隐私搜索</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">分享</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
+    <string name="mozac_selection_context_menu_email">电邮</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new call from the selected text. -->
+    <string name="mozac_selection_context_menu_call">呼叫</string>
 </resources>

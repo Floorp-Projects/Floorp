@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Text displayed when choosing which app to call with after selecting a phone number-->
+    <string name="mozac_support_ktx_menu_call_with">使用下列程式撥打電話…</string>
+    <!-- Text displayed when choosing which app to email with after selecting an email address-->
+    <string name="mozac_support_ktx_menu_email_with">使用下列程式發送郵件…</string>
     <string name="mozac_support_ktx_menu_share_with">使用下列方式分享…</string>
     <string name="mozac_support_ktx_share_dialog_title">分享到</string>
 </resources>

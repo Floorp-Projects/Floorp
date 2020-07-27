@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default shortcut label used if website has no title -->
+    <string name="mozac_feature_pwa_default_shortcut_label">웹 사이트</string>
+
+    <!-- Name of the "notification channel" used for displaying site controls notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_pwa_site_controls_notification_channel">전체 화면 사이트 컨트롤</string>
+    <!-- Text shown on the second row of the site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_notification_text">이 앱의 URL을 복사하려면 누르세요</string>
+    <!-- Refresh button in site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_refresh">새로 고침</string>
+    <!-- Toast displayed when the website URL is copied. -->
+    <string name="mozac_feature_pwa_copy_success">URL 복사됨.</string>
+</resources>

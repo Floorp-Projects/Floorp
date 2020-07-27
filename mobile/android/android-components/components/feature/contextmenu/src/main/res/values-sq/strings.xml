@@ -10,6 +10,8 @@
     <string name="mozac_feature_contextmenu_download_link">Lidhje shkarkimi</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Ndani lidhje me të tjerët</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Ndani figurë me të tjerët</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Kopjoje lidhjen</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
@@ -28,10 +30,14 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Kaloni në të</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Hape lidhjen në aplikacion të jashtëm</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
-    <string name="mozac_selection_context_menu_search">Kërkim me %s</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
-    <string name="mozac_selection_context_menu_search_privately">Kërkim Privat me %s</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
+    <string name="mozac_selection_context_menu_search_2">Kërko</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
+    <string name="mozac_selection_context_menu_search_privately_2">Kërkim Privat</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Ndajeni me të tjerë</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
+    <string name="mozac_selection_context_menu_email">Email</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new call from the selected text. -->
+    <string name="mozac_selection_context_menu_call">Thirrje</string>
 </resources>

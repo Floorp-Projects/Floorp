@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Refresh button in site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_refresh">Osveži</string>
+    </resources>
