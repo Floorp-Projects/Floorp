@@ -2,7 +2,7 @@
 
 # Colors
 
-`data class Colors` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L98)
+`data class Colors` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L99)
 
 Data class holding the customizable colors in "display mode".
 

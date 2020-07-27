@@ -11,6 +11,8 @@
 | Name | Summary |
 |---|---|
 | [AddContainerAction](-add-container-action/index.md) | `data class AddContainerAction : `[`ContainerAction`](./index.md)<br>Updates [BrowserState.containers](../../mozilla.components.browser.state.state/-browser-state/containers.md) to register the given added [container](-add-container-action/container.md). |
+| [AddContainersAction](-add-containers-action/index.md) | `data class AddContainersAction : `[`ContainerAction`](./index.md)<br>Updates [BrowserState.containers](../../mozilla.components.browser.state.state/-browser-state/containers.md) to register the given list of [containers](-add-containers-action/containers.md). |
+| [InitializeContainerState](-initialize-container-state.md) | `object InitializeContainerState : `[`ContainerAction`](./index.md)<br>Initializes the [BrowserState.containers](../../mozilla.components.browser.state.state/-browser-state/containers.md) state. |
 | [RemoveContainerAction](-remove-container-action/index.md) | `data class RemoveContainerAction : `[`ContainerAction`](./index.md)<br>Removes all state of the removed container from [BrowserState.containers](../../mozilla.components.browser.state.state/-browser-state/containers.md). |
 
 ### Extension Functions
@@ -24,4 +26,6 @@
 | Name | Summary |
 |---|---|
 | [AddContainerAction](-add-container-action/index.md) | `data class AddContainerAction : `[`ContainerAction`](./index.md)<br>Updates [BrowserState.containers](../../mozilla.components.browser.state.state/-browser-state/containers.md) to register the given added [container](-add-container-action/container.md). |
+| [AddContainersAction](-add-containers-action/index.md) | `data class AddContainersAction : `[`ContainerAction`](./index.md)<br>Updates [BrowserState.containers](../../mozilla.components.browser.state.state/-browser-state/containers.md) to register the given list of [containers](-add-containers-action/containers.md). |
+| [InitializeContainerState](-initialize-container-state.md) | `object InitializeContainerState : `[`ContainerAction`](./index.md)<br>Initializes the [BrowserState.containers](../../mozilla.components.browser.state.state/-browser-state/containers.md) state. |
 | [RemoveContainerAction](-remove-container-action/index.md) | `data class RemoveContainerAction : `[`ContainerAction`](./index.md)<br>Removes all state of the removed container from [BrowserState.containers](../../mozilla.components.browser.state.state/-browser-state/containers.md). |

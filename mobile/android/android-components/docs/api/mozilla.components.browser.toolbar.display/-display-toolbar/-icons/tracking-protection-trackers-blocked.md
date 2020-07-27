@@ -2,7 +2,7 @@
 
 # trackingProtectionTrackersBlocked
 
-`val trackingProtectionTrackersBlocked: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L123)
+`val trackingProtectionTrackersBlocked: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L124)
 
 An icon that is shown if tracking protection is
 enabled and trackers have been blocked.

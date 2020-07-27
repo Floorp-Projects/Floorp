@@ -2,7 +2,7 @@
 
 # Indicators
 
-`enum class Indicators` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L76)
+`enum class Indicators` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L77)
 
 Enum of indicators that can be displayed in the toolbar.
 

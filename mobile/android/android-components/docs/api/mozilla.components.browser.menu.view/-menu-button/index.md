@@ -2,7 +2,7 @@
 
 # MenuButton
 
-`class MenuButton` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/view/MenuButton.kt#L27)
+`class MenuButton : `[`MenuButton`](../../mozilla.components.concept.menu/-menu-button/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.menu/-menu-button/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/view/MenuButton.kt#L36)
 
 A `three-dot` button used for expanding menus.
 
@@ -18,10 +18,11 @@ If you are using a browser toolbar, do not use this class directly.
 
 | Name | Summary |
 |---|---|
-| [getOrientation](get-orientation.md) | `var getOrientation: () -> `[`Orientation`](../../mozilla.components.browser.menu/-browser-menu/-orientation/index.md)<br>Callback to get the orientation for the menu. This is called every time the menu should be displayed. |
-| [menuBuilder](menu-builder.md) | `var menuBuilder: `[`BrowserMenuBuilder`](../../mozilla.components.browser.menu/-browser-menu-builder/index.md)`?` |
-| [onDismiss](on-dismiss.md) | `var onDismiss: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Listener called when the menu is dismissed. |
-| [onShow](on-show.md) | `var onShow: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Listener called when the menu is shown. |
+| [getOrientation](get-orientation.md) | `var getOrientation: () -> `[`Orientation`](../../mozilla.components.browser.menu/-browser-menu/-orientation/index.md)<br>Callback to get the orientation for the menu. This is called every time the menu should be displayed. This has no effect when a [MenuController](../../mozilla.components.concept.menu/-menu-controller/index.md) is set. |
+| [menuBuilder](menu-builder.md) | `var menuBuilder: `[`BrowserMenuBuilder`](../../mozilla.components.browser.menu/-browser-menu-builder/index.md)`?`<br>Sets a [BrowserMenuBuilder](../../mozilla.components.browser.menu/-browser-menu-builder/index.md) that will be used to create a menu when this button is clicked. |
+| [menuController](menu-controller.md) | `var menuController: `[`MenuController`](../../mozilla.components.concept.menu/-menu-controller/index.md)`?`<br>Sets a [MenuController](../../mozilla.components.concept.menu/-menu-controller/index.md) that will be used to create a menu when this button is clicked. If present, [menuBuilder](menu-builder.md) will be ignored. |
+| [onDismiss](on-dismiss.md) | `var ~~onDismiss~~: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Listener called when the menu is dismissed. |
+| [onShow](on-show.md) | `var ~~onShow~~: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Listener called when the menu is shown. |
 
 ### Functions
 
@@ -31,6 +32,7 @@ If you are using a browser toolbar, do not use this class directly.
 | [invalidateBrowserMenu](invalidate-browser-menu.md) | `fun invalidateBrowserMenu(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invalidates the [BrowserMenu](../../mozilla.components.browser.menu/-browser-menu/index.md), if open. |
 | [onClick](on-click.md) | `fun onClick(v: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Shows the menu, or dismisses it if already open. |
 | [setColorFilter](set-color-filter.md) | `fun setColorFilter(color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the tint of the 3-dot menu icon. |
+| [setEffect](set-effect.md) | `fun setEffect(effect: `[`MenuEffect`](../../mozilla.components.concept.menu.candidate/-menu-effect.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Show the indicator for a browser menu effect. |
 | [setHighlight](set-highlight.md) | `fun setHighlight(highlight: `[`BrowserMenuHighlight`](../../mozilla.components.browser.menu/-browser-menu-highlight/index.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Show the indicator for a browser menu highlight. |
 
 ### Extension Functions
