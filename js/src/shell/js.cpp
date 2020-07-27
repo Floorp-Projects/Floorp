@@ -3887,8 +3887,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
                               : JS::WeakRefSpecifier::Disabled)
       .setToSourceEnabled(enableToSource)
       .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix)
-      .setIteratorHelpersEnabled(enableIteratorHelpers)
-      .setPrivateClassFieldsEnabled(enablePrivateClassFields);
+      .setIteratorHelpersEnabled(enableIteratorHelpers);
 }
 
 static MOZ_MUST_USE bool CheckRealmOptions(JSContext* cx,
@@ -10130,7 +10129,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks)
-      .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly);
+      .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
+      .setPrivateClassFields(enablePrivateClassFields);
 
   if (op.getBoolOption("no-ion-for-main-context")) {
     JS::ContextOptionsRef(cx).setDisableIon();

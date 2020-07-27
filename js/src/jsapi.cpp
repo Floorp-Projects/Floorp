@@ -3562,8 +3562,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   }
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
-  privateClassFields =
-      cx->realm()->creationOptions().getPrivateClassFieldsEnabled();
+  privateClassFields = cx->options().privateClassFields();
 
   sourcePragmas_ = cx->options().sourcePragmas();
 
