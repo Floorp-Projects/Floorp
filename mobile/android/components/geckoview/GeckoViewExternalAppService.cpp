@@ -46,7 +46,7 @@ NS_IMETHODIMP GeckoViewExternalAppService::CreateListener(
     const nsACString& aMimeContentType, nsIRequest* aRequest,
     mozilla::dom::BrowsingContext* aContentContext, bool aForceSave,
     nsIInterfaceRequestor* aWindowContext,
-    nsExternalAppHandler** aStreamListener) {
+    nsIStreamListener** aStreamListener) {
   using namespace mozilla;
   using namespace mozilla::dom;
   MOZ_ASSERT(XRE_IsParentProcess());

@@ -669,7 +669,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
     const nsACString& aMimeContentType, nsIRequest* aRequest,
     BrowsingContext* aContentContext, bool aForceSave,
     nsIInterfaceRequestor* aWindowContext,
-    nsExternalAppHandler** aStreamListener) {
+    nsIStreamListener** aStreamListener) {
   MOZ_ASSERT(!XRE_IsContentProcess());
 
   nsAutoString fileName;
@@ -818,10 +818,8 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(
                                          aStreamListener);
   }
 
-  RefPtr<nsExternalAppHandler> handler;
   nsresult rv = CreateListener(aMimeContentType, aRequest, bc, aForceSave,
-                               aWindowContext, getter_AddRefs(handler));
-  handler.forget(aStreamListener);
+                               aWindowContext, aStreamListener);
   return rv;
 }
 
@@ -1187,6 +1185,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
   NS_INTERFACE_MAP_ENTRY(nsICancelable)
   NS_INTERFACE_MAP_ENTRY(nsIBackgroundFileSaverObserver)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(nsExternalAppHandler)
 NS_INTERFACE_MAP_END
 
 nsExternalAppHandler::nsExternalAppHandler(
