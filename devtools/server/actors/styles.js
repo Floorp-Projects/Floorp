@@ -184,11 +184,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     return {
       actor: this.actorID,
       traits: {
-        // Whether the actor has had bug 1103993 fixed, which means that the
-        // getApplied method calls cssLogic.highlight(node) to recreate the
-        // style cache. Clients requesting getApplied from actors that have not
-        // been fixed must make sure cssLogic.highlight(node) was called before.
-        getAppliedCreatesStyleCache: true,
         // Whether the page supports values of font-stretch from CSS Fonts Level 4.
         fontStretchLevel4: CSS.supports("font-stretch: 100%"),
         // Whether the page supports values of font-style from CSS Fonts Level 4.
