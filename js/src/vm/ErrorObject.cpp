@@ -153,7 +153,7 @@ const ClassSpec ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
 
 #define IMPLEMENT_ERROR_CLASS(name)                                   \
   {                                                                   \
-    js_Error_str, /* yes, really, e.g. devtools depends on this. */   \
+#    name,                                                            \
         JSCLASS_HAS_CACHED_PROTO(JSProto_##name) |                    \
             JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS) | \
             JSCLASS_BACKGROUND_FINALIZE,                              \

@@ -18,7 +18,7 @@ dbg.onEnterFrame = frame => {
         let genObj = completion.return;
         assertEq(genObj.class, "Generator");
         let result = frame.evalWithBindings("genObj.next()", {genObj});
-        assertEq(result.throw.class, "Error");
+        assertEq(result.throw.class, "TypeError");
         assertEq(result.throw.getProperty("message").return,
                  "already executing generator");
         hits++;
