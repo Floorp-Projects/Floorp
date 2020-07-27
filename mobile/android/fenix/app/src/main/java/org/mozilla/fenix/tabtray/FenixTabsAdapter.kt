@@ -104,5 +104,6 @@ class FenixTabsAdapter(
             mode is TabTrayDialogFragmentState.Mode.MultiSelect && selectedItems.contains(tab)
         view.checkmark.isVisible = shouldBeChecked
         view.selected_mask.isVisible = shouldBeChecked
+        view.mozac_browser_tabstray_close.isVisible = mode is TabTrayDialogFragmentState.Mode.Normal
     }
 }

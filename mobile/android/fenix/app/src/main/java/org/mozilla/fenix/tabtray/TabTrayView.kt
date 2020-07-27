@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
@@ -248,12 +249,15 @@ class TabTrayView(
     fun updateState(state: TabTrayDialogFragmentState) {
         val oldMode = mode
 
-        if (oldMode::class != state.mode::class && view.context.settings().accessibilityServicesEnabled) {
-            view.announceForAccessibility(
-                if (state.mode == TabTrayDialogFragmentState.Mode.Normal) view.context.getString(
-                    R.string.tab_tray_exit_multiselect_content_description
-                ) else view.context.getString(R.string.tab_tray_enter_multiselect_content_description)
-            )
+        if (oldMode::class != state.mode::class) {
+            updateTabsForModeChanged()
+            if (view.context.settings().accessibilityServicesEnabled) {
+                view.announceForAccessibility(
+                    if (state.mode == TabTrayDialogFragmentState.Mode.Normal) view.context.getString(
+                        R.string.tab_tray_exit_multiselect_content_description
+                    ) else view.context.getString(R.string.tab_tray_enter_multiselect_content_description)
+                )
+            }
         }
 
         mode = state.mode
@@ -275,7 +279,7 @@ class TabTrayView(
 
                 fabView.new_tab_button.isVisible = false
                 view.tab_tray_new_tab.isVisible = false
-                view.collect_multi_select.isVisible = state.mode.selectedItems.size > 0
+                view.collect_multi_select.isVisible = state.mode.selectedItems.isNotEmpty()
 
                 view.multiselect_title.text = view.context.getString(
                     R.string.tab_tray_multi_select_title,
@@ -391,13 +395,21 @@ class TabTrayView(
         view.tab_layout.isVisible = !multiselect
     }
 
+    private fun updateTabsForModeChanged() {
+        view.tabsTray.apply {
+            val tabs = view.context.components.core.store.state.getNormalOrPrivateTabs(
+                isPrivateModeSelected
+            )
+
+            this.adapter?.notifyItemRangeChanged(0, tabs.size, true)
+        }
+    }
+
     private fun updateTabsForSelectionChanged(itemId: String) {
         view.tabsTray.apply {
-            val tabs = if (isPrivateModeSelected) {
-                view.context.components.core.store.state.privateTabs
-            } else {
-                view.context.components.core.store.state.normalTabs
-            }
+            val tabs = view.context.components.core.store.state.getNormalOrPrivateTabs(
+                isPrivateModeSelected
+            )
 
             val selectedBrowserTabIndex = tabs.indexOfFirst { it.id == itemId }
 
