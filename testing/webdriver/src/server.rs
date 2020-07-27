@@ -279,11 +279,36 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
         .and(warp::path::end())
         .and(warp::path::full())
         .and(warp::method())
+        .and(warp::header::optional::<String>("content-type"))
         .and(warp::body::bytes())
         .map(
-            move |params, full_path: warp::path::FullPath, method, body: Bytes| {
+            move |params,
+                  full_path: warp::path::FullPath,
+                  method,
+                  content_type_header: Option<String>,
+                  body: Bytes| {
                 if method == Method::HEAD {
                     return warp::reply::with_status("".into(), StatusCode::OK);
+                }
+                if method == Method::POST {
+                    // Disallow CORS-safelisted request headers
+                    // c.f. https://fetch.spec.whatwg.org/#cors-safelisted-request-header
+                    let content_type = content_type_header
+                        .as_ref()
+                        .map(|x| x.find(';').and_then(|idx| x.get(0..idx)).unwrap_or(x))
+                        .map(|x| x.trim())
+                        .map(|x| x.to_lowercase());
+                    match content_type.as_ref().map(|x| x.as_ref()) {
+                        Some("application/x-www-form-urlencoded")
+                        | Some("multipart/form-data")
+                        | Some("text/plain") => {
+                            return warp::reply::with_status(
+                                "Invalid content-type".to_string(),
+                                StatusCode::BAD_REQUEST,
+                            )
+                        }
+                        Some(_) | None => {}
+                    }
                 }
                 let body = String::from_utf8(body.bytes().to_vec());
                 if body.is_err() {
