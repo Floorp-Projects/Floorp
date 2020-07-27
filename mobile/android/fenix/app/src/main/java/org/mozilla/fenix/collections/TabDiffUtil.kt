@@ -10,7 +10,6 @@ import org.mozilla.fenix.home.Tab
 /**
  * Diff callback for comparing tab lists with selected state.
  */
-@Suppress("LongParameterList")
 internal class TabDiffUtil(
     private val old: List<Tab>,
     private val new: List<Tab>,

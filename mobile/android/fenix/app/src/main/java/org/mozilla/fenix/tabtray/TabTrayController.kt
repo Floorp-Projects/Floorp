@@ -53,7 +53,7 @@ interface TabTrayController {
  * @param showChooseCollectionDialog callback allowing saving a list of sessions to an existing collection.
  * @param showAddNewCollectionDialog callback allowing for saving a list of sessions to a new collection.
  */
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions")
 class DefaultTabTrayController(
     private val activity: HomeActivity,
     private val navController: NavController,

@@ -42,7 +42,7 @@ import org.mozilla.fenix.theme.ThemeManager
  * @param lifecycleOwner View lifecycle owner used to determine when to cancel UI jobs.
  * @param bookmarksStorage Used to check if a page is bookmarked.
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 class DefaultToolbarMenu(
     private val context: Context,
     private val sessionManager: SessionManager,

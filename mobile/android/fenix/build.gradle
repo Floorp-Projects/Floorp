@@ -147,7 +147,6 @@ detekt {
     version = "1.9.1"
     input = files("$projectDir/app/src")
     config = files("$projectDir/config/detekt.yml")
-    baseline = file("$projectDir/config/detekt-baseline.xml")
 
     reports {
         html {

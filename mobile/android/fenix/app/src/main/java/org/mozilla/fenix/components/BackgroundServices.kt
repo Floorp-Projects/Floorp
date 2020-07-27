@@ -47,6 +47,7 @@ import org.mozilla.fenix.utils.Settings
  * background worker.
  */
 @Mockable
+@Suppress("LongParameterList")
 class BackgroundServices(
     private val context: Context,
     private val push: Push,

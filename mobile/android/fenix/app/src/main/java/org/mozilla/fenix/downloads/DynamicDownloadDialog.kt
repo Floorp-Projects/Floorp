@@ -21,8 +21,8 @@ import org.mozilla.fenix.ext.settings
  * [DynamicDownloadDialog] is used to show a view in the current tab to the user, triggered when
  *  downloadFeature.onDownloadStopped gets invoked. It uses [DynamicDownloadDialogBehavior] to
  *  hide when the users scrolls through a website as to not impede his activities.
- * */
-
+ */
+@Suppress("LongParameterList")
 class DynamicDownloadDialog(
     private val container: ViewGroup,
     private val downloadState: DownloadState?,

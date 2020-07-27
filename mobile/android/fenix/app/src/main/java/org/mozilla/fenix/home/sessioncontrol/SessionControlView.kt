@@ -20,7 +20,7 @@ import org.mozilla.fenix.home.OnboardingState
 
 // This method got a little complex with the addition of the tab tray feature flag
 // When we remove the tabs from the home screen this will get much simpler again.
-@SuppressWarnings("LongParameterList", "ComplexMethod")
+@Suppress("ComplexMethod")
 private fun normalModeAdapterItems(
     topSites: List<TopSite>,
     collections: List<TabCollection>,

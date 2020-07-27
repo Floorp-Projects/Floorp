@@ -27,6 +27,7 @@ import org.mozilla.fenix.utils.Mockable
  * modules and can be triggered by UI interactions.
  */
 @Mockable
+@Suppress("LongParameterList")
 class UseCases(
     private val context: Context,
     private val engine: Engine,

@@ -28,7 +28,7 @@ import org.mozilla.fenix.ext.nav
  * [BookmarkFragment] controller.
  * Delegated by View Interactors, handles container business logic and operates changes on it.
  */
-@SuppressWarnings("TooManyFunctions")
+@Suppress("TooManyFunctions")
 interface BookmarkController {
     fun handleBookmarkChanged(item: BookmarkNode)
     fun handleBookmarkTapped(item: BookmarkNode)
@@ -47,7 +47,7 @@ interface BookmarkController {
     fun handleBackPressed()
 }
 
-@SuppressWarnings("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions")
 class DefaultBookmarkController(
     private val activity: HomeActivity,
     private val navController: NavController,

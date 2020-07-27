@@ -25,6 +25,7 @@ import org.mozilla.fenix.utils.Mockable
  * Component group for miscellaneous components.
  */
 @Mockable
+@Suppress("LongParameterList")
 class IntentProcessors(
     private val context: Context,
     private val sessionManager: SessionManager,

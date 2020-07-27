@@ -76,9 +76,12 @@ complexity:
     # https://github.com/mozilla-mobile/fenix/issues/4861
     threshold: 75
   LongParameterList:
-    active: true
-    threshold: 6
+    active: trued
+    excludes: "**/*Controller.kt, **/*Integration.kt"
+    functionThreshold: 6
+    constructorThreshold: 7
     ignoreDefaultParameters: false
+    ignoreDataClasses: true
   MethodOverloading:
     active: false
     threshold: 6
