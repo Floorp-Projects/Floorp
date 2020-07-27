@@ -1332,8 +1332,8 @@ void nsWindow::GeckoViewSupport::Open(
     chromeFlags += ",remote";
   }
   nsCOMPtr<mozIDOMWindowProxy> domWindow;
-  ww->OpenWindow(nullptr, url.get(), aId->ToCString().get(), chromeFlags.get(),
-                 androidView, getter_AddRefs(domWindow));
+  ww->OpenWindow(nullptr, url, nsDependentCString(aId->ToCString().get()),
+                 chromeFlags, androidView, getter_AddRefs(domWindow));
   MOZ_RELEASE_ASSERT(domWindow);
 
   nsCOMPtr<nsPIDOMWindowOuter> pdomWindow = nsPIDOMWindowOuter::From(domWindow);

@@ -5593,7 +5593,16 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::OpenOuter(
     const nsAString& aUrl, const nsAString& aName, const nsAString& aOptions,
     ErrorResult& aError) {
   RefPtr<BrowsingContext> bc;
-  aError = OpenJS(aUrl, aName, aOptions, getter_AddRefs(bc));
+  nsresult rv = OpenJS(aUrl, aName, aOptions, getter_AddRefs(bc));
+  if (rv == NS_ERROR_MALFORMED_URI) {
+    aError.ThrowSyntaxError("Unable to open a window with invalid URL '"_ns +
+                            NS_ConvertUTF16toUTF8(aUrl) + "'."_ns);
+    return nullptr;
+  }
+
+  // XXX Is it possible that some internal errors are thrown here?
+  aError = rv;
+
   if (!bc) {
     return nullptr;
   }
@@ -7018,9 +7027,6 @@ nsresult nsGlobalWindowOuter::OpenInternal(
 
   NS_ConvertUTF16toUTF8 name(windowName);
 
-  const char* options_ptr = options.IsEmpty() ? nullptr : options.get();
-  const char* name_ptr = windowName.IsEmpty() ? nullptr : name.get();
-
   nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
   NS_ENSURE_STATE(pwwatch);
 
@@ -7042,11 +7048,11 @@ nsresult nsGlobalWindowOuter::OpenInternal(
     if (!aCalledNoScript) {
       // We asserted at the top of this function that aNavigate is true for
       // !aCalledNoScript.
-      rv = pwwatch->OpenWindow2(
-          this, url.IsVoid() ? nullptr : url.get(), name_ptr, options_ptr,
-          /* aCalledFromScript = */ true, aDialog, aNavigate, argv,
-          isPopupSpamWindow, forceNoOpener, forceNoReferrer, aLoadState,
-          getter_AddRefs(domReturn));
+      rv = pwwatch->OpenWindow2(this, url, name, options,
+                                /* aCalledFromScript = */ true, aDialog,
+                                aNavigate, argv, isPopupSpamWindow,
+                                forceNoOpener, forceNoReferrer, aLoadState,
+                                getter_AddRefs(domReturn));
     } else {
       // Force a system caller here so that the window watcher won't screw us
       // up.  We do NOT want this case looking at the JS context on the stack
@@ -7062,11 +7068,11 @@ nsresult nsGlobalWindowOuter::OpenInternal(
         nojsapi.emplace();
       }
 
-      rv = pwwatch->OpenWindow2(
-          this, url.IsVoid() ? nullptr : url.get(), name_ptr, options_ptr,
-          /* aCalledFromScript = */ false, aDialog, aNavigate, aExtraArgument,
-          isPopupSpamWindow, forceNoOpener, forceNoReferrer, aLoadState,
-          getter_AddRefs(domReturn));
+      rv = pwwatch->OpenWindow2(this, url, name, options,
+                                /* aCalledFromScript = */ false, aDialog,
+                                aNavigate, aExtraArgument, isPopupSpamWindow,
+                                forceNoOpener, forceNoReferrer, aLoadState,
+                                getter_AddRefs(domReturn));
     }
   }
 
