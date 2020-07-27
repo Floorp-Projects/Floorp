@@ -95,8 +95,10 @@ auto GraphRunner::OneIteration(GraphTime aStateEnd, GraphTime aIterationEnd,
 }
 
 NS_IMETHODIMP GraphRunner::Run() {
+#ifndef XP_LINUX
   atp_handle* handle =
       atp_promote_current_thread_to_real_time(0, mGraph->GraphRate());
+#endif
 
   nsCOMPtr<nsIThreadInternal> threadInternal = do_QueryInterface(mThread);
   threadInternal->SetObserver(mGraph);
@@ -119,9 +121,11 @@ NS_IMETHODIMP GraphRunner::Run() {
     mMonitor.Notify();
   }
 
+#ifndef XP_LINUX
   if (handle) {
     atp_demote_current_thread_from_real_time(handle);
   }
+#endif
 
   return NS_OK;
 }
