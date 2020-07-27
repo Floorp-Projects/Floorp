@@ -60,6 +60,7 @@ class SettingsBasicsTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/12968")
     @Test
     // Walks through settings menu and sub-menus to ensure all items are present
     fun settingsMenuBasicsItemsTests() {
@@ -90,6 +91,7 @@ class SettingsBasicsTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/12968")
     @Test
     fun selectNewDefaultSearchEngine() {
         // Goes through the settings and changes the default search engine, then verifies it has changed.

@@ -66,6 +66,7 @@ class NavigationToolbarTest {
         }
     }
 
+    @Ignore("Flaky test: https://github.com/mozilla-mobile/fenix/issues/12894")
     @Test
     fun goForwardTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

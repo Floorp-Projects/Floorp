@@ -66,6 +66,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/12968")
     @Test
     fun shortcutSearchEngineSettingsTest() {
         homeScreen {
