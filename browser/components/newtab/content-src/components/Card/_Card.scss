@@ -268,7 +268,8 @@
       height: $container-size;
       width: $container-size;
       padding: ($container-size - $icon-size) / 2;
-      top: $card-preview-image-height-compact - $icon-size;
+      // The -1 at the end is so both opacity borders don't overlap, which causes bug 1629483
+      top: $card-preview-image-height-compact - $container-size / 2 - 1;
       inset-inline-end: 12px;
       inset-inline-start: auto;
 
