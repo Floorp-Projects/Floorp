@@ -75,9 +75,6 @@ def test_only_important_manifests(params, full_task_graph, filter_tasks):
             assert unimportant == []
 
 
-@pytest.mark.xfail(
-    reason="Bug 1641131 - shippable builds still showing up due to dependencies"
-)
 def test_no_shippable_builds(tgg, filter_tasks):
     optimized_task_graph = tgg.optimized_task_graph
     # We can still sometimes get macosx64-shippable builds with |mach try
@@ -88,8 +85,7 @@ def test_no_shippable_builds(tgg, filter_tasks):
         for t in filter_tasks(
             optimized_task_graph,
             lambda t: t.kind == "build"
-            and "shippable" in t.attributes["build_platform"]
-            and t.attributes["build_platform"] != "macosx64-shippable",
+            and "shippable" in t.attributes["build_platform"],
         )
     ]
 

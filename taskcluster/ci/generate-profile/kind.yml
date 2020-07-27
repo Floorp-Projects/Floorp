@@ -21,6 +21,7 @@ job-defaults:
         symbol: Bpgo(run)
         kind: build
         tier: 1
+    run-on-projects: ['release']
 
 jobs:
     linux-shippable/opt:

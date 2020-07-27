@@ -13,6 +13,8 @@ import six
 from taskgraph import try_option_syntax
 from taskgraph.parameters import Parameters
 from taskgraph.util.attributes import match_run_on_projects, match_run_on_hg_branches
+from taskgraph.util.backstop import is_backstop
+from taskgraph.util.platforms import platform_family
 
 _target_task_methods = {}
 
@@ -38,13 +40,9 @@ UNCOMMON_TRY_TASK_LABELS = [
     r'web-platform-tests.*backlog',  # hide wpt jobs that are not implemented yet - bug 1572820
     r'-ccov/',
     r'-profiling-',  # talos/raptor profiling jobs are run too often
-    # Generally, we don't want shippable builds or tests to run, unless they're needed
-    # for performance tests _or_ on OS X, where we run all tests against shippable
-    # builds (not opt).
-    # The negative lookbehind assertion looks weird here because it has to be fixed
-    # width, and we have two platforms (build & test) to catch.
-    # The full version of the first platform is macosx1014-64
-    r'(?<!(x1014-64|macosx64))-shippable(?!.*(awsy|browsertime|marionette-headless|raptor|talos|web-platform-tests-wdspec-headless))',  # noqa - too long
+    # Hide shippable versions of non perf tests. The non-shippable versions are faster
+    # to run.
+    r'-shippable(?!.*(awsy|browsertime|marionette-headless|raptor|talos|web-platform-tests-wdspec-headless))',  # noqa - too long
 ]
 
 
@@ -316,6 +314,67 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
             if standard_filter(t, parameters)
             and filter_out_shipping_phase(t, parameters)
             and filter_out_devedition(t, parameters)]
+
+
+@_target_task('autoland_tasks')
+def target_tasks_autoland(full_task_graph, parameters, graph_config):
+    """In addition to doing the filtering by project that the 'default'
+       filter does, also remove any tests running against shippable builds
+       for non-backstop pushes."""
+    filtered_for_project = target_tasks_default(full_task_graph, parameters, graph_config)
+
+    def filter(task):
+        if task.kind != "test":
+            return True
+
+        if is_backstop(parameters):
+            return True
+
+        build_type = task.attributes.get('build_type')
+        shippable = task.attributes.get('shippable', False)
+
+        if not build_type or build_type != 'opt' or not shippable:
+            return True
+
+        return False
+
+    return [l for l in filtered_for_project if filter(full_task_graph[l])]
+
+
+@_target_task('mozilla_central_tasks')
+def target_tasks_mozilla_central(full_task_graph, parameters, graph_config):
+    """In addition to doing the filtering by project that the 'default'
+       filter does, also remove any tests running against regular (aka not shippable,
+       asan, etc.) opt builds."""
+    filtered_for_project = target_tasks_default(full_task_graph, parameters, graph_config)
+
+    def filter(task):
+        if task.kind != "test":
+            return True
+
+        build_platform = task.attributes.get('build_platform')
+        build_type = task.attributes.get('build_type')
+        shippable = task.attributes.get('shippable', False)
+
+        if not build_platform or not build_type:
+            return True
+
+        family = platform_family(build_platform)
+        # We need to know whether this test is against a "regular" opt build
+        # (which is to say, not shippable, asan, tsan, or any other opt build
+        # with other properties). There's no positive test for this, so we have to
+        # do it somewhat hackily. Android doesn't have variants other than shippable
+        # so it is pretty straightforward to check for. Other platforms have many
+        # variants, but none of the regular opt builds we're looking for have a "-"
+        # in their platform name, so this works (for now).
+        is_regular_opt = (family == 'android' and not shippable) or '-' not in build_platform
+
+        if build_type != "opt" or not is_regular_opt:
+            return True
+
+        return False
+
+    return [l for l in filtered_for_project if filter(full_task_graph[l])]
 
 
 @_target_task('graphics_tasks')

@@ -36,6 +36,7 @@ job-defaults:
     fetches:
         toolchain:
             - linux64-sccache
+    run-on-projects: ['release']
 
 jobs:
     linux-shippable/opt:
