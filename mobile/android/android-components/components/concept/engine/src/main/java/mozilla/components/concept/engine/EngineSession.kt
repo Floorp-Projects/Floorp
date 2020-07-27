@@ -390,7 +390,10 @@ abstract class EngineSession(
             const val EXTERNAL: Int = 1 shl 2
             const val ALLOW_POPUPS: Int = 1 shl 3
             const val BYPASS_CLASSIFIER: Int = 1 shl 4
-            internal const val ALL = BYPASS_CACHE + BYPASS_PROXY + EXTERNAL + ALLOW_POPUPS + BYPASS_CLASSIFIER
+            const val LOAD_FLAGS_FORCE_ALLOW_DATA_URI: Int = 1 shl 5
+            const val LOAD_FLAGS_REPLACE_HISTORY: Int = 1 shl 6
+            internal const val ALL = BYPASS_CACHE + BYPASS_PROXY + EXTERNAL + ALLOW_POPUPS +
+                BYPASS_CLASSIFIER + LOAD_FLAGS_FORCE_ALLOW_DATA_URI + LOAD_FLAGS_REPLACE_HISTORY
 
             fun all() = LoadUrlFlags(ALL)
             fun none() = LoadUrlFlags(NONE)
