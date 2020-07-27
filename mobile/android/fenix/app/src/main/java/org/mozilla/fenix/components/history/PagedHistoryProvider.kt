@@ -26,16 +26,17 @@ interface PagedHistoryProvider {
 // If we run this in our own coroutineScope it breaks the PagedList
 fun HistoryStorage.createSynchronousPagedHistoryProvider(): PagedHistoryProvider {
     return object : PagedHistoryProvider {
+
         override fun getHistory(
             offset: Long,
             numberOfItems: Long,
             onComplete: (List<VisitInfo>) -> Unit
         ) {
             runBlocking {
-                val history = this@createSynchronousPagedHistoryProvider.getVisitsPaginated(
+                val history = getVisitsPaginated(
                     offset,
                     numberOfItems,
-                    listOf(
+                    excludeTypes = listOf(
                         VisitType.NOT_A_VISIT,
                         VisitType.DOWNLOAD,
                         VisitType.REDIRECT_TEMPORARY,

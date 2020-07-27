@@ -66,7 +66,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -88,7 +87,6 @@ class DefaultBrowserToolbarControllerTest {
     @RelaxedMockK private lateinit var engineView: EngineView
     @RelaxedMockK private lateinit var currentSession: Session
     @RelaxedMockK private lateinit var openInFenixIntent: Intent
-    @RelaxedMockK private lateinit var currentSessionAsTab: Tab
     @RelaxedMockK private lateinit var metrics: MetricController
     @RelaxedMockK private lateinit var searchUseCases: SearchUseCases
     @RelaxedMockK private lateinit var sessionUseCases: SessionUseCases
@@ -183,6 +181,22 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleTabCounterClick()
 
         verify { onTabCounterClicked() }
+    }
+
+    @Test
+    fun `handle reader mode enabled`() = runBlockingTest {
+        val controller = createController(scope = this)
+        controller.handleReaderModePressed(enabled = true)
+
+        verify { readerModeController.showReaderView() }
+    }
+
+    @Test
+    fun `handle reader mode disabled`() = runBlockingTest {
+        val controller = createController(scope = this)
+        controller.handleReaderModePressed(enabled = false)
+
+        verify { readerModeController.hideReaderView() }
     }
 
     @Test
