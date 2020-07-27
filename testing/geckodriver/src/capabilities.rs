@@ -82,7 +82,7 @@ impl<'a> FirefoxCapabilities<'a> {
         let version_regexp = Regex::new(r#"Mozilla Firefox [0-9]+\.[0-9]+(?:[a-z][0-9]+)?"#)
             .expect("Error parsing version regexp");
         let output = Command::new(binary)
-            .args(&["-version"])
+            .args(&["--version"])
             .stdout(Stdio::piped())
             .spawn()
             .and_then(|child| child.wait_with_output())
