@@ -317,21 +317,9 @@ class JS_FRIEND_API BaseProxyHandler {
                    HandleValue v, HandleValue receiver,
                    ObjectOpResult& result) const;
 
-  // Private fields don't use [[Has]], [[Get]] and [[Set]] semantics, as they
-  // technically use a weak-map semantics, however we end up on these paths with
-  // our implementation.
-  virtual bool hasPrivate(JSContext* cx, HandleObject proxy, HandleId id,
-                          bool* bp) const;
-  virtual bool getPrivate(JSContext* cx, HandleObject proxy,
-                          HandleValue receiver, HandleId id,
-                          MutableHandleValue vp) const;
-  virtual bool setPrivate(JSContext* cx, HandleObject proxy, HandleId id,
-                          HandleValue v, HandleValue receiver,
-                          ObjectOpResult& result) const;
-
-  virtual bool definePrivateField(JSContext* cx, HandleObject proxy,
-                                  HandleId id, Handle<PropertyDescriptor> desc,
-                                  ObjectOpResult& result) const;
+  // Use the ProxyExpando object for private fields, rather than taking the
+  // normal get/set/defineField paths.
+  virtual bool useProxyExpandoObjectForPrivateFields() const { return true; }
 
   /*
    * [[Call]] and [[Construct]] are standard internal methods but according
