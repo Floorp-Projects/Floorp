@@ -62,9 +62,6 @@ class nsSearchControlFrame final : public nsTextControlFrame {
   void UpdateClearButtonState();
 
  private:
-  already_AddRefed<Element> MakeAnonymousElement(Element* aParent,
-                                                 nsAtom* aTagName,
-                                                 PseudoStyleType aPseudoType);
   // See nsSearchControlFrame::CreateAnonymousContent of a description of these
   RefPtr<Element> mOuterWrapper;
   RefPtr<Element> mClearButton;
