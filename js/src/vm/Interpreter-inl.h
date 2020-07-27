@@ -16,6 +16,7 @@
 #include "vm/BytecodeUtil.h"  // JSDVG_SEARCH_STACK
 #include "vm/Realm.h"
 #include "vm/SharedStencil.h"  // GCThingIndex
+#include "vm/ThrowMsgKind.h"
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GlobalObject-inl.h"
@@ -539,43 +540,6 @@ static MOZ_ALWAYS_INLINE bool GetElemOptimizedArguments(
   return true;
 }
 
-static MOZ_ALWAYS_INLINE bool GetPrivateElemOperation(JSContext* cx,
-                                                      jsbytecode* pc,
-                                                      HandleValue lhsValue,
-                                                      HandleValue key,
-                                                      MutableHandleValue res) {
-  // Private names represented as PrivateSymbol properties on objects.
-  MOZ_ASSERT(key.isSymbol());
-  MOZ_ASSERT(key.toSymbol()->isPrivateName());
-
-  RootedId id(cx);
-  if (!ToPropertyKey(cx, key, &id)) {
-    return false;
-  }
-
-  // LHS must be an object.
-  if (!lhsValue.isObject()) {
-    ReportNotObject(cx, lhsValue);
-    return false;
-  }
-
-  RootedObject obj(cx, &lhsValue.toObject());
-
-  // Check obj has required property already.
-  bool hasField = false;
-  if (!HasOwnProperty(cx, obj, id, &hasField)) {
-    return false;
-  }
-
-  if (!hasField) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_UNDECLARED_PRIVATE);
-    return false;
-  }
-
-  return GetProperty(cx, obj, obj, id, res);
-}
-
 static MOZ_ALWAYS_INLINE bool GetElementOperationWithStackIndex(
     JSContext* cx, JSOp op, HandleValue lref, int lrefIndex, HandleValue rref,
     MutableHandleValue res) {
@@ -631,60 +595,69 @@ static MOZ_ALWAYS_INLINE bool InitElemOperation(JSContext* cx, jsbytecode* pc,
   }
 
   unsigned flags = GetInitDataPropAttrs(JSOp(*pc));
+  if (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isPrivateName()) {
+    // Clear enumerate flag off of private names.
+    flags &= ~JSPROP_ENUMERATE;
+  }
   return DefineDataProperty(cx, obj, id, val, flags);
 }
 
-static MOZ_ALWAYS_INLINE bool InitPrivateElemOperation(JSContext* cx,
-                                                       jsbytecode* pc,
-                                                       HandleObject obj,
-                                                       HandleValue idval,
-                                                       HandleValue val) {
-  MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
+static inline void GetCheckPrivateFieldOperands(jsbytecode* pc,
+                                                ThrowCondition* throwCondition,
+                                                ThrowMsgKind* throwKind) {
+  static_assert(sizeof(ThrowCondition) == sizeof(uint8_t));
+  static_assert(sizeof(ThrowMsgKind) == sizeof(uint8_t));
 
-  // Private names represented as PrivateSymbol properties on objects.
+  MOZ_ASSERT(JSOp(*pc) == JSOp::CheckPrivateField);
+  uint8_t throwConditionByte = GET_UINT8(pc);
+  uint8_t throwKindByte = GET_UINT8(pc + 1);
+
+  *throwCondition = static_cast<ThrowCondition>(throwConditionByte);
+  *throwKind = static_cast<ThrowMsgKind>(throwKindByte);
+
+  MOZ_ASSERT(*throwCondition == ThrowCondition::ThrowHas ||
+             *throwCondition == ThrowCondition::ThrowHasNot ||
+             *throwCondition == ThrowCondition::NoThrow);
+
+  MOZ_ASSERT(*throwKind == ThrowMsgKind::PrivateDoubleInit ||
+             *throwKind == ThrowMsgKind::MissingPrivateOnGet ||
+             *throwKind == ThrowMsgKind::MissingPrivateOnSet);
+}
+
+static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
+                                                         jsbytecode* pc,
+                                                         HandleValue val,
+                                                         HandleValue idval,
+                                                         bool* result) {
+  // Result had better not be a nullptr.
+  MOZ_ASSERT(result);
+
+  ThrowCondition condition;
+  ThrowMsgKind msgKind;
+  GetCheckPrivateFieldOperands(pc, &condition, &msgKind);
+
   MOZ_ASSERT(idval.isSymbol());
   MOZ_ASSERT(idval.toSymbol()->isPrivateName());
 
-  RootedId id(cx);
-  if (!ToPropertyKey(cx, idval, &id)) {
+  if (!HasOwnProperty(cx, val, idval, result)) {
     return false;
   }
 
-  bool hasField = false;
-  if (!HasOwnProperty(cx, obj, id, &hasField)) {
-    return false;
+  if (condition == ThrowCondition::NoThrow) {
+    // Result was set directly, nothing more do do, return.
+    return true;
   }
 
-  // PrivateFieldAdd: Step 4: We must throw a type error if obj already has
-  // this property.
-  if (hasField) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_PRIVATE_FIELD_DOUBLE);
-    return false;
-  }
-  unsigned flags = GetInitDataPropAttrs(JSOp(*pc));
-  return DefineDataProperty(cx, obj, id, val, flags);
-}
-
-static MOZ_ALWAYS_INLINE bool SetPrivateElementOperation(JSContext* cx,
-                                                         HandleObject obj,
-                                                         HandleId id,
-                                                         HandleValue value,
-                                                         HandleValue receiver) {
-  bool hasField = false;
-  if (!HasOwnProperty(cx, obj, id, &hasField)) {
-    return false;
+  if ((condition == ThrowCondition::ThrowHasNot && *result) ||
+      (condition == ThrowCondition::ThrowHas && !*result)) {
+    // Didn't meet the throw condition
+    return true;
   }
 
-  if (!hasField) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_UNDECLARED_PRIVATE);
-    return false;
-  }
-
-  ObjectOpResult result;
-  return SetProperty(cx, obj, id, value, receiver, result) &&
-         result.checkStrictModeError(cx, obj, id, true);
+  // Throw!
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            ThrowMsgKindToErrNum(msgKind));
+  return false;
 }
 
 static MOZ_ALWAYS_INLINE bool InitArrayElemOperation(JSContext* cx,

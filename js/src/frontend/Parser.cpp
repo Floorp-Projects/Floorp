@@ -7763,11 +7763,11 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     }
   } else if (handler_.isPrivateName(propName)) {
     // It would be nice if we could tweak this here such that only if
-    // HasHeritage::Yes we end up emitting InitPrivateElem, but otherwise we
+    // HasHeritage::Yes we end up emitting CheckPrivateField, but otherwise we
     // emit InitElem -- this is an optimization to minimize HasOwn checks
     // in InitElem for classes without heritage.
     //
-    // Further tweaking would be to ultimately only do InitPrivateElem for the
+    // Further tweaking would be to ultimately only do CheckPrivateField for the
     // -first- field in a derived class, which would suffice to match the
     // semantic check.
 

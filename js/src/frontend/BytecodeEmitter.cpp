@@ -10191,13 +10191,11 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationForOpcodeSlow(
                    emitAtomOp(JSOp::String, atomIndex) && emitDupAt(pushed + 2);
           });
     case JSOp::GetElem:
-    case JSOp::GetPrivateElem:
     case JSOp::CallElem:
       return emitInstrumentationSlow(
           InstrumentationKind::GetElement,
           [=](uint32_t pushed) { return emitDupAt(pushed + 1, 2); });
     case JSOp::SetElem:
-    case JSOp::SetPrivateElem:
     case JSOp::StrictSetElem:
       return emitInstrumentationSlow(
           InstrumentationKind::SetElement,

@@ -53,6 +53,7 @@
 #include "vm/SharedStencil.h"  // GCThingIndex
 #include "vm/StencilEnums.h"   // TryNoteKind
 #include "vm/StringType.h"     // JSAtom
+#include "vm/ThrowMsgKind.h"   // ThrowMsgKind, ThrowCondition
 
 namespace js {
 namespace frontend {
@@ -834,6 +835,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitReturnRval() {
     return emitInstrumentation(InstrumentationKind::Exit) &&
            emit1(JSOp::RetRval);
+  }
+
+  MOZ_MUST_USE bool emitCheckPrivateField(ThrowCondition throwCondition,
+                                          ThrowMsgKind msgKind) {
+    return emit3(JSOp::CheckPrivateField, uint8_t(throwCondition),
+                 uint8_t(msgKind));
   }
 
   MOZ_MUST_USE bool emitInstrumentation(InstrumentationKind kind,
