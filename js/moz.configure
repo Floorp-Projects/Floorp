@@ -508,20 +508,6 @@ set_config('JS_HAS_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x
 set_define('JS_HAS_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
 
 
-# Support for WebAssembly bulk memory operations.
-# =====================================================
-
-js_option('--disable-wasm-bulk-memory',
-          help='Disable WebAssembly bulk memory operators')
-
-@depends('--disable-wasm-bulk-memory')
-def enable_wasm_bulk_memory(value):
-    if value:
-        return True
-
-set_config('ENABLE_WASM_BULKMEM_OPS', enable_wasm_bulk_memory)
-set_define('ENABLE_WASM_BULKMEM_OPS', enable_wasm_bulk_memory)
-
 # Support for WebAssembly reference types.
 # =====================================================
 

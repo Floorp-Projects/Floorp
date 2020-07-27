@@ -8,11 +8,7 @@ const RuntimeError = WebAssembly.RuntimeError;
 const badFuncRefError = /can only pass WebAssembly exported functions to funcref/;
 
 function assertSegmentFitError(f) {
-    if (wasmBulkMemSupported()) {
-        assertErrorMessage(f, RuntimeError, /out of bounds/);
-    } else {
-        assertErrorMessage(f, LinkError, /segment does not fit/);
-    }
+    assertErrorMessage(f, RuntimeError, /out of bounds/);
 }
 
 var callee = i => `(func $f${i} (result i32) (i32.const ${i}))`;

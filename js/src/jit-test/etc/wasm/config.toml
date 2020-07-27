@@ -54,8 +54,6 @@ parent = "spec"
 excluded_tests = []
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
-# Skip in jit-test when it's not enabled
-directive = "; skip-if: !wasmBulkMemSupported()"
 
 [[repos]]
 name = "reference-types"
@@ -65,4 +63,4 @@ excluded_tests = []
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
-directive = "; skip-if: !wasmBulkMemSupported() || !wasmReftypesEnabled()"
+directive = "; skip-if: !wasmReftypesEnabled()"
