@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.123';
-const pdfjsBuild = 'a604973cc';
+const pdfjsVersion = '2.6.136';
+const pdfjsBuild = 'd69fb446b';
 
 /***/ }),
 /* 1 */
@@ -229,7 +229,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.123';
+    const workerVersion = '2.6.136';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1599,6 +1599,10 @@ var Dict = function DictClosure() {
       this.xref = newXref;
     },
 
+    get size() {
+      return Object.keys(this._map).length;
+    },
+
     get(key1, key2, key3) {
       let value = this._map[key1];
 
@@ -1660,6 +1664,9 @@ var Dict = function DictClosure() {
     },
     getKeys: function Dict_getKeys() {
       return Object.keys(this._map);
+    },
+    getRawValues: function Dict_getRawValues() {
+      return Object.values(this._map);
     },
     set: function Dict_set(key, value) {
       this._map[key] = value;
@@ -1756,39 +1763,42 @@ class RefSet {
 
 exports.RefSet = RefSet;
 
-var RefSetCache = function RefSetCacheClosure() {
-  function RefSetCache() {
-    this.dict = Object.create(null);
+class RefSetCache {
+  constructor() {
+    this._map = new Map();
   }
 
-  RefSetCache.prototype = {
-    get size() {
-      return Object.keys(this.dict).length;
-    },
+  get size() {
+    return this._map.size;
+  }
 
-    get: function RefSetCache_get(ref) {
-      return this.dict[ref.toString()];
-    },
-    has: function RefSetCache_has(ref) {
-      return ref.toString() in this.dict;
-    },
-    put: function RefSetCache_put(ref, obj) {
-      this.dict[ref.toString()] = obj;
-    },
-    putAlias: function RefSetCache_putAlias(ref, aliasRef) {
-      this.dict[ref.toString()] = this.get(aliasRef);
-    },
-    forEach: function RefSetCache_forEach(callback) {
-      for (const i in this.dict) {
-        callback(this.dict[i]);
-      }
-    },
-    clear: function RefSetCache_clear() {
-      this.dict = Object.create(null);
+  get(ref) {
+    return this._map.get(ref.toString());
+  }
+
+  has(ref) {
+    return this._map.has(ref.toString());
+  }
+
+  put(ref, obj) {
+    this._map.set(ref.toString(), obj);
+  }
+
+  putAlias(ref, aliasRef) {
+    this._map.set(ref.toString(), this.get(aliasRef));
+  }
+
+  forEach(callback) {
+    for (const value of this._map.values()) {
+      callback(value);
     }
-  };
-  return RefSetCache;
-}();
+  }
+
+  clear() {
+    this._map.clear();
+  }
+
+}
 
 exports.RefSetCache = RefSetCache;
 
@@ -3263,7 +3273,7 @@ class PDFDocument {
     try {
       const collection = this.catalog.catDict.get("Collection");
 
-      if ((0, _primitives.isDict)(collection) && collection.getKeys().length > 0) {
+      if ((0, _primitives.isDict)(collection) && collection.size > 0) {
         this.collection = collection;
       }
     } catch (ex) {
@@ -5677,24 +5687,17 @@ const ObjectLoader = function () {
   }
 
   function addChildren(node, nodesToVisit) {
-    if (node instanceof _primitives.Dict || (0, _primitives.isStream)(node)) {
-      const dict = node instanceof _primitives.Dict ? node : node.dict;
-      const dictKeys = dict.getKeys();
+    if (node instanceof _primitives.Dict) {
+      node = node.getRawValues();
+    } else if ((0, _primitives.isStream)(node)) {
+      node = node.dict.getRawValues();
+    } else if (!Array.isArray(node)) {
+      return;
+    }
 
-      for (let i = 0, ii = dictKeys.length; i < ii; i++) {
-        const rawValue = dict.getRaw(dictKeys[i]);
-
-        if (mayHaveChildren(rawValue)) {
-          nodesToVisit.push(rawValue);
-        }
-      }
-    } else if (Array.isArray(node)) {
-      for (let i = 0, ii = node.length; i < ii; i++) {
-        const value = node[i];
-
-        if (mayHaveChildren(value)) {
-          nodesToVisit.push(value);
-        }
+    for (const rawValue of node) {
+      if (mayHaveChildren(rawValue)) {
+        nodesToVisit.push(rawValue);
       }
     }
   }
@@ -18314,7 +18317,7 @@ const LabCS = function LabCSClosure() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.GlobalImageCache = exports.LocalFunctionCache = exports.LocalColorSpaceCache = exports.LocalImageCache = void 0;
+exports.GlobalImageCache = exports.LocalGStateCache = exports.LocalFunctionCache = exports.LocalColorSpaceCache = exports.LocalImageCache = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -18440,6 +18443,35 @@ class LocalFunctionCache extends BaseLocalCache {
 }
 
 exports.LocalFunctionCache = LocalFunctionCache;
+
+class LocalGStateCache extends BaseLocalCache {
+  set(name, ref = null, data) {
+    if (!name) {
+      throw new Error('LocalGStateCache.set - expected "name" argument.');
+    }
+
+    if (ref) {
+      if (this._imageCache.has(ref)) {
+        return;
+      }
+
+      this._nameRefMap.set(name, ref);
+
+      this._imageCache.put(ref, data);
+
+      return;
+    }
+
+    if (this._imageMap.has(name)) {
+      return;
+    }
+
+    this._imageMap.set(name, data);
+  }
+
+}
+
+exports.LocalGStateCache = LocalGStateCache;
 
 class GlobalImageCache {
   static get NUM_PAGES_THRESHOLD() {
@@ -20509,9 +20541,7 @@ class PartialEvaluator {
       var graphicStates = node.get("ExtGState");
 
       if (graphicStates instanceof _primitives.Dict) {
-        for (const key of graphicStates.getKeys()) {
-          let graphicState = graphicStates.getRaw(key);
-
+        for (let graphicState of graphicStates.getRawValues()) {
           if (graphicState instanceof _primitives.Ref) {
             if (processed.has(graphicState)) {
               continue;
@@ -20564,9 +20594,7 @@ class PartialEvaluator {
         continue;
       }
 
-      for (const key of xObjects.getKeys()) {
-        var xObject = xObjects.getRaw(key);
-
+      for (let xObject of xObjects.getRawValues()) {
         if (xObject instanceof _primitives.Ref) {
           if (processed.has(xObject)) {
             continue;
@@ -20995,7 +21023,18 @@ class PartialEvaluator {
     throw reason;
   }
 
-  setGState(resources, gState, operatorList, task, stateManager, localColorSpaceCache) {
+  async setGState({
+    resources,
+    gState,
+    operatorList,
+    cacheKey,
+    task,
+    stateManager,
+    localGStateCache,
+    localColorSpaceCache
+  }) {
+    const gStateRef = gState.objId;
+    let isSimpleGState = true;
     var gStateObj = [];
     var gStateKeys = gState.getKeys();
     var promise = Promise.resolve();
@@ -21040,6 +21079,7 @@ class PartialEvaluator {
           }
 
           if ((0, _primitives.isDict)(value)) {
+            isSimpleGState = false;
             promise = promise.then(() => {
               return this.handleSMask(value, resources, operatorList, task, stateManager, localColorSpaceCache);
             });
@@ -21076,6 +21116,10 @@ class PartialEvaluator {
     return promise.then(function () {
       if (gStateObj.length > 0) {
         operatorList.addOp(_util.OPS.setGState, [gStateObj]);
+      }
+
+      if (isSimpleGState) {
+        localGStateCache.set(cacheKey, gStateRef, gStateObj);
       }
     });
   }
@@ -21329,6 +21373,7 @@ class PartialEvaluator {
     let parsingText = false;
     const localImageCache = new _image_utils.LocalImageCache();
     const localColorSpaceCache = new _image_utils.LocalColorSpaceCache();
+    const localGStateCache = new _image_utils.LocalGStateCache();
 
     var xobjs = resources.get("XObject") || _primitives.Dict.empty;
 
@@ -21361,7 +21406,8 @@ class PartialEvaluator {
           operation = {},
           i,
           ii,
-          cs;
+          cs,
+          name;
 
       while (!(stop = timeSlotManager.check())) {
         operation.args = null;
@@ -21375,7 +21421,7 @@ class PartialEvaluator {
 
         switch (fn | 0) {
           case _util.OPS.paintXObject:
-            var name = args[0].name;
+            name = args[0].name;
 
             if (name) {
               const localImage = localImageCache.getByName(name);
@@ -21701,15 +21747,63 @@ class PartialEvaluator {
             break;
 
           case _util.OPS.setGState:
-            var dictName = args[0];
-            var extGState = resources.get("ExtGState");
+            name = args[0].name;
 
-            if (!(0, _primitives.isDict)(extGState) || !extGState.has(dictName.name)) {
-              break;
+            if (name) {
+              const localGStateObj = localGStateCache.getByName(name);
+
+              if (localGStateObj) {
+                if (localGStateObj.length > 0) {
+                  operatorList.addOp(_util.OPS.setGState, [localGStateObj]);
+                }
+
+                args = null;
+                continue;
+              }
             }
 
-            var gState = extGState.get(dictName.name);
-            next(self.setGState(resources, gState, operatorList, task, stateManager, localColorSpaceCache));
+            next(new Promise(function (resolveGState, rejectGState) {
+              if (!name) {
+                throw new _util.FormatError("GState must be referred to by name.");
+              }
+
+              const extGState = resources.get("ExtGState");
+
+              if (!(extGState instanceof _primitives.Dict)) {
+                throw new _util.FormatError("ExtGState should be a dictionary.");
+              }
+
+              const gState = extGState.get(name);
+
+              if (!(gState instanceof _primitives.Dict)) {
+                throw new _util.FormatError("GState should be a dictionary.");
+              }
+
+              self.setGState({
+                resources,
+                gState,
+                operatorList,
+                cacheKey: name,
+                task,
+                stateManager,
+                localGStateCache,
+                localColorSpaceCache
+              }).then(resolveGState, rejectGState);
+            }).catch(function (reason) {
+              if (reason instanceof _util.AbortException) {
+                return;
+              }
+
+              if (self.options.ignoreErrors) {
+                self.handler.send("UnsupportedFeature", {
+                  featureId: _util.UNSUPPORTED_FEATURES.errorExtGState
+                });
+                (0, _util.warn)(`getOperatorList - ignoring ExtGState: "${reason}".`);
+                return;
+              }
+
+              throw reason;
+            }));
             return;
 
           case _util.OPS.moveTo:
@@ -21816,6 +21910,7 @@ class PartialEvaluator {
     var xref = this.xref;
     var xobjs = null;
     const emptyXObjectCache = new _image_utils.LocalImageCache();
+    const emptyGStateCache = new _image_utils.LocalGStateCache();
     var preprocessor = new EvaluatorPreprocessor(stream, xref, stateManager);
     var textState;
 
@@ -22333,30 +22428,54 @@ class PartialEvaluator {
             return;
 
           case _util.OPS.setGState:
-            flushTextContentItem();
-            var dictName = args[0];
-            var extGState = resources.get("ExtGState");
+            name = args[0].name;
 
-            if (!(0, _primitives.isDict)(extGState) || !(0, _primitives.isName)(dictName)) {
+            if (name && emptyGStateCache.getByName(name)) {
               break;
             }
 
-            var gState = extGState.get(dictName.name);
+            next(new Promise(function (resolveGState, rejectGState) {
+              if (!name) {
+                throw new _util.FormatError("GState must be referred to by name.");
+              }
 
-            if (!(0, _primitives.isDict)(gState)) {
-              break;
-            }
+              const extGState = resources.get("ExtGState");
 
-            var gStateFont = gState.get("Font");
+              if (!(extGState instanceof _primitives.Dict)) {
+                throw new _util.FormatError("ExtGState should be a dictionary.");
+              }
 
-            if (gStateFont) {
+              const gState = extGState.get(name);
+
+              if (!(gState instanceof _primitives.Dict)) {
+                throw new _util.FormatError("GState should be a dictionary.");
+              }
+
+              const gStateFont = gState.get("Font");
+
+              if (!gStateFont) {
+                emptyGStateCache.set(name, gState.objId, true);
+                resolveGState();
+                return;
+              }
+
+              flushTextContentItem();
               textState.fontName = null;
               textState.fontSize = gStateFont[1];
-              next(handleSetFont(null, gStateFont[0]));
-              return;
-            }
+              handleSetFont(null, gStateFont[0]).then(resolveGState, rejectGState);
+            }).catch(function (reason) {
+              if (reason instanceof _util.AbortException) {
+                return;
+              }
 
-            break;
+              if (self.options.ignoreErrors) {
+                (0, _util.warn)(`getTextContent - ignoring ExtGState: "${reason}".`);
+                return;
+              }
+
+              throw reason;
+            }));
+            return;
         }
 
         if (textContent.items.length >= sink.desiredSize) {
@@ -22920,11 +23039,7 @@ class PartialEvaluator {
       } else if ((0, _primitives.isRef)(encoding)) {
         hash.update(encoding.toString());
       } else if ((0, _primitives.isDict)(encoding)) {
-        var keys = encoding.getKeys();
-
-        for (var i = 0, ii = keys.length; i < ii; i++) {
-          var entry = encoding.getRaw(keys[i]);
-
+        for (const entry of encoding.getRawValues()) {
           if ((0, _primitives.isName)(entry)) {
             hash.update(entry.name);
           } else if ((0, _primitives.isRef)(entry)) {
