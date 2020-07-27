@@ -17,7 +17,7 @@ object FeatureFlags {
     /**
      * Allows edit of saved logins.
      */
-    val loginsEdit = Config.channel.isNightlyOrDebug
+    const val loginsEdit = true
 
     /**
      * Enable tab sync feature
