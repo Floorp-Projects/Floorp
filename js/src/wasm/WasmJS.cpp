@@ -89,6 +89,25 @@ static inline bool WasmSimdFlag(JSContext* cx) {
 #endif
 }
 
+static inline bool WasmReftypesFlag(JSContext* cx) {
+#ifdef ENABLE_WASM_REFTYPES
+  return cx->options().wasmReftypes();
+#else
+  return false;
+#endif
+}
+
+static inline bool WasmGcFlag(JSContext* cx) { return cx->options().wasmGc(); }
+
+static inline bool WasmThreadsFlag(JSContext* cx) {
+  return cx->realm() &&
+         cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+}
+
+static inline bool WasmDebuggerActive(JSContext* cx) {
+  return cx->realm() && cx->realm()->debuggerObservesAsmJS();
+}
+
 /*
  * [WASMDOC] Compiler and feature selection; compiler and feature availability.
  *
@@ -215,8 +234,8 @@ static inline bool Append(JSStringBuilder* reason, const char (&s)[ArrayLength],
 bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                  JSStringBuilder* reason) {
   // Ion has no debugging support, no gc support.
-  bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
-  bool gc = cx->options().wasmGc();
+  bool debug = WasmDebuggerActive(cx);
+  bool gc = WasmGcFlag(cx);
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -243,11 +262,10 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                        JSStringBuilder* reason) {
   // Cranelift has no debugging support, no gc support, no threads, no simd, and
   // on x64, no multi-value support.
-  bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
-  bool gc = cx->options().wasmGc();
-  bool threads =
-      cx->realm() &&
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+  // on some platforms, no reference types or multi-value support.
+  bool debug = WasmDebuggerActive(cx);
+  bool gc = WasmGcFlag(cx);
+  bool threads = WasmThreadsFlag(cx);
   bool multiValueOnX64 = false;
 #if defined(JS_CODEGEN_X64)
   multiValueOnX64 = WasmMultiValueFlag(cx);
@@ -284,18 +302,14 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
 // ensure that only compilers that actually support the feature are used.
 
 bool wasm::ReftypesAvailable(JSContext* cx) {
-  // All compilers support reference types, except Cranelift on ARM64.
-#ifdef ENABLE_WASM_REFTYPES
-  return cx->options().wasmReftypes() &&
+  // All compilers support reference types.
+  return WasmReftypesFlag(cx) &&
          (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
-#else
-  return false;
-#endif
 }
 
 bool wasm::GcTypesAvailable(JSContext* cx) {
   // Cranelift and Ion do not support GC.
-  return cx->options().wasmGc() && BaselineAvailable(cx);
+  return WasmGcFlag(cx) && BaselineAvailable(cx);
 }
 
 bool wasm::MultiValuesAvailable(JSContext* cx) {
@@ -310,9 +324,7 @@ bool wasm::SimdAvailable(JSContext* cx) {
 
 bool wasm::ThreadsAvailable(JSContext* cx) {
   // Cranelift does not support atomics.
-  return cx->realm() &&
-         cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled() &&
-         (BaselineAvailable(cx) || IonAvailable(cx));
+  return WasmThreadsFlag(cx) && (BaselineAvailable(cx) || IonAvailable(cx));
 }
 
 bool wasm::HasPlatformSupport(JSContext* cx) {
