@@ -251,9 +251,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--instrument-to-file=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                                          "wpt_instruments.txt")]
 
+        is_windows_7 = mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1"
+
         if (self.is_android or
             "wdspec" in test_types or
-            "fission.autostart=true" in c['extra_prefs']):
+            "fission.autostart=true" in c['extra_prefs'] or
+            # Bug 1392106 - skia error 0x80070005: Access is denied.
+            is_windows_7 and mozinfo.info["debug"]):
             processes = 1
         else:
             processes = 2
@@ -263,7 +267,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd += ["--device-serial=%s" % self.device_serial,
                     "--package-name=%s" % self.query_package_name()]
 
-        if mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1":
+        if is_windows_7:
             # On Windows 7 --install-fonts fails, so fall back to a Firefox-specific codepath
             self._install_fonts()
         else:
