@@ -100,7 +100,7 @@ function isActualPlaybackStateEqualTo(tab, expectedState) {
   is(
     currentState,
     expectedState,
-    `curent state '${currentState}'' is equal to '${expectedState}'`
+    `current state '${currentState}'' is equal to '${expectedState}'`
   );
 }
 
