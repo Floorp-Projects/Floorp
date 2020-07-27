@@ -32,6 +32,8 @@ class nsTextControlFrame : public nsContainerFrame,
                            public nsIAnonymousContentCreator,
                            public nsITextControlFrame,
                            public nsIStatefulFrame {
+  using Element = mozilla::dom::Element;
+
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsTextControlFrame)
 
@@ -207,11 +209,11 @@ class nsTextControlFrame : public nsContainerFrame,
  public:  // for methods who access nsTextControlFrame directly
   void SetValueChanged(bool aValueChanged);
 
-  mozilla::dom::Element* GetRootNode() const { return mRootNode; }
+  Element* GetRootNode() const { return mRootNode; }
 
-  mozilla::dom::Element* GetPreviewNode() const { return mPreviewDiv; }
+  Element* GetPreviewNode() const { return mPreviewDiv; }
 
-  mozilla::dom::Element* GetPlaceholderNode() const { return mPlaceholderDiv; }
+  Element* GetPlaceholderNode() const { return mPlaceholderDiv; }
 
   // called by the focus listener
   nsresult MaybeBeginSecureKeyboardInput();
@@ -328,17 +330,17 @@ class nsTextControlFrame : public nsContainerFrame,
   nsresult CreateRootNode();
   void CreatePlaceholderIfNeeded();
   void CreatePreviewIfNeeded();
-  already_AddRefed<mozilla::dom::Element> CreateEmptyAnonymousDiv(
+  already_AddRefed<Element> CreateEmptyAnonymousDiv(
       mozilla::PseudoStyleType) const;
-  already_AddRefed<mozilla::dom::Element> CreateEmptyAnonymousDivWithTextNode(
+  already_AddRefed<Element> CreateEmptyAnonymousDivWithTextNode(
       mozilla::PseudoStyleType) const;
 
   bool ShouldInitializeEagerly() const;
   void InitializeEagerlyIfNeeded();
 
-  RefPtr<mozilla::dom::Element> mRootNode;
-  RefPtr<mozilla::dom::Element> mPlaceholderDiv;
-  RefPtr<mozilla::dom::Element> mPreviewDiv;
+  RefPtr<Element> mRootNode;
+  RefPtr<Element> mPlaceholderDiv;
+  RefPtr<Element> mPreviewDiv;
   RefPtr<nsAnonDivObserver> mMutationObserver;
   // Cache of the |.value| of <input> or <textarea> element without hard-wrap.
   // If its IsVoid() returns true, it doesn't cache |.value|.
