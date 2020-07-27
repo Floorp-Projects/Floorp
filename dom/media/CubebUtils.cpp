@@ -6,6 +6,7 @@
 
 #include "CubebUtils.h"
 
+#include "audio_thread_priority.h"
 #include "MediaInfo.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/dom/ContentChild.h"
@@ -18,6 +19,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/UnderrunHandler.h"
 #include "nsAutoRef.h"
 #include "nsDebug.h"
 #include "nsIStringBundle.h"
@@ -619,6 +621,12 @@ void InitLibrary() {
 #endif
 #ifdef MOZ_CUBEB_REMOTING
   if (sCubebSandbox && XRE_IsContentProcess()) {
+#  ifdef XP_LINUX
+    if (atp_set_real_time_limit(0, 48000)) {
+      NS_WARNING("could not set real-time limit in CubebUtils::InitLibrary");
+    }
+    InstallSoftRealTimeLimitHandler();
+#  endif
     InitAudioIPCConnection();
   }
 #endif
