@@ -347,6 +347,17 @@ class ThreeDotMenuMainRobot {
             ThreeDotMenuMainRobot().interact()
             return ThreeDotMenuMainRobot.Transition()
         }
+
+        fun openAddonsManagerMenu(interact: SettingsSubMenuAddonsManagerRobot.() -> Unit): SettingsSubMenuAddonsManagerRobot.Transition {
+            clickAddonsManagerButton()
+            mDevice.waitNotNull(
+                Until.findObject(By.text("Recommended")),
+                waitingTime
+            )
+
+            SettingsSubMenuAddonsManagerRobot().interact()
+            return SettingsSubMenuAddonsManagerRobot.Transition()
+        }
     }
 }
 
@@ -423,7 +434,9 @@ private fun addNewCollectionButton() = onView(allOf(withText("Add new collection
 private fun assertaddNewCollectionButton() = addNewCollectionButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun collectionNameTextField() = onView(allOf(withResourceName("name_collection_edittext")))
+private fun collectionNameTextField() =
+    onView(allOf(withResourceName("name_collection_edittext")))
+
 private fun assertCollectionNameTextField() = collectionNameTextField()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -473,6 +486,7 @@ private fun assertReaderViewAppearanceButton(visible: Boolean) = readerViewAppea
 
 private fun addToFirefoxHomeButton() =
     onView(allOf(withText(R.string.browser_menu_add_to_top_sites)))
+
 private fun assertAddToFirefoxHome() {
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .perform(
@@ -513,4 +527,11 @@ private fun assertOpenInAppButton() {
                 hasDescendant(withText(R.string.browser_menu_open_app_link))
             )
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun addonsManagerButton() = onView(withText("Add-ons Manager"))
+
+private fun clickAddonsManagerButton() {
+    onView(withText("Add-ons")).click()
+    addonsManagerButton().click()
 }

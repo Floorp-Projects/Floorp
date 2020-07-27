@@ -19,6 +19,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -74,7 +75,9 @@ class SettingsRobot {
 
     // ADVANCED SECTION
     fun verifyAdvancedHeading() = assertAdvancedHeading()
-    fun verifyAddons() = assertAddons()
+    fun verifyAddons() = assertAddonsButton()
+
+    // DEVELOPER TOOLS SECTION
     fun verifyRemoteDebug() = assertRemoteDebug()
     fun verifyLeakCanaryButton() = assertLeakCanaryButton()
 
@@ -210,6 +213,13 @@ class SettingsRobot {
 
             SettingsSubMenuDataCollectionRobot().interact()
             return SettingsSubMenuDataCollectionRobot.Transition()
+        }
+
+        fun openAddonsManagerMenu(interact: SettingsSubMenuAddonsManagerRobot.() -> Unit): SettingsSubMenuAddonsManagerRobot.Transition {
+            addonsManagerButton().click()
+
+            SettingsSubMenuAddonsManagerRobot().interact()
+            return SettingsSubMenuAddonsManagerRobot.Transition()
         }
     }
 
@@ -349,15 +359,25 @@ private fun assertDeveloperToolsHeading() {
 
 // ADVANCED SECTION
 private fun assertAdvancedHeading() {
-    scrollToElementByText("Advanced")
-    onView(withText("Advanced"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withId(R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText("Add-ons"))
+        )
+    )
+
+    onView(withText("Add-ons"))
+        .check(matches(isCompletelyDisplayed()))
 }
 
-private fun assertAddons() {
-    scrollToElementByText("Add-ons")
-    onView(withText("Add-ons"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertAddonsButton() {
+    onView(withId(R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText("Add-ons"))
+        )
+    )
+
+    addonsManagerButton()
+        .check(matches(isCompletelyDisplayed()))
 }
 
 private fun assertRemoteDebug() {
@@ -413,6 +433,8 @@ fun isPackageInstalled(packageName: String): Boolean {
         false
     }
 }
+
+private fun addonsManagerButton() = onView(withText(R.string.preferences_addons))
 
 private fun goBackButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
