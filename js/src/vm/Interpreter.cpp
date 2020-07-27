@@ -2465,6 +2465,20 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(HasOwn)
 
+    CASE(CheckPrivateField) {
+      /* Load the object being initialized into lval/val. */
+      HandleValue val = REGS.stackHandleAt(-2);
+      HandleValue idval = REGS.stackHandleAt(-1);
+
+      bool result = false;
+      if (!CheckPrivateFieldOperation(cx, REGS.pc, val, idval, &result)) {
+        goto error;
+      }
+
+      PUSH_BOOLEAN(result);
+    }
+    END_CASE(CheckPrivateField)
+
     CASE(Iter) {
       MOZ_ASSERT(REGS.stackDepth() >= 1);
       HandleValue val = REGS.stackHandleAt(-1);
@@ -3110,21 +3124,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(GetElem)
 
-    CASE(GetPrivateElem) {
-      int lvalIndex = -2;
-      MutableHandleValue lval = REGS.stackHandleAt(lvalIndex);
-      HandleValue rval = REGS.stackHandleAt(-1);
-      MutableHandleValue res = REGS.stackHandleAt(-2);
-
-      if (!GetPrivateElemOperation(cx, REGS.pc, lval, rval, res)) {
-        goto error;
-      }
-
-      JitScript::MonitorBytecodeType(cx, script, REGS.pc, res);
-      REGS.sp--;
-    }
-    END_CASE(GetPrivateElem)
-
     CASE(GetElemSuper) {
       ReservedRooted<Value> receiver(&rootValue1, REGS.sp[-3]);
       ReservedRooted<Value> rval(&rootValue0, REGS.sp[-2]);
@@ -3168,26 +3167,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       REGS.sp -= 2;
     }
     END_CASE(SetElem)
-
-    CASE(SetPrivateElem) {
-      int receiverIndex = -3;
-      HandleValue receiver = REGS.stackHandleAt(receiverIndex);
-      ReservedRooted<JSObject*> obj(&rootObject0);
-      obj = ToObjectFromStackForPropertyAccess(cx, receiver, receiverIndex,
-                                               REGS.stackHandleAt(-2));
-      if (!obj) {
-        goto error;
-      }
-      ReservedRooted<jsid> id(&rootId0);
-      FETCH_ELEMENT_ID(-2, id);
-      HandleValue value = REGS.stackHandleAt(-1);
-      if (!SetPrivateElementOperation(cx, obj, id, value, receiver)) {
-        goto error;
-      }
-      REGS.sp[-3] = value;
-      REGS.sp -= 2;
-    }
-    END_CASE(SetPrivateElem)
 
     CASE(SetElemSuper)
     CASE(StrictSetElemSuper) {
@@ -3395,8 +3374,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         if (!activation.pushInlineFrame(args, funScript, construct)) {
           goto error;
         }
-        leaveRealmGuard.release();  // We leave the callee's realm when we call
-                                    // popInlineFrame.
+        leaveRealmGuard.release();  // We leave the callee's realm when we
+                                    // call popInlineFrame.
       }
 
       SET_SCRIPT(REGS.fp()->script());
@@ -3757,8 +3736,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       /*
        * Skip the same-compartment assertion if the local will be immediately
        * popped. We do not guarantee sync for dead locals when coming in from
-       * the method JIT, and a GetLocal followed by Pop is not considered to be
-       * a use of the variable.
+       * the method JIT, and a GetLocal followed by Pop is not considered to
+       * be a use of the variable.
        */
       if (JSOp(REGS.pc[JSOpLength_GetLocal]) != JSOp::Pop) {
         cx->debugOnlyCheck(REGS.sp[-1]);
@@ -3796,9 +3775,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(DefFun) {
       /*
        * A top-level function defined in Global or Eval code (see ECMA-262
-       * Ed. 3), or else a SpiderMonkey extension: a named function statement in
-       * a compound statement (not at the top statement level of global code, or
-       * at the top level of a function body).
+       * Ed. 3), or else a SpiderMonkey extension: a named function statement
+       * in a compound statement (not at the top statement level of global
+       * code, or at the top level of a function body).
        */
       ReservedRooted<JSFunction*> fun(&rootFunction0,
                                       &REGS.sp[-1].toObject().as<JSFunction>());
@@ -4067,21 +4046,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(InitElem)
 
-    CASE(InitPrivateElem) {
-      MOZ_ASSERT(REGS.stackDepth() >= 3);
-      HandleValue val = REGS.stackHandleAt(-1);
-      HandleValue id = REGS.stackHandleAt(-2);
-
-      ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-3].toObject());
-
-      if (!InitPrivateElemOperation(cx, REGS.pc, obj, id, val)) {
-        goto error;
-      }
-
-      REGS.sp -= 2;
-    }
-    END_CASE(InitElem)
-
     CASE(InitElemArray) {
       MOZ_ASSERT(REGS.stackDepth() >= 2);
       HandleValue val = REGS.stackHandleAt(-1);
@@ -4129,8 +4093,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       if (lval.toBoolean()) {
         /*
          * Exception was pending during finally, throw it *before* we adjust
-         * pc, because pc indexes into script->trynotes.  This turns out not to
-         * be necessary, but it seems clearer.  And it points out a FIXME:
+         * pc, because pc indexes into script->trynotes.  This turns out not
+         * to be necessary, but it seems clearer.  And it points out a FIXME:
          * 350509, due to Igor Bukanov.
          */
         ReservedRooted<Value> v(&rootValue0, rval);
@@ -5251,7 +5215,6 @@ unsigned js::GetInitDataPropAttrs(JSOp op) {
       return JSPROP_PERMANENT | JSPROP_READONLY;
     case JSOp::InitHiddenProp:
     case JSOp::InitHiddenElem:
-    case JSOp::InitPrivateElem:
       // Non-enumerable, but writable and configurable
       return 0;
     default:;

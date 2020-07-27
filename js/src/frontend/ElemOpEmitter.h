@@ -153,8 +153,6 @@ class MOZ_STACK_CLASS ElemOpEmitter {
   //                                                         |  |
   // +-------------------------------------------------------+  |
   // |                                                          |
-  // |                                                          |
-  // |                                                          |
   // | [Get]                                                    |
   // | [Call]                                                   |
   // |   emitGet +-----+                                        |
@@ -268,6 +266,11 @@ class MOZ_STACK_CLASS ElemOpEmitter {
   MOZ_MUST_USE bool emitAssignment();
 
   MOZ_MUST_USE bool emitIncDec();
+
+ private:
+  // When we have private names, we may need to emit a CheckPrivateField
+  // op to potentially throw errors where required.
+  MOZ_MUST_USE bool emitPrivateGuard();
 };
 
 } /* namespace frontend */

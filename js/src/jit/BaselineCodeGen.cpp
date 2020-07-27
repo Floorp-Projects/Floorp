@@ -3059,11 +3059,6 @@ bool BaselineCodeGen<Handler>::emit_InitElem() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_InitPrivateElem() {
-  return emit_InitElem();
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_InitHiddenElem() {
   return emit_InitElem();
 }
@@ -3133,11 +3128,6 @@ bool BaselineCodeGen<Handler>::emit_GetElem() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_GetPrivateElem() {
-  return emit_GetElem();
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetElemSuper() {
   // Store obj in the scratch slot.
   frame.storeStackValue(-1, frame.addressOfScratchValue(), R2);
@@ -3185,11 +3175,6 @@ bool BaselineCodeGen<Handler>::emit_SetElem() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_StrictSetElem() {
-  return emit_SetElem();
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_SetPrivateElem() {
   return emit_SetElem();
 }
 
@@ -3293,6 +3278,33 @@ bool BaselineCodeGen<Handler>::emit_HasOwn() {
   }
 
   frame.push(R0);
+  return true;
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_CheckPrivateField() {
+  // Keep key and val on the stack.
+  frame.syncStack(0);
+  masm.loadValue(frame.addressOfStackValue(-2), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R1);
+
+  prepareVMCall();
+
+  // Key
+  pushArg(R1);
+  // val
+  pushArg(R0);
+  // pc
+  pushBytecodePCArg();
+
+  using Fn = bool (*)(JSContext*, jsbytecode*, HandleValue, HandleValue, bool*);
+  if (!callVM<Fn, CheckPrivateFieldOperation>()) {
+    return false;
+  }
+
+  masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
+  frame.push(R0);
+
   return true;
 }
 

@@ -180,8 +180,6 @@ bool BaseProxyHandler::setPrivate(JSContext* cx, HandleObject proxy,
   // For BaseProxyHandler, private names are stored in the expando object.
   RootedObject expando(cx, proxy->as<ProxyObject>().expando().toObjectOrNull());
 
-  // SetPrivateElementOperation checks for hasPrivate first, which ensures the
-  // expando exsists.
   MOZ_ASSERT(expando);
 
   Rooted<PropertyDescriptor> ownDesc(cx);

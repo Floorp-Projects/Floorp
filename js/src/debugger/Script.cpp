@@ -1336,7 +1336,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::StrictSetPropSuper:
     case JSOp::SetElem:
     case JSOp::StrictSetElem:
-    case JSOp::SetPrivateElem:
     case JSOp::SetElemSuper:
     case JSOp::StrictSetElemSuper:
     case JSOp::SetName:
@@ -1351,7 +1350,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::SetAliasedVar:
     case JSOp::InitHomeObject:
     case JSOp::InitAliasedLexical:
-    case JSOp::InitPrivateElem:
     case JSOp::SetIntrinsic:
     case JSOp::InitGLexical:
     case JSOp::DefVar:
@@ -1488,7 +1486,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::Int32:
     case JSOp::LoopHead:
     case JSOp::GetElem:
-    case JSOp::GetPrivateElem:
     case JSOp::CallElem:
     case JSOp::Length:
     case JSOp::Not:
@@ -1522,6 +1519,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::EndIter:
     case JSOp::In:
     case JSOp::HasOwn:
+    case JSOp::CheckPrivateField:
     case JSOp::SetRval:
     case JSOp::Instanceof:
     case JSOp::DebugLeaveLexicalEnv:
@@ -1895,7 +1893,8 @@ struct DebuggerScript::SetBreakpointMatcher {
     }
 
     // If the Debugger's compartment has killed incoming wrappers, we may not
-    // have gotten usable results from the 'wrap' calls. Treat it as a failure.
+    // have gotten usable results from the 'wrap' calls. Treat it as a
+    // failure.
     if (IsDeadProxyObject(handler_) || IsDeadProxyObject(debuggerObject_)) {
       ReportAccessDenied(cx_);
       return false;
@@ -2080,9 +2079,9 @@ class DebuggerScript::ClearBreakpointMatcher {
 
     // A Breakpoint belongs logically to its script's compartment, so it holds
     // its handler via a cross-compartment wrapper. But the handler passed to
-    // `clearBreakpoint` is same-compartment with the Debugger. Wrap it here, so
-    // that `DebugScript::clearBreakpointsIn` gets the right value to search
-    // for.
+    // `clearBreakpoint` is same-compartment with the Debugger. Wrap it here,
+    // so that `DebugScript::clearBreakpointsIn` gets the right value to
+    // search for.
     AutoRealm ar(cx_, script);
     if (!cx_->compartment()->wrap(cx_, &handler_)) {
       return false;
@@ -2098,10 +2097,11 @@ class DebuggerScript::ClearBreakpointMatcher {
       return true;
     }
 
-    // A Breakpoint belongs logically to its instance's compartment, so it holds
-    // its handler via a cross-compartment wrapper. But the handler passed to
-    // `clearBreakpoint` is same-compartment with the Debugger. Wrap it here, so
-    // that `DebugState::clearBreakpointsIn` gets the right value to search for.
+    // A Breakpoint belongs logically to its instance's compartment, so it
+    // holds its handler via a cross-compartment wrapper. But the handler
+    // passed to `clearBreakpoint` is same-compartment with the Debugger. Wrap
+    // it here, so that `DebugState::clearBreakpointsIn` gets the right value
+    // to search for.
     AutoRealm ar(cx_, instanceObj);
     if (!cx_->compartment()->wrap(cx_, &handler_)) {
       return false;

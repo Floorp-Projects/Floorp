@@ -223,8 +223,6 @@ bool DOMProxyHandler::definePrivateField(JSContext* cx, HandleObject proxy,
                                          HandleId id,
                                          Handle<PropertyDescriptor> desc,
                                          ObjectOpResult& result) const {
-  // Delegate to defineProperty, since InitPrivateElemOperation will
-  // do the pre-existence check for us.
   return this->defineProperty(cx, proxy, id, desc, result);
 }
 
@@ -232,16 +230,12 @@ bool DOMProxyHandler::setPrivate(JSContext* cx, Handle<JSObject*> proxy,
                                  Handle<jsid> id, Handle<JS::Value> v,
                                  Handle<JS::Value> receiver,
                                  ObjectOpResult& result) const {
-  // Delegate to set, since SetPrivateElemOperation will
-  // do the pre-existence check for us.
   return this->set(cx, proxy, id, v, receiver, result);
 }
 
 bool DOMProxyHandler::getPrivate(JSContext* cx, HandleObject proxy,
                                  HandleValue receiver, HandleId id,
                                  MutableHandleValue vp) const {
-  // Delegate to set, since GetPrivateElemOperation will
-  // do the pre-existence check for us.
   return this->get(cx, proxy, receiver, id, vp);
 }
 

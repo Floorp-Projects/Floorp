@@ -83,6 +83,7 @@ namespace jit {
     js::CheckGlobalOrEvalDeclarationConflicts)                                 \
   _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \
+  _(CheckPrivateFieldOperation, js::CheckPrivateFieldOperation)                \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
   _(ConcatStrings, js::ConcatStrings<CanGC>)                                   \
   _(ConvertElementsToDoubles, js::ObjectElements::ConvertElementsToDoubles)    \
