@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Text displayed when choosing which app to call with after selecting a phone number-->
+    <string name="mozac_support_ktx_menu_call_with">통화 앱…</string>
+    <!-- Text displayed when choosing which app to email with after selecting an email address-->
+    <string name="mozac_support_ktx_menu_email_with">이메일 앱…</string>
     <string name="mozac_support_ktx_menu_share_with">공유…</string>
     <string name="mozac_support_ktx_share_dialog_title">다음으로 공유</string>
 </resources>

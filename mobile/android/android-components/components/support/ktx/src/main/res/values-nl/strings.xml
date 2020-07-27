@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Text displayed when choosing which app to call with after selecting a phone number-->
+    <string name="mozac_support_ktx_menu_call_with">Bellen met…</string>
+    <!-- Text displayed when choosing which app to email with after selecting an email address-->
+    <string name="mozac_support_ktx_menu_email_with">E-mailen met…</string>
     <string name="mozac_support_ktx_menu_share_with">Delen met…</string>
     <string name="mozac_support_ktx_share_dialog_title">Delen via</string>
 </resources>

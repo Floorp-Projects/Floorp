@@ -18,6 +18,8 @@
     <string name="mozac_feature_prompt_password_hint">Parolla d’entrata</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
     <string name="mozac_feature_prompt_dont_save">Ùn arregistrà micca</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">Ùn arregistrà mai</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Arregistrà</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -33,7 +35,7 @@
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_update_headline">Mudificà st’identificazione di cunnessione ?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_add_username_headline">Aghjunghje un nome d’utilizatore è a parolla d’entrata arregistrata ?</string>
+    <string name="mozac_feature_prompt_login_add_username_headline">Aghjunghje un nome d’utilizatore à a parolla d’entrata arregistrata ?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
     <string name="mozac_feature_prompts_content_description_input_label">Discrizzione per a creazione d’un campu di scrittura di testu</string>
