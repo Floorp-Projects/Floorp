@@ -9644,9 +9644,8 @@ class BaseViewer {
       return pagesOverview;
     }
 
-    const isFirstPagePortrait = (0, _ui_utils.isPortraitOrientation)(pagesOverview[0]);
     return pagesOverview.map(function (size) {
-      if (isFirstPagePortrait === (0, _ui_utils.isPortraitOrientation)(size)) {
+      if ((0, _ui_utils.isPortraitOrientation)(size)) {
         return size;
       }
 
