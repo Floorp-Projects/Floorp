@@ -5585,6 +5585,7 @@ dependencies = [
  "uuid",
  "webrender",
  "winapi 0.3.7",
+ "wr_malloc_size_of",
 ]
 
 [[package]]

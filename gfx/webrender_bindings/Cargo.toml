@@ -22,6 +22,7 @@ uuid = { version = "0.8", features = ["v4"] }
 fxhash = "0.2.1"
 thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }
 swgl = { path = "../wr/swgl" }
+wr_malloc_size_of = { path = "../wr/wr_malloc_size_of" }
 
 [dependencies.webrender]
 path = "../wr/webrender"
