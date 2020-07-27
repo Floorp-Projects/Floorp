@@ -21,7 +21,8 @@ args = sys.argv[2:]
 p = subprocess.Popen(args, bufsize=0,
                      stdout=subprocess.PIPE,
                      stderr=subprocess.STDOUT,
-                     stdin=sys.stdin.fileno())
+                     stdin=sys.stdin.fileno(),
+                     close_fds=False)
 
 while True:
     data = p.stdout.readline()
