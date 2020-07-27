@@ -3,12 +3,16 @@
 <script src="/resources/testharnessreport.js"></script>
 <style id="sheet"></style>
 <script>
+// Even though some of these no longer exist, we still do want to test that
+// they aren't exposed to the web.
 const NON_CONTENT_ACCESIBLE_PSEUDOS = [
+  "::-moz-complex-control-wrapper",
   "::-moz-number-wrapper",
+  "::-moz-number-text",
   "::-moz-number-spin-up",
   "::-moz-number-spin-down",
   "::-moz-number-spin-box",
-  "::-moz-number-text",
+  "::-moz-search-clear-button",
 
   ":-moz-native-anonymous",
   ":-moz-use-shadow-tree-root",

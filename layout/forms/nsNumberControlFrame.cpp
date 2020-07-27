@@ -85,8 +85,8 @@ nsresult nsNumberControlFrame::CreateAnonymousContent(
   // nsNumberControlFrame::DestroyFrom.
 
   // Create the anonymous outer wrapper:
-  mOuterWrapper = MakeAnonymousElement(nullptr, nsGkAtoms::div,
-                                       PseudoStyleType::mozNumberWrapper);
+  mOuterWrapper = MakeAnonymousElement(
+      nullptr, nsGkAtoms::div, PseudoStyleType::mozComplexControlWrapper);
 
   // We want to do this now, rather than on the caller, so that the
   // AppendChildTo calls below know that they are anonymous already. This is

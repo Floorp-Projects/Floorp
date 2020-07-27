@@ -154,6 +154,8 @@ nsIFrame* NS_NewNumberControlFrame(mozilla::PresShell* aPresShell,
                                    mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewDateTimeControlFrame(mozilla::PresShell* aPresShell,
                                      mozilla::ComputedStyle* aStyle);
+nsIFrame* NS_NewSearchControlFrame(mozilla::PresShell* aPresShell,
+                                   mozilla::ComputedStyle* aStyle);
 nsBlockFrame* NS_NewDetailsFrame(mozilla::PresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewBulletFrame(mozilla::PresShell* aPresShell,
