@@ -97,6 +97,7 @@
 | [mozilla.components.browser.menu.item.BrowserMenuCategory](../mozilla.components.browser.menu.item/-browser-menu-category/index.md) | A browser menu item displaying styleable text, usable for menu categories |
 | [mozilla.components.browser.menu.item.BrowserMenuCheckbox](../mozilla.components.browser.menu.item/-browser-menu-checkbox/index.md) | A simple browser menu checkbox. |
 | [mozilla.components.browser.menu.item.BrowserMenuCompoundButton](../mozilla.components.browser.menu.item/-browser-menu-compound-button/index.md) | A browser menu compound button. A basic sub-class would only have to provide a layout resource to satisfy [BrowserMenuItem.getLayoutResource](../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md) which contains a [View](#) that inherits from [CompoundButton](#). |
+| [mozilla.components.browser.menu2.BrowserMenuController](../mozilla.components.browser.menu2/-browser-menu-controller/index.md) | Controls a popup menu composed of MenuCandidate objects. |
 | [mozilla.components.browser.menu.item.BrowserMenuDivider](../mozilla.components.browser.menu.item/-browser-menu-divider/index.md) | A browser menu item to display a horizontal divider. |
 | [mozilla.components.browser.menu.facts.BrowserMenuFacts](../mozilla.components.browser.menu.facts/-browser-menu-facts/index.md) | Facts emitted for telemetry related to [BrowserMenu](#). |
 | [mozilla.components.browser.menu.BrowserMenuHighlight](../mozilla.components.browser.menu/-browser-menu-highlight/index.md) | Describes how to display a [mozilla.components.browser.menu.item.BrowserMenuHighlightableItem](../mozilla.components.browser.menu.item/-browser-menu-highlightable-item/index.md) when it is highlighted. |
@@ -143,6 +144,7 @@
 | [mozilla.components.support.base.observer.ConsumableStream](../mozilla.components.support.base.observer/-consumable-stream/index.md) | A generic wrapper for a stream of values that can be consumed. Values will be consumed first in, first out. |
 | [mozilla.components.browser.state.state.Container](../mozilla.components.browser.state.state/-container.md) |  |
 | [mozilla.components.browser.state.action.ContainerAction](../mozilla.components.browser.state.action/-container-action/index.md) | [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) implementations related to updating [BrowserState.containers](../mozilla.components.browser.state.state/-browser-state/containers.md) |
+| [mozilla.components.feature.containers.ContainerMiddleware](../mozilla.components.feature.containers/-container-middleware/index.md) | [Middleware](../mozilla.components.lib.state/-middleware.md) implementation for handling [ContainerAction](../mozilla.components.browser.state.action/-container-action/index.md) and syncing the containers in [BrowserState.containers](../mozilla.components.browser.state.state/-browser-state/containers.md) with the [ContainerStorage](#). |
 | [mozilla.components.browser.state.state.ContainerState](../mozilla.components.browser.state.state/-container-state/index.md) | Value type that represents the state of a container also known as a contextual identity. |
 | [mozilla.components.concept.menu.candidate.ContainerStyle](../mozilla.components.concept.menu.candidate/-container-style/index.md) | Describes styling for the menu option container. |
 | [mozilla.components.browser.state.action.ContentAction](../mozilla.components.browser.state.action/-content-action/index.md) | [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) implementations related to updating the [ContentState](../mozilla.components.browser.state.state/-content-state/index.md) of a single [SessionState](../mozilla.components.browser.state.state/-session-state/index.md) inside [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |
@@ -427,6 +429,7 @@
 | [mozilla.components.tooling.lint.LintLogChecks](../mozilla.components.tooling.lint/-lint-log-checks/index.md) | Custom lint checks related to logging. |
 | [kotlin.collections.List](../mozilla.components.browser.menu.ext/kotlin.collections.-list/index.md) (extensions in package mozilla.components.browser.menu.ext) |  |
 | [kotlin.collections.List](../mozilla.components.concept.fetch/kotlin.collections.-list/index.md) (extensions in package mozilla.components.concept.fetch) |  |
+| [kotlin.collections.List](../mozilla.components.concept.menu.ext/kotlin.collections.-list/index.md) (extensions in package mozilla.components.concept.menu.ext) |  |
 | [kotlin.collections.List](../mozilla.components.lib.jexl.ext/kotlin.collections.-list/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
 | [kotlin.collections.List](../mozilla.components.service.fxa.sync/kotlin.collections.-list/index.md) (extensions in package mozilla.components.service.fxa.sync) |  |
 | [mozilla.components.service.digitalassetlinks.api.ListStatementsResponse](../mozilla.components.service.digitalassetlinks.api/-list-statements-response/index.md) |  |
@@ -471,13 +474,16 @@
 | [mozilla.components.browser.icons.processor.MemoryIconProcessor](../mozilla.components.browser.icons.processor/-memory-icon-processor/index.md) | An [IconProcessor](../mozilla.components.browser.icons.processor/-icon-processor/index.md) implementation that saves icons in the in-memory cache. |
 | [mozilla.components.service.glean.private.MemoryUnit](../mozilla.components.service.glean.private/-memory-unit.md) |  |
 | [mozilla.components.browser.menu.view.MenuButton](../mozilla.components.browser.menu.view/-menu-button/index.md) | A `three-dot` button used for expanding menus. |
+| [mozilla.components.concept.menu.MenuButton](../mozilla.components.concept.menu/-menu-button/index.md) | A `three-dot` button used for expanding menus. |
+| [mozilla.components.browser.menu2.view.MenuButton2](../mozilla.components.browser.menu2.view/-menu-button2/index.md) | A `three-dot` button used for expanding menus. |
 | [mozilla.components.concept.menu.candidate.MenuCandidate](../mozilla.components.concept.menu.candidate/-menu-candidate/index.md) | Menu option data classes to be shown in the browser menu. |
 | [mozilla.components.concept.menu.candidate.MenuCandidateEffect](../mozilla.components.concept.menu.candidate/-menu-candidate-effect.md) | Describes an effect for a menu candidate and its container. Effects can also alter the button that opens the menu. |
-| [mozilla.components.browser.menu2.MenuController](../mozilla.components.browser.menu2/-menu-controller/index.md) | Controls a popup menu composed of MenuCandidate objects. |
+| [mozilla.components.concept.menu.MenuController](../mozilla.components.concept.menu/-menu-controller/index.md) | Controls a popup menu composed of MenuCandidate objects. |
 | [mozilla.components.concept.menu.candidate.MenuEffect](../mozilla.components.concept.menu.candidate/-menu-effect.md) | Describes an effect for the menu. Effects can also alter the button to open the menu. |
 | [mozilla.components.concept.menu.candidate.MenuIcon](../mozilla.components.concept.menu.candidate/-menu-icon.md) | Menu option data classes to be shown alongside menu options |
 | [mozilla.components.concept.menu.candidate.MenuIconEffect](../mozilla.components.concept.menu.candidate/-menu-icon-effect.md) | Describes an effect for a menu icon. Effects can also alter the button that opens the menu. |
 | [mozilla.components.concept.menu.candidate.MenuIconWithDrawable](../mozilla.components.concept.menu.candidate/-menu-icon-with-drawable/index.md) | Interface shared by all [MenuIcon](../mozilla.components.concept.menu.candidate/-menu-icon.md)s with drawables. |
+| [mozilla.components.browser.menu2.view.MenuView](../mozilla.components.browser.menu2.view/-menu-view/index.md) | A popup menu composed of [MenuCandidate](../mozilla.components.concept.menu.candidate/-menu-candidate/index.md) objects. |
 | [mozilla.components.concept.engine.webextension.MessageHandler](../mozilla.components.concept.engine.webextension/-message-handler/index.md) | A handler for all messaging related events, usable for both content and background scripts. |
 | [mozilla.components.concept.engine.webextension.Metadata](../mozilla.components.concept.engine.webextension/-metadata/index.md) | Provides information about a [WebExtension](../mozilla.components.concept.engine.webextension/-web-extension/index.md). |
 | [org.mozilla.telemetry.measurement.MetricsMeasurement](../org.mozilla.telemetry.measurement/-metrics-measurement/index.md) |  |
@@ -526,6 +532,7 @@
 | [mozilla.components.feature.accounts.push.OneTimeFxaPushReset](../mozilla.components.feature.accounts.push/-one-time-fxa-push-reset/index.md) | Resets the fxa push scope (and therefore push subscription) if it does not follow the new format. |
 | [org.mozilla.telemetry.measurement.OperatingSystemMeasurement](../org.mozilla.telemetry.measurement/-operating-system-measurement/index.md) |  |
 | [org.mozilla.telemetry.measurement.OperatingSystemVersionMeasurement](../org.mozilla.telemetry.measurement/-operating-system-version-measurement/index.md) |  |
+| [mozilla.components.concept.menu.Orientation](../mozilla.components.concept.menu/-orientation/index.md) | Indicates the preferred orientation to show the menu. |
 | [mozilla.components.feature.customtabs.store.OriginRelationPair](../mozilla.components.feature.customtabs.store/-origin-relation-pair/index.md) | Pair of origin and relation type used as key in [CustomTabState.relationships](../mozilla.components.feature.customtabs.store/-custom-tab-state/relationships.md). |
 | [mozilla.components.feature.customtabs.verify.OriginVerifier](../mozilla.components.feature.customtabs.verify/-origin-verifier/index.md) | Used to verify postMessage origin for a designated package name. |
 | [mozilla.components.feature.customtabs.feature.OriginVerifierFeature](../mozilla.components.feature.customtabs.feature/-origin-verifier-feature/index.md) |  |
@@ -649,6 +656,7 @@
 | [mozilla.components.feature.accounts.push.SendTabFeature](../mozilla.components.feature.accounts.push/-send-tab-feature/index.md) | A feature that uses the [FxaAccountManager](../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md) to receive tabs. |
 | [mozilla.components.feature.accounts.push.SendTabUseCases](../mozilla.components.feature.accounts.push/-send-tab-use-cases/index.md) | Contains use cases for sending tabs to devices related to the firefox-accounts. |
 | [mozilla.components.lib.crash.service.SentryService](../mozilla.components.lib.crash.service/-sentry-service/index.md) | A [CrashReporterService](../mozilla.components.lib.crash.service/-crash-reporter-service/index.md) implementation that uploads crash reports to a Sentry server. |
+| [kotlin.sequences.Sequence](../mozilla.components.concept.menu.ext/kotlin.sequences.-sequence/index.md) (extensions in package mozilla.components.concept.menu.ext) |  |
 | [org.mozilla.telemetry.measurement.SequenceMeasurement](../org.mozilla.telemetry.measurement/-sequence-measurement/index.md) |  |
 | [mozilla.components.service.fxa.Server](../mozilla.components.service.fxa/-server.md) |  |
 | [mozilla.components.service.fxa.ServerConfig](../mozilla.components.service.fxa/-server-config.md) |  |

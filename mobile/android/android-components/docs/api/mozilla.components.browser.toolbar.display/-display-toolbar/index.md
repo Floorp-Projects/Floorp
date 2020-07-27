@@ -2,7 +2,7 @@
 
 # DisplayToolbar
 
-`class DisplayToolbar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L68)
+`class DisplayToolbar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L69)
 
 Sub-component of the browser toolbar responsible for displaying the URL and related controls ("display mode").
 
@@ -60,7 +60,8 @@ Progress (optional):
 | [hint](hint.md) | `var hint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Sets the text to be displayed when the URL of the toolbar is empty. |
 | [icons](icons.md) | `var icons: `[`Icons`](-icons/index.md)<br>Customizable icons in "edit mode". |
 | [indicators](indicators.md) | `var indicators: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Indicators`](-indicators/index.md)`>`<br>List of indicators that should be displayed next to the URL. |
-| [menuBuilder](menu-builder.md) | `var menuBuilder: `[`BrowserMenuBuilder`](../../mozilla.components.browser.menu/-browser-menu-builder/index.md)`?`<br>Sets a BrowserMenuBuilder that will be used to create a menu when the menu button is clicked. The menu button will only be visible if a builder has been set. |
+| [menuBuilder](menu-builder.md) | `var menuBuilder: `[`BrowserMenuBuilder`](../../mozilla.components.browser.menu/-browser-menu-builder/index.md)`?`<br>Sets a [BrowserMenuBuilder](../../mozilla.components.browser.menu/-browser-menu-builder/index.md) that will be used to create a menu when the menu button is clicked. The menu button will only be visible if a builder or controller has been set. |
+| [menuController](menu-controller.md) | `var menuController: `[`MenuController`](../../mozilla.components.concept.menu/-menu-controller/index.md)`?`<br>Sets a [MenuController](../../mozilla.components.concept.menu/-menu-controller/index.md) that will be used to create a menu when the menu button is clicked. The menu button will only be visible if a builder or controller has been set. If both a [menuBuilder](menu-builder.md) and controller are present, only the controller will be used. |
 | [onUrlClicked](on-url-clicked.md) | `var onUrlClicked: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Sets a lambda that will be invoked whenever the URL in display mode was clicked. Only if this lambda returns true the toolbar will switch to editing mode. Return false to not switch to editing mode and handle the click manually. |
 | [progressGravity](progress-gravity.md) | `var progressGravity: `[`Gravity`](-gravity/index.md)<br>Whether the progress bar should be drawn at the top or bottom of the toolbar. |
 | [textSize](text-size.md) | `var textSize: `[`Float`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html)<br>Sets the size of the text for the URL/search term displayed in the toolbar. |

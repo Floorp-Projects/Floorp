@@ -2,7 +2,7 @@
 
 # trackingProtectionException
 
-`val trackingProtectionException: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L125)
+`val trackingProtectionException: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L126)
 
 An icon that is shown if tracking protection is enabled
 but the current page is in the "exception list".

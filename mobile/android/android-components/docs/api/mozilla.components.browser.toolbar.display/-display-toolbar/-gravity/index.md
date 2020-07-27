@@ -2,7 +2,7 @@
 
 # Gravity
 
-`enum class Gravity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L131)
+`enum class Gravity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L132)
 
 Gravity enum for positioning the progress bar.
 

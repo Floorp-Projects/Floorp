@@ -10,3 +10,9 @@
 |---|---|
 | [UP](-u-p.md) |  |
 | [DOWN](-d-o-w-n.md) |  |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [concept](concept.md) | `val concept: `[`Orientation`](../../../mozilla.components.concept.menu/-orientation/index.md) |

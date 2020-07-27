@@ -2,7 +2,7 @@
 
 # colors
 
-`var colors: `[`Colors`](-colors/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L170)
+`var colors: `[`Colors`](-colors/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L171)
 
 Customizable colors in "display mode".
 

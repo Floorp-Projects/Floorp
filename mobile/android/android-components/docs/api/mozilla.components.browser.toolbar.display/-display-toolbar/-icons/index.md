@@ -2,7 +2,7 @@
 
 # Icons
 
-`data class Icons` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L121)
+`data class Icons` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/display/DisplayToolbar.kt#L122)
 
 Data class holding the customizable icons in "display mode".
 
