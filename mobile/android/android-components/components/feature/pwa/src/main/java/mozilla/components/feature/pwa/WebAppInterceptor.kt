@@ -27,6 +27,7 @@ class WebAppInterceptor(
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
+        lastUri: String?,
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
         isRedirect: Boolean,

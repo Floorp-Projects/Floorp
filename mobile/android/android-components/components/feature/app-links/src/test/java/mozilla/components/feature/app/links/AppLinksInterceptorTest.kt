@@ -67,25 +67,25 @@ class AppLinksInterceptorTest {
 
     @Test
     fun `request is intercepted by user clicking on a link`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
     @Test
     fun `request is intercepted by redirect`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, false, false, true, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, false, false, true, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
     @Test
     fun `request is not intercepted by a subframe redirect`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrl, false, false, true, false, true)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrl, null, false, false, true, false, true)
         assertEquals(null, response)
     }
 
     @Test
     fun `request is intercepted by direct navigation`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, false, false, false, true, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, false, false, false, true, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
@@ -98,7 +98,7 @@ class AppLinksInterceptorTest {
             useCases = mockUseCases
         )
 
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
         assertEquals(null, response)
     }
 
@@ -111,31 +111,49 @@ class AppLinksInterceptorTest {
             useCases = mockUseCases
         )
 
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
         assertEquals(null, response)
     }
 
     @Test
     fun `request is not intercepted when not user clicking on a link`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, false, false, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, false, false, false, false, false)
         assertEquals(null, response)
     }
 
     @Test
     fun `request is not intercepted if the current session is already on the same host`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, true, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, webUrlWithAppLink, true, true, false, false, false)
         assertEquals(null, response)
     }
 
     @Test
     fun `request is not intercepted by a redirect on same domain`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, false, true, true, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, webUrlWithAppLink, true, true, true, false, false)
+        assertEquals(null, response)
+    }
+
+    @Test
+    fun `domain is stripped before checking`() {
+        var response = appLinksInterceptor.onLoadRequest(mockEngineSession, "http://example.com", "example.com", true, true, true, false, false)
+        assertEquals(null, response)
+
+        response = appLinksInterceptor.onLoadRequest(mockEngineSession, "https://example.com", "http://example.com", true, true, true, false, false)
+        assertEquals(null, response)
+
+        response = appLinksInterceptor.onLoadRequest(mockEngineSession, "https://www.example.com", "http://example.com", true, true, true, false, false)
+        assertEquals(null, response)
+
+        response = appLinksInterceptor.onLoadRequest(mockEngineSession, "http://www.example.com", "https://www.example.com", true, true, true, false, false)
+        assertEquals(null, response)
+
+        response = appLinksInterceptor.onLoadRequest(mockEngineSession, "http://m.example.com", "https://www.example.com", true, true, true, false, false)
         assertEquals(null, response)
     }
 
     @Test
     fun `request is not intercepted if not user gesture, not redirect and not direct navigation`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, false, false, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, false, false, false, false, false)
         assertEquals(null, response)
     }
 
@@ -154,7 +172,7 @@ class AppLinksInterceptorTest {
         val blackListedUrl = "$blacklistedScheme://example.com"
         val blacklistedRedirect = AppLinkRedirect(Intent.parseUri(blackListedUrl, 0), blackListedUrl, null)
         whenever(mockGetRedirect.invoke(blackListedUrl)).thenReturn(blacklistedRedirect)
-        var response = feature.onLoadRequest(engineSession, blackListedUrl, true, false, false, false, false)
+        var response = feature.onLoadRequest(engineSession, blackListedUrl, null, true, false, false, false, false)
         assertEquals(null, response)
     }
 
@@ -173,7 +191,7 @@ class AppLinksInterceptorTest {
         val supportedUrl = "$supportedScheme://example.com"
         val supportedRedirect = AppLinkRedirect(Intent.parseUri(supportedUrl, 0), null, null)
         whenever(mockGetRedirect.invoke(supportedUrl)).thenReturn(supportedRedirect)
-        val response = feature.onLoadRequest(engineSession, supportedUrl, true, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, supportedUrl, null, true, false, false, false, false)
         assertEquals(null, response)
     }
 
@@ -192,7 +210,7 @@ class AppLinksInterceptorTest {
         val supportedUrl = "$supportedScheme://example.com"
         val supportedRedirect = AppLinkRedirect(Intent.parseUri(supportedUrl, 0), null, null)
         whenever(mockGetRedirect.invoke(supportedUrl)).thenReturn(supportedRedirect)
-        val response = feature.onLoadRequest(engineSession, supportedUrl, true, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, supportedUrl, null, true, false, false, false, false)
         assertEquals(null, response)
     }
 
@@ -211,7 +229,7 @@ class AppLinksInterceptorTest {
         val supportedUrl = "$supportedScheme://example.com"
         val supportedRedirect = AppLinkRedirect(Intent.parseUri(supportedUrl, 0), null, null)
         whenever(mockGetRedirect.invoke(supportedUrl)).thenReturn(supportedRedirect)
-        val response = feature.onLoadRequest(engineSession, supportedUrl, false, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, supportedUrl, null, false, false, false, false, false)
         assertEquals(null, response)
     }
 
@@ -233,7 +251,7 @@ class AppLinksInterceptorTest {
         val notSupportedUrl = "$notSupportedScheme://example.com"
         val notSupportedRedirect = AppLinkRedirect(Intent.parseUri(notSupportedUrl, 0), null, null)
         whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
-        val response = feature.onLoadRequest(engineSession, notSupportedUrl, false, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, null, false, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
@@ -254,7 +272,7 @@ class AppLinksInterceptorTest {
         val notSupportedUrl = "$notSupportedScheme://example.com"
         val notSupportedRedirect = AppLinkRedirect(Intent.parseUri(notSupportedUrl, 0), null, null)
         whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
-        val response = feature.onLoadRequest(engineSession, notSupportedUrl, false, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, null, false, false, false, false, false)
         assertEquals(null, response)
     }
 
@@ -276,7 +294,7 @@ class AppLinksInterceptorTest {
         val notSupportedUrl = "$notSupportedScheme://example.com"
         val notSupportedRedirect = AppLinkRedirect(Intent.parseUri(notSupportedUrl, 0), fallbackUrl, null)
         whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
-        val response = feature.onLoadRequest(engineSession, notSupportedUrl, false, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, null, false, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
@@ -299,7 +317,7 @@ class AppLinksInterceptorTest {
         val fallbackUrl = "https://example.com"
         val notSupportedRedirect = AppLinkRedirect(Intent.parseUri(notSupportedUrl, 0), fallbackUrl, null)
         whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
-        val response = feature.onLoadRequest(engineSession, notSupportedUrl, true, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, null, true, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.Url)
     }
 
@@ -316,7 +334,7 @@ class AppLinksInterceptorTest {
         val intentUrl = "intent://example.com"
         val intentRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), null, null)
         whenever(mockGetRedirect.invoke(intentUrl)).thenReturn(intentRedirect)
-        val response = feature.onLoadRequest(engineSession, intentUrl, true, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, intentUrl, null, true, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
@@ -334,7 +352,7 @@ class AppLinksInterceptorTest {
         val fallbackUrl = "https://example.com"
         val intentRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), fallbackUrl, null)
         whenever(mockGetRedirect.invoke(intentUrl)).thenReturn(intentRedirect)
-        val response = feature.onLoadRequest(engineSession, intentUrl, true, false, false, false, false)
+        val response = feature.onLoadRequest(engineSession, intentUrl, null, true, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.Url)
     }
 
@@ -345,19 +363,19 @@ class AppLinksInterceptorTest {
         val appRedirect = AppLinkRedirect(Intent.parseUri(javascriptUri, 0), null, null)
         whenever(mockGetRedirect.invoke(javascriptUri)).thenReturn(appRedirect)
 
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, javascriptUri, true, true, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, javascriptUri, null, true, true, false, false, false)
         assertEquals(null, response)
     }
 
     @Test
     fun `Use the fallback URL when no non-browser app is installed`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, fallbackUrl, true, false, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, fallbackUrl, null, true, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.Url)
     }
 
     @Test
     fun `use the market intent if target app is not installed`() {
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, marketplaceUrl, true, false, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, marketplaceUrl, null, true, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
@@ -371,7 +389,7 @@ class AppLinksInterceptorTest {
             launchFromInterceptor = true
         )
 
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
         verify(mockOpenRedirect).invoke(any(), anyBoolean(), any())
     }
@@ -401,7 +419,7 @@ class AppLinksInterceptorTest {
             launchFromInterceptor = true
         )
 
-        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, intentUrl, false, true, false, false, false)
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, intentUrl, null, false, true, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
         verify(mockOpenRedirect).invoke(any(), anyBoolean(), any())
     }

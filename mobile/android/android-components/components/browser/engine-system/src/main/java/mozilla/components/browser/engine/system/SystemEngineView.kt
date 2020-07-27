@@ -248,6 +248,7 @@ class SystemEngineView @JvmOverloads constructor(
                     interceptor.onLoadRequest(
                         session,
                         request.url.toString(),
+                        session.currentUrl,
                         request.hasGesture(),
                         session.currentUrl.tryGetHostFromUrl() == request.url.host,
                         isRedirect,
