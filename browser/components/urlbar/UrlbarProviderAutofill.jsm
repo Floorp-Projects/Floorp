@@ -89,7 +89,7 @@ function originQuery(where) {
          OR (host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF')
     )
     SELECT :query_type AS query_type,
-           iif(instr(:searchString, "www."), host, fixed) || '/' AS host_fixed,
+           iif(instr(host, :searchString) = 1, host, fixed) || '/' AS host_fixed,
            ifnull(:prefix, host_prefix) || host || '/' AS url
     FROM origins
     ${where}

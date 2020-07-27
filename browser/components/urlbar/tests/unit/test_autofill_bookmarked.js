@@ -83,7 +83,7 @@ add_task(async function() {
       { host }
     );
   });
-  await PlacesUtils.bookmarks.insert({
+  bookmark = await PlacesUtils.bookmarks.insert({
     url: `http://${host}`,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
@@ -91,6 +91,60 @@ add_task(async function() {
   await checkOriginsOrder(host, ["https://", "http://"]);
 
   await check_autofill();
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.remove(bookmark);
+});
+
+add_task(async function test_www() {
+  // Add a bookmark to the www version
+  let host = "example.com";
+  await PlacesUtils.bookmarks.insert({
+    url: `http://www.${host}`,
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  });
+
+  info("search for start of www.");
+  let context = createContext("w", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: `www.${host}/`,
+    completed: `http://www.${host}/`,
+    matches: [
+      makeVisitResult(context, {
+        uri: `http://www.${host}/`,
+        title: `www.${host}`,
+        heuristic: true,
+      }),
+    ],
+  });
+  info("search for full www.");
+  context = createContext("www.", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: `www.${host}/`,
+    completed: `http://www.${host}/`,
+    matches: [
+      makeVisitResult(context, {
+        uri: `http://www.${host}/`,
+        title: `www.${host}`,
+        heuristic: true,
+      }),
+    ],
+  });
+  info("search for host without www.");
+  context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: `${host}/`,
+    completed: `http://www.${host}/`,
+    matches: [
+      makeVisitResult(context, {
+        uri: `http://www.${host}/`,
+        title: `www.${host}`,
+        heuristic: true,
+      }),
+    ],
+  });
 });
 
 async function checkOriginsOrder(host, prefixOrder) {
