@@ -91,6 +91,7 @@ Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
 
     CacheOp op = reader.readOp();
     uint32_t argLength = CacheIROpArgLengths[size_t(op)];
+    mozilla::DebugOnly<const uint8_t*> argStart = reader.currentPosition();
 
     switch (op) {
       case CacheOp::GuardSpecificFunction:
@@ -140,7 +141,7 @@ Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
         reader.skip(argLength);
         break;
     }
-    MOZ_ASSERT(opStart + 1 + argLength == reader.currentPosition());
+    MOZ_ASSERT(argStart + argLength == reader.currentPosition());
   }
 
   if (data.isSome()) {

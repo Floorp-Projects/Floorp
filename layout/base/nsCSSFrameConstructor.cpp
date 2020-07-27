@@ -3393,6 +3393,21 @@ nsCSSFrameConstructor::FindImgControlData(const Element& aElement,
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindSearchControlData(const Element& aElement,
+                                             ComputedStyle& aStyle) {
+  if (StaticPrefs::layout_forms_input_type_search_enabled()) {
+    static const FrameConstructionData sSearchControlData =
+        SIMPLE_FCDATA(NS_NewSearchControlFrame);
+    return &sSearchControlData;
+  }
+
+  static const FrameConstructionData sTextControlData =
+      SIMPLE_FCDATA(NS_NewTextControlFrame);
+  return &sTextControlData;
+}
+
+/* static */
+const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindInputData(const Element& aElement,
                                      ComputedStyle& aStyle) {
   static const FrameConstructionDataByInt sInputData[] = {
@@ -3402,7 +3417,6 @@ nsCSSFrameConstructor::FindInputData(const Element& aElement,
       SIMPLE_INT_CHAIN(NS_FORM_INPUT_IMAGE,
                        nsCSSFrameConstructor::FindImgControlData),
       SIMPLE_INT_CREATE(NS_FORM_INPUT_EMAIL, NS_NewTextControlFrame),
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_SEARCH, NS_NewTextControlFrame),
       SIMPLE_INT_CREATE(NS_FORM_INPUT_TEXT, NS_NewTextControlFrame),
       SIMPLE_INT_CREATE(NS_FORM_INPUT_TEL, NS_NewTextControlFrame),
       SIMPLE_INT_CREATE(NS_FORM_INPUT_URL, NS_NewTextControlFrame),
@@ -3411,7 +3425,9 @@ nsCSSFrameConstructor::FindInputData(const Element& aElement,
       {NS_FORM_INPUT_COLOR,
        FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewColorControlFrame,
                                   PseudoStyleType::buttonContent)},
-      // TODO: this is temporary until a frame is written: bug 635240.
+
+      SIMPLE_INT_CHAIN(NS_FORM_INPUT_SEARCH,
+                       nsCSSFrameConstructor::FindSearchControlData),
       SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewNumberControlFrame),
       SIMPLE_INT_CREATE(NS_FORM_INPUT_TIME, NS_NewDateTimeControlFrame),
       SIMPLE_INT_CREATE(NS_FORM_INPUT_DATE, NS_NewDateTimeControlFrame),

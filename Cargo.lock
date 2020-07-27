@@ -1661,7 +1661,7 @@ dependencies = [
 
 [[package]]
 name = "geckodriver"
-version = "0.26.0"
+version = "0.27.0"
 dependencies = [
  "base64 0.12.0",
  "chrono",
@@ -2984,7 +2984,7 @@ dependencies = [
 
 [[package]]
 name = "mozdevice"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "log",
  "regex",
@@ -3026,14 +3026,14 @@ dependencies = [
 
 [[package]]
 name = "mozprofile"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "tempfile",
 ]
 
 [[package]]
 name = "mozrunner"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "dirs",
  "log",
@@ -3055,7 +3055,7 @@ dependencies = [
 
 [[package]]
 name = "mozversion"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "regex",
  "rust-ini",
@@ -5441,7 +5441,7 @@ dependencies = [
 
 [[package]]
 name = "webdriver"
-version = "0.40.2"
+version = "0.41.0"
 dependencies = [
  "base64 0.12.0",
  "bytes 0.5.3",
