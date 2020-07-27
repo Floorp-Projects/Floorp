@@ -7,7 +7,6 @@
 
 #import "MacUtils.h"
 #import "mozView.h"
-#import "GeckoTextMarker.h"
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
@@ -786,41 +785,11 @@ struct RoleDescrComparator {
   return NO;
 }
 
-enum AXTextEditType {
-  AXTextEditTypeUnknown,
-  AXTextEditTypeDelete,
-  AXTextEditTypeInsert,
-  AXTextEditTypeTyping,
-  AXTextEditTypeDictation,
-  AXTextEditTypeCut,
-  AXTextEditTypePaste,
-  AXTextEditTypeAttributesChange
-};
-
-enum AXTextStateChangeType {
-  AXTextStateChangeTypeUnknown,
-  AXTextStateChangeTypeEdit,
-  AXTextStateChangeTypeSelectionMove,
-  AXTextStateChangeTypeSelectionExtend
-};
-
 - (void)handleAccessibleTextChangeEvent:(NSString*)change
                                inserted:(BOOL)isInserted
+                            inContainer:(const AccessibleOrProxy&)container
                                      at:(int32_t)start {
-  GeckoTextMarker startMarker(mGeckoAccessible, start);
-  NSDictionary* userInfo = @{
-    @"AXTextChangeElement" : self,
-    @"AXTextStateChangeType" : @(AXTextStateChangeTypeEdit),
-    @"AXTextChangeValues" : @[ @{
-      @"AXTextChangeValue" : (change ? change : @""),
-      @"AXTextChangeValueStartMarker" : startMarker.CreateAXTextMarker(),
-      @"AXTextEditType" : isInserted ? @(AXTextEditTypeTyping) : @(AXTextEditTypeDelete)
-    } ]
-  };
-
-  mozAccessible* webArea = GetNativeFromGeckoAccessible([self geckoDocument]);
-  [webArea moxPostNotification:NSAccessibilityValueChangedNotification withUserInfo:userInfo];
-  [self moxPostNotification:NSAccessibilityValueChangedNotification withUserInfo:userInfo];
+  // XXX: Eventually live region handling will go here.
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
