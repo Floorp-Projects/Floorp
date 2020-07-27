@@ -93,6 +93,7 @@ FRAME_CLASSES = [
     Frame("nsRubyTextFrame", "RubyText", NOT_LEAF),
     Frame("nsScrollbarButtonFrame", "Box", NOT_LEAF),
     Frame("nsScrollbarFrame", "Scrollbar", NOT_LEAF),
+    Frame("nsSearchControlFrame", "SearchControl", LEAF),
     Frame("nsSelectsAreaFrame", "Block", NOT_LEAF),
     Frame("nsPageSequenceFrame", "PageSequence", NOT_LEAF),
     Frame("nsSliderFrame", "Slider", NOT_LEAF),

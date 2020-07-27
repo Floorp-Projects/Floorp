@@ -15,6 +15,7 @@
     static get inheritedAttributes() {
       return {
         "#scrollbutton-up": "disabled=scrolledtostart",
+        ".scrollbox-clip": "orient",
         scrollbox: "orient,align,pack,dir,smoothscroll",
         "#scrollbutton-down": "disabled=scrolledtoend",
       };
@@ -26,9 +27,11 @@
       <html:link rel="stylesheet" href="chrome://global/skin/arrowscrollbox.css"/>
       <toolbarbutton id="scrollbutton-up" part="scrollbutton-up"/>
       <spacer part="overflow-start-indicator"/>
-      <scrollbox part="scrollbox" flex="1">
-        <html:slot/>
-      </scrollbox>
+      <box class="scrollbox-clip" part="scrollbox-clip" flex="1">
+        <scrollbox part="scrollbox" flex="1">
+          <html:slot/>
+        </scrollbox>
+      </box>
       <spacer part="overflow-end-indicator"/>
       <toolbarbutton id="scrollbutton-down" part="scrollbutton-down"/>
     `;
