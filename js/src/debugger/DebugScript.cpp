@@ -158,24 +158,12 @@ void DebugScript::destroyBreakpointSite(JSFreeOp* fop, JSScript* script,
 }
 
 /* static */
-void DebugScript::clearBreakpointsIn(JSFreeOp* fop, Realm* realm, Debugger* dbg,
-                                     JSObject* handler) {
-  for (auto base = realm->zone()->cellIter<BaseScript>(); !base.done();
-       base.next()) {
-    MOZ_ASSERT_IF(base->hasDebugScript(), base->hasBytecode());
-    if (base->realm() == realm && base->hasDebugScript()) {
-      clearBreakpointsIn(fop, base->asJSScript(), dbg, handler);
-    }
-  }
-}
-
-/* static */
 void DebugScript::clearBreakpointsIn(JSFreeOp* fop, JSScript* script,
                                      Debugger* dbg, JSObject* handler) {
+  MOZ_ASSERT(script);
   // Breakpoints hold wrappers in the script's compartment for the handler. Make
   // sure we don't try to search for the unwrapped handler.
-  MOZ_ASSERT_IF(script && handler,
-                script->compartment() == handler->compartment());
+  MOZ_ASSERT_IF(handler, script->compartment() == handler->compartment());
 
   if (!script->hasDebugScript()) {
     return;

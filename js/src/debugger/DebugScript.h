@@ -89,8 +89,6 @@ class DebugScript {
   static void destroyBreakpointSite(JSFreeOp* fop, JSScript* script,
                                     jsbytecode* pc);
 
-  static void clearBreakpointsIn(JSFreeOp* fop, JS::Realm* realm, Debugger* dbg,
-                                 JSObject* handler);
   static void clearBreakpointsIn(JSFreeOp* fop, JSScript* script, Debugger* dbg,
                                  JSObject* handler);
 
