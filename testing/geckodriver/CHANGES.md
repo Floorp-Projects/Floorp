@@ -4,8 +4,8 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-0.27.0
-------
+0.27.0  (2020-07-27)
+--------------------
 
 ### Known problems
 
