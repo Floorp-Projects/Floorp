@@ -706,12 +706,29 @@ class FormAutofillParent extends JSWindowActorParent {
         creditCard.record["cc-number-decrypted"];
       let name = creditCard.record["cc-name"];
       const description = await CreditCard.getLabel({ name, number });
+
+      const telemetryObject = creditCard.guid
+        ? "update_doorhanger"
+        : "capture_doorhanger";
+      Services.telemetry.recordEvent(
+        "creditcard",
+        "show",
+        telemetryObject,
+        creditCard.flowId
+      );
+
       const state = await FormAutofillDoorhanger.show(
         browser,
         creditCard.guid ? "updateCreditCard" : "addCreditCard",
         description
       );
       if (state == "cancel") {
+        Services.telemetry.recordEvent(
+          "creditcard",
+          "cancel",
+          telemetryObject,
+          creditCard.flowId
+        );
         return;
       }
 
@@ -719,6 +736,12 @@ class FormAutofillParent extends JSWindowActorParent {
         Services.prefs.setBoolPref(
           "extensions.formautofill.creditCards.enabled",
           false
+        );
+        Services.telemetry.recordEvent(
+          "creditcard",
+          "disable",
+          telemetryObject,
+          creditCard.flowId
         );
         return;
       }
@@ -731,6 +754,12 @@ class FormAutofillParent extends JSWindowActorParent {
       let changedGUIDs = [];
       if (creditCard.guid) {
         if (state == "update") {
+          Services.telemetry.recordEvent(
+            "creditcard",
+            "update",
+            telemetryObject,
+            creditCard.flowId
+          );
           await gFormAutofillStorage.creditCards.update(
             creditCard.guid,
             creditCard.record,
@@ -738,6 +767,12 @@ class FormAutofillParent extends JSWindowActorParent {
           );
           changedGUIDs.push(creditCard.guid);
         } else if ("create") {
+          Services.telemetry.recordEvent(
+            "creditcard",
+            "save",
+            telemetryObject,
+            creditCard.flowId
+          );
           changedGUIDs.push(
             await gFormAutofillStorage.creditCards.add(creditCard.record)
           );
@@ -749,6 +784,12 @@ class FormAutofillParent extends JSWindowActorParent {
           ))
         );
         if (!changedGUIDs.length) {
+          Services.telemetry.recordEvent(
+            "creditcard",
+            "save",
+            telemetryObject,
+            creditCard.flowId
+          );
           changedGUIDs.push(
             await gFormAutofillStorage.creditCards.add(creditCard.record)
           );
