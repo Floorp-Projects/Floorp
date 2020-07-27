@@ -366,6 +366,8 @@ class VirtualenvMixin(object):
             os.path.join('{base_work_dir}', 'mozharness'),
             '{abs_src_dir}',
         ]
+        if 'abs_src_dir' not in dirs:
+            dirs['abs_src_dir'] = os.path.normpath(self.config['repo_path'])
         for d in venv_search_dirs:
             file = os.path.join(d, 'third_party', 'python', 'virtualenv', 'virtualenv.py')
             try:
