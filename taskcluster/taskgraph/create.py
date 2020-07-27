@@ -89,7 +89,7 @@ def create_tasks(graph_config, taskgraph, label_to_taskid, params, decision_task
                 attributes = taskgraph.tasks[task_id].attributes
                 for i in range(1, attributes.get('task_duplicates', 1)):
                     # We use slugid() since we want a distinct task id
-                    submit(slugid(), taskid_to_label[task_id], task_def)
+                    submit(slugid().decode("ascii"), taskid_to_label[task_id], task_def)
             tasklist.difference_update(to_remove)
 
             # as each of those futures complete, try to schedule more tasks
