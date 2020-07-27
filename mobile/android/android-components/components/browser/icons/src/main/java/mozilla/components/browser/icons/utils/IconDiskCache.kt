@@ -6,7 +6,6 @@ package mozilla.components.browser.icons.utils
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.annotation.VisibleForTesting
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
@@ -118,7 +117,6 @@ class IconDiskCache :
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun clear(context: Context) {
         getIconResourcesCache(context).delete()
         getIconDataCache(context).delete()
