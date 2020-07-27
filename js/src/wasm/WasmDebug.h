@@ -101,7 +101,6 @@ class DebugState {
                              uint32_t offset);
   void clearBreakpointsIn(JSFreeOp* fp, WasmInstanceObject* instance,
                           js::Debugger* dbg, JSObject* handler);
-  void clearAllBreakpoints(JSFreeOp* fp, WasmInstanceObject* instance);
 
   // When the Code is debug-enabled, single-stepping mode can be toggled on
   // the granularity of individual functions.

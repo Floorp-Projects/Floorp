@@ -4550,11 +4550,15 @@ bool Debugger::CallData::getNewestFrame() {
 }
 
 bool Debugger::CallData::clearAllBreakpoints() {
-  for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty();
-       r.popFront()) {
-    DebugScript::clearBreakpointsIn(cx->runtime()->defaultFreeOp(),
-                                    r.front()->realm(), dbg, nullptr);
+  JSFreeOp* fop = cx->defaultFreeOp();
+  Breakpoint* nextbp;
+  for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = nextbp) {
+    nextbp = bp->nextInDebugger();
+
+    bp->remove(fop);
   }
+  MOZ_ASSERT(!dbg->firstBreakpoint());
+
   return true;
 }
 

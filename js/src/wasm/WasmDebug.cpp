@@ -279,11 +279,6 @@ void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
   }
 }
 
-void DebugState::clearAllBreakpoints(JSFreeOp* fop,
-                                     WasmInstanceObject* instance) {
-  clearBreakpointsIn(fop, instance, nullptr, nullptr);
-}
-
 void DebugState::toggleDebugTrap(uint32_t offset, bool enabled) {
   MOZ_ASSERT(offset);
   uint8_t* trap = code_->segment(Tier::Debug).base() + offset;
