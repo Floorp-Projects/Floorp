@@ -330,9 +330,10 @@ class nsTextControlFrame : public nsContainerFrame,
   nsresult CreateRootNode();
   void CreatePlaceholderIfNeeded();
   void CreatePreviewIfNeeded();
-  already_AddRefed<Element> CreateEmptyAnonymousDiv(
-      mozilla::PseudoStyleType) const;
-  already_AddRefed<Element> CreateEmptyAnonymousDivWithTextNode(
+  already_AddRefed<Element> MakeAnonElement(
+      mozilla::PseudoStyleType, Element* aParent = nullptr,
+      nsAtom* aTag = nsGkAtoms::div) const;
+  already_AddRefed<Element> MakeAnonDivWithTextNode(
       mozilla::PseudoStyleType) const;
 
   bool ShouldInitializeEagerly() const;

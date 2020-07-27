@@ -335,25 +335,33 @@ nsresult nsTextControlFrame::EnsureEditorInitialized() {
   return NS_OK;
 }
 
-already_AddRefed<Element> nsTextControlFrame::CreateEmptyAnonymousDiv(
-    PseudoStyleType aPseudoType) const {
+already_AddRefed<Element> nsTextControlFrame::MakeAnonElement(
+    PseudoStyleType aPseudoType, Element* aParent, nsAtom* aTag) const {
   MOZ_ASSERT(aPseudoType != PseudoStyleType::NotPseudo);
   Document* doc = PresContext()->Document();
-  RefPtr<NodeInfo> nodeInfo = doc->NodeInfoManager()->GetNodeInfo(
-      nsGkAtoms::div, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
-  RefPtr<Element> div = NS_NewHTMLDivElement(nodeInfo.forget());
-  div->SetPseudoElementType(aPseudoType);
+  RefPtr<Element> element = doc->CreateHTMLElement(aTag);
+  element->SetPseudoElementType(aPseudoType);
   if (aPseudoType == PseudoStyleType::mozTextControlEditingRoot) {
     // Make our root node editable
-    div->SetFlags(NODE_IS_EDITABLE);
+    element->SetFlags(NODE_IS_EDITABLE);
   }
-  return div.forget();
+
+  if (aPseudoType == PseudoStyleType::mozNumberSpinDown ||
+      aPseudoType == PseudoStyleType::mozNumberSpinUp) {
+    element->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden, u"true"_ns,
+                     false);
+  }
+
+  if (aParent) {
+    aParent->AppendChildTo(element, false);
+  }
+
+  return element.forget();
 }
 
-already_AddRefed<Element>
-nsTextControlFrame::CreateEmptyAnonymousDivWithTextNode(
+already_AddRefed<Element> nsTextControlFrame::MakeAnonDivWithTextNode(
     PseudoStyleType aPseudoType) const {
-  RefPtr<Element> divElement = CreateEmptyAnonymousDiv(aPseudoType);
+  RefPtr<Element> divElement = MakeAnonElement(aPseudoType);
 
   // Create the text node for the anonymous <div> element.
   RefPtr<nsTextNode> textNode = new (divElement->OwnerDoc()->NodeInfoManager())
@@ -383,8 +391,7 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
   RefPtr<TextControlElement> textControlElement =
       TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
-  mRootNode =
-      CreateEmptyAnonymousDiv(PseudoStyleType::mozTextControlEditingRoot);
+  mRootNode = MakeAnonElement(PseudoStyleType::mozTextControlEditingRoot);
   if (NS_WARN_IF(!mRootNode)) {
     return NS_ERROR_FAILURE;
   }
@@ -482,8 +489,7 @@ void nsTextControlFrame::CreatePlaceholderIfNeeded() {
     return;
   }
 
-  mPlaceholderDiv =
-      CreateEmptyAnonymousDivWithTextNode(PseudoStyleType::placeholder);
+  mPlaceholderDiv = MakeAnonDivWithTextNode(PseudoStyleType::placeholder);
   mPlaceholderDiv->GetFirstChild()->AsText()->SetText(placeholderTxt, false);
 }
 
@@ -495,8 +501,7 @@ void nsTextControlFrame::CreatePreviewIfNeeded() {
     return;
   }
 
-  mPreviewDiv = CreateEmptyAnonymousDivWithTextNode(
-      PseudoStyleType::mozTextControlPreview);
+  mPreviewDiv = MakeAnonDivWithTextNode(PseudoStyleType::mozTextControlPreview);
 }
 
 void nsTextControlFrame::AppendAnonymousContentTo(
