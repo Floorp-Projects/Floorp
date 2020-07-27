@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the pings that are recorded by the Glean SDK. They are
+# automatically converted to platform-specific code at build time using the
+# `glean_parser` PyPI package.
+
+# This file is presently for Internal FOG Use Only.
+# You should not add pings here until probably about January of 2021.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/1-0-0
