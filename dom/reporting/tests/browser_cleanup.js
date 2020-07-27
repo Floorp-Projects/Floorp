@@ -197,7 +197,7 @@ add_task(async function() {
   });
   is(
     tab.getAttribute("usercontextid"),
-    identity.userContextId,
+    "" + identity.userContextId,
     "New tab has the right UCI"
   );
   gBrowser.selectedTab = tab;

@@ -35,7 +35,7 @@ add_task(async function() {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "Cookies received for images");
+      is(text, "0", "Cookies received for images");
     });
 
   await fetch(
@@ -43,7 +43,7 @@ add_task(async function() {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "Cookies received for images");
+      is(text, "0", "Cookies received for images");
     });
 
   info("Creating a 3rd party content");

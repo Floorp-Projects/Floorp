@@ -780,11 +780,7 @@ add_task(async function test_report_hidden_on_report_unsupported_addontype() {
 
   await onceCreateReportFailed;
 
-  is(
-    AbuseReporter.getOpenDialog(),
-    undefined,
-    "report dialog should not be open"
-  );
+  ok(!AbuseReporter.getOpenDialog(), "report dialog should not be open");
 
   await closeAboutAddons();
 });

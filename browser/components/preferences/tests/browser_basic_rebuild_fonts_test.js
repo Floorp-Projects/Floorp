@@ -95,7 +95,7 @@ add_task(async function() {
   let fontSizeField = doc.getElementById("defaultFontSize");
   is(
     fontSizeField.value,
-    defaultFontSize,
+    "" + defaultFontSize,
     "Font size should be set correctly."
   );
 

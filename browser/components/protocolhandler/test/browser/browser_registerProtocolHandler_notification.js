@@ -49,9 +49,5 @@ add_task(async function() {
 
   let button = buttons[0];
   isnot(button.label, null, "We expect the add button to have a label.");
-  todo_isnot(
-    button.accesskey,
-    null,
-    "We expect the add button to have a accesskey."
-  );
+  todo(button.accesskey, "We expect the add button to have a accesskey.");
 });

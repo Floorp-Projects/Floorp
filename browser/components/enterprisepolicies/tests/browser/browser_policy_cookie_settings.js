@@ -179,7 +179,7 @@ async function test_cookie_settings({
     )
       .then(r => r.text())
       .then(text => {
-        is(text, 0, '"Reject Tracker" pref should match what is expected');
+        is(text, "0", '"Reject Tracker" pref should match what is expected');
       });
   }
 }

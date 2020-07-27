@@ -9,5 +9,5 @@ function test() {
   info("info message");
 
   var func = is;
-  func(true, 1, "pass indirect is");
+  func(true, true, "pass indirect is");
 }

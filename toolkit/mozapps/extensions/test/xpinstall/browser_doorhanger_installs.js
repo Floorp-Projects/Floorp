@@ -139,9 +139,8 @@ function acceptAppMenuNotificationWhenShown(
     let permissionChangePromise = null;
     function appMenuPopupHidden() {
       PanelUI.panel.removeEventListener("popuphidden", appMenuPopupHidden);
-      is(
-        PanelUI.menuButton.getAttribute("badge-status"),
-        false,
+      ok(
+        !PanelUI.menuButton.hasAttribute("badge-status"),
         "badge is not set after addon-installed"
       );
       resolve(permissionChangePromise);

@@ -369,7 +369,7 @@ add_task(async function check_port_properties() {
     }
     is(
       `${expected.sort()}`,
-      expectedProperties,
+      `${expectedProperties}`,
       `${description} has expected keys`
     );
     is(

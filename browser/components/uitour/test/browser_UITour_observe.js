@@ -13,7 +13,7 @@ var tests = [
   function test_no_params(done) {
     function listener(event, params) {
       is(event, "test-event-1", "Correct event name");
-      is(params, null, "No param object");
+      ok(!params, "No param object");
       gContentAPI.observe(null);
       done();
     }
@@ -53,7 +53,7 @@ var tests = [
   function test_background_tab(done) {
     function listener(event, params) {
       is(event, "test-event-background-1", "Correct event name");
-      is(params, null, "No param object");
+      ok(!params, "No param object");
       gContentAPI.observe(null);
       gBrowser.removeCurrentTab();
       done();
@@ -75,7 +75,7 @@ var tests = [
     let blankTab = null;
     function listener(event, params) {
       is(event, "test-event-4", "Correct event name");
-      is(params, null, "No param object");
+      ok(!params, "No param object");
       gContentAPI.observe(null);
       gBrowser.removeTab(blankTab);
       done();

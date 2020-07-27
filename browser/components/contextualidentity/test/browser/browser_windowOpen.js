@@ -19,7 +19,7 @@ add_task(async function setup() {
 add_task(async function test() {
   info("Creating a tab with UCI = 1...");
   let tab = BrowserTestUtils.addTab(gBrowser, BASE_URI, { userContextId: 1 });
-  is(tab.getAttribute("usercontextid"), 1, "New tab has UCI equal 1");
+  is(tab.getAttribute("usercontextid"), "1", "New tab has UCI equal 1");
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
@@ -33,7 +33,7 @@ add_task(async function test() {
   let newWin = await newWinPromise;
   let newTab = newWin.gBrowser.selectedTab;
 
-  is(newTab.getAttribute("usercontextid"), 1, "New tab has UCI equal 1");
+  is(newTab.getAttribute("usercontextid"), "1", "New tab has UCI equal 1");
 
   info("Closing the new window and tab...");
   await BrowserTestUtils.closeWindow(newWin);

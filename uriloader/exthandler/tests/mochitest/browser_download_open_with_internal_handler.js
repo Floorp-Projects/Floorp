@@ -77,7 +77,7 @@ add_task(async function test_check_open_with_internal_handler() {
     let extraTab = await BrowserTestUtils.addTab(gBrowser, "about:blank");
     let dialogWindow = await dialogWindowPromise;
     is(
-      dialogWindow.location,
+      dialogWindow.location.href,
       "chrome://mozapps/content/downloads/unknownContentType.xhtml",
       "Should have seen the unknown content dialogWindow."
     );
@@ -191,7 +191,7 @@ add_task(async function test_check_open_with_external_application() {
     );
     let dialogWindow = await dialogWindowPromise;
     is(
-      dialogWindow.location,
+      dialogWindow.location.href,
       "chrome://mozapps/content/downloads/unknownContentType.xhtml",
       "Should have seen the unknown content dialogWindow."
     );
@@ -285,7 +285,7 @@ add_task(async function test_check_open_with_external_then_internal() {
     );
     let dialogWindow = await dialogWindowPromise;
     is(
-      dialogWindow.location,
+      dialogWindow.location.href,
       "chrome://mozapps/content/downloads/unknownContentType.xhtml",
       "Should have seen the unknown content dialogWindow."
     );
@@ -342,7 +342,7 @@ add_task(async function test_check_open_with_external_then_internal() {
     );
     dialogWindow = await dialogWindowPromise;
     is(
-      dialogWindow.location,
+      dialogWindow.location.href,
       "chrome://mozapps/content/downloads/unknownContentType.xhtml",
       "Should have seen the unknown content dialogWindow."
     );
@@ -402,7 +402,7 @@ add_task(async function test_internal_handler_hidden_with_nonpdf_type() {
   );
   let dialogWindow = await dialogWindowPromise;
   is(
-    dialogWindow.location,
+    dialogWindow.location.href,
     "chrome://mozapps/content/downloads/unknownContentType.xhtml",
     "Should have seen the unknown content dialogWindow."
   );
@@ -442,7 +442,7 @@ add_task(async function test_internal_handler_hidden_with_pref_disabled() {
     );
     let dialogWindow = await dialogWindowPromise;
     is(
-      dialogWindow.location,
+      dialogWindow.location.href,
       "chrome://mozapps/content/downloads/unknownContentType.xhtml",
       "Should have seen the unknown content dialogWindow."
     );

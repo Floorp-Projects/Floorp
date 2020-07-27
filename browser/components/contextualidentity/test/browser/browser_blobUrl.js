@@ -15,7 +15,7 @@ add_task(async function setup() {
 add_task(async function test() {
   info("Creating a tab with UCI = 1...");
   let tab1 = BrowserTestUtils.addTab(gBrowser, BASE_URI, { userContextId: 1 });
-  is(tab1.getAttribute("usercontextid"), 1, "New tab has UCI equal 1");
+  is(tab1.getAttribute("usercontextid"), "1", "New tab has UCI equal 1");
 
   let browser1 = gBrowser.getBrowserForTab(tab1);
   await BrowserTestUtils.browserLoaded(browser1);
@@ -35,7 +35,7 @@ add_task(async function test() {
 
   info("Creating a tab with UCI = 2...");
   let tab2 = BrowserTestUtils.addTab(gBrowser, BASE_URI, { userContextId: 2 });
-  is(tab2.getAttribute("usercontextid"), 2, "New tab has UCI equal 2");
+  is(tab2.getAttribute("usercontextid"), "2", "New tab has UCI equal 2");
 
   let browser2 = gBrowser.getBrowserForTab(tab2);
   await BrowserTestUtils.browserLoaded(browser2);
@@ -62,7 +62,7 @@ add_task(async function test() {
 
   info("Creating a tab with UCI = 1...");
   let tab3 = BrowserTestUtils.addTab(gBrowser, BASE_URI, { userContextId: 1 });
-  is(tab3.getAttribute("usercontextid"), 1, "New tab has UCI equal 1");
+  is(tab3.getAttribute("usercontextid"), "1", "New tab has UCI equal 1");
 
   let browser3 = gBrowser.getBrowserForTab(tab3);
   await BrowserTestUtils.browserLoaded(browser3);

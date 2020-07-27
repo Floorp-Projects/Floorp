@@ -11,7 +11,8 @@ registerCleanupFunction(removeCustomToolbars);
 
 function checkAreaType(widget) {
   try {
-    is(widget.areaType, null, "areaType should be null");
+    // widget.areaType returns either null or undefined
+    ok(!widget.areaType, "areaType should be null");
   } catch (ex) {
     info("Fetching areaType threw: " + ex);
     ok(false, "areaType getter shouldn't throw.");
