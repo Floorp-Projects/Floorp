@@ -65,7 +65,7 @@ decorate_task(
     );
 
     const addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
-    is(addon, undefined, "add-on is uninstalled");
+    ok(!addon, "add-on is uninstalled");
 
     const rollouts = await AddonRollouts.getAll();
     Assert.deepEqual(
@@ -154,7 +154,7 @@ decorate_task(
     );
 
     addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
-    is(addon, undefined, "add-on is uninstalled");
+    ok(!addon, "add-on is uninstalled");
 
     const rollouts = await AddonRollouts.getAll();
     Assert.deepEqual(

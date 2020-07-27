@@ -26,7 +26,7 @@ add_task(async function() {
   BrowserTestUtils.loadURI(browser, unknown_url);
   let win = await waitForNewWindow();
   is(
-    win.location,
+    win.location.href,
     "chrome://mozapps/content/downloads/unknownContentType.xhtml",
     "Should have seen the unknown content dialog."
   );

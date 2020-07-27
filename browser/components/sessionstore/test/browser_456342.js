@@ -43,14 +43,22 @@ add_task(async function test_restore_nonstandard_input_values() {
   let foundIds = 0;
   for (let id of Object.keys(savedFormData.id)) {
     ok(EXPECTED_IDS.has(id), `Check saved ID "${id}" was expected`);
-    is(savedFormData.id[id], expectedValue, `Check saved value for #${id}`);
+    is(
+      savedFormData.id[id],
+      "" + expectedValue,
+      `Check saved value for #${id}`
+    );
     foundIds++;
   }
 
   let foundXpaths = 0;
   for (let exp of Object.keys(savedFormData.xpath)) {
     ok(EXPECTED_XPATHS.has(exp), `Check saved xpath "${exp}" was expected`);
-    is(savedFormData.xpath[exp], expectedValue, `Check saved value for ${exp}`);
+    is(
+      savedFormData.xpath[exp],
+      "" + expectedValue,
+      `Check saved value for ${exp}`
+    );
     foundXpaths++;
   }
 

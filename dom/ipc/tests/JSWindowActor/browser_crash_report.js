@@ -103,8 +103,8 @@ declTest("crash actor", {
         { asyncCrash: true }
       );
 
-      is(report.JSActorName, null);
-      is(report.JSActorMessage, null);
+      ok(!report.JSActorName);
+      ok(!report.JSActorMessage);
 
       BrowserTestUtils.removeTab(newTab);
     }

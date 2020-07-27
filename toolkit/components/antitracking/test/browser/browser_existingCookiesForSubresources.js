@@ -77,7 +77,7 @@ add_task(async function() {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "Cookies received for images");
+      is(text, "1", "Cookies received for images");
     });
 
   await fetch(
@@ -85,7 +85,7 @@ add_task(async function() {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "Cookies received for scripts");
+      is(text, "1", "Cookies received for scripts");
     });
 
   info("Removing the tab");
@@ -204,7 +204,7 @@ add_task(async function() {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "No cookie received for images.");
+      is(text, "0", "No cookie received for images.");
     });
 
   await fetch(
@@ -212,7 +212,7 @@ add_task(async function() {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "No cookie received received for scripts.");
+      is(text, "0", "No cookie received received for scripts.");
     });
 
   info("Removing the tab");

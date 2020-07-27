@@ -165,7 +165,10 @@ function assertAvailableLocales(list, locales) {
     "The right number of locales are available"
   );
   is(
-    listLocales.map(item => item.value).sort(),
+    listLocales
+      .map(item => item.value)
+      .sort()
+      .join(","),
     locales.sort().join(","),
     "The available locales match"
   );

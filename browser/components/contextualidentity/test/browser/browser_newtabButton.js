@@ -91,7 +91,11 @@ add_task(async function test_containers_with_left_click() {
     let tabEvent = await waitForTabPromise;
     let tab = tabEvent.target;
     if (i > 0) {
-      is(tab.getAttribute("usercontextid"), i, `New tab has UCI equal ${i}`);
+      is(
+        tab.getAttribute("usercontextid"),
+        "" + i,
+        `New tab has UCI equal ${i}`
+      );
     } else {
       ok(!tab.hasAttribute("usercontextid"), `New tab has no UCI`);
     }

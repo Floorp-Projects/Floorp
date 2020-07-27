@@ -16,7 +16,7 @@ function test() {
       const domWindow = win.docShell.domWindow;
       waitForFocus(() => {
         is(
-          domWindow.location,
+          domWindow.location.href,
           "chrome://layoutdebug/content/layoutdebug.xhtml",
           "Window location is correct"
         );

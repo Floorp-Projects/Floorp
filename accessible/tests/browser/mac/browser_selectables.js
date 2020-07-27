@@ -73,7 +73,7 @@ addAccessibleTask('<p id="p">hello</p>', async (browser, accDoc) => {
     p.attributeNames.includes("AXSelected"),
     "html element includes 'AXSelected' attribute"
   );
-  is(p.getAttributeValue("AXSelected"), false, "AX selected is 'false'");
+  is(p.getAttributeValue("AXSelected"), 0, "AX selected is 'false'");
 });
 
 addAccessibleTask(

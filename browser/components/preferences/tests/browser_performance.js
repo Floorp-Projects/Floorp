@@ -93,7 +93,7 @@ add_task(async function() {
   );
   is(
     contentProcessCount.selectedItem.value,
-    DEFAULT_PROCESS_COUNT,
+    "" + DEFAULT_PROCESS_COUNT,
     "selected item should be the default one"
   );
 
@@ -135,7 +135,7 @@ add_task(async function() {
     7,
     "pref value should be 7"
   );
-  is(contentProcessCount.selectedItem.value, 7, "selected item should be 7");
+  is(contentProcessCount.selectedItem.value, "7", "selected item should be 7");
 
   allowHWAccel.click();
   allowHWAccelPref = Services.prefs.getBoolPref("layers.acceleration.disabled");
@@ -159,7 +159,7 @@ add_task(async function() {
   );
   is(
     contentProcessCount.selectedItem.value,
-    DEFAULT_PROCESS_COUNT,
+    "" + DEFAULT_PROCESS_COUNT,
     "selected item should be default one"
   );
 
@@ -276,7 +276,7 @@ add_task(async function() {
     7,
     "pref value should be 7"
   );
-  is(contentProcessCount.selectedItem.value, 7, "selected item should be 7");
+  is(contentProcessCount.selectedItem.value, "7", "selected item should be 7");
 
   Services.prefs.setBoolPref(
     "browser.preferences.defaultPerformanceSettings.enabled",

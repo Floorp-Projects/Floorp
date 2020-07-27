@@ -73,11 +73,7 @@ add_task(async function return_nothing_for_no_matching_message() {
     context,
   });
 
-  is(
-    match,
-    undefined,
-    "should return nothing since no matching message exists"
-  );
+  ok(!match, "should return nothing since no matching message exists");
 });
 
 add_task(async function check_other_error_handling() {
@@ -98,11 +94,7 @@ add_task(async function check_other_error_handling() {
     onError,
   });
 
-  is(
-    match,
-    undefined,
-    "should return nothing since no valid matching message exists"
-  );
+  ok(!match, "should return nothing since no valid matching message exists");
 
   Assert.ok(called, "Attribute error caught");
 });
@@ -229,9 +221,8 @@ add_task(async function check_isFxAEnabled() {
   );
 
   const message = { id: "foo", targeting: "isFxAEnabled" };
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
-    undefined,
+  ok(
+    !(await ASRouterTargeting.findMatchingMessage({ messages: [message] })),
     "should not select a message if fxa is disabled"
   );
 });
@@ -260,9 +251,8 @@ add_task(async function check_totalBookmarksCount() {
   const results = await ASRouterTargeting.findMatchingMessage({
     messages: [message],
   });
-  is(
-    results ? JSON.stringify(results) : results,
-    undefined,
+  ok(
+    !(results ? JSON.stringify(results) : results),
     "Should not select any message because bookmarks count is not 0"
   );
 
@@ -525,9 +515,8 @@ add_task(async function checkFrecentSites() {
     id: "foo",
     targeting: "'non-existent.com' in topFrecentSites|mapToProperty('host')",
   };
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
-    undefined,
+  ok(
+    !(await ASRouterTargeting.findMatchingMessage({ messages: [message] })),
     "should not select incorrect item by host in topFrecentSites"
   );
 
@@ -547,9 +536,8 @@ add_task(async function checkFrecentSites() {
     targeting:
       "'mozilla2.com' in topFrecentSites[.frecency >= 600]|mapToProperty('host')",
   };
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
-    undefined,
+  ok(
+    !(await ASRouterTargeting.findMatchingMessage({ messages: [message] })),
     "should not select incorrect item when filtering by frecency"
   );
 
@@ -571,9 +559,8 @@ add_task(async function checkFrecentSites() {
       0
     ) - 1}]|mapToProperty('host')`,
   };
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
-    undefined,
+  ok(
+    !(await ASRouterTargeting.findMatchingMessage({ messages: [message] })),
     "should not select incorrect item when filtering by lastVisitDate"
   );
 
@@ -852,9 +839,8 @@ add_task(async function checkCFRPinnedTabsTargetting() {
     param: { host: "github.com", url: "https://google.com" },
   };
 
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages, trigger }),
-    undefined,
+  ok(
+    !(await ASRouterTargeting.findMatchingMessage({ messages, trigger })),
     "should not select PIN_TAB mesage with only 2 visits in past hour"
   );
 
@@ -870,9 +856,8 @@ add_task(async function checkCFRPinnedTabsTargetting() {
     async browser => {
       let tab = gBrowser.getTabForBrowser(browser);
       gBrowser.pinTab(tab);
-      is(
-        await ASRouterTargeting.findMatchingMessage({ messages, trigger }),
-        undefined,
+      ok(
+        !(await ASRouterTargeting.findMatchingMessage({ messages, trigger })),
         "should not select PIN_TAB mesage if there is a pinned tab already"
       );
       gBrowser.unpinTab(tab);
@@ -880,9 +865,8 @@ add_task(async function checkCFRPinnedTabsTargetting() {
   );
 
   trigger.param = { host: "foo.bar", url: "https://foo.bar" };
-  is(
-    await ASRouterTargeting.findMatchingMessage({ messages, trigger }),
-    undefined,
+  ok(
+    !(await ASRouterTargeting.findMatchingMessage({ messages, trigger })),
     "should not select PIN_TAB mesage with a trigger param/host not in our hostlist"
   );
 });
