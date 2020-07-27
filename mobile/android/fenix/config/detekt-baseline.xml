@@ -2,33 +2,6 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
-    <ID>AbsentOrWrongFileLicense:AboutItemViewHolder.kt$org.mozilla.fenix.settings.about.viewholders.AboutItemViewHolder.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AccountSettingsFragmentStore.kt$org.mozilla.fenix.settings.account.AccountSettingsFragmentStore.kt</ID>
-    <ID>AbsentOrWrongFileLicense:AccountSettingsInteractor.kt$org.mozilla.fenix.settings.account.AccountSettingsInteractor.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ButtonTipViewHolder.kt$org.mozilla.fenix.home.tips.ButtonTipViewHolder.kt</ID>
-    <ID>AbsentOrWrongFileLicense:CustomTabContextMenuCandidate.kt$org.mozilla.fenix.browser.CustomTabContextMenuCandidate.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ExceptionsFragmentStore.kt$org.mozilla.fenix.loginexceptions.ExceptionsFragmentStore.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ExceptionsFragmentStore.kt$org.mozilla.fenix.trackingprotectionexceptions.ExceptionsFragmentStore.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ExceptionsInteractor.kt$org.mozilla.fenix.trackingprotectionexceptions.ExceptionsInteractor.kt</ID>
-    <ID>AbsentOrWrongFileLicense:FeatureFlags.kt$org.mozilla.fenix.FeatureFlags.kt</ID>
-    <ID>AbsentOrWrongFileLicense:HistoryController.kt$org.mozilla.fenix.library.history.HistoryController.kt</ID>
-    <ID>AbsentOrWrongFileLicense:HistoryFragmentStore.kt$org.mozilla.fenix.library.history.HistoryFragmentStore.kt</ID>
-    <ID>AbsentOrWrongFileLicense:HistoryInteractor.kt$org.mozilla.fenix.library.history.HistoryInteractor.kt</ID>
-    <ID>AbsentOrWrongFileLicense:InflationAwareFeature.kt$org.mozilla.fenix.components.InflationAwareFeature.kt</ID>
-    <ID>AbsentOrWrongFileLicense:LoginExceptionsInteractor.kt$org.mozilla.fenix.loginexceptions.LoginExceptionsInteractor.kt</ID>
-    <ID>AbsentOrWrongFileLicense:MigrationTelemetryListener.kt$org.mozilla.fenix.migration.MigrationTelemetryListener.kt</ID>
-    <ID>AbsentOrWrongFileLicense:Push.kt$org.mozilla.fenix.components.Push.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SearchController.kt$org.mozilla.fenix.search.SearchController.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SearchFragmentStore.kt$org.mozilla.fenix.search.SearchFragmentStore.kt</ID>
-    <ID>AbsentOrWrongFileLicense:SharedPreferenceUpdater.kt$org.mozilla.fenix.settings.SharedPreferenceUpdater.kt</ID>
-    <ID>AbsentOrWrongFileLicense:StoreProvider.kt$org.mozilla.fenix.components.StoreProvider.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TabCounterMenuItem.kt$org.mozilla.fenix.components.toolbar.TabCounterMenuItem.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ToolbarView.kt$org.mozilla.fenix.search.toolbar.ToolbarView.kt</ID>
-    <ID>AbsentOrWrongFileLicense:TrackingProtectionStore.kt$org.mozilla.fenix.trackingprotection.TrackingProtectionStore.kt</ID>
-    <ID>AbsentOrWrongFileLicense:ViewHolder.kt$org.mozilla.fenix.utils.view.ViewHolder.kt</ID>
-    <ID>AbsentOrWrongFileLicense:WhatsNew.kt$org.mozilla.fenix.whatsnew.WhatsNew.kt</ID>
-    <ID>AbsentOrWrongFileLicense:WhatsNewStorage.kt$org.mozilla.fenix.whatsnew.WhatsNewStorage.kt</ID>
-    <ID>AbsentOrWrongFileLicense:WhatsNewVersion.kt$org.mozilla.fenix.whatsnew.WhatsNewVersion.kt</ID>
     <ID>LongParameterList:BackgroundServices.kt$BackgroundServices$( private val context: Context, private val push: Push, crashReporter: CrashReporter, historyStorage: Lazy&lt;PlacesHistoryStorage&gt;, bookmarkStorage: Lazy&lt;PlacesBookmarksStorage&gt;, passwordsStorage: Lazy&lt;SyncableLoginsStorage&gt;, remoteTabsStorage: Lazy&lt;RemoteTabsStorage&gt; )</ID>
     <ID>LongParameterList:BookmarkController.kt$DefaultBookmarkController$( private val activity: HomeActivity, private val navController: NavController, private val clipboardManager: ClipboardManager?, private val scope: CoroutineScope, private val store: BookmarkFragmentStore, private val sharedViewModel: BookmarksSharedViewModel, private val loadBookmarkNode: suspend (String) -&gt; BookmarkNode?, private val showSnackbar: (String) -&gt; Unit, private val deleteBookmarkNodes: (Set&lt;BookmarkNode&gt;, Event) -&gt; Unit, private val deleteBookmarkFolder: (BookmarkNode) -&gt; Unit, private val invokePendingDeletion: () -&gt; Unit )</ID>
     <ID>LongParameterList:BrowserToolbarController.kt$DefaultBrowserToolbarController$( private val activity: HomeActivity, private val navController: NavController, private val readerModeController: ReaderModeController, private val sessionFeature: ViewBoundFeatureWrapper&lt;SessionFeature&gt;, private val sessionManager: SessionManager, private val findInPageLauncher: () -&gt; Unit, private val engineView: EngineView, private val browserAnimator: BrowserAnimator, private val swipeRefresh: SwipeRefreshLayout, private val customTabSession: Session?, private val openInFenixIntent: Intent, private val bookmarkTapped: (Session) -&gt; Unit, private val scope: CoroutineScope, private val tabCollectionStorage: TabCollectionStorage, private val topSiteStorage: TopSiteStorage, private val onTabCounterClicked: () -&gt; Unit, private val onCloseTab: (Session) -&gt; Unit )</ID>
