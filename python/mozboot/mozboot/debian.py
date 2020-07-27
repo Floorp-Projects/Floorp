@@ -83,7 +83,7 @@ class DebianBootstrapper(
             self.packages += self.DEBIAN_PACKAGES
 
     def install_system_packages(self):
-        pass
+        self.apt_install(*self.packages)
 
     def install_browser_packages(self):
         self.ensure_browser_packages()
