@@ -1095,9 +1095,7 @@ WSRunScanner::TextFragmentData::InvisibleLeadingWhiteSpaceRangeRef() const {
 
   // If it's preformatted or not start of line, the range is not invisible
   // leading white-spaces.
-  // TODO: We should check each text node style rather than WSRunScanner's
-  //       scan start position's style.
-  if (mIsPreformatted || !StartsFromHardLineBreak()) {
+  if (!StartsFromHardLineBreak()) {
     mLeadingWhiteSpaceRange.emplace();
     return mLeadingWhiteSpaceRange.ref();
   }
@@ -1127,9 +1125,7 @@ WSRunScanner::TextFragmentData::InvisibleTrailingWhiteSpaceRangeRef() const {
   // If it's preformatted or not immediately before block boundary, the range is
   // not invisible trailing white-spaces.  Note that collapsible white-spaces
   // before a `<br>` element is visible.
-  // TODO: We should check each text node style rather than WSRunScanner's
-  //       scan start position's style.
-  if (mIsPreformatted || !EndsByBlockBoundary()) {
+  if (!EndsByBlockBoundary()) {
     mTrailingWhiteSpaceRange.emplace();
     return mTrailingWhiteSpaceRange.ref();
   }
