@@ -61,11 +61,12 @@ ifndef MOZ_DEBUG_RUST
 # Enable link-time optimization for release builds, but not when linking
 # gkrust_gtest.
 ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
-# Pass -Clto for older versions of rust, and CARGO_PROFILE_RELEASE_LTO=true
-# for newer ones that support it. Combining the latter with -Clto works, so
-# set both everywhere.
 cargo_rustc_flags += -Clto
-export CARGO_PROFILE_RELEASE_LTO=true
+endif
+# Versions of rust >= 1.45 need -Cembed-bitcode=yes for all crates when
+# using -Clto.
+ifeq (,$(filter 1.38.% 1.39.% 1.40.% 1.41.% 1.42.% 1.43.% 1.44.%,$(RUSTC_VERSION)))
+RUSTFLAGS += -Cembed-bitcode=yes
 endif
 endif
 endif
