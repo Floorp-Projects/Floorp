@@ -1303,8 +1303,9 @@ nsresult WhiteSpaceVisibilityKeeper::
   if (replaceRangeDataAtEnd.IsSet() && !replaceRangeDataAtEnd.Collapsed()) {
     MOZ_ASSERT(rangeToDelete.EndRef().EqualsOrIsBefore(
         replaceRangeDataAtEnd.EndRef()));
-    MOZ_ASSERT(replaceRangeDataAtEnd.StartRef().EqualsOrIsBefore(
-        rangeToDelete.EndRef()));
+    MOZ_ASSERT_IF(rangeToDelete.EndRef().IsInTextNode(),
+                  replaceRangeDataAtEnd.StartRef().EqualsOrIsBefore(
+                      rangeToDelete.EndRef()));
     MOZ_ASSERT(rangeToDelete.StartRef().EqualsOrIsBefore(
         replaceRangeDataAtEnd.StartRef()));
     if (!replaceRangeDataAtEnd.HasReplaceString()) {
@@ -1473,7 +1474,9 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtEndOfDeletionRange(
       GetInclusiveNextEditableCharPoint(endToDelete);
   if (!nextCharOfStartOfEnd.IsSet() ||
       nextCharOfStartOfEnd.IsEndOfContainer() ||
-      !nextCharOfStartOfEnd.IsCharASCIISpace()) {
+      !nextCharOfStartOfEnd.IsCharASCIISpace() ||
+      EditorUtils::IsContentPreformatted(
+          *nextCharOfStartOfEnd.ContainerAsText())) {
     return ReplaceRangeData();
   }
   if (nextCharOfStartOfEnd.IsStartOfContainer() ||
@@ -1553,7 +1556,9 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtStartOfDeletionRange(
       GetPreviousEditableCharPoint(startToDelete);
   if (!atPreviousCharOfStart.IsSet() ||
       atPreviousCharOfStart.IsEndOfContainer() ||
-      !atPreviousCharOfStart.IsCharASCIISpace()) {
+      !atPreviousCharOfStart.IsCharASCIISpace() ||
+      EditorUtils::IsContentPreformatted(
+          *atPreviousCharOfStart.ContainerAsText())) {
     return ReplaceRangeData();
   }
   if (atPreviousCharOfStart.IsStartOfContainer() ||
