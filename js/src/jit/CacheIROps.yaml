@@ -74,6 +74,18 @@
 # If there's an argument named 'result', the generated CacheIRWriter method will
 # return a new OperandId of this type.
 
+- name: TypeMonitorResult
+  shared: false
+  transpile: true
+  cost_estimate: 1
+  args:
+
+- name: ReturnFromIC
+  shared: false
+  transpile: true
+  cost_estimate: 1
+  args:
+
 - name: GuardToObject
   shared: true
   transpile: true
@@ -2087,18 +2099,6 @@
 - name: Breakpoint
   shared: true
   transpile: false
-  cost_estimate: 1
-  args:
-
-- name: TypeMonitorResult
-  shared: false
-  transpile: true
-  cost_estimate: 1
-  args:
-
-- name: ReturnFromIC
-  shared: false
-  transpile: true
   cost_estimate: 1
   args:
 

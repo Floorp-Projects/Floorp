@@ -6,17 +6,12 @@ project’s canonical home was on GitHub.  Today geckodriver is hosted
 in [mozilla-central], and whilst we do want to make future releases
 from [Mozilla’s CI infrastructure], we are currently in between two
 worlds: development happens in m-c, but releases continue to be made
-from GitHub using Travis CI.
-
-The reason for this is that we haven't setup the release pipeline
-for TaskCluster builds yet, which would also include [signed releases]
-on Windows.
+from GitHub.
 
 In any case, the steps to release geckodriver are as follows:
 
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/
 [Mozilla’s CI infrastructure]: https://treeherder.mozilla.org/
-[signed releases]: https://github.com/mozilla/geckodriver/issues/292
 
 
 Update in-tree dependency crates
@@ -27,6 +22,7 @@ central by using relative paths:
 
 	[dependencies]
 	…
+    mozdevice = { path = "../mozbase/rust/mozdevice" }
 	mozprofile = { path = "../mozbase/rust/mozprofile" }
 	mozrunner = { path = "../mozbase/rust/mozrunner" }
 	mozversion = { path = "../mozbase/rust/mozversion" }
@@ -38,6 +34,7 @@ GitHub repository when we release, we first need to publish these
 crates if they have had any changes in the interim since the last
 release.  If they have received no changes, you can skip them:
 
+  - `testing/mozbase/rust/mozdevice`
   - `testing/mozbase/rust/mozprofile`
   - `testing/mozbase/rust/mozrunner`
   - `testing/mozbase/rust/mozversion`
@@ -218,41 +215,40 @@ or if you cannot use signing use:
     % git add .
     % git commit -am "import of vX.Y.Z" (unsigned)
 
+Then push the changes:
+
+    % git push
+
 As indicated above, the changes you make to this branch will not
 be upstreamed back into mozilla-central.  It is merely used as a
-staging ground for pushing builds to Travis CI.
+place for external consumers to build their own version of geckodriver.
 
 [GPG key]: https://help.github.com/articles/signing-commits/
-
-
-Tag the release
----------------
-
-Run the following command to tag the release:
-
-	% git tag 'vX.Y.Z'
 
 
 Make the release
 ----------------
 
-geckodriver is released and automatically uploaded from Travis CI by
-pushing a new version tag to the _release_ branch:
+geckodriver needs to be manually released on github.com. Therefore start to
+[draft a new release], and make the following changes:
 
-	% git push
-	% git push --tags
+1. Specify the "Tag version", and select "Release" as target.
 
+2. Leave the release title empty
 
-Update the release description
-------------------------------
+3. Paste the raw Markdown source from [CHANGES.md] into the description field.
+   This will highlight for end-users what changes were made in that particular
+   package when they visit the GitHub downloads section. Make sure to check that
+   all references can be resolved, and if not make sure to add those too.
 
-Once the release binaries have been built and are available on the
-[releases page] update the details of the new release by clicking
-`Edit`. Therefore copy the raw Markdown source from [CHANGES.md]
-into the description field. This will highlight for end-users what
-changes were made in that particular package when they visit the
-GitHub downloads section. Make sure to check that all references
-can be resolved, and if not make sure to add those too.
+4. Find the signed geckodriver archives in the [taskcluster index] by
+   replacing %changeset% with the full release changeset id. Rename the
+   individual files so the basename looks like 'geckodriver-v%version%-%platform%'.
+   Upload them all, including the checksum files for both the Linux platforms.
+
+[draft a new release]: https://github.com/mozilla/geckodriver/releases/new
+[taskcluster index]: https://firefox-ci-tc.services.mozilla.com/tasks/index/gecko.v2.mozilla-central.revision.%changeset%.geckodriver
+
 
 Congratulations!  You’ve released geckodriver!
 

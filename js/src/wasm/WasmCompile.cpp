@@ -94,8 +94,13 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   bool forceTiering =
       cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
 
-  // The <Compiler>Available() predicates should ensure this.
-  MOZ_RELEASE_ASSERT(!(debug && (ion || cranelift)));
+  // The <Compiler>Available() predicates should ensure no failure here, but
+  // when we're fuzzing we allow inconsistent switches and the check may thus
+  // fail.  Let it go to a run-time error instead of crashing.
+  if (debug && (ion || cranelift)) {
+    JS_ReportErrorASCII(cx, "no WebAssembly compiler available");
+    return nullptr;
+  }
 
   if (forceTiering && !(baseline && (cranelift || ion))) {
     // This can happen only in testing, and in this case we don't have a

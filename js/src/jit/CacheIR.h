@@ -497,8 +497,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void assertSameCompartment(JSObject*);
 
   void writeOp(CacheOp op) {
-    MOZ_ASSERT(uint32_t(op) <= UINT8_MAX);
-    buffer_.writeByte(uint32_t(op));
+    buffer_.writeUnsigned15Bit(uint32_t(op));
     nextInstructionId_++;
 #ifdef DEBUG
     MOZ_ASSERT(currentOp_.isNothing(), "Missing call to assertLengthMatches?");
@@ -928,7 +927,7 @@ class MOZ_RAII CacheIRReader {
 
   bool more() const { return buffer_.more(); }
 
-  CacheOp readOp() { return CacheOp(buffer_.readByte()); }
+  CacheOp readOp() { return CacheOp(buffer_.readUnsigned15Bit()); }
 
   // Skip data not currently used.
   void skip() { buffer_.readByte(); }

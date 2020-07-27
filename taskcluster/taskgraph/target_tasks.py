@@ -687,9 +687,6 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     if 'tp6' in try_name and 'amazon' in try_name:
                         return True
             else:
-                # Bug 1652451 - Perma-failing due to server issues
-                if 'youtube-playback' in try_name and 'youtube-playback-chrome' not in try_name:
-                    return False
                 # Run tests on all chrome variants
                 if '-chrome' in try_name:
                     return True

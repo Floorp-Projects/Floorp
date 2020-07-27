@@ -102,10 +102,6 @@ class nsNumberControlFrame final : public nsTextControlFrame {
   bool ShouldUseNativeStyleForSpinner() const;
 
  private:
-  already_AddRefed<Element> MakeAnonymousElement(Element* aParent,
-                                                 nsAtom* aTagName,
-                                                 PseudoStyleType aPseudoType);
-
   // See nsNumberControlFrame::CreateAnonymousContent for a description of
   // these.
   nsCOMPtr<Element> mOuterWrapper;

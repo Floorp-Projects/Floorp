@@ -101,6 +101,10 @@ function getWatchedData(watcher, { createData = false } = {}) {
  */
 function persistMapToSharedData() {
   Services.ppmm.sharedData.set(SHARED_DATA_KEY_NAME, watchedDataByWatcherActor);
+  // Request to immediately flush the data to the content processes in order to prevent
+  // races (bug 1644649). Otherwise content process may have outdated sharedData
+  // and try to create targets for Watcher actor that already stopped watching for targets.
+  Services.ppmm.sharedData.flush();
 }
 
 const WatcherRegistry = {

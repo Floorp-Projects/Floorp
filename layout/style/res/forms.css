@@ -912,7 +912,7 @@ input[type="number"] {
   -moz-default-appearance: number-input;
 }
 
-input[type=number]::-moz-number-wrapper {
+input:is([type=number], [type=search])::-moz-complex-control-wrapper {
   /* Prevent styling that would change the type of frame we construct. */
   display: flex;
   float: none !important;
@@ -923,7 +923,7 @@ input[type=number]::-moz-number-wrapper {
   overflow: -moz-hidden-unscrollable;
 }
 
-input[type=number]::-moz-text-control-editing-root {
+input:is([type=number], [type=search])::-moz-text-control-editing-root {
   display: block; /* Flex items must be block-level. Normally we do fixup in
                      the style system to ensure this, but that fixup is disabled
                      inside of form controls. So, we hardcode display here. */
@@ -1000,6 +1000,20 @@ input[type=number]::-moz-number-spin-down {
 input[type="number"] > div > div > div:hover {
   /* Give some indication of hover state for the up/down buttons */
   background-color: lightblue;
+}
+
+input[type=search]::-moz-search-clear-button {
+  display: block;
+  cursor: default;
+  width: 1em;
+  height: 1em;
+  max-height: 1em;
+  margin-inline-start: 1px;
+  align-self: center;
+  background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 
 input[type="date"],
