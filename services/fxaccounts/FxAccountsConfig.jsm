@@ -212,7 +212,7 @@ var FxAccountsConfig = {
   async ensureConfigured() {
     let isSignedIn = !!(await this.getSignedInUser());
     if (!isSignedIn) {
-      await this.fetchConfigURLs();
+      await this.updateConfigURLs();
     }
   },
 
@@ -221,36 +221,14 @@ var FxAccountsConfig = {
   // and replace all the relevant our prefs with the information found there.
   // This is only done before sign-in and sign-up, and even then only if the
   // `identity.fxaccounts.autoconfig.uri` preference is set.
-  async fetchConfigURLs() {
+  async updateConfigURLs() {
     let rootURL = this.getAutoConfigURL();
     if (!rootURL) {
       return;
     }
-    let configURL = rootURL + "/.well-known/fxa-client-configuration";
-    let request = new RESTRequest(configURL);
-    request.setHeader("Accept", "application/json");
-
-    // Catch and rethrow the error inline.
-    let resp = await request.get().catch(e => {
-      log.error(`Failed to get configuration object from "${configURL}"`, e);
-      throw e;
-    });
-    if (!resp.success) {
-      log.error(
-        `Received HTTP response code ${resp.status} from configuration object request`
-      );
-      if (resp.body) {
-        log.debug("Got error response", resp.body);
-      }
-      throw new Error(
-        `HTTP status ${resp.status} from configuration object request`
-      );
-    }
-
-    log.debug("Got successful configuration response", resp.body);
+    const config = await this.fetchConfigDocument(rootURL);
     try {
       // Update the prefs directly specified by the config.
-      let config = JSON.parse(resp.body);
       let authServerBase = config.auth_server_base_url;
       if (!authServerBase.endsWith("/v1")) {
         authServerBase += "/v1";
@@ -286,6 +264,44 @@ var FxAccountsConfig = {
     } catch (e) {
       log.error(
         "Failed to initialize configuration preferences from autoconfig object",
+        e
+      );
+      throw e;
+    }
+  },
+
+  // Read expected client configuration from the fxa auth server
+  // (or from the provided rootURL, if present) and return it as an object.
+  async fetchConfigDocument(rootURL = null) {
+    if (!rootURL) {
+      rootURL = ROOT_URL;
+    }
+    let configURL = rootURL + "/.well-known/fxa-client-configuration";
+    let request = new RESTRequest(configURL);
+    request.setHeader("Accept", "application/json");
+
+    // Catch and rethrow the error inline.
+    let resp = await request.get().catch(e => {
+      log.error(`Failed to get configuration object from "${configURL}"`, e);
+      throw e;
+    });
+    if (!resp.success) {
+      // Note: 'resp.body' is included with the error log below as we are not concerned
+      // that the body will contain PII, but if that changes it should be excluded.
+      log.error(
+        `Received HTTP response code ${resp.status} from configuration object request:
+        ${resp.body}`
+      );
+      throw new Error(
+        `HTTP status ${resp.status} from configuration object request`
+      );
+    }
+    log.debug("Got successful configuration response", resp.body);
+    try {
+      return JSON.parse(resp.body);
+    } catch (e) {
+      log.error(
+        `Failed to parse configuration preferences from ${configURL}`,
         e
       );
       throw e;

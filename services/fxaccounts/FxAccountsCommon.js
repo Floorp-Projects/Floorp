@@ -110,6 +110,7 @@ exports.COMMAND_SENDTAB = exports.COMMAND_PREFIX + exports.COMMAND_SENDTAB_TAIL;
 // OAuth
 exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
 exports.SCOPE_PROFILE = "profile";
+exports.SCOPE_PROFILE_WRITE = "profile:write";
 exports.SCOPE_OLD_SYNC = "https://identity.mozilla.com/apps/oldsync";
 
 // OAuth metadata for other Firefox-related services that we might need to know about

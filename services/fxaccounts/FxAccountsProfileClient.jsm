@@ -23,6 +23,7 @@ const {
   ERROR_UNKNOWN,
   log,
   SCOPE_PROFILE,
+  SCOPE_PROFILE_WRITE,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const { fxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
@@ -59,9 +60,6 @@ var FxAccountsProfileClient = function(options) {
   } catch (e) {
     throw new Error("Invalid 'serverURL'");
   }
-  this.oauthOptions = {
-    scope: SCOPE_PROFILE,
-  };
   log.debug("FxAccountsProfileClient: Initialized");
 };
 
@@ -83,19 +81,21 @@ FxAccountsProfileClient.prototype = {
    * @param {String} path
    *        Profile server path, i.e "/profile".
    * @param {String} [method]
-   *        Type of request, i.e "GET".
+   *        Type of request, e.g. "GET".
    * @param {String} [etag]
    *        Optional ETag used for caching purposes.
+   * @param {Object} [body]
+   *        Optional request body, to be sent as application/json.
    * @return Promise
    *         Resolves: {body: Object, etag: Object} Successful response from the Profile server.
    *         Rejects: {FxAccountsProfileClientError} Profile client error.
    * @private
    */
-  async _createRequest(path, method = "GET", etag = null) {
-    // tokens are cached, so getting them each request is cheap.
-    let token = await this.fxai.getOAuthToken(this.oauthOptions);
+  async _createRequest(path, method = "GET", etag = null, body = null) {
+    method = method.toUpperCase();
+    let token = await this._getTokenForRequest(method);
     try {
-      return await this._rawRequest(path, method, token, etag);
+      return await this._rawRequest(path, method, token, etag, body);
     } catch (ex) {
       if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
         throw ex;
@@ -105,11 +105,11 @@ FxAccountsProfileClient.prototype = {
         "Fetching the profile returned a 401 - revoking our token and retrying"
       );
       await this.fxai.removeCachedOAuthToken({ token });
-      token = await this.fxai.getOAuthToken(this.oauthOptions);
+      token = await this._getTokenForRequest(method);
       // and try with the new token - if that also fails then we fail after
       // revoking the token.
       try {
-        return await this._rawRequest(path, method, token, etag);
+        return await this._rawRequest(path, method, token, etag, body);
       } catch (ex) {
         if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
           throw ex;
@@ -124,6 +124,26 @@ FxAccountsProfileClient.prototype = {
   },
 
   /**
+   * Helper to get an OAuth token for a request.
+   *
+   * OAuth tokens are cached, so it's fine to call this for each request.
+   *
+   * @param {String} [method]
+   *        Type of request, i.e "GET".
+   * @return Promise
+   *         Resolves: Object containing "scope", "token" and "key" properties
+   *         Rejects: {FxAccountsProfileClientError} Profile client error.
+   * @private
+   */
+  async _getTokenForRequest(method) {
+    let scope = SCOPE_PROFILE;
+    if (method === "POST") {
+      scope = SCOPE_PROFILE_WRITE;
+    }
+    return this.fxai.getOAuthToken({ scope });
+  },
+
+  /**
    * Remote "raw" request helper - doesn't handle auth errors and tokens.
    *
    * @param {String} path
@@ -132,16 +152,17 @@ FxAccountsProfileClient.prototype = {
    *        Type of request, i.e "GET".
    * @param {String} token
    * @param {String} etag
+   * @param {Object} payload
+   *        The payload of the request, if any.
    * @return Promise
    *         Resolves: {body: Object, etag: Object} Successful response from the Profile server
                         or null if 304 is hit (same ETag).
    *         Rejects: {FxAccountsProfileClientError} Profile client error.
    * @private
    */
-  async _rawRequest(path, method, token, etag) {
+  async _rawRequest(path, method, token, etag = null, payload = null) {
     let profileDataUrl = this.serverURL + path;
     let request = new this._Request(profileDataUrl);
-    method = method.toUpperCase();
 
     request.setHeader("Authorization", "Bearer " + token);
     request.setHeader("Accept", "application/json");
@@ -149,7 +170,7 @@ FxAccountsProfileClient.prototype = {
       request.setHeader("If-None-Match", etag);
     }
 
-    if (method != "GET") {
+    if (method != "GET" && method != "POST") {
       // method not supported
       throw new FxAccountsProfileClientError({
         error: ERROR_NETWORK,
@@ -158,9 +179,8 @@ FxAccountsProfileClient.prototype = {
         message: ERROR_MSG_METHOD_NOT_ALLOWED,
       });
     }
-
     try {
-      await request.get();
+      await request.dispatch(method, payload);
     } catch (error) {
       throw new FxAccountsProfileClientError({
         error: ERROR_NETWORK,
@@ -211,6 +231,27 @@ FxAccountsProfileClient.prototype = {
   fetchProfile(etag) {
     log.debug("FxAccountsProfileClient: Requested profile");
     return this._createRequest("/profile", "GET", etag);
+  },
+
+  /**
+   * Write an ecosystemAnonId value to the user's profile data on the server.
+   *
+   * This should be used only if the user's profile data does not already contain an
+   * ecosytemAnonId field, and it will reject with a "412 Precondition Failed" if there
+   * is one already present on the server.
+   *
+   * @param {String} [ecosystemAnonId]
+   *        The generated ecosystemAnonId value to store on the server.
+   * @return Promise
+   *         Resolves: {body: Object} Successful response from the '/ecosystem_anon_id' endpoint.
+   *         Rejects: {FxAccountsProfileClientError} profile client error.
+   */
+  setEcosystemAnonId(ecosystemAnonId) {
+    log.debug("FxAccountsProfileClient: Setting ecosystemAnonId");
+    // This uses `If-None-Match: "*"` to prevent two concurrent clients from setting a value.
+    return this._createRequest("/ecosystem_anon_id", "POST", "*", {
+      ecosystemAnonId,
+    });
   },
 };
 

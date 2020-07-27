@@ -37,7 +37,7 @@ let mockResponse = function(response) {
           Request.ifNoneMatchSet = true;
         }
       },
-      async get() {
+      async dispatch(method, payload) {
         this.response = response;
         return this.response;
       },
@@ -72,7 +72,7 @@ let mockResponseError = function(error) {
   return function() {
     return {
       setHeader() {},
-      async get() {
+      async dispatch(method, payload) {
         throw error;
       },
     };
@@ -232,7 +232,7 @@ add_test(function server401ResponseThenSuccess() {
           Assert.equal(value, "Bearer " + lastToken);
         }
       },
-      async get() {
+      async dispatch(method, payload) {
         this.response = responses[numRequests];
         ++numRequests;
         return this.response;
@@ -295,7 +295,7 @@ add_test(function server401ResponsePersists() {
           Assert.equal(value, "Bearer " + lastToken);
         }
       },
-      async get() {
+      async dispatch(method, payload) {
         this.response = response;
         ++numRequests;
         return this.response;
