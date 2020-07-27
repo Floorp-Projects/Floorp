@@ -176,6 +176,7 @@ sealed class Event {
     object SearchWidgetCFRCanceled : Event()
     object SearchWidgetCFRNotNowPressed : Event()
     object SearchWidgetCFRAddWidgetPressed : Event()
+    object SearchWidgetInstalled : Event()
     object OnboardingAutoSignIn : Event()
     object OnboardingManualSignIn : Event()
     object OnboardingPrivacyNotice : Event()

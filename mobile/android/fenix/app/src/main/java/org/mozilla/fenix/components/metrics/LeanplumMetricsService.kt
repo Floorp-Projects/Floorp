@@ -39,6 +39,7 @@ private val Event.name: String?
         is Event.DismissedOnboarding -> "E_Dismissed_Onboarding"
         is Event.FennecToFenixMigrated -> "E_Fennec_To_Fenix_Migrated"
         is Event.AddonInstalled -> "E_Addon_Installed"
+        is Event.SearchWidgetInstalled -> "E_Search_Widget_Added"
 
         // Do not track other events in Leanplum
         else -> null
