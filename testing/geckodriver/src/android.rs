@@ -236,8 +236,8 @@ impl AndroidHandler {
         // TODO: Allow to write custom arguments and preferences from moz:firefoxOptions
         let mut config = Config {
             args: Value::Sequence(vec![
-                Value::String("-marionette".into()),
-                Value::String("-profile".into()),
+                Value::String("--marionette".into()),
+                Value::String("--profile".into()),
                 Value::String(self.profile.display().to_string()),
             ]),
             env: Mapping::new(),
@@ -342,7 +342,7 @@ impl AndroidHandler {
                 intent_arguments.push("--es".to_owned());
                 intent_arguments.push("args".to_owned());
                 intent_arguments
-                    .push(format!("-marionette -profile {}", self.profile.display()).to_owned());
+                    .push(format!("--marionette --profile {}", self.profile.display()).to_owned());
 
                 debug!("Launching {}/{}", process.package, process.activity);
                 process
