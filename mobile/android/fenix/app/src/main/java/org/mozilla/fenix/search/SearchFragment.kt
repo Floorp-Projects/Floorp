@@ -268,7 +268,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             qrFeature.get()?.scan(R.id.container)
         }
 
-        view.search_shortcuts_button.setOnClickListener {
+        view.search_engines_shortcut_button.setOnClickListener {
             searchInteractor.onSearchShortcutsButtonClicked()
         }
 
@@ -400,7 +400,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     }
 
     private fun updateSearchWithLabel(searchState: SearchFragmentState) {
-        search_with_shortcuts.visibility =
+        search_engine_shortcut.visibility =
             if (searchState.showSearchShortcuts) View.VISIBLE else View.GONE
     }
 
@@ -450,19 +450,19 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             findViewById<View>(R.id.search_suggestions_onboarding)?.isVisible = state.showSearchSuggestionsHint
 
             search_suggestions_onboarding_divider?.isVisible =
-                search_with_shortcuts.isVisible && state.showSearchSuggestionsHint
+                search_engine_shortcut.isVisible && state.showSearchSuggestionsHint
         }
     }
 
     private fun updateSearchShortcutsIcon(searchState: SearchFragmentState) {
         view?.apply {
-            search_shortcuts_button.isVisible = searchState.areShortcutsAvailable
+            search_engines_shortcut_button.isVisible = searchState.areShortcutsAvailable
 
             val showShortcuts = searchState.showSearchShortcuts
-            search_shortcuts_button.isChecked = showShortcuts
+            search_engines_shortcut_button.isChecked = showShortcuts
 
             val color = if (showShortcuts) R.attr.contrastText else R.attr.primaryText
-            search_shortcuts_button.compoundDrawables[0]?.setTint(
+            search_engines_shortcut_button.compoundDrawables[0]?.setTint(
                 requireContext().getColorFromAttr(color)
             )
         }

@@ -38,7 +38,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             }
 
         val showSearchShortcuts =
-            requirePreference<SwitchPreference>(R.string.pref_key_show_search_shortcuts).apply {
+            requirePreference<SwitchPreference>(R.string.pref_key_show_search_engine_shortcuts).apply {
                 isChecked = context.settings().shouldShowSearchShortcuts
             }
 

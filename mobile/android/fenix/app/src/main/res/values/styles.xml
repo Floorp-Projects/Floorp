@@ -455,7 +455,7 @@
         <item name="android:elevation">0dp</item>
     </style>
 
-    <style name="SearchShortcutsLabelStyle">
+    <style name="SearchEngineShortcutsLabelStyle">
         <item name="android:fontFamily">@font/metropolis_semibold</item>
         <item name="android:letterSpacing">0.15</item>
         <item name="android:textAllCaps">true</item>

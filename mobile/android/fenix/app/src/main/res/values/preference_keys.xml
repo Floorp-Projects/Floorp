@@ -86,7 +86,7 @@
 
     <!-- Search Settings -->
     <string name="pref_key_search_engine_list" translatable="false">pref_key_search_engine_list</string>
-    <string name="pref_key_show_search_shortcuts" translatable="false">pref_key_show_search_shortcuts</string>
+    <string name="pref_key_show_search_engine_shortcuts" translatable="false">pref_key_show_search_engine_shortcuts</string>
     <string name="pref_key_show_search_suggestions" translatable="false">pref_key_show_search_suggestions</string>
     <string name="pref_key_show_clipboard_suggestions" translatable="false">pref_key_show_clipboard_suggestions</string>
     <string name="pref_key_search_browsing_history" translatable="false">pref_key_search_browsing_history</string>
@@ -94,7 +94,6 @@
     <string name="pref_key_show_search_suggestions_in_private" translatable="false">pref_key_show_search_suggestions_in_private</string>
     <string name="pref_key_show_search_suggestions_in_private_onboarding" translatable="false">pref_key_show_search_suggestions_in_privateonboarding</string>
     <string name="pref_key_show_voice_search" translatable="false">pref_key_show_voice_search</string>
-
 
     <!-- Site Permissions Settings -->
     <string name="pref_key_optimize" translatable="false">pref_key_optimize</string>

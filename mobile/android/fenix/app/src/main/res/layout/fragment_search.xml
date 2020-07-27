@@ -52,7 +52,7 @@
                 android:fadingEdgeLength="40dp"
                 android:nestedScrollingEnabled="false"
                 android:requiresFadingEdge="vertical"
-                app:layout_constraintTop_toBottomOf="@id/search_with_shortcuts"
+                app:layout_constraintTop_toBottomOf="@id/search_engine_shortcut"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 mozac:awesomeBarDescriptionTextColor="?secondaryText"
@@ -139,8 +139,8 @@
                 app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard" />
 
             <TextView
-                android:id="@+id/search_with_shortcuts"
-                style="@style/SearchShortcutsLabelStyle"
+                android:id="@+id/search_engine_shortcut"
+                style="@style/SearchEngineShortcutsLabelStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/search_fragment_shortcuts_label_margin_horizontal"
@@ -150,14 +150,14 @@
                 android:text="@string/search_engines_search_with"
                 app:layout_constraintStart_toStartOf="@id/scrollable_area"
                 app:layout_constraintTop_toBottomOf="@id/awesomeBar_barrier"
-                tools:text="This time, search with:" />
+                tools:text="@string/search_engines_search_with" />
 
             <androidx.constraintlayout.widget.Barrier
                 android:id="@+id/awesomeBar_barrier"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:barrierDirection="bottom"
-                app:constraint_referenced_ids="fill_link_from_clipboard,search_with_shortcuts,search_suggestions_onboarding" />
+                app:constraint_referenced_ids="fill_link_from_clipboard,search_engine_shortcut,search_suggestions_onboarding" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -195,10 +195,10 @@
             app:drawableStartCompat="@drawable/ic_qr" />
 
         <ToggleButton
-            android:id="@+id/search_shortcuts_button"
+            android:id="@+id/search_engines_shortcut_button"
             style="@style/search_pill"
-            android:textOff="@string/search_engines_shortcut_button"
-            android:textOn="@string/search_engines_shortcut_button"
+            android:textOff="@string/search_engine_button"
+            android:textOn="@string/search_engine_button"
             app:drawableStartCompat="@drawable/ic_search" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

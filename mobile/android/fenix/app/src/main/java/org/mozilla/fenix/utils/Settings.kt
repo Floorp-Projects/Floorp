@@ -305,7 +305,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     val shouldShowSearchShortcuts by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_show_search_shortcuts),
+        appContext.getPreferenceKey(R.string.pref_key_show_search_engine_shortcuts),
         default = false
     )
 

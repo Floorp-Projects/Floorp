@@ -26,7 +26,7 @@
         android:layout="@layout/preference_cat_style">
         <SwitchPreference
             android:defaultValue="true"
-            android:key="@string/pref_key_show_search_shortcuts"
+            android:key="@string/pref_key_show_search_engine_shortcuts"
             android:title="@string/preferences_show_search_engines" />
         <SwitchPreference
             android:defaultValue="true"
