@@ -56,10 +56,10 @@ struct ParamTraits<GMPBufferType>
                                       GMP_BufferInvalid> {};
 
 template <>
-struct ParamTraits<cdm::EncryptionScheme>
-    : public ContiguousEnumSerializerInclusive<
-          cdm::EncryptionScheme, cdm::EncryptionScheme::kUnencrypted,
-          cdm::EncryptionScheme::kCbcs> {};
+struct ParamTraits<GMPEncryptionScheme>
+    : public ContiguousEnumSerializer<
+          GMPEncryptionScheme, GMPEncryptionScheme::kGMPEncryptionNone,
+          GMPEncryptionScheme::kGMPEncryptionInvalid> {};
 
 template <>
 struct ParamTraits<cdm::HdcpVersion>
