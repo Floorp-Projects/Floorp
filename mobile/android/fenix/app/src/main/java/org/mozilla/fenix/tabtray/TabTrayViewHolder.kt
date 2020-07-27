@@ -26,7 +26,6 @@ import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.images.ImageLoadRequest
 import mozilla.components.support.images.loader.ImageLoader
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -36,6 +35,7 @@ import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.utils.Do
 import kotlin.math.max
 
@@ -160,7 +160,9 @@ class TabTrayViewHolder(
         // is done in the toolbar and awesomebar:
         // https://github.com/mozilla-mobile/fenix/issues/1824
         // https://github.com/mozilla-mobile/android-components/issues/6985
-        urlView?.text = tab.url.tryGetHostFromUrl().take(MAX_URI_LENGTH)
+        urlView?.text = tab.url
+            .toShortUrl(itemView.context.components.publicSuffixList)
+            .take(MAX_URI_LENGTH)
     }
 
     @VisibleForTesting
