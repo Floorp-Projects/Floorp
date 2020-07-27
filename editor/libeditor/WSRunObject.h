@@ -629,16 +629,25 @@ class MOZ_STACK_CLASS WSRunScanner final {
           const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent,
           const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
 
-      BoundaryData() : mReason(WSType::NotInitialized) {}
+      enum class Preformatted : bool { Yes, No };
+      BoundaryData()
+          : mReason(WSType::NotInitialized),
+            mAcrossPreformattedCharacter(Preformatted::No) {}
       template <typename EditorDOMPointType>
       BoundaryData(const EditorDOMPointType& aPoint, nsIContent& aReasonContent,
-                   WSType aReason)
-          : mReasonContent(&aReasonContent), mPoint(aPoint), mReason(aReason) {}
+                   WSType aReason, Preformatted aDidCrossPreformattedCharacter)
+          : mReasonContent(&aReasonContent),
+            mPoint(aPoint),
+            mReason(aReason),
+            mAcrossPreformattedCharacter(aDidCrossPreformattedCharacter) {}
       bool Initialized() const { return mReasonContent && mPoint.IsSet(); }
 
       nsIContent* GetReasonContent() const { return mReasonContent; }
       const EditorDOMPoint& PointRef() const { return mPoint; }
       WSType RawReason() const { return mReason; }
+      bool AcrossPreformattedCharacter() const {
+        return mAcrossPreformattedCharacter == Preformatted::Yes;
+      }
 
       bool IsNormalText() const { return mReason == WSType::NormalText; }
       bool IsSpecialContent() const {
@@ -688,6 +697,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
       // WSType::SpecialContent, WSType::BRElement, WSType::CurrentBlockBoundary
       // or WSType::OtherBlockBoundary.
       WSType mReason;
+      // If the point crosses a preformatted character from scanning start
+      // point, set to "Yes".  So, this may NOT equal to the style at mPoint
+      // nor mReasonContent.
+      Preformatted mAcrossPreformattedCharacter;
     };
 
     class MOZ_STACK_CLASS NoBreakingSpaceData final {
