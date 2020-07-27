@@ -1,4 +1,4 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
 
 import io
 import abc
@@ -9,26 +9,20 @@ import email
 if sys.version_info > (3,):  # pragma: nocover
     import builtins
     from configparser import ConfigParser
-    import contextlib
+    from contextlib import suppress
     FileNotFoundError = builtins.FileNotFoundError
     IsADirectoryError = builtins.IsADirectoryError
     NotADirectoryError = builtins.NotADirectoryError
     PermissionError = builtins.PermissionError
     map = builtins.map
-    from itertools import filterfalse
 else:  # pragma: nocover
     from backports.configparser import ConfigParser
     from itertools import imap as map  # type: ignore
-    from itertools import ifilterfalse as filterfalse
-    import contextlib2 as contextlib
+    from contextlib2 import suppress  # noqa
     FileNotFoundError = IOError, OSError
     IsADirectoryError = IOError, OSError
     NotADirectoryError = IOError, OSError
     PermissionError = IOError, OSError
-
-str = type('')
-
-suppress = contextlib.suppress
 
 if sys.version_info > (3, 5):  # pragma: nocover
     import pathlib
@@ -135,18 +129,3 @@ class PyPy_repr:
     if affected:  # pragma: nocover
         __repr__ = __compat_repr__
     del affected
-
-
-# from itertools recipes
-def unique_everseen(iterable):  # pragma: nocover
-    "List unique elements, preserving order. Remember all elements ever seen."
-    seen = set()
-    seen_add = seen.add
-
-    for element in filterfalse(seen.__contains__, iterable):
-        seen_add(element)
-        yield element
-
-
-unique_ordered = (
-    unique_everseen if sys.version_info < (3, 7) else dict.fromkeys)
