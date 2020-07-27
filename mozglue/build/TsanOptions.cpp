@@ -316,6 +316,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:sctp_handle_tick\n"
          "race:sctp_handle_sack\n"
 
+         // See bug 1652530
+         "mutex:XErrorTrap\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
