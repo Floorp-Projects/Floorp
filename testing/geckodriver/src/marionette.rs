@@ -252,9 +252,10 @@ impl MarionetteHandler {
 
         let mut runner = FirefoxRunner::new(&binary, profile);
 
-        runner.arg("--marionette");
+        // double-dashed flags are not accepted on Windows systems
+        runner.arg("-marionette");
         if self.settings.jsdebugger {
-            runner.arg("--jsdebugger");
+            runner.arg("-jsdebugger");
         }
         if let Some(args) = options.args.as_ref() {
             runner.args(args);
