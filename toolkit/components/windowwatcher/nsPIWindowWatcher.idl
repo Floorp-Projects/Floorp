@@ -82,8 +82,8 @@ interface nsPIWindowWatcher : nsISupports
             (which is determined based on the JS stack and the value of
             aParent).  This is not guaranteed, however.
   */
-  BrowsingContext openWindow2(in mozIDOMWindowProxy aParent, in string aUrl,
-                              in string aName, in string aFeatures,
+  BrowsingContext openWindow2(in mozIDOMWindowProxy aParent, in ACString aUrl,
+                              in ACString aName, in ACString aFeatures,
                               in boolean aCalledFromScript,
                               in boolean aDialog,
                               in boolean aNavigate,

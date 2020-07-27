@@ -132,9 +132,9 @@ nsresult nsPrintDialogServiceWin::DoDialog(mozIDOMWindowProxy* aParent,
   array->AppendElement(blkSupps);
 
   nsCOMPtr<mozIDOMWindowProxy> dialog;
-  nsresult rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
-                                     "centerscreen,chrome,modal,titlebar",
-                                     array, getter_AddRefs(dialog));
+  nsresult rv = mWatcher->OpenWindow(
+      aParent, nsDependentCString(aChromeURL), "_blank"_ns,
+      "centerscreen,chrome,modal,titlebar"_ns, array, getter_AddRefs(dialog));
 
   return rv;
 }

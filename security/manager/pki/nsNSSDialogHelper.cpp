@@ -36,8 +36,9 @@ nsresult nsNSSDialogHelper::openDialog(mozIDOMWindowProxy* window,
   mozilla::dom::AutoNoJSAPI nojsapi;
 
   nsCOMPtr<mozIDOMWindowProxy> newWindow;
-  rv = windowWatcher->OpenWindow(parent, url, "_blank",
-                                 modal ? kOpenDialogParam : kOpenWindowParam,
-                                 params, getter_AddRefs(newWindow));
+  rv = windowWatcher->OpenWindow(
+      parent, nsDependentCString(url), "_blank"_ns,
+      nsDependentCString(modal ? kOpenDialogParam : kOpenWindowParam), params,
+      getter_AddRefs(newWindow));
   return rv;
 }

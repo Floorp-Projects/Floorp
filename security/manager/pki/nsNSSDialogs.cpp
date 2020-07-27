@@ -338,8 +338,8 @@ nsNSSDialogs::DisplayProtectedAuth(nsIInterfaceRequestor* aCtx,
 
   nsCOMPtr<mozIDOMWindowProxy> newWindow;
   rv = windowWatcher->OpenWindow(
-      parent, "chrome://pippki/content/protectedAuth.xhtml", "_blank",
-      "centerscreen,chrome,modal,titlebar,close=no", runnable,
+      parent, "chrome://pippki/content/protectedAuth.xhtml"_ns, "_blank"_ns,
+      "centerscreen,chrome,modal,titlebar,close=no"_ns, runnable,
       getter_AddRefs(newWindow));
 
   return rv;
