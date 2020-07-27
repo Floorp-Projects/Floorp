@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmBulkMemSupported()
-
 // Perform a test which,
 //
 // * if errKind is defined, is expected to fail with an exception

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmBulkMemSupported()
-
 // Sundry test cases for the "partial write" bounds checking semantics.
 
 // table.init: out of bounds of the table or the element segment, and should

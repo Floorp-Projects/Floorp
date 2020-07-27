@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmBulkMemSupported() || !wasmReftypesEnabled()
+// |jit-test| skip-if: !wasmReftypesEnabled()
 
 // Declared segments parse and validate
 wasmFullPass(`

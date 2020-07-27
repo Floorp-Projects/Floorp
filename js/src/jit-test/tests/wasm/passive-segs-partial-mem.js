@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmBulkMemSupported()
-
 let conf = getBuildConfiguration();
 if (conf.debug &&
     (conf["arm-simulator"] || conf["arm64-simulator"] ||

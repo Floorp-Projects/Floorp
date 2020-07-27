@@ -543,58 +543,6 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
   Instance& instance = instanceObj->instance();
   const SharedTableVector& tables = instance.tables();
 
-  // Bulk memory changes the error checking behavior: we apply segments
-  // in-order and terminate if one has an out-of-bounds range.
-  // We enable bulk memory semantics if shared memory is enabled.
-#ifdef ENABLE_WASM_BULKMEM_OPS
-  const bool eagerBoundsCheck = false;
-#else
-  // Bulk memory must be available if shared memory is enabled.
-  const bool eagerBoundsCheck =
-      !cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-#endif
-
-  if (eagerBoundsCheck) {
-    // Perform all error checks up front so that this function does not perform
-    // partial initialization if an error is reported. In addition, we need to
-    // to report OOBs as a link error when bulk-memory is disabled.
-
-    for (const ElemSegment* seg : elemSegments_) {
-      if (!seg->active()) {
-        continue;
-      }
-
-      uint32_t tableLength = tables[seg->tableIndex]->length();
-      uint32_t offset =
-          EvaluateOffsetInitExpr(globalImportValues, seg->offset());
-
-      if (offset > tableLength || tableLength - offset < seg->length()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_WASM_BAD_FIT, "elem", "table");
-        return false;
-      }
-    }
-
-    if (memoryObj) {
-      uint32_t memoryLength = memoryObj->volatileMemoryLength();
-      for (const DataSegment* seg : dataSegments_) {
-        if (!seg->active()) {
-          continue;
-        }
-
-        uint32_t offset =
-            EvaluateOffsetInitExpr(globalImportValues, seg->offset());
-
-        if (offset > memoryLength ||
-            memoryLength - offset < seg->bytes.length()) {
-          JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                   JSMSG_WASM_BAD_FIT, "data", "memory");
-          return false;
-        }
-      }
-    }
-  }
-
   // Write data/elem segments into memories/tables.
 
   for (const ElemSegment* seg : elemSegments_) {
@@ -603,13 +551,11 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
           EvaluateOffsetInitExpr(globalImportValues, seg->offset());
       uint32_t count = seg->length();
 
-      if (!eagerBoundsCheck) {
-        uint32_t tableLength = tables[seg->tableIndex]->length();
-        if (offset > tableLength || tableLength - offset < count) {
-          JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                   JSMSG_WASM_OUT_OF_BOUNDS);
-          return false;
-        }
+      uint32_t tableLength = tables[seg->tableIndex]->length();
+      if (offset > tableLength || tableLength - offset < count) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_OUT_OF_BOUNDS);
+        return false;
       }
 
       if (!instance.initElems(seg->tableIndex, *seg, offset, 0, count)) {
@@ -632,12 +578,10 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
           EvaluateOffsetInitExpr(globalImportValues, seg->offset());
       uint32_t count = seg->bytes.length();
 
-      if (!eagerBoundsCheck) {
-        if (offset > memoryLength || memoryLength - offset < count) {
-          JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                   JSMSG_WASM_OUT_OF_BOUNDS);
-          return false;
-        }
+      if (offset > memoryLength || memoryLength - offset < count) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_OUT_OF_BOUNDS);
+        return false;
       }
       memcpy(memoryBase + offset, seg->bytes.begin(), count);
     }

@@ -792,18 +792,6 @@ static bool WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-#ifdef ENABLE_WASM_BULKMEM_OPS
-  bool isSupported = true;
-#else
-  bool isSupported =
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-#endif
-  args.rval().setBoolean(isSupported);
-  return true;
-}
-
 static bool WasmReftypesEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::ReftypesAvailable(cx));
@@ -6451,11 +6439,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmThreadsSupported", WasmThreadsSupported, 0, 0,
 "wasmThreadsSupported()",
 "  Returns a boolean indicating whether the WebAssembly threads proposal is\n"
-"  supported on the current device."),
-
-    JS_FN_HELP("wasmBulkMemSupported", WasmBulkMemSupported, 0, 0,
-"wasmBulkMemSupported()",
-"  Returns a boolean indicating whether the WebAssembly bulk memory proposal is\n"
 "  supported on the current device."),
 
     JS_FN_HELP("wasmSimdSupported", WasmSimdSupported, 0, 0,
