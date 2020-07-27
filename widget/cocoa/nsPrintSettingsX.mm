@@ -421,6 +421,14 @@ nsPrintSettingsX::SetToFileName(const nsAString& aToFileName) {
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+void nsPrintSettingsX::SetDispositionSaveToFile() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mPrintInfo setJobDisposition:NSPrintSaveJob];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 NS_IMETHODIMP
 nsPrintSettingsX::GetOrientation(int32_t* aOrientation) {
   // Only use NSPrintInfo data in the parent process. The
