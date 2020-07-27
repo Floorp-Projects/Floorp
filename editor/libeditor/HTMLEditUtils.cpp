@@ -502,7 +502,7 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
     ELEM(legend, true, true, GROUP_NONE, GROUP_INLINE_ELEMENT),
     ELEM(li, true, false, GROUP_LI, GROUP_FLOW_ELEMENT),
     ELEM(link, false, false, GROUP_HEAD_CONTENT, GROUP_NONE),
-    ELEM(listing, false, false, GROUP_NONE, GROUP_NONE),
+    ELEM(listing, true, true, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
     ELEM(main, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
     ELEM(map, true, true, GROUP_SPECIAL, GROUP_BLOCK | GROUP_MAP_CONTENT),
     ELEM(mark, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
@@ -570,7 +570,7 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
     ELEM(var, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
     ELEM(video, false, false, GROUP_NONE, GROUP_NONE),
     ELEM(wbr, false, false, GROUP_NONE, GROUP_NONE),
-    ELEM(xmp, false, false, GROUP_NONE, GROUP_NONE),
+    ELEM(xmp, true, false, GROUP_BLOCK, GROUP_NONE),
 
     // These aren't elements.
     ELEM(text, false, false, GROUP_LEAF, GROUP_NONE),
