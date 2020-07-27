@@ -7,7 +7,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
 // Utils
-const { getGripType, isGrip, wrapRender } = require("./rep-utils");
+const { isGrip, wrapRender } = require("./rep-utils");
 const { cleanFunctionName } = require("./function");
 const { isLongString } = require("./string");
 const { MODE } = require("./constants");
@@ -276,10 +276,8 @@ function supportsObject(object, noGrip = false) {
   if (noGrip === true || !isGrip(object)) {
     return false;
   }
-  return (
-    (object.preview && getGripType(object, noGrip) === "Error") ||
-    object.class === "DOMException"
-  );
+
+  return object.isError || object.class === "DOMException";
 }
 
 // Exports from this module

@@ -206,7 +206,7 @@ class TreeNode extends Component {
 
   constructor(props) {
     super(props);
-    this.treeNodeRef = /*#__PURE__*/_react.default.createRef();
+    this.treeNodeRef = _react.default.createRef();
     this._onKeyDown = this._onKeyDown.bind(this);
   }
 
@@ -608,7 +608,7 @@ class Tree extends Component {
     this.state = {
       autoExpanded: new Set()
     };
-    this.treeRef = /*#__PURE__*/_react.default.createRef();
+    this.treeRef = _react.default.createRef();
 
     const opaf = fn => oncePerAnimationFrame(fn, {
       getDocument: () => this.treeRef.current && this.treeRef.current.ownerDocument
@@ -3077,7 +3077,6 @@ const {
 
 
 const {
-  getGripType,
   isGrip,
   wrapRender
 } = __webpack_require__(2);
@@ -3338,7 +3337,7 @@ function supportsObject(object, noGrip = false) {
     return false;
   }
 
-  return object.preview && getGripType(object, noGrip) === "Error" || object.class === "DOMException";
+  return object.isError || object.class === "DOMException";
 } // Exports from this module
 
 

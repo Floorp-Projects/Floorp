@@ -31,6 +31,7 @@ rawPackets.set(`new Date(0)`, {
       "extensible": true,
       "frozen": false,
       "sealed": false,
+      "isError": false,
       "preview": {
         "timestamp": 0
       }
@@ -48,11 +49,12 @@ rawPackets.set(`asdf()`, {
     "_grip": {
       "type": "object",
       "actor": "server0.conn0.child1/obj25",
-      "class": "Error",
+      "class": "ReferenceError",
       "ownPropertyLength": 4,
       "extensible": true,
       "frozen": false,
       "sealed": false,
+      "isError": true,
       "preview": {
         "kind": "Error",
         "name": "ReferenceError",
@@ -97,11 +99,12 @@ rawPackets.set(`1 + @`, {
     "_grip": {
       "type": "object",
       "actor": "server0.conn0.child1/obj26",
-      "class": "Error",
+      "class": "SyntaxError",
       "ownPropertyLength": 4,
       "extensible": true,
       "frozen": false,
       "sealed": false,
+      "isError": true,
       "preview": {
         "kind": "Error",
         "name": "SyntaxError",
@@ -145,6 +148,7 @@ rawPackets.set(`inspect({a: 1})`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
+        "isError": false,
         "preview": {
           "kind": "Object",
           "ownProperties": {
@@ -210,6 +214,7 @@ rawPackets.set(`longString message Error`, {
       "extensible": true,
       "frozen": false,
       "sealed": false,
+      "isError": true,
       "preview": {
         "kind": "Error",
         "name": "Error",
@@ -478,6 +483,7 @@ rawPackets.set(`eval throw Object`, {
       "extensible": true,
       "frozen": false,
       "sealed": false,
+      "isError": false,
       "preview": {
         "kind": "Object",
         "ownProperties": {
@@ -532,6 +538,7 @@ rawPackets.set(`eval throw Error Object`, {
       "extensible": true,
       "frozen": false,
       "sealed": false,
+      "isError": true,
       "preview": {
         "kind": "Error",
         "name": "Error",
@@ -580,6 +587,7 @@ rawPackets.set(`eval throw Error Object with custom name`, {
       "extensible": true,
       "frozen": false,
       "sealed": false,
+      "isError": true,
       "preview": {
         "kind": "Error",
         "name": "JuicyError",
