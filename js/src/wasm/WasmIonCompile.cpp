@@ -3481,13 +3481,6 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
 }
 
 static bool EmitMemCopy(FunctionCompiler& f) {
-  // Bulk memory must be available if shared memory is enabled.
-#ifndef ENABLE_WASM_BULKMEM_OPS
-  if (f.env().sharedMemoryEnabled == Shareable::False) {
-    return f.iter().fail("bulk memory ops disabled");
-  }
-#endif
-
   MDefinition *dst, *src, *len;
   uint32_t dstMemIndex;
   uint32_t srcMemIndex;
@@ -3509,13 +3502,6 @@ static bool EmitMemCopy(FunctionCompiler& f) {
 }
 
 static bool EmitTableCopy(FunctionCompiler& f) {
-  // Bulk memory must be available if shared memory is enabled.
-#ifndef ENABLE_WASM_BULKMEM_OPS
-  if (f.env().sharedMemoryEnabled == Shareable::False) {
-    return f.iter().fail("bulk memory ops disabled");
-  }
-#endif
-
   MDefinition *dst, *src, *len;
   uint32_t dstTableIndex;
   uint32_t srcTableIndex;
@@ -3567,13 +3553,6 @@ static bool EmitTableCopy(FunctionCompiler& f) {
 }
 
 static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
-  // Bulk memory must be available if shared memory is enabled.
-#ifndef ENABLE_WASM_BULKMEM_OPS
-  if (f.env().sharedMemoryEnabled == Shareable::False) {
-    return f.iter().fail("bulk memory ops disabled");
-  }
-#endif
-
   uint32_t segIndexVal = 0;
   if (!f.iter().readDataOrElemDrop(isData, &segIndexVal)) {
     return false;
@@ -3714,13 +3693,6 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
 }
 
 static bool EmitMemFill(FunctionCompiler& f) {
-  // Bulk memory must be available if shared memory is enabled.
-#ifndef ENABLE_WASM_BULKMEM_OPS
-  if (f.env().sharedMemoryEnabled == Shareable::False) {
-    return f.iter().fail("bulk memory ops disabled");
-  }
-#endif
-
   MDefinition *start, *val, *len;
   if (!f.iter().readMemFill(&start, &val, &len)) {
     return false;
@@ -3740,13 +3712,6 @@ static bool EmitMemFill(FunctionCompiler& f) {
 }
 
 static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
-  // Bulk memory must be available if shared memory is enabled.
-#ifndef ENABLE_WASM_BULKMEM_OPS
-  if (f.env().sharedMemoryEnabled == Shareable::False) {
-    return f.iter().fail("bulk memory ops disabled");
-  }
-#endif
-
   uint32_t segIndexVal = 0, dstTableIndex = 0;
   MDefinition *dstOff, *srcOff, *len;
   if (!f.iter().readMemOrTableInit(isMem, &segIndexVal, &dstTableIndex, &dstOff,

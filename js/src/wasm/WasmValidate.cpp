@@ -1168,12 +1168,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(MiscOp::I64TruncUSatF64):
             CHECK(iter.readConversion(ValType::F64, ValType::I64, &nothing));
           case uint32_t(MiscOp::MemCopy): {
-#ifndef ENABLE_WASM_BULKMEM_OPS
-            // Bulk memory must be available if shared memory is enabled.
-            if (env.sharedMemoryEnabled == Shareable::False) {
-              return iter.fail("bulk memory ops disabled");
-            }
-#endif
             uint32_t unusedDestMemIndex;
             uint32_t unusedSrcMemIndex;
             CHECK(iter.readMemOrTableCopy(/*isMem=*/true, &unusedDestMemIndex,
@@ -1181,30 +1175,12 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                           &nothing, &nothing));
           }
           case uint32_t(MiscOp::DataDrop): {
-#ifndef ENABLE_WASM_BULKMEM_OPS
-            // Bulk memory must be available if shared memory is enabled.
-            if (env.sharedMemoryEnabled == Shareable::False) {
-              return iter.fail("bulk memory ops disabled");
-            }
-#endif
             uint32_t unusedSegIndex;
             CHECK(iter.readDataOrElemDrop(/*isData=*/true, &unusedSegIndex));
           }
           case uint32_t(MiscOp::MemFill):
-#ifndef ENABLE_WASM_BULKMEM_OPS
-            // Bulk memory must be available if shared memory is enabled.
-            if (env.sharedMemoryEnabled == Shareable::False) {
-              return iter.fail("bulk memory ops disabled");
-            }
-#endif
             CHECK(iter.readMemFill(&nothing, &nothing, &nothing));
           case uint32_t(MiscOp::MemInit): {
-#ifndef ENABLE_WASM_BULKMEM_OPS
-            // Bulk memory must be available if shared memory is enabled.
-            if (env.sharedMemoryEnabled == Shareable::False) {
-              return iter.fail("bulk memory ops disabled");
-            }
-#endif
             uint32_t unusedSegIndex;
             uint32_t unusedTableIndex;
             CHECK(iter.readMemOrTableInit(/*isMem=*/true, &unusedSegIndex,
@@ -1212,12 +1188,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                           &nothing));
           }
           case uint32_t(MiscOp::TableCopy): {
-#ifndef ENABLE_WASM_BULKMEM_OPS
-            // Bulk memory must be available if shared memory is enabled.
-            if (env.sharedMemoryEnabled == Shareable::False) {
-              return iter.fail("bulk memory ops disabled");
-            }
-#endif
             uint32_t unusedDestTableIndex;
             uint32_t unusedSrcTableIndex;
             CHECK(iter.readMemOrTableCopy(
@@ -1225,22 +1195,10 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                 &unusedSrcTableIndex, &nothing, &nothing));
           }
           case uint32_t(MiscOp::ElemDrop): {
-#ifndef ENABLE_WASM_BULKMEM_OPS
-            // Bulk memory must be available if shared memory is enabled.
-            if (env.sharedMemoryEnabled == Shareable::False) {
-              return iter.fail("bulk memory ops disabled");
-            }
-#endif
             uint32_t unusedSegIndex;
             CHECK(iter.readDataOrElemDrop(/*isData=*/false, &unusedSegIndex));
           }
           case uint32_t(MiscOp::TableInit): {
-#ifndef ENABLE_WASM_BULKMEM_OPS
-            // Bulk memory must be available if shared memory is enabled.
-            if (env.sharedMemoryEnabled == Shareable::False) {
-              return iter.fail("bulk memory ops disabled");
-            }
-#endif
             uint32_t unusedSegIndex;
             uint32_t unusedTableIndex;
             CHECK(iter.readMemOrTableInit(/*isMem=*/false, &unusedSegIndex,
@@ -2825,13 +2783,6 @@ static bool DecodeDataCountSection(Decoder& d, ModuleEnvironment* env) {
   if (!range) {
     return true;
   }
-
-#ifndef ENABLE_WASM_BULKMEM_OPS
-  // Bulk memory must be available if shared memory is enabled.
-  if (env->sharedMemoryEnabled == Shareable::False) {
-    return d.fail("bulk memory ops disabled");
-  }
-#endif
 
   uint32_t dataCount;
   if (!d.readVarU32(&dataCount)) {
