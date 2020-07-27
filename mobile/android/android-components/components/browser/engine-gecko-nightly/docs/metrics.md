@@ -18,8 +18,8 @@ See the Glean SDK documentation for the [`metrics` ping](https://mozilla.github.
 
 The following metrics are added to the ping:
 
-| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefix/Data_Collection) |
-| --- | --- | --- | --- | --- | --- |
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
 | geckoview.build_id |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The Buildid of the Gecko engine, example: 20200205124310  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1611240#c2)||2021-02-01 | |
 | geckoview.content_process_lifetime |[timing_distribution](https://mozilla.github.io/glean/book/user/metrics/timing_distribution.html) |The uptime of content processes in ms  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1625325#c2)||never | |
 | geckoview.document_site_origins |[custom_distribution](https://mozilla.github.io/glean/book/user/metrics/custom_distribution.html) |When a document is loaded, report the number of [site origins](https://searchfox.org/ mozilla-central/rev/ 3300072e993ae05d50d5c63d815260367eaf9179/ caps/nsIPrincipal.idl#264) of the entire browser if it has been at least 5 minutes since last time we collect this data.  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1589700#c5)||never | |
