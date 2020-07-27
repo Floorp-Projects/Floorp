@@ -207,7 +207,9 @@ Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
               pointToInsert);
       if (atNextCharOfInsertionPoint.IsSet() &&
           !atNextCharOfInsertionPoint.IsEndOfContainer() &&
-          atNextCharOfInsertionPoint.IsCharASCIISpace()) {
+          atNextCharOfInsertionPoint.IsCharASCIISpace() &&
+          !EditorUtils::IsContentPreformatted(
+              *atNextCharOfInsertionPoint.ContainerAsText())) {
         EditorRawDOMPointInText atPreviousCharOfNextCharOfInsertionPoint =
             textFragmentDataAtInsertionPoint.GetPreviousEditableCharPoint(
                 atNextCharOfInsertionPoint);
@@ -578,7 +580,8 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
   }
 
   // Easy case, preformatted ws.
-  if (textFragmentDataAtDeletion.IsPreformatted()) {
+  if (EditorUtils::IsContentPreformatted(
+          *atPreviousCharOfStart.ContainerAsText())) {
     if (!atPreviousCharOfStart.IsCharASCIISpace() &&
         !atPreviousCharOfStart.IsCharNBSP()) {
       return NS_OK;
@@ -650,7 +653,8 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
   }
 
   // Easy case, preformatted ws.
-  if (textFragmentDataAtDeletion.IsPreformatted()) {
+  if (EditorUtils::IsContentPreformatted(
+          *atNextCharOfStart.ContainerAsText())) {
     if (!atNextCharOfStart.IsCharASCIISpace() &&
         !atNextCharOfStart.IsCharNBSP()) {
       return NS_OK;
@@ -1583,7 +1587,9 @@ WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
         textFragmentDataAtSplitPoint.GetInclusiveNextEditableCharPoint(
             pointToSplit);
     if (atNextCharOfStart.IsSet() && !atNextCharOfStart.IsEndOfContainer() &&
-        atNextCharOfStart.IsCharASCIISpace()) {
+        atNextCharOfStart.IsCharASCIISpace() &&
+        !EditorUtils::IsContentPreformatted(
+            *atNextCharOfStart.ContainerAsText())) {
       // pointToSplit will be referred bellow so that we need to keep
       // it a valid point.
       AutoEditorDOMPointChildInvalidator forgetChild(pointToSplit);
@@ -1620,7 +1626,9 @@ WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
         textFragmentDataAtSplitPoint.GetPreviousEditableCharPoint(pointToSplit);
     if (atPreviousCharOfStart.IsSet() &&
         !atPreviousCharOfStart.IsEndOfContainer() &&
-        atPreviousCharOfStart.IsCharASCIISpace()) {
+        atPreviousCharOfStart.IsCharASCIISpace() &&
+        !EditorUtils::IsContentPreformatted(
+            *atPreviousCharOfStart.ContainerAsText())) {
       if (atPreviousCharOfStart.IsStartOfContainer() ||
           atPreviousCharOfStart.IsPreviousCharASCIISpace()) {
         atPreviousCharOfStart =
@@ -1816,6 +1824,9 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
   MOZ_ASSERT(aPointAtASCIIWhiteSpace.IsSet());
   MOZ_ASSERT(!aPointAtASCIIWhiteSpace.IsEndOfContainer());
   MOZ_ASSERT(aPointAtASCIIWhiteSpace.IsCharASCIISpace());
+  NS_ASSERTION(!EditorUtils::IsContentPreformatted(
+                   *aPointAtASCIIWhiteSpace.ContainerAsText()),
+               "aPointAtASCIIWhiteSpace should be in a formatted text node");
 
   // If it's not the last character in the text node, let's scan following
   // characters in it.
@@ -1844,15 +1855,17 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
       return afterLastWhiteSpace;
     }
 
-    // We can ignore empty text nodes.
+    // We can ignore empty text nodes (even if it's preformatted).
     if (atStartOfNextTextNode.IsContainerEmpty()) {
       atEndOfPreviousTextNode = atStartOfNextTextNode;
       continue;
     }
 
-    // If next node starts with non-white-space character, return end of
-    // previous text node.
-    if (!atStartOfNextTextNode.IsCharASCIISpace()) {
+    // If next node starts with non-white-space character or next node is
+    // preformatted, return end of previous text node.
+    if (!atStartOfNextTextNode.IsCharASCIISpace() ||
+        EditorUtils::IsContentPreformatted(
+            *atStartOfNextTextNode.ContainerAsText())) {
       return afterLastWhiteSpace;
     }
 
@@ -1877,6 +1890,9 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
   MOZ_ASSERT(aPointAtASCIIWhiteSpace.IsSet());
   MOZ_ASSERT(!aPointAtASCIIWhiteSpace.IsEndOfContainer());
   MOZ_ASSERT(aPointAtASCIIWhiteSpace.IsCharASCIISpace());
+  NS_ASSERTION(!EditorUtils::IsContentPreformatted(
+                   *aPointAtASCIIWhiteSpace.ContainerAsText()),
+               "aPointAtASCIIWhiteSpace should be in a formatted text node");
 
   // If there is some characters before it, scan it in the text node first.
   if (!aPointAtASCIIWhiteSpace.IsStartOfContainer()) {
@@ -1904,15 +1920,17 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
       return atLastWhiteSpace;
     }
 
-    // We can ignore empty text nodes.
+    // We can ignore empty text nodes (even if it's preformatted).
     if (atLastCharOfNextTextNode.IsContainerEmpty()) {
       atStartOfPreviousTextNode = atLastCharOfNextTextNode;
       continue;
     }
 
-    // If next node ends with non-white-space character, return start of
-    // previous text node.
-    if (!atLastCharOfNextTextNode.IsCharASCIISpace()) {
+    // If next node ends with non-white-space character or next node is
+    // preformatted, return start of previous text node.
+    if (!atLastCharOfNextTextNode.IsCharASCIISpace() ||
+        EditorUtils::IsContentPreformatted(
+            *atLastCharOfNextTextNode.ContainerAsText())) {
       return atLastWhiteSpace;
     }
 
@@ -2135,9 +2153,11 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     // XXX This is different behavior from Blink.  Blink generates pairs of
     //     an NBSP and an ASCII white-space, but put NBSP at the end of the
     //     sequence.  We should follow the behavior for web-compat.
-    if (textFragmentData.IsPreformatted() || maybeNBSPFollowingVisibleContent ||
-        !isPreviousCharASCIIWhiteSpace ||
-        !followedByVisibleContentOrBRElement) {
+    if (maybeNBSPFollowingVisibleContent || !isPreviousCharASCIIWhiteSpace ||
+        !followedByVisibleContentOrBRElement ||
+        EditorUtils::IsContentPreformatted(
+            *atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
+                 .GetContainerAsText())) {
       return NS_OK;
     }
 
@@ -2262,13 +2282,22 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   EditorDOMPointInText atPreviousChar =
       GetPreviousEditableCharPoint(aPointToInsert);
   if (!atPreviousChar.IsSet() || atPreviousChar.IsEndOfContainer() ||
-      !atPreviousChar.IsCharNBSP()) {
+      !atPreviousChar.IsCharNBSP() ||
+      EditorUtils::IsContentPreformatted(*atPreviousChar.ContainerAsText())) {
     return EditorDOMPointInText();
   }
 
   EditorDOMPointInText atPreviousCharOfPreviousChar =
       GetPreviousEditableCharPoint(atPreviousChar);
   if (atPreviousCharOfPreviousChar.IsSet()) {
+    // If the previous char is in different text node and it's preformatted,
+    // we shouldn't touch it.
+    if (atPreviousChar.ContainerAsText() !=
+            atPreviousCharOfPreviousChar.ContainerAsText() &&
+        EditorUtils::IsContentPreformatted(
+            *atPreviousCharOfPreviousChar.ContainerAsText())) {
+      return EditorDOMPointInText();
+    }
     // If the previous char of the NBSP at previous position of aPointToInsert
     // is an ASCII white-space, we don't need to replace it with same character.
     if (!atPreviousCharOfPreviousChar.IsEndOfContainer() &&
@@ -2308,13 +2337,22 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   EditorDOMPointInText atNextChar =
       GetInclusiveNextEditableCharPoint(aPointToInsert);
   if (!atNextChar.IsSet() || NS_WARN_IF(atNextChar.IsEndOfContainer()) ||
-      !atNextChar.IsCharNBSP()) {
+      !atNextChar.IsCharNBSP() ||
+      EditorUtils::IsContentPreformatted(*atNextChar.ContainerAsText())) {
     return EditorDOMPointInText();
   }
 
   EditorDOMPointInText atNextCharOfNextCharOfNBSP =
       GetInclusiveNextEditableCharPoint(atNextChar.NextPoint());
   if (atNextCharOfNextCharOfNBSP.IsSet()) {
+    // If the next char is in different text node and it's preformatted,
+    // we shouldn't touch it.
+    if (atNextChar.ContainerAsText() !=
+            atNextCharOfNextCharOfNBSP.ContainerAsText() &&
+        EditorUtils::IsContentPreformatted(
+            *atNextCharOfNextCharOfNBSP.ContainerAsText())) {
+      return EditorDOMPointInText();
+    }
     // If following character of an NBSP is an ASCII white-space, we don't
     // need to replace it with same character.
     if (!atNextCharOfNextCharOfNBSP.IsEndOfContainer() &&
