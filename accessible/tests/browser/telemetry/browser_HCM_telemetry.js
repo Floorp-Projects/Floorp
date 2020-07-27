@@ -58,7 +58,7 @@ add_task(async function testInit() {
   if (AppConstants.platform == "win") {
     is(
       menulistHCM.value,
-      0,
+      "0",
       "HCM menulist should be set to only with HCM theme on startup for windows"
     );
 
@@ -72,7 +72,7 @@ add_task(async function testInit() {
   } else {
     is(
       menulistHCM.value,
-      1,
+      "1",
       "HCM menulist should be set to never on startup for non-windows platforms"
     );
 
@@ -96,7 +96,7 @@ add_task(async function testSetAlways() {
   const newOption = dialogWin.document.getElementById("documentColorAlways");
   newOption.click();
 
-  is(menulistHCM.value, 2, "HCM menulist should be set to always");
+  is(menulistHCM.value, "2", "HCM menulist should be set to always");
 
   await closeColorsDialog(dialogWin);
 
@@ -119,7 +119,7 @@ add_task(async function testSetDefault() {
   const newOption = dialogWin.document.getElementById("documentColorAutomatic");
   newOption.click();
 
-  is(menulistHCM.value, 0, "HCM menulist should be set to default");
+  is(menulistHCM.value, "0", "HCM menulist should be set to default");
 
   await closeColorsDialog(dialogWin);
 
@@ -142,7 +142,7 @@ add_task(async function testSetNever() {
   const newOption = dialogWin.document.getElementById("documentColorNever");
   newOption.click();
 
-  is(menulistHCM.value, 1, "HCM menulist should be set to never");
+  is(menulistHCM.value, "1", "HCM menulist should be set to never");
 
   await closeColorsDialog(dialogWin);
 
@@ -169,9 +169,9 @@ add_task(async function testBackplate() {
 
   Services.prefs.setBoolPref("browser.display.permit_backplate", false);
   // Verify correct recorded value
-  verifyBackplate(0);
+  verifyBackplate(false);
 
   Services.prefs.setBoolPref("browser.display.permit_backplate", true);
   // Verify correct recorded value
-  verifyBackplate(1);
+  verifyBackplate(true);
 });

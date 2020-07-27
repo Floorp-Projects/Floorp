@@ -72,12 +72,12 @@ add_task(async function testChangeAutoUpdates() {
   ok(inputs.checkForUpdate.hidden, "Update check is hidden");
 
   inputs.on.click();
-  is(addon.applyBackgroundUpdates, 2, "Updates are now enabled");
+  is(addon.applyBackgroundUpdates, "2", "Updates are now enabled");
   ok(inputs.on.checked, "The on option is selected");
   ok(inputs.checkForUpdate.hidden, "Update check is hidden");
 
   inputs.off.click();
-  is(addon.applyBackgroundUpdates, 0, "Updates are now disabled");
+  is(addon.applyBackgroundUpdates, "0", "Updates are now disabled");
   ok(inputs.off.checked, "The off option is selected");
   ok(!inputs.checkForUpdate.hidden, "Update check is visible");
 
@@ -101,18 +101,18 @@ add_task(async function testChangeAutoUpdates() {
   await updated;
 
   // Updates are still the same.
-  is(addon.applyBackgroundUpdates, 0, "Updates are now disabled");
+  is(addon.applyBackgroundUpdates, "0", "Updates are now disabled");
   ok(inputs.off.checked, "The off option is selected");
   ok(!inputs.checkForUpdate.hidden, "Update check is visible");
 
   // Check default.
   inputs.default.click();
-  is(addon.applyBackgroundUpdates, 1, "Default is set");
+  is(addon.applyBackgroundUpdates, "1", "Default is set");
   ok(inputs.default.checked, "The default option is selected");
   ok(!inputs.checkForUpdate.hidden, "Update check is visible");
 
   inputs.on.click();
-  is(addon.applyBackgroundUpdates, 2, "Updates are now enabled");
+  is(addon.applyBackgroundUpdates, "2", "Updates are now enabled");
   ok(inputs.on.checked, "The on option is selected");
   ok(inputs.checkForUpdate.hidden, "Update check is hidden");
 

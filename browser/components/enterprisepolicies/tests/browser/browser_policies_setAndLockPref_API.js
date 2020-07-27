@@ -148,9 +148,8 @@ add_task(async function test_pref_tracker() {
     false,
     "test1.pref1 got unlocked"
   );
-  is(
-    Services.prefs.getStringPref("test1.pref3", undefined),
-    undefined,
+  ok(
+    !Services.prefs.getStringPref("test1.pref3", undefined),
     "test1.pref3 should have had its value unset"
   );
   is(

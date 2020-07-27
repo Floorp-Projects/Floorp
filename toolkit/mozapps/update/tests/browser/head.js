@@ -745,7 +745,7 @@ function runAboutDialogUpdateTest(params, steps) {
               logTestInfo(e);
             });
             is(
-              patch.getProperty(resultName),
+              "" + patch.getProperty(resultName),
               data[resultName],
               "The patch property " +
                 resultName +
@@ -939,7 +939,7 @@ function runAboutPrefsUpdateTest(params, steps) {
               logTestInfo(e);
             });
             is(
-              patch.getProperty(resultName),
+              "" + patch.getProperty(resultName),
               data[resultName],
               "The patch property " +
                 resultName +

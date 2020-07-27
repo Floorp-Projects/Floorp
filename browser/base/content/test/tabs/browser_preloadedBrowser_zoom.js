@@ -28,7 +28,7 @@ async function checkPreloadedZoom(level, message) {
 }
 
 add_task(async function test_default_zoom() {
-  await checkPreloadedZoom(1, "default preloaded zoom is 1");
+  await checkPreloadedZoom("1.00", "default preloaded zoom is 1");
 });
 
 /**

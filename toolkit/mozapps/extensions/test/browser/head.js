@@ -383,7 +383,7 @@ function open_manager(
 
       ok(aManagerWindow != null, "Should have an add-ons manager window");
       is(
-        aManagerWindow.location,
+        aManagerWindow.location.href,
         MANAGER_URI,
         "Should be displaying the correct UI"
       );
@@ -425,7 +425,7 @@ function close_manager(aManagerWindow, aCallback, aLongerTimeout) {
       "Should have an add-ons manager window to close"
     );
     is(
-      aManagerWindow.location,
+      aManagerWindow.location.href,
       MANAGER_URI,
       "Should be closing window with correct URI"
     );

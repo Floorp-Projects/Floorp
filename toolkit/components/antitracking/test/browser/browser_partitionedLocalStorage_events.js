@@ -911,7 +911,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       }
     );
 
-    is(result2, null, "The value is equal");
+    ok(!result2, "The value is null");
 
     BrowserTestUtils.removeTab(normalTab);
     BrowserTestUtils.removeTab(normalTab2);

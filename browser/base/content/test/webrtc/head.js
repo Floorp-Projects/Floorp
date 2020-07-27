@@ -97,7 +97,7 @@ async function assertWebRTCIndicatorStatus(expected) {
 
   let expectVideo = false,
     expectAudio = false,
-    expectScreen = false;
+    expectScreen = "";
   if (expected) {
     if (expected.video) {
       expectVideo = true;
@@ -110,12 +110,12 @@ async function assertWebRTCIndicatorStatus(expected) {
     }
   }
   is(
-    ui.showCameraIndicator,
+    Boolean(ui.showCameraIndicator),
     expectVideo,
     "camera global indicator as expected"
   );
   is(
-    ui.showMicrophoneIndicator,
+    Boolean(ui.showMicrophoneIndicator),
     expectAudio,
     "microphone global indicator as expected"
   );

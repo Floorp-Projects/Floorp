@@ -84,7 +84,7 @@ add_task(async function testPrefsAreDefault() {
   );
   is(
     contentProcessCount.selectedItem.value,
-    DEFAULT_PROCESS_COUNT,
+    "" + DEFAULT_PROCESS_COUNT,
     "selected item should be the default one"
   );
 
@@ -132,7 +132,7 @@ add_task(async function testPrefsSetByUser() {
   );
   is(
     contentProcessCount.selectedItem.value,
-    kNewCount,
+    "" + kNewCount,
     "selected item should be the set one"
   );
 

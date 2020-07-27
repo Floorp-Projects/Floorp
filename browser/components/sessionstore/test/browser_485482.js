@@ -41,7 +41,7 @@ add_task(async function test_xpath_exp_for_strange_documents() {
     "input[type=text]",
     "value"
   );
-  is(text, uniqueValue, "generated XPath expression was valid");
+  is("" + text, "" + uniqueValue, "generated XPath expression was valid");
   let checkbox = await getPropertyOfFormField(
     browser2,
     "input[type=checkbox]",

@@ -20,7 +20,7 @@ add_task(async function() {
   });
   is(
     relatedTab.getAttribute("usercontextid"),
-    1,
+    "1",
     "Related tab (relatedToCurrent) inherits current tab's usercontextid"
   );
   is(
@@ -37,7 +37,7 @@ add_task(async function() {
   });
   is(
     relatedTab.getAttribute("usercontextid"),
-    2,
+    "2",
     "Related tab (relatedToCurrent) with overridden usercontextid"
   );
   is(
@@ -58,7 +58,7 @@ add_task(async function() {
   });
   is(
     relatedTab.getAttribute("usercontextid"),
-    1,
+    "1",
     "Related tab (referrer) inherits current tab's usercontextid"
   );
   is(
@@ -80,7 +80,7 @@ add_task(async function() {
   });
   is(
     relatedTab.getAttribute("usercontextid"),
-    2,
+    "2",
     "Related tab (referrer) with overridden usercontextid"
   );
   is(

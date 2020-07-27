@@ -79,7 +79,7 @@ var selectBookmarksIn = async function(organizer, bookmarks, aLeftPaneQuery) {
 
   for (let node of ContentTree.view.selectedNodes) {
     is(
-      node.bookmarkIndex,
+      "" + node.bookmarkIndex,
       node.title,
       "Found the expected bookmark in the expected position"
     );

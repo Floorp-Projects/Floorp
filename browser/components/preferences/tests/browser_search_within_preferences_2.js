@@ -25,7 +25,7 @@ add_task(async function() {
   );
   is(
     weavePrefsDeck.selectedIndex,
-    0,
+    "0",
     "Should select the #noFxaAccount child node"
   );
 

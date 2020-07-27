@@ -182,7 +182,7 @@ var checkStyle = async function(browser, styleProperty, expected) {
       return style.getPropertyValue(styleProperty);
     }
   );
-  is(value, expected, "Correct value of " + styleProperty);
+  is(value, "" + expected, "Correct value of " + styleProperty);
 };
 
 var checkHighlight = async function(browser, expected) {

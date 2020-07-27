@@ -6,9 +6,8 @@ ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 
 decorate_task(PreferenceRollouts.withTestMock, async function testGetMissing() {
-  is(
-    await PreferenceRollouts.get("does-not-exist"),
-    null,
+  ok(
+    !(await PreferenceRollouts.get("does-not-exist")),
     "get should return null when the requested rollout does not exist"
   );
 });

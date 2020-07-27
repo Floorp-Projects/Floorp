@@ -6,9 +6,8 @@ ChromeUtils.import("resource://normandy/lib/AddonRollouts.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 
 decorate_task(AddonRollouts.withTestMock, async function testGetMissing() {
-  is(
-    await AddonRollouts.get("does-not-exist"),
-    null,
+  ok(
+    !(await AddonRollouts.get("does-not-exist")),
     "get should return null when the requested rollout does not exist"
   );
 });

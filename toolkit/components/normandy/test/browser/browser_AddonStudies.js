@@ -20,9 +20,8 @@ const {
 AddonTestUtils.initMochitest(this);
 
 decorate_task(AddonStudies.withStudies(), async function testGetMissing() {
-  is(
-    await AddonStudies.get("does-not-exist"),
-    null,
+  ok(
+    !(await AddonStudies.get("does-not-exist")),
     "get returns null when the requested study does not exist"
   );
 });

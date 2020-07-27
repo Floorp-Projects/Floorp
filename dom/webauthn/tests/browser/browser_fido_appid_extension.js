@@ -147,8 +147,8 @@ add_task(async function test_appid_unused() {
     new Uint8Array(authenticatorData)
   );
   is(
-    attestation.flags,
-    flag_TUP,
+    "" + attestation.flags,
+    "" + flag_TUP,
     "Assertion's user presence byte set correctly"
   );
 

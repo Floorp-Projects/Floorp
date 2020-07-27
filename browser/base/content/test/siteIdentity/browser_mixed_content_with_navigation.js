@@ -104,7 +104,7 @@ async function run_testcase(testcase) {
     browser.webNavigation.goBack();
     await BrowserTestUtils.browserStopped(browser, kSecureURI);
     let secureIdentityModeAgain = window.document.getElementById("identity-box")
-      .classList;
+      .className;
     is(
       secureIdentityModeAgain,
       "verifiedDomain",

@@ -187,7 +187,7 @@ function checkMenuItem(
   index
 ) {
   is(
-    actualItem,
+    `${actualItem}`,
     expectedItem,
     "checking item #" + index / 2 + " (" + expectedItem + ") name"
   );

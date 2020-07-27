@@ -37,7 +37,7 @@ add_task(async function test() {
     await loaded;
 
     securityInfo = await browser.browsingContext.currentWindowGlobal.getSecurityInfo();
-    is(securityInfo, null, "Found no security info");
+    ok(!securityInfo, "Found no security info");
 
     loaded = BrowserTestUtils.browserLoaded(browser);
     await BrowserTestUtils.loadURI(browser, "https://example.com");
@@ -60,7 +60,7 @@ add_task(async function test() {
 
     // Get the info of the parent, which is HTTP.
     securityInfo = await browser.browsingContext.currentWindowGlobal.getSecurityInfo();
-    is(securityInfo, null, "Found no security info");
+    ok(!securityInfo, "Found no security info");
 
     // Get the info of the frame, which is HTTPS.
     securityInfo = await browser.browsingContext.children[0].currentWindowGlobal.getSecurityInfo();

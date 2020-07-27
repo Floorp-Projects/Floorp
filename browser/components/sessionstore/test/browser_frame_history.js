@@ -62,7 +62,7 @@ add_task(async function() {
   );
   for (let i = 0; i < frames.length; i++) {
     is(
-      frames[i].contentDocument.location,
+      frames[i].contentDocument.location.href,
       getRootDirectory(gTestPath) +
         "browser_frame_history_" +
         expectedURLEnds[i],
@@ -124,7 +124,7 @@ add_task(async function() {
     .contentDocument.getElementsByTagName("frame");
   for (let i = 0; i < frames.length; i++) {
     is(
-      frames[i].contentDocument.location,
+      frames[i].contentDocument.location.href,
       getRootDirectory(gTestPath) +
         "browser_frame_history_" +
         expectedURLEnds[i],

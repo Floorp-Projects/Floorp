@@ -50,7 +50,7 @@ add_task(async function test_inline_plugin_prefs() {
   // the file name depends on the platform
   is(
     pluginLibraries.textContent,
-    testPlugin.pluginLibraries,
+    testPlugin.pluginLibraries[0],
     "Plugin file name should be displayed"
   );
 

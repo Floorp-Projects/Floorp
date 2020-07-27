@@ -256,7 +256,7 @@ add_task(async function test_history_downloads_unchecked() {
 
     for (let entry of formEntries) {
       let exists = await formNameExists(entry);
-      is(exists, false, "form entry " + entry + " should no longer exist");
+      is(exists, 0, "form entry " + entry + " should no longer exist");
     }
 
     // OK, done, cleanup after ourselves.
@@ -410,7 +410,7 @@ add_task(async function test_cannot_clear_history() {
 
     let exists = await formNameExists(formEntries[0]);
     is(
-      exists,
+      Boolean(exists),
       false,
       "form entry " + formEntries[0] + " should no longer exist"
     );
@@ -482,7 +482,11 @@ add_task(async function test_form_entries() {
   wh.onunload = async function() {
     await promiseSanitized;
     let exists = await formNameExists(formEntry);
-    is(exists, false, "form entry " + formEntry + " should no longer exist");
+    is(
+      Boolean(exists),
+      false,
+      "form entry " + formEntry + " should no longer exist"
+    );
   };
   wh.open();
   await wh.promiseClosed;

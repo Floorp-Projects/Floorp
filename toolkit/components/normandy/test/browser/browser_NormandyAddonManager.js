@@ -82,7 +82,7 @@ decorate_task(ensureAddonCleanup, async function id_mismatch() {
   await undoDeferred;
 
   const addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
-  is(addon, undefined, "add-on is not installed");
+  ok(!addon, "add-on is not installed");
 });
 
 decorate_task(ensureAddonCleanup, async function version_mismatch() {
@@ -132,7 +132,7 @@ decorate_task(ensureAddonCleanup, async function version_mismatch() {
   await undoDeferred;
 
   const addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
-  is(addon, undefined, "add-on is not installed");
+  ok(!addon, "add-on is not installed");
 });
 
 decorate_task(ensureAddonCleanup, async function download_failure() {
@@ -184,5 +184,5 @@ decorate_task(ensureAddonCleanup, async function download_failure() {
   await undoDeferred;
 
   const addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
-  is(addon, undefined, "add-on is not installed");
+  ok(!addon, "add-on is not installed");
 });

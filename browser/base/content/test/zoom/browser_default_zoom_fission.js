@@ -25,8 +25,8 @@ add_task(async function test_sitespecific_iframe_global_zoom() {
     return ZoomManager.getZoomForBrowser(tabBrowser) == 0.67;
   });
 
-  let zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser);
-  is(zoomLevel, 0.67, "tab zoom has been set to 67%");
+  let zoomLevel = ZoomManager.getZoomForBrowser(tabBrowser).toFixed(2);
+  is(zoomLevel, "0.67", "tab zoom has been set to 67%");
 
   let frameLoadedPromise = BrowserTestUtils.browserLoaded(
     tabBrowser,
@@ -91,7 +91,11 @@ add_task(async function test_sitespecific_global_zoom_enlarge() {
     return ZoomManager.getZoomForBrowser(tabBrowser) == 0.8;
   });
 
-  is(ZoomManager.getZoomForBrowser(tabBrowser), 0.8, "Local zoom is increased");
+  is(
+    ZoomManager.getZoomForBrowser(tabBrowser).toFixed(2),
+    "0.80",
+    "Local zoom is increased"
+  );
 
   let frameZoom = await SpecialPowers.spawn(
     gBrowser.selectedBrowser.browsingContext.children[0],
@@ -104,7 +108,7 @@ add_task(async function test_sitespecific_global_zoom_enlarge() {
     }
   );
 
-  is(frameZoom, 0.8, "(without fission) iframe zoom matches page zoom");
+  is(frameZoom, "0.80", "(without fission) iframe zoom matches page zoom");
   console.log("Removing tab");
   await FullZoomHelper.removeTabAndWaitForLocationChange();
 });

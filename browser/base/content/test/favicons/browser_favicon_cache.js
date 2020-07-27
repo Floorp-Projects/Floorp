@@ -19,7 +19,7 @@ add_task(async () => {
   for (let cookie of cookies) {
     if (cookie.name == "faviconCookie") {
       seenCookie = true;
-      is(cookie.value, 1, "Should have seen the right initial cookie.");
+      is(cookie.value, "1", "Should have seen the right initial cookie.");
     }
   }
   ok(seenCookie, "Should have seen the cookie.");
@@ -36,7 +36,7 @@ add_task(async () => {
   for (let cookie of cookies) {
     if (cookie.name == "faviconCookie") {
       seenCookie = true;
-      is(cookie.value, 1, "Should have seen the cached cookie.");
+      is(cookie.value, "1", "Should have seen the cached cookie.");
     }
   }
   ok(seenCookie, "Should have seen the cookie.");
