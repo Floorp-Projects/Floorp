@@ -18,7 +18,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   // "subject" data.
   Observers: "resource://services-common/observers.js",
   Services: "resource://gre/modules/Services.jsm",
+  CommonUtils: "resource://services-common/utils.js",
   CryptoUtils: "resource://services-crypto/utils.js",
+  FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.jsm",
+  jwcrypto: "resource://services-crypto/jwcrypto.jsm",
 });
 
 const { PREF_ACCOUNT_ROOT, log } = ChromeUtils.import(
@@ -47,13 +50,17 @@ class FxAccountsTelemetry {
     Observers.notify("fxa:telemetry:event", { object, method, value, extra });
   }
 
-  // A flow ID can be anything that's "probably" unique, so for now use a UUID.
-  generateFlowID() {
+  generateUUID() {
     return Cc["@mozilla.org/uuid-generator;1"]
       .getService(Ci.nsIUUIDGenerator)
       .generateUUID()
       .toString()
       .slice(1, -1);
+  }
+
+  // A flow ID can be anything that's "probably" unique, so for now use a UUID.
+  generateFlowID() {
+    return this.generateUUID();
   }
 
   // Account Ecosystem Telemetry identifies the user by a secret id called their "ecosystemUserId".
@@ -95,14 +102,55 @@ class FxAccountsTelemetry {
   // This asynchronous method resolves with the "ecosystemAnonId" value on success, and rejects
   // with an error if no user is signed in or if the value could not be obtained from the
   // FxA server.
-  async ensureEcosystemAnonId() {
-    const profile = await this._internal.profile.ensureProfile();
-    if (!profile.hasOwnProperty("ecosystemAnonId")) {
-      // In a future iteration, we can synthesize a placeholder ecosystemAnonId and persist it
-      // back to the FxA server.
-      throw new Error("Profile data does not contain an 'ecosystemAnonId'");
-    }
-    return profile.ecosystemAnonId;
+  async ensureEcosystemAnonId(generatePlaceholder = true) {
+    const telemetry = this;
+    return this._fxai.withCurrentAccountState(async function(state) {
+      const profile = await telemetry._fxai.profile.ensureProfile();
+      if (profile.hasOwnProperty("ecosystemAnonId")) {
+        return profile.ecosystemAnonId;
+      }
+      if (!generatePlaceholder) {
+        throw new Error("Profile data does not contain an 'ecosystemAnonId'");
+      }
+      // If the server doesn't have ecosystemAnonId yet, we can create a placeholder value.
+      // First, generate a random ecosystemUserId.
+      let ecosystemUserId = CommonUtils.bufferToHex(
+        CryptoUtils.generateRandomBytes(32)
+      );
+      // Now encrypt it to the AET public key, as advertized by the FxA server.
+      const serverConfig = await FxAccountsConfig.fetchConfigDocument();
+      const ecosystemKeys = serverConfig.ecosystem_anon_id_keys;
+      if (!ecosystemKeys || !ecosystemKeys.length) {
+        throw new Error(
+          "Unable to fetch ecosystem_anon_id_keys from FxA server"
+        );
+      }
+      const randomKey = Math.floor(
+        Math.random() * Math.floor(ecosystemKeys.length)
+      );
+      const ecosystemAnonId = await jwcrypto.generateJWE(
+        ecosystemKeys[randomKey],
+        new TextEncoder().encode(ecosystemUserId)
+      );
+      // Persist the encrypted value to the server so other clients can find it.
+      try {
+        await telemetry._fxai.profile.client.setEcosystemAnonId(
+          ecosystemAnonId
+        );
+      } catch (err) {
+        if (err && err.code && err.code === 412) {
+          // Another client raced us to upload the placeholder, fetch it.
+          return telemetry.ensureEcosystemAnonId(false);
+        }
+        throw err;
+      }
+      // Locally persist the unencrypted ecosystemUserId for possible future use.
+      ecosystemUserId = state.ecosystemUserId;
+      await state.updateUserAccountData({
+        ecosystemUserId,
+      });
+      return ecosystemAnonId;
+    });
   }
 
   // Prior to Account Ecosystem Telemetry, FxA- and Sync-related metrics were submitted in
