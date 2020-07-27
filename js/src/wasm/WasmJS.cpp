@@ -241,17 +241,16 @@ bool wasm::CraneliftAvailable(JSContext* cx) {
 
 bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                        JSStringBuilder* reason) {
-  // Cranelift has no debugging support, no gc support, no threads, and no
-  // simd.
+  // Cranelift has no debugging support, no gc support, no threads, no simd, and
+  // on x64, no multi-value support.
   bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
   bool gc = cx->options().wasmGc();
   bool threads =
       cx->realm() &&
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-#if defined(JS_CODEGEN_ARM64)
-  bool multiValue = false;  // `false` --> not disabled.
-#else
-  bool multiValue = WasmMultiValueFlag(cx);
+  bool multiValueOnX64 = false;
+#if defined(JS_CODEGEN_X64)
+  multiValueOnX64 = WasmMultiValueFlag(cx);
 #endif
   bool simd = WasmSimdFlag(cx);
   if (reason) {
@@ -262,7 +261,7 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (gc && !Append(reason, "gc", &sep)) {
       return false;
     }
-    if (multiValue && !Append(reason, "multi-value", &sep)) {
+    if (multiValueOnX64 && !Append(reason, "multi-value", &sep)) {
       return false;
     }
     if (threads && !Append(reason, "threads", &sep)) {
@@ -272,7 +271,7 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
       return false;
     }
   }
-  *isDisabled = debug || gc || multiValue || threads || simd;
+  *isDisabled = debug || gc || multiValueOnX64 || threads || simd;
   return true;
 }
 
