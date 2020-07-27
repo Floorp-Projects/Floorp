@@ -186,5 +186,7 @@
     <string name="pref_key_is_in_search_widget_experiment" translatable="false">pref_key_is_in_search_widget_experiment</string>
     <string name="pref_key_show_search_widget_cfr" translatable="false">pref_key_show_search_widget_cfr</string>
 
+    <string name="pref_key_default_browser" translatable="false">pref_key_default_browser</string>
+
     <string name="pref_key_login_exceptions" translatable="false">pref_key_login_exceptions</string>
 </resources>

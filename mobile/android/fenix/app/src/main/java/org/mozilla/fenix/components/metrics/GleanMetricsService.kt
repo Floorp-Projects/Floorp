@@ -666,6 +666,7 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.FennecToFenixMigrated -> null
         is Event.AddonInstalled -> null
         is Event.SearchWidgetInstalled -> null
+        is Event.ChangedToDefaultBrowser -> null
     }
 
 class GleanMetricsService(private val context: Context) : MetricsService {

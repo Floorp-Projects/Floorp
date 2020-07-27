@@ -31,6 +31,7 @@ import androidx.navigation.ui.NavigationUI
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -68,6 +69,7 @@ import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
@@ -243,12 +245,24 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 }
             }
         }
+
+        // Launch this on a background thread so as not to affect startup performance
+        lifecycleScope.launch(IO) {
+            if (settings().wasDefaultBrowserOnLastPause != settings().isDefaultBrowser()) {
+                metrics.track(Event.ChangedToDefaultBrowser)
+            }
+        }
     }
 
     final override fun onPause() {
         if (settings().lastKnownMode.isPrivate) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
+
+        if (settings().wasDefaultBrowserOnLastPause != settings().isDefaultBrowser()) {
+            settings().wasDefaultBrowserOnLastPause = settings().isDefaultBrowser()
+        }
+
         super.onPause()
 
         // Every time the application goes into the background, it is possible that the user

@@ -183,6 +183,7 @@ sealed class Event {
     object OnboardingPrivateBrowsing : Event()
     object OnboardingWhatsNew : Event()
     object OnboardingFinish : Event()
+    object ChangedToDefaultBrowser : Event()
 
     object ContextualHintETPDisplayed : Event()
     object ContextualHintETPDismissed : Event()
