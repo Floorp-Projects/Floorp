@@ -109,7 +109,6 @@ bool ProxySetProperty(JSContext* cx, HandleObject proxy, HandleId id,
 
 bool ProxySetPropertyByValue(JSContext* cx, HandleObject proxy,
                              HandleValue idVal, HandleValue val, bool strict);
-
 } /* namespace js */
 
 #endif /* proxy_Proxy_h */

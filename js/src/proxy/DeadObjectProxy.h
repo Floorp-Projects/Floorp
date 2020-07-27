@@ -65,18 +65,10 @@ class DeadObjectProxy : public BaseProxyHandler {
   virtual RegExpShared* regexp_toShared(JSContext* cx,
                                         HandleObject proxy) const override;
 
-  virtual bool hasPrivate(JSContext* cx, HandleObject proxy, HandleId id,
-                          bool* bp) const override;
-  virtual bool getPrivate(JSContext* cx, HandleObject proxy,
-                          HandleValue receiver, HandleId id,
-                          MutableHandleValue vp) const override;
-  virtual bool setPrivate(JSContext* cx, HandleObject proxy, HandleId id,
-                          HandleValue v, HandleValue receiver,
-                          ObjectOpResult& result) const override;
-
-  virtual bool definePrivateField(JSContext* cx, HandleObject proxy,
-                                  HandleId id, Handle<PropertyDescriptor> desc,
-                                  ObjectOpResult& result) const override;
+  // Use the regular paths for private values
+  virtual bool useProxyExpandoObjectForPrivateFields() const override {
+    return false;
+  }
 
   virtual bool isCallable(JSObject* obj) const override {
     return flags(obj) & DeadObjectProxyIsCallable;
