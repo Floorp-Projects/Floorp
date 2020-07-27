@@ -2,6 +2,46 @@
  importlib_metadata NEWS
 =========================
 
+v1.7.0
+======
+
+* ``PathNotFoundError`` now has a custom ``__str__``
+  mentioning "package metadata" being missing to help
+  guide users to the cause when the package is installed
+  but no metadata is present. Closes #124.
+
+v1.6.1
+======
+
+* Added ``Distribution._local()`` as a provisional
+  demonstration of how to load metadata for a local
+  package. Implicitly requires that
+  `pep517 <https://pypi.org/project/pep517>`_ is
+  installed. Ref #42.
+* Ensure inputs to FastPath are Unicode. Closes #121.
+* Tests now rely on ``importlib.resources.files`` (and
+  backport) instead of the older ``path`` function.
+* Support any iterable from ``find_distributions``.
+  Closes #122.
+
+v1.6.0
+======
+
+* Added ``module`` and ``attr`` attributes to ``EntryPoint``
+
+v1.5.2
+======
+
+* Fix redundant entries from ``FastPath.zip_children``.
+  Closes #117.
+
+v1.5.1
+======
+
+* Improve reliability and consistency of compatibility
+  imports for contextlib and pathlib when running tests.
+  Closes #116.
+
 v1.5.0
 ======
 
