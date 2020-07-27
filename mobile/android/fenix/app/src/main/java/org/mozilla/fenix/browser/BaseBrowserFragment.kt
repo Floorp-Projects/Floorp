@@ -831,7 +831,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 if (session.hasParentSession) {
                     sessionManager.remove(session, true)
                 }
-                val goToOverview = isLastSession || !session.hasParentSession
+                // We want to return to home if this removed session was the last session of its type
+                // and didn't have a parent session to select.
+                val goToOverview = isLastSession && !session.hasParentSession
                 !goToOverview
             }
         }
