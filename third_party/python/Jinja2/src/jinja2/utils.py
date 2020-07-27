@@ -165,15 +165,11 @@ def object_type_repr(obj):
         return "None"
     elif obj is Ellipsis:
         return "Ellipsis"
-
-    cls = type(obj)
-
     # __builtin__ in 2.x, builtins in 3.x
-    if cls.__module__ in ("__builtin__", "builtins"):
-        name = cls.__name__
+    if obj.__class__.__module__ in ("__builtin__", "builtins"):
+        name = obj.__class__.__name__
     else:
-        name = cls.__module__ + "." + cls.__name__
-
+        name = obj.__class__.__module__ + "." + obj.__class__.__name__
     return "%s object" % name
 
 
@@ -697,8 +693,7 @@ class Namespace(object):
         self.__attrs = dict(*args, **kwargs)
 
     def __getattribute__(self, name):
-        # __class__ is needed for the awaitable check in async mode
-        if name in {"_Namespace__attrs", "__class__"}:
+        if name == "_Namespace__attrs":
             return object.__getattribute__(self, name)
         try:
             return self.__attrs[name]

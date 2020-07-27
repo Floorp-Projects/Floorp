@@ -280,11 +280,11 @@ class Context(with_metaclass(ContextMeta)):
                     break
 
         if callable(__obj):
-            if getattr(__obj, "contextfunction", False) is True:
+            if getattr(__obj, "contextfunction", 0):
                 args = (__self,) + args
-            elif getattr(__obj, "evalcontextfunction", False) is True:
+            elif getattr(__obj, "evalcontextfunction", 0):
                 args = (__self.eval_ctx,) + args
-            elif getattr(__obj, "environmentfunction", False) is True:
+            elif getattr(__obj, "environmentfunction", 0):
                 args = (__self.environment,) + args
         try:
             return __obj(*args, **kwargs)

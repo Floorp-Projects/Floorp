@@ -225,11 +225,11 @@ def _sequence_field(checked_class, item_type, optional, initial):
     TheType = _make_seq_field_type(checked_class, item_type)
 
     if optional:
-        def factory(argument, _factory_fields=None, ignore_extra=False):
+        def factory(argument):
             if argument is None:
                 return None
             else:
-                return TheType.create(argument, _factory_fields=_factory_fields, ignore_extra=ignore_extra)
+                return TheType.create(argument)
     else:
         factory = TheType.create
 

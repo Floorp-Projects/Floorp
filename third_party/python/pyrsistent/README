@@ -682,8 +682,6 @@ ossdev07 https://github.com/ossdev07
 
 Kerry Olesen https://github.com/qhesz
 
-johnthagen https://github.com/johnthagen
-
 Contributing
 ------------
 

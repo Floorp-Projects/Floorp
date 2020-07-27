@@ -1,14 +1,21 @@
+# coding: utf-8
+
+from __future__ import division
+
 import io
+import sys
 import posixpath
 import zipfile
+import functools
 import itertools
-import contextlib
-import sys
+from collections import OrderedDict
 
-if sys.version_info < (3, 7):
-    from collections import OrderedDict
-else:
-    OrderedDict = dict
+try:
+    from contextlib import suppress
+except ImportError:
+    from contextlib2 import suppress
+
+__metaclass__ = type
 
 
 def _parents(path):
@@ -52,18 +59,6 @@ def _ancestry(path):
         path, tail = posixpath.split(path)
 
 
-_dedupe = OrderedDict.fromkeys
-"""Deduplicate an iterable in original order"""
-
-
-def _difference(minuend, subtrahend):
-    """
-    Return items in minuend not in subtrahend, retaining order
-    with O(1) lookup.
-    """
-    return itertools.filterfalse(set(subtrahend).__contains__, minuend)
-
-
 class CompleteDirs(zipfile.ZipFile):
     """
     A ZipFile subclass that ensures that implied directories
@@ -73,8 +68,14 @@ class CompleteDirs(zipfile.ZipFile):
     @staticmethod
     def _implied_dirs(names):
         parents = itertools.chain.from_iterable(map(_parents, names))
-        as_dirs = (p + posixpath.sep for p in parents)
-        return _dedupe(_difference(as_dirs, names))
+        # Cast names to a set for O(1) lookups
+        existing = set(names)
+        # Deduplicate entries in original order
+        implied_dirs = OrderedDict.fromkeys(
+            p + posixpath.sep for p in parents
+            if p + posixpath.sep not in existing
+        )
+        return implied_dirs
 
     def namelist(self):
         names = super(CompleteDirs, self).namelist()
@@ -120,13 +121,13 @@ class FastLookup(CompleteDirs):
     dirs exist and are resolved rapidly.
     """
     def namelist(self):
-        with contextlib.suppress(AttributeError):
+        with suppress(AttributeError):
             return self.__names
         self.__names = super(FastLookup, self).namelist()
         return self.__names
 
     def _name_set(self):
-        with contextlib.suppress(AttributeError):
+        with suppress(AttributeError):
             return self.__lookup
         self.__lookup = super(FastLookup, self)._name_set()
         return self.__lookup
@@ -214,17 +215,14 @@ class Path:
         self.root = FastLookup.make(root)
         self.at = at
 
-    def open(self, mode='r', *args, pwd=None, **kwargs):
+    def open(self, mode='r', *args, **kwargs):
         """
         Open this entry as text or binary following the semantics
         of ``pathlib.Path.open()`` by passing arguments through
         to io.TextIOWrapper().
         """
-        if self.is_dir():
-            raise IsADirectoryError(self)
+        pwd = kwargs.pop('pwd', None)
         zip_mode = mode[0]
-        if not self.exists() and zip_mode == 'r':
-            raise FileNotFoundError(self)
         stream = self.root.open(self.at, zip_mode, pwd=pwd)
         if 'b' in mode:
             if args or kwargs:
@@ -283,3 +281,6 @@ class Path:
         if parent_at:
             parent_at += '/'
         return self._next(parent_at)
+
+    if sys.version_info < (3,):
+        __div__ = __truediv__
