@@ -64,7 +64,53 @@ function testValueChangedEventData(
   is(str, expectedWordAtLeft);
 }
 
-async function synthKeyAndTestEvent(
+function matchWebArea(expectedId) {
+  return (iface, data) => {
+    return (
+      iface.getAttributeValue("AXRole") == "AXWebArea" &&
+      !!data &&
+      data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier") ==
+        expectedId
+    );
+  };
+}
+
+function matchInput(expectedId) {
+  return (iface, data) =>
+    iface.getAttributeValue("AXDOMIdentifier") == expectedId && !!data;
+}
+
+async function synthKeyAndTestSelectionChanged(
+  synthKey,
+  synthEvent,
+  expectedId,
+  expectedSelectionString
+) {
+  let selectionChangedEvents = Promise.all([
+    waitForMacEventWithInfo("AXSelectedTextChanged", matchWebArea(expectedId)),
+    waitForMacEventWithInfo("AXSelectedTextChanged", matchInput(expectedId)),
+  ]);
+
+  EventUtils.synthesizeKey(synthKey, synthEvent);
+  let [, inputEvent] = await selectionChangedEvents;
+  is(
+    inputEvent.data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier"),
+    expectedId,
+    "Correct AXTextChangeElement"
+  );
+
+  let rangeString = inputEvent.macIface.getParameterizedAttributeValue(
+    "AXStringForTextMarkerRange",
+    inputEvent.data.AXSelectedTextMarkerRange
+  );
+  is(
+    rangeString,
+    expectedSelectionString,
+    `selection has correct value (${expectedSelectionString})`
+  );
+}
+
+async function synthKeyAndTestValueChanged(
   synthKey,
   synthEvent,
   expectedId,
@@ -73,22 +119,14 @@ async function synthKeyAndTestEvent(
   expectedWordAtLeft
 ) {
   let valueChangedEvents = Promise.all([
-    waitForMacEventWithInfo("AXValueChanged", (iface, data) => {
-      return (
-        iface.getAttributeValue("AXRole") == "AXWebArea" &&
-        !!data &&
-        data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier") == "input"
-      );
-    }),
-    waitForMacEventWithInfo(
-      "AXValueChanged",
-      (iface, data) =>
-        iface.getAttributeValue("AXDOMIdentifier") == "input" && !!data
-    ),
+    waitForMacEventWithInfo("AXSelectedTextChanged", matchWebArea(expectedId)),
+    waitForMacEventWithInfo("AXSelectedTextChanged", matchInput(expectedId)),
+    waitForMacEventWithInfo("AXValueChanged", matchWebArea(expectedId)),
+    waitForMacEventWithInfo("AXValueChanged", matchInput(expectedId)),
   ]);
 
   EventUtils.synthesizeKey(synthKey, synthEvent);
-  let [webareaEvent, inputEvent] = await valueChangedEvents;
+  let [, , webareaEvent, inputEvent] = await valueChangedEvents;
 
   testValueChangedEventData(
     webareaEvent.macIface,
@@ -115,19 +153,23 @@ addAccessibleTask(
     let input = getNativeInterface(accDoc, "input");
     ok(!input.getAttributeValue("AXFocused"), "input is not focused");
     ok(input.isAttributeSettable("AXFocused"), "input is focusable");
-    let focusChanged = waitForMacEvent(
-      "AXFocusedUIElementChanged",
-      iface => iface.getAttributeValue("AXDOMIdentifier") == "input"
-    );
+    let events = Promise.all([
+      waitForMacEvent(
+        "AXFocusedUIElementChanged",
+        iface => iface.getAttributeValue("AXDOMIdentifier") == "input"
+      ),
+      waitForMacEventWithInfo("AXSelectedTextChanged", matchWebArea("input")),
+      waitForMacEventWithInfo("AXSelectedTextChanged", matchInput("input")),
+    ]);
     input.setAttributeValue("AXFocused", true);
-    await focusChanged;
+    await events;
 
     async function testTextInput(
       synthKey,
       expectedChangeValue,
       expectedWordAtLeft
     ) {
-      await synthKeyAndTestEvent(
+      await synthKeyAndTestValueChanged(
         synthKey,
         null,
         "input",
@@ -153,7 +195,7 @@ addAccessibleTask(
     await testTextInput("d", "d", "world");
 
     async function testTextDelete(expectedChangeValue, expectedWordAtLeft) {
-      await synthKeyAndTestEvent(
+      await synthKeyAndTestValueChanged(
         "KEY_Backspace",
         null,
         "input",
@@ -165,5 +207,33 @@ addAccessibleTask(
 
     await testTextDelete("d", "worl");
     await testTextDelete("l", "wor");
+
+    await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, "input", "");
+    await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowLeft",
+      { shiftKey: true },
+      "input",
+      "o"
+    );
+    await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowLeft",
+      { shiftKey: true },
+      "input",
+      "wo"
+    );
+    await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, "input", "");
+    await synthKeyAndTestSelectionChanged(
+      "KEY_Home",
+      { shiftKey: true },
+      "input",
+      "hello "
+    );
+    await synthKeyAndTestSelectionChanged("KEY_ArrowLeft", null, "input", "");
+    await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowRight",
+      { shiftKey: true, altKey: true },
+      "input",
+      "hello"
+    );
   }
 );
