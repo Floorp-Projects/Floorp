@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: pyrsistent
-Version: 0.16.0
+Version: 0.15.7
 Summary: Persistent/Functional/Immutable data structures
 Home-page: http://github.com/tobgu/pyrsistent/
 Author: Tobias Gustafsson
@@ -690,8 +690,6 @@ Description: Pyrsistent
         
         Kerry Olesen https://github.com/qhesz
         
-        johnthagen https://github.com/johnthagen
-        
         Contributing
         ------------
         
@@ -736,6 +734,7 @@ Platform: UNKNOWN
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3.5
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
