@@ -71,11 +71,13 @@ macosx64/opt:
         tier: 1
     worker:
         max-run-time: 7200
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['integration']
     use-sccache: true
     fetches:
         toolchain:
@@ -221,6 +223,7 @@ macosx64-shippable/opt:
         platform: osx-shippable/opt
         symbol: Bpgo(B)
         tier: 1
+    run-on-projects: ['release']
     worker:
         max-run-time: 7200
         env:

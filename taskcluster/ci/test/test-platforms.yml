@@ -31,9 +31,12 @@ linux1804-64/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
+        - marionette-headless
         - mochitest-headless
+        - mochitest-webgpu
         - web-platform-tests
         - web-platform-tests-backlog
+        - web-platform-tests-wdspec-headless
 
 linux1804-64/debug:
     build-platform: linux64/debug
@@ -52,6 +55,7 @@ linux1804-64-shippable/opt:
         - mochitest-headless
         - mochitest-webgpu
         - web-platform-tests
+        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
 
 linux1804-64-devedition/opt:
@@ -78,6 +82,7 @@ linux1804-64-qr/opt:
     test-sets:
         - awsy
         - linux1804-qr-tests
+        - mochitest-webgpu
         - web-platform-tests
 
 linux1804-64-shippable-qr/opt:
@@ -181,6 +186,8 @@ windows7-32/opt:
         - web-platform-tests
         - raptor-firefox
         - browsertime
+        - mochitest-webgpu
+        - web-platform-tests-wdspec-headless
 
 windows7-32-shippable/opt:
     build-platform: win32-shippable/opt
@@ -241,6 +248,8 @@ windows10-64/opt:
         - web-platform-tests-backlog
         - raptor-firefox
         - browsertime
+        - mochitest-webgpu
+        - web-platform-tests-wdspec-headless
 
 windows10-aarch64/opt:
     build-platform: win64-aarch64-shippable/opt
@@ -263,6 +272,7 @@ windows10-64-shippable/opt:
         - marionette-gpu-tests
         - windows-tests
         - web-platform-tests
+        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - raptor-chrome
         - raptor-chromium
@@ -340,6 +350,15 @@ windows7-32-mingwclang/opt:
 ##
 # MacOS X platforms (matching /macosx.*/)
 
+macosx1014-64/opt:
+    build-platform: macosx64/opt
+    test-sets:
+        - macosx1014-64-tests
+        - desktop-screenshot-capture
+        - web-platform-tests
+        - web-platform-tests-backlog
+        - web-platform-tests-wdspec-headless
+
 macosx1014-64-shippable/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
@@ -369,6 +388,11 @@ macosx1014-64-devedition/opt:
     test-sets:
         - macosx1014-64-tests
         - web-platform-tests
+
+macosx1014-64-qr/opt:
+    build-platform: macosx64/opt
+    test-sets:
+        - macosx1014-64-qr-tests
 
 macosx1014-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
@@ -401,6 +425,7 @@ android-em-7.0-x86_64-shippable/opt:
     build-platform: android-x86_64-shippable/opt
     test-sets:
         - android-x86_64-tests
+        - web-platform-tests-backlog
 
 android-em-7.0-x86_64/debug:
     build-platform: android-x86_64/debug

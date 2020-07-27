@@ -470,6 +470,7 @@ android-x86_64-qr-tests:
     - mochitest-plain-gpu
 
 android-hw-aarch64-opt-unittests:
+    - jittest
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
@@ -482,6 +483,9 @@ android-hw-arm7-pgo-unittests:
 android-hw-aarch64-pgo-unittests:
     - jittest
     - mochitest-media
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
 
 android-hw-arm7-debug-unittests:
     - jittest
