@@ -276,8 +276,9 @@ static already_AddRefed<nsIArray> ConvertArgsToArray(nsISupports* aArguments) {
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent, const char* aUrl,
-                            const char* aName, const char* aFeatures,
+nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent, const nsACString& aUrl,
+                            const nsACString& aName,
+                            const nsACString& aFeatures,
                             nsISupports* aArguments,
                             mozIDOMWindowProxy** aResult) {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -348,8 +349,9 @@ struct SizeSpec {
 };
 
 NS_IMETHODIMP
-nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent, const char* aUrl,
-                             const char* aName, const char* aFeatures,
+nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
+                             const nsACString& aUrl, const nsACString& aName,
+                             const nsACString& aFeatures,
                              bool aCalledFromScript, bool aDialog,
                              bool aNavigate, nsISupports* aArguments,
                              bool aIsPopupSpam, bool aForceNoOpener,
@@ -582,10 +584,10 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
 }
 
 nsresult nsWindowWatcher::OpenWindowInternal(
-    mozIDOMWindowProxy* aParent, const char* aUrl, const char* aName,
-    const char* aFeatures, bool aCalledFromJS, bool aDialog, bool aNavigate,
-    nsIArray* aArgv, bool aIsPopupSpam, bool aForceNoOpener,
-    bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
+    mozIDOMWindowProxy* aParent, const nsACString& aUrl,
+    const nsACString& aName, const nsACString& aFeatures, bool aCalledFromJS,
+    bool aDialog, bool aNavigate, nsIArray* aArgv, bool aIsPopupSpam,
+    bool aForceNoOpener, bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
     BrowsingContext** aResult) {
   MOZ_ASSERT_IF(aForceNoReferrer, aForceNoOpener);
 
@@ -621,7 +623,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // We expect BrowserParent to have provided us the absolute URI of the window
   // we're to open, so there's no need to call URIfromURL (or more importantly,
   // to check for a chrome URI, which cannot be opened from a remote tab).
-  if (aUrl) {
+  if (!aUrl.IsVoid()) {
     rv = URIfromURL(aUrl, aParent, getter_AddRefs(uriToLoad));
     if (NS_FAILED(rv)) {
       return rv;
@@ -630,8 +632,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   }
 
   bool nameSpecified = false;
-  if (aName) {
-    CopyUTF8toUTF16(MakeStringSpan(aName), name);
+  if (!aName.IsEmpty()) {
+    CopyUTF8toUTF16(aName, name);
     nameSpecified = true;
   } else {
     name.SetIsVoid(true);
@@ -639,7 +641,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   WindowFeatures features;
   nsAutoCString featuresStr;
-  if (aFeatures) {
+  if (!aFeatures.IsEmpty()) {
     featuresStr.Assign(aFeatures);
     features.Tokenize(featuresStr);
   } else {
@@ -1623,7 +1625,7 @@ bool nsWindowWatcher::RemoveEnumerator(nsWatcherWindowEnumerator* aEnumerator) {
   return mEnumeratorList.RemoveElement(aEnumerator);
 }
 
-nsresult nsWindowWatcher::URIfromURL(const char* aURL,
+nsresult nsWindowWatcher::URIfromURL(const nsACString& aURL,
                                      mozIDOMWindowProxy* aParent,
                                      nsIURI** aURI) {
   // Build the URI relative to the entry global.
@@ -1646,7 +1648,7 @@ nsresult nsWindowWatcher::URIfromURL(const char* aURL,
   }
 
   // build and return the absolute URI
-  return NS_NewURI(aURI, aURL, baseURI);
+  return NS_NewURI(aURI, aURL, nullptr, baseURI);
 }
 
 // static

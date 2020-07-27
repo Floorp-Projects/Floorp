@@ -2036,9 +2036,10 @@ static ReturnAbortOnError ShowProfileManager(
       NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
 
       nsCOMPtr<mozIDOMWindowProxy> newWindow;
-      rv = windowWatcher->OpenWindow(nullptr, kProfileManagerURL, "_blank",
-                                     "centerscreen,chrome,modal,titlebar",
-                                     ioParamBlock, getter_AddRefs(newWindow));
+      rv = windowWatcher->OpenWindow(
+          nullptr, nsDependentCString(kProfileManagerURL), "_blank"_ns,
+          "centerscreen,chrome,modal,titlebar"_ns, ioParamBlock,
+          getter_AddRefs(newWindow));
 
       NS_ENSURE_SUCCESS_LOG(rv, rv);
 
@@ -2463,9 +2464,10 @@ static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
       paramBlock->SetInt(0, flags);
 
       nsCOMPtr<mozIDOMWindowProxy> newWindow;
-      rv = windowWatcher->OpenWindow(nullptr, kProfileDowngradeURL, "_blank",
-                                     "centerscreen,chrome,modal,titlebar",
-                                     paramBlock, getter_AddRefs(newWindow));
+      rv = windowWatcher->OpenWindow(
+          nullptr, nsDependentCString(kProfileDowngradeURL), "_blank"_ns,
+          "centerscreen,chrome,modal,titlebar"_ns, paramBlock,
+          getter_AddRefs(newWindow));
       NS_ENSURE_SUCCESS(rv, rv);
 
       paramBlock->GetInt(1, &result);

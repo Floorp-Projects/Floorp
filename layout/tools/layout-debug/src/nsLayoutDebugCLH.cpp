@@ -165,9 +165,9 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine) {
   NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
 
   nsCOMPtr<mozIDOMWindowProxy> opened;
-  wwatch->OpenWindow(nullptr, "chrome://layoutdebug/content/layoutdebug.xhtml",
-                     "_blank", "chrome,dialog=no,all", argsArray,
-                     getter_AddRefs(opened));
+  wwatch->OpenWindow(
+      nullptr, "chrome://layoutdebug/content/layoutdebug.xhtml"_ns, "_blank"_ns,
+      "chrome,dialog=no,all"_ns, argsArray, getter_AddRefs(opened));
   aCmdLine->SetPreventDefault(true);
   return NS_OK;
 }

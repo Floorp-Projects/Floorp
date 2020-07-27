@@ -19,7 +19,7 @@
 
 using namespace mozilla;
 
-#define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xhtml"
+#define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xhtml"_ns
 
 namespace {
 StaticRefPtr<nsXULAlerts> gXULAlerts;
@@ -356,7 +356,7 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   if (inPrivateBrowsing) {
     features.AppendLiteral(",private");
   }
-  rv = wwatch->OpenWindow(nullptr, ALERT_CHROME_URL, "_blank", features.get(),
+  rv = wwatch->OpenWindow(nullptr, ALERT_CHROME_URL, "_blank"_ns, features,
                           argsArray, getter_AddRefs(newWindow));
   NS_ENSURE_SUCCESS(rv, rv);
 
