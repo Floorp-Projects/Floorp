@@ -38,40 +38,35 @@ add_task(async function() {
   await selectNode("div", inspector);
 
   info("Resize window so the media query for small viewports applies");
-  let onRuleViewRefreshed = ruleView.once("ruleview-refreshed");
-  let onResize = once(hostWindow, "resize");
   hostWindow.resizeTo(400, 400);
-  await onResize;
-  await testActor.reflow();
-  await onRuleViewRefreshed;
 
-  is(
-    getTextProperty(ruleView, 1, { color: "red" }).value,
-    "red",
-    "Small viewport media query inspected"
-  );
+  await waitForMediaRuleColor(ruleView, "red");
+  ok(true, "Small viewport media query inspected");
 
   info("Reload the current page");
   await reloadPage(inspector, testActor);
   await selectNode("div", inspector);
 
   info("Resize window so the media query for large viewports applies");
-  onRuleViewRefreshed = ruleView.once("ruleview-refreshed");
-  onResize = once(hostWindow, "resize");
   hostWindow.resizeTo(800, 800);
-  await onResize;
-  await testActor.reflow();
-  await onRuleViewRefreshed;
-  info("Reselect the rule after page reload.");
 
-  is(
-    getTextProperty(ruleView, 1, { color: "green" }).value,
-    "green",
-    "Large viewport media query inspected"
-  );
+  info("Reselect the rule after page reload.");
+  await waitForMediaRuleColor(ruleView, "green");
+  ok(true, "Large viewport media query inspected");
 
   info("Resize window to original dimentions");
-  onResize = once(hostWindow, "resize");
+  const onResize = once(hostWindow, "resize");
   hostWindow.resizeTo(originalWidth, originalHeight);
   await onResize;
 });
+
+function waitForMediaRuleColor(ruleView, color) {
+  return waitUntil(() => {
+    try {
+      const { value } = getTextProperty(ruleView, 1, { color });
+      return value === color;
+    } catch (e) {
+      return false;
+    }
+  });
+}
