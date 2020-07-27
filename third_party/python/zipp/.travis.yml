@@ -2,18 +2,8 @@ dist: xenial
 language: python
 
 python:
-- 2.7
 - 3.6
 - &latest_py3 3.8
-
-jobs:
-  fast_finish: true
-  include:
-  - stage: deploy
-    if: tag IS present
-    python: *latest_py3
-    before_script: skip
-    script: tox -e release
 
 cache: pip
 

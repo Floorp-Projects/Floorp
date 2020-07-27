@@ -1,0 +1,71 @@
+# Create the project in Azure with:
+# az devops project create --name $name --organization https://dev.azure.com/$org/ --visibility public
+# then configure the pipelines (through web UI)
+
+trigger:
+  branches:
+    include:
+    - '*'
+  tags:
+    include:
+    - '*'
+
+pool:
+  vmimage: 'Ubuntu-18.04'
+
+variables:
+- group: Azure secrets
+
+stages:
+- stage: Test
+  jobs:
+
+  - job: 'Test'
+    strategy:
+      matrix:
+        Python36:
+          python.version: '3.6'
+        Python38:
+          python.version: '3.8'
+      maxParallel: 4
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(python.version)'
+        architecture: 'x64'
+
+    - script: python -m pip install tox
+      displayName: 'Install tox'
+
+    - script: |
+        tox -- --junit-xml=test-results.xml
+      displayName: 'run tests'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFiles: '**/test-results.xml'
+        testRunTitle: 'Python $(python.version)'
+      condition: succeededOrFailed()
+
+- stage: Publish
+  dependsOn: Test
+  jobs:
+  - job: 'Publish'
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.8'
+        architecture: 'x64'
+
+    - script: python -m pip install tox
+      displayName: 'Install tox'
+
+    - script: |
+        tox -e release
+      env:
+        TWINE_PASSWORD: $(PyPI-token)
+      displayName: 'publish to PyPI'
+
+  condition: contains(variables['Build.SourceBranch'], 'tags')

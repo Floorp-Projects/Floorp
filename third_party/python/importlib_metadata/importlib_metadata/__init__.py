@@ -28,6 +28,8 @@ from ._compat import (
     MetaPathFinder,
     email_message_from_string,
     PyPy_repr,
+    unique_ordered,
+    str,
     )
 from importlib import import_module
 from itertools import starmap
@@ -52,6 +54,15 @@ __all__ = [
 
 class PackageNotFoundError(ModuleNotFoundError):
     """The package was not found."""
+
+    def __str__(self):
+        tmpl = "No package metadata was found for {self.name}"
+        return tmpl.format(**locals())
+
+    @property
+    def name(self):
+        name, = self.args
+        return name
 
 
 class EntryPoint(
@@ -94,6 +105,16 @@ class EntryPoint(
         module = import_module(match.group('module'))
         attrs = filter(None, (match.group('attr') or '').split('.'))
         return functools.reduce(getattr, attrs, module)
+
+    @property
+    def module(self):
+        match = self.pattern.match(self.value)
+        return match.group('module')
+
+    @property
+    def attr(self):
+        match = self.pattern.match(self.value)
+        return match.group('attr')
 
     @property
     def extras(self):
@@ -187,7 +208,7 @@ class Distribution:
         """
         for resolver in cls._discover_resolvers():
             dists = resolver(DistributionFinder.Context(name=name))
-            dist = next(dists, None)
+            dist = next(iter(dists), None)
             if dist is not None:
                 return dist
         else:
@@ -229,6 +250,17 @@ class Distribution:
             for finder in sys.meta_path
             )
         return filter(None, declared)
+
+    @classmethod
+    def _local(cls, root='.'):
+        from pep517 import build, meta
+        system = build.compat_system(root)
+        builder = functools.partial(
+            meta.build,
+            source_dir=root,
+            system=system,
+            )
+        return PathDistribution(zipp.Path(meta.build_as_zip(builder)))
 
     @property
     def metadata(self):
@@ -407,8 +439,8 @@ class FastPath:
     """
 
     def __init__(self, root):
-        self.root = root
-        self.base = os.path.basename(root).lower()
+        self.root = str(root)
+        self.base = os.path.basename(self.root).lower()
 
     def joinpath(self, child):
         return pathlib.Path(self.root, child)
@@ -425,8 +457,8 @@ class FastPath:
         names = zip_path.root.namelist()
         self.joinpath = zip_path.joinpath
 
-        return (
-            posixpath.split(child)[0]
+        return unique_ordered(
+            child.split(posixpath.sep, 1)[0]
             for child in names
             )
 
