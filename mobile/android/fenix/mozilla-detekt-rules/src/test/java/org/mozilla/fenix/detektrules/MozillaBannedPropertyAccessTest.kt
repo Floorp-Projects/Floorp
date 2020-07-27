@@ -2,12 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("Deprecation")
+
 package org.mozilla.fenix.detektrules
 
-import io.gitlab.arturbosch.detekt.test.lint
+import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.api.YamlConfig
+import io.gitlab.arturbosch.detekt.test.lint
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -17,10 +21,18 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
 internal class MozillaBannedPropertyAccessTest {
+
+    private lateinit var config: Config
+
+    @BeforeEach
+    fun setup() {
+        config = YamlConfig.loadResource(this.javaClass.getResource("/config.yml"))
+    }
+
     @Test
     internal fun `non compliant property access should warn`() {
         val findings =
-            MozillaBannedPropertyAccess(YamlConfig.loadResource(this.javaClass.getResource("/config.yml"))).lint(
+            MozillaBannedPropertyAccess(config).lint(
                 NONCOMPLIANT_ACCESS.trimIndent()
             )
         assertEquals(1, findings.size)
@@ -32,7 +44,7 @@ internal class MozillaBannedPropertyAccessTest {
     @ParameterizedTest(name = "{1} should not warn")
     internal fun testCompliantWhen(source: String) {
         val findings =
-            MozillaBannedPropertyAccess(YamlConfig.loadResource(this.javaClass.getResource("/config.yml"))).lint(
+            MozillaBannedPropertyAccess(config).lint(
                 source
             )
         assertTrue(findings.isEmpty())

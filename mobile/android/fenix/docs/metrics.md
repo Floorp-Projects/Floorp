@@ -33,8 +33,8 @@ an hashed version of the Google Advertising ID.
 
 The following metrics are added to the ping:
 
-| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefix/Data_Collection) |
-| --- | --- | --- | --- | --- | --- |
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
 | activation.activation_id |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |An alternate identifier, not correlated with the client_id, generated once and only sent with the activation ping.  |[1](https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209)||2020-10-01 | |
 | activation.identifier |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |A hashed and salted version of the Google Advertising ID from the device. This will never be sent in a ping that also contains the client_id.  |[1](https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209)||2020-10-01 | |
 
@@ -46,8 +46,8 @@ See the Glean SDK documentation for the [`events` ping](https://mozilla.github.i
 
 The following metrics are added to the ping:
 
-| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefix/Data_Collection) |
-| --- | --- | --- | --- | --- | --- |
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
 | about_page.libraries_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Libraries that we use" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-10-01 | |
 | about_page.licensing_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Licensing information" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-10-01 | |
 | about_page.privacy_notice_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Privacy notice" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-10-01 | |
@@ -235,8 +235,8 @@ This ping includes the [client id](https://mozilla.github.io/glean/book/user/pin
 
 The following metrics are added to the ping:
 
-| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefix/Data_Collection) |
-| --- | --- | --- | --- | --- | --- |
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
 | first_session.adgroup |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the AdGroup that was used to source this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586480836)||2020-10-01 | |
 | first_session.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the campaign that is responsible for this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-10-01 | |
 | first_session.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The identifier of the creative material that the user interacted with.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-10-01 | |
@@ -251,8 +251,8 @@ See the Glean SDK documentation for the [`metrics` ping](https://mozilla.github.
 
 The following metrics are added to the ping:
 
-| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefix/Data_Collection) |
-| --- | --- | --- | --- | --- | --- |
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
 | addons.enabled_addons |[string_list](https://mozilla.github.io/glean/book/user/metrics/string_list.html) |A list of all enabled add-ons on the device.  |[1](https://github.com/mozilla-mobile/fenix/pull/11080)||2020-10-01 | |
 | addons.has_enabled_addons |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |Whether or not the user has enabled add-ons on the device.  |[1](https://github.com/mozilla-mobile/fenix/pull/8318)||2020-10-01 | |
 | addons.has_installed_addons |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |Whether or not the user has installed add-ons on the device.  |[1](https://github.com/mozilla-mobile/fenix/pull/8318)||2020-10-01 | |
@@ -324,8 +324,8 @@ into their own ping in order to isolate them and make this process easier.
 
 The following metrics are added to the ping:
 
-| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefix/Data_Collection) |
-| --- | --- | --- | --- | --- | --- |
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
 | startup.timeline.clock_ticks_per_second |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |The number of clock tick time units that occur in one second on this particular device. This value is expected to be used in conjunction with the `framework_start` metric.  |[1](https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626)||2020-10-01 | |
 | startup.timeline.framework_start |[timespan](https://mozilla.github.io/glean/book/user/metrics/timespan.html) |The duration the Android framework takes to start before letting us run code in `*Application.init`. This is calculated from `appInitTimestamp - processStartTimestamp`. `processStartTimestamp` is derived from the clock tick time unit, which is expected to be less granular than nanoseconds. Therefore, we convert and round our timestamps to clock ticks before computing the difference and convert back to nanoseconds to report.  For debugging purposes, `clock_ticks_per_second`, which may vary between devices, is also reported as a metric  |[1](https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626)||2020-10-01 | |
 | startup.timeline.framework_start_error |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |An error when attempting to record `framework_start` - the application init timestamp returned a negative value - which is likely indicative of a bug in the implementation.  |[1](https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626)||2020-10-01 | |
