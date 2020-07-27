@@ -53,10 +53,11 @@ void clipboard_get_cb(GtkClipboard* aGtkClipboard,
 // Callback when someone asks us to clear a clipboard
 void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data);
 
-static void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
-                              char16_t** unicodeData, int32_t& outUnicodeLen);
+static bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
+                              nsCString& charset, char16_t** unicodeData,
+                              int32_t& outUnicodeLen);
 
-static void GetHTMLCharset(const char* data, int32_t dataLength,
+static bool GetHTMLCharset(const char* data, int32_t dataLength,
                            nsCString& str);
 
 GdkAtom GetSelectionAtom(int32_t aWhichClipboard) {
@@ -334,11 +335,14 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
         char16_t* htmlBody = nullptr;
         int32_t htmlBodyLen = 0;
         // Convert text/html into our unicode format
-        ConvertHTMLtoUCS2(clipboardData, clipboardDataLength, &htmlBody,
-                          htmlBodyLen);
-
-        // Try next data format?
-        if (!htmlBodyLen) {
+        nsAutoCString charset;
+        if (!GetHTMLCharset(clipboardData, clipboardDataLength, charset)) {
+          // Fall back to utf-8 in case html/data is missing kHTMLMarkupPrefix.
+          LOGCLIP(("Failed to get html/text encoding, fall back to utf-8.\n"));
+          charset.AssignLiteral("utf-8");
+        }
+        if (!ConvertHTMLtoUCS2(clipboardData, clipboardDataLength, charset,
+                               &htmlBody, htmlBodyLen)) {
           LOGCLIP(("    failed to convert text/html to UCS2.\n"));
           mContext->ReleaseClipboardData(clipboardData);
           continue;
@@ -698,20 +702,19 @@ void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data) {
  * body      : pass to Mozilla
  * bodyLength: pass to Mozilla
  */
-void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
+bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
                        char16_t** unicodeData, int32_t& outUnicodeLen) {
-  nsAutoCString charset;
-  GetHTMLCharset(data, dataLength, charset);  // get charset of HTML
-  if (charset.EqualsLiteral("UTF-16")) {      // current mozilla
+  if (charset.EqualsLiteral("UTF-16")) {  // current mozilla
     outUnicodeLen = (dataLength / 2) - 1;
     *unicodeData = reinterpret_cast<char16_t*>(
         moz_xmalloc((outUnicodeLen + sizeof('\0')) * sizeof(char16_t)));
     memcpy(*unicodeData, data + sizeof(char16_t),
            outUnicodeLen * sizeof(char16_t));
     (*unicodeData)[outUnicodeLen] = '\0';
+    return true;
   } else if (charset.EqualsLiteral("UNKNOWN")) {
     outUnicodeLen = 0;
-    return;
+    return false;
   } else {
     // app which use "text/html" to copy&paste
     // get the decoder
@@ -719,7 +722,7 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
     if (!encoding) {
       LOGCLIP(("ConvertHTMLtoUCS2: get unicode decoder error\n"));
       outUnicodeLen = 0;
-      return;
+      return false;
     }
 
     auto dataSpan = MakeSpan(data, dataLength);
@@ -736,7 +739,7 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
         decoder->MaxUTF16BufferLength(dataSpan.Length());
     if (!needed.isValid() || needed.value() > INT32_MAX) {
       outUnicodeLen = 0;
-      return;
+      return false;
     }
 
     outUnicodeLen = 0;
@@ -756,8 +759,10 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
       outUnicodeLen = written;
       // null terminate.
       (*unicodeData)[outUnicodeLen] = '\0';
+      return true;
     }  // if valid length
   }
+  return false;
 }
 
 /*
@@ -767,13 +772,13 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
  *  2. "UNKNOWN":     mozilla can't detect what encode it use
  *  3. other:         "text/html" with other charset than utf-16
  */
-void GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
+bool GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
   // if detect "FFFE" or "FEFF", assume UTF-16
   char16_t* beginChar = (char16_t*)data;
   if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
     str.AssignLiteral("UTF-16");
     LOGCLIP(("ConvertHTMLtoUCS2: Charset of HTML is UTF-16\n"));
-    return;
+    return true;
   }
   // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
   const nsDependentCSubstring htmlStr(data, dataLength);
@@ -799,8 +804,9 @@ void GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
     str = Substring(valueStart, valueEnd);
     ToUpperCase(str);
     LOGCLIP(("ConvertHTMLtoUCS2: Charset of HTML = %s\n", str.get()));
-    return;
+    return true;
   }
   str.AssignLiteral("UNKNOWN");
   LOGCLIP(("ConvertHTMLtoUCS2: Failed to get HTML Charset!\n"));
+  return false;
 }
