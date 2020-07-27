@@ -53,6 +53,9 @@ permalink: /changelog/
 * **feature-containers**
   * Adds a `ContainerMiddleware` that connects container browser actions with the `ContainerStorage`.
 
+* **support-ktx**
+  * Added `Vibrator.vibrateOneShot` compat method.
+
 # 51.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v50.0.0...v51.0.0)
