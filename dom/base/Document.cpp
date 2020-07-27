@@ -4032,6 +4032,13 @@ void Document::InitialTranslationCompleted(bool aL10nCached) {
 }
 
 bool Document::AllowsL10n() const {
+  if (IsStaticDocument()) {
+    // We don't allow l10n on static documents, because the nodes are already
+    // cloned translated, and static docs don't get parsed so we never
+    // TriggerInitialTranslation, etc, so a load blocker would keep hanging
+    // forever.
+    return false;
+  }
   bool allowed = false;
   NodePrincipal()->IsL10nAllowed(GetDocumentURI(), &allowed);
   return allowed;
