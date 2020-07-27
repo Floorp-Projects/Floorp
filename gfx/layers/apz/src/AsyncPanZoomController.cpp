@@ -1029,7 +1029,8 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
     return nsEventStatus_eConsumeNoDefault;
   }
 
-  if (aEvent.mType == MouseInput::MouseType::MOUSE_UP) {
+  if (aEvent.mType == MouseInput::MouseType::MOUSE_UP &&
+      mState == SCROLLBAR_DRAG) {
     APZC_LOG("%p ending drag\n", this);
     SetState(NOTHING);
     ScrollSnap();
