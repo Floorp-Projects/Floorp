@@ -28,11 +28,11 @@ export function wrapExpression(input: string): string {
 }
 
 function isUnavailable(value): boolean {
-  if (!value.preview || !value.preview.name) {
-    return false;
-  }
-
-  return ["ReferenceError", "TypeError"].includes(value.preview.name);
+  return (
+    value &&
+    !!value.isError &&
+    (value.class === "ReferenceError" || value.class === "TypeError")
+  );
 }
 
 export function getValue(
@@ -57,11 +57,7 @@ export function getValue(
 
   const valueGrip = getGrip(value.result);
 
-  if (
-    valueGrip &&
-    typeof valueGrip === "object" &&
-    valueGrip.class == "Error"
-  ) {
+  if (valueGrip && typeof valueGrip === "object" && valueGrip.isError) {
     if (isUnavailable(valueGrip)) {
       return UNAVAILABLE_GRIP;
     }

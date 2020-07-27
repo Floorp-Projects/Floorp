@@ -166,6 +166,7 @@ const proto = {
       extensible: this.obj.isExtensible(),
       frozen: this.obj.isFrozen(),
       sealed: this.obj.isSealed(),
+      isError: this.obj.isError,
     });
 
     this.hooks.incrementGripDepth();

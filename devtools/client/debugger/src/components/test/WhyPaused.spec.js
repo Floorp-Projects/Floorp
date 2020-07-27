@@ -31,7 +31,8 @@ describe("WhyPaused", () => {
     const why = {
       type: "exception",
       exception: {
-        class: "Error",
+        class: "ReferenceError",
+        isError: true,
         preview: {
           name: "ReferenceError",
           message: "o is not defined",
