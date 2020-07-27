@@ -212,4 +212,34 @@ class SessionSuggestionProviderTest {
         assertEquals("b", suggestions.first().id)
         assertEquals("Switch to tab", suggestions.first().description)
     }
+
+    @Test
+    fun `Uses title for chip title when available, but falls back to URL`() = runBlocking {
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://wikipedia.org", title = "Wikipedia"),
+                createTab(id = "b", url = "https://www.mozilla.org", title = "")
+            ),
+            selectedTabId = "b"
+        ))
+
+        val resources: Resources = mock()
+        `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
+
+        val useCase: TabsUseCases.SelectTabUseCase = mock()
+
+        val provider = SessionSuggestionProvider(resources, store, useCase, excludeSelectedSession = false)
+        var suggestions = provider.onInputChanged("mozilla")
+
+        assertEquals(1, suggestions.size)
+        assertEquals("b", suggestions.first().id)
+        assertEquals("https://www.mozilla.org", suggestions.first().title)
+        assertEquals("Switch to tab", suggestions.first().description)
+
+        suggestions = provider.onInputChanged("wiki")
+        assertEquals(1, suggestions.size)
+        assertEquals("a", suggestions.first().id)
+        assertEquals("Wikipedia", suggestions.first().title)
+        assertEquals("Switch to tab", suggestions.first().description)
+    }
 }

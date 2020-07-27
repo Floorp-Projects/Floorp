@@ -51,16 +51,16 @@ class SessionSuggestionProvider(
                 shouldIncludeSelectedTab(state, result)
             ) {
                 suggestions.add(
-                        AwesomeBar.Suggestion(
-                            provider = this,
-                            id = result.id,
-                            title = result.content.title,
-                            description = resources.getString(R.string.switch_to_tab_description),
-                            flags = setOf(AwesomeBar.Suggestion.Flag.OPEN_TAB),
-                            icon = icon?.await()?.bitmap,
-                            indicatorIcon = indicatorIcon,
-                            onSuggestionClicked = { selectTabUseCase(result.id) }
-                        )
+                    AwesomeBar.Suggestion(
+                        provider = this,
+                        id = result.id,
+                        title = if (result.content.title.isNotBlank()) result.content.title else result.content.url,
+                        description = resources.getString(R.string.switch_to_tab_description),
+                        flags = setOf(AwesomeBar.Suggestion.Flag.OPEN_TAB),
+                        icon = icon?.await()?.bitmap,
+                        indicatorIcon = indicatorIcon,
+                        onSuggestionClicked = { selectTabUseCase(result.id) }
+                    )
                 )
             }
         }
