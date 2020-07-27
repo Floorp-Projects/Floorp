@@ -245,6 +245,13 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
     return rv;
   }
 
+#ifdef MOZ_LOGGING
+  LOGCLIP(("Flavors which can be imported:\n"));
+  for (uint32_t i = 0; i < flavors.Length(); i++) {
+    LOGCLIP(("    %s\n", flavors[i].get()));
+  }
+#endif
+
   for (uint32_t i = 0; i < flavors.Length(); i++) {
     nsCString& flavorStr = flavors[i];
 
@@ -256,6 +263,8 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
       if (flavorStr.EqualsLiteral(kJPGImageMime)) {
         flavorStr.Assign(kJPEGImageMime);
       }
+
+      LOGCLIP(("    Getting image %s MIME clipboard data\n", flavorStr.get()));
 
       uint32_t clipboardDataLength;
       const char* clipboardData = mContext->GetClipboardData(
@@ -279,6 +288,9 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
     // Special case text/unicode since we can convert any
     // string into text/unicode
     if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+      LOGCLIP(
+          ("    Getting unicode %s MIME clipboard data\n", flavorStr.get()));
+
       const char* clipboardData = mContext->GetClipboardText(aWhichClipboard);
       if (!clipboardData) {
         LOGCLIP(("    failed to get unicode data\n"));
@@ -301,6 +313,8 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
       mContext->ReleaseClipboardData(clipboardData);
       return NS_OK;
     }
+
+    LOGCLIP(("    Getting %s MIME clipboard data\n", flavorStr.get()));
 
     uint32_t clipboardDataLength;
     const char* clipboardData = mContext->GetClipboardData(
@@ -325,6 +339,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
 
         // Try next data format?
         if (!htmlBodyLen) {
+          LOGCLIP(("    failed to convert text/html to UCS2.\n"));
           mContext->ReleaseClipboardData(clipboardData);
           continue;
         }
@@ -702,9 +717,7 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
     // get the decoder
     auto encoding = Encoding::ForLabelNoReplacement(charset);
     if (!encoding) {
-#ifdef DEBUG_CLIPBOARD
-      g_print("        get unicode decoder error\n");
-#endif
+      LOGCLIP(("ConvertHTMLtoUCS2: get unicode decoder error\n"));
       outUnicodeLen = 0;
       return;
     }
@@ -759,6 +772,7 @@ void GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
   char16_t* beginChar = (char16_t*)data;
   if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
     str.AssignLiteral("UTF-16");
+    LOGCLIP(("ConvertHTMLtoUCS2: Charset of HTML is UTF-16\n"));
     return;
   }
   // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
@@ -784,10 +798,9 @@ void GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
   if (valueStart != valueEnd) {
     str = Substring(valueStart, valueEnd);
     ToUpperCase(str);
-#ifdef DEBUG_CLIPBOARD
-    printf("Charset of HTML = %s\n", charsetUpperStr.get());
-#endif
+    LOGCLIP(("ConvertHTMLtoUCS2: Charset of HTML = %s\n", str.get()));
     return;
   }
   str.AssignLiteral("UNKNOWN");
+  LOGCLIP(("ConvertHTMLtoUCS2: Failed to get HTML Charset!\n"));
 }
