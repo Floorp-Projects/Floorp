@@ -73,6 +73,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         accountUiView = AccountUiView(
             fragment = this,
+            scope = lifecycleScope,
             accountManager = requireComponents.backgroundServices.accountManager,
             httpClient = requireComponents.core.client,
             updateFxASyncOverrideMenu = ::updateFxASyncOverrideMenu
@@ -135,6 +136,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         // Consider finish of `onResume` to be the point at which we consider this fragment as 'created'.
         creatingFragment = false
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        accountUiView.cancel()
     }
 
     private fun update(shouldUpdateAccountUIState: Boolean) {
