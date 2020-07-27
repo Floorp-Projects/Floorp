@@ -569,6 +569,10 @@ class HTMLMediaElement::MediaControlKeyListener final
   // might be different from the one that we used to initialize
   // `ContentMediaAgent`.
   BrowsingContext* GetCurrentBrowsingContext() const {
+    // Owner has been CCed, which would break the link of the weaker pointer.
+    if (!Owner()) {
+      return nullptr;
+    }
     nsPIDOMWindowInner* window = Owner()->OwnerDoc()->GetInnerWindow();
     return window ? window->GetBrowsingContext() : nullptr;
   }
@@ -589,7 +593,9 @@ class HTMLMediaElement::MediaControlKeyListener final
   }
 
   HTMLMediaElement* Owner() const {
-    MOZ_ASSERT(mElement);
+    // `mElement` would be clear during CC unlinked, but it would only happen
+    // after stopping the listener.
+    MOZ_ASSERT(mElement || !IsStarted());
     return mElement.get();
   }
 
