@@ -659,6 +659,11 @@ TESTCASES.forEach(testcase => {
       "Check expected onFormSubmit.called"
     );
     if (FormAutofillContent._onFormSubmit.called) {
+      for (let ccRecord of FormAutofillContent._onFormSubmit.args[0][0]
+        .creditCard) {
+        delete ccRecord.flowId;
+      }
+
       Assert.deepEqual(
         FormAutofillContent._onFormSubmit.args[0][0],
         testcase.expectedResult.records
