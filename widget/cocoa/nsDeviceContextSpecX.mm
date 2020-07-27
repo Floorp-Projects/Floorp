@@ -224,6 +224,10 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
   bool toFile;
   settings->GetPrintToFile(&toFile);
 
+  if (toFile) {
+    settings->SetDispositionSaveToFile();
+  }
+
   bool toPrinter = !toFile && !aIsPrintPreview;
   if (!toPrinter) {
     double width, height;
