@@ -1585,6 +1585,18 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       }
       break;
     }
+    case JOF_TWO_UINT8: {
+      int one = (int)GET_UINT8(pc);
+      int two = (int)GET_UINT8(pc + 1);
+
+      if (!sp->jsprintf(" %d", one)) {
+        return 0;
+      }
+      if (!sp->jsprintf(" %d", two)) {
+        return 0;
+      }
+      break;
+    }
 
     case JOF_ARGC:
     case JOF_UINT16:

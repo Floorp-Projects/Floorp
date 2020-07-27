@@ -2453,9 +2453,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       break;
 
     // Private Fields
-    case JSOp::InitPrivateElem:
-    case JSOp::GetPrivateElem:
-    case JSOp::SetPrivateElem:
+    case JSOp::CheckPrivateField:
       break;
 
     case JSOp::ForceInterpreter:
