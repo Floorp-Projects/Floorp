@@ -848,6 +848,14 @@ class HTMLInputElement final : public TextControlElement,
 
   bool HasBeenTypePassword() { return mHasBeenTypePassword; }
 
+  /**
+   * Returns whether the current value is the empty string.  This only makes
+   * sense for some input types; does NOT make sense for file inputs.
+   *
+   * @return whether the current value is the empty string.
+   */
+  bool IsValueEmpty() const;
+
  protected:
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual ~HTMLInputElement();
 
@@ -924,14 +932,6 @@ class HTMLInputElement final : public TextControlElement,
   // A getter for callers that know we're not dealing with a file input, so they
   // don't have to think about the caller type.
   void GetNonFileValueInternal(nsAString& aValue) const;
-
-  /**
-   * Returns whether the current value is the empty string.  This only makes
-   * sense for some input types; does NOT make sense for file inputs.
-   *
-   * @return whether the current value is the empty string.
-   */
-  bool IsValueEmpty() const;
 
   /**
    * Returns whether the current placeholder value should be shown.

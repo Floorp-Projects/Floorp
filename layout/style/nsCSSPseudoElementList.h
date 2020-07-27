@@ -56,9 +56,8 @@ CSS_PSEUDO_ELEMENT(mozFocusInner, ":-moz-focus-inner", 0)
 CSS_PSEUDO_ELEMENT(mozFocusOuter, ":-moz-focus-outer", 0)
 
 // HTML5 Forms pseudo elements
-CSS_PSEUDO_ELEMENT(mozNumberWrapper, ":-moz-number-wrapper",
-                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
-                   CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
+CSS_PSEUDO_ELEMENT(mozComplexControlWrapper, ":-moz-complex-control-wrapper",
+                   CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS)
 CSS_PSEUDO_ELEMENT(mozNumberSpinBox, ":-moz-number-spin-box",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
                    CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
@@ -66,6 +65,9 @@ CSS_PSEUDO_ELEMENT(mozNumberSpinUp, ":-moz-number-spin-up",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
                    CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
 CSS_PSEUDO_ELEMENT(mozNumberSpinDown, ":-moz-number-spin-down",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
+CSS_PSEUDO_ELEMENT(mozSearchClearButton, ":-moz-search-clear-button",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
                    CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
 CSS_PSEUDO_ELEMENT(mozProgressBar, ":-moz-progress-bar",

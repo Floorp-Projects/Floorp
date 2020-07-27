@@ -35,6 +35,7 @@
 #include "nsFocusManager.h"
 #include "nsColorControlFrame.h"
 #include "nsNumberControlFrame.h"
+#include "nsSearchControlFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsRepeatService.h"
 #include "nsContentCID.h"
@@ -4010,6 +4011,23 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           break;
         }
 #endif
+        case eMouseClick: {
+          if (!aVisitor.mEvent->DefaultPrevented() &&
+              aVisitor.mEvent->IsTrusted() && mType == NS_FORM_INPUT_SEARCH &&
+              aVisitor.mEvent->AsMouseEvent()->mButton ==
+                  MouseButton::ePrimary) {
+            if (nsSearchControlFrame* searchControlFrame =
+                    do_QueryFrame(GetPrimaryFrame())) {
+              Element* clearButton = searchControlFrame->GetAnonClearButton();
+              if (clearButton &&
+                  aVisitor.mEvent->mOriginalTarget == clearButton) {
+                SetUserInput(EmptyString(),
+                             *nsContentUtils::GetSystemPrincipal());
+              }
+            }
+          }
+          break;
+        }
         default:
           break;
       }
@@ -6634,6 +6652,14 @@ void HTMLInputElement::OnValueChanged(ValueChangeKind aKind) {
   // However, we don't want to waste cycles if the state doesn't apply.
   if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder)) {
     UpdateState(true);
+  }
+
+  // Update clear button state on search inputs
+  if (mType == NS_FORM_INPUT_SEARCH) {
+    if (nsSearchControlFrame* searchControlFrame =
+            do_QueryFrame(GetPrimaryFrame())) {
+      searchControlFrame->UpdateClearButtonState();
+    }
   }
 }
 

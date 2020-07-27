@@ -6250,6 +6250,13 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Enables the <input type=search> custom layout frame with a clear icon.
+# Still needs tests and a web-exposed way to remove that icon, see bug 1654288.
+- name: layout.forms.input-type-search.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Pref to control browser frame rate, in Hz. A value <= 0 means choose
 # automatically based on knowledge of the platform (or 60Hz if no platform-
 # specific information is available).
