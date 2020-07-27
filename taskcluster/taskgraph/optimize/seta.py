@@ -92,13 +92,7 @@ class SETA(object):
             low_value_tasks.update(high_value_android_tasks)
 
             seta_conversions = {
-                # old: new
-                'test-linux64/opt': 'test-linux64-shippable/opt',
-                'test-linux64-qr/opt': 'test-linux64-shippable-qr/opt',
-                'test-windows7-32/opt': 'test-windows7-32-shippable/opt',
-                'test-windows10-64/opt': 'test-windows10-64-shippable/opt',
-                'test-windows10-64-qr/opt': 'test-windows10-64-shippable-qr/opt',
-                }
+            }
             # Now add new variants to the low-value set
             for old, new in six.iteritems(seta_conversions):
                 if any(t.startswith(old) for t in low_value_tasks):

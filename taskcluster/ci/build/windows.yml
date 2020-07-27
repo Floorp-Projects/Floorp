@@ -97,7 +97,7 @@ win32/opt:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['integration']
     use-sccache: true
     fetches:
         toolchain:
@@ -288,7 +288,7 @@ win64/opt:
                 # another.
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['integration']
     use-sccache: true
     fetches:
         toolchain:
@@ -374,6 +374,7 @@ win32-shippable/opt:
         platform: windows2012-32-shippable/opt
         symbol: Bpgo(B)
         tier: 1
+    run-on-projects: ['release']
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian10-amd64-build}
@@ -429,6 +430,7 @@ win64-shippable/opt:
         platform: windows2012-64-shippable/opt
         symbol: Bpgo(B)
         tier: 1
+    run-on-projects: ['release']
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian10-amd64-build}
@@ -1259,6 +1261,7 @@ win64-aarch64/opt:
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
                 LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
+    run-on-projects: ['integration']
     use-sccache: true
     fetches:
         toolchain:

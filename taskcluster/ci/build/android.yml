@@ -76,7 +76,7 @@ android-x86/opt:
     treeherder:
         platform: android-4-2-x86/opt
         symbol: B
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['integration']
     worker-type: b-linux
     worker:
         env:
@@ -127,6 +127,7 @@ android-x86-shippable/opt:
     treeherder:
         platform: android-4-2-x86-shippable/opt
         symbol: B
+    run-on-projects: ['release']
     worker-type: b-linux
     worker:
         env:
@@ -151,7 +152,7 @@ android-api-16/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         symbol: B
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['integration']
     worker-type: b-linux
     worker:
         env:
@@ -181,6 +182,7 @@ android-api-16-shippable/opt:
     treeherder:
         platform: android-4-0-armv7-api16-shippable/opt
         symbol: Bpgo(B)
+    run-on-projects: ['release']
     worker-type: b-linux
     worker:
         env:
@@ -205,7 +207,7 @@ android-aarch64/opt:
     treeherder:
         platform: android-5-0-aarch64/opt
         symbol: B
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['integration']
     worker-type: b-linux
     worker:
         env:
@@ -259,6 +261,7 @@ android-aarch64-shippable/opt:
     treeherder:
         platform: android-5-0-aarch64-shippable/opt
         symbol: Bpgo(B)
+    run-on-projects: ['release']
     worker-type: b-linux
     worker:
         env:
@@ -283,7 +286,7 @@ android-x86_64/opt:
     treeherder:
         platform: android-5-0-x86_64/opt
         symbol: B
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['integration']
     worker-type: b-linux
     worker:
         env:
@@ -312,6 +315,7 @@ android-x86_64-shippable/opt:
     treeherder:
         platform: android-5-0-x86_64-shippable/opt
         symbol: B
+    run-on-projects: ['release']
     worker-type: b-linux
     worker:
         env:

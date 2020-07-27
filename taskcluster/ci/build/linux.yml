@@ -28,7 +28,7 @@ linux64/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['integration']
     use-sccache: true
     fetches:
         toolchain:
@@ -342,7 +342,7 @@ linux/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['release']
+    run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr68', 'mozilla-esr78']
     use-sccache: true
     fetches:
         toolchain:
@@ -1010,6 +1010,7 @@ linux64-shippable/opt:
     treeherder:
         platform: linux64-shippable/opt
         symbol: Bpgo(B)
+    run-on-projects: ['release']
     worker-type: b-linux
     worker:
         max-run-time: 9000
@@ -1286,6 +1287,7 @@ linux64-aarch64/opt:
         mozconfig-variant: opt
         tooltool-downloads: public
         need-xvfb: true
+    run-on-projects: ['integration']
     use-sccache: true
     fetches:
         toolchain:

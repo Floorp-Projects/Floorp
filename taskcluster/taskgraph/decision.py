@@ -73,7 +73,7 @@ PER_PROJECT_PARAMETERS = {
     },
 
     'mozilla-central': {
-        'target_tasks_method': 'default',
+        'target_tasks_method': 'mozilla_central_tasks',
         'release_type': 'nightly',
     },
 
@@ -123,6 +123,10 @@ PER_PROJECT_PARAMETERS = {
 
     'kaios': {
         'target_tasks_method': 'kaios_tasks',
+    },
+
+    'autoland': {
+        'target_tasks_method': 'autoland_tasks',
     },
 
     # the default parameters are used for projects that do not match above.
