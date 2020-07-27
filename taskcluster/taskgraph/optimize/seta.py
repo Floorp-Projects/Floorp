@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import json
 import logging
 
 import attr
@@ -64,7 +63,7 @@ class SETA(object):
             response = retry(requests.get, attempts=2, sleeptime=10,
                              args=(url_low, ),
                              kwargs={'timeout': 60, 'headers': ''})
-            task_list = json.loads(response.content).get('jobtypes', '')
+            task_list = response.json().get('jobtypes', '')
 
             if type(task_list) == dict and len(task_list) > 0:
                 task_list = list(task_list.values())[0]
@@ -76,7 +75,7 @@ class SETA(object):
             response = retry(requests.get, attempts=2, sleeptime=10,
                              args=(url_high, ),
                              kwargs={'timeout': 60, 'headers': ''})
-            task_list = json.loads(response.content).get('jobtypes', '')
+            task_list = response.json().get('jobtypes', '')
 
             high_value_tasks = set()
             if type(task_list) == dict and len(task_list) > 0:
