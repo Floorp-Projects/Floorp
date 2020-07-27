@@ -143,16 +143,20 @@ internal class LoginDialogFragment : PromptDialogFragment() {
                         feature?.loginExceptionStorage?.addLoginException(origin)
                     }
                 }
+                emitNeverSaveFact()
                 feature?.onCancel(sessionId)
                 dismiss()
             }
         }
+
+        emitDisplayFact()
         update()
     }
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         feature?.onCancel(sessionId)
+        emitCancelFact()
     }
 
     private fun onPositiveClickAction() {
@@ -166,6 +170,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
                 password = password
             )
         )
+        emitSaveFact()
         dismiss()
     }
 
