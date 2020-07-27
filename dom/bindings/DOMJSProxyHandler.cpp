@@ -219,39 +219,6 @@ bool DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy,
   return true;
 }
 
-bool DOMProxyHandler::definePrivateField(JSContext* cx, HandleObject proxy,
-                                         HandleId id,
-                                         Handle<PropertyDescriptor> desc,
-                                         ObjectOpResult& result) const {
-  return this->defineProperty(cx, proxy, id, desc, result);
-}
-
-bool DOMProxyHandler::setPrivate(JSContext* cx, Handle<JSObject*> proxy,
-                                 Handle<jsid> id, Handle<JS::Value> v,
-                                 Handle<JS::Value> receiver,
-                                 ObjectOpResult& result) const {
-  return this->set(cx, proxy, id, v, receiver, result);
-}
-
-bool DOMProxyHandler::getPrivate(JSContext* cx, HandleObject proxy,
-                                 HandleValue receiver, HandleId id,
-                                 MutableHandleValue vp) const {
-  return this->get(cx, proxy, receiver, id, vp);
-}
-
-bool DOMProxyHandler::hasPrivate(JSContext* cx, HandleObject proxy, HandleId id,
-                                 bool* bp) const {
-  JS::Rooted<JSObject*> expando(cx, GetExpandoObject(proxy));
-  // If there is no expando object, then there is no private field.
-  if (!expando) {
-    *bp = false;
-    return true;
-  }
-
-  // Check if the private property is on the expando.
-  return JS_HasOwnPropertyById(cx, expando, id, bp);
-}
-
 bool DOMProxyHandler::set(JSContext* cx, Handle<JSObject*> proxy,
                           Handle<jsid> id, Handle<JS::Value> v,
                           Handle<JS::Value> receiver,
