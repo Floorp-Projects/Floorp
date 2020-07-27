@@ -129,7 +129,6 @@ menuitem[_moz-menuactive="true"] {
 
 menuitem[customoptionstyling="true"] {
   appearance: none;
-  padding-block: 0;
 }
 
 /* menu/menuitems in menulist popups */
