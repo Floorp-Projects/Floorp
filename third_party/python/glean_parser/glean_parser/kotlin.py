@@ -11,11 +11,15 @@ Outputter to generate Kotlin code for metrics.
 from collections import OrderedDict
 import enum
 import json
+from pathlib import Path
+from typing import Any, Dict, List, Union  # noqa
 
+from . import metrics
+from . import pings
 from . import util
 
 
-def kotlin_datatypes_filter(value):
+def kotlin_datatypes_filter(value: util.JSONType) -> str:
     """
     A Jinja2 filter that renders Kotlin literals.
 
@@ -65,7 +69,7 @@ def kotlin_datatypes_filter(value):
     return "".join(KotlinEncoder().iterencode(value))
 
 
-def type_name(obj):
+def type_name(obj: Union[metrics.Metric, pings.Ping]) -> str:
     """
     Returns the Kotlin type to use for a given metric or ping object.
     """
@@ -86,7 +90,7 @@ def type_name(obj):
     return class_name(obj.type)
 
 
-def class_name(obj_type):
+def class_name(obj_type: str) -> str:
     """
     Returns the Kotlin class name for a given metric or ping type.
     """
@@ -97,13 +101,15 @@ def class_name(obj_type):
     return util.Camelize(obj_type) + "MetricType"
 
 
-def output_gecko_lookup(objs, output_dir, options={}):
+def output_gecko_lookup(
+    objs: metrics.ObjectTree, output_dir: Path, options: Dict[str, Any] = {}
+) -> None:
     """
     Given a tree of objects, generate a Kotlin map between Gecko histograms and
     Glean SDK metric types.
 
     :param objects: A tree of objects (metrics and pings) as returned from
-    `parser.parse_objects`.
+        `parser.parse_objects`.
     :param output_dir: Path to an output directory to write to.
     :param options: options dictionary, with the following optional keys:
 
@@ -138,7 +144,9 @@ def output_gecko_lookup(objs, output_dir, options={}):
     #   },
     #   "other-type": {}
     # }
-    gecko_metrics = OrderedDict()
+    gecko_metrics: OrderedDict[
+        str, OrderedDict[str, List[Dict[str, str]]]
+    ] = OrderedDict()
 
     # Define scalar-like types.
     SCALAR_LIKE_TYPES = ["boolean", "string", "quantity"]
@@ -148,7 +156,9 @@ def output_gecko_lookup(objs, output_dir, options={}):
         # Glean SDK and GeckoView. See bug 1566356 for more context.
         for metric in category_val.values():
             # This is not a Gecko metric, skip it.
-            if not getattr(metric, "gecko_datapoint", False):
+            if isinstance(metric, pings.Ping) or not getattr(
+                metric, "gecko_datapoint", False
+            ):
                 continue
 
             # Put scalars in their own categories, histogram-like in "histograms" and
@@ -186,12 +196,14 @@ def output_gecko_lookup(objs, output_dir, options={}):
         fd.write("\n")
 
 
-def output_kotlin(objs, output_dir, options={}):
+def output_kotlin(
+    objs: metrics.ObjectTree, output_dir: Path, options: Dict[str, Any] = {}
+) -> None:
     """
     Given a tree of objects, output Kotlin code to `output_dir`.
 
     :param objects: A tree of objects (metrics and pings) as returned from
-    `parser.parse_objects`.
+        `parser.parse_objects`.
     :param output_dir: Path to an output directory to write to.
     :param options: options dictionary, with the following optional keys:
 
@@ -209,25 +221,6 @@ def output_kotlin(objs, output_dir, options={}):
             ("class_name", class_name),
         ),
     )
-
-    # The object parameters to pass to constructors
-    extra_args = [
-        "allowed_extra_keys",
-        "bucket_count",
-        "category",
-        "disabled",
-        "histogram_type",
-        "include_client_id",
-        "send_if_empty",
-        "lifetime",
-        "memory_unit",
-        "name",
-        "range_max",
-        "range_min",
-        "reason_codes",
-        "send_in_pings",
-        "time_unit",
-    ]
 
     namespace = options.get("namespace", "GleanMetrics")
     glean_namespace = options.get("glean_namespace", "mozilla.components.service.glean")
@@ -249,7 +242,7 @@ def output_kotlin(objs, output_dir, options={}):
                     category_name=category_key,
                     objs=category_val,
                     obj_types=obj_types,
-                    extra_args=extra_args,
+                    extra_args=util.extra_args,
                     namespace=namespace,
                     has_labeled_metrics=has_labeled_metrics,
                     glean_namespace=glean_namespace,

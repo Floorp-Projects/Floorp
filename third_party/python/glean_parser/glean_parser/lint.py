@@ -3,25 +3,53 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+import enum
+from pathlib import Path
 import re
 import sys
+from typing import Any, Callable, Dict, Generator, List, Iterable, Tuple, Union  # noqa
 
 
+from . import metrics
 from . import parser
+from . import pings
 from . import util
 
-from yamllint.config import YamlLintConfig
-from yamllint import linter
+
+from yamllint.config import YamlLintConfig  # type: ignore
+from yamllint import linter  # type: ignore
 
 
-def _split_words(name):
+LintGenerator = Generator[str, None, None]
+
+
+class CheckType(enum.Enum):
+    warning = 0
+    error = 1
+
+
+def _split_words(name: str) -> List[str]:
     """
     Helper function to split words on either `.` or `_`.
     """
     return re.split("[._]", name)
 
 
-def _hamming_distance(str1, str2):
+def _english_list(items: List[str]) -> str:
+    """
+    Helper function to format a list [A, B, C] as "'A', 'B', or 'C'".
+    """
+    if len(items) == 0:
+        return ""
+    elif len(items) == 1:
+        return f"'{items[0]}'"
+    else:
+        return "{}, or '{}'".format(
+            ", ".join([f"'{x}'" for x in items[:-1]]), items[-1]
+        )
+
+
+def _hamming_distance(str1: str, str2: str) -> int:
     """
     Count the # of differences between strings str1 and str2,
     padding the shorter one with whitespace
@@ -39,7 +67,9 @@ def _hamming_distance(str1, str2):
     return diffs
 
 
-def check_common_prefix(category_name, metrics):
+def check_common_prefix(
+    category_name: str, metrics: Iterable[metrics.Metric]
+) -> LintGenerator:
     """
     Check if all metrics begin with a common prefix.
     """
@@ -58,12 +88,16 @@ def check_common_prefix(category_name, metrics):
     if i > 0:
         common_prefix = "_".join(first[:i])
         yield (
-            "Within category '{}', all metrics begin with prefix "
-            "'{}'. Remove prefixes and (possibly) rename category."
-        ).format(category_name, common_prefix)
+            f"Within category '{category_name}', all metrics begin with "
+            f"prefix '{common_prefix}'."
+            "Remove the prefixes on the metric names and (possibly) "
+            "rename the category."
+        )
 
 
-def check_unit_in_name(metric, parser_config={}):
+def check_unit_in_name(
+    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+) -> LintGenerator:
     """
     The metric name ends in a unit.
     """
@@ -87,105 +121,160 @@ def check_unit_in_name(metric, parser_config={}):
     name_words = _split_words(metric.name)
     unit_in_name = name_words[-1]
 
-    if hasattr(metric, "time_unit"):
+    time_unit = getattr(metric, "time_unit", None)
+    memory_unit = getattr(metric, "memory_unit", None)
+    unit = getattr(metric, "unit", None)
+
+    if time_unit is not None:
         if (
-            unit_in_name == TIME_UNIT_ABBREV.get(metric.time_unit.name)
-            or unit_in_name == metric.time_unit.name
+            unit_in_name == TIME_UNIT_ABBREV.get(time_unit.name)
+            or unit_in_name == time_unit.name
         ):
             yield (
-                "Suffix '{}' is redundant with time_unit. " "Only include time_unit."
-            ).format(unit_in_name)
+                f"Suffix '{unit_in_name}' is redundant with time_unit "
+                f"'{time_unit.name}'. Only include time_unit."
+            )
         elif (
             unit_in_name in TIME_UNIT_ABBREV.keys()
             or unit_in_name in TIME_UNIT_ABBREV.values()
         ):
             yield (
-                "Suffix '{}' doesn't match time_unit. "
+                f"Suffix '{unit_in_name}' doesn't match time_unit "
+                f"'{time_unit.name}'. "
                 "Confirm the unit is correct and only include time_unit."
-            ).format(unit_in_name)
+            )
 
-    elif hasattr(metric, "memory_unit"):
+    elif memory_unit is not None:
         if (
-            unit_in_name == MEMORY_UNIT_ABBREV.get(metric.memory_unit.name)
-            or unit_in_name == metric.memory_unit.name
+            unit_in_name == MEMORY_UNIT_ABBREV.get(memory_unit.name)
+            or unit_in_name == memory_unit.name
         ):
             yield (
-                "Suffix '{}' is redundant with memory_unit. "
+                f"Suffix '{unit_in_name}' is redundant with memory_unit "
+                f"'{memory_unit.name}'. "
                 "Only include memory_unit."
-            ).format(unit_in_name)
+            )
         elif (
             unit_in_name in MEMORY_UNIT_ABBREV.keys()
             or unit_in_name in MEMORY_UNIT_ABBREV.values()
         ):
             yield (
-                "Suffix '{}' doesn't match memory_unit. "
+                f"Suffix '{unit_in_name}' doesn't match memory_unit "
+                f"{memory_unit.name}'. "
                 "Confirm the unit is correct and only include memory_unit."
-            ).format(unit_in_name)
+            )
 
-    elif hasattr(metric, "unit"):
-        if unit_in_name == metric.unit:
+    elif unit is not None:
+        if unit_in_name == unit:
             yield (
-                "Suffix '{}' is redundant with unit param. " "Only include unit."
-            ).format(unit_in_name)
+                f"Suffix '{unit_in_name}' is redundant with unit param "
+                f"'{unit}'. "
+                "Only include unit."
+            )
 
 
-def check_category_generic(category_name, metrics):
+def check_category_generic(
+    category_name: str, metrics: Iterable[metrics.Metric]
+) -> LintGenerator:
     """
     The category name is too generic.
     """
     GENERIC_CATEGORIES = ["metrics", "events"]
 
     if category_name in GENERIC_CATEGORIES:
-        yield "Category '{}' is too generic.".format(category_name)
+        yield (
+            f"Category '{category_name}' is too generic. "
+            f"Don't use {_english_list(GENERIC_CATEGORIES)} for category names"
+        )
 
 
-def check_bug_number(metric, parser_config={}):
+def check_bug_number(
+    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+) -> LintGenerator:
     number_bugs = [str(bug) for bug in metric.bugs if isinstance(bug, int)]
 
     if len(number_bugs):
         yield (
-            "For bugs {}: "
-            "Bug numbers are deprecated and should be changed to full URLs."
-        ).format(", ".join(number_bugs))
+            f"For bugs {', '.join(number_bugs)}: "
+            "Bug numbers are deprecated and should be changed to full URLs. "
+            "For example, use 'http://bugzilla.mozilla.org/12345' instead of '12345'."
+        )
 
 
-def check_valid_in_baseline(metric, parser_config={}):
+def check_valid_in_baseline(
+    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+) -> LintGenerator:
     allow_reserved = parser_config.get("allow_reserved", False)
 
     if not allow_reserved and "baseline" in metric.send_in_pings:
         yield (
             "The baseline ping is Glean-internal. "
-            "User metrics should go into the 'metrics' ping or custom pings."
+            "Remove 'baseline' from the send_in_pings array."
         )
 
 
-def check_misspelled_pings(metric, parser_config={}):
-    builtin_pings = ["metrics", "events"]
-
+def check_misspelled_pings(
+    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+) -> LintGenerator:
     for ping in metric.send_in_pings:
-        for builtin in builtin_pings:
+        for builtin in pings.RESERVED_PING_NAMES:
             distance = _hamming_distance(ping, builtin)
             if distance == 1:
-                yield ("Ping '{}' seems misspelled. Did you mean '{}'?").format(
-                    ping, builtin
-                )
+                yield f"Ping '{ping}' seems misspelled. Did you mean '{builtin}'?"
 
 
-CATEGORY_CHECKS = {
-    "COMMON_PREFIX": check_common_prefix,
-    "CATEGORY_GENERIC": check_category_generic,
+def check_user_lifetime_expiration(
+    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+) -> LintGenerator:
+
+    if metric.lifetime == metrics.Lifetime.user and metric.expires != "never":
+        yield (
+            "Metrics with 'user' lifetime cannot have an expiration date. "
+            "They live as long as the user profile does. "
+            "Set expires to 'never'."
+        )
+
+
+# The checks that operate on an entire category of metrics:
+#    {NAME: (function, is_error)}
+CATEGORY_CHECKS: Dict[
+    str, Tuple[Callable[[str, Iterable[metrics.Metric]], LintGenerator], CheckType]
+] = {
+    "COMMON_PREFIX": (check_common_prefix, CheckType.error),
+    "CATEGORY_GENERIC": (check_category_generic, CheckType.error),
 }
 
 
-INDIVIDUAL_CHECKS = {
-    "UNIT_IN_NAME": check_unit_in_name,
-    "BUG_NUMBER": check_bug_number,
-    "BASELINE_PING": check_valid_in_baseline,
-    "MISSPELLED_PING": check_misspelled_pings,
+# The checks that operate on individual metrics:
+#     {NAME: (function, is_error)}
+INDIVIDUAL_CHECKS: Dict[
+    str, Tuple[Callable[[metrics.Metric, dict], LintGenerator], CheckType]
+] = {
+    "UNIT_IN_NAME": (check_unit_in_name, CheckType.error),
+    "BUG_NUMBER": (check_bug_number, CheckType.error),
+    "BASELINE_PING": (check_valid_in_baseline, CheckType.error),
+    "MISSPELLED_PING": (check_misspelled_pings, CheckType.error),
+    "USER_LIFETIME_EXPIRATION": (check_user_lifetime_expiration, CheckType.warning),
 }
 
 
-def lint_metrics(objs, parser_config={}, file=sys.stderr):
+class GlinterNit:
+    def __init__(self, check_name: str, name: str, msg: str, check_type: CheckType):
+        self.check_name = check_name
+        self.name = name
+        self.msg = msg
+        self.check_type = check_type
+
+    def format(self):
+        return (
+            f"{self.check_type.name.upper()}: {self.check_name}: "
+            f"{self.name}: {self.msg}"
+        )
+
+
+def lint_metrics(
+    objs: metrics.ObjectTree, parser_config: Dict[str, Any] = {}, file=sys.stderr
+) -> List[GlinterNit]:
     """
     Performs glinter checks on a set of metrics objects.
 
@@ -193,26 +282,40 @@ def lint_metrics(objs, parser_config={}, file=sys.stderr):
     :param file: The stream to write errors to.
     :returns: List of nits.
     """
-    nits = []
-    for (category_name, metrics) in sorted(list(objs.items())):
+    nits: List[GlinterNit] = []
+    for (category_name, category) in sorted(list(objs.items())):
         if category_name == "pings":
             continue
 
-        for (check_name, check_func) in CATEGORY_CHECKS.items():
-            if any(check_name in metric.no_lint for metric in metrics.values()):
+        # Make sure the category has only Metrics, not Pings
+        category_metrics = dict(
+            (name, metric)
+            for (name, metric) in category.items()
+            if isinstance(metric, metrics.Metric)
+        )
+
+        for (cat_check_name, (cat_check_func, check_type)) in CATEGORY_CHECKS.items():
+            if any(
+                cat_check_name in metric.no_lint for metric in category_metrics.values()
+            ):
                 continue
             nits.extend(
-                (check_name, category_name, msg)
-                for msg in check_func(category_name, metrics.values())
+                GlinterNit(cat_check_name, category_name, msg, check_type)
+                for msg in cat_check_func(category_name, category_metrics.values())
             )
 
-        for (metric_name, metric) in sorted(list(metrics.items())):
-            for (check_name, check_func) in INDIVIDUAL_CHECKS.items():
+        for (metric_name, metric) in sorted(list(category_metrics.items())):
+            for (check_name, (check_func, check_type)) in INDIVIDUAL_CHECKS.items():
                 new_nits = list(check_func(metric, parser_config))
                 if len(new_nits):
                     if check_name not in metric.no_lint:
                         nits.extend(
-                            (check_name, ".".join([metric.category, metric.name]), msg)
+                            GlinterNit(
+                                check_name,
+                                ".".join([metric.category, metric.name]),
+                                msg,
+                                check_type,
+                            )
                             for msg in new_nits
                         )
                 else:
@@ -221,20 +324,21 @@ def lint_metrics(objs, parser_config={}, file=sys.stderr):
                         and check_name in metric.no_lint
                     ):
                         nits.append(
-                            (
+                            GlinterNit(
                                 "SUPERFLUOUS_NO_LINT",
                                 ".".join([metric.category, metric.name]),
                                 (
-                                    "Superfluous no_lint entry '{}'. "
+                                    f"Superfluous no_lint entry '{check_name}'. "
                                     "Please remove it."
-                                ).format(check_name),
+                                ),
+                                CheckType.warning,
                             )
                         )
 
     if len(nits):
         print("Sorry, Glean found some glinter nits:", file=file)
-        for check_name, name, msg in nits:
-            print("{}: {}: {}".format(check_name, name, msg), file=file)
+        for nit in nits:
+            print(nit.format(), file=file)
         print("", file=file)
         print("Please fix the above nits to continue.", file=file)
         print(
@@ -248,7 +352,7 @@ def lint_metrics(objs, parser_config={}, file=sys.stderr):
     return nits
 
 
-def lint_yaml_files(input_filepaths, file=sys.stderr):
+def lint_yaml_files(input_filepaths: Iterable[Path], file=sys.stderr) -> List:
     """
     Performs glinter YAML lint on a set of files.
 
@@ -257,32 +361,36 @@ def lint_yaml_files(input_filepaths, file=sys.stderr):
     :returns: List of nits.
     """
 
-    nits = []
+    # Generic type since the actual type comes from yamllint, which we don't
+    # control.
+    nits: List = []
     for path in input_filepaths:
         # yamllint needs both the file content and the path.
         file_content = None
-        with path.open("r") as fd:
+        with path.open("r", encoding="utf-8") as fd:
             file_content = fd.read()
 
         problems = linter.run(file_content, YamlLintConfig("extends: default"), path)
-        nits.extend(p for p in problems)
+        nits.extend((path, p) for p in problems)
 
     if len(nits):
         print("Sorry, Glean found some glinter nits:", file=file)
-        for p in nits:
-            print("{} ({}:{}) - {}".format(path, p.line, p.column, p.message))
+        for (path, p) in nits:
+            print(f"{path} ({p.line}:{p.column}) - {p.message}")
         print("", file=file)
         print("Please fix the above nits to continue.", file=file)
 
-    return nits
+    return [x[1] for x in nits]
 
 
-def glinter(input_filepaths, parser_config={}, file=sys.stderr):
+def glinter(
+    input_filepaths: Iterable[Path], parser_config: Dict[str, Any] = {}, file=sys.stderr
+) -> int:
     """
     Commandline helper for glinter.
 
     :param input_filepaths: List of Path objects to load metrics from.
-    :param parser_config: Parser configuration objects, passed to
+    :param parser_config: Parser configuration object, passed to
       `parser.parse_objects`.
     :param file: The stream to write the errors to.
     :return: Non-zero if there were any glinter errors.
@@ -295,8 +403,9 @@ def glinter(input_filepaths, parser_config={}, file=sys.stderr):
     if util.report_validation_errors(objs):
         return 1
 
-    if lint_metrics(objs.value, parser_config=parser_config, file=file):
+    nits = lint_metrics(objs.value, parser_config=parser_config, file=file)
+    if any(nit.check_type == CheckType.error for nit in nits):
         return 1
-
-    print("✨ Your metrics are Glean! ✨", file=file)
+    if len(nits) == 0:
+        print("✨ Your metrics are Glean! ✨", file=file)
     return 0

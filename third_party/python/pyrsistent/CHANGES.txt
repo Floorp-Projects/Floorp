@@ -1,5 +1,11 @@
 Revision history
 ----------------
+0.16.0, 2020-03-24
+ * No major updates but Python 2 support no longer guaranteed.
+ * Fix #192, 'ignore_extra' for 'pvector_field'. Thanks @ss18 for this!
+ * Fix #191, include LICENCE in distribution. Thanks @johnthagen for this!
+ * Fix #190, minor MyPy errors. Thanks @Qhesz for this!
+
 0.15.7, 2020-01-07
  * NOTE! This is the last version of Pyrsistent that officially supports Python 2.X!
  * Fix #186, type errors with more recent versions of MyPy. Thanks @qhesz for this!
