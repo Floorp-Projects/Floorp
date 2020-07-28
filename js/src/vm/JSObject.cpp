@@ -3552,6 +3552,9 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (nobj->denseElementsAreFrozen()) {
       out.put(" frozen_elements");
     }
+    if (nobj->getElementsHeader()->maybeInIteration()) {
+      out.put(" elements_maybe_in_iteration");
+    }
   } else {
     out.put(" not_native\n");
   }

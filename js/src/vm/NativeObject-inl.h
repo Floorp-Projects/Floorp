@@ -615,6 +615,14 @@ inline js::gc::AllocKind NativeObject::allocKindForTenure() const {
 
 inline js::GlobalObject& NativeObject::global() const { return nonCCWGlobal(); }
 
+inline bool NativeObject::denseElementsMaybeInIteration() {
+  if (!getElementsHeader()->maybeInIteration()) {
+    AssertDenseElementsNotIterated(this);
+    return false;
+  }
+  return ObjectRealm::get(this).objectMaybeInIteration(this);
+}
+
 /*
  * Call obj's resolve hook.
  *
