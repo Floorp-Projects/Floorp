@@ -306,6 +306,10 @@ class VirtualenvManager(object):
         python2 -- This denotes that the action should only be taken when run
             on python 2.
 
+        in-virtualenv -- This denotes that the action should only be taken when
+            constructing a virtualenv (and not when bootstrapping a `mach`
+            action).
+
         Note that the Python interpreter running this function should be the
         one from the virtualenv. If it is the system Python or if the
         environment is not configured properly, packages could be installed
@@ -317,6 +321,11 @@ class VirtualenvManager(object):
         python_lib = distutils.sysconfig.get_python_lib()
 
         def handle_package(package):
+            if package[0] == 'in-virtualenv':
+                assert len(package) >= 2
+                package = package[1:]
+                # Continue processing normally.
+
             if package[0] == 'setup.py':
                 assert len(package) >= 2
 

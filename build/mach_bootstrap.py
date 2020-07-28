@@ -141,6 +141,9 @@ def search_path(mozilla_dir, packages_txt):
         packages = [line.rstrip().split(':') for line in f]
 
     def handle_package(package):
+        if package[0] == 'in-virtualenv':
+            return
+
         if package[0] == 'optional':
             try:
                 for path in handle_package(package[1:]):
