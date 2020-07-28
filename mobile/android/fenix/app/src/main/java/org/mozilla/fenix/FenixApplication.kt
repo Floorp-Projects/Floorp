@@ -8,9 +8,12 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.StrictMode
+import android.util.Log.INFO
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
+import androidx.work.Configuration.Provider
+import androidx.work.Configuration.Builder
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -53,7 +56,7 @@ import org.mozilla.fenix.utils.BrowsersCache
  *  Installs [CrashReporter], initializes [Glean]  in fenix builds and setup Megazord in the main process.
  */
 @Suppress("Registered", "TooManyFunctions", "LargeClass")
-open class FenixApplication : LocaleAwareApplication() {
+open class FenixApplication : LocaleAwareApplication(), Provider {
     init {
         recordOnInit() // DO NOT MOVE ANYTHING ABOVE HERE: the timing of this measurement is critical.
     }
@@ -420,4 +423,6 @@ open class FenixApplication : LocaleAwareApplication() {
     companion object {
         private const val KINTO_ENDPOINT_PROD = "https://firefox.settings.services.mozilla.com/v1"
     }
+
+    override fun getWorkManagerConfiguration() = Builder().setMinimumLoggingLevel(INFO).build()
 }
