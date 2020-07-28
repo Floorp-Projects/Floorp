@@ -129,19 +129,25 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
-   * Gets the tooltip for the one-off button of an engine.
+   * Sets the tooltip for a one-off button with an engine.  This should set
+   * either the `tooltiptext` attribute or the relevant l10n ID.
    *
-   * @param {nsISearchEngine|SearchEngine} engine
-   *   The engine.
-   * @returns {string}
-   *   The tooltip for the given engine.
+   * @param {element} button
+   *   The one-off button.
    */
-  tooltipForEngine(engine) {
-    let tooltip = engine.name;
-    let aliases = UrlbarSearchUtils.aliasesForEngine(engine);
-    if (aliases.length) {
-      tooltip += ` (${aliases[0]})`;
+  setTooltipForEngineButton(button) {
+    let aliases = UrlbarSearchUtils.aliasesForEngine(button.engine);
+    if (!aliases.length) {
+      super.setTooltipForEngineButton(button);
+      return;
     }
-    return tooltip;
+    this.document.l10n.setAttributes(
+      button,
+      "search-one-offs-engine-with-alias",
+      {
+        engineName: button.engine.name,
+        alias: aliases[0],
+      }
+    );
   }
 }

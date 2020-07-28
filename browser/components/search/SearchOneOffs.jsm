@@ -515,6 +515,7 @@ class SearchOneOffs {
     for (let i = 0; i < engines.length; ++i) {
       let engine = engines[i];
       let button = this.document.createXULElement("button");
+      button.engine = engine;
       button.id = this._buttonIDForEngine(engine);
       let uri = "chrome://browser/skin/search-engine-placeholder.png";
       if (engine.iconURI) {
@@ -522,8 +523,7 @@ class SearchOneOffs {
       }
       button.setAttribute("image", uri);
       button.setAttribute("class", "searchbar-engine-one-off-item");
-      button.setAttribute("tooltiptext", this.tooltipForEngine(engine));
-      button.engine = engine;
+      this.setTooltipForEngineButton(button);
 
       this.buttons.appendChild(button);
     }
@@ -1094,14 +1094,14 @@ class SearchOneOffs {
   }
 
   /**
-   * Gets the tooltip for the one-off button of an engine.
+   * Sets the tooltip for a one-off button with an engine.  This should set
+   * either the `tooltiptext` attribute or the relevant l10n ID.
    *
-   * @param {nsISearchEngine|SearchEngine} engine
-   *        The engine.
-   * @returns {string} The tooltip for the given engine.
+   * @param {element} button
+   *        The one-off button.
    */
-  tooltipForEngine(engine) {
-    return engine.name;
+  setTooltipForEngineButton(button) {
+    button.setAttribute("tooltiptext", button.engine.name);
   }
 
   // Event handlers below.
