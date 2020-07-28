@@ -211,6 +211,10 @@ JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
     auto script =
         Smoosh::compileGlobalScript(compilationInfo, srcBuf, &unimplemented);
     if (!unimplemented) {
+      if (!compilationInfo.assignSource(srcBuf)) {
+        return nullptr;
+      }
+
       if (compilationInfo.cx->options().trackNotImplemented()) {
         rt->parserWatcherFile.put("1");
       }
