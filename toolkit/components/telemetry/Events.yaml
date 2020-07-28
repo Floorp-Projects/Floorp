@@ -369,6 +369,24 @@ creditcard:
       - "firefox"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
+  manage:
+    description: >-
+      User interactions for credit card autofill preferences management UI.
+    objects:
+      - "manage"
+    methods:
+      - "show"
+      - "add"
+      - "delete"
+      - "show_entry"
+      - "edit"
+    bug_numbers: [1653073, 1654167]
+    notification_emails: ["jmathies@mozilla.com", "chsiang@mozilla.com"]
+    expiry_version: "93"
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
   cc_form:
     description: >-
       User interactions for credit card autofill forms
