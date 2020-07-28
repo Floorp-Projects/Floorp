@@ -4,94 +4,121 @@
 
 const { gBrowser, PrintUtils } = window.docShell.chromeEventHandler.ownerGlobal;
 
-const PrintUI = {
-  initialize(sourceBrowser) {
-    this.sourceBrowser = sourceBrowser;
+document.addEventListener("DOMContentLoaded", e => {
+  PrintEventHandler.init();
+});
 
-    this.form = document.querySelector("form#print");
-    this._openDialogLink = document.querySelector("#open-dialog-link");
-    this._settingsSection = document.querySelector("#settings");
-    this._printerPicker = document.querySelector("#printer-picker");
-    this._sheetsCount = document.querySelector("#sheets-count");
+const PrintEventHandler = {
+  init() {
+    this.sourceBrowser = this.getSourceBrowser();
+    this.settings = PrintUtils.getPrintSettings();
 
-    this.form.addEventListener("submit", this);
-    this._openDialogLink.addEventListener("click", event => {
-      event.preventDefault();
-      PrintUtils.printWindow(sourceBrowser.browsingContext);
-    });
-    this._printerPicker.addEventListener("change", this);
-    this._settingsSection.addEventListener("change", this);
+    document.addEventListener("print", e => this.print({ silent: true }));
+    document.addEventListener("update-print-setting", e =>
+      this.updateSetting(e.detail)
+    );
+    document.addEventListener("cancel-print", () => this.cancelPrint());
+    document.addEventListener("open-system-dialog", () =>
+      this.print({ silent: false })
+    );
+    document.dispatchEvent(
+      new CustomEvent("available-destinations", {
+        detail: this.getPrintDestinations(),
+      })
+    );
 
-    this.printDestinations = [];
-    this.printSettings = PrintUtils.getPrintSettings();
-    // TODO: figure out where this data comes from
-    this.numSheets = 1;
+    this.settingValues = {
+      printRange: printRange =>
+        printRange == "all"
+          ? Ci.nsIPrintSettings.kRangeAllPages
+          : Ci.nsIPrintSettings.kRangeSpecifiedPageRange,
+      // TODO: There's also kRangeSelection, which should come into play
+      // once we have a text box where the user can specify a range
+    };
+    this.settingFlags = {
+      orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
+      scaling: Ci.nsIPrintSettings.kInitSaveScaling,
+      printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
+    };
 
-    this.render();
+    document.dispatchEvent(
+      new CustomEvent("print-settings", {
+        detail: this.settings,
+      })
+    );
   },
 
-  render() {
-    console.log(
-      "TODO: populate the UI with printer listing with printDestinations:",
-      this.printDestinations
-    );
-    //  TODO: populate the settings controls with an nsIPrintSettings
-
-    document.l10n.setAttributes(
-      this._sheetsCount,
-      this._sheetsCount.getAttribute("data-deferred-l10n-id"),
-      {
-        sheetCount: this.numSheets,
-      }
-    );
-  },
-
-  handleEvent(event) {
-    if (event.type == "submit" && event.target == this.form) {
-      event.preventDefault();
-      switch (event.submitter.name) {
-        case "print":
-          PrintUtils.printWindow(this.sourceBrowser.browsingContext, {
-            printSilent: true,
-            printerName: this._printerPicker.value,
-          });
-          break;
-        case "cancel":
-          console.log(
-            "TODO: trigger any teardown, exit the print preview and close the tab-modal"
-          );
-          break;
-      }
+  print({ printerName, silent } = {}) {
+    let settings = this.settings;
+    if (silent) {
+      settings.printSilent = true;
     }
-    /* TODO:
-     * handle clicks to the system dialog link
-     * handle change of the selected printer/destination
-     * handle changes from each of the print settings controls
-     */
+    if (printerName) {
+      settings.printerName = printerName;
+    }
+    PrintUtils.printWindow(this.sourceBrowser.browsingContext, settings);
+  },
+
+  cancelPrint() {
+    gBrowser.removeTab(
+      gBrowser.getTabForBrowser(window.docShell.chromeEventHandler)
+    );
+  },
+
+  updateSetting({ setting, value }) {
+    let settingValue =
+      setting in this.settingValues
+        ? this.settingValues[setting](value)
+        : value;
+
+    if (this.settings[setting] != settingValue) {
+      this.settings[setting] = settingValue;
+
+      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+        Ci.nsIPrintSettingsService
+      );
+
+      let flag = this.settingFlags[setting];
+      if (flag) {
+        PSSVC.savePrintSettingsToPrefs(this.settings, true, flag);
+      }
+
+      document.dispatchEvent(
+        new CustomEvent("print-settings", {
+          detail: this.settings,
+        })
+      );
+    }
+  },
+
+  getSourceBrowser() {
+    let params = new URLSearchParams(location.search);
+    let browsingContextId = params.get("browsingContextId");
+    if (!browsingContextId) {
+      return null;
+    }
+    let browsingContext = BrowsingContext.get(browsingContextId);
+    if (!browsingContext) {
+      return null;
+    }
+    return browsingContext.embedderElement;
+  },
+
+  getPrintDestinations() {
+    let printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
+      Ci.nsIPrinterList
+    );
+    let currentPrinterName = PrintUtils._getLastUsedPrinterName();
+    let destinations = printerList.printers.map(printer => {
+      return {
+        name: printer.name,
+        value: printer.name,
+        selected: printer.name == currentPrinterName,
+      };
+    });
+    return destinations;
   },
 };
-
-function getSourceBrowser() {
-  let params = new URLSearchParams(location.search);
-  let browsingContextId = params.get("browsingContextId");
-  if (!browsingContextId) {
-    return null;
-  }
-  let browsingContext = BrowsingContext.get(browsingContextId);
-  if (!browsingContext) {
-    return null;
-  }
-  return browsingContext.embedderElement;
-}
-
-document.addEventListener("DOMContentLoaded", e => {
-  let sourceBrowser = getSourceBrowser();
-  if (sourceBrowser) {
-    PrintUI.initialize(sourceBrowser);
-  } else {
-    console.error("No source browser");
-  }
-});
 
 /*
  * Custom elements ----------------------------------------------------
@@ -103,6 +130,7 @@ function PrintUIControlMixin(superClass) {
       this.initialize();
       this.render();
     }
+
     initialize() {
       if (this._initialized) {
         return;
@@ -113,24 +141,70 @@ function PrintUIControlMixin(superClass) {
         let templateContent = template.content;
         this.appendChild(templateContent.cloneNode(true));
       }
+
+      document.addEventListener("print-settings", ({ detail: settings }) => {
+        this.update(settings);
+      });
+
+      this.addEventListener("change", this);
     }
+
     render() {}
+
+    update(settings) {}
+
+    updateSetting(setting, value) {
+      this.dispatchEvent(
+        new CustomEvent("update-print-setting", {
+          bubbles: true,
+          detail: { setting, value },
+        })
+      );
+    }
+
+    handleEvent(event) {}
   };
 }
 
 class DestinationPicker extends HTMLSelectElement {
+  constructor() {
+    super();
+    this.addEventListener("change", this);
+    document.addEventListener("available-destinations", this);
+  }
+
   setOptions(optionValues = []) {
-    console.log("DestinationPicker, setOptions:", optionValues);
+    this._options = optionValues;
     this.textContent = "";
-    for (let optionData of optionValues) {
+    for (let optionData of this._options) {
       let opt = new Option(
         optionData.name,
         "value" in optionData ? optionData.value : optionData.name
       );
       if (optionData.selected) {
+        this._currentPrinter = optionData.value;
         opt.selected = true;
       }
       this.options.add(opt);
+    }
+  }
+
+  handleEvent(e) {
+    if (e.type == "change") {
+      this._currentPrinter = e.target.value;
+      this.dispatchEvent(
+        new CustomEvent("update-print-setting", {
+          bubbles: true,
+          detail: {
+            setting: "printerName",
+            value: e.target.value,
+          },
+        })
+      );
+    }
+
+    if (e.type == "available-destinations") {
+      this.setOptions(e.detail);
     }
   }
 }
@@ -143,28 +217,87 @@ class OrientationInput extends PrintUIControlMixin(HTMLElement) {
     return "orientation-template";
   }
 
-  constructor() {
-    super();
-    this._orientation = null;
+  update(settings) {
+    for (let input of this.querySelectorAll("input")) {
+      input.checked = settings.orientation == input.value;
+    }
   }
 
-  render() {
-    console.log(
-      "TODO: populate/set orientation state from the current print settings"
-    );
+  handleEvent(e) {
+    this.updateSetting("orientation", e.target.value);
   }
 }
 customElements.define("orientation-input", OrientationInput);
+
+class CopiesInput extends PrintUIControlMixin(HTMLElement) {
+  get templateId() {
+    return "copy-count-template";
+  }
+
+  update(settings) {
+    this.querySelector("input").value = settings.numCopies;
+  }
+
+  handleEvent(e) {
+    this.updateSetting("numCopies", e.target.value);
+  }
+}
+customElements.define("copy-count-input", CopiesInput);
+
+class PrintUIForm extends PrintUIControlMixin(HTMLElement) {
+  initialize() {
+    super.initialize();
+
+    this.addEventListener("submit", this);
+    this.addEventListener("click", this);
+  }
+
+  handleEvent(e) {
+    if (e.target.id == "open-dialog-link") {
+      this.dispatchEvent(new Event("open-system-dialog", { bubbles: true }));
+    }
+
+    if (e.type == "submit") {
+      e.preventDefault();
+      switch (e.submitter.name) {
+        case "print":
+          this.dispatchEvent(new Event("print", { bubbles: true }));
+          break;
+        case "cancel":
+          this.dispatchEvent(new Event("cancel-print", { bubbles: true }));
+          break;
+      }
+    }
+  }
+}
+customElements.define("print-form", PrintUIForm);
 
 class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   get templateId() {
     return "scale-template";
   }
 
-  render() {
-    console.log(
-      "TODO: populate/set print scale state from the current print settings"
-    );
+  initialize() {
+    super.initialize();
+    this.addEventListener("input", this);
+    this._percentScale = this.querySelector("#percent-scale");
+    this._shrinkToFit = this.querySelector("#fit-choice");
+  }
+
+  update(settings) {
+    // TODO: .scaling only goes from 0-1. Need validation mechanism
+    let { scaling, shrinkToFit } = settings;
+    this._shrinkToFit.checked = shrinkToFit;
+    this.querySelector("#percent-scale-choice").checked = !shrinkToFit;
+    this._percentScale.disabled = shrinkToFit;
+
+    // Only allow whole numbers. 0.14 * 100 would have decimal places, etc.
+    this._percentScale.value = parseInt(scaling * 100, 10);
+  }
+
+  handleEvent(e) {
+    this.updateSetting("shrinkToFit", this._shrinkToFit.checked);
+    this.updateSetting("scaling", this._percentScale.value / 100);
   }
 }
 customElements.define("scale-input", ScaleInput);
@@ -174,10 +307,13 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
     return "page-range-template";
   }
 
-  render() {
-    console.log(
-      "TODO: populate/set page-range state from the current print settings"
-    );
+  update(settings) {
+    let rangePicker = document.querySelector("#range-picker");
+    rangePicker.value = settings.printRange == 0 ? "all" : "custom";
+  }
+
+  handleEvent(e) {
+    this.updateSetting("printRange", e.target.value);
   }
 }
 customElements.define("page-range-input", PageRangeInput);
@@ -202,7 +338,7 @@ class TwistySummary extends PrintUIControlMixin(HTMLElement) {
     this.updateSummary();
   }
 
-  handleEvent(event) {
+  handleEvent(e) {
     let willOpen = !this.isOpen;
     this.updateSummary(willOpen);
   }

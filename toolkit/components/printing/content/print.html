@@ -35,6 +35,11 @@
       </span>
     </template>
 
+    <template id="copy-count-template">
+      <span class="input"></span>
+      <input id="copies-count" type="number" min="1">
+    </template>
+
     <template id="twisty-summary-template">
       <span class="label"></span>
       <span class="twisty"></span>
@@ -49,7 +54,7 @@
         <div>
           <input type="radio" name="scale-choice" id="percent-scale-choice">
           <label for="percent-scale-choice" data-l10n-id="printui-scale-pcent"></label>
-          <input id="percent-scale" type="text" placeholder="100%" disabled>
+          <input id="percent-scale" placeholder="100%" type="text" disabled>
         </div>
       </div>
     </template>
@@ -59,7 +64,7 @@
       <p id="sheets-count" data-deferred-l10n-id="printui-sheets-count"></p>
     </header>
 
-    <form id="print">
+    <form id="print" is="print-form">
       <section class="body-container">
         <section id="destination" class="row">
           <label for="printer-picker" class="block-label" data-l10n-id="printui-destination-label"></label>
@@ -67,8 +72,8 @@
         </section>
         <section id="settings">
           <section id="copies" class="row">
-            <label for="copies-count" class="block-label" data-l10n-id="printui-copies-label"></label>
-            <input id="copies-count" type="number" min="1">
+            <label for="copy-count-input" class="block-label" data-l10n-id="printui-copies-label"></label>
+            <span id="copy-count-input" is="copy-count-input" class="copy-count-input"></span>
           </section>
 
           <section id="orientation" class="row">
@@ -95,7 +100,7 @@
         </section>
       </section>
 
-      <footer class="footer-container">
+      <footer class="footer-container" id="print-footer">
         <section id="system-print" class="row">
           <a href="#" id="open-dialog-link" data-l10n-id="printui-system-dialog-link"></a>
         </section>
