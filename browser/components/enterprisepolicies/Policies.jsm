@@ -1386,6 +1386,15 @@ var Policies = {
         );
         setDefaultPermission("desktop-notification", param.Notifications);
       }
+
+      if ("VirtualReality" in param) {
+        addAllowDenyPermissions(
+          "xr",
+          param.VirtualReality.Allow,
+          param.VirtualReality.Block
+        );
+        setDefaultPermission("xr", param.VirtualReality);
+      }
     },
   },
 
