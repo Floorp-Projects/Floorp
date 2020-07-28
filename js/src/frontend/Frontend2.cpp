@@ -234,7 +234,8 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
 
 // Convert SmooshImmutableScriptData into ImmutableScriptData.
 UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
-    JSContext* cx, const SmooshImmutableScriptData& smooshScriptData) {
+    JSContext* cx, const SmooshImmutableScriptData& smooshScriptData,
+    bool isFunction) {
   Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
   if (!scopeNotes.resize(smooshScriptData.scope_notes.len)) {
     return nullptr;
@@ -247,15 +248,11 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
     scopeNotes[i].parent = scopeNote.parent;
   }
 
-  // FIXME: Support functions.
-  bool isFunction = false;
-  int funLength = 0;
-
   return ImmutableScriptData::new_(
       cx, smooshScriptData.main_offset, smooshScriptData.nfixed,
       smooshScriptData.nslots, GCThingIndex(smooshScriptData.body_scope_index),
       smooshScriptData.num_ic_entries, smooshScriptData.num_bytecode_type_sets,
-      isFunction, funLength,
+      isFunction, smooshScriptData.fun_length,
       mozilla::MakeSpan(smooshScriptData.bytecode.data,
                         smooshScriptData.bytecode.len),
       mozilla::Span<const SrcNote>(), mozilla::Span<const uint32_t>(),
@@ -314,13 +311,6 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           JS::HandleVector<JSAtom*> allAtoms,
                           CompilationInfo& compilationInfo,
                           MutableHandle<ScriptStencil> stencil) {
-  auto index = smooshStencil.immutable_script_data.AsSome();
-  auto immutableScriptData =
-      ConvertImmutableScriptData(cx, result.script_data_list.data[index]);
-  if (!immutableScriptData) {
-    return false;
-  }
-
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
   const JS::ReadOnlyCompileOptions& options = compilationInfo.options;
@@ -337,7 +327,18 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   stencil.get().immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
                                        options.isRunOnce);
 
-  stencil.get().immutableScriptData = std::move(immutableScriptData);
+  bool isFunction =
+      stencil.get().immutableFlags.hasFlag(ImmutableFlags::IsFunction);
+
+  if (smooshStencil.immutable_script_data.IsSome()) {
+    auto index = smooshStencil.immutable_script_data.AsSome();
+    auto immutableScriptData = ConvertImmutableScriptData(
+        cx, result.script_data_list.data[index], isFunction);
+    if (!immutableScriptData) {
+      return false;
+    }
+    stencil.get().immutableScriptData = std::move(immutableScriptData);
+  }
 
   stencil.get().extent.sourceStart = smooshStencil.extent.source_start;
   stencil.get().extent.sourceEnd = smooshStencil.extent.source_end;
