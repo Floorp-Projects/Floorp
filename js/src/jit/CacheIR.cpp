@@ -6519,6 +6519,30 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachTypedArrayByteOffset(
+    HandleFunction callee) {
+  // Self-hosted code calls this with a single TypedArrayObject argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objArgId = writer.guardToObject(argId);
+  writer.typedArrayByteOffsetResult(objArgId);
+
+  // This stub does not need to be monitored because it always returns int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("TypedArrayByteOffset");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachTypedArrayElementShift(
     HandleFunction callee) {
   // Self-hosted code calls this with a single TypedArrayObject argument.
@@ -6854,6 +6878,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachGuardToClass(callee, native);
 
     // TypedArray intrinsics.
+    case InlinableNative::IntrinsicTypedArrayByteOffset:
+      return tryAttachTypedArrayByteOffset(callee);
     case InlinableNative::IntrinsicTypedArrayElementShift:
       return tryAttachTypedArrayElementShift(callee);
 

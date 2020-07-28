@@ -1812,6 +1812,16 @@ bool WarpCacheIRTranspiler::emitIsConstructorResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetResult(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MArrayBufferViewByteOffset::New(alloc(), obj);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTypedArrayElementShiftResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);

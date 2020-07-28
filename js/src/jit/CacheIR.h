@@ -1636,6 +1636,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                        UnaryMathFunction fun);
   AttachDecision tryAttachMathPow(HandleFunction callee);
   AttachDecision tryAttachMathMinMax(HandleFunction callee, bool isMax);
+  AttachDecision tryAttachTypedArrayByteOffset(HandleFunction callee);
   AttachDecision tryAttachTypedArrayElementShift(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
