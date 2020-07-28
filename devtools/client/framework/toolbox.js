@@ -195,7 +195,7 @@ loader.lazyGetter(this, "registerHarOverlay", () => {
 
 loader.lazyRequireGetter(
   this,
-  "defaultThreadOptions",
+  "getThreadOptions",
   "devtools/client/shared/thread-utils",
   true
 );
@@ -750,21 +750,22 @@ Toolbox.prototype = {
   async _attachTarget(targetFront) {
     await targetFront.attach();
 
-    // Do not attach to the thread of additional Frame targets, as they are
-    // already tracked by the content process targets. At least in the context
-    // of the Browser Toolbox.
-    // We would have to revisit that for the content toolboxes.
-    // Worker targets are attached to by the debugger so that the debugger
-    // has a chance to register breakpoints with the server.
-    if (
-      targetFront.isTopLevel ||
-      targetFront.targetType == TargetList.TYPES.PROCESS
-    ) {
-      const threadFront = await this._attachAndResumeThread(targetFront);
-      this._startThreadFrontListeners(threadFront);
-      if (targetFront.isTopLevel) {
-        this._threadFront = threadFront;
-      }
+    const isBrowserToolbox = this.targetList.targetFront.isParentProcess;
+    const isNonTopLevelFrameTarget =
+      !targetFront.isTopLevel && targetFront.type === TargetList.TYPES.FRAME;
+
+    if (isBrowserToolbox && isNonTopLevelFrameTarget) {
+      // In the BrowserToolbox, non-top-level frame targets are already
+      // debugged via content-process targets.
+      // Do not attach the thread here, as it was already done by the
+      // corresponding content-process target.
+      return;
+    }
+
+    const threadFront = await this._attachAndResumeThread(targetFront);
+    this._startThreadFrontListeners(threadFront);
+    if (targetFront.isTopLevel) {
+      this._threadFront = threadFront;
     }
   },
 
@@ -777,7 +778,7 @@ Toolbox.prototype = {
   },
 
   _attachAndResumeThread: async function(target) {
-    const options = defaultThreadOptions();
+    const options = await getThreadOptions();
     const threadFront = await target.attachThread(options);
 
     try {

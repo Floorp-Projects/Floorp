@@ -16,7 +16,7 @@ export function addTarget(targetFront: Target) {
   return async function(args: ThunkArgs) {
     const { client, getState, dispatch } = args;
     const cx = getContext(getState());
-    const thread = await client.attachThread(targetFront);
+    const thread = await client.addThread(targetFront);
     validateContext(getState(), cx);
 
     dispatch(({ type: "INSERT_THREAD", cx, newThread: thread }: Action));

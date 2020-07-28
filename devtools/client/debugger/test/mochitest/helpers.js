@@ -2022,3 +2022,6 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Current thread has paused or resumed/
 );
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  / error occurred while processing 'attach'/
+);

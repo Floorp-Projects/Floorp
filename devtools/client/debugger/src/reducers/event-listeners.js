@@ -15,6 +15,9 @@ import type {
 } from "../actions/types";
 
 export type EventListenersState = {|
+  // XXX: The `active` property is expected by the thread-utils module at
+  // devtools/client/shared/thread-utils.js . If the name is updated here,
+  // thread-utils.js should be updated at the same time.
   +active: EventListenerActiveList,
   +categories: EventListenerCategoryList,
   +expanded: EventListenerExpandedList,
