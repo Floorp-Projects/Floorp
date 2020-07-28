@@ -41,4 +41,17 @@
         <item name="android:padding">@dimen/mozac_widget_favicon_padding</item>
         <item name="android:background">@drawable/mozac_widget_favicon_background</item>
     </style>
+
+    <style name="Mozac.Widgets.SiteItem.Label" parent="">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name="android:textSize">@dimen/mozac_widget_site_item_label_text_size</item>
+        <item name="android:textColor">?attr/mozac_primary_text_color</item>
+    </style>
+    <style name="Mozac.Widgets.SiteItem.Caption" parent="Mozac.Widgets.SiteItem.Label">
+        <item name="android:textSize">@dimen/mozac_widget_site_item_caption_text_size</item>
+        <item name="android:textColor">?attr/mozac_caption_text_color</item>
+    </style>
 </resources>

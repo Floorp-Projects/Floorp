@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -10,6 +11,8 @@ android {
     defaultConfig {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -21,10 +24,14 @@ android {
 }
 
 dependencies {
+    implementation Dependencies.kotlin_stdlib
+
     implementation project(':ui-colors')
     implementation project(':ui-icons')
 
+    implementation Dependencies.androidx_appcompat
     implementation Dependencies.androidx_constraintlayout
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.google_material
 }
 

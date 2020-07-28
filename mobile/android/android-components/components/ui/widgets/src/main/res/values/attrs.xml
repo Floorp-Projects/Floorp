@@ -9,4 +9,6 @@
 
     <attr name="mozac_widget_favicon_background_color" format="reference" />
     <attr name="mozac_widget_favicon_border_color" format="reference" />
+    <attr name="mozac_primary_text_color" format="reference" />
+    <attr name="mozac_caption_text_color" format="reference" />
 </resources>
