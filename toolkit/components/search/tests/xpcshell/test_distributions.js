@@ -515,6 +515,48 @@ for (const locale of ["en-US", "de"]) {
 }
 
 tests.push({
+  locale: "en-GB",
+  distribution: "gmxcouk",
+  test: engines =>
+    hasURLs(
+      engines,
+      "GMX Search",
+      "https://go.gmx.co.uk/br/moz_search_web/?enc=UTF-8&q=test",
+      "https://suggestplugin.gmx.co.uk/s?q=test&brand=gmxcouk&origin=moz_splugin_ff&enc=UTF-8"
+    ) &&
+    hasDefault(engines, "GMX Search") &&
+    hasEnginesFirst(engines, ["GMX Search"]),
+});
+
+tests.push({
+  locale: "es",
+  distribution: "gmxes",
+  test: engines =>
+    hasURLs(
+      engines,
+      "GMX - Búsqueda web",
+      "https://go.gmx.es/br/moz_search_web/?enc=UTF-8&q=test",
+      "https://suggestplugin.gmx.es/s?q=test&brand=gmxes&origin=moz_splugin_ff&enc=UTF-8"
+    ) &&
+    hasDefault(engines, "GMX Search") &&
+    hasEnginesFirst(engines, ["GMX Search"]),
+});
+
+tests.push({
+  locale: "fr",
+  distribution: "gmxfr",
+  test: engines =>
+    hasURLs(
+      engines,
+      "GMX - Recherche web",
+      "https://go.gmx.fr/br/moz_search_web/?enc=UTF-8&q=test",
+      "https://suggestplugin.gmx.fr/s?q=test&brand=gmxfr&origin=moz_splugin_ff&enc=UTF-8"
+    ) &&
+    hasDefault(engines, "GMX Search") &&
+    hasEnginesFirst(engines, ["GMX Search"]),
+});
+
+tests.push({
   locale: "ru",
   distribution: "yandex-drp",
   test: engines =>
@@ -596,6 +638,25 @@ tests.push({
     hasDefault(engines, "Яндекс") &&
     hasEnginesFirst(engines, ["Яндекс"]),
 });
+
+function hasURLs(engines, engineName, url, suggestURL) {
+  let engine = engines.find(e => e._name === engineName);
+  Assert.ok(engine, `Should be able to find ${engineName}`);
+
+  let submission = engine.getSubmission("test", "text/html");
+  Assert.equal(
+    submission.uri.spec,
+    url,
+    `Should have the correct submission url for ${engineName}`
+  );
+
+  submission = engine.getSubmission("test", "application/x-suggestions+json");
+  Assert.equal(
+    submission.uri.spec,
+    suggestURL,
+    `Should have the correct suggestion url for ${engineName}`
+  );
+}
 
 function hasParams(engines, engineName, purpose, param) {
   let engine = engines.find(e => e._name === engineName);
