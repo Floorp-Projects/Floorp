@@ -8,19 +8,22 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.storage.sync.RemoteTabsStorage
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceCapability
+import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.accounts.push.FxaPushSupportFeature
 import mozilla.components.feature.accounts.push.SendTabFeature
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.lib.crash.CrashReporter
-import mozilla.components.service.fxa.DeviceConfig
+import mozilla.components.service.fxa.PeriodicSyncConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
@@ -86,7 +89,7 @@ class BackgroundServices(
     @VisibleForTesting
     val supportedEngines =
         setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords, SyncEngine.Tabs)
-    private val syncConfig = SyncConfig(supportedEngines, syncPeriodInMinutes = 240L) // four hours
+    private val syncConfig = SyncConfig(supportedEngines, PeriodicSyncConfig(periodMinutes = 240)) // four hours
 
     init {
         /* Make the "history", "bookmark", "passwords", and "tabs" stores accessible to workers
@@ -156,10 +159,10 @@ class BackgroundServices(
 
         SyncedTabsIntegration(context, accountManager).launch()
 
-        accountAbnormalities.accountManagerInitializedAsync(
-            accountManager,
-            accountManager.initAsync()
-        )
+        MainScope().launch {
+            accountManager.start()
+            accountAbnormalities.accountManagerStarted(accountManager)
+        }
     }.also {
         accountManagerAvailableQueue.ready()
     }
@@ -180,31 +183,33 @@ internal class TelemetryAccountObserver(
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         when (authType) {
             // User signed-in into an existing FxA account.
-            AuthType.Signin ->
-                metricController.track(Event.SyncAuthSignIn)
+            AuthType.Signin -> Event.SyncAuthSignIn
 
             // User created a new FxA account.
-            AuthType.Signup ->
-                metricController.track(Event.SyncAuthSignUp)
+            AuthType.Signup -> Event.SyncAuthSignUp
 
             // User paired to an existing account via QR code scanning.
-            AuthType.Pairing ->
-                metricController.track(Event.SyncAuthPaired)
+            AuthType.Pairing -> Event.SyncAuthPaired
 
-            // User signed-in into an FxA account shared from another locally installed app
-            // (e.g. Fennec).
-            AuthType.Shared ->
-                metricController.track(Event.SyncAuthFromShared)
+            // User signed-in into an FxA account shared from another locally installed app using the reuse flow.
+            AuthType.MigratedReuse -> Event.SyncAuthFromSharedReuse
+
+            // User signed-in into an FxA account shared from another locally installed app using the copy flow.
+            AuthType.MigratedCopy -> Event.SyncAuthFromSharedCopy
 
             // Account Manager recovered a broken FxA auth state, without direct user involvement.
-            AuthType.Recovered ->
-                metricController.track(Event.SyncAuthRecovered)
+            AuthType.Recovered -> Event.SyncAuthRecovered
 
             // User signed-in into an FxA account via unknown means.
             // Exact mechanism identified by the 'action' param.
-            is AuthType.OtherExternal ->
-                metricController.track(Event.SyncAuthOtherExternal)
+            is AuthType.OtherExternal -> Event.SyncAuthOtherExternal
+
+            // Account restored from a hydrated state on disk (e.g. during startup).
+            AuthType.Existing -> null
+        }?.let {
+            metricController.track(it)
         }
+
         // Used by Leanplum as a context variable.
         settings.fxaSignedIn = true
     }

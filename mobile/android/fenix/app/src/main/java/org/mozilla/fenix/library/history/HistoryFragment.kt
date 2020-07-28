@@ -344,7 +344,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
     private suspend fun syncHistory() {
         val accountManager = requireComponents.backgroundServices.accountManager
-        accountManager.syncNowAsync(SyncReason.User).await()
+        accountManager.syncNow(SyncReason.User)
         viewModel.invalidate()
     }
 }

@@ -269,7 +269,7 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SyncAuthOtherExternal -> EventWrapper<NoExtraKeys>(
             { SyncAuth.otherExternal.record(it) }
         )
-        is Event.SyncAuthFromShared -> EventWrapper<NoExtraKeys>(
+        is Event.SyncAuthFromSharedReuse, Event.SyncAuthFromSharedCopy -> EventWrapper<NoExtraKeys>(
             { SyncAuth.autoLogin.record(it) }
         )
         is Event.SyncAuthRecovered -> EventWrapper<NoExtraKeys>(

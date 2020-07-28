@@ -143,7 +143,7 @@ class DefaultBookmarkController(
         scope.launch {
             store.dispatch(BookmarkFragmentAction.StartSync)
             invokePendingDeletion()
-            activity.components.backgroundServices.accountManager.syncNowAsync(SyncReason.User).await()
+            activity.components.backgroundServices.accountManager.syncNow(SyncReason.User)
             // The current bookmark node we are viewing may be made invalid after syncing so we
             // check if the current node is valid and if it isn't we find the nearest valid ancestor
             // and open it

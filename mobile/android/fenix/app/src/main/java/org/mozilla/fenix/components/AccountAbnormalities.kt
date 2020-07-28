@@ -5,13 +5,11 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.StrictMode
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -77,9 +75,18 @@ class AccountAbnormalities(
 
     private val logger = Logger("AccountAbnormalities")
 
-    private val prefs = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
-        context.getSharedPreferences(PREF_FXA_ABNORMALITIES, Context.MODE_PRIVATE)
-    }
+    private val prefs: SharedPreferences
+    private val hadAccountPrior: Boolean
+
+    init {
+        val prefPair = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+            val p = context.getSharedPreferences(PREF_FXA_ABNORMALITIES, Context.MODE_PRIVATE)
+            val a = p.getBoolean(KEY_HAS_ACCOUNT, false)
+            Pair(p, a)
+        }
+        prefs = prefPair.first
+        hadAccountPrior = prefPair.second
+}
 
     /**
      * Once [accountManager] is initialized, queries it to detect abnormal account states.
@@ -89,37 +96,28 @@ class AccountAbnormalities(
      * @param initResult A deferred result of initializing [accountManager].
      * @return A [Unit] deferred, resolved once [initResult] is resolved and state is processed for abnormalities.
      */
-    fun accountManagerInitializedAsync(
-        accountManager: FxaAccountManager,
-        initResult: Deferred<Unit>
-    ): Deferred<Unit> {
+    fun accountManagerStarted(
+        accountManager: FxaAccountManager
+    ) {
+        check(!accountManagerConfigured) { "accountManagerStarted called twice" }
         accountManagerConfigured = true
 
-        return CoroutineScope(coroutineContext).async {
-            // Wait for the account manager to finish initializing. If it's queried before the
-            // "init" deferred returns, we'll get inaccurate results.
-            initResult.await()
+        // Behaviour considered abnormal:
+        // - we had an account before, and it's no longer present during startup
 
-            // Account manager finished initialization, we can now query it for the account state
-            // and see if it doesn't match our expectations.
-            // Behaviour considered abnormal:
-            // - we had an account before, and it's no longer present during startup
+        // We use a flag in prefs to keep track of the fact that we have an authenticated
+        // account. This works because our account state is persisted in the application's
+        // directory, same as SharedPreferences. If user clears application data, both the
+        // fxa state and our flag will be removed.
+        val hasAccountNow = accountManager.authenticatedAccount() != null
+        if (hadAccountPrior && !hasAccountNow) {
+            prefs.edit().putBoolean(KEY_HAS_ACCOUNT, false).apply()
 
-            // We use a flag in prefs to keep track of the fact that we have an authenticated
-            // account. This works because our account state is persisted in the application's
-            // directory, same as SharedPreferences. If user clears application data, both the
-            // fxa state and our flag will be removed.
-            val hadAccountBefore = prefs.getBoolean(KEY_HAS_ACCOUNT, false)
-            val hasAccountNow = accountManager.authenticatedAccount() != null
-            if (hadAccountBefore && !hasAccountNow) {
-                prefs.edit().putBoolean(KEY_HAS_ACCOUNT, false).apply()
+            logger.warn("Missing expected account on startup")
 
-                logger.warn("Missing expected account on startup")
-
-                crashReporter.submitCaughtException(
-                    AbnormalFxaEvent.MissingExpectedAccountAfterStartup()
-                )
-            }
+            crashReporter.submitCaughtException(
+                AbnormalFxaEvent.MissingExpectedAccountAfterStartup()
+            )
         }
     }
 
@@ -152,8 +150,7 @@ class AccountAbnormalities(
     }
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-        check(accountManagerConfigured) { "onAuthenticated before account manager was configured" }
-
+        // Not checking state of accountManagerConfigured because we'll race against account manager's start.
         onAuthenticatedCalled = true
 
         // We don't check if KEY_HAS_ACCOUNT was already true: we will see onAuthenticated on every

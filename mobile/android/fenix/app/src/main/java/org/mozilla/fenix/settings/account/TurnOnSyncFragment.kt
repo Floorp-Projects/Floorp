@@ -70,6 +70,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requireComponents.backgroundServices.accountManager.register(this, owner = this)
         requireComponents.analytics.metrics.track(Event.SyncAuthOpened)
 
         // App can be installed on devices with no camera modules. Like Android TV boxes.
@@ -139,23 +140,13 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
         // Since the snackbar can be presented in BrowserFragment or in SettingsFragment we must
         // base our display method on the padSnackbar argument
-        if (args.padSnackbar) {
-            FenixSnackbar.make(
-                view = requireView(),
-                duration = snackbarLength,
-                isDisplayedWithBrowserToolbar = true
-            )
-                .setText(snackbarText)
-                .show()
-        } else {
-            FenixSnackbar.make(
-                view = requireView(),
-                duration = snackbarLength,
-                isDisplayedWithBrowserToolbar = false
-            )
-                .setText(snackbarText)
-                .show()
-        }
+        FenixSnackbar.make(
+            view = requireView(),
+            duration = snackbarLength,
+            isDisplayedWithBrowserToolbar = args.padSnackbar
+        )
+            .setText(snackbarText)
+            .show()
     }
 
     private fun navigateToPairWithEmail() {

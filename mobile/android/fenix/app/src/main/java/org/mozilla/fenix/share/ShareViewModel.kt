@@ -54,8 +54,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
             viewModelScope.launch(ioDispatcher) {
                 fxaAccountManager.authenticatedAccount()
                     ?.deviceConstellation()
-                    ?.refreshDevicesAsync()
-                    ?.await()
+                    ?.refreshDevices()
 
                 val devicesShareOptions = buildDeviceList(fxaAccountManager, network)
                 devicesListLiveData.postValue(devicesShareOptions)

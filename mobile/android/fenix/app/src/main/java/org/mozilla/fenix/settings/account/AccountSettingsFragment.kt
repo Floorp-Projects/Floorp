@@ -169,25 +169,32 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         updateSyncEngineStates()
         setDisabledWhileSyncing(accountManager.isSyncActive())
 
-        requirePreference<CheckBoxPreference>(R.string.pref_key_sync_history).apply {
-            setOnPreferenceChangeListener { _, newValue ->
-                SyncEnginesStorage(context).setStatus(SyncEngine.History, newValue as Boolean)
-                @Suppress("DeferredResultUnused")
-                context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
-                true
+        fun updateSyncEngineState(context: Context, engine: SyncEngine, newState: Boolean) {
+            SyncEnginesStorage(context).setStatus(engine, newState)
+            viewLifecycleOwner.lifecycleScope.launch {
+                context.components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
             }
         }
 
-        requirePreference<CheckBoxPreference>(R.string.pref_key_sync_bookmarks).apply {
-            setOnPreferenceChangeListener { _, newValue ->
-                SyncEnginesStorage(context).setStatus(SyncEngine.Bookmarks, newValue as Boolean)
-                @Suppress("DeferredResultUnused")
-                context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
-                true
+        fun SyncEngine.prefId(): Int = when (this) {
+            SyncEngine.History -> R.string.pref_key_sync_history
+            SyncEngine.Bookmarks -> R.string.pref_key_sync_bookmarks
+            SyncEngine.Passwords -> R.string.pref_key_sync_logins
+            SyncEngine.Tabs -> R.string.pref_key_sync_tabs
+            else -> throw IllegalStateException("Accessing internal sync engines")
+        }
+
+        listOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Tabs).forEach {
+            requirePreference<CheckBoxPreference>(it.prefId()).apply {
+                setOnPreferenceChangeListener { _, newValue ->
+                    updateSyncEngineState(context, it, newValue as Boolean)
+                    true
+                }
             }
         }
 
-        requirePreference<CheckBoxPreference>(R.string.pref_key_sync_logins).apply {
+        // 'Passwords' listener is special, since we also display a pin protection warning.
+        requirePreference<CheckBoxPreference>(SyncEngine.Passwords.prefId()).apply {
             setOnPreferenceChangeListener { _, newValue ->
                 val manager =
                     activity?.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
@@ -195,21 +202,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     newValue == false ||
                     !context.settings().shouldShowSecurityPinWarningSync
                 ) {
-                    SyncEnginesStorage(context).setStatus(SyncEngine.Passwords, newValue as Boolean)
-                    @Suppress("DeferredResultUnused")
-                    context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                    updateSyncEngineState(context, SyncEngine.Passwords, newValue as Boolean)
                 } else {
                     showPinDialogWarning(newValue as Boolean)
                 }
-                true
-            }
-        }
-
-        requirePreference<CheckBoxPreference>(R.string.pref_key_sync_tabs).apply {
-            setOnPreferenceChangeListener { _, newValue ->
-                SyncEnginesStorage(context).setStatus(SyncEngine.Tabs, newValue as Boolean)
-                @Suppress("DeferredResultUnused")
-                context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
                 true
             }
         }
@@ -237,8 +233,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
                 setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
                     SyncEnginesStorage(context).setStatus(SyncEngine.Passwords, newValue)
-                    @Suppress("DeferredResultUnused")
-                    context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        context.components.backgroundServices.accountManager.syncNow(SyncReason.EngineChange)
+                    }
                 }
 
                 setPositiveButton(getString(R.string.logins_warning_dialog_set_up_now)) { it: DialogInterface, _ ->
@@ -278,13 +275,12 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         viewLifecycleOwner.lifecycleScope.launch {
             requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
             // Trigger a sync.
-            requireComponents.backgroundServices.accountManager.syncNowAsync(SyncReason.User)
-                .await()
+            requireComponents.backgroundServices.accountManager.syncNow(SyncReason.User)
             // Poll for device events & update devices.
             accountManager.authenticatedAccount()
                 ?.deviceConstellation()?.run {
-                    refreshDevicesAsync().await()
-                    pollForCommandsAsync().await()
+                    refreshDevices()
+                    pollForCommands()
                 }
         }
     }
@@ -298,8 +294,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             context?.let {
                 accountManager.authenticatedAccount()
                     ?.deviceConstellation()
-                    ?.setDeviceNameAsync(newValue, it)
-                    ?.await()
+                    ?.setDeviceName(newValue, it)
             }
         }
         return true

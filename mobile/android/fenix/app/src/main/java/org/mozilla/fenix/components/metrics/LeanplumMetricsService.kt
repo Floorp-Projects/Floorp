@@ -42,7 +42,7 @@ private val Event.name: String?
         is Event.CollectionTabRestored -> "E_Collection_Tab_Opened"
         is Event.SyncAuthSignUp -> "E_FxA_New_Signup"
         is Event.SyncAuthSignIn, Event.SyncAuthPaired, Event.SyncAuthOtherExternal -> "E_Sign_In_FxA"
-        is Event.SyncAuthFromShared -> "E_Sign_In_FxA_Fennec_to_Fenix"
+        is Event.SyncAuthFromSharedCopy, Event.SyncAuthFromSharedReuse -> "E_Sign_In_FxA_Fennec_to_Fenix"
         is Event.SyncAuthSignOut -> "E_Sign_Out_FxA"
         is Event.ClearedPrivateData -> "E_Cleared_Private_Data"
         is Event.DismissedOnboarding -> "E_Dismissed_Onboarding"

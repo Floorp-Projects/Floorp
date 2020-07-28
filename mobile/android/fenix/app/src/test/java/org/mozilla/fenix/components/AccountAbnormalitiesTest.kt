@@ -9,7 +9,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -35,12 +34,8 @@ class AccountAbnormalitiesTest {
             assertEquals("userRequestedLogout before account manager was configured", e.message)
         }
 
-        try {
-            accountAbnormalities.onAuthenticated(mockk(), mockk())
-            fail()
-        } catch (e: IllegalStateException) {
-            assertEquals("onAuthenticated before account manager was configured", e.message)
-        }
+        // This doesn't throw, see method for details.
+        accountAbnormalities.onAuthenticated(mockk(), mockk())
 
         try {
             accountAbnormalities.onLoggedOut()
@@ -58,10 +53,7 @@ class AccountAbnormalitiesTest {
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerInitializedAsync(
-            accountManager,
-            CompletableDeferred(Unit).also { it.complete(Unit) }
-        ).await()
+        accountAbnormalities.accountManagerStarted(accountManager)
 
         // Logout action must be preceded by auth.
         accountAbnormalities.userRequestedLogout()
@@ -74,10 +66,7 @@ class AccountAbnormalitiesTest {
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerInitializedAsync(
-            accountManager,
-            CompletableDeferred(Unit).also { it.complete(Unit) }
-        ).await()
+        accountAbnormalities.accountManagerStarted(accountManager)
 
         accountAbnormalities.onAuthenticated(mockk(), mockk())
         // So far, so good. A regular logout request while being authenticated.
@@ -95,10 +84,7 @@ class AccountAbnormalitiesTest {
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerInitializedAsync(
-            accountManager,
-            CompletableDeferred(Unit).also { it.complete(Unit) }
-        ).await()
+        accountAbnormalities.accountManagerStarted(accountManager)
 
         // User didn't request this logout.
         accountAbnormalities.onLoggedOut()
@@ -111,10 +97,7 @@ class AccountAbnormalitiesTest {
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerInitializedAsync(
-            accountManager,
-            CompletableDeferred(Unit).also { it.complete(Unit) }
-        ).await()
+        accountAbnormalities.accountManagerStarted(accountManager)
 
         accountAbnormalities.onAuthenticated(mockk(), mockk())
         verify { crashReporter wasNot Called }
@@ -124,10 +107,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities2 = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
         // mock accountManager doesn't have an account, but we expect it to have one since we
         // were authenticated before our "restart".
-        accountAbnormalities2.accountManagerInitializedAsync(
-            accountManager,
-            CompletableDeferred(Unit).also { it.complete(Unit) }
-        ).await()
+        accountAbnormalities2.accountManagerStarted(accountManager)
 
         assertCaughtException<AbnormalFxaEvent.MissingExpectedAccountAfterStartup>(crashReporter)
     }
@@ -138,10 +118,7 @@ class AccountAbnormalitiesTest {
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
         val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
-        accountAbnormalities.accountManagerInitializedAsync(
-            accountManager,
-            CompletableDeferred(Unit).also { it.complete(Unit) }
-        ).await()
+        accountAbnormalities.accountManagerStarted(accountManager)
 
         // We saw an auth event, then user requested a logout.
         accountAbnormalities.onAuthenticated(mockk(), mockk())

@@ -78,10 +78,13 @@ class BackgroundServicesTest {
     fun `telemetry account observer tracks shared event`() {
         val account = mockk<OAuthAccount>()
 
-        registry.notifyObservers { onAuthenticated(account, AuthType.Shared) }
-        verify { metrics.track(Event.SyncAuthFromShared) }
+        registry.notifyObservers { onAuthenticated(account, AuthType.MigratedReuse) }
+        verify { metrics.track(Event.SyncAuthFromSharedReuse) }
         verify { settings.fxaSignedIn = true }
         confirmVerified(metrics, settings)
+
+        registry.notifyObservers { onAuthenticated(account, AuthType.MigratedCopy) }
+        verify { metrics.track(Event.SyncAuthFromSharedCopy) }
     }
 
     @Test

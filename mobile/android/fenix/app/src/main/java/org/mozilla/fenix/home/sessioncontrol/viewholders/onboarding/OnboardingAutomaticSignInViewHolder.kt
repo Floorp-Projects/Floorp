@@ -14,7 +14,7 @@ import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
+import mozilla.components.service.fxa.manager.MigrationResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
@@ -56,8 +56,12 @@ class OnboardingAutomaticSignInViewHolder(
         button.isEnabled = false
 
         val accountManager = context.components.backgroundServices.accountManager
-        when (accountManager.signInWithShareableAccountAsync(shareableAccount).await()) {
-            SignInWithShareableAccountResult.Failure -> {
+        when (accountManager.migrateFromAccount(shareableAccount)) {
+            MigrationResult.WillRetry,
+            MigrationResult.Success -> {
+                // We consider both of these as a 'success'.
+            }
+            MigrationResult.Failure -> {
                 // Failed to sign-in (e.g. bad credentials). Allow to try again.
                 button.text = context.getString(R.string.onboarding_firefox_account_auto_signin_confirm)
                 button.isEnabled = true
@@ -68,9 +72,6 @@ class OnboardingAutomaticSignInViewHolder(
                 ).setText(
                     context.getString(R.string.onboarding_firefox_account_automatic_signin_failed)
                 ).show()
-            }
-            SignInWithShareableAccountResult.WillRetry, SignInWithShareableAccountResult.Success -> {
-                // We consider both of these as a 'success'.
             }
         }
     }
