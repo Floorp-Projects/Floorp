@@ -931,10 +931,29 @@ static JSObject* GetIterator(JSContext* cx, HandleObject obj) {
     return nullptr;
   }
 
-  if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj)) {
-    return nullptr;
+  if (IsTypeInferenceEnabled()) {
+    if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj)) {
+      return nullptr;
+    }
+    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
   }
-  MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
+
+  // If the object has dense elements, mark the dense elements as
+  // maybe-in-iteration.
+  //
+  // The iterator is a snapshot so if indexed properties are added after this
+  // point we don't need to do anything. However, the object might have sparse
+  // elements now that can be densified later. To account for this, we set the
+  // maybe-in-iteration flag also in NativeObject::maybeDensifySparseElements.
+  //
+  // In debug builds, AssertDenseElementsNotIterated is used to check the flag
+  // is set correctly.
+  if (obj->is<NativeObject>() &&
+      obj->as<NativeObject>().getDenseInitializedLength() > 0) {
+    if (!obj->as<NativeObject>().markDenseElementsMaybeInIteration(cx)) {
+      return nullptr;
+    }
+  }
 
   PropertyIteratorObject* iterobj =
       CreatePropertyIterator(cx, obj, keys, numGuards, 0);
@@ -1504,6 +1523,38 @@ bool js::SuppressDeletedElement(JSContext* cx, HandleObject obj,
   }
   return SuppressDeletedPropertyHelper(cx, obj, str);
 }
+
+#ifdef DEBUG
+void js::AssertDenseElementsNotIterated(NativeObject* obj) {
+  // Search for active iterators for |obj| and assert they don't contain any
+  // property keys that are dense elements. This is used to check correctness
+  // of the MAYBE_IN_ITERATION flag on ObjectElements.
+
+  // Limit the number of properties we check to avoid slowing down debug builds
+  // too much.
+  static constexpr uint32_t MaxPropsToCheck = 10;
+  uint32_t propsChecked = 0;
+
+  NativeIterator* enumeratorList = ObjectRealm::get(obj).enumerators;
+  NativeIterator* ni = enumeratorList->next();
+
+  while (ni != enumeratorList) {
+    if (ni->objectBeingIterated() == obj) {
+      for (GCPtrLinearString* idp = ni->nextProperty();
+           idp < ni->propertiesEnd(); ++idp) {
+        uint32_t index;
+        if (idp->get()->isIndex(&index)) {
+          MOZ_ASSERT(!obj->containsDenseElement(index));
+        }
+        if (++propsChecked > MaxPropsToCheck) {
+          return;
+        }
+      }
+    }
+    ni = ni->next();
+  }
+}
+#endif
 
 static const JSFunctionSpec iterator_methods[] = {
     JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0), JS_FS_END};

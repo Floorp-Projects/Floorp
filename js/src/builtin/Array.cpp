@@ -670,38 +670,6 @@ struct ReverseIndexComparator {
   }
 };
 
-static bool MaybeInIteration(HandleObject obj, JSContext* cx) {
-  /*
-   * Don't optimize if the array might be in the midst of iteration.  We
-   * rely on this to be able to safely move dense array elements around with
-   * just a memmove (see NativeObject::moveDenseArrayElements), without worrying
-   * about updating any in-progress enumerators for properties implicitly
-   * deleted if a hole is moved from one location to another location not yet
-   * visited.  See bug 690622.
-   *
-   * Note that it's fine to optimize if |obj| is on the prototype of another
-   * object: SuppressDeletedProperty only suppresses properties deleted from
-   * the iterated object itself.
-   */
-
-  if (MOZ_LIKELY(!ObjectRealm::get(obj).objectMaybeInIteration(obj))) {
-    return false;
-  }
-
-  ObjectGroup* group = JSObject::getGroup(cx, obj);
-  if (MOZ_UNLIKELY(!group)) {
-    cx->recoverFromOutOfMemory();
-    return true;
-  }
-
-  AutoSweepObjectGroup sweep(group);
-  if (MOZ_UNLIKELY(group->hasAllFlags(sweep, OBJECT_FLAG_ITERATED))) {
-    return true;
-  }
-
-  return false;
-}
-
 /* ES6 draft rev 34 (2015 Feb 20) 9.4.2.4 ArraySetLength */
 bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
                         unsigned attrs, HandleValue value,
@@ -804,7 +772,7 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     // would be too costly.
     // This optimization is also invalid when there are sealed
     // (non-configurable) elements.
-    if (!arr->isIndexed() && !MaybeInIteration(arr, cx) &&
+    if (!arr->isIndexed() && !arr->denseElementsMaybeInIteration() &&
         !arr->denseElementsAreSealed()) {
       if (!arr->maybeCopyElementsForWrite(cx)) {
         return false;
@@ -1639,7 +1607,8 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
     }
   }
 
-  if (!MaybeInIteration(obj, cx) && !cx->zone()->needsIncrementalBarrier()) {
+  if (!obj->denseElementsMaybeInIteration() &&
+      !cx->zone()->needsIncrementalBarrier()) {
     obj->reverseDenseElementsNoPreBarrier(length);
     return DenseElementResult::Success;
   }
@@ -2544,35 +2513,35 @@ static DenseElementResult ArrayShiftDenseKernel(JSContext* cx, HandleObject obj,
     return DenseElementResult::Incomplete;
   }
 
-  if (MaybeInIteration(obj, cx)) {
+  HandleNativeObject nobj = obj.as<NativeObject>();
+  if (nobj->denseElementsMaybeInIteration()) {
     return DenseElementResult::Incomplete;
   }
 
-  if (!obj->as<NativeObject>().isExtensible()) {
+  if (!nobj->isExtensible()) {
     return DenseElementResult::Incomplete;
   }
 
-  size_t initlen = obj->as<NativeObject>().getDenseInitializedLength();
+  size_t initlen = nobj->getDenseInitializedLength();
   if (initlen == 0) {
     return DenseElementResult::Incomplete;
   }
 
-  rval.set(obj->as<NativeObject>().getDenseElement(0));
+  rval.set(nobj->getDenseElement(0));
   if (rval.isMagic(JS_ELEMENTS_HOLE)) {
     rval.setUndefined();
   }
 
-  if (obj->as<NativeObject>().tryShiftDenseElements(1)) {
+  if (nobj->tryShiftDenseElements(1)) {
     return DenseElementResult::Success;
   }
 
-  DenseElementResult result =
-      MoveDenseElements(cx, &obj->as<NativeObject>(), 0, 1, initlen - 1);
+  DenseElementResult result = MoveDenseElements(cx, nobj, 0, 1, initlen - 1);
   if (result != DenseElementResult::Success) {
     return result;
   }
 
-  SetInitializedLength(cx, obj.as<NativeObject>(), initlen - 1);
+  SetInitializedLength(cx, nobj, initlen - 1);
   return DenseElementResult::Success;
 }
 
@@ -2692,10 +2661,10 @@ static bool array_unshift(JSContext* cx, unsigned argc, Value* vp) {
       if (ObjectMayHaveExtraIndexedProperties(obj)) {
         break;
       }
-      if (MaybeInIteration(obj, cx)) {
+      NativeObject* nobj = &obj->as<NativeObject>();
+      if (nobj->denseElementsMaybeInIteration()) {
         break;
       }
-      NativeObject* nobj = &obj->as<NativeObject>();
       if (!nobj->isExtensible()) {
         break;
       }
@@ -2827,7 +2796,7 @@ static bool CanOptimizeForDenseStorage(HandleObject arr, uint64_t endIndex,
   }
 
   /* Also pick the slow path if the object is being iterated over. */
-  if (MaybeInIteration(arr, cx)) {
+  if (arr->as<ArrayObject>().denseElementsMaybeInIteration()) {
     return false;
   }
 

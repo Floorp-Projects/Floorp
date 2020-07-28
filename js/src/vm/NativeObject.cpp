@@ -584,6 +584,14 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
 
   obj->ensureDenseInitializedLength(cx, newInitializedLength, 0);
 
+  if (ObjectRealm::get(obj).objectMaybeInIteration(obj)) {
+    // Mark the densified elements as maybe-in-iteration. See also the comment
+    // in GetIterator.
+    if (!obj->markDenseElementsMaybeInIteration(cx)) {
+      return DenseElementResult::Failure;
+    }
+  }
+
   RootedValue value(cx);
 
   shape = obj->lastProperty();
