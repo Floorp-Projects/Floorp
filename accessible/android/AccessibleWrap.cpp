@@ -296,10 +296,13 @@ bool AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
 
 void AccessibleWrap::Pivot(int32_t aGranularity, bool aForward,
                            bool aInclusive) {
-  a11y::Pivot pivot(RootAccessible());
+  AccessibleOrProxy accOrProxyRoot = AccessibleOrProxy(RootAccessible());
+  a11y::Pivot pivot(accOrProxyRoot);
   TraversalRule rule(aGranularity);
-  Accessible* result = aForward ? pivot.Next(this, rule, aInclusive)
-                                : pivot.Prev(this, rule, aInclusive);
+  AccessibleOrProxy accOrProxy = AccessibleOrProxy(this);
+  Accessible* result =
+      aForward ? pivot.Next(accOrProxy, rule, aInclusive).AsAccessible()
+               : pivot.Prev(accOrProxy, rule, aInclusive).AsAccessible();
   if (result && (result != this || aInclusive)) {
     PivotMoveReason reason = aForward ? nsIAccessiblePivot::REASON_NEXT
                                       : nsIAccessiblePivot::REASON_PREV;
@@ -314,7 +317,7 @@ void AccessibleWrap::ExploreByTouch(float aX, float aY) {
   a11y::Pivot pivot(RootAccessible());
   TraversalRule rule;
 
-  Accessible* result = pivot.AtPoint(aX, aY, rule);
+  Accessible* result = pivot.AtPoint(aX, aY, rule).AsAccessible();
 
   if (result && result != this) {
     RefPtr<AccEvent> event =

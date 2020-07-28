@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Accessible-inl.h"
+#include "AccessibleOrProxy.h"
 #include "DocAccessibleChild.h"
 #include "DocAccessibleWrap.h"
 #include "nsIDocShell.h"
@@ -157,10 +158,11 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
   }
 
   if (docAcc->mCachePivotBoundaries) {
-    a11y::Pivot pivot(docAcc);
+    AccessibleOrProxy accOrProxy = AccessibleOrProxy(docAcc);
+    a11y::Pivot pivot(accOrProxy);
     TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT);
-    Accessible* first = pivot.First(rule);
-    Accessible* last = pivot.Last(rule);
+    Accessible* first = pivot.First(rule).AsAccessible();
+    Accessible* last = pivot.Last(rule).AsAccessible();
 
     // If first/last are null, pass the root document as pivot boundary.
     if (IPCAccessibilityActive()) {
