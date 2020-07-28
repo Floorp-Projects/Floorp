@@ -149,13 +149,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Digitalizar</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Atalhos</string>
+    <string name="search_engines_shortcut_button">Mecanismo de pesquisa</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Configurações de mecanismos de pesquisa</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Pesquisar com</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Desta vez, pesquisar com:</string>
+    <string name="search_engines_search_with">Desta vez, pesquisar com:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Usar link da área de transferência</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -262,8 +260,8 @@
     <string name="developer_tools_category">Ferramentas do desenvolvedor</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Depuração remota via USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Mostrar atalhos de pesquisa</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Mostrar mecanismos de pesquisa</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Mostrar sugestões de pesquisa</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1461,4 +1459,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, entendi</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Atalhos</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Pesquisar com</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Desta vez, pesquisar com:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Mostrar atalhos de pesquisa</string>
+    </resources>

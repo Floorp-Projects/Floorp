@@ -142,13 +142,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Cʼhwilerviñ</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Berradennoù</string>
+    <string name="search_engines_shortcut_button">Lusker klask</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Arventennoù al lusker klask</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Klask gant</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Evit ar wech-mañ, klask gant:</string>
+    <string name="search_engines_search_with">Ar wech-mañ, klask gant:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Leuniañ diwar ar golver</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -255,8 +253,8 @@
     <string name="developer_tools_category">Ostilhoù an diorroer</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Diveugañ a-bell dre USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Berradennoù klask</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Diskouez al luskerioù klask</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Diskouez kinnigoù ar cʼhlask</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -566,6 +564,8 @@
     <string name="bookmark_select_folder">Dibab un teuliad</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Ha fellout a ra deocʼh dilemel an teuliad-mañ ?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s a zilamo an elfennoù diuzet</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Dilamet %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -620,8 +620,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Dilamet %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Dilamet eo bet ar sined</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">O tilemel an teuliadoù diuzet</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">DIZOBER</string>
 
@@ -715,6 +717,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d ivinell diuzet</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Ivinelloù enrollet!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Dastumad enrollet!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Ivinell enrollet!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -818,6 +822,10 @@
     <string name="qr_scanner_dialog_negative">NACʼHAÑ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Sur ocʼh e fell deocʼh dilemel %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Dilemel an ivinell-mañ a zilamo an dastumad a-bezh. Gallout a rit krouiñ dastumadoù nevez pa fell deoc’h.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Dilemel %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Dilemel</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1214,6 +1222,8 @@
     <string name="preferences_passwords_exceptions_description_empty">An titouroù kennaskañ n’int ket enrollet a vo diskouezet amañ.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Ne vo ket enrollet an titouroù kennaskañ evit al lec’hiennoù-mañ.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Dilemel an holl nemedennoù</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Klask titouroù kennaskañ</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1253,6 +1263,8 @@
     <string name="saved_login_copy_username">Eilañ an anv arveriad</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Eilañ al lec’hienn</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Digeriñ al lec’hienn er merdeer</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Diskouez ar ger-tremen</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1425,4 +1437,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Mat, komprenet am eus</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Berradennoù</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Klask gant</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Evit ar wech-mañ, klask gant:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Berradennoù klask</string>
+    </resources>

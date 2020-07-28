@@ -149,13 +149,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Quét</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Tìm kiếm</string>
+    <string name="search_engines_shortcut_button">Công cụ tìm kiếm</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Cài đặt công cụ tìm kiếm</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Tìm kiếm với</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Lần này, tìm kiếm với:</string>
+    <string name="search_engines_search_with">Lần này, tìm kiếm với:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Điền liên kết từ bộ nhớ tạm</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -262,8 +260,8 @@
     <string name="developer_tools_category">Công cụ dành cho nhà phát triển</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Gỡ lỗi từ xa qua USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Hiển thị các lối tắt tìm kiếm</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Hiển thị công cụ tìm kiếm</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Hiển thị gợi ý tìm kiếm</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1449,4 +1447,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, đã hiểu</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Tìm kiếm</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Tìm kiếm với</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Lần này, tìm kiếm với:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Hiển thị các lối tắt tìm kiếm</string>
+    </resources>

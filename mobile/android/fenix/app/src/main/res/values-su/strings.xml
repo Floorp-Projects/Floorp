@@ -147,13 +147,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Pinday</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Takulan</string>
+    <string name="search_engines_shortcut_button">Mesin Pamaluruh</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Setélan mesin pamaluruh</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Paluruh maké</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Saayeunaeun, paluruh maké:</string>
+    <string name="search_engines_search_with">Saayeunaeun, paluruh maké:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Eusian tutumbu tina papan klip</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -261,8 +259,8 @@
     <string name="developer_tools_category">Parabot pamekar</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Debugging ti kajauhan liwat USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Témbongkeun takulan pamaluruhan</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Témbongkeun mesin pamaluruh</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Témbongkeun anjuran maluruh</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -579,6 +577,8 @@
     <string name="bookmark_select_folder">Pilih map</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Yakin anjeun rék mupus ieu folder?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s bakal mupus item anu dipilih.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Mupus %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -634,8 +634,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Mupus %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Mupus markah</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Mupus folder anu dipilih</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">BEDO</string>
 
@@ -730,6 +732,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d tab dipilih</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Tab diteundeun!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Koléksi diteundeun!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Tab disimpen!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -834,6 +838,10 @@
     <string name="qr_scanner_dialog_negative">HULAG</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Anjeun yakin rék mupus %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Mupus ieu tab bakal mupus sakabéh koléksi. Anjeun bisa nyieun koléksi anyar iraha baé.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Pupus %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Pupus</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1241,6 +1249,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Login jeung kecap sandi anu teu diteundeun bakal ditémbongkeun di dieu.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Login jeung kecap sandi moal diteundeun pikeun ieu loka.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Hapus sadaya pengecualian</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Paluruh login</string>
 
@@ -1280,6 +1290,8 @@
     <string name="saved_login_copy_username">Niron sandiasma</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Niron loka</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Buka loka dina pamaluruh</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Témbongkeun sandi</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1456,4 +1468,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Okéh, Ngarti</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Takulan</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Paluruh maké</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Saayeunaeun, paluruh maké:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Témbongkeun takulan pamaluruhan</string>
+    </resources>

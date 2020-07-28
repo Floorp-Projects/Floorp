@@ -149,13 +149,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Սկանավորել</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Դյուրանցումներ</string>
+    <string name="search_engines_shortcut_button">Որոնիչ</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Որոնիչի կարգավորումներ</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Որոնել հետևյալում՝</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Այս անգամ որոնել հետևյալով՝</string>
+    <string name="search_engines_search_with">Այս անգամ որոնել հետևյալով՝</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Լրացնել հղումը սեղմատախտակից</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -263,8 +261,8 @@
     <string name="developer_tools_category">Մշակողի գործիքներ</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Հեռակա վրիպազերծում USB-ով</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Ցուցադրել որոնման դյուրացումները</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Ցուցադրել որոնիչները</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Ցուցադրել որոնման հուշումներ</string>
 
@@ -575,6 +573,8 @@
     <string name="bookmark_select_folder">Ընտրել պանակ</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս պանակը:</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s-ը կջնջի ընտրված միույթները:</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s-ը ջնջվել է</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -630,8 +630,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Ջնջվել է %1$s-ը</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Էջանիշը ջնջվեց</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Ընտրված պանակների ջնջում</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ՀԵՏԱՐԿԵԼ</string>
 
@@ -726,6 +728,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d ներդիր է ընտրված</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Ներդիրները պահպանված են:</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Հավաքածուն պահպանվել է</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Ներդիրը պահպանված է:</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -833,6 +837,10 @@
     <string name="qr_scanner_dialog_negative">ԱՐԳԵԼԵԼ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել %1$s-ը։</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Այս ներդիրի ջնջումը կհեռացնի ամբողջ հավաքածուն: Կարող եք ստեգղծել նոր հավաքածու ցանկացած ժամանակ:</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Ջնջե՞լ %1$s-ը:</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Ջնջել</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1231,6 +1239,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Մուտքանունները և գաղտնաբառերը, որոնք չեն պահպանվել, կցուցադրվեն այստեղ:</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Մուտքանունները և գաղտնաբառերը չեն պահպանվի այս կայքերի համար:</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Ջնջել բոլոր բացառությունները</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Որոնել մուտքանուններ</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1270,6 +1280,8 @@
     <string name="saved_login_copy_username">Պատճենել օգտվողի անունը</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Պատճենել կայքը</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Բացել կայքը դիտարկիչում</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Ցուցադրել գաղտնաբառը</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1445,4 +1457,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Հասկանալի է</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Դյուրանցումներ</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Որոնել հետևյալում՝</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Այս անգամ որոնել հետևյալով՝</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Ցուցադրել որոնման դյուրացումները</string>
+    </resources>

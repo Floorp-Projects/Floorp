@@ -23,6 +23,29 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s file deschise. Atinge pentru a comuta filele.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d selectate</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Adaugă o colecție nouă</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Denumire</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Selectează colecția</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Ieși din modul de selecție multiplă</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Salvează în colecție filele selectate</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s selectate</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s neselectate</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Ai ieșit din modul de selectare multiplă</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">După ce intri în modul de selectare multiplă, selectează filele de salvat într-o colecție</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Selectate</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s este realizat de Mozilla.</string>
 
@@ -145,13 +168,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scanează</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Comenzi rapide</string>
+    <string name="search_engines_shortcut_button">Motor de căutare</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Setări pentru motorul de căutare</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Căutare cu</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">De data aceasta, caută cu:</string>
+    <string name="search_engines_search_with">De data aceasta, caută cu:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Completează linkul din clipboard</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -254,13 +275,13 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Colectare de date</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Politica de confidențialitate</string>
+    <string name="preferences_privacy_link">Notificare privind confidențialitatea</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Unelte pentru dezvoltatori</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Depanare de la distanță prin USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Afișează comenzile rapide pentru căutări</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Afișează motoare de căutare</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Afișează sugestii de căutare</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -294,7 +315,7 @@
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">File deschise</string>
     <!-- Preference for signing out -->
-    <string name="preferences_sign_out">Deconectare</string>
+    <string name="preferences_sign_out">Deconectează-te</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Numele dispozitivului</string>
     <!-- Text shown when user enters empty device name -->
@@ -505,6 +526,9 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (mod privat)</string>
 
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Salvează</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Șterge istoricul</string>
@@ -570,6 +594,8 @@
     <string name="bookmark_select_folder">Selectează dosarul</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Sigur vrei să ștergi acest dosar?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s va șterge elementele selectate.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s șters</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -624,8 +650,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s șters</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Marcaje șterse</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Se șterg dosarele selectate</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANULEAZĂ</string>
 
@@ -639,7 +667,7 @@
         Secure settings status and a button to modify site permissions -->
     <string name="quick_settings_sheet">Fișă de setări rapide</string>
     <!-- Label that indicates that this option it the recommended one -->
-    <string name="phone_feature_recommended">Recomandată</string>
+    <string name="phone_feature_recommended">Opțiune recomandată</string>
 
     <!-- button that allows editing site permissions settings -->
     <string name="quick_settings_sheet_manage_site_permissions">Gestionează permisiunile pentru site-uri</string>
@@ -662,11 +690,11 @@
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Solicită pentru a permite</string>
     <!-- Label that indicates that a permission must be blocked -->
-    <string name="preference_option_phone_feature_blocked">Blocat</string>
+    <string name="preference_option_phone_feature_blocked">Blocat(ă)</string>
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">Permis</string>
     <!--Label that indicates a permission is by the Android OS-->
-    <string name="phone_feature_blocked_by_android">Blocat de Android</string>
+    <string name="phone_feature_blocked_by_android">Blocat(ă) de Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Excepții</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -720,6 +748,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d filă selectată</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">File salvate!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Colecție salvată!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Filă salvată!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -825,6 +855,10 @@
     <string name="qr_scanner_dialog_negative">REFUZĂ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Sigur vrei să ștergi %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Ștergerea acestei file va șterge toată colecția. Poți crea în orice moment colecții noi.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Ștergi %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Șterge</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -841,7 +875,7 @@
     <string name="preference_accessibility_font_size_title">Dimensiunea fontului</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_2">Mărime automată a fontului</string>
+    <string name="preference_accessibility_auto_size_2">Dimensionare automată pentru fonturi</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Dimensiunea fontului va coincide cu cea din setările Android. Dezactivează pentru a gestiona aici dimensiunea fontului.</string>
 
@@ -900,8 +934,8 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview este acum Firefox Nightly</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly se actualizează în fiecare seară și are funcționalități experimentale noi
-        Dar poate fi mai puțin stabil. Descarcă browserul nostru beta pentru o experiență mai stabilă.</string>
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly se actualizează în fiecare seară și are funcționalități experimentale noi.
+        Însă poate fi mai puțin stabil. Descarcă browserul nostru beta pentru o experiență mai stabilă.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Descarcă Firefox Beta pentru Android</string>
@@ -995,7 +1029,7 @@
     <string name="onboarding_privacy_notice_description">Am proiectat %s să îți dea control asupra a ceea ce partajezi
         online și ce partajezi cu noi.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Citește politica noastră de confidențialitate</string>
+    <string name="onboarding_privacy_notice_read_button">Citește notificarea noastră privind confidențialitatea</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Închide</string>
@@ -1040,9 +1074,9 @@
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s va înceta să se mai sincronizeze cu contul tău, dar nu va șterge nimic din datele de navigare de pe acest dispozitiv.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_disconnect">Deconectare</string>
+    <string name="sign_out_disconnect">Deconectează-te</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_cancel">Anulare</string>
+    <string name="sign_out_cancel">Anulează</string>
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
     <string name="bookmark_cannot_edit_root">Dosarele implicite nu pot fi editate</string>
 
@@ -1149,7 +1183,7 @@
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">Defecțiuni</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">Politică de confidențialitate</string>
+    <string name="about_privacy_notice">Notificare privind confidențialitatea</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Cunoaște-ți drepturile</string>
     <!-- About page link text to open licensing information link -->
@@ -1223,6 +1257,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Aici vor apărea datele de autentificare și parolele nesalvate.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Datele de autentificare și parolele nu vor fi salvate pentru aceste site-uri.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Șterge toate excepțiile</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Caută date de autentificare</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1261,6 +1297,8 @@
     <string name="saved_login_copy_username">Copiază numele de utilizator</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiază site-ul</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Deschide site-ul în browser</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Afișeză parola</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1436,4 +1474,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, am înțeles</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Comenzi rapide</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Căutare cu</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">De data aceasta, caută cu:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Afișează comenzile rapide pentru căutări</string>
+    </resources>

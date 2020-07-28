@@ -146,14 +146,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">წაკითხვა</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">მალსახმობები</string>
+    <string name="search_engines_shortcut_button">საძიებო სისტემა</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">საძიებო სისტემის პარამეტრები</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">ძიება</string>
-
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">ძიებისთვის გამოიყენეთ:</string>
+    <string name="search_engines_search_with">ამჯერად, მოსაძიებლად გამოიყენეთ:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">ბმულის შევსება აღებული ასლით</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -263,8 +260,8 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">დაშორებული გამართვა USB-ით</string>
 
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">ძიების მალსახმობები</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">საძიებო სისტემების ჩვენება</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">ძიების შემოთავაზების ჩვენება</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -576,6 +573,8 @@
     <string name="bookmark_select_folder">საქაღალდის მითითება</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">ნამდვილად გსურთ ამ საქაღალდის წაშლა?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s წაშლის მონისნულებს.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">წაიშალა %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -632,8 +631,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">წაიშალა %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">სანიშნები წაიშალა</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">იშლება მითითებული საქაღალდეები</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">დაბრუნება</string>
 
@@ -726,6 +727,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d ჩანართია შერჩეული</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">ჩანართები შენახულია!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">კრებულის შენახულია!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">ჩანართი შენახულია!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -831,6 +834,10 @@
     <string name="qr_scanner_dialog_negative">უარყოფა</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">ნამდვილად გსურთ, წაიშალოს %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">ამ ჩანართის წაშლით, მთლიანი კრებული წაიშლება. ახალი კრებულების შექმნა, ნებისმიერ დროს შეგეძლებათ.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">წაიშალოს %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">წაშლა</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -886,8 +893,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">წაიშლება დათვალიერებული გვერდების მონაცემები მენიუში „გამოსვლაზე“ დაჭერისას</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">წაიშლება დათვალიერებული გვერდების მონაცემები მენიუში „გამოსვლაზე“ დაჭერისას</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">დათვალიერების ისტორია</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">გამოსვლა</string>
 
@@ -1234,6 +1239,8 @@
 
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">ანგარიშის მონაცემები არ შეინახება ამ საიტებისთვის.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">ყველა გამონაკლისის წაშლა</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">ანგარიშების ძიება</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1273,6 +1280,8 @@
     <string name="saved_login_copy_username">მომხმარებლის ასლი</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">საიტის ასლი</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">საიტის ბრაუზერში გახსნა</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">პაროლის გამოჩენა</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1448,4 +1457,14 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">კარგი, გასაგებია</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">მალსახმობები</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">ძიება</string>
+
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">ძიებისთვის გამოიყენეთ:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">ძიების მალსახმობები</string>
+    </resources>

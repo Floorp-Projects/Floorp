@@ -151,16 +151,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Nātsij hue\'ê</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Nānà\'uì\' a\'ngô hiūj u</string>
-
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Sa nagi\'iaj sa nānà\'ui\'i</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Nānà\'uì\' ngà</string>
-
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Hìaj nī, nānà\'uì\' ngà:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Gāchrūn si enlasê portapâpel</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -275,8 +267,8 @@
     <string name="developer_tools_category">Rasūn nikāj desarroyadôr</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Guxūn sa kïj ï ngà USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Dīgân riña a\'ngô hiūj ga\'ue nānà\'uì\'</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Nāruguì’ nej sa nana’ui’i gīni’iājt</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Dīgân a\'ngô nuguan\' nikāj dugui\' ngà sa nana\'uî\'</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -595,6 +587,8 @@
     <string name="bookmark_select_folder">Nāguī karpêta</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Huā yītïnj ruhuât nādure\'t kārpetâ nan anj</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s nādure’ej nej sa naguit dan.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Ngà nare\' %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -651,8 +645,10 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Ngà nare\' %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Ngà nare\' nej sa arâj sun nīchrò\' doj</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Nādure’ nej karpetâ naguit</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">NĀNIKÀJ RŪKÙ</string>
 
@@ -745,6 +741,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d rakïj ñanj naguit</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Nej rakïj ñanj na\'nín sà\'t</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Ngà nanun sà\' nej sa nachra chrē\'t</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Rakïj ñanj na\'nïnj sà\'t</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -854,6 +852,8 @@
     <string name="qr_scanner_dialog_negative">SĪ GA\'NÏNJT</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Huā yītïnj ruhuât nādure\'t %1$s anj</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Nādurê\'t %1$s raj</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Nādūre\'</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1491,4 +1491,15 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ga\'ue, ngà garâj da\'nga\' ruhuâj</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Nānà\'uì\' a\'ngô hiūj u</string>
+
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Nānà\'uì\' ngà</string>
+
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Hìaj nī, nānà\'uì\' ngà:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Dīgân riña a\'ngô hiūj ga\'ue nānà\'uì\'</string>
+    </resources>

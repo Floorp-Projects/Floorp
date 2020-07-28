@@ -143,14 +143,10 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Tekshirish</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Yorliqlar</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Qidiruv tizimi sozlamalari</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Izlash:</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Bu safar quyidagi bilan izlash:</string>
+    <string name="search_engines_search_with">Bu safar quyidagi bilan izlash:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Havolani klipboarddan olish</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -230,6 +226,74 @@
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Boshqa Sync serveri</string>
 
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox hisobi/Sync serveri oʻzgargan. Oʻzgarishlar amalga oshirshi uchun ilovadan chiqilmoqda…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Hisob</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Kirish</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Asboblar paneli</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Mavzu</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Moslash</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Xatchoʻplar va tarix kabilarni Firefox hisobingiz bilan sinxronlang</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox hisobi</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Sinxronlashni davom ettirish uchun qayta ulaning</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Til</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Maʼlumotlarni tanlash</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Maʼlumotlarni toʻplash</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Maxfiylik eslatmalari</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Dasturchi asboblari</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">USB orqali masofadan nosozlikni tuzatish</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Qidiruv tizimlarini koʻrsatish</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Qidiruv tavsiyalarini koʻrsatish</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Ovozli qidiruvni koʻrsatish</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Maxfiy seanslarda koʻrsatish</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Klipboard tavsiyalarni koʻrsatish</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Brauzer tarixidan izlash</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Xatchoʻplarni izlash</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Hisob sozlamalari</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Havolalarni ilovalarda ochish</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Qoʻshimcha dasturlar</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Hozir sinxronlash</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Nimani sinxronlashni tanlang</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Tarix</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Xatchoʻplar</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Loginlar</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Varaqlarni ochish</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Chiqish</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Qurilma nomi</string>
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">Qurilma nomi boʻsh boʻlishi mumkin emas.</string>
     <!-- Label indicating that sync is in progress -->
@@ -248,6 +312,10 @@
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s, %2$s %3$s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Qabul qilingan varaqlar</string>
 
     <!-- Accessibility description text for a completed migration item -->
     <string name="migration_icon_description">Koʻchirish tugadi</string>
@@ -340,4 +408,11 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, tushundim</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Yorliqlar</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Izlash:</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Bu safar quyidagi bilan izlash:</string>
+    </resources>
