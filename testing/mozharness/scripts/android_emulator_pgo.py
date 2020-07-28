@@ -98,9 +98,8 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         abs_dirs = super(AndroidProfileRun, self).query_abs_dirs()
         dirs = {}
 
-        dirs['abs_src_dir'] = os.environ['GECKO_PATH']
         dirs['abs_test_install_dir'] = os.path.join(
-            dirs['abs_src_dir'], 'testing')
+            abs_dirs['abs_src_dir'], 'testing')
         dirs['abs_xre_dir'] = os.path.join(
             abs_dirs['abs_work_dir'], 'hostutils')
         dirs['abs_blob_upload_dir'] = '/builds/worker/artifacts/blobber_upload_dir'
