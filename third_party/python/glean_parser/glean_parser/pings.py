@@ -8,27 +8,33 @@
 Classes for managing the description of pings.
 """
 
-from typing import Dict, List, Optional
+import sys
 
 
-from . import util
+# Import a backport of PEP487 to support __init_subclass__
+if sys.version_info < (3, 6):
+    import pep487
+
+    base_object = pep487.PEP487Object
+else:
+    base_object = object
 
 
-RESERVED_PING_NAMES = ["baseline", "metrics", "events", "deletion-request"]
+RESERVED_PING_NAMES = ["baseline", "metrics", "events", "deletion_request"]
 
 
-class Ping:
+class Ping(base_object):
     def __init__(
         self,
-        name: str,
-        description: str,
-        bugs: List[str],
-        notification_emails: List[str],
-        data_reviews: Optional[List[str]] = None,
-        include_client_id: bool = False,
-        send_if_empty: bool = False,
-        reasons: Dict[str, str] = None,
-        _validated: bool = False,
+        name,
+        description,
+        bugs,
+        notification_emails,
+        data_reviews=None,
+        include_client_id=False,
+        send_if_empty=False,
+        reasons=None,
+        _validated=False,
     ):
         # Avoid cyclical import
         from . import parser
@@ -49,24 +55,21 @@ class Ping:
         # _validated indicates whether this metric has already been jsonschema
         # validated (but not any of the Python-level validation).
         if not _validated:
-            data: Dict[str, util.JSONType] = {
-                "$schema": parser.PINGS_ID,
-                self.name: self.serialize(),
-            }
+            data = {"$schema": parser.PINGS_ID, self.name: self.serialize()}
             for error in parser.validate(data):
                 raise ValueError(error)
 
     _generate_enums = [("reason_codes", "ReasonCodes")]
 
     @property
-    def type(self) -> str:
+    def type(self):
         return "ping"
 
     @property
-    def reason_codes(self) -> List[str]:
+    def reason_codes(self):
         return sorted(list(self.reasons.keys()))
 
-    def serialize(self) -> Dict[str, util.JSONType]:
+    def serialize(self):
         """
         Serialize the metric back to JSON object model.
         """

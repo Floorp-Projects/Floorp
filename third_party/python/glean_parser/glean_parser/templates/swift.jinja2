@@ -26,15 +26,14 @@ import {{ glean_namespace }}
 // swiftlint:disable force_try
 
 extension {{ namespace }} {
-    {% for category in categories %}
-    {% if category.contains_pings %}
-    class {{ category.name|Camelize }} {
-        public static let shared = {{ category.name|Camelize }}()
+    {% if is_ping_type %}
+    class {{ category_name|Camelize }} {
+        public static let shared = {{ category_name|Camelize }}()
         private init() {
             // Intentionally left private, no external user can instantiate a new global object.
         }
 
-        {% for obj in category.objs.values() %}
+        {% for obj in objs.values() %}
         {% if obj|attr("_generate_enums") %}
         {% for name, suffix in obj["_generate_enums"] %}
         {% if obj|attr(name)|length %}
@@ -51,6 +50,7 @@ extension {{ namespace }} {
         {% endif %}
         {% endfor %}
         {% endif %}
+
         /// {{ obj.description|wordwrap() | replace('\n', '\n        /// ') }}
         let {{ obj.name|camelize|variable_name }} = {{obj|type_name}}(
             name: {{ obj.name|swift }},
@@ -61,10 +61,9 @@ extension {{ namespace }} {
 
       {% endfor %}
     }
-
     {% else %}
-    enum {{ category.name|Camelize }} {
-    {% for obj in category.objs.values() %}
+    enum {{ category_name|Camelize }} {
+    {% for obj in objs.values() %}
         {% if obj|attr("_generate_enums") %}
         {% for name, suffix in obj["_generate_enums"] %}
         {% if obj|attr(name)|length %}
@@ -82,7 +81,7 @@ extension {{ namespace }} {
         {% endfor %}
         {% endif %}
     {% endfor %}
-    {% for obj in category.objs.values() %}
+    {% for obj in objs.values() %}
         {% if obj.labeled %}
         {{ obj_declaration(obj, 'Label', 'private ') }}
         /// {{ obj.description|wordwrap() | replace('\n', '\n        /// ') }}
@@ -102,7 +101,5 @@ extension {{ namespace }} {
         {% endif %}
     {% endfor %}
     }
-
     {% endif %}
-    {% endfor %}
 }

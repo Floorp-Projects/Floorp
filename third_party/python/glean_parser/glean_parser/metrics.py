@@ -9,55 +9,50 @@ Classes for each of the high-level metric types.
 """
 
 import enum
-from typing import Any, Dict, List, Optional, Type, Union  # noqa
+import sys
 
-
-from . import pings
 from . import util
 
 
-# Important: if the values are ever changing here, make sure
-# to also fix mozilla/glean. Otherwise language bindings may
-# break there.
+# Import a backport of PEP487 to support __init_subclass__
+if sys.version_info < (3, 6):
+    import pep487
+
+    base_object = pep487.PEP487Object
+else:
+    base_object = object
+
+
 class Lifetime(enum.Enum):
     ping = 0
-    application = 1
-    user = 2
+    user = 1
+    application = 2
 
 
-class DataSensitivity(enum.Enum):
-    technical = 1
-    interaction = 2
-    web_activity = 3
-    highly_sensitive = 4
-
-
-class Metric:
-    typename: str = "ERROR"
-    glean_internal_metric_cat: str = "glean.internal.metrics"
-    metric_types: Dict[str, Any] = {}
-    default_store_names: List[str] = ["metrics"]
+class Metric(base_object):
+    glean_internal_metric_cat = "glean.internal.metrics"
+    metric_types = {}
+    default_store_names = ["metrics"]
 
     def __init__(
         self,
-        type: str,
-        category: str,
-        name: str,
-        bugs: List[str],
-        description: str,
-        notification_emails: List[str],
-        expires: str,
-        data_reviews: Optional[List[str]] = None,
-        version: int = 0,
-        disabled: bool = False,
-        lifetime: str = "ping",
-        send_in_pings: Optional[List[str]] = None,
-        unit: str = "",
-        gecko_datapoint: str = "",
-        no_lint: Optional[List[str]] = None,
-        data_sensitivity: Optional[List[str]] = None,
-        _config: Optional[Dict[str, Any]] = None,
-        _validated: bool = False,
+        type,
+        category,
+        name,
+        bugs,
+        description,
+        notification_emails,
+        expires,
+        data_reviews=None,
+        version=0,
+        disabled=False,
+        lifetime="ping",
+        send_in_pings=None,
+        unit="",
+        gecko_datapoint="",
+        no_lint=None,
+        _config=None,
+        _validated=False,
     ):
         # Avoid cyclical import
         from . import parser
@@ -83,10 +78,6 @@ class Metric:
         if no_lint is None:
             no_lint = []
         self.no_lint = no_lint
-        if data_sensitivity is not None:
-            self.data_sensitivity = [
-                getattr(DataSensitivity, x) for x in data_sensitivity
-            ]
 
         # _validated indicates whether this metric has already been jsonschema
         # validated (but not any of the Python-level validation).
@@ -94,7 +85,7 @@ class Metric:
             data = {
                 "$schema": parser.METRICS_ID,
                 self.category: {self.name: self.serialize()},
-            }  # type: Dict[str, util.JSONType]
+            }
             for error in parser.validate(data):
                 raise ValueError(error)
 
@@ -110,14 +101,7 @@ class Metric:
         super().__init_subclass__(**kwargs)
 
     @classmethod
-    def make_metric(
-        cls,
-        category: str,
-        name: str,
-        metric_info: Dict[str, util.JSONType],
-        config: Dict[str, Any] = {},
-        validated: bool = False,
-    ):
+    def make_metric(cls, category, name, metric_info, config={}, validated=False):
         """
         Given a metric_info dictionary from metrics.yaml, return a metric
         instance.
@@ -132,17 +116,15 @@ class Metric:
         :return: A new Metric instance.
         """
         metric_type = metric_info["type"]
-        if not isinstance(metric_type, str):
-            raise TypeError(f"Unknown metric type {metric_type}")
         return cls.metric_types[metric_type](
             category=category,
             name=name,
             _validated=validated,
             _config=config,
-            **metric_info,
+            **metric_info
         )
 
-    def serialize(self) -> Dict[str, util.JSONType]:
+    def serialize(self):
         """
         Serialize the metric back to JSON object model.
         """
@@ -153,13 +135,11 @@ class Metric:
                 d[key] = d[key].name
             if isinstance(val, set):
                 d[key] = sorted(list(val))
-            if isinstance(val, list) and len(val) and isinstance(val[0], enum.Enum):
-                d[key] = [x.name for x in val]
         del d["name"]
         del d["category"]
         return d
 
-    def identifier(self) -> str:
+    def identifier(self):
         """
         Create an identifier unique for this metric.
         Generally, category.name; however, Glean internal
@@ -169,17 +149,17 @@ class Metric:
             return self.name
         return ".".join((self.category, self.name))
 
-    def is_disabled(self) -> bool:
+    def is_disabled(self):
         return self.disabled or self.is_expired()
 
-    def is_expired(self) -> bool:
+    def is_expired(self):
         return util.is_expired(self.expires)
 
     @staticmethod
-    def validate_expires(expires) -> None:
+    def validate_expires(expires):
         return util.validate_expires(expires)
 
-    def is_internal_metric(self) -> bool:
+    def is_internal_metric(self):
         return self.category in (Metric.glean_internal_metric_cat, "")
 
 
@@ -226,10 +206,6 @@ class Timespan(TimeBase):
 class TimingDistribution(TimeBase):
     typename = "timing_distribution"
 
-    def __init__(self, *args, **kwargs):
-        self.time_unit = getattr(TimeUnit, kwargs.pop("time_unit", "nanosecond"))
-        Metric.__init__(self, *args, **kwargs)
-
 
 class MemoryUnit(enum.Enum):
     byte = 0
@@ -273,7 +249,7 @@ class Event(Metric):
 
     default_store_names = ["events"]
 
-    _generate_enums = [("allowed_extra_keys", "Keys")]
+    _generate_enums = [("extra_keys", "Keys")]
 
     def __init__(self, *args, **kwargs):
         self.extra_keys = kwargs.pop("extra_keys", {})
@@ -286,7 +262,7 @@ class Event(Metric):
         return sorted(list(self.extra_keys.keys()))
 
     @staticmethod
-    def validate_extra_keys(extra_keys: Dict[str, str], config: Dict[str, Any]) -> None:
+    def validate_extra_keys(extra_keys, config):
         if not config.get("allow_reserved") and any(
             k.startswith("glean.") for k in extra_keys.keys()
         ):
@@ -298,14 +274,6 @@ class Event(Metric):
 
 class Uuid(Metric):
     typename = "uuid"
-
-
-class Jwe(Metric):
-    typename = "jwe"
-
-    def __init__(self, *args, **kwargs):
-        self.decrypted_name = kwargs.pop("decrypted_name")
-        super().__init__(*args, **kwargs)
 
 
 class Labeled(Metric):
@@ -321,7 +289,7 @@ class Labeled(Metric):
             self.labels = None
         super().__init__(*args, **kwargs)
 
-    def serialize(self) -> Dict[str, util.JSONType]:
+    def serialize(self):
         """
         Serialize the metric back to JSON object model.
         """
@@ -341,6 +309,3 @@ class LabeledString(Labeled, String):
 
 class LabeledCounter(Labeled, Counter):
     typename = "labeled_counter"
-
-
-ObjectTree = Dict[str, Dict[str, Union[Metric, pings.Ping]]]
