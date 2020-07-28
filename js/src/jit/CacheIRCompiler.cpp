@@ -3889,6 +3889,19 @@ bool CacheIRCompiler::emitIsConstructorResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitTypedArrayByteOffsetResult(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Register obj = allocator.useRegister(masm, objId);
+
+  masm.unboxInt32(Address(obj, ArrayBufferViewObject::byteOffsetOffset()),
+                  scratch);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitTypedArrayElementShiftResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
