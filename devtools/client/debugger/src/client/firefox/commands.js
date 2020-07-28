@@ -42,20 +42,13 @@ import type {
   SourcesPacket,
 } from "./types";
 
-import type {
-  EventListenerCategoryList,
-  EventListenerActiveList,
-} from "../../actions/types";
-
-// $FlowIgnore
-const { defaultThreadOptions } = require("devtools/client/shared/thread-utils");
+import type { EventListenerCategoryList } from "../../actions/types";
 
 let targets: { [string]: Target };
 let devToolsClient: DevToolsClient;
 let targetList: TargetList;
 let sourceActors: { [ActorId]: SourceId };
 let breakpoints: { [string]: Object };
-let eventBreakpoints: ?EventListenerActiveList;
 
 const CALL_STACK_PAGE_SIZE = 1000;
 
@@ -371,8 +364,6 @@ function interrupt(thread: string): Promise<*> {
 }
 
 function setEventListenerBreakpoints(ids: string[]) {
-  eventBreakpoints = ids;
-
   return forEachThread(thread => thread.setActiveEventBreakpoints(ids));
 }
 
@@ -461,51 +452,16 @@ function getSourceForActor(actor: ActorId) {
   return sourceActors[actor];
 }
 
-async function attachThread(targetFront: Target) {
-  const options = {
-    breakpoints,
-    eventBreakpoints,
-    observeAsmJS: true,
-  };
+async function addThread(targetFront: Target) {
+  // Wait for the thread actor to be attached
+  await targetFront.onThreadAttached;
 
-  await attachTarget(targetFront, options);
-  const threadFront: ThreadFront = await targetFront.getFront("thread");
-
-  return createThread(threadFront.actorID, targetFront);
-}
-
-export async function attachTarget(targetFront: Target, options: Object) {
-  try {
-    await targetFront.attach();
-
-    const threadActorID = targetFront.targetForm.threadActor;
-    if (targets[threadActorID]) {
-      return;
-    }
+  const threadActorID = targetFront.targetForm.threadActor;
+  if (!targets[threadActorID]) {
     targets[threadActorID] = targetFront;
-
-    // Content process targets have already been attached by the toolbox.
-    // And the thread front has been initialized from there.
-    // So we only need to retrieve it here.
-    let threadFront = targetFront.threadFront;
-
-    // But workers targets are still only managed by the debugger codebase
-    // and so we have to attach their thread actor
-    if (!threadFront) {
-      threadFront = await targetFront.attachThread({
-        ...defaultThreadOptions(),
-        ...options,
-      });
-      // NOTE: resume is not necessary for ProcessDescriptors and can be removed
-      // once we switch to WorkerDescriptors
-      threadFront.resume();
-    }
-
-    addThreadEventListeners(threadFront);
-  } catch (e) {
-    // If any of the workers have terminated since the list command initiated
-    // then we will get errors. Ignore these.
+    addThreadEventListeners(targetFront.threadFront);
   }
+  return createThread(threadActorID, targetFront);
 }
 
 function removeThread(thread: Thread) {
@@ -606,7 +562,7 @@ const clientCommands = {
   fetchThreadSources,
   checkIfAlreadyPaused,
   registerSourceActor,
-  attachThread,
+  addThread,
   removeThread,
   getMainThread,
   sendPacket,
