@@ -5810,6 +5810,12 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
+- name: layout.css.cross-fade.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for DOMMatrix enabled?
 - name: layout.css.DOMMatrix.enabled
   type: RelaxedAtomicBool
