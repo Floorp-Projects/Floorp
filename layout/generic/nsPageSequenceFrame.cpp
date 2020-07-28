@@ -94,7 +94,7 @@ float nsPageSequenceFrame::GetPrintPreviewScale() const {
 }
 
 void nsPageSequenceFrame::PopulateReflowOutput(
-    ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput) {
+    ReflowOutput& aReflowOutput, const ReflowInput& aReflowInput) {
   // Aim to fill the whole available space, not only so we can act as a
   // background in print preview but also handle overflow in child page frames
   // correctly.
@@ -105,11 +105,11 @@ void nsPageSequenceFrame::PopulateReflowOutput(
   nscoord iSize = wm.IsVertical() ? mSize.Height() : mSize.Width();
   nscoord bSize = wm.IsVertical() ? mSize.Width() : mSize.Height();
 
-  aDesiredSize.ISize(wm) =
+  aReflowOutput.ISize(wm) =
       std::max(NSToCoordFloor(iSize * scale), aReflowInput.AvailableISize());
-  aDesiredSize.BSize(wm) =
+  aReflowOutput.BSize(wm) =
       std::max(NSToCoordFloor(bSize * scale), aReflowInput.ComputedBSize());
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  aReflowOutput.SetOverflowAreasToDesiredBounds();
 }
 
 // Helper function to compute the offset needed to center a child
@@ -152,14 +152,14 @@ nscoord nsPageSequenceFrame::ComputeCenteringMargin(
  * arranged in the same orientation, regardless of writing mode.
  */
 void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
-                                 ReflowOutput& aDesiredSize,
+                                 ReflowOutput& aReflowOutput,
                                  const ReflowInput& aReflowInput,
                                  nsReflowStatus& aStatus) {
   MarkInReflow();
   MOZ_ASSERT(aPresContext->IsRootPaginatedDocument(),
              "A Page Sequence is only for real pages");
   DO_GLOBAL_REFLOW_COUNT("nsPageSequenceFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE_REFLOW_IN("nsPageSequenceFrame::Reflow");
 
@@ -182,10 +182,10 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   // it right in paginated mode.
   if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Return our desired size
-    PopulateReflowOutput(aDesiredSize, aReflowInput);
-    FinishAndStoreOverflow(&aDesiredSize);
+    PopulateReflowOutput(aReflowOutput, aReflowInput);
+    FinishAndStoreOverflow(&aReflowOutput);
 
-    if (GetSize().Width() != aDesiredSize.Width()) {
+    if (GetSize().Width() != aReflowOutput.Width()) {
       CenterPages();
     }
     return;
@@ -245,7 +245,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   nscoord maxXMost = 0;
 
   // Tile the pages vertically
-  ReflowOutput kidSize(aReflowInput);
+  ReflowOutput kidReflowOutput(aReflowInput);
   for (nsIFrame* kidFrame : mFrames) {
     // Set the shared data into the page frame before reflow
     auto* pf = static_cast<nsPageFrame*>(kidFrame);
@@ -268,15 +268,16 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     nscoord x = pageCSSMargin.left;
 
     // Place and size the page.
-    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowInput, x, y,
+    ReflowChild(kidFrame, aPresContext, kidReflowOutput, kidReflowInput, x, y,
                 ReflowChildFlags::Default, status);
 
-    FinishReflowChild(kidFrame, aPresContext, kidSize, &kidReflowInput, x, y,
-                      ReflowChildFlags::Default);
-    y += kidSize.Height();
+    FinishReflowChild(kidFrame, aPresContext, kidReflowOutput, &kidReflowInput,
+                      x, y, ReflowChildFlags::Default);
+    y += kidReflowOutput.Height();
     y += pageCSSMargin.bottom;
 
-    maxXMost = std::max(maxXMost, x + kidSize.Width() + pageCSSMargin.right);
+    maxXMost =
+        std::max(maxXMost, x + kidReflowOutput.Width() + pageCSSMargin.right);
 
     // Is the page complete?
     nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
@@ -325,15 +326,15 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   // Return our desired size
   // Adjust the reflow size by PrintPreviewScale so the scrollbars end up the
   // correct size
-  PopulateReflowOutput(aDesiredSize, aReflowInput);
+  PopulateReflowOutput(aReflowOutput, aReflowInput);
 
-  FinishAndStoreOverflow(&aDesiredSize);
+  FinishAndStoreOverflow(&aReflowOutput);
 
   // Now center our pages.
   CenterPages();
 
   NS_FRAME_TRACE_REFLOW_OUT("nsPageSequenceFrame::Reflow", aStatus);
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aReflowOutput);
 }
 
 //----------------------------------------------------------------------
