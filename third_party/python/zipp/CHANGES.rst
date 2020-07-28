@@ -1,14 +1,3 @@
-v3.1.0
-======
-
-#47: ``.open`` now raises ``FileNotFoundError`` and
-``IsADirectoryError`` when appropriate.
-
-v3.0.0
-======
-
-#44: Merge with v1.2.0.
-
 v1.2.0
 ======
 
@@ -21,26 +10,10 @@ longer accepts ``pwd`` as a positional argument and does not
 accept the ``force_zip64`` parameter at all. This change is
 a backward-incompatible change for that single function.
 
-v2.2.1
-======
-
-#43: Merge with v1.1.1.
-
 v1.1.1
 ======
 
 #43: Restored performance of implicit dir computation.
-
-v2.2.0
-======
-
-#36: Rebuild package with minimum Python version declared both
-in package metadata and in the python tag.
-
-v2.1.0
-======
-
-#32: Merge with v1.1.0.
 
 v1.1.0
 ======
@@ -50,16 +23,6 @@ v1.1.0
 quadratic time in common use-cases and rendering large
 zip files unusable for Path. Big thanks to Benjy Weinberger
 for the bug report and contributed fix (#33).
-
-v2.0.1
-======
-
-#30: Corrected version inference (from jaraco/skeleton#12).
-
-v2.0.0
-======
-
-Require Python 3.6 or later.
 
 v1.0.0
 ======

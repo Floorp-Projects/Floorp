@@ -70,9 +70,7 @@ Entry points
 The ``entry_points()`` function returns a dictionary of all entry points,
 keyed by group.  Entry points are represented by ``EntryPoint`` instances;
 each ``EntryPoint`` has a ``.name``, ``.group``, and ``.value`` attributes and
-a ``.load()`` method to resolve the value.  There are also ``.module``,
-``.attr``, and ``.extras`` attributes for getting the components of the
-``.value`` attribute::
+a ``.load()`` method to resolve the value::
 
     >>> eps = entry_points()
     >>> list(eps)
@@ -81,12 +79,6 @@ a ``.load()`` method to resolve the value.  There are also ``.module``,
     >>> wheel = [ep for ep in scripts if ep.name == 'wheel'][0]
     >>> wheel
     EntryPoint(name='wheel', value='wheel.cli:main', group='console_scripts')
-    >>> wheel.module
-    'wheel.cli'
-    >>> wheel.attr
-    'main'
-    >>> wheel.extras
-    []
     >>> main = wheel.load()
     >>> main
     <function main at 0x103528488>
@@ -95,7 +87,7 @@ The ``group`` and ``name`` are arbitrary values defined by the package author
 and usually a client will wish to resolve all entry points for a particular
 group.  Read `the setuptools docs
 <https://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins>`_
-for more information on entry points, their definition, and usage.
+for more information on entrypoints, their definition, and usage.
 
 
 .. _metadata:
@@ -236,7 +228,7 @@ method::
         """
 
 The ``DistributionFinder.Context`` object provides ``.path`` and ``.name``
-properties indicating the path to search and name to match and may
+properties indicating the path to search and names to match and may
 supply other relevant context.
 
 What this means in practice is that to support finding distribution package

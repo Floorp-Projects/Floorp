@@ -11,34 +11,24 @@ import json
 from pathlib import Path
 import sys
 import textwrap
-from typing import Any, Callable, Iterable, Sequence, Tuple, Union
 import urllib.request
 
-import appdirs  # type: ignore
-import diskcache  # type: ignore
+import appdirs
+import diskcache
 import jinja2
-import jsonschema  # type: ignore
-from jsonschema import _utils  # type: ignore
+import jsonschema
+from jsonschema import _utils
 import yaml
 
 if sys.version_info < (3, 7):
-    import iso8601  # type: ignore
+    import iso8601
 
 
 TESTING_MODE = "pytest" in sys.modules
 
 
-JSONType = Union[list, dict, str, int, float, None]
-"""
-The types supported by JSON.
-
-This is only an approximation -- this should really be a recursive type.
-"""
-
 # Adapted from
 # https://stackoverflow.com/questions/34667108/ignore-dates-and-times-while-parsing-yaml
-
-
 class _NoDatesSafeLoader(yaml.SafeLoader):
     @classmethod
     def remove_implicit_resolver(cls, tag_to_remove):
@@ -106,7 +96,7 @@ else:
         return yaml.dump(data, **kwargs)
 
 
-def load_yaml_or_json(path: Path, ordered_dict: bool = False):
+def load_yaml_or_json(path, ordered_dict=False):
     """
     Load the content from either a .json or .yaml file, based on the filename
     extension.
@@ -123,19 +113,19 @@ def load_yaml_or_json(path: Path, ordered_dict: bool = False):
         return {}
 
     if path.suffix == ".json":
-        with path.open("r", encoding="utf-8") as fd:
+        with path.open("r") as fd:
             return json.load(fd)
     elif path.suffix in (".yml", ".yaml", ".yamlx"):
-        with path.open("r", encoding="utf-8") as fd:
+        with path.open("r") as fd:
             if ordered_dict:
                 return ordered_yaml_load(fd)
             else:
                 return yaml.load(fd, Loader=_NoDatesSafeLoader)
     else:
-        raise ValueError(f"Unknown file extension {path.suffix}")
+        raise ValueError("Unknown file extension {}".format(path.suffix))
 
 
-def ensure_list(value: Any) -> Sequence[Any]:
+def ensure_list(value):
     """
     Ensures that the value is a list. If it is anything but a list or tuple, a
     list with a single element containing only value is returned.
@@ -145,7 +135,7 @@ def ensure_list(value: Any) -> Sequence[Any]:
     return value
 
 
-def to_camel_case(input: str, capitalize_first_letter: bool) -> str:
+def to_camel_case(input, capitalize_first_letter):
     """
     Convert the value to camelCase.
 
@@ -160,10 +150,10 @@ def to_camel_case(input: str, capitalize_first_letter: bool) -> str:
     if not capitalize_first_letter:
         tokens[0] = tokens[0].lower()
     # Finally join the tokens and capitalize.
-    return "".join(tokens)
+    return ''.join(tokens)
 
 
-def camelize(value: str) -> str:
+def camelize(value):
     """
     Convert the value to camelCase (with a lower case first letter).
 
@@ -173,7 +163,7 @@ def camelize(value: str) -> str:
     return to_camel_case(value, False)
 
 
-def Camelize(value: str) -> str:
+def Camelize(value):
     """
     Convert the value to CamelCase (with an upper case first letter).
 
@@ -184,9 +174,7 @@ def Camelize(value: str) -> str:
 
 
 @functools.lru_cache()
-def get_jinja2_template(
-    template_name: str, filters: Iterable[Tuple[str, Callable]] = ()
-):
+def get_jinja2_template(template_name, filters=()):
     """
     Get a Jinja2 template that ships with glean_parser.
 
@@ -248,32 +236,35 @@ def get_null_resolver(schema):
     return NullResolver.from_schema(schema)
 
 
-def fetch_remote_url(url: str, cache: bool = True):
+def fetch_remote_url(url, cache=True):
     """
     Fetches the contents from an HTTP url or local file path, and optionally
     caches it to disk.
     """
-    # Include the Python version in the cache key, since caches aren't
-    # sharable across Python versions.
-    key = (url, str(sys.version_info))
-
     is_http = url.startswith("http")
 
     if not is_http:
         with open(url, "r", encoding="utf-8") as fd:
-            return fd.read()
+            contents = fd.read()
+        return contents
 
     if cache:
         cache_dir = appdirs.user_cache_dir("glean_parser", "mozilla")
         with diskcache.Cache(cache_dir) as dc:
-            if key in dc:
-                return dc[key]
+            if url in dc:
+                return dc[url]
 
-    contents: str = urllib.request.urlopen(url).read()
+    contents = urllib.request.urlopen(url).read()
+
+    # On Python 3.5, urlopen does not handle the unicode decoding for us. This
+    # is ok because we control these files and we know they are in UTF-8,
+    # however, this wouldn't be correct in general.
+    if sys.version_info < (3, 6):
+        contents = contents.decode("utf8")
 
     if cache:
         with diskcache.Cache(cache_dir) as dc:
-            dc[key] = contents
+            dc[url] = contents
 
     return contents
 
@@ -281,7 +272,7 @@ def fetch_remote_url(url: str, cache: bool = True):
 _unset = _utils.Unset()
 
 
-def pprint_validation_error(error) -> str:
+def pprint_validation_error(error):
     """
     A version of jsonschema's ValidationError __str__ method that doesn't
     include the schema fragment that failed.  This makes the error messages
@@ -322,7 +313,7 @@ def pprint_validation_error(error) -> str:
     return "\n".join(parts)
 
 
-def format_error(filepath: Union[str, Path], header: str, content: str) -> str:
+def format_error(filepath, header, content):
     """
     Format a jsonshema validation error.
     """
@@ -331,12 +322,12 @@ def format_error(filepath: Union[str, Path], header: str, content: str) -> str:
     else:
         filepath = "<string>"
     if header:
-        return f"{filepath}: {header}\n{_utils.indent(content)}"
+        return "{}: {}\n{}".format(filepath, header, _utils.indent(content))
     else:
-        return f"{filepath}:\n{_utils.indent(content)}"
+        return "{}:\n{}".format(filepath, _utils.indent(content))
 
 
-def is_expired(expires: str) -> bool:
+def is_expired(expires):
     """
     Parses the `expires` field in a metric or ping and returns whether
     the object should be considered expired.
@@ -353,13 +344,15 @@ def is_expired(expires: str) -> bool:
                 date = datetime.date.fromisoformat(expires)
         except ValueError:
             raise ValueError(
-                f"Invalid expiration date '{expires}'. "
-                "Must be of the form yyyy-mm-dd in UTC."
+                (
+                    "Invalid expiration date '{}'. "
+                    "Must be of the form yyyy-mm-dd in UTC."
+                ).format(expires)
             )
         return date <= datetime.datetime.utcnow().date()
 
 
-def validate_expires(expires: str) -> None:
+def validate_expires(expires):
     """
     Raises ValueError if `expires` is not valid.
     """
@@ -381,40 +374,3 @@ def report_validation_errors(all_objects):
         print("=" * 78, file=sys.stderr)
         print(error, file=sys.stderr)
     return found_error
-
-
-# Names of metric parameters to pass to constructors.
-# This includes only things that the language bindings care about, not things
-# that are metadata-only or are resolved into other parameters at parse time.
-# **CAUTION**: This list needs to be in the order the Swift type constructors
-# expects them. (The other language bindings don't care about the order). The
-# `test_order_of_fields` test checks that the generated code is valid.
-# **DO NOT CHANGE THE ORDER OR ADD NEW FIELDS IN THE MIDDLE**
-extra_metric_args = [
-    "category",
-    "name",
-    "send_in_pings",
-    "lifetime",
-    "disabled",
-    "time_unit",
-    "memory_unit",
-    "allowed_extra_keys",
-    "reason_codes",
-    "bucket_count",
-    "range_max",
-    "range_min",
-    "histogram_type",
-]
-
-
-# Names of ping parameters to pass to constructors.
-extra_ping_args = [
-    "include_client_id",
-    "send_if_empty",
-    "name",
-    "reason_codes",
-]
-
-
-# Names of parameters to pass to both metric and ping constructors.
-extra_args = list(set(extra_metric_args) | set(extra_ping_args))

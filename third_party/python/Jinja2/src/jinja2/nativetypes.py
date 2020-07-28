@@ -1,3 +1,4 @@
+import types
 from ast import literal_eval
 from itertools import chain
 from itertools import islice
@@ -10,7 +11,7 @@ from .environment import Environment
 from .environment import Template
 
 
-def native_concat(nodes):
+def native_concat(nodes, preserve_quotes=True):
     """Return a native Python type from the list of compiled nodes. If
     the result is a single node, its value is returned. Otherwise, the
     nodes are concatenated as strings. If the result can be parsed with
@@ -18,6 +19,9 @@ def native_concat(nodes):
     the string is returned.
 
     :param nodes: Iterable of nodes to concatenate.
+    :param preserve_quotes: Whether to re-wrap literal strings with
+        quotes, to preserve quotes around expressions for later parsing.
+        Should be ``False`` in :meth:`NativeEnvironment.render`.
     """
     head = list(islice(nodes, 2))
 
@@ -27,17 +31,29 @@ def native_concat(nodes):
     if len(head) == 1:
         raw = head[0]
     else:
-        raw = u"".join([text_type(v) for v in chain(head, nodes)])
+        if isinstance(nodes, types.GeneratorType):
+            nodes = chain(head, nodes)
+        raw = u"".join([text_type(v) for v in nodes])
 
     try:
-        return literal_eval(raw)
+        literal = literal_eval(raw)
     except (ValueError, SyntaxError, MemoryError):
         return raw
+
+    # If literal_eval returned a string, re-wrap with the original
+    # quote character to avoid dropping quotes between expression nodes.
+    # Without this, "'{{ a }}', '{{ b }}'" results in "a, b", but should
+    # be ('a', 'b').
+    if preserve_quotes and isinstance(literal, str):
+        return "{quote}{}{quote}".format(literal, quote=raw[0])
+
+    return literal
 
 
 class NativeCodeGenerator(CodeGenerator):
     """A code generator which renders Python types by not adding
-    ``to_string()`` around output nodes.
+    ``to_string()`` around output nodes, and using :func:`native_concat`
+    to convert complex strings back to Python types if possible.
     """
 
     @staticmethod
@@ -45,7 +61,7 @@ class NativeCodeGenerator(CodeGenerator):
         return value
 
     def _output_const_repr(self, group):
-        return repr(u"".join([text_type(v) for v in group]))
+        return repr(native_concat(group))
 
     def _output_child_to_const(self, node, frame, finalize):
         const = node.as_const(frame.eval_ctx)
@@ -84,9 +100,10 @@ class NativeTemplate(Template):
         Otherwise, the string is returned.
         """
         vars = dict(*args, **kwargs)
-
         try:
-            return native_concat(self.root_render_func(self.new_context(vars)))
+            return native_concat(
+                self.root_render_func(self.new_context(vars)), preserve_quotes=False
+            )
         except Exception:
             return self.environment.handle_exception()
 
