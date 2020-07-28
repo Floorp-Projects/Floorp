@@ -2424,6 +2424,11 @@ bool IonCacheIRCompiler::emitIsArrayResult(ValOperandId inputId) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitIsTypedArrayResult(ObjOperandId objId,
+                                                bool isPossiblyWrapped) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitStringFromCharCodeResult(Int32OperandId codeId) {
   MOZ_CRASH("Call ICs not used in ion");
 }

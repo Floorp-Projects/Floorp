@@ -1812,6 +1812,28 @@ bool WarpCacheIRTranspiler::emitIsConstructorResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitIsTypedArrayResult(ObjOperandId objId,
+                                                   bool isPossiblyWrapped) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MIsTypedArray::New(alloc(), obj, isPossiblyWrapped);
+  if (isPossiblyWrapped) {
+    addEffectful(ins);
+  } else {
+    add(ins);
+  }
+
+  pushResult(ins);
+
+  if (isPossiblyWrapped) {
+    if (!resumeAfter(ins)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 

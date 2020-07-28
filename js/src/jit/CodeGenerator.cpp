@@ -13434,21 +13434,8 @@ void CodeGenerator::visitIsTypedArray(LIsTypedArray* lir) {
   Label notTypedArray;
   Label done;
 
-  static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
-  const JSClass* firstTypedArrayClass =
-      TypedArrayObject::classForType(Scalar::Int8);
-
-  static_assert(
-      (Scalar::BigUint64 - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
-      "BigUint64 is the last typed array class");
-  const JSClass* lastTypedArrayClass =
-      TypedArrayObject::classForType(Scalar::BigUint64);
-
   masm.loadObjClassUnsafe(object, output);
-  masm.branchPtr(Assembler::Below, output, ImmPtr(firstTypedArrayClass),
-                 &notTypedArray);
-  masm.branchPtr(Assembler::Above, output, ImmPtr(lastTypedArrayClass),
-                 &notTypedArray);
+  masm.branchIfClassIsNotTypedArray(output, &notTypedArray);
 
   masm.move32(Imm32(1), output);
   masm.jump(&done);

@@ -904,6 +904,14 @@
   args:
     obj: ObjId
 
+- name: IsTypedArrayResult
+  shared: false
+  transpile: true
+  cost_estimate: 5
+  args:
+    obj: ObjId
+    isPossiblyWrapped: BoolImm
+
 - name: TypedArrayByteOffsetResult
   shared: true
   transpile: true
