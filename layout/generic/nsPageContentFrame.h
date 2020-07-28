@@ -54,8 +54,9 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
                               nsPresContext* aPresContext)
       : ViewportFrame(aStyle, aPresContext, kClassID) {}
 
-  // Note: this is strongly owned by our nsPageSequenceFrame, which outlives us.
-  nsSharedPageData* mPD;
+  // Note: this will be set before reflow, and it's strongly owned by our
+  // nsPageSequenceFrame, which outlives us.
+  nsSharedPageData* mPD = nullptr;
 };
 
 #endif /* nsPageContentFrame_h___ */

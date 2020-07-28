@@ -84,11 +84,14 @@ class nsPageFrame final : public nsContainerFrame {
 
   void ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr);
 
-  int32_t mPageNum;
-  int32_t mTotNumPages;
+  static constexpr int32_t kPageNumUnset = -1;
 
-  // Note: this is strongly owned by our nsPageSequenceFrame, which outlives us.
-  nsSharedPageData* mPD;
+  int32_t mPageNum = kPageNumUnset;
+  int32_t mTotNumPages = kPageNumUnset;
+
+  // Note: this will be set before reflow, and it's strongly owned by our
+  // nsPageSequenceFrame, which outlives us.
+  nsSharedPageData* mPD = nullptr;
 
   nsMargin mPageContentMargin;
 };
