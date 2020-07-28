@@ -11,6 +11,7 @@ use crate::builder::{ScopeDataMapAndScriptStencilList, ScopeDataMapBuilder};
 use crate::data::FunctionDeclarationPropertyMap;
 use ast::arena;
 use ast::associated_data::AssociatedData;
+use ast::source_atom_set::CommonSourceAtomSetIndices;
 use ast::{types::*, visit::Pass};
 use std::collections::HashMap;
 use stencil::scope::ScopeDataMap;
@@ -118,6 +119,11 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
     // IdentifierExpression or AssignmentTargetIdentifier.
     fn visit_identifier(&mut self, ast: &'alloc Identifier) {
         self.builder.on_non_binding_identifier(ast.value);
+    }
+
+    fn visit_enum_expression_variant_this_expression(&mut self) {
+        self.builder
+            .on_non_binding_identifier(CommonSourceAtomSetIndices::this());
     }
 
     fn enter_enum_statement_variant_function_declaration(&mut self, ast: &'alloc Function<'alloc>) {

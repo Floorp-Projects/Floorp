@@ -2859,12 +2859,10 @@ impl ScopeDataMapBuilder {
             }
 
             if try_declare_arguments {
-                let has_defined_arguments = parameter_has_arguments || body_has_defined_arguments;
-                let declare_arguments = if has_extra_body_var {
-                    !parameter_has_arguments
-                } else {
-                    has_defined_arguments
-                };
+                // if extra body var scope exists, the existence of `arguments`
+                // binding in function body doesn't affect.
+                let declare_arguments =
+                    !parameter_has_arguments && (has_extra_body_var || !body_has_defined_arguments);
 
                 if declare_arguments {
                     fun_stencil.set_should_declare_arguments();

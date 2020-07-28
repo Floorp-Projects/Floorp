@@ -108,9 +108,10 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         }
         .emit(&mut self)?;
 
-        let script = self
-            .emit
-            .into_stencil(&mut self.compilation_info.script_data_list)?;
+        let script = self.emit.into_stencil(
+            &mut self.compilation_info.script_data_list,
+            self.options.extent.clone(),
+        )?;
 
         Ok(script)
     }

@@ -11,7 +11,7 @@ def state_43_actions(parser, lexer):
     replay = [StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_86_actions(parser, lexer)
+    state_84_actions(parser, lexer)
     return
 
 def state_44_actions(parser, lexer):
@@ -21,7 +21,7 @@ def state_44_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_defs'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_84_actions(parser, lexer)
+    state_82_actions(parser, lexer)
     return
 
 def state_45_actions(parser, lexer):
@@ -31,7 +31,7 @@ def state_45_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('token_defs'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_85_actions(parser, lexer)
+    state_83_actions(parser, lexer)
     return
 
 def state_46_actions(parser, lexer):
@@ -41,7 +41,7 @@ def state_46_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_defs'), value, False)]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_84_actions(parser, lexer)
+    state_82_actions(parser, lexer)
     return
 
 def state_47_actions(parser, lexer):
@@ -51,7 +51,7 @@ def state_47_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('token_defs'), value, False)]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_85_actions(parser, lexer)
+    state_83_actions(parser, lexer)
     return
 
 def state_48_actions(parser, lexer):
@@ -61,7 +61,7 @@ def state_48_actions(parser, lexer):
     replay = [StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value, False)]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_86_actions(parser, lexer)
+    state_84_actions(parser, lexer)
     return
 
 def state_49_actions(parser, lexer):
@@ -71,7 +71,7 @@ def state_49_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_def'), value, False)]
     del parser.stack[-4:]
     parser.shift_list(replay, lexer)
-    state_112_actions(parser, lexer)
+    state_107_actions(parser, lexer)
     return
 
 def state_50_actions(parser, lexer):
@@ -81,7 +81,7 @@ def state_50_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('prods'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_98_actions(parser, lexer)
+    state_94_actions(parser, lexer)
     return
 
 def state_51_actions(parser, lexer):
@@ -91,7 +91,7 @@ def state_51_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('terms'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_101_actions(parser, lexer)
+    state_97_actions(parser, lexer)
     return
 
 def state_52_actions(parser, lexer):
@@ -101,7 +101,7 @@ def state_52_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('symbol'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_95_actions(parser, lexer)
+    state_91_actions(parser, lexer)
     return
 
 def state_53_actions(parser, lexer):
@@ -111,7 +111,7 @@ def state_53_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('symbol'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_95_actions(parser, lexer)
+    state_91_actions(parser, lexer)
     return
 
 def state_54_actions(parser, lexer):
@@ -121,7 +121,7 @@ def state_54_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('prods'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_98_actions(parser, lexer)
+    state_94_actions(parser, lexer)
     return
 
 def state_55_actions(parser, lexer):
@@ -131,7 +131,7 @@ def state_55_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('token_def'), value, False)]
     del parser.stack[-4:]
     parser.shift_list(replay, lexer)
-    state_104_actions(parser, lexer)
+    state_100_actions(parser, lexer)
     return
 
 def state_56_actions(parser, lexer):
@@ -141,7 +141,7 @@ def state_56_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_def'), value, False)]
     del parser.stack[-5:]
     parser.shift_list(replay, lexer)
-    state_112_actions(parser, lexer)
+    state_107_actions(parser, lexer)
     return
 
 def state_57_actions(parser, lexer):
@@ -151,7 +151,7 @@ def state_57_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('prods'), value, False)]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_98_actions(parser, lexer)
+    state_94_actions(parser, lexer)
     return
 
 def state_58_actions(parser, lexer):
@@ -161,7 +161,7 @@ def state_58_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('prod'), value, False)]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_105_actions(parser, lexer)
+    state_101_actions(parser, lexer)
     return
 
 def state_59_actions(parser, lexer):
@@ -171,7 +171,7 @@ def state_59_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('terms'), value, False)]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_101_actions(parser, lexer)
+    state_97_actions(parser, lexer)
     return
 
 def state_60_actions(parser, lexer):
@@ -181,7 +181,7 @@ def state_60_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('term'), value, False)]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_118_actions(parser, lexer)
+    state_111_actions(parser, lexer)
     return
 
 def state_61_actions(parser, lexer):
@@ -191,7 +191,7 @@ def state_61_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_def'), value, False)]
     del parser.stack[-5:]
     parser.shift_list(replay, lexer)
-    state_112_actions(parser, lexer)
+    state_107_actions(parser, lexer)
     return
 
 def state_62_actions(parser, lexer):
@@ -201,7 +201,7 @@ def state_62_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_def'), value, False)]
     del parser.stack[-5:]
     parser.shift_list(replay, lexer)
-    state_112_actions(parser, lexer)
+    state_107_actions(parser, lexer)
     return
 
 def state_63_actions(parser, lexer):
@@ -211,7 +211,7 @@ def state_63_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('token_def'), value, False)]
     del parser.stack[-5:]
     parser.shift_list(replay, lexer)
-    state_104_actions(parser, lexer)
+    state_100_actions(parser, lexer)
     return
 
 def state_64_actions(parser, lexer):
@@ -221,7 +221,7 @@ def state_64_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('prod'), value, False)]
     del parser.stack[-3:]
     parser.shift_list(replay, lexer)
-    state_105_actions(parser, lexer)
+    state_101_actions(parser, lexer)
     return
 
 def state_65_actions(parser, lexer):
@@ -231,7 +231,7 @@ def state_65_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('reducer'), value, False)]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_106_actions(parser, lexer)
+    state_102_actions(parser, lexer)
     return
 
 def state_66_actions(parser, lexer):
@@ -241,7 +241,7 @@ def state_66_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('expr'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_114_actions(parser, lexer)
+    state_108_actions(parser, lexer)
     return
 
 def state_67_actions(parser, lexer):
@@ -251,7 +251,7 @@ def state_67_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('expr'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_114_actions(parser, lexer)
+    state_108_actions(parser, lexer)
     return
 
 def state_68_actions(parser, lexer):
@@ -261,7 +261,7 @@ def state_68_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_def'), value, False)]
     del parser.stack[-6:]
     parser.shift_list(replay, lexer)
-    state_112_actions(parser, lexer)
+    state_107_actions(parser, lexer)
     return
 
 def state_69_actions(parser, lexer):
@@ -271,7 +271,7 @@ def state_69_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_def'), value, False)]
     del parser.stack[-6:]
     parser.shift_list(replay, lexer)
-    state_112_actions(parser, lexer)
+    state_107_actions(parser, lexer)
     return
 
 def state_70_actions(parser, lexer):
@@ -281,7 +281,7 @@ def state_70_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_def'), value, False)]
     del parser.stack[-6:]
     parser.shift_list(replay, lexer)
-    state_112_actions(parser, lexer)
+    state_107_actions(parser, lexer)
     return
 
 def state_71_actions(parser, lexer):
@@ -291,7 +291,7 @@ def state_71_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('nt_def'), value, False)]
     del parser.stack[-7:]
     parser.shift_list(replay, lexer)
-    state_112_actions(parser, lexer)
+    state_107_actions(parser, lexer)
     return
 
 def state_72_actions(parser, lexer):
@@ -301,7 +301,7 @@ def state_72_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('expr'), value, False)]
     del parser.stack[-3:]
     parser.shift_list(replay, lexer)
-    state_114_actions(parser, lexer)
+    state_108_actions(parser, lexer)
     return
 
 def state_73_actions(parser, lexer):
@@ -311,7 +311,7 @@ def state_73_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('expr_args'), value, False)]
     del parser.stack[-1:]
     parser.shift_list(replay, lexer)
-    state_115_actions(parser, lexer)
+    state_109_actions(parser, lexer)
     return
 
 def state_74_actions(parser, lexer):
@@ -321,7 +321,7 @@ def state_74_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('expr'), value, False)]
     del parser.stack[-4:]
     parser.shift_list(replay, lexer)
-    state_114_actions(parser, lexer)
+    state_108_actions(parser, lexer)
     return
 
 def state_75_actions(parser, lexer):
@@ -331,7 +331,7 @@ def state_75_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('expr'), value, False)]
     del parser.stack[-4:]
     parser.shift_list(replay, lexer)
-    state_114_actions(parser, lexer)
+    state_108_actions(parser, lexer)
     return
 
 def state_76_actions(parser, lexer):
@@ -341,7 +341,7 @@ def state_76_actions(parser, lexer):
     replay = [StateTermValue(0, Nt('expr_args'), value, False)]
     del parser.stack[-3:]
     parser.shift_list(replay, lexer)
-    state_115_actions(parser, lexer)
+    state_109_actions(parser, lexer)
     return
 
 def state_77_actions(parser, lexer):
@@ -352,7 +352,7 @@ def state_77_actions(parser, lexer):
     replay = replay + parser.stack[-1:]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_116_actions(parser, lexer)
+    state_110_actions(parser, lexer)
     return
 
 def state_78_actions(parser, lexer):
@@ -363,7 +363,7 @@ def state_78_actions(parser, lexer):
     replay = replay + parser.stack[-1:]
     del parser.stack[-3:]
     parser.shift_list(replay, lexer)
-    state_116_actions(parser, lexer)
+    state_110_actions(parser, lexer)
     return
 
 def state_79_actions(parser, lexer):
@@ -374,19 +374,10 @@ def state_79_actions(parser, lexer):
     replay = replay + parser.stack[-1:]
     del parser.stack[-2:]
     parser.shift_list(replay, lexer)
-    state_118_actions(parser, lexer)
+    state_111_actions(parser, lexer)
     return
 
 def state_80_actions(parser, lexer):
-
-    value = None
-    parser.replay_action(23)
-    top = parser.stack.pop()
-    top = StateTermValue(23, top.term, top.value, top.new_line)
-    parser.stack.append(top)
-    return
-
-def state_81_actions(parser, lexer):
 
     value = None
     parser.replay_action(12)
@@ -395,7 +386,7 @@ def state_81_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_82_actions(parser, lexer):
+def state_81_actions(parser, lexer):
 
     value = None
     parser.replay_action(13)
@@ -403,6 +394,16 @@ def state_82_actions(parser, lexer):
     top = StateTermValue(13, top.term, top.value, top.new_line)
     parser.stack.append(top)
     return
+
+def state_82_actions(parser, lexer):
+
+    value = None
+    if parser.top_state() in [10]:
+        state_80_actions(parser, lexer)
+        return
+    if parser.top_state() in [11]:
+        state_81_actions(parser, lexer)
+        return
 
 def state_83_actions(parser, lexer):
 
@@ -416,42 +417,27 @@ def state_83_actions(parser, lexer):
 def state_84_actions(parser, lexer):
 
     value = None
-    if parser.top_state() in [10]:
-        state_81_actions(parser, lexer)
-        return
-    if parser.top_state() in [11]:
-        state_82_actions(parser, lexer)
-        return
+    parser.replay_action(23)
+    top = parser.stack.pop()
+    top = StateTermValue(23, top.term, top.value, top.new_line)
+    parser.stack.append(top)
+    return
 
 def state_85_actions(parser, lexer):
-
-    value = None
-    if parser.top_state() in [10]:
-        state_83_actions(parser, lexer)
-        return
-
-def state_86_actions(parser, lexer):
-
-    value = None
-    if parser.top_state() in [10]:
-        state_80_actions(parser, lexer)
-        return
-
-def state_87_actions(parser, lexer):
 
     value = None
     parser.replay_action(44)
     state_44_actions(parser, lexer)
     return
 
-def state_88_actions(parser, lexer):
+def state_86_actions(parser, lexer):
 
     value = None
     parser.replay_action(46)
     state_46_actions(parser, lexer)
     return
 
-def state_89_actions(parser, lexer):
+def state_87_actions(parser, lexer):
 
     value = None
     parser.replay_action(4)
@@ -460,7 +446,7 @@ def state_89_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_90_actions(parser, lexer):
+def state_88_actions(parser, lexer):
 
     value = None
     parser.replay_action(5)
@@ -469,7 +455,7 @@ def state_90_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_91_actions(parser, lexer):
+def state_89_actions(parser, lexer):
 
     value = None
     parser.replay_action(6)
@@ -478,7 +464,7 @@ def state_91_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_92_actions(parser, lexer):
+def state_90_actions(parser, lexer):
 
     value = None
     parser.replay_action(7)
@@ -487,16 +473,7 @@ def state_92_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_93_actions(parser, lexer):
-
-    value = None
-    parser.replay_action(8)
-    top = parser.stack.pop()
-    top = StateTermValue(8, top.term, top.value, top.new_line)
-    parser.stack.append(top)
-    return
-
-def state_94_actions(parser, lexer):
+def state_91_actions(parser, lexer):
 
     value = None
     parser.replay_action(9)
@@ -505,106 +482,94 @@ def state_94_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_95_actions(parser, lexer):
-
-    value = None
-    if parser.top_state() in [0, 1, 2, 3, 4, 5, 6, 7, 8]:
-        state_94_actions(parser, lexer)
-        return
-
-def state_96_actions(parser, lexer):
+def state_92_actions(parser, lexer):
 
     value = None
     parser.replay_action(45)
     state_45_actions(parser, lexer)
     return
 
-def state_97_actions(parser, lexer):
+def state_93_actions(parser, lexer):
 
     value = None
     parser.replay_action(47)
     state_47_actions(parser, lexer)
     return
 
-def state_98_actions(parser, lexer):
+def state_94_actions(parser, lexer):
 
     value = None
     if parser.top_state() in [0]:
-        state_89_actions(parser, lexer)
+        state_87_actions(parser, lexer)
         return
     if parser.top_state() in [1]:
-        state_90_actions(parser, lexer)
+        state_88_actions(parser, lexer)
         return
     if parser.top_state() in [2]:
-        state_91_actions(parser, lexer)
+        state_89_actions(parser, lexer)
         return
     if parser.top_state() in [3]:
-        state_92_actions(parser, lexer)
+        state_90_actions(parser, lexer)
         return
 
-def state_99_actions(parser, lexer):
+def state_95_actions(parser, lexer):
 
     value = None
     parser.replay_action(50)
     state_50_actions(parser, lexer)
     return
 
-def state_100_actions(parser, lexer):
+def state_96_actions(parser, lexer):
 
     value = None
     parser.replay_action(57)
     state_57_actions(parser, lexer)
     return
 
-def state_101_actions(parser, lexer):
+def state_97_actions(parser, lexer):
 
     value = None
-    if parser.top_state() in [0, 1, 2, 3, 4, 5, 6, 7]:
-        state_93_actions(parser, lexer)
-        return
+    parser.replay_action(8)
+    top = parser.stack.pop()
+    top = StateTermValue(8, top.term, top.value, top.new_line)
+    parser.stack.append(top)
+    return
 
-def state_102_actions(parser, lexer):
+def state_98_actions(parser, lexer):
 
     value = None
     parser.replay_action(51)
     state_51_actions(parser, lexer)
     return
 
-def state_103_actions(parser, lexer):
+def state_99_actions(parser, lexer):
 
     value = None
     parser.replay_action(59)
     state_59_actions(parser, lexer)
     return
 
-def state_104_actions(parser, lexer):
+def state_100_actions(parser, lexer):
 
     value = None
     if parser.top_state() in [10]:
-        state_96_actions(parser, lexer)
+        state_92_actions(parser, lexer)
         return
     if parser.top_state() in [11]:
-        state_97_actions(parser, lexer)
+        state_93_actions(parser, lexer)
         return
 
-def state_105_actions(parser, lexer):
+def state_101_actions(parser, lexer):
 
     value = None
     if parser.top_state() in [0, 1, 2, 3]:
-        state_99_actions(parser, lexer)
+        state_95_actions(parser, lexer)
         return
     if parser.top_state() in [4, 5, 6, 7]:
-        state_100_actions(parser, lexer)
+        state_96_actions(parser, lexer)
         return
 
-def state_106_actions(parser, lexer):
-
-    value = None
-    if parser.top_state() in [8]:
-        state_107_actions(parser, lexer)
-        return
-
-def state_107_actions(parser, lexer):
+def state_102_actions(parser, lexer):
 
     value = None
     parser.replay_action(38)
@@ -613,21 +578,21 @@ def state_107_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_108_actions(parser, lexer):
+def state_103_actions(parser, lexer):
 
     value = None
     parser.replay_action(65)
     state_65_actions(parser, lexer)
     return
 
-def state_109_actions(parser, lexer):
+def state_104_actions(parser, lexer):
 
     value = None
     parser.replay_action(73)
     state_73_actions(parser, lexer)
     return
 
-def state_110_actions(parser, lexer):
+def state_105_actions(parser, lexer):
 
     value = None
     parser.replay_action(42)
@@ -636,24 +601,40 @@ def state_110_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_111_actions(parser, lexer):
+def state_106_actions(parser, lexer):
 
     value = None
     parser.replay_action(76)
     state_76_actions(parser, lexer)
     return
 
-def state_112_actions(parser, lexer):
+def state_107_actions(parser, lexer):
 
     value = None
     if parser.top_state() in [10, 11]:
-        state_87_actions(parser, lexer)
+        state_85_actions(parser, lexer)
         return
     if parser.top_state() in [12, 13]:
-        state_88_actions(parser, lexer)
+        state_86_actions(parser, lexer)
         return
 
-def state_113_actions(parser, lexer):
+def state_108_actions(parser, lexer):
+
+    value = None
+    if parser.top_state() in [15]:
+        state_103_actions(parser, lexer)
+        return
+    if parser.top_state() in [14]:
+        state_104_actions(parser, lexer)
+        return
+    if parser.top_state() in [16]:
+        state_105_actions(parser, lexer)
+        return
+    if parser.top_state() in [17]:
+        state_106_actions(parser, lexer)
+        return
+
+def state_109_actions(parser, lexer):
 
     value = None
     parser.replay_action(41)
@@ -662,51 +643,21 @@ def state_113_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_114_actions(parser, lexer):
-
-    value = None
-    if parser.top_state() in [15]:
-        state_108_actions(parser, lexer)
-        return
-    if parser.top_state() in [14]:
-        state_109_actions(parser, lexer)
-        return
-    if parser.top_state() in [16]:
-        state_110_actions(parser, lexer)
-        return
-    if parser.top_state() in [17]:
-        state_111_actions(parser, lexer)
-        return
-
-def state_115_actions(parser, lexer):
-
-    value = None
-    if parser.top_state() in [14]:
-        state_113_actions(parser, lexer)
-        return
-
-def state_116_actions(parser, lexer):
-
-    value = None
-    if parser.top_state() in [10]:
-        state_117_actions(parser, lexer)
-        return
-
-def state_117_actions(parser, lexer):
+def state_110_actions(parser, lexer):
 
     value = None
     parser.replay_action(43)
     state_43_actions(parser, lexer)
     return
 
-def state_118_actions(parser, lexer):
+def state_111_actions(parser, lexer):
 
     value = None
     if parser.top_state() in [0, 1, 2, 3, 4, 5, 6, 7]:
-        state_102_actions(parser, lexer)
+        state_98_actions(parser, lexer)
         return
     if parser.top_state() in [8]:
-        state_103_actions(parser, lexer)
+        state_99_actions(parser, lexer)
         return
 
 actions = [
@@ -1158,34 +1109,6 @@ actions = [
 
     state_111_actions,
 
-    # 112.
-
-    state_112_actions,
-
-    # 113.
-
-    state_113_actions,
-
-    # 114.
-
-    state_114_actions,
-
-    # 115.
-
-    state_115_actions,
-
-    # 116.
-
-    state_116_actions,
-
-    # 117.
-
-    state_117_actions,
-
-    # 118.
-
-    state_118_actions,
-
 ]
 
 error_codes = [
@@ -1196,7 +1119,6 @@ error_codes = [
     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-    None, None, None, None, None, None, None,
 ]
 
 goal_nt_to_init_state = {'grammar': 10}

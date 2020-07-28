@@ -31,6 +31,7 @@ use jsparagus::stencil::script::{ImmutableScriptData, ScriptStencil, SourceExten
 use std::boxed::Box;
 use std::cell::RefCell;
 use std::os::raw::{c_char, c_void};
+use std::convert::TryInto;
 use std::rc::Rc;
 use std::{mem, slice, str};
 
@@ -625,6 +626,8 @@ fn smoosh<'alloc>(
     let parse_options = ParseOptions::new();
     let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
     let slices = Rc::new(RefCell::new(SourceSliceList::new()));
+    let text_length = text.len();
+
     let parse_result = match parse_script(
         &allocator,
         text,
@@ -644,7 +647,8 @@ fn smoosh<'alloc>(
         },
     };
 
-    let mut emit_options = EmitOptions::new();
+    let extent = SourceExtent::top_level_script(text_length.try_into().unwrap(), 1, 0);
+    let mut emit_options = EmitOptions::new(extent);
     emit_options.no_script_rval = options.no_script_rval;
     let script = parse_result.unbox();
     match emit(
