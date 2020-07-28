@@ -51,6 +51,10 @@ enum EmojiPresentation { TextOnly = 0, TextDefault = 1, EmojiDefault = 2 };
 const uint32_t kVariationSelector15 = 0xFE0E;  // text presentation
 const uint32_t kVariationSelector16 = 0xFE0F;  // emoji presentation
 
+// Unicode values for EMOJI MODIFIER FITZPATRICK TYPE-*
+const uint32_t kEmojiSkinToneFirst = 0x1f3fb;
+const uint32_t kEmojiSkinToneLast = 0x1f3ff;
+
 extern const hb_unicode_general_category_t sICUtoHBcategory[];
 
 inline uint32_t GetMirroredChar(uint32_t aCh) { return u_charMirror(aCh); }
@@ -176,6 +180,19 @@ inline EmojiPresentation GetEmojiPresentation(uint32_t aCh) {
     return EmojiDefault;
   }
   return TextDefault;
+}
+
+inline bool ShouldPreferEmojiFont(uint32_t aCh, uint32_t aNextCh) {
+  EmojiPresentation emoji = GetEmojiPresentation(aCh);
+  if (emoji != EmojiPresentation::TextOnly) {
+    if (aNextCh == kVariationSelector16 ||
+        (aNextCh != kVariationSelector15 &&
+         emoji == EmojiPresentation::EmojiDefault) ||
+        (aNextCh >= kEmojiSkinToneFirst && aNextCh <= kEmojiSkinToneLast)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // returns the simplified Gen Category as defined in nsUGenCategory
