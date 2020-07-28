@@ -14,8 +14,9 @@ LOG = RaptorLogger(component='raptor-output-handler')
 
 
 class OutputHandler(object):
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.proc = None
+        self.verbose = verbose
 
     def __call__(self, line):
         if not line.strip():
@@ -34,5 +35,5 @@ class OutputHandler(object):
             self.process_output(json.dumps(data))
 
     def process_output(self, line):
-        if "raptor" in line:
+        if "raptor" in line or self.verbose:
             LOG.process_output(self.proc.pid, line)
