@@ -70,6 +70,7 @@ class TabTrayView(
     private val tabTrayItemMenu: TabTrayItemMenu
     private var menu: BrowserMenu? = null
 
+    private val bottomSheetCallback: BottomSheetBehavior.BottomSheetCallback
     private var tabsTouchHelper: TabsTouchHelper
     private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor)
 
@@ -83,7 +84,7 @@ class TabTrayView(
 
         toggleFabText(isPrivate)
 
-        behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 if (!hasAccessibilityEnabled) {
                     if (slideOffset >= SLIDE_OFFSET) {
@@ -100,7 +101,9 @@ class TabTrayView(
                     interactor.onTabTrayDismissed()
                 }
             }
-        })
+        }
+
+        behavior.addBottomSheetCallback(bottomSheetCallback)
 
         val selectedTabIndex = if (!isPrivate) {
             DEFAULT_TAB_ID
@@ -273,6 +276,7 @@ class TabTrayView(
                 view.tabsTray.apply {
                     tabsTouchHelper.attachToRecyclerView(this)
                 }
+                behavior.addBottomSheetCallback(bottomSheetCallback)
 
                 toggleUIMultiselect(multiselect = false)
 
@@ -281,6 +285,7 @@ class TabTrayView(
             is TabTrayDialogFragmentState.Mode.MultiSelect -> {
                 // Disable swipe to delete while in multiselect
                 tabsTouchHelper.attachToRecyclerView(null)
+                behavior.removeBottomSheetCallback(bottomSheetCallback)
 
                 toggleUIMultiselect(multiselect = true)
 
