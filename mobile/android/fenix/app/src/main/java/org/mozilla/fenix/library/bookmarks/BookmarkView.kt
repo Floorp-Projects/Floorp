@@ -112,11 +112,10 @@ class BookmarkView(
     private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
     private var tree: BookmarkNode? = null
 
-    private val bookmarkAdapter: BookmarkAdapter
+    private val bookmarkAdapter = BookmarkAdapter(view.bookmarks_empty_view, interactor)
 
     init {
         view.bookmark_list.apply {
-            bookmarkAdapter = BookmarkAdapter(view.bookmarks_empty_view, interactor)
             adapter = bookmarkAdapter
         }
         view.bookmark_folders_sign_in.setOnClickListener {

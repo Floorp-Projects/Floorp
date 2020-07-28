@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -21,8 +22,9 @@ import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkSeparatorViewHold
 class BookmarkTouchHelper(interactor: BookmarkViewInteractor) :
     ItemTouchHelper(BookmarkTouchCallback(interactor))
 
-class BookmarkTouchCallback(private val interactor: BookmarkViewInteractor) :
-    ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+class BookmarkTouchCallback(
+    private val interactor: BookmarkViewInteractor
+) : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
     override fun getSwipeDirs(
         recyclerView: RecyclerView,
@@ -41,7 +43,14 @@ class BookmarkTouchCallback(private val interactor: BookmarkViewInteractor) :
      */
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         val item = (viewHolder as BookmarkNodeViewHolder).item
-        item?.let { interactor.onDelete(setOf(it)) }
+        item?.let {
+            interactor.onDelete(setOf(it))
+            // We need to notify the adapter of a change if we swipe a folder to prevent
+            // visual bugs when cancelling deletion of a folder
+            if (item.type == BookmarkNodeType.FOLDER) {
+                viewHolder.bindingAdapter?.notifyItemChanged(viewHolder.bindingAdapterPosition)
+            }
+        }
     }
 
     override fun onChildDraw(
