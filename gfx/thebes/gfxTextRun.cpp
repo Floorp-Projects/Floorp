@@ -1884,9 +1884,8 @@ void gfxFontGroup::AddFamilyToFontList(fontlist::Family* aFamily,
 }
 
 bool gfxFontGroup::HasFont(const gfxFontEntry* aFontEntry) {
-  uint32_t count = mFonts.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    if (mFonts[i].FontEntry() == aFontEntry) {
+  for (auto& f : mFonts) {
+    if (f.FontEntry() == aFontEntry) {
       return true;
     }
   }
@@ -1905,7 +1904,10 @@ gfxFont* gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh, bool* aLoading) {
 
   gfxFont* font = ff.Font();
   if (!font) {
-    gfxFontEntry* fe = mFonts[i].FontEntry();
+    gfxFontEntry* fe = ff.FontEntry();
+    if (!fe) {
+      return nullptr;
+    }
     gfxCharacterMap* unicodeRangeMap = nullptr;
     if (fe->mIsUserFontContainer) {
       gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
@@ -1929,13 +1931,16 @@ gfxFont* gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh, bool* aLoading) {
       RefPtr<gfxFont> ref(font);
       return nullptr;
     }
-    mFonts[i].SetFont(font);
+    ff.SetFont(font);
   }
   return font;
 }
 
 void gfxFontGroup::FamilyFace::CheckState(bool& aSkipDrawing) {
   gfxFontEntry* fe = FontEntry();
+  if (!fe) {
+    return;
+  }
   if (fe->mIsUserFontContainer) {
     gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
     gfxUserFontEntry::UserFontLoadState state = ufe->LoadState();
@@ -2121,9 +2126,9 @@ gfxFont* gfxFontGroup::GetFirstValidFont(uint32_t aCh,
     // Need to build a font, loading userfont if not loaded. In
     // cases where unicode range might apply, use the character
     // provided.
-    if (ff.IsUserFontContainer()) {
-      gfxUserFontEntry* ufe =
-          static_cast<gfxUserFontEntry*>(mFonts[i].FontEntry());
+    gfxFontEntry* fe = ff.FontEntry();
+    if (fe && fe->mIsUserFontContainer) {
+      gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
       bool inRange = ufe->CharacterInUnicodeRange(aCh);
       if (inRange) {
         if (!loading &&
@@ -2143,7 +2148,7 @@ gfxFont* gfxFontGroup::GetFirstValidFont(uint32_t aCh,
     font = GetFontAt(i, aCh, &loading);
     if (font) {
       if (aGeneric) {
-        *aGeneric = mFonts[i].Generic();
+        *aGeneric = ff.Generic();
       }
       return font;
     }
@@ -2816,7 +2821,11 @@ gfxFloat gfxFontGroup::GetUnderlineOffset() {
     uint32_t len = mFonts.Length();
     for (uint32_t i = 0; i < len; i++) {
       FamilyFace& ff = mFonts[i];
-      if (!ff.IsUserFontContainer() && !ff.FontEntry()->IsUserFont() &&
+      gfxFontEntry* fe = ff.FontEntry();
+      if (!fe) {
+        continue;
+      }
+      if (!fe->mIsUserFontContainer && !fe->IsUserFont() &&
           ((ff.IsSharedFamily() && ff.SharedFamily() &&
             ff.SharedFamily()->IsBadUnderlineFamily()) ||
            (!ff.IsSharedFamily() && ff.OwnedFamily() &&
@@ -2980,7 +2989,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     } else {
       // don't have a gfxFont yet, test charmap before instantiating
       gfxFontEntry* fe = ff.FontEntry();
-      if (fe->mIsUserFontContainer) {
+      if (fe && fe->mIsUserFontContainer) {
         // for userfonts, need to test both the unicode range map and
         // the cmap of the platform font entry
         gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
@@ -3011,7 +3020,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
             return font;
           }
         }
-      } else if (fe->HasCharacter(aCh)) {
+      } else if (fe && fe->HasCharacter(aCh)) {
         // for normal platform fonts, after checking the cmap
         // build the font via GetFontAt
         font = GetFontAt(i, aCh, &loading);
@@ -3048,7 +3057,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
       // fallback to handle styles with reduced character sets (see
       // also above).
       gfxFontEntry* fe = ff.FontEntry();
-      if (!fe->mIsUserFontContainer && !fe->IsUserFont()) {
+      if (fe && !fe->mIsUserFontContainer && !fe->IsUserFont()) {
         font = FindFallbackFaceForChar(ff, aCh);
         if (font) {
           *aMatchType = {FontMatchType::Kind::kFontGroup, ff.Generic()};
