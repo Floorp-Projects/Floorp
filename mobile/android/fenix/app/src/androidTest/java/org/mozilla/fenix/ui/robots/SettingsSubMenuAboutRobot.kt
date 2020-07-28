@@ -64,6 +64,11 @@ private fun assertFirefoxPreviewPage() {
 }
 
 private fun navigateBackToAboutPage(itemToInteract: () -> Unit) {
+    browserScreen {
+    }.openTabDrawer {
+        closeTab()
+    }
+
     homeScreen {
     }.openThreeDotMenu {
     }.openSettings {
