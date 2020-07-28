@@ -1409,6 +1409,16 @@ bool WarpCacheIRTranspiler::emitMathAbsNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathClz32Result(Int32OperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MClz::New(alloc(), input, MIRType::Int32);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathFloorToInt32Result(
     NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
