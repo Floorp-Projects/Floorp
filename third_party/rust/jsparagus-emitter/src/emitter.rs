@@ -145,11 +145,13 @@ pub struct InstructionWriter {
 #[derive(Debug)]
 pub struct EmitOptions {
     pub no_script_rval: bool,
+    pub extent: SourceExtent,
 }
 impl EmitOptions {
-    pub fn new() -> Self {
+    pub fn new(extent: SourceExtent) -> Self {
         Self {
             no_script_rval: false,
+            extent,
         }
     }
 }
@@ -1473,6 +1475,7 @@ impl InstructionWriter {
     pub fn into_stencil(
         self,
         script_data_list: &mut ImmutableScriptDataList,
+        extent: SourceExtent,
     ) -> Result<ScriptStencil, EmitError> {
         let main_offset: usize = self.main_offset.into();
         let nfixed: u32 = self.max_fixed_slots.into();
@@ -1500,7 +1503,7 @@ impl InstructionWriter {
         Ok(ScriptStencil::top_level_script(
             self.gcthings.into(),
             immutable_script_data,
-            SourceExtent::top_level_script(1, 0),
+            extent,
         ))
     }
 }

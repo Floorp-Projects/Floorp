@@ -219,7 +219,7 @@ impl From<ImmutableScriptDataList> for Vec<ImmutableScriptData> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SourceExtent {
     pub source_start: u32,
     pub source_end: u32,
@@ -231,12 +231,12 @@ pub struct SourceExtent {
 }
 
 impl SourceExtent {
-    pub fn top_level_script(lineno: u32, column: u32) -> Self {
+    pub fn top_level_script(length: u32, lineno: u32, column: u32) -> Self {
         Self {
             source_start: 0,
-            source_end: 0,
+            source_end: length,
             to_string_start: 0,
-            to_string_end: 0,
+            to_string_end: length,
 
             lineno,
             column,
