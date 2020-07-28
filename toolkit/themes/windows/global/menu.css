@@ -272,3 +272,5 @@ menulist > menupopup > menuseparator {
   border-top: 1px solid #000000;
   border-bottom: none;
 }
+
+%include ../../shared/menu-scrolling.inc.css
