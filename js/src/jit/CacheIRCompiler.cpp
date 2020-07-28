@@ -3986,6 +3986,21 @@ bool CacheIRCompiler::emitMathSignNumberToInt32Result(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathImulResult(Int32OperandId lhsId,
+                                         Int32OperandId rhsId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Register lhs = allocator.useRegister(masm, lhsId);
+  Register rhs = allocator.useRegister(masm, rhsId);
+
+  masm.mov(lhs, scratch);
+  masm.mul32(rhs, scratch);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

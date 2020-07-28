@@ -1623,6 +1623,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachMathAbs(HandleFunction callee);
   AttachDecision tryAttachMathClz32(HandleFunction callee);
   AttachDecision tryAttachMathSign(HandleFunction callee);
+  AttachDecision tryAttachMathImul(HandleFunction callee);
   AttachDecision tryAttachMathFloor(HandleFunction callee);
   AttachDecision tryAttachMathCeil(HandleFunction callee);
   AttachDecision tryAttachMathTrunc(HandleFunction callee);

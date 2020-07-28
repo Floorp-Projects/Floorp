@@ -953,6 +953,14 @@
   args:
     input: NumberId
 
+- name: MathImulResult
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    lhs: Int32Id
+    rhs: Int32Id
+
 - name: MathSqrtNumberResult
   shared: true
   transpile: true

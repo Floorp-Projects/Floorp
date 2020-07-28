@@ -6005,6 +6005,42 @@ AttachDecision CallIRGenerator::tryAttachMathSign(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachMathImul(HandleFunction callee) {
+  // Need two (number) arguments.
+  if (argc_ != 2 || !args_[0].isNumber() || !args_[1].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'imul' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+
+  Int32OperandId int32Arg0Id, int32Arg1Id;
+  if (args_[0].isInt32() && args_[1].isInt32()) {
+    int32Arg0Id = writer.guardToInt32(arg0Id);
+    int32Arg1Id = writer.guardToInt32(arg1Id);
+  } else {
+    // Treat both arguments as numbers if at least one of them is non-int32.
+    NumberOperandId numArg0Id = writer.guardIsNumber(arg0Id);
+    NumberOperandId numArg1Id = writer.guardIsNumber(arg1Id);
+    int32Arg0Id = writer.truncateDoubleToUInt32(numArg0Id);
+    int32Arg1Id = writer.truncateDoubleToUInt32(numArg1Id);
+  }
+  writer.mathImulResult(int32Arg0Id, int32Arg1Id);
+
+  // Math.imul always returns int32 so we don't need type monitoring.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("MathImul");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachMathFloor(HandleFunction callee) {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
@@ -6710,6 +6746,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachMathClz32(callee);
     case InlinableNative::MathSign:
       return tryAttachMathSign(callee);
+    case InlinableNative::MathImul:
+      return tryAttachMathImul(callee);
     case InlinableNative::MathFloor:
       return tryAttachMathFloor(callee);
     case InlinableNative::MathCeil:

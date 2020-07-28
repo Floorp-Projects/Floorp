@@ -1450,6 +1450,18 @@ bool WarpCacheIRTranspiler::emitMathSignNumberToInt32Result(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathImulResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MMul::New(alloc(), lhs, rhs, MIRType::Int32, MMul::Integer);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathFloorToInt32Result(
     NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
