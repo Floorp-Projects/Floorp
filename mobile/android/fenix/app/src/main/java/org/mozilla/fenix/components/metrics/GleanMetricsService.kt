@@ -12,6 +12,7 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.AboutPage
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
+import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Collections
@@ -45,6 +46,7 @@ import org.mozilla.fenix.GleanMetrics.SearchWidgetCfr
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
+import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
@@ -633,40 +635,47 @@ private val Event.wrapper: EventWrapper<*>?
         )
 
         is Event.TabsTrayOpened -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.opened.record(it) }
+            { TabsTray.opened.record(it) }
         )
         is Event.TabsTrayClosed -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.closed.record(it) }
+            { TabsTray.closed.record(it) }
         )
         is Event.OpenedExistingTab -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.openedExistingTab.record(it) }
+            { TabsTray.openedExistingTab.record(it) }
         )
         is Event.ClosedExistingTab -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.closedExistingTab.record(it) }
+            { TabsTray.closedExistingTab.record(it) }
         )
         is Event.TabsTrayPrivateModeTapped -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.privateModeTapped.record(it) }
+            { TabsTray.privateModeTapped.record(it) }
         )
         is Event.TabsTrayNormalModeTapped -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.normalModeTapped.record(it) }
+            { TabsTray.normalModeTapped.record(it) }
         )
         is Event.NewTabTapped -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.newTabTapped.record(it) }
+            { TabsTray.newTabTapped.record(it) }
         )
         is Event.NewPrivateTabTapped -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.newPrivateTabTapped.record(it) }
+            { TabsTray.newPrivateTabTapped.record(it) }
         )
         is Event.TabsTrayMenuOpened -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.menuOpened.record(it) }
+            { TabsTray.menuOpened.record(it) }
         )
         is Event.TabsTraySaveToCollectionPressed -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.saveToCollection.record(it) }
+            { TabsTray.saveToCollection.record(it) }
         )
         is Event.TabsTrayShareAllTabsPressed -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.shareAllTabs.record(it) }
+            { TabsTray.shareAllTabs.record(it) }
         )
         is Event.TabsTrayCloseAllTabsPressed -> EventWrapper<NoExtraKeys>(
-            { org.mozilla.fenix.GleanMetrics.TabsTray.closeAllTabs.record(it) }
+            { TabsTray.closeAllTabs.record(it) }
+        )
+        Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
+            { Autoplay.visitedSetting.record(it) }
+        )
+        is Event.AutoPlaySettingChanged -> EventWrapper(
+            { Autoplay.settingChanged.record(it) },
+            { Autoplay.settingChangedKeys.valueOf(it) }
         )
 
         // Don't record other events in Glean:

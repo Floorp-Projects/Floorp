@@ -3207,3 +3207,32 @@ perf.awesomebar:
       - fenix-core@mozilla.com
       - gkruglov@mozilla.com
     expires: "2020-10-01"
+
+autoplay:
+  visited_setting:
+    type: event
+    description: A user visited the autoplay settings screen
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11579
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/13041#issuecomment-665777411
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-02-01"
+  setting_changed:
+    type: event
+    description: |
+      A user changed their autoplay setting to either block_cellular,
+      block_audio, or block_all.
+    extra_keys:
+      autoplay_setting:
+        description: |
+          The new setting for autoplay: block_cellular,
+          block_audio, or block_all.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11579
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/13041#issuecomment-665777411
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-02-01"

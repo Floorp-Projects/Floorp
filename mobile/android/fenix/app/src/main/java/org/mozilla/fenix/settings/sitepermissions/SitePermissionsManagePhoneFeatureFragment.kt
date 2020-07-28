@@ -27,6 +27,8 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.AL
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_AUDIBLE
@@ -180,16 +182,27 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
      */
     private fun saveActionInSettings(autoplaySetting: Int) {
         settings.setAutoplayUserSetting(autoplaySetting)
+        val setting: Event.AutoPlaySettingChanged.AutoplaySetting
+
         val (audible, inaudible) = when (autoplaySetting) {
             AUTOPLAY_ALLOW_ALL,
             AUTOPLAY_ALLOW_ON_WIFI -> {
                 settings.setAutoplayUserSetting(AUTOPLAY_ALLOW_ON_WIFI)
+                setting = Event.AutoPlaySettingChanged.AutoplaySetting.BLOCK_CELLULAR
                 BLOCKED to BLOCKED
             }
-            AUTOPLAY_BLOCK_AUDIBLE -> BLOCKED to ALLOWED
-            AUTOPLAY_BLOCK_ALL -> BLOCKED to BLOCKED
+            AUTOPLAY_BLOCK_AUDIBLE -> {
+                setting = Event.AutoPlaySettingChanged.AutoplaySetting.BLOCK_AUDIO
+                BLOCKED to ALLOWED
+            }
+            AUTOPLAY_BLOCK_ALL -> {
+                setting = Event.AutoPlaySettingChanged.AutoplaySetting.BLOCK_ALL
+                BLOCKED to BLOCKED
+            }
             else -> return
         }
+
+        requireComponents.analytics.metrics.track(Event.AutoPlaySettingChanged(setting))
         settings.setSitePermissionsPhoneFeatureAction(AUTOPLAY_AUDIBLE, audible)
         settings.setSitePermissionsPhoneFeatureAction(AUTOPLAY_INAUDIBLE, inaudible)
     }

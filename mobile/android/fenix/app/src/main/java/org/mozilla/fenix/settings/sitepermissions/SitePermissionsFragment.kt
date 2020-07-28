@@ -10,7 +10,9 @@ import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
@@ -78,6 +80,11 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
     private fun navigateToPhoneFeature(phoneFeature: PhoneFeature) {
         val directions = SitePermissionsFragmentDirections
             .actionSitePermissionsToManagePhoneFeatures(phoneFeature)
+
+        if (phoneFeature == PhoneFeature.AUTOPLAY_AUDIBLE) {
+            requireComponents.analytics.metrics.track(Event.AutoPlaySettingVisited)
+        }
+
         Navigation.findNavController(requireView()).navigate(directions)
     }
 }

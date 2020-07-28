@@ -33,6 +33,7 @@ import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
+import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
@@ -512,6 +513,17 @@ sealed class Event {
 
         override val extras: Map<Events.tabCounterMenuActionKeys, String>?
             get() = mapOf(Events.tabCounterMenuActionKeys.item to item.toString().toLowerCase(Locale.ROOT))
+    }
+
+    object AutoPlaySettingVisited : Event()
+
+    data class AutoPlaySettingChanged(val setting: AutoplaySetting) : Event() {
+        enum class AutoplaySetting {
+            BLOCK_CELLULAR, BLOCK_AUDIO, BLOCK_ALL
+        }
+
+        override val extras: Map<Autoplay.settingChangedKeys, String>?
+            get() = mapOf(Autoplay.settingChangedKeys.autoplaySetting to setting.toString().toLowerCase(Locale.ROOT))
     }
 
     sealed class Search
