@@ -3939,6 +3939,53 @@ bool CacheIRCompiler::emitMathClz32Result(Int32OperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathSignInt32Result(Int32OperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Register input = allocator.useRegister(masm, inputId);
+
+  masm.signInt32(input, scratch);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitMathSignNumberResult(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch2(*this, FloatReg1);
+
+  allocator.ensureDoubleRegister(masm, inputId, floatScratch1);
+
+  masm.signDouble(floatScratch1, floatScratch2);
+  masm.boxDouble(floatScratch2, output.valueReg(), floatScratch2);
+  return true;
+}
+
+bool CacheIRCompiler::emitMathSignNumberToInt32Result(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch2(*this, FloatReg1);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  allocator.ensureDoubleRegister(masm, inputId, floatScratch1);
+
+  masm.signDoubleToInt32(floatScratch1, scratch, floatScratch2,
+                         failure->label());
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
