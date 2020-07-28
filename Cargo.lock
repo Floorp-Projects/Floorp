@@ -468,6 +468,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cache-padded"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "631ae5198c9be5e753e5cc215e1bd73c2b466a3565173db433f52bb9d3e66dba"
+
+[[package]]
 name = "cascade_bloom_filter"
 version = "0.1.0"
 dependencies = [
@@ -720,7 +726,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=260be23d1166a22e2ff6a89844efaca8bb4b61e2#260be23d1166a22e2ff6a89844efaca8bb4b61e2"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=b071bbe2119885605f64de6b63356a7501018841#b071bbe2119885605f64de6b63356a7501018841"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -968,7 +974,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=260be23d1166a22e2ff6a89844efaca8bb4b61e2#260be23d1166a22e2ff6a89844efaca8bb4b61e2"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=b071bbe2119885605f64de6b63356a7501018841#b071bbe2119885605f64de6b63356a7501018841"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -980,6 +986,7 @@ dependencies = [
  "libc",
  "mach",
  "ringbuf",
+ "triple_buffer",
 ]
 
 [[package]]
@@ -5176,6 +5183,15 @@ name = "tracy-rs"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dbbb439715d4c258415c7cbf137be32a4f54f7348724076145ede565ee2142e8"
+
+[[package]]
+name = "triple_buffer"
+version = "5.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06577fa2229f6eff69f06ba2e08a27458f32f87a7985abb5047d7bd2e0006512"
+dependencies = [
+ "cache-padded",
+]
 
 [[package]]
 name = "try-lock"

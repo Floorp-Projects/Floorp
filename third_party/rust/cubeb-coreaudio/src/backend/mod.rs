@@ -43,7 +43,7 @@ use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
 use std::slice;
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 const NO_ERR: OSStatus = 0;
@@ -345,13 +345,14 @@ extern "C" fn audiounit_input_callback(
     let stm = unsafe { &mut *(user_ptr as *mut AudioUnitStream) };
 
     if unsafe { *flags | kAudioTimeStampHostTimeValid } != 0 {
-        let input_latency_frames = compute_input_latency(&stm, unsafe { (*tstamp).mHostTime });
+        let now = unsafe { mach_absolute_time() };
+        let input_latency_frames = compute_input_latency(&stm, unsafe { (*tstamp).mHostTime }, now);
         stm.total_input_latency_frames
             .store(input_latency_frames, Ordering::SeqCst);
     }
 
-    if stm.shutdown.load(Ordering::SeqCst) {
-        cubeb_log!("({:p}) input shutdown", stm as *const AudioUnitStream);
+    if stm.stopped.load(Ordering::SeqCst) {
+        cubeb_log!("({:p}) input stopped", stm as *const AudioUnitStream);
         return NO_ERR;
     }
 
@@ -493,42 +494,30 @@ fn host_time_to_ns(host_time: u64) -> u64 {
     rv as u64
 }
 
-fn compute_output_latency(stm: &AudioUnitStream, host_time: u64) -> u32 {
+fn compute_output_latency(stm: &AudioUnitStream, host_time: u64, now: u64) -> u32 {
     const NS2S: u64 = 1_000_000_000;
-
-    let now = host_time_to_ns(unsafe { mach_absolute_time() });
     let audio_output_time = host_time_to_ns(host_time);
     let output_hw_rate = stm.core_stream_data.output_hw_rate as u64;
     let fixed_latency_ns =
-        (stm.current_output_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / output_hw_rate;
-    let total_output_latency_ns = if audio_output_time < now {
-        0
-    } else {
-        // The total output latency is the timestamp difference + the stream latency + the hardware
-        // latency.
-        (audio_output_time - now) + fixed_latency_ns
-    };
+        (stm.output_device_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / output_hw_rate;
+    // The total output latency is the timestamp difference + the stream latency + the hardware
+    // latency.
+    let total_output_latency_ns = fixed_latency_ns + audio_output_time.saturating_sub(now);
 
-    ((total_output_latency_ns * output_hw_rate) / NS2S) as u32
+    (total_output_latency_ns * output_hw_rate / NS2S) as u32
 }
 
-fn compute_input_latency(stm: &AudioUnitStream, host_time: u64) -> u32 {
+fn compute_input_latency(stm: &AudioUnitStream, host_time: u64, now: u64) -> u32 {
     const NS2S: u64 = 1_000_000_000;
-
-    let now = host_time_to_ns(unsafe { mach_absolute_time() });
     let audio_input_time = host_time_to_ns(host_time);
     let input_hw_rate = stm.core_stream_data.input_hw_rate as u64;
     let fixed_latency_ns =
-        (stm.current_input_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / input_hw_rate;
-    let total_input_latency_ns = if audio_input_time > now {
-        0
-    } else {
-        // The total input latency is the timestamp difference + the stream latency +
-        // the hardware latency.
-        (now - audio_input_time) + fixed_latency_ns
-    };
+        (stm.input_device_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / input_hw_rate;
+    // The total input latency is the timestamp difference + the stream latency +
+    // the hardware latency.
+    let total_input_latency_ns = now.saturating_sub(audio_input_time) + fixed_latency_ns;
 
-    ((total_input_latency_ns * input_hw_rate) / NS2S) as u32
+    (total_input_latency_ns * input_hw_rate / NS2S) as u32
 }
 
 extern "C" fn audiounit_output_callback(
@@ -547,29 +536,14 @@ extern "C" fn audiounit_output_callback(
 
     let out_buffer_list_ref = unsafe { &mut (*out_buffer_list) };
     assert_eq!(out_buffer_list_ref.mNumberBuffers, 1);
-    let mut buffers = unsafe {
+    let buffers = unsafe {
         let ptr = out_buffer_list_ref.mBuffers.as_mut_ptr();
         let len = out_buffer_list_ref.mNumberBuffers as usize;
         slice::from_raw_parts_mut(ptr, len)
     };
 
-    if unsafe { *flags | kAudioTimeStampHostTimeValid } != 0 {
-        let output_latency_frames = compute_output_latency(&stm, unsafe { (*tstamp).mHostTime });
-        stm.total_output_latency_frames
-            .store(output_latency_frames, Ordering::SeqCst);
-    }
-
-    cubeb_logv!(
-        "({:p}) output: buffers {}, size {}, channels {}, frames {}.",
-        stm as *const AudioUnitStream,
-        buffers.len(),
-        buffers[0].mDataByteSize,
-        buffers[0].mNumberChannels,
-        output_frames
-    );
-
-    if stm.shutdown.load(Ordering::SeqCst) {
-        cubeb_log!("({:p}) output shutdown.", stm as *const AudioUnitStream);
+    if stm.stopped.load(Ordering::SeqCst) {
+        cubeb_log!("({:p}) output stopped.", stm as *const AudioUnitStream);
         audiounit_make_silent(&mut buffers[0]);
         return NO_ERR;
     }
@@ -584,151 +558,162 @@ extern "C" fn audiounit_output_callback(
         return NO_ERR;
     }
 
-    let handler = |stm: &mut AudioUnitStream,
-                   output_frames: u32,
-                   buffers: &mut [AudioBuffer]|
-     -> (OSStatus, Option<State>) {
-        // Get output buffer
-        let output_buffer = match stm.core_stream_data.mixer.as_mut() {
-            None => buffers[0].mData,
-            Some(mixer) => {
-                // If remixing needs to occur, we can't directly work in our final
-                // destination buffer as data may be overwritten or too small to start with.
-                mixer.update_buffer_size(output_frames as usize);
-                mixer.get_buffer_mut_ptr() as *mut c_void
-            }
-        };
+    let now = unsafe { mach_absolute_time() };
 
-        let prev_frames_written = stm.frames_written.load(Ordering::SeqCst);
+    if unsafe { *flags | kAudioTimeStampHostTimeValid } != 0 {
+        let output_latency_frames =
+            compute_output_latency(&stm, unsafe { (*tstamp).mHostTime }, now);
+        stm.total_output_latency_frames
+            .store(output_latency_frames, Ordering::SeqCst);
+    }
 
-        stm.frames_written
-            .fetch_add(output_frames as usize, Ordering::SeqCst);
+    cubeb_logv!(
+        "({:p}) output: buffers {}, size {}, channels {}, frames {}.",
+        stm as *const AudioUnitStream,
+        buffers.len(),
+        buffers[0].mDataByteSize,
+        buffers[0].mNumberChannels,
+        output_frames
+    );
 
-        // Also get the input buffer if the stream is duplex
-        let (input_buffer, mut input_frames) = if !stm.core_stream_data.input_unit.is_null() {
-            let input_buffer_manager = stm.core_stream_data.input_buffer_manager.as_mut().unwrap();
-            assert_ne!(stm.core_stream_data.input_desc.mChannelsPerFrame, 0);
-            let input_channels = stm.core_stream_data.input_desc.mChannelsPerFrame as usize;
-            // If the output callback came first and this is a duplex stream, we need to
-            // fill in some additional silence in the resampler.
-            // Otherwise, if we had more than expected callbacks in a row, or we're
-            // currently switching, we add some silence as well to compensate for the
-            // fact that we're lacking some input data.
-            let input_frames_needed = minimum_resampling_input_frames(
-                stm.core_stream_data.input_hw_rate,
-                f64::from(stm.core_stream_data.output_stream_params.rate()),
-                output_frames as usize,
-            );
-            let buffered_input_frames = input_buffer_manager.available_samples() / input_channels;
-            // Else if the input has buffered a lot already because the output started late, we
-            // need to trim the input buffer
-            if prev_frames_written == 0 && buffered_input_frames > input_frames_needed as usize {
-                input_buffer_manager.trim(input_frames_needed * input_channels);
-                let popped_frames = buffered_input_frames - input_frames_needed as usize;
-                stm.frames_read.fetch_sub(popped_frames, Ordering::SeqCst);
-
-                cubeb_log!("Dropping {} frames in input buffer.", popped_frames);
-            }
-
-            let input_frames = if input_frames_needed > buffered_input_frames
-                && (stm.switching_device.load(Ordering::SeqCst)
-                    || stm.frames_read.load(Ordering::SeqCst) == 0)
-            {
-                // The silent frames will be inserted in `get_linear_data` below.
-                let silent_frames_to_push = input_frames_needed - buffered_input_frames;
-                stm.frames_read
-                    .fetch_add(input_frames_needed, Ordering::SeqCst);
-                cubeb_log!(
-                    "({:p}) Missing Frames: {} will append {} frames of input silence.",
-                    stm.core_stream_data.stm_ptr,
-                    if stm.frames_read.load(Ordering::SeqCst) == 0 {
-                        "input hasn't started,"
-                    } else {
-                        assert!(stm.switching_device.load(Ordering::SeqCst));
-                        "device switching,"
-                    },
-                    silent_frames_to_push
-                );
-                input_frames_needed
-            } else {
-                buffered_input_frames
-            };
-
-            let input_samples_needed = input_frames * input_channels;
-            (
-                input_buffer_manager.get_linear_data(input_samples_needed),
-                input_frames as i64,
-            )
-        } else {
-            (ptr::null_mut::<c_void>(), 0)
-        };
-
-        let outframes = stm.core_stream_data.resampler.fill(
-            input_buffer,
-            if input_buffer.is_null() {
-                ptr::null_mut()
-            } else {
-                &mut input_frames
-            },
-            output_buffer,
-            i64::from(output_frames),
-        );
-
-        if outframes < 0 || outframes > i64::from(output_frames) {
-            stm.shutdown.store(true, Ordering::SeqCst);
-            stm.core_stream_data.stop_audiounits();
-            audiounit_make_silent(&mut buffers[0]);
-            return (NO_ERR, Some(State::Error));
+    // Get output buffer
+    let output_buffer = match stm.core_stream_data.mixer.as_mut() {
+        None => buffers[0].mData,
+        Some(mixer) => {
+            // If remixing needs to occur, we can't directly work in our final
+            // destination buffer as data may be overwritten or too small to start with.
+            mixer.update_buffer_size(output_frames as usize);
+            mixer.get_buffer_mut_ptr() as *mut c_void
         }
-
-        stm.draining
-            .store(outframes < i64::from(output_frames), Ordering::SeqCst);
-        stm.frames_played
-            .store(stm.frames_queued, atomic::Ordering::SeqCst);
-        stm.frames_queued += outframes as u64;
-
-        // Post process output samples.
-        if stm.draining.load(Ordering::SeqCst) {
-            // Clear missing frames (silence)
-            let frames_to_bytes = |frames: usize| -> usize {
-                let sample_size =
-                    cubeb_sample_size(stm.core_stream_data.output_stream_params.format());
-                let channel_count = stm.core_stream_data.output_stream_params.channels() as usize;
-                frames * sample_size * channel_count
-            };
-            let out_bytes = unsafe {
-                slice::from_raw_parts_mut(
-                    output_buffer as *mut u8,
-                    frames_to_bytes(output_frames as usize),
-                )
-            };
-            let start = frames_to_bytes(outframes as usize);
-            for byte in out_bytes.iter_mut().skip(start) {
-                *byte = 0;
-            }
-        }
-
-        // Mixing
-        if stm.core_stream_data.mixer.is_some() {
-            assert!(
-                buffers[0].mDataByteSize
-                    >= stm.core_stream_data.output_desc.mBytesPerFrame * output_frames
-            );
-            stm.core_stream_data.mixer.as_mut().unwrap().mix(
-                output_frames as usize,
-                buffers[0].mData,
-                buffers[0].mDataByteSize as usize,
-            );
-        }
-
-        (NO_ERR, None)
     };
 
-    let (status, notification) = handler(stm, output_frames, &mut buffers);
-    if let Some(state) = notification {
-        stm.notify_state_changed(state);
+    let prev_frames_written = stm.frames_written.load(Ordering::SeqCst);
+
+    stm.frames_written
+        .fetch_add(output_frames as usize, Ordering::SeqCst);
+
+    // Also get the input buffer if the stream is duplex
+    let (input_buffer, mut input_frames) = if !stm.core_stream_data.input_unit.is_null() {
+        let input_buffer_manager = stm.core_stream_data.input_buffer_manager.as_mut().unwrap();
+        assert_ne!(stm.core_stream_data.input_desc.mChannelsPerFrame, 0);
+        let input_channels = stm.core_stream_data.input_desc.mChannelsPerFrame as usize;
+        // If the output callback came first and this is a duplex stream, we need to
+        // fill in some additional silence in the resampler.
+        // Otherwise, if we had more than expected callbacks in a row, or we're
+        // currently switching, we add some silence as well to compensate for the
+        // fact that we're lacking some input data.
+        let input_frames_needed = minimum_resampling_input_frames(
+            stm.core_stream_data.input_hw_rate,
+            f64::from(stm.core_stream_data.output_stream_params.rate()),
+            output_frames as usize,
+        );
+        let buffered_input_frames = input_buffer_manager.available_samples() / input_channels;
+        // Else if the input has buffered a lot already because the output started late, we
+        // need to trim the input buffer
+        if prev_frames_written == 0 && buffered_input_frames > input_frames_needed as usize {
+            input_buffer_manager.trim(input_frames_needed * input_channels);
+            let popped_frames = buffered_input_frames - input_frames_needed as usize;
+            stm.frames_read.fetch_sub(popped_frames, Ordering::SeqCst);
+
+            cubeb_log!("Dropping {} frames in input buffer.", popped_frames);
+        }
+
+        let input_frames = if input_frames_needed > buffered_input_frames
+            && (stm.switching_device.load(Ordering::SeqCst)
+                || stm.frames_read.load(Ordering::SeqCst) == 0)
+        {
+            // The silent frames will be inserted in `get_linear_data` below.
+            let silent_frames_to_push = input_frames_needed - buffered_input_frames;
+            cubeb_log!(
+                "({:p}) Missing Frames: {} will append {} frames of input silence.",
+                stm.core_stream_data.stm_ptr,
+                if stm.frames_read.load(Ordering::SeqCst) == 0 {
+                    "input hasn't started,"
+                } else {
+                    assert!(stm.switching_device.load(Ordering::SeqCst));
+                    "device switching,"
+                },
+                silent_frames_to_push
+            );
+            stm.frames_read
+                .fetch_add(input_frames_needed, Ordering::SeqCst);
+            input_frames_needed
+        } else {
+            buffered_input_frames
+        };
+
+        let input_samples_needed = input_frames * input_channels;
+        (
+            input_buffer_manager.get_linear_data(input_samples_needed),
+            input_frames as i64,
+        )
+    } else {
+        (ptr::null_mut::<c_void>(), 0)
+    };
+
+    let outframes = stm.core_stream_data.resampler.fill(
+        input_buffer,
+        if input_buffer.is_null() {
+            ptr::null_mut()
+        } else {
+            &mut input_frames
+        },
+        output_buffer,
+        i64::from(output_frames),
+    );
+
+    if outframes < 0 || outframes > i64::from(output_frames) {
+        stm.stopped.store(true, Ordering::SeqCst);
+        stm.core_stream_data.stop_audiounits();
+        audiounit_make_silent(&mut buffers[0]);
+        stm.notify_state_changed(State::Error);
+        return NO_ERR;
     }
-    status
+
+    stm.draining
+        .store(outframes < i64::from(output_frames), Ordering::SeqCst);
+    stm.output_callback_timing_data_write
+        .write(OutputCallbackTimingData {
+            frames_queued: stm.frames_queued,
+            timestamp: now,
+            buffer_size: outframes as u64,
+        });
+
+    stm.frames_queued += outframes as u64;
+
+    // Post process output samples.
+    if stm.draining.load(Ordering::SeqCst) {
+        // Clear missing frames (silence)
+        let frames_to_bytes = |frames: usize| -> usize {
+            let sample_size = cubeb_sample_size(stm.core_stream_data.output_stream_params.format());
+            let channel_count = stm.core_stream_data.output_stream_params.channels() as usize;
+            frames * sample_size * channel_count
+        };
+        let out_bytes = unsafe {
+            slice::from_raw_parts_mut(
+                output_buffer as *mut u8,
+                frames_to_bytes(output_frames as usize),
+            )
+        };
+        let start = frames_to_bytes(outframes as usize);
+        for byte in out_bytes.iter_mut().skip(start) {
+            *byte = 0;
+        }
+    }
+
+    // Mixing
+    if stm.core_stream_data.mixer.is_some() {
+        assert!(
+            buffers[0].mDataByteSize
+                >= stm.core_stream_data.output_desc.mBytesPerFrame * output_frames
+        );
+        stm.core_stream_data.mixer.as_mut().unwrap().mix(
+            output_frames as usize,
+            buffers[0].mData,
+            buffers[0].mDataByteSize as usize,
+        );
+    }
+    NO_ERR
 }
 
 #[allow(clippy::cognitive_complexity)]
@@ -2843,7 +2828,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 return Err(Error::error());
             }
 
-            stream.current_input_latency_frames.store(
+            stream.input_device_latency_frames.store(
                 get_fixed_latency(self.input_device.id, DeviceType::INPUT),
                 Ordering::SeqCst,
             );
@@ -2856,7 +2841,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 return Err(Error::error());
             }
 
-            stream.current_output_latency_frames.store(
+            stream.output_device_latency_frames.store(
                 get_fixed_latency(self.output_device.id, DeviceType::OUTPUT),
                 Ordering::SeqCst,
             );
@@ -2872,7 +2857,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 &mut size,
             ) == NO_ERR
             {
-                stream.current_output_latency_frames.fetch_add(
+                stream.output_device_latency_frames.fetch_add(
                     (unit_s * self.output_desc.mSampleRate) as u32,
                     Ordering::SeqCst,
                 );
@@ -3119,6 +3104,13 @@ impl<'ctx> Drop for CoreStreamData<'ctx> {
     }
 }
 
+#[derive(Debug, Clone)]
+struct OutputCallbackTimingData {
+    frames_queued: u64,
+    timestamp: u64,
+    buffer_size: u64,
+}
+
 // The fisrt two members of the Cubeb stream must be a pointer to its Cubeb context and a void user
 // defined pointer. The Cubeb interface use this assumption to operate the Cubeb APIs.
 // #[repr(C)] is used to prevent any padding from being added in the beginning of the AudioUnitStream.
@@ -3136,23 +3128,27 @@ struct AudioUnitStream<'ctx> {
     state_callback: ffi::cubeb_state_callback,
     device_changed_callback: Mutex<ffi::cubeb_device_changed_callback>,
     // Frame counters
-    frames_played: AtomicU64,
     frames_queued: u64,
     // How many frames got read from the input since the stream started (includes
     // padded silence)
     frames_read: AtomicUsize,
     // How many frames got written to the output device since the stream started
     frames_written: AtomicUsize,
-    shutdown: AtomicBool,
+    stopped: AtomicBool,
     draining: AtomicBool,
     reinit_pending: AtomicBool,
     destroy_pending: AtomicBool,
     // Latency requested by the user.
     latency_frames: u32,
-    current_output_latency_frames: AtomicU32,
-    current_input_latency_frames: AtomicU32,
+    // Fixed latency, characteristic of the device.
+    output_device_latency_frames: AtomicU32,
+    input_device_latency_frames: AtomicU32,
+    // Total latency: the latency of the device + the OS latency
     total_output_latency_frames: AtomicU32,
     total_input_latency_frames: AtomicU32,
+    output_callback_timing_data_read: triple_buffer::Output<OutputCallbackTimingData>,
+    output_callback_timing_data_write: triple_buffer::Input<OutputCallbackTimingData>,
+    prev_position: u64,
     // This is true if a device change callback is currently running.
     switching_device: AtomicBool,
     core_stream_data: CoreStreamData<'ctx>,
@@ -3166,6 +3162,14 @@ impl<'ctx> AudioUnitStream<'ctx> {
         state_callback: ffi::cubeb_state_callback,
         latency_frames: u32,
     ) -> Self {
+        let output_callback_timing_data =
+            triple_buffer::TripleBuffer::new(OutputCallbackTimingData {
+                frames_queued: 0,
+                timestamp: 0,
+                buffer_size: 0,
+            });
+        let (output_callback_timing_data_write, output_callback_timing_data_read) =
+            output_callback_timing_data.split();
         AudioUnitStream {
             context,
             user_ptr,
@@ -3173,19 +3177,21 @@ impl<'ctx> AudioUnitStream<'ctx> {
             data_callback,
             state_callback,
             device_changed_callback: Mutex::new(None),
-            frames_played: AtomicU64::new(0),
             frames_queued: 0,
             frames_read: AtomicUsize::new(0),
             frames_written: AtomicUsize::new(0),
-            shutdown: AtomicBool::new(true),
+            stopped: AtomicBool::new(true),
             draining: AtomicBool::new(false),
             reinit_pending: AtomicBool::new(false),
             destroy_pending: AtomicBool::new(false),
             latency_frames,
-            current_output_latency_frames: AtomicU32::new(0),
-            current_input_latency_frames: AtomicU32::new(0),
+            output_device_latency_frames: AtomicU32::new(0),
+            input_device_latency_frames: AtomicU32::new(0),
             total_output_latency_frames: AtomicU32::new(0),
             total_input_latency_frames: AtomicU32::new(0),
+            output_callback_timing_data_write,
+            output_callback_timing_data_read,
+            prev_position: 0,
             switching_device: AtomicBool::new(false),
             core_stream_data: CoreStreamData::default(),
         }
@@ -3228,7 +3234,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
         // which locks a mutex inside CoreAudio framework, then this call will block the current
         // thread until the callback is finished since this call asks to lock a mutex inside
         // CoreAudio framework that is used by the data callback.
-        if !self.shutdown.load(Ordering::SeqCst) {
+        if !self.stopped.load(Ordering::SeqCst) {
             self.core_stream_data.stop_audiounits();
         }
 
@@ -3308,7 +3314,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
         }
 
         // If the stream was running, start it again.
-        if !self.shutdown.load(Ordering::SeqCst) {
+        if !self.stopped.load(Ordering::SeqCst) {
             self.core_stream_data.start_audiounits().map_err(|e| {
                 cubeb_log!(
                     "({:p}) Start audiounit failed.",
@@ -3402,9 +3408,9 @@ impl<'ctx> AudioUnitStream<'ctx> {
             // which locks a mutex inside CoreAudio framework, then this call will block the current
             // thread until the callback is finished since this call asks to lock a mutex inside
             // CoreAudio framework that is used by the data callback.
-            if !self.shutdown.load(Ordering::SeqCst) {
+            if !self.stopped.load(Ordering::SeqCst) {
                 self.core_stream_data.stop_audiounits();
-                self.shutdown.store(true, Ordering::SeqCst);
+                self.stopped.store(true, Ordering::SeqCst);
             }
 
             self.destroy_internal();
@@ -3422,7 +3428,7 @@ impl<'ctx> Drop for AudioUnitStream<'ctx> {
 
 impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
     fn start(&mut self) -> Result<()> {
-        self.shutdown.store(false, Ordering::SeqCst);
+        self.stopped.store(false, Ordering::SeqCst);
         self.draining.store(false, Ordering::SeqCst);
 
         // Execute start in serial queue to avoid racing with destroy or reinit.
@@ -3446,7 +3452,7 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         Ok(())
     }
     fn stop(&mut self) -> Result<()> {
-        self.shutdown.store(true, Ordering::SeqCst);
+        self.stopped.store(true, Ordering::SeqCst);
 
         // Execute stop in serial queue to avoid racing with destroy or reinit.
         let stream = &self;
@@ -3466,18 +3472,42 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         Err(Error::not_supported())
     }
     fn position(&mut self) -> Result<u64> {
-        let current_output_latency_frames =
-            u64::from(self.current_output_latency_frames.load(Ordering::SeqCst));
-        let frames_played = self.frames_played.load(Ordering::SeqCst);
-        if current_output_latency_frames != 0 {
-            let position = if current_output_latency_frames > frames_played {
+        let OutputCallbackTimingData {
+            frames_queued,
+            timestamp,
+            buffer_size,
+        } = self.output_callback_timing_data_read.read().clone();
+        let total_output_latency_frames =
+            u64::from(self.total_output_latency_frames.load(Ordering::SeqCst));
+        // If output latency is available, take it into account. Otherwise, use the number of
+        // frames played.
+        let position = if total_output_latency_frames != 0 {
+            if total_output_latency_frames > frames_queued {
                 0
             } else {
-                frames_played - current_output_latency_frames
-            };
-            return Ok(position);
+                // Interpolate here to match other cubeb backends. Only return an interpolated time
+                // if we've played enough frames. If the stream is paused, clamp the interpolated
+                // number of frames to the buffer size.
+                const NS2S: u64 = 1_000_000_000;
+                let now = unsafe { mach_absolute_time() };
+                let diff = now - timestamp;
+                let interpolated_frames = cmp::min(
+                    host_time_to_ns(diff)
+                        * self.core_stream_data.output_stream_params.rate() as u64
+                        / NS2S,
+                    buffer_size,
+                );
+                (frames_queued - total_output_latency_frames) + interpolated_frames
+            }
+        } else {
+            frames_queued
+        };
+
+        // Ensure mononicity of the clock even when changing output device.
+        if position > self.prev_position {
+            self.prev_position = position;
         }
-        Ok(frames_played)
+        Ok(self.prev_position)
     }
     #[cfg(target_os = "ios")]
     fn latency(&mut self) -> Result<u32> {
