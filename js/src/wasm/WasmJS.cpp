@@ -3219,7 +3219,8 @@ void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
       cell->i64 = val.i64();
       break;
     case ValType::V128:
-      MOZ_CRASH("unexpected v128 when setting global's value");
+      cell->v128 = val.v128();
+      break;
     case ValType::Ref:
       switch (this->type().refTypeKind()) {
         case RefType::Func:
