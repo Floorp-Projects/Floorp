@@ -343,7 +343,7 @@ load 478170-1.html
 load 478185-1.html
 load 478504.html
 asserts-if(!Android,0-1) load 479938-1.html # Bug 575011
-load 480345-1.html
+asserts(60) load 480345-1.html # bug 1655630
 load 481921.html
 load 489462-1.html
 load 489477.html
@@ -405,12 +405,12 @@ load 553504-1.xhtml
 load 564368-1.xhtml
 load 564968.xhtml
 load 569193-1.html
-load 570160.html
+asserts(2) load 570160.html # bug 1655630
 load 570289-1.html
 load 571618-1.svg
 asserts(0-1) load 571975-1.html # bug 574889
 load 571995.xhtml
-load 574958.xhtml
+asserts(3) load 574958.xhtml # bug 1655630
 asserts(0-6) load 578977.html # bug 757305
 load 580504-1.xhtml
 load 585598-1.xhtml

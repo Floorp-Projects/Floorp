@@ -272,7 +272,7 @@ skip-if(Android&&asyncPan) == 243519-1.html 243519-1-ref.html
 == 243519-5b.html 243519-5-ref.html
 == 243519-5c.html 243519-5-ref.html
 == 243519-5d.html 243519-5-ref.html
-== 243519-6.html 243519-6-ref.html
+asserts(12) == 243519-6.html 243519-6-ref.html # bug 1655630
 == 243519-7.html 243519-7-ref.html
 == 243519-8.svg 243519-8-ref.svg
 == 243519-9a.html 243519-9-ref.html
