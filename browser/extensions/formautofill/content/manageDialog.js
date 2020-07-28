@@ -366,6 +366,9 @@ class ManageCreditCards extends ManageRecords {
         FormAutofillUtils.stringBundle.GetStringFromName(key)
       ).join("\n")
     );
+
+    Services.telemetry.recordEvent("creditcard", "show", "manage");
+
     this._isDecrypted = false;
   }
 
@@ -445,6 +448,13 @@ class ManageCreditCards extends ManageRecords {
       } else {
         option.removeAttribute("cc-type");
       }
+    }
+  }
+
+  async removeRecords(options) {
+    await super.removeRecords(options);
+    for (let i = 0; i < options.length; i++) {
+      Services.telemetry.recordEvent("creditcard", "delete", "manage");
     }
   }
 
