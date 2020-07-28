@@ -42,7 +42,9 @@
 #include "nsJSUtils.h"
 
 #include "nsIXULRuntime.h"
+#include "nsIAppStartup.h"
 #include "GeckoProfiler.h"
+#include "Components.h"
 
 #ifdef ANDROID
 #  include <android/log.h>
@@ -1302,6 +1304,12 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
         return 1;
       }
 
+      nsCOMPtr<nsIAppStartup> appStartup(components::AppStartup::Service());
+      if (!appStartup) {
+        return 1;
+      }
+      appStartup->DoneStartingUp();
+
       backstagePass->SetGlobalObject(glob);
 
       JSAutoRealm ar(cx, glob);
@@ -1344,6 +1352,12 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
             result = EXITCODE_RUNTIME_ERROR;
           }
         }
+      }
+
+      // Signal that we're now shutting down.
+      nsCOMPtr<nsIObserver> obs = do_QueryInterface(appStartup);
+      if (obs) {
+        obs->Observe(nullptr, "quit-application-forced", nullptr);
       }
 
       JS_DropPrincipals(cx, gJSPrincipals);
