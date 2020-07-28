@@ -836,7 +836,7 @@ class MozbuildObject(ProcessExecutionMixin):
         return cls(self.topsrcdir, self.settings, self.log_manager,
                    topobjdir=self.topobjdir)
 
-    def _activate_virtualenv(self):
+    def activate_virtualenv(self):
         self.virtualenv_manager.ensure()
         self.virtualenv_manager.activate()
 
@@ -844,7 +844,7 @@ class MozbuildObject(ProcessExecutionMixin):
         self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
 
     def ensure_pipenv(self):
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         pipenv = os.path.join(self.virtualenv_manager.bin_path, 'pipenv')
         if not os.path.exists(pipenv):
             for package in ['certifi', 'pipenv', 'six', 'virtualenv', 'virtualenv-clone']:
@@ -863,7 +863,7 @@ class MozbuildObject(ProcessExecutionMixin):
         try:
             import zstandard  # noqa: F401
         except (ImportError, AttributeError):
-            self._activate_virtualenv()
+            self.activate_virtualenv()
             self.virtualenv_manager.install_pip_package('zstandard>=0.9.0,<=0.13.0')
 
 

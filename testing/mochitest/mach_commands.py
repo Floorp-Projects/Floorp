@@ -290,7 +290,7 @@ class MachCommands(MachCommandBase):
 
         # TODO: This is only strictly necessary while mochitest is using Python
         # 2 and can be removed once the command is migrated to Python 3.
-        self._activate_virtualenv()
+        self.activate_virtualenv()
 
         buildapp = None
         for app in SUPPORTED_APPS:

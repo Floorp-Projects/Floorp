@@ -72,7 +72,7 @@ class MachCommands(MachCommandBase):
     )
     def lint(self, *runargs, **lintargs):
         """Run linters."""
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         from mozlint import cli, parser
 
         try:

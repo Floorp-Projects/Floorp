@@ -336,7 +336,7 @@ def create_parser_testpaths():
 @CommandProvider
 class MachCommands(MachCommandBase):
     def setup(self):
-        self._activate_virtualenv()
+        self.activate_virtualenv()
 
     @Command("web-platform-tests",
              category="testing",

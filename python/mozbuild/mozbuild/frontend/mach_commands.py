@@ -37,7 +37,7 @@ class MozbuildFileCommands(MachCommandBase):
     def reference(self, symbol, name_only=False):
         # mozbuild.sphinx imports some Sphinx modules, so we need to be sure
         # the optional Sphinx package is installed.
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         self.virtualenv_manager.install_pip_package('Sphinx==1.1.3')
 
         from mozbuild.sphinx import (

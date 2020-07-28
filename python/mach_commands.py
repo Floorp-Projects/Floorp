@@ -63,7 +63,7 @@ class MachCommands(MachCommandBase):
             python_path = sys.executable
             append_env['PYTHONPATH'] = os.pathsep.join(sys.path)
         else:
-            self._activate_virtualenv()
+            self.activate_virtualenv()
             python_path = self.virtualenv_manager.python_path
 
         if exec_file:

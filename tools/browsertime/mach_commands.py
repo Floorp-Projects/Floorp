@@ -413,13 +413,13 @@ class MachBrowsertime(MachCommandBase):
         site_packages = os.path.abspath(req.satisfied_by.location)
         return not site_packages.startswith(venv_site_lib)
 
-    def _activate_virtualenv(self, *args, **kwargs):
+    def activate_virtualenv(self, *args, **kwargs):
         r'''Activates virtualenv.
 
         This function will also install Pillow and pyssim if needed.
         It will raise an error in case the install failed.
         '''
-        MachCommandBase._activate_virtualenv(self, *args, **kwargs)
+        MachCommandBase.activate_virtualenv(self, *args, **kwargs)
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
@@ -428,7 +428,7 @@ class MachBrowsertime(MachCommandBase):
 
     def check(self):
         r'''Run `visualmetrics.py --check`.'''
-        self._activate_virtualenv()
+        self.activate_virtualenv()
 
         args = ['--check']
         status = self.run_process(
@@ -576,7 +576,7 @@ class MachBrowsertime(MachCommandBase):
         if browsertime_help:
             args.append('--help')
 
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         default_args = self.extra_default_args(args)
         if default_args == 1:
             return 1
@@ -588,7 +588,7 @@ class MachBrowsertime(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def visualmetrics(self, video, args):
         self._set_log_level(True)
-        self._activate_virtualenv()
+        self.activate_virtualenv()
 
         # Turn '/path/to/video/1.mp4' into '/path/to/video' and '1'.
         d, base = os.path.split(video)
