@@ -7,6 +7,7 @@
 const TYPES = {
   CONSOLE_MESSAGE: "console-message",
   CSS_MESSAGE: "css-message",
+  DOCUMENT_EVENT: "document-event",
   ERROR_MESSAGE: "error-message",
   PLATFORM_MESSAGE: "platform-message",
 };
@@ -28,6 +29,9 @@ const Resources = {
   },
   [TYPES.CSS_MESSAGE]: {
     path: "devtools/server/actors/resources/css-messages",
+  },
+  [TYPES.DOCUMENT_EVENT]: {
+    path: "devtools/server/actors/resources/document-event",
   },
   [TYPES.ERROR_MESSAGE]: {
     path: "devtools/server/actors/resources/error-messages",
