@@ -5,6 +5,7 @@
 use api::{FontInstanceFlags, FontSize, BaseFontInstance};
 use api::{FontKey, FontRenderMode, FontTemplate};
 use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics};
+use api::channel::{unbounded_channel, Receiver, Sender};
 use api::units::*;
 use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};
 use crate::internal_types::ResourceCacheError;
@@ -29,7 +30,6 @@ use std::hash::{Hash, Hasher};
 use std::mem;
 use std::ops::Deref;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub static GLYPH_FLASHING: AtomicBool = AtomicBool::new(false);
@@ -909,7 +909,7 @@ pub struct GlyphRasterizer {
 
 impl GlyphRasterizer {
     pub fn new(workers: Arc<ThreadPool>) -> Result<Self, ResourceCacheError> {
-        let (glyph_tx, glyph_rx) = channel();
+        let (glyph_tx, glyph_rx) = unbounded_channel();
 
         let num_workers = workers.current_num_threads();
         let mut contexts = Vec::with_capacity(num_workers);

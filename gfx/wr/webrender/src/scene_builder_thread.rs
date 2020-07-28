@@ -7,6 +7,7 @@ use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, Ex
 use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings, TransactionMsg};
 use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind, SharedFontInstanceMap};
 use api::{DocumentLayer, GlyphDimensionRequest, GlyphIndexRequest};
+use api::channel::{unbounded_channel, single_msg_channel, Receiver, Sender};
 use api::units::*;
 #[cfg(feature = "capture")]
 use crate::capture::CaptureConfig;
@@ -26,7 +27,6 @@ use crate::render_backend::SceneView;
 use crate::renderer::{PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
 use std::iter;
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::mem::replace;
 use time::precise_time_ns;
 use crate::util::drain_filter;
@@ -269,9 +269,9 @@ impl SceneBuilderThreadChannels {
     pub fn new(
         api_tx: Sender<ApiMsg>
     ) -> (Self, Sender<SceneBuilderRequest>, Sender<BackendSceneBuilderRequest>, Receiver<SceneBuilderResult>) {
-        let (in_tx, in_rx) = channel();
-        let (out_tx, out_rx) = channel();
-        let (backend_tx, backend_rx) = channel();
+        let (in_tx, in_rx) = unbounded_channel();
+        let (out_tx, out_rx) = unbounded_channel();
+        let (backend_tx, backend_rx) = unbounded_channel();
         (
             Self {
                 rx: in_rx,
@@ -787,7 +787,7 @@ impl SceneBuilderThread {
                             .flatten().collect(),
                     };
 
-                    let (tx, rx) = channel();
+                    let (tx, rx) = single_msg_channel();
                     let txn = txns.iter().find(|txn| txn.built_scene.is_some()).unwrap();
                     hooks.pre_scene_swap(txn.scene_build_end_time - txn.scene_build_start_time);
 

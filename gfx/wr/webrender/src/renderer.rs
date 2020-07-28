@@ -43,6 +43,7 @@ use api::{RenderApiSender, RenderNotifier, TextureTarget, SharedFontInstanceMap}
 #[cfg(feature = "replay")]
 use api::ExternalImage;
 use api::units::*;
+use api::channel::{unbounded_channel, Sender, Receiver};
 pub use api::DebugFlags;
 use core::time::Duration;
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
@@ -109,7 +110,6 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread;
 use std::cell::RefCell;
 use tracy_rs::register_thread_with_profiler;
@@ -2229,8 +2229,8 @@ impl Renderer {
 
         HAS_BEEN_INITIALIZED.store(true, Ordering::SeqCst);
 
-        let (api_tx, api_rx) = channel();
-        let (result_tx, result_rx) = channel();
+        let (api_tx, api_rx) = unbounded_channel();
+        let (result_tx, result_rx) = unbounded_channel();
         let gl_type = gl.get_type();
 
         let debug_server = new_debug_server(options.start_debug_server, api_tx.clone());
@@ -2550,7 +2550,7 @@ impl Renderer {
         })?;
 
         let low_priority_scene_tx = if options.support_low_priority_transactions {
-            let (low_priority_scene_tx, low_priority_scene_rx) = channel();
+            let (low_priority_scene_tx, low_priority_scene_rx) = unbounded_channel();
             let lp_builder = LowPrioritySceneBuilderThread {
                 rx: low_priority_scene_rx,
                 tx: scene_tx.clone(),

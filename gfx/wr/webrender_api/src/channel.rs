@@ -7,7 +7,7 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::io::{self, Cursor, Error, ErrorKind, Read};
 use std::mem;
-use std::sync::mpsc;
+pub use crossbeam_channel::{Sender, Receiver};
 
 #[derive(Clone)]
 pub struct Payload {
@@ -74,7 +74,7 @@ pub type PayloadSender = MsgSender<Payload>;
 pub type PayloadReceiver = MsgReceiver<Payload>;
 
 pub struct MsgReceiver<T> {
-    rx: mpsc::Receiver<T>,
+    rx: Receiver<T>,
 }
 
 impl<T> MsgReceiver<T> {
@@ -82,14 +82,14 @@ impl<T> MsgReceiver<T> {
         self.rx.recv().map_err(|e| io::Error::new(ErrorKind::Other, e.to_string()))
     }
 
-    pub fn to_mpsc_receiver(self) -> mpsc::Receiver<T> {
+    pub fn to_crossbeam_receiver(self) -> Receiver<T> {
         self.rx
     }
 }
 
 #[derive(Clone)]
 pub struct MsgSender<T> {
-    tx: mpsc::Sender<T>,
+    tx: Sender<T>,
 }
 
 impl<T> MsgSender<T> {
@@ -99,12 +99,12 @@ impl<T> MsgSender<T> {
 }
 
 pub fn payload_channel() -> Result<(PayloadSender, PayloadReceiver), Error> {
-    let (tx, rx) = mpsc::channel();
+    let (tx, rx) = unbounded_channel();
     Ok((PayloadSender { tx }, PayloadReceiver { rx }))
 }
 
 pub fn msg_channel<T>() -> Result<(MsgSender<T>, MsgReceiver<T>), Error> {
-    let (tx, rx) = mpsc::channel();
+    let (tx, rx) = unbounded_channel();
     Ok((MsgSender { tx }, MsgReceiver { rx }))
 }
 
@@ -129,3 +129,26 @@ impl<'de, T> Deserialize<'de> for MsgSender<T> {
         unreachable!();
     }
 }
+
+/// A create a channel intended for one-shot uses, for example the channels
+/// created to block on a synchronous query and then discarded,
+pub fn single_msg_channel<T>() -> (Sender<T>, Receiver<T>) {
+    crossbeam_channel::bounded(1)
+}
+
+/// A fast MPMC message channel that can hold a fixed number of messages.
+///
+/// If the channel is full, the sender will block upon sending extra messages
+/// until the receiver has consumed some messages.
+/// The capacity parameter should be chosen either:
+///  - high enough to avoid blocking on the common cases,
+///  - or, on the contrary, using the blocking behavior as a means to prevent
+///    fast producers from building up work faster than it is consumed.
+pub fn fast_channel<T>(capacity: usize) -> (Sender<T>, Receiver<T>) {
+    crossbeam_channel::bounded(capacity)
+}
+
+/// Creates an MPMC channel that is a bit slower than the fast_channel but doesn't
+/// have a limit on the number of messages held at a given time and therefore
+/// doesn't block when sending.
+pub use crossbeam_channel::unbounded as unbounded_channel;

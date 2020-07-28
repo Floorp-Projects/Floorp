@@ -15,6 +15,9 @@
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::float_cmp, clippy::too_many_arguments))]
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal, clippy::new_without_default))]
 
+pub extern crate crossbeam_channel;
+pub extern crate euclid;
+
 extern crate app_units;
 #[macro_use]
 extern crate bitflags;
@@ -27,7 +30,6 @@ extern crate core_foundation;
 extern crate core_graphics;
 #[macro_use]
 extern crate derive_more;
-pub extern crate euclid;
 #[macro_use]
 extern crate malloc_size_of_derive;
 extern crate serde;

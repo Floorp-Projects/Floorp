@@ -4,10 +4,9 @@
 
 use api::{ApiMsg, DebugCommand, DebugFlags};
 use api::units::DeviceIntSize;
+use api::crossbeam_channel::{bounded, Sender, Receiver};
 use crate::print_tree::PrintTreePrinter;
 use crate::renderer;
-use std::sync::mpsc::{channel, Receiver};
-use std::sync::mpsc::Sender;
 use std::thread;
 use ws;
 use base64::encode;
@@ -111,7 +110,7 @@ pub struct DebugServerImpl {
 
 impl DebugServerImpl {
     pub fn new(api_tx: Sender<ApiMsg>) -> DebugServerImpl {
-        let (debug_tx, debug_rx) = channel();
+        let (debug_tx, debug_rx) = bounded(64);
 
         let socket = ws::Builder::new()
             .build(move |out| {
