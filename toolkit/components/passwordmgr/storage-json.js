@@ -121,6 +121,62 @@ class LoginManagerStorage_json {
     return this._store._save();
   }
 
+  /**
+   * Returns the "sync id" used by Sync to know whether the store is current with
+   * respect to the sync servers. It is stored encrypted, but only so we
+   * can detect failure to decrypt (for example, a "reset" of the master
+   * password will leave all logins alone, but they will fail to decrypt. We
+   * also want this metadata to be unavailable in that scenario)
+   *
+   * Returns null if the data doesn't exist or if the data can't be
+   * decrypted (including if the master-password prompt is cancelled). This is
+   * OK for Sync as it can't even begin syncing if the master-password is
+   * locked as the sync encrytion keys are stored in this login manager.
+   */
+  async getSyncID() {
+    await this._store.load();
+    if (!this._store.data.sync) {
+      return null;
+    }
+    let raw = this._store.data.sync.syncID;
+    try {
+      return raw ? this._crypto.decrypt(raw) : null;
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_FAILURE) {
+        this.log("Could not decrypt the syncID - returning null");
+        return null;
+      }
+      // any other errors get re-thrown.
+      throw e;
+    }
+  }
+
+  async setSyncID(syncID) {
+    await this._store.load();
+    if (!this._store.data.sync) {
+      this._store.data.sync = {};
+    }
+    this._store.data.sync.syncID = syncID ? this._crypto.encrypt(syncID) : null;
+    this._store.saveSoon();
+  }
+
+  async getLastSync() {
+    await this._store.load();
+    if (!this._store.data.sync) {
+      return 0;
+    }
+    return this._store.data.sync.lastSync || 0.0;
+  }
+
+  async setLastSync(timestamp) {
+    await this._store.load();
+    if (!this._store.data.sync) {
+      this._store.data.sync = {};
+    }
+    this._store.data.sync.lastSync = timestamp;
+    this._store.saveSoon();
+  }
+
   addLogin(
     login,
     preEncrypted = false,
