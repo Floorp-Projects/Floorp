@@ -45,6 +45,9 @@ XPCOMUtils.defineLazyGetter(this, "gStateFilePath", () => {
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
 
+const SCALAR_DELETION_REQUEST_ECOSYSTEM_CLIENT_ID =
+  "deletion.request.ecosystem_client_id";
+
 /**
  * Checks if client ID has a valid format.
  *
@@ -74,6 +77,16 @@ var ClientID = Object.freeze({
   },
 
   /**
+   * Returns a promise resolving to the ecosystem client ID, used in ecosystem
+   * pings as a stable identifier for this profile.
+   *
+   * @return {Promise<string>} The ecosystem client ID.
+   */
+  getEcosystemClientID() {
+    return ClientIDImpl.getEcosystemClientID();
+  },
+
+  /**
    * This returns true if the client ID prior to the last client ID reset was a canary client ID.
    * Android only. Always returns null on Desktop.
    */
@@ -96,38 +109,47 @@ var ClientID = Object.freeze({
     return ClientIDImpl.getCachedClientID();
   },
 
+  /**
+   * Gets the in-memory cached ecosystem client ID if it was already loaded;
+   * `null` otherwise.
+   */
+  getCachedEcosystemClientID() {
+    return ClientIDImpl.getCachedEcosystemClientID();
+  },
+
   async getClientIdHash() {
     return ClientIDImpl.getClientIdHash();
   },
 
   /**
-   * Set a specific client id asynchronously, writing it to disk
-   * and updating the cached version.
+   * Sets the main and ecosystem client IDs to the canary (known) client ID,
+   * writing them to disk and updating the cached versions.
    *
-   * Should only ever be used when a known client ID value should be set.
-   * Use `resetClientID` to generate a new random one if required.
+   * Use `removeClientIDs` followed by `get{Ecosystem}ClientID` to clear the
+   * existing IDs and generate new, random ones if required.
    *
-   * @return {Promise<string>} The stable client ID.
+   * @return {Promise<void>}
    */
-  setClientID(id) {
-    return ClientIDImpl.setClientID(id);
+  setCanaryClientIDs() {
+    return ClientIDImpl.setCanaryClientIDs();
   },
 
   /**
-   * Reset the client id asynchronously, writing it to disk
-   * and updating the cached version.
+   * Clears the main and ecosystem client IDs asynchronously, removing them
+   * from disk. Use `getClientID()` and `getEcosystemClientID()` to generate
+   * fresh IDs after calling this method.
    *
-   * Should only be used if a reset is explicitely requested by the user.
+   * Should only be used if a reset is explicitly requested by the user.
    *
-   * @return {Promise<string>} A new stable client ID.
+   * @return {Promise<void>}
    */
-  resetClientID() {
-    return ClientIDImpl.resetClientID();
+  removeClientIDs() {
+    return ClientIDImpl.removeClientIDs();
   },
 
   /**
-   * Only used for testing. Invalidates the client ID so that it gets read
-   * again from file.
+   * Only used for testing. Invalidates the cached client IDs so that they're
+   * read again from file, but doesn't remove the existing IDs from disk.
    */
   _reset() {
     return ClientIDImpl._reset();
@@ -137,58 +159,79 @@ var ClientID = Object.freeze({
 var ClientIDImpl = {
   _clientID: null,
   _clientIDHash: null,
-  _loadClientIdTask: null,
-  _saveClientIdTask: null,
-  _removeClientIdTask: null,
+  _ecosystemClientID: null,
+  _loadClientIdsTask: null,
+  _saveClientIdsTask: null,
+  _removeClientIdsTask: null,
   _logger: null,
   _wasCanary: null,
 
-  _loadClientID() {
-    if (this._loadClientIdTask) {
-      return this._loadClientIdTask;
+  _loadClientIDs() {
+    if (this._loadClientIdsTask) {
+      return this._loadClientIdsTask;
     }
 
-    this._loadClientIdTask = this._doLoadClientID();
-    let clear = () => (this._loadClientIdTask = null);
-    this._loadClientIdTask.then(clear, clear);
-    return this._loadClientIdTask;
+    this._loadClientIdsTask = this._doLoadClientIDs();
+    let clear = () => (this._loadClientIdsTask = null);
+    this._loadClientIdsTask.then(clear, clear);
+    return this._loadClientIdsTask;
   },
 
   /**
-   * Load the Client ID from the DataReporting Service state file.
-   * If no Client ID is found, we generate a new one.
+   * Load the client IDs (Telemetry Client ID and Ecosystem Client ID) from the
+   * DataReporting Service state file. If either ID is missing, we generate a
+   * new one.
    */
-  async _doLoadClientID() {
-    this._log.trace(`_doLoadClientID`);
+  async _doLoadClientIDs() {
+    this._log.trace(`_doLoadClientIDs`);
     // If there's a removal in progress, let's wait for it
-    await this._removeClientIdTask;
+    await this._removeClientIdsTask;
 
     // Try to load the client id from the DRS state file.
+    let hasCurrentClientID = false;
+    let hasCurrentEcosystemClientID = false;
     try {
       let state = await CommonUtils.readJSON(gStateFilePath);
       if (AppConstants.platform == "android" && state && "wasCanary" in state) {
         this._wasCanary = state.wasCanary;
       }
-      if (state && this.updateClientID(state.clientID)) {
-        this._log.trace(`_doLoadClientID: Client id loaded from state.`);
-        return this._clientID;
+      if (state) {
+        hasCurrentClientID = this.updateClientID(state.clientID);
+        hasCurrentEcosystemClientID = this.updateEcosystemClientID(
+          state.ecosystemClientID
+        );
+        if (hasCurrentClientID && hasCurrentEcosystemClientID) {
+          this._log.trace(`_doLoadClientIDs: Client IDs loaded from state.`);
+          return {
+            clientID: this._clientID,
+            ecosystemClientID: this._ecosystemClientID,
+          };
+        }
       }
     } catch (e) {
       // fall through to next option
     }
 
-    // We dont have an id from the DRS state file yet, generate a new ID.
-    this.updateClientID(CommonUtils.generateUUID());
-    this._saveClientIdTask = this._saveClientID();
+    // We're missing one or both IDs from the DRS state file, generate new ones.
+    if (!hasCurrentClientID) {
+      this.updateClientID(CommonUtils.generateUUID());
+    }
+    if (!hasCurrentEcosystemClientID) {
+      this.updateEcosystemClientID(CommonUtils.generateUUID());
+    }
+    this._saveClientIdsTask = this._saveClientIDs();
 
     // Wait on persisting the id. Otherwise failure to save the ID would result in
     // the client creating and subsequently sending multiple IDs to the server.
     // This would appear as multiple clients submitting similar data, which would
     // result in orphaning.
-    await this._saveClientIdTask;
+    await this._saveClientIdsTask;
 
-    this._log.trace("_doLoadClientID: New client id loaded and persisted.");
-    return this._clientID;
+    this._log.trace("_doLoadClientIDs: New client IDs loaded and persisted.");
+    return {
+      clientID: this._clientID,
+      ecosystemClientID: this._ecosystemClientID,
+    };
   },
 
   /**
@@ -196,16 +239,19 @@ var ClientIDImpl = {
    *
    * @return {Promise} A promise resolved when the client ID is saved to disk.
    */
-  async _saveClientID() {
-    this._log.trace(`_saveClientID`);
-    let obj = { clientID: this._clientID };
+  async _saveClientIDs() {
+    this._log.trace(`_saveClientIDs`);
+    let obj = {
+      clientID: this._clientID,
+      ecosystemClientID: this._ecosystemClientID,
+    };
     // We detected a canary client ID when resetting, storing this as a flag
     if (AppConstants.platform == "android" && this._wasCanary) {
       obj.wasCanary = true;
     }
     await OS.File.makeDir(gDatareportingPath);
     await CommonUtils.writeJSON(obj, gStateFilePath);
-    this._saveClientIdTask = null;
+    this._saveClientIdsTask = null;
   },
 
   /**
@@ -214,12 +260,22 @@ var ClientIDImpl = {
    *
    * @return {Promise<string>} The stable client ID.
    */
-  getClientID() {
+  async getClientID() {
     if (!this._clientID) {
-      return this._loadClientID();
+      let { clientID } = await this._loadClientIDs();
+      return clientID;
     }
 
     return Promise.resolve(this._clientID);
+  },
+
+  async getEcosystemClientID() {
+    if (!this._ecosystemClientID) {
+      let { ecosystemClientID } = await this._loadClientIDs();
+      return ecosystemClientID;
+    }
+
+    return Promise.resolve(this._ecosystemClientID);
   },
 
   /**
@@ -274,6 +330,10 @@ var ClientIDImpl = {
     return id;
   },
 
+  getCachedEcosystemClientID() {
+    return this._ecosystemClientID;
+  },
+
   async getClientIdHash() {
     if (!this._clientIDHash) {
       let byteArr = new TextEncoder().encode(await this.getClientID());
@@ -288,59 +348,63 @@ var ClientIDImpl = {
    * Resets the provider. This is for testing only.
    */
   async _reset() {
-    await this._loadClientIdTask;
-    await this._saveClientIdTask;
+    await this._loadClientIdsTask;
+    await this._saveClientIdsTask;
     this._clientID = null;
     this._clientIDHash = null;
+    this._ecosystemClientID = null;
   },
 
-  async setClientID(id) {
-    this._log.trace("setClientID");
-    if (!this.updateClientID(id)) {
-      throw new Error("Invalid client ID: " + id);
-    }
+  async setCanaryClientIDs() {
+    this._log.trace("setCanaryClientIDs");
+    this.updateClientID(CANARY_CLIENT_ID);
+    this.updateEcosystemClientID(CANARY_CLIENT_ID);
 
-    this._saveClientIdTask = this._saveClientID();
-    await this._saveClientIdTask;
+    this._saveClientIdsTask = this._saveClientIDs();
+    await this._saveClientIdsTask;
     return this._clientID;
   },
 
-  async _doRemoveClientID() {
-    this._log.trace("_doRemoveClientID");
+  async _doRemoveClientIDs() {
+    this._log.trace("_doRemoveClientIDs");
 
-    // Reset stored id.
+    // Reset the cached main and ecosystem client IDs.
     this._clientID = null;
     this._clientIDHash = null;
+    this._ecosystemClientID = null;
 
     // Clear the client id from the preference cache.
     Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
 
+    // Clear the old ecosystem client ID from the deletion request scalar store.
+    Services.telemetry.scalarSet(
+      SCALAR_DELETION_REQUEST_ECOSYSTEM_CLIENT_ID,
+      ""
+    );
+
     // If there is a save in progress, wait for it to complete.
-    await this._saveClientIdTask;
+    await this._saveClientIdsTask;
 
     // Remove the client id from disk
     await OS.File.remove(gStateFilePath, { ignoreAbsent: true });
   },
 
-  async resetClientID() {
-    this._log.trace("resetClientID");
+  async removeClientIDs() {
+    this._log.trace("removeClientIDs");
     let oldClientId = this._clientID;
 
     // Wait for the removal.
     // Asynchronous calls to getClientID will also be blocked on this.
-    this._removeClientIdTask = this._doRemoveClientID();
-    let clear = () => (this._removeClientIdTask = null);
-    this._removeClientIdTask.then(clear, clear);
+    this._removeClientIdsTask = this._doRemoveClientIDs();
+    let clear = () => (this._removeClientIdsTask = null);
+    this._removeClientIdsTask.then(clear, clear);
 
-    await this._removeClientIdTask;
+    await this._removeClientIdsTask;
 
     // On Android we detect resets after a canary client ID.
     if (AppConstants.platform == "android") {
       this._wasCanary = oldClientId == CANARY_CLIENT_ID;
     }
-
-    // Generate a new id.
-    return this.getClientID();
   },
 
   /**
@@ -360,6 +424,22 @@ var ClientIDImpl = {
     this._clientID = id;
     this._clientIDHash = null;
     Services.prefs.setStringPref(PREF_CACHED_CLIENTID, this._clientID);
+    return true;
+  },
+
+  updateEcosystemClientID(id) {
+    if (!isValidClientID(id)) {
+      this._log.error(
+        "updateEcosystemClientID - invalid ecosystem client ID",
+        id
+      );
+      return false;
+    }
+    this._ecosystemClientID = id;
+    Services.telemetry.scalarSet(
+      SCALAR_DELETION_REQUEST_ECOSYSTEM_CLIENT_ID,
+      id
+    );
     return true;
   },
 
