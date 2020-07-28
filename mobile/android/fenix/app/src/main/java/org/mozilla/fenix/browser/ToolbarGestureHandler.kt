@@ -180,14 +180,14 @@ class ToolbarGestureHandler(
             val sessions = sessionManager.sessionsOfType(currentSession.private)
             val index = when (gestureDirection) {
                 GestureDirection.RIGHT_TO_LEFT -> if (isLtr) {
-                    currentIndex + 1
-                } else {
                     currentIndex - 1
+                } else {
+                    currentIndex + 1
                 }
                 GestureDirection.LEFT_TO_RIGHT -> if (isLtr) {
-                    currentIndex - 1
-                } else {
                     currentIndex + 1
+                } else {
+                    currentIndex - 1
                 }
             }
 
