@@ -116,6 +116,12 @@ body {
   min-height: 42px;
 }
 
+#categories > .category.category-no-icon {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  width: auto;
+}
+
 .category-name {
   padding: 9px 0;
   vertical-align: middle;
