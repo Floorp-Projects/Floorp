@@ -63,14 +63,14 @@ Afterwards, you can run
 
 ::
 
-   $ python -m fuzzfetch -a --fuzzing --tests gtest -n firefox-fuzzing
+   $ python -m fuzzfetch -a --fuzzing --gtest -n firefox-fuzzing
 
 to fetch the latest optimized build. Alternatively, we offer non-ASan debug builds
 which you can download using
 
 ::
 
-   $ python -m fuzzfetch -d --fuzzing --tests gtest -n firefox-fuzzing
+   $ python -m fuzzfetch -d --fuzzing --gtest -n firefox-fuzzing
 
 In both commands, ``firefox-fuzzing`` indicates the name of the directory that
 will be created for the download.
