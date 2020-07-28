@@ -311,21 +311,7 @@ class UrlbarController {
         break;
       case KeyEvent.DOM_VK_RETURN:
         if (executeAction) {
-          if (
-            this.view.oneOffsRefresh &&
-            this.view.oneOffSearchButtons.selectedButton?.engine
-          ) {
-            this.input.setSearchMode(
-              this.view.oneOffSearchButtons.selectedButton.engine
-            );
-            this.view.oneOffSearchButtons.selectedButton = null;
-            this.input.startQuery({
-              allowAutofill: false,
-              event,
-            });
-          } else {
-            this.input.handleCommand(event);
-          }
+          this.input.handleCommand(event);
         }
         event.preventDefault();
         break;
