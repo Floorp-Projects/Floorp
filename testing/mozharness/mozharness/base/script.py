@@ -2186,6 +2186,8 @@ class BaseScript(ScriptMixin, LogMixin, object):
         dirs['base_work_dir'] = c['base_work_dir']
         dirs['abs_work_dir'] = os.path.join(c['base_work_dir'], c['work_dir'])
         dirs['abs_log_dir'] = os.path.join(c['base_work_dir'], c.get('log_dir', 'logs'))
+        if 'GECKO_PATH' in os.environ:
+            dirs['abs_src_dir'] = os.environ['GECKO_PATH']
         self.abs_dirs = dirs
         return self.abs_dirs
 
