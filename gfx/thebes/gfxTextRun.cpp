@@ -3361,11 +3361,7 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh,
   eFontPrefLang charLang;
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
 
-  EmojiPresentation emoji = GetEmojiPresentation(aCh);
-  if ((emoji != EmojiPresentation::TextOnly &&
-       (aNextCh == kVariationSelector16 ||
-        (emoji == EmojiPresentation::EmojiDefault &&
-         aNextCh != kVariationSelector15)))) {
+  if (ShouldPreferEmojiFont(aCh, aNextCh)) {
     charLang = eFontPrefLang_Emoji;
   } else {
     // get the pref font list if it hasn't been set up already
