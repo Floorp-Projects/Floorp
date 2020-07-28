@@ -58,7 +58,7 @@ def get_taskcluster_secret(secret_name):
 
 def main():
     config = MozbuildObject.from_environment()
-    config._activate_virtualenv()
+    config.activate_virtualenv()
 
     import redo
     import requests

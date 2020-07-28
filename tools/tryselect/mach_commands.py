@@ -327,7 +327,7 @@ class TrySelect(MachCommandBase):
         has been made, pressing the 'Push' button will automatically push the
         selection to try.
         """
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         path = os.path.join('tools', 'tryselect', 'selectors', 'chooser', 'requirements.txt')
         self.virtualenv_manager.install_pip_requirements(path, quiet=True)
 
