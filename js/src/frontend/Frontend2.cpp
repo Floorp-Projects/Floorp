@@ -322,10 +322,15 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                                        options.selfHostingMode);
   stencil.get().immutableFlags.setFlag(ImmutableFlags::ForceStrict,
                                        options.forceStrictMode());
-  stencil.get().immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
-                                       options.noScriptRval);
-  stencil.get().immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
-                                       options.isRunOnce);
+  stencil.get().immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
+                                       options.nonSyntacticScope);
+
+  if (&smooshStencil == &result.top_level_script) {
+    stencil.get().immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
+                                         options.isRunOnce);
+    stencil.get().immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
+                                         options.noScriptRval);
+  }
 
   bool isFunction =
       stencil.get().immutableFlags.hasFlag(ImmutableFlags::IsFunction);
