@@ -57,8 +57,7 @@ class AndroidMixin(object):
             adb = self.adb_path
             import mozdevice
             self._device = mozdevice.ADBDeviceFactory(adb=adb,
-                                                      device=self.device_serial,
-                                                      verbose=True)
+                                                      device=self.device_serial)
         return self._device
 
     @property
