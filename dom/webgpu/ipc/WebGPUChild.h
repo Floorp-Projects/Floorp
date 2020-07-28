@@ -69,8 +69,6 @@ class WebGPUChild final : public PWebGPUChild {
   RawId DeviceCreateRenderPipeline(
       RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc);
 
-  void QueueSubmit(RawId aSelfId, const nsTArray<RawId>& aCommandBufferIds);
-
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
                              size_t maxBufferCount,
                              wr::ExternalImageId aExternalImageId);

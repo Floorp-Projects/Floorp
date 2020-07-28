@@ -325,21 +325,21 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyBufferToTexture(
     RawId aSelfId, WGPUBufferCopyView aSource, WGPUTextureCopyView aDestination,
     WGPUExtent3d aCopySize) {
   ffi::wgpu_server_encoder_copy_buffer_to_texture(mContext, aSelfId, &aSource,
-                                                  &aDestination, aCopySize);
+                                                  &aDestination, &aCopySize);
   return IPC_OK();
 }
 ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyTextureToBuffer(
     RawId aSelfId, WGPUTextureCopyView aSource, WGPUBufferCopyView aDestination,
     WGPUExtent3d aCopySize) {
   ffi::wgpu_server_encoder_copy_texture_to_buffer(mContext, aSelfId, &aSource,
-                                                  &aDestination, aCopySize);
+                                                  &aDestination, &aCopySize);
   return IPC_OK();
 }
 ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyTextureToTexture(
     RawId aSelfId, WGPUTextureCopyView aSource,
     WGPUTextureCopyView aDestination, WGPUExtent3d aCopySize) {
   ffi::wgpu_server_encoder_copy_texture_to_texture(mContext, aSelfId, &aSource,
-                                                   &aDestination, aCopySize);
+                                                   &aDestination, &aCopySize);
   return IPC_OK();
 }
 
@@ -384,6 +384,28 @@ ipc::IPCResult WebGPUParent::RecvQueueSubmit(
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvQueueWriteBuffer(RawId aSelfId,
+                                                  RawId aBufferId,
+                                                  uint64_t aBufferOffset,
+                                                  Shmem&& aShmem) {
+  ffi::wgpu_server_queue_write_buffer(mContext, aSelfId, aBufferId,
+                                      aBufferOffset, aShmem.get<uint8_t>(),
+                                      aShmem.Size<uint8_t>());
+  DeallocShmem(aShmem);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvQueueWriteTexture(
+    RawId aSelfId, const ffi::WGPUTextureCopyView& aDestination, Shmem&& aShmem,
+    const ffi::WGPUTextureDataLayout& aDataLayout,
+    const ffi::WGPUExtent3d& aExtent) {
+  ffi::wgpu_server_queue_write_texture(
+      mContext, aSelfId, &aDestination, aShmem.get<uint8_t>(),
+      aShmem.Size<uint8_t>(), &aDataLayout, &aExtent);
+  DeallocShmem(aShmem);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvDeviceCreateBindGroupLayout(
     RawId aSelfId, const SerialBindGroupLayoutDescriptor& aDesc, RawId aNewId) {
   ffi::WGPUBindGroupLayoutDescriptor desc = {};
@@ -425,7 +447,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateBindGroup(
         bgb.resource.tag = ffi::WGPUBindingResource_Buffer;
         bgb.resource.buffer._0.buffer = entry.mValue;
         bgb.resource.buffer._0.offset = entry.mBufferOffset;
-        bgb.resource.buffer._0.size = entry.mBufferSize;
+        bgb.resource.buffer._0.size = ffi::make_buffer_size(entry.mBufferSize);
         break;
       case SerialBindGroupEntryType::Texture:
         bgb.resource.tag = ffi::WGPUBindingResource_TextureView;
@@ -655,11 +677,14 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   const ffi::WGPUTextureCopyView texView = {
       aTextureId,
   };
-  const ffi::WGPUBufferCopyView bufView = {
-      bufferId,
+  const ffi::WGPUTextureDataLayout bufLayout = {
       0,
       data->mSourcePitch,
       0,
+  };
+  const ffi::WGPUBufferCopyView bufView = {
+      bufferId,
+      bufLayout,
   };
   const ffi::WGPUExtent3d extent = {
       static_cast<uint32_t>(size.width),
@@ -667,7 +692,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
       1,
   };
   ffi::wgpu_server_encoder_copy_texture_to_buffer(mContext, aCommandEncoderId,
-                                                  &texView, &bufView, extent);
+                                                  &texView, &bufView, &extent);
   ffi::WGPUCommandBufferDescriptor commandDesc = {};
   ffi::wgpu_server_encoder_finish(mContext, aCommandEncoderId, &commandDesc);
   ffi::wgpu_server_queue_submit(mContext, data->mQueueId, &aCommandEncoderId,

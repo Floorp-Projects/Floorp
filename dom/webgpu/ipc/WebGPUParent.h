@@ -66,14 +66,21 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvCommandEncoderCopyTextureToTexture(
       RawId aSelfId, WGPUTextureCopyView aSource,
       WGPUTextureCopyView aDestination, WGPUExtent3d aCopySize);
-  ipc::IPCResult RecvCommandEncoderRunComputePass(RawId aSelfId, Shmem&& shmem);
-  ipc::IPCResult RecvCommandEncoderRunRenderPass(RawId aSelfId, Shmem&& shmem);
+  ipc::IPCResult RecvCommandEncoderRunComputePass(RawId aSelfId,
+                                                  Shmem&& aShmem);
+  ipc::IPCResult RecvCommandEncoderRunRenderPass(RawId aSelfId, Shmem&& aShmem);
   ipc::IPCResult RecvCommandEncoderFinish(
       RawId aSelfId, const dom::GPUCommandBufferDescriptor& aDesc);
   ipc::IPCResult RecvCommandEncoderDestroy(RawId aSelfId);
   ipc::IPCResult RecvCommandBufferDestroy(RawId aSelfId);
   ipc::IPCResult RecvQueueSubmit(RawId aSelfId,
                                  const nsTArray<RawId>& aCommandBuffers);
+  ipc::IPCResult RecvQueueWriteBuffer(RawId aSelfId, RawId aBufferId,
+                                      uint64_t aBufferOffset, Shmem&& aShmem);
+  ipc::IPCResult RecvQueueWriteTexture(
+      RawId aSelfId, const ffi::WGPUTextureCopyView& aDestination,
+      Shmem&& aShmem, const ffi::WGPUTextureDataLayout& aDataLayout,
+      const ffi::WGPUExtent3d& aExtent);
   ipc::IPCResult RecvDeviceCreateBindGroupLayout(
       RawId aSelfId, const SerialBindGroupLayoutDescriptor& aDesc,
       RawId aNewId);

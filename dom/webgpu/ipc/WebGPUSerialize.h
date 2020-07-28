@@ -85,7 +85,7 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUSamplerDescriptor,
                                   label, address_mode_u, address_mode_v,
                                   address_mode_w, mag_filter, min_filter,
                                   mipmap_filter, lod_min_clamp, lod_max_clamp,
-                                  compare);
+                                  compare, anisotropy_clamp);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUExtent3d, width,
                                   height, depth);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUOrigin3d, x, y, z);
@@ -111,11 +111,12 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mozilla::webgpu::ffi::WGPUVertexAttributeDescriptor, offset, format,
     shader_location);
 
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUTextureDataLayout,
+                                  offset, bytes_per_row, rows_per_image);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUBufferCopyView,
-                                  buffer, offset, bytes_per_row,
-                                  rows_per_image);
+                                  buffer, layout);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUTextureCopyView,
-                                  texture, mip_level, array_layer, origin);
+                                  texture, mip_level, origin);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mozilla::webgpu::ffi::WGPUBindGroupLayoutEntry, binding, visibility, ty,

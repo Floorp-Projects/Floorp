@@ -159,13 +159,13 @@ RawId WebGPUChild::TextureCreateView(
 
   desc.aspect = ffi::WGPUTextureAspect(aDesc.mAspect);
   desc.base_mip_level = aDesc.mBaseMipLevel;
-  desc.level_count = aDesc.mMipLevelCount
-                         ? aDesc.mMipLevelCount
+  desc.level_count = aDesc.mMipLevelCount.WasPassed()
+                         ? aDesc.mMipLevelCount.Value()
                          : aDefaultViewDesc.level_count - aDesc.mBaseMipLevel;
   desc.base_array_layer = aDesc.mBaseArrayLayer;
   desc.array_layer_count =
-      aDesc.mArrayLayerCount
-          ? aDesc.mArrayLayerCount
+      aDesc.mArrayLayerCount.WasPassed()
+          ? aDesc.mArrayLayerCount.Value()
           : aDefaultViewDesc.array_layer_count - aDesc.mBaseArrayLayer;
 
   RawId id = ffi::wgpu_client_make_texture_view_id(mClient, aSelfId);
@@ -438,11 +438,6 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
     MOZ_CRASH("IPC failure");
   }
   return id;
-}
-
-void WebGPUChild::QueueSubmit(RawId aSelfId,
-                              const nsTArray<RawId>& aCommandBufferIds) {
-  SendQueueSubmit(aSelfId, aCommandBufferIds);
 }
 
 ipc::IPCResult WebGPUChild::RecvFreeAdapter(RawId id) {

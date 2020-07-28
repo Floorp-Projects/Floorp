@@ -33,6 +33,53 @@ void Texture::Cleanup() {
   }
 }
 
+uint8_t Texture::BytesPerTexel() const {
+  switch (mDefaultViewDescriptor->format) {
+    case ffi::WGPUTextureFormat_R8Unorm:
+    case ffi::WGPUTextureFormat_R8Snorm:
+    case ffi::WGPUTextureFormat_R8Uint:
+    case ffi::WGPUTextureFormat_R8Sint:
+      return 1;
+    case ffi::WGPUTextureFormat_R16Uint:
+    case ffi::WGPUTextureFormat_R16Sint:
+    case ffi::WGPUTextureFormat_R16Float:
+    case ffi::WGPUTextureFormat_Rg8Unorm:
+    case ffi::WGPUTextureFormat_Rg8Snorm:
+    case ffi::WGPUTextureFormat_Rg8Uint:
+    case ffi::WGPUTextureFormat_Rg8Sint:
+      return 2;
+    case ffi::WGPUTextureFormat_R32Uint:
+    case ffi::WGPUTextureFormat_R32Sint:
+    case ffi::WGPUTextureFormat_R32Float:
+    case ffi::WGPUTextureFormat_Rg16Uint:
+    case ffi::WGPUTextureFormat_Rg16Sint:
+    case ffi::WGPUTextureFormat_Rg16Float:
+    case ffi::WGPUTextureFormat_Rgba8Unorm:
+    case ffi::WGPUTextureFormat_Rgba8UnormSrgb:
+    case ffi::WGPUTextureFormat_Rgba8Snorm:
+    case ffi::WGPUTextureFormat_Rgba8Uint:
+    case ffi::WGPUTextureFormat_Rgba8Sint:
+    case ffi::WGPUTextureFormat_Bgra8Unorm:
+    case ffi::WGPUTextureFormat_Bgra8UnormSrgb:
+    case ffi::WGPUTextureFormat_Rgb10a2Unorm:
+    case ffi::WGPUTextureFormat_Rg11b10Float:
+      return 4;
+    case ffi::WGPUTextureFormat_Rg32Uint:
+    case ffi::WGPUTextureFormat_Rg32Sint:
+    case ffi::WGPUTextureFormat_Rg32Float:
+      return 8;
+    case ffi::WGPUTextureFormat_Rgba16Uint:
+    case ffi::WGPUTextureFormat_Rgba16Sint:
+    case ffi::WGPUTextureFormat_Rgba16Float:
+    case ffi::WGPUTextureFormat_Rgba32Uint:
+    case ffi::WGPUTextureFormat_Rgba32Sint:
+    case ffi::WGPUTextureFormat_Rgba32Float:
+      return 16;
+    default:
+      return 0;
+  }
+}
+
 already_AddRefed<TextureView> Texture::CreateView(
     const dom::GPUTextureViewDescriptor& aDesc) {
   RawId id = mParent->GetBridge()->TextureCreateView(mId, aDesc,
