@@ -75,7 +75,7 @@ android {
         fenixProduction releaseTemplate >> {
             applicationIdSuffix ".fenix"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
-            def deepLinkSchemeValue = "fenix"
+            def deepLinkSchemeValue = "fenix-nightly"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
             manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue]
         }
