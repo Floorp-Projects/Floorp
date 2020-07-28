@@ -64,7 +64,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   NS_DECL_FRAMEARENA_HELPERS(nsPageSequenceFrame)
 
   // nsIFrame
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aReflowOutput,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 

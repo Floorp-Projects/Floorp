@@ -26,7 +26,7 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
   friend class nsPageFrame;
 
   // nsIFrame
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aReflowOutput,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 

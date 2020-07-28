@@ -26,7 +26,7 @@ class nsPageFrame final : public nsContainerFrame {
   friend nsPageFrame* NS_NewPageFrame(mozilla::PresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aReflowOutput,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
@@ -102,7 +102,7 @@ class nsPageBreakFrame final : public nsLeafFrame {
   explicit nsPageBreakFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   ~nsPageBreakFrame();
 
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aReflowOutput,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
