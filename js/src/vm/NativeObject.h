@@ -216,6 +216,12 @@ class ObjectElements {
     // If this flag is not set, the elements are guaranteed to contain no hole
     // values (the JS_ELEMENTS_HOLE MagicValue) in [0, initializedLength).
     NON_PACKED = 0x40,
+
+    // If this flag is not set, there's definitely no for-in iterator that
+    // covers these dense elements so elements can be deleted without calling
+    // SuppressDeletedProperty. This is used by fast paths for various Array
+    // builtins. See also NativeObject::denseElementsMaybeInIteration.
+    MAYBE_IN_ITERATION = 0x80,
   };
 
   // The flags word stores both the flags and the number of shifted elements.
@@ -314,6 +320,9 @@ class ObjectElements {
   }
 
   void markNonPacked() { flags |= NON_PACKED; }
+
+  void markMaybeInIteration() { flags |= MAYBE_IN_ITERATION; }
+  bool maybeInIteration() { return flags & MAYBE_IN_ITERATION; }
 
   void seal() {
     MOZ_ASSERT(!isSealed());
@@ -1334,6 +1343,24 @@ class NativeObject : public JSObject {
   bool denseElementsArePacked() const {
     return getElementsHeader()->isPacked();
   }
+
+  MOZ_MUST_USE bool markDenseElementsMaybeInIteration(JSContext* cx) {
+    if (!maybeCopyElementsForWrite(cx)) {
+      return false;
+    }
+    getElementsHeader()->markMaybeInIteration();
+    return true;
+  }
+
+  // Return whether the object's dense elements might be in the midst of for-in
+  // iteration. We rely on this to be able to safely delete or move dense array
+  // elements without worrying about updating in-progress iterators.
+  // See bug 690622.
+  //
+  // Note that it's fine to return false if this object is on the prototype of
+  // another object: SuppressDeletedProperty only suppresses properties deleted
+  // from the iterated object itself.
+  inline bool denseElementsMaybeInIteration();
 
   // Ensures that the object can hold at least index + extra elements. This
   // returns DenseElement_Success on success, DenseElement_Failed on failure
