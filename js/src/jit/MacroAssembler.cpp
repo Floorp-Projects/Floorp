@@ -3088,6 +3088,68 @@ void MacroAssembler::pow32(Register base, Register power, Register dest,
   bind(&done);
 }
 
+void MacroAssembler::signInt32(Register input, Register output) {
+  MOZ_ASSERT(input != output);
+
+  Label done;
+  move32(input, output);
+  rshift32Arithmetic(Imm32(31), output);
+  branch32(Assembler::LessThanOrEqual, input, Imm32(0), &done);
+  move32(Imm32(1), output);
+  bind(&done);
+}
+
+void MacroAssembler::signDouble(FloatRegister input, FloatRegister output) {
+  MOZ_ASSERT(input != output);
+
+  Label done, zeroOrNaN, negative;
+  loadConstantDouble(0.0, output);
+  branchDouble(Assembler::DoubleEqualOrUnordered, input, output, &zeroOrNaN);
+  branchDouble(Assembler::DoubleLessThan, input, output, &negative);
+
+  loadConstantDouble(1.0, output);
+  jump(&done);
+
+  bind(&negative);
+  loadConstantDouble(-1.0, output);
+  jump(&done);
+
+  bind(&zeroOrNaN);
+  moveDouble(input, output);
+
+  bind(&done);
+}
+
+void MacroAssembler::signDoubleToInt32(FloatRegister input, Register output,
+                                       FloatRegister temp, Label* fail) {
+  MOZ_ASSERT(input != temp);
+
+  Label done, zeroOrNaN, negative;
+  loadConstantDouble(0.0, temp);
+  branchDouble(Assembler::DoubleEqualOrUnordered, input, temp, &zeroOrNaN);
+  branchDouble(Assembler::DoubleLessThan, input, temp, &negative);
+
+  move32(Imm32(1), output);
+  jump(&done);
+
+  bind(&negative);
+  move32(Imm32(-1), output);
+  jump(&done);
+
+  // Fail for NaN and negative zero.
+  bind(&zeroOrNaN);
+  branchDouble(Assembler::DoubleUnordered, input, input, fail);
+
+  // The easiest way to distinguish -0.0 from 0.0 is that 1.0/-0.0
+  // is -Infinity instead of Infinity.
+  loadConstantDouble(1.0, temp);
+  divDouble(input, temp);
+  branchDouble(Assembler::DoubleLessThan, temp, input, fail);
+  move32(Imm32(0), output);
+
+  bind(&done);
+}
+
 void MacroAssembler::randomDouble(Register rng, FloatRegister dest,
                                   Register64 temp0, Register64 temp1) {
   using mozilla::non_crypto::XorShift128PlusRNG;
