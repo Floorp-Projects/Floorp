@@ -4,14 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import rust
 import sys
-
-from glean_parser import lint, parser, util
-from pathlib import Path
 
 
 def main(output_fd, *metrics_yamls):
+    from pathlib import Path
+
+    srcdir = Path(__file__).joinpath('../../../../../../')
+    glean_parser_path = srcdir.joinpath('third_party/python/glean_parser')
+    sys.path.insert(0, str(glean_parser_path.resolve()))
+
+    from glean_parser import lint, parser, util
+    import rust
+
     # Derived heavily from glean_parser.translate.translate.
     # Adapted to how mozbuild sends us a fd.
     options = {"allow_reserved": False}
