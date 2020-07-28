@@ -1,1 +1,1 @@
-== moz-block-fragmentation-001.html moz-block-fragmentation-001-ref.html
+asserts(4) == moz-block-fragmentation-001.html moz-block-fragmentation-001-ref.html # bug 1655630
