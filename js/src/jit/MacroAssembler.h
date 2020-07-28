@@ -1044,6 +1044,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void truncDoubleToInt32(FloatRegister src, Register dest,
                           Label* fail) PER_SHARED_ARCH;
 
+  void signInt32(Register input, Register output);
+  void signDouble(FloatRegister input, FloatRegister output);
+  void signDoubleToInt32(FloatRegister input, Register output,
+                         FloatRegister temp, Label* fail);
+
   // Returns a random double in range [0, 1) in |dest|. The |rng| register must
   // hold a pointer to a mozilla::non_crypto::XorShift128PlusRNG.
   void randomDouble(Register rng, FloatRegister dest, Register64 temp0,
