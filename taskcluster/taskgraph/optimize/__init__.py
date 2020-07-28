@@ -397,11 +397,12 @@ class Alias(CompositeStrategy):
 
 
 def split_bugbug_arg(arg):
-    """
-    The bugbug optimization strageies require passing an dict as
-    scratch space for communicating with downstream stratgies.
-    This function pass the provided argument to the first strategy,
-    and a fresh dictionary to the second stratgey.
+    """Split args for bugbug based strategies.
+
+    Many bugbug based optimizations require passing an empty dict by reference
+    to communicate to downstream strategies. This function passes the provided
+    arg to the first strategy and an empty dict to second (bugbug based)
+    strategy.
     """
     return (arg, {})
 
@@ -417,15 +418,24 @@ register_strategy('build-optimized', args=(
     'backstop',
 ))(All)
 register_strategy('build-fuzzing', args=('push-interval-10',))(Alias)
-register_strategy('test', args=(
-    Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=split_bugbug_arg),
-    'backstop',
-))(All)
+register_strategy('test', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
-register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
 
 
-# Strategy overrides used by |mach try| and/or shadow-scheduler tasks.
+# Strategy overrides used to tweak the default strategies. These are referenced
+# by the `optimize_strategies` parameter.
+
+class project(object):
+    """Strategies that should be applied per-project."""
+
+    autoland = {
+        'test': All(
+            Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=split_bugbug_arg),
+            'backstop',
+        ),
+    }
+    """Strategy overrides that apply to autoland."""
+
 
 class experimental(object):
     """Experimental strategies either under development or used as benchmarks.
