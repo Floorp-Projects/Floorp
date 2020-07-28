@@ -107,6 +107,10 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   }
 
   mozilla::a11y::GeckoTextMarkerRange range(mGeckoDocAccessible, textMarkerRange);
+  if (!range.IsValid()) {
+    return @"";
+  }
+
   return range.Text();
 }
 
