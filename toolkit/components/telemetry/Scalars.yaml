@@ -4995,6 +4995,25 @@ deletion.request:
     record_into_store:
       - 'deletion-request'
 
+  ecosystem_client_id:
+    bug_numbers:
+      - 1635662
+    description: >
+      An identifier used by the ecosystem ping, to delete all ecosystem
+      metrics collected from this profile if the user opts out of telemetry.
+    expires: never
+    kind: string
+    notification_emails:
+      - lina@mozilla.com
+      - sync-team@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'deletion-request'
+
 policies:
   count:
     bug_numbers:
