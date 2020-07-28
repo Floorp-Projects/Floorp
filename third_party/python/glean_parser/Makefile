@@ -21,7 +21,7 @@ clean-build: ## remove build artifacts
 	rm -fr dist/
 	rm -fr .eggs/
 	find . -name '*.egg-info' -exec rm -fr {} +
-	find . -name '*.egg' -exec rm -f {} +
+	find . -name '*.egg' -exec rm -fr {} +
 
 clean-pyc: ## remove Python file artifacts
 	find . -name '*.pyc' -exec rm -f {} +
@@ -36,10 +36,11 @@ clean-test: ## remove test and coverage artifacts
 
 lint: ## check style with flake8
 	python3 -m flake8 glean_parser tests
-	bash -c 'if [[ `python3 --version` =~ "Python 3\.[678]\..*" ]]; then \
+	if python3 --version | grep 'Python 3\.[678]\..*'; then \
 		python3 -m black --check glean_parser tests setup.py; \
-	fi'
+	fi
 	python3 -m yamllint glean_parser tests
+	python3 -m mypy glean_parser
 
 test: ## run tests quickly with the default Python
 	py.test

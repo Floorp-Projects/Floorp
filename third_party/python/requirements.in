@@ -26,6 +26,7 @@ distro==1.4.0
 ecdsa==0.15
 esprima==4.0.1
 fluent.migrate==0.9
+glean_parser==1.28.0
 jsmin==2.1.0
 json-e==2.7.0
 mozilla-version==0.3.4
