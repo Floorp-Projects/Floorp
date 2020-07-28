@@ -1104,6 +1104,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     if (!this.styleElements.has(document)) {
       const style = document.createElementNS(XHTML_NS, "style");
       style.setAttribute("type", "text/css");
+      style.setDevtoolsAsTriggeringPrincipal();
       document.documentElement.appendChild(style);
       this.styleElements.set(document, style);
     }

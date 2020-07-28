@@ -21,3 +21,14 @@ interface HTMLStyleElement : HTMLElement {
 };
 HTMLStyleElement includes LinkStyle;
 
+// Mozilla-specific additions to support devtools
+partial interface HTMLStyleElement {
+  /**
+   * Mark this style element with a devtools-specific principal that
+   * skips Content Security Policy unsafe-inline checks. This triggering
+   * principal will be overwritten by any callers that set textContent
+   * or innerHTML on this element.
+   */
+  [ChromeOnly]
+  void setDevtoolsAsTriggeringPrincipal();
+};
