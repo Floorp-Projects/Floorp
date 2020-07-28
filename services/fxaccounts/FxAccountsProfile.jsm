@@ -168,7 +168,10 @@ FxAccountsProfile.prototype = {
   // callers who need to await the underlying network request.
   async ensureProfile() {
     const profileCache = await this._getProfileCache();
-    if (Date.now() > this._cachedAt + this.PROFILE_FRESHNESS_THRESHOLD) {
+    if (
+      !profileCache ||
+      Date.now() > this._cachedAt + this.PROFILE_FRESHNESS_THRESHOLD
+    ) {
       const profile = await this._fetchAndCacheProfile().catch(err => {
         log.error("Background refresh of profile failed", err);
       });
@@ -177,8 +180,7 @@ FxAccountsProfile.prototype = {
       }
     }
     log.trace("not checking freshness of profile as it remains recent");
-
-    return profileCache.profile;
+    return profileCache ? profileCache.profile : null;
   },
 
   QueryInterface: ChromeUtils.generateQI([

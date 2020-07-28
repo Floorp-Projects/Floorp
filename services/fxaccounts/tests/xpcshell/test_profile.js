@@ -417,6 +417,20 @@ add_task(async function test_ensureProfile() {
       },
       fetchAndCacheProfileResolves: false,
     },
+    // profile retrieval when we've cached a failure to fetch profile data
+    {
+      // Note: The threshold for this test case is being set to an arbitrary value that will
+      // be greater than Date.now() so the retrieved cached profile will be deemed recent.
+      threshold: Date.now() + 5000,
+      hasRecentCachedProfile: false,
+      cachedProfile: null,
+      fetchedProfile: {
+        uid: `${ACCOUNT_UID}7`,
+        email: `${ACCOUNT_EMAIL}7`,
+        avatar: "myimg7",
+      },
+      fetchAndCacheProfileResolves: true,
+    },
   ];
 
   for (const tc of testCases) {
@@ -424,9 +438,13 @@ add_task(async function test_ensureProfile() {
     mockProfile
       .expects("_getProfileCache")
       .once()
-      .returns({
-        profile: tc.cachedProfile,
-      });
+      .returns(
+        tc.cachedProfile
+          ? {
+              profile: tc.cachedProfile,
+            }
+          : null
+      );
     profile.PROFILE_FRESHNESS_THRESHOLD = tc.threshold;
 
     if (tc.hasRecentCachedProfile) {
