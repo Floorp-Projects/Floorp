@@ -62,6 +62,11 @@ class AccessibleOrProxy {
   }
 
   /**
+   * Return true if the object has children, false otherwise
+   */
+  bool HasChildren() const { return ChildCount() > 0; }
+
+  /**
    * Return the child object either an accessible or a proxied accessible at
    * the given index.
    */
@@ -108,6 +113,28 @@ class AccessibleOrProxy {
     }
 
     return AsAccessible()->LastChild();
+  }
+
+  /**
+   * Return the next sibling object.
+   */
+  AccessibleOrProxy NextSibling() {
+    if (IsProxy()) {
+      return AsProxy()->NextSibling();
+    }
+
+    return AsAccessible()->NextSibling();
+  }
+
+  /**
+   * Return the prev sibling object.
+   */
+  AccessibleOrProxy PrevSibling() {
+    if (IsProxy()) {
+      return AsProxy()->PrevSibling();
+    }
+
+    return AsAccessible()->PrevSibling();
   }
 
   role Role() const {

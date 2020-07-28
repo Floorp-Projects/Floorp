@@ -24,7 +24,7 @@ class TraversalRule final : public PivotRule {
 
   ~TraversalRule() = default;
 
-  virtual uint16_t Match(Accessible* aAccessible) override;
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
 
  private:
   bool IsSingleLineage(Accessible* aAccessible);
