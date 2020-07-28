@@ -128,10 +128,10 @@ export class WelcomeScreen extends React.PureComponent {
   }
 
   highlightTheme(theme) {
-    const themes = document.querySelectorAll("button.theme");
+    const themes = document.querySelectorAll("label.theme");
     themes.forEach(function(element) {
       element.classList.remove("selected");
-      if (element.value === theme) {
+      if (element.firstElementChild.value === theme) {
         element.classList.add("selected");
       }
     });
@@ -240,34 +240,41 @@ export class WelcomeScreen extends React.PureComponent {
       case "theme":
         return this.props.content.tiles.data ? (
           <div className="tiles-theme-container">
-            <div className="tiles-theme-section">
-              {this.props.content.tiles.data.map(
-                ({ theme, label, tooltip, description }) => (
-                  <Localized
-                    key={theme + label}
-                    text={typeof tooltip === "object" ? tooltip : {}}
-                  >
-                    <button
-                      className="theme"
-                      value={theme}
-                      title={tooltip}
-                      onClick={this.handleAction}
+            <div>
+              <fieldset className="tiles-theme-section">
+                <Localized text={this.props.content.subtitle}>
+                  <legend className="sr-only" />
+                </Localized>
+                {this.props.content.tiles.data.map(
+                  ({ theme, label, tooltip, description }) => (
+                    <Localized
+                      key={theme + label}
+                      text={typeof tooltip === "object" ? tooltip : {}}
                     >
-                      <div className={`icon ${theme}`} />
-                      {label && (
-                        <Localized text={label}>
-                          <div className="text" />
-                        </Localized>
-                      )}
-                      {description && (
-                        <Localized text={description}>
-                          <div className="theme-desc" />
-                        </Localized>
-                      )}
-                    </button>
-                  </Localized>
-                )
-              )}
+                      <label className="theme" title={theme + label}>
+                        <input
+                          type="radio"
+                          value={theme}
+                          name="theme"
+                          className="sr-only input"
+                          onClick={this.handleAction}
+                        />
+                        <div className={`icon ${theme}`} />
+                        {label && (
+                          <Localized text={label}>
+                            <div className="text" />
+                          </Localized>
+                        )}
+                        {description && (
+                          <Localized text={description}>
+                            <div className="theme-desc" />
+                          </Localized>
+                        )}
+                      </label>
+                    </Localized>
+                  )
+                )}
+              </fieldset>
             </div>
           </div>
         ) : null;
