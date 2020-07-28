@@ -925,6 +925,13 @@
   args:
     input: NumberId
 
+- name: MathClz32Result
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    input: Int32Id
+
 - name: MathSqrtNumberResult
   shared: true
   transpile: true

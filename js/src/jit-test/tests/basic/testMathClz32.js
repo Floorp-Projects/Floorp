@@ -23,6 +23,16 @@ function h() {
     return x;
 }
 
+function k() {
+    var x = 0;
+    for (var i = -1000; i < 1000; i++) {
+        x += Math.clz32(i);
+        x += Math.clz32(i + 0.5);
+    }
+    return x;
+}
+
 assertEq(f(), 13048543);
 assertEq(g(), 13048543);
 assertEq(h(), 13048575);
+assertEq(k(), 46078);
