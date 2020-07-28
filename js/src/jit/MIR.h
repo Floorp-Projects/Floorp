@@ -7342,6 +7342,11 @@ class MTypedArrayElementShift : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
 
+  AliasSet getAliasSet() const override {
+    // Class is immutable. See also MHasClass.
+    return AliasSet::None();
+  }
+
   void computeRange(TempAllocator& alloc) override;
 };
 

@@ -3560,6 +3560,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void setIsPackedArray(Register obj, Register output, Register temp);
 
+  void typedArrayElementShift(Register obj, Register output);
+
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
 
   void iteratorMore(Register obj, ValueOperand output, Register temp);
