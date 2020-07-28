@@ -55,3 +55,16 @@ By necessity these can only be integration tests against the compiled crate.
 (e.g. `TEST(FOG, YourTestName) { ... }`).
 
 To run FOG's Rust `gtest` suite use `mach gtest FOG.*`
+
+## Python
+
+The [Glean Parser](https://github.com/mozilla/glean_parser/)
+has been augmented to generate FOG-specific APIs for Glean metrics.
+This augmentation is tested by running:
+
+`mach test toolkit/components/glean/pytest`
+
+These tests require Python 3+.
+If your default Python is Python 2, you may need to instead run:
+
+`mach python-test --python 3 toolkit/components/glean/pytest`
