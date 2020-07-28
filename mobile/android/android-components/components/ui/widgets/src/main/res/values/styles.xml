@@ -32,4 +32,13 @@
         <item name="iconTint">?mozac_contrast_text</item>
         <item name="android:textColor">?mozac_contrast_text</item>
     </style>
+
+    <!-- Favicon styling -->
+    <style name="Mozac.Widgets.Favicon" parent="">
+        <item name="android:layout_width">@dimen/mozac_widget_favicon_size</item>
+        <item name="android:layout_height">@dimen/mozac_widget_favicon_size</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:padding">@dimen/mozac_widget_favicon_padding</item>
+        <item name="android:background">@drawable/mozac_widget_favicon_background</item>
+    </style>
 </resources>

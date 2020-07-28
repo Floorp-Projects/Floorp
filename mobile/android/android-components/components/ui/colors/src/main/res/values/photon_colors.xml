@@ -77,6 +77,8 @@
    <color name="photonOrange90">#3e1300</color>
    
    <!-- Ink -->
+   <color name="photonInk20">#312A65</color>
+   <color name="photonInk50">#291D4F</color>
    <color name="photonInk70">#363959</color>
    <color name="photonInk80">#202340</color>
    <color name="photonInk90">#0f1126</color>
@@ -91,6 +93,21 @@
    <color name="photonGrey70">#38383d</color>
    <color name="photonGrey80">#2a2a2e</color>
    <color name="photonGrey90">#0c0c0d</color>
+
+   <!-- Light Grey -->
+   <color name="photonLightGrey05">#FBFBFE</color>
+   <color name="photonLightGrey10">#F9F9FB</color>
+   <color name="photonLightGrey30">#E0E0E6</color>
+   <color name="photonLightGrey60">#AFAFBB</color>
+   <color name="photonLightGrey70">#9F9FAD</color>
+   <color name="photonLightGrey80">#8F8F9D</color>
+   <color name="photonLightGrey90">#80808E</color>
+
+   <!-- Dark Grey -->
+   <color name="photonDarkGrey05">#5B5B66</color>
+   <color name="photonDarkGrey10">#52525E</color>
+   <color name="photonDarkGrey50">#32313C</color>
+   <color name="photonDarkGrey80">#1C1B22</color>
   
    <!-- White -->
    <color name="photonWhite">#ffffff</color>
