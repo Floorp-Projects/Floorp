@@ -50,7 +50,7 @@ def thaw(o):
 
     >>> from pyrsistent import s, m, v
     >>> thaw(s(1, 2))
-    set([1, 2])
+    {1, 2}
     >>> thaw(v(1, m(a=3)))
     [1, {'a': 3}]
     >>> thaw((1, v()))
