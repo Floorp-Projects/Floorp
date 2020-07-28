@@ -1372,6 +1372,10 @@ nsresult nsPrintJob::ReconstructAndReflow(bool doSetPixelScale) {
     po->mPresContext->SetPrintPreviewScale(mScreenDPI / printDPI);
 
     RefPtr<PresShell> presShell(po->mPresShell);
+    if (NS_WARN_IF(presShell->IsDestroying())) {
+      return NS_ERROR_FAILURE;
+    }
+
     presShell->ReconstructFrames();
 
     // If the printing was canceled or restarted with different data,
@@ -1396,6 +1400,10 @@ nsresult nsPrintJob::ReconstructAndReflow(bool doSetPixelScale) {
     }
 
     presShell->FlushPendingNotifications(FlushType::Layout);
+
+    if (NS_WARN_IF(presShell->IsDestroying())) {
+      return NS_ERROR_FAILURE;
+    }
 
     // If the printing was canceled or restarted with different data,
     // let's stop doing this printing.
