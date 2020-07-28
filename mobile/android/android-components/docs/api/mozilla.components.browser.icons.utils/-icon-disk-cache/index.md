@@ -2,7 +2,7 @@
 
 # IconDiskCache
 
-`class IconDiskCache : `[`LoaderDiskCache`](../../mozilla.components.browser.icons.loader/-disk-icon-loader/-loader-disk-cache/index.md)`, `[`PreparerDiskCache`](../../mozilla.components.browser.icons.preparer/-disk-icon-preparer/-preparer-disk-cache/index.md)`, `[`ProcessorDiskCache`](../../mozilla.components.browser.icons.processor/-disk-icon-processor/-processor-disk-cache/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/utils/IconDiskCache.kt#L36)
+`class IconDiskCache : `[`LoaderDiskCache`](../../mozilla.components.browser.icons.loader/-disk-icon-loader/-loader-disk-cache/index.md)`, `[`PreparerDiskCache`](../../mozilla.components.browser.icons.preparer/-disk-icon-preparer/-preparer-disk-cache/index.md)`, `[`ProcessorDiskCache`](../../mozilla.components.browser.icons.processor/-disk-icon-processor/-processor-disk-cache/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/utils/IconDiskCache.kt#L35)
 
 Caching bitmaps and resource URLs on disk.
 

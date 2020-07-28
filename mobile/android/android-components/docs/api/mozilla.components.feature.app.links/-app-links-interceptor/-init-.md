@@ -38,5 +38,3 @@ of security concerns.
 have registered to open.
 
 `launchFromInterceptor` - If {true} then the interceptor will launch the link in third-party apps if available.
-
-`allowRedirectUrls` - A set of URLs that allows intercept when `onLoadRequest` is triggered by redirect.
