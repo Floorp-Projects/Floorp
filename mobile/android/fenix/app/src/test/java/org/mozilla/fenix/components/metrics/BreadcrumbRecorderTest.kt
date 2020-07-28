@@ -4,8 +4,11 @@
 
 package org.mozilla.fenix.components.metrics
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -16,7 +19,24 @@ import mozilla.components.support.base.crash.Breadcrumb
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-internal class BreadcrumbRecorderTest {
+class BreadcrumbRecorderTest {
+
+    @Test
+    fun `sets listener on create and destroy`() {
+        val navController: NavController = mockk(relaxUnitFun = true)
+
+        val lifecycle = LifecycleRegistry(mockk())
+        val breadCrumbRecorder = BreadcrumbsRecorder(mockk(), navController) { "test" }
+
+        lifecycle.addObserver(breadCrumbRecorder)
+        verify { navController wasNot Called }
+
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        verify { navController.addOnDestinationChangedListener(breadCrumbRecorder) }
+
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        verify { navController.removeOnDestinationChangedListener(breadCrumbRecorder) }
+    }
 
     @Test
     fun `ensure crash reporter recordCrashBreadcrumb is called`() {

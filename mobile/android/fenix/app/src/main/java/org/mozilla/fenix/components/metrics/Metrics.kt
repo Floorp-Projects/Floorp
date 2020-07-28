@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.awesomebar.facts.BrowserAwesomeBarFacts
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
@@ -640,21 +641,26 @@ interface MetricController {
     }
 }
 
-private class DebugMetricController : MetricController {
+@VisibleForTesting
+internal class DebugMetricController(
+    private val logger: Logger = Logger()
+) : MetricController {
+
     override fun start(type: MetricServiceType) {
-        Logger.debug("DebugMetricController: start")
+        logger.debug("DebugMetricController: start")
     }
 
     override fun stop(type: MetricServiceType) {
-        Logger.debug("DebugMetricController: stop")
+        logger.debug("DebugMetricController: stop")
     }
 
     override fun track(event: Event) {
-        Logger.debug("DebugMetricController: track event: $event")
+        logger.debug("DebugMetricController: track event: $event")
     }
 }
 
-private class ReleaseMetricController(
+@VisibleForTesting
+internal class ReleaseMetricController(
     private val services: List<MetricsService>,
     private val isDataTelemetryEnabled: () -> Boolean,
     private val isMarketingDataTelemetryEnabled: () -> Boolean
@@ -706,7 +712,7 @@ private class ReleaseMetricController(
                 val isEnabled = isTelemetryEnabled(it.type)
                 val isInitialized = isInitialized(it.type)
                 if (!isEnabled || !isInitialized) {
-                    return
+                    return@forEach
                 }
 
                 it.track(event)
