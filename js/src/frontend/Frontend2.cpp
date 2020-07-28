@@ -329,7 +329,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
 
   const JS::ReadOnlyCompileOptions& options = compilationInfo.options;
 
-  stencil.get().immutableFlags = result.top_level_script.immutable_flags;
+  stencil.get().immutableFlags = smooshStencil.immutable_flags;
 
   // FIXME: The following flags should be set in jsparagus.
   stencil.get().immutableFlags.setFlag(ImmutableFlags::SelfHosted,
