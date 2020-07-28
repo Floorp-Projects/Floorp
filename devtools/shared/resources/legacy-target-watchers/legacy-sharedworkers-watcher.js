@@ -9,6 +9,10 @@ const {
 } = require("devtools/shared/resources/legacy-target-watchers/legacy-workers-watcher");
 
 class LegacySharedWorkersWatcher extends LegacyWorkersWatcher {
+  // Flag used from the parent class to listen to process targets.
+  // Decision tree is complicated, keep all logic in the parent methods.
+  _isSharedWorkerWatcher = true;
+
   _supportWorkerTarget(workerTarget) {
     return workerTarget.isSharedWorker;
   }
