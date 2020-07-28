@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.pwa
 
-import mozilla.components.feature.pwa.ProgressiveWebAppFacts.Companion.MS_PRECISION
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -20,21 +19,6 @@ class ProgressiveWebAppFacts {
     object Items {
         const val INSTALL_SHORTCUT = "install_shortcut"
         const val HOMESCREEN_ICON_TAP = "homescreen_icon_tap"
-        const val ENTER_BACKGROUND = "enter_background"
-        const val ENTER_FOREGROUND = "enter_foreground"
-    }
-
-    /**
-     * Keys used to record metadata about [Items].
-     */
-    object MetadataKeys {
-        const val BACKGROUND_TIME = "background_time"
-        const val FOREGROUND_TIME = "foreground_time"
-    }
-
-    companion object {
-        // We only care about millisecond precision in this context
-        internal const val MS_PRECISION = 1_000_000L
     }
 }
 
@@ -53,32 +37,14 @@ private fun emitPwaFact(
     ).collect()
 }
 
-internal fun emitHomescreenIconTapFact() =
-    emitPwaFact(
-        Action.CLICK,
-        ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP
-    )
-
 internal fun emitPwaInstallFact() =
     emitPwaFact(
         Action.CLICK,
         ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT
     )
 
-internal fun emitForegroundTimingFact(timingNs: Long) =
+internal fun emitHomescreenIconTapFact() =
     emitPwaFact(
-        Action.INTERACTION,
-        ProgressiveWebAppFacts.Items.ENTER_FOREGROUND,
-        metadata = mapOf(
-            ProgressiveWebAppFacts.MetadataKeys.FOREGROUND_TIME to (timingNs / MS_PRECISION)
-        )
-    )
-
-internal fun emitBackgroundTimingFact(timingNs: Long) =
-    emitPwaFact(
-        Action.INTERACTION,
-        ProgressiveWebAppFacts.Items.ENTER_BACKGROUND,
-        metadata = mapOf(
-            ProgressiveWebAppFacts.MetadataKeys.BACKGROUND_TIME to (timingNs / MS_PRECISION)
-        )
+        Action.CLICK,
+        ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP
     )

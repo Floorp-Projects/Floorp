@@ -8,7 +8,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.appcompat.app.AppCompatActivity
@@ -45,18 +44,6 @@ class WebAppLauncherActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        val currTime = SystemClock.elapsedRealtimeNanos()
-        emitForegroundTimingFact(currTime)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        val currTime = SystemClock.elapsedRealtimeNanos()
-        emitBackgroundTimingFact(currTime)
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
@@ -67,7 +54,10 @@ class WebAppLauncherActivity : AppCompatActivity() {
         when (manifest?.display) {
             WebAppManifest.DisplayMode.FULLSCREEN,
             WebAppManifest.DisplayMode.STANDALONE,
-            WebAppManifest.DisplayMode.MINIMAL_UI -> launchWebAppShell(startUrl)
+            WebAppManifest.DisplayMode.MINIMAL_UI -> {
+                emitHomescreenIconTapFact()
+                launchWebAppShell(startUrl)
+            }
 
             // If no manifest is saved for this site, just open the browser.
             WebAppManifest.DisplayMode.BROWSER, null -> launchBrowser(startUrl)
@@ -96,7 +86,6 @@ class WebAppLauncherActivity : AppCompatActivity() {
 
         try {
             startActivity(intent)
-            emitHomescreenIconTapFact()
         } catch (e: ActivityNotFoundException) {
             logger.error("Packages does not handle ACTION_VIEW_PWA intent. Can't launch as web app.", e)
             // Fall back to normal browser
