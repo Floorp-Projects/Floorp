@@ -300,3 +300,106 @@ add_task(async function test_submit_creditCard_update() {
     ["creditcard", "save", "update_doorhanger"],
   ]);
 });
+
+const TEST_SELECTORS = {
+  selRecords: "#credit-cards",
+  btnRemove: "#remove",
+  btnAdd: "#add",
+  btnEdit: "#edit",
+};
+
+const DIALOG_SIZE = "width=600,height=400";
+
+add_task(async function test_removingCreditCardsViaKeyboardDelete() {
+  Services.telemetry.clearEvents();
+  Services.telemetry.setEventRecordingEnabled("creditcard", true);
+
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+  let win = window.openDialog(
+    MANAGE_CREDIT_CARDS_DIALOG_URL,
+    null,
+    DIALOG_SIZE
+  );
+  await waitForFocusAndFormReady(win);
+
+  let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
+
+  is(selRecords.length, 1, "One credit card");
+
+  EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
+  EventUtils.synthesizeKey("VK_DELETE", {}, win);
+  await BrowserTestUtils.waitForEvent(selRecords, "RecordsRemoved");
+  is(selRecords.length, 0, "No credit cards left");
+
+  win.close();
+
+  await assertTelemetry(undefined, [
+    ["creditcard", "show", "manage"],
+    ["creditcard", "delete", "manage"],
+  ]);
+  await removeAllRecords();
+});
+
+add_task(async function test_saveCreditCard() {
+  Services.telemetry.clearEvents();
+  Services.telemetry.setEventRecordingEnabled("creditcard", true);
+
+  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-number"], {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey(
+      "0" + TEST_CREDIT_CARD_1["cc-exp-month"].toString(),
+      {},
+      win
+    );
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey(
+      TEST_CREDIT_CARD_1["cc-exp-year"].toString(),
+      {},
+      win
+    );
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-name"], {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-type"], {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    info("saving credit card");
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+  });
+
+  await removeAllRecords();
+
+  await assertTelemetry(undefined, [["creditcard", "add", "manage"]]);
+});
+
+add_task(async function test_editCreditCard() {
+  Services.telemetry.clearEvents();
+  Services.telemetry.setEventRecordingEnabled("creditcard", true);
+
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "only one credit card is in storage");
+  await testDialog(
+    EDIT_CREDIT_CARD_DIALOG_URL,
+    win => {
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_RIGHT", {}, win);
+      EventUtils.synthesizeKey("test", {}, win);
+      win.document.querySelector("#save").click();
+    },
+    {
+      record: creditCards[0],
+    }
+  );
+  await removeAllRecords();
+  await assertTelemetry(undefined, [
+    ["creditcard", "show_entry", "manage"],
+    ["creditcard", "edit", "manage"],
+  ]);
+});
