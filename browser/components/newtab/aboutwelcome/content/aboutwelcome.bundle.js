@@ -386,11 +386,11 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   }
 
   highlightTheme(theme) {
-    const themes = document.querySelectorAll("button.theme");
+    const themes = document.querySelectorAll("label.theme");
     themes.forEach(function (element) {
       element.classList.remove("selected");
 
-      if (element.value === theme) {
+      if (element.firstElementChild.value === theme) {
         element.classList.add("selected");
       }
     });
@@ -481,9 +481,13 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       case "theme":
         return this.props.content.tiles.data ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "tiles-theme-container"
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("fieldset", {
           className: "tiles-theme-section"
-        }, this.props.content.tiles.data.map(({
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+          text: this.props.content.subtitle
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("legend", {
+          className: "sr-only"
+        })), this.props.content.tiles.data.map(({
           theme,
           label,
           tooltip,
@@ -491,12 +495,16 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
         }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           key: theme + label,
           text: typeof tooltip === "object" ? tooltip : {}
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
           className: "theme",
+          title: theme + label
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
+          type: "radio",
           value: theme,
-          title: tooltip,
+          name: "theme",
+          className: "sr-only input",
           onClick: this.handleAction
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: `icon ${theme}`
         }), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           text: label
@@ -506,7 +514,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           text: description
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "theme-desc"
-        }))))))) : null;
+        })))))))) : null;
     }
 
     return null;
