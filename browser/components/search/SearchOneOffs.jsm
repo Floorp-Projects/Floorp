@@ -14,13 +14,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });
 
 /**
  * Defines the search one-off button elements. These are displayed at the bottom
- * of the address bar or the search bar. The address bar buttons are a subclass
- * in browser/components/urlbar/UrlbarSearchOneOffs.jsm.
+ * of the address bar and search bar. The address bar buttons are a subclass in
+ * browser/components/urlbar/UrlbarSearchOneOffs.jsm. If you are adding a new
+ * subclass, see "Methods for subclasses to override" below.
  */
 class SearchOneOffs {
   constructor(container) {
@@ -52,7 +52,6 @@ class SearchOneOffs {
       )
     );
 
-    this._view = null;
     this._popup = null;
     this._textbox = null;
 
@@ -200,22 +199,6 @@ class SearchOneOffs {
   }
 
   /**
-   * @param {UrlbarView} val
-   */
-  set view(val) {
-    if (this._view) {
-      this._view.controller.removeQueryListener(this);
-    }
-    this._view = val;
-    if (val) {
-      if (val.isOpen) {
-        this._rebuild();
-      }
-      val.controller.addQueryListener(this);
-    }
-  }
-
-  /**
    * The popup that contains the one-offs.
    *
    * @param {DOMElement} val
@@ -281,10 +264,7 @@ class SearchOneOffs {
    */
   set query(val) {
     this._query = val;
-    if (
-      (this._view && this._view.isOpen) ||
-      (this.popup && this.popup.popupOpen)
-    ) {
+    if (this.isViewOpen) {
       let isOneOffSelected =
         this.selectedButton &&
         this.selectedButton.classList.contains("searchbar-engine-one-off-item");
@@ -318,7 +298,7 @@ class SearchOneOffs {
         // If the button doesn't have an engine, then clear the popup's
         // selection to indicate that pressing Return while the button is
         // selected will do the button's command, not search.
-        this.selectedAutocompleteIndex = -1;
+        this.selectedViewIndex = -1;
       }
     }
     this._selectedButton = val;
@@ -364,21 +344,6 @@ class SearchOneOffs {
       }
     }
     return -1;
-  }
-
-  get selectedAutocompleteIndex() {
-    if (!this.compact) {
-      return this.popup.selectedIndex;
-    }
-    return this._view.selectedElementIndex;
-  }
-
-  set selectedAutocompleteIndex(val) {
-    if (!this.compact) {
-      this.popup.selectedIndex = val;
-      return;
-    }
-    this._view.selectedElementIndex = val;
   }
 
   get compact() {
@@ -557,17 +522,7 @@ class SearchOneOffs {
       }
       button.setAttribute("image", uri);
       button.setAttribute("class", "searchbar-engine-one-off-item");
-      if (this.compact) {
-        let tooltip = engine.name;
-        let aliases = UrlbarSearchUtils.aliasesForEngine(engine);
-        if (aliases.length) {
-          tooltip = tooltip + ` (${aliases[0]})`;
-        }
-
-        button.setAttribute("tooltiptext", tooltip);
-      } else {
-        button.setAttribute("tooltiptext", engine.name);
-      }
+      button.setAttribute("tooltiptext", this.tooltipForEngine(engine));
       button.engine = engine;
 
       this.buttons.appendChild(button);
@@ -718,11 +673,19 @@ class SearchOneOffs {
     return buttons;
   }
 
-  handleSearchCommand(aEvent, aEngine, aForceNewTab) {
-    if (this._view?.oneOffsCommandHandler(aEvent, aEngine)) {
-      return;
-    }
-
+  /**
+   * Returns information on where a search results page should be loaded: in the
+   * current tab or a new tab.
+   *
+   * @param {event} aEvent
+   *        The event that triggered the page load.
+   * @param {boolean} aForceNewTab
+   *        True to force the load in a new tab.
+   * @returns {object} An object { where, params }.  `where` is a string:
+   *          "current" or "tab".  `params` is an object further describing how
+   *          the page should be loaded.
+   */
+  _whereToOpen(aEvent, aForceNewTab) {
     let where = "current";
     let params;
     // Open ctrl/cmd clicks on one-off buttons in a new background tab.
@@ -752,12 +715,7 @@ class SearchOneOffs {
       }
     }
 
-    (this._view || this.popup).handleOneOffSearch(
-      aEvent,
-      aEngine,
-      where,
-      params
-    );
+    return { where, params };
   }
 
   /**
@@ -830,9 +788,6 @@ class SearchOneOffs {
    * @returns {boolean} True if the one-offs handled the key press.
    */
   handleKeyDown(event, numListItems, allowEmptySelection, textboxUserValue) {
-    if (!this.popup && !this._view) {
-      return false;
-    }
     let handled = this._handleKeyDown(
       event,
       numListItems,
@@ -891,7 +846,7 @@ class SearchOneOffs {
         this.selectedButton = null;
         return false;
       }
-      this.selectedAutocompleteIndex = -1;
+      this.selectedViewIndex = -1;
       this.advanceSelection(!event.shiftKey, true, false);
       return !!this.selectedButton;
     }
@@ -908,13 +863,13 @@ class SearchOneOffs {
         this.advanceSelection(false, true, false);
         return true;
       }
-      if (this.selectedAutocompleteIndex > 0) {
+      if (this.selectedViewIndex > 0) {
         // Moving up within the list.  The autocomplete controller should
         // handle this case.  A button may be selected, so null it.
         this.selectedButton = null;
         return false;
       }
-      if (this.selectedAutocompleteIndex == 0) {
+      if (this.selectedViewIndex == 0) {
         // Moving up from the top of the list.
         if (allowEmptySelection) {
           // Let the autocomplete controller remove selection in the list
@@ -957,18 +912,18 @@ class SearchOneOffs {
         return true;
       }
       if (
-        this.selectedAutocompleteIndex >= 0 &&
-        this.selectedAutocompleteIndex < numListItems - 1
+        this.selectedViewIndex >= 0 &&
+        this.selectedViewIndex < numListItems - 1
       ) {
         // Moving down within the list.  The autocomplete controller
         // should handle this case.  A button may be selected, so null it.
         this.selectedButton = null;
         return false;
       }
-      if (this.selectedAutocompleteIndex == numListItems - 1) {
+      if (this.selectedViewIndex == numListItems - 1) {
         // Moving down from the last item in the list to the buttons.
         if (!allowEmptySelection) {
-          this.selectedAutocompleteIndex = -1;
+          this.selectedViewIndex = -1;
           if (this.textbox && typeof textboxUserValue == "string") {
             this.textbox.value = textboxUserValue;
           }
@@ -1089,6 +1044,66 @@ class SearchOneOffs {
     }, this._addEngineMenuTimeoutMs);
   }
 
+  // Methods for subclasses to override
+
+  /**
+   * @returns {boolean} True if the view is open.
+   */
+  get isViewOpen() {
+    return this.popup && this.popup.popupOpen;
+  }
+
+  /**
+   * @returns {number} The selected index in the view or -1 if no selection.
+   */
+  get selectedViewIndex() {
+    return this.popup.selectedIndex;
+  }
+
+  /**
+   * Sets the selected index in the view.
+   *
+   * @param {number} val
+   *        The selected index or -1 if no selection.
+   */
+  set selectedViewIndex(val) {
+    this.popup.selectedIndex = val;
+  }
+
+  /**
+   * Closes the view.
+   */
+  closeView() {
+    this.popup.hidePopup();
+  }
+
+  /**
+   * Called when a one-off is clicked or the "Search in New Tab" context menu
+   * item is picked.  This is not called for the settings button.
+   *
+   * @param {event} event
+   *        The event that triggered the pick.
+   * @param {nsISearchEngine|SearchEngine} engine
+   *        The engine that was picked.
+   * @param {boolean} forceNewTab
+   *        True if the search results page should be loaded in a new tab.
+   */
+  handleSearchCommand(event, engine, forceNewTab = false) {
+    let { where, params } = this._whereToOpen(event, forceNewTab);
+    this.popup.handleOneOffSearch(event, engine, where, params);
+  }
+
+  /**
+   * Gets the tooltip for the one-off button of an engine.
+   *
+   * @param {nsISearchEngine|SearchEngine} engine
+   *        The engine.
+   * @returns {string} The tooltip for the given engine.
+   */
+  tooltipForEngine(engine) {
+    return engine.name;
+  }
+
   // Event handlers below.
 
   _on_mousedown(event) {
@@ -1129,10 +1144,6 @@ class SearchOneOffs {
   }
 
   _on_click(event) {
-    if (this._view?.oneOffsClickHandler(event)) {
-      return;
-    }
-
     if (event.button == 2) {
       return; // ignore right clicks.
     }
@@ -1158,11 +1169,7 @@ class SearchOneOffs {
 
       // If the preference tab was already selected, the panel doesn't
       // close itself automatically.
-      if (this._view) {
-        this._view.close();
-      } else {
-        this.popup.hidePopup();
-      }
+      this.closeView();
       return;
     }
 
@@ -1297,18 +1304,10 @@ class SearchOneOffs {
   }
 
   _on_popupshowing() {
-    this.onViewOpen();
-  }
-
-  _on_popuphidden() {
-    this.onViewClose();
-  }
-
-  onViewOpen() {
     this._rebuild();
   }
 
-  onViewClose() {
+  _on_popuphidden() {
     this.selectedButton = null;
     this._contextEngine = null;
   }

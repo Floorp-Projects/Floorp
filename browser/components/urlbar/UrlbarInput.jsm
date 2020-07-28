@@ -414,18 +414,20 @@ class UrlbarInput {
       if (selectedOneOff && isMouseEvent && event.target != selectedOneOff) {
         selectedOneOff = null;
       }
-      // Do the command of the selected one-off if it's not an engine.
-      if (selectedOneOff && !selectedOneOff.engine) {
-        this.controller.engagementEvent.discard();
-        selectedOneOff.doCommand();
-        return;
-      }
-
-      // If the user clicked on a filter-style one-off, we want to avoid the
-      // handling below to execute a search. One-off code in this function can
-      // be simplified when update2 is on by default.
-      if (this.view.oneOffsRefresh && !result?.heuristic) {
-        selectedOneOff = null;
+      if (selectedOneOff) {
+        if (!selectedOneOff.engine) {
+          // the settings button
+          this.controller.engagementEvent.discard();
+          selectedOneOff.doCommand();
+          return;
+        }
+        if (this.view.oneOffsRefresh) {
+          this.view.oneOffSearchButtons.handleSearchCommand(
+            event,
+            selectedOneOff.engine
+          );
+          return;
+        }
       }
     }
 
