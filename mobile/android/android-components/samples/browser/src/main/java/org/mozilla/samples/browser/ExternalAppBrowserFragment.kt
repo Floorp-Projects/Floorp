@@ -5,7 +5,6 @@
 package org.mozilla.samples.browser
 
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,9 +13,6 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.customtabs.CustomTabWindowFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
-import mozilla.components.feature.pwa.emitBackgroundTimingFact
-import mozilla.components.feature.pwa.emitForegroundTimingFact
-import mozilla.components.feature.pwa.emitHomescreenIconTapFact
 import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.feature.ManifestUpdateFeature
@@ -39,8 +35,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
         get() = arguments?.getWebAppManifest()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        emitHomescreenIconTapFact()
-
         val layout = super.onCreateView(inflater, container, savedInstanceState)
 
         val manifest = this.manifest
@@ -105,18 +99,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
         }
 
         return layout
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val currTime = SystemClock.elapsedRealtimeNanos()
-        emitForegroundTimingFact(currTime)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        val currTime = SystemClock.elapsedRealtimeNanos()
-        emitBackgroundTimingFact(currTime)
     }
 
     /**

@@ -54,7 +54,10 @@ class WebAppLauncherActivity : AppCompatActivity() {
         when (manifest?.display) {
             WebAppManifest.DisplayMode.FULLSCREEN,
             WebAppManifest.DisplayMode.STANDALONE,
-            WebAppManifest.DisplayMode.MINIMAL_UI -> launchWebAppShell(startUrl)
+            WebAppManifest.DisplayMode.MINIMAL_UI -> {
+                emitHomescreenIconTapFact()
+                launchWebAppShell(startUrl)
+            }
 
             // If no manifest is saved for this site, just open the browser.
             WebAppManifest.DisplayMode.BROWSER, null -> launchBrowser(startUrl)
