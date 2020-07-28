@@ -4,8 +4,18 @@
 "use strict";
 
 var Services = require("Services");
+const asyncStoreHelper = require("devtools/client/shared/async-store-helper");
 
-exports.defaultThreadOptions = function() {
+// Another asyncStore instance is used by the Debugger reducer and will both
+// read and write preferences.
+// This asyncStore should only be used to read values to avoid potential races.
+// See Bug 1654587 for further improvements to Debugger settings.
+const asyncStore = asyncStoreHelper("debugger", {
+  breakpoints: ["pending-breakpoints", {}],
+  eventBreakpoints: ["event-listener-breakpoints", {}],
+});
+
+exports.getThreadOptions = async function() {
   return {
     pauseOnExceptions: Services.prefs.getBoolPref(
       "devtools.debugger.pause-on-exceptions"
@@ -28,5 +38,13 @@ exports.defaultThreadOptions = function() {
     logEventBreakpoints: Services.prefs.getBoolPref(
       "devtools.debugger.log-event-breakpoints"
     ),
+    // This option is always true. See Bug 1654590 for removal.
+    observeAsmJS: true,
+    breakpoints: await asyncStore.breakpoints,
+    // XXX: `event-listener-breakpoints` is a copy of the event-listeners state
+    // of the debugger panel. The `active` property is therefore linked to
+    // the `active` property of the state.
+    // See devtools/client/debugger/src/reducers/event-listeners.js
+    eventBreakpoints: (await asyncStore.eventBreakpoints).active || [],
   };
 };
