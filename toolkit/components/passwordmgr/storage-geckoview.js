@@ -227,6 +227,25 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   _decryptLogins(logins) {
     return logins;
   }
+
+  /**
+   * Sync metadata, which isn't supported by GeckoView.
+   */
+  async getSyncID() {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  }
+
+  async setSyncID(syncID) {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  }
+
+  async getLastSync() {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  }
+
+  async setLastSync(timestamp) {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  }
 }
 
 XPCOMUtils.defineLazyGetter(
