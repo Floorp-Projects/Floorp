@@ -169,6 +169,16 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  BackgroundThumbnails: {
+    child: {
+      moduleURI: "resource://gre/actors/BackgroundThumbnailsChild.jsm",
+      events: {
+        DOMDocElementInserted: { capture: true },
+      },
+    },
+    messageManagerGroups: ["thumbnails"],
+  },
+
   BrowserElement: {
     parent: {
       moduleURI: "resource://gre/actors/BrowserElementParent.jsm",

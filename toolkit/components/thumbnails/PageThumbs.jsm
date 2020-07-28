@@ -192,16 +192,29 @@ var PageThumbs = {
    *   will be resized to default thumbnail dimensions just prior to painting.
    * @param aArgs (optional) Additional named parameters:
    *   fullScale - request that a non-downscaled image be returned.
+   *   isImage - indicate that this should be treated as an image url.
+   *   backgroundColor - background color to draw behind images.
+   *   targetWidth - desired width for images.
+   *   isBackgroundThumb - true if request is from the background thumb service.
+   * @param aSkipTelemetry skip recording telemetry
    */
-  async captureToCanvas(aBrowser, aCanvas, aArgs) {
+  async captureToCanvas(aBrowser, aCanvas, aArgs, aSkipTelemetry = false) {
     let telemetryCaptureTime = new Date();
     let args = {
       fullScale: aArgs ? aArgs.fullScale : false,
+      isImage: aArgs ? aArgs.isImage : false,
+      backgroundColor:
+        aArgs?.backgroundColor ?? PageThumbUtils.THUMBNAIL_BG_COLOR,
+      targetWidth: aArgs?.targetWidth ?? PageThumbUtils.THUMBNAIL_DEFAULT_SIZE,
+      isBackgroundThumb: aArgs ? aArgs.isBackgroundThumb : false,
     };
+
     return this._captureToCanvas(aBrowser, aCanvas, args).then(() => {
-      Services.telemetry
-        .getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
-        .add(new Date() - telemetryCaptureTime);
+      if (!aSkipTelemetry) {
+        Services.telemetry
+          .getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
+          .add(new Date() - telemetryCaptureTime);
+      }
       return aCanvas;
     });
   },
@@ -259,6 +272,7 @@ var PageThumbs = {
         aCanvas.height = thumbnail.height;
         aCanvas.getContext("2d").putImageData(imgData, 0, 0);
       }
+
       return aCanvas;
     }
     // The content is a local page, grab a thumbnail sync.
@@ -278,43 +292,73 @@ var PageThumbs = {
    * @param aHeight The desired canvas height.
    * @param aArgs (optional) Additional named parameters:
    *   fullScale - request that a non-downscaled image be returned.
+   *   isImage - indicate that this should be treated as an image url.
+   *   backgroundColor - background color to draw behind images.
+   *   targetWidth - desired width for images.
+   *   isBackgroundThumb - true if request is from the background thumb service.
    * @return a promise
    */
   async _captureRemoteThumbnail(aBrowser, aWidth, aHeight, aArgs) {
-    if (!aBrowser.browsingContext) {
+    if (!aBrowser.browsingContext || !aBrowser.parentElement) {
       return null;
     }
+
     let thumbnailsActor = aBrowser.browsingContext.currentWindowGlobal.getActor(
-      "Thumbnails"
+      aArgs.isBackgroundThumb ? "BackgroundThumbnails" : "Thumbnails"
     );
-    let [contentWidth, contentHeight] = await thumbnailsActor.sendQuery(
-      "Browser:Thumbnail:ContentSize"
+    let contentInfo = await thumbnailsActor.sendQuery(
+      "Browser:Thumbnail:ContentInfo",
+      {
+        isImage: aArgs.isImage,
+        targetWidth: aArgs.targetWidth,
+        backgroundColor: aArgs.backgroundColor,
+      }
     );
-    let fullScale = aArgs ? aArgs.fullScale : false;
-    let scale = fullScale
-      ? 1
-      : Math.min(Math.max(aWidth / contentWidth, aHeight / contentHeight), 1);
-    let image = await aBrowser.drawSnapshot(
-      0,
-      0,
-      contentWidth,
-      contentHeight,
-      scale,
-      PageThumbUtils.THUMBNAIL_BG_COLOR
+
+    let contentWidth = contentInfo.width;
+    let contentHeight = contentInfo.height;
+    if (contentWidth == 0 || contentHeight == 0) {
+      throw new Error("IMAGE_ZERO_DIMENSION");
+    }
+
+    let doc = aBrowser.parentElement.ownerDocument;
+    let thumbnail = doc.createElementNS(
+      PageThumbUtils.HTML_NAMESPACE,
+      "canvas"
     );
-    if (aBrowser.parentElement) {
-      let doc = aBrowser.parentElement.ownerDocument;
-      let thumbnail = doc.createElementNS(
-        PageThumbUtils.HTML_NAMESPACE,
-        "canvas"
+
+    let image;
+    if (contentInfo.imageData) {
+      thumbnail.width = contentWidth;
+      thumbnail.height = contentHeight;
+
+      image = new aBrowser.ownerGlobal.Image();
+      await new Promise(resolve => {
+        image.onload = resolve;
+        image.src = contentInfo.imageData;
+      });
+    } else {
+      let fullScale = aArgs ? aArgs.fullScale : false;
+      let scale = fullScale
+        ? 1
+        : Math.min(Math.max(aWidth / contentWidth, aHeight / contentHeight), 1);
+
+      image = await aBrowser.drawSnapshot(
+        0,
+        0,
+        contentWidth,
+        contentHeight,
+        scale,
+        aArgs.backgroundColor
       );
+
       thumbnail.width = fullScale ? contentWidth : aWidth;
       thumbnail.height = fullScale ? contentHeight : aHeight;
-      let ctx = thumbnail.getContext("2d");
-      ctx.drawImage(image, 0, 0);
-      return thumbnail;
     }
-    return null;
+
+    thumbnail.getContext("2d").drawImage(image, 0, 0);
+
+    return thumbnail;
   },
 
   /**

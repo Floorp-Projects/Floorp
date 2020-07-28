@@ -4,7 +4,7 @@
 
 /*
  * Common thumbnailing routines used by various consumers, including
- * PageThumbs and backgroundPageThumbsContent.
+ * PageThumbs and BackgroundPageThumbs.
  */
 
 var EXPORTED_SYMBOLS = ["PageThumbUtils"];
@@ -18,6 +18,8 @@ ChromeUtils.defineModuleGetter(
 );
 
 var PageThumbUtils = {
+  // The default thumbnail size for images
+  THUMBNAIL_DEFAULT_SIZE: 448,
   // The default background color for page thumbnails.
   THUMBNAIL_BG_COLOR: "#fff",
   // The namespace for thumbnail canvas elements.
@@ -175,10 +177,15 @@ var PageThumbUtils = {
     context.fillStyle = backgroundColor;
     context.fillRect(0, 0, width, canvasHeight);
     context.drawImage(image, 0, 0, width, height);
-    return canvas;
+
+    return {
+      width,
+      height: canvasHeight,
+      imageData: canvas.toDataURL(),
+    };
   },
 
-  /** *
+  /**
    * Given a browser window, this creates a snapshot of the content
    * and returns a canvas with the resulting snapshot of the content
    * at the thumbnail size. It has to do this through a two step process:
@@ -200,6 +207,9 @@ var PageThumbUtils = {
    * @return Canvas with a scaled thumbnail of the window.
    */
   createSnapshotThumbnail(aWindow, aDestCanvas, aArgs) {
+    let backgroundColor = aArgs
+      ? aArgs.backgroundColor
+      : PageThumbUtils.THUMBNAIL_BG_COLOR;
     let fullScale = aArgs ? aArgs.fullScale : false;
     let [contentWidth, contentHeight] = this.getContentSize(aWindow);
     let [thumbnailWidth, thumbnailHeight] = aDestCanvas
@@ -264,7 +274,7 @@ var PageThumbUtils = {
       0,
       contentWidth,
       contentHeight,
-      PageThumbUtils.THUMBNAIL_BG_COLOR,
+      backgroundColor,
       snapshotCtx.DRAWWINDOW_DO_NOT_FLUSH
     );
     snapshotCtx.restore();
