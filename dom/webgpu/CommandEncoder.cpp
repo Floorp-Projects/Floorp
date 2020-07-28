@@ -18,56 +18,74 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(CommandEncoder, mParent, mBridge)
 GPU_IMPL_JS_WRAP(CommandEncoder)
 
+void CommandEncoder::ConvertTextureDataLayoutToFFI(
+    const dom::GPUTextureDataLayout& aLayout,
+    ffi::WGPUTextureDataLayout* aLayoutFFI) {
+  *aLayoutFFI = {};
+  aLayoutFFI->offset = aLayout.mOffset;
+  aLayoutFFI->bytes_per_row = aLayout.mBytesPerRow;
+  aLayoutFFI->rows_per_image = aLayout.mRowsPerImage;
+}
+
+void CommandEncoder::ConvertTextureCopyViewToFFI(
+    const dom::GPUTextureCopyView& aView, ffi::WGPUTextureCopyView* aViewFFI) {
+  *aViewFFI = {};
+  aViewFFI->texture = aView.mTexture->mId;
+  aViewFFI->mip_level = aView.mMipLevel;
+  if (aView.mOrigin.WasPassed()) {
+    const auto& origin = aView.mOrigin.Value();
+    if (origin.IsRangeEnforcedUnsignedLongSequence()) {
+      const auto& seq = origin.GetAsRangeEnforcedUnsignedLongSequence();
+      aViewFFI->origin.x = seq.Length() > 0 ? seq[0] : 0;
+      aViewFFI->origin.y = seq.Length() > 1 ? seq[1] : 0;
+      aViewFFI->origin.z = seq.Length() > 2 ? seq[2] : 0;
+    } else if (origin.IsGPUOrigin3DDict()) {
+      const auto& dict = origin.GetAsGPUOrigin3DDict();
+      aViewFFI->origin.x = dict.mX;
+      aViewFFI->origin.y = dict.mY;
+      aViewFFI->origin.z = dict.mZ;
+    } else {
+      MOZ_CRASH("Unexpected origin type");
+    }
+  }
+}
+
+void CommandEncoder::ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
+                                          ffi::WGPUExtent3d* aExtentFFI) {
+  *aExtentFFI = {};
+  if (aExtent.IsRangeEnforcedUnsignedLongSequence()) {
+    const auto& seq = aExtent.GetAsRangeEnforcedUnsignedLongSequence();
+    aExtentFFI->width = seq.Length() > 0 ? seq[0] : 0;
+    aExtentFFI->height = seq.Length() > 1 ? seq[1] : 0;
+    aExtentFFI->depth = seq.Length() > 2 ? seq[2] : 0;
+  } else if (aExtent.IsGPUExtent3DDict()) {
+    const auto& dict = aExtent.GetAsGPUExtent3DDict();
+    aExtentFFI->width = dict.mWidth;
+    aExtentFFI->height = dict.mHeight;
+    aExtentFFI->depth = dict.mDepth;
+  } else {
+    MOZ_CRASH("Unexptected extent type");
+  }
+}
+
 static ffi::WGPUBufferCopyView ConvertBufferCopyView(
     const dom::GPUBufferCopyView& aView) {
   ffi::WGPUBufferCopyView view = {};
   view.buffer = aView.mBuffer->mId;
-  view.offset = aView.mOffset;
-  view.bytes_per_row = aView.mBytesPerRow;
-  view.rows_per_image = aView.mRowsPerImage;
+  CommandEncoder::ConvertTextureDataLayoutToFFI(aView, &view.layout);
   return view;
 }
 
 static ffi::WGPUTextureCopyView ConvertTextureCopyView(
     const dom::GPUTextureCopyView& aView) {
   ffi::WGPUTextureCopyView view = {};
-  view.texture = aView.mTexture->mId;
-  view.mip_level = aView.mMipLevel;
-  view.array_layer = aView.mArrayLayer;
-  if (aView.mOrigin.WasPassed()) {
-    const auto& origin = aView.mOrigin.Value();
-    if (origin.IsRangeEnforcedUnsignedLongSequence()) {
-      const auto& seq = origin.GetAsRangeEnforcedUnsignedLongSequence();
-      view.origin.x = seq.Length() > 0 ? seq[0] : 0;
-      view.origin.y = seq.Length() > 1 ? seq[1] : 0;
-      view.origin.z = seq.Length() > 2 ? seq[2] : 0;
-    } else if (origin.IsGPUOrigin3DDict()) {
-      const auto& dict = origin.GetAsGPUOrigin3DDict();
-      view.origin.x = dict.mX;
-      view.origin.y = dict.mY;
-      view.origin.z = dict.mZ;
-    } else {
-      MOZ_CRASH("Unexpected origin type");
-    }
-  }
+  CommandEncoder::ConvertTextureCopyViewToFFI(aView, &view);
   return view;
 }
 
 static ffi::WGPUExtent3d ConvertExtent(const dom::GPUExtent3D& aExtent) {
   ffi::WGPUExtent3d extent = {};
-  if (aExtent.IsRangeEnforcedUnsignedLongSequence()) {
-    const auto& seq = aExtent.GetAsRangeEnforcedUnsignedLongSequence();
-    extent.width = seq.Length() > 0 ? seq[0] : 0;
-    extent.height = seq.Length() > 1 ? seq[1] : 0;
-    extent.depth = seq.Length() > 2 ? seq[2] : 0;
-  } else if (aExtent.IsGPUExtent3DDict()) {
-    const auto& dict = aExtent.GetAsGPUExtent3DDict();
-    extent.width = dict.mWidth;
-    extent.height = dict.mHeight;
-    extent.depth = dict.mDepth;
-  } else {
-    MOZ_CRASH("Unexptected extent type");
-  }
+  CommandEncoder::ConvertExtent3DToFFI(aExtent, &extent);
   return extent;
 }
 

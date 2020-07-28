@@ -25,6 +25,11 @@ struct GPUTextureCopyView;
 typedef RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict GPUExtent3D;
 }  // namespace dom
 namespace webgpu {
+namespace ffi {
+struct WGPUTextureDataLayout;
+struct WGPUTextureCopyView;
+struct WGPUExtent3d;
+}  // namespace ffi
 
 class BindGroup;
 class Buffer;
@@ -41,6 +46,14 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   CommandEncoder(Device* const aParent, WebGPUChild* const aBridge, RawId aId);
 
   const RawId mId;
+
+  static void ConvertTextureDataLayoutToFFI(
+      const dom::GPUTextureDataLayout& aLayout,
+      ffi::WGPUTextureDataLayout* aLayoutFFI);
+  static void ConvertTextureCopyViewToFFI(const dom::GPUTextureCopyView& aView,
+                                          ffi::WGPUTextureCopyView* aViewFFI);
+  static void ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
+                                   ffi::WGPUExtent3d* aExtentFFI);
 
  private:
   ~CommandEncoder();

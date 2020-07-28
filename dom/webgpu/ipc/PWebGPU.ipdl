@@ -24,6 +24,7 @@ using webgpu::ffi::WGPUTextureDescriptor from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUSamplerDescriptor from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUTextureViewDescriptor from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUBufferCopyView from "mozilla/webgpu/ffi/wgpu.h";
+using webgpu::ffi::WGPUTextureDataLayout from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUTextureCopyView from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUExtent3d from "mozilla/webgpu/ffi/wgpu.h";
 
@@ -57,6 +58,7 @@ parent:
   async TextureViewDestroy(RawId selfId);
   async DeviceCreateSampler(RawId selfId, WGPUSamplerDescriptor desc, nsCString label, RawId newId);
   async SamplerDestroy(RawId selfId);
+
   async DeviceCreateCommandEncoder(RawId selfId, GPUCommandEncoderDescriptor desc, RawId newId);
   async CommandEncoderCopyBufferToBuffer(RawId selfId, RawId sourceId, BufferAddress sourceOffset, RawId destinationId, BufferAddress destinationOffset, BufferAddress size);
   async CommandEncoderCopyBufferToTexture(RawId selfId, WGPUBufferCopyView source, WGPUTextureCopyView destination, WGPUExtent3d extent);
@@ -68,6 +70,9 @@ parent:
   async CommandEncoderDestroy(RawId selfId);
   async CommandBufferDestroy(RawId selfId);
   async QueueSubmit(RawId selfId, RawId[] commandBuffers);
+  async QueueWriteBuffer(RawId selfId, RawId bufferId, BufferAddress bufferOffset, Shmem shmem);
+  async QueueWriteTexture(RawId selfId, WGPUTextureCopyView destination, Shmem shmem, WGPUTextureDataLayout layout, WGPUExtent3d extent);
+
   async DeviceCreateBindGroupLayout(RawId selfId, SerialBindGroupLayoutDescriptor desc, RawId newId);
   async BindGroupLayoutDestroy(RawId selfId);
   async DeviceCreatePipelineLayout(RawId selfId, SerialPipelineLayoutDescriptor desc, RawId newId);
@@ -83,6 +88,7 @@ parent:
   async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, ExternalImageId externalId);
   async SwapChainPresent(ExternalImageId externalId, RawId textureId, RawId commandEncoderId);
   async SwapChainDestroy(ExternalImageId externalId);
+
   async Shutdown();
 
 child:

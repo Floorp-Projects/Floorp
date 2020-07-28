@@ -158,7 +158,8 @@ void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer, uint64_t aOffset,
                                        uint64_t aSize) {
   if (mValid) {
     mUsedBuffers.AppendElement(&aBuffer);
-    ffi::wgpu_render_pass_set_index_buffer(&mRaw, aBuffer.mId, aOffset, aSize);
+    ffi::wgpu_render_pass_set_index_buffer(&mRaw, aBuffer.mId, aOffset,
+                                           ffi::make_buffer_size(aSize));
   }
 }
 
@@ -167,7 +168,7 @@ void RenderPassEncoder::SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer,
   if (mValid) {
     mUsedBuffers.AppendElement(&aBuffer);
     ffi::wgpu_render_pass_set_vertex_buffer(&mRaw, aSlot, aBuffer.mId, aOffset,
-                                            aSize);
+                                            ffi::make_buffer_size(aSize));
   }
 }
 
