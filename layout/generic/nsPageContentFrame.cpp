@@ -30,6 +30,7 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsPageContentFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+  MOZ_ASSERT(mPD, "Need a pointer to nsSharedPageData before reflow starts");
 
   if (GetPrevInFlow() && HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     nsresult rv =
