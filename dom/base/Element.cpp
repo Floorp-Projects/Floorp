@@ -860,8 +860,10 @@ nsRect Element::GetClientAreaRect() {
     MOZ_ASSERT(frame);
     nsRect scrollPort = sf->GetScrollPortRect();
     nsIFrame* scrollableAsFrame = do_QueryFrame(sf);
-    if (frame != scrollableAsFrame) {
-      // We want the offset to be relative to `frame`, not `sf`.
+    // We want the offset to be relative to `frame`, not `sf`... Except for the
+    // root scroll frame, which is an ancestor of frame rather than a descendant
+    // and thus this wouldn't particularly make sense.
+    if (frame != scrollableAsFrame && !sf->IsRootScrollFrameOfDocument()) {
       scrollPort.MoveBy(scrollableAsFrame->GetOffsetTo(frame));
     }
     // The scroll port value might be expanded to the minimum scale size, we
