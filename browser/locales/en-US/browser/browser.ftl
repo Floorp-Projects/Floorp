@@ -190,6 +190,13 @@ search-one-offs-context-set-as-default-private =
     .label = Set as Default Search Engine for Private Windows
     .accesskey = P
 
+# Search engine one-off buttons with an @alias shortcut/keyword.
+# Variables:
+#  $engineName (String): The name of the engine.
+#  $alias (String): The @alias shortcut/keyword.
+search-one-offs-engine-with-alias =
+    .tooltiptext = { $engineName } ({ $alias })
+
 ## Bookmark Panel
 
 bookmark-panel-show-editor-checkbox =
