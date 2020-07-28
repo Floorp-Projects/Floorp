@@ -778,6 +778,24 @@ Toolbox.prototype = {
   },
 
   _attachAndResumeThread: async function(target) {
+    if (target.threadFront) {
+      // if threadFront already exists, the thread is already attached.
+      if (target.type !== TargetList.TYPES.SERVICE_WORKER) {
+        // This can legitimately happen for service workers. See Bug 1655439.
+        console.warn(
+          "Attaching to an already attached thread for a service worker target"
+        );
+        // Wait for the onThreadAttached promise and return the existing front.
+        await target.onThreadAttached;
+        return target.threadFront;
+      }
+
+      // This should not happen for non-server-worker targets, throw otherwise.
+      throw new Error(
+        `Attaching to an already attached thread for a target of type "${target.type}"`
+      );
+    }
+
     const options = await getThreadOptions();
     const threadFront = await target.attachThread(options);
 
