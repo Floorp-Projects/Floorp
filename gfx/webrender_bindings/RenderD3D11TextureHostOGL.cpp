@@ -140,6 +140,7 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
   mStream = egl->fCreateStreamKHR(egl->Display(), nullptr);
   MOZ_ASSERT(mStream);
 
+  bool ok = true;
   if (mFormat != gfx::SurfaceFormat::NV12 &&
       mFormat != gfx::SurfaceFormat::P010 &&
       mFormat != gfx::SurfaceFormat::P016) {
@@ -151,10 +152,10 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
                                  mTextureHandle[0], aRendering);
     // Cache new rendering filter.
     mCachedRendering = aRendering;
-    MOZ_ALWAYS_TRUE(egl->fStreamConsumerGLTextureExternalAttribsNV(
+    ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
         egl->Display(), mStream, nullptr));
-    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureANGLE(
-        egl->Display(), mStream, nullptr));
+    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(),
+                                                         mStream, nullptr));
   } else {
     // The nv12/p016 format.
 
@@ -179,15 +180,21 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
                                  mTextureHandle[1], aRendering);
     // Cache new rendering filter.
     mCachedRendering = aRendering;
-    MOZ_ALWAYS_TRUE(egl->fStreamConsumerGLTextureExternalAttribsNV(
+    ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
         egl->Display(), mStream, consumerAttributes));
-    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureANGLE(
-        egl->Display(), mStream, nullptr));
+    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(),
+                                                         mStream, nullptr));
   }
 
   // Insert the d3d texture.
-  MOZ_ALWAYS_TRUE(egl->fStreamPostD3DTextureANGLE(
-      egl->Display(), mStream, (void*)mTexture.get(), nullptr));
+  ok &= bool(egl->fStreamPostD3DTextureANGLE(egl->Display(), mStream,
+                                             (void*)mTexture.get(), nullptr));
+
+  if (!ok) {
+    gfxCriticalNote << "RenderDXGITextureHostOGL init stream failed";
+    DeleteTextureHandle();
+    return false;
+  }
 
   // Now, we could get the gl handle from the stream.
   egl->fStreamConsumerAcquireKHR(egl->Display(), mStream);
@@ -389,6 +396,7 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
   }
 
   mGL->fGenTextures(3, mTextureHandles);
+  bool ok = true;
   for (int i = 0; i < 3; ++i) {
     ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0 + i,
                                  LOCAL_GL_TEXTURE_EXTERNAL_OES,
@@ -400,18 +408,24 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
     mStreams[i] = egl->fCreateStreamKHR(egl->Display(), nullptr);
     MOZ_ASSERT(mStreams[i]);
 
-    MOZ_ALWAYS_TRUE(egl->fStreamConsumerGLTextureExternalAttribsNV(
+    ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
         egl->Display(), mStreams[i], nullptr));
-    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureANGLE(
-        egl->Display(), mStreams[i], nullptr));
+    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(),
+                                                         mStreams[i], nullptr));
 
     // Insert the R8 texture.
-    MOZ_ALWAYS_TRUE(egl->fStreamPostD3DTextureANGLE(
+    ok &= bool(egl->fStreamPostD3DTextureANGLE(
         egl->Display(), mStreams[i], (void*)mTextures[i].get(), nullptr));
 
     // Now, we could get the R8 gl handle from the stream.
     egl->fStreamConsumerAcquireKHR(egl->Display(), mStreams[i]);
     MOZ_ASSERT(egl->fGetError() == LOCAL_EGL_SUCCESS);
+  }
+
+  if (!ok) {
+    gfxCriticalNote << "RenderDXGIYCbCrTextureHostOGL init stream failed";
+    DeleteTextureHandle();
+    return false;
   }
 
   return true;
