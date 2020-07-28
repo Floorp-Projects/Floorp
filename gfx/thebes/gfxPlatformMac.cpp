@@ -174,14 +174,8 @@ static const char kFontZapfDingbats[] = "Zapf Dingbats";
 void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                             Script aRunScript,
                                             nsTArray<const char*>& aFontList) {
-  EmojiPresentation emoji = GetEmojiPresentation(aCh);
-  if (emoji != EmojiPresentation::TextOnly) {
-    if (aNextCh == kVariationSelector16 ||
-        (aNextCh != kVariationSelector15 &&
-         emoji == EmojiPresentation::EmojiDefault)) {
-      // if char is followed by VS16, try for a color emoji glyph
-      aFontList.AppendElement(kFontAppleColorEmoji);
-    }
+  if (ShouldPreferEmojiFont(aCh, aNextCh)) {
+    aFontList.AppendElement(kFontAppleColorEmoji);
   }
 
   aFontList.AppendElement(kFontLucidaGrande);
