@@ -43,7 +43,6 @@ class Repackage(BaseScript):
         config = self.config
 
         dirs = {}
-        dirs['abs_src_dir'] = os.environ['GECKO_PATH']
         dirs['abs_input_dir'] = os.path.join(abs_dirs['base_work_dir'], 'fetches')
         output_dir_suffix = []
         if config.get('locale'):

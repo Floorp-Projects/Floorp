@@ -77,7 +77,6 @@ class FxDesktopBuild(BuildScript, object):
             # there is a seperation in mh.  for example, rather than having
             # '{mozharness_repo}/build/build/', I have '{
             # mozharness_repo}/build/src/'
-            'abs_src_dir': os.environ['GECKO_PATH'],
             'abs_obj_dir': os.path.join(abs_dirs['abs_work_dir'],
                                         self._query_objdir()),
             'upload_path': self.config["upload_env"]["UPLOAD_PATH"],
