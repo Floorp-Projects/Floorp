@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window title="Mozilla Bug ????" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+    <!-- test results are displayed in the html:body -->
+
+    <body xmlns="http://www.w3.org/1999/xhtml">
+        <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=>?????" target="_blank">Mozilla Bug ???? </a>
+    </body>
+
+    <!-- test code goes here -->
+    <script type="application/javascript"><![CDATA[
+            add_task(async () => {
+                var sandbox = new Cu.Sandbox("about:blank");
+
+                var test_utils = window.windowUtils;
+
+                await SpecialPowers.pushPrefEnv({
+                    "set": [["security.allow_eval_with_system_principal",
+                        true]]
+                });
+
+                function getCOW(x) {
+                    if (typeof x != 'object' && typeof x != 'function')
+                        return x;
+                    x = Cu.waiveXrays(x);
+                    var rval = {};
+                    if (typeof x == "function")
+                        rval = eval(`(${x.toString()})`);
+                    for (var i in x) {
+                        if (x.__lookupGetter__(i))
+                            rval.__defineGetter__(i, eval(`(${x.__lookupGetter__(i).toString()})`))
+                        else
+                            rval[i] = getCOW(x[i]);
+                    }
+                    return rval;
+                }
+
+                // Give the sandbox a way to create ChromeObjectWrapped objects.
+                sandbox.getCOW = getCOW;
+
+                // Define test API functions in the sandbox.
+                const TEST_API = ['is', 'ok', 'info'];
+                TEST_API.forEach(function (name) { sandbox[name] = window[name]; });
+
+
+                function COWTests() {
+
+                    var empty = {};
+                    var cow = getCOW(empty);
+
+                    // Because private fields may not be enabled, we construct A via the below eval of an IFFE,
+                    // and return early if it syntax errors.
+                    var A;
+                    try {
+                        A = eval(`(function(){
+                                    class Base {
+                                        constructor(o) {
+                                            return o;
+                                        }
+                                    };
+
+                                    class A extends Base {
+                                        #x = 12;
+                                        static gx(o) {
+                                            return o.#x;
+                                        }
+
+                                        static sx(o, v) {
+                                            o.#x = v;
+                                        }
+                                    };
+                                    return A;
+                                })();`);
+                    } catch (e) {
+                        is(e instanceof SyntaxError, true, "Syntax error: Private fields not enabled");
+                        is(/private fields are not currently supported/.test(e.message), true, "correct message");
+                        return;
+                    }
+
+                    new A(empty);
+                    is(A.gx(empty), 12, "Correct value read");
+                    A.sx(empty, 'wrapped');
+
+                    function assertThrewInstance(f, error) {
+                        var threw = true;
+                        try {
+                            f();
+                            threw = false;
+                        } catch (e) {
+                            is(e instanceof error, true, "Correct Error");
+                        }
+                        is(threw, true, "Threw!");
+                    }
+
+                    // Note: These throw warnings:
+                    //
+                    //   WARNING: Silently denied access to property ##x: Access to privileged JS object not permitted (@chrome://mochitests/content/chrome/js/xpconnect/tests/chrome/test_private_field_cows.xhtml:108:27): file /js/xpconnect/wrappers/XrayWrapper.cpp, line 226
+                    //
+                    // It's not clear to me if we ougth to wire this up to -not-? I suspect this is a result of invoking
+                    // the has
+                    assertThrewInstance(() => A.gx(cow), TypeError);
+                    assertThrewInstance(() => A.sx(cow, 'unwrapped'), TypeError);
+                    assertThrewInstance(() => new A(cow), Error);
+                    assertThrewInstance(() => A.gx(cow), TypeError);
+                }
+
+                // Stringify the COW test suite and directly evaluate it in the sandbox.
+                Cu.evalInSandbox('(' + COWTests.toString() + ')()', sandbox);
+
+                // Test that COWed objects passing from content to chrome get unwrapped.
+                function returnCOW() {
+                    return getCOW({
+                        __exposedProps__: {},
+                        bar: 6
+                    });
+                }
+
+                var unwrapped = Cu.evalInSandbox(
+                    '(' + returnCOW.toString() + ')()',
+                    sandbox
+                );
+
+                ok(true, "passed");
+            });
+        ]]></script>
+</window>

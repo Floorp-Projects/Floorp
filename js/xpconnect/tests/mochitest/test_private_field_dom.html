@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=????
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug ????</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <iframe id="ifr"></iframe>
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1094930">Mozilla Bug 1094930</a>
+  <p id="display"></p>
+  <div id="test_contents">
+    <!-- Extracted from nsHTMLTagList.h -->
+    <applet></applet>
+    <area></area>
+    <audio></audio>
+    <base>
+    </base>
+    <bgsound></bgsound>
+    <blockquote></blockquote>
+
+    <body></body>
+    <br></br>
+    <button></button>
+    <canvas></canvas>
+    <caption></caption>
+    <col>
+    </col>
+    <colgroup></colgroup>
+    <data></data>
+    <datalist></datalist>
+    <del></del>
+    <details></details>
+    <dialog></dialog>
+    <dir></dir>
+    <div></div>
+    <dl></dl>
+    <embed></embed>
+    <fieldset></fieldset>
+    <font></font>
+    <form></form>
+    <frame></frame>
+    <frameset></frameset>
+    <h1></h1>
+    <h2></h2>
+    <h3></h3>
+    <h4></h4>
+    <h5></h5>
+    <h6></h6>
+
+    <head></head>
+    <hr>
+    </hr>
+    <html>
+
+    </html>
+    <iframe></iframe>
+    <img></img>
+    <input></input>
+    <ins></ins>
+    <keygen></keygen>
+    <label></label>
+    <legend></legend>
+    <li></li>
+    <link>
+    </link>
+    <listing></listing>
+    <map></map>
+    <marquee></marquee>
+    <menu></menu>
+    <menuitem>
+    </menuitem>
+    <meta>
+    </meta>
+    <meter></meter>
+    <multicol></multicol>
+    <object></object>
+    <ol></ol>
+    <optgroup></optgroup>
+    <option></option>
+    <output></output>
+    <p></p>
+    <param>
+    </param>
+    <picture></picture>
+    <pre></pre>
+    <progress></progress>
+    <q></q>
+    <script></script>
+    <select></select>
+    <slot></slot>
+    <source>
+    </source>
+    <span></span>
+    <style></style>
+    <summary></summary>
+    <table></table>
+    <tbody></tbody>
+    <td></td>
+    <textarea></textarea>
+    <tfoot></tfoot>
+    <th></th>
+    <thead></thead>
+    <template></template>
+    <time></time>
+    <title></title>
+    <tr></tr>
+    <track>
+    </track>
+    <ul></ul>
+    <video></video>
+    <xmp></xmp>
+  </div>
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    info("running")
+
+
+    // Because private fields may not be enabled, we construct A via the below eval of an IFFE,
+    // and return early if it syntax errors.
+    var A = undefined;
+    try {
+       A = eval(`(function(){
+                      class Base {
+                          constructor(o) {
+                              return o;
+                          }
+                      }
+
+                      class A extends Base {
+                        #x = 1;
+                        static g(o) {
+                          return o.#x;
+                        }
+                        static s(o, v) {
+                          o.#x = v;
+                        }
+                      }
+                      
+                      return A;
+                  })();`);
+    } catch (e) {
+      is(e instanceof SyntaxError, true, "Threw Syntax Error, Private Fields Not Enabled");
+      is(/private fields are not currently supported/.test(e.message), true, "correct message");
+    }
+
+    if (A instanceof Function) {
+      function testNode(node) {
+        info("Testing node " + node.nodeName);
+
+        function assertThrewInstance(f, error) {
+          var threw = true;
+          try {
+            f();
+            threw = false;
+          } catch (e) {
+            // info("Caught " + e.name);
+            is(e instanceof error, true, "Correct Error thrown");
+          }
+          is(threw, true, "Error was thrown");
+        }
+
+
+        assertThrewInstance(() => A.g(node), TypeError);
+        assertThrewInstance(() => A.s(node, 'node'), TypeError);
+        // info("Stamping Node");
+        new A(node);
+        // info("Asserting read");
+        is(A.g(node), 1, "correct value read");
+        // info("Setting");
+        A.s(node, 'node');
+        // info("Verifing setter set the value");
+        is(A.g(node), 'node', "updated value read");
+        // info("Verifying we cannot double-init");
+        assertThrewInstance(() => new A(node), TypeError);
+      }
+
+      function testNodeRecursive(node) {
+        testNode(node);
+        for (c of node.children) {
+          testNodeRecursive(c)
+        }
+      }
+
+      const test_contents = document.getElementById('test_contents');
+      testNodeRecursive(test_contents);
+
+      // Test window and prototype chain.
+      var w = window;
+      while (w) {
+        testNode(w);
+        w = Object.getPrototypeOf(w);
+      }
+
+      info("Test Document")
+      testNode(document);
+
+
+      info("Test CSSRuleList")
+      testNode(document.styleSheets[0].cssRules)
+
+      info("Test DOMTokenList")
+      const div = document.createElement('div');
+      testNode(div.classList);
+    }
+    SimpleTest.finish();
+  </script>
+</body>
+
+</html>
