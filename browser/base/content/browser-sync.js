@@ -197,8 +197,6 @@ var gSync = {
     EnsureFxAccountsWebChannel();
 
     this._initialized = true;
-
-    this.viewCacheTemplate = document.getElementById("appMenu-viewCache");
   },
 
   uninit() {
@@ -698,8 +696,10 @@ var gSync = {
 
   updateSyncStatus(state) {
     let syncNow =
-      this.viewCacheTemplate.content.querySelector(".syncNowBtn") ||
-      document.querySelector(".syncNowBtn");
+      document.querySelector(".syncNowBtn") ||
+      document
+        .getElementById("appMenu-viewCache")
+        .content.querySelector(".syncNowBtn");
     const syncingUI = syncNow.getAttribute("syncstatus") == "active";
     if (state.syncing != syncingUI) {
       // Do we need to update the UI?
@@ -1242,19 +1242,20 @@ var gSync = {
     clearTimeout(this._syncAnimationTimer);
     this._syncStartTime = Date.now();
 
-    this.viewCacheTemplate.content
-      .querySelectorAll(".syncNowBtn")
-      .forEach(el => {
-        el.setAttribute("syncstatus", "active");
-        el.setAttribute("disabled", "true");
-        document.l10n.setAttributes(el, el.getAttribute("syncinglabel"));
-      });
-
     document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.setAttribute("syncstatus", "active");
       el.setAttribute("disabled", "true");
       document.l10n.setAttributes(el, el.getAttribute("syncinglabel"));
     });
+
+    document
+      .getElementById("appMenu-viewCache")
+      .content.querySelectorAll(".syncNowBtn")
+      .forEach(el => {
+        el.setAttribute("syncstatus", "active");
+        el.setAttribute("disabled", "true");
+        document.l10n.setAttributes(el, el.getAttribute("syncinglabel"));
+      });
   },
 
   _onActivityStop() {
@@ -1262,19 +1263,20 @@ var gSync = {
       return;
     }
 
-    this.viewCacheTemplate.content
-      .querySelectorAll(".syncNowBtn")
-      .forEach(el => {
-        el.removeAttribute("syncstatus");
-        el.removeAttribute("disabled");
-        document.l10n.setAttributes(el, "fxa-toolbar-sync-now");
-      });
-
     document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.removeAttribute("syncstatus");
       el.removeAttribute("disabled");
       document.l10n.setAttributes(el, "fxa-toolbar-sync-now");
     });
+
+    document
+      .getElementById("appMenu-viewCache")
+      .content.querySelectorAll(".syncNowBtn")
+      .forEach(el => {
+        el.removeAttribute("syncstatus");
+        el.removeAttribute("disabled");
+        document.l10n.setAttributes(el, "fxa-toolbar-sync-now");
+      });
 
     Services.obs.notifyObservers(null, "test:browser-sync:activity-stop");
   },
@@ -1458,8 +1460,9 @@ var gSync = {
       }
     });
 
-    this.viewCacheTemplate.content
-      .querySelectorAll(".syncNowBtn")
+    document
+      .getElementById("appMenu-viewCache")
+      .content.querySelectorAll(".syncNowBtn")
       .forEach(el => {
         if (tooltiptext) {
           el.setAttribute("tooltiptext", tooltiptext);
