@@ -95,7 +95,7 @@ sealed class FxaMigrationResult {
          */
         data class CorruptAccountState(val e: JSONException) : Failure() {
             override fun toString(): String {
-                return "Corrupt account state, exception type: ${e::class}"
+                return "Corrupt account state, exception: $e"
             }
         }
 

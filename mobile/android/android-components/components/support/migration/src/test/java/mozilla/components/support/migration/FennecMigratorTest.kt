@@ -1011,7 +1011,7 @@ class FennecMigratorTest {
         verify(crashReporter).submitCaughtException(captor.capture())
 
         assertEquals(AddonMigrationException::class, captor.value::class)
-        assertEquals("Failed to query installed add-ons: ${IllegalArgumentException::class}", captor.value.message)
+        assertEquals("Failed to query installed add-ons: ${IllegalArgumentException::class.java.name}", captor.value.message)
     }
 
     @Test
