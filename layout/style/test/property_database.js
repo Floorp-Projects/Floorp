@@ -110,7 +110,7 @@ function initial_font_family_is_sans_serif() {
 var gInitialFontFamilyIsSansSerif = initial_font_family_is_sans_serif();
 
 // shared by background-image and border-image-source
-var validNonUrlImageValues = [
+var validGradientAndElementValues = [
   "-moz-element(#a)",
   "-moz-element(  #a  )",
   "-moz-element(#a-1)",
@@ -270,25 +270,6 @@ var validNonUrlImageValues = [
   "radial-gradient(at calc(100px + -25px) top, red, blue)",
   "radial-gradient(at left calc(100px + -25px), red, blue)",
 
-  ...(IsCSSPropertyPrefEnabled("layout.css.cross-fade.enabled")
-    ? [
-        "cross-fade(red, blue)",
-        "cross-fade(red)",
-        "cross-fade(red 50%)",
-        // see: <https://github.com/w3c/csswg-drafts/issues/5333>. This
-        // may become invalid depending on how discussion on that issue
-        // goes.
-        "cross-fade(red -50%, blue 150%)",
-        "cross-fade(red -50%, url(www.example.com))",
-
-        "cross-fade(url(http://placekitten.com/200/300), 55% linear-gradient(red, blue))",
-        "cross-fade(cross-fade(red, white), cross-fade(blue))",
-        "cross-fade(gold 77%, 60% blue)",
-
-        "cross-fade(url(http://placekitten.com/200/300), url(http://placekitten.com/200/300))",
-        "cross-fade(#F0F8FF, rgb(0, 0, 0), rgba(0, 255, 0, 1) 25%)",
-      ]
-    : []),
   ...(IsCSSPropertyPrefEnabled("layout.css.conic-gradient.enabled")
     ? [
         // Conic gradient
@@ -514,7 +495,7 @@ var validNonUrlImageValues = [
   "-webkit-repeating-radial-gradient(circle farthest-corner, gray 10px, yellow 20px)",
   "-webkit-repeating-radial-gradient(top left, circle, red, blue 4%, red 8%)",
 ];
-var invalidNonUrlImageValues = [
+var invalidGradientAndElementValues = [
   "-moz-element(#a:1)",
   "-moz-element(a#a)",
   "-moz-element(#a a)",
@@ -805,28 +786,6 @@ var invalidNonUrlImageValues = [
   "-moz-conic-gradient(red, blue)",
   "-webkit-repeating-conic-gradient(red, blue)",
   "-moz-repeating-conic-gradient(red, blue)",
-
-  ...(IsCSSPropertyPrefEnabled("layout.css.cross-fade.enabled")
-    ? [
-        "cross-fade(red blue)",
-        "cross-fade()",
-        "cross-fade(50%, blue 50%)",
-        // Old sytnax
-        "cross-fade(red, white, 50%)",
-        // see: <https://github.com/w3c/csswg-drafts/issues/5333>. This
-        // may become invalid depending on how discussion on that issue
-        // goes.
-        "cross-fade(red, 150%, blue)",
-        "cross-fade(red auto, blue 10%)",
-
-        // nested invalidity should propagate.
-        "cross-fade(url(http://placekitten.com/200/300), 55% linear-gradient(center, red, blue))",
-        "cross-fade(cross-fade(red, white, 50%), cross-fade(blue))",
-
-        "cross-fade(url(http://placekitten.com/200/300) url(http://placekitten.com/200/300))",
-        "cross-fade(#F0F8FF, rgb(0, 0, 0), rgba(0, 255, 0, 1), 25%)",
-      ]
-    : []),
 ];
 var unbalancedGradientAndElementValues = ["-moz-element(#a()"];
 
@@ -1012,7 +971,7 @@ var basicShapeUnbalancedValues = [
 if (/* mozGradientsEnabled */ true) {
   // Maybe one day :(
   // Extend gradient lists with valid/invalid moz-prefixed expressions:
-  validNonUrlImageValues.push(
+  validGradientAndElementValues.push(
     "-moz-linear-gradient(red, blue)",
     "-moz-linear-gradient(red, yellow, blue)",
     "-moz-linear-gradient(red 1px, yellow 20%, blue 24em, green)",
@@ -1134,7 +1093,7 @@ if (/* mozGradientsEnabled */ true) {
     "-moz-radial-gradient(left calc(100px + -25px), red, blue)"
   );
 
-  invalidNonUrlImageValues.push(
+  invalidGradientAndElementValues.push(
     // The entries in this block used to be valid with the older more-complex
     // -moz prefixed gradient syntax, but we've since simplified the syntax for
     // consistency with -webkit prefixed gradients, in a way that makes these
@@ -1880,9 +1839,9 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     initial_values: ["none"],
-    other_values: ["url('border.png')"].concat(validNonUrlImageValues),
+    other_values: ["url('border.png')"].concat(validGradientAndElementValues),
     invalid_values: ["url('border.png') url('border.png')"].concat(
-      invalidNonUrlImageValues
+      invalidGradientAndElementValues
     ),
     unbalanced_values: [].concat(unbalancedGradientAndElementValues),
   },
@@ -3123,8 +3082,8 @@ var gCSSProperties = {
       "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
       "none, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
       "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
-    ].concat(validNonUrlImageValues),
-    invalid_values: [].concat(invalidNonUrlImageValues),
+    ].concat(validGradientAndElementValues),
+    invalid_values: [].concat(invalidGradientAndElementValues),
     unbalanced_values: [].concat(unbalancedGradientAndElementValues),
   },
   "mask-mode": {
@@ -4314,8 +4273,8 @@ var gCSSProperties = {
       "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
       "none, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
       "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
-    ].concat(validNonUrlImageValues),
-    invalid_values: [].concat(invalidNonUrlImageValues),
+    ].concat(validGradientAndElementValues),
+    invalid_values: [].concat(invalidGradientAndElementValues),
     unbalanced_values: [].concat(unbalancedGradientAndElementValues),
   },
   "background-origin": {
@@ -9189,12 +9148,12 @@ var gCSSProperties = {
     initial_values: ["none"],
     other_values: ["url(#my-shape-outside)"].concat(
       basicShapeOtherValues,
-      validNonUrlImageValues
+      validGradientAndElementValues
     ),
     invalid_values: [].concat(
       basicShapeSVGBoxValues,
       basicShapeInvalidValues,
-      invalidNonUrlImageValues
+      invalidGradientAndElementValues
     ),
     unbalanced_values: [].concat(
       basicShapeUnbalancedValues,
@@ -12806,12 +12765,12 @@ if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
   for (const prop of ["background", "mask"]) {
     let i = 0;
     const p = patterns[prop];
-    for (const v of invalidNonUrlImageValues) {
+    for (const v of invalidGradientAndElementValues) {
       gCSSProperties[prop].invalid_values.push(
         p[i++ % p.length].replace("{}", v)
       );
     }
-    for (const v of validNonUrlImageValues) {
+    for (const v of validGradientAndElementValues) {
       gCSSProperties[prop].other_values.push(
         p[i++ % p.length].replace("{}", v)
       );
