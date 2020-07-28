@@ -4,6 +4,15 @@
 
 FROM ubuntu:bionic
 
+ENV LANG='en_US.UTF-8' \
+    LANGUAGE='en_US:en' \
+    LC_ALL='en_US.UTF-8' \
+    PATH="/snap/bin:$PATH" \
+    SNAP='/snap/snapcraft/current' \
+    SNAP_NAME='snapcraft' \
+    SNAP_ARCH='amd64' \
+    TERM='dumb'
+
 # Grab dependencies
 RUN apt-get update && \
     apt-get dist-upgrade --yes && \
@@ -20,50 +29,19 @@ RUN apt-get update && \
       locales \
       sudo && \
     apt-get clean && \
-locale-gen en_US.UTF-8
+locale-gen "$LANG"
 
-ENV LANG="en_US.UTF-8"
-ENV LANGUAGE="en_US:en"
-ENV LC_ALL="en_US.UTF-8"
-ENV PATH="/snap/bin:$PATH"
-ENV SNAP="/snap/snapcraft/current"
-ENV SNAP_NAME="snapcraft"
-ENV SNAP_ARCH="amd64"
+COPY download_and_install_snap.sh .
 
-# Grab the core snap (for backwards compatibility) from the stable channel and
-# unpack it in the proper place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/snaps/details/core' | jq '.download_url' -r) --output core.snap && \
-    mkdir -p /snap/core && \
-    unsquashfs -d /snap/core/current core.snap && \
-    rm core.snap
+# Grab the core snap (for backwards compatibility)
+RUN bash download_and_install_snap.sh 'core' 
+# Grab the core18 snap (which snapcraft uses as a base)
+RUN bash download_and_install_snap.sh 'core18'
+RUN bash download_and_install_snap.sh 'gnome-3-34-1804'
+RUN bash download_and_install_snap.sh 'gnome-3-34-1804-sdk'
+RUN bash download_and_install_snap.sh 'snapcraft'
 
-# Grab the core18 snap (which snapcraft uses as a base) from the stable channel
-# and unpack it in the proper place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/snaps/details/core18' | jq '.download_url' -r) --output core18.snap
-RUN mkdir -p /snap/core18
-RUN unsquashfs -d /snap/core18/current core18.snap
-
-# Grab the gnome-3-34-1804 snap from the stable channel
-# and unpack it in the proper place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/snaps/details/gnome-3-34-1804?channel=stable' | jq '.download_url' -r) --output gnome-3-34-1804.snap
-RUN mkdir -p /snap/gnome-3-34-1804
-RUN unsquashfs -d /snap/gnome-3-34-1804/current gnome-3-34-1804.snap
-
-# Grab the gnome-3-34-1804-sdk snap from the stable channel
-# and unpack it in the proper place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/snaps/details/gnome-3-34-1804-sdk?channel=stable' | jq '.download_url' -r) --output gnome-3-34-1804-sdk.snap
-RUN mkdir -p /snap/gnome-3-34-1804-sdk
-RUN unsquashfs -d /snap/gnome-3-34-1804-sdk/current gnome-3-34-1804-sdk.snap
-
-# Grab the snapcraft snap from the stable channel and unpack it in the proper
-# place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/snaps/details/snapcraft?channel=stable' | jq '.download_url' -r) --output snapcraft.snap && \
-    mkdir -p /snap/snapcraft && \
-    unsquashfs -d /snap/snapcraft/current snapcraft.snap && \
-    rm snapcraft.snap
-
-# Create a snapcraft runner (TODO: move version detection to the core of
-# snapcraft).
+# Create a snapcraft runner (TODO: move version detection to the core of snapcraft).
 RUN mkdir -p /snap/bin
 RUN echo "#!/bin/sh" > /snap/bin/snapcraft
 RUN snap_version="$(awk '/^version:/{print $2}' /snap/snapcraft/current/meta/snap.yaml)" && echo "export SNAP_VERSION=\"$snap_version\"" >> /snap/bin/snapcraft
