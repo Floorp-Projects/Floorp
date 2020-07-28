@@ -688,16 +688,17 @@ def original_path():
 
 @template
 def toolchain_search_path_for(host_or_target):
-    vc_path = {
-        host: host_vc_compiler_path,
-        target: vc_compiler_path,
+    arch_alias, vc_path = {
+        host: ('host', host_vc_compiler_path),
+        target: ('target', vc_compiler_path),
     }[host_or_target]
 
-    @depends(vc_path, original_path, developer_options, mozbuild_state_path)
+    @depends(dependable(arch_alias), vc_path, original_path, developer_options,
+             mozbuild_state_path)
     @imports('os')
     @imports(_from='os', _import='environ')
-    def toolchain_search_path(vc_compiler_path, original_path, developer_options,
-                              mozbuild_state_path):
+    def toolchain_search_path(arch_alias, vc_compiler_path, original_path,
+                              developer_options, mozbuild_state_path):
         result = list(original_path)
 
         if vc_compiler_path:
@@ -725,8 +726,17 @@ def toolchain_search_path_for(host_or_target):
         result.append(rustup_path)
 
         if developer_options:
-            return bootstrapped + result
-        return result + bootstrapped
+            log.debug('Prioritizing mozbuild state dir in {} toolchain path because '
+                      'you are not building in release mode.'.format(arch_alias))
+            search_path = bootstrapped + result
+        else:
+            log.debug('Prioritizing system over mozbuild state dir in {} '
+                      'toolchain path because you are building in '
+                      'release mode.'.format(arch_alias))
+            search_path = result + bootstrapped
+
+        log.debug('Search path for {} toolchain: {}'.format(arch_alias, search_path))
+        return search_path
     return toolchain_search_path
 
 
