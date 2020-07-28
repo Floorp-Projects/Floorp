@@ -222,11 +222,6 @@ XPCOMUtils.defineLazyScriptGetter(
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
-  "SearchOneOffs",
-  "chrome://browser/content/search/search-one-offs.js"
-);
-XPCOMUtils.defineLazyScriptGetter(
-  this,
   "gGfxUtils",
   "chrome://browser/content/browser-graphics-utils.js"
 );

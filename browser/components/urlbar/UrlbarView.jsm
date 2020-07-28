@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -83,7 +84,7 @@ class UrlbarView {
 
   get oneOffSearchButtons() {
     if (!this._oneOffSearchButtons) {
-      this._oneOffSearchButtons = new this.window.SearchOneOffs(
+      this._oneOffSearchButtons = new UrlbarSearchOneOffs(
         this.panel.querySelector(".search-one-offs")
       );
       this._oneOffSearchButtons.addEventListener(
