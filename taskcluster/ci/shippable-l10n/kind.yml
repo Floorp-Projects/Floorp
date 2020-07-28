@@ -45,7 +45,10 @@ job-template:
             # OSX has a special locale for japanese
             macosx64.*: [ja]
             default: [ja-JP-mac]
-    run-time: 3600
+    run-time: 
+        by-build-platform:
+            default: 900
+            win.*: 1800
     fetches:
         toolchain:
             by-build-platform:
