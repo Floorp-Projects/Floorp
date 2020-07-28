@@ -318,14 +318,25 @@ body {
       color: var(--grey-subtitle-1);
       line-height: 28px; }
   .multistageContainer .tiles-theme-container {
-    margin: 10px auto; }
+    margin: 10px auto;
+    border: 0; }
+  .multistageContainer .sr-only {
+    opacity: 0;
+    overflow: hidden;
+    position: absolute; }
+    .multistageContainer .sr-only.input {
+      height: 1px;
+      width: 1px; }
   .multistageContainer .tiles-theme-section {
     display: grid;
     grid-gap: 21px;
-    grid-template-columns: repeat(3, auto); }
+    grid-template-columns: repeat(3, auto);
+    border: 0; }
     @media (max-width: 610px) {
       .multistageContainer .tiles-theme-section {
         grid-template-columns: repeat(2, auto); } }
+    .multistageContainer .tiles-theme-section:focus-within {
+      border: 1px dotted; }
     .multistageContainer .tiles-theme-section .theme {
       display: flex;
       flex-direction: column;
