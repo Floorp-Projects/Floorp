@@ -38,3 +38,4 @@ Milestone: https://github.com/mozilla-mobile/android-components/milestone/15?clo
 ```
 - Update version number in repository
   - [.buildconfig.yml](https://github.com/mozilla-mobile/android-components/blob/master/.buildconfig.yml#L1)
+- Create the next milestone
