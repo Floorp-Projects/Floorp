@@ -430,11 +430,7 @@ class project(object):
 
     autoland = {
         'test': All(
-            Any(
-                'skip-unless-schedules',
-                'bugbug-reduced-manifests-fallback',
-                split_args=split_bugbug_arg,
-            ),
+            Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=split_bugbug_arg),
             'backstop',
         ),
     }
