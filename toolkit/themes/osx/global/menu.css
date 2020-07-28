@@ -169,33 +169,4 @@ menuseparator {
   padding: 1px 0;
 }
 
-/* Scroll buttons */
-
-/* Hide arrow buttons when there's nothing to scroll in that direction */
-.menupopup-arrowscrollbox[scrolledtostart="true"]::part(scrollbutton-up),
-.menupopup-arrowscrollbox[scrolledtoend="true"]::part(scrollbutton-down) {
-  visibility: collapse;
-}
-
-/* Prevent the scrolled contents of the menupopup from jumping vertically when
- * the arrow buttons appear / disappear, by positioning ::part(scrollbox) in
- * such a way that its edges are at the same position as the edges of
- * arrowscrollbox regardless of scroll button visibility.
- */
-.menupopup-arrowscrollbox:not([scrolledtostart="true"])::part(scrollbox) {
-  /* scrollbutton-up is visible; shift our top edge up by its height. */
-  margin-top: -16px;
-}
-
-.menupopup-arrowscrollbox:not([scrolledtoend="true"])::part(scrollbox) {
-  /* scrollbutton-down is visible; shift our bottom edge down by its height. */
-  margin-bottom: -16px;
-}
-
-.menupopup-arrowscrollbox::part(scrollbox-clip) {
-  /* In the space where the arrow buttons overlap the scrollbox, clip away the
-   * scrollbox so that nothing is shown behind the arrow button even if the
-   * button is transparent.
-   */
-  overflow: hidden;
-}
+%include ../../shared/menu-scrolling.inc.css
