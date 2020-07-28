@@ -76,3 +76,7 @@ def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, dige
         'name': cache_name,
         'digest': digest,
     }
+
+    # Allow future pushes to find this task before it completes
+    # Implementation in morphs
+    taskdesc['attributes']['eager_index'] = TARGET_CACHE_INDEX.format(**subs)
