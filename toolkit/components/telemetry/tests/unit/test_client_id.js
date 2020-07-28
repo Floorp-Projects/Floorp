@@ -11,18 +11,51 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
 
+const SCALAR_DELETION_REQUEST_ECOSYSTEM_CLIENT_ID =
+  "deletion.request.ecosystem_client_id";
+
+var drsPath;
+
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function run_test() {
   do_get_profile();
-  run_next_test();
-}
-
-add_task(async function() {
-  const drsPath = OS.Path.join(
+  drsPath = OS.Path.join(
     OS.Constants.Path.profileDir,
     "datareporting",
     "state.json"
   );
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  run_next_test();
+}
+
+add_task(async function test_ecosystemClientID() {
+  await ClientID._reset();
+  Assert.ok(!ClientID.getCachedEcosystemClientID());
+  let ecosystemClientID = await ClientID.getEcosystemClientID();
+  Assert.equal(typeof ecosystemClientID, "string");
+  Assert.equal(ClientID.getCachedEcosystemClientID(), ecosystemClientID);
+
+  let clientID = await ClientID.getClientID();
+  await ClientID._reset();
+  await OS.File.writeAtomic(
+    drsPath,
+    JSON.stringify({
+      clientID,
+    }),
+    {
+      encoding: "utf-8",
+      tmpPath: drsPath + ".tmp",
+    }
+  );
+
+  let newClientID = await ClientID.getClientID();
+  Assert.equal(newClientID, clientID);
+
+  let newEcosystemClientID = await ClientID.getEcosystemClientID();
+  Assert.notEqual(newEcosystemClientID, ecosystemClientID);
+});
+
+add_task(async function() {
   const invalidIDs = [
     [-1, "setIntPref"],
     [0.5, "setIntPref"],
@@ -79,75 +112,92 @@ add_task(async function() {
   }
 });
 
-add_task(async function test_setClientID() {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const invalidIDs = [
-    -1,
-    0.5,
-    "INVALID-UUID",
-    true,
-    "",
-    "3d1e1560-682a-4043-8cf2-aaaaaaaaaaaZ",
-  ];
+add_task(async function test_setCanaryClientIDs() {
   const KNOWN_UUID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
 
   await ClientID._reset();
 
   // We should be able to set a valid UUID
-  await ClientID.setClientID(KNOWN_UUID);
+  await ClientID.setCanaryClientIDs();
   let clientID = await ClientID.getClientID();
   Assert.equal(KNOWN_UUID, clientID);
-
-  // Setting invalid UUIDs should always fail and not modify the client ID
-  for (let invalidID of invalidIDs) {
-    await ClientID._reset();
-    let prevClientID = await ClientID.getClientID();
-    await ClientID.setClientID(invalidID)
-      .then(() =>
-        Assert.ok(false, `Invalid client ID '${invalidID}' should be rejected`)
-      )
-      .catch(() => Assert.ok(true));
-
-    clientID = await ClientID.getClientID();
-    Assert.equal(typeof clientID, "string");
-    Assert.ok(uuidRegex.test(clientID));
-    Assert.equal(prevClientID, clientID);
-  }
 });
 
-add_task(async function test_resetClientID() {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
+add_task(async function test_removeClientIDs() {
   // We should get a valid UUID after reset
   await ClientID._reset();
   let firstClientID = await ClientID.getClientID();
+  let firstEcosystemClientID = await ClientID.getEcosystemClientID();
   Assert.equal(typeof firstClientID, "string");
+  Assert.equal(typeof firstEcosystemClientID, "string");
   Assert.ok(uuidRegex.test(firstClientID));
+  Assert.ok(uuidRegex.test(firstEcosystemClientID));
+
+  await ClientID.removeClientIDs();
+
+  if (AppConstants.platform != "android") {
+    // We don't record the old ecosystem client ID on Android, since the
+    // FxA and telemetry infrastructure is different there.
+    let prefClientID = Services.prefs.getStringPref(PREF_CACHED_CLIENTID, null);
+    let scalarsDeletionRequest = Services.telemetry.getSnapshotForScalars(
+      "deletion-request"
+    );
+    Assert.ok(!prefClientID);
+    Assert.ok(
+      !scalarsDeletionRequest.parent?.[
+        SCALAR_DELETION_REQUEST_ECOSYSTEM_CLIENT_ID
+      ]
+    );
+  }
 
   // When resetting again we should get a new ID
-  let nextClientID = await ClientID.resetClientID();
+  let nextClientID = await ClientID.getClientID();
+  let nextEcosystemClientID = await ClientID.getEcosystemClientID();
   Assert.equal(typeof nextClientID, "string");
+  Assert.equal(typeof nextEcosystemClientID, "string");
   Assert.ok(uuidRegex.test(nextClientID));
+  Assert.ok(uuidRegex.test(nextEcosystemClientID));
   Assert.notEqual(
     firstClientID,
     nextClientID,
     "After reset client ID should be different."
   );
+  Assert.notEqual(
+    firstEcosystemClientID,
+    nextEcosystemClientID,
+    "After reset ecosystem client ID should be different."
+  );
 
   let cachedID = ClientID.getCachedClientID();
   Assert.equal(nextClientID, cachedID);
 
+  let cachedEcosystemID = ClientID.getCachedEcosystemClientID();
+  Assert.equal(nextEcosystemClientID, cachedEcosystemID);
+
   let prefClientID = Services.prefs.getStringPref(PREF_CACHED_CLIENTID, null);
   Assert.equal(nextClientID, prefClientID);
+
+  if (AppConstants.platform != "android") {
+    let scalarsDeletionRequest = Services.telemetry.getSnapshotForScalars(
+      "deletion-request"
+    );
+    Assert.equal(
+      nextEcosystemClientID,
+      scalarsDeletionRequest.parent[SCALAR_DELETION_REQUEST_ECOSYSTEM_CLIENT_ID]
+    );
+  }
 });
 
-add_task(async function test_resetParallelGet() {
+add_task(async function test_removeParallelGet() {
   // We should get a valid UUID after reset
-  let firstClientID = await ClientID.resetClientID();
+  await ClientID.removeClientIDs();
+  let firstClientID = await ClientID.getClientID();
 
   // We should get the same ID twice when requesting it in parallel to a reset.
-  let p = ClientID.resetClientID();
+  let promiseRemoveClientIDs = ClientID.removeClientIDs();
+  let p = ClientID.getClientID();
   let newClientID = await ClientID.getClientID();
+  await promiseRemoveClientIDs;
   let otherClientID = await p;
 
   Assert.notEqual(
@@ -170,18 +220,20 @@ add_task(
     const KNOWN_UUID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
 
     // We should get a valid UUID after reset
-    let firstClientID = await ClientID.resetClientID();
+    await ClientID.removeClientIDs();
+    let firstClientID = await ClientID.getClientID();
     Assert.notEqual(KNOWN_UUID, firstClientID, "Client ID should be random.");
 
     // Set the canary client ID.
-    await ClientID.setClientID(KNOWN_UUID);
+    await ClientID.setCanaryClientIDs();
     Assert.equal(
       KNOWN_UUID,
       await ClientID.getClientID(),
       "Client ID should be known canary."
     );
 
-    let newClientID = await ClientID.resetClientID();
+    await ClientID.removeClientIDs();
+    let newClientID = await ClientID.getClientID();
     Assert.notEqual(
       KNOWN_UUID,
       newClientID,
@@ -197,7 +249,8 @@ add_task(
       "After reset we should have detected a canary client ID"
     );
 
-    let clientID = await ClientID.resetClientID();
+    await ClientID.removeClientIDs();
+    let clientID = await ClientID.getClientID();
     Assert.notEqual(
       KNOWN_UUID,
       clientID,
