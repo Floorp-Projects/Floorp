@@ -793,7 +793,7 @@ Search.prototype = {
     // to true so that when the result is added, "heuristic" can be included in
     // its style.
     this._addingHeuristicResult = true;
-    let hasHeuristic = await this._matchFirstHeuristicResult(conn);
+    await this._matchFirstHeuristicResult(conn);
     this._addingHeuristicResult = false;
     if (!this.pending) {
       return;
@@ -801,10 +801,13 @@ Search.prototype = {
 
     // We sleep a little between adding the heuristic result and matching
     // any other searches so we aren't kicking off potentially expensive
-    // searches on every keystroke.
-    // Though, if there's no heuristic result, we start searching immediately,
-    // since autocomplete may be waiting for us.
-    if (hasHeuristic) {
+    // searches on every keystroke. We check trimmedOriginalSearchString instead
+    // of whether we have a heurisitic because several sources of heuristic
+    // results have been factored out of UnifiedComplete. See discussion in
+    // bug 1655034.
+    // If there's no string, we search immediately because the user wants
+    // the empty search results ASAP.
+    if (this._trimmedOriginalSearchString) {
       await this._sleep(UrlbarPrefs.get("delay"));
       if (!this.pending) {
         return;
