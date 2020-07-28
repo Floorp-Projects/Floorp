@@ -232,6 +232,37 @@ interface nsILoginManager : nsISupports {
    */
   Array<nsILoginInfo> searchLogins(in nsIPropertyBag matchData);
 
+  /**
+   * Returns the "sync id" used by Sync to know whether the store is current with
+   * respect to the sync servers.
+   *
+   * Returns null if the data doesn't exist or if the data can't be
+   * decrypted (including if the master-password prompt is cancelled). This is
+   * OK for Sync as it can't even begin syncing if the master-password is
+   * locked as the sync encrytion keys are stored in this login manager.
+   */
+  Promise getSyncID();
+
+  /**
+   * Sets the "sync id" used by Sync to know whether the store is current with
+   * respect to the sync servers. May be set to null.
+   *
+   * Throws if the data can't be encrypted (including if the master-password
+   * prompt is cancelled)
+   */
+  Promise setSyncID(in AString syncID);
+
+  /**
+   * Returns the timestamp of the last sync as a double (in seconds since Epoch
+   * rounded to two decimal places), or 0.0 if the data doesn't exist.
+   */
+  Promise getLastSync();
+
+  /**
+   * Sets the timestamp of the last sync.
+   */
+  Promise setLastSync(in double timestamp);
+
  /**
   * True when a master password prompt is being displayed.
   */

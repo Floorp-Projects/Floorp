@@ -531,6 +531,23 @@ LoginManager.prototype = {
     return this._storage.countLogins(origin, formActionOrigin, httpRealm);
   },
 
+  /* Sync metadata functions - see nsILoginManagerStorage for details */
+  async getSyncID() {
+    return this._storage.getSyncID();
+  },
+
+  async setSyncID(id) {
+    await this._storage.setSyncID(id);
+  },
+
+  async getLastSync() {
+    return this._storage.getLastSync();
+  },
+
+  async setLastSync(timestamp) {
+    await this._storage.setLastSync(timestamp);
+  },
+
   get uiBusy() {
     return this._storage.uiBusy;
   },
