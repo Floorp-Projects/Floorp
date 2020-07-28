@@ -245,7 +245,6 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   nscoord maxXMost = 0;
 
   // Tile the pages vertically
-  ReflowOutput kidReflowOutput(aReflowInput);
   for (nsIFrame* kidFrame : mFrames) {
     // Set the shared data into the page frame before reflow
     auto* pf = static_cast<nsPageFrame*>(kidFrame);
@@ -255,6 +254,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     ReflowInput kidReflowInput(
         aPresContext, aReflowInput, kidFrame,
         LogicalSize(kidFrame->GetWritingMode(), pageSize));
+    ReflowOutput kidReflowOutput(kidReflowInput);
     nsReflowStatus status;
 
     kidReflowInput.SetComputedISize(kidReflowInput.AvailableISize());
