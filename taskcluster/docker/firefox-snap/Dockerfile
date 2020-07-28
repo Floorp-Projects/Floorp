@@ -13,7 +13,7 @@ ENV LANG='en_US.UTF-8' \
     SNAP_ARCH='amd64' \
     TERM='dumb'
 
-# Grab dependencies
+# Grab dependencies. snapd is now required per https://github.com/snapcore/snapcraft/pull/3210
 RUN apt-get update && \
     apt-get dist-upgrade --yes && \
     apt-get install --yes \
@@ -27,7 +27,9 @@ RUN apt-get update && \
       git \
       python3 \
       locales \
-      sudo && \
+      snapd \
+      sudo \
+      && \
     apt-get clean && \
 locale-gen "$LANG"
 
