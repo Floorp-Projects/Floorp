@@ -98,6 +98,16 @@ interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
      *
      */
     fun onRequestSync()
+
+    /**
+     * Handles the start of a swipe on a bookmark.
+     */
+    fun onStartSwipingItem()
+
+    /**
+     * Handles the end of a swipe on a bookmark.
+     */
+    fun onStopSwipingItem()
 }
 
 class BookmarkView(
@@ -152,8 +162,7 @@ class BookmarkView(
             }
         }
         view.bookmarks_progress_bar.isVisible = state.isLoading
-        view.swipe_refresh.isEnabled =
-            state.mode is BookmarkFragmentState.Mode.Normal || state.mode is BookmarkFragmentState.Mode.Syncing
+        view.swipe_refresh.isEnabled = state.isSwipeToRefreshEnabled
         view.swipe_refresh.isRefreshing = state.mode is BookmarkFragmentState.Mode.Syncing
     }
 

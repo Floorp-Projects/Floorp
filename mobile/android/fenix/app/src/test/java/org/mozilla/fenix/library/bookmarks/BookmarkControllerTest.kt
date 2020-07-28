@@ -337,4 +337,22 @@ class BookmarkControllerTest {
             navController.popBackStack()
         }
     }
+
+    @Test
+    fun `handleStartSwipingItem disables swipe to refresh`() {
+        controller.handleStartSwipingItem()
+
+        verify {
+            bookmarkStore.dispatch(BookmarkFragmentAction.SwipeRefreshAvailabilityChanged(false))
+        }
+    }
+
+    @Test
+    fun `handleStopSwipingItem attempts to enable swipe to refresh`() {
+        controller.handleStopSwipingItem()
+
+        verify {
+            bookmarkStore.dispatch(BookmarkFragmentAction.SwipeRefreshAvailabilityChanged(true))
+        }
+    }
 }

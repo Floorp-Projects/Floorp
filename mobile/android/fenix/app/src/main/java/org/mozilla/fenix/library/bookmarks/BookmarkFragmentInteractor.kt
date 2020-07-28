@@ -120,4 +120,12 @@ class BookmarkFragmentInteractor(
     override fun onRequestSync() {
         bookmarksController.handleRequestSync()
     }
+
+    override fun onStartSwipingItem() {
+        bookmarksController.handleStartSwipingItem()
+    }
+
+    override fun onStopSwipingItem() {
+        bookmarksController.handleStopSwipingItem()
+    }
 }

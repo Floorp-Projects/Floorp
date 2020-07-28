@@ -116,6 +116,15 @@ class BookmarkTouchCallback(
         target: RecyclerView.ViewHolder
     ): Boolean = false
 
+    override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+        super.onSelectedChanged(viewHolder, actionState)
+        if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+            interactor.onStartSwipingItem()
+        } else {
+            interactor.onStopSwipingItem()
+        }
+    }
+
     private fun setBounds(
         background: Drawable,
         backgroundBounds: Rect,

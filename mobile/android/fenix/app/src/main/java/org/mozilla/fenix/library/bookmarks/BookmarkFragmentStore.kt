@@ -23,12 +23,14 @@ class BookmarkFragmentStore(
  * @property guidBackstack A set of guids for bookmark nodes we have visited. Used to traverse back
  *                  up the tree after a sync.
  * @property isLoading true if bookmarks are still being loaded from disk
+ * @property isSwipeToRefreshEnabled true if swipe to refresh should be enabled
  */
 data class BookmarkFragmentState(
     val tree: BookmarkNode?,
     val mode: Mode = Mode.Normal(),
     val guidBackstack: List<String> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val isSwipeToRefreshEnabled: Boolean = true
 ) : State {
     sealed class Mode {
         open val selectedItems = emptySet<BookmarkNode>()
@@ -49,6 +51,7 @@ sealed class BookmarkFragmentAction : Action {
     object DeselectAll : BookmarkFragmentAction()
     object StartSync : BookmarkFragmentAction()
     object FinishSync : BookmarkFragmentAction()
+    data class SwipeRefreshAvailabilityChanged(val enabled: Boolean) : BookmarkFragmentAction()
 }
 
 /**
@@ -71,31 +74,37 @@ private fun bookmarkFragmentStateReducer(
             } + action.tree.guid
 
             val items = state.mode.selectedItems.filter { it in action.tree }
+            val mode = when {
+                state.mode is BookmarkFragmentState.Mode.Syncing -> {
+                    BookmarkFragmentState.Mode.Syncing
+                }
+                items.isEmpty() -> {
+                    BookmarkFragmentState.Mode.Normal(shouldShowMenu(action.tree.guid))
+                }
+                else -> BookmarkFragmentState.Mode.Selecting(items.toSet())
+            }
             state.copy(
                 tree = action.tree,
-                mode = when {
-                    state.mode is BookmarkFragmentState.Mode.Syncing -> {
-                        BookmarkFragmentState.Mode.Syncing
-                    }
-                    items.isEmpty() -> {
-                        BookmarkFragmentState.Mode.Normal(shouldShowMenu(action.tree.guid))
-                    }
-                    else -> BookmarkFragmentState.Mode.Selecting(items.toSet())
-                },
+                mode = mode,
                 guidBackstack = backstack,
-                isLoading = false
+                isLoading = false,
+                isSwipeToRefreshEnabled = mode !is BookmarkFragmentState.Mode.Selecting
             )
         }
-        is BookmarkFragmentAction.Select ->
-            state.copy(mode = BookmarkFragmentState.Mode.Selecting(state.mode.selectedItems + action.item))
+        is BookmarkFragmentAction.Select -> state.copy(
+                mode = BookmarkFragmentState.Mode.Selecting(state.mode.selectedItems + action.item),
+                isSwipeToRefreshEnabled = false
+            )
         is BookmarkFragmentAction.Deselect -> {
             val items = state.mode.selectedItems - action.item
+            val mode = if (items.isEmpty()) {
+                BookmarkFragmentState.Mode.Normal()
+            } else {
+                BookmarkFragmentState.Mode.Selecting(items)
+            }
             state.copy(
-                mode = if (items.isEmpty()) {
-                    BookmarkFragmentState.Mode.Normal()
-                } else {
-                    BookmarkFragmentState.Mode.Selecting(items)
-                }
+                mode = mode,
+                isSwipeToRefreshEnabled = mode !is BookmarkFragmentState.Mode.Selecting
             )
         }
         is BookmarkFragmentAction.DeselectAll ->
@@ -104,18 +113,22 @@ private fun bookmarkFragmentStateReducer(
                     BookmarkFragmentState.Mode.Syncing
                 } else {
                     BookmarkFragmentState.Mode.Normal()
-                }
+                },
+                isSwipeToRefreshEnabled = true
             )
-        is BookmarkFragmentAction.StartSync ->
-            state.copy(
-                mode = BookmarkFragmentState.Mode.Syncing
-            )
-        is BookmarkFragmentAction.FinishSync ->
-            state.copy(
-                mode = BookmarkFragmentState.Mode.Normal(
-                    showMenu = shouldShowMenu(state.tree?.guid)
-                )
-            )
+        is BookmarkFragmentAction.StartSync -> state.copy(
+            mode = BookmarkFragmentState.Mode.Syncing,
+            isSwipeToRefreshEnabled = true
+        )
+        is BookmarkFragmentAction.FinishSync -> state.copy(
+            mode = BookmarkFragmentState.Mode.Normal(
+                showMenu = shouldShowMenu(state.tree?.guid)
+            ),
+            isSwipeToRefreshEnabled = true
+        )
+        is BookmarkFragmentAction.SwipeRefreshAvailabilityChanged -> state.copy(
+            isSwipeToRefreshEnabled = action.enabled && state.mode !is BookmarkFragmentState.Mode.Selecting
+        )
     }
 }
 

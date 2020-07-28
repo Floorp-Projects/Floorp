@@ -210,4 +210,22 @@ class BookmarkFragmentInteractorTest {
             bookmarkController.handleRequestSync()
         }
     }
+
+    @Test
+    fun `start swiping an item`() {
+        interactor.onStartSwipingItem()
+
+        verify {
+            bookmarkController.handleStartSwipingItem()
+        }
+    }
+
+    @Test
+    fun `stop swiping an item`() {
+        interactor.onStopSwipingItem()
+
+        verify {
+            bookmarkController.handleStopSwipingItem()
+        }
+    }
 }
