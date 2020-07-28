@@ -323,15 +323,32 @@ body {
 
   .tiles-theme-container {
     margin: 10px auto;
+    border: 0;
+  }
+
+  .sr-only {
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+
+    &.input {
+      height: 1px;
+      width: 1px;
+    }
   }
 
   .tiles-theme-section {
     display: grid;
     grid-gap: 21px;
     grid-template-columns: repeat(3, auto);
+    border: 0;
 
     @media (max-width: $break-point-medium) {
       grid-template-columns: repeat(2, auto);
+    }
+
+    &:focus-within {
+      border: 1px dotted;
     }
 
     .theme {
