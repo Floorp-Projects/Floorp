@@ -23,7 +23,7 @@ object Versions {
     const val androidx_lifecycle = "2.2.0"
     const val androidx_fragment = "1.2.5"
     const val androidx_navigation = "2.3.0"
-    const val androidx_recyclerview = "1.1.0"
+    const val androidx_recyclerview = "1.2.0-alpha05"
     const val androidx_core = "1.2.0"
     const val androidx_paging = "2.1.0"
     const val androidx_transition = "1.3.0"

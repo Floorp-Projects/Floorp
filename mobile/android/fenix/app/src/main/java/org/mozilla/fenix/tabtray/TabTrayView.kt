@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
@@ -34,6 +35,7 @@ import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -69,6 +71,7 @@ class TabTrayView(
     private var menu: BrowserMenu? = null
 
     private var tabsTouchHelper: TabsTouchHelper
+    private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor)
 
     private var hasLoaded = false
 
@@ -131,9 +134,13 @@ class TabTrayView(
                 reverseLayout = true
                 stackFromEnd = true
             }
-            adapter = tabsAdapter
+            adapter = ConcatAdapter(collectionsButtonAdapter, tabsAdapter)
 
-            tabsTouchHelper = TabsTouchHelper(tabsAdapter)
+            tabsTouchHelper = TabsTouchHelper(
+                observable = tabsAdapter,
+                onViewHolderTouched = { it is TabViewHolder }
+            )
+
             tabsTouchHelper.attachToRecyclerView(this)
 
             tabsAdapter.tabTrayInteractor = interactor
@@ -468,7 +475,11 @@ class TabTrayView(
             val selectedBrowserTabIndex = tabs
                 .indexOfFirst { it.id == sessionId }
 
-            layoutManager?.scrollToPosition(selectedBrowserTabIndex)
+            // We offset the tab index by the number of items in the other adapters.
+            // We add the offset, because the layoutManager is initialized with `reverseLayout`.
+            val recyclerViewIndex = selectedBrowserTabIndex + collectionsButtonAdapter.itemCount
+
+            layoutManager?.scrollToPosition(recyclerViewIndex)
         }
     }
 

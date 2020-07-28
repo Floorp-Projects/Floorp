@@ -96,7 +96,7 @@ internal class MigrationStatusItemDecoration(
         parent: RecyclerView,
         state: RecyclerView.State
     ) {
-        val position = parent.getChildViewHolder(view).adapterPosition
+        val position = parent.getChildViewHolder(view).bindingAdapterPosition
         val itemCount = state.itemCount
 
         outRect.left = spacing
