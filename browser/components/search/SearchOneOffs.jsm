@@ -4,23 +4,32 @@
 
 "use strict";
 
-/* eslint-env mozilla/browser-window */
-/* globals XULCommandEvent */
+var EXPORTED_SYMBOLS = ["SearchOneOffs"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
+  clearTimeout: "resource://gre/modules/Timer.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });
 
 /**
  * Defines the search one-off button elements. These are displayed at the bottom
- * of the address bar or the search bar.
+ * of the address bar or the search bar. The address bar buttons are a subclass
+ * in browser/components/urlbar/UrlbarSearchOneOffs.jsm.
  */
 class SearchOneOffs {
   constructor(container) {
     this.container = container;
+    this.window = container.ownerGlobal;
+    this.document = container.ownerDocument;
 
     this.container.appendChild(
-      MozXULElement.parseXULToFragment(
+      this.window.MozXULElement.parseXULToFragment(
         `
       <hbox class="search-panel-one-offs-header search-panel-header">
         <label class="search-panel-one-offs-header-label" data-l10n-id="search-one-offs-with-title"/>
@@ -204,7 +213,6 @@ class SearchOneOffs {
       }
       val.controller.addQueryListener(this);
     }
-    return val;
   }
 
   /**
@@ -230,8 +238,6 @@ class SearchOneOffs {
     if (val && val.state != "closed") {
       this._rebuild();
     }
-
-    return val;
   }
 
   get popup() {
@@ -254,7 +260,7 @@ class SearchOneOffs {
     if (val) {
       val.addEventListener("input", this);
     }
-    return (this._textbox = val);
+    this._textbox = val;
   }
 
   get style() {
@@ -288,7 +294,6 @@ class SearchOneOffs {
         this.selectedButton = null;
       }
     }
-    return val;
   }
 
   get query() {
@@ -333,7 +338,6 @@ class SearchOneOffs {
       previousSelectedButton: previousButton,
     });
     this.dispatchEvent(event);
-    return val;
   }
 
   get selectedButton() {
@@ -350,7 +354,6 @@ class SearchOneOffs {
   set selectedButtonIndex(val) {
     let buttons = this.getSelectableButtons(true);
     this.selectedButton = buttons[val];
-    return val;
   }
 
   get selectedButtonIndex() {
@@ -372,9 +375,10 @@ class SearchOneOffs {
 
   set selectedAutocompleteIndex(val) {
     if (!this.compact) {
-      return (this.popup.selectedIndex = val);
+      this.popup.selectedIndex = val;
+      return;
     }
-    return (this._view.selectedElementIndex = val);
+    this._view.selectedElementIndex = val;
   }
 
   get compact() {
@@ -395,7 +399,7 @@ class SearchOneOffs {
     }
     let currentEngineNameToIgnore;
     if (!this.getAttribute("includecurrentengine")) {
-      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      if (PrivateBrowsingUtils.isWindowPrivate(this.window)) {
         currentEngineNameToIgnore = (await Services.search.getDefaultPrivate())
           .name;
       } else {
@@ -459,7 +463,7 @@ class SearchOneOffs {
 
     // Return early if the engines and panel width have not changed.
     if (this.popup && this._textbox) {
-      let textboxWidth = await window.promiseDocumentFlushed(() => {
+      let textboxWidth = await this.window.promiseDocumentFlushed(() => {
         return this._textbox.clientWidth;
       });
       if (this._engines && this._textboxWidth == textboxWidth) {
@@ -480,7 +484,7 @@ class SearchOneOffs {
     this.buttons.setAttribute("aria-labelledby", headerText.id);
 
     let engines = await this.getEngines();
-    let defaultEngine = PrivateBrowsingUtils.isWindowPrivate(window)
+    let defaultEngine = PrivateBrowsingUtils.isWindowPrivate(this.window)
       ? await Services.search.getDefaultPrivate()
       : await Services.search.getDefault();
     let oneOffCount = engines.length;
@@ -513,7 +517,7 @@ class SearchOneOffs {
       // This is likely because the clientWidth getter rounds the value, but
       // the panel's border width is not an integer.
       // As a workaround, decrement the width if the scale is not an integer.
-      let scale = window.windowUtils.screenPixelsPerCSSPixel;
+      let scale = this.window.windowUtils.screenPixelsPerCSSPixel;
       if (Math.floor(scale) != scale) {
         --buttonsWidth;
       }
@@ -545,7 +549,7 @@ class SearchOneOffs {
 
     for (let i = 0; i < engines.length; ++i) {
       let engine = engines[i];
-      let button = document.createXULElement("button");
+      let button = this.document.createXULElement("button");
       button.id = this._buttonIDForEngine(engine);
       let uri = "chrome://browser/skin/search-engine-placeholder.png";
       if (engine.iconURI) {
@@ -584,16 +588,16 @@ class SearchOneOffs {
     // example), so a page could break the popup by offering too many.
     // Instead, add a single menu button with a submenu of all the engines.
 
-    if (!gBrowser.selectedBrowser.engines) {
+    if (!this.window.gBrowser.selectedBrowser.engines) {
       return;
     }
 
-    let engines = gBrowser.selectedBrowser.engines;
+    let engines = this.window.gBrowser.selectedBrowser.engines;
     let tooManyEngines = engines.length > this._addEngineMenuThreshold;
 
     if (tooManyEngines) {
       // Make the top-level menu button.
-      let button = document.createXULElement("toolbarbutton");
+      let button = this.document.createXULElement("toolbarbutton");
       button.classList.add("addengine-menu-button", "addengine-item");
       button.setAttribute("badged", "true");
       button.setAttribute("type", "menu");
@@ -615,7 +619,7 @@ class SearchOneOffs {
       list.appendChild(button);
 
       // Now make the button's child menupopup.
-      list = document.createXULElement("menupopup");
+      list = this.document.createXULElement("menupopup");
       button.appendChild(list);
       list.setAttribute("class", "addengine-menu");
       list.setAttribute("position", "topright topleft");
@@ -642,7 +646,7 @@ class SearchOneOffs {
     // handling for free inside menupopups.
     let eltType = tooManyEngines ? "menuitem" : "toolbarbutton";
     for (let engine of engines) {
-      let button = document.createXULElement(eltType);
+      let button = this.document.createXULElement(eltType);
       button.classList.add("addengine-item");
       if (!tooManyEngines) {
         button.setAttribute("badged", "true");
@@ -685,7 +689,7 @@ class SearchOneOffs {
 
   _buttonForEngine(engine) {
     let id = this._buttonIDForEngine(engine);
-    return document.getElementById(id);
+    return this.document.getElementById(id);
   }
 
   getSelectableButtons(aIncludeNonEngineButtons) {
@@ -733,7 +737,7 @@ class SearchOneOffs {
       let newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
       if (
         (aEvent instanceof KeyboardEvent && aEvent.altKey) ^ newTabPref &&
-        !gBrowser.selectedTab.isEmpty
+        !this.window.gBrowser.selectedTab.isEmpty
       ) {
         where = "tab";
       }
@@ -1051,7 +1055,7 @@ class SearchOneOffs {
         engine = target.engine;
       }
     } else if (
-      aEvent instanceof XULCommandEvent &&
+      aEvent instanceof this.window.XULCommandEvent &&
       target.classList.contains("search-one-offs-context-open-in-new-tab")
     ) {
       source = "oneoff-context";
@@ -1066,7 +1070,11 @@ class SearchOneOffs {
       source += "-" + this.telemetryOrigin;
     }
 
-    BrowserSearch.recordOneoffSearchInTelemetry(engine, source, type);
+    this.window.BrowserSearch.recordOneoffSearchInTelemetry(
+      engine,
+      source,
+      type
+    );
     return true;
   }
 
@@ -1146,7 +1154,7 @@ class SearchOneOffs {
     let target = event.target;
 
     if (target == this.settingsButton || target == this.settingsButtonCompact) {
-      openPreferences("paneSearch");
+      this.window.openPreferences("paneSearch");
 
       // If the preference tab was already selected, the panel doesn't
       // close itself automatically.
@@ -1177,7 +1185,7 @@ class SearchOneOffs {
           const kSearchBundleURI =
             "chrome://global/locale/search/search.properties";
           let searchBundle = Services.strings.createBundle(kSearchBundleURI);
-          let brandBundle = document.getElementById("bundle_brand");
+          let brandBundle = this.document.getElementById("bundle_brand");
           let brandName = brandBundle.getString("brandShortName");
           let title = searchBundle.GetStringFromName(
             "error_invalid_engine_title"
@@ -1187,7 +1195,7 @@ class SearchOneOffs {
             [brandName, target.getAttribute("uri")]
           );
           Services.prompt.alertBC(
-            gBrowser.selectedBrowser.browsingContext,
+            this.window.gBrowser.selectedBrowser.browsingContext,
             Ci.nsIPrompt.MODAL_TYPE_CONTENT,
             title,
             text
@@ -1214,7 +1222,7 @@ class SearchOneOffs {
         : "defaultEngine";
       let currentEngine = Services.search[engineType];
 
-      const isPrivateWin = PrivateBrowsingUtils.isWindowPrivate(window);
+      const isPrivateWin = PrivateBrowsingUtils.isWindowPrivate(this.window);
       if (
         !this.getAttribute("includecurrentengine") &&
         isPrivateButton == isPrivateWin
@@ -1305,5 +1313,3 @@ class SearchOneOffs {
     this._contextEngine = null;
   }
 }
-
-window.SearchOneOffs = SearchOneOffs;
