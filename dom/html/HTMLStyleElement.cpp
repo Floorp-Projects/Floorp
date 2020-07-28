@@ -162,6 +162,10 @@ void HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
   Unused << UpdateStyleSheetInternal(nullptr, nullptr);
 }
 
+void HTMLStyleElement::SetDevtoolsAsTriggeringPrincipal() {
+  mTriggeringPrincipal = CreateDevtoolsPrincipal();
+}
+
 Maybe<LinkStyle::SheetInfo> HTMLStyleElement::GetStyleSheetInfo() {
   if (!IsCSSMimeTypeAttributeForStyleElement(*this)) {
     return Nothing();
