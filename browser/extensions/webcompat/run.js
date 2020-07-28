@@ -4,13 +4,14 @@
 
 "use strict";
 
-/* globals AVAILABLE_INJECTIONS, AVAILABLE_UA_OVERRIDES, AboutCompatBroker,
-           Injections, UAOverrides, CUSTOM_FUNCTIONS, AVAILABLE_PIP_OVERRIDES,
-           PictureInPictureOverrides */
+/* globals AboutCompatBroker, AVAILABLE_INJECTIONS, AVAILABLE_SHIMS,
+           AVAILABLE_PIP_OVERRIDES, AVAILABLE_UA_OVERRIDES, CUSTOM_FUNCTIONS,
+           Injections, PictureInPictureOverrides, Shims, UAOverrides */
 
 const injections = new Injections(AVAILABLE_INJECTIONS, CUSTOM_FUNCTIONS);
 const uaOverrides = new UAOverrides(AVAILABLE_UA_OVERRIDES);
 const pipOverrides = new PictureInPictureOverrides(AVAILABLE_PIP_OVERRIDES);
+const shims = new Shims(AVAILABLE_SHIMS);
 
 const aboutCompatBroker = new AboutCompatBroker({
   injections,
