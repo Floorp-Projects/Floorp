@@ -33,4 +33,9 @@ object FeatureFlags {
      * Enables swipe on toolbar to switch tabs
      */
     val swipeToSwitchTabs = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables viewing tab history
+     */
+    val tabHistory = Config.channel.isNightlyOrDebug
 }
