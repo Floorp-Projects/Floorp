@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
     'testCompileUtf8.cpp',
     'testDateToLocaleString.cpp',
     'testDebugger.cpp',
+    'testDeduplication.cpp',
     'testDeepFreeze.cpp',
     'testDefineGetterSetterNonEnumerable.cpp',
     'testDefineProperty.cpp',
