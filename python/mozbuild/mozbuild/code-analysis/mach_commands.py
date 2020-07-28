@@ -537,7 +537,7 @@ class StaticAnalysis(MachCommandBase):
 
         self.log(logging.INFO, 'static-analysis', {}, 'Running '+' '.join(cmd))
 
-        rc = self.run_process(args=cmd, cwd=path, pass_thru=True)
+        rc = self.run_process(args=cmd, cwd=path, pass_thru=True, ensure_exit_code=False)
 
         if rc != 0:
             self.log(logging.ERROR, 'static-analysis', {},
