@@ -23,6 +23,13 @@ abstract class RedirectDialogFragment : DialogFragment() {
     var onConfirmRedirect: () -> Unit = {}
 
     /**
+     * A callback to trigger when user dismisses the dialog.
+     * For instance, a valid use case can be in confirmation dialog, after the negative button is clicked,
+     * this callback must be called.
+     */
+    var onCancelRedirect: () -> Unit? = {}
+
+    /**
      * add the metadata of this download object to the arguments of this fragment.
      */
     fun setAppLinkRedirectUrl(url: String) {
