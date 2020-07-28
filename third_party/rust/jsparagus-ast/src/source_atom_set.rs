@@ -198,7 +198,9 @@ impl<'alloc> SourceAtomSet<'alloc> {
     // it with the result of this method.
     pub fn new_uninitialized() -> Self {
         Self {
-            atoms: IndexSet::new(),
+            // 256 is a number which should cover 75% of scripts without
+            // reallocation.
+            atoms: IndexSet::with_capacity(256),
         }
     }
 

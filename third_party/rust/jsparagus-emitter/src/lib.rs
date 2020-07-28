@@ -62,20 +62,24 @@ mod tests {
     use bumpalo::Bump;
     use parser::{parse_script, ParseOptions};
     use std::cell::RefCell;
+    use std::convert::TryInto;
     use std::rc::Rc;
     use stencil::opcode::*;
+    use stencil::script::SourceExtent;
 
     fn bytecode(source: &str) -> Vec<u8> {
         let alloc = &Bump::new();
         let parse_options = ParseOptions::new();
         let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
         let slices = Rc::new(RefCell::new(SourceSliceList::new()));
+        let source_len = source.len();
         let parse_result =
             parse_script(alloc, source, &parse_options, atoms.clone(), slices.clone())
                 .expect("Failed to parse");
         // println!("{:?}", parse_result);
 
-        let emit_options = EmitOptions::new();
+        let extent = SourceExtent::top_level_script(source_len.try_into().unwrap(), 1, 0);
+        let emit_options = EmitOptions::new(extent);
 
         let result = emit(
             alloc.alloc(ast::types::Program::Script(parse_result.unbox())),

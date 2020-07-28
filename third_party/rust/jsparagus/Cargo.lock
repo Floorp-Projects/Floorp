@@ -397,6 +397,7 @@ dependencies = [
  "jsparagus-emitter",
  "jsparagus-interpreter",
  "jsparagus-parser",
+ "jsparagus-stencil",
  "log",
  "rustyline",
  "rustyline-derive",

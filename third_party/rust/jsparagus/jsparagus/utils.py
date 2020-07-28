@@ -5,6 +5,7 @@ import typing
 
 
 T = typing.TypeVar("T")
+U = typing.TypeVar("U")
 
 
 def keep_until(
@@ -57,3 +58,17 @@ def consume(iterator: typing.Iterable[T], progress: bool) -> None:
         if progress and i != 0:
             sys.stdout.write("\n")
             sys.stdout.flush()
+
+
+class default_id_dict(dict, typing.Mapping[T, T]):
+    def __missing__(self, key) -> T:
+        return key
+
+
+class default_fwd_dict(dict, typing.Mapping[T, U]):
+    def __init__(self, fwd: typing.Mapping[T, U]):
+        super().__init__()
+        self.fwd = fwd
+
+    def __missing__(self, key: T) -> U:
+        return self.fwd[key]
