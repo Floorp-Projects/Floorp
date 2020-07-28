@@ -151,8 +151,9 @@ class FirefoxConnector {
 
   async onResourceAvailable({ resourceType, targetFront, resource }) {
     const { TYPES } = this.toolbox.resourceWatcher;
+
     if (resourceType === TYPES.DOCUMENT_EVENT) {
-      this.onDocEvent(resource);
+      this.onDocEvent(targetFront, resource);
       return;
     }
 
@@ -317,9 +318,15 @@ class FirefoxConnector {
   /**
    * The "DOMContentLoaded" and "Load" events sent by the console actor.
    *
-   * @param {object} marker
+   * @param {object} targetFront
+   * @param {object} event
    */
-  onDocEvent(event) {
+  onDocEvent(targetFront, event) {
+    if (!targetFront.isTopLevel) {
+      // Only handle document events for the top level target.
+      return;
+    }
+
     if (event.name === "dom-loading") {
       // Netmonitor does not support dom-loading event yet.
       return;
