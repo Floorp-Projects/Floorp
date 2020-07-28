@@ -6,6 +6,12 @@
 
 Gecko-based EngineSession implementation.
 
+### Types
+
+| Name | Summary |
+|---|---|
+| [LoadRequest](-load-request/index.md) | `data class LoadRequest`<br>Represents a request to load a [url](-load-request/url.md). |
+
 ### Constructors
 
 | Name | Summary |

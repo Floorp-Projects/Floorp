@@ -447,6 +447,7 @@
 | [mozilla.components.support.base.log.sink.LogSink](../mozilla.components.support.base.log.sink/-log-sink/index.md) |  |
 | [mozilla.components.support.base.log.logger.Logger](../mozilla.components.support.base.log.logger/-logger/index.md) | A wrapper for the Log object providing a more convenient API for logging. |
 | [mozilla.components.concept.storage.Login](../mozilla.components.concept.storage/-login/index.md) | Represents a login that can be used by autofill APIs. |
+| [mozilla.components.feature.prompts.dialog.LoginDialogFacts](../mozilla.components.feature.prompts.dialog/-login-dialog-facts/index.md) | Facts emitted for telemetry related to [LoginDialogFragment](#) |
 | [mozilla.components.feature.logins.exceptions.LoginException](../mozilla.components.feature.logins.exceptions/-login-exception/index.md) | A login exception. |
 | [mozilla.components.feature.logins.exceptions.LoginExceptionStorage](../mozilla.components.feature.logins.exceptions/-login-exception-storage/index.md) | A storage implementation for organizing login exceptions. |
 | [mozilla.components.feature.prompts.LoginExceptions](../mozilla.components.feature.prompts/-login-exceptions/index.md) | Interface to be implemented by a storage layer to exclude the save logins prompt from showing. |
