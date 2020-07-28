@@ -386,19 +386,16 @@ def make_job_description(config, jobs):
             job_description['extra'] = job['extra']
 
         job_description['run']['tooltool-downloads'] = job['tooltool']
+
+        job_description['worker'] = {
+            'max-run-time': job['run-time'],
+            'chain-of-trust': True,
+        }
         if job['worker-type'] == "b-win2012":
-            job_description['worker'] = {
-                'os': 'windows',
-                'max-run-time': 7200,
-                'chain-of-trust': True,
-            }
+            job_description['worker']['os'] = 'windows'
             job_description['run']['use-simple-package'] = False
             job_description['run']['use-magic-mh-args'] = False
         else:
-            job_description['worker'] = {
-                'max-run-time': job['run-time'],
-                'chain-of-trust': True,
-            }
             job_description['run']['need-xvfb'] = True
 
         if job.get('docker-image'):
