@@ -16,8 +16,9 @@ ChromeUtils.defineModuleGetter(
 class ThumbnailsChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
-      case "Browser:Thumbnail:ContentSize": {
-        return PageThumbUtils.getContentSize(this.contentWindow);
+      case "Browser:Thumbnail:ContentInfo": {
+        let [width, height] = PageThumbUtils.getContentSize(this.contentWindow);
+        return { width, height };
       }
       case "Browser:Thumbnail:CheckState": {
         /**
