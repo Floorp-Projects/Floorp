@@ -1027,7 +1027,7 @@ class StaticAnalysis(MachCommandBase):
 
     def _check_for_java(self):
         '''Check if javac can be found.'''
-        import distutils
+        import distutils.spawn
         java = self.substs.get('JAVA')
         java = java or os.getenv('JAVA_HOME')
         java = java or distutils.spawn.find_executable('javac')
