@@ -36,6 +36,8 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
 
   WeakPtr<dom::HTMLCanvasElement> mTargetCanvasElement;
 
+  uint8_t BytesPerTexel() const;
+
  private:
   virtual ~Texture();
   void Cleanup();

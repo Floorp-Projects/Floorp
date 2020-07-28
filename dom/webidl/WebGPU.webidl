@@ -347,9 +347,9 @@ dictionary GPUTextureViewDescriptor : GPUObjectDescriptorBase {
     GPUTextureViewDimension dimension;
     GPUTextureAspect aspect = "all";
     GPUIntegerCoordinate baseMipLevel = 0;
-    GPUIntegerCoordinate mipLevelCount = 1;
+    GPUIntegerCoordinate mipLevelCount;
     GPUIntegerCoordinate baseArrayLayer = 0;
-    GPUIntegerCoordinate arrayLayerCount = 1;
+    GPUIntegerCoordinate arrayLayerCount;
 };
 
 [Pref="dom.webgpu.enabled",
@@ -767,7 +767,6 @@ dictionary GPUBufferCopyView : GPUTextureDataLayout {
 dictionary GPUTextureCopyView {
     required GPUTexture texture;
     GPUIntegerCoordinate mipLevel = 0;
-    GPUSize32 arrayLayer = 0;
     GPUOrigin3D origin;
 };
 
@@ -951,6 +950,21 @@ interface GPUQueue {
 
     //GPUFence createFence(optional GPUFenceDescriptor descriptor = {});
     //void signal(GPUFence fence, GPUFenceValue signalValue);
+
+    [Throws]
+    void writeBuffer(
+        GPUBuffer buffer,
+        GPUSize64 bufferOffset,
+        [AllowShared] ArrayBuffer data,
+        optional GPUSize64 dataOffset = 0,
+        optional GPUSize64 size);
+
+    [Throws]
+    void writeTexture(
+      GPUTextureCopyView destination,
+      [AllowShared] ArrayBuffer data,
+      GPUTextureDataLayout dataLayout,
+      GPUExtent3D size);
 };
 GPUQueue includes GPUObjectBase;
 
