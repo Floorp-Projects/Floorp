@@ -13,7 +13,9 @@
 <script>
 "use strict";
 // eslint-disable-next-line no-unused-vars
-const worker = new Worker("https://example.com/browser/devtools/shared/resources/tests/test_worker.js");
+const worker = new Worker("https://example.com/browser/devtools/shared/resources/tests/test_worker.js#simple-worker");
+// eslint-disable-next-line no-unused-vars
+const sharedWorker = new SharedWorker("https://example.com/browser/devtools/shared/resources/tests/test_worker.js#shared-worker");
 
 (async function () {
   // Expose a reference to the registration so that tests can unregister it.

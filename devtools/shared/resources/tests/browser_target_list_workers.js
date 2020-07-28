@@ -207,12 +207,21 @@ async function testTabWorkers(mainRoot, tab) {
 
   await targetList.startListening();
 
-  // Check that calling getAllTargets([workers]) return the same target instances
-  const workers = await targetList.getAllTargets([TYPES.WORKER]);
-  is(workers.length, 1, "retrieved the worker");
-  is(workers[0].url, WORKER_URL, "The first worker is the page worker");
+  info(
+    "Check that getAllTargets does return the dedicated worker, but not the shared one"
+  );
+  const workers = await targetList.getAllTargets([
+    TYPES.WORKER,
+    TYPES.SHARED_WORKER,
+  ]);
 
-  // Assert that watchTargets will call the create callback for all existing workers
+  // XXX: This should be modified in Bug 1607778, where we plan to add support for shared workers.
+  is(workers.length, 1, "Retrieved only one worker…");
+  is(workers[0]?.url, `${WORKER_URL}#simple-worker`, "…the dedicated worker");
+
+  info(
+    "Assert that watchTargets will call the create callback for existing dedicated workers"
+  );
   const targets = [];
   const onAvailable = async ({ targetFront }) => {
     is(
@@ -223,10 +232,23 @@ async function testTabWorkers(mainRoot, tab) {
     ok(!targetFront.isTopLevel, "The workers are never top level");
     targets.push(targetFront);
   };
-  await targetList.watchTargets([TYPES.WORKER], onAvailable);
-  is(targets.length, 1, "retrieved just the worker");
-  is(targets[0], workers[0], "Got the exact same target front");
-  targetList.unwatchTargets([TYPES.WORKER], onAvailable);
+  await targetList.watchTargets(
+    [TYPES.WORKER, TYPES.SHARED_WORKER],
+    onAvailable
+  );
+
+  // XXX: This should be modified in Bug 1607778, where we plan to add support for shared workers.
+  is(targets.length, 1, "Retrieved one worker…");
+  is(targets[0]?.url, `${WORKER_URL}#simple-worker`, "…the dedicated worker");
+
+  info("Check that watched targets return the same fronts as getAllTargets");
+  is(
+    targets[0],
+    workers[0],
+    "Got the exact same target front for the dedicated worker"
+  );
+
+  targetList.unwatchTargets([TYPES.WORKER, TYPES.SHARED_WORKER], onAvailable);
 
   targetList.stopListening();
 
