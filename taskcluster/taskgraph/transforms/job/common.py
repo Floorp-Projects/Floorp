@@ -11,7 +11,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.util.taskcluster import get_artifact_prefix
 
-SECRET_SCOPE = 'secrets:get:project/releng/gecko/{}/level-{}/{}'
+SECRET_SCOPE = 'secrets:get:project/releng/{trust_domain}/{kind}/level-{level}/{secret}'
 
 
 def add_cache(job, taskdesc, name, mount_point, skip_untrusted=False):
@@ -180,9 +180,15 @@ def setup_secrets(config, job, taskdesc):
     secrets = job['run']['secrets']
     if secrets is True:
         secrets = ['*']
-    for sec in secrets:
-        taskdesc['scopes'].append(SECRET_SCOPE.format(
-            job['treeherder']['kind'], config.params['level'], sec))
+    for secret in secrets:
+        taskdesc["scopes"].append(
+            SECRET_SCOPE.format(
+                trust_domain=config.graph_config["trust-domain"],
+                kind=job["treeherder"]["kind"],
+                level=config.params["level"],
+                secret=secret,
+            )
+        )
 
 
 def add_tooltool(config, job, taskdesc, internal=False):
