@@ -15,7 +15,7 @@ requirements = os.path.join(os.path.dirname(__file__), "requirements", "base.txt
 @CommandProvider
 class CondprofileCommandProvider(MachCommandBase):
     def _init(self):
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         self.virtualenv_manager.install_pip_requirements(
             requirements, require_hashes=False
         )

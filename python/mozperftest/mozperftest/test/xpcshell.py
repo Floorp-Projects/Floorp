@@ -53,7 +53,7 @@ class XPCShell(Layer):
         self.metrics = []
 
     def setup(self):
-        self.mach_cmd._activate_virtualenv()
+        self.mach_cmd.activate_virtualenv()
 
     def run(self, metadata):
         tests = self.get_arg("tests", [])

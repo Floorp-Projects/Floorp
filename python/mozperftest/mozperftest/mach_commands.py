@@ -66,7 +66,7 @@ class Perftest(MachCommandBase):
             return
 
         # run locally
-        MachCommandBase._activate_virtualenv(self)
+        MachCommandBase.activate_virtualenv(self)
 
         from mozperftest.runner import run_tests
 
@@ -122,7 +122,7 @@ class PerftestTests(MachCommandBase):
         "-v", "--verbose", action="store_true", default=False, help="Verbose mode",
     )
     def run_tests(self, **kwargs):
-        MachCommandBase._activate_virtualenv(self)
+        MachCommandBase.activate_virtualenv(self)
 
         from pathlib import Path
         from mozperftest.runner import _setup_path

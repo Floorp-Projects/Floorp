@@ -83,7 +83,7 @@ class Watch(MachCommandBase):
                   'https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching')  # noqa
             return 1
 
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         try:
             self.virtualenv_manager.install_pip_package('pywatchman==1.4.1')
         except Exception:
@@ -168,7 +168,7 @@ class Doctor(MachCommandBase):
     @CommandArgument('--fix', default=None, action='store_true',
                      help='Attempt to fix found problems.')
     def doctor(self, fix=None):
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         from mozbuild.doctor import Doctor
         doctor = Doctor(self.topsrcdir, self.topobjdir, fix)
         return doctor.check_all()

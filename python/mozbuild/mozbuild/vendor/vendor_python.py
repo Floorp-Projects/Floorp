@@ -28,7 +28,7 @@ class VendorPython(MozbuildObject):
                 "--with-windows-wheel is only supported for a single package!"
             )
 
-        self._activate_virtualenv()
+        self.activate_virtualenv()
         pip_compile = os.path.join(self.virtualenv_manager.bin_path, "pip-compile")
         if not os.path.exists(pip_compile):
             path = os.path.normpath(
