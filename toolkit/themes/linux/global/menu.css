@@ -191,3 +191,5 @@ menuseparator {
   appearance: auto !important;
   -moz-default-appearance: menuseparator !important;
 }
+
+%include ../../shared/menu-scrolling.inc.css
