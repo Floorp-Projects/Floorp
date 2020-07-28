@@ -4,55 +4,40 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * Forward `DOMContentLoaded` and `load` events with precise timing
  * of when events happened according to window.performance numbers.
  *
  * @constructor
- * @param object console
- *        The web console actor.
+ * @param BrowsingContextTarget targetActor
  */
-function DocumentEventsListener(console) {
-  this.console = console;
+function DocumentEventsListener(targetActor) {
+  this.targetActor = targetActor;
 
+  EventEmitter.decorate(this);
   this.onWindowReady = this.onWindowReady.bind(this);
   this.onContentLoaded = this.onContentLoaded.bind(this);
   this.onLoad = this.onLoad.bind(this);
-  this.listen();
 }
 
 exports.DocumentEventsListener = DocumentEventsListener;
 
 DocumentEventsListener.prototype = {
   listen() {
-    EventEmitter.on(
-      this.console.parentActor,
-      "window-ready",
-      this.onWindowReady
-    );
-    this.onWindowReady({ window: this.console.window, isTopLevel: true });
+    EventEmitter.on(this.targetActor, "window-ready", this.onWindowReady);
+    this.onWindowReady({ window: this.targetActor.window, isTopLevel: true });
   },
 
   onWindowReady({ window, isTopLevel }) {
-    // Avoid listening if the console actor is already destroyed
-    if (!this.console.conn) {
-      return;
-    }
-
     // Ignore iframes
     if (!isTopLevel) {
       return;
     }
 
-    const packet = {
-      from: this.console.actorID,
-      type: "documentEvent",
-      name: "dom-loading",
-      time: window.performance.timing.navigationStart,
-    };
-    this.console.conn.send(packet);
+    const time = window.performance.timing.navigationStart;
+    this.emit("dom-loading", time);
 
     const { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
@@ -70,50 +55,24 @@ DocumentEventsListener.prototype = {
   },
 
   onContentLoaded(event) {
-    // Avoid emitting an event when the console actor is already destroyed
-    if (!this.console.conn) {
-      return;
-    }
-
+    // milliseconds since the UNIX epoch, when the parser finished its work
+    // on the main document, that is when its Document.readyState changes to
+    // 'interactive' and the corresponding readystatechange event is thrown
     const window = event.target.defaultView;
-    const packet = {
-      from: this.console.actorID,
-      type: "documentEvent",
-      name: "dom-interactive",
-      // milliseconds since the UNIX epoch, when the parser finished its work
-      // on the main document, that is when its Document.readyState changes to
-      // 'interactive' and the corresponding readystatechange event is thrown
-      time: window.performance.timing.domInteractive,
-    };
-    this.console.conn.send(packet);
+    const time = window.performance.timing.domInteractive;
+    this.emit("dom-interactive", time);
   },
 
   onLoad(event) {
-    // Avoid emitting an event when the console actor is already destroyed
-    if (!this.console.conn) {
-      return;
-    }
-
+    // milliseconds since the UNIX epoch, when the parser finished its work
+    // on the main document, that is when its Document.readyState changes to
+    // 'complete' and the corresponding readystatechange event is thrown
     const window = event.target.defaultView;
-    const packet = {
-      from: this.console.actorID,
-      type: "documentEvent",
-      name: "dom-complete",
-      // milliseconds since the UNIX epoch, when the parser finished its work
-      // on the main document, that is when its Document.readyState changes to
-      // 'complete' and the corresponding readystatechange event is thrown
-      time: window.performance.timing.domComplete,
-    };
-    this.console.conn.send(packet);
+    const time = window.performance.timing.domComplete;
+    this.emit("dom-complete", time);
   },
 
   destroy() {
-    EventEmitter.off(
-      this.console.parentActor,
-      "window-ready",
-      this.onWindowReady
-    );
-
     this.listener = null;
   },
 };

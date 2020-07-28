@@ -204,6 +204,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     );
     this.onConsoleServiceMessage = this.onConsoleServiceMessage.bind(this);
     this.onConsoleAPICall = this.onConsoleAPICall.bind(this);
+    this.onDocumentEvent = this.onDocumentEvent.bind(this);
 
     EventEmitter.on(
       this.parentActor,
@@ -798,7 +799,11 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             break;
           }
           if (!this.documentEventsListener) {
-            this.documentEventsListener = new DocumentEventsListener(this);
+            this.documentEventsListener = new DocumentEventsListener(
+              this.parentActor
+            );
+            this.documentEventsListener.on("*", this.onDocumentEvent);
+            this.documentEventsListener.listen();
           }
           startedListeners.push(event);
           break;
@@ -1770,6 +1775,25 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   onConsoleAPICall: function(message) {
     this.emit("consoleAPICall", {
       message: this.prepareConsoleMessageForRemote(message),
+    });
+  },
+
+  /**
+   * Handler for the DocumentEventsListener.
+   *
+   * @see DocumentEventsListener
+   * @param {String} name
+   *        The document event name that either of followings.
+   *        - dom-loading
+   *        - dom-interactive
+   *        - dom-complete
+   * @param {Number} time
+   *        The time that the event is fired.
+   */
+  onDocumentEvent: function(name, time) {
+    this.emit("documentEvent", {
+      name,
+      time,
     });
   },
 
