@@ -1812,6 +1812,17 @@ bool WarpCacheIRTranspiler::emitIsConstructorResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitTypedArrayElementShiftResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MTypedArrayElementShift::New(alloc(), obj);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.

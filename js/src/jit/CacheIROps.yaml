@@ -904,6 +904,13 @@
   args:
     obj: ObjId
 
+- name: TypedArrayElementShiftResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: StringFromCharCodeResult
   shared: false
   transpile: true
