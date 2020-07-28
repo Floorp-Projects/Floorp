@@ -11,6 +11,7 @@ DIRS += [
 DevToolsModules(
     'console-messages.js',
     'css-messages.js',
+    'document-event.js',
     'error-messages.js',
     'index.js',
     'platform-messages.js',
