@@ -37,6 +37,13 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
   virtual void SetTextContentInternal(const nsAString& aTextContent,
                                       nsIPrincipal* aSubjectPrincipal,
                                       mozilla::ErrorResult& aError) override;
+  /**
+   * Mark this style element with a devtools-specific principal that
+   * skips Content Security Policy unsafe-inline checks. This triggering
+   * principal will be overwritten by any callers that set textContent
+   * or innerHTML on this element.
+   */
+  void SetDevtoolsAsTriggeringPrincipal();
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;

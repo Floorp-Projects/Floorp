@@ -1109,6 +1109,14 @@ class Element : public FragmentOrElement {
                     ErrorResult& aError) {
     SetAttribute(aName, aValue, nullptr, aError);
   }
+  /**
+   * This method creates a principal that subsumes this element's NodePrincipal
+   * and which has flags set for elevated permissions that devtools needs to
+   * operate on this element. The principal returned by this method is used by
+   * various devtools methods to permit otherwise blocked operations, without
+   * changing any other restrictions the NodePrincipal might have.
+   */
+  already_AddRefed<nsIPrincipal> CreateDevtoolsPrincipal();
   void SetAttributeDevtools(const nsAString& aName, const nsAString& aValue,
                             ErrorResult& aError);
   void SetAttributeDevtoolsNS(const nsAString& aNamespaceURI,
