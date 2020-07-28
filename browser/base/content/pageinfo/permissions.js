@@ -128,6 +128,7 @@ function initRow(aPartId) {
     case "desktop-notification":
     case "camera":
     case "microphone":
+    case "xr":
       checkbox.disabled = Services.prefs.prefIsLocked(
         "permissions.default." + aPartId
       );
