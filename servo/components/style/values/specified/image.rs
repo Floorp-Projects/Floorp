@@ -35,7 +35,7 @@ use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 
 /// Specified values for an image according to CSS-IMAGES.
 /// <https://drafts.csswg.org/css-images/#image-values>
-pub type Image = generic::Image<Gradient, MozImageRect, SpecifiedImageUrl, Color, Percentage>;
+pub type Image = generic::Image<Gradient, MozImageRect, SpecifiedImageUrl>;
 
 /// Specified values for a CSS gradient.
 /// <https://drafts.csswg.org/css-images/#gradients>
@@ -50,17 +50,6 @@ pub type Gradient = generic::Gradient<
     Color,
 >;
 
-/// Specified values for CSS cross-fade
-/// cross-fade( CrossFadeElement, ...)
-/// <https://drafts.csswg.org/css-images-4/#cross-fade-function>
-pub type CrossFade = generic::CrossFade<Image, Color, Percentage>;
-/// CrossFadeElement = percent? CrossFadeImage
-pub type CrossFadeElement = generic::CrossFadeElement<Image, Color, Percentage>;
-/// CrossFadeImage = image | color
-pub type CrossFadeImage = generic::CrossFadeImage<Image, Color>;
-/// A specified percentage or nothing.
-pub type PercentOrNone = generic::PercentOrNone<Percentage>;
-
 type LengthPercentageItemList = crate::OwnedSlice<generic::GradientItem<Color, LengthPercentage>>;
 
 #[cfg(feature = "gecko")]
@@ -70,16 +59,6 @@ fn conic_gradients_enabled() -> bool {
 
 #[cfg(feature = "servo")]
 fn conic_gradients_enabled() -> bool {
-    false
-}
-
-#[cfg(feature = "gecko")]
-fn cross_fade_enabled() -> bool {
-    static_prefs::pref!("layout.css.cross-fade.enabled")
-}
-
-#[cfg(feature = "servo")]
-fn cross_fade_enabled() -> bool {
     false
 }
 
@@ -162,11 +141,6 @@ impl Parse for Image {
         if let Ok(gradient) = input.try_parse(|i| Gradient::parse(context, i)) {
             return Ok(generic::Image::Gradient(Box::new(gradient)));
         }
-        if cross_fade_enabled() {
-            if let Ok(cf) = input.try_parse(|input| CrossFade::parse(context, input)) {
-                return Ok(generic::Image::CrossFade(cf));
-            }
-        }
         #[cfg(feature = "servo-layout-2013")]
         {
             if let Ok(paint_worklet) = input.try_parse(|i| PaintWorklet::parse(context, i)) {
@@ -220,57 +194,6 @@ impl Image {
             return Ok(generic::Image::Url(url));
         }
         Self::parse(context, input)
-    }
-}
-
-impl Parse for CrossFade {
-    /// cross-fade() = cross-fade( <cf-image># )
-    fn parse<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        input.expect_function_matching("cross-fade")?;
-        let elements = input.parse_nested_block(|input| {
-            input.parse_comma_separated(|input| CrossFadeElement::parse(context, input))
-        })?;
-        let elements = crate::OwnedSlice::from(elements);
-        Ok(Self { elements })
-    }
-}
-
-impl Parse for CrossFadeElement {
-    /// <cf-image> = <percentage>? && [ <image> | <color> ]
-    fn parse<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        // Try and parse a leading percent sign.
-        let mut percent = PercentOrNone::parse_or_none(context, input);
-        // Parse the image
-        let image = CrossFadeImage::parse(context, input)?;
-        // Try and parse a trailing percent sign.
-        if percent == PercentOrNone::None {
-            percent = PercentOrNone::parse_or_none(context, input);
-        }
-        Ok(Self { percent, image })
-    }
-}
-
-impl PercentOrNone {
-    fn parse_or_none<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Self {
-        // We clamp our values here as this is the way that Safari and
-        // Chrome's implementation handle out-of-bounds percentages
-        // but whether or not this behavior follows the specification
-        // is still being discussed. See:
-        // <https://github.com/w3c/csswg-drafts/issues/5333>
-        if let Ok(percent) = input.try_parse(|input| Percentage::parse_non_negative(context, input)) {
-            Self::Percent(percent.clamp_to_hundred())
-        } else {
-            Self::None
-        }
     }
 }
 

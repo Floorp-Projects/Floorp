@@ -1593,9 +1593,6 @@ bool StyleImage::IsComplete() const {
              (status & imgIRequest::STATUS_SIZE_AVAILABLE) &&
              (status & imgIRequest::STATUS_FRAME_COMPLETE);
     }
-    // Bug 546052 cross-fade not yet implemented.
-    case Tag::CrossFade:
-      return true;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected image type");
       return false;

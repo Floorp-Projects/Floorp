@@ -8,7 +8,6 @@
 //! [image]: https://drafts.csswg.org/css-images/#image-values
 
 use crate::values::computed::position::Position;
-use crate::values::computed::percentage::Percentage;
 use crate::values::computed::url::ComputedImageUrl;
 #[cfg(feature = "gecko")]
 use crate::values::computed::NumberOrPercentage;
@@ -26,7 +25,7 @@ use style_traits::{CssWriter, ToCss};
 
 /// Computed values for an image according to CSS-IMAGES.
 /// <https://drafts.csswg.org/css-images/#image-values>
-pub type Image = generic::GenericImage<Gradient, MozImageRect, ComputedImageUrl, Color, Percentage>;
+pub type Image = generic::GenericImage<Gradient, MozImageRect, ComputedImageUrl>;
 
 /// Computed values for a CSS gradient.
 /// <https://drafts.csswg.org/css-images/#gradients>
@@ -40,12 +39,6 @@ pub type Gradient = generic::GenericGradient<
     AngleOrPercentage,
     Color,
 >;
-
-/// Computed values for CSS cross-fade
-/// <https://drafts.csswg.org/css-images-4/#cross-fade-function>
-pub type CrossFade = generic::CrossFade<Image, Color, Percentage>;
-/// A computed percentage or nothing.
-pub type PercentOrNone = generic::PercentOrNone<Percentage>;
 
 /// A computed radial gradient ending shape.
 pub type EndingShape = generic::GenericEndingShape<NonNegativeLength, NonNegativeLengthPercentage>;
