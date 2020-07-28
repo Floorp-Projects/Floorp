@@ -25,6 +25,10 @@ add_task(async function test_pageinfo_permissions() {
           BlockNewRequests: true,
           Locked: true,
         },
+        VirtualReality: {
+          BlockNewRequests: true,
+          Locked: true,
+        },
         Autoplay: {
           Default: "block-audio",
           Locked: true,
@@ -51,6 +55,7 @@ add_task(async function test_pageinfo_permissions() {
     "cookie",
     "camera",
     "microphone",
+    "xr",
   ];
 
   await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function(browser) {
