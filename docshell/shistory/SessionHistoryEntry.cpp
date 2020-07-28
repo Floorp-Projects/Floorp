@@ -35,10 +35,21 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
       /* FIXME Should this be aLoadState->IsSrcdocLoad()? */
       mIsSrcdocEntry(!aLoadState->SrcdocData().IsEmpty()),
       mScrollRestorationIsManual(false) {
+  MaybeUpdateTitleFromURI();
   bool isNoStore = false;
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel)) {
     Unused << httpChannel->IsNoStoreResponse(&isNoStore);
     mPersist = !isNoStore;
+  }
+}
+
+void SessionHistoryInfo::MaybeUpdateTitleFromURI() {
+  if (mTitle.IsEmpty() && mURI) {
+    // Default title is the URL.
+    nsAutoCString spec;
+    if (NS_SUCCEEDED(mURI->GetSpec(spec))) {
+      AppendUTF8toUTF16(spec, mTitle);
+    }
   }
 }
 
