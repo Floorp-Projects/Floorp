@@ -1493,6 +1493,48 @@ bool BaselineCacheIRCompiler::emitIsArrayResult(ValOperandId inputId) {
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitIsTypedArrayResult(ObjOperandId objId,
+                                                     bool isPossiblyWrapped) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Register obj = allocator.useRegister(masm, objId);
+
+  Label notTypedArray, isProxy, done;
+  masm.loadObjClassUnsafe(obj, scratch);
+  masm.branchIfClassIsNotTypedArray(scratch, &notTypedArray);
+  masm.moveValue(BooleanValue(true), output.valueReg());
+  masm.jump(&done);
+
+  masm.bind(&notTypedArray);
+  if (isPossiblyWrapped) {
+    masm.branchTestClassIsProxy(true, scratch, &isProxy);
+  }
+  masm.moveValue(BooleanValue(false), output.valueReg());
+
+  if (isPossiblyWrapped) {
+    masm.jump(&done);
+
+    masm.bind(&isProxy);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(obj);
+
+    using Fn = bool (*)(JSContext*, JSObject*, bool*);
+    callVM<Fn, jit::IsPossiblyWrappedTypedArray>(masm);
+
+    stubFrame.leave(masm);
+
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, output.valueReg());
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitStringFromCharCodeResult(
     Int32OperandId codeId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

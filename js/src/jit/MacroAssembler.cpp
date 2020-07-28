@@ -3927,6 +3927,24 @@ void MacroAssembler::typedArrayElementShift(Register obj, Register output) {
   bind(&done);
 }
 
+void MacroAssembler::branchIfClassIsNotTypedArray(Register clasp,
+                                                  Label* notTypedArray) {
+  static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
+  const JSClass* firstTypedArrayClass =
+      TypedArrayObject::classForType(Scalar::Int8);
+
+  static_assert(
+      (Scalar::BigUint64 - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
+      "BigUint64 is the last typed array class");
+  const JSClass* lastTypedArrayClass =
+      TypedArrayObject::classForType(Scalar::BigUint64);
+
+  branchPtr(Assembler::Below, clasp, ImmPtr(firstTypedArrayClass),
+            notTypedArray);
+  branchPtr(Assembler::Above, clasp, ImmPtr(lastTypedArrayClass),
+            notTypedArray);
+}
+
 void MacroAssembler::branchIfNativeIteratorNotReusable(Register ni,
                                                        Label* notReusable) {
   // See NativeIterator::isReusable.

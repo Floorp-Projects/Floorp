@@ -6519,6 +6519,30 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachIsTypedArray(HandleFunction callee,
+                                                      bool isPossiblyWrapped) {
+  // Self-hosted code calls this with a single object argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isObject());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objArgId = writer.guardToObject(argId);
+  writer.isTypedArrayResult(objArgId, isPossiblyWrapped);
+
+  // This stub does not need to be monitored because it always returns a bool.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached(isPossiblyWrapped ? "IsPossiblyWrappedTypedArray"
+                                  : "IsTypedArray");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachTypedArrayByteOffset(
     HandleFunction callee) {
   // Self-hosted code calls this with a single TypedArrayObject argument.
@@ -6878,6 +6902,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachGuardToClass(callee, native);
 
     // TypedArray intrinsics.
+    case InlinableNative::IntrinsicIsTypedArray:
+      return tryAttachIsTypedArray(callee, /* isPossiblyWrapped = */ false);
+    case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
+      return tryAttachIsTypedArray(callee, /* isPossiblyWrapped = */ true);
     case InlinableNative::IntrinsicTypedArrayByteOffset:
       return tryAttachTypedArrayByteOffset(callee);
     case InlinableNative::IntrinsicTypedArrayElementShift:
