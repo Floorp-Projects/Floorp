@@ -10,6 +10,7 @@ import os
 import platform
 from six.moves import urllib
 import json
+import ssl
 from six.moves.urllib.parse import urlparse, ParseResult
 
 from mozharness.base.errors import BaseErrorList
@@ -117,6 +118,7 @@ class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
     symbols_path = None
     jsshell_url = None
     minidump_stackwalk_path = None
+    ssl_context = None
 
     def query_build_dir_url(self, file_name):
         """
@@ -265,7 +267,14 @@ class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
         if "developer_config.py" in self.config["config_files"]:
             return _urlopen_basic_auth(url, **kwargs)
         else:
-            return urllib.request.urlopen(url, **kwargs)
+            # windows certificates need to be refreshed (https://bugs.python.org/issue36011)
+            if self.platform_name() in ('win64',):
+                if self.ssl_context is None:
+                    self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                    self.ssl_context.load_default_certs()
+                return urllib.request.urlopen(url, context=self.ssl_context, **kwargs)
+            else:
+                return urllib.request.urlopen(url, **kwargs)
 
     def _query_binary_version(self, regex, cmd):
         output = self.get_output_from_command(cmd, silent=False)

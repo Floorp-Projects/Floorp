@@ -26,6 +26,7 @@ import pprint
 import re
 import shutil
 import socket
+import ssl
 import subprocess
 import sys
 import tarfile
@@ -192,6 +193,7 @@ class ScriptMixin(PlatformMixin):
 
     env = None
     script_obj = None
+    ssl_context = None
 
     def query_filesize(self, file_path):
         self.info("Determining filesize for %s" % file_path)
@@ -407,7 +409,14 @@ class ScriptMixin(PlatformMixin):
         """
         # http://bugs.python.org/issue13359 - urllib2 does not automatically quote the URL
         url_quoted = quote(url, safe='%/:=&?~#+!$,;\'@()*[]|')
-        return urlopen(url_quoted, **kwargs)
+        # windows certificates need to be refreshed (https://bugs.python.org/issue36011)
+        if self.platform_name() in ('win64',):
+            if self.ssl_context is None:
+                self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                self.ssl_context.load_default_certs()
+            return urlopen(url_quoted, context=self.ssl_context, **kwargs)
+        else:
+            return urlopen(url_quoted, **kwargs)
 
     def fetch_url_into_memory(self, url):
         ''' Downloads a file from a url into memory instead of disk.
