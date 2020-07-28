@@ -6,10 +6,6 @@
 
 // Wrap in a block to prevent leaking to window scope.
 {
-  XPCOMUtils.defineLazyModuleGetters(this, {
-    SearchOneOffs: "resource:///modules/SearchOneOffs.jsm",
-  });
-
   /**
    * A richlistbox popup custom element for for a browser search autocomplete
    * widget.
