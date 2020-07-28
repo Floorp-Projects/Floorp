@@ -5,14 +5,18 @@
 package org.mozilla.fenix.ext
 
 import android.graphics.Rect
+import android.os.Build
 import android.util.DisplayMetrics
 import android.view.View
+import android.view.WindowInsets
 import android.widget.FrameLayout
+import androidx.core.view.WindowInsetsCompat
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
@@ -20,7 +24,11 @@ import mozilla.components.support.ktx.android.util.dpToPx
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(FenixRobolectricTestRunner::class)
 class ViewTest {
 
     @MockK private lateinit var view: View
@@ -31,6 +39,7 @@ class ViewTest {
     fun setup() {
         MockKAnnotations.init(this)
         mockkStatic("mozilla.components.support.ktx.android.util.DisplayMetricsKt")
+        mockkStatic("org.mozilla.fenix.ext.ViewKt")
 
         every { view.resources.displayMetrics } returns displayMetrics
         every { view.parent } returns parent
@@ -65,5 +74,78 @@ class ViewTest {
     fun `test remove touch delegate`() {
         view.removeTouchDelegate()
         verify { parent.touchDelegate = null }
+    }
+
+    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP, Build.VERSION_CODES.LOLLIPOP_MR1])
+    @Test
+    fun `getWindowInsets returns null below API 23`() {
+        assertEquals(null, view.getWindowInsets())
+    }
+
+    @Test
+    fun `getWindowInsets returns null when the system insets don't exist`() {
+        every { view.rootWindowInsets } returns null
+        assertEquals(null, view.getWindowInsets())
+    }
+
+    @Test
+    fun `getWindowInsets returns the compat insets when the system insets exist`() {
+        val rootInsets: WindowInsets = mockk(relaxed = true)
+        every { view.rootWindowInsets } returns rootInsets
+
+        assertEquals(WindowInsetsCompat.toWindowInsetsCompat(rootInsets), view.getWindowInsets())
+    }
+
+    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP, Build.VERSION_CODES.LOLLIPOP_MR1])
+    @Test
+    fun `getKeyboardHeight accounts for status bar below API 23`() {
+        every { view.getWindowVisibleDisplayFrame() } returns Rect(0, 50, 1000, 500)
+        every { view.rootView.height } returns 1000
+
+        assertEquals(500, view.getKeyboardHeight())
+    }
+
+    @Test
+    fun `getKeyboardHeight accounts for status bar and navigation bar`() {
+        every { view.getWindowVisibleDisplayFrame() } returns Rect(0, 50, 1000, 500)
+        every { view.rootView.height } returns 1000
+        every { view.getWindowInsets() } returns mockk(relaxed = true) {
+            every { stableInsetBottom } returns 50
+        }
+
+        assertEquals(450, view.getKeyboardHeight())
+    }
+
+    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP, Build.VERSION_CODES.LOLLIPOP_MR1])
+    @Test
+    fun `isKeyboardVisible returns false when the keyboard height is less than or equal to the minimum threshold`() {
+        val threshold = MINIMUM_KEYBOARD_HEIGHT.dpToPx(displayMetrics)
+
+        every { view.getKeyboardHeight() } returns threshold - 1
+        assertEquals(false, view.isKeyboardVisible())
+
+        every { view.getKeyboardHeight() } returns threshold
+        assertEquals(false, view.isKeyboardVisible())
+    }
+
+    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP, Build.VERSION_CODES.LOLLIPOP_MR1])
+    @Test
+    fun `isKeyboardVisible returns true when the keyboard height is greater than the minimum threshold`() {
+        val threshold = MINIMUM_KEYBOARD_HEIGHT.dpToPx(displayMetrics)
+        every { view.getKeyboardHeight() } returns threshold + 1
+
+        assertEquals(true, view.isKeyboardVisible())
+    }
+
+    @Test
+    fun `isKeyboardVisible returns false when the keyboard height is 0`() {
+        every { view.getKeyboardHeight() } returns 0
+        assertEquals(false, view.isKeyboardVisible())
+    }
+
+    @Test
+    fun `isKeyboardVisible returns true when the keyboard height is greater than 0`() {
+        every { view.getKeyboardHeight() } returns 100
+        assertEquals(true, view.isKeyboardVisible())
     }
 }

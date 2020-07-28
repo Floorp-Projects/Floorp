@@ -9,7 +9,6 @@ import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.graphics.PointF
 import android.graphics.Rect
-import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewConfiguration
@@ -17,7 +16,6 @@ import androidx.annotation.Dimension
 import androidx.annotation.Dimension.DP
 import androidx.core.graphics.contains
 import androidx.core.graphics.toPoint
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.FlingAnimation
@@ -25,6 +23,8 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
+import org.mozilla.fenix.ext.getWindowInsets
+import org.mozilla.fenix.ext.isKeyboardVisible
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import kotlin.math.abs
@@ -35,7 +35,6 @@ import kotlin.math.min
  * Handles intercepting touch events on the toolbar for swipe gestures and executes the
  * necessary animations.
  */
-@Suppress("LargeClass", "TooManyFunctions")
 class ToolbarGestureHandler(
     private val activity: Activity,
     private val contentLayout: View,
@@ -55,18 +54,6 @@ class ToolbarGestureHandler(
 
     private val windowWidth: Int
         get() = activity.resources.displayMetrics.widthPixels
-
-    private val windowInsets: WindowInsetsCompat?
-        get() =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // In theory, the rootWindowInsets should exist at this point but if the decorView is
-                // not attached for some reason we'll get a NullPointerException without the check.
-                activity.window.decorView.rootWindowInsets?.let {
-                    WindowInsetsCompat.toWindowInsetsCompat(it)
-                }
-            } else {
-                null
-            }
 
     private val previewOffset = PREVIEW_OFFSET.dpToPx(activity.resources.displayMetrics)
 
@@ -89,7 +76,12 @@ class ToolbarGestureHandler(
             GestureDirection.LEFT_TO_RIGHT
         }
 
-        return if (start.isInToolbar() && abs(dx) > touchSlop && abs(dy) < abs(dx)) {
+        return if (
+            !activity.window.decorView.isKeyboardVisible() &&
+            start.isInToolbar() &&
+            abs(dx) > touchSlop &&
+            abs(dy) < abs(dx)
+        ) {
             preparePreview(getDestination())
             true
         } else {
@@ -313,7 +305,7 @@ class ToolbarGestureHandler(
         val toolbarLocation = toolbarLayout.getRectWithViewLocation()
         // In Android 10, the system gesture touch area overlaps the bottom of the toolbar, so
         // lets make our swipe area taller by that amount
-        windowInsets?.let { insets ->
+        activity.window.decorView.getWindowInsets()?.let { insets ->
             if (activity.settings().shouldUseBottomToolbar) {
                 toolbarLocation.top -= (insets.mandatorySystemGestureInsets.bottom - insets.stableInsetBottom)
             }
