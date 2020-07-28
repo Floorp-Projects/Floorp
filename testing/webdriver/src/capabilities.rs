@@ -57,7 +57,7 @@ pub trait BrowserCapabilities {
     /// Check that custom properties containing ":" have the correct data types.
     /// Properties that are unrecognised must be ignored i.e. return without
     /// error.
-    fn validate_custom(&self, name: &str, value: &Value) -> WebDriverResult<()>;
+    fn validate_custom(&mut self, name: &str, value: &Value) -> WebDriverResult<()>;
 
     /// Check if custom properties are accepted capabilites
     ///
@@ -112,7 +112,7 @@ impl SpecNewSessionParameters {
     fn validate<T: BrowserCapabilities>(
         &self,
         mut capabilities: Capabilities,
-        browser_capabilities: &T,
+        browser_capabilities: &mut T,
     ) -> WebDriverResult<Capabilities> {
         // Filter out entries with the value `null`
         let null_entries = capabilities
