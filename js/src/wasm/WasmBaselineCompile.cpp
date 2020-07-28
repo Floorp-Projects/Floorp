@@ -10598,6 +10598,11 @@ bool BaseCompiler::emitGetGlobal() {
       case ValType::Ref:
         pushRef(intptr_t(value.ref().forCompiledCode()));
         break;
+#ifdef ENABLE_WASM_SIMD
+      case ValType::V128:
+        pushV128(value.v128());
+        break;
+#endif
       default:
         MOZ_CRASH("Global constant type");
     }

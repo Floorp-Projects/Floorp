@@ -1796,7 +1796,7 @@ var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
 
-    (global $g (mut v128) (v128.const i32x4 0 0 0 0))
+    (global $g (mut v128) (v128.const i32x4 9 8 7 6))
 
     (func (export "put") (param $val i32)
       (global.set $g (i32x4.splat (local.get $val))))
@@ -1805,9 +1805,26 @@ var ins = wasmEvalText(`
       (v128.store (local.get $dest) (global.get $g))))`);
 
 var mem = new Int32Array(ins.exports.mem.buffer);
+ins.exports.get(0);
+assertSame(get(mem, 0, 4), [9, 8, 7, 6]);
 ins.exports.put(37);
 ins.exports.get(0);
 assertSame(get(mem, 0, 4), [37, 37, 37, 37]);
+
+// Same, but exported immutable globals use other code paths for initialization.
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+
+    (global $g (export "g") v128 (v128.const i32x4 1 2 3 4))
+
+    (func (export "get") (param $dest i32)
+      (v128.store (local.get $dest) (global.get $g))))`);
+
+var mem = new Int32Array(ins.exports.mem.buffer);
+ins.exports.get(0);
+assertSame(get(mem, 0, 4), [1, 2, 3, 4]);
 
 // Imports and exports that pass and return v128
 
