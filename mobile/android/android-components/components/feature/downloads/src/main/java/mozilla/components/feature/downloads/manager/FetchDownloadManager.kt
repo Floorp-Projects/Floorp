@@ -17,6 +17,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mozilla.components.browser.state.action.DownloadAction
+import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
@@ -103,9 +104,9 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
         val download = store.state.queuedDownloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(EXTRA_DOWNLOAD_STATUS)
-            as AbstractFetchDownloadService.DownloadJobStatus
+            as Status
 
-        if (downloadStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED) {
+        if (downloadStatus == Status.COMPLETED) {
             store.dispatch(DownloadAction.RemoveQueuedDownloadAction(downloadID))
         }
         if (download != null) {

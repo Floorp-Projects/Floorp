@@ -9,12 +9,6 @@ import androidx.core.app.NotificationCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.PAUSED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.FAILED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.ACTIVE
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.CANCELLED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.COMPLETED
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -29,9 +23,9 @@ class DownloadNotificationTest {
     fun getProgress() {
         val downloadJobState = DownloadJobState(
                 job = null,
-                state = DownloadState(url = "mozilla.org/mozilla.txt", contentLength = 100L),
-                currentBytesCopied = 10,
-                status = ACTIVE,
+                state = DownloadState(url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                        currentBytesCopied = 10,
+                        status = DownloadState.Status.DOWNLOADING),
                 foregroundServiceId = 1,
                 downloadDeleted = false
         )
@@ -65,23 +59,58 @@ class DownloadNotificationTest {
         val pausedText = testContext.getString(R.string.mozac_feature_downloads_paused_notification_text)
         val completedText = testContext.getString(R.string.mozac_feature_downloads_completed_notification_text2)
         val failedText = testContext.getString(R.string.mozac_feature_downloads_failed_notification_text2)
-        var downloadJobState = DownloadJobState(state = mock(), status = ACTIVE)
+        var downloadJobState = DownloadJobState(
+                job = null,
+                state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                        currentBytesCopied = 10,
+                        status = DownloadState.Status.DOWNLOADING),
+                foregroundServiceId = 1,
+                downloadDeleted = false
+        )
 
         assertEquals(downloadJobState.getProgress(), downloadJobState.getStatusDescription(testContext))
 
-        downloadJobState = DownloadJobState(state = mock(), status = PAUSED)
+        downloadJobState = DownloadJobState(
+                job = null,
+                state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                        currentBytesCopied = 10,
+                        status = DownloadState.Status.PAUSED),
+                foregroundServiceId = 1,
+                downloadDeleted = false
+        )
 
         assertEquals(pausedText, downloadJobState.getStatusDescription(testContext))
 
-        downloadJobState = DownloadJobState(state = mock(), status = COMPLETED)
+        downloadJobState = DownloadJobState(
+                job = null,
+                state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                        currentBytesCopied = 10,
+                        status = DownloadState.Status.COMPLETED),
+                foregroundServiceId = 1,
+                downloadDeleted = false
+        )
 
         assertEquals(completedText, downloadJobState.getStatusDescription(testContext))
 
-        downloadJobState = DownloadJobState(state = mock(), status = FAILED)
+        downloadJobState = DownloadJobState(
+                job = null,
+                state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                        currentBytesCopied = 10,
+                        status = DownloadState.Status.FAILED),
+                foregroundServiceId = 1,
+                downloadDeleted = false
+        )
 
         assertEquals(failedText, downloadJobState.getStatusDescription(testContext))
 
-        downloadJobState = DownloadJobState(state = mock(), status = CANCELLED)
+        downloadJobState = DownloadJobState(
+                job = null,
+                state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                        currentBytesCopied = 10,
+                        status = DownloadState.Status.CANCELLED),
+                foregroundServiceId = 1,
+                downloadDeleted = false
+        )
 
         assertEquals("", downloadJobState.getStatusDescription(testContext))
     }
@@ -90,17 +119,17 @@ class DownloadNotificationTest {
     fun getDownloadSummary() {
         val download1 = DownloadJobState(
                 job = null,
-                state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L),
-                currentBytesCopied = 10,
-                status = ACTIVE,
+                state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                        currentBytesCopied = 10,
+                        status = DownloadState.Status.DOWNLOADING),
                 foregroundServiceId = 1,
                 downloadDeleted = false
         )
         val download2 = DownloadJobState(
                 job = null,
-                state = DownloadState(fileName = "mozilla2.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L),
-                currentBytesCopied = 20,
-                status = ACTIVE,
+                state = DownloadState(fileName = "mozilla2.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                        currentBytesCopied = 20,
+                        status = DownloadState.Status.DOWNLOADING),
                 foregroundServiceId = 1,
                 downloadDeleted = false
         )

@@ -20,6 +20,7 @@ import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
+import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
@@ -203,6 +204,8 @@ internal class EngineObserver(
             fileName,
             contentType,
             fileSize,
+            0,
+            INITIATED,
             userAgent,
             Environment.DIRECTORY_DOWNLOADS
         )

@@ -26,7 +26,6 @@ import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.widget.Toast
 import android.webkit.MimeTypeMap
-import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
@@ -41,18 +40,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.DownloadAction
+import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
+import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
+import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
+import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
+import mozilla.components.browser.state.state.content.DownloadState.Status.PAUSED
+import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_RANGE
 import mozilla.components.concept.fetch.Headers.Names.RANGE
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.CANCELLED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.COMPLETED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.ACTIVE
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.FAILED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.PAUSED
 import mozilla.components.feature.downloads.DownloadNotification.NOTIFICATION_DOWNLOAD_GROUP_ID
 import mozilla.components.feature.downloads.ext.addCompletedDownload
 import mozilla.components.feature.downloads.ext.isScheme
@@ -87,10 +88,13 @@ abstract class AbstractFetchDownloadService : Service() {
     private val notificationUpdateScope = MainScope()
 
     protected abstract val httpClient: Client
+
     @VisibleForTesting
     internal val broadcastManager by lazy { LocalBroadcastManager.getInstance(this) }
+
     @VisibleForTesting
     internal val context: Context get() = this
+
     @VisibleForTesting
     internal var compatForegroundNotificationId: Int = COMPAT_DEFAULT_FOREGROUND_ID
     private val logger = Logger("AbstractFetchDownloadService")
@@ -102,8 +106,6 @@ abstract class AbstractFetchDownloadService : Service() {
     internal data class DownloadJobState(
         var job: Job? = null,
         @Volatile var state: DownloadState,
-        var currentBytesCopied: Long = 0,
-        @GuardedBy("context") var status: DownloadJobStatus,
         var foregroundServiceId: Int = 0,
         var downloadDeleted: Boolean = false,
         var notifiedStopped: Boolean = false,
@@ -130,28 +132,20 @@ abstract class AbstractFetchDownloadService : Service() {
         }
     }
 
-    internal fun setDownloadJobStatus(downloadJobState: DownloadJobState, status: DownloadJobStatus) {
+    internal fun setDownloadJobStatus(downloadJobState: DownloadJobState, status: Status) {
         synchronized(context) {
-            if (status == DownloadJobStatus.ACTIVE) { downloadJobState.notifiedStopped = false }
-            downloadJobState.status = status
+            if (status == DOWNLOADING) {
+                downloadJobState.notifiedStopped = false
+            }
+
+            updateDownloadState(downloadJobState.state.copy(status = status))
         }
     }
 
-    internal fun getDownloadJobStatus(downloadJobState: DownloadJobState): DownloadJobStatus {
+    internal fun getDownloadJobStatus(downloadJobState: DownloadJobState): Status {
         synchronized(context) {
-            return downloadJobState.status
+            return downloadJobState.state.status
         }
-    }
-
-    /**
-     * Status of an ongoing download
-     */
-    enum class DownloadJobStatus {
-        ACTIVE,
-        PAUSED,
-        CANCELLED,
-        FAILED,
-        COMPLETED
     }
 
     internal val broadcastReceiver by lazy {
@@ -171,7 +165,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     }
 
                     ACTION_RESUME -> {
-                        setDownloadJobStatus(currentDownloadJobState, ACTIVE)
+                        setDownloadJobStatus(currentDownloadJobState, DOWNLOADING)
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
                             startDownloadJob(currentDownloadJobState)
@@ -200,7 +194,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     ACTION_TRY_AGAIN -> {
                         removeNotification(context, currentDownloadJobState)
                         currentDownloadJobState.lastNotificationUpdate = System.currentTimeMillis()
-                        setDownloadJobStatus(currentDownloadJobState, ACTIVE)
+                        setDownloadJobStatus(currentDownloadJobState, DOWNLOADING)
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
                             startDownloadJob(currentDownloadJobState)
@@ -220,12 +214,13 @@ abstract class AbstractFetchDownloadService : Service() {
                                 context = context,
                                 filePath = currentDownloadJobState.state.filePath,
                                 contentType = currentDownloadJobState.state.contentType
-                            )) {
+                            )
+                        ) {
                             val fileExt = MimeTypeMap.getFileExtensionFromUrl(
-                                    currentDownloadJobState.state.filePath.toString()
+                                currentDownloadJobState.state.filePath.toString()
                             )
                             val errorMessage = applicationContext.getString(
-                                    R.string.mozac_feature_downloads_open_not_supported1, fileExt
+                                R.string.mozac_feature_downloads_open_not_supported1, fileExt
                             )
 
                             Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
@@ -257,10 +252,11 @@ abstract class AbstractFetchDownloadService : Service() {
 
         // Create a new job and add it, with its downloadState to the map
         val downloadJobState = DownloadJobState(
-            state = download,
-            foregroundServiceId = foregroundServiceId,
-            status = ACTIVE
+            state = download.copy(status = DOWNLOADING),
+            foregroundServiceId = foregroundServiceId
         )
+
+        store.dispatch(DownloadAction.UpdateQueuedDownloadAction(downloadJobState.state))
 
         downloadJobState.job = CoroutineScope(IO).launch {
             startDownloadJob(downloadJobState)
@@ -302,7 +298,7 @@ abstract class AbstractFetchDownloadService : Service() {
             // Dispatch the corresponding notification based on the current status
             updateDownloadNotification(uiStatus, download)
 
-            if (uiStatus != ACTIVE) {
+            if (uiStatus != DOWNLOADING) {
                 sendDownloadStopped(download)
             }
         }
@@ -314,9 +310,9 @@ abstract class AbstractFetchDownloadService : Service() {
      * from another thread, causing inconsistencies in the ui.
      */
     @VisibleForTesting
-    internal fun updateDownloadNotification(latestUIStatus: DownloadJobStatus, download: DownloadJobState) {
+    internal fun updateDownloadNotification(latestUIStatus: Status, download: DownloadJobState) {
         val notification = when (latestUIStatus) {
-            ACTIVE -> DownloadNotification.createOngoingDownloadNotification(context, download)
+            DOWNLOADING -> DownloadNotification.createOngoingDownloadNotification(context, download)
             PAUSED -> DownloadNotification.createPausedDownloadNotification(context, download)
             FAILED -> DownloadNotification.createDownloadFailedNotification(context, download)
             COMPLETED -> {
@@ -328,6 +324,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 download.lastNotificationUpdate = System.currentTimeMillis()
                 null
             }
+            INITIATED -> null
         }
 
         notification?.let {
@@ -390,22 +387,22 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun addToDownloadSystemDatabaseCompat(download: DownloadState) {
         if (SDK_INT < Build.VERSION_CODES.Q) {
             val fileName = download.fileName
-                    ?: throw IllegalStateException("A fileName for a download is required")
+                ?: throw IllegalStateException("A fileName for a download is required")
             val file = File(download.filePath)
             // addCompletedDownload can't handle any non http(s) urls
             val url = if (!download.isScheme(listOf("http", "https"))) null else download.url.toUri()
 
             context.addCompletedDownload(
-                    title = fileName,
-                    description = fileName,
-                    isMediaScannerScannable = true,
-                    mimeType = download.contentType ?: "*/*",
-                    path = file.absolutePath,
-                    length = download.contentLength ?: file.length(),
-                    // Only show notifications if our channel is blocked
-                    showNotification = !DownloadNotification.isChannelEnabled(context),
-                    uri = url,
-                    referer = download.referrerUrl?.toUri()
+                title = fileName,
+                description = fileName,
+                isMediaScannerScannable = true,
+                mimeType = download.contentType ?: "*/*",
+                path = file.absolutePath,
+                length = download.contentLength ?: file.length(),
+                // Only show notifications if our channel is blocked
+                showNotification = !DownloadNotification.isChannelEnabled(context),
+                uri = url,
+                referer = download.referrerUrl?.toUri()
             )
         }
     }
@@ -454,7 +451,8 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun updateNotificationGroup(): Notification? {
         return if (SDK_INT >= Build.VERSION_CODES.N) {
             val downloadList = downloadJobs.values.toList()
-            val notificationGroup = DownloadNotification.createDownloadGroupNotification(context, downloadList)
+            val notificationGroup =
+                DownloadNotification.createDownloadGroupNotification(context, downloadList)
             NotificationManagerCompat.from(context).apply {
                 notify(NOTIFICATION_DOWNLOAD_GROUP_ID, notificationGroup)
             }
@@ -465,7 +463,8 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     internal fun createCompactForegroundNotification(downloadJobState: DownloadJobState): Notification {
-        val notification = DownloadNotification.createOngoingDownloadNotification(context, downloadJobState)
+        val notification =
+            DownloadNotification.createOngoingDownloadNotification(context, downloadJobState)
         compatForegroundNotificationId = downloadJobState.foregroundServiceId
         NotificationManagerCompat.from(context).apply {
             notify(compatForegroundNotificationId, notification)
@@ -500,7 +499,9 @@ abstract class AbstractFetchDownloadService : Service() {
             previousDownload = downloadJobs.values.firstOrNull {
                 it.foregroundServiceId == compatForegroundNotificationId
             }
-            downloadJobState.foregroundServiceId to createCompactForegroundNotification(downloadJobState)
+            downloadJobState.foregroundServiceId to createCompactForegroundNotification(
+                downloadJobState
+            )
         }
 
         startForeground(notificationId, notification)
@@ -513,7 +514,7 @@ abstract class AbstractFetchDownloadService : Service() {
          * it always deletes the previous notification :(
          */
         previousDownload?.let {
-            updateDownloadNotification(previousDownload.status, it)
+            updateDownloadNotification(previousDownload.state.status, it)
         }
     }
 
@@ -530,7 +531,7 @@ abstract class AbstractFetchDownloadService : Service() {
              * the foreground notification id, when the previous one gets a state that
              * is likely to be dismissed.
              */
-            val status = download.status
+            val status = download.state.status
             val foregroundId = download.foregroundServiceId
             val isSelectedForegroundId = compatForegroundNotificationId == foregroundId
             val needNewForegroundNotification = when (status) {
@@ -544,7 +545,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 stopForeground(false)
 
                 // Now we need to find a new foreground notification, if needed.
-                val newSelectedForegroundDownload = downloadJobs.values.firstOrNull { it.status == ACTIVE }
+                val newSelectedForegroundDownload = downloadJobs.values.firstOrNull { it.state.status == DOWNLOADING }
                 newSelectedForegroundDownload?.let {
                     setForegroundNotification(it)
                 }
@@ -558,11 +559,11 @@ abstract class AbstractFetchDownloadService : Service() {
     @Suppress("ComplexCondition")
     internal fun performDownload(currentDownloadJobState: DownloadJobState) {
         val download = currentDownloadJobState.state
-        val isResumingDownload = currentDownloadJobState.currentBytesCopied > 0L
+        val isResumingDownload = currentDownloadJobState.state.currentBytesCopied > 0L
         val headers = MutableHeaders()
 
         if (isResumingDownload) {
-            headers.append(RANGE, "bytes=${currentDownloadJobState.currentBytesCopied}-")
+            headers.append(RANGE, "bytes=${currentDownloadJobState.state.currentBytesCopied}-")
         }
 
         val request = Request(download.url.sanitizeURL(), headers = headers)
@@ -574,7 +575,7 @@ abstract class AbstractFetchDownloadService : Service() {
         if (response.status != PARTIAL_CONTENT_STATUS && response.status != OK_STATUS ||
             (isResumingDownload && !response.headers.contains(CONTENT_RANGE))) {
             // We experienced a problem trying to fetch the file, send a failure notification
-            currentDownloadJobState.currentBytesCopied = 0
+            currentDownloadJobState.state = currentDownloadJobState.state.copy(currentBytesCopied = 0)
             setDownloadJobStatus(currentDownloadJobState, FAILED)
             logger.debug("Unable to fetching Download for ${currentDownloadJobState.state.url} status FAILED")
             return
@@ -596,11 +597,12 @@ abstract class AbstractFetchDownloadService : Service() {
      * Updates the status of an ACTIVE download to completed or failed based on bytes copied
      */
     internal fun verifyDownload(download: DownloadJobState) {
-        if (getDownloadJobStatus(download) == DownloadJobStatus.ACTIVE &&
-            download.currentBytesCopied < download.state.contentLength ?: 0) {
+        if (getDownloadJobStatus(download) == DOWNLOADING &&
+            download.state.currentBytesCopied < download.state.contentLength ?: 0
+        ) {
             setDownloadJobStatus(download, FAILED)
             logger.error("verifyDownload for ${download.state.url} FAILED")
-        } else if (getDownloadJobStatus(download) == DownloadJobStatus.ACTIVE) {
+        } else if (getDownloadJobStatus(download) == DOWNLOADING) {
             setDownloadJobStatus(download, COMPLETED)
             /**
              * In cases when we don't get the file size provided initially, we have to
@@ -608,31 +610,37 @@ abstract class AbstractFetchDownloadService : Service() {
              */
             val fileSizeNotFound = download.state.contentLength == null || download.state.contentLength == 0L
             if (fileSizeNotFound) {
-                val newState = download.state.copy(contentLength = download.currentBytesCopied)
+                val newState = download.state.copy(contentLength = download.state.currentBytesCopied)
                 updateDownloadState(newState)
             }
-            logger.debug("verifyDownload for ${download.state.url} ${download.status}")
+            logger.debug("verifyDownload for ${download.state.url} ${download.state.status}")
         }
     }
 
     private fun copyInChunks(downloadJobState: DownloadJobState, inStream: InputStream, outStream: OutputStream) {
         val data = ByteArray(CHUNK_SIZE)
         logger.debug("starting copyInChunks ${downloadJobState.state.url}" +
-                " currentBytesCopied ${downloadJobState.currentBytesCopied}")
+                " currentBytesCopied ${downloadJobState.state.currentBytesCopied}")
 
         // To ensure that we copy all files (even ones that don't have fileSize, we must NOT check < fileSize
-        while (getDownloadJobStatus(downloadJobState) == DownloadJobStatus.ACTIVE) {
+        while (getDownloadJobStatus(downloadJobState) == DOWNLOADING) {
             val bytesRead = inStream.read(data)
 
             // If bytesRead is -1, there's no data left to read from the stream
             if (bytesRead == -1) { break }
 
-            downloadJobState.currentBytesCopied += bytesRead
+            val newState = downloadJobState.state.copy(
+                currentBytesCopied =
+                downloadJobState.state.currentBytesCopied + bytesRead
+            )
+            updateDownloadState(newState)
 
             outStream.write(data, 0, bytesRead)
         }
-        logger.debug("Finishing copyInChunks ${downloadJobState.state.url} " +
-                "currentBytesCopied ${downloadJobState.currentBytesCopied}")
+        logger.debug(
+            "Finishing copyInChunks ${downloadJobState.state.url} " +
+                "currentBytesCopied ${downloadJobState.state.currentBytesCopied}"
+        )
     }
 
     /**
@@ -687,13 +695,17 @@ abstract class AbstractFetchDownloadService : Service() {
         download: DownloadState,
         append: Boolean
     ): DownloadState {
-        if (append) { return download }
+        if (append) {
+            return download
+        }
 
         return download.fileName?.let {
-            download.copy(fileName = DownloadUtils.uniqueFileName(
-                Environment.getExternalStoragePublicDirectory(download.destinationDirectory),
-                it
-            ))
+            download.copy(
+                fileName = DownloadUtils.uniqueFileName(
+                    Environment.getExternalStoragePublicDirectory(download.destinationDirectory),
+                    it
+                )
+            )
         } ?: download
     }
 
@@ -780,6 +792,7 @@ abstract class AbstractFetchDownloadService : Service() {
         private const val CHUNK_SIZE = 4 * 1024
         private const val PARTIAL_CONTENT_STATUS = 206
         private const val OK_STATUS = 200
+
         /**
          * This interval was decided on by balancing the limit of the system (200ms) and allowing
          * users to press buttons on the notification. If a new notification is presented while a

@@ -18,6 +18,12 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_NONE
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
+import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
+import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
+import mozilla.components.browser.state.state.content.DownloadState.Status.PAUSED
+import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
+import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
+import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_CANCEL
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_DISMISS
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_OPEN
@@ -25,11 +31,6 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_RESUME
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.CANCELLED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.COMPLETED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.ACTIVE
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.FAILED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.PAUSED
 import kotlin.random.Random
 
 @Suppress("LargeClass", "TooManyFunctions")
@@ -48,7 +49,7 @@ internal object DownloadNotification {
         context: Context,
         notifications: List<DownloadJobState>
     ): Notification {
-        val allDownloadsHaveFinished = notifications.all { it.status != ACTIVE }
+        val allDownloadsHaveFinished = notifications.all { it.state.status != DOWNLOADING }
         val icon = if (allDownloadsHaveFinished) {
             R.drawable.mozac_feature_download_ic_download_complete
         } else {
@@ -78,7 +79,7 @@ internal object DownloadNotification {
         downloadJobState: DownloadJobState
     ): Notification {
         val downloadState = downloadJobState.state
-        val bytesCopied = downloadJobState.currentBytesCopied
+        val bytesCopied = downloadJobState.state.currentBytesCopied
         val channelId = ensureChannelExists(context)
         val isIndeterminate = downloadState.contentLength == null
 
@@ -279,7 +280,7 @@ internal fun NotificationCompat.Builder.setCompatGroup(groupKey: String): Notifi
 
 @VisibleForTesting
 internal fun DownloadJobState.getProgress(): String {
-    val bytesCopied = currentBytesCopied
+    val bytesCopied = state.currentBytesCopied
     val isIndeterminate = state.contentLength == null || bytesCopied == 0L
     return if (isIndeterminate) {
         ""
@@ -290,8 +291,8 @@ internal fun DownloadJobState.getProgress(): String {
 
 @VisibleForTesting
 internal fun DownloadJobState.getStatusDescription(context: Context): String {
-    return when (this.status) {
-        ACTIVE -> {
+    return when (this.state.status) {
+        DOWNLOADING -> {
             getProgress()
         }
 
@@ -307,6 +308,6 @@ internal fun DownloadJobState.getStatusDescription(context: Context): String {
             context.getString(R.string.mozac_feature_downloads_failed_notification_text2)
         }
 
-        CANCELLED -> ""
+        CANCELLED, INITIATED -> ""
     }
 }

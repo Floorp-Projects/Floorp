@@ -19,6 +19,7 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.core.util.set
 import mozilla.components.browser.state.action.DownloadAction
+import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Headers.Names.COOKIE
@@ -107,9 +108,9 @@ class AndroidDownloadManager(
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
         val download = store.state.queuedDownloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(AbstractFetchDownloadService.EXTRA_DOWNLOAD_STATUS)
-            as AbstractFetchDownloadService.DownloadJobStatus
+            as Status
 
-        if (downloadStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED) {
+        if (downloadStatus == Status.COMPLETED) {
             store.dispatch(DownloadAction.RemoveQueuedDownloadAction(downloadID))
         }
 
