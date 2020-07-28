@@ -311,8 +311,7 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
 // (until GC things gets removed from stencil) tracing API of the GC.
 bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           const SmooshScriptStencil& smooshStencil,
-                          // FIXME: Store length in SmooshScriptStencil.
-                          size_t length, JS::HandleVector<JSAtom*> allAtoms,
+                          JS::HandleVector<JSAtom*> allAtoms,
                           CompilationInfo& compilationInfo,
                           MutableHandle<ScriptStencil> stencil) {
   auto index = smooshStencil.immutable_script_data.AsSome();
@@ -321,9 +320,6 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   if (!immutableScriptData) {
     return false;
   }
-
-  // FIXME: Support extent.
-  stencil.get().extent = SourceExtent::makeGlobalExtent(length);
 
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
@@ -342,6 +338,13 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                                        options.isRunOnce);
 
   stencil.get().immutableScriptData = std::move(immutableScriptData);
+
+  stencil.get().extent.sourceStart = smooshStencil.extent.source_start;
+  stencil.get().extent.sourceEnd = smooshStencil.extent.source_end;
+  stencil.get().extent.toStringStart = smooshStencil.extent.to_string_start;
+  stencil.get().extent.toStringEnd = smooshStencil.extent.to_string_end;
+  stencil.get().extent.lineno = smooshStencil.extent.lineno;
+  stencil.get().extent.column = smooshStencil.extent.column;
 
   if (!ConvertGCThings(cx, result, smooshStencil, allAtoms, stencil)) {
     return false;
@@ -445,9 +448,8 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   }
 
   // FIXME: Support functions.
-  if (!ConvertScriptStencil(cx, result, result.top_level_script, length,
-                            allAtoms, compilationInfo,
-                            &compilationInfo.topLevel)) {
+  if (!ConvertScriptStencil(cx, result, result.top_level_script, allAtoms,
+                            compilationInfo, &compilationInfo.topLevel)) {
     return nullptr;
   }
 
