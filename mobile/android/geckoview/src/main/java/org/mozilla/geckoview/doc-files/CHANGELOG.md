@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v81
+- Added `cookiePurging` to [`ContentBlocking.Settings.Builder`][81.1] and `getCookiePurging` and `setCookiePurging`
+  to [`ContentBlocking.Settings`][81.2].
+
+[81.1]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html
+[81.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
+
 ## v80
 - Removed `GeckoSession.hashCode` and `GeckoSession.equals` overrides in favor
   of the default implementations. ([bug 1647883]({{bugzilla}}1647883))
@@ -752,4 +759,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c86252550df86d5790603805a43ad5a313c20dc0
+[api-version]: b7c6af9e586923fd7c9be735ea7244365a663c2e
