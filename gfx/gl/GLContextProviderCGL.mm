@@ -80,6 +80,8 @@ CGLContextObj GLContextCGL::GetCGLContext() const {
   return static_cast<CGLContextObj>([mContext CGLContextObj]);
 }
 
+bool GLContextCGL::IsAliveImpl() const { return true; }
+
 bool GLContextCGL::MakeCurrentImpl() const {
   if (mContext) {
     [mContext makeCurrentContext];

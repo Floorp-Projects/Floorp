@@ -260,24 +260,24 @@ void RenderDXGITextureHostOGL::DeleteTextureHandle() {
 
   if (mGL->MakeCurrent()) {
     mGL->fDeleteTextures(2, mTextureHandle);
+    const auto& gle = gl::GLContextEGL::Cast(mGL);
+    const auto& egl = gle->mEgl;
+    if (mSurface) {
+      egl->fDestroySurface(egl->Display(), mSurface);
+    }
+    if (mStream) {
+      egl->fDestroyStreamKHR(egl->Display(), mStream);
+    }
   }
+
   for (int i = 0; i < 2; ++i) {
     mTextureHandle[i] = 0;
   }
 
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-  if (mSurface) {
-    egl->fDestroySurface(egl->Display(), mSurface);
-    mSurface = 0;
-  }
-  if (mStream) {
-    egl->fDestroyStreamKHR(egl->Display(), mStream);
-    mStream = 0;
-  }
-
   mTexture = nullptr;
   mKeyedMutex = nullptr;
+  mSurface = 0;
+  mStream = 0;
 }
 
 GLuint RenderDXGITextureHostOGL::GetGLHandle(uint8_t aChannelIndex) const {
