@@ -8,14 +8,19 @@
 #define WIDGET_GTK_MPRIS_SERVICE_HANDLER_H_
 
 #include <gio/gio.h>
+#include "mozilla/dom/FetchImageHelper.h"
 #include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
+#include "nsIFile.h"
+#include "nsMimeTypes.h"
 #include "nsString.h"
 
 #define DBUS_MRPIS_SERVICE_NAME "org.mpris.MediaPlayer2.firefox"
 #define DBUS_MPRIS_OBJECT_PATH "/org/mpris/MediaPlayer2"
 #define DBUS_MPRIS_PLAYER_INTERFACE "org.mpris.MediaPlayer2.Player"
 #define DBUS_MPRIS_TRACK_PATH "/org/mpris/MediaPlayer2/firefox"
+#define MPRIS_IMAGE_PREFIX "firefox-mpris"
 
 namespace mozilla {
 namespace widget {
@@ -52,7 +57,12 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
  public:
   // Note that this constructor does NOT initialize the MPRIS Service but only
   // this class. The method Open() is responsible for registering and MAY FAIL.
-  MPRISServiceHandler() = default;
+
+  // The image format used in MPRIS is based on the mMimeType here. Although
+  // IMAGE_JPEG or IMAGE_BMP are valid types as well but a png image with
+  // transparent background will be converted into a jpeg/bmp file with a
+  // colored background IMAGE_PNG format seems to be the best choice for now.
+  MPRISServiceHandler() : mMimeType(IMAGE_PNG){};
   bool Open() override;
   void Close() override;
   bool IsOpened() const override;
@@ -144,7 +154,49 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
   GDBusConnection* mConnection = nullptr;
   bool mInitialized = false;
   nsAutoCString mIdentity;
-  Maybe<dom::MediaMetadataBase> mMetadata;
+
+  nsCString mMimeType;
+
+  class MPRISMetadata : public dom::MediaMetadataBase {
+   public:
+    MPRISMetadata() = default;
+    ~MPRISMetadata() = default;
+
+    void UpdateFromMetadataBase(const dom::MediaMetadataBase& aMetadata) {
+      mTitle = aMetadata.mTitle;
+      mArtist = aMetadata.mArtist;
+      mAlbum = aMetadata.mAlbum;
+      mArtwork = aMetadata.mArtwork;
+    }
+    void Clear() {
+      UpdateFromMetadataBase(MediaMetadataBase::EmptyData());
+      mArtUrl = EmptyCString();
+    }
+
+    nsCString mArtUrl;
+  };
+  MPRISMetadata mMPRISMetadata;
+
+  // The saved image file fetched from the URL
+  nsCOMPtr<nsIFile> mLocalImageFile;
+
+  mozilla::UniquePtr<mozilla::dom::FetchImageHelper> mImageFetcher;
+  mozilla::MozPromiseRequestHolder<mozilla::dom::ImagePromise>
+      mImageFetchRequest;
+
+  nsString mFetchingUrl;
+  nsString mCurrentImageUrl;
+
+  size_t mNextImageIndex = 0;
+
+  // Load the image at index aIndex of the metadta's artwork to MPRIS
+  // asynchronously
+  void LoadImageAtIndex(const size_t aIndex);
+  bool SetImageToDisplay(const char* aImageData, uint32_t aDataSize);
+
+  bool RenewLocalImageFile(const char* aImageData, uint32_t aDataSize);
+  bool InitLocalImageFile();
+  void RemoveLocalImageFile();
 
   // Queries nsAppInfo to get the branded browser name and vendor
   void InitIdentity();
@@ -162,6 +214,11 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
                                   const gchar* aName, gpointer aUserData);
 
   void EmitEvent(dom::MediaControlKey aKey);
+
+  bool EmitMetadataChanged() const;
+
+  void SetMediaMetadataInternal(const dom::MediaMetadataBase& aMetadata,
+                                bool aClearArtUrl = true);
 };
 
 }  // namespace widget
