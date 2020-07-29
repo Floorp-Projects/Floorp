@@ -759,7 +759,6 @@ nsPlacesExpiration.prototype = {
       // idle only if history is dirty, to preserve mobile devices batteries.
       this.expireOnIdle = aNewStatus == STATUS.DIRTY;
     }
-    return aNewStatus;
   },
   get status() {
     return this._status;
@@ -786,7 +785,6 @@ nsPlacesExpiration.prototype = {
     } else {
       this._expireOnIdle = aExpireOnIdle;
     }
-    return this._expireOnIdle;
   },
   get expireOnIdle() {
     return this._expireOnIdle;
