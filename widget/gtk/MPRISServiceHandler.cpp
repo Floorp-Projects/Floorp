@@ -828,7 +828,7 @@ bool MPRISServiceHandler::InitLocalImageFile() {
   }
 
   // Create an image with read/write permissions
-  rv = mLocalImageFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+  rv = mLocalImageFile->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
   if (NS_FAILED(rv)) {
     LOG("Failed to create an image file");
     return false;
