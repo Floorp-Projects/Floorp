@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
-export MAKECAB=$TOOLTOOL_DIR/makecab.exe
 export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
 
 if [ -z "$USE_ARTIFACT" ]; then
