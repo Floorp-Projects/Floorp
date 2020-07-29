@@ -68,7 +68,7 @@ class FxaStateMatrixTest {
         assertEquals(AccountState.AuthenticatedNoProfile, FxaStateMatrix.nextState(state, Event.FetchProfile))
         assertEquals(AccountState.AuthenticatedWithProfile, FxaStateMatrix.nextState(state, Event.FetchedProfile))
         assertEquals(AccountState.AuthenticatedNoProfile, FxaStateMatrix.nextState(state, Event.FailedToFetchProfile))
-        assertNull(FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
+        assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.Logout))
         assertEquals(AccountState.AuthenticationProblem, FxaStateMatrix.nextState(state, Event.AuthenticationError("test")))
         assertNull(FxaStateMatrix.nextState(state, Event.SignInShareableAccount(mock(), false)))

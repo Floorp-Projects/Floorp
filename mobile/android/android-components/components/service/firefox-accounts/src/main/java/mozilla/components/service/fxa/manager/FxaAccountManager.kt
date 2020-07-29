@@ -598,7 +598,7 @@ open class FxaAccountManager(
             }
             AccountState.NotAuthenticated -> {
                 when (via) {
-                    Event.Logout -> {
+                    Event.FailedToAuthenticate, Event.Logout -> {
                         // Clean up internal account state and destroy the current FxA device record.
                         if (account.disconnectAsync().await()) {
                             logger.info("Disconnected FxA account")
@@ -619,7 +619,9 @@ open class FxaAccountManager(
                         // Re-initialize account.
                         account = createAccount(serverConfig)
 
-                        notifyObservers { onLoggedOut() }
+                        if (via is Event.Logout) {
+                            notifyObservers { onLoggedOut() }
+                        }
 
                         null
                     }
@@ -743,13 +745,14 @@ open class FxaAccountManager(
 
                         logger.info("Initializing device")
                         // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
-                        account.deviceConstellation().initDeviceAsync(
+                        if (account.deviceConstellation().initDeviceAsync(
                             deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
-                        ).await()
-
-                        postAuthenticated(via.authData.authType, via.authData.declinedEngines)
-
-                        Event.FetchProfile
+                        ).await()) {
+                            postAuthenticated(via.authData.authType, via.authData.declinedEngines)
+                            Event.FetchProfile
+                        } else {
+                            Event.FailedToAuthenticate
+                        }
                     }
                     Event.AccountRestored -> {
                         logger.info("Registering persistence callback")
@@ -778,7 +781,7 @@ open class FxaAccountManager(
                         logger.info("Registering device constellation observer")
                         account.deviceConstellation().register(accountEventsIntegration)
 
-                        if (via.reuseAccount) {
+                        val deviceFinalizeSuccess = if (via.reuseAccount) {
                             logger.info("Configuring migrated account's device")
                             // At the minimum, we need to "ensure capabilities" - that is, register for Send Tab, etc.
                             account.deviceConstellation().ensureCapabilitiesAsync(deviceConfig.capabilities).await()
@@ -792,9 +795,12 @@ open class FxaAccountManager(
                             ).await()
                         }
 
-                        postAuthenticated(AuthType.Shared)
-
-                        Event.FetchProfile
+                        if (deviceFinalizeSuccess) {
+                            postAuthenticated(AuthType.Shared)
+                            Event.FetchProfile
+                        } else {
+                            Event.FailedToAuthenticate
+                        }
                     }
 
                     Event.RecoveredFromAuthenticationProblem -> {
