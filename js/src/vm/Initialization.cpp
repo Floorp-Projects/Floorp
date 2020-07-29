@@ -62,7 +62,7 @@ static void CheckMessageParameterCounts() {
   // parameters.
 #  define MSG_DEF(name, count, exception, format) \
     MOZ_ASSERT(MessageParameterCount(format) == count);
-#  include "js.msg"
+#  include "js/friend/ErrorNumbers.msg"
 #  undef MSG_DEF
 }
 #endif /* DEBUG */

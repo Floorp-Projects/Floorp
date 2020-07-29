@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-	Error messages for JSShell. See js.msg for format.
+ * Error messages for JSShell. See js/public/friend/ErrorNumbers.msg for format.
 */
 
 MSG_DEF(JSSMSG_NOT_AN_ERROR,            0, JSEXN_ERR, "<Error #0 is reserved>")

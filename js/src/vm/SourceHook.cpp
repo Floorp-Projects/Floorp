@@ -4,14 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/experimental/SourceHook.h"
+
 #include "mozilla/UniquePtr.h"  // mozilla::UniquePtr
 
 #include <utility>  // std::move
 
 #include "jstypes.h"  // JS_FRIEND_API
 
-#include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
-#include "vm/JSContext.h"
+#include "vm/JSContext.h"  // JSContext
+#include "vm/Runtime.h"    // JSRuntime
 
 JS_FRIEND_API void js::SetSourceHook(JSContext* cx,
                                      mozilla::UniquePtr<SourceHook> hook) {

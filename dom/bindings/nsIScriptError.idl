@@ -117,8 +117,8 @@ interface nsIScriptError : nsIConsoleMessage
     [noscript] readonly attribute jsval stackGlobal;
 
     /**
-     * The name of a template string, as found in js.msg, associated with the
-     * error message.
+     * The name of a template string associated with the error message.  See
+     * js/public/friend/ErrorNumbers.msg.
      */
     attribute AString errorMessageName;
 

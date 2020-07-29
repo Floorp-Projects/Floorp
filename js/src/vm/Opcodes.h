@@ -2552,9 +2552,9 @@
      * example, `delete super.prop;` is allowed in methods, but always throws a
      * ReferenceError.
      *
-     * `msgNumber` must be one of the error codes listed in js/src/js.msg; it
-     * determines the `.message` and [[Prototype]] of the new Error object. The
-     * number of arguments in the error message must be 0.
+     * `msgNumber` determines the `.message` and [[Prototype]] of the new Error
+     * object.  It must be an error number in js/public/friend/ErrorNumbers.msg.
+     * The number of arguments in the error message must be 0.
      *
      *   Category: Control flow
      *   Type: Exceptions
