@@ -9,7 +9,6 @@ crossbeam-utils = "0.6.3"
 cstr = "0.1"
 lazy_static = "1"
 libc = "0.2"
-lmdb-rkv = "0.14"
 log = "0.4"
 moz_task = { path = "../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../xpcom/rust/nserror" }
