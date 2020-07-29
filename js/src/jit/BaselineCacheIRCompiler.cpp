@@ -708,6 +708,26 @@ bool BaselineCacheIRCompiler::emitLoadFrameArgumentResult(
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitFrameIsConstructingResult() {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register outputScratch = output.valueReg().scratchReg();
+
+  // Load the CalleeToken.
+  Address tokenAddr(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
+  masm.loadPtr(tokenAddr, outputScratch);
+
+  // The low bit indicates whether this call is constructing, just clear the
+  // other bits.
+  static_assert(CalleeToken_Function == 0x0);
+  static_assert(CalleeToken_FunctionConstructing == 0x1);
+  masm.andPtr(Imm32(0x1), outputScratch);
+
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, outputScratch, output.valueReg());
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitLoadEnvironmentFixedSlotResult(
     ObjOperandId objId, uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

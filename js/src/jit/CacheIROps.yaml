@@ -1484,6 +1484,12 @@
   args:
     index: Int32Id
 
+- name: FrameIsConstructingResult
+  shared: false
+  transpile: true
+  cost_estimate: 1
+  args:
+
 - name: LoadEnvironmentFixedSlotResult
   shared: false
   transpile: true
