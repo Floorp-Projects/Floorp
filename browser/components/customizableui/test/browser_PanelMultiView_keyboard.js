@@ -456,14 +456,10 @@ add_task(async function testActivationMousedown() {
 async function testTabArrowsEmbeddedDoc(aView, aEmbedder) {
   await openPopup();
   await showSubView(aView);
-  const doc = aEmbedder.contentDocument;
-  if (doc.readyState != "complete") {
-    info("Embedded doc not yet loaded, waiting for load");
-    await BrowserTestUtils.waitForEvent(doc, "load");
-  }
   let backButton = aView.querySelector(".subviewbutton-back");
   backButton.id = "docBack";
   await expectFocusAfterKey("Tab", backButton);
+  let doc = aEmbedder.contentDocument;
   // Documents don't have an id property, but expectFocusAfterKey wants one.
   doc.id = "doc";
   await expectFocusAfterKey("Tab", doc);
