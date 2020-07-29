@@ -274,8 +274,14 @@ nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
 UniquePtr<SessionHistoryInfo>
 CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
-  RefPtr<SessionHistoryEntry> entry =
-      new SessionHistoryEntry(aLoadState, aChannel);
+  RefPtr<SessionHistoryEntry> entry;
+  const SessionHistoryInfo* info = aLoadState->GetSessionHistoryInfo();
+  if (info) {
+    entry = SessionHistoryEntry::GetByInfoId(info->Id());
+  }
+  if (!entry) {
+    entry = new SessionHistoryEntry(aLoadState, aChannel);
+  }
   mLoadingEntries.AppendElement(entry);
   MOZ_ASSERT(SessionHistoryEntry::GetByInfoId(entry->Info().Id()) == entry);
   return MakeUnique<SessionHistoryInfo>(entry->Info());
@@ -295,13 +301,21 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
       mActiveEntry = mLoadingEntries[i];
       mLoadingEntries.RemoveElementAt(i);
       if (IsTop()) {
-        shistory->AddEntry(mActiveEntry,
-                           /* FIXME aPersist = */ true);
+        nsCOMPtr<nsISHistory> existingSHistory = mActiveEntry->GetShistory();
+        if (existingSHistory) {
+          MOZ_ASSERT(existingSHistory == shistory);
+          shistory->UpdateIndex();
+        } else {
+          shistory->AddEntry(mActiveEntry,
+                             /* FIXME aPersist = */ true);
+        }
       } else {
         // FIXME Check if we're replacing before adding a child.
         // FIXME The old implementations adds it to the parent's mLSHE if there
         //       is one, need to figure out if that makes sense here (peterv
         //       doesn't think it would).
+        // FIXME if the loading entry is already in the session history, we
+        // shouldn't add a new entry.
         if (oldActiveEntry) {
           // FIXME Need to figure out the right value for aCloneChildren.
           shistory->AddChildSHEntryHelper(oldActiveEntry, mActiveEntry, Top(),

@@ -76,6 +76,10 @@ nsDocShellLoadState::nsDocShellLoadState(
   mHeadersStream = aLoadState.HeadersStream();
   mSrcdocData = aLoadState.SrcdocData();
   mChannelInitialized = aLoadState.ChannelInitialized();
+  if (aLoadState.sessionHistoryInfo().isSome()) {
+    mSessionHistoryInfo =
+        MakeUnique<SessionHistoryInfo>(aLoadState.sessionHistoryInfo().value());
+  }
 }
 
 nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
@@ -504,6 +508,12 @@ nsISHEntry* nsDocShellLoadState::SHEntry() const { return mSHEntry; }
 
 void nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry) {
   mSHEntry = aSHEntry;
+  nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aSHEntry);
+  if (she) {
+    SetSessionHistoryInfo(she->Info());
+  } else {
+    mSessionHistoryInfo = nullptr;
+  }
 }
 
 void nsDocShellLoadState::SetSessionHistoryInfo(
@@ -905,5 +915,8 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.ResultPrincipalURI() = mResultPrincipalURI;
   loadState.LoadIdentifier() = mLoadIdentifier;
   loadState.ChannelInitialized() = mChannelInitialized;
+  if (mSessionHistoryInfo) {
+    loadState.sessionHistoryInfo().emplace(*mSessionHistoryInfo);
+  }
   return loadState;
 }
