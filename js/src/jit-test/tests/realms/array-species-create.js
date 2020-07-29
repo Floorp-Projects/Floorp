@@ -24,8 +24,12 @@ function testIntrinsic() {
     var IsCrossRealmArrayConstructor = getSelfHostedValue("IsCrossRealmArrayConstructor");
     for (var i = 0; i < 20; i++) {
         assertEq(IsCrossRealmArrayConstructor(Array), false);
+        assertEq(IsCrossRealmArrayConstructor(Math), false);
+        assertEq(IsCrossRealmArrayConstructor(() => 1), false);
         assertEq(IsCrossRealmArrayConstructor(g1.Array), true);
         assertEq(IsCrossRealmArrayConstructor(g2.Array), true);
+        assertEq(IsCrossRealmArrayConstructor(g1.assertEq), false);
+        assertEq(IsCrossRealmArrayConstructor(g2.assertEq), false);
     }
 }
 testIntrinsic();

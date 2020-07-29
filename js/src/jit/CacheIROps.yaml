@@ -360,6 +360,13 @@
   args:
     obj: ObjId
 
+- name: GuardIsNotProxy
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: GuardHasProxyHandler
   shared: false
   transpile: false
@@ -901,6 +908,13 @@
   shared: true
   transpile: true
   cost_estimate: 4
+  args:
+    obj: ObjId
+
+- name: IsCrossRealmArrayConstructorResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
   args:
     obj: ObjId
 

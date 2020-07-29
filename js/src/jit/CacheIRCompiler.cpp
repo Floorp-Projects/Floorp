@@ -2024,6 +2024,7 @@ bool CacheIRCompiler::emitGuardFunctionPrototype(ObjOperandId objId,
 
 bool CacheIRCompiler::emitGuardIsNativeObject(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
@@ -2038,6 +2039,7 @@ bool CacheIRCompiler::emitGuardIsNativeObject(ObjOperandId objId) {
 
 bool CacheIRCompiler::emitGuardIsProxy(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
@@ -2047,6 +2049,21 @@ bool CacheIRCompiler::emitGuardIsProxy(ObjOperandId objId) {
   }
 
   masm.branchTestObjectIsProxy(false, obj, scratch, failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardIsNotProxy(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchTestObjectIsProxy(true, obj, scratch, failure->label());
   return true;
 }
 
@@ -3916,6 +3933,19 @@ bool CacheIRCompiler::emitIsConstructorResult(ObjOperandId objId) {
 
   masm.bind(&done);
   EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
+  return true;
+}
+
+bool CacheIRCompiler::emitIsCrossRealmArrayConstructorResult(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Register obj = allocator.useRegister(masm, objId);
+
+  masm.setIsCrossRealmArrayConstructor(obj, scratch);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
   return true;
 }
 

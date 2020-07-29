@@ -1606,6 +1606,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachIsPackedArray(HandleFunction callee);
   AttachDecision tryAttachIsCallable(HandleFunction callee);
   AttachDecision tryAttachIsConstructor(HandleFunction callee);
+  AttachDecision tryAttachIsCrossRealmArrayConstructor(HandleFunction callee);
   AttachDecision tryAttachGuardToClass(HandleFunction callee,
                                        InlinableNative native);
   AttachDecision tryAttachHasClass(HandleFunction callee, const JSClass* clasp);
