@@ -38,6 +38,7 @@
 #  undef LOG
 #endif
 #include "base/thread.h"
+#include <atomic>
 
 namespace WebCore {
 
@@ -83,8 +84,8 @@ class ReverbConvolver {
   base::Thread m_backgroundThread;
   mozilla::Monitor m_backgroundThreadMonitor;
   bool m_useBackgroundThreads;
-  bool m_wantsToExit;
-  bool m_moreInputBuffered;
+  std::atomic<bool> m_wantsToExit;
+  std::atomic<bool> m_moreInputBuffered;
 };
 
 }  // namespace WebCore
