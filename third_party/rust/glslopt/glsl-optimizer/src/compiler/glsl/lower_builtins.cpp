@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010 Intel Corporation
+ * Copyright © 2019 Google, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,50 +22,43 @@
  */
 
 /**
- * \file lower_noise.cpp
- * IR lower pass to remove noise opcodes.
+ * \file lower_builtins.cpp
  *
- * \author Ian Romanick <ian.d.romanick@intel.com>
+ * Inline calls to builtin functions.
  */
 
 #include "ir.h"
-#include "ir_rvalue_visitor.h"
+#include "ir_optimization.h"
 
-class lower_noise_visitor : public ir_rvalue_visitor {
+namespace {
+
+class lower_builtins_visitor : public ir_hierarchical_visitor {
 public:
-   lower_noise_visitor() : progress(false)
-   {
-      /* empty */
-   }
-
-   void handle_rvalue(ir_rvalue **rvalue)
-   {
-      if (!*rvalue)
-	 return;
-
-      ir_expression *expr = (*rvalue)->as_expression();
-      if (!expr)
-	 return;
-
-      /* In the future, ir_unop_noise may be replaced by a call to a function
-       * that implements noise.  No hardware has a noise instruction.
-       */
-      if (expr->operation == ir_unop_noise) {
-	 *rvalue = ir_constant::zero(ralloc_parent(expr), expr->type);
-	 this->progress = true;
-      }
-   }
-
+   lower_builtins_visitor() : progress(false) { }
+   ir_visitor_status visit_leave(ir_call *);
    bool progress;
 };
 
+}
 
 bool
-lower_noise(exec_list *instructions)
+lower_builtins(exec_list *instructions)
 {
-   lower_noise_visitor v;
-
+   lower_builtins_visitor v;
    visit_list_elements(&v, instructions);
-
    return v.progress;
+}
+
+ir_visitor_status
+lower_builtins_visitor::visit_leave(ir_call *ir)
+{
+   if (!ir->callee->is_builtin())
+      return visit_continue;
+
+   ir->generate_inline(ir);
+   ir->remove();
+
+   this->progress = true;
+
+   return visit_continue;
 }

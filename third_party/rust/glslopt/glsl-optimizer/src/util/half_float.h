@@ -33,8 +33,8 @@
 extern "C" {
 #endif
 
-#define FP16_ONE     0x3C00
-#define FP16_ZERO    0
+#define FP16_ONE     ((uint16_t) 0x3c00)
+#define FP16_ZERO    ((uint16_t) 0)
 
 uint16_t _mesa_float_to_half(float val);
 float _mesa_half_to_float(uint16_t val);
@@ -60,6 +60,22 @@ _mesa_half_is_negative(uint16_t h)
 {
    return !!(h & 0x8000);
 }
+
+
+#ifdef __cplusplus
+
+/* Helper class for disambiguating fp16 from uint16_t in C++ overloads */
+
+struct float16_t {
+   uint16_t bits;
+   float16_t(float f) : bits(_mesa_float_to_half(f)) {}
+   float16_t(double d) : bits(_mesa_float_to_half(d)) {}
+   float16_t(uint16_t bits) : bits(bits) {}
+   static float16_t one() { return float16_t(FP16_ONE); }
+   static float16_t zero() { return float16_t(FP16_ZERO); }
+};
+
+#endif
 
 
 #ifdef __cplusplus

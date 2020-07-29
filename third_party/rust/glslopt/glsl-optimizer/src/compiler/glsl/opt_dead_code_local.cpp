@@ -66,6 +66,8 @@ public:
 
 class kill_for_derefs_visitor : public ir_hierarchical_visitor {
 public:
+   using ir_hierarchical_visitor::visit;
+
    kill_for_derefs_visitor(exec_list *assignments)
    {
       this->assignments = assignments;

@@ -560,6 +560,26 @@ enum pipe_video_chroma_format
    PIPE_VIDEO_CHROMA_FORMAT_NONE
 };
 
+static inline enum pipe_video_chroma_format
+pipe_format_to_chroma_format(enum pipe_format format)
+{
+   switch (format) {
+      case PIPE_FORMAT_NV12:
+      case PIPE_FORMAT_NV21:
+      case PIPE_FORMAT_YV12:
+      case PIPE_FORMAT_IYUV:
+      case PIPE_FORMAT_P010:
+      case PIPE_FORMAT_P016:
+         return PIPE_VIDEO_CHROMA_FORMAT_420;
+      case PIPE_FORMAT_UYVY:
+      case PIPE_FORMAT_YUYV:
+      case PIPE_FORMAT_YV16:
+         return PIPE_VIDEO_CHROMA_FORMAT_422;
+      default:
+         return PIPE_VIDEO_CHROMA_FORMAT_NONE;
+   }
+}
+
 #ifdef __cplusplus
 }
 #endif

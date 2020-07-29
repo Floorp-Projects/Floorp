@@ -274,6 +274,8 @@ _mesa_print_ir_glsl(exec_list *instructions,
 			str.asprintf_append ("#extension GL_EXT_blend_func_extended : enable\n");
 		if (state->OES_EGL_image_external_essl3_enable)
 			str.asprintf_append ("#extension GL_OES_EGL_image_external_essl3 : enable\n");
+		if (state->ARB_shader_storage_buffer_object_enable)
+			str.asprintf_append ("#extension GL_ARB_shader_storage_buffer_object : enable\n");
 
 
 		// TODO: support other blend specifiers besides "all"
@@ -464,14 +466,25 @@ static void print_type(string_buffer& buffer, const glsl_type *t, bool arraySize
 static void print_type_post(string_buffer& buffer, const glsl_type *t, bool arraySize)
 {
 	if (t->base_type == GLSL_TYPE_ARRAY) {
-		if (!arraySize)
-			buffer.asprintf_append ("[%u]", t->length);
+		if (!arraySize) {
+			if (t->length) {
+				buffer.asprintf_append ("[%u]", t->length);
+			} else {
+				buffer.asprintf_append ("[]");
+			}
+		}
 	}
 }
 
 
 void ir_print_glsl_visitor::visit(ir_variable *ir)
 {
+	// Variables that are declared as or part of interface blocks will be printed by the block declaration.
+	if (ir->is_in_buffer_block()) {
+		skipped_this_ir = true;
+		return;
+	}
+
 	const char *const cent = (ir->data.centroid) ? "centroid " : "";
 	const char *const inv = (ir->data.invariant) ? "invariant " : "";
 	const char *const mode[3][ir_var_mode_count] =
@@ -644,174 +657,194 @@ void ir_print_glsl_visitor::visit(ir_function *ir)
    indent();
 }
 
-static const char *const operator_glsl_strs[] = {
-	"~", // ir_unop_bit_not,
-	"!", // ir_unop_logic_not,
-	"-", // ir_unop_neg,
-	"abs", // ir_unop_abs,
-	"sign", // ir_unop_sign,
-	"1.0/", // ir_unop_rcp,
-	"inversesqrt", // ir_unop_rsq,
-	"sqrt", // ir_unop_sqrt,
-	"exp", // ir_unop_exp,
-	"log", // ir_unop_log,
-	"exp2", // ir_unop_exp2,
-	"log2", // ir_unop_log2,
-	"int", // ir_unop_f2i,
-	"int", // ir_unop_f2u,
-	"float", // ir_unop_i2f,
-	"bool", // ir_unop_f2b,
-	"float", // ir_unop_b2f,
-	"bool", // ir_unop_i2b,
-	"int", // ir_unop_b2i,
-	"float", // ir_unop_u2f,
-	"int", // ir_unop_i2u,
-	"int", // ir_unop_u2i,
-	"float", // ir_unop_d2f,
-	"f2d", // ir_unop_f2d,
-	"d2i", // ir_unop_d2i,
-	"i2d", // ir_unop_i2d,
-	"d2u", // ir_unop_d2u,
-	"u2d", // ir_unop_u2d,
-	"d2b", // ir_unop_d2b,
-	"intBitsToFloat", // ir_unop_bitcast_i2f,
-	"floatBitsToInt", // ir_unop_bitcast_f2i,
-	"uintBitsToFloat", // ir_unop_bitcast_u2f,
-	"floatBitsToUint", // ir_unop_bitcast_f2u,
-	"uint64BitsToDouble", // ir_unop_bitcast_u642d,
-	"int64BitsToDouble", // ir_unop_bitcast_i642d,
-	"doubleBitsToUint64", // ir_unop_bitcast_d2u64,
-	"doubleBitsToInt64", // ir_unop_bitcast_d2i64,
-	"int", // ir_unop_i642i,
-	"int", // ir_unop_u642i,
-	"uint", // ir_unop_i642u,
-	"uint", // ir_unop_u642u,
-	"bool", // ir_unop_i642b,
-	"float", // ir_unop_i642f,
-	"float", // ir_unop_u642f,
-	"double", // ir_unop_i642d,
-	"double", // ir_unop_u642d,
-	"int64_t", // ir_unop_i2i64,
-	"int64_t", // ir_unop_u2i64,
-	"int64_t", // ir_unop_b2i64,
-	"int64_t", // ir_unop_f2i64,
-	"int64_t", // ir_unop_d2i64,
-	"uint64_t", // ir_unop_i2u64,
-	"uint64_t", // ir_unop_u2u64,
-	"uint64_t", // ir_unop_f2u64,
-	"uint64_t", // ir_unop_d2u64,
-	"int64_t", // ir_unop_u642i64,
-	"uint64_t", // ir_unop_i642u64,
-	"trunc", // ir_unop_trunc,
-	"ceil", // ir_unop_ceil,
-	"floor", // ir_unop_floor,
-	"fract", // ir_unop_fract,
-	"roundEven", // ir_unop_round_even,
-	"sin", // ir_unop_sin,
-	"cos", // ir_unop_cos,
-	"atan", // ir_unop_atan,
-	"dFdx", // ir_unop_dFdx,
-	"dFdxCoarse", // ir_unop_dFdx_coarse,
-	"dFdxFine", // ir_unop_dFdx_fine,
-	"dFdy", // ir_unop_dFdy,
-	"dFdyCoarse", // ir_unop_dFdy_coarse,
-	"dFdyFine", // ir_unop_dFdy_fine,
-	"packSnorm2x16", // ir_unop_pack_snorm_2x16,
-	"packSnorm4x8", // ir_unop_pack_snorm_4x8,
-	"packUnorm2x16", // ir_unop_pack_unorm_2x16,
-	"packUnorm4x8", // ir_unop_pack_unorm_4x8,
-	"packHalf2x16", // ir_unop_pack_half_2x16,
-	"unpackSnorm2x16", // ir_unop_unpack_snorm_2x16,
-	"unpackSnorm4x8", // ir_unop_unpack_snorm_4x8,
-	"unpackUnorm2x16", // ir_unop_unpack_unorm_2x16,
-	"unpackUnorm4x8", // ir_unop_unpack_unorm_4x8,
-	"unpackHalf2x16", // ir_unop_unpack_half_2x16,
-	"bitfieldReverse", // ir_unop_bitfield_reverse,
-	"bitCount", // ir_unop_bit_count,
-	"findMSB", // ir_unop_find_msb,
-	"findLSB", // ir_unop_find_lsb,
-	"clz_TODO", // ir_unop_clz,
-	"saturate", // ir_unop_saturate,
-	"packDouble2x32", // ir_unop_pack_double_2x32,
-	"unpackDouble2x32", // ir_unop_unpack_double_2x32,
-	"packSampler2x32", // ir_unop_pack_sampler_2x32,
-	"packImage2x32", // ir_unop_pack_image_2x32,
-	"unpackSampler2x32", // ir_unop_unpack_sampler_2x32,
-	"unpackImage2x32", // ir_unop_unpack_image_2x32,
-	"frexp_sig_TODO", // ir_unop_frexp_sig,
-	"frexp_exp_TODO", // ir_unop_frexp_exp,
-	"noise", // ir_unop_noise,
-	"subroutine_to_int_TODO", // ir_unop_subroutine_to_int,
-	"interpolateAtCentroid", // ir_unop_interpolate_at_centroid,
-	"get_buffer_size_TODO", // ir_unop_get_buffer_size,
-	"ssbo_unsized_array_length_TODO", // ir_unop_ssbo_unsized_array_length,
-	"packInt2x32", // ir_unop_pack_int_2x32,
-	"packUint2x32", // ir_unop_pack_uint_2x32,
-	"unpackInt2x32", // ir_unop_unpack_int_2x32,
-	"unpackUint2x32", // ir_unop_unpack_uint_2x32,
-	"+", // ir_binop_add,
-	"-", // ir_binop_sub,
-	"add_sat_TODO", // ir_binop_add_sat,
-	"sub_sat_TODO", // ir_binop_sub_sat,
-	"abs_sub_TODO", // ir_binop_abs_sub,
-	"avg_TODO", // ir_binop_avg,
-	"avg_round_TODO", // ir_binop_avg_round,
-	"*", // ir_binop_mul,
-	"mul_32x16_TODO", // ir_binop_mul_32x16,
-	"imul_high_TODO", // ir_binop_imul_high,
-	"/", // ir_binop_div,
-	"carry_TODO", // ir_binop_carry,
-	"borrow_TODO", // ir_binop_borrow,
-	"mod", // ir_binop_mod,
-	"<", // ir_binop_less,
-	">=", // ir_binop_gequal,
-	"==", // ir_binop_equal,
-	"!=", // ir_binop_nequal,
-	"==", // ir_binop_all_equal,
-	"!=", // ir_binop_any_nequal,
-	"<<", // ir_binop_lshift,
-	">>", // ir_binop_rshift,
-	"&", // ir_binop_bit_and,
-	"^", // ir_binop_bit_xor,
-	"|", // ir_binop_bit_or,
-	"&&", // ir_binop_logic_and,
-	"^^", // ir_binop_logic_xor,
-	"||", // ir_binop_logic_or,
-	"dot", // ir_binop_dot,
-	"min", // ir_binop_min,
-	"max", // ir_binop_max,
-	"pow", // ir_binop_pow,
-	"uboload_TODO", // ir_binop_ubo_load,
-	"ldexp_TODO", // ir_binop_ldexp,
-	"vectorExtract_TODO", // ir_binop_vector_extract,
-	"interpolateAtOffset", // ir_binop_interpolate_at_offset,
-	"interpolateAtSample", // ir_binop_interpolate_at_sample,
-	"atan", // ir_binop_atan2,
-	"fma", // ir_triop_fma,
-	"mix", // ir_triop_lrp,
-	"csel_TODO", // ir_triop_csel,
-	"bitfield_extract_TODO", // ir_triop_bitfield_extract,
-	"vector_insert_TODO", // ir_triop_vector_insert,
-	"bitfield_insert_TODO", // ir_quadop_bitfield_insert,
-	"vector_TODO", // ir_quadop_vector,
-};
-
-static const char *const operator_vec_glsl_strs[] = {
-	"lessThan",
-	"greaterThanEqual",
-	"equal",
-	"notEqual",
-};
-
+static const char* operator_glsl_str(ir_expression_operation op, const glsl_type* type) {
+	switch (op) {
+	case ir_unop_bit_not:
+		return "~";
+	case ir_unop_logic_not:
+		return "!";
+	case ir_unop_neg:
+		return "-";
+	case ir_unop_abs:
+		return "abs";
+	case ir_unop_sign:
+		return "sign";
+	case ir_unop_rsq:
+		return "inversesqrt";
+	case ir_unop_sqrt:
+		return "sqrt";
+	case ir_unop_exp:
+		return "exp";
+	case ir_unop_log:
+		return "log";
+	case ir_unop_exp2:
+		return "exp2";
+	case ir_unop_log2:
+		return "log2";
+	case ir_unop_trunc:
+		return "trunc";
+	case ir_unop_ceil:
+		return "ceil";
+	case ir_unop_floor:
+		return "floor";
+	case ir_unop_fract:
+		return "fract";
+	case ir_unop_round_even:
+		return "roundEven";
+	case ir_unop_sin:
+		return "sin";
+	case ir_unop_cos:
+		return "cos";
+	case ir_unop_atan:
+		return "atan";
+	case ir_unop_dFdx:
+		return "dFdx";
+	case ir_unop_dFdx_coarse:
+		return "dFdxCoarse";
+	case ir_unop_dFdx_fine:
+		return "dFdxFine";
+	case ir_unop_dFdy:
+		return "dFdy";
+	case ir_unop_dFdy_coarse:
+		return "dFdyCoarse";
+	case ir_unop_dFdy_fine:
+		return "dFdyFine";
+	case ir_unop_pack_snorm_2x16:
+		return "packSnorm2x16";
+	case ir_unop_pack_snorm_4x8:
+		return "packSnorm4x8";
+	case ir_unop_pack_unorm_2x16:
+		return "packUnorm2x16";
+	case ir_unop_pack_unorm_4x8:
+		return "packUnorm4x8";
+	case ir_unop_pack_half_2x16:
+		return "packHalf2x16";
+	case ir_unop_unpack_snorm_2x16:
+		return "unpackSnorm2x16";
+	case ir_unop_unpack_snorm_4x8:
+		return "unpackSnorm4x8";
+	case ir_unop_unpack_unorm_2x16:
+		return "unpackUnorm2x16";
+	case ir_unop_unpack_unorm_4x8:
+		return "unpackUnorm4x8";
+	case ir_unop_unpack_half_2x16:
+		return "unpackHalf2x16";
+	case ir_unop_bitfield_reverse:
+		return "bitfieldReverse";
+	case ir_unop_bit_count:
+		return "bitCount";
+	case ir_unop_find_msb:
+		return "findMSB";
+	case ir_unop_find_lsb:
+		return "findLSB";
+	case ir_unop_saturate:
+		return "saturate";
+	case ir_unop_pack_double_2x32:
+		return "packDouble2x32";
+	case ir_unop_unpack_double_2x32:
+		return "unpackDouble2x32";
+	case ir_unop_pack_sampler_2x32:
+		return "packSampler2x32";
+	case ir_unop_pack_image_2x32:
+		return "packImage2x32";
+	case ir_unop_unpack_sampler_2x32:
+		return "unpackSampler2x32";
+	case ir_unop_unpack_image_2x32:
+		return "unpackImage2x32";
+	case ir_unop_interpolate_at_centroid:
+		return "interpolateAtCentroid";
+	case ir_unop_pack_int_2x32:
+		return "packInt2x32";
+	case ir_unop_pack_uint_2x32:
+		return "packUint2x32";
+	case ir_unop_unpack_int_2x32:
+		return "unpackInt2x32";
+	case ir_unop_unpack_uint_2x32:
+		return "unpackUint2x32";
+	case ir_binop_add:
+		return "+";
+	case ir_binop_sub:
+		return "-";
+	case ir_binop_mul:
+		return "*";
+	case ir_binop_div:
+		return "/";
+	case ir_binop_mod:
+		if (type->is_integer())
+			return "%";
+		else
+			return "mod";
+	case ir_binop_less:
+		if (type->is_vector())
+			return "lessThan";
+		else
+			return "<";
+	case ir_binop_gequal:
+		if (type->is_vector())
+			return "greaterThanEqual";
+		else
+			return ">=";
+	case ir_binop_equal:
+		if (type->is_vector())
+			return "equal";
+		else
+			return "==";
+	case ir_binop_nequal:
+		if (type->is_vector())
+			return "notEqual";
+		else
+			return "!=";
+	case ir_binop_all_equal:
+		return "==";
+	case ir_binop_any_nequal:
+		return "!=";
+	case ir_binop_lshift:
+		return "<<";
+	case ir_binop_rshift:
+		return ">>";
+	case ir_binop_bit_and:
+		return "&";
+	case ir_binop_bit_xor:
+		return "^";
+	case ir_binop_bit_or:
+		return "|";
+	case ir_binop_logic_and:
+		return "&&";
+	case ir_binop_logic_xor:
+		return "^^";
+	case ir_binop_logic_or:
+		return "||";
+	case ir_binop_dot:
+		return "dot";
+	case ir_binop_min:
+		return "min";
+	case ir_binop_max:
+		return "max";
+	case ir_binop_pow:
+		return "pow";
+	case ir_binop_interpolate_at_offset:
+		return "interpolateAtOffset";
+	case ir_binop_interpolate_at_sample:
+		return "interpolateAtSample";
+	case ir_binop_atan2:
+		return "atan";
+	case ir_triop_fma:
+		return "fma";
+	case ir_triop_lrp:
+		return "mix";
+	default:
+		unreachable("Unexpected operator in operator_glsl_str");
+		return "UNIMPLEMENTED";
+	}
+}
 
 static bool is_binop_func_like(ir_expression_operation op, const glsl_type* type)
 {
-	if (op == ir_binop_mod ||
-		(op >= ir_binop_dot && op <= ir_binop_pow) ||
-		op == ir_binop_atan2)
+	if (op == ir_binop_mod && !type->is_integer()) {
 		return true;
-	if (type->is_vector() && (op >= ir_binop_less && op <= ir_binop_nequal))
-	{
+	} else if ((op >= ir_binop_dot && op <= ir_binop_pow) || op == ir_binop_atan2) {
+		return true;
+	} else if (type->is_vector() && (op >= ir_binop_less && op <= ir_binop_nequal)) {
 		return true;
 	}
 	return false;
@@ -829,7 +862,7 @@ void ir_print_glsl_visitor::visit(ir_expression *ir)
 		} else if (ir->operation == ir_unop_rcp) {
 			buffer.asprintf_append ("(1.0/(");
 		} else {
-			buffer.asprintf_append ("%s(", operator_glsl_strs[ir->operation]);
+			buffer.asprintf_append ("%s(", operator_glsl_str(ir->operation, ir->type));
 		}
 		if (ir->operands[0])
 			ir->operands[0]->accept(this);
@@ -862,23 +895,6 @@ void ir_print_glsl_visitor::visit(ir_expression *ir)
 			ir->operands[1]->accept(this);
 		buffer.asprintf_append ("]");
 	}
-	else if (ir->operation == ir_binop_mod && ir->operands[0]->type->is_integer())
-	{
-		// In GLES, mod() is only a func for floats,
-		// and we must use the % operator for ints.
-		assert(ir->num_operands == 2);
-		assert(ir->operands[1]->type->is_integer());
-
-		buffer.asprintf_append ("(");
-		if (ir->operands[0])
-			ir->operands[0]->accept(this);
-
-		buffer.asprintf_append (" %s ", "%");
-
-		if (ir->operands[1])
-			ir->operands[1]->accept(this);
-		buffer.asprintf_append (")");
-	}
 	else if (is_binop_func_like(ir->operation, ir->type))
 	{
 		if (ir->operation == ir_binop_mod)
@@ -887,10 +903,7 @@ void ir_print_glsl_visitor::visit(ir_expression *ir)
 			print_type(buffer, ir->type, true);
 			buffer.asprintf_append ("(");
 		}
-		if (ir->type->is_vector() && (ir->operation >= ir_binop_less && ir->operation <= ir_binop_nequal))
-			buffer.asprintf_append ("%s (", operator_vec_glsl_strs[ir->operation-ir_binop_less]);
-		else
-			buffer.asprintf_append ("%s (", operator_glsl_strs[ir->operation]);
+		buffer.asprintf_append ("%s (", operator_glsl_str(ir->operation, ir->type));
 
 		if (ir->operands[0])
 			ir->operands[0]->accept(this);
@@ -907,7 +920,7 @@ void ir_print_glsl_visitor::visit(ir_expression *ir)
 		if (ir->operands[0])
 			ir->operands[0]->accept(this);
 
-		buffer.asprintf_append (" %s ", operator_glsl_strs[ir->operation]);
+		buffer.asprintf_append (" %s ", operator_glsl_str(ir->operation, ir->type));
 
 		if (ir->operands[1])
 			ir->operands[1]->accept(this);
@@ -916,7 +929,7 @@ void ir_print_glsl_visitor::visit(ir_expression *ir)
 	else
 	{
 		// ternary op
-		buffer.asprintf_append ("%s (", operator_glsl_strs[ir->operation]);
+		buffer.asprintf_append ("%s (", operator_glsl_str(ir->operation, ir->type));
 		if (ir->operands[0])
 			ir->operands[0]->accept(this);
 		buffer.asprintf_append (", ");
@@ -1863,12 +1876,68 @@ ir_print_glsl_visitor::visit(ir_precision_statement *ir)
 	buffer.asprintf_append ("%s", ir->precision_statement);
 }
 
-// FIXME
+static const char*
+interface_packing_string(enum glsl_interface_packing packing)
+{
+	switch (packing) {
+	case GLSL_INTERFACE_PACKING_STD140:
+		return "std140";
+	case GLSL_INTERFACE_PACKING_SHARED:
+		return "shared";
+	case GLSL_INTERFACE_PACKING_PACKED:
+		return "packed";
+	case GLSL_INTERFACE_PACKING_STD430:
+		return "std430";
+	default:
+		unreachable("Unexpected interface packing");
+		return "UNKNOWN";
+	}
+}
+
+static const char*
+interface_variable_mode_string(enum ir_variable_mode mode)
+{
+	switch (mode) {
+	case ir_var_uniform:
+		return "uniform";
+	case ir_var_shader_storage:
+		return "buffer";
+	default:
+		unreachable("Unexpected interface variable mode");
+		return "UNKOWN";
+	}
+}
+
 void
 ir_print_glsl_visitor::visit(ir_typedecl_statement *ir)
 {
 	const glsl_type *const s = ir->type_decl;
-	buffer.asprintf_append ("struct %s {\n", s->name);
+
+	ir_variable* interface_var = NULL;
+
+	if (s->is_struct()) {
+		buffer.asprintf_append ("struct %s {\n", s->name);
+	} else if (s->is_interface()) {
+		const char* packing = interface_packing_string(s->get_interface_packing());
+
+		// Find a variable defined by this interface, as it holds some necessary data.
+		exec_node* n = ir;
+		while ((n = n->get_next())) {
+			ir_variable* v = ((ir_instruction *)n)->as_variable();
+			if (v != NULL && v->get_interface_type() == ir->type_decl) {
+				interface_var = v;
+				break;
+			}
+		}
+		const char* mode = interface_variable_mode_string((enum ir_variable_mode)interface_var->data.mode);
+		if (interface_var->data.explicit_binding) {
+			uint16_t binding = interface_var->data.binding;
+			buffer.asprintf_append ("layout(%s, binding=%" PRIu16 ") %s %s {\n", packing, binding, mode, s->name);
+		} else {
+			buffer.asprintf_append ("layout(%s) %s %s {\n", packing, mode, s->name);
+		}
+
+	}
 
 	for (unsigned j = 0; j < s->length; j++) {
 		buffer.asprintf_append ("  ");
@@ -1881,6 +1950,11 @@ ir_print_glsl_visitor::visit(ir_typedecl_statement *ir)
 		buffer.asprintf_append (";\n");
 	}
 	buffer.asprintf_append ("}");
+
+	if (interface_var && interface_var->is_interface_instance()) {
+		buffer.asprintf_append(" ");
+		print_var_name(interface_var);
+	}
 }
 
 void

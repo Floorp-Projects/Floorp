@@ -22,7 +22,7 @@
  */
 
 #include <string.h>
-#include "main/compiler.h"
+#include "util/compiler.h"
 #include "ir.h"
 #include "compiler/glsl_types.h"
 #include "util/hash_table.h"

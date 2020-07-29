@@ -42,13 +42,13 @@ extern "C" {
 struct gl_context;
 
 GLboolean
-_vbo_CreateContext(struct gl_context *ctx);
+_vbo_CreateContext(struct gl_context *ctx, bool use_buffer_objects);
 
 void
 _vbo_DestroyContext(struct gl_context *ctx);
 
 void
-vbo_exec_invalidate_state(struct gl_context *ctx);
+vbo_exec_update_eval_maps(struct gl_context *ctx);
 
 void
 _vbo_install_exec_vtxfmt(struct gl_context *ctx);
@@ -88,22 +88,24 @@ void
 vbo_delete_minmax_cache(struct gl_buffer_object *bufferObj);
 
 void
+vbo_get_minmax_index_mapped(unsigned count, unsigned index_size,
+                            unsigned restartIndex, bool restart,
+                            const void *indices,
+                            unsigned *min_index, unsigned *max_index);
+
+void
 vbo_get_minmax_indices(struct gl_context *ctx, const struct _mesa_prim *prim,
                        const struct _mesa_index_buffer *ib,
                        GLuint *min_index, GLuint *max_index, GLuint nr_prims);
-
-void
-vbo_use_buffer_objects(struct gl_context *ctx);
-
-void
-vbo_always_unmap_buffers(struct gl_context *ctx);
 
 void
 vbo_sw_primitive_restart(struct gl_context *ctx,
                          const struct _mesa_prim *prim,
                          GLuint nr_prims,
                          const struct _mesa_index_buffer *ib,
-                         struct gl_buffer_object *indirect);
+                         GLuint num_instances, GLuint base_instance,
+                         struct gl_buffer_object *indirect,
+                         GLsizeiptr indirect_offset);
 
 
 const struct gl_array_attributes*

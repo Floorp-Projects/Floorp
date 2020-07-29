@@ -34,6 +34,7 @@
 #include "glheader.h"
 #include "formats.h"
 #include "menums.h"
+#include "compiler/shader_enums.h"
 
 struct gl_bitmap_atlas;
 struct gl_buffer_object;
@@ -69,6 +70,9 @@ struct _mesa_index_buffer;
  * respect the contents of already referenced data.
  */
 #define MESA_MAP_NOWAIT_BIT       0x4000
+
+/* Mapping a buffer is allowed from any thread. */
+#define MESA_MAP_THREAD_SAFE_BIT  0x8000
 
 
 /**
@@ -450,7 +454,8 @@ struct dd_function_table {
     */
    /*@{*/
    /** Allocate a new program */
-   struct gl_program * (*NewProgram)(struct gl_context *ctx, GLenum target,
+   struct gl_program * (*NewProgram)(struct gl_context *ctx,
+                                     gl_shader_stage stage,
                                      GLuint id, bool is_arb_asm);
    /** Delete a program */
    void (*DeleteProgram)(struct gl_context *ctx, struct gl_program *prog);   
@@ -528,6 +533,8 @@ struct dd_function_table {
     * \param index_bounds_valid  are min_index and max_index valid?
     * \param min_index  lowest vertex index used
     * \param max_index  highest vertex index used
+    * \param num_instances  instance count from ARB_draw_instanced
+    * \param base_instance  base instance from ARB_base_instance
     * \param tfb_vertcount  if non-null, indicates which transform feedback
     *                       object has the vertex count.
     * \param tfb_stream  If called via DrawTransformFeedbackStream, specifies
@@ -542,8 +549,9 @@ struct dd_function_table {
                 const struct _mesa_index_buffer *ib,
                 GLboolean index_bounds_valid,
                 GLuint min_index, GLuint max_index,
+                GLuint num_instances, GLuint base_instance,
                 struct gl_transform_feedback_object *tfb_vertcount,
-                unsigned tfb_stream, struct gl_buffer_object *indirect);
+                unsigned tfb_stream);
 
 
    /**

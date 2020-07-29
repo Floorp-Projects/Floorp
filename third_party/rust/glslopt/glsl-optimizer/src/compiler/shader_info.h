@@ -134,11 +134,23 @@ typedef struct shader_info {
    /* Which patch outputs are read */
    uint32_t patch_outputs_read;
 
+   /* Which inputs are read indirectly (subset of inputs_read) */
+   uint64_t inputs_read_indirectly;
+   /* Which outputs are read or written indirectly */
+   uint64_t outputs_accessed_indirectly;
+   /* Which patch inputs are read indirectly (subset of patch_inputs_read) */
+   uint64_t patch_inputs_read_indirectly;
+   /* Which patch outputs are read or written indirectly */
+   uint64_t patch_outputs_accessed_indirectly;
+
    /** Bitfield of which textures are used */
    uint32_t textures_used;
 
    /** Bitfield of which textures are used by texelFetch() */
    uint32_t textures_used_by_txf;
+
+   /** Bitfield of which images are used */
+   uint32_t images_used;
 
    /* SPV_KHR_float_controls: execution mode for floating point ops */
    uint16_t float_controls_execution_mode;
@@ -175,6 +187,12 @@ typedef struct shader_info {
 
    /* Whether flrp has been lowered. */
    bool flrp_lowered:1;
+
+   /* Whether the shader writes memory, including transform feedback. */
+   bool writes_memory:1;
+
+   /* Whether gl_Layer is viewport-relative */
+   bool layer_viewport_relative:1;
 
    union {
       struct {
@@ -217,6 +235,7 @@ typedef struct shader_info {
 
       struct {
          bool uses_discard:1;
+         bool uses_demote:1;
 
          /**
           * True if this fragment shader requires helper invocations.  This
@@ -282,6 +301,7 @@ typedef struct shader_info {
 
       struct {
          uint16_t local_size[3];
+         uint16_t max_variable_local_size;
 
          bool local_size_variable:1;
          uint8_t user_data_components_amd:3;
@@ -317,6 +337,16 @@ typedef struct shader_info {
          /** Is the vertex order counterclockwise? */
          bool ccw:1;
          bool point_mode:1;
+
+         /* Bit mask of TCS per-vertex inputs (VS outputs) that are used
+          * with a vertex index that is NOT the invocation id
+          */
+         uint64_t tcs_cross_invocation_inputs_read;
+
+         /* Bit mask of TCS per-vertex outputs that are used
+          * with a vertex index that is NOT the invocation id
+          */
+         uint64_t tcs_cross_invocation_outputs_read;
       } tess;
    };
 } shader_info;

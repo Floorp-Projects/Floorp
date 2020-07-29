@@ -7,6 +7,7 @@ use std::env;
 fn configure(build: &mut cc::Build) -> &mut cc::Build {
     build.define("__STDC_FORMAT_MACROS", None);
     if cfg!(target_os = "linux") {
+        build.define("_GNU_SOURCE", None);
         build.define("HAVE_ENDIAN_H", None);
     }
     if cfg!(target_os = "windows") {
@@ -48,12 +49,14 @@ fn main() {
         .file("glsl-optimizer/src/util/half_float.c")
         .file("glsl-optimizer/src/util/hash_table.c")
         .file("glsl-optimizer/src/util/mesa-sha1.c")
+        .file("glsl-optimizer/src/util/os_misc.c")
         .file("glsl-optimizer/src/util/ralloc.c")
         .file("glsl-optimizer/src/util/set.c")
         .file("glsl-optimizer/src/util/sha1/sha1.c")
         .file("glsl-optimizer/src/util/softfloat.c")
         .file("glsl-optimizer/src/util/string_buffer.c")
         .file("glsl-optimizer/src/util/strtod.c")
+        .file("glsl-optimizer/src/util/u_debug.c")
         .compile("glcpp");
 
     configure(&mut cc::Build::new())
@@ -70,7 +73,6 @@ fn main() {
         .file("glsl-optimizer/src/mesa/program/dummy_errors.c")
         .file("glsl-optimizer/src/mesa/program/symbol_table.c")
         .file("glsl-optimizer/src/mesa/main/extensions_table.c")
-        .file("glsl-optimizer/src/mesa/main/imports.c")
         .file("glsl-optimizer/src/compiler/shader_enums.c")
         .compile("mesa");
 
@@ -137,6 +139,7 @@ fn main() {
         .file("glsl-optimizer/src/compiler/glsl/loop_unroll.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_blend_equation_advanced.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_buffer_access.cpp")
+        .file("glsl-optimizer/src/compiler/glsl/lower_builtins.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_const_arrays_to_uniforms.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_cs_derived.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_discard_flow.cpp")
@@ -148,11 +151,11 @@ fn main() {
         .file("glsl-optimizer/src/compiler/glsl/lower_jumps.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_mat_op_to_vec.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_named_interface_blocks.cpp")
-        .file("glsl-optimizer/src/compiler/glsl/lower_noise.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_offset_array.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_output_reads.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_packed_varyings.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_packing_builtins.cpp")
+        .file("glsl-optimizer/src/compiler/glsl/lower_precision.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_shared_reference.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_subroutine.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_tess_level.cpp")
@@ -165,6 +168,7 @@ fn main() {
         .file("glsl-optimizer/src/compiler/glsl/lower_vector_insert.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_vector.cpp")
         .file("glsl-optimizer/src/compiler/glsl/lower_vertex_id.cpp")
+        .file("glsl-optimizer/src/compiler/glsl/lower_xfb_varying.cpp")
         .file("glsl-optimizer/src/compiler/glsl/opt_algebraic.cpp")
         .file("glsl-optimizer/src/compiler/glsl/opt_array_splitting.cpp")
         .file("glsl-optimizer/src/compiler/glsl/opt_conditional_discard.cpp")

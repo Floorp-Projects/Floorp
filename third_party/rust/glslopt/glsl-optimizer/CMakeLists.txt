@@ -4,6 +4,8 @@ project(glsl_optimizer VERSION 0.1
                        DESCRIPTION "GLSL Optimizer"
                        LANGUAGES C CXX)
 
+set(CMAKE_CXX_STANDARD 11)
+
 include_directories(include)
 include_directories(src/mesa)
 include_directories(src/mapi)
@@ -16,6 +18,7 @@ include_directories(src/util)
 
 add_definitions(-D__STDC_FORMAT_MACROS)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  add_definitions(-D_GNU_SOURCE)
   add_definitions(-DHAVE_ENDIAN_H)
 endif()
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -23,17 +26,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 else()
   add_definitions(-DHAVE_PTHREAD)
   add_definitions(-DHAVE_TIMESPEC_GET)
-endif()
-
-option (DEBUG "Enable debugging" FALSE)
-
-if(${DEBUG} MATCHES "on")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0")
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -DNDEBUG")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -DNDEBUG")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s")
 endif()
 
 add_library(glcpp STATIC "src/compiler/glsl/glcpp/glcpp-lex.c"
@@ -45,17 +37,18 @@ add_library(glcpp STATIC "src/compiler/glsl/glcpp/glcpp-lex.c"
                          "src/util/half_float.c"
                          "src/util/hash_table.c"
                          "src/util/mesa-sha1.c"
+                         "src/util/os_misc.c"
                          "src/util/ralloc.c"
                          "src/util/set.c"
                          "src/util/sha1/sha1.c"
                          "src/util/softfloat.c"
                          "src/util/string_buffer.c"
-                         "src/util/strtod.c")
+                         "src/util/strtod.c"
+                         "src/util/u_debug.c")
 
 add_library(mesa STATIC "src/mesa/program/dummy_errors.c"
                         "src/mesa/program/symbol_table.c"
-                        "src/mesa/main/extensions_table.c"
-                        "src/mesa/main/imports.c")
+                        "src/mesa/main/extensions_table.c")
 
 add_library(glsl_optimizer STATIC "src/compiler/glsl_types.cpp"
                                   "src/compiler/glsl/ast_array_index.cpp"
@@ -111,6 +104,7 @@ add_library(glsl_optimizer STATIC "src/compiler/glsl_types.cpp"
                                   "src/compiler/glsl/loop_unroll.cpp"
                                   "src/compiler/glsl/lower_blend_equation_advanced.cpp"
                                   "src/compiler/glsl/lower_buffer_access.cpp"
+                                  "src/compiler/glsl/lower_builtins.cpp"
                                   "src/compiler/glsl/lower_const_arrays_to_uniforms.cpp"
                                   "src/compiler/glsl/lower_cs_derived.cpp"
                                   "src/compiler/glsl/lower_discard_flow.cpp"
@@ -122,11 +116,11 @@ add_library(glsl_optimizer STATIC "src/compiler/glsl_types.cpp"
                                   "src/compiler/glsl/lower_jumps.cpp"
                                   "src/compiler/glsl/lower_mat_op_to_vec.cpp"
                                   "src/compiler/glsl/lower_named_interface_blocks.cpp"
-                                  "src/compiler/glsl/lower_noise.cpp"
                                   "src/compiler/glsl/lower_offset_array.cpp"
                                   "src/compiler/glsl/lower_output_reads.cpp"
                                   "src/compiler/glsl/lower_packed_varyings.cpp"
                                   "src/compiler/glsl/lower_packing_builtins.cpp"
+                                  "src/compiler/glsl/lower_precision.cpp"
                                   "src/compiler/glsl/lower_shared_reference.cpp"
                                   "src/compiler/glsl/lower_subroutine.cpp"
                                   "src/compiler/glsl/lower_tess_level.cpp"
@@ -139,6 +133,7 @@ add_library(glsl_optimizer STATIC "src/compiler/glsl_types.cpp"
                                   "src/compiler/glsl/lower_vector_insert.cpp"
                                   "src/compiler/glsl/lower_vector.cpp"
                                   "src/compiler/glsl/lower_vertex_id.cpp"
+                                  "src/compiler/glsl/lower_xfb_varying.cpp"
                                   "src/compiler/glsl/opt_algebraic.cpp"
                                   "src/compiler/glsl/opt_array_splitting.cpp"
                                   "src/compiler/glsl/opt_conditional_discard.cpp"

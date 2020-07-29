@@ -59,6 +59,11 @@
 #define FLOAT_ROUND_UP              3
 #define FLOAT_ROUNDING_MODE         FLOAT_ROUND_NEAREST_EVEN
 
+/* Relax propagation of NaN.  Binary operations with a NaN source will still
+ * produce a NaN result, but it won't follow strict IEEE rules.
+ */
+#define RELAXED_NAN_PROPAGATION
+
 /* Absolute value of a Float64 :
  * Clear the sign bit
  */
@@ -88,10 +93,7 @@ uint64_t
 __fneg64(uint64_t __a)
 {
    uvec2 a = unpackUint2x32(__a);
-   uint t = a.y;
-
-   t ^= (1u << 31);
-   a.y = mix(t, a.y, __is_nan(__a));
+   a.y ^= (1u << 31);
    return packUint2x32(a);
 }
 
@@ -165,17 +167,17 @@ __fne64(uint64_t a, uint64_t b)
 uint
 __extractFloat64Sign(uint64_t a)
 {
-   return unpackUint2x32(a).y >> 31;
+   return unpackUint2x32(a).y & 0x80000000u;
 }
 
-/* Returns true if the 64-bit value formed by concatenating `a0' and `a1' is less
- * than the 64-bit value formed by concatenating `b0' and `b1'.  Otherwise,
- * returns false.
+/* Returns true if the signed 64-bit value formed by concatenating `a0' and
+ * `a1' is less than the signed 64-bit value formed by concatenating `b0' and
+ * `b1'.  Otherwise, returns false.
  */
 bool
-lt64(uint a0, uint a1, uint b0, uint b1)
+ilt64(uint a0, uint a1, uint b0, uint b1)
 {
-   return (a0 < b0) || ((a0 == b0) && (a1 < b1));
+   return (int(a0) < int(b0)) || ((a0 == b0) && (a1 < b1));
 }
 
 bool
@@ -183,12 +185,42 @@ __flt64_nonnan(uint64_t __a, uint64_t __b)
 {
    uvec2 a = unpackUint2x32(__a);
    uvec2 b = unpackUint2x32(__b);
-   uint aSign = __extractFloat64Sign(__a);
-   uint bSign = __extractFloat64Sign(__b);
-   if (aSign != bSign)
-      return (aSign != 0u) && ((((a.y | b.y)<<1) | a.x | b.x) != 0u);
 
-   return mix(lt64(a.y, a.x, b.y, b.x), lt64(b.y, b.x, a.y, a.x), aSign != 0u);
+   /* IEEE 754 floating point numbers are specifically designed so that, with
+    * two exceptions, values can be compared by bit-casting to signed integers
+    * with the same number of bits.
+    *
+    * From https://en.wikipedia.org/wiki/IEEE_754-1985#Comparing_floating-point_numbers:
+    *
+    *    When comparing as 2's-complement integers: If the sign bits differ,
+    *    the negative number precedes the positive number, so 2's complement
+    *    gives the correct result (except that negative zero and positive zero
+    *    should be considered equal). If both values are positive, the 2's
+    *    complement comparison again gives the correct result. Otherwise (two
+    *    negative numbers), the correct FP ordering is the opposite of the 2's
+    *    complement ordering.
+    *
+    * The logic implied by the above quotation is:
+    *
+    *    !both_are_zero(a, b) && (both_negative(a, b) ? a > b : a < b)
+    *
+    * This is equivalent to
+    *
+    *    fne(a, b) && (both_negative(a, b) ? a >= b : a < b)
+    *
+    *    fne(a, b) && (both_negative(a, b) ? !(a < b) : a < b)
+    *
+    *    fne(a, b) && ((both_negative(a, b) && !(a < b)) ||
+    *                  (!both_negative(a, b) && (a < b)))
+    *
+    * (A!|B)&(A|!B) is (A xor B) which is implemented here using !=.
+    *
+    *    fne(a, b) && (both_negative(a, b) != (a < b))
+    */
+   bool lt = ilt64(a.y, a.x, b.y, b.x);
+   bool both_negative = (a.y & b.y & 0x80000000u) != 0;
+
+   return !__feq64_nonnan(__a, __b) && (lt != both_negative);
 }
 
 /* Returns true if the double-precision floating-point value `a' is less than
@@ -198,10 +230,15 @@ __flt64_nonnan(uint64_t __a, uint64_t __b)
 bool
 __flt64(uint64_t a, uint64_t b)
 {
-   if (__is_nan(a) || __is_nan(b))
-      return false;
+   /* This weird layout matters.  Doing the "obvious" thing results in extra
+    * flow control being inserted to implement the short-circuit evaluation
+    * rules.  Flow control is bad!
+    */
+   bool x = !__is_nan(a);
+   bool y = !__is_nan(b);
+   bool z = __flt64_nonnan(a, b);
 
-   return __flt64_nonnan(a, b);
+   return (x && y && z);
 }
 
 /* Returns true if the double-precision floating-point value `a' is greater
@@ -212,19 +249,45 @@ __flt64(uint64_t a, uint64_t b)
 bool
 __fge64(uint64_t a, uint64_t b)
 {
-   if (__is_nan(a) || __is_nan(b))
-      return false;
+   /* This weird layout matters.  Doing the "obvious" thing results in extra
+    * flow control being inserted to implement the short-circuit evaluation
+    * rules.  Flow control is bad!
+    */
+   bool x = !__is_nan(a);
+   bool y = !__is_nan(b);
+   bool z = !__flt64_nonnan(a, b);
 
-   return !__flt64_nonnan(a, b);
+   return (x && y && z);
 }
 
 uint64_t
 __fsat64(uint64_t __a)
 {
-   if (__flt64(__a, 0ul))
+   uvec2 a = unpackUint2x32(__a);
+
+   /* fsat(NaN) should be zero. */
+   if (__is_nan(__a) || int(a.y) < 0)
       return 0ul;
 
-   if (__fge64(__a, 0x3FF0000000000000ul /* 1.0 */))
+   /* IEEE 754 floating point numbers are specifically designed so that, with
+    * two exceptions, values can be compared by bit-casting to signed integers
+    * with the same number of bits.
+    *
+    * From https://en.wikipedia.org/wiki/IEEE_754-1985#Comparing_floating-point_numbers:
+    *
+    *    When comparing as 2's-complement integers: If the sign bits differ,
+    *    the negative number precedes the positive number, so 2's complement
+    *    gives the correct result (except that negative zero and positive zero
+    *    should be considered equal). If both values are positive, the 2's
+    *    complement comparison again gives the correct result. Otherwise (two
+    *    negative numbers), the correct FP ordering is the opposite of the 2's
+    *    complement ordering.
+    *
+    * We know that both values are not negative, and we know that at least one
+    * value is not zero.  Therefore, we can just use the 2's complement
+    * comparison ordering.
+    */
+   if (ilt64(0x3FF00000, 0x00000000, a.y, a.x))
       return 0x3FF0000000000000ul;
 
    return __a;
@@ -376,7 +439,7 @@ __packFloat64(uint zSign, int zExp, uint zFrac0, uint zFrac1)
 {
    uvec2 z;
 
-   z.y = (zSign << 31) + (uint(zExp) << 20) + zFrac0;
+   z.y = zSign + (uint(zExp) << 20) + zFrac0;
    z.x = zFrac1;
    return packUint2x32(z);
 }
@@ -437,23 +500,25 @@ __roundAndPackFloat64(uint zSign,
          }
          return __packFloat64(zSign, 0x7FF, 0u, 0u);
       }
-      if (zExp < 0) {
-         __shift64ExtraRightJamming(
-            zFrac0, zFrac1, zFrac2, -zExp, zFrac0, zFrac1, zFrac2);
-         zExp = 0;
-         if (roundNearestEven) {
-            increment = zFrac2 < 0u;
+   }
+
+   if (zExp < 0) {
+      __shift64ExtraRightJamming(
+         zFrac0, zFrac1, zFrac2, -zExp, zFrac0, zFrac1, zFrac2);
+      zExp = 0;
+      if (roundNearestEven) {
+         increment = zFrac2 < 0u;
+      } else {
+         if (zSign != 0u) {
+            increment = (FLOAT_ROUNDING_MODE == FLOAT_ROUND_DOWN) &&
+               (zFrac2 != 0u);
          } else {
-            if (zSign != 0u) {
-               increment = (FLOAT_ROUNDING_MODE == FLOAT_ROUND_DOWN) &&
-                  (zFrac2 != 0u);
-            } else {
-               increment = (FLOAT_ROUNDING_MODE == FLOAT_ROUND_UP) &&
-                  (zFrac2 != 0u);
-            }
+            increment = (FLOAT_ROUNDING_MODE == FLOAT_ROUND_UP) &&
+               (zFrac2 != 0u);
          }
       }
    }
+
    if (increment) {
       __add64(zFrac0, zFrac1, 0u, 1u, zFrac0, zFrac1);
       zFrac1 &= ~((zFrac2 + uint(zFrac2 == 0u)) & uint(roundNearestEven));
@@ -492,7 +557,7 @@ __roundAndPackUInt64(uint zSign, uint zFrac0, uint zFrac1, uint zFrac2)
          zFrac1 &= ~(1u) + uint(zFrac2 == 0u) & uint(roundNearestEven);
    }
    return mix(packUint2x32(uvec2(zFrac1, zFrac0)), default_nan,
-              (zSign !=0u && (zFrac0 | zFrac1) != 0u));
+              (zSign != 0u && (zFrac0 | zFrac1) != 0u));
 }
 
 int64_t
@@ -526,9 +591,9 @@ __roundAndPackInt64(uint zSign, uint zFrac0, uint zFrac1, uint zFrac2)
 
    int64_t absZ = mix(int64_t(packUint2x32(uvec2(zFrac1, zFrac0))),
                       -int64_t(packUint2x32(uvec2(zFrac1, zFrac0))),
-                      (zSign != 0u));
-   int64_t nan = mix(default_PosNaN, default_NegNaN, bool(zSign));
-   return mix(absZ, nan, bool(zSign ^ uint(absZ < 0)) && bool(absZ));
+                      zSign != 0u);
+   int64_t nan = mix(default_PosNaN, default_NegNaN, zSign != 0u);
+   return mix(absZ, nan, ((zSign != 0u) != (absZ < 0)) && bool(absZ));
 }
 
 /* Returns the number of leading 0 bits before the most-significant 1 bit of
@@ -537,9 +602,7 @@ __roundAndPackInt64(uint zSign, uint zFrac0, uint zFrac1, uint zFrac2)
 int
 __countLeadingZeros32(uint a)
 {
-   int shiftCount;
-   shiftCount = mix(31 - findMSB(a), 32, a == 0u);
-   return shiftCount;
+   return 31 - findMSB(a);
 }
 
 /* Takes an abstract floating-point value having sign `zSign', exponent `zExp',
@@ -583,6 +646,12 @@ __normalizeRoundAndPackFloat64(uint zSign,
 uint64_t
 __propagateFloat64NaN(uint64_t __a, uint64_t __b)
 {
+#if defined RELAXED_NAN_PROPAGATION
+   uvec2 a = unpackUint2x32(__a);
+   uvec2 b = unpackUint2x32(__b);
+
+   return packUint2x32(uvec2(a.x | b.x, a.y | b.y));
+#else
    bool aIsNaN = __is_nan(__a);
    bool bIsNaN = __is_nan(__b);
    uvec2 a = unpackUint2x32(__a);
@@ -591,7 +660,19 @@ __propagateFloat64NaN(uint64_t __a, uint64_t __b)
    b.y |= 0x00080000u;
 
    return packUint2x32(mix(b, mix(a, b, bvec2(bIsNaN, bIsNaN)), bvec2(aIsNaN, aIsNaN)));
+#endif
 }
+
+/* If a shader is in the soft-fp64 path, it almost certainly has register
+ * pressure problems.  Choose a method to exchange two values that does not
+ * require a temporary.
+ */
+#define EXCHANGE(a, b) \
+   do {                \
+       a ^= b;         \
+       b ^= a;         \
+       a ^= b;         \
+   } while (false)
 
 /* Returns the result of adding the double-precision floating-point values
  * `a' and `b'.  The operation is performed according to the IEEE Standard for
@@ -608,17 +689,16 @@ __fadd64(uint64_t a, uint64_t b)
    uint bFracHi = __extractFloat64FracHi(b);
    int aExp = __extractFloat64Exp(a);
    int bExp = __extractFloat64Exp(b);
-   uint zFrac0 = 0u;
-   uint zFrac1 = 0u;
    int expDiff = aExp - bExp;
    if (aSign == bSign) {
-      uint zFrac2 = 0u;
+      uint zFrac0;
+      uint zFrac1;
+      uint zFrac2;
       int zExp;
-      bool orig_exp_diff_is_zero = (expDiff == 0);
 
-      if (orig_exp_diff_is_zero) {
+      if (expDiff == 0) {
          if (aExp == 0x7FF) {
-            bool propagate = (aFracHi | aFracLo | bFracHi | bFracLo) != 0u;
+            bool propagate = ((aFracHi | bFracHi) | (aFracLo| bFracLo)) != 0u;
             return mix(a, __propagateFloat64NaN(a, b), propagate);
          }
          __add64(aFracHi, aFracLo, bFracHi, bFracLo, zFrac0, zFrac1);
@@ -629,29 +709,24 @@ __fadd64(uint64_t a, uint64_t b)
          zExp = aExp;
          __shift64ExtraRightJamming(
             zFrac0, zFrac1, zFrac2, 1, zFrac0, zFrac1, zFrac2);
-      } else if (0 < expDiff) {
-         if (aExp == 0x7FF) {
-            bool propagate = (aFracHi | aFracLo) != 0u;
-            return mix(a, __propagateFloat64NaN(a, b), propagate);
+      } else {
+         if (expDiff < 0) {
+            EXCHANGE(aFracHi, bFracHi);
+            EXCHANGE(aFracLo, bFracLo);
+            EXCHANGE(aExp, bExp);
          }
 
-         expDiff = mix(expDiff, expDiff - 1, bExp == 0);
+         if (aExp == 0x7FF) {
+            bool propagate = (aFracHi | aFracLo) != 0u;
+            return mix(__packFloat64(aSign, 0x7ff, 0u, 0u), __propagateFloat64NaN(a, b), propagate);
+         }
+
+         expDiff = mix(abs(expDiff), abs(expDiff) - 1, bExp == 0);
          bFracHi = mix(bFracHi | 0x00100000u, bFracHi, bExp == 0);
          __shift64ExtraRightJamming(
             bFracHi, bFracLo, 0u, expDiff, bFracHi, bFracLo, zFrac2);
          zExp = aExp;
-      } else if (expDiff < 0) {
-         if (bExp == 0x7FF) {
-            bool propagate = (bFracHi | bFracLo) != 0u;
-            return mix(__packFloat64(aSign, 0x7ff, 0u, 0u), __propagateFloat64NaN(a, b), propagate);
-         }
-         expDiff = mix(expDiff, expDiff + 1, aExp == 0);
-         aFracHi = mix(aFracHi | 0x00100000u, aFracHi, aExp == 0);
-         __shift64ExtraRightJamming(
-            aFracHi, aFracLo, 0u, - expDiff, aFracHi, aFracLo, zFrac2);
-         zExp = bExp;
-      }
-      if (!orig_exp_diff_is_zero) {
+
          aFracHi |= 0x00100000u;
          __add64(aFracHi, aFracLo, bFracHi, bFracLo, zFrac0, zFrac1);
          --zExp;
@@ -667,12 +742,23 @@ __fadd64(uint64_t a, uint64_t b)
 
       __shortShift64Left(aFracHi, aFracLo, 10, aFracHi, aFracLo);
       __shortShift64Left(bFracHi, bFracLo, 10, bFracHi, bFracLo);
-      if (0 < expDiff) {
+      if (expDiff != 0) {
+         uint zFrac0;
+         uint zFrac1;
+
+         if (expDiff < 0) {
+            EXCHANGE(aFracHi, bFracHi);
+            EXCHANGE(aFracLo, bFracLo);
+            EXCHANGE(aExp, bExp);
+            aSign ^= 0x80000000u;
+         }
+
          if (aExp == 0x7FF) {
             bool propagate = (aFracHi | aFracLo) != 0u;
-            return mix(a, __propagateFloat64NaN(a, b), propagate);
+            return mix(__packFloat64(aSign, 0x7ff, 0u, 0u), __propagateFloat64NaN(a, b), propagate);
          }
-         expDiff = mix(expDiff, expDiff - 1, bExp == 0);
+
+         expDiff = mix(abs(expDiff), abs(expDiff) - 1, bExp == 0);
          bFracHi = mix(bFracHi | 0x40000000u, bFracHi, bExp == 0);
          __shift64RightJamming(bFracHi, bFracLo, expDiff, bFracHi, bFracLo);
          aFracHi |= 0x40000000u;
@@ -681,77 +767,37 @@ __fadd64(uint64_t a, uint64_t b)
          --zExp;
          return __normalizeRoundAndPackFloat64(aSign, zExp - 10, zFrac0, zFrac1);
       }
-      if (expDiff < 0) {
-         if (bExp == 0x7FF) {
-            bool propagate = (bFracHi | bFracLo) != 0u;
-            return mix(__packFloat64(aSign ^ 1u, 0x7ff, 0u, 0u), __propagateFloat64NaN(a, b), propagate);
-         }
-         expDiff = mix(expDiff, expDiff + 1, aExp == 0);
-         aFracHi = mix(aFracHi | 0x40000000u, aFracHi, aExp == 0);
-         __shift64RightJamming(aFracHi, aFracLo, - expDiff, aFracHi, aFracLo);
-         bFracHi |= 0x40000000u;
-         __sub64(bFracHi, bFracLo, aFracHi, aFracLo, zFrac0, zFrac1);
-         zExp = bExp;
-         aSign ^= 1u;
-         --zExp;
-         return __normalizeRoundAndPackFloat64(aSign, zExp - 10, zFrac0, zFrac1);
-      }
       if (aExp == 0x7FF) {
-          bool propagate = (aFracHi | aFracLo | bFracHi | bFracLo) != 0u;
+         bool propagate = ((aFracHi | bFracHi) | (aFracLo | bFracLo)) != 0u;
          return mix(0xFFFFFFFFFFFFFFFFUL, __propagateFloat64NaN(a, b), propagate);
       }
       bExp = mix(bExp, 1, aExp == 0);
       aExp = mix(aExp, 1, aExp == 0);
-      bool zexp_normal = false;
-      bool blta = true;
+
+      uint zFrac0;
+      uint zFrac1;
+      uint sign_of_difference = 0;
       if (bFracHi < aFracHi) {
          __sub64(aFracHi, aFracLo, bFracHi, bFracLo, zFrac0, zFrac1);
-         zexp_normal = true;
       }
       else if (aFracHi < bFracHi) {
          __sub64(bFracHi, bFracLo, aFracHi, aFracLo, zFrac0, zFrac1);
-         blta = false;
-         zexp_normal = true;
+         sign_of_difference = 0x80000000;
       }
-      else if (bFracLo < aFracLo) {
+      else if (bFracLo <= aFracLo) {
+         /* It is possible that zFrac0 and zFrac1 may be zero after this. */
          __sub64(aFracHi, aFracLo, bFracHi, bFracLo, zFrac0, zFrac1);
-         zexp_normal = true;
       }
-      else if (aFracLo < bFracLo) {
+      else {
          __sub64(bFracHi, bFracLo, aFracHi, aFracLo, zFrac0, zFrac1);
-          blta = false;
-          zexp_normal = true;
+         sign_of_difference = 0x80000000;
       }
-      zExp = mix(bExp, aExp, blta);
-      aSign = mix(aSign ^ 1u, aSign, blta);
-      uint64_t retval_0 = __packFloat64(uint(FLOAT_ROUNDING_MODE == FLOAT_ROUND_DOWN), 0, 0u, 0u);
+      zExp = mix(bExp, aExp, sign_of_difference == 0u);
+      aSign ^= sign_of_difference;
+      uint64_t retval_0 = __packFloat64(uint(FLOAT_ROUNDING_MODE == FLOAT_ROUND_DOWN) << 31, 0, 0u, 0u);
       uint64_t retval_1 = __normalizeRoundAndPackFloat64(aSign, zExp - 11, zFrac0, zFrac1);
-      return mix(retval_0, retval_1, zexp_normal);
+      return mix(retval_0, retval_1, zFrac0 != 0u || zFrac1 != 0u);
    }
-}
-
-/* Multiplies `a' by `b' to obtain a 64-bit product.  The product is broken
- * into two 32-bit pieces which are stored at the locations pointed to by
- * `z0Ptr' and `z1Ptr'.
- */
-void
-__mul32To64(uint a, uint b, out uint z0Ptr, out uint z1Ptr)
-{
-   uint aLow = a & 0x0000FFFFu;
-   uint aHigh = a>>16;
-   uint bLow = b & 0x0000FFFFu;
-   uint bHigh = b>>16;
-   uint z1 = aLow * bLow;
-   uint zMiddleA = aLow * bHigh;
-   uint zMiddleB = aHigh * bLow;
-   uint z0 = aHigh * bHigh;
-   zMiddleA += zMiddleB;
-   z0 += ((uint(zMiddleA < zMiddleB)) << 16) + (zMiddleA >> 16);
-   zMiddleA <<= 16;
-   z1 += zMiddleA;
-   z0 += uint(z1 < zMiddleA);
-   z1Ptr = z1;
-   z0Ptr = z0;
 }
 
 /* Multiplies the 64-bit value formed by concatenating `a0' and `a1' to the
@@ -773,12 +819,12 @@ __mul64To128(uint a0, uint a1, uint b0, uint b1,
    uint more1 = 0u;
    uint more2 = 0u;
 
-   __mul32To64(a1, b1, z2, z3);
-   __mul32To64(a1, b0, z1, more2);
+   umulExtended(a1, b1, z2, z3);
+   umulExtended(a1, b0, z1, more2);
    __add64(z1, more2, 0u, z2, z1, z2);
-   __mul32To64(a0, b0, z0, more1);
+   umulExtended(a0, b0, z0, more1);
    __add64(z0, more1, 0u, z1, z0, z1);
-   __mul32To64(a0, b1, more1, more2);
+   umulExtended(a0, b1, more1, more2);
    __add64(more1, more2, 0u, z2, more1, z2);
    __add64(z0, z1, 0u, more1, z0, z1);
    z3Ptr = z3;
@@ -847,8 +893,13 @@ __fmul64(uint64_t a, uint64_t b)
       return __packFloat64(zSign, 0x7FF, 0u, 0u);
    }
    if (bExp == 0x7FF) {
+      /* a cannot be NaN, but is b NaN? */
       if ((bFracHi | bFracLo) != 0u)
+#if defined RELAXED_NAN_PROPAGATION
+         return b;
+#else
          return __propagateFloat64NaN(a, b);
+#endif
       if ((uint(aExp) | aFracHi | aFracLo) == 0u)
          return 0xFFFFFFFFFFFFFFFFUL;
       return __packFloat64(zSign, 0x7FF, 0u, 0u);
@@ -934,13 +985,13 @@ __fp64_to_uint(uint64_t a)
       __shift64RightJamming(aFracHi, aFracLo, shiftDist, aFracHi, aFracLo);
 
    if ((aFracHi & 0xFFFFF000u) != 0u)
-      return mix(~0u, 0u, (aSign != 0u));
+      return mix(~0u, 0u, aSign != 0u);
 
    uint z = 0u;
    uint zero = 0u;
    __shift64Right(aFracHi, aFracLo, 12, zero, z);
 
-   uint expt = mix(~0u, 0u, (aSign != 0u));
+   uint expt = mix(~0u, 0u, aSign != 0u);
 
    return mix(z, expt, (aSign != 0u) && (z != 0u));
 }
@@ -1047,7 +1098,7 @@ __fp32_to_uint64(float f)
    uint a = floatBitsToUint(f);
    uint aFrac = a & 0x007FFFFFu;
    int aExp = int((a>>23) & 0xFFu);
-   uint aSign = a>>31;
+   uint aSign = a & 0x80000000u;
    uint zFrac0 = 0u;
    uint zFrac1 = 0u;
    uint zFrac2 = 0u;
@@ -1076,7 +1127,7 @@ __fp32_to_int64(float f)
    uint a = floatBitsToUint(f);
    uint aFrac = a & 0x007FFFFFu;
    int aExp = int((a>>23) & 0xFFu);
-   uint aSign = a>>31;
+   uint aSign = a & 0x80000000u;
    uint zFrac0 = 0u;
    uint zFrac1 = 0u;
    uint zFrac2 = 0u;
@@ -1110,10 +1161,10 @@ __int64_to_fp64(int64_t a)
    uint64_t absA = mix(uint64_t(a), uint64_t(-a), a < 0);
    uint aFracHi = __extractFloat64FracHi(absA);
    uvec2 aFrac = unpackUint2x32(absA);
-   uint zSign = uint(a < 0);
+   uint zSign = uint(unpackInt2x32(a).y) & 0x80000000u;
 
    if ((aFracHi & 0x80000000u) != 0u) {
-      return mix(0ul, __packFloat64(1, 0x434, 0u, 0u), a < 0);
+      return mix(0ul, __packFloat64(0x80000000u, 0x434, 0u, 0u), a < 0);
    }
 
    return __normalizeRoundAndPackFloat64(zSign, 0x432, aFrac.y, aFrac.x);
@@ -1143,7 +1194,7 @@ __fp64_to_int(uint64_t a)
       if (0x41E < aExp) {
          if ((aExp == 0x7FF) && bool(aFracHi | aFracLo))
             aSign = 0u;
-         return mix(0x7FFFFFFF, 0x80000000, bool(aSign));
+         return mix(0x7FFFFFFF, 0x80000000, aSign != 0u);
       }
       __shortShift64Left(aFracHi | 0x00100000u, aFracLo, shiftCount, absZ, aFracExtra);
    } else {
@@ -1155,9 +1206,9 @@ __fp64_to_int(uint64_t a)
       absZ = aFracHi >> (- shiftCount);
    }
 
-   int z = mix(int(absZ), -int(absZ), (aSign != 0u));
-   int nan = mix(0x7FFFFFFF, 0x80000000, bool(aSign));
-   return mix(z, nan, bool(aSign ^ uint(z < 0)) && bool(z));
+   int z = mix(int(absZ), -int(absZ), aSign != 0u);
+   int nan = mix(0x7FFFFFFF, 0x80000000, aSign != 0u);
+   return mix(z, nan, ((aSign != 0u) != (z < 0)) && bool(z));
 }
 
 /* Returns the result of converting the 32-bit two's complement integer `a'
@@ -1171,7 +1222,7 @@ __int_to_fp64(int a)
    uint zFrac1 = 0u;
    if (a==0)
       return __packFloat64(0u, 0, 0u, 0u);
-   uint zSign = uint(a < 0);
+   uint zSign = uint(a) & 0x80000000u;
    uint absA = mix(uint(a), uint(-a), a < 0);
    int shiftCount = __countLeadingZeros32(absA) - 11;
    if (0 <= shiftCount) {
@@ -1192,7 +1243,7 @@ __fp64_to_bool(uint64_t a)
 uint64_t
 __bool_to_fp64(bool a)
 {
-   return __int_to_fp64(int(a));
+   return packUint2x32(uvec2(0x00000000u, uint(-int(a) & 0x3ff00000)));
 }
 
 /* Packs the sign `zSign', exponent `zExp', and significand `zFrac' into a
@@ -1207,7 +1258,7 @@ __bool_to_fp64(bool a)
 float
 __packFloat32(uint zSign, int zExp, uint zFrac)
 {
-   return uintBitsToFloat((zSign<<31) + (uint(zExp)<<23) + zFrac);
+   return uintBitsToFloat(zSign + (uint(zExp)<<23) + zFrac);
 }
 
 /* Takes an abstract floating-point value having sign `zSign', exponent `zExp',
@@ -1287,7 +1338,7 @@ __fp64_to_fp32(uint64_t __a)
    uint aSign = __extractFloat64Sign(__a);
    if (aExp == 0x7FF) {
       __shortShift64Left(a.y, a.x, 12, a.y, a.x);
-      float rval = uintBitsToFloat((aSign<<31) | 0x7FC00000u | (a.y>>9));
+      float rval = uintBitsToFloat(aSign | 0x7FC00000u | (a.y>>9));
       rval = mix(__packFloat32(aSign, 0xFF, 0u), rval, (aFracHi | aFracLo) != 0u);
       return rval;
    }
@@ -1315,7 +1366,7 @@ __uint64_to_fp32(uint64_t __a)
 float
 __int64_to_fp32(int64_t __a)
 {
-   uint aSign = uint(__a < 0);
+   uint aSign = uint(unpackInt2x32(__a).y) & 0x80000000u;
    uint64_t absA = mix(uint64_t(__a), uint64_t(-__a), __a < 0);
    uvec2 aFrac = unpackUint2x32(absA);
    int shiftCount = mix(__countLeadingZeros32(aFrac.y) - 33,
@@ -1339,7 +1390,7 @@ __fp32_to_fp64(float f)
    uint a = floatBitsToUint(f);
    uint aFrac = a & 0x007FFFFFu;
    int aExp = int((a>>23) & 0xFFu);
-   uint aSign = a>>31;
+   uint aSign = a & 0x80000000u;
    uint zFrac0 = 0u;
    uint zFrac1 = 0u;
 
@@ -1348,7 +1399,7 @@ __fp32_to_fp64(float f)
          uint nanLo = 0u;
          uint nanHi = a<<9;
          __shift64Right(nanHi, nanLo, 12, nanHi, nanLo);
-         nanHi |= ((aSign<<31) | 0x7FF80000u);
+         nanHi |= aSign | 0x7FF80000u;
          return packUint2x32(uvec2(nanLo, nanHi));
       }
       return __packFloat64(aSign, 0x7FF, 0u, 0u);
@@ -1442,7 +1493,7 @@ __estimateDiv64To32(uint a0, uint a1, uint b)
       return 0xFFFFFFFFu;
    b0 = b>>16;
    z = (b0<<16 <= a0) ? 0xFFFF0000u : (a0 / b0)<<16;
-   __mul32To64(b, z, term0, term1);
+   umulExtended(b, z, term0, term1);
    __sub64(a0, a1, term0, term1, rem0, rem1);
    while (int(rem0) < 0) {
       z -= 0x10000u;
@@ -1612,7 +1663,7 @@ __fsqrt64(uint64_t a)
       zFrac0 = 0x7FFFFFFFu;
    doubleZFrac0 = zFrac0 + zFrac0;
    __shortShift64Left(aFracHi, aFracLo, 9 - (aExp & 1), aFracHi, aFracLo);
-   __mul32To64(zFrac0, zFrac0, term0, term1);
+   umulExtended(zFrac0, zFrac0, term0, term1);
    __sub64(aFracHi, aFracLo, term0, term1, rem0, rem1);
    while (int(rem0) < 0) {
       --zFrac0;
@@ -1623,9 +1674,9 @@ __fsqrt64(uint64_t a)
    if ((zFrac1 & 0x1FFu) <= 5u) {
       if (zFrac1 == 0u)
          zFrac1 = 1u;
-      __mul32To64(doubleZFrac0, zFrac1, term1, term2);
+      umulExtended(doubleZFrac0, zFrac1, term1, term2);
       __sub64(rem1, 0u, term1, term2, rem1, rem2);
-      __mul32To64(zFrac1, zFrac1, term2, term3);
+      umulExtended(zFrac1, zFrac1, term2, term3);
       __sub96(rem1, rem2, 0u, 0u, term2, term3, rem1, rem2, rem3);
       while (int(rem1) < 0) {
          --zFrac1;
@@ -1665,7 +1716,19 @@ __ftrunc64(uint64_t __a)
 uint64_t
 __ffloor64(uint64_t a)
 {
-   bool is_positive = __fge64(a, 0ul);
+   /* The big assumtion is that when 'a' is NaN, __ftrunc(a) returns a.  Based
+    * on that assumption, NaN values that don't have the sign bit will safely
+    * return NaN (identity).  This is guarded by RELAXED_NAN_PROPAGATION
+    * because otherwise the NaN should have the "signal" bit set.  The
+    * __fadd64 will ensure that occurs.
+    */
+   bool is_positive =
+#if defined RELAXED_NAN_PROPAGATION
+      int(unpackUint2x32(a).y) >= 0
+#else
+      __fge64(a, 0ul)
+#endif
+      ;
    uint64_t tr = __ftrunc64(a);
 
    if (is_positive || __feq64(tr, a)) {
@@ -1723,21 +1786,29 @@ __fround64(uint64_t __a)
 uint64_t
 __fmin64(uint64_t a, uint64_t b)
 {
-   if (__is_nan(a)) return b;
-   if (__is_nan(b)) return a;
+   /* This weird layout matters.  Doing the "obvious" thing results in extra
+    * flow control being inserted to implement the short-circuit evaluation
+    * rules.  Flow control is bad!
+    */
+   bool b_nan = __is_nan(b);
+   bool a_lt_b = __flt64_nonnan(a, b);
+   bool a_nan = __is_nan(a);
 
-   if (__flt64_nonnan(a, b)) return a;
-   return b;
+   return (b_nan || a_lt_b) && !a_nan ? a : b;
 }
 
 uint64_t
 __fmax64(uint64_t a, uint64_t b)
 {
-   if (__is_nan(a)) return b;
-   if (__is_nan(b)) return a;
+   /* This weird layout matters.  Doing the "obvious" thing results in extra
+    * flow control being inserted to implement the short-circuit evaluation
+    * rules.  Flow control is bad!
+    */
+   bool b_nan = __is_nan(b);
+   bool a_lt_b = __flt64_nonnan(a, b);
+   bool a_nan = __is_nan(a);
 
-   if (__flt64_nonnan(a, b)) return b;
-   return a;
+   return (b_nan || a_lt_b) && !a_nan ? b : a;
 }
 
 uint64_t
