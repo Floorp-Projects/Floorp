@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -21,7 +22,13 @@ import org.mozilla.fenix.ext.settings
 fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope, snackbar: FenixSnackbar?) {
     coroutineScope.launch {
         val settings = activity.settings()
-        val controller = DefaultDeleteBrowsingDataController(activity, coroutineContext)
+        val controller = DefaultDeleteBrowsingDataController(
+            activity.components.useCases.tabsUseCases.removeAllTabs,
+            activity.components.core.historyStorage,
+            activity.components.core.permissionStorage,
+            activity.components.core.engine,
+            coroutineContext
+        )
 
         snackbar?.apply {
             setText(activity.getString(R.string.deleting_browsing_data_in_progress))

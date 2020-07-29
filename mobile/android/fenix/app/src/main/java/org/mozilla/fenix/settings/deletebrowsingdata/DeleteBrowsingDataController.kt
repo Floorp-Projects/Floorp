@@ -4,11 +4,12 @@
 
 package org.mozilla.fenix.settings.deletebrowsingdata
 
-import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.Engine
-import org.mozilla.fenix.ext.components
+import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.fenix.components.PermissionStorage
 import kotlin.coroutines.CoroutineContext
 
 interface DeleteBrowsingDataController {
@@ -21,13 +22,16 @@ interface DeleteBrowsingDataController {
 }
 
 class DefaultDeleteBrowsingDataController(
-    val context: Context,
-    val coroutineContext: CoroutineContext = Dispatchers.Main
+    private val removeAllTabs: TabsUseCases.RemoveAllTabsUseCase,
+    private val historyStorage: HistoryStorage,
+    private val permissionStorage: PermissionStorage,
+    private val engine: Engine,
+    private val coroutineContext: CoroutineContext = Dispatchers.Main
 ) : DeleteBrowsingDataController {
 
     override suspend fun deleteTabs() {
         withContext(coroutineContext) {
-            context.components.useCases.tabsUseCases.removeAllTabs.invoke()
+            removeAllTabs.invoke()
         }
     }
 
@@ -37,14 +41,14 @@ class DefaultDeleteBrowsingDataController(
 
     override suspend fun deleteHistoryAndDOMStorages() {
         withContext(coroutineContext) {
-            context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
+            engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
         }
-        context.components.core.historyStorage.deleteEverything()
+        historyStorage.deleteEverything()
     }
 
     override suspend fun deleteCookies() {
         withContext(coroutineContext) {
-            context.components.core.engine.clearData(
+            engine.clearData(
                 Engine.BrowsingData.select(
                     Engine.BrowsingData.COOKIES,
                     Engine.BrowsingData.AUTH_SESSIONS
@@ -55,7 +59,7 @@ class DefaultDeleteBrowsingDataController(
 
     override suspend fun deleteCachedFiles() {
         withContext(coroutineContext) {
-            context.components.core.engine.clearData(
+            engine.clearData(
                 Engine.BrowsingData.select(Engine.BrowsingData.ALL_CACHES)
             )
         }
@@ -63,10 +67,10 @@ class DefaultDeleteBrowsingDataController(
 
     override suspend fun deleteSitePermissions() {
         withContext(coroutineContext) {
-            context.components.core.engine.clearData(
+            engine.clearData(
                 Engine.BrowsingData.select(Engine.BrowsingData.ALL_SITE_SETTINGS)
             )
         }
-        context.components.core.permissionStorage.deleteAllSitePermissions()
+        permissionStorage.deleteAllSitePermissions()
     }
 }

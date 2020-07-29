@@ -25,6 +25,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -40,7 +41,12 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        controller = DefaultDeleteBrowsingDataController(requireContext())
+        controller = DefaultDeleteBrowsingDataController(
+            requireContext().components.useCases.tabsUseCases.removeAllTabs,
+            requireContext().components.core.historyStorage,
+            requireContext().components.core.permissionStorage,
+            requireContext().components.core.engine
+        )
         settings = requireContext().settings()
 
         getCheckboxes().forEach {
