@@ -20,7 +20,7 @@ for commit in $(cat $topdir/tmp/commit-list)
 do
   git checkout $commit
   # python script pulls from env variables, export those
-  export total_count=$(find $topdir/rust -iname '*.rs' -type f -exec cat {} + | grep -c -E "(Emit|Parse)Error::NotImplemented")
+  export total_count=$(find $topdir/rust -iname '*.rs' -type f -exec cat {} + | grep -c -E "(Emit|Parse|ScopeBuild)Error::NotImplemented")
   export current_commit=$commit
   python not_implemented_count.py
   python not_implemented_badge.py

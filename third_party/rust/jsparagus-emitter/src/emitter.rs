@@ -62,6 +62,16 @@ pub enum ThrowMsgKind {
     AssignToCall = 0,
     IteratorNoThrow = 1,
     CantDeleteSuper = 2,
+    PrivateDoubleInit = 3,
+    MissingPrivateOnGet = 4,
+    MissingPrivateOnSet = 5,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ThrowCondition {
+    ThrowHas = 0,
+    ThrowHasNot = 1,
+    NoThrow = 2,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -557,10 +567,6 @@ impl InstructionWriter {
         self.emit_op(Opcode::InitHiddenElem);
     }
 
-    pub fn init_private_elem(&mut self) {
-        self.emit_op(Opcode::InitPrivateElem);
-    }
-
     pub fn init_prop_getter(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::InitPropGetter);
         self.write_g_c_thing_index(name_index);
@@ -615,10 +621,6 @@ impl InstructionWriter {
         self.emit_op(Opcode::CallElem);
     }
 
-    pub fn get_private_elem(&mut self) {
-        self.emit_op(Opcode::GetPrivateElem);
-    }
-
     pub fn length(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::Length);
         self.write_g_c_thing_index(name_index);
@@ -642,10 +644,6 @@ impl InstructionWriter {
         self.emit_op(Opcode::StrictSetElem);
     }
 
-    pub fn set_private_elem(&mut self) {
-        self.emit_op(Opcode::SetPrivateElem);
-    }
-
     pub fn del_prop(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::DelProp);
         self.write_g_c_thing_index(name_index);
@@ -666,6 +664,12 @@ impl InstructionWriter {
 
     pub fn has_own(&mut self) {
         self.emit_op(Opcode::HasOwn);
+    }
+
+    pub fn check_private_field(&mut self, throw_condition: ThrowCondition, msg_kind: ThrowMsgKind) {
+        self.emit_op(Opcode::CheckPrivateField);
+        self.write_u8(throw_condition as u8);
+        self.write_u8(msg_kind as u8);
     }
 
     pub fn super_base(&mut self) {

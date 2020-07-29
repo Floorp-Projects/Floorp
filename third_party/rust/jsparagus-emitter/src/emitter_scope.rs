@@ -188,6 +188,13 @@ impl EmitterScope {
             EmitterScope::Lexical(scope) => scope.has_environment_object(),
         }
     }
+
+    fn is_var_scope(&self) -> bool {
+        match self {
+            EmitterScope::Global(_) => true,
+            EmitterScope::Lexical(_) => false,
+        }
+    }
 }
 
 /// Stack that tracks the current scope chain while emitting bytecode.
@@ -359,6 +366,31 @@ impl EmitterScopeStack {
                     _ => loc,
                 };
             }
+            if scope.has_environment_object() {
+                hops.next();
+            }
+        }
+
+        NameLocation::Dynamic
+    }
+
+    /// Just like lookup_name, but only in var scope.
+    pub fn lookup_name_in_var(&mut self, name: SourceAtomSetIndex) -> NameLocation {
+        let mut hops = EnvironmentHops::new(0);
+
+        for scope in self.scope_stack.iter().rev() {
+            if scope.is_var_scope() {
+                if let Some(loc) = scope.lookup_name(name) {
+                    return match loc {
+                        NameLocation::EnvironmentCoord(orig_hops, slot, kind) => {
+                            debug_assert!(u8::from(orig_hops) == 0u8);
+                            NameLocation::EnvironmentCoord(hops, slot, kind)
+                        }
+                        _ => loc,
+                    };
+                }
+            }
+
             if scope.has_environment_object() {
                 hops.next();
             }

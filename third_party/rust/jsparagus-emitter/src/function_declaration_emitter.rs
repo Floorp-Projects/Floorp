@@ -1,6 +1,8 @@
 use crate::ast_emitter::AstEmitter;
 use crate::emitter::EmitError;
-use crate::reference_op_emitter::{AssignmentEmitter, DeclarationEmitter, NameReferenceEmitter};
+use crate::reference_op_emitter::{
+    AssignmentEmitter, DeclarationEmitter, GetNameEmitter, NameReferenceEmitter,
+};
 use ast::source_atom_set::SourceAtomSetIndex;
 use stencil::gcthings::GCThingIndex;
 use stencil::script::ScriptStencilIndex;
@@ -47,7 +49,11 @@ impl LexicalFunctionDeclarationEmitter {
                 Ok(())
             },
         }
-        .emit(emitter)
+        .emit(emitter)?;
+
+        emitter.emit.pop();
+
+        Ok(())
     }
 }
 
@@ -58,15 +64,25 @@ pub struct AnnexBFunctionDeclarationEmitter {
 
 impl AnnexBFunctionDeclarationEmitter {
     pub fn emit(self, emitter: &mut AstEmitter) -> Result<(), EmitError> {
+        LexicalFunctionDeclarationEmitter {
+            name: self.name,
+            fun_index: self.fun_index,
+        }
+        .emit(emitter)?;
+
         AssignmentEmitter {
             lhs: |emitter| {
-                Ok(NameReferenceEmitter { name: self.name }.emit_for_assignment(emitter))
+                Ok(NameReferenceEmitter { name: self.name }.emit_for_var_assignment(emitter))
             },
             rhs: |emitter| {
-                emitter.emit.lambda(self.fun_index);
+                GetNameEmitter { name: self.name }.emit(emitter);
                 Ok(())
             },
         }
-        .emit(emitter)
+        .emit(emitter)?;
+
+        emitter.emit.pop();
+
+        Ok(())
     }
 }

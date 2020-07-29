@@ -5,379 +5,492 @@ from jsparagus.runtime import (Nt, InitNt, End, ErrorToken, StateTermValue,
                                ShiftError, ShiftAccept)
 
 def state_43_actions(parser, lexer):
+    # { value = AstBuilder::id(1) [off: 0]; Unwind(Nt(InitNt(goal=Nt('grammar'))), 1, 0) }
 
     value = None
     value = parser.stack[-1].value
-    replay = [StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_84_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_84_actions(parser, lexer, r0)
     return
 
 def state_44_actions(parser, lexer):
+    # { value = AstBuilder::nt_defs_single(1) [off: 0]; Unwind(Nt('nt_defs'), 1, 0) }
 
     value = None
     value = parser.methods.nt_defs_single(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('nt_defs'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_defs'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_82_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_82_actions(parser, lexer, r0)
     return
 
 def state_45_actions(parser, lexer):
+    # { value = AstBuilder::single(1) [off: 0]; Unwind(Nt('token_defs'), 1, 0) }
 
     value = None
     value = parser.methods.single(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('token_defs'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('token_defs'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_83_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_83_actions(parser, lexer, r0)
     return
 
 def state_46_actions(parser, lexer):
+    # { value = AstBuilder::nt_defs_append(2, 1) [off: 0]; Unwind(Nt('nt_defs'), 2, 0) }
 
     value = None
     value = parser.methods.nt_defs_append(parser.stack[-2].value, parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('nt_defs'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_defs'), value, False))
     del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_82_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_82_actions(parser, lexer, r0)
     return
 
 def state_47_actions(parser, lexer):
+    # { value = AstBuilder::append(2, 1) [off: 0]; Unwind(Nt('token_defs'), 2, 0) }
 
     value = None
     value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('token_defs'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('token_defs'), value, False))
     del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_83_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_83_actions(parser, lexer, r0)
     return
 
 def state_48_actions(parser, lexer):
+    # { Accept(); Unwind(Nt(InitNt(goal=Nt('grammar'))), 2, 0) }
 
     value = None
     raise ShiftAccept()
-    replay = [StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value, False))
     del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_84_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_84_actions(parser, lexer, r0)
     return
 
 def state_49_actions(parser, lexer):
+    # { value = AstBuilder::nt_def(None, None, 3, None) [off: 0]; Unwind(Nt('nt_def'), 4, 0) }
 
     value = None
     value = parser.methods.nt_def(None, None, parser.stack[-3].value, None)
-    replay = [StateTermValue(0, Nt('nt_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_def'), value, False))
     del parser.stack[-4:]
-    parser.shift_list(replay, lexer)
-    state_107_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_107_actions(parser, lexer, r0)
     return
 
 def state_50_actions(parser, lexer):
+    # { value = AstBuilder::single(1) [off: 0]; Unwind(Nt('prods'), 1, 0) }
 
     value = None
     value = parser.methods.single(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('prods'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('prods'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_94_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_94_actions(parser, lexer, r0)
     return
 
 def state_51_actions(parser, lexer):
+    # { value = AstBuilder::single(1) [off: 0]; Unwind(Nt('terms'), 1, 0) }
 
     value = None
     value = parser.methods.single(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('terms'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('terms'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_97_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_97_actions(parser, lexer, r0)
     return
 
 def state_52_actions(parser, lexer):
+    # { value = AstBuilder::ident(1) [off: 0]; Unwind(Nt('symbol'), 1, 0) }
 
     value = None
     value = parser.methods.ident(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('symbol'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('symbol'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_91_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_91_actions(parser, lexer, r0)
     return
 
 def state_53_actions(parser, lexer):
+    # { value = AstBuilder::str(1) [off: 0]; Unwind(Nt('symbol'), 1, 0) }
 
     value = None
     value = parser.methods.str(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('symbol'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('symbol'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_91_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_91_actions(parser, lexer, r0)
     return
 
 def state_54_actions(parser, lexer):
+    # { value = AstBuilder::empty(1) [off: 0]; Unwind(Nt('prods'), 1, 0) }
 
     value = None
     value = parser.methods.empty(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('prods'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('prods'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_94_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_94_actions(parser, lexer, r0)
     return
 
 def state_55_actions(parser, lexer):
+    # { value = AstBuilder::var_token(2) [off: 0]; Unwind(Nt('token_def'), 4, 0) }
 
     value = None
     value = parser.methods.var_token(parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('token_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('token_def'), value, False))
     del parser.stack[-4:]
-    parser.shift_list(replay, lexer)
-    state_100_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_100_actions(parser, lexer, r0)
     return
 
 def state_56_actions(parser, lexer):
+    # { value = AstBuilder::nt_def(None, None, 4, Some(inner=2)) [off: 0]; Unwind(Nt('nt_def'), 5, 0) }
 
     value = None
     value = parser.methods.nt_def(None, None, parser.stack[-4].value, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('nt_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_def'), value, False))
     del parser.stack[-5:]
-    parser.shift_list(replay, lexer)
-    state_107_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_107_actions(parser, lexer, r0)
     return
 
 def state_57_actions(parser, lexer):
+    # { value = AstBuilder::append(2, 1) [off: 0]; Unwind(Nt('prods'), 2, 0) }
 
     value = None
     value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('prods'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('prods'), value, False))
     del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_94_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_94_actions(parser, lexer, r0)
     return
 
 def state_58_actions(parser, lexer):
+    # { value = AstBuilder::prod(2, None) [off: 0]; Unwind(Nt('prod'), 2, 0) }
 
     value = None
     value = parser.methods.prod(parser.stack[-2].value, None)
-    replay = [StateTermValue(0, Nt('prod'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('prod'), value, False))
     del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_101_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_101_actions(parser, lexer, r0)
     return
 
 def state_59_actions(parser, lexer):
+    # { value = AstBuilder::append(2, 1) [off: 0]; Unwind(Nt('terms'), 2, 0) }
 
     value = None
     value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('terms'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('terms'), value, False))
     del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_97_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_97_actions(parser, lexer, r0)
     return
 
 def state_60_actions(parser, lexer):
+    # { value = AstBuilder::optional(2) [off: 0]; Unwind(Nt('term'), 2, 0) }
 
     value = None
     value = parser.methods.optional(parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('term'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('term'), value, False))
     del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_111_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_111_actions(parser, lexer, r0)
     return
 
 def state_61_actions(parser, lexer):
+    # { value = AstBuilder::nt_def(Some(inner=5), None, 3, None) [off: 0]; Unwind(Nt('nt_def'), 5, 0) }
 
     value = None
     value = parser.methods.nt_def(parser.stack[-5].value, None, parser.stack[-3].value, None)
-    replay = [StateTermValue(0, Nt('nt_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_def'), value, False))
     del parser.stack[-5:]
-    parser.shift_list(replay, lexer)
-    state_107_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_107_actions(parser, lexer, r0)
     return
 
 def state_62_actions(parser, lexer):
+    # { value = AstBuilder::nt_def(None, Some(inner=5), 3, None) [off: 0]; Unwind(Nt('nt_def'), 5, 0) }
 
     value = None
     value = parser.methods.nt_def(None, parser.stack[-5].value, parser.stack[-3].value, None)
-    replay = [StateTermValue(0, Nt('nt_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_def'), value, False))
     del parser.stack[-5:]
-    parser.shift_list(replay, lexer)
-    state_107_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_107_actions(parser, lexer, r0)
     return
 
 def state_63_actions(parser, lexer):
+    # { value = AstBuilder::const_token(4, 2) [off: 0]; Unwind(Nt('token_def'), 5, 0) }
 
     value = None
     value = parser.methods.const_token(parser.stack[-4].value, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('token_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('token_def'), value, False))
     del parser.stack[-5:]
-    parser.shift_list(replay, lexer)
-    state_100_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_100_actions(parser, lexer, r0)
     return
 
 def state_64_actions(parser, lexer):
+    # { value = AstBuilder::prod(3, Some(inner=2)) [off: 0]; Unwind(Nt('prod'), 3, 0) }
 
     value = None
     value = parser.methods.prod(parser.stack[-3].value, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('prod'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('prod'), value, False))
     del parser.stack[-3:]
-    parser.shift_list(replay, lexer)
-    state_101_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_101_actions(parser, lexer, r0)
     return
 
 def state_65_actions(parser, lexer):
+    # { value = AstBuilder::id(1) [off: 0]; Unwind(Nt('reducer'), 2, 0) }
 
     value = None
     value = parser.stack[-1].value
-    replay = [StateTermValue(0, Nt('reducer'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('reducer'), value, False))
     del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_102_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_102_actions(parser, lexer, r0)
     return
 
 def state_66_actions(parser, lexer):
+    # { value = AstBuilder::expr_match(1) [off: 0]; Unwind(Nt('expr'), 1, 0) }
 
     value = None
     value = parser.methods.expr_match(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('expr'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_108_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_108_actions(parser, lexer, r0)
     return
 
 def state_67_actions(parser, lexer):
+    # { value = AstBuilder::expr_none() [off: 0]; Unwind(Nt('expr'), 1, 0) }
 
     value = None
     value = parser.methods.expr_none()
-    replay = [StateTermValue(0, Nt('expr'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_108_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_108_actions(parser, lexer, r0)
     return
 
 def state_68_actions(parser, lexer):
+    # { value = AstBuilder::nt_def(Some(inner=6), None, 4, Some(inner=2)) [off: 0]; Unwind(Nt('nt_def'), 6, 0) }
 
     value = None
     value = parser.methods.nt_def(parser.stack[-6].value, None, parser.stack[-4].value, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('nt_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_def'), value, False))
     del parser.stack[-6:]
-    parser.shift_list(replay, lexer)
-    state_107_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_107_actions(parser, lexer, r0)
     return
 
 def state_69_actions(parser, lexer):
+    # { value = AstBuilder::nt_def(Some(inner=6), Some(inner=5), 3, None) [off: 0]; Unwind(Nt('nt_def'), 6, 0) }
 
     value = None
     value = parser.methods.nt_def(parser.stack[-6].value, parser.stack[-5].value, parser.stack[-3].value, None)
-    replay = [StateTermValue(0, Nt('nt_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_def'), value, False))
     del parser.stack[-6:]
-    parser.shift_list(replay, lexer)
-    state_107_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_107_actions(parser, lexer, r0)
     return
 
 def state_70_actions(parser, lexer):
+    # { value = AstBuilder::nt_def(None, Some(inner=6), 4, Some(inner=2)) [off: 0]; Unwind(Nt('nt_def'), 6, 0) }
 
     value = None
     value = parser.methods.nt_def(None, parser.stack[-6].value, parser.stack[-4].value, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('nt_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_def'), value, False))
     del parser.stack[-6:]
-    parser.shift_list(replay, lexer)
-    state_107_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_107_actions(parser, lexer, r0)
     return
 
 def state_71_actions(parser, lexer):
+    # { value = AstBuilder::nt_def(Some(inner=7), Some(inner=6), 4, Some(inner=2)) [off: 0]; Unwind(Nt('nt_def'), 7, 0) }
 
     value = None
     value = parser.methods.nt_def(parser.stack[-7].value, parser.stack[-6].value, parser.stack[-4].value, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('nt_def'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_def'), value, False))
     del parser.stack[-7:]
-    parser.shift_list(replay, lexer)
-    state_107_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_107_actions(parser, lexer, r0)
     return
 
 def state_72_actions(parser, lexer):
+    # { value = AstBuilder::expr_call(3, None) [off: 0]; Unwind(Nt('expr'), 3, 0) }
 
     value = None
     value = parser.methods.expr_call(parser.stack[-3].value, None)
-    replay = [StateTermValue(0, Nt('expr'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr'), value, False))
     del parser.stack[-3:]
-    parser.shift_list(replay, lexer)
-    state_108_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_108_actions(parser, lexer, r0)
     return
 
 def state_73_actions(parser, lexer):
+    # { value = AstBuilder::args_single(1) [off: 0]; Unwind(Nt('expr_args'), 1, 0) }
 
     value = None
     value = parser.methods.args_single(parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('expr_args'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr_args'), value, False))
     del parser.stack[-1:]
-    parser.shift_list(replay, lexer)
-    state_109_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_109_actions(parser, lexer, r0)
     return
 
 def state_74_actions(parser, lexer):
+    # { value = AstBuilder::expr_call(4, Some(inner=2)) [off: 0]; Unwind(Nt('expr'), 4, 0) }
 
     value = None
     value = parser.methods.expr_call(parser.stack[-4].value, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('expr'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr'), value, False))
     del parser.stack[-4:]
-    parser.shift_list(replay, lexer)
-    state_108_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_108_actions(parser, lexer, r0)
     return
 
 def state_75_actions(parser, lexer):
+    # { value = AstBuilder::expr_some(2) [off: 0]; Unwind(Nt('expr'), 4, 0) }
 
     value = None
     value = parser.methods.expr_some(parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('expr'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr'), value, False))
     del parser.stack[-4:]
-    parser.shift_list(replay, lexer)
-    state_108_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_108_actions(parser, lexer, r0)
     return
 
 def state_76_actions(parser, lexer):
+    # { value = AstBuilder::args_append(3, 1) [off: 0]; Unwind(Nt('expr_args'), 3, 0) }
 
     value = None
     value = parser.methods.args_append(parser.stack[-3].value, parser.stack[-1].value)
-    replay = [StateTermValue(0, Nt('expr_args'), value, False)]
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr_args'), value, False))
     del parser.stack[-3:]
-    parser.shift_list(replay, lexer)
-    state_109_actions(parser, lexer)
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_109_actions(parser, lexer, r0)
     return
 
 def state_77_actions(parser, lexer):
+    # { value = AstBuilder::grammar(None, 1) [off: 1]; Unwind(Nt('grammar'), 1, 1) }
 
     value = None
     value = parser.methods.grammar(None, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('grammar'), value, False)]
-    replay = replay + parser.stack[-1:]
-    del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_110_actions(parser, lexer)
+    replay = []
+    replay.append(parser.stack.pop())
+    replay.append(StateTermValue(0, Nt('grammar'), value, False))
+    del parser.stack[-1:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_110_actions(parser, lexer, r0)
     return
 
 def state_78_actions(parser, lexer):
+    # { value = AstBuilder::grammar(Some(inner=2), 1) [off: 1]; Unwind(Nt('grammar'), 2, 1) }
 
     value = None
     value = parser.methods.grammar(parser.stack[-3].value, parser.stack[-2].value)
-    replay = [StateTermValue(0, Nt('grammar'), value, False)]
-    replay = replay + parser.stack[-1:]
-    del parser.stack[-3:]
-    parser.shift_list(replay, lexer)
-    state_110_actions(parser, lexer)
+    replay = []
+    replay.append(parser.stack.pop())
+    replay.append(StateTermValue(0, Nt('grammar'), value, False))
+    del parser.stack[-2:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_110_actions(parser, lexer, r0)
     return
 
 def state_79_actions(parser, lexer):
+    # { value = AstBuilder::id(1) [off: 1]; Unwind(Nt('term'), 1, 1) }
 
     value = None
     value = parser.stack[-2].value
-    replay = [StateTermValue(0, Nt('term'), value, False)]
-    replay = replay + parser.stack[-1:]
-    del parser.stack[-2:]
-    parser.shift_list(replay, lexer)
-    state_111_actions(parser, lexer)
+    replay = []
+    replay.append(parser.stack.pop())
+    replay.append(StateTermValue(0, Nt('term'), value, False))
+    del parser.stack[-1:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_111_actions(parser, lexer, r0)
     return
 
-def state_80_actions(parser, lexer):
+def state_80_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((12,))
 
     value = None
     parser.replay_action(12)
@@ -386,7 +499,9 @@ def state_80_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_81_actions(parser, lexer):
+def state_81_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((13,))
 
     value = None
     parser.replay_action(13)
@@ -395,17 +510,22 @@ def state_81_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_82_actions(parser, lexer):
+def state_82_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
 
     value = None
     if parser.top_state() in [10]:
-        state_80_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_80_actions(parser, lexer, r0)
         return
     if parser.top_state() in [11]:
-        state_81_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_81_actions(parser, lexer, r0)
         return
 
-def state_83_actions(parser, lexer):
+def state_83_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((11,))
 
     value = None
     parser.replay_action(11)
@@ -414,7 +534,9 @@ def state_83_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_84_actions(parser, lexer):
+def state_84_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((23,))
 
     value = None
     parser.replay_action(23)
@@ -423,21 +545,39 @@ def state_84_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_85_actions(parser, lexer):
+def state_85_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::nt_defs_single(1) [off: -1]; Unwind(Nt('nt_defs'), 1, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(44)
-    state_44_actions(parser, lexer)
+    value = parser.methods.nt_defs_single(parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_defs'), value, False))
+    del parser.stack[-1:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_82_actions(parser, lexer, r0)
     return
 
-def state_86_actions(parser, lexer):
+def state_86_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::nt_defs_append(2, 1) [off: -1]; Unwind(Nt('nt_defs'), 2, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(46)
-    state_46_actions(parser, lexer)
+    value = parser.methods.nt_defs_append(parser.stack[-2].value, parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('nt_defs'), value, False))
+    del parser.stack[-2:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_82_actions(parser, lexer, r0)
     return
 
-def state_87_actions(parser, lexer):
+def state_87_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((4,))
 
     value = None
     parser.replay_action(4)
@@ -446,7 +586,9 @@ def state_87_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_88_actions(parser, lexer):
+def state_88_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((5,))
 
     value = None
     parser.replay_action(5)
@@ -455,7 +597,9 @@ def state_88_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_89_actions(parser, lexer):
+def state_89_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((6,))
 
     value = None
     parser.replay_action(6)
@@ -464,7 +608,9 @@ def state_89_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_90_actions(parser, lexer):
+def state_90_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((7,))
 
     value = None
     parser.replay_action(7)
@@ -473,7 +619,9 @@ def state_90_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_91_actions(parser, lexer):
+def state_91_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((9,))
 
     value = None
     parser.replay_action(9)
@@ -482,51 +630,90 @@ def state_91_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_92_actions(parser, lexer):
+def state_92_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::single(1) [off: -1]; Unwind(Nt('token_defs'), 1, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(45)
-    state_45_actions(parser, lexer)
+    value = parser.methods.single(parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('token_defs'), value, False))
+    del parser.stack[-1:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_83_actions(parser, lexer, r0)
     return
 
-def state_93_actions(parser, lexer):
+def state_93_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::append(2, 1) [off: -1]; Unwind(Nt('token_defs'), 2, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(47)
-    state_47_actions(parser, lexer)
+    value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('token_defs'), value, False))
+    del parser.stack[-2:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_83_actions(parser, lexer, r0)
     return
 
-def state_94_actions(parser, lexer):
+def state_94_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
 
     value = None
     if parser.top_state() in [0]:
-        state_87_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_87_actions(parser, lexer, r0)
         return
     if parser.top_state() in [1]:
-        state_88_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_88_actions(parser, lexer, r0)
         return
     if parser.top_state() in [2]:
-        state_89_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_89_actions(parser, lexer, r0)
         return
     if parser.top_state() in [3]:
-        state_90_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_90_actions(parser, lexer, r0)
         return
 
-def state_95_actions(parser, lexer):
+def state_95_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::single(1) [off: -1]; Unwind(Nt('prods'), 1, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(50)
-    state_50_actions(parser, lexer)
+    value = parser.methods.single(parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('prods'), value, False))
+    del parser.stack[-1:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_94_actions(parser, lexer, r0)
     return
 
-def state_96_actions(parser, lexer):
+def state_96_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::append(2, 1) [off: -1]; Unwind(Nt('prods'), 2, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(57)
-    state_57_actions(parser, lexer)
+    value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('prods'), value, False))
+    del parser.stack[-2:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_94_actions(parser, lexer, r0)
     return
 
-def state_97_actions(parser, lexer):
+def state_97_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((8,))
 
     value = None
     parser.replay_action(8)
@@ -535,41 +722,65 @@ def state_97_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_98_actions(parser, lexer):
+def state_98_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::single(1) [off: -1]; Unwind(Nt('terms'), 1, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(51)
-    state_51_actions(parser, lexer)
+    value = parser.methods.single(parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('terms'), value, False))
+    del parser.stack[-1:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_97_actions(parser, lexer, r0)
     return
 
-def state_99_actions(parser, lexer):
+def state_99_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::append(2, 1) [off: -1]; Unwind(Nt('terms'), 2, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(59)
-    state_59_actions(parser, lexer)
+    value = parser.methods.append(parser.stack[-2].value, parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('terms'), value, False))
+    del parser.stack[-2:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_97_actions(parser, lexer, r0)
     return
 
-def state_100_actions(parser, lexer):
+def state_100_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
 
     value = None
     if parser.top_state() in [10]:
-        state_92_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_92_actions(parser, lexer, r0)
         return
     if parser.top_state() in [11]:
-        state_93_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_93_actions(parser, lexer, r0)
         return
 
-def state_101_actions(parser, lexer):
+def state_101_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
 
     value = None
     if parser.top_state() in [0, 1, 2, 3]:
-        state_95_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_95_actions(parser, lexer, r0)
         return
     if parser.top_state() in [4, 5, 6, 7]:
-        state_96_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_96_actions(parser, lexer, r0)
         return
 
-def state_102_actions(parser, lexer):
+def state_102_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((38,))
 
     value = None
     parser.replay_action(38)
@@ -578,21 +789,39 @@ def state_102_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_103_actions(parser, lexer):
+def state_103_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::id(1) [off: -1]; Unwind(Nt('reducer'), 2, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(65)
-    state_65_actions(parser, lexer)
+    value = parser.stack[-1].value
+    replay = []
+    replay.append(StateTermValue(0, Nt('reducer'), value, False))
+    del parser.stack[-2:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_102_actions(parser, lexer, r0)
     return
 
-def state_104_actions(parser, lexer):
+def state_104_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::args_single(1) [off: -1]; Unwind(Nt('expr_args'), 1, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(73)
-    state_73_actions(parser, lexer)
+    value = parser.methods.args_single(parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr_args'), value, False))
+    del parser.stack[-1:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_109_actions(parser, lexer, r0)
     return
 
-def state_105_actions(parser, lexer):
+def state_105_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((42,))
 
     value = None
     parser.replay_action(42)
@@ -601,40 +830,58 @@ def state_105_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_106_actions(parser, lexer):
+def state_106_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::args_append(3, 1) [off: -1]; Unwind(Nt('expr_args'), 3, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(76)
-    state_76_actions(parser, lexer)
+    value = parser.methods.args_append(parser.stack[-3].value, parser.stack[-1].value)
+    replay = []
+    replay.append(StateTermValue(0, Nt('expr_args'), value, False))
+    del parser.stack[-3:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_109_actions(parser, lexer, r0)
     return
 
-def state_107_actions(parser, lexer):
+def state_107_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
 
     value = None
     if parser.top_state() in [10, 11]:
-        state_85_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_85_actions(parser, lexer, r0)
         return
     if parser.top_state() in [12, 13]:
-        state_86_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_86_actions(parser, lexer, r0)
         return
 
-def state_108_actions(parser, lexer):
+def state_108_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
 
     value = None
     if parser.top_state() in [15]:
-        state_103_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_103_actions(parser, lexer, r0)
         return
     if parser.top_state() in [14]:
-        state_104_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_104_actions(parser, lexer, r0)
         return
     if parser.top_state() in [16]:
-        state_105_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_105_actions(parser, lexer, r0)
         return
     if parser.top_state() in [17]:
-        state_106_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_106_actions(parser, lexer, r0)
         return
 
-def state_109_actions(parser, lexer):
+def state_109_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # Replay((41,))
 
     value = None
     parser.replay_action(41)
@@ -643,21 +890,32 @@ def state_109_actions(parser, lexer):
     parser.stack.append(top)
     return
 
-def state_110_actions(parser, lexer):
+def state_110_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
+    # { value = AstBuilder::id(1) [off: -1]; Unwind(Nt(InitNt(goal=Nt('grammar'))), 1, -1) }
+    parser.stack.append(parser.replay.pop())
 
     value = None
-    parser.replay_action(43)
-    state_43_actions(parser, lexer)
+    value = parser.stack[-1].value
+    replay = []
+    replay.append(StateTermValue(0, Nt(InitNt(goal=Nt('grammar'))), value, False))
+    del parser.stack[-1:]
+    parser.replay.extend(replay)
+    r0 = parser.replay.pop()
+    state_84_actions(parser, lexer, r0)
     return
 
-def state_111_actions(parser, lexer):
+def state_111_actions(parser, lexer, a0):
+    parser.replay.extend([a0])
 
     value = None
     if parser.top_state() in [0, 1, 2, 3, 4, 5, 6, 7]:
-        state_98_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_98_actions(parser, lexer, r0)
         return
     if parser.top_state() in [8]:
-        state_99_actions(parser, lexer)
+        r0 = parser.replay.pop()
+        state_99_actions(parser, lexer, r0)
         return
 
 actions = [
@@ -1142,44 +1400,24 @@ class DefaultMethods:
         return ('empty', x0)
     def var_token(self, x0):
         return ('var_token', x0)
-    def nt_def(self, x0, x1, x2, x3):
-        return ('nt_def', x0, x1, x2, x3)
     def prod(self, x0, x1):
         return ('prod', x0, x1)
     def optional(self, x0):
         return ('optional', x0)
-    def nt_def(self, x0, x1, x2, x3):
-        return ('nt_def', x0, x1, x2, x3)
-    def nt_def(self, x0, x1, x2, x3):
-        return ('nt_def', x0, x1, x2, x3)
     def const_token(self, x0, x1):
         return ('const_token', x0, x1)
-    def prod(self, x0, x1):
-        return ('prod', x0, x1)
     def expr_match(self, x0):
         return ('expr_match', x0)
     def expr_none(self, ):
         return ('expr_none', )
-    def nt_def(self, x0, x1, x2, x3):
-        return ('nt_def', x0, x1, x2, x3)
-    def nt_def(self, x0, x1, x2, x3):
-        return ('nt_def', x0, x1, x2, x3)
-    def nt_def(self, x0, x1, x2, x3):
-        return ('nt_def', x0, x1, x2, x3)
-    def nt_def(self, x0, x1, x2, x3):
-        return ('nt_def', x0, x1, x2, x3)
     def expr_call(self, x0, x1):
         return ('expr_call', x0, x1)
     def args_single(self, x0):
         return ('args_single', x0)
-    def expr_call(self, x0, x1):
-        return ('expr_call', x0, x1)
     def expr_some(self, x0):
         return ('expr_some', x0)
     def args_append(self, x0, x1):
         return ('args_append', x0, x1)
-    def grammar(self, x0, x1):
-        return ('grammar', x0, x1)
     def grammar(self, x0, x1):
         return ('grammar', x0, x1)
 

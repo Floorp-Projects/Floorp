@@ -382,9 +382,12 @@ impl NameReferenceEmitter {
         CallReference::new(CallKind::Normal)
     }
 
-    pub fn emit_for_assignment(self, emitter: &mut AstEmitter) -> AssignmentReference {
+    pub fn emit_for_assignment_with_loc(
+        self,
+        emitter: &mut AstEmitter,
+        loc: NameLocation,
+    ) -> AssignmentReference {
         let name_index = emitter.emit.get_atom_gcthing_index(self.name);
-        let loc = emitter.lookup_name(self.name);
 
         //              [stack]
 
@@ -426,6 +429,18 @@ impl NameReferenceEmitter {
                 }
             }
         }
+    }
+
+    pub fn emit_for_assignment(self, emitter: &mut AstEmitter) -> AssignmentReference {
+        let loc = emitter.lookup_name(self.name);
+        self.emit_for_assignment_with_loc(emitter, loc)
+    }
+
+    /// Ignore any lexical scope and assign to var scope.
+    /// Used by Annex B function.
+    pub fn emit_for_var_assignment(self, emitter: &mut AstEmitter) -> AssignmentReference {
+        let loc = emitter.lookup_name_in_var(self.name);
+        self.emit_for_assignment_with_loc(emitter, loc)
     }
 
     pub fn emit_for_declaration(self, emitter: &mut AstEmitter) -> DeclarationReference {

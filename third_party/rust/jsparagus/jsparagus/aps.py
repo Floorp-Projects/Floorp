@@ -4,7 +4,7 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 from .lr0 import ShiftedTerm, Term
-from .actions import Action, FilterStates
+from .actions import Action, FilterStates, Replay
 
 # Avoid circular reference between this module and parse_table.py
 if typing.TYPE_CHECKING:
@@ -55,6 +55,7 @@ def reduce_path(pt: ParseTable, shifted: Path) -> typing.Iterator[Path]:
     nt = stack_diff.nt
     assert nt is not None
     depth = stack_diff.pop + stack_diff.replay
+    assert depth >= 0
     if depth > 0:
         # We are reducing at least one element from the stack.
         stacked = [i for i, e in enumerate(shifted) if pt.term_is_stacked(e.term)]
@@ -240,10 +241,12 @@ class APS:
             # TODO: Add support for Lookahead and flag manipulation rules, as
             # both of these would invalide potential reduce paths.
             if a.update_stack():
+                new_rp: typing.List[ShiftedTerm]
                 stack_diff = a.update_stack_with()
-                if stack_diff.replay < 0:
+                if isinstance(a, Replay):
                     assert stack_diff.pop == 0
                     assert stack_diff.nt is None
+                    assert stack_diff.replay < 0
                     num_replay = -stack_diff.replay
                     assert len(self.replay) >= num_replay
                     new_rp = self.replay[:]
@@ -267,10 +270,10 @@ class APS:
                     # we might loop on Optional rules. Which would not match
                     # the expected behaviour of the parser.
                     continue
+
                 reducing = not a.follow_edge()
                 assert stack_diff.pop >= 0
                 assert stack_diff.nt is not None
-                assert stack_diff.replay >= 0
                 for path in reduce_path(pt, prev_sh):
                     # path contains the chains of state shifted, including
                     # epsilon transitions. The head of the path should be able
@@ -314,21 +317,31 @@ class APS:
                     new_sh = prev_sh[:-len(path)] + [Edge(path[0].src, None)]
                     assert pt.is_valid_path(new_sh)
 
-                    # When reducing, we replay terms which got previously
-                    # pushed on the stack as our lookahead. These terms are
-                    # computed here such that we can traverse the graph from
-                    # `to` state, using the replayed terms.
+                    # Update the replay list of the new APS, starting with the
+                    # reduced non-terminal and followed by the lookahead terms
+                    # which have to be replayed and/or the truncated replay
+                    # list, if any are consumed while reducing.
                     replay = stack_diff.replay
                     nt = stack_diff.nt
                     assert nt is not None
                     new_rp = [nt]
                     if replay > 0:
+                        # Move previously shifted terms to the replay list, as
+                        # they would have to be replayed after reducing the
+                        # non-terminal.
                         stacked_terms = [
                             typing.cast(ShiftedTerm, edge.term)
                             for edge in path if pt.term_is_stacked(edge.term)
                         ]
-                        new_rp = new_rp + stacked_terms[-replay:]
-                    new_rp = new_rp + rp
+                        new_rp = new_rp + stacked_terms[-replay:] + rp
+                    elif replay == 0:
+                        new_rp = new_rp + rp
+                    elif replay < 0:
+                        # Remove the replayed tokens from the front of the
+                        # replay list as they are consumed by this Unwind
+                        # action.
+                        assert len(rp) >= -replay
+                        new_rp = new_rp + rp[-replay:]
                     new_la = la[:max(len(la) - replay, 0)]
 
                     # If we are reducing, this implies that we are not
