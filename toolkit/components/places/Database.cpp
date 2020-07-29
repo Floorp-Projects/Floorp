@@ -1242,6 +1242,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 69 uses schema version 53
 
+      if (currentSchemaVersion < 54) {
+        rv = MigrateV54Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 81 uses schema version 54
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -2415,6 +2422,30 @@ nsresult Database::MigrateV53Up() {
       "  EXCEPT "
       "  SELECT DISTINCT anno_attribute_id FROM moz_items_annos "
       ")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult Database::MigrateV54Up() {
+  // Add an expiration column to moz_icons_to_pages.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT expire_ms FROM moz_icons_to_pages"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_icons_to_pages "
+        "ADD COLUMN expire_ms INTEGER NOT NULL DEFAULT 0 "_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Set all the zero-ed entries as expired today, they won't be removed until
+  // the next related page load.
+  rv = mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_icons_to_pages "
+      "SET expire_ms = strftime('%s','now','localtime','start "
+      "of day','utc') * 1000 "
+      "WHERE expire_ms = 0 "_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

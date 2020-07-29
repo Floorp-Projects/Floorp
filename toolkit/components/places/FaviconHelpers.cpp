@@ -449,6 +449,7 @@ PRTime GetExpirationTimeFromChannel(nsIChannel* aChannel) {
 
   // Attempt to get an expiration time from the cache.  If this fails, we'll
   // make one up.
+  PRTime now = PR_Now();
   PRTime expiration = -1;
   nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(aChannel);
   if (cachingChannel) {
@@ -460,13 +461,15 @@ PRTime GetExpirationTimeFromChannel(nsIChannel* aChannel) {
       rv = cacheEntry->GetExpirationTime(&seconds);
       if (NS_SUCCEEDED(rv)) {
         // Set the expiration, but make sure we honor our cap.
-        expiration = PR_Now() + std::min((PRTime)seconds * PR_USEC_PER_SEC,
-                                         MAX_FAVICON_EXPIRATION);
+        expiration = now + std::min((PRTime)seconds * PR_USEC_PER_SEC,
+                                    MAX_FAVICON_EXPIRATION);
       }
     }
   }
   // If we did not obtain a time from the cache, use the cap value.
-  return expiration < 0 ? PR_Now() + MAX_FAVICON_EXPIRATION : expiration;
+  return expiration < now + MIN_FAVICON_EXPIRATION
+             ? now + MAX_FAVICON_EXPIRATION
+             : expiration;
 }
 
 }  // namespace
@@ -841,13 +844,8 @@ AsyncAssociateIconToPage::Run() {
     nsCOMPtr<mozIStorageStatement> stmt;
     stmt = DB->GetStatement(
         "DELETE FROM moz_icons_to_pages "
-        "WHERE icon_id IN ( "
-        "  SELECT icon_id FROM moz_icons_to_pages "
-        "  JOIN moz_icons i ON icon_id = i.id "
-        "  WHERE page_id = :page_id "
-        "  AND expire_ms < strftime('%s','now','localtime','start of day','-7 "
-        "days','utc') * 1000 "
-        ") AND page_id = :page_id ");
+        "WHERE page_id = :page_id "
+        "AND expire_ms < strftime('%s','now','localtime','utc') * 1000 ");
     NS_ENSURE_STATE(stmt);
     mozStorageStatementScoper scoper(stmt);
     rv = stmt->BindInt64ByName("page_id"_ns, mPage.id);
@@ -888,10 +886,12 @@ AsyncAssociateIconToPage::Run() {
     // Then we can create the relations.
     nsCOMPtr<mozIStorageStatement> stmt;
     stmt = DB->GetStatement(
-        "INSERT OR IGNORE INTO moz_icons_to_pages (page_id, icon_id) "
+        "INSERT INTO moz_icons_to_pages (page_id, icon_id, expire_ms) "
         "VALUES ((SELECT id from moz_pages_w_icons WHERE page_url_hash = "
         "hash(:page_url) AND page_url = :page_url), "
-        ":icon_id) ");
+        ":icon_id, :expire) "
+        "ON CONFLICT(page_id, icon_id) DO "
+        "UPDATE SET expire_ms = :expire ");
     NS_ENSURE_STATE(stmt);
 
     // For some reason using BindingParamsArray here fails execution, so we must
@@ -904,6 +904,8 @@ AsyncAssociateIconToPage::Run() {
       rv = URIBinder::Bind(stmt, "page_url"_ns, mPage.spec);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->BindInt64ByName("icon_id"_ns, payload.id);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->BindInt64ByName("expire"_ns, mIcon.expiration / 1000);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->Execute();
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1406,8 +1408,8 @@ AsyncCopyFavicons::Run() {
 
   // Create the relations.
   nsCOMPtr<mozIStorageStatement> stmt = DB->GetStatement(
-      "INSERT OR IGNORE INTO moz_icons_to_pages (page_id, icon_id) "
-      "SELECT :id, icon_id "
+      "INSERT OR IGNORE INTO moz_icons_to_pages (page_id, icon_id, expire_ms) "
+      "SELECT :id, icon_id, expire_ms "
       "FROM moz_icons_to_pages "
       "WHERE page_id = (SELECT id FROM moz_pages_w_icons WHERE page_url_hash = "
       "hash(:url) AND page_url = :url) ");
