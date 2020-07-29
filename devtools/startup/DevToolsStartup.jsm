@@ -282,8 +282,9 @@ function validateProfilerWebChannelUrl(targetUrl) {
       // Allows the following:
       //   "https://deploy-preview-1234--perf-html.netlify.com"
       //   "https://deploy-preview-1234--perf-html.netlify.com/"
-      //   "https://deploy-preview-1234567--perf-html.netlify.com"
-      /^https:\/\/deploy-preview-\d+--perf-html\.netlify\.com\/?$/.test(
+      //   "https://deploy-preview-1234567--perf-html.netlify.app"
+      //   "https://main--perf-html.netlify.app"
+      /^https:\/\/(?:deploy-preview-\d+|main)--perf-html\.netlify\.(?:com|app)\/?$/.test(
         targetUrl
       )
     ) {
