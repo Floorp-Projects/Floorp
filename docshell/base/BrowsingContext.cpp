@@ -792,6 +792,30 @@ void BrowsingContext::UnregisterWindowContext(WindowContext* aWindow) {
   }
 }
 
+void BrowsingContext::PreOrderWalk(
+    const std::function<void(BrowsingContext*)>& aCallback) {
+  aCallback(this);
+  for (auto& child : Children()) {
+    child->PreOrderWalk(aCallback);
+  }
+}
+
+void BrowsingContext::PostOrderWalk(
+    const std::function<void(BrowsingContext*)>& aCallback) {
+  for (auto& child : Children()) {
+    child->PostOrderWalk(aCallback);
+  }
+
+  aCallback(this);
+}
+
+void BrowsingContext::GetAllBrowsingContextsInSubtree(
+    nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts) {
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    aBrowsingContexts.AppendElement(aContext);
+  });
+}
+
 // FindWithName follows the rules for choosing a browsing context,
 // with the exception of sandboxing for iframes. The implementation
 // for arbitrarily choosing between two browsing contexts with the
