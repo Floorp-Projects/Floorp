@@ -940,6 +940,20 @@
   args:
     code: Int32Id
 
+- name: StringToLowerCaseResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+
+- name: StringToUpperCaseResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+
 - name: MathAbsInt32Result
   shared: true
   transpile: true
