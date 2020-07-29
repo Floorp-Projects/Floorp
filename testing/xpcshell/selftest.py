@@ -7,6 +7,7 @@
 from __future__ import absolute_import
 
 import mozinfo
+import mozunit
 import os
 import pprint
 import re
@@ -16,10 +17,26 @@ import sys
 import tempfile
 import unittest
 
+from buildconfig import substs
+from StringIO import StringIO
 from mozlog import structured
+from mozbuild.base import MozbuildObject
+os.environ.pop('MOZ_OBJDIR', None)
+build_obj = MozbuildObject.from_environment()
 
 from runxpcshelltests import XPCShellTests
 
+mozinfo.find_and_update_from_json()
+
+objdir = build_obj.topobjdir.encode("utf-8")
+
+if mozinfo.isMac:
+    xpcshellBin = os.path.join(objdir, "dist", substs['MOZ_MACBUNDLE_NAME'],
+                               "Contents", "MacOS", "xpcshell")
+else:
+    xpcshellBin = os.path.join(objdir, "dist", "bin", "xpcshell")
+    if sys.platform == "win32":
+        xpcshellBin += ".exe"
 
 TEST_PASS_STRING = "TEST-PASS"
 TEST_FAIL_STRING = "TEST-UNEXPECTED-FAIL"
@@ -474,37 +491,19 @@ class XPCShellTestsTests(unittest.TestCase):
     """
     Yes, these are unit tests for a unit test harness.
     """
-    def __init__(self, name):
-        super(XPCShellTestsTests, self).__init__(name)
-        from buildconfig import substs
-        from mozbuild.base import MozbuildObject
-        os.environ.pop('MOZ_OBJDIR', None)
-        self.build_obj = MozbuildObject.from_environment()
-
-        objdir = self.build_obj.topobjdir.encode("utf-8")
-        self.testing_modules = os.path.join(objdir, '_tests', 'modules')
-
-        if mozinfo.isMac:
-            self.xpcshellBin = os.path.join(objdir, "dist", substs['MOZ_MACBUNDLE_NAME'],
-                                            "Contents", "MacOS", "xpcshell")
-        else:
-            self.xpcshellBin = os.path.join(objdir, "dist", "bin", "xpcshell")
-        if sys.platform == "win32":
-            self.xpcshellBin += ".exe"
-        self.utility_path = os.path.join(objdir, 'dist', 'bin')
-        self.symbols_path = None
-        candidate_path = os.path.join(self.build_obj.distdir, 'crashreporter-symbols')
-        if (os.path.isdir(candidate_path)):
-            self.symbols_path = candidate_path
-
     def setUp(self):
-        self.log = six.StringIO()
+        self.log = StringIO()
         self.tempdir = tempfile.mkdtemp()
+        self.utility_path = os.path.join(objdir, 'dist', 'bin')
         logger = structured.commandline.setup_logging("selftest%s" % id(self),
                                                       {},
                                                       {"tbpl": self.log})
         self.x = XPCShellTests(logger)
         self.x.harness_timeout = 30 if not mozinfo.info["ccov"] else 60
+        self.symbols_path = None
+        candidate_path = os.path.join(build_obj.distdir, 'crashreporter-symbols')
+        if (os.path.isdir(candidate_path)):
+            self.symbols_path = candidate_path
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -553,7 +552,7 @@ prefs =
         returns |expected|.
         """
         kwargs = {}
-        kwargs['xpcshell'] = self.xpcshellBin
+        kwargs['xpcshell'] = xpcshellBin
         kwargs['symbolsPath'] = self.symbols_path
         kwargs['manifest'] = self.manifest
         kwargs['mozInfo'] = mozinfo.info
@@ -561,7 +560,7 @@ prefs =
         kwargs['verbose'] = verbose
         kwargs['headless'] = headless
         kwargs['sequential'] = True
-        kwargs['testingModulesDir'] = self.testing_modules
+        kwargs['testingModulesDir'] = os.path.join(objdir, '_tests', 'modules')
         kwargs['utility_path'] = self.utility_path
         self.assertEquals(expected,
                           self.x.runTests(kwargs),
@@ -1020,7 +1019,7 @@ add_test({
         self.assertEquals(1, self.x.testCount)
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
-        if mozinfo.info.get('crashreporter'):
+        if substs.get('MOZ_CRASHREPORTER'):
             self.assertInLog("\nPROCESS-CRASH")
 
     def testLogCorrectFileName(self):
@@ -1183,7 +1182,7 @@ add_test({
             self.assertTestResult(True)
         except Exception as ex:
             raised = True
-            self.assertEquals(str(ex)[0:9], "head file")
+            self.assertEquals(ex.message[0:9], "head file")
 
         self.assertTrue(raised)
 
@@ -1496,6 +1495,4 @@ add_test({
 
 
 if __name__ == "__main__":
-    import mozunit
-    mozinfo.find_and_update_from_json()
     mozunit.main()
