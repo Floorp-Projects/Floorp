@@ -2878,8 +2878,8 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       //      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB) << 1;
       break;
     case StyleAppearance::ScrollbarNonDisappearing: {
-      aResult->SizeTo(::GetSystemMetrics(SM_CXVSCROLL),
-                      ::GetSystemMetrics(SM_CYHSCROLL));
+      aResult->SizeTo(::GetSystemMetrics(SM_CXHSCROLL),
+                      ::GetSystemMetrics(SM_CYVSCROLL));
       break;
     }
     case StyleAppearance::RangeThumb: {
