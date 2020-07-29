@@ -331,7 +331,7 @@ add_task(async function searchWith() {
   await hidePopup();
 });
 
-// Clicks a one-off.
+// Clicks a one-off with an engine.
 add_task(async function oneOffClick() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
@@ -357,10 +357,10 @@ add_task(async function oneOffClick() {
         UrlbarTestUtils.isPopupOpen(window),
         "Urlbar view is still open."
       );
-      Assert.ok(
-        UrlbarTestUtils.isInSearchMode(window, oneOffs[0].engine.name),
-        "The Urlbar is in search mode."
-      );
+      UrlbarTestUtils.assertSearchMode(window, {
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        engineName: oneOffs[0].engine.name,
+      });
       window.gURLBar.setSearchMode(null);
     } else {
       let resultsPromise = BrowserTestUtils.browserLoaded(
@@ -377,7 +377,7 @@ add_task(async function oneOffClick() {
   await UrlbarTestUtils.formHistory.clear();
 });
 
-// Presses the Return key when a one-off is selected.
+// Presses the Return key when a one-off with an engine is selected.
 add_task(async function oneOffReturn() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
@@ -408,10 +408,10 @@ add_task(async function oneOffReturn() {
         UrlbarTestUtils.isPopupOpen(window),
         "Urlbar view is still open."
       );
-      Assert.ok(
-        UrlbarTestUtils.isInSearchMode(window, oneOffs[0].engine.name),
-        "The Urlbar is in search mode."
-      );
+      UrlbarTestUtils.assertSearchMode(window, {
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        engineName: oneOffs[0].engine.name,
+      });
       window.gURLBar.setSearchMode(null);
     } else {
       let resultsPromise = BrowserTestUtils.browserLoaded(
@@ -428,6 +428,7 @@ add_task(async function oneOffReturn() {
   await UrlbarTestUtils.formHistory.clear();
 });
 
+// Hidden engines should not appear in the one-offs.
 add_task(async function hiddenOneOffs() {
   // Disable all the engines but the current one, check the oneoffs are
   // hidden and that moving up selects the last match.
@@ -455,6 +456,7 @@ add_task(async function hiddenOneOffs() {
   EventUtils.synthesizeKey("KEY_ArrowUp");
   assertState(1, -1);
   await hidePopup();
+  await SpecialPowers.popPrefEnv();
 });
 
 // The one-offs should be hidden when searching with an "@engine" search engine
@@ -488,6 +490,285 @@ add_task(async function hiddenWhenUsingSearchAlias() {
   );
   await hidePopup();
 });
+
+// Makes sure local search mode one-offs don't exist without update2.
+add_task(async function localOneOffsWithoutUpdate2() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
+
+  // Null out _engines so that the one-offs rebuild themselves when the view
+  // opens.
+  oneOffSearchButtons._engines = null;
+  let rebuildPromise = BrowserTestUtils.waitForEvent(
+    oneOffSearchButtons,
+    "rebuild"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "localOneOffsWithoutUpdate2",
+  });
+  await rebuildPromise;
+
+  Assert.equal(oneOffSearchButtons.localButtons.length, 0);
+  Assert.equal(
+    document.getElementById("urlbar-engine-one-off-item-bookmarks"),
+    null,
+    "Bookmarks one-off should not exist"
+  );
+  Assert.equal(
+    document.getElementById("urlbar-engine-one-off-item-tabs"),
+    null,
+    "Tabs one-off should not exist"
+  );
+  Assert.equal(
+    document.getElementById("urlbar-engine-one-off-item-history"),
+    null,
+    "History one-off should not exist"
+  );
+
+  await hidePopup();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Makes sure local search mode one-offs exist with update2.
+add_task(async function localOneOffsWithUpdate2() {
+  // Null out _engines so that the one-offs rebuild themselves when the view
+  // opens.
+  oneOffSearchButtons._engines = null;
+  await doLocalOneOffsShownTest();
+});
+
+// Clicks a local search mode one-off.
+add_task(async function localOneOffClick() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.localOneOffs", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+
+  // We are explicitly using something that looks like a url, to make the test
+  // stricter. Even if it looks like a url, we should search.
+  let typedValue = "foo.bar";
+
+  // Null out _engines so that the one-offs rebuild themselves when the view
+  // opens.
+  oneOffSearchButtons._engines = null;
+  let rebuildPromise = BrowserTestUtils.waitForEvent(
+    oneOffSearchButtons,
+    "rebuild"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: typedValue,
+  });
+  await rebuildPromise;
+
+  let buttons = oneOffSearchButtons.localButtons;
+  Assert.ok(buttons.length, "Sanity check: Local one-offs exist");
+
+  for (let button of buttons) {
+    Assert.ok(button.source, "Sanity check: Button has a source");
+    EventUtils.synthesizeMouseAtCenter(button, {});
+    Assert.ok(
+      UrlbarTestUtils.isPopupOpen(window),
+      "Urlbar view is still open."
+    );
+    UrlbarTestUtils.assertSearchMode(window, {
+      source: button.source,
+    });
+  }
+
+  window.gURLBar.setSearchMode(null);
+
+  await hidePopup();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Presses the Return key when a local search mode one-off is selected.
+add_task(async function localOneOffReturn() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.localOneOffs", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+
+  // We are explicitly using something that looks like a url, to make the test
+  // stricter. Even if it looks like a url, we should search.
+  let typedValue = "foo.bar";
+
+  // Null out _engines so that the one-offs rebuild themselves when the view
+  // opens.
+  oneOffSearchButtons._engines = null;
+  let rebuildPromise = BrowserTestUtils.waitForEvent(
+    oneOffSearchButtons,
+    "rebuild"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: typedValue,
+  });
+  await rebuildPromise;
+
+  let buttons = oneOffSearchButtons.localButtons;
+  Assert.ok(buttons.length, "Sanity check: Local one-offs exist");
+
+  let allButtons = oneOffSearchButtons.getSelectableButtons(false);
+  let firstLocalIndex = allButtons.length - buttons.length;
+
+  for (let i = 0; i < buttons.length; i++) {
+    let button = buttons[i];
+
+    // Alt+Down enough times to select the button.
+    let index = firstLocalIndex + i;
+    EventUtils.synthesizeKey("KEY_ArrowDown", {
+      altKey: true,
+      repeat: index + 1,
+    });
+    await TestUtils.waitForCondition(
+      () => oneOffSearchButtons.selectedButtonIndex == index,
+      "Waiting for local one-off to become selected"
+    );
+    assertState(0, index, typedValue);
+
+    Assert.ok(button.source, "Sanity check: Button has a source");
+    EventUtils.synthesizeKey("KEY_Enter");
+    Assert.ok(
+      UrlbarTestUtils.isPopupOpen(window),
+      "Urlbar view is still open."
+    );
+    UrlbarTestUtils.assertSearchMode(window, {
+      source: button.source,
+    });
+  }
+
+  window.gURLBar.setSearchMode(null);
+
+  await hidePopup();
+  await SpecialPowers.popPrefEnv();
+});
+
+// The bookmarks one-off should be hidden when suggest.bookmark is false.
+add_task(async function hiddenBookmarksOneOff() {
+  await doLocalOneOffsShownTest("suggest.bookmark");
+});
+
+// The tabs one-off should be hidden when suggest.openpage is false.
+add_task(async function hiddenTabsOneOff() {
+  await doLocalOneOffsShownTest("suggest.openpage");
+});
+
+// The history one-off should be hidden when suggest.history is false.
+add_task(async function hiddenHistoryOneOff() {
+  await doLocalOneOffsShownTest("suggest.history");
+});
+
+/**
+ * Checks that the local one-offs are shown correctly.
+ *
+ * @param {boolean} prefToDisable
+ *   If given, this should be one of the `browser.urlbar.suggest` prefs.  It
+ *   will be disabled before running the test to make sure the corresponding
+ *   button isn't shown.
+ */
+async function doLocalOneOffsShownTest(prefToDisable = "") {
+  let prefs = [
+    ["browser.urlbar.update2", true],
+    ["browser.urlbar.update2.localOneOffs", true],
+    ["browser.urlbar.update2.oneOffsRefresh", true],
+  ];
+  if (prefToDisable) {
+    prefs.push([`browser.urlbar.${prefToDisable}`, false]);
+  }
+  await SpecialPowers.pushPrefEnv({ set: prefs });
+
+  if (prefToDisable) {
+    Assert.equal(
+      UrlbarPrefs.get(prefToDisable),
+      false,
+      `Sanity check: Pref ${prefToDisable} is disabled`
+    );
+  }
+
+  let rebuildPromise = BrowserTestUtils.waitForEvent(
+    oneOffSearchButtons,
+    "rebuild"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "doLocalOneOffsShownTest",
+  });
+  await rebuildPromise;
+
+  let buttons = oneOffSearchButtons.localButtons;
+  Assert.equal(
+    buttons.length,
+    prefToDisable ? 2 : 3,
+    "Expected number of local buttons"
+  );
+
+  let expectedSource;
+  let seenIDs = new Set();
+  for (let button of buttons) {
+    Assert.ok(
+      !seenIDs.has(button.id),
+      "Should not have already seen button.id"
+    );
+    seenIDs.add(button.id);
+    switch (button.id) {
+      case "urlbar-engine-one-off-item-bookmarks":
+        expectedSource = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
+        break;
+      case "urlbar-engine-one-off-item-tabs":
+        expectedSource = UrlbarUtils.RESULT_SOURCE.TABS;
+        break;
+      case "urlbar-engine-one-off-item-history":
+        expectedSource = UrlbarUtils.RESULT_SOURCE.HISTORY;
+        break;
+      default:
+        Assert.ok(false, `Unexpected local button ID: ${button.id}`);
+        break;
+    }
+    Assert.equal(button.source, expectedSource, "Expected button.source");
+
+    switch (prefToDisable) {
+      case "suggest.bookmark":
+        Assert.notEqual(expectedSource, UrlbarUtils.RESULT_SOURCE.BOOKMARKS);
+        break;
+      case "suggest.openpage":
+        Assert.notEqual(expectedSource, UrlbarUtils.RESULT_SOURCE.TABS);
+        break;
+      case "suggest.history":
+        Assert.notEqual(expectedSource, UrlbarUtils.RESULT_SOURCE.HISTORY);
+        break;
+      default:
+        if (prefToDisable) {
+          Assert.ok(false, `Unexpected pref: ${prefToDisable}`);
+        }
+        break;
+    }
+  }
+
+  await hidePopup();
+
+  if (prefToDisable) {
+    // Run the test again with the pref toggled back to true in order to test
+    // that the buttons automatically rebuild on the pref change and that all
+    // buttons are shown.
+    info(`Running test again with ${prefToDisable} = true`);
+    await SpecialPowers.pushPrefEnv({
+      set: [[`browser.urlbar.${prefToDisable}`, true]],
+    });
+    await doLocalOneOffsShownTest();
+    await SpecialPowers.popPrefEnv();
+  }
+
+  await SpecialPowers.popPrefEnv();
+}
 
 function assertState(result, oneOff, textValue = undefined) {
   Assert.equal(
