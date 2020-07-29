@@ -13,27 +13,28 @@
  * A transport that uses a WorkerDebugger to send packets from the main
  * thread to a worker thread.
  */
-function MainThreadWorkerDebuggerTransport(dbg, id) {
-  this._dbg = dbg;
-  this._id = id;
-  this.onMessage = this._onMessage.bind(this);
-}
+class MainThreadWorkerDebuggerTransport {
+  constructor(dbg, id) {
+    this._dbg = dbg;
+    this._id = id;
 
-MainThreadWorkerDebuggerTransport.prototype = {
-  constructor: MainThreadWorkerDebuggerTransport,
+    this._dbgListener = {
+      onMessage: this._onMessage.bind(this),
+    };
+  }
 
-  ready: function() {
-    this._dbg.addListener(this);
-  },
+  ready() {
+    this._dbg.addListener(this._dbgListener);
+  }
 
-  close: function() {
-    this._dbg.removeListener(this);
+  close() {
+    this._dbg.removeListener(this._dbgListener);
     if (this.hooks) {
       this.hooks.onClosed();
     }
-  },
+  }
 
-  send: function(packet) {
+  send(packet) {
     this._dbg.postMessage(
       JSON.stringify({
         type: "message",
@@ -41,23 +42,21 @@ MainThreadWorkerDebuggerTransport.prototype = {
         message: packet,
       })
     );
-  },
+  }
 
-  startBulkSend: function() {
+  startBulkSend() {
     throw new Error("Can't send bulk data from worker threads!");
-  },
+  }
 
-  _onMessage: function(message) {
+  _onMessage(message) {
     const packet = JSON.parse(message);
-    if (packet.type !== "message" || packet.id !== this._id) {
+    if (packet.type !== "message" || packet.id !== this._id || !this.hooks) {
       return;
     }
 
-    if (this.hooks) {
-      this.hooks.onPacket(packet.message);
-    }
-  },
-};
+    this.hooks.onPacket(packet.message);
+  }
+}
 
 exports.MainThreadWorkerDebuggerTransport = MainThreadWorkerDebuggerTransport;
 

@@ -40,6 +40,11 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
     this._attached = false;
     this._threadActor = null;
     this._transport = null;
+
+    this._dbgListener = {
+      onClose: this._onWorkerClose.bind(this),
+      onError: this._onWorkerError.bind(this),
+    };
   },
 
   form() {
@@ -83,7 +88,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
       if (isServiceWorker) {
         this._preventServiceWorkerShutdown();
       }
-      this._dbg.addListener(this);
+      this._dbg.addListener(this._dbgListener);
       this._attached = true;
     }
 
@@ -152,7 +157,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
     return { type: "pushed" };
   },
 
-  onClose() {
+  _onWorkerClose() {
     if (this._attached) {
       this._detach();
     }
@@ -160,7 +165,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
     this.conn.sendActorEvent(this.actorID, "close");
   },
 
-  onError(filename, lineno, message) {
+  _onWorkerError(filename, lineno, message) {
     reportError("ERROR:" + filename + ":" + lineno + ":" + message + "\n");
   },
 
@@ -194,7 +199,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
       this._allowServiceWorkerShutdown();
     }
 
-    this._dbg.removeListener(this);
+    this._dbg.removeListener(this._dbgListener);
     this._attached = false;
   },
 
