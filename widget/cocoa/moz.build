@@ -54,6 +54,7 @@ UNIFIED_SOURCES += [
     'nsMenuItemX.mm',
     'nsMenuUtilsX.mm',
     'nsMenuX.mm',
+    'nsNativeBasicThemeCocoa.cpp',
     'nsPrintDialogX.mm',
     'nsPrintSettingsServiceX.mm',
     'nsPrintSettingsX.mm',

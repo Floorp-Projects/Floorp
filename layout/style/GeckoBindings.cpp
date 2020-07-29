@@ -1006,7 +1006,8 @@ void Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
   LookAndFeel::FontID fontID = static_cast<LookAndFeel::FontID>(aFontId);
 
   AutoWriteLock guard(*sServoFFILock);
-  nsLayoutUtils::ComputeSystemFont(aDest, fontID, defaultVariableFont);
+  nsLayoutUtils::ComputeSystemFont(aDest, fontID, defaultVariableFont,
+                                   aDocument);
 }
 
 void Gecko_nsFont_Destroy(nsFont* aDest) { aDest->~nsFont(); }
