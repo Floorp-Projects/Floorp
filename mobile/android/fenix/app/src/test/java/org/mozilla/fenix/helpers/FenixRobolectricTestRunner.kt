@@ -5,12 +5,12 @@
 package org.mozilla.fenix.helpers
 
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 /**
- * A test runner that starts Robolectric with our custom configuration for use in unit tests. This
- * should ALWAYS be used instead of RobolectricTestRunner and AndroidJUnit4. You should only use
- * Robolectric when necessary because it non-trivially increases test duration.
+ * A test runner that was added to start Robolectric with our custom configuration for use in unit tests.
+ *
+ * This class is now deprecated as the configuration is set by robolectric.properties instead.
+ * You should only use Robolectric when necessary because it non-trivially increases test duration.
  *
  * usage:
  * ```
@@ -29,12 +29,7 @@ import org.robolectric.annotation.Config
  * We chose the name RobolectricTestRunner because we want folks to know they're starting Robolectric
  * because it increases test runtime. Furthermore, the naming of 3) is unclear so we didn't want to
  * use that name.
+ *
+ * As a result, new tests should use RobolectricTestRunner.
  */
-class FenixRobolectricTestRunner(testClass: Class<*>) : RobolectricTestRunner(testClass) {
-
-    override fun buildGlobalConfig(): Config {
-        return Config.Builder()
-            .setApplication(FenixRobolectricTestApplication::class.java)
-            .build()
-    }
-}
+class FenixRobolectricTestRunner(testClass: Class<*>) : RobolectricTestRunner(testClass)
