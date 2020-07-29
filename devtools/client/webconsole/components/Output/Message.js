@@ -14,6 +14,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const actions = require("devtools/client/webconsole/actions/index");
 const {
+  MESSAGE_LEVEL,
   MESSAGE_SOURCE,
   MESSAGE_TYPE,
 } = require("devtools/client/webconsole/constants");
@@ -180,7 +181,10 @@ class Message extends Component {
     }
 
     if (isBlockedNetworkMessage) {
-      return MessageIcon({ type: "blockedReason" });
+      return MessageIcon({
+        level: MESSAGE_LEVEL.ERROR,
+        type: "blockedReason",
+      });
     }
 
     return MessageIcon({
