@@ -258,16 +258,26 @@ bool GCRuntime::registerWeakRef(HandleObject target, HandleObject weakRef) {
   return refs.emplaceBack(weakRef);
 }
 
-void GCRuntime::unregisterWeakRef(WeakRefObject* weakRef) {
+bool GCRuntime::unregisterWeakRefWrapper(JSObject* wrapper) {
+  WeakRefObject* weakRef =
+      &UncheckedUnwrapWithoutExpose(wrapper)->as<WeakRefObject>();
+
   JSObject* target = weakRef->target();
   MOZ_ASSERT(target);
 
+  bool removed = false;
   auto& map = target->zone()->weakRefMap();
   if (auto ptr = map.lookup(target)) {
-    ptr->value().eraseIf([weakRef](JSObject* obj) {
-      return UncheckedUnwrapWithoutExpose(obj) == weakRef;
+    ptr->value().eraseIf([wrapper, &removed](JSObject* obj) {
+      bool remove = obj == wrapper;
+      if (remove) {
+        removed = true;
+      }
+      return remove;
     });
   }
+
+  return removed;
 }
 
 void GCRuntime::traceKeptObjects(JSTracer* trc) {

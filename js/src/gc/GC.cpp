@@ -4776,24 +4776,23 @@ static bool HasIncomingCrossCompartmentPointers(JSRuntime* rt) {
 }
 #endif
 
-void js::NotifyGCNukeWrapper(JSObject* obj) {
-  MOZ_ASSERT(IsCrossCompartmentWrapper(obj));
+void js::NotifyGCNukeWrapper(JSObject* wrapper) {
+  MOZ_ASSERT(IsCrossCompartmentWrapper(wrapper));
 
   /*
    * References to target of wrapper are being removed, we no longer have to
    * remember to mark it.
    */
-  RemoveFromGrayList(obj);
+  RemoveFromGrayList(wrapper);
 
   /*
    * Clean up WeakRef maps which might include this wrapper.
    */
-  JSObject* target = UncheckedUnwrapWithoutExpose(obj);
+  JSObject* target = UncheckedUnwrapWithoutExpose(wrapper);
   if (target->is<WeakRefObject>()) {
     WeakRefObject* weakRef = &target->as<WeakRefObject>();
     GCRuntime* gc = &weakRef->runtimeFromMainThread()->gc;
-    if (weakRef->target()) {
-      gc->unregisterWeakRef(weakRef);
+    if (weakRef->target() && gc->unregisterWeakRefWrapper(wrapper)) {
       weakRef->setTarget(nullptr);
     }
   }

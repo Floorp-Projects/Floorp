@@ -581,7 +581,7 @@ class GCRuntime {
 
   // WeakRefs
   bool registerWeakRef(HandleObject target, HandleObject weakRef);
-  void unregisterWeakRef(js::WeakRefObject* weakRef);
+  bool unregisterWeakRefWrapper(JSObject* wrapper);
   void traceKeptObjects(JSTracer* trc);
 
  private:
