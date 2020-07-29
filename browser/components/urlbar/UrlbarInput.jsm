@@ -414,19 +414,20 @@ class UrlbarInput {
       if (selectedOneOff && isMouseEvent && event.target != selectedOneOff) {
         selectedOneOff = null;
       }
-      if (
-        selectedOneOff == this.view.oneOffSearchButtons.settingsButtonCompact
-      ) {
-        this.controller.engagementEvent.discard();
-        selectedOneOff.doCommand();
-        return;
-      }
-      if (selectedOneOff && this.view.oneOffsRefresh) {
-        this.view.oneOffSearchButtons.handleSearchCommand(
-          event,
-          selectedOneOff.engine || selectedOneOff.source
-        );
-        return;
+      if (selectedOneOff) {
+        if (!selectedOneOff.engine) {
+          // the settings button
+          this.controller.engagementEvent.discard();
+          selectedOneOff.doCommand();
+          return;
+        }
+        if (this.view.oneOffsRefresh) {
+          this.view.oneOffSearchButtons.handleSearchCommand(
+            event,
+            selectedOneOff.engine
+          );
+          return;
+        }
       }
     }
 
@@ -1162,55 +1163,34 @@ class UrlbarInput {
   /**
    * Sets search mode and shows the search mode indicator.
    *
-   * @param {nsISearchEngine|SearchEngine|UrlbarUtils.RESULT_SOURCE} engineOrSource
-   *   Either the search engine to restrict to or a UrlbarUtils.RESULT_SOURCE
-   *   value.  Exits search mode if null.
+   * @param {nsISearchEngine | string} engineOrMode
+   *   Either the search engine to restrict to or a mode described by a string.
+   *   Exits search mode if null.
    */
-  setSearchMode(engineOrSource) {
+  setSearchMode(engineOrMode) {
     if (!UrlbarPrefs.get("update2")) {
       return;
     }
 
-    this._searchModeIndicatorTitle.textContent = "";
-    this._searchModeLabel.textContent = "";
-    this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
-    this._searchModeLabel.removeAttribute("data-l10n-id");
-
-    if (!engineOrSource) {
+    let indicatorTitle;
+    if (!engineOrMode) {
       this.searchMode = null;
+      this.removeAttribute("searchmode");
     } else if (
-      engineOrSource instanceof Ci.nsISearchEngine ||
-      engineOrSource instanceof SearchEngine
+      engineOrMode instanceof Ci.nsISearchEngine ||
+      engineOrMode instanceof SearchEngine
     ) {
       this.searchMode = {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        engineName: engineOrSource.name,
+        engineName: engineOrMode.name,
       };
-      this._searchModeIndicatorTitle.textContent = engineOrSource.name;
-      this._searchModeLabel.textContent = engineOrSource.name;
-    } else if (typeof engineOrSource == "number") {
-      let sourceName = UrlbarUtils.getResultSourceName(engineOrSource);
-      if (!sourceName) {
-        Cu.reportError(`Unrecognized source: ${engineOrSource}`);
-        this.searchMode = null;
-      } else {
-        this.searchMode = { source: engineOrSource };
-        let l10nID = `urlbar-search-mode-${sourceName}`;
-        this.document.l10n.setAttributes(
-          this._searchModeIndicatorTitle,
-          l10nID
-        );
-        this.document.l10n.setAttributes(this._searchModeLabel, l10nID);
-      }
-    } else {
-      Cu.reportError(`Unexpected search mode: ${engineOrSource}`);
-    }
-
-    if (this.searchMode) {
+      indicatorTitle = engineOrMode.name;
       this.toggleAttribute("searchmode", true);
     } else {
-      this.removeAttribute("searchmode");
+      // TODO: Support non-RESULT_SOURCE.SEARCH search modes (bug 1647896).
     }
+    this._searchModeIndicatorTitle.textContent = indicatorTitle;
+    this._searchModeLabel.textContent = indicatorTitle;
   }
 
   // Getters and Setters below.

@@ -110,12 +110,6 @@ urlbar-tip-icon-description =
 urlbar-search-tips-onboard = Type less, find more: Search { $engineName } right from your address bar.
 urlbar-search-tips-redirect-2 = Start your search in the address bar to see suggestions from { $engineName } and your browsing history.
 
-## Local search mode indicator labels in the urlbar
-
-urlbar-search-mode-bookmarks = Bookmarks
-urlbar-search-mode-tabs = Tabs
-urlbar-search-mode-history = History
-
 ##
 
 urlbar-geolocation-blocked =
@@ -202,20 +196,6 @@ search-one-offs-context-set-as-default-private =
 #  $alias (String): The @alias shortcut/keyword.
 search-one-offs-engine-with-alias =
     .tooltiptext = { $engineName } ({ $alias })
-
-## Local search mode one-off buttons
-## Variables:
-##  $restrict (String): The restriction token corresponding to the search mode.
-##    Restriction tokens are special characters users can type in the urlbar to
-##    restrict their searches to certain sources (e.g., "*" to search only
-##    bookmarks).
-
-search-one-offs-bookmarks =
-    .tooltiptext = Bookmarks ({ $restrict })
-search-one-offs-tabs =
-    .tooltiptext = Tabs ({ $restrict })
-search-one-offs-history =
-    .tooltiptext = History ({ $restrict })
 
 ## Bookmark Panel
 

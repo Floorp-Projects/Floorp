@@ -294,6 +294,12 @@ class SearchOneOffs {
     }
     if (val) {
       val.setAttribute("selected", "true");
+      if (!val.engine) {
+        // If the button doesn't have an engine, then clear the popup's
+        // selection to indicate that pressing Return while the button is
+        // selected will do the button's command, not search.
+        this.selectedViewIndex = -1;
+      }
     }
     this._selectedButton = val;
 
@@ -506,30 +512,23 @@ class SearchOneOffs {
     this.settingsButton.id = origin + "-anon-search-settings";
     this.settingsButtonCompact.id = origin + "-anon-search-settings-compact";
 
-    this._rebuildEngineList(engines);
-    this.dispatchEvent(new Event("rebuild"));
-  }
-
-  /**
-   * Adds one-offs for the given engines to the DOM.
-   *
-   * @param {array} engines
-   *        The engines to add.
-   */
-  _rebuildEngineList(engines) {
     for (let i = 0; i < engines.length; ++i) {
       let engine = engines[i];
       let button = this.document.createXULElement("button");
       button.engine = engine;
       button.id = this._buttonIDForEngine(engine);
-      let iconURI =
-        engine.iconURI?.spec ||
-        "chrome://browser/skin/search-engine-placeholder.png";
-      button.setAttribute("image", iconURI);
+      let uri = "chrome://browser/skin/search-engine-placeholder.png";
+      if (engine.iconURI) {
+        uri = engine.iconURI.spec;
+      }
+      button.setAttribute("image", uri);
       button.setAttribute("class", "searchbar-engine-one-off-item");
       this.setTooltipForEngineButton(button);
+
       this.buttons.appendChild(button);
     }
+
+    this.dispatchEvent(new Event("rebuild"));
   }
 
   _rebuildAddEngineList() {
@@ -881,7 +880,6 @@ class SearchOneOffs {
         if (this.textbox && typeof textboxUserValue == "string") {
           this.textbox.value = textboxUserValue;
         }
-        this.selectedViewIndex = -1;
         this.advanceSelection(false, true, true);
         return true;
       }

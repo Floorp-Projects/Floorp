@@ -233,7 +233,6 @@ class Preferences {
    */
   constructor() {
     this._map = new Map();
-    this._observers = new Set();
     this.QueryInterface = ChromeUtils.generateQI([
       "nsIObserver",
       "nsISupportsWeakReference",
@@ -280,28 +279,6 @@ class Preferences {
   }
 
   /**
-   * Adds a callback that will be called when a urlbar pref changes.  `observer`
-   * will be passed the name of the pref that changed.  For prefs in the
-   * `browser.urlbar.` branch, the name will be relative to the branch.
-   *
-   * @param {function} observer
-   *        A callback function.
-   */
-  addObserver(observer) {
-    this._observers.add(observer);
-  }
-
-  /**
-   * Removes an observer callback.
-   *
-   * @param {function} observer
-   *        A callback function.
-   */
-  removeObserver(observer) {
-    this._observers.delete(observer);
-  }
-
-  /**
    * Observes preference changes.
    *
    * @param {nsISupports} subject
@@ -320,10 +297,6 @@ class Preferences {
     }
     if (pref.startsWith("suggest.")) {
       this._map.delete("defaultBehavior");
-    }
-
-    for (let observer of this._observers) {
-      observer(pref);
     }
   }
 
