@@ -19,7 +19,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Bookmarks.jsm"
 );
 
-var { DefaultMap, ExtensionError } = ExtensionUtils;
+var { DefaultMap, ExtensionError, parseMatchPatterns } = ExtensionUtils;
 
 var { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
@@ -759,7 +759,7 @@ MenuItem.prototype = {
     }
 
     if (createProperties.documentUrlPatterns != null) {
-      this.documentUrlMatchPattern = new MatchPatternSet(
+      this.documentUrlMatchPattern = parseMatchPatterns(
         this.documentUrlPatterns,
         {
           restrictSchemes: this.extension.restrictSchemes,
@@ -768,7 +768,7 @@ MenuItem.prototype = {
     }
 
     if (createProperties.targetUrlPatterns != null) {
-      this.targetUrlMatchPattern = new MatchPatternSet(this.targetUrlPatterns, {
+      this.targetUrlMatchPattern = parseMatchPatterns(this.targetUrlPatterns, {
         // restrictSchemes default to false when matching links instead of pages
         // (see Bug 1280370 for a rationale).
         restrictSchemes: false,
