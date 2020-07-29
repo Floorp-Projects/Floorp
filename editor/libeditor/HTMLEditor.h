@@ -2022,14 +2022,28 @@ class HTMLEditor final : public TextEditor,
   DeleteNodeIfInvisibleAndEditableTextNode(nsIContent& aContent);
 
   /**
-   * DeleteTextAndTextNodesWithTransaction() removes text nodes which are in
-   * the given range and delete some characters in start and/or end of
-   * the range.
+   * DeleteTextAndTextNodesWithTransaction() removes text or text nodes in
+   * the given range.
    */
+  enum class TreatEmptyTextNodes {
+    // KeepIfContainerOfRangeBoundaries:
+    //   Will remove empty text nodes middle of the range, but keep empty
+    //   text nodes which are containers of range boundaries.
+    KeepIfContainerOfRangeBoundaries,
+    // Remove:
+    //   Will remove all empty text nodes.
+    Remove,
+    // RemoveAllEmptyInlineAncestors:
+    //   Will remove all empty text nodes and its inline ancestors which
+    //   become empty due to removing empty text nodes.
+    RemoveAllEmptyInlineAncestors,
+  };
   template <typename EditorDOMPointType>
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteTextAndTextNodesWithTransaction(const EditorDOMPointType& aStartPoint,
-                                        const EditorDOMPointType& aEndPoint);
+  DeleteTextAndTextNodesWithTransaction(
+      const EditorDOMPointType& aStartPoint,
+      const EditorDOMPointType& aEndPoint,
+      TreatEmptyTextNodes aTreatEmptyTextNodes);
 
   /**
    * If aPoint follows invisible `<br>` element, returns the invisible `<br>`
