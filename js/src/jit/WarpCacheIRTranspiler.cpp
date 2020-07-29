@@ -942,6 +942,28 @@ bool WarpCacheIRTranspiler::emitStringFromCodePointResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStringToLowerCaseResult(StringOperandId strId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* convert =
+      MStringConvertCase::New(alloc(), str, MStringConvertCase::LowerCase);
+  add(convert);
+
+  pushResult(convert);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitStringToUpperCaseResult(StringOperandId strId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* convert =
+      MStringConvertCase::New(alloc(), str, MStringConvertCase::UpperCase);
+  add(convert);
+
+  pushResult(convert);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitStoreDynamicSlot(ObjOperandId objId,
                                                  uint32_t offsetOffset,
                                                  ValOperandId rhsId) {
