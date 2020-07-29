@@ -19,7 +19,7 @@
         android:title="@string/preferences_category_account"
         app:iconSpaceReserved="false"
         app:isPreferenceVisible="false"
-        android:layout="@layout/preference_cat_style" >
+        android:layout="@layout/preference_category_main_style" >
 
         <org.mozilla.fenix.settings.account.AccountPreference
             android:icon="@drawable/ic_account"
@@ -47,7 +47,7 @@
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_general"
         app:iconSpaceReserved="false"
-        android:layout="@layout/preference_cat_style" >
+        android:layout="@layout/preference_category_main_style" >
         <androidx.preference.Preference
             android:icon="@drawable/ic_search"
             android:key="@string/pref_key_search_settings"
@@ -82,7 +82,7 @@
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_privacy_security"
         app:iconSpaceReserved="false"
-        android:layout="@layout/preference_cat_style">
+        android:layout="@layout/preference_category_main_style">
 
         <androidx.preference.Preference
             android:icon="@drawable/ic_private_browsing"
@@ -120,7 +120,7 @@
         android:title="@string/preferences_category_advanced"
         app:iconSpaceReserved="false"
         android:key="@string/pref_key_advanced"
-        android:layout="@layout/preference_cat_style">
+        android:layout="@layout/preference_category_main_style">
         <androidx.preference.Preference
             android:icon="@drawable/ic_addons_extensions"
             android:key="@string/pref_key_addons"
@@ -149,7 +149,7 @@
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_about"
         app:iconSpaceReserved="false"
-        android:layout="@layout/preference_cat_style">
+        android:layout="@layout/preference_category_main_style">
         <androidx.preference.Preference
             android:icon="@drawable/ic_bookmark_outline"
             android:key="@string/pref_key_rate"
