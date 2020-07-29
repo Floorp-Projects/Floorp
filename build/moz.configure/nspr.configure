@@ -40,7 +40,7 @@ set_define('JS_WITHOUT_NSPR', True, when=js_without_nspr)
 def nspr_minver(building_js):
     if building_js:
         return 'nspr >= 4.10'
-    return 'nspr >= 4.25'
+    return 'nspr >= 4.26'
 
 nspr_pkg = pkg_check_modules('NSPR', nspr_minver, when='--with-system-nspr')
 
