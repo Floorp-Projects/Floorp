@@ -506,15 +506,3 @@ sealed class Event {
         get() = null
 }
 
-enum class MetricServiceType {
-    Data, Marketing;
-}
-
-interface MetricsService {
-    val type: MetricServiceType
-
-    fun start()
-    fun stop()
-    fun track(event: Event)
-    fun shouldTrack(event: Event): Boolean
-}
