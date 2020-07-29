@@ -91,11 +91,6 @@ FastMarshaler::GetMarshalFlags(DWORD aDestContext, DWORD aMshlFlags) {
     return aMshlFlags;
   }
 
-  if (IsCallerExternalProcess()) {
-    return aMshlFlags;
-  }
-
-  // The caller is our parent main thread. Disable ping functionality.
   return aMshlFlags | MSHLFLAGS_NOPING;
 }
 

@@ -17,13 +17,16 @@ namespace mozilla {
 namespace mscom {
 
 /**
- * When we are marshaling to the parent process main thread, we want to turn
- * off COM's ping functionality. That functionality is designed to free
- * strong references held by defunct client processes. Since our content
- * processes cannot outlive our parent process, we turn off pings when we know
- * that the COM client is going to be our parent process. This provides a
- * significant performance boost in a11y code due to large numbers of remote
- * objects being created and destroyed within a short period of time.
+ * COM ping functionality is enabled by default and is designed to free strong
+ * references held by defunct client processes. However, this incurs a
+ * significant performance penalty in a11y code due to large numbers of remote
+ * objects being created and destroyed within a short period of time. Thus, we
+ * turn off pings to improve performance.
+ * ACHTUNG! When COM pings are disabled, Release calls from remote clients are
+ * never sent to the server! If you use this marshaler, you *must* explicitly
+ * disconnect clients using CoDisconnectObject when the object is no longer
+ * relevant. Otherwise, references to the object will never be released, causing
+ * a leak.
  */
 class FastMarshaler final : public IMarshal {
  public:

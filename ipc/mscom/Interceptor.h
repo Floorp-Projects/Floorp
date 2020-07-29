@@ -63,6 +63,11 @@ struct IInterceptor : public IUnknown {
  * We accomplish this by using COM aggregation, which means that the
  * ICallInterceptor delegates its IUnknown implementation to its outer object
  * (the mscom::Interceptor we implement and control).
+ *
+ * ACHTUNG! mscom::Interceptor uses FastMarshaler to disable COM garbage
+ * collection. If you use this class, you *must* call
+ * Interceptor::DisconnectRemotesForTarget when an object is no longer relevant.
+ * Otherwise, the object will never be released, causing a leak.
  */
 class Interceptor final : public WeakReferenceSupport,
                           public IStdMarshalInfo,
