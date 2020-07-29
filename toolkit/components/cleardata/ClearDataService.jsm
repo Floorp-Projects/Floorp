@@ -928,11 +928,6 @@ const SecuritySettingsCleaner = {
           );
         }
       }
-      let cars = Cc[
-        "@mozilla.org/security/clientAuthRememberService;1"
-      ].getService(Ci.nsIClientAuthRememberService);
-
-      cars.deleteDecisionsByHost(aHost, aOriginAttributes);
 
       aResolve();
     });
@@ -946,10 +941,6 @@ const SecuritySettingsCleaner = {
         Ci.nsISiteSecurityService
       );
       sss.clearAll();
-      let cars = Cc[
-        "@mozilla.org/security/clientAuthRememberService;1"
-      ].getService(Ci.nsIClientAuthRememberService);
-      cars.clearRememberedDecisions();
       aResolve();
     });
   },
