@@ -259,7 +259,7 @@ class FennecFxaMigrationTest {
             val corruptAccountResult = fxaMigrationException.failure as FxaMigrationResult.Failure.CorruptAccountState
             assertEquals(JSONException::class, corruptAccountResult.e::class)
 
-            assertEquals("Corrupt account state, exception type: class org.json.JSONException", corruptAccountResult.toString())
+            assertTrue(corruptAccountResult.toString().startsWith("Corrupt account state, exception: org.json.JSONException"))
         }
 
         verifyZeroInteractions(accountManager)
@@ -281,7 +281,7 @@ class FennecFxaMigrationTest {
             val corruptAccountResult = fxaMigrationException.failure as FxaMigrationResult.Failure.CorruptAccountState
             assertEquals(JSONException::class, corruptAccountResult.e::class)
 
-            assertEquals("Corrupt account state, exception type: class org.json.JSONException", corruptAccountResult.toString())
+            assertEquals("Corrupt account state, exception: org.json.JSONException: No value for pickle_version", corruptAccountResult.toString())
         }
 
         verifyZeroInteractions(accountManager)
@@ -303,7 +303,7 @@ class FennecFxaMigrationTest {
             val corruptAccountResult = fxaMigrationException.failure as FxaMigrationResult.Failure.CorruptAccountState
             assertEquals(JSONException::class, corruptAccountResult.e::class)
 
-            assertEquals("Corrupt account state, exception type: class org.json.JSONException", corruptAccountResult.toString())
+            assertEquals("Corrupt account state, exception: org.json.JSONException: No value for version", corruptAccountResult.toString())
         }
 
         verifyZeroInteractions(accountManager)

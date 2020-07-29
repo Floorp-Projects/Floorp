@@ -62,7 +62,7 @@ sealed class GeckoMigrationResult {
          */
         internal data class FailedToWriteBackup(val throwable: Throwable) : Failure() {
             override fun toString(): String {
-                return "Failed to write backup of prefs.js file: ${throwable::class}"
+                return "Failed to write backup of prefs.js file: $throwable"
             }
         }
 
@@ -71,7 +71,7 @@ sealed class GeckoMigrationResult {
          */
         internal data class FailedToWritePrefs(val throwable: Throwable) : Failure() {
             override fun toString(): String {
-                return "Failed to write transformed prefs.js file: ${throwable::class}"
+                return "Failed to write transformed prefs.js file: $throwable"
             }
         }
 
@@ -80,7 +80,7 @@ sealed class GeckoMigrationResult {
          */
         internal data class FailedToDeleteFile(val throwable: Throwable? = null) : Failure() {
             override fun toString(): String {
-                return "Failed to delete prefs.js file: ${throwable?.let { it::class }}"
+                return "Failed to delete prefs.js file: ${throwable ?: ""}"
             }
         }
     }

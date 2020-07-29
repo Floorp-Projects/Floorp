@@ -72,7 +72,7 @@ sealed class AddonMigrationResult {
          */
         internal data class FailedToQueryInstalledAddons(val throwable: Throwable) : Failure() {
             override fun toString(): String {
-                return "Failed to query installed add-ons: ${throwable::class}"
+                return "Failed to query installed add-ons: $throwable"
             }
         }
 
