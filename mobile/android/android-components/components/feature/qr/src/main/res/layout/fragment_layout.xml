@@ -11,6 +11,15 @@
     android:focusable="true"
     tools:ignore="Overdraw">
 
+    <TextView
+        android:id="@+id/camera_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="@string/mozac_feature_qr_scanner_no_camera"
+        android:textColor="@android:color/white"
+        android:visibility="gone" />
+
     <mozilla.components.feature.qr.views.AutoFitTextureView
         android:id="@+id/texture"
         android:layout_width="match_parent"
@@ -22,4 +31,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerInParent="true" />
+
 </RelativeLayout>

@@ -41,6 +41,7 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
@@ -52,6 +53,7 @@ import com.google.zxing.common.HybridBinarizer
 import mozilla.components.feature.qr.views.AutoFitTextureView
 import mozilla.components.feature.qr.views.CustomViewFinder
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.content.hasCamera
 import java.io.Serializable
 import java.util.ArrayList
 import java.util.Arrays
@@ -80,7 +82,7 @@ class QrFragment : Fragment() {
     private val surfaceTextureListener = object : TextureView.SurfaceTextureListener {
 
         override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
-            openCamera(width, height)
+            tryOpenCamera(width, height)
         }
 
         override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture, width: Int, height: Int) {
@@ -97,6 +99,8 @@ class QrFragment : Fragment() {
 
     internal lateinit var textureView: AutoFitTextureView
     internal lateinit var customViewFinder: CustomViewFinder
+    internal lateinit var cameraErrorView: TextView
+
     @StringRes
     private var scanMessage: Int? = null
     internal var cameraId: String? = null
@@ -209,6 +213,8 @@ class QrFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         textureView = view.findViewById<View>(R.id.texture) as AutoFitTextureView
         customViewFinder = view.findViewById<View>(R.id.view_finder) as CustomViewFinder
+        cameraErrorView = view.findViewById<View>(R.id.camera_error) as TextView
+
         scanMessage?.let {
             CustomViewFinder.setMessage(it)
         }
@@ -223,7 +229,7 @@ class QrFragment : Fragment() {
         // a camera and start preview from here (otherwise, we wait until the surface is ready in
         // the SurfaceTextureListener).
         if (textureView.isAvailable) {
-            openCamera(textureView.width, textureView.height)
+            tryOpenCamera(textureView.width, textureView.height)
         } else {
             textureView.surfaceTextureListener = surfaceTextureListener
         }
@@ -322,6 +328,30 @@ class QrFragment : Fragment() {
         val length = min(optimalSize.height, optimalSize.width)
         textureView.setAspectRatio(length, length)
         this.previewSize = Size(length, length)
+    }
+
+    /**
+     * Tries to open the camera and displays an error message in case
+     * there's no camera available or we fail to open it. Applications
+     * should ideally check for camera availability, but we use this
+     * as a fallback in case they don't.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    internal fun tryOpenCamera(width: Int, height: Int, skipCheck: Boolean = false) {
+        try {
+            if (context?.hasCamera() == true || skipCheck) {
+                openCamera(width, height)
+            } else {
+                showNoCameraAvailableError()
+            }
+        } catch (e: Exception) {
+            showNoCameraAvailableError()
+        }
+    }
+
+    private fun showNoCameraAvailableError() {
+        cameraErrorView.visibility = View.VISIBLE
+        customViewFinder.visibility = View.GONE
     }
 
     /**
