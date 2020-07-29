@@ -23,7 +23,7 @@ use crate::compilation_info::CompilationInfo;
 
 use ast::source_atom_set::SourceAtomSet;
 use ast::source_slice_list::SourceSliceList;
-use scope::ScopePassResult;
+use scope::{ScopeBuildError, ScopePassResult};
 use stencil::result::EmitResult;
 
 pub fn emit<'alloc>(
@@ -38,7 +38,18 @@ pub fn emit<'alloc>(
         function_stencil_indices,
         function_declaration_properties,
         functions,
+        error,
     } = scope::generate_scope_data(ast);
+
+    // Error case for scope analysis will be removed once all syntax is
+    // supported. Use field instead of Result type here for simplicity.
+    match error {
+        Some(ScopeBuildError::NotImplemented(s)) => {
+            return Err(EmitError::NotImplemented(s));
+        }
+        None => {}
+    }
+
     let compilation_info = CompilationInfo::new(
         atoms,
         slices,

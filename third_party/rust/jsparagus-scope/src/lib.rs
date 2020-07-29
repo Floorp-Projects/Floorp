@@ -19,6 +19,7 @@ extern crate jsparagus_stencil as stencil;
 
 use ast::visit::Pass;
 
+pub use builder::ScopeBuildError;
 pub use pass::ScopePassResult;
 
 /// Visit all nodes in the AST, and create a scope data.

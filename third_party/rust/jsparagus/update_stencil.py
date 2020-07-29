@@ -343,6 +343,7 @@ def extract_types(paths):
     extract_enum(types, paths, 'FunctionPrefixKind')
     extract_enum(types, paths, 'GeneratorResumeKind')
     extract_enum(types, paths, 'ThrowMsgKind')
+    extract_enum(types, paths, 'ThrowCondition', 'ThrowMsgKind.h')
     extract_enum(types, paths, 'TryNoteKind', 'StencilEnums.h')
 
     extract_symbols()
@@ -438,6 +439,7 @@ def parse_operands(opcode):
         'FunctionPrefixKind',
         'GeneratorResumeKind',
         'ThrowMsgKind',
+        'ThrowCondition',
     ]
 
     for operand in opcode.operands_array:
@@ -452,7 +454,7 @@ def parse_operands(opcode):
         elif ty in copied_types:
             pass
         else:
-            print(f'Unspported operand type {ty}', file=sys.stderr)
+            print(f'Unsupported operand type {ty}', file=sys.stderr)
             sys.exit(1)
 
         if 'JOF_ATOM' in opcode.format_:

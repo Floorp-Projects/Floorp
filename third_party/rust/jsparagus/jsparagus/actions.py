@@ -12,6 +12,7 @@ from . import types, grammar
 if typing.TYPE_CHECKING:
     from .parse_table import StateId
 
+
 @dataclasses.dataclass(frozen=True)
 class StackDiff:
     """StackDiff represent stack mutations which have to be performed when executing an action.
@@ -269,7 +270,6 @@ class Unwind(Action):
         return StackDiff(self.pop, self.nt, self.replay)
 
     def unshift_action(self, num: int) -> Unwind:
-        assert self.replay >= num
         return Unwind(self.nt, self.pop, replay=self.replay - num)
 
     def shifted_action(self, shifted_term: Element) -> Unwind:
@@ -280,6 +280,8 @@ class Reduce(Action):
     """Prevent the fall-through to the epsilon transition and returns to the shift
     table execution to resume shifting or replaying terms."""
     __slots__ = ['unwind']
+
+    unwind: Unwind
 
     def __init__(self, unwind: Unwind) -> None:
         nt_name = unwind.nt.name
@@ -577,7 +579,6 @@ class FunCall(Action):
         ])))
 
     def unshift_action(self, num: int) -> FunCall:
-        assert self.offset >= num
         return FunCall(self.method, self.args,
                        trait=self.trait,
                        fallible=self.fallible,
