@@ -169,8 +169,7 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
   SetCurrentTextureHost(img->mTextureHost);
 
   if (mCurrentAsyncImageManager->GetCompositionTime()) {
-    // We are in a composition. Send ImageCompositeNotifications and call
-    // UpdateBias.
+    // We are in a composition. Send ImageCompositeNotifications.
     OnFinishRendering(imageIndex, img, mAsyncRef.mProcessId, mAsyncRef.mHandle);
   }
 
