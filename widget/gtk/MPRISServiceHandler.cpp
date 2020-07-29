@@ -470,7 +470,7 @@ void MPRISServiceHandler::Close() {
 
   mImageFetchRequest.DisconnectIfExists();
 
-  RemoveLocalImageFile();
+  RemoveAllLocalImages();
   mMPRISMetadata.Clear();
 
   mCurrentImageUrl = EmptyString();
@@ -785,7 +785,7 @@ bool MPRISServiceHandler::RenewLocalImageFile(const char* aImageData,
   nsresult rv = out->Write(aImageData, aDataSize, &written);
   if (NS_FAILED(rv) || written != aDataSize) {
     LOG("Failed to write an image file");
-    RemoveLocalImageFile();
+    RemoveAllLocalImages();
     return false;
   }
 
@@ -798,18 +798,24 @@ static const char* GetImageFileExtension(const char* aMimeType) {
 }
 
 bool MPRISServiceHandler::InitLocalImageFile() {
+  RemoveAllLocalImages();
+
+  if (!InitLocalImageFolder()) {
+    return false;
+  }
+
+  MOZ_ASSERT(mLocalImageFolder);
+  MOZ_ASSERT(!mLocalImageFile);
+  nsresult rv = mLocalImageFolder->Clone(getter_AddRefs(mLocalImageFile));
+  if (NS_FAILED(rv)) {
+    LOG("Failed to get the image folder");
+    return false;
+  }
+
   auto cleanup =
       MakeScopeExit([this, self = RefPtr<MPRISServiceHandler>(this)] {
         mLocalImageFile = nullptr;
       });
-
-  RemoveLocalImageFile();
-  nsresult rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR,
-                                       getter_AddRefs(mLocalImageFile));
-  if (NS_FAILED(rv) || !mLocalImageFile) {
-    LOG("Failed to get the image folder");
-    return false;
-  }
 
   // Create an unique file name to work around the file caching mechanism in the
   // Ubuntu. Once the image X specified by the filename Y is used in Ubuntu's
@@ -818,8 +824,8 @@ bool MPRISServiceHandler::InitLocalImageFile() {
   // The image shown in the Ubuntu's notification is still X instead of Z.
   // Changing the filename constantly works around this problem
   char filename[64];
-  SprintfLiteral(filename, "%s_%d_%d.%s", MPRIS_IMAGE_PREFIX, getpid(),
-                 gImageNumber++, GetImageFileExtension(mMimeType.get()));
+  SprintfLiteral(filename, "%d_%d.%s", getpid(), gImageNumber++,
+                 GetImageFileExtension(mMimeType.get()));
 
   rv = mLocalImageFile->Append(NS_ConvertUTF8toUTF16(filename));
   if (NS_FAILED(rv)) {
@@ -827,7 +833,6 @@ bool MPRISServiceHandler::InitLocalImageFile() {
     return false;
   }
 
-  // Create an image with read/write permissions
   rv = mLocalImageFile->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
   if (NS_FAILED(rv)) {
     LOG("Failed to create an image file");
@@ -838,38 +843,66 @@ bool MPRISServiceHandler::InitLocalImageFile() {
   return true;
 }
 
-void MPRISServiceHandler::RemoveLocalImageFile() {
+bool MPRISServiceHandler::InitLocalImageFolder() {
+  if (mLocalImageFolder && LocalImageFolderExists()) {
+    return true;
+  }
+
+  nsresult rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR,
+                                       getter_AddRefs(mLocalImageFolder));
+  if (NS_FAILED(rv) || !mLocalImageFolder) {
+    LOG("Failed to get the image folder");
+    return false;
+  }
+
   auto cleanup =
       MakeScopeExit([this, self = RefPtr<MPRISServiceHandler>(this)] {
-        mLocalImageFile = nullptr;
+        mLocalImageFolder = nullptr;
       });
 
-  mMPRISMetadata.mArtUrl = EmptyCString();
+  rv = mLocalImageFolder->Append(u"firefox-mpris"_ns);
+  if (NS_FAILED(rv)) {
+    LOG("Failed to name an image folder");
+    return false;
+  }
 
-  if (!mLocalImageFile) {
-    LOG("No image file to be removed");
+  if (!LocalImageFolderExists()) {
+    rv = mLocalImageFolder->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    if (NS_FAILED(rv)) {
+      LOG("Failed to create an image folder");
+      return false;
+    }
+  }
+
+  cleanup.release();
+  return true;
+}
+
+void MPRISServiceHandler::RemoveAllLocalImages() {
+  if (!mLocalImageFolder || !LocalImageFolderExists()) {
     return;
   }
+
+  nsresult rv = mLocalImageFolder->Remove(/* aRecursive */ true);
+  if (NS_FAILED(rv)) {
+    // It's ok to fail. The next removal is called when updating the
+    // media-session image, or closing the MPRIS.
+    LOG("Failed to remove images");
+  }
+
+  LOG("Abandon %s",
+      mLocalImageFile ? mLocalImageFile->NativePath().get() : "nothing");
+  mMPRISMetadata.mArtUrl = EmptyCString();
+  mLocalImageFile = nullptr;
+  mLocalImageFolder = nullptr;
+}
+
+bool MPRISServiceHandler::LocalImageFolderExists() {
+  MOZ_ASSERT(mLocalImageFolder);
 
   bool exists;
-  nsresult rv = mLocalImageFile->Exists(&exists);
-  if (NS_FAILED(rv)) {
-    LOG("Failed to check existence of the image file");
-    return;
-  }
-
-  if (!exists) {
-    LOG("The image file doesn't exist");
-    return;
-  }
-
-  rv = mLocalImageFile->Remove(/* recursive */ false);
-  if (NS_FAILED(rv)) {
-    LOG("Failed to remove the image file");
-    return;
-  }
-
-  LOG("The image file: %s is removed", mLocalImageFile->NativePath().get());
+  nsresult rv = mLocalImageFolder->Exists(&exists);
+  return NS_SUCCEEDED(rv) && exists;
 }
 
 GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
