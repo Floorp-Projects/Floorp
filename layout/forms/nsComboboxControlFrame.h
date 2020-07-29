@@ -226,7 +226,6 @@ class nsComboboxControlFrame final : public nsBlockFrame,
 
   // Return true if we should render a dropdown button.
   bool HasDropDownButton() const;
-  nscoord DropDownButtonISize();
 
   enum DropDownPositionState {
     // can't show the dropdown at its current position

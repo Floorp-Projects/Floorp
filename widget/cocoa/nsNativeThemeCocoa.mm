@@ -3756,7 +3756,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
     }
 
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton: {
+    case StyleAppearance::MenulistButton:
+    case StyleAppearance::MozMenulistArrowButton: {
       SInt32 popupHeight = 0;
       ::GetThemeMetric(kThemeMetricPopupButtonHeight, &popupHeight);
       aResult->SizeTo(0, popupHeight);
@@ -3874,7 +3875,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
       break;
     }
 
-    case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::ScrollbarNonDisappearing: {
       int32_t themeMetric = kThemeMetricScrollBarWidth;
       SInt32 scrollbarWidth = 0;
