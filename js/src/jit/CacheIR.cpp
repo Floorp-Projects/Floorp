@@ -6717,6 +6717,26 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachIsConstructing(HandleFunction callee) {
+  // Self-hosted code calls this with no arguments in function scripts.
+  MOZ_ASSERT(argc_ == 0);
+  MOZ_ASSERT(script_->isFunction());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  writer.frameIsConstructingResult();
+
+  // This stub does not need to be monitored, it always returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("IsConstructing");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
   if (calleeFunc->native() != fun_apply) {
@@ -6912,6 +6932,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachGuardToClass(callee, native);
     case InlinableNative::IntrinsicSubstringKernel:
       return tryAttachSubstringKernel(callee);
+    case InlinableNative::IntrinsicIsConstructing:
+      return tryAttachIsConstructing(callee);
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:

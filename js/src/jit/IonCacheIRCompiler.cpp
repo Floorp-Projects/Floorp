@@ -1156,6 +1156,10 @@ bool IonCacheIRCompiler::emitLoadFrameArgumentResult(Int32OperandId indexId) {
   MOZ_CRASH("Baseline-specific op");
 }
 
+bool IonCacheIRCompiler::emitFrameIsConstructingResult() {
+  MOZ_CRASH("Baseline-specific op");
+}
+
 bool IonCacheIRCompiler::emitLoadEnvironmentFixedSlotResult(
     ObjOperandId objId, uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
