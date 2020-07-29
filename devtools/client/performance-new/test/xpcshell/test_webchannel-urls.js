@@ -24,12 +24,17 @@ add_task(function test() {
   checkUrlIsValid("http://localhost:4242/");
   checkUrlIsValid("https://deploy-preview-1234--perf-html.netlify.com");
   checkUrlIsValid("https://deploy-preview-1234--perf-html.netlify.com/");
+  checkUrlIsValid("https://deploy-preview-1234--perf-html.netlify.app");
+  checkUrlIsValid("https://deploy-preview-1234--perf-html.netlify.app/");
+  checkUrlIsValid("https://main--perf-html.netlify.app/");
 
   info("Check all of the invalid URLs");
   checkUrlIsInvalid("https://profiler.firefox.com/some-other-path");
   checkUrlIsInvalid("http://localhost:4242/some-other-path");
   checkUrlIsInvalid("http://profiler.firefox.com.example.com");
   checkUrlIsInvalid("http://mozilla.com");
+  checkUrlIsInvalid("https://deploy-preview-1234--perf-html.netlify.dev");
+  checkUrlIsInvalid("https://anything--perf-html.netlify.app/");
 });
 
 function setup() {
