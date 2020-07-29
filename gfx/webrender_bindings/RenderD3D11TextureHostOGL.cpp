@@ -209,7 +209,14 @@ wr::WrExternalImage RenderDXGITextureHostOGL::Lock(
     // Release the texture handle in the previous gl context.
     DeleteTextureHandle();
     mGL = aGL;
-    mGL->MakeCurrent();
+  }
+
+  if (!mGL) {
+    // XXX Software WebRender is not handled yet.
+    // Software WebRender does not provide GLContext
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by RenderDXGITextureHostOGL.";
+    return InvalidToWrExternalImage();
   }
 
   if (!EnsureLockable(aRendering)) {
@@ -437,7 +444,14 @@ wr::WrExternalImage RenderDXGIYCbCrTextureHostOGL::Lock(
     // Release the texture handle in the previous gl context.
     DeleteTextureHandle();
     mGL = aGL;
-    mGL->MakeCurrent();
+  }
+
+  if (!mGL) {
+    // XXX Software WebRender is not handled yet.
+    // Software WebRender does not provide GLContext
+    gfxCriticalNoteOnce << "Software WebRender is not suppored by "
+                           "RenderDXGIYCbCrTextureHostOGL.";
+    return InvalidToWrExternalImage();
   }
 
   if (!EnsureLockable(aRendering)) {
