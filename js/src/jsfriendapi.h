@@ -22,6 +22,7 @@
 #include "js/Class.h"
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
+#include "js/friend/ErrorMessages.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -1276,19 +1277,7 @@ extern JS_FRIEND_API bool DateGetMsecSinceEpoch(JSContext* cx,
 
 } /* namespace js */
 
-typedef enum JSErrNum {
-#define MSG_DEF(name, count, exception, format) name,
-#include "js.msg"
-#undef MSG_DEF
-  JSErr_Limit
-} JSErrNum;
-
 namespace js {
-
-/* Implemented in vm/JSContext.cpp. */
-
-extern JS_FRIEND_API const JSErrorFormatString* GetErrorMessage(
-    void* userRef, const unsigned errorNumber);
 
 /* Implemented in vm/StructuredClone.cpp. */
 extern JS_FRIEND_API uint64_t GetSCOffset(JSStructuredCloneWriter* writer);
