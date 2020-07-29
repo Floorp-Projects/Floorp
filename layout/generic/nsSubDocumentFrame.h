@@ -177,7 +177,7 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
   typedef mozilla::LayerState LayerState;
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
-  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
+  typedef mozilla::LayoutDevicePoint LayoutDevicePoint;
 
  public:
   nsDisplayRemote(nsDisplayListBuilder* aBuilder, nsSubDocumentFrame* aFrame);
@@ -210,7 +210,7 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
 
   TabId mTabId;
   LayersId mLayersId;
-  LayoutDeviceIntPoint mOffset;
+  LayoutDevicePoint mOffset;
   EventRegionsOverride mEventRegionsOverride;
 };
 
