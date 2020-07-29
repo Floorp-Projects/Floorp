@@ -699,6 +699,10 @@ class EditorBase : public nsIEditor,
     // to restore it.
     bool mRestoreContentEditableCount;
 
+    // If we explicitly normalized whitespaces around the changed range,
+    // set to true.
+    bool mDidNormalizeWhitespaces;
+
     /**
      * The following methods modifies some data of this struct and
      * `EditSubActionData` struct.  Currently, these are required only
@@ -747,6 +751,7 @@ class EditorBase : public nsIEditor,
       mDidDeleteNonCollapsedRange = false;
       mDidDeleteEmptyParentBlocks = false;
       mRestoreContentEditableCount = false;
+      mDidNormalizeWhitespaces = false;
     }
 
     /**
