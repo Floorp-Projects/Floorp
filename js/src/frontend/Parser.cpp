@@ -860,6 +860,11 @@ LexicalScope::Data* NewEmptyLexicalScopeData(JSContext* cx, LifoAlloc& alloc,
   return NewEmptyBindingData<LexicalScope>(cx, alloc, numBindings);
 }
 
+FunctionScope::Data* NewEmptyFunctionScopeData(JSContext* cx, LifoAlloc& alloc,
+                                               uint32_t numBindings) {
+  return NewEmptyBindingData<FunctionScope>(cx, alloc, numBindings);
+}
+
 namespace detail {
 
 template <class Data>
@@ -1197,6 +1202,11 @@ bool FunctionScopeHasClosedOverBindings(ParseContext* pc) {
 Maybe<FunctionScope::Data*> ParserBase::newFunctionScopeData(
     ParseContext::Scope& scope, bool hasParameterExprs) {
   return NewFunctionScopeData(cx_, scope, hasParameterExprs, alloc_, pc_);
+}
+
+VarScope::Data* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
+                                     uint32_t numBindings) {
+  return NewEmptyBindingData<VarScope>(cx, alloc, numBindings);
 }
 
 Maybe<VarScope::Data*> NewVarScopeData(JSContext* cx,

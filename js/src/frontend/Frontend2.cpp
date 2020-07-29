@@ -20,13 +20,13 @@
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
 #include "frontend/CompilationInfo.h"   // CompilationInfo
-#include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData
+#include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData, NewEmptyVarScopeData, NewEmptyFunctionScopeData
 #include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
 #include "frontend/SourceNotes.h"       // SrcNote
-#include "frontend/Stencil.h"           // ScopeCreationData, RegExpIndex
-#include "frontend/TokenStream.h"       // TokenStreamAnyChars
-#include "gc/Rooting.h"                 // RootedScriptSourceObject
-#include "irregexp/RegExpAPI.h"         // irregexp::CheckPatternSyntax
+#include "frontend/Stencil.h"  // ScopeCreationData, RegExpIndex, FunctionIndex, NullScriptThing
+#include "frontend/TokenStream.h"  // TokenStreamAnyChars
+#include "gc/Rooting.h"            // RootedScriptSourceObject
+#include "irregexp/RegExpAPI.h"    // irregexp::CheckPatternSyntax
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
 #include "js/GCAPI.h"              // JS::AutoCheckCannotGC
 #include "js/GCVector.h"           // JS::RootedVector
@@ -92,6 +92,24 @@ void CopyBindingNames(JSContext* cx, CVec<SmooshBindingName>& from,
   }
 }
 
+void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
+                      JS::HandleVector<JSAtom*> allAtoms, BindingName* to) {
+  // We're setting trailing array's content before setting its length.
+  JS::AutoCheckCannotGC nogc(cx);
+
+  size_t numBindings = from.len;
+  for (size_t i = 0; i < numBindings; i++) {
+    COption<SmooshBindingName>& maybeName = from.data[i];
+    if (maybeName.IsSome()) {
+      SmooshBindingName& name = maybeName.AsSome();
+      new (mozilla::KnownNotNull, &to[i]) BindingName(
+          allAtoms[name.name], name.is_closed_over, name.is_top_level_function);
+    } else {
+      new (mozilla::KnownNotNull, &to[i]) BindingName(nullptr, false, false);
+    }
+  }
+}
+
 // Given the result of SmooshMonkey's parser, convert a list of scope data
 // into a list of ScopeCreationData.
 bool ConvertScopeCreationData(JSContext* cx, const SmooshResult& result,
@@ -127,6 +145,36 @@ bool ConvertScopeCreationData(JSContext* cx, const SmooshResult& result,
         }
         break;
       }
+      case SmooshScopeData::Tag::Var: {
+        auto& var = scopeData.AsVar();
+
+        size_t numBindings = var.bindings.len;
+
+        JS::Rooted<VarScope::Data*> data(
+            cx, NewEmptyVarScopeData(cx, alloc, numBindings));
+        if (!data) {
+          return false;
+        }
+
+        CopyBindingNames(cx, var.bindings, allAtoms,
+                         data->trailingNames.start());
+
+        // NOTE: data->nextFrameSlot is set in ScopeCreationData::create.
+
+        data->length = numBindings;
+
+        uint32_t firstFrameSlot = var.first_frame_slot;
+        ScopeIndex enclosingIndex(var.enclosing);
+        Rooted<AbstractScopePtr> enclosing(
+            cx, AbstractScopePtr(compilationInfo, enclosingIndex));
+        if (!ScopeCreationData::create(
+                cx, compilationInfo, ScopeKind::FunctionBodyVar, data,
+                firstFrameSlot, var.function_has_extensible_scope, enclosing,
+                &index)) {
+          return false;
+        }
+        break;
+      }
       case SmooshScopeData::Tag::Lexical: {
         auto& lexical = scopeData.AsLexical();
 
@@ -152,6 +200,42 @@ bool ConvertScopeCreationData(JSContext* cx, const SmooshResult& result,
         if (!ScopeCreationData::create(cx, compilationInfo, ScopeKind::Lexical,
                                        data, firstFrameSlot, enclosing,
                                        &index)) {
+          return false;
+        }
+        break;
+      }
+      case SmooshScopeData::Tag::Function: {
+        auto& function = scopeData.AsFunction();
+
+        size_t numBindings = function.bindings.len;
+        JS::Rooted<FunctionScope::Data*> data(
+            cx, NewEmptyFunctionScopeData(cx, alloc, numBindings));
+        if (!data) {
+          return false;
+        }
+
+        CopyBindingNames(cx, function.bindings, allAtoms,
+                         data->trailingNames.start());
+
+        // NOTE: data->nextFrameSlot is set in ScopeCreationData::create.
+
+        data->hasParameterExprs = function.has_parameter_exprs;
+        data->nonPositionalFormalStart = function.non_positional_formal_start;
+        data->varStart = function.var_start;
+        data->length = numBindings;
+
+        bool hasParameterExprs = function.has_parameter_exprs;
+        bool needsEnvironment = function.non_positional_formal_start;
+        // FIXME: Prepare function pointed by this index.
+        FunctionIndex functionIndex = FunctionIndex(function.function_index);
+        bool isArrow = function.is_arrow;
+
+        ScopeIndex enclosingIndex(function.enclosing);
+        Rooted<AbstractScopePtr> enclosing(
+            cx, AbstractScopePtr(compilationInfo, enclosingIndex));
+        if (!ScopeCreationData::create(
+                cx, compilationInfo, data, hasParameterExprs, needsEnvironment,
+                functionIndex, isArrow, enclosing, &index)) {
           return false;
         }
         break;
