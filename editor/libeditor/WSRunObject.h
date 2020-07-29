@@ -330,6 +330,22 @@ class MOZ_STACK_CLASS WSRunScanner final {
   }
 
   /**
+   * GetRangeInTextNodesToForwardDeleteFrom() returns the range to remove
+   * text when caret is at aPoint.
+   */
+  static Result<EditorDOMRangeInTexts, nsresult>
+  GetRangeInTextNodesToForwardDeleteFrom(const HTMLEditor& aHTMLEditor,
+                                         const EditorDOMPoint& aPoint);
+
+  /**
+   * GetRangeInTextNodesToBackspaceFrom() returns the range to remove text
+   * when caret is at aPoint.
+   */
+  static Result<EditorDOMRangeInTexts, nsresult>
+  GetRangeInTextNodesToBackspaceFrom(const HTMLEditor& aHTMLEditor,
+                                     const EditorDOMPoint& aPoint);
+
+  /**
    * GetStartReasonContent() and GetEndReasonContent() return a node which
    * was found by scanning from mScanStartPoint backward or  forward.  If there
    * was white-spaces or text from the point, returns the text node.  Otherwise,
@@ -1035,9 +1051,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
      * with an NBSP.
      */
     ReplaceRangeData GetReplaceRangeDataAtEndOfDeletionRange(
-        const TextFragmentData& aTextFragmentDataAtStartToDelete);
+        const TextFragmentData& aTextFragmentDataAtStartToDelete) const;
     ReplaceRangeData GetReplaceRangeDataAtStartOfDeletionRange(
-        const TextFragmentData& aTextFragmentDataAtEndToDelete);
+        const TextFragmentData& aTextFragmentDataAtEndToDelete) const;
 
     /**
      * VisibleWhiteSpacesDataRef() returns reference to visible white-spaces
@@ -1092,6 +1108,20 @@ class MOZ_STACK_CLASS WSRunScanner final {
   const HTMLEditor* mHTMLEditor;
 
  private:
+  /**
+   * ComputeRangeInTextNodesContainingInvisibleWhiteSpaces() returns range
+   * containing invisible white-spaces if deleting between aStart and aEnd
+   * causes them become visible.
+   *
+   * @param aStart      TextFragmentData at start of deleting range.
+   *                    This must be initialized with DOM point in a text node.
+   * @param aEnd        TextFragmentData at end of deleting range.
+   *                    This must be initialized with DOM point in a text node.
+   */
+  static EditorDOMRangeInTexts
+  ComputeRangeInTextNodesContainingInvisibleWhiteSpaces(
+      const TextFragmentData& aStart, const TextFragmentData& aEnd);
+
   TextFragmentData mTextFragmentDataAtStart;
 
   friend class WhiteSpaceVisibilityKeeper;
