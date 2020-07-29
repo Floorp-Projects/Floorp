@@ -13,6 +13,7 @@
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/Logging.h"
+#include "nsReadableUtils.h"
 
 extern mozilla::LazyLogModule gMediaControlLog;
 
@@ -212,6 +213,11 @@ inline nsresult GetEncodedImageBuffer(imgIContainer* aImage,
 
   encoder.forget(aStream);
   return NS_OK;
+}
+
+inline bool IsValidImageUrl(const nsAString& aUrl) {
+  return StringBeginsWith(aUrl, u"http://"_ns) ||
+         StringBeginsWith(aUrl, u"https://"_ns);
 }
 
 }  // namespace dom
