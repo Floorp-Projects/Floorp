@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabtray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -31,7 +32,10 @@ class SaveToCollectionsButtonAdapter(
         return ViewHolder(itemView, interactor)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) = Unit
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.itemView.isVisible =
+            interactor.onModeRequested() is TabTrayDialogFragmentState.Mode.Normal
+    }
 
     override fun getItemViewType(position: Int): Int {
         return ViewHolder.LAYOUT_ID
