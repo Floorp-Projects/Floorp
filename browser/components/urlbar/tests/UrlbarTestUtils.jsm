@@ -33,6 +33,9 @@ var UrlbarTestUtils = {
    */
   init(scope) {
     this._testScope = scope;
+    if (scope) {
+      this.Assert = scope.Assert;
+    }
   },
 
   /**
@@ -347,24 +350,72 @@ var UrlbarTestUtils = {
   },
 
   /**
-   * @param {object} win The browser window
-   * @param {string} [engineName]
-   * @returns {boolean} True if the UrlbarInput is in search mode. If
-   *   engineName is specified, only returns true if the search mode engine
-   *   matches.
+   * Asserts that the input is in a given search mode, or no search mode.
+   *
+   * @param {Window} window
+   *   The browser window.
+   * @param {object} expectedSearchMode
+   *   The expected search mode object.
    */
-  isInSearchMode(win, engineName = null) {
-    if (!!win.gURLBar.searchMode != win.gURLBar.hasAttribute("searchmode")) {
-      throw new Error(
-        "Urlbar should never be in search mode without the corresponding attribute."
+  assertSearchMode(window, expectedSearchMode) {
+    this.Assert.equal(
+      !!window.gURLBar.searchMode,
+      window.gURLBar.hasAttribute("searchmode"),
+      "Urlbar should never be in search mode without the corresponding attribute."
+    );
+
+    if (!expectedSearchMode) {
+      this.Assert.ok(
+        !window.gURLBar.searchMode,
+        "gURLBar.searchMode not expected"
+      );
+      return;
+    }
+
+    this.Assert.deepEqual(
+      window.gURLBar.searchMode,
+      expectedSearchMode,
+      "Expected searchMode"
+    );
+
+    // Check the textContent and l10n attributes of the indicator and label.
+    let expectedTextContent = "";
+    let expectedL10n = {};
+
+    if (expectedSearchMode.engineName) {
+      expectedTextContent = expectedSearchMode.engineName;
+    } else if (expectedSearchMode.source) {
+      let name = UrlbarUtils.getResultSourceName(expectedSearchMode.source);
+      this.Assert.ok(name, "Expected result source should have a name");
+      expectedL10n = { id: `urlbar-search-mode-${name}` };
+    } else {
+      this.Assert.ok(false, "Unexpected searchMode");
+    }
+
+    // document.l10n.getAttributes returns an object with a null value for each
+    // of these properties when they aren't present.
+    if (!expectedL10n.id) {
+      expectedL10n.id = null;
+    }
+    if (!expectedL10n.args) {
+      expectedL10n.args = null;
+    }
+
+    for (let element of [
+      window.gURLBar._searchModeIndicatorTitle,
+      window.gURLBar._searchModeLabel,
+    ]) {
+      this.Assert.equal(
+        element.textContent,
+        expectedTextContent,
+        "Expected textContent"
+      );
+      this.Assert.deepEqual(
+        window.document.l10n.getAttributes(element),
+        expectedL10n,
+        "Expected l10n"
       );
     }
-
-    if (engineName) {
-      return win.gURLBar.searchMode.engineName == engineName;
-    }
-
-    return !!win.gURLBar.searchMode;
   },
 
   /**
