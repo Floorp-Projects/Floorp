@@ -90,14 +90,10 @@ add_task(async function test_deserialize_principal_with_csp() {
     }
 
     if ("URI" in test.output && test.output.URI === false) {
-      is(
-        principal.isContentPrincipal,
-        false,
-        "Should have not have a URI for system"
-      );
+      is(principal.URI, null, "Should have not have a URI for system");
     } else {
       is(
-        principal.spec,
+        principal.URI.spec,
         test.output.URISpec,
         `Should have spec ${test.output.URISpec}`
       );

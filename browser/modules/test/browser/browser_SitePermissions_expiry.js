@@ -21,7 +21,9 @@ add_task(async function testTemporaryPermissionExpiry() {
   );
   let id = "camera";
 
-  await BrowserTestUtils.withNewTab(principal.spec, async function(browser) {
+  await BrowserTestUtils.withNewTab(principal.URI.spec, async function(
+    browser
+  ) {
     SitePermissions.setForPrincipal(
       principal,
       id,
