@@ -25,7 +25,7 @@
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_title">రక్షిత అనుసంధానం విఫలమైంది</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_title">సురక్షిత అనుసంధానం విఫలమైంది</string>
 
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
