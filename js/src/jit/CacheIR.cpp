@@ -5745,6 +5745,30 @@ AttachDecision CallIRGenerator::tryAttachRegExpInstanceOptimizable(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachGetFirstDollarIndex(
+    HandleFunction callee) {
+  // Self-hosted code calls this with a single string argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isString());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  StringOperandId strId = writer.guardToString(arg0Id);
+
+  writer.getFirstDollarIndexResult(strId);
+
+  // No type monitoring because this always returns an int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("GetFirstDollarIndex");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachSubstringKernel(
     HandleFunction callee) {
   // Self-hosted code calls this with (string, int32, int32) arguments.
@@ -7049,6 +7073,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachRegExpPrototypeOptimizable(callee);
     case InlinableNative::RegExpInstanceOptimizable:
       return tryAttachRegExpInstanceOptimizable(callee);
+    case InlinableNative::GetFirstDollarIndex:
+      return tryAttachGetFirstDollarIndex(callee);
 
     // String natives.
     case InlinableNative::String:

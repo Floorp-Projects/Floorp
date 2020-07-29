@@ -329,6 +329,13 @@
     regexp: ObjId
     proto: ObjId
 
+- name: GetFirstDollarIndexResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+
 # Add a reference to a global in the compartment to keep it alive.
 - name: GuardCompartment
   shared: false

@@ -1614,6 +1614,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                                       InlinableNative native);
   AttachDecision tryAttachRegExpPrototypeOptimizable(HandleFunction callee);
   AttachDecision tryAttachRegExpInstanceOptimizable(HandleFunction callee);
+  AttachDecision tryAttachGetFirstDollarIndex(HandleFunction callee);
   AttachDecision tryAttachSubstringKernel(HandleFunction callee);
   AttachDecision tryAttachString(HandleFunction callee);
   AttachDecision tryAttachStringChar(HandleFunction callee, StringChar kind);
