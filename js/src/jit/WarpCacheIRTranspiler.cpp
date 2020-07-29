@@ -1804,6 +1804,17 @@ bool WarpCacheIRTranspiler::emitRegExpInstanceOptimizableResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGetFirstDollarIndexResult(
+    StringOperandId strId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* firstDollarIndex = MGetFirstDollarIndex::New(alloc(), str);
+  add(firstDollarIndex);
+
+  pushResult(firstDollarIndex);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitIsArrayResult(ValOperandId inputId) {
   MDefinition* value = getOperand(inputId);
 
