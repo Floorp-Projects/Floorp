@@ -1954,7 +1954,7 @@ class GeckoEngineSessionTest {
     @Test
     fun `onFirstContentfulPaint notifies observers`() {
         val engineSession = GeckoEngineSession(mock(),
-            geckoSessionProvider = geckoSessionProvider)
+                geckoSessionProvider = geckoSessionProvider)
 
         captureDelegates()
 

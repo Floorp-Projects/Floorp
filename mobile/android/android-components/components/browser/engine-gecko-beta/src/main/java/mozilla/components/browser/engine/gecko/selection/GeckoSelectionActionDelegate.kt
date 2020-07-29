@@ -44,7 +44,7 @@ open class GeckoSelectionActionDelegate(
         val selectedText = mSelection?.text
 
         val customActionIsAvailable = !selectedText.isNullOrEmpty() &&
-            customDelegate.isActionAvailable(id, selectedText)
+        customDelegate.isActionAvailable(id, selectedText)
 
         return customActionIsAvailable ||
             super.isActionAvailable(id)

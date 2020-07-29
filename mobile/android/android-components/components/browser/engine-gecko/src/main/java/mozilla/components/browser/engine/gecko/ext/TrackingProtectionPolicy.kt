@@ -20,15 +20,9 @@ fun TrackingProtectionPolicy.toContentBlockingSetting(
     antiTracking(getAntiTrackingPolicy())
     cookieBehavior(cookiePolicy.id)
     safeBrowsing(safeBrowsingPolicy.sumBy { it.id })
-    strictSocialTrackingProtection(getStrictSocialTrackingProtection())
+    // This will be fixed on merge day when strictSocialTrackingProtection will be available on beta
+    // strictSocialTrackingProtection(getStrictSocialTrackingProtection())
 }.build()
-
-/**
- * Returns whether [TrackingCategory.STRICT] is enabled in the [TrackingProtectionPolicy].
- */
-internal fun TrackingProtectionPolicy.getStrictSocialTrackingProtection(): Boolean {
-    return strictSocialTrackingProtection ?: trackingCategories.contains(TrackingCategory.STRICT)
-}
 
 /**
  * Returns the [TrackingProtectionPolicy] categories as an Enhanced Tracking Protection level for GeckoView.
