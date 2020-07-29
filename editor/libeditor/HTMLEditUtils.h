@@ -558,6 +558,36 @@ class HTMLEditUtils final {
   static Element* GetClosestAncestorAnyListElement(const nsIContent& aContent);
 
   /**
+   * GetMostDistantAnscestorEditableEmptyInlineElement() returns most distant
+   * ancestor which only has aEmptyContent or its ancestor, editable and
+   * inline element.
+   */
+  static Element* GetMostDistantAnscestorEditableEmptyInlineElement(
+      const nsIContent& aEmptyContent, const Element* aEditingHost = nullptr) {
+    nsIContent* lastEmptyContent = const_cast<nsIContent*>(&aEmptyContent);
+    for (Element* element = aEmptyContent.GetParentElement();
+         element && element != aEditingHost &&
+         HTMLEditUtils::IsInlineElement(*element) &&
+         HTMLEditUtils::IsSimplyEditableNode(*element);
+         element = element->GetParentElement()) {
+      if (element->GetChildCount() > 1) {
+        for (const nsIContent* child = element->GetFirstChild(); child;
+             child = child->GetNextSibling()) {
+          if (child == lastEmptyContent || child->IsComment()) {
+            continue;
+          }
+          return lastEmptyContent != &aEmptyContent
+                     ? lastEmptyContent->AsElement()
+                     : nullptr;
+        }
+      }
+      lastEmptyContent = element;
+    }
+    return lastEmptyContent != &aEmptyContent ? lastEmptyContent->AsElement()
+                                              : nullptr;
+  }
+
+  /**
    * GetElementIfOnlyOneSelected() returns an element if aRange selects only
    * the element node (and its descendants).
    */
