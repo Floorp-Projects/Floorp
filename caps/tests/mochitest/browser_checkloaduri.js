@@ -240,8 +240,8 @@ function testURL(
   flags
 ) {
   function getPrincipalDesc(principal) {
-    if (principal.spec != "") {
-      return principal.spec;
+    if (principal.URI) {
+      return principal.URI.spec;
     }
     if (principal.isSystemPrincipal) {
       return "system principal";

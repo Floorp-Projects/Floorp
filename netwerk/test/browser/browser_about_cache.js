@@ -41,11 +41,11 @@ add_task(async function() {
       !content.document.nodePrincipal.isSystemPrincipal,
       "about:cache should not have system principal"
     );
-    let principal = content.document.nodePrincipal;
+    let principalURI = content.document.nodePrincipal.URI;
     let channel = content.docShell.currentDocumentChannel;
     ok(!channel.loadInfo.loadingPrincipal, "Loading principal should be null.");
     is(
-      principal.spec,
+      principalURI && principalURI.spec,
       content.document.location.href,
       "Principal matches location"
     );
@@ -73,16 +73,16 @@ add_task(async function() {
       !content.document.nodePrincipal.isSystemPrincipal,
       "about:cache with query params should still not have system principal"
     );
-    let principal = content.document.nodePrincipal;
+    let principalURI = content.document.nodePrincipal.URI;
     is(
-      principal.spec,
+      principalURI && principalURI.spec,
       content.document.location.href,
       "Principal matches location"
     );
     let channel = content.docShell.currentDocumentChannel;
-    principal = channel.loadInfo.triggeringPrincipal;
+    principalURI = channel.loadInfo.triggeringPrincipal.URI;
     is(
-      principal.spec,
+      principalURI && principalURI.spec,
       "about:cache",
       "Triggering principal matches previous location"
     );
@@ -103,16 +103,16 @@ add_task(async function() {
       !content.document.nodePrincipal.isSystemPrincipal,
       "about:cache-entry should also not have system principal"
     );
-    let principal = content.document.nodePrincipal;
+    let principalURI = content.document.nodePrincipal.URI;
     is(
-      principal.spec,
+      principalURI && principalURI.spec,
       content.document.location.href,
       "Principal matches location"
     );
     let channel = content.docShell.currentDocumentChannel;
-    principal = channel.loadInfo.triggeringPrincipal;
+    principalURI = channel.loadInfo.triggeringPrincipal.URI;
     is(
-      principal.spec,
+      principalURI && principalURI.spec,
       triggeringURISpec,
       "Triggering principal matches previous location"
     );

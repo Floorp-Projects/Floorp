@@ -86,7 +86,7 @@
 
     if (parent_intercept_enabled) {
       let chromeScript = SpecialPowers.loadChromeScript(chromeScriptSource);
-      let docPrincipal = SpecialPowers.wrap(document).nodePrincipal.spec;
+      let docPrincipal = SpecialPowers.wrap(document).nodePrincipal.URI.spec;
 
       getScope = async (path) => {
         let rv = await chromeScript.sendQuery("getScope", { principal: docPrincipal, path });

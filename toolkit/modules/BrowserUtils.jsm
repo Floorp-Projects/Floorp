@@ -105,7 +105,7 @@ var BrowserUtils = {
       if (
         (uriToCheck.spec == "about:blank" &&
           contentPrincipal.isNullPrincipal) ||
-        contentPrincipal.spec == "about:blank"
+        contentPrincipal.URI.spec == "about:blank"
       ) {
         return true;
       }
@@ -146,7 +146,7 @@ var BrowserUtils = {
     } catch (e) {
       let principalStr = "";
       try {
-        principalStr = " from " + aPrincipal.spec;
+        principalStr = " from " + aPrincipal.URI.spec;
       } catch (e2) {}
 
       throw new Error(`Load of ${aURL + principalStr} denied.`);

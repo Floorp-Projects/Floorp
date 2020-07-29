@@ -53,7 +53,9 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
   loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
     debug`loadURI: uri=${aUri && aUri.spec}
                     where=${aWhere} flags=0x${aFlags.toString(16)}
-                    tp=${aTriggeringPrincipal && aTriggeringPrincipal.spec}`;
+                    tp=${aTriggeringPrincipal &&
+                      aTriggeringPrincipal.URI &&
+                      aTriggeringPrincipal.URI.spec}`;
     if (!this.isContentWindow) {
       debug`loadURI: not a content window`;
       // This is an internal Gecko window, nothing to do
