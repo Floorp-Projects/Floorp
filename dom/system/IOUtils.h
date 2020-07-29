@@ -12,12 +12,14 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Result.h"
 #include "nspr/prio.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
 #include "nsLocalFile.h"
+#include "nsPrintfCString.h"
+#include "nsString.h"
 
 namespace mozilla {
 
@@ -76,6 +78,8 @@ class IOUtils final {
   friend class IOUtilsShutdownBlocker;
   struct InternalFileInfo;
 
+  class IOError;
+
   static StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
       sBackgroundEventTarget;
   static StaticRefPtr<nsIAsyncShutdownClient> sBarrier;
@@ -98,6 +102,12 @@ class IOUtils final {
   friend MOZ_MUST_USE bool ToJSValue(JSContext* aCx,
                                      const InternalFileInfo& aInternalFileInfo,
                                      JS::MutableHandle<JS::Value> aValue);
+
+  /**
+   * Rejects |aPromise| with an appropriate |DOMException| describing |aError|.
+   */
+  static void RejectJSPromise(const RefPtr<Promise>& aPromise,
+                              const IOError& aError);
 
   /**
    * Opens an existing file at |aPath|.
@@ -133,7 +143,7 @@ class IOUtils final {
    *
    * @return A byte array of the entire file contents, or an error.
    */
-  static Result<nsTArray<uint8_t>, nsresult> ReadSync(
+  static Result<nsTArray<uint8_t>, IOError> ReadSync(
       const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes);
 
   /**
@@ -148,7 +158,7 @@ class IOUtils final {
    * @return The number of bytes written to the file, or an error if the write
    *         failed or was incomplete.
    */
-  static Result<uint32_t, nsresult> WriteAtomicSync(
+  static Result<uint32_t, IOError> WriteAtomicSync(
       const nsAString& aDestPath, const nsTArray<uint8_t>& aByteArray,
       const WriteAtomicOptions& aOptions);
 
@@ -162,8 +172,9 @@ class IOUtils final {
    * @return The number of bytes written to the file, or an error if the write
    *         failed or was incomplete.
    */
-  static Result<uint32_t, nsresult> WriteSync(PRFileDesc* aFd,
-                                              const nsTArray<uint8_t>& aBytes);
+  static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd,
+                                             const nsACString& aPath,
+                                             const nsTArray<uint8_t>& aBytes);
 
   /**
    * Attempts to move the file located at |aSource| to |aDest|.
@@ -177,9 +188,8 @@ class IOUtils final {
    *
    * @return Ok if the file was moved successfully, or an error.
    */
-  static Result<Ok, nsresult> MoveSync(const nsAString& aSource,
-                                       const nsAString& aDest,
-                                       bool noOverwrite);
+  static Result<Ok, IOError> MoveSync(const nsAString& aSource,
+                                      const nsAString& aDest, bool noOverwrite);
 
   /**
    * Attempts to remove the file located at |aPath|.
@@ -192,8 +202,8 @@ class IOUtils final {
    *
    * @return Ok if the file was removed successfully, or an error.
    */
-  static Result<Ok, nsresult> RemoveSync(const nsAString& aPath,
-                                         bool aIgnoreAbsent, bool aRecursive);
+  static Result<Ok, IOError> RemoveSync(const nsAString& aPath,
+                                        bool aIgnoreAbsent, bool aRecursive);
 
   /**
    * Attempts to create a new directory at |aPath|.
@@ -212,10 +222,10 @@ class IOUtils final {
    *
    * @return Ok if the directory was created successfully, or an error.
    */
-  static Result<Ok, nsresult> CreateDirectorySync(const nsAString& aPath,
-                                                  bool aCreateAncestors,
-                                                  bool aIgnoreExisting,
-                                                  int32_t aMode = 0777);
+  static Result<Ok, IOError> CreateDirectorySync(const nsAString& aPath,
+                                                 bool aCreateAncestors,
+                                                 bool aIgnoreExisting,
+                                                 int32_t aMode = 0777);
 
   /**
    * Attempts to stat a file at |aPath|.
@@ -224,22 +234,68 @@ class IOUtils final {
    *
    * @return An |InternalFileInfo| struct if successful, or an error.
    */
-  static Result<IOUtils::InternalFileInfo, nsresult> StatSync(
+  static Result<IOUtils::InternalFileInfo, IOError> StatSync(
       const nsAString& aPath);
 
-  using IOReadMozPromise =
-      mozilla::MozPromise<nsTArray<uint8_t>, const nsresult,
-                          /* IsExclusive */ true>;
+  using IOReadMozPromise = mozilla::MozPromise<nsTArray<uint8_t>, const IOError,
+                                               /* IsExclusive */ true>;
 
   using IOWriteMozPromise =
-      mozilla::MozPromise<uint32_t, const nsresult, /* IsExclusive */ true>;
+      mozilla::MozPromise<uint32_t, const IOError, /* IsExclusive */ true>;
 
   using IOStatMozPromise =
-      mozilla::MozPromise<struct InternalFileInfo, const nsresult,
+      mozilla::MozPromise<struct InternalFileInfo, const IOError,
                           /* IsExclusive */ true>;
 
-  using IOMozPromise = mozilla::MozPromise<Ok /* ignored */, const nsresult,
+  using IOMozPromise = mozilla::MozPromise<Ok /* ignored */, const IOError,
                                            /* IsExclusive */ true>;
+};
+
+/**
+ * An error class used with the |Result| type returned by most private |IOUtils|
+ * methods.
+ */
+class IOUtils::IOError {
+ public:
+  MOZ_IMPLICIT IOError(nsresult aCode) : mCode(aCode), mMessage(Nothing()) {}
+
+  /**
+   * Replaces the message associated with this error.
+   */
+  template <typename... Args>
+  IOError WithMessage(const char* const aMessage, Args... aArgs) {
+    mMessage.emplace(nsPrintfCString(aMessage, aArgs...));
+    return *this;
+  }
+  IOError WithMessage(const char* const aMessage) {
+    mMessage.emplace(nsCString(aMessage));
+    return *this;
+  }
+  IOError WithMessage(nsCString aMessage) {
+    mMessage.emplace(aMessage);
+    return *this;
+  }
+
+  /**
+   * Returns the |nsresult| associated with this error.
+   */
+  nsresult Code() const { return mCode; }
+
+  /**
+   * Maybe returns a message associated with this error.
+   */
+  const Maybe<nsCString>& Message() const { return mMessage; }
+
+  using IOStatMozPromise =
+      mozilla::MozPromise<struct InternalFileInfo, const IOError,
+                          /* IsExclusive */ true>;
+
+  using IOMozPromise = mozilla::MozPromise<Ok /* ignored */, const IOError,
+                                           /* IsExclusive */ true>;
+
+ private:
+  nsresult mCode;
+  Maybe<nsCString> mMessage;
 };
 
 /**
