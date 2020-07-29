@@ -74,6 +74,3 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['inline'] = '__inline'
 else:
     DEFINES['HAVE_NETINET_IN_H'] = 1
-
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CFLAGS += ['-std=gnu99']
