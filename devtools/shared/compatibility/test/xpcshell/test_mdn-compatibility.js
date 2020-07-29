@@ -106,6 +106,7 @@ const TEST_DATA = [
         url: "https://developer.mozilla.org/docs/Web/CSS/user-select",
         deprecated: false,
         experimental: false,
+        prefixNeeded: true,
         unsupportedBrowsers: [SAFARI_13],
       },
     ],
