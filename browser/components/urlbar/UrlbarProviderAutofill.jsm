@@ -75,7 +75,9 @@ function originQuery(where) {
       SELECT
       id,
       prefix,
-      first_value(prefix) OVER (PARTITION BY host ORDER BY frecency DESC),
+      first_value(prefix) OVER (
+        PARTITION BY host ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
+      ),
       host,
       fixup_url(host),
       TOTAL(frecency) OVER (PARTITION BY fixup_url(host)),
@@ -93,7 +95,7 @@ function originQuery(where) {
            ifnull(:prefix, host_prefix) || host || '/' AS url
     FROM origins
     ${where}
-    ORDER BY frecency DESC, id DESC
+    ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
     LIMIT 1
   `;
 }
