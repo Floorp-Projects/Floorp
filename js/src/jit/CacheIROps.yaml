@@ -1637,6 +1637,15 @@
     obj: ObjId
     index: Int32Id
 
+- name: GetNextMapSetEntryForIteratorResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    iter: ObjId
+    resultArr: ObjId
+    isMap: BoolImm
+
 - name: LoadUndefinedResult
   shared: true
   transpile: true
