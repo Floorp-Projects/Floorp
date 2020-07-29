@@ -21,9 +21,6 @@
 
   var test;
   runNetworkTest(async function (options) {
-    // rtcp-rsize is only implemented for webrtc-sdp
-    await SpecialPowers.pushPrefEnv({set: [["media.peerconnection.sdp.parser", "webrtc-sdp"]]});
-
     test = new PeerConnectionTest(options);
 
     var mSectionsAltered = 0;
