@@ -114,6 +114,21 @@ public class ContentBlocking {
                 getSettings().setStrictSocialTrackingProtection(enabled);
                 return this;
             }
+
+            /**
+             * Set whether or not to automatically purge tracking cookies. This will purge cookies
+             * from tracking sites that do not have recent user interaction provided that the
+             * cookie behavior is set to either {@link ContentBlocking.CookieBehavior#ACCEPT_NON_TRACKERS}
+             * or {@link ContentBlocking.CookieBehavior#ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS}.
+             *
+             * @param enabled A boolean indicating whether or not cookie purging should be enabled.
+             *
+             * @return The builder instance.
+             */
+            public @NonNull Builder cookiePurging(final boolean enabled) {
+                getSettings().setCookiePurging(enabled);
+                return this;
+            }
         }
 
         /* package */ final Pref<String> mAt = new Pref<String>(
@@ -145,6 +160,8 @@ public class ContentBlocking {
             "network.cookie.cookieBehavior", CookieBehavior.ACCEPT_NON_TRACKERS);
         /* package */ final Pref<Integer> mCookieLifetime = new Pref<Integer>(
             "network.cookie.lifetimePolicy", CookieLifetime.NORMAL);
+        /* package */ final Pref<Boolean> mCookiePurging = new Pref<Boolean>(
+            "privacy.purge_trackers.enabled", false);
 
         /* package */ final Pref<Boolean> mEtpEnabled = new Pref<Boolean>(
             "privacy.trackingprotection.annotate_channels", false);
@@ -341,6 +358,30 @@ public class ContentBlocking {
         public @NonNull Settings setCookieLifetime(
                 final @CBCookieLifetime int lifetime) {
             mCookieLifetime.commit(lifetime);
+            return this;
+        }
+
+        /**
+         * Get whether or not cookie purging is enabled.
+         *
+         * @return A boolean indicating whether or not cookie purging is enabled.
+         */
+        public boolean getCookiePurging() {
+            return mCookiePurging.get();
+        }
+
+        /**
+         * Enable or disable cookie purging. This will automatically purge cookies
+         * from tracking sites that have no recent user interaction, provided the cookie
+         * behavior is set to {@link ContentBlocking.CookieBehavior#ACCEPT_NON_TRACKERS} or
+         * {@link ContentBlocking.CookieBehavior#ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS}.
+         *
+         * @param enabled A boolean indicating whether to enable cookie purging.
+         *
+         * @return This Settings instance.
+         */
+        public @NonNull Settings setCookiePurging(final boolean enabled) {
+            mCookiePurging.commit(enabled);
             return this;
         }
 
