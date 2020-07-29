@@ -50,6 +50,18 @@
     }                                                             \
   } while (false)
 
+#define REJECT_IF_RELATIVE_PATH(aPath, aJSPromise)                    \
+  do {                                                                \
+    if (!IsAbsolutePath(aPath)) {                                     \
+      (aJSPromise)                                                    \
+          ->MaybeRejectWithOperationError(nsPrintfCString(            \
+              "Refusing to work with path(%s) because only absolute " \
+              "file paths are permitted",                             \
+              NS_ConvertUTF16toUTF8(aPath).get()));                   \
+      return (aJSPromise).forget();                                   \
+    }                                                                 \
+  } while (false)
+
 namespace mozilla {
 namespace dom {
 
@@ -154,18 +166,14 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const Optional<uint32_t>& aMaxBytes) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+
   REJECT_IF_SHUTTING_DOWN(promise);
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
 
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   // Process arguments.
-  if (!IsAbsolutePath(aPath)) {
-    promise->MaybeRejectWithOperationError(
-        "Only absolute file paths are permitted");
-    return promise.forget();
-  }
-
   uint32_t toRead = 0;
   if (aMaxBytes.WasPassed()) {
     toRead = aMaxBytes.Value();
@@ -255,17 +263,14 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
     const WriteAtomicOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+
   REJECT_IF_SHUTTING_DOWN(promise);
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
 
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   // Process arguments.
-  if (!IsAbsolutePath(aPath)) {
-    promise->MaybeRejectWithOperationError(
-        "Only absolute file paths are permitted");
-    return promise.forget();
-  }
   aData.ComputeState();
   FallibleTArray<uint8_t> toWrite;
   if (!toWrite.InsertElementsAt(0, aData.Data(), aData.Length(), fallible)) {
@@ -391,7 +396,10 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const MoveOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+
   REJECT_IF_SHUTTING_DOWN(promise);
+  REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
+  REJECT_IF_RELATIVE_PATH(aDestPath, promise);
 
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
@@ -463,18 +471,13 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                                           const nsAString& aPath,
                                           const RemoveOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  REJECT_IF_SHUTTING_DOWN(promise);
+  NS_ENSURE_TRUE(!!promise, nullptr);
 
-  // Do the IO on a background thread and return the result to this thread.
+  REJECT_IF_SHUTTING_DOWN(promise);
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
+
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
-  // Process arguments.
-  if (!IsAbsolutePath(aPath)) {
-    promise->MaybeRejectWithOperationError(
-        "Only absolute file paths are permitted");
-    return promise.forget();
-  }
 
   InvokeAsync(bg, __func__,
               [path = nsAutoString(aPath), aOptions]() {
@@ -521,18 +524,13 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
     GlobalObject& aGlobal, const nsAString& aPath,
     const MakeDirectoryOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  REJECT_IF_SHUTTING_DOWN(promise);
+  NS_ENSURE_TRUE(!!promise, nullptr);
 
-  // Do the IO on a background thread and return the result to this thread.
+  REJECT_IF_SHUTTING_DOWN(promise);
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
+
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
-  // Process arguments.
-  if (!IsAbsolutePath(aPath)) {
-    promise->MaybeRejectWithOperationError(
-        "Only absolute file paths are permitted");
-    return promise.forget();
-  }
 
   InvokeAsync(bg, __func__,
               [path = nsAutoString(aPath), aOptions]() {
@@ -579,18 +577,13 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
 already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
                                         const nsAString& aPath) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  REJECT_IF_SHUTTING_DOWN(promise);
+  NS_ENSURE_TRUE(!!promise, nullptr);
 
-  // Do the IO on a background thread and return the result to this thread.
+  REJECT_IF_SHUTTING_DOWN(promise);
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
+
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
-  // Process arguments.
-  if (!IsAbsolutePath(aPath)) {
-    promise->MaybeRejectWithOperationError(
-        "Only absolute file paths are permitted");
-    return promise.forget();
-  }
 
   InvokeAsync(
       bg, __func__,
@@ -1004,3 +997,4 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::GetState(nsIPropertyBag** aState) {
 
 #undef REJECT_IF_NULL_EVENT_TARGET
 #undef REJECT_IF_SHUTTING_DOWN
+#undef REJECT_IF_RELATIVE_PATH

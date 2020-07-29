@@ -388,7 +388,7 @@
       info("Test writing a file at a relative destination");
       await Assert.rejects(
         window.IOUtils.writeAtomic(tmpFileName, bytes),
-        /Only absolute file paths are permitted/,
+        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
         "IOUtils::writeAtomic only works with absolute paths"
       );
     });
@@ -399,7 +399,7 @@
       info("Test reading a file at a relative destination");
       await Assert.rejects(
         window.IOUtils.read(tmpFileName),
-        /Only absolute file paths are permitted/,
+        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
         "IOUtils::writeAtomic only works with absolute paths"
       );
     });
@@ -412,7 +412,7 @@
       info("Test moving a file to a relative destination");
       await Assert.rejects(
         window.IOUtils.move(tmpFileName, dest),
-        /Only absolute file paths are permitted/,
+        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
         "IOUtils::move only works with absolute paths"
       );
       ok(
