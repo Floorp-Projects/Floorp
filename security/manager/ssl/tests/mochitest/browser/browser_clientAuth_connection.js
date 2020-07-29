@@ -21,9 +21,6 @@ const DialogState = {
 };
 
 var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
-let cars = Cc["@mozilla.org/security/clientAuthRememberService;1"].getService(
-  Ci.nsIClientAuthRememberService
-);
 
 var gExpectedClientCertificateChoices;
 
@@ -163,17 +160,10 @@ add_task(async function setup() {
  *        If the connection is expected to load successfully, the URL that
  *        should load. If the connection is expected to fail and result in an
  *        error page, |undefined|.
- * @param {Boolean} expectCallingChooseCertificate
- *        Determines whether we expect chooseCertificate to be called.
  * @param {Object} options
  *        Optional options object to pass on to the window that gets opened.
  */
-async function testHelper(
-  prefValue,
-  expectedURL,
-  expectCallingChooseCertificate,
-  options = undefined
-) {
+async function testHelper(prefValue, expectedURL, options = undefined) {
   gClientAuthDialogs.chooseCertificateCalled = false;
   await SpecialPowers.pushPrefEnv({
     set: [["security.default_personal_cert", prefValue]],
@@ -199,7 +189,7 @@ async function testHelper(
   );
   Assert.equal(
     gClientAuthDialogs.chooseCertificateCalled,
-    expectCallingChooseCertificate,
+    prefValue == "Ask Every Time",
     "chooseCertificate should have been called if we were expecting it to be called"
   );
 
@@ -217,12 +207,11 @@ add_task(async function testCertChosenAutomatically() {
   gClientAuthDialogs.state = DialogState.ASSERT_NOT_CALLED;
   await testHelper(
     "Select Automatically",
-    "https://requireclientcert.example.com/",
-    false
+    "https://requireclientcert.example.com/"
   );
   // This clears all saved client auth certificate state so we don't influence
   // subsequent tests.
-  cars.clearRememberedDecisions();
+  sdr.logoutAndTeardown();
 });
 
 // Test that if the user doesn't choose a certificate, the connection fails and
@@ -231,38 +220,16 @@ add_task(async function testCertNotChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_NOT_SELECTED;
   await testHelper(
     "Ask Every Time",
-    "about:neterror?e=nssFailure2&u=https%3A//requireclientcert.example.com/",
-    true
+    "about:neterror?e=nssFailure2&u=https%3A//requireclientcert.example.com/"
   );
-  cars.clearRememberedDecisions();
+  sdr.logoutAndTeardown();
 });
 
 // Test that if the user chooses a certificate the connection suceeeds.
 add_task(async function testCertChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_SELECTED;
-  await testHelper(
-    "Ask Every Time",
-    "https://requireclientcert.example.com/",
-    true
-  );
-  cars.clearRememberedDecisions();
-});
-
-// Test that the cancel decision is remembered correctly
-add_task(async function testEmptyCertChosenByUser() {
-  gClientAuthDialogs.state = DialogState.RETURN_CERT_NOT_SELECTED;
-  gClientAuthDialogs.rememberClientAuthCertificate = true;
-  await testHelper(
-    "Ask Every Time",
-    "about:neterror?e=nssFailure2&u=https%3A//requireclientcert.example.com/",
-    true
-  );
-  await testHelper(
-    "Ask Every Time",
-    "about:neterror?e=nssFailure2&u=https%3A//requireclientcert.example.com/",
-    false
-  );
-  cars.clearRememberedDecisions();
+  await testHelper("Ask Every Time", "https://requireclientcert.example.com/");
+  sdr.logoutAndTeardown();
 });
 
 // Test that if the user chooses a certificate in a private browsing window,
@@ -276,32 +243,18 @@ add_task(async function testEmptyCertChosenByUser() {
 add_task(async function testClearPrivateBrowsingState() {
   gClientAuthDialogs.rememberClientAuthCertificate = true;
   gClientAuthDialogs.state = DialogState.RETURN_CERT_SELECTED;
-  await testHelper(
-    "Ask Every Time",
-    "https://requireclientcert.example.com/",
-    true,
-    {
-      private: true,
-    }
-  );
-  await testHelper(
-    "Ask Every Time",
-    "https://requireclientcert.example.com/",
-    true,
-    {
-      private: true,
-    }
-  );
-  await testHelper(
-    "Ask Every Time",
-    "https://requireclientcert.example.com/",
-    true
-  );
-  // NB: we don't `cars.clearRememberedDecisions()` in between the two calls to
+  await testHelper("Ask Every Time", "https://requireclientcert.example.com/", {
+    private: true,
+  });
+  await testHelper("Ask Every Time", "https://requireclientcert.example.com/", {
+    private: true,
+  });
+  await testHelper("Ask Every Time", "https://requireclientcert.example.com/");
+  // NB: we don't `sdr.logoutAndTeardown()` in between the two calls to
   // `testHelper` because that would clear all client auth certificate state and
   // obscure what we're testing (that Firefox properly clears the relevant state
   // when the last private window closes).
-  cars.clearRememberedDecisions();
+  sdr.logoutAndTeardown();
 });
 
 // Test that 3rd party certificates are taken into account when filtering client
@@ -329,12 +282,8 @@ add_task(async function testCertFilteringWithIntermediate() {
   nssComponent.addEnterpriseIntermediate(intermediateBytes);
   gExpectedClientCertificateChoices = 4;
   gClientAuthDialogs.state = DialogState.RETURN_CERT_SELECTED;
-  await testHelper(
-    "Ask Every Time",
-    "https://requireclientcert.example.com/",
-    true
-  );
-  cars.clearRememberedDecisions();
+  await testHelper("Ask Every Time", "https://requireclientcert.example.com/");
+  sdr.logoutAndTeardown();
   // This will reset the added intermediate.
   await SpecialPowers.pushPrefEnv({
     set: [["security.enterprise_roots.enabled", true]],

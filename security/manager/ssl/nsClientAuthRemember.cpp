@@ -7,7 +7,6 @@
 #include "nsClientAuthRemember.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/DataStorage.h"
 #include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include "nsNSSCertHelper.h"
@@ -23,16 +22,12 @@
 #include "sechash.h"
 #include "SharedSSLState.h"
 
-#include "nsJSUtils.h"
-
 using namespace mozilla;
 using namespace mozilla::psm;
 
-NS_IMPL_ISUPPORTS(nsClientAuthRememberService, nsIClientAuthRememberService)
+NS_IMPL_ISUPPORTS(nsClientAuthRememberService, nsIClientAuthRememberService,
+                  nsIObserver)
 NS_IMPL_ISUPPORTS(nsClientAuthRemember, nsIClientAuthRememberRecord)
-
-const nsCString nsClientAuthRemember::SentinelValue =
-    "no client certificate"_ns;
 
 NS_IMETHODIMP
 nsClientAuthRemember::GetAsciiHost(/*out*/ nsACString& aAsciiHost) {
@@ -58,18 +53,24 @@ nsClientAuthRemember::GetEntryKey(/*out*/ nsACString& aEntryKey) {
   return NS_OK;
 }
 
+nsClientAuthRememberService::nsClientAuthRememberService()
+    : monitor("nsClientAuthRememberService.monitor") {}
+
+nsClientAuthRememberService::~nsClientAuthRememberService() {
+  RemoveAllFromMemory();
+}
+
 nsresult nsClientAuthRememberService::Init() {
   if (!NS_IsMainThread()) {
     NS_ERROR("nsClientAuthRememberService::Init called off the main thread");
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  mClientAuthRememberList =
-      mozilla::DataStorage::Get(DataStorageClass::ClientAuthRememberList);
-  nsresult rv = mClientAuthRememberList->Init(nullptr);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(this, "profile-before-change", false);
+    observerService->AddObserver(this, "last-pb-context-exited", false);
   }
 
   return NS_OK;
@@ -77,8 +78,10 @@ nsresult nsClientAuthRememberService::Init() {
 
 NS_IMETHODIMP
 nsClientAuthRememberService::ForgetRememberedDecision(const nsACString& key) {
-  mClientAuthRememberList->Remove(PromiseFlatCString(key),
-                                  mozilla::DataStorage_Persistent);
+  {
+    ReentrantMonitorAutoEnter lock(monitor);
+    mSettingsTable.RemoveEntry(PromiseFlatCString(key).get());
+  }
 
   nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
   return NS_OK;
@@ -87,16 +90,30 @@ nsClientAuthRememberService::ForgetRememberedDecision(const nsACString& key) {
 NS_IMETHODIMP
 nsClientAuthRememberService::GetDecisions(
     nsTArray<RefPtr<nsIClientAuthRememberRecord>>& results) {
-  nsTArray<mozilla::psm::DataStorageItem> decisions;
-  mClientAuthRememberList->GetAll(&decisions);
-
-  for (const mozilla::psm::DataStorageItem& decision : decisions) {
-    if (decision.type() == DataStorageType::DataStorage_Persistent) {
-      RefPtr<nsIClientAuthRememberRecord> tmp =
-          new nsClientAuthRemember(decision.key(), decision.value());
-
-      results.AppendElement(tmp);
+  ReentrantMonitorAutoEnter lock(monitor);
+  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+    if (!nsClientAuthRememberService::IsPrivateBrowsingKey(
+            iter.Get()->mEntryKey)) {
+      results.AppendElement(iter.Get()->mSettings);
     }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClientAuthRememberService::Observe(nsISupports* aSubject, const char* aTopic,
+                                     const char16_t* aData) {
+  // check the topic
+  if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
+    // The profile is about to change,
+    // or is going away because the application is shutting down.
+
+    ReentrantMonitorAutoEnter lock(monitor);
+    RemoveAllFromMemory();
+  } else if (!nsCRT::strcmp(aTopic, "last-pb-context-exited")) {
+    ReentrantMonitorAutoEnter lock(monitor);
+    ClearPrivateDecisions();
   }
 
   return NS_OK;
@@ -104,37 +121,24 @@ nsClientAuthRememberService::GetDecisions(
 
 NS_IMETHODIMP
 nsClientAuthRememberService::ClearRememberedDecisions() {
-  mClientAuthRememberList->Clear();
-  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
+  ReentrantMonitorAutoEnter lock(monitor);
+  RemoveAllFromMemory();
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsClientAuthRememberService::DeleteDecisionsByHost(
-    const nsACString& aHostName, JS::Handle<JS::Value> aOriginAttributes,
-    JSContext* aCx) {
-  OriginAttributes attrs;
-  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  DataStorageType storageType = GetDataStorageType(attrs);
-
-  nsTArray<mozilla::psm::DataStorageItem> decisions;
-  mClientAuthRememberList->GetAll(&decisions);
-
-  for (const mozilla::psm::DataStorageItem& decision : decisions) {
-    if (decision.type() == storageType) {
-      RefPtr<nsIClientAuthRememberRecord> tmp =
-          new nsClientAuthRemember(decision.key(), decision.value());
-      nsAutoCString asciiHost;
-      tmp->GetAsciiHost(asciiHost);
-      if (asciiHost.Equals(aHostName)) {
-        mClientAuthRememberList->Remove(decision.key(), decision.type());
-      }
+nsresult nsClientAuthRememberService::ClearPrivateDecisions() {
+  ReentrantMonitorAutoEnter lock(monitor);
+  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+    if (nsClientAuthRememberService::IsPrivateBrowsingKey(
+            iter.Get()->mEntryKey)) {
+      iter.Remove();
     }
   }
-  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
   return NS_OK;
+}
+
+void nsClientAuthRememberService::RemoveAllFromMemory() {
+  mSettingsTable.Clear();
 }
 
 NS_IMETHODIMP
@@ -154,16 +158,19 @@ nsClientAuthRememberService::RememberDecision(
     return rv;
   }
 
-  if (aClientCert) {
-    RefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(aClientCert));
-    nsAutoCString dbkey;
-    rv = pipCert->GetDbKey(dbkey);
-    if (NS_SUCCEEDED(rv)) {
-      AddEntryToList(aHostName, aOriginAttributes, fpStr, dbkey);
+  {
+    ReentrantMonitorAutoEnter lock(monitor);
+    if (aClientCert) {
+      RefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(aClientCert));
+      nsAutoCString dbkey;
+      rv = pipCert->GetDbKey(dbkey);
+      if (NS_SUCCEEDED(rv)) {
+        AddEntryToList(aHostName, aOriginAttributes, fpStr, dbkey);
+      }
+    } else {
+      nsCString empty;
+      AddEntryToList(aHostName, aOriginAttributes, fpStr, empty);
     }
-  } else {
-    AddEntryToList(aHostName, aOriginAttributes, fpStr,
-                   nsClientAuthRemember::SentinelValue);
   }
 
   return NS_OK;
@@ -178,7 +185,6 @@ nsClientAuthRememberService::HasRememberedDecision(
   NS_ENSURE_ARG_POINTER(aCert);
   NS_ENSURE_ARG_POINTER(aRetVal);
   *aRetVal = false;
-  aCertDBKey.Truncate();
 
   nsresult rv;
   nsAutoCString fpStr;
@@ -187,18 +193,13 @@ nsClientAuthRememberService::HasRememberedDecision(
 
   nsAutoCString entryKey;
   GetEntryKey(aHostName, aOriginAttributes, fpStr, entryKey);
-  DataStorageType storageType = GetDataStorageType(aOriginAttributes);
-
-  nsCString listEntry = mClientAuthRememberList->Get(entryKey, storageType);
-  if (listEntry.IsEmpty()) {
-    return NS_OK;
+  {
+    ReentrantMonitorAutoEnter lock(monitor);
+    nsClientAuthRememberEntry* entry = mSettingsTable.GetEntry(entryKey.get());
+    if (!entry) return NS_OK;
+    entry->mSettings->GetDbKey(aCertDBKey);
+    *aRetVal = true;
   }
-
-  if (!listEntry.Equals(nsClientAuthRemember::SentinelValue)) {
-    aCertDBKey = listEntry;
-  }
-  *aRetVal = true;
-
   return NS_OK;
 }
 
@@ -207,12 +208,20 @@ nsresult nsClientAuthRememberService::AddEntryToList(
     const nsACString& aFingerprint, const nsACString& aDBKey) {
   nsAutoCString entryKey;
   GetEntryKey(aHostName, aOriginAttributes, aFingerprint, entryKey);
-  DataStorageType storageType = GetDataStorageType(aOriginAttributes);
 
-  nsCString tmpDbKey(aDBKey);
-  nsresult rv = mClientAuthRememberList->Put(entryKey, tmpDbKey, storageType);
-  if (NS_FAILED(rv)) {
-    return rv;
+  {
+    ReentrantMonitorAutoEnter lock(monitor);
+    nsClientAuthRememberEntry* entry = mSettingsTable.PutEntry(entryKey.get());
+
+    if (!entry) {
+      NS_ERROR("can't insert a null entry!");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    entry->mEntryKey = entryKey;
+
+    entry->mSettings =
+        new nsClientAuthRemember(aHostName, aFingerprint, aDBKey, entryKey);
   }
 
   return NS_OK;
@@ -222,13 +231,11 @@ void nsClientAuthRememberService::GetEntryKey(
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
     const nsACString& aFingerprint, nsACString& aEntryKey) {
   nsAutoCString hostCert(aHostName);
-  hostCert.Append(',');
-  hostCert.Append(aFingerprint);
-  hostCert.Append(',');
-
   nsAutoCString suffix;
   aOriginAttributes.CreateSuffix(suffix);
   hostCert.Append(suffix);
+  hostCert.Append(':');
+  hostCert.Append(aFingerprint);
 
   aEntryKey.Assign(hostCert);
 }
@@ -243,12 +250,4 @@ bool nsClientAuthRememberService::IsPrivateBrowsingKey(
     suffix = entryKey;
   }
   return OriginAttributes::IsPrivateBrowsing(suffix);
-}
-
-DataStorageType nsClientAuthRememberService::GetDataStorageType(
-    const OriginAttributes& aOriginAttributes) {
-  if (aOriginAttributes.mPrivateBrowsingId > 0) {
-    return DataStorage_Private;
-  }
-  return DataStorage_Persistent;
 }
