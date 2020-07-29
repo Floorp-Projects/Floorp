@@ -112,3 +112,51 @@ add_task(async function test_update_error() {
   await extension.awaitMessage("done");
   await extension.unload();
 });
+
+add_task(async function test_invalid_documentUrlPatterns() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["menus"],
+    },
+    async background() {
+      await new Promise(resolve => {
+        browser.menus.create(
+          {
+            title: "invalid url",
+            contexts: ["tab"],
+            documentUrlPatterns: ["test1"],
+          },
+          () => {
+            browser.test.assertEq(
+              "Invalid url pattern: test1",
+              browser.runtime.lastError.message,
+              "Expected invalid match pattern"
+            );
+            resolve();
+          }
+        );
+      });
+      await new Promise(resolve => {
+        browser.menus.create(
+          {
+            title: "invalid url",
+            contexts: ["link"],
+            targetUrlPatterns: ["test2"],
+          },
+          () => {
+            browser.test.assertEq(
+              "Invalid url pattern: test2",
+              browser.runtime.lastError.message,
+              "Expected invalid match pattern"
+            );
+            resolve();
+          }
+        );
+      });
+      browser.test.sendMessage("done");
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
