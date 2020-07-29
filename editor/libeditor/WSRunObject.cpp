@@ -188,7 +188,8 @@ Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
                    pointToInsert);
         nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
             invisibleTrailingWhiteSpaceRangeOfCurrentLine.StartRef(),
-            invisibleTrailingWhiteSpaceRangeOfCurrentLine.EndRef());
+            invisibleTrailingWhiteSpaceRangeOfCurrentLine.EndRef(),
+            HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -247,7 +248,8 @@ Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
         //     So, we may do something wrong here.
         nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
             invisibleLeadingWhiteSpaceRangeOfNewLine.StartRef(),
-            invisibleLeadingWhiteSpaceRangeOfNewLine.EndRef());
+            invisibleLeadingWhiteSpaceRangeOfNewLine.EndRef(),
+            HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "WhiteSpaceVisibilityKeeper::"
@@ -371,7 +373,8 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
                    pointToInsert);
         nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
             invisibleTrailingWhiteSpaceRangeAtEnd.StartRef(),
-            invisibleTrailingWhiteSpaceRangeAtEnd.EndRef());
+            invisibleTrailingWhiteSpaceRangeAtEnd.EndRef(),
+            HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -415,7 +418,8 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
         //     So, we may do something wrong here.
         nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
             invisibleLeadingWhiteSpaceRangeAtStart.StartRef(),
-            invisibleLeadingWhiteSpaceRangeAtStart.EndRef());
+            invisibleLeadingWhiteSpaceRangeAtStart.EndRef(),
+            HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -587,7 +591,8 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
       return NS_OK;
     }
     nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-        atPreviousCharOfStart, atPreviousCharOfStart.NextPoint());
+        atPreviousCharOfStart, atPreviousCharOfStart.NextPoint(),
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -611,8 +616,9 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     }
 
     // finally, delete that ws
-    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(startToDelete,
-                                                           endToDelete);
+    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+        startToDelete, endToDelete,
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -630,8 +636,9 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     }
 
     // finally, delete that ws
-    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(startToDelete,
-                                                           endToDelete);
+    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+        startToDelete, endToDelete,
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -660,7 +667,8 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
       return NS_OK;
     }
     nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-        atNextCharOfStart, atNextCharOfStart.NextPoint());
+        atNextCharOfStart, atNextCharOfStart.NextPoint(),
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -684,8 +692,9 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     }
 
     // Finally, delete that ws
-    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(startToDelete,
-                                                           endToDelete);
+    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+        startToDelete, endToDelete,
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -703,8 +712,9 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     }
 
     // Finally, delete that ws
-    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(startToDelete,
-                                                           endToDelete);
+    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+        startToDelete, endToDelete,
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -1319,7 +1329,8 @@ nsresult WhiteSpaceVisibilityKeeper::
         AutoTrackDOMPoint trackEndToDelete(aHTMLEditor.RangeUpdaterRef(),
                                            &endToDelete);
         nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-            replaceRangeDataAtEnd.StartRef(), replaceRangeDataAtEnd.EndRef());
+            replaceRangeDataAtEnd.StartRef(), replaceRangeDataAtEnd.EndRef(),
+            HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -1393,7 +1404,8 @@ nsresult WhiteSpaceVisibilityKeeper::
   }
   if (!replaceRangeDataAtStart.HasReplaceString()) {
     nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-        replaceRangeDataAtStart.StartRef(), replaceRangeDataAtStart.EndRef());
+        replaceRangeDataAtStart.StartRef(), replaceRangeDataAtStart.EndRef(),
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     // XXX Should we validate the range for making this return
     //     NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE in this case?
     NS_WARNING_ASSERTION(
@@ -1999,7 +2011,8 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
   rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
       EditorDOMPointInText::AtEndOf(
           *aRangeToReplace.StartRef().ContainerAsText()),
-      aRangeToReplace.EndRef());
+      aRangeToReplace.EndRef(),
+      HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -2222,7 +2235,8 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
         EditorDOMPointInText::AtEndOf(
             *atFirstASCIIWhiteSpace.ContainerAsText()),
-        atPreviousCharOfEndOfVisibleWhiteSpaces.NextPoint());
+        atPreviousCharOfEndOfVisibleWhiteSpaces.NextPoint(),
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
@@ -2410,7 +2424,8 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
   if (leadingWhiteSpaceRange.IsPositioned() &&
       !leadingWhiteSpaceRange.Collapsed()) {
     nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-        leadingWhiteSpaceRange.StartRef(), leadingWhiteSpaceRange.EndRef());
+        leadingWhiteSpaceRange.StartRef(), leadingWhiteSpaceRange.EndRef(),
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed to "
@@ -2426,7 +2441,8 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
                  "We're trying to remove trailing white-spaces with maybe "
                  "outdated range");
     nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-        trailingWhiteSpaceRange.StartRef(), trailingWhiteSpaceRange.EndRef());
+        trailingWhiteSpaceRange.StartRef(), trailingWhiteSpaceRange.EndRef(),
+        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed to "
