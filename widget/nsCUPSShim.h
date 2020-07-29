@@ -35,6 +35,7 @@ class nsCUPSShim {
    */
   decltype(cupsAddOption)* mCupsAddOption;
   decltype(cupsCheckDestSupported)* mCupsCheckDestSupported;
+  decltype(cupsCopyDest)* mCupsCopyDest;
   decltype(cupsCopyDestInfo)* mCupsCopyDestInfo;
   decltype(cupsFreeDestInfo)* mCupsFreeDestInfo;
   decltype(cupsFreeDests)* mCupsFreeDests;
