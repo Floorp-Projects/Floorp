@@ -83,6 +83,10 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         self.scope_stack.lookup_name(name)
     }
 
+    pub fn lookup_name_in_var(&mut self, name: SourceAtomSetIndex) -> NameLocation {
+        self.scope_stack.lookup_name_in_var(name)
+    }
+
     fn emit_script(mut self, ast: &Script) -> Result<ScriptStencil, EmitError> {
         let scope_data_map = &self.compilation_info.scope_data_map;
         let function_declarations = &self.compilation_info.function_declarations;
