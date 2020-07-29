@@ -11,6 +11,7 @@ import android.hardware.camera2.CameraManager
 import android.media.Image
 import android.util.Size
 import android.view.View
+import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.zxing.BarcodeFormat
@@ -32,6 +33,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
@@ -68,14 +70,16 @@ class QrFragmentTest {
         whenever(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
 
         qrFragment.textureView = mock()
+        qrFragment.cameraErrorView = mock()
+        qrFragment.customViewFinder = mock()
         qrFragment.onResume()
-        verify(qrFragment, never()).openCamera(anyInt(), anyInt())
+        verify(qrFragment, never()).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
 
         whenever(qrFragment.textureView.isAvailable).thenReturn(true)
         qrFragment.cameraId = "mockCamera"
         qrFragment.onResume()
         verify(qrFragment, times(2)).startBackgroundThread()
-        verify(qrFragment).openCamera(anyInt(), anyInt())
+        verify(qrFragment).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
     }
 
     @Test
@@ -84,9 +88,11 @@ class QrFragmentTest {
         val view: View = mock()
         val textureView: AutoFitTextureView = mock()
         val viewFinder: CustomViewFinder = mock()
+        val cameraErrorView: TextView = mock()
 
         whenever(view.findViewById<AutoFitTextureView>(R.id.texture)).thenReturn(textureView)
         whenever(view.findViewById<CustomViewFinder>(R.id.view_finder)).thenReturn(viewFinder)
+        whenever(view.findViewById<TextView>(R.id.camera_error)).thenReturn(cameraErrorView)
 
         qrFragment.onViewCreated(view, mock())
         assertEquals(QrFragment.STATE_FIND_QRCODE, QrFragment.qrState)
@@ -368,5 +374,53 @@ class QrFragmentTest {
         verify(textureView).setAspectRatio(768, 768)
         assertEquals(768, qrFragment.previewSize?.width)
         assertEquals(768, qrFragment.previewSize?.height)
+    }
+
+    @Test
+    fun `tryOpenCamera displays error message if no camera is available`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+
+        qrFragment.textureView = mock()
+        qrFragment.cameraErrorView = mock()
+        qrFragment.customViewFinder = mock()
+
+        qrFragment.tryOpenCamera(0, 0)
+        verify(qrFragment.cameraErrorView).visibility = View.VISIBLE
+        verify(qrFragment.customViewFinder).visibility = View.GONE
+    }
+
+    @Test
+    fun `tryOpenCamera opens camera if available`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+
+        qrFragment.textureView = mock()
+        qrFragment.cameraErrorView = mock()
+        qrFragment.customViewFinder = mock()
+
+        qrFragment.tryOpenCamera(0, 0, skipCheck = true)
+        verify(qrFragment).openCamera(0, 0)
+    }
+
+    @Test
+    fun `tryOpenCamera displays error message if camera throws exception`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        whenever(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
+
+        qrFragment.textureView = mock()
+        qrFragment.cameraErrorView = mock()
+        qrFragment.customViewFinder = mock()
+
+        val cameraManager: CameraManager = mock()
+        whenever(cameraManager.openCamera(anyString(), any<CameraDevice.StateCallback>(), any()))
+            .thenThrow(IllegalStateException("no camera"))
+
+        val activity: FragmentActivity = mock()
+        whenever(activity.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
+        whenever(qrFragment.activity).thenReturn(activity)
+        qrFragment.cameraId = "mockCamera"
+
+        qrFragment.tryOpenCamera(0, 0, skipCheck = true)
+        verify(qrFragment.cameraErrorView).visibility = View.VISIBLE
+        verify(qrFragment.customViewFinder).visibility = View.GONE
     }
 }
