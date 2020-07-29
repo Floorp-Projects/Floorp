@@ -2056,24 +2056,6 @@ static void SetUpdateStubData(ICCacheIR_Updated* stub,
   }
 }
 
-// This is a conservative approximation.
-static MOZ_ALWAYS_INLINE bool CanAttachPrivateInitIC(JSContext* cx,
-                                                     HandleObject obj,
-                                                     HandleId id) {
-  // Only allow plain objects; this also means we have no hooks to worry about.
-  if (!obj->is<PlainObject>()) {
-    return false;
-  }
-
-  PropertyResult prop;
-  if (!LookupOwnPropertyPure(cx, obj, id, &prop)) {
-    return false;
-  }
-
-  // Init requires the prop not already exist
-  return !prop;
-}
-
 bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
                        ICSetElem_Fallback* stub, Value* stack, HandleValue objv,
                        HandleValue index, HandleValue rhs) {
