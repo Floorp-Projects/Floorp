@@ -10,7 +10,6 @@
 #include <inttypes.h>
 #include <unordered_map>
 
-#include "imgIEncoder.h"
 #include "MPRISInterfaceDescription.h"
 #include "mozilla/dom/MediaControlUtils.h"
 #include "mozilla/Maybe.h"
@@ -621,16 +620,6 @@ GVariant* MPRISServiceHandler::GetPlaybackStatus() const {
   }
 }
 
-static bool IsImageIn(const nsTArray<mozilla::dom::MediaImage>& aArtwork,
-                      const nsAString& aImageUrl) {
-  for (const mozilla::dom::MediaImage& image : aArtwork) {
-    if (image.mSrc == aImageUrl) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void MPRISServiceHandler::SetMediaMetadata(
     const dom::MediaMetadataBase& aMetadata) {
   // Reset the index of the next available image to be fetched in the artwork,
@@ -644,7 +633,7 @@ void MPRISServiceHandler::SetMediaMetadata(
   // 1) MPRIS image is being fetched, and the one in fetching is in the artwork
   // 2) MPRIS image is not being fetched, and the one in use is in the artwork
   if (!mFetchingUrl.IsEmpty()) {
-    if (IsImageIn(aMetadata.mArtwork, mFetchingUrl)) {
+    if (mozilla::dom::IsImageIn(aMetadata.mArtwork, mFetchingUrl)) {
       LOG("No need to load MPRIS image. The one being processed is in the "
           "artwork");
       // Set MPRIS without the image first. The image will be loaded to MPRIS
@@ -653,7 +642,7 @@ void MPRISServiceHandler::SetMediaMetadata(
       return;
     }
   } else if (!mCurrentImageUrl.IsEmpty()) {
-    if (IsImageIn(aMetadata.mArtwork, mCurrentImageUrl)) {
+    if (mozilla::dom::IsImageIn(aMetadata.mArtwork, mCurrentImageUrl)) {
       LOG("No need to load MPRIS image. The one in use is in the artwork");
       SetMediaMetadataInternal(aMetadata, false);
       return;
@@ -703,48 +692,6 @@ void MPRISServiceHandler::SetMediaMetadataInternal(
   EmitMetadataChanged();
 }
 
-// The image buffer would be allocated in aStream whose size is aSize and the
-// buffer head is aBuffer
-static nsresult GetEncodedImageBuffer(imgIContainer* aImage,
-                                      const nsACString& aMimeType,
-                                      nsIInputStream** aStream, uint32_t* aSize,
-                                      char** aBuffer) {
-  MOZ_ASSERT(aImage);
-
-  nsCOMPtr<imgITools> imgTools = do_GetService("@mozilla.org/image/tools;1");
-  if (!imgTools) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIInputStream> inputStream;
-  nsresult rv = imgTools->EncodeImage(aImage, aMimeType, EmptyString(),
-                                      getter_AddRefs(inputStream));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!inputStream) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<imgIEncoder> encoder = do_QueryInterface(inputStream);
-  if (!encoder) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = encoder->GetImageBufferUsed(aSize);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = encoder->GetImageBuffer(aBuffer);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  encoder.forget(aStream);
-  return NS_OK;
-}
 
 void MPRISServiceHandler::LoadImageAtIndex(const size_t aIndex) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -779,7 +726,7 @@ void MPRISServiceHandler::LoadImageAtIndex(const size_t aIndex) {
             char* data = nullptr;
             // Only used to hold the image data
             nsCOMPtr<nsIInputStream> inputStream;
-            nsresult rv = GetEncodedImageBuffer(
+            nsresult rv = mozilla::dom::GetEncodedImageBuffer(
                 aImage, mMimeType, getter_AddRefs(inputStream), &size, &data);
             if (NS_FAILED(rv) || !inputStream || size == 0 || !data) {
               LOG("Failed to get the image buffer info. Try next image");

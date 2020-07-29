@@ -7,6 +7,8 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 
+#include "imgIEncoder.h"
+#include "imgITools.h"
 #include "MediaController.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/dom/MediaControllerBinding.h"
@@ -158,6 +160,59 @@ inline const char* ToMediaSessionPlaybackStateStr(
 }
 
 BrowsingContext* GetAliveTopBrowsingContext(BrowsingContext* aBC);
+
+inline bool IsImageIn(const nsTArray<MediaImage>& aArtwork,
+                      const nsAString& aImageUrl) {
+  for (const MediaImage& image : aArtwork) {
+    if (image.mSrc == aImageUrl) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// The image buffer would be allocated in aStream whose size is aSize and the
+// buffer head is aBuffer
+inline nsresult GetEncodedImageBuffer(imgIContainer* aImage,
+                                      const nsACString& aMimeType,
+                                      nsIInputStream** aStream, uint32_t* aSize,
+                                      char** aBuffer) {
+  MOZ_ASSERT(aImage);
+
+  nsCOMPtr<imgITools> imgTools = do_GetService("@mozilla.org/image/tools;1");
+  if (!imgTools) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsresult rv = imgTools->EncodeImage(aImage, aMimeType, EmptyString(),
+                                      getter_AddRefs(inputStream));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!inputStream) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<imgIEncoder> encoder = do_QueryInterface(inputStream);
+  if (!encoder) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = encoder->GetImageBufferUsed(aSize);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = encoder->GetImageBuffer(aBuffer);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  encoder.forget(aStream);
+  return NS_OK;
+}
 
 }  // namespace dom
 }  // namespace mozilla

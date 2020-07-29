@@ -15,7 +15,6 @@
 #  include <winsdkver.h>
 #  include <wrl.h>
 
-#  include "imgIEncoder.h"
 #  include "nsMimeTypes.h"
 #  include "mozilla/Assertions.h"
 #  include "mozilla/Logging.h"
@@ -23,6 +22,7 @@
 #  include "mozilla/WidgetUtils.h"
 #  include "mozilla/WindowsVersion.h"
 #  include "mozilla/ScopeExit.h"
+#  include "mozilla/dom/MediaControlUtils.h"
 #  include "mozilla/media/MediaUtils.h"
 #  include "nsThreadUtils.h"
 
@@ -376,57 +376,6 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
   return true;
 }
 
-// The image buffer would be allocated in aStream whose size is aSize and the
-// buffer head is aBuffer
-static nsresult GetEncodedImageBuffer(imgIContainer* aImage,
-                                      const nsACString& aMimeType,
-                                      nsIInputStream** aStream, uint32_t* aSize,
-                                      char** aBuffer) {
-  nsCOMPtr<imgITools> imgTools = do_GetService("@mozilla.org/image/tools;1");
-  if (!imgTools) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIInputStream> inputStream;
-  nsresult rv = imgTools->EncodeImage(aImage, aMimeType, EmptyString(),
-                                      getter_AddRefs(inputStream));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!inputStream) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<imgIEncoder> encoder = do_QueryInterface(inputStream);
-  if (!encoder) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = encoder->GetImageBufferUsed(aSize);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = encoder->GetImageBuffer(aBuffer);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  encoder.forget(aStream);
-  return NS_OK;
-}
-
-static bool IsImageIn(const nsTArray<mozilla::dom::MediaImage>& aArtwork,
-                      const nsAString& aImageUrl) {
-  for (const mozilla::dom::MediaImage& image : aArtwork) {
-    if (image.mSrc == aImageUrl) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void WindowsSMTCProvider::LoadThumbnail(
     const nsTArray<mozilla::dom::MediaImage>& aArtwork) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -441,13 +390,13 @@ void WindowsSMTCProvider::LoadThumbnail(
   if (!mProcessingUrl.IsEmpty()) {
     LOG("Load thumbnail while image: %s is being processed",
         NS_ConvertUTF16toUTF8(mProcessingUrl).get());
-    if (IsImageIn(mArtwork, mProcessingUrl)) {
+    if (mozilla::dom::IsImageIn(mArtwork, mProcessingUrl)) {
       LOG("No need to load thumbnail. The one being processed is in the "
           "artwork");
       return;
     }
   } else if (!mThumbnailUrl.IsEmpty()) {
-    if (IsImageIn(mArtwork, mThumbnailUrl)) {
+    if (mozilla::dom::IsImageIn(mArtwork, mThumbnailUrl)) {
       LOG("No need to load thumbnail. The one in use is in the artwork");
       return;
     }
@@ -507,9 +456,9 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
             char* src = nullptr;
             // Only used to hold the image data
             nsCOMPtr<nsIInputStream> inputStream;
-            nsresult rv =
-                GetEncodedImageBuffer(aImage, nsLiteralCString(IMAGE_PNG),
-                                      getter_AddRefs(inputStream), &size, &src);
+            nsresult rv = mozilla::dom::GetEncodedImageBuffer(
+                aImage, nsLiteralCString(IMAGE_PNG),
+                getter_AddRefs(inputStream), &size, &src);
             if (NS_FAILED(rv) || !inputStream || size == 0 || !src) {
               LOG("Failed to get the image buffer info. Try next image");
               LoadImageAtIndex(mNextImageIndex++);
