@@ -59,7 +59,7 @@ void ImageComposite::UpdateBias(size_t aImageIndex, bool aFrameChanged) {
     mBias = ImageComposite::BIAS_NONE;
     return;
   }
-  TimeDuration threshold = TimeDuration::FromMilliseconds(1.0);
+  TimeDuration threshold = TimeDuration::FromMilliseconds(1.5);
   if (compositionTime - compositedImageTime < threshold &&
       compositionTime - compositedImageTime > -threshold) {
     // The chosen frame's time is very close to the composition time (probably
