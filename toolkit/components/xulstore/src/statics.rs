@@ -7,21 +7,22 @@ use crate::{
     ffi::ProfileChangeObserver,
     make_key, SEPARATOR,
 };
-use lmdb::Error as LmdbError;
 use moz_task::is_main_thread;
 use nsstring::nsString;
 use once_cell::sync::Lazy;
-use rkv::{migrate::Migrator, Rkv, SingleStore, StoreError, StoreOptions, Value};
+use rkv::backend::{SafeMode, SafeModeDatabase, SafeModeEnvironment};
+use rkv::{Migrator, StoreOptions, Value};
 use std::{
     collections::BTreeMap,
-    fs::{copy, create_dir_all, remove_file, File},
+    fs::{create_dir_all, remove_file, File},
     path::PathBuf,
     str,
     sync::Mutex,
 };
-use tempfile::tempdir;
 use xpcom::{interfaces::nsIFile, XpCom};
 
+type Rkv = rkv::Rkv<SafeModeEnvironment>;
+type SingleStore = rkv::SingleStore<SafeModeDatabase>;
 type XULStoreCache = BTreeMap<String, BTreeMap<String, BTreeMap<String, String>>>;
 
 pub struct Database {
@@ -47,27 +48,10 @@ pub(crate) fn get_database() -> XULStoreResult<Database> {
     let xulstore_dir = get_xulstore_dir()?;
     let xulstore_path = xulstore_dir.as_path();
 
-    let env = match Rkv::new(xulstore_path) {
-        Ok(env) => Ok(env),
-        Err(StoreError::LmdbError(LmdbError::Invalid)) => {
-            let temp_env = tempdir()?;
-            let mut migrator = Migrator::new(&xulstore_path)?;
-            migrator.migrate(temp_env.path())?;
-            copy(
-                temp_env.path().join("data.mdb"),
-                xulstore_path.join("data.mdb"),
-            )?;
-            copy(
-                temp_env.path().join("lock.mdb"),
-                xulstore_path.join("lock.mdb"),
-            )?;
-            Rkv::new(xulstore_path)
-        }
-        Err(err) => Err(err),
-    }?;
+    let env = Rkv::new::<SafeMode>(xulstore_path)?;
+    Migrator::easy_migrate_lmdb_to_safe_mode(xulstore_path, &env)?;
 
     let store = env.open_single("db", StoreOptions::create())?;
-
     Ok(Database::new(env, store))
 }
 
@@ -186,14 +170,11 @@ fn cache_data() -> XULStoreResult<XULStoreCache> {
 
     for result in iterator {
         let (key, value): (&str, String) = match result {
-            Ok((key, value)) => {
-                assert!(value.is_some(), "iterated key has value");
-                match (str::from_utf8(&key), unwrap_value(&value)) {
-                    (Ok(key), Ok(value)) => (key, value),
-                    (Err(err), _) => return Err(err.into()),
-                    (_, Err(err)) => return Err(err),
-                }
-            }
+            Ok((key, value)) => match (str::from_utf8(&key), unwrap_value(&value)) {
+                (Ok(key), Ok(value)) => (key, value),
+                (Err(err), _) => return Err(err.into()),
+                (_, Err(err)) => return Err(err),
+            },
             Err(err) => return Err(err.into()),
         };
 
@@ -255,17 +236,13 @@ fn maybe_migrate_data(env: &Rkv, store: SingleStore) {
     .unwrap_or_else(|err| error!("error migrating data: {}", err));
 }
 
-fn unwrap_value(value: &Option<Value>) -> XULStoreResult<String> {
+fn unwrap_value(value: &Value) -> XULStoreResult<String> {
     match value {
-        Some(Value::Str(val)) => Ok(val.to_string()),
-
-        // Per the XULStore API, return an empty string if the value
-        // isn't found.
-        None => Ok(String::new()),
+        Value::Str(val) => Ok(val.to_string()),
 
         // This should never happen, but it could happen in theory
         // if someone writes a different kind of value into the store
         // using a more general API (kvstore, rkv, LMDB).
-        Some(_) => Err(XULStoreError::UnexpectedValue),
+        _ => Err(XULStoreError::UnexpectedValue),
     }
 }
