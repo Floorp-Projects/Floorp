@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DataStorage.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIClientAuthRememberService.h"
@@ -30,74 +31,39 @@ class nsClientAuthRemember final : public nsIClientAuthRememberRecord {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICLIENTAUTHREMEMBERRECORD
 
-  nsClientAuthRemember(const nsACString& aAsciiHost,
-                       const nsACString& aFingerprint, const nsACString& aDBKey,
-                       const nsACString& aEntryKey) {
-    mAsciiHost = aAsciiHost;
-    mFingerprint = aFingerprint;
-    mDBKey = aDBKey;
+  nsClientAuthRemember(const nsCString& aEntryKey, const nsCString& aDBKey) {
     mEntryKey = aEntryKey;
+    if (!aDBKey.Equals(nsClientAuthRemember::SentinelValue)) {
+      mDBKey = aDBKey;
+    }
+
+    nsTArray<nsCString*> fields = {&mAsciiHost, &mFingerprint};
+
+    auto fieldsIter = fields.begin();
+    auto splitter = aEntryKey.Split(',');
+    auto splitterIter = splitter.begin();
+    for (; fieldsIter != fields.end() && splitterIter != splitter.end();
+         ++fieldsIter, ++splitterIter) {
+      (*fieldsIter)->Assign(*splitterIter);
+    }
   }
 
   nsCString mAsciiHost;
   nsCString mFingerprint;
   nsCString mDBKey;
   nsCString mEntryKey;
+  static const nsCString SentinelValue;
 
  protected:
   ~nsClientAuthRemember() = default;
 };
 
-// hash entry class
-class nsClientAuthRememberEntry final : public PLDHashEntryHdr {
- public:
-  // Hash methods
-  typedef const char* KeyType;
-  typedef const char* KeyTypePointer;
-
-  // do nothing with aHost - we require mHead to be set before we're live!
-  explicit nsClientAuthRememberEntry(KeyTypePointer aHostWithCertUTF8) {}
-
-  nsClientAuthRememberEntry(nsClientAuthRememberEntry&& aToMove)
-      : PLDHashEntryHdr(std::move(aToMove)),
-        mSettings(std::move(aToMove.mSettings)),
-        mEntryKey(std::move(aToMove.mEntryKey)) {}
-
-  ~nsClientAuthRememberEntry() = default;
-
-  KeyType GetKey() const { return EntryKeyPtr(); }
-
-  KeyTypePointer GetKeyPointer() const { return EntryKeyPtr(); }
-
-  bool KeyEquals(KeyTypePointer aKey) const {
-    return !strcmp(EntryKeyPtr(), aKey);
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return mozilla::HashString(aKey);
-  }
-
-  enum { ALLOW_MEMMOVE = false };
-
-  // get methods
-  inline const nsCString& GetEntryKey() const { return mEntryKey; }
-
-  inline KeyTypePointer EntryKeyPtr() const { return mEntryKey.get(); }
-
-  nsCOMPtr<nsIClientAuthRememberRecord> mSettings;
-  nsCString mEntryKey;
-};
-
-class nsClientAuthRememberService final : public nsIObserver,
-                                          public nsIClientAuthRememberService {
+class nsClientAuthRememberService final : public nsIClientAuthRememberService {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSICLIENTAUTHREMEMBERSERVICE
 
-  nsClientAuthRememberService();
+  nsClientAuthRememberService() = default;
 
   nsresult Init();
 
@@ -109,14 +75,12 @@ class nsClientAuthRememberService final : public nsIObserver,
   static bool IsPrivateBrowsingKey(const nsCString& entryKey);
 
  protected:
-  ~nsClientAuthRememberService();
+  ~nsClientAuthRememberService() = default;
 
-  mozilla::ReentrantMonitor monitor;
-  nsTHashtable<nsClientAuthRememberEntry> mSettingsTable;
+  static mozilla::DataStorageType GetDataStorageType(
+      const OriginAttributes& aOriginAttributes);
 
-  void RemoveAllFromMemory();
-
-  nsresult ClearPrivateDecisions();
+  RefPtr<mozilla::DataStorage> mClientAuthRememberList;
 
   nsresult AddEntryToList(const nsACString& aHost,
                           const OriginAttributes& aOriginAttributes,

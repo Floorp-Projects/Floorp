@@ -54,4 +54,9 @@ interface nsIClientAuthRememberService : nsISupports
 
   [must_use]
   void clearRememberedDecisions();
+
+  [implicit_jscontext]
+  void deleteDecisionsByHost(in ACString aHostName,
+                             in jsval aOriginAttributes);
+
 };
