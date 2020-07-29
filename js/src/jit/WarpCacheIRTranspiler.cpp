@@ -1912,6 +1912,20 @@ bool WarpCacheIRTranspiler::emitTypedArrayElementShiftResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGetNextMapSetEntryForIteratorResult(
+    ObjOperandId iterId, ObjOperandId resultArrId, bool isMap) {
+  MDefinition* iter = getOperand(iterId);
+  MDefinition* resultArr = getOperand(resultArrId);
+
+  MGetNextEntryForIterator::Mode mode =
+      isMap ? MGetNextEntryForIterator::Map : MGetNextEntryForIterator::Set;
+  auto* ins = MGetNextEntryForIterator::New(alloc(), iter, resultArr, mode);
+  addEffectful(ins);
+  pushResult(ins);
+
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitFrameIsConstructingResult() {
   if (const CallInfo* callInfo = builder_->inlineCallInfo()) {
     auto* ins = constant(BooleanValue(callInfo->constructing()));
