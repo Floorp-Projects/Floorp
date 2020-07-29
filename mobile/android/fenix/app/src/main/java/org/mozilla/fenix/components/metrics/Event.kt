@@ -505,4 +505,3 @@ sealed class Event {
     internal open val extras: Map<*, String>?
         get() = null
 }
-
