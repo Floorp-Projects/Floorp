@@ -17,6 +17,8 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
+class nsIWebSocketImpl;
+
 namespace mozilla {
 namespace net {
 
@@ -62,6 +64,9 @@ class WebSocketEventService final : public nsIWebSocketEventService,
                  already_AddRefed<WebSocketFrame> aFrame,
                  nsIEventTarget* aTarget = nullptr);
 
+  void AssociateWebSocketImplWithSerialID(nsIWebSocketImpl* aWebSocketImpl,
+                                          uint32_t aWebSocketSerialID);
+
   already_AddRefed<WebSocketFrame> CreateFrameIfNeeded(
       bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
       uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
@@ -85,6 +90,8 @@ class WebSocketEventService final : public nsIWebSocketEventService,
   void Shutdown();
 
   typedef nsTArray<nsCOMPtr<nsIWebSocketEventListener>> WindowListeners;
+
+  nsDataHashtable<nsUint32HashKey, nsWeakPtr> mWebSocketImplMap;
 
   struct WindowListener {
     WindowListeners mListeners;

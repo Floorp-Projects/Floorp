@@ -16,6 +16,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
+#include "nsIWebSocketImpl.h"
 
 namespace mozilla {
 namespace net {
@@ -332,6 +333,29 @@ void WebSocketEventService::FrameSent(uint32_t aWebSocketSerialID,
                                ? aTarget->Dispatch(runnable, NS_DISPATCH_NORMAL)
                                : NS_DispatchToMainThread(runnable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
+}
+
+void WebSocketEventService::AssociateWebSocketImplWithSerialID(
+    nsIWebSocketImpl* aWebSocketImpl, uint32_t aWebSocketSerialID) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mWebSocketImplMap.Put(aWebSocketSerialID,
+                        do_GetWeakReference(aWebSocketImpl));
+}
+
+NS_IMETHODIMP
+WebSocketEventService::SendMessage(uint32_t aWebSocketSerialID,
+                                   const nsAString& aMessage) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsWeakPtr weakPtr = mWebSocketImplMap.Get(aWebSocketSerialID);
+  nsCOMPtr<nsIWebSocketImpl> webSocketImpl = do_QueryReferent(weakPtr);
+
+  if (!webSocketImpl) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return webSocketImpl->SendMessage(aMessage);
 }
 
 NS_IMETHODIMP
