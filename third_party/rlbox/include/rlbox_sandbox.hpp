@@ -8,6 +8,7 @@
 #  include <chrono>
 #endif
 #include <cstdlib>
+#include <limits>
 #include <map>
 #include <mutex>
 #ifndef RLBOX_USE_CUSTOM_SHARED_LOCK
@@ -17,6 +18,7 @@
 #  include <sstream>
 #  include <string>
 #endif
+#include <stdint.h>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -478,7 +480,24 @@ public:
     }
 
     detail::dynamic_check(count != 0, "Malloc tried to allocate 0 bytes");
-    auto ptr_in_sandbox = this->impl_malloc_in_sandbox(sizeof(T) * count);
+    if constexpr (sizeof(T) >= std::numeric_limits<uint32_t>::max()) {
+      rlbox_detail_static_fail_because(sizeof(T) >=
+                                         std::numeric_limits<uint32_t>::max(),
+                                       "Tried to allocate an object over 4GB.");
+    }
+    auto total_size = static_cast<uint64_t>(sizeof(T)) * count;
+    if constexpr (sizeof(size_t) == 4) {
+      // On a 32-bit platform, we need to make sure that total_size is not >=4GB
+      detail::dynamic_check(total_size < std::numeric_limits<uint32_t>::max(),
+                            "Tried to allocate memory over 4GB");
+    } else if constexpr (sizeof(size_t) != 8) {
+      // Double check we are on a 64-bit platform
+      // Note for static checks we need to have some dependence on T, so adding a dummy
+      constexpr bool dummy = sizeof(T) >= 0;
+      rlbox_detail_static_fail_because(dummy && sizeof(size_t) != 8,
+                                       "Expected 32 or 64 bit platform.");
+    }
+    auto ptr_in_sandbox = this->impl_malloc_in_sandbox(total_size);
     auto ptr = get_unsandboxed_pointer<T*>(ptr_in_sandbox);
     if (!ptr) {
       return tainted<T*, T_Sbx>(nullptr);
@@ -508,6 +527,30 @@ public:
     }
 
     this->impl_free_in_sandbox(ptr.get_raw_sandbox_value(*this));
+  }
+
+  /**
+   * @brief Free the memory referenced by a tainted_volatile pointer ref.
+   *
+   * @param ptr_ref Pointer reference to sandbox memory to free.
+   */
+  template<typename T>
+  inline void free_in_sandbox(tainted_volatile<T, T_Sbx>& ptr_ref)
+  {
+    tainted<T, T_Sbx> ptr = ptr_ref;
+    free_in_sandbox(ptr);
+  }
+
+  /**
+   * @brief Free the memory referenced by a tainted_opaque pointer.
+   *
+   * @param ptr_opaque Opaque pointer to sandbox memory to free.
+   */
+  template<typename T>
+  inline void free_in_sandbox(tainted_opaque<T, T_Sbx> ptr_opaque)
+  {
+    tainted<T, T_Sbx> ptr = from_opaque(ptr_opaque);
+    free_in_sandbox(ptr);
   }
 
   /**
