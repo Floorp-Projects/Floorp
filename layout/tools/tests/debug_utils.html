@@ -52,12 +52,6 @@ function DumpViews()
   gDebugTools.dumpViews();
 }
 
-function DumpWebShells()
-{
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  gDebugTools.dumpWebShells();
-}
-
 </script>
 
 <body onload="Init()">
@@ -99,7 +93,6 @@ function DumpWebShells()
 <input type="button" value="Dump Frames" onclick="DumpFrames()">
 <input type="button" value="Dump Content" onclick="DumpContent()">
 <input type="button" value="Dump Views" onclick="DumpViews()">
-<input type="button" value="Dump WebShells" onclick="DumpWebShells()">
 </div>
 
 </form>
