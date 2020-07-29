@@ -93,9 +93,7 @@ function runTests() {
   editor7.focus();
   synthesizeKey("KEY_ArrowRight");
   synthesizeKey("KEY_Backspace");
-  todo_is(editor7.innerHTML, "<br>",
-     "an editor which had \"f\" in a <span> element should have only <br> element after Backspace keypress");
-  todo_isnot(editor7.innerHTML, "<span><br></span>",
+  is(editor7.innerHTML, "<br>",
      "an editor which had \"f\" in a <span> element should have only <br> element after Backspace keypress");
   ok(Math.abs(editor7.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
      "an editor whose content was removed by Backspace key should have a place to put a caret");
@@ -105,7 +103,7 @@ function runTests() {
   synthesizeKey("KEY_Delete");
   todo_is(editor8.innerHTML, "<br>",
      "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress");
-  todo_isnot(editor8.innerHTML, "<span><br></span>",
+  todo_isnot(editor8.innerHTML, "<br><span></span>",
      "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress");
   ok(Math.abs(editor8.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
      "an editor whose content was removed by Backspace key should have a place to put a caret");

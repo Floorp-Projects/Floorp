@@ -2581,10 +2581,6 @@ WSRunScanner::GetRangeInTextNodesToBackspaceFrom(const HTMLEditor& aHTMLEditor,
   if (!atPreviousChar.IsSet()) {
     return EditorDOMRangeInTexts();  // There is no content in the block.
   }
-  // For now, we handle white-space deletion.
-  if (!atPreviousChar.IsCharASCIISpaceOrNBSP()) {
-    return EditorDOMRangeInTexts();
-  }
 
   // XXX When previous char point is in an empty text node, we do nothing,
   //     but this must look odd from point of user view.  We should delete
@@ -2593,9 +2589,23 @@ WSRunScanner::GetRangeInTextNodesToBackspaceFrom(const HTMLEditor& aHTMLEditor,
     return EditorDOMRangeInTexts();
   }
 
+  // Extend delete range if previous char is a low surrogate following
+  // a high surrogate.
+  EditorDOMPointInText atNextChar = atPreviousChar.NextPoint();
+  if (!atPreviousChar.IsStartOfContainer()) {
+    if (atPreviousChar.IsCharLowSurrogateFollowingHighSurrogate()) {
+      atPreviousChar = atPreviousChar.PreviousPoint();
+    }
+    // If caret is in middle of a surrogate pair, delete the surrogate pair
+    // (blink-compat).
+    else if (atPreviousChar.IsCharHighSurrogateFollowedByLowSurrogate()) {
+      atNextChar = atNextChar.NextPoint();
+    }
+  }
+
   // If the text node is preformatted, just remove the previous character.
   if (textFragmentDataAtCaret.IsPreformatted()) {
-    return EditorDOMRangeInTexts(atPreviousChar, atPreviousChar.NextPoint());
+    return EditorDOMRangeInTexts(atPreviousChar, atNextChar);
   }
 
   // If previous char is an ASCII white-spaces, delete all adjcent ASCII
@@ -2619,11 +2629,9 @@ WSRunScanner::GetRangeInTextNodesToBackspaceFrom(const HTMLEditor& aHTMLEditor,
     }
     rangeToDelete = EditorDOMRangeInTexts(startToDelete, endToDelete);
   }
-  // if previous char is an NBSP, remove it.
+  // if previous char is not an ASCII white-space, remove it.
   else {
-    MOZ_ASSERT(atPreviousChar.IsCharNBSP());
-    rangeToDelete =
-        EditorDOMRangeInTexts(atPreviousChar, atPreviousChar.NextPoint());
+    rangeToDelete = EditorDOMRangeInTexts(atPreviousChar, atNextChar);
   }
 
   // If there is no removable and visible content, we should do nothing.
@@ -2663,9 +2671,11 @@ WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(
   if (!atCaret.IsSet()) {
     return EditorDOMRangeInTexts();  // There is no content in the block.
   }
-  // For now, we handle whitespace deletion.
-  if (!atCaret.IsCharASCIISpaceOrNBSP()) {
-    return EditorDOMRangeInTexts();
+  // If caret is in middle of a surrogate pair, we should remove next
+  // character (blink-compat).
+  if (!atCaret.IsEndOfContainer() &&
+      atCaret.IsCharLowSurrogateFollowingHighSurrogate()) {
+    atCaret = atCaret.NextPoint();
   }
 
   // XXX When next char point is in an empty text node, we do nothing,
@@ -2675,9 +2685,16 @@ WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(
     return EditorDOMRangeInTexts();
   }
 
+  // Extend delete range if previous char is a low surrogate following
+  // a high surrogate.
+  EditorDOMPointInText atNextChar = atCaret.NextPoint();
+  if (atCaret.IsCharHighSurrogateFollowedByLowSurrogate()) {
+    atNextChar = atNextChar.NextPoint();
+  }
+
   // If the text node is preformatted, just remove the previous character.
   if (textFragmentDataAtCaret.IsPreformatted()) {
-    return EditorDOMRangeInTexts(atCaret, atCaret.NextPoint());
+    return EditorDOMRangeInTexts(atCaret, atNextChar);
   }
 
   // If next char is an ASCII whitespaces, delete all adjcent ASCII
@@ -2700,10 +2717,9 @@ WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(
     }
     rangeToDelete = EditorDOMRangeInTexts(startToDelete, endToDelete);
   }
-  // if next char is an NBSP, remove it.
+  // if next char is not an ASCII white-space, remove it.
   else {
-    MOZ_ASSERT(atCaret.IsCharNBSP());
-    rangeToDelete = EditorDOMRangeInTexts(atCaret, atCaret.NextPoint());
+    rangeToDelete = EditorDOMRangeInTexts(atCaret, atNextChar);
   }
 
   // If there is no removable and visible content, we should do nothing.
