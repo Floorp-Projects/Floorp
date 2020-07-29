@@ -1835,8 +1835,14 @@ class MOZ_STACK_CLASS AutoInParametersOfAsyncFunction {
 GlobalScope::Data* NewEmptyGlobalScopeData(JSContext* cx, LifoAlloc& alloc,
                                            uint32_t numBindings);
 
+VarScope::Data* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
+                                     uint32_t numBindings);
+
 LexicalScope::Data* NewEmptyLexicalScopeData(JSContext* cx, LifoAlloc& alloc,
                                              uint32_t numBindings);
+
+FunctionScope::Data* NewEmptyFunctionScopeData(JSContext* cx, LifoAlloc& alloc,
+                                               uint32_t numBindings);
 
 mozilla::Maybe<GlobalScope::Data*> NewGlobalScopeData(
     JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,

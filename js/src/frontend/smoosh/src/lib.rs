@@ -122,6 +122,14 @@ pub struct SmooshGlobalScopeData {
 }
 
 #[repr(C)]
+pub struct SmooshVarScopeData {
+    bindings: CVec<SmooshBindingName>,
+    enclosing: usize,
+    function_has_extensible_scope: bool,
+    first_frame_slot: u32,
+}
+
+#[repr(C)]
 pub struct SmooshLexicalScopeData {
     bindings: CVec<SmooshBindingName>,
     const_start: usize,
@@ -129,10 +137,24 @@ pub struct SmooshLexicalScopeData {
     first_frame_slot: u32,
 }
 
+#[repr(C)]
+pub struct SmooshFunctionScopeData {
+    bindings: CVec<COption<SmooshBindingName>>,
+    has_parameter_exprs: bool,
+    non_positional_formal_start: usize,
+    var_start: usize,
+    enclosing: usize,
+    first_frame_slot: u32,
+    function_index: usize,
+    is_arrow: bool,
+}
+
 #[repr(C, u8)]
 pub enum SmooshScopeData {
     Global(SmooshGlobalScopeData),
+    Var(SmooshVarScopeData),
     Lexical(SmooshLexicalScopeData),
+    Function(SmooshFunctionScopeData),
 }
 
 /// Convert single Scope data, resolving enclosing index with scope_index_map.
@@ -144,8 +166,16 @@ fn convert_scope(scope: ScopeData, scope_index_map: &mut HashMap<usize, usize>) 
             let_start: data.let_start,
             const_start: data.const_start,
         }),
-        ScopeData::Var(_data) => {
-            panic!("Not yet supported");
+        ScopeData::Var(data) => {
+            let enclosing: usize = data.enclosing.into();
+            SmooshScopeData::Var(SmooshVarScopeData {
+                bindings: CVec::from(data.base.bindings.into_iter().map(|x| x.into()).collect()),
+                enclosing: *scope_index_map
+                    .get(&enclosing)
+                    .expect("Alias target should be earlier index"),
+                function_has_extensible_scope: data.function_has_extensible_scope,
+                first_frame_slot: data.first_frame_slot.into(),
+            })
         }
         ScopeData::Lexical(data) => {
             let enclosing: usize = data.enclosing.into();
@@ -158,8 +188,26 @@ fn convert_scope(scope: ScopeData, scope_index_map: &mut HashMap<usize, usize>) 
                 first_frame_slot: data.first_frame_slot.into(),
             })
         }
-        ScopeData::Function(_data) => {
-            panic!("Not yet supported");
+        ScopeData::Function(data) => {
+            let enclosing: usize = data.enclosing.into();
+            SmooshScopeData::Function(SmooshFunctionScopeData {
+                bindings: CVec::from(
+                    data.base
+                        .bindings
+                        .into_iter()
+                        .map(|x| COption::from(x.map(|x| x.into())))
+                        .collect(),
+                ),
+                has_parameter_exprs: data.has_parameter_exprs,
+                non_positional_formal_start: data.non_positional_formal_start,
+                var_start: data.var_start,
+                enclosing: *scope_index_map
+                    .get(&enclosing)
+                    .expect("Alias target should be earlier index"),
+                first_frame_slot: data.first_frame_slot.into(),
+                function_index: data.function_index.into(),
+                is_arrow: data.is_arrow,
+            })
         }
     }
 }
@@ -286,6 +334,10 @@ pub struct SmooshScriptStencil {
     pub fun_name: COption<usize>,
     pub fun_nargs: u16,
     pub fun_flags: u16,
+    pub lazy_function_enclosing_scope_index: COption<usize>,
+    pub is_standalone_function: bool,
+    pub was_function_emitted: bool,
+    pub is_singleton_function: bool,
 }
 
 #[repr(C)]
@@ -340,6 +392,10 @@ impl SmooshResult {
                 fun_name: COption::None,
                 fun_nargs: 0,
                 fun_flags: 0,
+                lazy_function_enclosing_scope_index: COption::None,
+                is_standalone_function: false,
+                was_function_emitted: false,
+                is_singleton_function: false,
             },
             functions: CVec::empty(),
             script_data_list: CVec::empty(),
@@ -405,6 +461,17 @@ fn convert_script(
     let fun_nargs = script.fun_nargs;
     let fun_flags = script.fun_flags.into();
 
+    let lazy_function_enclosing_scope_index =
+        COption::from(script.lazy_function_enclosing_scope_index.map(|index| {
+            *scope_index_map
+                .get(&index.into())
+                .expect("Alias target should be earlier index")
+        }));
+
+    let is_standalone_function = script.is_standalone_function;
+    let was_function_emitted = script.was_function_emitted;
+    let is_singleton_function = script.is_singleton_function;
+
     SmooshScriptStencil {
         immutable_flags,
         gcthings,
@@ -413,6 +480,10 @@ fn convert_script(
         fun_name,
         fun_nargs,
         fun_flags,
+        lazy_function_enclosing_scope_index,
+        is_standalone_function,
+        was_function_emitted,
+        is_singleton_function,
     }
 }
 
