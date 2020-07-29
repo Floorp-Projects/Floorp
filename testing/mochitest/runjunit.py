@@ -14,6 +14,7 @@ import sys
 import tempfile
 import traceback
 
+from mach.util import UserError
 import mozcrash
 import mozinfo
 import mozlog
@@ -63,7 +64,7 @@ class JUnitTestRunner(MochitestDesktop):
         self.remote_filter_list = posixpath.join(self.device.test_root, 'junit-filters.list')
 
         if self.options.coverage and not self.options.coverage_output_dir:
-            raise Exception("--coverage-output-dir is required when using --enable-coverage")
+            raise UserError("--coverage-output-dir is required when using --enable-coverage")
         if self.options.coverage:
             self.remote_coverage_output_file = posixpath.join(self.device.test_root,
                                                               'junit-coverage.ec')
@@ -94,7 +95,7 @@ class JUnitTestRunner(MochitestDesktop):
             if os.name != "nt":
                 self.options.remoteWebServer = moznetwork.get_ip()
             else:
-                raise Exception("--remote-webserver must be specified")
+                raise UserError("--remote-webserver must be specified")
         self.options.webServer = self.options.remoteWebServer
         self.options.webSocketPort = '9988'
         self.options.httpdPath = None
@@ -241,14 +242,14 @@ class JUnitTestRunner(MochitestDesktop):
            Run the tests.
         """
         if not self.device.is_app_installed(self.options.app):
-            raise Exception("%s is not installed" %
+            raise UserError("%s is not installed" %
                             self.options.app)
         if self.device.process_exist(self.options.app):
-            raise Exception("%s already running before starting tests" %
+            raise UserError("%s already running before starting tests" %
                             self.options.app)
         # test_filters_file and test_filters must be mutually-exclusive
         if test_filters_file and test_filters:
-            raise Exception("Test filters may not be specified when test-filters-file is provided")
+            raise UserError("Test filters may not be specified when test-filters-file is provided")
 
         self.test_started = False
         self.pass_count = 0
