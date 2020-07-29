@@ -341,7 +341,10 @@ void ContentMediaController::HandleMediaKey(MediaControlKey aKey) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG("Handle '%s' event, receiver num=%zu", ToMediaControlKeyStr(aKey),
       mReceivers.Length());
-  for (auto& receiver : mReceivers) {
+  // When receiving `Stop`, the amount of receiver would vary during the
+  // iteration, so we use the backward iteration to avoid accessing the index
+  // which is over the array length.
+  for (auto& receiver : Reversed(mReceivers)) {
     receiver->HandleMediaKey(aKey);
   }
 }

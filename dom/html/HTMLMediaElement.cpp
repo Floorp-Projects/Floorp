@@ -523,12 +523,15 @@ class HTMLMediaElement::MediaControlKeyListener final
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(IsStarted());
     MEDIACONTROL_LOG("HandleEvent '%s'", ToMediaControlKeyStr(aKey));
-    if (aKey == MediaControlKey::Play && Owner()->Paused()) {
+    if (aKey == MediaControlKey::Play) {
       Owner()->Play();
-    } else if ((aKey == MediaControlKey::Pause ||
-                aKey == MediaControlKey::Stop) &&
-               !Owner()->Paused()) {
+    } else if (aKey == MediaControlKey::Pause) {
       Owner()->Pause();
+    } else {
+      MOZ_ASSERT(aKey == MediaControlKey::Stop,
+                 "Not supported key for media element!");
+      Owner()->Pause();
+      StopIfNeeded();
     }
   }
 
