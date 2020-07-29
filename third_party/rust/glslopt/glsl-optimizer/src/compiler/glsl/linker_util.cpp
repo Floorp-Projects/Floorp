@@ -287,3 +287,90 @@ link_util_calculate_subroutine_compat(struct gl_shader_program *prog)
       }
    }
 }
+
+/**
+ * Recursive part of the public mark_array_elements_referenced function.
+ *
+ * The recursion occurs when an entire array-of- is accessed.  See the
+ * implementation for more details.
+ *
+ * \param dr                List of array_deref_range elements to be
+ *                          processed.
+ * \param count             Number of array_deref_range elements to be
+ *                          processed.
+ * \param scale             Current offset scale.
+ * \param linearized_index  Current accumulated linearized array index.
+ */
+void
+_mark_array_elements_referenced(const struct array_deref_range *dr,
+                                unsigned count, unsigned scale,
+                                unsigned linearized_index,
+                                BITSET_WORD *bits)
+{
+   /* Walk through the list of array dereferences in least- to
+    * most-significant order.  Along the way, accumulate the current
+    * linearized offset and the scale factor for each array-of-.
+    */
+   for (unsigned i = 0; i < count; i++) {
+      if (dr[i].index < dr[i].size) {
+         linearized_index += dr[i].index * scale;
+         scale *= dr[i].size;
+      } else {
+         /* For each element in the current array, update the count and
+          * offset, then recurse to process the remaining arrays.
+          *
+          * There is some inefficency here if the last eBITSET_WORD *bitslement in the
+          * array_deref_range list specifies the entire array.  In that case,
+          * the loop will make recursive calls with count == 0.  In the call,
+          * all that will happen is the bit will be set.
+          */
+         for (unsigned j = 0; j < dr[i].size; j++) {
+            _mark_array_elements_referenced(&dr[i + 1],
+                                            count - (i + 1),
+                                            scale * dr[i].size,
+                                            linearized_index + (j * scale),
+                                            bits);
+         }
+
+         return;
+      }
+   }
+
+   BITSET_SET(bits, linearized_index);
+}
+
+/**
+ * Mark a set of array elements as accessed.
+ *
+ * If every \c array_deref_range is for a single index, only a single
+ * element will be marked.  If any \c array_deref_range is for an entire
+ * array-of-, then multiple elements will be marked.
+ *
+ * Items in the \c array_deref_range list appear in least- to
+ * most-significant order.  This is the \b opposite order the indices
+ * appear in the GLSL shader text.  An array access like
+ *
+ *     x = y[1][i][3];
+ *
+ * would appear as
+ *
+ *     { { 3, n }, { m, m }, { 1, p } }
+ *
+ * where n, m, and p are the sizes of the arrays-of-arrays.
+ *
+ * The set of marked array elements can later be queried by
+ * \c ::is_linearized_index_referenced.
+ *
+ * \param dr     List of array_deref_range elements to be processed.
+ * \param count  Number of array_deref_range elements to be processed.
+ */
+void
+link_util_mark_array_elements_referenced(const struct array_deref_range *dr,
+                                         unsigned count, unsigned array_depth,
+                                         BITSET_WORD *bits)
+{
+   if (count != array_depth)
+      return;
+
+   _mark_array_elements_referenced(dr, count, 1, 0, bits);
+}

@@ -49,7 +49,7 @@ public:
 
 	virtual ir_visitor_status visit(ir_typedecl_statement* ir)
 	{
-		if (!used_structs->has_struct_entry(ir->type_decl))
+		if (ir->type_decl->is_struct() && !used_structs->has_struct_entry(ir->type_decl))
 		{
 			ir->remove();
 		}

@@ -50,7 +50,7 @@
 
 
 #include "errors.h"
-#include "imports.h"
+
 #include "extensions.h"
 #include "mtypes.h"
 #include "vbo/vbo.h"
@@ -66,7 +66,7 @@ struct _glapi_table;
 
 /** \name Visual-related functions */
 /*@{*/
- 
+
 extern struct gl_config *
 _mesa_create_visual( GLboolean dbFlag,
                      GLboolean stereoFlag,
@@ -106,6 +106,9 @@ _mesa_destroy_visual( struct gl_config *vis );
 
 /** \name Context-related functions */
 /*@{*/
+
+extern void
+_mesa_initialize(void);
 
 extern GLboolean
 _mesa_initialize_context( struct gl_context *ctx,
@@ -244,14 +247,20 @@ do {								\
 do {                                                            \
    if (MESA_VERBOSE & VERBOSE_STATE)                            \
       _mesa_debug(ctx, "FLUSH_FOR_DRAW in %s\n", __func__);     \
-   if (ctx->Driver.NeedFlush)                                   \
-      vbo_exec_FlushVertices(ctx, ctx->Driver.NeedFlush);       \
+   if (ctx->Driver.NeedFlush) {                                 \
+      if (ctx->_AllowDrawOutOfOrder) {                          \
+          if (ctx->Driver.NeedFlush & FLUSH_UPDATE_CURRENT)     \
+             vbo_exec_FlushVertices(ctx, FLUSH_UPDATE_CURRENT); \
+      } else {                                                  \
+         vbo_exec_FlushVertices(ctx, ctx->Driver.NeedFlush);    \
+      }                                                         \
+   }                                                            \
 } while (0)
 
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair, with return value.
- * 
+ *
  * \param ctx GL context.
  * \param retval value to return in case the assertion fails.
  */
@@ -266,7 +275,7 @@ do {									\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair.
- * 
+ *
  * \param ctx GL context.
  */
 #define ASSERT_OUTSIDE_BEGIN_END(ctx)					\

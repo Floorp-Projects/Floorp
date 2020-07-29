@@ -49,6 +49,13 @@ process_parameters(exec_list *instructions, exec_list *actual_parameters,
       ast->set_is_lhs(true);
       ir_rvalue *result = ast->hir(instructions, state);
 
+      /* Error happened processing function parameter */
+      if (!result) {
+         actual_parameters->push_tail(ir_rvalue::error_value(mem_ctx));
+         count++;
+         continue;
+      }
+
       ir_constant *const constant =
          result->constant_expression_value(mem_ctx);
 
@@ -612,11 +619,6 @@ generate_call(exec_list *instructions, ir_function_signature *sig,
    ir_call *call = new(ctx) ir_call(sig, deref,
                                     actual_parameters, sub_var, array_idx);
    instructions->push_tail(call);
-   if (sig->is_builtin()) {
-      /* inline immediately */
-      call->generate_inline(call);
-      call->remove();
-   }
 
    /* Also emit any necessary out-parameter conversions. */
    instructions->append_list(&post_call_conversions);

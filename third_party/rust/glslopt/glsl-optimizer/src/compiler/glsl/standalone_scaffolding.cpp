@@ -203,6 +203,7 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Extensions.ARB_shader_bit_encoding = true;
    ctx->Extensions.ARB_shader_draw_parameters = true;
    ctx->Extensions.ARB_shader_stencil_export = true;
+   ctx->Extensions.ARB_shader_storage_buffer_object = true;
    ctx->Extensions.ARB_shader_texture_lod = true;
    ctx->Extensions.ARB_shading_language_420pack = true;
    ctx->Extensions.ARB_shading_language_packing = true;
@@ -264,6 +265,16 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Const.Program[MESA_SHADER_COMPUTE].MaxUniformComponents = 1024;
    ctx->Const.Program[MESA_SHADER_COMPUTE].MaxInputComponents = 0; /* not used */
    ctx->Const.Program[MESA_SHADER_COMPUTE].MaxOutputComponents = 0; /* not used */
+
+   ctx->Const.MaxVertexStreams = 4;
+   ctx->Const.MaxTransformFeedbackBuffers = 4;
+   ctx->Const.MaxShaderStorageBufferBindings = 4;
+   ctx->Const.MaxShaderStorageBlockSize = 4096;
+   ctx->Const.Program[MESA_SHADER_VERTEX].MaxShaderStorageBlocks = 8;
+   ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxShaderStorageBlocks = 8;
+
+   ctx->Const.Program[MESA_SHADER_VERTEX].MaxUniformBlocks = 12;
+   ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxUniformBlocks = 12;
 
    /* Set up default shader compiler options. */
    struct gl_shader_compiler_options options;

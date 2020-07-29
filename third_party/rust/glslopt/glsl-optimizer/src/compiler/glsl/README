@@ -220,7 +220,7 @@ Q: What is the file naming convention in this directory?
 Initially, there really wasn't one.  We have since adopted one:
 
  - Files that implement code lowering passes should be named lower_*
-   (e.g., lower_noise.cpp).
+   (e.g., lower_builtins.cpp).
  - Files that implement optimization passes should be named opt_*.
  - Files that implement a class that is used throught the code should
    take the name of that class (e.g., ir_hierarchical_visitor.cpp).

@@ -151,6 +151,12 @@ public:
     */
    void run(struct exec_list *instructions);
 
+   /**
+    * Utility function to call both the leave and enter callback functions.
+    * This is used for leaf nodes.
+    */
+   void call_enter_leave_callbacks(class ir_instruction *ir);
+
    /* Some visitors may need to insert new variable declarations and
     * assignments for portions of a subtree, which means they need a
     * pointer to the current instruction in the stream, not just their

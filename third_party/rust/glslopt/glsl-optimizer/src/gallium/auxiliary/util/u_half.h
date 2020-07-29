@@ -30,6 +30,7 @@
 
 #include "pipe/p_compiler.h"
 #include "util/u_math.h"
+#include "util/half_float.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,6 +46,12 @@ extern "C" {
 
 static inline uint16_t
 util_float_to_half(float f)
+{
+   return _mesa_float_to_half(f);
+}
+
+static inline uint16_t
+util_float_to_half_rtz(float f)
 {
    uint32_t sign_mask  = 0x80000000;
    uint32_t round_mask = ~0xfff;

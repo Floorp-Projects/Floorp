@@ -823,6 +823,8 @@ struct _mesa_glsl_parse_state {
    bool EXT_demote_to_helper_invocation_warn;
    bool EXT_draw_buffers_enable;
    bool EXT_draw_buffers_warn;
+   bool EXT_draw_instanced_enable;
+   bool EXT_draw_instanced_warn;
    bool EXT_frag_depth_enable;
    bool EXT_frag_depth_warn;
    bool EXT_geometry_point_size_enable;
@@ -883,6 +885,8 @@ struct _mesa_glsl_parse_state {
    bool NV_image_formats_warn;
    bool NV_shader_atomic_float_enable;
    bool NV_shader_atomic_float_warn;
+   bool NV_viewport_array2_enable;
+   bool NV_viewport_array2_warn;
    /*@}*/
 
    /** Extensions supported by the OpenGL implementation. */
@@ -924,6 +928,10 @@ struct _mesa_glsl_parse_state {
 
    /** Atomic counter offsets by binding */
    unsigned atomic_counter_offsets[MAX_COMBINED_ATOMIC_BUFFERS];
+
+   /** Whether gl_Layer output is viewport-relative. */
+   bool redeclares_gl_layer;
+   bool layer_viewport_relative;
 
    bool allow_extension_directive_midshader;
    bool allow_builtin_variable_redeclaration;

@@ -452,6 +452,21 @@ isub64_saturate(int64_t a, int64_t b)
    return a - b;
 }
 
+static uint64_t
+pack_2x32(uint32_t a, uint32_t b)
+{
+   uint64_t v = a;
+   v |= (uint64_t)b << 32;
+   return v;
+}
+
+static void
+unpack_2x32(uint64_t p, uint32_t *a, uint32_t *b)
+{
+   *a = p & 0xffffffff;
+   *b = (p >> 32);
+}
+
 /**
  * Get the constant that is ultimately referenced by an r-value, in a constant
  * expression evaluation context.
@@ -692,6 +707,23 @@ ir_expression::constant_expression_value(void *mem_ctx,
          return NULL;
    }
 
+   for (unsigned operand = 0; operand < this->num_operands; operand++) {
+      if (op[operand]->type->base_type == GLSL_TYPE_FLOAT16) {
+         const struct glsl_type *float_type =
+            glsl_type::get_instance(GLSL_TYPE_FLOAT,
+                                    op[operand]->type->vector_elements,
+                                    op[operand]->type->matrix_columns,
+                                    op[operand]->type->explicit_stride,
+                                    op[operand]->type->interface_row_major);
+
+         ir_constant_data f;
+         for (unsigned i = 0; i < ARRAY_SIZE(f.f); i++)
+            f.f[i] = _mesa_half_to_float(op[operand]->value.f16[i]);
+
+         op[operand] = new(mem_ctx) ir_constant(float_type, &f);
+      }
+   }
+
    if (op[1] != NULL)
       switch (this->operation) {
       case ir_binop_lshift:
@@ -740,6 +772,15 @@ ir_expression::constant_expression_value(void *mem_ctx,
 
 #include "ir_expression_operation_constant.h"
 
+   if (this->type->base_type == GLSL_TYPE_FLOAT16) {
+      ir_constant_data f;
+      for (unsigned i = 0; i < ARRAY_SIZE(f.f16); i++)
+         f.f16[i] = _mesa_float_to_half(data.f[i]);
+
+      return new(mem_ctx) ir_constant(this->type, &f);
+   }
+
+
    return new(mem_ctx) ir_constant(this->type, &data);
 }
 
@@ -773,6 +814,7 @@ ir_swizzle::constant_expression_value(void *mem_ctx,
          case GLSL_TYPE_UINT:
          case GLSL_TYPE_INT:   data.u[i] = v->value.u[swiz_idx[i]]; break;
          case GLSL_TYPE_FLOAT: data.f[i] = v->value.f[swiz_idx[i]]; break;
+         case GLSL_TYPE_FLOAT16: data.f16[i] = v->value.f16[swiz_idx[i]]; break;
          case GLSL_TYPE_BOOL:  data.b[i] = v->value.b[swiz_idx[i]]; break;
          case GLSL_TYPE_DOUBLE:data.d[i] = v->value.d[swiz_idx[i]]; break;
          case GLSL_TYPE_UINT64:data.u64[i] = v->value.u64[swiz_idx[i]]; break;
@@ -1056,10 +1098,16 @@ ir_function_signature::constant_expression_value(void *mem_ctx,
 
    /*
     * Of the builtin functions, only the texture lookups and the noise
-    * ones must not be used in constant expressions.  They all include
-    * specific opcodes so they don't need to be special-cased at this
-    * point.
+    * ones must not be used in constant expressions.  Texture instructions
+    * include special ir_texture opcodes which can't be constant-folded (see
+    * ir_texture::constant_expression_value).  Noise functions, however, we
+    * have to special case here.
     */
+   if (strcmp(this->function_name(), "noise1") == 0 ||
+       strcmp(this->function_name(), "noise2") == 0 ||
+       strcmp(this->function_name(), "noise3") == 0 ||
+       strcmp(this->function_name(), "noise4") == 0)
+      return NULL;
 
    /* Initialize the table of dereferencable names with the function
     * parameters.  Verify their const-ness on the way.

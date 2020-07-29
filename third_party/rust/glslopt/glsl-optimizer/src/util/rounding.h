@@ -108,6 +108,7 @@ _mesa_lroundevenf(float x)
 #endif
 }
 
+
 /**
  * \brief Rounds \c x to the nearest integer, with ties to the even integer,
  * and returns the value as a long int.

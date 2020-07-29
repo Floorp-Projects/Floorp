@@ -135,7 +135,6 @@ bool do_vec_index_to_swizzle(exec_list *instructions);
 bool lower_discard(exec_list *instructions);
 void lower_discard_flow(exec_list *instructions);
 bool lower_instructions(exec_list *instructions, unsigned what_to_lower);
-bool lower_noise(exec_list *instructions);
 bool lower_variable_index_to_cond_assign(gl_shader_stage stage,
     exec_list *instructions, bool lower_input, bool lower_output,
     bool lower_temp, bool lower_uniform);
@@ -143,6 +142,9 @@ bool lower_quadop_vector(exec_list *instructions, bool dont_lower_swz);
 bool lower_const_arrays_to_uniforms(exec_list *instructions, unsigned stage, unsigned max_uniform_components);
 bool lower_clip_cull_distance(struct gl_shader_program *prog,
                               gl_linked_shader *shader);
+ir_variable * lower_xfb_varying(void *mem_ctx,
+                                gl_linked_shader *shader,
+                                const char *old_var_name);
 void lower_output_reads(unsigned stage, exec_list *instructions);
 bool lower_packing_builtins(exec_list *instructions, int op_mask);
 void lower_shared_reference(struct gl_context *ctx,
@@ -156,7 +158,9 @@ void lower_packed_varyings(void *mem_ctx,
                            ir_variable_mode mode,
                            unsigned gs_input_vertices,
                            gl_linked_shader *shader,
-                           bool disable_varying_packing, bool xfb_enabled);
+                           bool disable_varying_packing,
+                           bool disable_xfb_packing,
+                           bool xfb_enabled);
 bool lower_vector_insert(exec_list *instructions, bool lower_nonconstant_index);
 bool lower_vector_derefs(gl_linked_shader *shader);
 void lower_named_interface_blocks(void *mem_ctx, gl_linked_shader *shader);
@@ -171,6 +175,7 @@ bool lower_vertex_id(gl_linked_shader *shader);
 bool lower_cs_derived(gl_linked_shader *shader);
 bool lower_blend_equation_advanced(gl_linked_shader *shader, bool coherent);
 
+bool lower_builtins(exec_list *instructions);
 bool lower_subroutine(exec_list *instructions, struct _mesa_glsl_parse_state *state);
 void propagate_invariance(exec_list *instructions);
 
@@ -182,5 +187,7 @@ ir_variable *compare_index_block(ir_builder::ir_factory &body,
 
 bool lower_64bit_integer_instructions(exec_list *instructions,
                                       unsigned what_to_lower);
+
+bool lower_precision(exec_list *instructions);
 
 #endif /* GLSL_IR_OPTIMIZATION_H */

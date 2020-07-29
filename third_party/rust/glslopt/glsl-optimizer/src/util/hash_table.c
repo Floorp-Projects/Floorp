@@ -47,11 +47,31 @@
 #include "hash_table.h"
 #include "ralloc.h"
 #include "macros.h"
-#include "main/hash.h"
+#include "u_memory.h"
 #include "fast_urem_by_const.h"
+#include "util/u_memory.h"
 
 #define XXH_INLINE_ALL
 #include "xxhash.h"
+
+/**
+ * Magic number that gets stored outside of the struct hash_table.
+ *
+ * The hash table needs a particular pointer to be the marker for a key that
+ * was deleted from the table, along with NULL for the "never allocated in the
+ * table" marker.  Legacy GL allows any GLuint to be used as a GL object name,
+ * and we use a 1:1 mapping from GLuints to key pointers, so we need to be
+ * able to track a GLuint that happens to match the deleted key outside of
+ * struct hash_table.  We tell the hash table to use "1" as the deleted key
+ * value, so that we test the deleted-key-in-the-table path as best we can.
+ */
+#define DELETED_KEY_VALUE 1
+
+static inline void *
+uint_key(unsigned id)
+{
+   return (void *)(uintptr_t) id;
+}
 
 static const uint32_t deleted_key_value;
 
@@ -101,7 +121,7 @@ static const struct {
    ENTRY(2147483648ul, 2362232233ul, 2362232231ul )
 };
 
-static inline bool
+ASSERTED static inline bool
 key_pointer_is_reserved(const struct hash_table *ht, const void *key)
 {
    return key == NULL || key == ht->deleted_key;

@@ -1,6 +1,6 @@
 /**
  * \file hash.h
- * Generic hash table. 
+ * Generic hash table.
  */
 
 /*
@@ -32,8 +32,10 @@
 #define HASH_H
 
 
+#include <stdbool.h>
+#include <stdint.h>
 #include "glheader.h"
-#include "imports.h"
+
 #include "c11/threads.h"
 
 /**

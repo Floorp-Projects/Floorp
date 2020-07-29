@@ -24,6 +24,8 @@
 #ifndef GLSL_LINKER_UTIL_H
 #define GLSL_LINKER_UTIL_H
 
+#include "util/bitset.h"
+
 struct gl_context;
 struct gl_shader_program;
 struct gl_uniform_storage;
@@ -43,6 +45,23 @@ struct empty_uniform_block {
    unsigned start;
    /* The number of slots in the block */
    unsigned slots;
+};
+
+/**
+ * Describes an access of an array element or an access of the whole array
+ */
+struct array_deref_range {
+   /**
+    * Index that was accessed.
+    *
+    * All valid array indices are less than the size of the array.  If index
+    * is equal to the size of the array, this means the entire array has been
+    * accessed (e.g., due to use of a non-constant index).
+    */
+   unsigned index;
+
+   /** Size of the array.  Used for offset calculations. */
+   unsigned size;
 };
 
 void
@@ -80,6 +99,11 @@ link_util_check_uniform_resources(struct gl_context *ctx,
 
 void
 link_util_calculate_subroutine_compat(struct gl_shader_program *prog);
+
+void
+link_util_mark_array_elements_referenced(const struct array_deref_range *dr,
+                                         unsigned count, unsigned array_depth,
+                                         BITSET_WORD *bits);
 
 #ifdef __cplusplus
 }

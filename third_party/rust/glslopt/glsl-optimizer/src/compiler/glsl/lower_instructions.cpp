@@ -63,7 +63,8 @@
  * reciprocal.  By breaking the operation down, constant reciprocals
  * can get constant folded.
  *
- * FDIV_TO_MUL_RCP only lowers single-precision floating point division;
+ * FDIV_TO_MUL_RCP lowers single-precision and half-precision
+ * floating point division;
  * DDIV_TO_MUL_RCP only lowers double-precision floating point division.
  * DIV_TO_MUL_RCP is a convenience macro that sets both flags.
  * INT_DIV_TO_MUL_RCP handles the integer case, converting to and from floating
@@ -123,6 +124,7 @@
 #include "ir.h"
 #include "ir_builder.h"
 #include "ir_optimization.h"
+#include "util/half_float.h"
 
 using namespace ir_builder;
 
@@ -172,6 +174,11 @@ private:
    void mul64_to_mul_and_mul_high(ir_expression *ir);
 
    ir_expression *_carry(operand a, operand b);
+
+   static ir_constant *_imm_fp(void *mem_ctx,
+                               const glsl_type *type,
+                               double f,
+                               unsigned vector_elements=1);
 };
 
 } /* anonymous namespace */
@@ -203,7 +210,7 @@ lower_instructions_visitor::sub_to_add_neg(ir_expression *ir)
 void
 lower_instructions_visitor::div_to_mul_rcp(ir_expression *ir)
 {
-   assert(ir->operands[1]->type->is_float() || ir->operands[1]->type->is_double());
+   assert(ir->operands[1]->type->is_float_16_32_64());
 
    /* New expression for the 1.0 / op1 */
    ir_rvalue *expr;
@@ -273,7 +280,7 @@ lower_instructions_visitor::int_div_to_mul_rcp(ir_expression *ir)
 void
 lower_instructions_visitor::exp_to_exp2(ir_expression *ir)
 {
-   ir_constant *log2_e = new(ir) ir_constant(float(M_LOG2E));
+   ir_constant *log2_e = _imm_fp(ir, ir->type, M_LOG2E);
 
    ir->operation = ir_unop_exp2;
    ir->init_num_operands();
@@ -304,7 +311,7 @@ lower_instructions_visitor::log_to_log2(ir_expression *ir)
    ir->init_num_operands();
    ir->operands[0] = new(ir) ir_expression(ir_unop_log2, ir->operands[0]->type,
 					   ir->operands[0], NULL);
-   ir->operands[1] = new(ir) ir_constant(float(1.0 / M_LOG2E));
+   ir->operands[1] = _imm_fp(ir, ir->operands[0]->type, 1.0 / M_LOG2E);
    this->progress = true;
 }
 
@@ -336,7 +343,7 @@ lower_instructions_visitor::mod_to_floor(ir_expression *ir)
    /* Don't generate new IR that would need to be lowered in an additional
     * pass.
     */
-   if ((lowering(FDIV_TO_MUL_RCP) && ir->type->is_float()) ||
+   if ((lowering(FDIV_TO_MUL_RCP) && ir->type->is_float_16_32()) ||
        (lowering(DDIV_TO_MUL_RCP) && ir->type->is_double()))
       div_to_mul_rcp(div_expr);
 
@@ -837,10 +844,11 @@ lower_instructions_visitor::sat_to_clamp(ir_expression *ir)
 
    ir->operation = ir_binop_min;
    ir->init_num_operands();
+
+   ir_constant *zero = _imm_fp(ir, ir->operands[0]->type, 0.0);
    ir->operands[0] = new(ir) ir_expression(ir_binop_max, ir->operands[0]->type,
-                                           ir->operands[0],
-                                           new(ir) ir_constant(0.0f));
-   ir->operands[1] = new(ir) ir_constant(1.0f);
+                                           ir->operands[0], zero);
+   ir->operands[1] = _imm_fp(ir, ir->operands[0]->type, 1.0);
 
    this->progress = true;
 }
@@ -1515,6 +1523,25 @@ lower_instructions_visitor::_carry(operand a, operand b)
       return carry(a, b);
 }
 
+ir_constant *
+lower_instructions_visitor::_imm_fp(void *mem_ctx,
+                                    const glsl_type *type,
+                                    double f,
+                                    unsigned vector_elements)
+{
+   switch (type->base_type) {
+   case GLSL_TYPE_FLOAT:
+      return new(mem_ctx) ir_constant((float) f, vector_elements);
+   case GLSL_TYPE_DOUBLE:
+      return new(mem_ctx) ir_constant((double) f, vector_elements);
+   case GLSL_TYPE_FLOAT16:
+      return new(mem_ctx) ir_constant(float16_t(f), vector_elements);
+   default:
+      assert(!"unknown float type for immediate");
+      return NULL;
+   }
+}
+
 void
 lower_instructions_visitor::imul_high_to_mul(ir_expression *ir)
 {
@@ -1747,7 +1774,7 @@ lower_instructions_visitor::visit_leave(ir_expression *ir)
    case ir_binop_div:
       if (ir->operands[1]->type->is_integer_32() && lowering(INT_DIV_TO_MUL_RCP))
 	 int_div_to_mul_rcp(ir);
-      else if ((ir->operands[1]->type->is_float() && lowering(FDIV_TO_MUL_RCP)) ||
+      else if ((ir->operands[1]->type->is_float_16_32() && lowering(FDIV_TO_MUL_RCP)) ||
                (ir->operands[1]->type->is_double() && lowering(DDIV_TO_MUL_RCP)))
 	 div_to_mul_rcp(ir);
       break;
@@ -1763,7 +1790,7 @@ lower_instructions_visitor::visit_leave(ir_expression *ir)
       break;
 
    case ir_binop_mod:
-      if (lowering(MOD_TO_FLOOR) && (ir->type->is_float() || ir->type->is_double()))
+      if (lowering(MOD_TO_FLOOR) && ir->type->is_float_16_32_64())
 	 mod_to_floor(ir);
       break;
 
