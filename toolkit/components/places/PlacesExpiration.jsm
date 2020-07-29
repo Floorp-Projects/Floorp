@@ -270,7 +270,7 @@ const EXPIRATION_QUERIES = {
             JOIN moz_origins o ON o.id = h.origin_id
             WHERE root = 0
               AND h.foreign_count = 0
-              AND expire_ms BETWEEN 1 AND strftime('%s','now','localtime','start of day','-180 days','utc') * 1000
+              AND i.expire_ms BETWEEN 1 AND strftime('%s','now','localtime','start of day','-180 days','utc') * 1000
               AND (
               h.id IN (
                 SELECT v.place_id
