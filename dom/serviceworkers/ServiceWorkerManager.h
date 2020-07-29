@@ -122,24 +122,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   bool IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI,
                    nsIChannel* aChannel);
 
-  // Return true if the given content process could potentially be executing
-  // service worker code with the given principal.  At the current time, this
-  // just means that we have any registration for the origin, regardless of
-  // scope.  This is a very weak guarantee but is the best we can do when push
-  // notifications can currently spin up a service worker in content processes
-  // without our involvement in the parent process.
-  //
-  // In the future when there is only a single ServiceWorkerManager in the
-  // parent process that is entirely in control of spawning and running service
-  // worker code, we will be able to authoritatively indicate whether there is
-  // an activate service worker in the given content process.  At that time we
-  // will rename this method HasActiveServiceWorkerInstance and provide
-  // semantics that ensure this method returns true until the worker is known to
-  // have shut down in order to allow the caller to induce a crash for security
-  // reasons without having to worry about shutdown races with the worker.
-  bool MayHaveActiveServiceWorkerInstance(ContentParent* aContent,
-                                          nsIPrincipal* aPrincipal);
-
   void DispatchFetchEvent(nsIInterceptedChannel* aChannel, ErrorResult& aRv);
 
   void Update(nsIPrincipal* aPrincipal, const nsACString& aScope,
@@ -160,11 +142,7 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   void PropagateSoftUpdate(const OriginAttributes& aOriginAttributes,
                            const nsAString& aScope);
 
-  void PropagateRemove(const nsACString& aHost);
-
   void Remove(const nsACString& aHost);
-
-  void PropagateRemoveAll();
 
   void RemoveAll();
 
@@ -194,8 +172,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
 
   void StoreRegistration(nsIPrincipal* aPrincipal,
                          ServiceWorkerRegistrationInfo* aRegistration);
-
-  void FinishFetch(ServiceWorkerRegistrationInfo* aRegistration);
 
   /**
    * Report an error for the given scope to any window we think might be
@@ -370,9 +346,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   void UpdateClientControllers(ServiceWorkerRegistrationInfo* aRegistration);
 
   void MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
-
-  // Removes all service worker registrations that matches the given pattern.
-  void RemoveAllRegistrations(OriginAttributesPattern* aPattern);
 
   RefPtr<ServiceWorkerManagerChild> mActor;
 

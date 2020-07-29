@@ -715,32 +715,6 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final
 
 namespace {
 
-class PropagateSoftUpdateRunnable final : public Runnable {
- public:
-  PropagateSoftUpdateRunnable(const OriginAttributes& aOriginAttributes,
-                              const nsAString& aScope)
-      : Runnable("dom::ServiceWorkerManager::PropagateSoftUpdateRunnable"),
-        mOriginAttributes(aOriginAttributes),
-        mScope(aScope) {}
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (swm) {
-      swm->PropagateSoftUpdate(mOriginAttributes, mScope);
-    }
-
-    return NS_OK;
-  }
-
- private:
-  ~PropagateSoftUpdateRunnable() = default;
-
-  const OriginAttributes mOriginAttributes;
-  const nsString mScope;
-};
-
 class PromiseResolverCallback final : public ServiceWorkerUpdateFinishCallback {
  public:
   PromiseResolverCallback(ServiceWorkerUpdateFinishCallback* aCallback,
@@ -1175,7 +1149,6 @@ ServiceWorkerManager::GetRegistrations(const ClientInfo& aClientInfo) const {
       new GetRegistrationsRunnable(aClientInfo);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
   return runnable->Promise();
-  ;
 }
 
 /*
@@ -1668,9 +1641,6 @@ already_AddRefed<ServiceWorkerManager> ServiceWorkerManager::GetInstance() {
   RefPtr<ServiceWorkerManager> copy = gInstance.get();
   return copy.forget();
 }
-
-void ServiceWorkerManager::FinishFetch(
-    ServiceWorkerRegistrationInfo* aRegistration) {}
 
 void ServiceWorkerManager::ReportToAllClients(
     const nsCString& aScope, const nsString& aMessage,
@@ -3093,7 +3063,7 @@ ServiceWorkerManager::RemoveRegistrationsByOriginAttributes(
   return NS_OK;
 }
 
-// MUST ONLY BE CALLED FROM Remove(), RemoveAll() and RemoveAllRegistrations()!
+// MUST ONLY BE CALLED FROM Remove()!
 void ServiceWorkerManager::ForceUnregister(
     RegistrationDataPerPrincipal* aRegistrationData,
     ServiceWorkerRegistrationInfo* aRegistration) {
@@ -3157,11 +3127,6 @@ void ServiceWorkerManager::Remove(const nsACString& aHost) {
   }
 }
 
-void ServiceWorkerManager::PropagateRemove(const nsACString& aHost) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mActor->SendPropagateRemove(nsCString(aHost));
-}
-
 void ServiceWorkerManager::RemoveAll() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -3172,12 +3137,6 @@ void ServiceWorkerManager::RemoveAll() {
       ForceUnregister(data, reg);
     }
   }
-}
-
-void ServiceWorkerManager::PropagateRemoveAll() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_IsParentProcess());
-  mActor->SendPropagateRemoveAll();
 }
 
 NS_IMETHODIMP
@@ -3324,29 +3283,6 @@ class UpdateTimerCallback final : public nsITimerCallback, public nsINamed {
 };
 
 NS_IMPL_ISUPPORTS(UpdateTimerCallback, nsITimerCallback, nsINamed)
-
-bool ServiceWorkerManager::MayHaveActiveServiceWorkerInstance(
-    ContentParent* aContent, nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-
-  if (mShuttingDown) {
-    return false;
-  }
-
-  nsAutoCString scopeKey;
-  nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  RegistrationDataPerPrincipal* data;
-  if (!mRegistrationInfos.Get(scopeKey, &data)) {
-    return false;
-  }
-
-  return true;
-}
 
 void ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
                                                const nsACString& aScope) {
