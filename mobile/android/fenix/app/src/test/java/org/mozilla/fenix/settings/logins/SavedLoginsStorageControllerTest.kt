@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings.logins
 
-import android.content.Context
 import android.os.Looper
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -17,13 +16,13 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.concept.storage.Login
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 import org.robolectric.Shadows.shadowOf
@@ -34,7 +33,7 @@ import org.robolectric.annotation.LooperMode
 @RunWith(FenixRobolectricTestRunner::class)
 class SavedLoginsStorageControllerTest {
     private lateinit var components: Components
-    private val context: Context = mockk(relaxed = true)
+    private val passwordsStorage: SyncableLoginsStorage = mockk(relaxed = true)
     private lateinit var controller: SavedLoginsStorageController
     private val navController: NavController = mockk(relaxed = true)
     private val loginsFragmentStore: LoginsFragmentStore = mockk(relaxed = true)
@@ -46,13 +45,12 @@ class SavedLoginsStorageControllerTest {
         every { navController.currentDestination } returns NavDestination("").apply {
             id = R.id.loginDetailFragment
         }
-        coEvery { context.components.core.passwordsStorage.get(any()) } returns loginMock
+        coEvery { passwordsStorage.get(any()) } returns loginMock
         every { loginsFragmentStore.dispatch(any()) } returns mockk()
-        coEvery { context.components.core.passwordsStorage } returns mockk(relaxed = true)
         components = mockk(relaxed = true)
 
         controller = SavedLoginsStorageController(
-            context = context,
+            passwordsStorage = passwordsStorage,
             viewLifecycleScope = MainScope(),
             navController = navController,
             loginsFragmentStore = loginsFragmentStore
@@ -68,12 +66,12 @@ class SavedLoginsStorageControllerTest {
     fun `WHEN a login is deleted, THEN navigate back to the previous page`() = runBlocking {
         val loginId = "id"
         // mock for deleteLoginJob: Deferred<Boolean>?
-        coEvery { context.components.core.passwordsStorage.delete(any()) } returns true
+        coEvery { passwordsStorage.delete(any()) } returns true
         controller.delete(loginId)
 
         shadow()
 
-        coVerify { context.components.core.passwordsStorage.delete(loginId) }
+        coVerify { passwordsStorage.delete(loginId) }
     }
 
     private fun shadow() {
@@ -86,11 +84,11 @@ class SavedLoginsStorageControllerTest {
     fun `WHEN fetching the login list, THEN update the state in the store`() {
         val loginId = "id"
         // for deferredLogin: Deferred<List<Login>>?
-        coEvery { context.components.core.passwordsStorage.list() } returns listOf()
+        coEvery { passwordsStorage.list() } returns listOf()
 
         controller.fetchLoginDetails(loginId)
 
-        coVerify { context.components.core.passwordsStorage.list() }
+        coVerify { passwordsStorage.list() }
     }
 
     @Test
@@ -103,11 +101,11 @@ class SavedLoginsStorageControllerTest {
             httpRealm = "httpRealm",
             formActionOrigin = ""
         )
-        coEvery { context.components.core.passwordsStorage.get(any()) } returns loginMock
+        coEvery { passwordsStorage.get(any()) } returns loginMock
 
         controller.save(login.guid!!, login.username, login.password)
 
-        coVerify { context.components.core.passwordsStorage.get(any()) }
+        coVerify { passwordsStorage.get(any()) }
     }
 
     @Test
@@ -121,11 +119,11 @@ class SavedLoginsStorageControllerTest {
             formActionOrigin = ""
         )
 
-        coEvery { context.components.core.passwordsStorage.get(any()) } returns login
+        coEvery { passwordsStorage.get(any()) } returns login
 
         // for deferredLogin: Deferred<List<Login>>?
         coEvery {
-            context.components.core.passwordsStorage.getPotentialDupesIgnoringUsername(any())
+            passwordsStorage.getPotentialDupesIgnoringUsername(any())
         } returns listOf()
 
         controller.findPotentialDuplicates(login.guid!!)
@@ -133,7 +131,7 @@ class SavedLoginsStorageControllerTest {
         shadow()
 
         coVerify {
-            context.components.core.passwordsStorage.getPotentialDupesIgnoringUsername(login)
+            passwordsStorage.getPotentialDupesIgnoringUsername(login)
         }
     }
 }

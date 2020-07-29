@@ -24,6 +24,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -79,7 +80,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
 
         interactor = EditLoginInteractor(
             SavedLoginsStorageController(
-                context = requireContext(),
+                passwordsStorage = requireContext().components.core.passwordsStorage,
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
                 navController = findNavController(),
                 loginsFragmentStore = loginsFragmentStore

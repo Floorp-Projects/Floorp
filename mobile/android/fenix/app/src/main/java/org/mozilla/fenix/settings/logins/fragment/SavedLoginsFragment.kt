@@ -101,7 +101,7 @@ class SavedLoginsFragment : Fragment() {
             )
         savedLoginsStorageController =
             SavedLoginsStorageController(
-                context = requireContext(),
+                passwordsStorage = requireContext().components.core.passwordsStorage,
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
                 navController = findNavController(),
                 loginsFragmentStore = savedLoginsStore

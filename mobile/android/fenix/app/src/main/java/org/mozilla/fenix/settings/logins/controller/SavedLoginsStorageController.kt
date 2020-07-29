@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings.logins.controller
 
-import android.content.Context
 import android.util.Log
 import androidx.navigation.NavController
 import kotlinx.coroutines.CancellationException
@@ -18,8 +17,8 @@ import mozilla.components.concept.storage.Login
 import mozilla.components.service.sync.logins.InvalidRecordException
 import mozilla.components.service.sync.logins.LoginsStorageException
 import mozilla.components.service.sync.logins.NoSuchRecordException
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
@@ -29,20 +28,19 @@ import org.mozilla.fenix.settings.logins.mapToSavedLogin
  * Controller for all saved logins interactions with the password storage component
  */
 open class SavedLoginsStorageController(
-    private val context: Context,
+    private val passwordsStorage: SyncableLoginsStorage,
     private val viewLifecycleScope: CoroutineScope,
     private val navController: NavController,
     private val loginsFragmentStore: LoginsFragmentStore
 ) {
 
-    private suspend fun getLogin(loginId: String): Login? =
-        context.components.core.passwordsStorage.get(loginId)
+    private suspend fun getLogin(loginId: String): Login? = passwordsStorage.get(loginId)
 
     fun delete(loginId: String) {
         var deleteLoginJob: Deferred<Boolean>? = null
         val deleteJob = viewLifecycleScope.launch(Dispatchers.IO) {
             deleteLoginJob = async {
-                context.components.core.passwordsStorage.delete(loginId)
+                passwordsStorage.delete(loginId)
             }
             deleteLoginJob?.await()
             withContext(Dispatchers.Main) {
@@ -61,7 +59,7 @@ open class SavedLoginsStorageController(
         viewLifecycleScope.launch(Dispatchers.IO) {
             saveLoginJob = async {
                 // must retrieve from storage to get the httpsRealm and formActionOrigin
-                val oldLogin = context.components.core.passwordsStorage.get(loginId)
+                val oldLogin = passwordsStorage.get(loginId)
 
                 // Update requires a Login type, which needs at least one of
                 // httpRealm or formActionOrigin
@@ -95,16 +93,20 @@ open class SavedLoginsStorageController(
 
     private suspend fun save(loginToSave: Login) {
         try {
-            context.components.core.passwordsStorage.update(loginToSave)
+            passwordsStorage.update(loginToSave)
         } catch (loginException: LoginsStorageException) {
             when (loginException) {
                 is NoSuchRecordException,
                 is InvalidRecordException -> {
-                    Log.e("Edit login",
-                        "Failed to save edited login.", loginException)
+                    Log.e(
+                        "Edit login",
+                        "Failed to save edited login.", loginException
+                    )
                 }
-                else -> Log.e("Edit login",
-                    "Failed to save edited login.", loginException)
+                else -> Log.e(
+                    "Edit login",
+                    "Failed to save edited login.", loginException
+                )
             }
         }
     }
@@ -124,7 +126,7 @@ open class SavedLoginsStorageController(
         val fetchLoginJob = viewLifecycleScope.launch(Dispatchers.IO) {
             deferredLogin = async {
                 val login = getLogin(loginId)
-                context.components.core.passwordsStorage.getPotentialDupesIgnoringUsername(login!!)
+                passwordsStorage.getPotentialDupesIgnoringUsername(login!!)
             }
             val fetchedDuplicatesList = deferredLogin?.await()
             fetchedDuplicatesList?.let { list ->
@@ -149,7 +151,7 @@ open class SavedLoginsStorageController(
         var deferredLogin: Deferred<List<Login>>? = null
         val fetchLoginJob = viewLifecycleScope.launch(Dispatchers.IO) {
             deferredLogin = async {
-                context.components.core.passwordsStorage.list()
+                passwordsStorage.list()
             }
             val fetchedLoginList = deferredLogin?.await()
 
@@ -177,7 +179,7 @@ open class SavedLoginsStorageController(
         var deferredLogins: Deferred<List<Login>>? = null
         val fetchLoginsJob = viewLifecycleScope.launch(Dispatchers.IO) {
             deferredLogins = async {
-                context.components.core.passwordsStorage.list()
+                passwordsStorage.list()
             }
             val logins = deferredLogins?.await()
             logins?.let {
