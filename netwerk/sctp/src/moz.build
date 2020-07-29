@@ -46,9 +46,6 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CFLAGS += ['-std=gnu99']
-
 for var in ('__Userspace__',
             'SCTP_SIMPLE_ALLOCATOR',
             'SCTP_PROCESS_LEVEL_LOCKS',
