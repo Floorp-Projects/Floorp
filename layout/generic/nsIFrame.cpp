@@ -8334,9 +8334,11 @@ nsresult nsIFrame::PeekOffsetForWord(nsPeekOffsetStruct* aPos, int32_t offset) {
         done = true;
         // If we've crossed the line boundary, check to make sure that we
         // have not consumed a trailing newline as whitespace if it's
-        // significant.
+        // significant. (It's not needed for `pre-line` since in that case
+        // the newline is treated as trimmed space.)
         if (jumpedLine && wordSelectEatSpace &&
-            current->HasSignificantTerminalNewline()) {
+            current->HasSignificantTerminalNewline() &&
+            current->StyleText()->mWhiteSpace != StyleWhiteSpace::PreLine) {
           offset -= 1;
         }
       } else {
