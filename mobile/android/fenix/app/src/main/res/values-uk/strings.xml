@@ -258,7 +258,7 @@
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Спеціальний сервер синхронізації</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Сервер Облікового запису / Синхронізації  Firefox змінено. Вихід з програми для застосування змін…</string>
+    <string name="toast_override_fxa_sync_server_done">Сервер Облікового запису/Синхронізації Firefox змінено. Вихід з програми для застосування змін…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Обліковий запис</string>
     <!-- Preference shown on banner to sign into account -->
