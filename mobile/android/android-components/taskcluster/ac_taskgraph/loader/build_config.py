@@ -125,7 +125,7 @@ def loader(kind, path, config, params, loaded_tasks):
     # Filter away overridden jobs that we wouldn't build anyways to avoid ending up with
     # partial job entries.
     overridden_jobs = {k: v for k, v in config.pop('overriden-jobs', {}).items() if affected_components is ALL_COMPONENTS or k in affected_components}
-    jobs = merge(jobs, config.pop('overriden-jobs', {}))
+    jobs = merge(jobs, overridden_jobs)
 
     config['jobs'] = jobs
 
