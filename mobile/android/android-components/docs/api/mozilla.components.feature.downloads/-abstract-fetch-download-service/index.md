@@ -2,18 +2,12 @@
 
 # AbstractFetchDownloadService
 
-`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L84)
+`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L85)
 
 Service that performs downloads through a fetch [Client](../../mozilla.components.concept.fetch/-client/index.md) rather than through the native
 Android download manager.
 
 To use this service, you must create a subclass in your application and add it to the manifest.
-
-### Types
-
-| Name | Summary |
-|---|---|
-| [DownloadJobStatus](-download-job-status/index.md) | `enum class DownloadJobStatus`<br>Status of an ongoing download |
 
 ### Constructors
 
