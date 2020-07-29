@@ -180,6 +180,54 @@ StaticRefPtr<nsIAsyncShutdownClient> IOUtils::sBarrier;
 /* static */
 Atomic<bool> IOUtils::sShutdownStarted = Atomic<bool>(false);
 
+template <typename MozPromiseT, typename Fn, typename... Args>
+static RefPtr<MozPromiseT> InvokeToMozPromise(Fn aFunc, Args... aArgs) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  auto rv = aFunc(std::forward<Args>(aArgs)...);
+  if (rv.isErr()) {
+    return MozPromiseT::CreateAndReject(rv.unwrapErr(), __func__);
+  }
+  return MozPromiseT::CreateAndResolve(rv.unwrap(), __func__);
+}
+
+/* static */
+template <typename OkT, typename Fn, typename... Args>
+already_AddRefed<Promise> IOUtils::RunOnBackgroundThread(
+    RefPtr<Promise>& aPromise, Fn aFunc, Args... aArgs) {
+  REJECT_IF_SHUTTING_DOWN(aPromise);
+
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, aPromise);
+
+  InvokeAsync(
+      bg, __func__,
+      [fn = aFunc, argsTuple = std::make_tuple(std::move(aArgs)...)]() mutable {
+        return std::apply(
+            [fn](Args... args) mutable {
+              using MozPromiseT = MozPromise<OkT, IOError, true>;
+              return InvokeToMozPromise<MozPromiseT>(
+                  fn, std::forward<Args>(args)...);
+            },
+            std::move(argsTuple));
+      })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(aPromise)](const OkT& ok) {
+            if constexpr (std::is_same_v<OkT, nsTArray<uint8_t>>) {
+              TypedArrayCreator<Uint8Array> arr(ok);
+              promise->MaybeResolve(arr);
+            } else if constexpr (std::is_same_v<OkT, Ok>) {
+              promise->MaybeResolveWithUndefined();
+            } else {
+              promise->MaybeResolve(ok);
+            }
+          },
+          [promise = RefPtr(aPromise)](const IOError& err) {
+            RejectJSPromise(promise, err);
+          });
+  return aPromise.forget();
+}
+
 /* static */
 already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
@@ -187,44 +235,22 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_SHUTTING_DOWN(promise);
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
   // Process arguments.
+  REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsAutoString path(aPath);
   Maybe<uint32_t> toRead = Nothing();
   if (aMaxBytes.WasPassed()) {
     if (aMaxBytes.Value() == 0) {
       // Resolve with an empty buffer.
       nsTArray<uint8_t> arr(0);
-      TypedArrayCreator<Uint8Array> arrCreator(arr);
-      promise->MaybeResolve(arrCreator);
+      promise->MaybeResolve(TypedArrayCreator<Uint8Array>(arr));
       return promise.forget();
     }
     toRead.emplace(aMaxBytes.Value());
   }
 
-  InvokeAsync(
-      bg, __func__,
-      [path = nsAutoString(aPath), toRead]() {
-        MOZ_ASSERT(!NS_IsMainThread());
-        auto rv = IOUtils::ReadSync(path, toRead);
-        return ToMozPromise<IOReadMozPromise, nsTArray<uint8_t>, IOError>(
-            rv, __func__);
-      })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(promise)](const nsTArray<uint8_t>& aBuf) {
-            const TypedArrayCreator<Uint8Array> arrayCreator(aBuf);
-            promise->MaybeResolve(arrayCreator);
-          },
-          [promise = RefPtr(promise)](const IOError& aError) {
-            RejectJSPromise(promise, aError);
-          });
-
-  return promise.forget();
+  return RunOnBackgroundThread<nsTArray<uint8_t>>(promise, &ReadSync, path,
+                                                  toRead);
 }
 
 /* static */
@@ -242,29 +268,24 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
 
   // Process arguments.
   aData.ComputeState();
-  FallibleTArray<uint8_t> toWrite;
-  if (!toWrite.InsertElementsAt(0, aData.Data(), aData.Length(), fallible)) {
+  auto buf = Buffer<uint8_t>::CopyFrom(MakeSpan(aData.Data(), aData.Length()));
+  if (buf.isNothing()) {
     promise->MaybeRejectWithOperationError("Out of memory");
     return promise.forget();
   }
+  nsAutoString destPath(aPath);
+  InternalWriteAtomicOpts opts;
+  opts.mFlush = aOptions.mFlush;
+  opts.mNoOverwrite = aOptions.mNoOverwrite;
+  if (aOptions.mBackupFile.WasPassed()) {
+    opts.mBackupFile.emplace(aOptions.mBackupFile.Value());
+  }
+  if (aOptions.mTmpPath.WasPassed()) {
+    opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
+  }
 
-  InvokeAsync(
-      bg, __func__,
-      [destPath = nsString(aPath), toWrite = std::move(toWrite), aOptions]() {
-        MOZ_ASSERT(!NS_IsMainThread());
-        auto rv = WriteAtomicSync(destPath, toWrite, aOptions);
-        return ToMozPromise<IOWriteMozPromise, uint32_t, IOError>(rv, __func__);
-      })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(promise)](const uint32_t& aBytesWritten) {
-            promise->MaybeResolve(aBytesWritten);
-          },
-          [promise = RefPtr(promise)](const IOError& aError) {
-            RejectJSPromise(promise, aError);
-          });
-
-  return promise.forget();
+  return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicSync, destPath,
+                                         std::move(*buf), std::move(opts));
 }
 
 /* static */
@@ -275,36 +296,18 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_SHUTTING_DOWN(promise);
+  // Process arguments.
   REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
   REJECT_IF_RELATIVE_PATH(aDestPath, promise);
-
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
-  // Process arguments.
+  nsAutoString sourcePath(aSourcePath);
+  nsAutoString destPath(aDestPath);
   bool noOverwrite = false;
   if (aOptions.IsAnyMemberPresent()) {
     noOverwrite = aOptions.mNoOverwrite;
   }
 
-  InvokeAsync(bg, __func__,
-              [srcPathString = nsAutoString(aSourcePath),
-               destPathString = nsAutoString(aDestPath), noOverwrite]() {
-                MOZ_ASSERT(!NS_IsMainThread());
-                auto rv = MoveSync(srcPathString, destPathString, noOverwrite);
-                return ToMozPromise<IOMozPromise, Ok, IOError>(rv, __func__);
-              })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(promise)](const Ok&) {
-            promise->MaybeResolveWithUndefined();
-          },
-          [promise = RefPtr(promise)](const IOError& aError) {
-            RejectJSPromise(promise, aError);
-          });
-
-  return promise.forget();
+  return RunOnBackgroundThread<Ok>(promise, &MoveSync, sourcePath, destPath,
+                                   noOverwrite);
 }
 
 /* static */
@@ -314,29 +317,11 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_SHUTTING_DOWN(promise);
   REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsAutoString path(aPath);
 
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
-  InvokeAsync(bg, __func__,
-              [path = nsAutoString(aPath), aOptions]() {
-                MOZ_ASSERT(!NS_IsMainThread());
-                auto rv = RemoveSync(path, aOptions.mIgnoreAbsent,
-                                     aOptions.mRecursive);
-                return ToMozPromise<IOMozPromise, Ok, IOError>(rv, __func__);
-              })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(promise)](const Ok&) {
-            promise->MaybeResolveWithUndefined();
-          },
-          [promise = RefPtr(promise)](const IOError& aError) {
-            RejectJSPromise(promise, aError);
-          });
-
-  return promise.forget();
+  return RunOnBackgroundThread<Ok>(promise, &RemoveSync, path,
+                                   aOptions.mIgnoreAbsent, aOptions.mRecursive);
 }
 
 /* static */
@@ -346,28 +331,12 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_SHUTTING_DOWN(promise);
   REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsAutoString path(aPath);
 
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
-  InvokeAsync(bg, __func__,
-              [path = nsAutoString(aPath), aOptions]() {
-                MOZ_ASSERT(!NS_IsMainThread());
-                auto rv = CreateDirectorySync(path, aOptions.mCreateAncestors,
-                                              aOptions.mIgnoreExisting);
-                return ToMozPromise<IOMozPromise, Ok, IOError>(rv, __func__);
-              })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(promise)](const Ok&) {
-            promise->MaybeResolveWithUndefined();
-          },
-          [promise = RefPtr(promise)](const IOError& aError) {
-            RejectJSPromise(promise, aError);
-          });
-  return promise.forget();
+  return RunOnBackgroundThread<Ok>(promise, &CreateDirectorySync, path,
+                                   aOptions.mCreateAncestors,
+                                   aOptions.mIgnoreExisting, 0777);
 }
 
 already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
@@ -375,31 +344,10 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
 
-  REJECT_IF_SHUTTING_DOWN(promise);
   REJECT_IF_RELATIVE_PATH(aPath, promise);
+  nsAutoString path(aPath);
 
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
-
-  InvokeAsync(
-      bg, __func__,
-      [path = nsAutoString(aPath)]() {
-        MOZ_ASSERT(!NS_IsMainThread());
-
-        auto rv = StatSync(path);
-        return ToMozPromise<IOStatMozPromise, InternalFileInfo, IOError>(
-            rv, __func__);
-      })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(promise)](const InternalFileInfo& aInfo) {
-            promise->MaybeResolve(aInfo);
-          },
-          [promise = RefPtr(promise)](const IOError& aError) {
-            RejectJSPromise(promise, aError);
-          });
-
-  return promise.forget();
+  return RunOnBackgroundThread<InternalFileInfo>(promise, &StatSync, path);
 }
 
 /* static */
@@ -631,8 +579,8 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
 
 /* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
-    const nsAString& aDestPath, const nsTArray<uint8_t>& aByteArray,
-    const WriteAtomicOptions& aOptions) {
+    const nsAString& aDestPath, const Buffer<uint8_t>& aByteArray,
+    const IOUtils::InternalWriteAtomicOpts& aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Check if the file exists and test it against the noOverwrite option.
@@ -653,21 +601,21 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
   }
 
   // If backupFile was specified, perform the backup as a move.
-  if (exists && aOptions.mBackupFile.WasPassed() &&
-      MoveSync(aDestPath, aOptions.mBackupFile.Value(), noOverwrite).isErr()) {
+  if (exists && aOptions.mBackupFile.isSome() &&
+      MoveSync(aDestPath, aOptions.mBackupFile.value(), noOverwrite).isErr()) {
     return Err(
         IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
             .WithMessage(
                 "Failed to backup the source file(%s) to %s",
                 NS_ConvertUTF16toUTF8(aDestPath).get(),
-                NS_ConvertUTF16toUTF8(aOptions.mBackupFile.Value()).get()));
+                NS_ConvertUTF16toUTF8(aOptions.mBackupFile.value()).get()));
   }
 
   // If tmpPath was specified, we will write to there first, then perform
   // a move to ensure the file ends up at the final requested destination.
   nsAutoString tmpPath;
-  if (aOptions.mTmpPath.WasPassed()) {
-    tmpPath = aOptions.mTmpPath.Value();
+  if (aOptions.mTmpPath.isSome()) {
+    tmpPath = aOptions.mTmpPath.value();
   } else {
     tmpPath = aDestPath;
   }
@@ -714,7 +662,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
 
 /* static */
 Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
-    PRFileDesc* aFd, const nsACString& aPath, const nsTArray<uint8_t>& aBytes) {
+    PRFileDesc* aFd, const nsACString& aPath, const Buffer<uint8_t>& aBytes) {
   // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max
   // length.
   MOZ_ASSERT(aBytes.Length() <= UINT32_MAX);
@@ -735,7 +683,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     if (pendingBytes < chunkSize) {
       chunkSize = pendingBytes;
     }
-    int32_t rv = PR_Write(aFd, aBytes.Elements() + bytesWritten, chunkSize);
+    int32_t rv = PR_Write(aFd, aBytes.begin() + bytesWritten, chunkSize);
     if (rv < 0) {
       return Err(IOError(NS_ERROR_FILE_CORRUPTED)
                      .WithMessage("Could not write chunk(size=%" PRIu32
