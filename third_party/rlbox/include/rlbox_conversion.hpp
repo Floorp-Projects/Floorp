@@ -31,7 +31,8 @@ inline constexpr void convert_type_fundamental(T_To& to,
   }
   else if_constexpr_named(cond3, is_enum_v<T_To> || is_enum_v<T_From>)
   {
-    static_assert(std::is_same_v<T_To, T_From>);
+    static_assert(std::is_same_v<detail::remove_cv_ref_t<T_To>,
+                                 detail::remove_cv_ref_t<T_From>>);
     to = from;
   }
   else if_constexpr_named(
