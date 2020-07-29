@@ -59,8 +59,7 @@ files:
 
 - ``toolkit/components/extensions/ext-toolkit.json``
 - ``browser/components/extensions/ext-browser.json``
-- ``mobile/android/components/extensions/ext-android.js``
-  (*ugh android*)
+- ``mobile/android/components/extensions/ext-android.json``
 
 Here is a sample fragment for a new API:
 

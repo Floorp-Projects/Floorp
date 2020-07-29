@@ -5,7 +5,7 @@
 "use strict";
 
 // This file expects tabTracker to be defined in the global scope (e.g.
-// by ext-utils.js).
+// by ext-browser.js or ext-android.js).
 /* global tabTracker */
 
 ChromeUtils.defineModuleGetter(
