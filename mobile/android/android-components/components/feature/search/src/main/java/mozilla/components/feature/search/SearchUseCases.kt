@@ -9,7 +9,9 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 
 /**
  * Contains use cases related to the search feature.
@@ -20,6 +22,7 @@ import mozilla.components.browser.state.state.SessionState
  */
 class SearchUseCases(
     context: Context,
+    store: BrowserStore,
     searchEngineManager: SearchEngineManager,
     sessionManager: SessionManager,
     onNoSession: (String) -> Session = { url ->
@@ -39,6 +42,7 @@ class SearchUseCases(
 
     class DefaultSearchUseCase(
         private val context: Context,
+        private val store: BrowserStore,
         private val searchEngineManager: SearchEngineManager,
         private val sessionManager: SessionManager,
         private val onNoSession: (String) -> Session
@@ -75,12 +79,16 @@ class SearchUseCases(
 
             searchSession.searchTerms = searchTerms
 
-            sessionManager.getOrCreateEngineSession(searchSession).loadUrl(searchUrl)
+            store.dispatch(EngineAction.LoadUrlAction(
+                searchSession.id,
+                searchUrl
+            ))
         }
     }
 
     class NewTabSearchUseCase(
         private val context: Context,
+        private val store: BrowserStore,
         private val searchEngineManager: SearchEngineManager,
         private val sessionManager: SessionManager,
         private val isPrivate: Boolean
@@ -127,19 +135,23 @@ class SearchUseCases(
             session.searchTerms = searchTerms
 
             sessionManager.add(session, selected, parent = parentSession)
-            sessionManager.getOrCreateEngineSession(session).loadUrl(searchUrl)
+
+            store.dispatch(EngineAction.LoadUrlAction(
+                session.id,
+                searchUrl
+            ))
         }
     }
 
     val defaultSearch: DefaultSearchUseCase by lazy {
-        DefaultSearchUseCase(context, searchEngineManager, sessionManager, onNoSession)
+        DefaultSearchUseCase(context, store, searchEngineManager, sessionManager, onNoSession)
     }
 
     val newTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(context, searchEngineManager, sessionManager, false)
+        NewTabSearchUseCase(context, store, searchEngineManager, sessionManager, false)
     }
 
     val newPrivateTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(context, searchEngineManager, sessionManager, true)
+        NewTabSearchUseCase(context, store, searchEngineManager, sessionManager, true)
     }
 }

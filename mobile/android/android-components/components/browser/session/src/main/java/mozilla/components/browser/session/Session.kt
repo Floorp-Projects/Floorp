@@ -6,14 +6,11 @@ package mozilla.components.browser.session
 
 import android.content.Intent
 import android.graphics.Bitmap
-import mozilla.components.browser.session.engine.EngineSessionHolder
 import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
-import mozilla.components.browser.session.ext.toTabSessionState
-import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.RemoveWebAppManifestAction
 import mozilla.components.browser.state.action.ContentAction.UpdateBackNavigationStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateForwardNavigationStateAction
@@ -21,13 +18,10 @@ import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateA
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
-import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
 import mozilla.components.browser.state.action.ContentAction.UpdateWebAppManifestAction
-import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
-import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.action.TabListAction.AddTabAction
+import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
@@ -55,12 +49,6 @@ class Session(
     val contextId: String? = null,
     delegate: Observable<Observer> = ObserverRegistry()
 ) : Observable<Session.Observer> by delegate {
-    /**
-     * Holder for keeping a reference to an engine session and its observer to update this session
-     * object.
-     */
-    internal val engineSessionHolder = EngineSessionHolder()
-
     // For migration purposes every `Session` has a reference to the `BrowserStore` (if used) in order to dispatch
     // actions to it when the `Session` changes.
     internal var store: BrowserStore? = null
@@ -94,10 +82,8 @@ class Session(
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
-        fun onThumbnailChanged(session: Session, bitmap: Bitmap?) = Unit
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
-        fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
         fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) = Unit
         fun onLaunchIntentRequest(session: Session, url: String, appIntent: Intent?) = Unit
     }
@@ -218,11 +204,9 @@ class Session(
         // tabs to regular tabs, so we have to dispatch the corresponding
         // browser actions to keep the store in sync.
         if (old != new && new == null) {
-            store?.syncDispatch(RemoveCustomTabAction(id))
-            store?.syncDispatch(AddTabAction(toTabSessionState()))
-            engineSessionHolder.engineSession?.let { engineSession ->
-                store?.syncDispatch(EngineAction.LinkEngineSessionAction(id, engineSession))
-            }
+            store?.syncDispatch(
+                CustomTabListAction.TurnCustomTabIntoNormalTabAction(id)
+            )
         }
     }
 
@@ -294,16 +278,6 @@ class Session(
     }
 
     /**
-     * The target of the latest thumbnail.
-     */
-    var thumbnail: Bitmap? by Delegates.observable<Bitmap?>(null) { _, _, new ->
-        notifyObservers { onThumbnailChanged(this@Session, new) }
-
-        val action = if (new != null) UpdateThumbnailAction(id, new) else RemoveThumbnailAction(id)
-        store?.syncDispatch(action)
-    }
-
-    /**
      * Desktop Mode state, true if the desktop mode is requested, otherwise false.
      */
     var desktopMode: Boolean by Delegates.observable(false) { _, old, new ->
@@ -339,19 +313,6 @@ class Session(
         _, _, request ->
             val consumers = wrapConsumers<PermissionRequest> { onAppPermissionRequested(this@Session, it) }
             !request.consumeBy(consumers)
-    }
-
-    /**
-     * Whether this [Session] has crashed.
-     *
-     * In conjunction with a `concept-engine` implementation that uses a multi-process architecture, single sessions
-     * can crash without crashing the whole app.
-     *
-     * A crashed session may still be operational (since the underlying engine implementation has recovered its content
-     * process), but further action may be needed to restore the last state before the session has crashed (if desired).
-     */
-    var crashed: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { onCrashStateChanged(this@Session, new) }
     }
 
     /**

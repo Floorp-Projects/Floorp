@@ -4,14 +4,12 @@
 
 package mozilla.components.browser.session
 
-import android.graphics.Bitmap
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito
 
 class SelectionAwareSessionObserverTest {
     private lateinit var sessionManager: SessionManager
@@ -148,7 +146,6 @@ class SelectionAwareSessionObserverTest {
         observer.onTrackerBlockingEnabledChanged(session, true)
         observer.onTrackerBlocked(session, Tracker(""), emptyList())
         observer.onDesktopModeChanged(session, true)
-        observer.onThumbnailChanged(session, Mockito.spy(Bitmap::class.java))
         observer.onSessionRemoved(session)
         observer.onAllSessionsRemoved()
     }

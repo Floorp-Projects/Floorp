@@ -17,6 +17,11 @@ package mozilla.components.browser.state.state
  * contextual identity to use for the session's cookie store.
  * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Work_with_contextual_identities
  * @property source the [Source] of this session to describe how and why it was created.
+ * @property crashed Whether this session has crashed. In conjunction with a `concept-engine`
+ * implementation that uses a multi-process architecture, single sessions can crash without crashing
+ * the whole app. A crashed session may still be operational (since the underlying engine implementation
+ * has recovered its content process), but further action may be needed to restore the last state
+ * before the session has crashed (if desired).
  */
 interface SessionState {
     val id: String
@@ -26,6 +31,7 @@ interface SessionState {
     val extensionState: Map<String, WebExtensionState>
     val contextId: String?
     val source: Source
+    val crashed: Boolean
 
     /**
      * Copy the class and override some parameters.
@@ -37,7 +43,8 @@ interface SessionState {
         trackingProtection: TrackingProtectionState = this.trackingProtection,
         engineState: EngineState = this.engineState,
         extensionState: Map<String, WebExtensionState> = this.extensionState,
-        contextId: String? = this.contextId
+        contextId: String? = this.contextId,
+        crashed: Boolean = this.crashed
     ): SessionState
 
     /**

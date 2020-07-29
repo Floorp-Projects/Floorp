@@ -27,12 +27,13 @@ data class TabSessionState(
     override val content: ContentState,
     override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
     override val engineState: EngineState = EngineState(),
-    val parentId: String? = null,
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
-    val readerState: ReaderState = ReaderState(),
     override val contextId: String? = null,
+    override val source: SessionState.Source = SessionState.Source.NONE,
+    override val crashed: Boolean = false,
+    val parentId: String? = null,
     val lastAccess: Long = 0L,
-    override val source: SessionState.Source = SessionState.Source.NONE
+    val readerState: ReaderState = ReaderState()
 ) : SessionState {
 
     override fun createCopy(
@@ -41,14 +42,16 @@ data class TabSessionState(
         trackingProtection: TrackingProtectionState,
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
-        contextId: String?
+        contextId: String?,
+        crashed: Boolean
     ): SessionState = copy(
         id = id,
         content = content,
         trackingProtection = trackingProtection,
         engineState = engineState,
         extensionState = extensionState,
-        contextId = contextId
+        contextId = contextId,
+        crashed = crashed
     )
 }
 

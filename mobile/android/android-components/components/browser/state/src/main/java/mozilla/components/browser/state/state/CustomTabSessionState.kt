@@ -25,7 +25,8 @@ data class CustomTabSessionState(
     override val engineState: EngineState = EngineState(),
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
     override val contextId: String? = null,
-    override val source: SessionState.Source = SessionState.Source.CUSTOM_TAB
+    override val source: SessionState.Source = SessionState.Source.CUSTOM_TAB,
+    override val crashed: Boolean = false
 ) : SessionState {
 
     override fun createCopy(
@@ -34,14 +35,16 @@ data class CustomTabSessionState(
         trackingProtection: TrackingProtectionState,
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
-        contextId: String?
+        contextId: String?,
+        crashed: Boolean
     ) = copy(
         id = id,
         content = content,
         trackingProtection = trackingProtection,
         engineState = engineState,
         extensionState = extensionState,
-        contextId = contextId
+        contextId = contextId,
+        crashed = crashed
     )
 }
 

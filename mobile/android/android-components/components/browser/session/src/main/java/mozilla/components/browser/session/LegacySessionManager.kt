@@ -6,8 +6,6 @@ package mozilla.components.browser.session
 
 import androidx.annotation.GuardedBy
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import kotlin.math.max
@@ -19,7 +17,6 @@ import kotlin.math.min
 @Suppress("TooManyFunctions", "LargeClass")
 class LegacySessionManager(
     val engine: Engine,
-    private val engineSessionLinker: SessionManager.EngineSessionLinker,
     delegate: Observable<SessionManager.Observer> = ObserverRegistry()
 ) : Observable<SessionManager.Observer> by delegate {
     // It's important that any access to `values` is synchronized;
@@ -34,60 +31,6 @@ class LegacySessionManager(
      */
     val size: Int
         get() = synchronized(values) { values.size }
-
-    /**
-     * Produces a snapshot of this manager's state, suitable for restoring via [SessionManager.restore].
-     * Only regular sessions are included in the snapshot. Private and Custom Tab sessions are omitted.
-     *
-     * @return [SessionManager.Snapshot] of the current session state.
-     */
-    fun createSnapshot(): SessionManager.Snapshot = synchronized(values) {
-        if (values.isEmpty()) {
-            return SessionManager.Snapshot.empty()
-        }
-
-        // Filter out CustomTab and private sessions.
-        // We're using 'values' directly instead of 'sessions' to get benefits of a sequence.
-        val sessionStateTuples = values.asSequence()
-                .filter { !it.isCustomTabSession() }
-                .filter { !it.private }
-                .map { session -> createSessionSnapshot(session) }
-                .toList()
-
-        // We might have some sessions (private, custom tab) but none we'd include in the snapshot.
-        if (sessionStateTuples.isEmpty()) {
-            return SessionManager.Snapshot.empty()
-        }
-
-        // We need to find out the index of our selected session in the filtered list. If we have a
-        // mix of private, custom tab and regular sessions, global selectedIndex isn't good enough.
-        // We must have a selectedSession if there is at least one "regular" (non-CustomTabs) session
-        // present. Selected session might be private, in which case we reset our selection index to 0.
-        var selectedIndexAfterFiltering = 0
-        selectedSession?.takeIf { !it.private }?.let { selected ->
-            sessionStateTuples.find { it.session.id == selected.id }?.let { selectedTuple ->
-                selectedIndexAfterFiltering = sessionStateTuples.indexOf(selectedTuple)
-            }
-        }
-
-        // Sanity check to guard against producing invalid snapshots.
-        checkNotNull(sessionStateTuples.getOrNull(selectedIndexAfterFiltering)) {
-            "Selection index after filtering session must be valid"
-        }
-
-        SessionManager.Snapshot(
-            sessions = sessionStateTuples,
-            selectedSessionIndex = selectedIndexAfterFiltering
-        )
-    }
-
-    fun createSessionSnapshot(session: Session): SessionManager.Snapshot.Item {
-        return SessionManager.Snapshot.Item(
-            session,
-            session.engineSessionHolder.engineSession,
-            session.engineSessionHolder.engineSessionState
-        )
-    }
 
     /**
      * Gets the currently selected session if there is one.
@@ -136,19 +79,15 @@ class LegacySessionManager(
     fun add(
         session: Session,
         selected: Boolean = false,
-        engineSession: EngineSession? = null,
-        engineSessionState: EngineSessionState? = null,
         parent: Session? = null
     ) = synchronized(values) {
-        addInternal(session, selected, engineSession, engineSessionState, parent = parent, viaRestore = false)
+        addInternal(session, selected, parent = parent, viaRestore = false)
     }
 
     @Suppress("LongParameterList", "ComplexMethod")
     private fun addInternal(
         session: Session,
         selected: Boolean = false,
-        engineSession: EngineSession? = null,
-        engineSessionState: EngineSessionState? = null,
         parent: Session? = null,
         viaRestore: Boolean = false,
         notifyObservers: Boolean = true
@@ -171,12 +110,6 @@ class LegacySessionManager(
             } else {
                 values.add(session)
             }
-        }
-
-        if (engineSession != null) {
-            link(session, engineSession)
-        } else if (engineSessionState != null) {
-            session.engineSessionHolder.engineSessionState = engineSessionState
         }
 
         // If session is being added via restore, skip notification and auto-selection.
@@ -241,8 +174,6 @@ class LegacySessionManager(
         snapshot.sessions.asReversed().forEach {
             addInternal(
                 it.session,
-                engineSession = it.engineSession,
-                engineSessionState = it.engineSessionState,
                 parent = null,
                 viaRestore = true
             )
@@ -263,52 +194,6 @@ class LegacySessionManager(
     }
 
     /**
-     * Gets the linked engine session for the provided session (if it exists).
-     */
-    fun getEngineSession(session: Session = selectedSessionOrThrow) = session.engineSessionHolder.engineSession
-
-    /**
-     * Gets the linked engine session for the provided session and creates it if needed.
-     */
-    fun getOrCreateEngineSession(
-        session: Session = selectedSessionOrThrow,
-        skipLoading: Boolean = false
-    ): EngineSession {
-        getEngineSession(session)?.let { return it }
-
-        return engine.createSession(session.private, session.contextId).apply {
-            var restored = false
-            session.engineSessionHolder.engineSessionState?.let { state ->
-                restored = restoreState(state)
-                session.engineSessionHolder.engineSessionState = null
-            }
-
-            link(session, this, restored, skipLoading)
-        }
-    }
-
-    private fun link(
-        session: Session,
-        engineSession: EngineSession,
-        restored: Boolean = false,
-        skipLoading: Boolean = false
-    ) {
-        val parent = values.find { it.id == session.parentId }?.let {
-            this.getEngineSession(it)
-        }
-        engineSessionLinker.link(session, engineSession, parent, restored, skipLoading)
-
-        if (session == selectedSession) {
-            engineSession.markActiveForWebExtensions(true)
-        }
-    }
-
-    private fun unlink(session: Session) {
-        getEngineSession(session)?.markActiveForWebExtensions(false)
-        engineSessionLinker.unlink(session)
-    }
-
-    /**
      * Removes the provided session. If no session is provided then the selected session is removed.
      */
     fun remove(
@@ -324,8 +209,6 @@ class LegacySessionManager(
 
         values.removeAt(indexToRemove)
 
-        unlink(session)
-
         recalculateSelectionIndex(
             indexToRemove,
             selectParentIfExists,
@@ -339,7 +222,6 @@ class LegacySessionManager(
         notifyObservers { onSessionRemoved(session) }
 
         if (selectedBeforeRemove != selectedSession && selectedIndex != NO_SELECTION) {
-            getEngineSession(selectedSessionOrThrow)?.markActiveForWebExtensions(true)
             notifyObservers { onSessionSelected(selectedSessionOrThrow) }
         }
     }
@@ -472,7 +354,6 @@ class LegacySessionManager(
      */
     fun removeSessions() = synchronized(values) {
         sessions.forEach {
-            unlink(it)
             values.remove(it)
         }
 
@@ -487,7 +368,6 @@ class LegacySessionManager(
      * Removes all sessions including CustomTab sessions.
      */
     fun removeAll() = synchronized(values) {
-        values.forEach { unlink(it) }
         values.clear()
 
         selectedIndex = NO_SELECTION
@@ -507,13 +387,8 @@ class LegacySessionManager(
             "Value to select is not in list"
         }
 
-        selectedSession?.let {
-            getEngineSession(it)?.markActiveForWebExtensions(false)
-        }
-
         selectedIndex = index
 
-        getEngineSession(session)?.markActiveForWebExtensions(true)
         notifyObservers { onSessionSelected(session) }
     }
 

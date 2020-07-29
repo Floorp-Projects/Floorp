@@ -9,9 +9,9 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.concept.engine.EngineSession
-import mozilla.components.support.test.any
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -23,7 +23,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -32,6 +31,7 @@ class SearchUseCasesTest {
     private lateinit var searchEngine: SearchEngine
     private lateinit var searchEngineManager: SearchEngineManager
     private lateinit var sessionManager: SessionManager
+    private lateinit var store: BrowserStore
     private lateinit var useCases: SearchUseCases
 
     @Before
@@ -39,25 +39,24 @@ class SearchUseCasesTest {
         searchEngine = mock()
         searchEngineManager = mock()
         sessionManager = mock()
-        useCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
+        store = mock()
+        useCases = SearchUseCases(testContext, store, searchEngineManager, sessionManager)
     }
 
     @Test
     fun defaultSearch() {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
-
         val session = Session("mozilla.org")
-        val engineSession = mock<EngineSession>()
 
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         useCases.defaultSearch(searchTerms, session)
-
         assertEquals(searchTerms, session.searchTerms)
-        verify(engineSession).loadUrl(searchUrl)
+        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
+        verify(store).dispatch(actionCaptor.capture())
+        assertEquals(searchUrl, actionCaptor.value.url)
     }
 
     @Test
@@ -65,13 +64,13 @@ class SearchUseCasesTest {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 
-        val engineSession = mock<EngineSession>()
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
 
         useCases.newTabSearch(searchTerms, SessionState.Source.NEW_TAB)
-        verify(engineSession).loadUrl(searchUrl)
+        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
+        verify(store).dispatch(actionCaptor.capture())
+        assertEquals(searchUrl, actionCaptor.value.url)
     }
 
     @Test
@@ -80,20 +79,18 @@ class SearchUseCasesTest {
 
         whenever(searchEngine.buildSearchUrl("test")).thenReturn("https://search.example.com")
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(mock())
 
         var sessionCreatedForUrl: String? = null
 
-        val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager) { url ->
+        val searchUseCases = SearchUseCases(testContext, store, searchEngineManager, sessionManager) { url ->
             sessionCreatedForUrl = url
             Session(url).also { createdSession = it }
         }
 
         searchUseCases.defaultSearch("test")
-
         assertEquals("https://search.example.com", sessionCreatedForUrl)
-        assertNotNull(createdSession)
-        verify(sessionManager).getOrCreateEngineSession(createdSession!!)
+        assertNotNull(createdSession!!)
+        verify(store).dispatch(EngineAction.LoadUrlAction(createdSession!!.id, sessionCreatedForUrl!!))
     }
 
     @Test
@@ -101,17 +98,16 @@ class SearchUseCasesTest {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 
-        val engineSession = mock<EngineSession>()
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
-
         useCases.newPrivateTabSearch.invoke(searchTerms)
 
         val captor = argumentCaptor<Session>()
         verify(sessionManager).add(captor.capture(), eq(true), eq(null), eq(null), eq(null))
         assertTrue(captor.value.private)
-        verify(engineSession).loadUrl(searchUrl)
+        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
+        verify(store).dispatch(actionCaptor.capture())
+        assertEquals(searchUrl, actionCaptor.value.url)
     }
 
     @Test
@@ -119,10 +115,8 @@ class SearchUseCasesTest {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 
-        val engineSession = mock<EngineSession>()
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
 
         val parentSession = mock<Session>()
         useCases.newPrivateTabSearch.invoke(searchTerms, parentSession = parentSession)
@@ -130,6 +124,9 @@ class SearchUseCasesTest {
         val captor = argumentCaptor<Session>()
         verify(sessionManager).add(captor.capture(), eq(true), eq(null), eq(null), eq(parentSession))
         assertTrue(captor.value.private)
-        verify(engineSession).loadUrl(searchUrl)
+
+        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
+        verify(store).dispatch(actionCaptor.capture())
+        assertEquals(searchUrl, actionCaptor.value.url)
     }
 }

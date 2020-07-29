@@ -27,8 +27,8 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
-import mozilla.components.browser.session.usecases.EngineSessionUseCases
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.thumbnails.ThumbnailsMiddleware
@@ -128,20 +128,26 @@ open class DefaultComponents(private val applicationContext: Context) {
             DownloadMiddleware(applicationContext, DownloadService::class.java),
             ReaderViewMiddleware(),
             ThumbnailsMiddleware(thumbnailStorage)
-        ))
+        ) + EngineMiddleware.create(engine, ::findSessionById))
     }
 
     val customTabsStore by lazy { CustomTabsServiceStore() }
 
+    private fun findSessionById(tabId: String): Session? {
+        return sessionManager.findSessionById(tabId)
+    }
+
     val sessionManager by lazy {
         SessionManager(engine, store).apply {
-            sessionStorage.restore()?.let { snapshot -> restore(snapshot) }
+            sessionStorage.restore()?.let {
+                snapshot -> restore(snapshot)
+            }
 
             if (size == 0) {
                 add(Session("about:blank"))
             }
 
-            sessionStorage.autoSave(this)
+            sessionStorage.autoSave(store)
                 .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
                 .whenGoingToBackground()
                 .whenSessionsChange()
@@ -156,9 +162,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         }
     }
 
-    val sessionUseCases by lazy { SessionUseCases(sessionManager) }
-
-    val engineSessionUseCases by lazy { EngineSessionUseCases(sessionManager) }
+    val sessionUseCases by lazy { SessionUseCases(store, sessionManager) }
 
     // Addons
     val addonManager by lazy {
@@ -187,7 +191,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         }
     }
 
-    val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }
+    val searchUseCases by lazy { SearchUseCases(applicationContext, store, searchEngineManager, sessionManager) }
     val defaultSearchUseCase by lazy {
         { searchTerms: String ->
             searchUseCases.defaultSearch.invoke(

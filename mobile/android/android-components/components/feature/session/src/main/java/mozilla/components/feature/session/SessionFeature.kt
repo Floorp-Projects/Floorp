@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.browser.session.usecases.EngineSessionUseCases
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
@@ -18,11 +17,10 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 class SessionFeature(
     private val store: BrowserStore,
     private val goBackUseCase: SessionUseCases.GoBackUseCase,
-    engineSessionUseCases: EngineSessionUseCases,
     private val engineView: EngineView,
     private val tabId: String? = null
 ) : LifecycleAwareFeature, UserInteractionHandler {
-    internal val presenter = EngineViewPresenter(store, engineView, engineSessionUseCases, tabId)
+    internal val presenter = EngineViewPresenter(store, engineView, tabId)
 
     /**
      * Start feature: App is in the foreground.

@@ -17,7 +17,7 @@ import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_EXTENSION_URL
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_MESSAGING_ID
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareStore
+import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.webextensions.WebExtensionController
 
 /**
@@ -35,13 +35,13 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
     )
 
     override fun invoke(
-        store: MiddlewareStore<BrowserState, BrowserAction>,
+        context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
-        if (preProcess(store, action)) {
+        if (preProcess(context, action)) {
             next(action)
-            postProcess(store, action)
+            postProcess(context, action)
         }
     }
 
@@ -53,7 +53,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
      * @return true if the original action should be processed, otherwise false.
      */
     private fun preProcess(
-        store: MiddlewareStore<BrowserState, BrowserAction>,
+        context: MiddlewareContext<BrowserState, BrowserAction>,
         action: BrowserAction
     ): Boolean {
         return when (action) {
@@ -62,7 +62,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
             // (e.g. via a tabs tray fragment). In order to disconnect the port as
             // early as possible it's best to do it here directly.
             is EngineAction.UnlinkEngineSessionAction -> {
-                store.state.findTab(action.sessionId)?.engineState?.engineSession?.let {
+                context.state.findTab(action.sessionId)?.engineState?.engineSession?.let {
                     extensionController.disconnectPort(it, READER_VIEW_EXTENSION_ID)
                 }
                 true
@@ -76,20 +76,20 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1550144
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1322304
                 // https://github.com/mozilla-mobile/android-components/issues/2879
-                val tab = store.state.findTab(action.sessionId)
+                val tab = context.state.findTab(action.sessionId)
                 if (isReaderUrl(tab, action.url)) {
                     val urlReplaced = tab?.readerState?.activeUrl?.let { activeUrl ->
-                        store.dispatch(ContentAction.UpdateUrlAction(action.sessionId, activeUrl))
+                        context.dispatch(ContentAction.UpdateUrlAction(action.sessionId, activeUrl))
                         true
                     } ?: false
-                    store.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, true))
+                    context.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, true))
                     !urlReplaced
                 } else {
                     if (action.url != tab?.readerState?.activeUrl) {
-                        store.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, false))
-                        store.dispatch(ReaderAction.UpdateReaderableAction(action.sessionId, false))
-                        store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.sessionId, true))
-                        store.dispatch(ReaderAction.ClearReaderActiveUrlAction(action.sessionId))
+                        context.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, false))
+                        context.dispatch(ReaderAction.UpdateReaderableAction(action.sessionId, false))
+                        context.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.sessionId, true))
+                        context.dispatch(ReaderAction.ClearReaderActiveUrlAction(action.sessionId))
                     }
                     true
                 }
@@ -99,26 +99,26 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
     }
 
     private fun postProcess(
-        store: MiddlewareStore<BrowserState, BrowserAction>,
+        context: MiddlewareContext<BrowserState, BrowserAction>,
         action: BrowserAction
     ) {
         when (action) {
             is TabListAction.SelectTabAction -> {
-                store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.tabId, true))
-                store.dispatch(ReaderAction.UpdateReaderableAction(action.tabId, false))
-                store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.tabId, true))
+                context.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.tabId, true))
+                context.dispatch(ReaderAction.UpdateReaderableAction(action.tabId, false))
+                context.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.tabId, true))
             }
             is EngineAction.LinkEngineSessionAction -> {
-                store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.sessionId, true))
+                context.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.sessionId, true))
             }
             is ReaderAction.UpdateReaderActiveUrlAction -> {
                 // When a tab is restored, the reader page will connect, but we won't get a
                 // UpdateUrlAction. We still want to mask the moz-extension:// URL though
                 // so we update the URL here. See comment on handling UpdateUrlAction.
-                val tab = store.state.findTab(action.tabId)
+                val tab = context.state.findTab(action.tabId)
                 val url = tab?.content?.url
                 if (url != null && isReaderUrl(tab, url)) {
-                    store.dispatch(ContentAction.UpdateUrlAction(tab.id, url))
+                    context.dispatch(ContentAction.UpdateUrlAction(tab.id, url))
                 }
             }
         }

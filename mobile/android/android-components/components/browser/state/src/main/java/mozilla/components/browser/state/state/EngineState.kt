@@ -13,8 +13,13 @@ import mozilla.components.concept.engine.EngineSessionState
  * @property engineSession the engine's representation of this session.
  * @property engineSessionState serializable and restorable state of an engine session, see
  * [EngineSession.saveState] and [EngineSession.restoreState].
+ * @property engineObserver the [EngineSession.Observer] linked to [engineSession]. It is
+ * used to observe engine events and update the store. It should become obsolete, once the
+ * migration to browser state is complete, as the engine will then have direct access to
+ * the store.
  */
 data class EngineState(
     val engineSession: EngineSession? = null,
-    val engineSessionState: EngineSessionState? = null
+    val engineSessionState: EngineSessionState? = null,
+    val engineObserver: EngineSession.Observer? = null
 )

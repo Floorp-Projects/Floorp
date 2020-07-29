@@ -10,27 +10,40 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 class AutoSave(
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val sessionStorage: Storage,
     private val minimumIntervalMs: Long
 ) {
     interface Storage {
-        fun save(snapshot: SessionManager.Snapshot): Boolean
+        /**
+         * Saves the provided [BrowserState].
+         *
+         * @param state the state to save.
+         * @return true if save was successful, otherwise false.
+         */
+        fun save(state: BrowserState): Boolean
     }
 
     internal val logger = Logger("SessionStorage/AutoSave")
@@ -73,11 +86,13 @@ class AutoSave(
     /**
      * Saves the state automatically when the sessions change, e.g. sessions get added and removed.
      */
-    fun whenSessionsChange(): AutoSave {
-        AutoSaveSessionChange(
-            this,
-            sessionManager
-        ).observeSelected()
+    fun whenSessionsChange(
+        scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ): AutoSave {
+        scope.launch {
+            val monitoring = StateMonitoring(this@AutoSave)
+            monitoring.monitor(store.flow())
+        }
         return this
     }
 
@@ -111,8 +126,8 @@ class AutoSave(
             val start = now()
 
             try {
-                val snapshot = sessionManager.createSnapshot()
-                sessionStorage.save(snapshot)
+                val state = store.state
+                sessionStorage.save(state)
             } finally {
                 val took = now() - start
                 logger.debug("Saved state to disk [${took}ms]")
@@ -176,38 +191,55 @@ private class AutoSaveBackground(
     }
 }
 
-/**
- * [SelectionAwareSessionObserver] to save the state whenever sessions change.
- */
-private class AutoSaveSessionChange(
-    private val autoSave: AutoSave,
-    sessionManager: SessionManager
-) : SelectionAwareSessionObserver(sessionManager) {
-    override fun onSessionSelected(session: Session) {
-        super.onSessionSelected(session)
-        autoSave.logger.info("Save: Session selected")
-        autoSave.triggerSave()
+private class StateMonitoring(
+    private val autoSave: AutoSave
+) {
+    private var lastObservation: Observation? = null
+
+    suspend fun monitor(flow: Flow<BrowserState>) {
+        flow
+            .map { state ->
+                Observation(
+                    state.selectedTabId,
+                    state.normalTabs.size,
+                    state.selectedTab?.content?.loading
+                )
+            }
+            .ifChanged()
+            .collect { observation -> onChange(observation) }
     }
 
-    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-        if (!loading) {
+    private fun onChange(observation: Observation) {
+        if (lastObservation == null) {
+            // If this is the first observation then just remember it. We only want to react to
+            // changes and not the initial state.
+            lastObservation = observation
+            return
+        }
+
+        val triggerSave = if (lastObservation!!.selectedTabId != observation.selectedTabId) {
+            autoSave.logger.info("Save: New tab selected")
+            true
+        } else if (lastObservation!!.tabs != observation.tabs) {
+            autoSave.logger.info("Save: Number of tabs changed")
+            true
+        } else if (lastObservation!!.loading != observation.loading && observation.loading == false) {
             autoSave.logger.info("Save: Load finished")
+            true
+        } else {
+            false
+        }
+
+        lastObservation = observation
+
+        if (triggerSave) {
             autoSave.triggerSave()
         }
     }
 
-    override fun onSessionAdded(session: Session) {
-        autoSave.logger.info("Save: Session added")
-        autoSave.triggerSave()
-    }
-
-    override fun onSessionRemoved(session: Session) {
-        autoSave.logger.info("Save: Session removed")
-        autoSave.triggerSave()
-    }
-
-    override fun onAllSessionsRemoved() {
-        autoSave.logger.info("Save: All sessions removed")
-        autoSave.triggerSave()
-    }
+    private data class Observation(
+        val selectedTabId: String?,
+        val tabs: Int,
+        val loading: Boolean?
+    )
 }

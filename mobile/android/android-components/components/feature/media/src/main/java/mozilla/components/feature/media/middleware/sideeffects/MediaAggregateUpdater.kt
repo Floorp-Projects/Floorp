@@ -14,13 +14,13 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaState
-import mozilla.components.feature.media.ext.findPlayingSession
 import mozilla.components.feature.media.ext.findFullscreenMediaOrientation
+import mozilla.components.feature.media.ext.findPlayingSession
 import mozilla.components.feature.media.ext.getPausedMedia
 import mozilla.components.feature.media.ext.getPlayingMediaIdsForTab
-import mozilla.components.feature.media.ext.hasMediaWithSufficientLongDuration
 import mozilla.components.feature.media.ext.hasMediaWithAudibleAudio
-import mozilla.components.lib.state.MiddlewareStore
+import mozilla.components.feature.media.ext.hasMediaWithSufficientLongDuration
+import mozilla.components.lib.state.Store
 import mozilla.components.support.base.coroutines.Dispatchers
 
 private const val DELAY_AGGREGATE_STATE_UPDATE_MS = 100L
@@ -31,7 +31,7 @@ internal class MediaAggregateUpdater(
     @VisibleForTesting(otherwise = PRIVATE)
     internal var updateAggregateJob: Job? = null
 
-    fun process(store: MiddlewareStore<BrowserState, BrowserAction>) {
+    fun process(store: Store<BrowserState, BrowserAction>) {
         val aggregate = aggregateNewState(store.state.media)
         if (aggregate != store.state.media.aggregate) {
             // We delay updating the state here and cancel previous jobs in order to batch multiple

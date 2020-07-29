@@ -10,7 +10,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareStore
+import mozilla.components.lib.state.MiddlewareContext
 
 /**
  * [Middleware] implementation for handling [ContentAction.UpdateThumbnailAction] and storing
@@ -20,7 +20,7 @@ class ThumbnailsMiddleware(
     private val thumbnailStorage: ThumbnailStorage
 ) : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
-        store: MiddlewareStore<BrowserState, BrowserAction>,
+        context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
@@ -31,12 +31,12 @@ class ThumbnailsMiddleware(
                 thumbnailStorage.saveThumbnail(action.sessionId, action.thumbnail)
             }
             is TabListAction.RemoveAllNormalTabsAction -> {
-                store.state.tabs.filterNot { it.content.private }.forEach { tab ->
+                context.state.tabs.filterNot { it.content.private }.forEach { tab ->
                     thumbnailStorage.deleteThumbnail(tab.id)
                 }
             }
             is TabListAction.RemoveAllPrivateTabsAction -> {
-                store.state.tabs.filter { it.content.private }.forEach { tab ->
+                context.state.tabs.filter { it.content.private }.forEach { tab ->
                     thumbnailStorage.deleteThumbnail(tab.id)
                 }
             }

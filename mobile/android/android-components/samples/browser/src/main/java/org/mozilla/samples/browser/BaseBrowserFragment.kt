@@ -67,7 +67,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
             feature = SessionFeature(
                 components.store,
                 components.sessionUseCases.goBack,
-                components.engineSessionUseCases,
                 layout.engineView,
                 sessionId),
             owner = this,
@@ -190,7 +189,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                 engine = components.engine,
                 view = layout.p2p,
                 thunk = { components.nearbyConnection },
-                sessionManager = components.sessionManager,
                 tabsUseCases = components.tabsUseCases,
                 sessionUseCases = components.sessionUseCases
             ) { permissions ->
