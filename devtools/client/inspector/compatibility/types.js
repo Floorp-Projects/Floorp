@@ -35,6 +35,8 @@ const issue = {
   deprecated: PropTypes.bool.isRequired,
   // Whether the CSS property is experimental or not.
   experimental: PropTypes.bool.isRequired,
+  // Whether the CSS property is needed prefix to cover all target browsers or not.
+  prefixNeeded: PropTypes.bool.isRequired,
   // The browsers which do not support the CSS property.
   unsupportedBrowsers: PropTypes.arrayOf(PropTypes.shape(browser)).isRequired,
   // Nodes that caused this issue. This will be available for top-level target issues only.

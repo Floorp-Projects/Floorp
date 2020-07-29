@@ -84,18 +84,29 @@ class IssueItem extends PureComponent {
   }
 
   _renderCauses() {
-    const { deprecated, experimental } = this.props;
+    const { deprecated, experimental, prefixNeeded } = this.props;
 
-    if (!deprecated && !experimental) {
+    if (!deprecated && !experimental && !prefixNeeded) {
       return null;
     }
 
-    let localizationId = "compatibility-issue-deprecated-experimental";
+    let localizationId = "";
 
-    if (!deprecated) {
-      localizationId = "compatibility-issue-experimental";
-    } else if (!experimental) {
+    if (deprecated && experimental && prefixNeeded) {
+      localizationId =
+        "compatibility-issue-deprecated-experimental-prefixneeded";
+    } else if (deprecated && experimental) {
+      localizationId = "compatibility-issue-deprecated-experimental";
+    } else if (deprecated && prefixNeeded) {
+      localizationId = "compatibility-issue-deprecated-prefixneeded";
+    } else if (experimental && prefixNeeded) {
+      localizationId = "compatibility-issue-experimental-prefixneeded";
+    } else if (deprecated) {
       localizationId = "compatibility-issue-deprecated";
+    } else if (experimental) {
+      localizationId = "compatibility-issue-experimental";
+    } else if (prefixNeeded) {
+      localizationId = "compatibility-issue-prefixneeded";
     }
 
     return Localized(
