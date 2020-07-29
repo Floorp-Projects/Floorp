@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default shortcut label used if website has no title -->
+    <string name="mozac_feature_pwa_default_shortcut_label">वेबसाइट</string>
+
+    <!-- Text shown on the second row of the site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_notification_text">इस ऐप के लिए URL को कॉपी करने के लिए टैप करें</string>
+    <!-- Toast displayed when the website URL is copied. -->
+    <string name="mozac_feature_pwa_copy_success">URL कॉपी हो गया।</string>
+</resources>

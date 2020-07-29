@@ -151,6 +151,15 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Pagina pas trobada</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Lo navegador a pas pogut trobar lo servidor òste per l’adreça fornida.</p>
+      <ul>
+        <li>Verificatz l’adreça se per cas i a una deca coma
+          <strong>ww</strong>.exemple.com allòc de
+          <strong>www</strong>.exemple.com.</li>
+        <li>Se podètz pas cargar cap de pagina, verificatz la connexion de donada del periferic o Wi-Fi.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Cap de connexion Internet</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->

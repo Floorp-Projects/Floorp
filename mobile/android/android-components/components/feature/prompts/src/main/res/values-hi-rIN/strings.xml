@@ -18,6 +18,8 @@
     <string name="mozac_feature_prompt_password_hint">पासवर्ड</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
     <string name="mozac_feature_prompt_dont_save">मत सहेजें‌</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">कभी नहीं सहेजें</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">सहेजें</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -45,6 +47,12 @@
     <string name="mozac_feature_prompts_deny">अस्वीकार करें</string>
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_title">क्या आपको यकीन है?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">क्या आप इस साइट को छोड़ना चाहते हैं? आपके द्वारा दर्ज किया गया डेटा सहेजा नहीं जा सकता है</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">रुकें</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">छोड़ें</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">एक महीना चुनें</string>
     <!-- January (short description), used on the month chooser dialog. -->
