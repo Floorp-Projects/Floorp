@@ -7,7 +7,7 @@ use common::*;
 
 use once_cell::sync::Lazy;
 
-use glean::metrics::{
+use glean::private::{
     BooleanMetric, CommonMetricData, CounterMetric, ErrorType, LabeledMetric, Lifetime,
     StringMetric,
 };

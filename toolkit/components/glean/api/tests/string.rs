@@ -6,7 +6,7 @@ mod common;
 use common::*;
 
 use glean::ipc;
-use glean::metrics::{CommonMetricData, Lifetime, StringMetric};
+use glean::private::{CommonMetricData, Lifetime, StringMetric};
 
 #[test]
 fn sets_string_value() {
