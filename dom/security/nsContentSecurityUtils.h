@@ -53,8 +53,6 @@ class nsContentSecurityUtils {
   // Helper function to Check if a Download is allowed;
   static bool IsDownloadAllowed(nsIChannel* aChannel,
                                 const nsAutoCString& aMimeTypeGuess);
-  // Logs an Error Message to the Console
-  static void LogMessageToConsole(nsIHttpChannel* aChannel, const char* aMsg);
 
 #if defined(DEBUG)
   static void AssertAboutPageHasCSP(mozilla::dom::Document* aDocument);
@@ -62,6 +60,12 @@ class nsContentSecurityUtils {
 
   static bool ValidateScriptFilename(const char* aFilename,
                                      bool aIsSystemRealm);
+  /*
+   * Checks if a Channel should be able to proceed a download.
+   */
+  static bool IsDownloadAllowed(nsIChannel* aChannel);
+  // Helper Function to Post a message to the corresponding JS-Console
+  static void LogMessageToConsole(nsIHttpChannel* aChannel, const char* aMsg);
 };
 
 #endif /* nsContentSecurityUtils_h___ */
