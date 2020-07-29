@@ -3698,6 +3698,12 @@
           ${If} ${FileExists} "$R0\updates"
             RmDir /r "$R0"
           ${EndIf}
+
+          ; Also remove the secure log files that our updater may have created
+          ; inside the maintenance service path. There are several files named
+          ; with the install hash and an extension indicating the kind of file.
+          ; so use a wildcard to delete them all.
+          Delete "$PROGRAMFILES32\Mozilla Maintenance Service\UpdateLogs\$R1.*"
         ${EndIf}
       ${EndIf}
 

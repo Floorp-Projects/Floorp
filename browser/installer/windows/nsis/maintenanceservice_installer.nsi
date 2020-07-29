@@ -317,6 +317,7 @@ Section "Uninstall"
   RMDir /REBOOTOK "$APPDATA\Mozilla"
   RMDir /REBOOTOK "$INSTDIR\logs"
   RMDir /REBOOTOK "$INSTDIR\update"
+  RMDir /REBOOTOK "$INSTDIR\UpdateLogs"
   RMDir /REBOOTOK "$INSTDIR"
 
   ${If} ${RunningX64}
