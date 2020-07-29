@@ -9106,6 +9106,28 @@ class MGuardNullProto : public MUnaryInstruction,
   }
 };
 
+// Guard the object is not a proxy.
+class MGuardIsNotProxy : public MUnaryInstruction,
+                         public SingleObjectPolicy::Data {
+  explicit MGuardIsNotProxy(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(obj->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardIsNotProxy)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Loads a specific JSObject* that was originally nursery-allocated.
 // See also WarpObjectField.
 class MNurseryObject : public MNullaryInstruction {
@@ -10889,6 +10911,10 @@ class MIsCallable : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
   MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
@@ -10906,6 +10932,31 @@ class MIsConstructor : public MUnaryInstruction,
   INSTRUCTION_HEADER(IsConstructor)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+class MIsCrossRealmArrayConstructor : public MUnaryInstruction,
+                                      public SingleObjectPolicy::Data {
+ public:
+  explicit MIsCrossRealmArrayConstructor(MDefinition* object)
+      : MUnaryInstruction(classOpcode, object) {
+    setResultType(MIRType::Boolean);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(IsCrossRealmArrayConstructor)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };

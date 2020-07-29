@@ -150,8 +150,11 @@ static bool intrinsic_IsArray(JSContext* cx, unsigned argc, Value* vp) {
 static bool intrinsic_IsCrossRealmArrayConstructor(JSContext* cx, unsigned argc,
                                                    Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args[0].isObject());
+
   bool result = false;
-  if (!IsCrossRealmArrayConstructor(cx, args[0], &result)) {
+  if (!IsCrossRealmArrayConstructor(cx, &args[0].toObject(), &result)) {
     return false;
   }
   args.rval().setBoolean(result);

@@ -1045,14 +1045,8 @@ static bool IsArrayConstructor(const Value& v) {
   return v.isObject() && IsArrayConstructor(&v.toObject());
 }
 
-bool js::IsCrossRealmArrayConstructor(JSContext* cx, const Value& v,
+bool js::IsCrossRealmArrayConstructor(JSContext* cx, JSObject* obj,
                                       bool* result) {
-  if (!v.isObject()) {
-    *result = false;
-    return true;
-  }
-
-  JSObject* obj = &v.toObject();
   if (obj->is<WrapperObject>()) {
     obj = CheckedUnwrapDynamic(obj, cx);
     if (!obj) {

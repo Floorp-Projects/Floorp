@@ -263,6 +263,16 @@ bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsNotProxy(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardIsNotProxy::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardProto(ObjOperandId objId,
                                            uint32_t protoOffset) {
   MDefinition* def = getOperand(objId);
@@ -1845,6 +1855,17 @@ bool WarpCacheIRTranspiler::emitIsConstructorResult(ObjOperandId objId) {
   add(isConstructor);
 
   pushResult(isConstructor);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitIsCrossRealmArrayConstructorResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MIsCrossRealmArrayConstructor::New(alloc(), obj);
+  add(ins);
+
+  pushResult(ins);
   return true;
 }
 
