@@ -208,6 +208,8 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
       sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32},
     {"ssrc-group", sizeof("ssrc-group"), sdp_parse_attr_ssrc_group,
       sdp_build_attr_ssrc_group},
+    {"rtcp-rsize", sizeof("rtcp-rsize"),
+      sdp_parse_attr_simple_flag, sdp_build_attr_simple_flag},
 };
 
 /* Note: These *must* be in the same order as the enum types. */
