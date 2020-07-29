@@ -3253,6 +3253,36 @@ bool CacheIRCompiler::emitLoadStringCharCodeResult(StringOperandId strId,
   return true;
 }
 
+bool CacheIRCompiler::emitStringToLowerCaseResult(StringOperandId strId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+
+  callvm.prepare();
+  masm.Push(str);
+
+  using Fn = JSString* (*)(JSContext*, HandleString);
+  callvm.call<Fn, js::StringToLowerCase>();
+  return true;
+}
+
+bool CacheIRCompiler::emitStringToUpperCaseResult(StringOperandId strId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+
+  callvm.prepare();
+  masm.Push(str);
+
+  using Fn = JSString* (*)(JSContext*, HandleString);
+  callvm.call<Fn, js::StringToUpperCase>();
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadArgumentsObjectArgResult(ObjOperandId objId,
                                                        Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

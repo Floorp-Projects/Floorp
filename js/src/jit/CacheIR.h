@@ -1620,6 +1620,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachStringCharAt(HandleFunction callee);
   AttachDecision tryAttachStringFromCharCode(HandleFunction callee);
   AttachDecision tryAttachStringFromCodePoint(HandleFunction callee);
+  AttachDecision tryAttachStringToLowerCase(HandleFunction callee);
+  AttachDecision tryAttachStringToUpperCase(HandleFunction callee);
   AttachDecision tryAttachMathRandom(HandleFunction callee);
   AttachDecision tryAttachMathAbs(HandleFunction callee);
   AttachDecision tryAttachMathClz32(HandleFunction callee);
