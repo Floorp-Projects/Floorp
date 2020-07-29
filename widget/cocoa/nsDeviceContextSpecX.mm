@@ -18,13 +18,14 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
 
+#include "CUPSPrinterList.h"
 #include "nsCocoaUtils.h"
 #include "nsCRT.h"
 #include "nsCUPSShim.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFileMac.h"
 #include "nsPaper.h"
-#include "nsPrinter.h"
+#include "nsPrinterCUPS.h"
 #include "nsPrintSettingsX.h"
 #include "nsQueryObject.h"
 #include "prenv.h"
@@ -97,22 +98,22 @@ static nsresult FillPaperListForPrinter(PMPrinter aPrinter,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult CreatePrinter(PMPrinter aPMPrinter, nsIPrinter** aPrinter) {
+static nsresult CreatePrinter(mozilla::CUPSPrinterList& aCupsPrinterList, PMPrinter aPMPrinter,
+                              nsIPrinter** aPrinter) {
   NS_ENSURE_ARG_POINTER(aPrinter);
   *aPrinter = nullptr;
-
-  nsAutoString printerName;
-  NSString* name = static_cast<NSString*>(PMPrinterGetName(aPMPrinter));
-  nsCocoaUtils::GetStringForNSString(name, printerName);
 
   nsTArray<RefPtr<nsIPaper>> paperList;
   nsresult rv = FillPaperListForPrinter(aPMPrinter, paperList);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aPrinter = new nsPrinter(printerName, paperList);
-  NS_ADDREF(*aPrinter);
-
-  return NS_OK;
+  NSString* const printerID = static_cast<NSString*>(PMPrinterGetID(aPMPrinter));
+  if (cups_dest_t* const dest = aCupsPrinterList.FindPrinterByName([printerID UTF8String])) {
+    *aPrinter = new nsPrinterCUPS(sCupsShim, dest, std::move(paperList));
+    NS_ADDREF(*aPrinter);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------
@@ -142,16 +143,23 @@ nsPrinterListX::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   aPrinters.Clear();
+  if (!sCupsShim.IsInitialized()) {
+    if (!sCupsShim.Init()) {
+      return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
+    }
+  }
   CFArrayRef pmPrinterList;
   OSStatus status = PMServerCreatePrinterList(kPMServerLocal, &pmPrinterList);
   NS_ENSURE_TRUE(status == noErr && pmPrinterList, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE);
 
   const CFIndex printerCount = CFArrayGetCount(pmPrinterList);
+  mozilla::CUPSPrinterList cupsPrinterList{sCupsShim};
+  cupsPrinterList.Initialize();
   for (auto i = 0; i < printerCount; ++i) {
     PMPrinter pmPrinter =
         static_cast<PMPrinter>(const_cast<void*>(CFArrayGetValueAtIndex(pmPrinterList, i)));
     RefPtr<nsIPrinter> printer;
-    nsresult rv = CreatePrinter(pmPrinter, getter_AddRefs(printer));
+    nsresult rv = CreatePrinter(cupsPrinterList, pmPrinter, getter_AddRefs(printer));
     NS_ENSURE_SUCCESS(rv, rv);
     aPrinters.AppendElement(std::move(printer));
   }
