@@ -53,12 +53,6 @@ function DumpViews()
   gDebugTools.dumpViews();
 }
 
-function DumpWebShells()
-{
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  gDebugTools.dumpWebShells();
-}
-
 function InputKey(inEvent)
 {
   if (inEvent.keyCode == KeyEvent.DOM_VK_RETURN)
@@ -86,7 +80,6 @@ URL: <input type="text" size="100" name="urlfield" value="http://www.mozilla.org
 <input type="button" value="Dump Frames" onclick="DumpFrames()">
 <input type="button" value="Dump Content" onclick="DumpContent()">
 <input type="button" value="Dump Views" onclick="DumpViews()">
-<input type="button" value="Dump WebShells" onclick="DumpWebShells()">
 
 <input type="checkbox" id="showBordersCheck" name="showBordersCheck"
     onchange="SetShowFrameBorders(document.dumpform.showBordersCheck.checked)"></input>

@@ -32,7 +32,6 @@ interface nsILayoutDebuggingTools : nsISupports
     void setPagedMode(in boolean enabled);
 
     /* Run various tests. */
-    void dumpWebShells();
     void dumpContent();
     void dumpFrames();
     void dumpFramesInCSSPixels();

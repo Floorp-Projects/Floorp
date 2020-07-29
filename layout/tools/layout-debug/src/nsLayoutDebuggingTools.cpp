@@ -145,41 +145,6 @@ nsLayoutDebuggingTools::SetPagedMode(bool aPagedMode) {
   return NS_OK;
 }
 
-static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out,
-                          int32_t aIndent) {
-  nsString name;
-  nsCOMPtr<nsIDocShellTreeItem> parent;
-  int32_t i, n;
-
-  for (i = aIndent; --i >= 0;) fprintf(out, "  ");
-
-  fprintf(out, "%p '", static_cast<void*>(aShellItem));
-  aShellItem->GetName(name);
-  aShellItem->GetInProcessSameTypeParent(getter_AddRefs(parent));
-  fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
-  fprintf(out, "' parent=%p <\n", static_cast<void*>(parent));
-
-  ++aIndent;
-  aShellItem->GetInProcessChildCount(&n);
-  for (i = 0; i < n; ++i) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    aShellItem->GetInProcessChildAt(i, getter_AddRefs(child));
-    if (child) {
-      DumpAWebShell(child, out, aIndent);
-    }
-  }
-  --aIndent;
-  for (i = aIndent; --i >= 0;) fprintf(out, "  ");
-  fputs(">\n", out);
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::DumpWebShells() {
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
-  DumpAWebShell(mDocShell, stdout, 0);
-  return NS_OK;
-}
-
 static void DumpContentRecur(nsIDocShell* aDocShell, FILE* out) {
 #ifdef DEBUG
   if (nullptr != aDocShell) {
