@@ -24,6 +24,7 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
+import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
@@ -139,6 +140,18 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SearchShortcutSelected -> EventWrapper(
             { SearchShortcuts.selected.record(it) },
             { SearchShortcuts.selectedKeys.valueOf(it) }
+        )
+        is Event.LoginDialogPromptDisplayed -> EventWrapper<NoExtraKeys>(
+            { LoginDialog.displayed.record(it) }
+        )
+        is Event.LoginDialogPromptCancelled -> EventWrapper<NoExtraKeys>(
+            { LoginDialog.cancelled.record(it) }
+        )
+        is Event.LoginDialogPromptSave -> EventWrapper<NoExtraKeys>(
+            { LoginDialog.saved.record(it) }
+        )
+        is Event.LoginDialogPromptNeverSave -> EventWrapper<NoExtraKeys>(
+            { LoginDialog.neverSave.record(it) }
         )
         is Event.FindInPageOpened -> EventWrapper<NoExtraKeys>(
             { FindInPage.opened.record(it) }

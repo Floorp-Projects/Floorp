@@ -21,6 +21,7 @@ import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.downloads.facts.DownloadsFacts
 import mozilla.components.feature.findinpage.facts.FindInPageFacts
 import mozilla.components.feature.media.facts.MediaFacts
+import mozilla.components.feature.prompts.dialog.LoginDialogFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -184,6 +185,11 @@ sealed class Event {
     object OnboardingWhatsNew : Event()
     object OnboardingFinish : Event()
     object ChangedToDefaultBrowser : Event()
+
+    object LoginDialogPromptDisplayed : Event()
+    object LoginDialogPromptCancelled : Event()
+    object LoginDialogPromptSave : Event()
+    object LoginDialogPromptNeverSave : Event()
 
     object ContextualHintETPDisplayed : Event()
     object ContextualHintETPDismissed : Event()
@@ -514,6 +520,11 @@ sealed class Event {
 }
 
 private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
+    Component.FEATURE_PROMPTS to LoginDialogFacts.Items.DISPLAY -> Event.LoginDialogPromptDisplayed
+    Component.FEATURE_PROMPTS to LoginDialogFacts.Items.CANCEL -> Event.LoginDialogPromptCancelled
+    Component.FEATURE_PROMPTS to LoginDialogFacts.Items.NEVER_SAVE -> Event.LoginDialogPromptNeverSave
+    Component.FEATURE_PROMPTS to LoginDialogFacts.Items.SAVE -> Event.LoginDialogPromptSave
+
     Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.CLOSE -> Event.FindInPageClosed
     Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.INPUT -> Event.FindInPageSearchCommitted
     Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {

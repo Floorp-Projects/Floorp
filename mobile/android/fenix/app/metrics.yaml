@@ -471,6 +471,52 @@ context_menu:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
 
+login_dialog:
+  displayed:
+    type: event
+    description: |
+      The login dialog prompt was displayed
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9730
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/13050
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-02-01"
+  cancelled:
+    type: event
+    description: |
+      The login dialog prompt was cancelled
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9730
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/13050
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-02-01"
+  saved:
+    type: event
+    description: |
+      The login dialog prompt "save" button was pressed
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9730
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/13050
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-02-01"
+  never_save:
+    type: event
+    description: |
+      The login dialog prompt "never save" button was pressed
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9730
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/13050
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-02-01"
+
 find_in_page:
   opened:
     type: event

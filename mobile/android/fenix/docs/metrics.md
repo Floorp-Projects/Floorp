@@ -118,6 +118,10 @@ The following metrics are added to the ping:
 | history.removed |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user removed a history item  |[1](https://github.com/mozilla-mobile/fenix/pull/3940)||2020-10-01 | |
 | history.removed_all |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user removed all history items  |[1](https://github.com/mozilla-mobile/fenix/pull/3940)||2020-10-01 | |
 | history.shared |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user shared a history item  |[1](https://github.com/mozilla-mobile/fenix/pull/3940)||2020-10-01 | |
+| login_dialog.cancelled |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |The login dialog prompt was cancelled  |[1](https://github.com/mozilla-mobile/fenix/pull/13050)||2021-02-01 | |
+| login_dialog.displayed |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |The login dialog prompt was displayed  |[1](https://github.com/mozilla-mobile/fenix/pull/13050)||2021-02-01 | |
+| login_dialog.never_save |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |The login dialog prompt "never save" button was pressed  |[1](https://github.com/mozilla-mobile/fenix/pull/13050)||2021-02-01 | |
+| login_dialog.saved |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |The login dialog prompt "save" button was pressed  |[1](https://github.com/mozilla-mobile/fenix/pull/13050)||2021-02-01 | |
 | logins.copy_login |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user copied a piece of a login in saved logins  |[1](https://github.com/mozilla-mobile/fenix/pull/6352)||2020-10-01 | |
 | logins.delete_saved_login |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user confirms delete of a saved login  |[1](https://github.com/mozilla-mobile/fenix/issues/11208)||2020-10-01 | |
 | logins.open_individual_login |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user accessed an individual login in saved logins  |[1](https://github.com/mozilla-mobile/fenix/pull/6352)||2020-10-01 | |
