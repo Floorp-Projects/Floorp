@@ -2549,6 +2549,18 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
     return EditActionCanceled();
   }
 
+  if (StaticPrefs::editor_white_space_normalization_blink_compatible()) {
+    if (scanFromStartPointResult.InNormalWhiteSpaces() ||
+        scanFromStartPointResult.InNormalText()) {
+      EditActionResult result = HandleDeleteTextAroundCollapsedSelection(
+          aDirectionAndAmount, scanFromStartPointResult.Point());
+      NS_WARNING_ASSERTION(
+          result.Succeeded(),
+          "HTMLEditor::HandleDeleteCollapsedSelectionInTextNode() failed");
+      return result;
+    }
+  }
+
   if (scanFromStartPointResult.InNormalWhiteSpaces()) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtWhiteSpaces(
         aDirectionAndAmount, startPoint);
@@ -2562,11 +2574,11 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
     if (NS_WARN_IF(!scanFromStartPointResult.GetContent()->IsText())) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
-    EditActionResult result = HandleDeleteCollapsedSelectionAtTextNode(
+    EditActionResult result = HandleDeleteCollapsedSelectionAtVisibleChar(
         aDirectionAndAmount, scanFromStartPointResult.Point());
     NS_WARNING_ASSERTION(
         result.Succeeded(),
-        "HTMLEditor::HandleDeleteCollapsedSelectionAtTextNode() failed");
+        "HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar() failed");
     return result;
   }
 
@@ -2685,15 +2697,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
     nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aPointToDelete) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (StaticPrefs::editor_white_space_normalization_blink_compatible()) {
-    EditActionResult result = HandleDeleteTextAroundCollapsedSelection(
-        aDirectionAndAmount, aPointToDelete);
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "HTMLEditor::HandleDeleteTextAroundCollapsedSelection() failed");
-    return result;
-  }
+  MOZ_ASSERT(!StaticPrefs::editor_white_space_normalization_blink_compatible());
 
   if (aDirectionAndAmount == nsIEditor::eNext) {
     nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
@@ -2721,10 +2725,11 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
   return EditActionHandled(rv);
 }
 
-EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtTextNode(
+EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
     nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aPointToDelete) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(!StaticPrefs::editor_white_space_normalization_blink_compatible());
   MOZ_ASSERT(aPointToDelete.IsSet());
   MOZ_ASSERT(aPointToDelete.IsInTextNode());
 

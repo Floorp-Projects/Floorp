@@ -343,6 +343,22 @@ class EditorDOMPointBase final {
     return nsCRT::IsAsciiSpace(ch) || ch == 0x00A0;
   }
 
+  MOZ_NEVER_INLINE_DEBUG bool IsCharHighSurrogateFollowedByLowSurrogate()
+      const {
+    MOZ_ASSERT(IsSetAndValid());
+    MOZ_ASSERT(!IsEndOfContainer());
+    return ContainerAsText()
+        ->TextFragment()
+        .IsHighSurrogateFollowedByLowSurrogateAt(mOffset.value());
+  }
+  MOZ_NEVER_INLINE_DEBUG bool IsCharLowSurrogateFollowingHighSurrogate() const {
+    MOZ_ASSERT(IsSetAndValid());
+    MOZ_ASSERT(!IsEndOfContainer());
+    return ContainerAsText()
+        ->TextFragment()
+        .IsLowSurrogateFollowingHighSurrogateAt(mOffset.value());
+  }
+
   MOZ_NEVER_INLINE_DEBUG char16_t PreviousChar() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsStartOfContainer());
