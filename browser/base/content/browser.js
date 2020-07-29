@@ -1510,7 +1510,6 @@ function _loadURI(browser, uri, params = {}) {
     params.loadFlags || params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
   let hasValidUserGestureActivation =
     document.hasValidTransientUserGestureActivation;
-
   if (!triggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
   }
