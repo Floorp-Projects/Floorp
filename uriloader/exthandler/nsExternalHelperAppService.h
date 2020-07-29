@@ -24,6 +24,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIChannel.h"
 #include "nsIBackgroundFileSaver.h"
+#include "nsIHttpChannel.h"
 
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
