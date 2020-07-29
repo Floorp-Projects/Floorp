@@ -6163,6 +6163,20 @@ class LGuardNullProto : public LInstructionHelper<0, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LGuardIsNotProxy : public LInstructionHelper<0, 1, 1> {
+ public:
+  LIR_HEADER(GuardIsNotProxy)
+
+  LGuardIsNotProxy(const LAllocation& obj, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 class LGuardObjectGroup : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(GuardObjectGroup)
@@ -6306,6 +6320,17 @@ class LIsConstructor : public LInstructionHelper<1, 1, 0> {
 
   const LAllocation* object() { return getOperand(0); }
   MIsConstructor* mir() const { return mir_->toIsConstructor(); }
+};
+
+class LIsCrossRealmArrayConstructor : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(IsCrossRealmArrayConstructor);
+  explicit LIsCrossRealmArrayConstructor(const LAllocation& object)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, object);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
 };
 
 class LIsArrayO : public LInstructionHelper<1, 1, 0> {

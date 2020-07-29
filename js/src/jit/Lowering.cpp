@@ -4110,6 +4110,16 @@ void LIRGenerator::visitGuardNullProto(MGuardNullProto* ins) {
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardIsNotProxy(MGuardIsNotProxy* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir =
+      new (alloc()) LGuardIsNotProxy(useRegister(ins->object()), temp());
+  assignSnapshot(lir, BailoutKind::NotProxyGuard);
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitNurseryObject(MNurseryObject* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
 
@@ -4485,6 +4495,15 @@ void LIRGenerator::visitIsConstructor(MIsConstructor* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Boolean);
   define(new (alloc()) LIsConstructor(useRegister(ins->object())), ins);
+}
+
+void LIRGenerator::visitIsCrossRealmArrayConstructor(
+    MIsCrossRealmArrayConstructor* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Boolean);
+  define(new (alloc())
+             LIsCrossRealmArrayConstructor(useRegister(ins->object())),
+         ins);
 }
 
 static bool CanEmitIsObjectOrIsNullOrUndefinedAtUses(MInstruction* ins) {

@@ -179,7 +179,7 @@ extern bool array_construct(JSContext* cx, unsigned argc, Value* vp);
 
 extern JSString* ArrayToSource(JSContext* cx, HandleObject obj);
 
-extern bool IsCrossRealmArrayConstructor(JSContext* cx, const Value& v,
+extern bool IsCrossRealmArrayConstructor(JSContext* cx, JSObject* obj,
                                          bool* result);
 
 extern bool ObjectMayHaveExtraIndexedProperties(JSObject* obj);
