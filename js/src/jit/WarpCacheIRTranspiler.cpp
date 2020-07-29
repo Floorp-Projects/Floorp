@@ -931,6 +931,17 @@ bool WarpCacheIRTranspiler::emitStringFromCharCodeResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStringFromCodePointResult(
+    Int32OperandId codeId) {
+  MDefinition* code = getOperand(codeId);
+
+  auto* fromCodePoint = MFromCodePoint::New(alloc(), code);
+  add(fromCodePoint);
+
+  pushResult(fromCodePoint);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitStoreDynamicSlot(ObjOperandId objId,
                                                  uint32_t offsetOffset,
                                                  ValOperandId rhsId) {

@@ -12,6 +12,7 @@
 #include "jit/VMFunctions.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
+#include "util/Unicode.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
@@ -1535,14 +1536,19 @@ bool BaselineCacheIRCompiler::emitIsTypedArrayResult(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitStringFromCharCodeResult(
-    Int32OperandId codeId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
+bool BaselineCacheIRCompiler::emitStringFromCodeResult(Int32OperandId codeId,
+                                                       StringCode stringCode) {
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   Register code = allocator.useRegister(masm, codeId);
+
+  FailurePath* failure = nullptr;
+  if (stringCode == StringCode::CodePoint) {
+    if (!addFailurePath(&failure)) {
+      return false;
+    }
+  }
 
   allocator.discardStack(masm);
 
@@ -1559,13 +1565,25 @@ bool BaselineCacheIRCompiler::emitStringFromCharCodeResult(
   {
     masm.bind(&vmCall);
 
+    if (stringCode == StringCode::CodePoint) {
+      // Note: This condition must match tryAttachStringFromCodePoint to prevent
+      // failure loops.
+      masm.branch32(Assembler::Above, code, Imm32(unicode::NonBMPMax),
+                    failure->label());
+    }
+
     AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
     masm.Push(code);
 
-    using Fn = JSLinearString* (*)(JSContext*, int32_t);
-    callVM<Fn, jit::StringFromCharCode>(masm);
+    if (stringCode == StringCode::CodeUnit) {
+      using Fn = JSLinearString* (*)(JSContext*, int32_t);
+      callVM<Fn, jit::StringFromCharCode>(masm);
+    } else {
+      using Fn = JSString* (*)(JSContext*, int32_t);
+      callVM<Fn, jit::StringFromCodePoint>(masm);
+    }
 
     stubFrame.leave(masm);
     masm.mov(ReturnReg, scratch);
@@ -1574,6 +1592,20 @@ bool BaselineCacheIRCompiler::emitStringFromCharCodeResult(
   masm.bind(&done);
   masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
   return true;
+}
+
+bool BaselineCacheIRCompiler::emitStringFromCharCodeResult(
+    Int32OperandId codeId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  return emitStringFromCodeResult(codeId, StringCode::CodeUnit);
+}
+
+bool BaselineCacheIRCompiler::emitStringFromCodePointResult(
+    Int32OperandId codeId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  return emitStringFromCodeResult(codeId, StringCode::CodePoint);
 }
 
 bool BaselineCacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
