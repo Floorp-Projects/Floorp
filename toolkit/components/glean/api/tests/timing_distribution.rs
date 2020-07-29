@@ -5,7 +5,7 @@
 mod common;
 use common::*;
 
-use glean::metrics::{CommonMetricData, Lifetime, TimeUnit, TimingDistributionMetric};
+use glean::private::{CommonMetricData, Lifetime, TimeUnit, TimingDistributionMetric};
 
 #[test]
 fn smoke_test_timing_distribution() {

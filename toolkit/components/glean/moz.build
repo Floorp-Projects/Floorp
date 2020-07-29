@@ -24,6 +24,14 @@ if CONFIG['MOZ_GLEAN']:
         'gtest',
     ]
 
+    GeneratedFile('api/src/metrics.rs',
+                  script='build_scripts/glean_parser_ext/run_glean_parser.py',
+                  inputs=['metrics.yaml'])
+
+    GeneratedFile('api/src/pings.rs',
+                  script='build_scripts/glean_parser_ext/run_glean_parser.py',
+                  inputs=['pings.yaml'])
+
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 

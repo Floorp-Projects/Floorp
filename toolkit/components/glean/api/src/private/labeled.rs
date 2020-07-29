@@ -56,7 +56,7 @@ mod private {
                 !need_ipc(),
                 "Labeled String metrics are not supported in non-main processes"
             );
-            StringMetric::Parent(crate::metrics::string::StringMetricImpl(metric))
+            StringMetric::Parent(crate::private::string::StringMetricImpl(metric))
         }
 
         fn new_inner(meta: CommonMetricData) -> Self::Inner {
@@ -72,7 +72,7 @@ mod private {
 
         fn from_inner(metric: Self::Inner) -> Self {
             assert!(!need_ipc());
-            CounterMetric::Parent(crate::metrics::counter::CounterMetricImpl(metric))
+            CounterMetric::Parent(crate::private::counter::CounterMetricImpl(metric))
         }
 
         fn new_inner(meta: CommonMetricData) -> Self::Inner {
