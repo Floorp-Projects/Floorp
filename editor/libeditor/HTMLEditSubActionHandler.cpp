@@ -3905,18 +3905,28 @@ void HTMLEditor::ExtendRangeToDeleteWithNormalizingWhiteSpaces(
   // adjacent text node's first or last character information in some cases.
   EditorDOMPointInText precedingCharPoint =
       WSRunScanner::GetPreviousEditableCharPoint(*this, aStartToDelete);
-  bool maybeNormalizePrecedingWhiteSpaces =
-      precedingCharPoint.IsSet() && !precedingCharPoint.IsEndOfContainer() &&
+  EditorDOMPointInText followingCharPoint =
+      WSRunScanner::GetInclusiveNextEditableCharPoint(*this, aEndToDelete);
+  // Blink-compat: Normalize white-spaces in first node only when not removing
+  //               its last character or no text nodes follow the first node.
+  //               If removing last character of first node and there are
+  //               following text nodes, white-spaces in following text node are
+  //               normalized instead.
+  const bool removingLastCharOfStartNode =
+      aStartToDelete.ContainerAsText() != aEndToDelete.ContainerAsText() ||
+      (aEndToDelete.IsEndOfContainer() && followingCharPoint.IsSet());
+  const bool maybeNormalizePrecedingWhiteSpaces =
+      !removingLastCharOfStartNode && precedingCharPoint.IsSet() &&
+      !precedingCharPoint.IsEndOfContainer() &&
       precedingCharPoint.ContainerAsText() ==
           aStartToDelete.ContainerAsText() &&
       precedingCharPoint.IsCharASCIISpaceOrNBSP() &&
       !EditorUtils::IsContentPreformatted(
           *precedingCharPoint.ContainerAsText());
-  EditorDOMPointInText followingCharPoint =
-      WSRunScanner::GetInclusiveNextEditableCharPoint(*this, aEndToDelete);
   const bool maybeNormalizeFollowingWhiteSpaces =
       followingCharPoint.IsSet() && !followingCharPoint.IsEndOfContainer() &&
-      followingCharPoint.ContainerAsText() == aEndToDelete.ContainerAsText() &&
+      (followingCharPoint.ContainerAsText() == aEndToDelete.ContainerAsText() ||
+       removingLastCharOfStartNode) &&
       followingCharPoint.IsCharASCIISpaceOrNBSP() &&
       !EditorUtils::IsContentPreformatted(
           *followingCharPoint.ContainerAsText());
@@ -3952,9 +3962,14 @@ void HTMLEditor::ExtendRangeToDeleteWithNormalizingWhiteSpaces(
   }
 
   // Next, retrieve surrounding information of white-space sequence.
+  // If we're removing first text node's last character, we need to
+  // normalize white-spaces starts from another text node.  In this case,
+  // we need to lie for avoiding assertion in GenerateWhiteSpaceSequence().
   CharPointData previousCharPointData =
-      GetPreviousCharPointDataForNormalizingWhiteSpaces(
-          startToNormalize.IsSet() ? startToNormalize : aStartToDelete);
+      removingLastCharOfStartNode
+          ? CharPointData::InDifferentTextNode(CharPointType::TextEnd)
+          : GetPreviousCharPointDataForNormalizingWhiteSpaces(
+                startToNormalize.IsSet() ? startToNormalize : aStartToDelete);
   CharPointData nextCharPointData =
       GetInclusiveNextCharPointDataForNormalizingWhiteSpaces(
           endToNormalize.IsSet() ? endToNormalize : aEndToDelete);
@@ -3968,9 +3983,10 @@ void HTMLEditor::ExtendRangeToDeleteWithNormalizingWhiteSpaces(
     MOZ_ASSERT(lengthInStartNode);
   }
   if (endToNormalize.IsSet()) {
-    MOZ_ASSERT(endToNormalize.ContainerAsText() ==
-               aEndToDelete.ContainerAsText());
-    lengthInEndNode = endToNormalize.Offset() - aEndToDelete.Offset();
+    lengthInEndNode =
+        endToNormalize.ContainerAsText() == aEndToDelete.ContainerAsText()
+            ? endToNormalize.Offset() - aEndToDelete.Offset()
+            : endToNormalize.Offset();
     MOZ_ASSERT(lengthInEndNode);
     // If we normalize white-spaces in a text node, we can replace all of them
     // with one ReplaceTextTransaction.
