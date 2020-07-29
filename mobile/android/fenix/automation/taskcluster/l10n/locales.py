@@ -11,11 +11,21 @@ import re
 OPEN_LOCALES = "locales = ["
 CLOSE_LOCALES = "]"
 
+# Android uses non-standard locale codes, these are the mappings back and forth
+# See Legacy language codes in https://developer.android.com/reference/java/util/Locale.html
+ANDROID_LEGACY_MAP = {
+    'he': 'iw',
+    'id': 'in',
+    'yi': 'ji'
+}
+
 def trim_to_locale(str):
     match = re.search('\s*"([a-z]+-?[A-Z]*)",\s*', str)
     if not match:
         raise Exception("Failed parsing locale found in l10n.toml: " + str)
-    return match.group(1)
+
+    locale = match.group(1)
+    return ANDROID_LEGACY_MAP.get(locale, locale)
 
 
 # This file is a dumb parser that converts values from '/l10n-release.toml' to be easily
