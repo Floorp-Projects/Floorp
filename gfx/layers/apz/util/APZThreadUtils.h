@@ -54,6 +54,11 @@ class APZThreadUtils {
   static bool IsControllerThread();
 
   /**
+   * Returns true if the controller thread is still alive.
+   */
+  static bool IsControllerThreadAlive();
+
+  /**
    * Schedules a runnable to run on the controller thread at some time
    * in the future.
    */
