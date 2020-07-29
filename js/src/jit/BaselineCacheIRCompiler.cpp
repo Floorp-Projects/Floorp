@@ -1522,6 +1522,8 @@ bool BaselineCacheIRCompiler::emitIsTypedArrayResult(ObjOperandId objId,
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
   Register obj = allocator.useRegister(masm, objId);
 
+  allocator.discardStack(masm);
+
   Label notTypedArray, isProxy, done;
   masm.loadObjClassUnsafe(obj, scratch);
   masm.branchIfClassIsNotTypedArray(scratch, &notTypedArray);
