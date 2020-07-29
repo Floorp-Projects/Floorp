@@ -1740,6 +1740,8 @@ class HTMLMediaElement::ChannelLoader final {
       securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
     }
 
+    securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
+
     MOZ_ASSERT(
         aElement->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
     nsContentPolicyType contentPolicyType =
