@@ -87,7 +87,17 @@ class IOUtils final {
 
   static void SetShutdownHooks();
 
+  /**
+   * Creates a new JS Promise.
+   *
+   * @return The new promise, or |nullptr| on failure.
+   */
   static already_AddRefed<Promise> CreateJSPromise(GlobalObject& aGlobal);
+
+  // Allow conversion of |InternalFileInfo| with |ToJSValue|.
+  friend MOZ_MUST_USE bool ToJSValue(JSContext* aCx,
+                                     const InternalFileInfo& aInternalFileInfo,
+                                     JS::MutableHandle<JS::Value> aValue);
 
   /**
    * Opens an existing file at |aPath|.
