@@ -15,7 +15,8 @@
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRSpewer.h"
 #include "jit/InlinableNatives.h"
-#include "jit/Ion.h"         // IsIonEnabled
+#include "jit/Ion.h"  // IsIonEnabled
+#include "util/Unicode.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/SelfHosting.h"
 
@@ -5868,6 +5869,40 @@ AttachDecision CallIRGenerator::tryAttachStringFromCharCode(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachStringFromCodePoint(
+    HandleFunction callee) {
+  // Need one int32 argument.
+  if (argc_ != 1 || !args_[0].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  // String.fromCodePoint throws for invalid code points.
+  int32_t codePoint = args_[0].toInt32();
+  if (codePoint < 0 || codePoint > int32_t(unicode::NonBMPMax)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'fromCodePoint' native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard int32 argument.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  Int32OperandId codeId = writer.guardToInt32(argId);
+
+  // Return string created from code point.
+  writer.stringFromCodePointResult(codeId);
+
+  // This stub doesn't need to be monitored, because it always returns a string.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("StringFromCodePoint");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachMathRandom(HandleFunction callee) {
   // Expecting no arguments.
   if (argc_ != 0) {
@@ -6835,6 +6870,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachStringCharAt(callee);
     case InlinableNative::StringFromCharCode:
       return tryAttachStringFromCharCode(callee);
+    case InlinableNative::StringFromCodePoint:
+      return tryAttachStringFromCodePoint(callee);
 
     // Math natives.
     case InlinableNative::MathRandom:
