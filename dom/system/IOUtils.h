@@ -8,6 +8,7 @@
 #define mozilla_dom_IOUtils__
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Buffer.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IOUtilsBinding.h"
@@ -46,6 +47,8 @@ namespace dom {
 
 class IOUtils final {
  public:
+  class IOError;
+
   static already_AddRefed<Promise> Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
                                         const Optional<uint32_t>& aMaxBytes);
@@ -77,8 +80,7 @@ class IOUtils final {
 
   friend class IOUtilsShutdownBlocker;
   struct InternalFileInfo;
-
-  class IOError;
+  struct InternalWriteAtomicOpts;
 
   static StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
       sBackgroundEventTarget;
@@ -90,6 +92,10 @@ class IOUtils final {
   static already_AddRefed<nsISerialEventTarget> GetBackgroundEventTarget();
 
   static void SetShutdownHooks();
+
+  template <typename OkT, typename Fn, typename... Args>
+  static already_AddRefed<Promise> RunOnBackgroundThread(
+      RefPtr<Promise>& aPromise, Fn aFunc, Args... aArgs);
 
   /**
    * Creates a new JS Promise.
@@ -159,8 +165,8 @@ class IOUtils final {
    *         failed or was incomplete.
    */
   static Result<uint32_t, IOError> WriteAtomicSync(
-      const nsAString& aDestPath, const nsTArray<uint8_t>& aByteArray,
-      const WriteAtomicOptions& aOptions);
+      const nsAString& aDestPath, const Buffer<uint8_t>& aByteArray,
+      const InternalWriteAtomicOpts& aOptions);
 
   /**
    * Attempts to write |aBytes| to the file pointed by |aFd|.
@@ -174,7 +180,7 @@ class IOUtils final {
    */
   static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd,
                                              const nsACString& aPath,
-                                             const nsTArray<uint8_t>& aBytes);
+                                             const Buffer<uint8_t>& aBytes);
 
   /**
    * Attempts to move the file located at |aSource| to |aDest|.
@@ -237,18 +243,8 @@ class IOUtils final {
   static Result<IOUtils::InternalFileInfo, IOError> StatSync(
       const nsAString& aPath);
 
-  using IOReadMozPromise = mozilla::MozPromise<nsTArray<uint8_t>, const IOError,
-                                               /* IsExclusive */ true>;
-
   using IOWriteMozPromise =
       mozilla::MozPromise<uint32_t, const IOError, /* IsExclusive */ true>;
-
-  using IOStatMozPromise =
-      mozilla::MozPromise<struct InternalFileInfo, const IOError,
-                          /* IsExclusive */ true>;
-
-  using IOMozPromise = mozilla::MozPromise<Ok /* ignored */, const IOError,
-                                           /* IsExclusive */ true>;
 };
 
 /**
@@ -286,13 +282,6 @@ class IOUtils::IOError {
    */
   const Maybe<nsCString>& Message() const { return mMessage; }
 
-  using IOStatMozPromise =
-      mozilla::MozPromise<struct InternalFileInfo, const IOError,
-                          /* IsExclusive */ true>;
-
-  using IOMozPromise = mozilla::MozPromise<Ok /* ignored */, const IOError,
-                                           /* IsExclusive */ true>;
-
  private:
   nsresult mCode;
   Maybe<nsCString> mMessage;
@@ -311,6 +300,21 @@ struct IOUtils::InternalFileInfo {
   FileType mType;
   uint64_t mSize;
   uint64_t mLastModified;
+};
+
+/**
+ * This is an easier to work with representation of a
+ * |mozilla::dom::WriteAtomicOptions| for private use in the |IOUtils|
+ * implementation.
+ *
+ * Because web IDL dictionaries are not easily copy/moveable, this class is
+ * used instead.
+ */
+struct IOUtils::InternalWriteAtomicOpts {
+  Maybe<nsString> mBackupFile;
+  bool mFlush;
+  bool mNoOverwrite;
+  Maybe<nsString> mTmpPath;
 };
 
 class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {
