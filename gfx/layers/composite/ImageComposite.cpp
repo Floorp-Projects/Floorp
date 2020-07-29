@@ -43,6 +43,18 @@ void ImageComposite::UpdateBias(size_t aImageIndex, bool aFrameChanged) {
                                 ? mImages[aImageIndex + 1].mTimeStamp
                                 : TimeStamp();
 
+#if MOZ_GECKO_PROFILER
+  if (profiler_can_accept_markers() && compositedImageTime && nextImageTime) {
+    TimeDuration offsetCurrent = compositedImageTime - compositionTime;
+    TimeDuration offsetNext = nextImageTime - compositionTime;
+    nsPrintfCString str("current %.2lfms, next %.2lfms",
+                        offsetCurrent.ToMilliseconds(),
+                        offsetNext.ToMilliseconds());
+    AUTO_PROFILER_TEXT_MARKER_CAUSE("Video frame offsets", str, GRAPHICS,
+                                    Nothing(), nullptr);
+  }
+#endif
+
   if (compositedImageTime.IsNull()) {
     mBias = ImageComposite::BIAS_NONE;
     return;
