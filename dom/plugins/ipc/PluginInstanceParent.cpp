@@ -331,7 +331,11 @@ PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncBitmapSurface(
 bool PluginInstanceParent::SupportsPluginDirectDXGISurfaceDrawing() {
   bool value = false;
 #if defined(XP_WIN)
-  if (StaticPrefs::dom_ipc_plugins_allow_dxgi_surface()) {
+  // When WebRender does not use ANGLE, DXGISurface could not be used.
+  bool useAsyncDXGISurface =
+      StaticPrefs::dom_ipc_plugins_allow_dxgi_surface() &&
+      !(gfx::gfxVars::UseWebRender() && !gfx::gfxVars::UseWebRenderANGLE());
+  if (useAsyncDXGISurface) {
     auto cbc = CompositorBridgeChild::Get();
     if (cbc) {
       cbc->SendSupportsAsyncDXGISurface(&value);
