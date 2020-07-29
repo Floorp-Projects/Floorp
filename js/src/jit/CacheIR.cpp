@@ -3607,6 +3607,13 @@ OperandId IRGenerator::emitNumericGuard(ValOperandId valId, Scalar::Type type) {
   MOZ_CRASH("Unsupported TypedArray type");
 }
 
+static bool ValueIsNumeric(Scalar::Type type, const Value& val) {
+  if (Scalar::isBigIntType(type)) {
+    return val.isBigInt();
+  }
+  return val.isNumber();
+}
+
 AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
     HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
   if (!obj->is<TypedObject>()) {
@@ -3636,6 +3643,13 @@ AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
     // that stores object pointers and null in an anyref slot should be able
     // to get a fast path.
     return AttachDecision::NoAction;
+  }
+
+  if (fieldDescr->is<ScalarTypeDescr>()) {
+    Scalar::Type type = fieldDescr->as<ScalarTypeDescr>().type();
+    if (!ValueIsNumeric(type, rhsVal_)) {
+      return AttachDecision::NoAction;
+    }
   }
 
   uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
@@ -4121,14 +4135,8 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
   // Don't attach if the input type doesn't match the guard added below.
-  if (Scalar::isBigIntType(elementType)) {
-    if (!rhsVal_.isBigInt()) {
-      return AttachDecision::NoAction;
-    }
-  } else {
-    if (!rhsVal_.isNumber()) {
-      return AttachDecision::NoAction;
-    }
+  if (!ValueIsNumeric(elementType, rhsVal_)) {
+    return AttachDecision::NoAction;
   }
 
   if (IsPrimitiveArrayTypedObject(obj)) {
@@ -4170,14 +4178,8 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElementNonInt32Index(
   Scalar::Type elementType = TypedThingElementType(obj);
 
   // Don't attach if the input type doesn't match the guard added below.
-  if (Scalar::isBigIntType(elementType)) {
-    if (!rhsVal_.isBigInt()) {
-      return AttachDecision::NoAction;
-    }
-  } else {
-    if (!rhsVal_.isNumber()) {
-      return AttachDecision::NoAction;
-    }
+  if (!ValueIsNumeric(elementType, rhsVal_)) {
+    return AttachDecision::NoAction;
   }
 
   ValOperandId keyId = setElemKeyValueId();
@@ -5199,14 +5201,8 @@ AttachDecision CallIRGenerator::tryAttachDataViewSet(HandleFunction callee,
   if (!args_[0].isNumber()) {
     return AttachDecision::NoAction;
   }
-  if (Scalar::isBigIntType(type)) {
-    if (!args_[1].isBigInt()) {
-      return AttachDecision::NoAction;
-    }
-  } else {
-    if (!args_[1].isNumber()) {
-      return AttachDecision::NoAction;
-    }
+  if (!ValueIsNumeric(type, args_[1])) {
+    return AttachDecision::NoAction;
   }
   if (argc_ > 2 && !args_[2].isBoolean()) {
     return AttachDecision::NoAction;
