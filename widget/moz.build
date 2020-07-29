@@ -143,8 +143,6 @@ EXPORTS += [
     'nsIRollupListener.h',
     'nsIWidget.h',
     'nsIWidgetListener.h',
-    'nsPaper.h',
-    'nsPrinter.h',
     'nsUserIdleService.h',
     'nsWidgetInitData.h',
     'nsWidgetsCID.h',
@@ -246,6 +244,17 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     if toolkit != 'windows':
         UNIFIED_SOURCES += [
             'nsPaper.cpp',
+        ]
+    # These will be unified for all CUPS platforms by Bug 1654678
+    if toolkit == 'cocoa':
+        UNIFIED_SOURCES += [
+            'CUPSPrinterList.cpp',
+            'nsCUPSShim.cpp',
+            'nsPrinterCUPS.cpp',
+        ]
+    if toolkit == 'gtk':
+        UNIFIED_SOURCES += [
+            'nsCUPSShim.cpp',
             'nsPrinter.cpp',
         ]
 
@@ -298,11 +307,6 @@ if toolkit in ('gtk', 'windows', 'cocoa', 'android'):
 if toolkit == 'gtk':
     XPIDL_SOURCES += [
         'nsIApplicationChooser.idl',
-    ]
-if toolkit in ('gtk', 'cocoa'):
-    UNIFIED_SOURCES += [
-        'CUPSPrinter.cpp',
-        'nsCUPSShim.cpp'
     ]
 
 DEFINES['MOZ_CROSS_PROCESS_IME'] = True
