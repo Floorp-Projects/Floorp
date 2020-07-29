@@ -47,6 +47,14 @@ function checkLabel(row, name) {
   );
 }
 
+function formatUrl(contentAttribute, url) {
+  let parsedUrl = new URL(url);
+  parsedUrl.searchParams.set("utm_source", "firefox-browser");
+  parsedUrl.searchParams.set("utm_medium", "firefox-browser");
+  parsedUrl.searchParams.set("utm_content", contentAttribute);
+  return parsedUrl.href;
+}
+
 function checkLink(link, url, text = url) {
   ok(link, "There is a link");
   is(link.href, url, "The link goes to the URL");
@@ -139,7 +147,7 @@ add_task(async function enableHtmlViews() {
     {
       id: "addon1@mochi.test",
       name: "Test add-on 1",
-      creator: { name: "The creator", url: "http://example.com/me" },
+      creator: { name: "The creator", url: "http://addons.mozilla.org/me" },
       version: "3.1",
       description: "Short description",
       fullDescription: "Longer description\nWith brs!",
@@ -151,7 +159,7 @@ add_task(async function enableHtmlViews() {
         permissions: ["alarms", "contextMenus", "tabs", "webNavigation"],
       },
       reviewCount: 5,
-      reviewURL: "http://example.com/reviews",
+      reviewURL: "http://addons.mozilla.org/reviews",
       homepageURL: "http://example.com/addon1",
       updateDate: new Date("2019-03-07T01:00:00"),
       applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE,
@@ -537,7 +545,11 @@ add_task(async function testFullDetails() {
   row = rows.shift();
   checkLabel(row, "author");
   let link = row.querySelector("a");
-  checkLink(link, "http://example.com/me", "The creator");
+  let authorLink = formatUrl(
+    "addons-manager-user-profile-link",
+    "http://addons.mozilla.org/me"
+  );
+  checkLink(link, authorLink, "The creator");
 
   // Version.
   row = rows.shift();
@@ -568,7 +580,11 @@ add_task(async function testFullDetails() {
   let fullAttrs = stars.map(star => star.getAttribute("fill")).join(",");
   is(fullAttrs, "full,full,full,full,half", "Four and a half stars are full");
   link = rating.querySelector("a");
-  checkLink(link, "http://example.com/reviews", {
+  let reviewsLink = formatUrl(
+    "addons-manager-reviews-link",
+    "http://addons.mozilla.org/reviews"
+  );
+  checkLink(link, reviewsLink, {
     id: "addon-detail-reviews-link",
     args: { numberOfReviews: 5 },
   });

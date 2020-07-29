@@ -1180,7 +1180,10 @@ class SearchAddons extends HTMLElement {
       return;
     }
 
-    let url = AddonRepository.getSearchURL(query);
+    let url = formatAmoUrl(
+      "addons-manager-search",
+      AddonRepository.getSearchURL(query)
+    );
 
     let browser = getBrowserElement();
     let chromewin = browser.ownerGlobal;
@@ -2663,7 +2666,10 @@ class AddonDetails extends HTMLElement {
       if (link.hidden) {
         creatorRow.appendChild(new Text(addon.creator.name));
       } else {
-        link.href = addon.creator.url;
+        link.href = formatAmoUrl(
+          "addons-manager-user-profile-link",
+          addon.creator.url
+        );
         link.target = "_blank";
         link.textContent = addon.creator.name;
       }
@@ -2707,7 +2713,10 @@ class AddonDetails extends HTMLElement {
     if (addon.averageRating) {
       ratingRow.querySelector("five-star-rating").rating = addon.averageRating;
       let reviews = ratingRow.querySelector("a");
-      reviews.href = addon.reviewURL;
+      reviews.href = formatAmoUrl(
+        "addons-manager-reviews-link",
+        addon.reviewURL
+      );
       document.l10n.setAttributes(reviews, "addon-detail-reviews-link", {
         numberOfReviews: addon.reviewCount,
       });
