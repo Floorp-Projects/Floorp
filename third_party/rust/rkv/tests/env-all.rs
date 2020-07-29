@@ -12,11 +12,11 @@ use std::fs;
 
 use tempfile::Builder;
 
-use rkv::backend::{
-    Lmdb,
-    SafeMode,
-};
 use rkv::{
+    backend::{
+        Lmdb,
+        SafeMode,
+    },
     Rkv,
     StoreOptions,
     Value,
@@ -67,7 +67,7 @@ fn test_open_safe_same_dir_as_lmdb() {
         assert_eq!(sk.get(&reader, "bar").expect("read"), Some(Value::Bool(true)));
         assert_eq!(sk.get(&reader, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
     }
-    // Create database of type B and save to disk (database of type A exists at the same path).
+    // Create database of type B and save to disk (type A exists at the same path).
     {
         let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
         let sk = k.open_single("sk", StoreOptions::create()).expect("opened");
@@ -149,7 +149,7 @@ fn test_open_lmdb_same_dir_as_safe() {
         assert_eq!(sk.get(&reader, "bar").expect("read"), Some(Value::Bool(true)));
         assert_eq!(sk.get(&reader, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
     }
-    // Create database of type B and save to disk (database of type A exists at the same path).
+    // Create database of type B and save to disk (type A exists at the same path).
     {
         let k = Rkv::new::<Lmdb>(root.path()).expect("new succeeded");
         let sk = k.open_single("sk", StoreOptions::create()).expect("opened");
