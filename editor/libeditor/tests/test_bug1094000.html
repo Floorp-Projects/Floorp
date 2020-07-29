@@ -20,6 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1094000
   <div id="editor4" contenteditable>c</div>
   <div id="editor5" contenteditable>d</div>
   <div id="editor6" contenteditable>e</div>
+  <div id="editor7" contenteditable><span>f</span></div>
+  <div id="editor8" contenteditable><span>g</span></div>
+  <div id="editor9" contenteditable><span>h</span></div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -38,6 +41,9 @@ function runTests() {
   var editor4 = document.getElementById("editor4");
   var editor5 = document.getElementById("editor5");
   var editor6 = document.getElementById("editor6");
+  var editor7 = document.getElementById("editor7");
+  var editor8 = document.getElementById("editor8");
+  var editor9 = document.getElementById("editor9");
 
   ok(Math.abs(editor1.getBoundingClientRect().height - editor0.getBoundingClientRect().height) <= 1,
      "an editor having a <br> element and an empty editor should be same height");
@@ -83,6 +89,36 @@ function runTests() {
      "an editor which had \"e\" should have only <br> element after removing selected text by \"Cut\"");
   ok(Math.abs(editor6.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
      "an editor whose content was selected and removed by \"Cut\" should have a place to put a caret");
+
+  editor7.focus();
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_Backspace");
+  todo_is(editor7.innerHTML, "<br>",
+     "an editor which had \"f\" in a <span> element should have only <br> element after Backspace keypress");
+  todo_isnot(editor7.innerHTML, "<span><br></span>",
+     "an editor which had \"f\" in a <span> element should have only <br> element after Backspace keypress");
+  ok(Math.abs(editor7.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was removed by Backspace key should have a place to put a caret");
+
+  editor8.focus();
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("KEY_Delete");
+  todo_is(editor8.innerHTML, "<br>",
+     "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress");
+  todo_isnot(editor8.innerHTML, "<span><br></span>",
+     "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress");
+  ok(Math.abs(editor8.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was removed by Backspace key should have a place to put a caret");
+
+  editor9.focus();
+  window.getSelection().selectAllChildren(editor9.querySelector("span"));
+  synthesizeKey("KEY_Backspace");
+  todo_is(editor9.innerHTML, "<br>",
+     "an editor which had \"h\" in a <span> element should have only <br> element after removing selected text with Backspace key");
+  todo_isnot(editor9.innerHTML, "<span><br></span>",
+     "an editor which had \"h\" in a <span> element should have only <br> element after removing selected text with Backspace key");
+  ok(Math.abs(editor9.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
+     "an editor whose content was removed by Backspace key should have a place to put a caret");
 
   editor0.focus();
   synthesizeKey("KEY_Backspace");

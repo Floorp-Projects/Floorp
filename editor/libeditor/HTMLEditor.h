@@ -1829,10 +1829,9 @@ class HTMLEditor final : public TextEditor,
    * line is empty) and the line ends with block boundary, inserts a `<br>`
    * element.
    */
-  template <typename EditorDOMPointType>
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-      const EditorDOMPointType& aPointToInsert);
+      const EditorDOMPoint& aPointToInsert);
 
   /**
    * Insert a `<br>` element if aElement is a block element and empty.
@@ -2470,18 +2469,24 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * DeleteTextAndNormalizeSurroundingWhiteSpaces() deletes text between
-   * aStartToDelete and immediately before aEndToDelete.  If surrounding
-   * characters are white-spaces, this normalize them too.  Finally, inserts
-   * `<br>` element if it's required.
+   * aStartToDelete and immediately before aEndToDelete and return new caret
+   * position.  If surrounding characters are white-spaces, this normalize them
+   * too.  Finally, inserts `<br>` element if it's required.
    * Note that if you wants only normalizing white-spaces, you can set same
    * point to both aStartToDelete and aEndToDelete.  Then, this tries to
    * normalize white-space sequence containing previous character of
    * aStartToDelete.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  enum class DeleteDirection {
+    Forward,
+    Backward,
+  };
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   DeleteTextAndNormalizeSurroundingWhiteSpaces(
       const EditorDOMPointInText& aStartToDelete,
-      const EditorDOMPointInText& aEndToDelete);
+      const EditorDOMPointInText& aEndToDelete,
+      TreatEmptyTextNodes aTreatEmptyTextNodes,
+      DeleteDirection aDeleteDirection);
 
   /**
    * ExtendRangeToDeleteWithNormalizingWhiteSpaces() is a helper method of
