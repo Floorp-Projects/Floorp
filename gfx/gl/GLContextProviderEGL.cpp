@@ -456,6 +456,8 @@ void GLContextEGL::SetEGLSurfaceOverride(EGLSurface surf) {
   MOZ_ASSERT(ok);
 }
 
+bool GLContextEGL::IsAliveImpl() const { return mEgl->IsAlive(); }
+
 bool GLContextEGL::MakeCurrentImpl() const {
   EGLSurface surface =
       (mSurfaceOverride != EGL_NO_SURFACE) ? mSurfaceOverride : mSurface;

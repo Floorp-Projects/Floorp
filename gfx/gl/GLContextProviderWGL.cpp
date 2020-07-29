@@ -298,6 +298,8 @@ GLContextWGL::~GLContextWGL() {
   }
 }
 
+bool GLContextWGL::IsAliveImpl() const { return true; }
+
 bool GLContextWGL::MakeCurrentImpl() const {
   const bool succeeded = sWGLLib.mSymbols.fMakeCurrent(mDC, mContext);
   NS_ASSERTION(succeeded, "Failed to make GL context current!");

@@ -109,7 +109,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);
   RefPtr<IDXGISwapChain1> CreateSwapChainForDComp(bool aUseTripleBuffering,
                                                   bool aUseAlpha);
-  bool SutdownEGLLibraryIfNecessary();
+  bool ShutdownEGLLibraryIfNecessary();
   RefPtr<ID3D11Query> GetD3D11Query();
   void ReleaseNativeCompositorResources();
   HWND GetCompositorHwnd();

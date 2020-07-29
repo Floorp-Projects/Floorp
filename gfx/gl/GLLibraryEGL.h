@@ -421,6 +421,7 @@ class GLLibraryEGL final {
                                 nsACString* const out_failureId);
 
   void Shutdown();
+  bool IsAlive() const;
 
   void DumpEGLConfig(EGLConfig cfg);
   void DumpEGLConfigs();

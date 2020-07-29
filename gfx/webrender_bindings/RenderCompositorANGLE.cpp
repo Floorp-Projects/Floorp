@@ -96,7 +96,7 @@ ID3D11Device* RenderCompositorANGLE::GetDeviceOfEGLDisplay() {
   return device;
 }
 
-bool RenderCompositorANGLE::SutdownEGLLibraryIfNecessary() {
+bool RenderCompositorANGLE::ShutdownEGLLibraryIfNecessary() {
   const RefPtr<gl::GLLibraryEGL> egl = gl::GLLibraryEGL::Get();
   if (!egl) {
     // egl is not initialized yet;
@@ -128,7 +128,7 @@ bool RenderCompositorANGLE::Initialize() {
   }
 
   // Update device if necessary.
-  if (!SutdownEGLLibraryIfNecessary()) {
+  if (!ShutdownEGLLibraryIfNecessary()) {
     return false;
   }
   const auto gl = RenderThread::Get()->SharedGL();
