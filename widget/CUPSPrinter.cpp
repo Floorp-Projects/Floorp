@@ -5,17 +5,25 @@
 
 #include "CUPSPrinter.h"
 
+#include "mozilla/DebugOnly.h"
+
 namespace mozilla {
 
 CUPSPrinter::CUPSPrinter(const nsCUPSShim& aShim, cups_dest_t* aPrinter)
-    : mShim(aShim), mPrinter(aPrinter) {
-  MOZ_ASSERT(mPrinter);
-  mPrinterInfo = aShim.mCupsCopyDestInfo(CUPS_HTTP_DEFAULT, aPrinter);
+    : mShim(aShim) {
+  MOZ_ASSERT(mShim.IsInitialized());
+  MOZ_ASSERT(aPrinter);
+  DebugOnly<const int> numCopied = aShim.mCupsCopyDest(aPrinter, 0, &mPrinter);
+  MOZ_ASSERT(numCopied == 1);
+  mPrinterInfo = aShim.mCupsCopyDestInfo(CUPS_HTTP_DEFAULT, mPrinter);
 }
 
 CUPSPrinter::~CUPSPrinter() {
   if (mPrinterInfo) {
     mShim.mCupsFreeDestInfo(mPrinterInfo);
+  }
+  if (mPrinter) {
+    mShim.mCupsFreeDests(1, mPrinter);
   }
 }
 
