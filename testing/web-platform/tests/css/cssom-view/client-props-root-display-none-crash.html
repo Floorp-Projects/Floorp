@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<title>Shouldn't assert when asking for the client* props on the scrolling element</title>
+<style>
+  :root { display: none }
+</style>
+<script>
+  document.scrollingElement.clientTop;
+  document.scrollingElement.clientLeft;
+  document.scrollingElement.clientHeight;
+  document.scrollingElement.clientWidth;
+</script>
