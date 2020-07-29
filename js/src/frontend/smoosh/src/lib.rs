@@ -30,6 +30,7 @@ use jsparagus::stencil::scope_notes::ScopeNote;
 use jsparagus::stencil::script::{ImmutableScriptData, ScriptStencil, SourceExtent};
 use std::boxed::Box;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::os::raw::{c_char, c_void};
 use std::convert::TryInto;
 use std::rc::Rc;
@@ -79,16 +80,19 @@ pub enum SmooshGCThing {
     RegExp(usize),
 }
 
-impl From<GCThing> for SmooshGCThing {
-    fn from(item: GCThing) -> Self {
-        match item {
-            GCThing::Null => Self::Null,
-            GCThing::Atom(index) => Self::Atom(index.into()),
-            GCThing::Function(_index) => {
-                panic!("Not yet implemented");
-            }
-            GCThing::RegExp(index) => Self::RegExp(index.into()),
-            GCThing::Scope(index) => Self::Scope(index.into()),
+fn convert_gcthing(item: GCThing, scope_index_map: &HashMap<usize, usize>) -> SmooshGCThing {
+    match item {
+        GCThing::Null => SmooshGCThing::Null,
+        GCThing::Atom(index) => SmooshGCThing::Atom(index.into()),
+        GCThing::Function(_index) => {
+            panic!("Not yet implemented");
+        }
+        GCThing::RegExp(index) => SmooshGCThing::RegExp(index.into()),
+        GCThing::Scope(index) => {
+            let mapped_index = *scope_index_map
+                .get(&index.into())
+                .expect("Scope map should be populated");
+            SmooshGCThing::Scope(mapped_index)
         }
     }
 }
@@ -131,25 +135,58 @@ pub enum SmooshScopeData {
     Lexical(SmooshLexicalScopeData),
 }
 
-impl From<ScopeData> for SmooshScopeData {
-    fn from(data: ScopeData) -> Self {
-        match data {
-            ScopeData::Global(data) => Self::Global(SmooshGlobalScopeData {
+/// Convert single Scope data, resolving enclosing index with scope_index_map.
+fn convert_scope(scope: ScopeData, scope_index_map: &mut HashMap<usize, usize>) -> SmooshScopeData {
+    match scope {
+        ScopeData::Alias(_) => panic!("alias should be handled in convert_scopes"),
+        ScopeData::Global(data) => SmooshScopeData::Global(SmooshGlobalScopeData {
+            bindings: CVec::from(data.base.bindings.into_iter().map(|x| x.into()).collect()),
+            let_start: data.let_start,
+            const_start: data.const_start,
+        }),
+        ScopeData::Var(_data) => {
+            panic!("Not yet supported");
+        }
+        ScopeData::Lexical(data) => {
+            let enclosing: usize = data.enclosing.into();
+            SmooshScopeData::Lexical(SmooshLexicalScopeData {
                 bindings: CVec::from(data.base.bindings.into_iter().map(|x| x.into()).collect()),
-                let_start: data.let_start,
                 const_start: data.const_start,
-            }),
-            ScopeData::Lexical(data) => Self::Lexical(SmooshLexicalScopeData {
-                bindings: CVec::from(data.base.bindings.into_iter().map(|x| x.into()).collect()),
-                const_start: data.const_start,
-                enclosing: data.enclosing.into(),
+                enclosing: *scope_index_map
+                    .get(&enclosing)
+                    .expect("Alias target should be earlier index"),
                 first_frame_slot: data.first_frame_slot.into(),
-            }),
-            _ => {
-                panic!("Not yet implemented");
-            }
+            })
+        }
+        ScopeData::Function(_data) => {
+            panic!("Not yet supported");
         }
     }
+}
+
+/// Convert list of Scope data, removing aliases.
+/// Also create a map between original index into index into result vector
+/// without aliases.
+fn convert_scopes(
+    scopes: Vec<ScopeData>,
+    scope_index_map: &mut HashMap<usize, usize>,
+) -> CVec<SmooshScopeData> {
+    let mut result = Vec::with_capacity(scopes.len());
+    for (i, scope) in scopes.into_iter().enumerate() {
+        if let ScopeData::Alias(index) = scope {
+            let mapped_index = *scope_index_map
+                .get(&index.into())
+                .expect("Alias target should be earlier index");
+            scope_index_map.insert(i, mapped_index);
+
+            continue;
+        }
+
+        scope_index_map.insert(i, result.len());
+        result.push(convert_scope(scope, scope_index_map))
+    }
+
+    CVec::from(result)
 }
 
 #[repr(C)]
@@ -346,10 +383,19 @@ fn convert_extent(extent: SourceExtent) -> SmooshSourceExtent {
     }
 }
 
-fn convert_script(script: ScriptStencil) -> SmooshScriptStencil {
+fn convert_script(
+    script: ScriptStencil,
+    scope_index_map: &HashMap<usize, usize>,
+) -> SmooshScriptStencil {
     let immutable_flags = script.immutable_flags.into();
 
-    let gcthings = CVec::from(script.gcthings.into_iter().map(|x| x.into()).collect());
+    let gcthings = CVec::from(
+        script
+            .gcthings
+            .into_iter()
+            .map(|x| convert_gcthing(x, scope_index_map))
+            .collect(),
+    );
 
     let immutable_script_data = COption::from(script.immutable_script_data.map(|n| n.into()));
 
@@ -412,12 +458,20 @@ pub unsafe extern "C" fn smoosh_run(
     let allocator = Box::new(bumpalo::Bump::new());
     match smoosh(&allocator, text, options) {
         Ok(result) => {
-            let scopes = CVec::from(result.scopes.into_iter().map(|x| x.into()).collect());
+            let mut scope_index_map = HashMap::new();
+
+            let scopes = convert_scopes(result.scopes, &mut scope_index_map);
             let regexps = CVec::from(result.regexps.into_iter().map(|x| x.into()).collect());
 
-            let top_level_script = convert_script(result.top_level_script);
+            let top_level_script = convert_script(result.top_level_script, &scope_index_map);
 
-            let functions = CVec::from(result.functions.into_iter().map(convert_script).collect());
+            let functions = CVec::from(
+                result
+                    .functions
+                    .into_iter()
+                    .map(|x| convert_script(x, &scope_index_map))
+                    .collect(),
+            );
 
             let script_data_list = CVec::from(
                 result
