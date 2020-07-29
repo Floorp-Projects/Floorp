@@ -128,6 +128,6 @@ async function do_test(loadFn) {
 
 function getPrincipalURI(browser) {
   return SpecialPowers.spawn(browser, [], function() {
-    return content.document.nodePrincipal.spec;
+    return content.document.nodePrincipal.URI.spec;
   });
 }

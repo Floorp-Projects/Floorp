@@ -679,7 +679,9 @@ var FullZoom = {
 
   _isPDFViewer(browser) {
     return !!(
-      browser.contentPrincipal.spec == "resource://pdf.js/web/viewer.html"
+      browser.contentPrincipal &&
+      browser.contentPrincipal.URI &&
+      browser.contentPrincipal.URI.spec == "resource://pdf.js/web/viewer.html"
     );
   },
 };

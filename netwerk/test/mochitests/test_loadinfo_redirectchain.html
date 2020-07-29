@@ -102,10 +102,10 @@ function checkLoadInfoWithTwoRedirects() {
        "two redirect, chainInternal should have length 2");
 
     for (var i = 0; i < redirectChain.length; i++) {
-      is(redirectChain[i].principal.spec,
+      is(redirectChain[i].principal.URI.spec,
         EXPECTED_REDIRECT_CHAIN[i],
          "redirectChain at index [" + i + "] should match");
-      is(redirectChainIncludingInternalRedirects[i].principal.spec,
+      is(redirectChainIncludingInternalRedirects[i].principal.URI.spec,
          EXPECTED_REDIRECT_CHAIN[i],
          "redirectChainIncludingInternalRedirects at index [" + i + "] should match");
       is(redirectChain[i].referrerURI.spec,

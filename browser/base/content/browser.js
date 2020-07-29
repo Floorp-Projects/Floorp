@@ -1105,17 +1105,13 @@ var gPopupBlockerObserver = {
     //          nsGlobalWindow::CheckOpenAllow() was changed to also
     //          check if the top window's location is whitelisted.
     let browser = gBrowser.selectedBrowser;
-    var uriOrPrincipal = browser.contentPrincipal.isContentPrincipal
-      ? browser.contentPrincipal
-      : browser.currentURI;
+    var uri = browser.contentPrincipal.URI || browser.currentURI;
     var blockedPopupAllowSite = document.getElementById(
       "blockedPopupAllowSite"
     );
     try {
       blockedPopupAllowSite.removeAttribute("hidden");
-      let uriHost = uriOrPrincipal.asciiHost
-        ? uriOrPrincipal.host
-        : uriOrPrincipal.spec;
+      let uriHost = uri.asciiHost ? uri.host : uri.spec;
       var pm = Services.perms;
       if (
         pm.testPermissionFromPrincipal(browser.contentPrincipal, "popup") ==
@@ -1186,7 +1182,7 @@ var gPopupBlockerObserver = {
             popupURIspec == "" ||
             popupURIspec == "about:blank" ||
             popupURIspec == "<self>" ||
-            popupURIspec == uriOrPrincipal.spec
+            popupURIspec == uri.spec
           ) {
             continue;
           }

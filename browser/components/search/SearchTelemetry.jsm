@@ -665,8 +665,12 @@ class ContentHandler {
       }
 
       // top-level resource
-      if (channel.loadInfo && channel.loadInfo.loadingPrincipal) {
-        return channel.loadInfo.loadingPrincipal.spec;
+      if (
+        channel.loadInfo &&
+        channel.loadInfo.loadingPrincipal &&
+        channel.loadInfo.loadingPrincipal.URI
+      ) {
+        return channel.loadInfo.loadingPrincipal.URI.spec;
       }
 
       return null;
