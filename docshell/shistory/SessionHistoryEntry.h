@@ -91,6 +91,13 @@ class SessionHistoryInfo {
 // SessionHistoryEntry is used to store session history data in the parent
 // process. It holds a SessionHistoryInfo, some state shared amongst multiple
 // SessionHistoryEntries, a parent and children.
+#define NS_SESSIONHISTORYENTRY_IID                   \
+  {                                                  \
+    0x5b66a244, 0x8cec, 0x4caa, {                    \
+      0xaa, 0x0a, 0x78, 0x92, 0xfd, 0x17, 0xa6, 0x67 \
+    }                                                \
+  }
+
 class SessionHistoryEntry : public nsISHEntry {
  public:
   SessionHistoryEntry(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
@@ -98,6 +105,7 @@ class SessionHistoryEntry : public nsISHEntry {
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SESSIONHISTORYENTRY_IID)
 
   const SessionHistoryInfo& Info() const { return *mInfo; }
 
@@ -118,6 +126,8 @@ class SessionHistoryEntry : public nsISHEntry {
 
   static nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>* sInfoIdToEntry;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(SessionHistoryEntry, NS_SESSIONHISTORYENTRY_IID)
 
 }  // namespace dom
 

@@ -20,6 +20,9 @@ using struct mozilla::void_t
 using moveonly struct mozilla::SerializedStructuredCloneBuffer
   from "ipc/IPCMessageUtils.h";
 
+using moveonly mozilla::dom::SessionHistoryInfo
+  from "mozilla/dom/SessionHistoryEntry.h";
+
 using LayoutDeviceIntRect from "Units.h";
 using DesktopIntRect from "Units.h";
 using DesktopToLayoutDeviceScale from "Units.h";
@@ -285,6 +288,8 @@ struct DocShellLoadStateInit
   uint64_t LoadIdentifier;
 
   bool ChannelInitialized;
+
+  SessionHistoryInfo? sessionHistoryInfo;
 };
 
 struct TimedChannelInfo
