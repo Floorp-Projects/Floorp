@@ -275,13 +275,15 @@ JSONFile.prototype = {
         try {
           await OS.File.copy(this._options.backupTo, this.path);
         } catch (e) {
-          Cu.reportError(e);
+          if (!(e instanceof OS.File.Error && ex.becauseNoSuchFile)) {
+            Cu.reportError(e);
+          }
         }
 
         try {
           // We still read from the backup file here instead of the original file in case
-          // access to the original file is blocked. For eg. by anti-virus softwares on
-          // the user's computer.
+          // access to the original file is blocked, e.g. by anti-virus software on the
+          // user's computer.
           let bytes = await OS.File.read(this._options.backupTo, this._options);
 
           // If synchronous loading happened in the meantime, exit now.
@@ -291,7 +293,9 @@ JSONFile.prototype = {
           data = JSON.parse(gTextDecoder.decode(bytes));
           this._recordTelemetry("load", cleansedBasename, "used_backup");
         } catch (e3) {
-          Cu.reportError(e3);
+          if (!(e3 instanceof OS.File.Error && ex.becauseNoSuchFile)) {
+            Cu.reportError(e3);
+          }
         }
       }
 
@@ -378,13 +382,18 @@ JSONFile.prototype = {
           let backupFile = new FileUtils.File(this._options.backupTo);
           backupFile.copyTo(null, basename);
         } catch (e) {
-          Cu.reportError(e);
+          if (
+            e.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
+            e.result != Cr.NS_ERROR_FILE_NOT_FOUND
+          ) {
+            Cu.reportError(e);
+          }
         }
 
         try {
           // We still read from the backup file here instead of the original file in case
-          // access to the original file is blocked. For eg. by anti-virus softwares on
-          // the user's computer.
+          // access to the original file is blocked, e.g. by anti-virus software on the
+          // user's computer.
           // This reads the file and automatically detects the UTF-8 encoding.
           let inputStream = new FileInputStream(
             new FileUtils.File(this._options.backupTo),
@@ -402,7 +411,12 @@ JSONFile.prototype = {
             inputStream.close();
           }
         } catch (e3) {
-          Cu.reportError(e3);
+          if (
+            e3.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
+            e3.result != Cr.NS_ERROR_FILE_NOT_FOUND
+          ) {
+            Cu.reportError(e3);
+          }
         }
       }
     }
