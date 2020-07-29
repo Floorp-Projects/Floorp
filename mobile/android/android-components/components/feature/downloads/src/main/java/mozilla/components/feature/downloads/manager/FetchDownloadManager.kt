@@ -61,14 +61,14 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
 
         // The middleware will notify the service to start the download
         // once this action is processed.
-        store.dispatch(DownloadAction.QueueDownloadAction(download))
+        store.dispatch(DownloadAction.AddDownloadAction(download))
 
         registerBroadcastReceiver()
         return download.id
     }
 
     override fun tryAgain(downloadId: Long) {
-        val download = store.state.queuedDownloads[downloadId] ?: return
+        val download = store.state.downloads[downloadId] ?: return
 
         val intent = Intent(applicationContext, service.java)
         intent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
@@ -84,7 +84,6 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
         if (isSubscribedReceiver) {
             broadcastManager.unregisterReceiver(this)
             isSubscribedReceiver = false
-            store.dispatch(DownloadAction.RemoveAllQueuedDownloadsAction)
         }
     }
 
@@ -102,13 +101,10 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
      */
     override fun onReceive(context: Context, intent: Intent) {
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
-        val download = store.state.queuedDownloads[downloadID]
+        val download = store.state.downloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(EXTRA_DOWNLOAD_STATUS)
             as Status
 
-        if (downloadStatus == Status.COMPLETED) {
-            store.dispatch(DownloadAction.RemoveQueuedDownloadAction(downloadID))
-        }
         if (download != null) {
             onDownloadStopped(download, downloadID, downloadStatus)
         }

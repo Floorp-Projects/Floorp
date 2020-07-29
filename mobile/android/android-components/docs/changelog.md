@@ -21,6 +21,9 @@ permalink: /changelog/
 * **feature-downloads**
   * ⚠️ **This is a breaking change**: Removed the following properties from `DownloadJobState` in `AbstractFetchDownloadService` and added to `DownloadState`: `DownloadJobStatus` (now renamed to `DownloadStatus`) and `currentBytesCopied`. These properties can now be read from `DownloadState`.
   * ⚠️ **This is a breaking change**: Removed the enum class `DownloadJobStatus` from `AbstractFetchDownloadService` and moved into `DownloadState`, and removed the `ACTIVE` state while introducing two new states called `INITIATED` and `DOWNLOADING`.
+  * ⚠️ **This is a breaking change**: Renamed the following data classes from `BrowserAction`: `QueuedDownloadAction` to `AddDownloadAction`, `RemoveQueuedDownloadAction` to `RemoveDownloadAction`, `RemoveAllQueuedDownloadsAction` to `RemoveAllDownloadsAction`, and `UpdateQueuedDownloadAction` to `UpdateDownloadAction`. 
+  * ⚠️ **This is a breaking change**: Renamed `queuedDownloads` from `BrowserState` to `downloads` .
+  * Removed automatic deletion of `downloads` upon a completed download.
 
 # 52.0.0
 

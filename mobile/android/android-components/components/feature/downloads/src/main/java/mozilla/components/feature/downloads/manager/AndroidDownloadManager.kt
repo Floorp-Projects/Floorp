@@ -69,7 +69,7 @@ class AndroidDownloadManager(
 
         val request = download.toAndroidRequest(cookie)
         val downloadID = androidDownloadManager.enqueue(request)
-        store.dispatch(DownloadAction.QueueDownloadAction(download.copy(id = downloadID)))
+        store.dispatch(DownloadAction.AddDownloadAction(download.copy(id = downloadID)))
         downloadRequests[downloadID] = request
         registerBroadcastReceiver()
         return downloadID
@@ -87,7 +87,6 @@ class AndroidDownloadManager(
         if (isSubscribedReceiver) {
             applicationContext.unregisterReceiver(this)
             isSubscribedReceiver = false
-            store.dispatch(DownloadAction.RemoveAllQueuedDownloadsAction)
             downloadRequests.clear()
         }
     }
@@ -106,13 +105,9 @@ class AndroidDownloadManager(
      */
     override fun onReceive(context: Context, intent: Intent) {
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
-        val download = store.state.queuedDownloads[downloadID]
+        val download = store.state.downloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(AbstractFetchDownloadService.EXTRA_DOWNLOAD_STATUS)
             as Status
-
-        if (downloadStatus == Status.COMPLETED) {
-            store.dispatch(DownloadAction.RemoveQueuedDownloadAction(downloadID))
-        }
 
         if (download != null) {
             onDownloadStopped(download, downloadID, downloadStatus)

@@ -570,24 +570,24 @@ sealed class MediaAction : BrowserAction() {
  */
 sealed class DownloadAction : BrowserAction() {
     /**
-     * Updates the [BrowserState] to track the provided [download] as queued.
+     * Updates the [BrowserState] to track the provided [download] as added.
      */
-    data class QueueDownloadAction(val download: DownloadState) : DownloadAction()
+    data class AddDownloadAction(val download: DownloadState) : DownloadAction()
 
     /**
-     * Updates the [BrowserState] to remove the queued download with the provided [downloadId].
+     * Updates the [BrowserState] to remove the download with the provided [downloadId].
      */
-    data class RemoveQueuedDownloadAction(val downloadId: Long) : DownloadAction()
+    data class RemoveDownloadAction(val downloadId: Long) : DownloadAction()
 
     /**
-     * Updates the [BrowserState] to remove all queued downloads.
+     * Updates the [BrowserState] to remove all downloads.
      */
-    object RemoveAllQueuedDownloadsAction : DownloadAction()
+    object RemoveAllDownloadsAction : DownloadAction()
 
     /**
      * Updates the provided [download] on the [BrowserState].
      */
-    data class UpdateQueuedDownloadAction(val download: DownloadState) : DownloadAction()
+    data class UpdateDownloadAction(val download: DownloadState) : DownloadAction()
 }
 
 /**

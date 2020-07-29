@@ -32,7 +32,7 @@ class DownloadMiddlewareTest {
         )
 
         val download = DownloadState("https://mozilla.org/download", destinationDirectory = "")
-        store.dispatch(DownloadAction.QueueDownloadAction(download)).joinBlocking()
+        store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
 
         val intentCaptor = argumentCaptor<Intent>()
         verify(applicationContext).startService(intentCaptor.capture())

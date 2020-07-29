@@ -58,10 +58,10 @@ class AndroidDownloadManagerTest {
 
         grantPermissions()
 
-        assertTrue(store.state.queuedDownloads.isEmpty())
+        assertTrue(store.state.downloads.isEmpty())
         val id = downloadManager.download(download)!!
         store.waitUntilIdle()
-        assertEquals(download.copy(id = id), store.state.queuedDownloads[id])
+        assertEquals(download.copy(id = id), store.state.downloads[id])
 
         notifyDownloadCompleted(id)
         assertTrue(downloadCompleted)
@@ -120,7 +120,7 @@ class AndroidDownloadManagerTest {
     }
 
     @Test
-    fun `sendBroadcast with completed download removes queued download from store`() {
+    fun `sendBroadcast with completed download`() {
         var downloadStatus: DownloadState.Status? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
         grantPermissions()
@@ -134,12 +134,11 @@ class AndroidDownloadManagerTest {
             cookie = "yummy_cookie=choco"
         )!!
         store.waitUntilIdle()
-        assertEquals(downloadWithFileName.copy(id = id), store.state.queuedDownloads[id])
+        assertEquals(downloadWithFileName.copy(id = id), store.state.downloads[id])
 
         notifyDownloadCompleted(id)
         store.waitUntilIdle()
         assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
-        assertTrue(store.state.queuedDownloads.isEmpty())
     }
 
     @Test
