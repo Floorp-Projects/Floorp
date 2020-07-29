@@ -47,6 +47,8 @@
 <!ENTITY ldb.dumpFrames.accesskey "F">
 <!ENTITY ldb.dumpFramesInCSSPixels.label "Frames (CSS pixels)">
 <!ENTITY ldb.dumpFramesInCSSPixels.accesskey "P">
+<!ENTITY ldb.dumpTextRuns.label "Text Runs">
+<!ENTITY ldb.dumpTextRuns.accesskey "T">
 <!ENTITY ldb.dumpViews.label "Views and Widgets">
 <!ENTITY ldb.dumpViews.accesskey "V">
 <!ENTITY ldb.dumpStyleSheets.label "Style Sheets">
