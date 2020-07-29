@@ -2288,12 +2288,15 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
   }
 
   AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-  nsresult rv = aHTMLEditor.DeleteTextAndNormalizeSurroundingWhiteSpaces(
-      startToDelete, endToDelete);
+  Result<EditorDOMPoint, nsresult> result =
+      aHTMLEditor.DeleteTextAndNormalizeSurroundingWhiteSpaces(
+          startToDelete, endToDelete,
+          HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries,
+          HTMLEditor::DeleteDirection::Forward);
   NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
+      !result.isOk(),
       "HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces() failed");
-  return rv;
+  return result.isErr() ? result.unwrapErr() : NS_OK;
 }
 
 EditorDOMPointInText WSRunScanner::TextFragmentData::
