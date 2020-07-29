@@ -1085,14 +1085,12 @@ class FennecMigrator private constructor(
                 return when (val failure = migrationFailureWrapper.failure) {
                     is SearchEngineMigrationResult.Failure.NoDefault -> {
                         logger.error("Missing search engine default: $failure")
-                        crashReporter.submitCaughtException(migrationFailureWrapper)
                         MigrationSearch.failureReason.add(FailureReasonTelemetryCodes.SEARCH_NO_DEFAULT.code)
                         result
                     }
 
                     is SearchEngineMigrationResult.Failure.NoMatch -> {
                         logger.error("Could not find matching search engine: $failure")
-                        crashReporter.submitCaughtException(migrationFailureWrapper)
                         MigrationSearch.failureReason.add(FailureReasonTelemetryCodes.SEARCH_NO_MATCH.code)
                         result
                     }
