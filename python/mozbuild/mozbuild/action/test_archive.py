@@ -634,7 +634,6 @@ ARCHIVE_FILES = {
                 'dns-packet/**',
                 'remotexpcshelltests.py',
                 'runxpcshelltests.py',
-                'selftest.py',
                 'xpcshellcommandline.py',
             ],
             'dest': 'xpcshell',
