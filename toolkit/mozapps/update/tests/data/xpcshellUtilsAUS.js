@@ -44,6 +44,12 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/MockRegistrar.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "updateAppInfo",
+  "resource://testing-common/AppInfo.jsm"
+);
+
 const Cm = Components.manager;
 
 /* global MOZ_APP_VENDOR, MOZ_APP_BASENAME */
@@ -4181,15 +4187,7 @@ function stop_httpserver(aCallback) {
  *          The gecko version of the application
  */
 function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
-  const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-  const XULAPPINFO_CID = Components.ID(
-    "{c763b610-9d49-455a-bbd2-ede71682a1ac}"
-  );
-  let ifaces = [Ci.nsIXULAppInfo, Ci.nsIPlatformInfo, Ci.nsIXULRuntime];
-  if (AppConstants.platform == "win") {
-    ifaces.push(Ci.nsIWinAppHelper);
-  }
-  const XULAppInfo = {
+  updateAppInfo({
     vendor: APP_INFO_VENDOR,
     name: aName,
     ID: aID,
@@ -4201,26 +4199,7 @@ function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
     logConsoleErrors: true,
     OS: "XPCShell",
     XPCOMABI: "noarch-spidermonkey",
-
-    QueryInterface: ChromeUtils.generateQI(ifaces),
-  };
-
-  const XULAppInfoFactory = {
-    createInstance(aOuter, aIID) {
-      if (aOuter == null) {
-        return XULAppInfo.QueryInterface(aIID);
-      }
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    },
-  };
-
-  let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(
-    XULAPPINFO_CID,
-    "XULAppInfo",
-    XULAPPINFO_CONTRACTID,
-    XULAppInfoFactory
-  );
+  });
 }
 
 /**
