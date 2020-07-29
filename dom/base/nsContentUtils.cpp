@@ -9514,28 +9514,20 @@ bool nsContentUtils::ShouldBlockReservedKeys(WidgetKeyboardEvent* aKeyEvent) {
 
   if (isRemoteBrowser) {
     targetBrowser->GetContentPrincipal(getter_AddRefs(principal));
-  } else {
-    // Get the top-level document.
-    nsCOMPtr<nsIContent> content =
-        do_QueryInterface(aKeyEvent->mOriginalTarget);
-    if (content) {
-      Document* doc = content->GetUncomposedDoc();
-      if (doc) {
-        nsCOMPtr<nsIDocShellTreeItem> docShell = doc->GetDocShell();
-        if (docShell &&
-            docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-          nsCOMPtr<nsIDocShellTreeItem> rootItem;
-          docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(rootItem));
-          if (rootItem && rootItem->GetDocument()) {
-            principal = rootItem->GetDocument()->NodePrincipal();
-          }
-        }
-      }
-    }
+    return principal ? nsContentUtils::IsSitePermDeny(principal, "shortcuts"_ns)
+                     : false;
   }
 
-  if (principal) {
-    return nsContentUtils::IsSitePermDeny(principal, "shortcuts"_ns);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aKeyEvent->mOriginalTarget);
+  if (content) {
+    Document* doc = content->GetUncomposedDoc();
+    if (doc) {
+      RefPtr<WindowContext> wc = doc->GetWindowContext();
+      if (wc) {
+        return wc->TopWindowContext()->GetShortcutsPermission() ==
+               nsIPermissionManager::DENY_ACTION;
+      }
+    }
   }
 
   return false;
