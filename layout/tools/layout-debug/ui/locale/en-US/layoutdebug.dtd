@@ -39,8 +39,6 @@
 <!ENTITY ldb.DumpMenu.label "Dump">
 <!ENTITY ldb.DumpMenu.accesskey "D">
 
-<!ENTITY ldb.dumpWebShells.label "Web Shells">
-<!ENTITY ldb.dumpWebShells.accesskey "W">
 <!ENTITY ldb.dumpContent.label "Content">
 <!ENTITY ldb.dumpContent.accesskey "C">
 <!ENTITY ldb.dumpFrames.label "Frames (app units)">

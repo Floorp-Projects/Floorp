@@ -35,7 +35,6 @@ const FEATURES = {
 };
 
 const COMMANDS = [
-  "dumpWebShells",
   "dumpContent",
   "dumpFrames",
   "dumpFramesInCSSPixels",
