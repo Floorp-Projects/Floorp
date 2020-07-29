@@ -15,11 +15,8 @@ namespace mozilla {
 /**
  * @brief Interface to help implementing nsIPrinter using a CUPS printer.
  *
- * This does not manage the lifetime of the cups_dest_t that represents the
- * actual printer. This is because how the printer is retrieved from CUPS, and
- * so the caller must take care of freeing it.
- * This will also cause a blocking request on construction, and (depending on
- * CUPS scheduling) on attribute getters.
+ * This will cause a blocking request on construction, and (depending on CUPS
+ * scheduling) on attribute getters.
  */
 class CUPSPrinter {
  public:
@@ -28,6 +25,7 @@ class CUPSPrinter {
       : mShim(other.mShim),
         mPrinter(other.mPrinter),
         mPrinterInfo(other.mPrinterInfo) {
+    other.mPrinter = nullptr;
     other.mPrinterInfo = nullptr;
   }
   /**
@@ -47,7 +45,7 @@ class CUPSPrinter {
   bool Supports(const char* option, const char* value) const;
 
   const nsCUPSShim& mShim;
-  cups_dest_t* const mPrinter;
+  cups_dest_t* mPrinter;
   cups_dinfo_t* mPrinterInfo;
 };
 
