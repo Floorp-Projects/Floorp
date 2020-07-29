@@ -45,13 +45,13 @@ pref(browser.display.document_color_use,2) == non-themed-button-002.html non-the
 pref(browser.display.document_color_use,2) == background-transparent-form-control.html background-transparent-form-control-ref.html
 
 # prefers-contrast media query:
-# XXX: because we can't toggle an OS high contrast theme from a
-# reftest we can't directly test whether or not that triggers the high
-# contrast setting on the prefers-contrast media query. This is quite
-# sad. Bug 1648807.
 
-# a prefers-contrast value of forced should evaluate to true
+# a prefers-contrast value of forced or high should evaluate to true
 == prefers-contrast-001.html prefers-contrast-black-ref.html
+test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(ui.useAccessibilityTheme,1) == prefers-contrast-001.html prefers-contrast-black-ref.html
+
+# high should match when an accessibility theme is being used
+test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(ui.useAccessibilityTheme,1) == prefers-contrast-002.html prefers-contrast-black-ref.html
 
 # If RFP is on the media query stops evaluating contrast preferences
 # and defaults to no-preference. The media query will still evaluate
@@ -59,9 +59,11 @@ pref(browser.display.document_color_use,2) == background-transparent-form-contro
 # ways to detect if forced colors are enabled so might as well not lie
 # about it.
 test-pref(privacy.resistFingerprinting,true) == prefers-contrast-003.html prefers-contrast-black-ref.html
+# high should not match when RFP is enabled.
+test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(privacy.resistFingerprinting,true) test-pref(ui.useAccessibilityTheme,1) != prefers-contrast-002.html prefers-contrast-black-ref.html
+
 # Should only be enabled behind preference.
 test-pref(layout.css.prefers-contrast.enabled,false) != prefers-contrast-001.html prefers-contrast-black-ref.html
-
 
 # prefers-contrast forced matching forced
 == prefers-contrast-003.html prefers-contrast-black-ref.html

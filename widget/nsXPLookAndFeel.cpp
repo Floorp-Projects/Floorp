@@ -36,6 +36,12 @@
 
 using namespace mozilla;
 
+// To make one of these prefs toggleable from a reftest add a user
+// pref in testing/profiles/reftest/user.js. For example, to make
+// ui.useAccessibilityTheme toggleable, add:
+//
+// user_pref("ui.useAccessibilityTheme", 0);
+//
 nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] = {
     {"ui.caretBlinkTime", IntID::CaretBlinkTime, false, 0},
     {"ui.caretWidth", IntID::CaretWidth, false, 0},
