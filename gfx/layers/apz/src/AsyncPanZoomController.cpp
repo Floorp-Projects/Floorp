@@ -2658,7 +2658,10 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
   ParentLayerPoint startPoint = aEvent.mLocalPanStartPoint;
   ParentLayerPoint endPoint =
       aEvent.mLocalPanStartPoint - logicalPanDisplacement;
-  RecordScrollPayload(aEvent.mTimeStamp);
+  if (logicalPanDisplacement != ParentLayerPoint()) {
+    // Don't expect a composite to be triggered if the displacement is zero
+    RecordScrollPayload(aEvent.mTimeStamp);
+  }
   bool consumed = CallDispatchScroll(startPoint, endPoint, handoffState);
 
   if (!consumed && !aFingersOnTouchpad) {
