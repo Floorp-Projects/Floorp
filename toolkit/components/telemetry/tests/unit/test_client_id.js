@@ -135,9 +135,12 @@ add_task(async function test_removeClientIDs() {
 
   await ClientID.removeClientIDs();
 
-  if (AppConstants.platform != "android") {
-    // We don't record the old ecosystem client ID on Android, since the
-    // FxA and telemetry infrastructure is different there.
+  if (
+    AppConstants.platform != "android" &&
+    AppConstants.MOZ_APP_NAME != "thunderbird"
+  ) {
+    // We don't record the old ecosystem client ID on Android or Thunderbird,
+    // since the FxA and telemetry infrastructure is different there.
     let prefClientID = Services.prefs.getStringPref(PREF_CACHED_CLIENTID, null);
     let scalarsDeletionRequest = Services.telemetry.getSnapshotForScalars(
       "deletion-request"
@@ -177,7 +180,10 @@ add_task(async function test_removeClientIDs() {
   let prefClientID = Services.prefs.getStringPref(PREF_CACHED_CLIENTID, null);
   Assert.equal(nextClientID, prefClientID);
 
-  if (AppConstants.platform != "android") {
+  if (
+    AppConstants.platform != "android" &&
+    AppConstants.MOZ_APP_NAME != "thunderbird"
+  ) {
     let scalarsDeletionRequest = Services.telemetry.getSnapshotForScalars(
       "deletion-request"
     );
