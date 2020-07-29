@@ -1141,18 +1141,34 @@ bool nsContentSecurityUtils::IsDownloadAllowed(
   Telemetry::Accumulate(mozilla::Telemetry::MIXED_CONTENT_DOWNLOADS,
                         decission != nsIContentPolicy::ACCEPT);
 
-  if (!StaticPrefs::dom_block_download_insecure() ||
-      decission == nsIContentPolicy::ACCEPT) {
-    return true;
+  if (StaticPrefs::dom_block_download_insecure() &&
+      decission != nsIContentPolicy::ACCEPT) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    if (httpChannel) {
+      LogMessageToConsole(httpChannel, "MixedContentBlockedDownload");
+    }
+    return false;
   }
 
   if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
     return true;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    LogMessageToConsole(httpChannel, "MixedContentBlockedDownload");
+  if (!StaticPrefs::dom_block_download_in_sandboxed_iframes()) {
+    return true;
   }
-  return false;
+
+  uint32_t triggeringFlags = loadInfo->GetTriggeringSandboxFlags();
+  uint32_t currentflags = loadInfo->GetSandboxFlags();
+
+  if ((triggeringFlags & SANDBOXED_ALLOW_DOWNLOADS) ||
+      (currentflags & SANDBOXED_ALLOW_DOWNLOADS)) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    if (httpChannel) {
+      LogMessageToConsole(httpChannel, "IframeSandboxBlockedDownload");
+    }
+    return false;
+  }
+
+  return true;
 }
