@@ -139,11 +139,11 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         view.findViewById<Button>(R.id.save_cancel).apply {
             setOnClickListener {
                 if (this.text == context?.getString(R.string.mozac_feature_prompt_never_save)) {
+                    emitNeverSaveFact()
                     CoroutineScope(IO).launch {
                         feature?.loginExceptionStorage?.addLoginException(origin)
                     }
                 }
-                emitNeverSaveFact()
                 feature?.onCancel(sessionId)
                 dismiss()
             }
