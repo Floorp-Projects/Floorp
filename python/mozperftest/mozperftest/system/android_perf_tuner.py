@@ -74,32 +74,6 @@ class PerformanceTuner:
             else:
                 self.log.warning(" ".join(["failed to terminate:", service]))
 
-    def disable_animations(self):
-        self.log.info("disabling animations")
-        commands = {
-            "animator_duration_scale": 0.0,
-            "transition_animation_scale": 0.0,
-            "window_animation_scale": 0.0,
-        }
-
-        for key, value in commands.items():
-            command = " ".join(["settings", "put", "global", key, str(value)])
-            self.log.info("setting {} to {}".format(key, value))
-            self.device.shell_bool(command, timeout=self.timeout)
-
-    def restore_animations(self):
-        # animation settings are not restored to default by reboot
-        self.log.info("restoring animations")
-        commands = {
-            "animator_duration_scale": 1.0,
-            "transition_animation_scale": 1.0,
-            "window_animation_scale": 1.0,
-        }
-
-        for key, value in commands.items():
-            command = " ".join(["settings", "put", "global", key, str(value)])
-            self.device.shell_bool(command, timeout=self.timeout)
-
     def set_virtual_memory_parameters(self):
         self.log.info("setting virtual memory parameters")
         commands = {
