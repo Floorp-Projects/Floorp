@@ -2654,7 +2654,7 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aPointToDelete);
 
   /**
-   * HandleDeleteCollapsedSelectionAtTextNode() handles deletion of
+   * HandleDeleteCollapsedSelectionAtVisibleChar() handles deletion of
    * collapsed selection in a text node.
    *
    * @param aDirectionAndAmount Direction of the deletion.
@@ -2663,7 +2663,7 @@ class HTMLEditor final : public TextEditor,
    *                            node.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteCollapsedSelectionAtTextNode(
+  HandleDeleteCollapsedSelectionAtVisibleChar(
       nsIEditor::EDirection aDirectionAndAmount,
       const EditorDOMPoint& aPointToDelete);
 
