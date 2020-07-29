@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !this.hasOwnProperty("TypedObject") || typeof minorgc !== 'function'
+// |jit-test| skip-if: !this.hasOwnProperty('TypedObject') || typeof minorgc !== 'function'
 
 load(libdir + "immutable-prototype.js");
 
