@@ -23,6 +23,7 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RangeUtils.h"
+#include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
 #include "mozilla/TextComposition.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -523,9 +524,13 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     // attempt to transform any unneeded nbsp's into spaces after doing various
     // operations
     switch (GetTopLevelEditSubAction()) {
+      case EditSubAction::eDeleteSelectedContent:
+        if (TopLevelEditSubActionDataRef().mDidNormalizeWhitespaces) {
+          break;
+        }
+        [[fallthrough]];
       case EditSubAction::eInsertText:
       case EditSubAction::eInsertTextComingFromIME:
-      case EditSubAction::eDeleteSelectedContent:
       case EditSubAction::eInsertLineBreak:
       case EditSubAction::eInsertParagraphSeparator:
       case EditSubAction::ePasteHTMLContent:
@@ -2617,10 +2622,93 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
   return EditActionIgnored();
 }
 
+EditActionResult HTMLEditor::HandleDeleteTextAroundCollapsedSelection(
+    nsIEditor::EDirection aDirectionAndAmount,
+    const EditorDOMPoint& aCaretPosition) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
+             aDirectionAndAmount == nsIEditor::ePrevious);
+
+  EditorDOMRangeInTexts rangeToDelete;
+  EditorDOMPointInText newCaretPosition;
+  if (aDirectionAndAmount == nsIEditor::eNext) {
+    Result<EditorDOMRangeInTexts, nsresult> result =
+        WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(*this,
+                                                             aCaretPosition);
+    if (result.isErr()) {
+      NS_WARNING(
+          "WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom() failed");
+      return EditActionHandled(result.unwrapErr());
+    }
+    rangeToDelete = result.unwrap();
+    if (!rangeToDelete.IsPositioned()) {
+      return EditActionHandled();  // no range to delete
+    }
+    newCaretPosition = rangeToDelete.StartRef();
+  } else {
+    Result<EditorDOMRangeInTexts, nsresult> result =
+        WSRunScanner::GetRangeInTextNodesToBackspaceFrom(*this, aCaretPosition);
+    if (result.isErr()) {
+      NS_WARNING("WSRunScanner::GetRangeInTextNodesToBackspaceFrom() failed");
+      return EditActionHandled(result.unwrapErr());
+    }
+    rangeToDelete = result.unwrap();
+    if (!rangeToDelete.IsPositioned()) {
+      return EditActionHandled();  // no range to delete
+    }
+    if (rangeToDelete.InSameContainer()) {
+      newCaretPosition = rangeToDelete.StartRef();
+    } else {
+      newCaretPosition =
+          EditorDOMPointInText(rangeToDelete.EndRef().ContainerAsText(), 0);
+    }
+  }
+
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
+  nsresult rv = DeleteTextAndNormalizeSurroundingWhiteSpaces(
+      rangeToDelete.StartRef(), rangeToDelete.EndRef());
+  TopLevelEditSubActionDataRef().mDidNormalizeWhitespaces = true;
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces() failed");
+    return EditActionHandled(rv);
+  }
+
+  if (!newCaretPosition.IsSetAndValid() ||
+      !newCaretPosition.ContainerAsText()->IsInComposedDoc()) {
+    return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
+  // For compatibility with Blink, we should move caret to end of previous
+  // text node if it's direct previous sibling of the first text node in the
+  // range.
+  if (newCaretPosition.IsStartOfContainer() &&
+      newCaretPosition.GetContainer()->GetPreviousSibling() &&
+      newCaretPosition.GetContainer()->GetPreviousSibling()->IsText()) {
+    newCaretPosition.SetToEndOf(
+        newCaretPosition.GetContainer()->GetPreviousSibling()->AsText());
+  }
+
+  DebugOnly<nsresult> rvIgnored =
+      SelectionRefPtr()->Collapse(newCaretPosition.ToRawRangeBoundary());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Selection::Collapse() failed, but ignored");
+  return EditActionHandled();
+}
+
 EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtWhiteSpaces(
     nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aPointToDelete) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (StaticPrefs::editor_white_space_normalization_blink_compatible()) {
+    EditActionResult result = HandleDeleteTextAroundCollapsedSelection(
+        aDirectionAndAmount, aPointToDelete);
+    NS_WARNING_ASSERTION(
+        result.Succeeded(),
+        "HTMLEditor::HandleDeleteTextAroundCollapsedSelection() failed");
+    return result;
+  }
 
   if (aDirectionAndAmount == nsIEditor::eNext) {
     nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
@@ -3913,9 +4001,9 @@ nsresult HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
       startToDelete, endToDelete, normalizedWhiteSpacesInFirstNode,
       normalizedWhiteSpacesInLastNode);
 
-  // If given range is collapsed, i.e., the caller just wants to normalize
-  // white-space sequence, but there is no white-spaces which need to be
-  // replaced, we need to do nothing here.
+  // If extended range is still collapsed, i.e., the caller just wants to
+  // normalize white-space sequence, but there is no white-spaces which need to
+  // be replaced, we need to do nothing here.
   if (startToDelete == endToDelete) {
     return NS_OK;
   }

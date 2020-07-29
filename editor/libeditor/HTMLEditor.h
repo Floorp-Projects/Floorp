@@ -2740,6 +2740,19 @@ class HTMLEditor final : public TextEditor,
       nsIEditor::EStripWrappers aStripWrappers);
 
   /**
+   * HandleDeleteTextAroundCollapsedSelection() handles deletion of
+   * collapsed selection in a text node.
+   *
+   * @param aDirectionAndAmount Must be eNext or ePrevious.
+   * @param aCaretPoisition     The position where caret is.  This container
+   *                            must be a text node.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteTextAroundCollapsedSelection(
+      nsIEditor::EDirection aDirectionAndAmount,
+      const EditorDOMPoint& aCaretPosition);
+
+  /**
    * HandleDeleteNonCollapsedSelection() handles deletion with non-collapsed
    * `Selection`.  Callers must guarantee that this is called only when
    * `Selection` is NOT collapsed.

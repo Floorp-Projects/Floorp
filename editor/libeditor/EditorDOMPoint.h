@@ -1065,7 +1065,8 @@ class EditorDOMRangeBase final {
   }
   template <typename OtherRangeType>
   bool operator==(const OtherRangeType& aOther) const {
-    return mStart == aOther.mStart && mEnd == aOther.mEnd;
+    return (!IsPositioned() && !aOther.IsPositioned()) ||
+           (mStart == aOther.mStart && mEnd == aOther.mEnd);
   }
   template <typename OtherRangeType>
   bool operator!=(const OtherRangeType& aOther) const {
