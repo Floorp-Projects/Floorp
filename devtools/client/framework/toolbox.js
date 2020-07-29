@@ -3781,24 +3781,8 @@ Toolbox.prototype = {
             this._removeWindowListeners();
             this._removeChromeEventHandlerEvents();
 
-            // `location` may already be 'invalid' if the toolbox document is
-            // already in process of destruction. Otherwise if it is still
-            // around, ensure releasing toolbox document and triggering cleanup
-            // thanks to unload event. We do that precisely here, before
-            // nullifying the target as various cleanup code depends on the
-            // target attribute to be still
-            // defined.
-            try {
-              // If this toolbox displayed as a page, avoid to move to `about:blank`.
-              // For example in case of reloading, when the thread of processing of
-              // destroying the toolbox arrives at here after starting reloading process,
-              // although we should display same page, `about:blank` will display.
-              if (this.hostType !== Toolbox.HostType.PAGE) {
-                win.location.replace("about:blank");
-              }
-            } catch (e) {
-              // Do nothing;
-            }
+            // Notify toolbox-host-manager that the host can be destroyed.
+            this.emit("toolbox-unload");
 
             // Targets need to be notified that the toolbox is being torn down.
             // This is done after other destruction tasks since it may tear down
