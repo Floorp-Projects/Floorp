@@ -61,7 +61,6 @@ UNIFIED_SOURCES += [
     'nsDataObjCollection.cpp',
     'nsDragService.cpp',
     'nsLookAndFeel.cpp',
-    'nsNativeBasicThemeWin.cpp',
     'nsNativeDragSource.cpp',
     'nsNativeDragTarget.cpp',
     'nsNativeThemeWin.cpp',
