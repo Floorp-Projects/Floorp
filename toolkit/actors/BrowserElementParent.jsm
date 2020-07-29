@@ -311,6 +311,11 @@ var PermitUnloader = {
   _transitionFrameState(windowGlobal, newFrameState) {
     let frameLoader = windowGlobal.rootFrameLoader;
     let state = this.inProgressPermitUnload.get(frameLoader);
+
+    if (!state) {
+      return;
+    }
+
     let oldFrameState = state.frameStates.get(windowGlobal);
 
     if (oldFrameState == STATE_WAITING) {
