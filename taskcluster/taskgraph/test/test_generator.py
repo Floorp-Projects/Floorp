@@ -110,6 +110,7 @@ class TestGenerator(unittest.TestCase):
         parameters = FakeParameters({
             '_kinds': kinds,
             'target_tasks_method': 'test_method',
+            'test_manifest_loader': 'default',
             'try_mode': None,
             'try_task_config': {},
             'tasks_for': 'hg-push',

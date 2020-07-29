@@ -324,7 +324,15 @@ def verify_shippable_no_sccache(task, taskgraph, scratch_pad, graph_config, para
 @verifications.add('full_task_graph')
 def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters):
     if task is None:
-        has_target_kind = parameters.get('target-kind') is None
+        # In certain cases there are valid reasons for tests to be missing,
+        # don't error out when that happens.
+        missing_tests_allowed = any((
+            # user specified `--target-kind`
+            parameters.get('target-kind') is not None,
+            # manifest scheduling is enabled
+            parameters['test_manifest_loader'] != 'default',
+        ))
+
         exceptions = []
         for task in six.itervalues(taskgraph.tasks):
             if task.kind == 'build' and not task.attributes.get('skip-verify-test-packaging'):
@@ -354,7 +362,7 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters
                     if not build_has_tests and not shippable:
                         # If we have not generated all task kinds, we can't verify that
                         # there are no dependent tests.
-                        if has_target_kind:
+                        if not missing_tests_allowed:
                             exceptions.append(
                                 'Build job {} has no tests, but specifies '
                                 'MOZ_AUTOMATION_PACKAGE_TESTS={} in the environment. '
