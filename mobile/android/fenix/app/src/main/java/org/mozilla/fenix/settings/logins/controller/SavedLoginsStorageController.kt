@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings.logins.controller
 import android.util.Log
 import androidx.navigation.NavController
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -31,14 +32,15 @@ open class SavedLoginsStorageController(
     private val passwordsStorage: SyncableLoginsStorage,
     private val viewLifecycleScope: CoroutineScope,
     private val navController: NavController,
-    private val loginsFragmentStore: LoginsFragmentStore
+    private val loginsFragmentStore: LoginsFragmentStore,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     private suspend fun getLogin(loginId: String): Login? = passwordsStorage.get(loginId)
 
     fun delete(loginId: String) {
         var deleteLoginJob: Deferred<Boolean>? = null
-        val deleteJob = viewLifecycleScope.launch(Dispatchers.IO) {
+        val deleteJob = viewLifecycleScope.launch(ioDispatcher) {
             deleteLoginJob = async {
                 passwordsStorage.delete(loginId)
             }
@@ -56,7 +58,7 @@ open class SavedLoginsStorageController(
 
     fun save(loginId: String, usernameText: String, passwordText: String) {
         var saveLoginJob: Deferred<Unit>? = null
-        viewLifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleScope.launch(ioDispatcher) {
             saveLoginJob = async {
                 // must retrieve from storage to get the httpsRealm and formActionOrigin
                 val oldLogin = passwordsStorage.get(loginId)
@@ -123,7 +125,7 @@ open class SavedLoginsStorageController(
     fun findPotentialDuplicates(loginId: String) {
         var deferredLogin: Deferred<List<Login>>? = null
         // What scope should be used here?
-        val fetchLoginJob = viewLifecycleScope.launch(Dispatchers.IO) {
+        val fetchLoginJob = viewLifecycleScope.launch(ioDispatcher) {
             deferredLogin = async {
                 val login = getLogin(loginId)
                 passwordsStorage.getPotentialDupesIgnoringUsername(login!!)
@@ -149,7 +151,7 @@ open class SavedLoginsStorageController(
 
     fun fetchLoginDetails(loginId: String) {
         var deferredLogin: Deferred<List<Login>>? = null
-        val fetchLoginJob = viewLifecycleScope.launch(Dispatchers.IO) {
+        val fetchLoginJob = viewLifecycleScope.launch(ioDispatcher) {
             deferredLogin = async {
                 passwordsStorage.list()
             }
@@ -177,7 +179,7 @@ open class SavedLoginsStorageController(
 
     fun handleLoadAndMapLogins() {
         var deferredLogins: Deferred<List<Login>>? = null
-        val fetchLoginsJob = viewLifecycleScope.launch(Dispatchers.IO) {
+        val fetchLoginsJob = viewLifecycleScope.launch(ioDispatcher) {
             deferredLogins = async {
                 passwordsStorage.list()
             }

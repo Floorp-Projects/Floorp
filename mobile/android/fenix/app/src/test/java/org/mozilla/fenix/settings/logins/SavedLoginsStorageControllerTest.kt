@@ -13,9 +13,9 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.storage.Login
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -41,6 +41,7 @@ class SavedLoginsStorageControllerTest {
     private val navController: NavController = mockk(relaxed = true)
     private val loginsFragmentStore: LoginsFragmentStore = mockk(relaxed = true)
     private val scope = TestCoroutineScope()
+    private val ioDispatcher = TestCoroutineDispatcher()
     private val loginMock: Login = mockk(relaxed = true)
 
     @Before
@@ -55,17 +56,19 @@ class SavedLoginsStorageControllerTest {
             passwordsStorage = passwordsStorage,
             viewLifecycleScope = scope,
             navController = navController,
-            loginsFragmentStore = loginsFragmentStore
+            loginsFragmentStore = loginsFragmentStore,
+            ioDispatcher = ioDispatcher
         )
     }
 
     @After
     fun cleanUp() {
         scope.cleanupTestCoroutines()
+        ioDispatcher.cleanupTestCoroutines()
     }
 
     @Test
-    fun `WHEN a login is deleted, THEN navigate back to the previous page`() = runBlocking {
+    fun `WHEN a login is deleted, THEN navigate back to the previous page`() = scope.runBlockingTest {
         val loginId = "id"
         coEvery { passwordsStorage.delete(any()) } returns true
         controller.delete(loginId)
@@ -77,7 +80,7 @@ class SavedLoginsStorageControllerTest {
     }
 
     @Test
-    fun `WHEN fetching the login list, THEN update the state in the store`() {
+    fun `WHEN fetching the login list, THEN update the state in the store`() = scope.runBlockingTest {
         val login = Login(
             guid = "id",
             origin = "https://www.test.co.gov.org",
@@ -103,7 +106,7 @@ class SavedLoginsStorageControllerTest {
     }
 
     @Test
-    fun `WHEN saving an update to an item, THEN navigate to login detail view`() {
+    fun `WHEN saving an update to an item, THEN navigate to login detail view`() = scope.runBlockingTest {
         val oldLogin = Login(
             guid = "id",
             origin = "https://www.test.co.gov.org",
@@ -147,7 +150,7 @@ class SavedLoginsStorageControllerTest {
     }
 
     @Test
-    fun `WHEN finding login dupes, THEN update duplicates in the store`() {
+    fun `WHEN finding login dupes, THEN update duplicates in the store`() = scope.runBlockingTest {
         val login = Login(
             guid = "id",
             origin = "https://www.test.co.gov.org",
