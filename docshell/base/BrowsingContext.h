@@ -381,6 +381,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return mCurrentWindowContext;
   }
 
+  // Helpers to traverse this BrowsingContext subtree. Note that these will only
+  // traverse active contexts, and will ignore ones in the BFCache.
+  void PreOrderWalk(const std::function<void(BrowsingContext*)>& aCallback);
+  void PostOrderWalk(const std::function<void(BrowsingContext*)>& aCallback);
+  void GetAllBrowsingContextsInSubtree(
+      nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
+
   BrowsingContextGroup* Group() { return mGroup; }
 
   // WebIDL bindings for nsILoadContext
@@ -516,23 +523,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BrowsingContext)
   NS_DECL_NSILOADCONTEXT
-
-  // Perform a pre-order walk of this BrowsingContext subtree.
-  void PreOrderWalk(const std::function<void(BrowsingContext*)>& aCallback) {
-    aCallback(this);
-    for (auto& child : Children()) {
-      child->PreOrderWalk(aCallback);
-    }
-  }
-
-  // Perform an post-order walk of this BrowsingContext subtree.
-  void PostOrderWalk(const std::function<void(BrowsingContext*)>& aCallback) {
-    for (auto& child : Children()) {
-      child->PostOrderWalk(aCallback);
-    }
-
-    aCallback(this);
-  }
 
   // Window APIs that are cross-origin-accessible (from the HTML spec).
   WindowProxyHolder Window();

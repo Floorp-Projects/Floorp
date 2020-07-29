@@ -36,6 +36,8 @@ interface BrowsingContext {
 
   static BrowsingContext? getFromWindow(WindowProxy window);
 
+  sequence<BrowsingContext> getAllBrowsingContextsInSubtree();
+
   BrowsingContext? findChildWithName(DOMString name, BrowsingContext accessor);
   BrowsingContext? findWithName(DOMString name);
 
