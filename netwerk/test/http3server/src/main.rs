@@ -55,7 +55,22 @@ fn process_events(server: &mut Http3Server) {
                 match path_hdr {
                     Some((_, path)) if !path.is_empty() => {
                         qtrace!("Serve request {}", path);
-                        if path == "/RequestCancelled" {
+                        if path == "/Response421" {
+                            let response_body = b"0123456789".to_vec();
+                            request
+                                .set_response(
+                                    &[
+                                        (String::from(":status"), String::from("421")),
+                                        (String::from("Cache-Control"), String::from("no-cache")),
+                                        (
+                                            String::from("content-length"),
+                                            response_body.len().to_string(),
+                                        ),
+                                    ],
+                                    &response_body,
+                                )
+                                .unwrap();
+                        } else if path == "/RequestCancelled" {
                             request
                                 .stream_reset(Error::HttpRequestCancelled.code())
                                 .unwrap();
