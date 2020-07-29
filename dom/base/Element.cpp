@@ -857,15 +857,19 @@ nsRect Element::GetClientAreaRect() {
 
   nsIFrame* frame;
   if (nsIScrollableFrame* sf = GetScrollFrame(&frame)) {
-    MOZ_ASSERT(frame);
     nsRect scrollPort = sf->GetScrollPortRect();
-    nsIFrame* scrollableAsFrame = do_QueryFrame(sf);
-    // We want the offset to be relative to `frame`, not `sf`... Except for the
-    // root scroll frame, which is an ancestor of frame rather than a descendant
-    // and thus this wouldn't particularly make sense.
-    if (frame != scrollableAsFrame && !sf->IsRootScrollFrameOfDocument()) {
-      scrollPort.MoveBy(scrollableAsFrame->GetOffsetTo(frame));
+
+    if (!sf->IsRootScrollFrameOfDocument()) {
+      MOZ_ASSERT(frame);
+      nsIFrame* scrollableAsFrame = do_QueryFrame(sf);
+      // We want the offset to be relative to `frame`, not `sf`... Except for
+      // the root scroll frame, which is an ancestor of frame rather than a
+      // descendant and thus this wouldn't particularly make sense.
+      if (frame != scrollableAsFrame) {
+        scrollPort.MoveBy(scrollableAsFrame->GetOffsetTo(frame));
+      }
     }
+
     // The scroll port value might be expanded to the minimum scale size, we
     // should limit the size to the ICB in such cases.
     scrollPort.SizeTo(sf->GetLayoutSize());
