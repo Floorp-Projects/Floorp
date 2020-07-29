@@ -20,7 +20,6 @@
 #define DBUS_MPRIS_OBJECT_PATH "/org/mpris/MediaPlayer2"
 #define DBUS_MPRIS_PLAYER_INTERFACE "org.mpris.MediaPlayer2.Player"
 #define DBUS_MPRIS_TRACK_PATH "/org/mpris/MediaPlayer2/firefox"
-#define MPRIS_IMAGE_PREFIX "firefox-mpris"
 
 namespace mozilla {
 namespace widget {
@@ -179,6 +178,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
 
   // The saved image file fetched from the URL
   nsCOMPtr<nsIFile> mLocalImageFile;
+  nsCOMPtr<nsIFile> mLocalImageFolder;
 
   mozilla::UniquePtr<mozilla::dom::FetchImageHelper> mImageFetcher;
   mozilla::MozPromiseRequestHolder<mozilla::dom::ImagePromise>
@@ -196,7 +196,9 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
 
   bool RenewLocalImageFile(const char* aImageData, uint32_t aDataSize);
   bool InitLocalImageFile();
-  void RemoveLocalImageFile();
+  bool InitLocalImageFolder();
+  void RemoveAllLocalImages();
+  bool LocalImageFolderExists();
 
   // Queries nsAppInfo to get the branded browser name and vendor
   void InitIdentity();
