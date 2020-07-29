@@ -4489,6 +4489,7 @@ void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
   AddRemoveSelfReference();
   UpdatePreloadAction();
   UpdateSrcMediaStreamPlaying();
+  StartMediaControlKeyListenerIfNeeded();
 
   // Once play() has been called in a user generated event handler,
   // it is allowed to autoplay. Note: we can reach here when not in
@@ -6216,6 +6217,7 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
   AddRemoveSelfReference();
   UpdateSrcMediaStreamPlaying();
   UpdateAudioChannelPlayingState();
+  StartMediaControlKeyListenerIfNeeded();
 
   if (mDecoder) {
     SetPlayedOrSeeked(true);
