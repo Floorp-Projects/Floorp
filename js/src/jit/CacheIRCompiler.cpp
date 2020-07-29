@@ -7186,6 +7186,21 @@ bool CacheIRCompiler::emitRegExpInstanceOptimizableResult(
   return true;
 }
 
+bool CacheIRCompiler::emitGetFirstDollarIndexResult(StringOperandId strId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+
+  callvm.prepare();
+  masm.Push(str);
+
+  using Fn = bool (*)(JSContext*, JSString*, int32_t*);
+  callvm.call<Fn, GetFirstDollarIndexRaw>();
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
