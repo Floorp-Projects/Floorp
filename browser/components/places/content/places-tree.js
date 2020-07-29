@@ -150,7 +150,6 @@
       } else {
         this.removeAttribute("disableUserActions");
       }
-      return val;
     }
 
     get disableUserActions() {
@@ -163,12 +162,11 @@
       // We save the view so that we can avoid expensive get calls when
       // we need to get the view again.
       this._view = val;
-      /* eslint-disable no-undef */
-      return Object.getOwnPropertyDescriptor(
+      Object.getOwnPropertyDescriptor(
+        // eslint-disable-next-line no-undef
         XULTreeElement.prototype,
         "view"
       ).set.call(this, val);
-      /* eslint-enable no-undef */
     }
 
     get view() {
@@ -188,7 +186,6 @@
           this.place = this.place;
         }
       }
-      return val;
     }
 
     get flatList() {
@@ -215,8 +212,6 @@
         options = {};
       PlacesUtils.history.queryStringToQuery(val, query, options);
       this.load(query.value, options.value);
-
-      return val;
     }
 
     get place() {
@@ -409,7 +404,7 @@
     }
 
     set active(val) {
-      return (this._active = val);
+      this._active = val;
     }
 
     get active() {

@@ -72,35 +72,35 @@
           return this._folder.elt;
         },
         set elt(val) {
-          return (this._folder.elt = val);
+          this._folder.elt = val;
         },
 
         get openTimer() {
           return this._folder.openTimer;
         },
         set openTimer(val) {
-          return (this._folder.openTimer = val);
+          this._folder.openTimer = val;
         },
 
         get hoverTime() {
           return this._folder.hoverTime;
         },
         set hoverTime(val) {
-          return (this._folder.hoverTime = val);
+          this._folder.hoverTime = val;
         },
 
         get closeTimer() {
           return this._folder.closeTimer;
         },
         set closeTimer(val) {
-          return (this._folder.closeTimer = val);
+          this._folder.closeTimer = val;
         },
 
         get closeMenuTimer() {
           return this._closeMenuTimer;
         },
         set closeMenuTimer(val) {
-          return (this._closeMenuTimer = val);
+          this._closeMenuTimer = val;
         },
 
         setTimer: function OF__setTimer(aTime) {

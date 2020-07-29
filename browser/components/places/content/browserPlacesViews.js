@@ -63,7 +63,6 @@ PlacesViewBase.prototype = {
     history.queryStringToQuery(val, query, options);
     let result = history.executeQuery(query.value, options.value);
     result.addObserver(this);
-    return val;
   },
 
   _result: null,
@@ -72,7 +71,7 @@ PlacesViewBase.prototype = {
   },
   set result(val) {
     if (this._result == val) {
-      return val;
+      return;
     }
 
     if (this._result) {
@@ -97,8 +96,6 @@ PlacesViewBase.prototype = {
       this._resultNode = null;
       delete this._domNodes;
     }
-
-    return val;
   },
 
   _options: null,
@@ -114,8 +111,6 @@ PlacesViewBase.prototype = {
       val.extraClasses = {};
     }
     this._options = val;
-
-    return val;
   },
 
   /**
