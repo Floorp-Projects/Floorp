@@ -137,7 +137,10 @@ def fill_template(config, tasks):
         taskdesc = {
             'label': 'build-docker-image-' + image_name,
             'description': description,
-            'attributes': {'image_name': image_name},
+            'attributes': {
+                'image_name': image_name,
+                'artifact_prefix': 'public',
+            },
             'expires-after': '28 days' if config.params.is_try() else '1 year',
             'scopes': [],
             'treeherder': {
