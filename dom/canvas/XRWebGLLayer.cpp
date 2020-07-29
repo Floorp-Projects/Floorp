@@ -24,6 +24,8 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace dom {
 
+static constexpr float XR_FRAMEBUFFER_MIN_SCALE = 0.2f;
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRWebGLLayer, mParent, mSession, mWebGL,
                                       mFramebuffer, mLeftViewport,
                                       mRightViewport)
@@ -136,12 +138,19 @@ already_AddRefed<XRWebGLLayer> XRWebGLLayer::Constructor(
     options.depthStencil =
         aXRWebGLLayerInitDict.mDepth || aXRWebGLLayerInitDict.mStencil;
 
+    // Clamp the requested framebuffer size to ensure it's not too
+    // small to see or larger than the max native resolution.
+    const float maxScale =
+        std::max(displayState.nativeFramebufferScaleFactor, 1.0f);
     const float scaleFactor =
-        fmin(aXRWebGLLayerInitDict.mFramebufferScaleFactor, 1.0f);
+        std::max(XR_FRAMEBUFFER_MIN_SCALE,
+                 std::min((float)aXRWebGLLayerInitDict.mFramebufferScaleFactor,
+                          maxScale));
 
     options.width =
-        (int32_t)(2.0f * displayState.eyeResolution.width * scaleFactor);
-    options.height = (int32_t)(displayState.eyeResolution.height * scaleFactor);
+        (int32_t)ceilf(2.0f * displayState.eyeResolution.width * scaleFactor);
+    options.height =
+        (int32_t)ceilf(displayState.eyeResolution.height * scaleFactor);
     framebuffer = gl->CreateOpaqueFramebuffer(options);
 
     if (!framebuffer) {
@@ -233,14 +242,19 @@ already_AddRefed<XRViewport> XRWebGLLayer::GetViewport(const XRView& aView) {
   return result.forget();
 }
 
+// https://www.w3.org/TR/webxr/#dom-xrwebgllayer-getnativeframebufferscalefactor
 /* static */ double XRWebGLLayer::GetNativeFramebufferScaleFactor(
     const GlobalObject& aGlobal, const XRSession& aSession) {
   if (aSession.IsEnded()) {
     return 0.0f;
   }
-  // TODO: Get the maximum framebuffer size from each display.
-  // Right now we assume that the recommended size is the maximum one.
-  return 1.0f;
+  if (!aSession.IsImmersive()) {
+    return 1.0f;
+  }
+
+  const gfx::VRDisplayInfo& displayInfo =
+      aSession.GetDisplayClient()->GetDisplayInfo();
+  return displayInfo.mDisplayState.nativeFramebufferScaleFactor;
 }
 
 void XRWebGLLayer::StartAnimationFrame() {

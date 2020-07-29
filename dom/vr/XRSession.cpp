@@ -143,7 +143,9 @@ XRSession::XRSession(
 
 XRSession::~XRSession() { MOZ_ASSERT(mShutdown); }
 
-gfx::VRDisplayClient* XRSession::GetDisplayClient() { return mDisplayClient; }
+gfx::VRDisplayClient* XRSession::GetDisplayClient() const {
+  return mDisplayClient;
+}
 
 JSObject* XRSession::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {
@@ -382,7 +384,9 @@ already_AddRefed<Promise> XRSession::RequestReferenceSpace(
   return promise.forget();
 }
 
-XRRenderState* XRSession::GetActiveRenderState() { return mActiveRenderState; }
+XRRenderState* XRSession::GetActiveRenderState() const {
+  return mActiveRenderState;
+}
 
 void XRSession::XRFrameRequest::Call(const DOMHighResTimeStamp& aTimeStamp,
                                      XRFrame& aFrame) {

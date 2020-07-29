@@ -740,6 +740,7 @@ bool OpenVRSession::InitState(VRSystemState& aSystemState) {
   mVRSystem->GetRecommendedRenderTargetSize(&w, &h);
   state.eyeResolution.width = w;
   state.eyeResolution.height = h;
+  state.nativeFramebufferScaleFactor = 1.0f;
 
   // default to an identity quaternion
   aSystemState.sensorState.pose.orientation[3] = 1.0f;

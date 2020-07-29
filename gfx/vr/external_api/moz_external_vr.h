@@ -47,8 +47,8 @@ namespace gfx {
 // and mapped files if we have both release and nightlies
 // running at the same time? Or...what if we have multiple
 // release builds running on same machine? (Bug 1563232)
-#define SHMEM_VERSION "0.0.10"
-static const int32_t kVRExternalVersion = 17;
+#define SHMEM_VERSION "0.0.11"
+static const int32_t kVRExternalVersion = 18;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -345,6 +345,7 @@ struct VRDisplayState {
   VRFieldOfView eyeFOV[VRDisplayState::NumEyes];
   Point3D_POD eyeTranslation[VRDisplayState::NumEyes];
   IntSize_POD eyeResolution;
+  float nativeFramebufferScaleFactor;
   bool suppressFrames;
   bool isConnected;
   bool isMounted;
