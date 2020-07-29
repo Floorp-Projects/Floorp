@@ -104,7 +104,6 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.theme.ThemeManager
@@ -835,14 +834,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 sessionManager.remove(session)
                 true
             } else {
-                val isLastSession =
-                    sessionManager.sessionsOfType(private = session.private).count() == 1
                 if (session.hasParentSession) {
                     sessionManager.remove(session, true)
                 }
-                // We want to return to home if this removed session was the last session of its type
-                // and didn't have a parent session to select.
-                val goToOverview = isLastSession && !session.hasParentSession
+                // We want to return to home if this session didn't have a parent session to select.
+                val goToOverview = !session.hasParentSession
                 !goToOverview
             }
         }
