@@ -2,7 +2,7 @@
 
 # ProgressiveWebAppFacts
 
-`class ProgressiveWebAppFacts` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L16)
+`class ProgressiveWebAppFacts` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L15)
 
 Facts emitted for telemetry related to [PwaFeature](#)
 
@@ -11,7 +11,6 @@ Facts emitted for telemetry related to [PwaFeature](#)
 | Name | Summary |
 |---|---|
 | [Items](-items/index.md) | `object Items`<br>Items that specify which portion of the [PwaFeature](#) was interacted with |
-| [MetadataKeys](-metadata-keys/index.md) | `object MetadataKeys`<br>Keys used to record metadata about [Items](-items/index.md). |
 
 ### Constructors
 

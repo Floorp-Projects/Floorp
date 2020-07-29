@@ -2,4 +2,4 @@
 
 # INSTALL_SHORTCUT
 
-`const val INSTALL_SHORTCUT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L21)
+`const val INSTALL_SHORTCUT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ProgressiveWebAppFacts.kt#L20)
