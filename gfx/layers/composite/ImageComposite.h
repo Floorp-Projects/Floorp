@@ -92,8 +92,6 @@ class ImageComposite {
 
   int32_t mLastFrameID = -1;
   int32_t mLastProducerID = -1;
-  CompositionOpportunityId mLastChooseImageIndexComposition;
-  CompositionOpportunityId mLastFrameUpdateComposition;
 
  private:
   nsTArray<TimedImage> mImages;
@@ -127,6 +125,11 @@ class ImageComposite {
   // tabs are expected to skip frames, and those skipped frames are not counted
   // as dropped frames.
   uint32_t mDroppedFrames = 0;
+
+  // The composition opportunity IDs of the last calls to ChooseImageIndex and
+  // UpdateCompositedFrame, respectively.
+  CompositionOpportunityId mLastChooseImageIndexComposition;
+  CompositionOpportunityId mLastFrameUpdateComposition;
 };
 
 }  // namespace layers
