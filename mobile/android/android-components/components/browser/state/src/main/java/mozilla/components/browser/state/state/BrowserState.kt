@@ -19,6 +19,7 @@ import mozilla.components.lib.state.State
  * be overridden per [SessionState].
  * @property media The state of all media elements and playback states for all tabs.
  * @property queuedDownloads queued downloads ([DownloadState]s) mapped to their IDs.
+ * @property search the state of search for this browser state.
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
@@ -27,5 +28,6 @@ data class BrowserState(
     val containers: Map<String, ContainerState> = emptyMap(),
     val extensions: Map<String, WebExtensionState> = emptyMap(),
     val media: MediaState = MediaState(),
-    val queuedDownloads: Map<Long, DownloadState> = emptyMap()
+    val queuedDownloads: Map<Long, DownloadState> = emptyMap(),
+    val search: SearchState = SearchState()
 ) : State
