@@ -277,7 +277,7 @@ var PlacesOrganizer = {
 
   set location(aLocation) {
     if (!aLocation || this._location == aLocation) {
-      return aLocation;
+      return;
     }
 
     if (this.location) {
@@ -313,8 +313,6 @@ var PlacesOrganizer = {
         .getElementById("OrganizerCommand:Forward")
         .removeAttribute("disabled");
     }
-
-    return aLocation;
   },
 
   _backHistory: [],
@@ -838,7 +836,6 @@ var PlacesSearchBox = {
   },
   set folders(aFolders) {
     this._folders = aFolders;
-    return aFolders;
   },
 
   /**
@@ -947,13 +944,11 @@ var PlacesSearchBox = {
   },
   set filterCollection(collectionName) {
     if (collectionName == this.filterCollection) {
-      return collectionName;
+      return;
     }
 
     this.searchFilter.setAttribute("collection", collectionName);
     this.updateCollectionTitle();
-
-    return collectionName;
   },
 
   /**
@@ -977,7 +972,7 @@ var PlacesSearchBox = {
     return this.searchFilter.value;
   },
   set value(value) {
-    return (this.searchFilter.value = value);
+    this.searchFilter.value = value;
   },
 };
 
@@ -1380,7 +1375,6 @@ var ContentArea = {
         aNewView.associatedElement.focus();
       }
     }
-    return aNewView;
   },
 
   get currentPlace() {
@@ -1396,7 +1390,6 @@ var ContentArea = {
       this._setupView();
       newView.active = true;
     }
-    return aQueryString;
   },
 
   /**

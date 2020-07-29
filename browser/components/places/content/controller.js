@@ -46,7 +46,7 @@ function PlacesInsertionPoint({
 
 PlacesInsertionPoint.prototype = {
   set index(val) {
-    return (this._index = val);
+    this._index = val;
   },
 
   async getIndex() {
@@ -1175,7 +1175,6 @@ PlacesController.prototype = {
     updateCutNodes(false);
     this._cutNodes = aNodes;
     updateCutNodes(true);
-    return aNodes;
   },
 
   /**
