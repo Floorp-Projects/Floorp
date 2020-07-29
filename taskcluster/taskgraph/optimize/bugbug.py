@@ -27,6 +27,7 @@ from taskgraph.util.bugbug import (
 @register_strategy("bugbug-reduced-fallback", args=(CT_MEDIUM, True, True, True))
 @register_strategy("bugbug-reduced-high", args=(CT_HIGH, True, True))
 @register_strategy("bugbug-reduced-manifests", args=(CT_MEDIUM, False, True))
+@register_strategy("bugbug-reduced-manifests-fallback", args=(CT_MEDIUM, False, True, True))
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
 
