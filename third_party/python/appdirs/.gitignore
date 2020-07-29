@@ -1,0 +1,8 @@
+*.pyc
+*.egg-info
+tmp/
+build/
+dist/
+.tox/
+MANIFEST
+*.komodoproject

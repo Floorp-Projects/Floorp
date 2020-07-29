@@ -1,36 +1,17 @@
-# coding: utf-8
-
-from __future__ import division, unicode_literals
-
 import io
 import zipfile
 import contextlib
+import pathlib
+import unittest
 import tempfile
 import shutil
 import string
-
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
-
-if not hasattr(contextlib, 'ExitStack'):
-    import contextlib2
-    contextlib.ExitStack = contextlib2.ExitStack
-
-try:
-    import unittest
-
-    unittest.TestCase.subTest
-except AttributeError:
-    import unittest2 as unittest
 
 import jaraco.itertools
 import func_timeout
 
 import zipp
 
-__metaclass__ = type
 consume = tuple
 
 
@@ -126,6 +107,14 @@ class TestPath(unittest.TestCase):
             i, = h.iterdir()
             assert i.is_file()
 
+    def test_subdir_is_dir(self):
+        for alpharep in self.zipfile_alpharep():
+            root = zipp.Path(alpharep)
+            assert (root / 'b').is_dir()
+            assert (root / 'b/').is_dir()
+            assert (root / 'g').is_dir()
+            assert (root / 'g/').is_dir()
+
     def test_open(self):
         for alpharep in self.zipfile_alpharep():
             root = zipp.Path(alpharep)
@@ -133,6 +122,33 @@ class TestPath(unittest.TestCase):
             with a.open() as strm:
                 data = strm.read()
             assert data == "content of a"
+
+    def test_open_write(self):
+        """
+        If the zipfile is open for write, it should be possible to
+        write bytes or text to it.
+        """
+        zf = zipp.Path(zipfile.ZipFile(io.BytesIO(), mode='w'))
+        with zf.joinpath('file.bin').open('wb') as strm:
+            strm.write(b'binary contents')
+        with zf.joinpath('file.txt').open('w') as strm:
+            strm.write('text file')
+
+    def test_open_extant_directory(self):
+        """
+        Attempting to open a directory raises IsADirectoryError.
+        """
+        zf = zipp.Path(add_dirs(build_alpharep_fixture()))
+        with self.assertRaises(IsADirectoryError):
+            zf.joinpath('b').open()
+
+    def test_open_missing_directory(self):
+        """
+        Attempting to open a missing directory raises FileNotFoundError.
+        """
+        zf = zipp.Path(add_dirs(build_alpharep_fixture()))
+        with self.assertRaises(FileNotFoundError):
+            zf.joinpath('z').open()
 
     def test_read(self):
         for alpharep in self.zipfile_alpharep():
@@ -208,8 +224,8 @@ class TestPath(unittest.TestCase):
         for alpharep in self.zipfile_alpharep():
             root = zipp.Path(alpharep)
             a, b, g = root.iterdir()
-            alpharep.writestr('foo.txt', b'foo')
-            alpharep.writestr('bar/baz.txt', b'baz')
+            alpharep.writestr('foo.txt', 'foo')
+            alpharep.writestr('bar/baz.txt', 'baz')
             assert any(
                 child.name == 'foo.txt'
                 for child in root.iterdir())

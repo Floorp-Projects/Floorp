@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 import sys
 
-import jsonschema
+import jsonschema  # type: ignore
 
 from . import util
 
@@ -68,7 +68,7 @@ def validate_ping(ins, outs=None, schema_url=None):
         outs = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
     if isinstance(ins, (str, bytes, Path)):
-        with open(ins, "r") as fd:
+        with open(ins, "r", encoding="utf-8") as fd:
             return _validate_ping(fd, outs, schema_url=schema_url)
     else:
         return _validate_ping(ins, outs, schema_url=schema_url)
