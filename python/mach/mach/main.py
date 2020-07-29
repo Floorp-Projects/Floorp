@@ -37,7 +37,7 @@ from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
 from .sentry import register_sentry, NoopErrorReporter
-from .util import setenv
+from .util import setenv, UserError
 
 SUGGEST_MACH_BUSTED_TEMPLATE = r'''
 You can invoke |./mach busted| to check if this issue is already on file. If it
@@ -56,6 +56,10 @@ If filing a bug, please include the full output of mach, including this error
 message.
 
 The details of the failure are as follows:
+'''.lstrip()
+
+USER_ERROR = r'''
+This is a user error and does not appear to be a bug in mach.
 '''.lstrip()
 
 COMMAND_ERROR_TEMPLATE = r'''
@@ -483,6 +487,15 @@ To see more help for a specific command, run:
         except FailedCommandError as e:
             print(e.message)
             return e.exit_code
+        except UserError:
+            # We explicitly don't report UserErrors to Sentry.
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            # The first two frames are us and are never used.
+            stack = traceback.extract_tb(exc_tb)[2:]
+            self._print_error_header(argv, sys.stdout)
+            print(USER_ERROR)
+            self._print_exception(sys.stdout, exc_type, exc_value, stack)
+            return 1
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             sentry.report_exception(exc_value)
