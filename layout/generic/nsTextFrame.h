@@ -317,6 +317,8 @@ class nsTextFrame : public nsIFrame {
             ListFlags aFlags = ListFlags()) const final;
   nsresult GetFrameName(nsAString& aResult) const final;
   void ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const;
+  void ListTextRuns(FILE* out,
+                    nsTHashtable<nsVoidPtrHashKey>& aSeen) const final;
 #endif
 
   // Returns this text frame's content's text fragment.

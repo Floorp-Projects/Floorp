@@ -44,6 +44,7 @@
     <command id="cmd_dumpContent" oncommand="gDebugger.dumpContent();"/>
     <command id="cmd_dumpFrames" oncommand="gDebugger.dumpFrames();"/>
     <command id="cmd_dumpFramesInCSSPixels" oncommand="gDebugger.dumpFramesInCSSPixels();"/>
+    <command id="cmd_dumpTextRuns" oncommand="gDebugger.dumpTextRuns();"/>
   </commandset>
 
   <keyset id="tasksKeys">
@@ -54,6 +55,7 @@
     <key id="key_dumpContent" key="D" modifiers="accel" command="cmd_dumpContent"/> <!-- "D" means DOM tree -->
     <key id="key_dumpFrames" key="F" modifiers="accel" command="cmd_dumpFrames"/>
     <key id="key_dumpFramesInCSSPixels" key="P" modifiers="accel" command="cmd_dumpFramesInCSSPixels"/>
+    <key id="key_dumpTextRuns" key="T" modifiers="accel" command="cmd_dumpTextRuns"/>
   </keyset>
 
   <vbox flex="1">
@@ -93,6 +95,7 @@
             <menuitem id="menu_dumpContent" label="&ldb.dumpContent.label;" accesskey="&ldb.dumpContent.accesskey;" oncommand="gDebugger.dumpContent();" />
             <menuitem id="menu_dumpFrames" label="&ldb.dumpFrames.label;" accesskey="&ldb.dumpFrames.accesskey;" oncommand="gDebugger.dumpFrames();" />
             <menuitem id="menu_dumpFramesInCSSPixels" label="&ldb.dumpFramesInCSSPixels.label;" accesskey="&ldb.dumpFramesInCSSPixels.accesskey;" oncommand="gDebugger.dumpFramesInCSSPixels();" />
+            <menuitem id="menu_dumpTextRuns" label="&ldb.dumpTextRuns.label;" accesskey="&ldb.dumpTextRuns.accesskey;" oncommand="gDebugger.dumpTextRuns();" />
             <menuitem id="menu_dumpViews" label="&ldb.dumpViews.label;" accesskey="&ldb.dumpViews.accesskey;" oncommand="gDebugger.dumpViews();" />
             <menuseparator />
             <menuitem id="menu_dumpStyleSheets" label="&ldb.dumpStyleSheets.label;" accesskey="&ldb.dumpStyleSheets.accesskey;" oncommand="gDebugger.dumpStyleSheets();" />

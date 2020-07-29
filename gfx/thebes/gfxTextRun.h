@@ -27,9 +27,10 @@
 #include "harfbuzz/hb.h"
 #include "nsUnicodeScriptCodes.h"
 #include "nsColor.h"
+#include "nsFrameList.h"
 #include "X11UndefineNone.h"
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 #  include <stdio.h>
 #endif
 
@@ -756,8 +757,8 @@ class gfxTextRun : public gfxShapedText {
     return advance;
   }
 
-#ifdef DEBUG
-  void Dump(FILE* aOutput);
+#ifdef DEBUG_FRAME_DUMP
+  void Dump(FILE* aOutput = stderr);
 #endif
 
  protected:

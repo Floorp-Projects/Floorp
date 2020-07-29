@@ -28,6 +28,8 @@ class Text;
 class nsTextFrameUtils {
  public:
   // These constants are used as textrun flags for textframe textruns.
+  //
+  // If you add a flag, please add support for it in gfxTextRun::Dump.
   enum class Flags : uint16_t {
     // The following flags are set by TransformText
 

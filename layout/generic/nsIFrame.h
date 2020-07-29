@@ -5304,6 +5304,10 @@ class nsIFrame : public nsQueryFrame {
   virtual void List(FILE* out = stderr, const char* aPrefix = "",
                     ListFlags aFlags = ListFlags()) const;
 
+  void ListTextRuns(FILE* out = stderr) const;
+  virtual void ListTextRuns(FILE* out,
+                            nsTHashtable<nsVoidPtrHashKey>& aSeen) const;
+
   virtual void ListWithMatchedRules(FILE* out = stderr,
                                     const char* aPrefix = "") const;
   void ListMatchedRules(FILE* out, const char* aPrefix) const;

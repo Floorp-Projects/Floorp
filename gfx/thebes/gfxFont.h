@@ -474,6 +474,8 @@ namespace gfx {
 // Flags that live in the gfxShapedText::mFlags field.
 // (Note that gfxTextRun has an additional mFlags2 field for use
 // by textrun clients like nsTextFrame.)
+//
+// If you add a flag, please add support for it in gfxTextRun::Dump.
 enum class ShapedTextFlags : uint16_t {
   /**
    * When set, the text is RTL.
