@@ -146,6 +146,8 @@ void SipccSdpAttributeList::LoadFlags(sdp_t* sdp, uint16_t level) {
     if (sdp_attr_valid(sdp, SDP_ATTR_BUNDLE_ONLY, level, 0, 1)) {
       SetAttribute(new SdpFlagAttribute(SdpAttribute::kBundleOnlyAttribute));
     }
+    if (sdp_attr_valid(sdp, SDP_ATTR_RTCP_RSIZE, level, 0, 1))
+      SetAttribute(new SdpFlagAttribute(SdpAttribute::kRtcpRsizeAttribute));
   }
 }
 
