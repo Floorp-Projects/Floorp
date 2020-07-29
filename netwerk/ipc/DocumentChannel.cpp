@@ -353,7 +353,7 @@ NS_IMETHODIMP DocumentChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
 }
 
 NS_IMETHODIMP DocumentChannel::GetContentType(nsACString& aContentType) {
-  MOZ_CRASH("If we get here, something is broken");
+  NS_ERROR("If we get here, something is broken");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
