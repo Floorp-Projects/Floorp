@@ -16,6 +16,11 @@ from condprof.check_install import check  # NOQA
 if "MANUAL_MACH_RUN" not in os.environ:
     check()
 
+PY3 = sys.version_info.major == 3
+
+if PY3:
+    from condprof import patch  # noqa
+
 
 def main(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="Profile Creator")
