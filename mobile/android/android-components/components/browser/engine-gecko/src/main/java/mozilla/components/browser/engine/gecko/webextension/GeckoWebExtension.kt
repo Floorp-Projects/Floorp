@@ -31,25 +31,12 @@ import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionActio
  */
 @Suppress("TooManyFunctions")
 class GeckoWebExtension(
-    id: String,
-    url: String,
-    val runtime: GeckoRuntime,
-    allowContentMessaging: Boolean = true,
-    supportActions: Boolean = false,
-    @Suppress("Deprecation") // https://github.com/mozilla-mobile/android-components/issues/6356
-    val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
-        url,
-        id,
-        createWebExtensionFlags(allowContentMessaging),
-        runtime.webExtensionController
-    ),
+    val nativeExtension: GeckoNativeWebExtension,
+    val runtime: GeckoRuntime
+) : WebExtension(nativeExtension.id, nativeExtension.location, true) {
+
     private val connectedPorts: MutableMap<PortId, Port> = mutableMapOf()
-) : WebExtension(id, url, supportActions) {
-
     private val logger = Logger("GeckoWebExtension")
-
-    constructor(native: GeckoNativeWebExtension, runtime: GeckoRuntime) :
-        this(native.id, native.location, runtime, true, true, native)
 
     /**
      * Uniquely identifies a port using its name and the session it
@@ -279,6 +266,17 @@ class GeckoWebExtension(
                 )
                 return GeckoResult.fromValue(geckoEngineSession.geckoSession)
             }
+
+            override fun onOpenOptionsPage(ext: GeckoNativeWebExtension) {
+                ext.metaData?.optionsPageUrl?.let { optionsPageUrl ->
+                    tabHandler.onNewTab(
+                        this@GeckoWebExtension,
+                        GeckoEngineSession(runtime),
+                        false,
+                        optionsPageUrl
+                    )
+                }
+            }
         }
 
         nativeExtension.tabDelegate = tabDelegate
@@ -361,6 +359,10 @@ class GeckoWebExtension(
         }
     }
 
+    override fun isBuiltIn(): Boolean {
+        return nativeExtension.isBuiltIn
+    }
+
     override fun isEnabled(): Boolean {
         return nativeExtension.metaData?.enabled ?: true
     }
@@ -392,14 +394,6 @@ class GeckoPort(
 
     override fun disconnect() {
         nativePort.disconnect()
-    }
-}
-
-private fun createWebExtensionFlags(allowContentMessaging: Boolean): Long {
-    return if (allowContentMessaging) {
-        GeckoNativeWebExtension.Flags.ALLOW_CONTENT_MESSAGING
-    } else {
-        GeckoNativeWebExtension.Flags.NONE
     }
 }
 

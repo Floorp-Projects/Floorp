@@ -297,8 +297,7 @@ class GeckoEngineViewTest {
         // selection with empty text returns false
         val bundle = GeckoBundle()
         bundle.putString("selection", "")
-        val selectionWthEmptyText: GeckoSession.SelectionActionDelegate.Selection =
-            MockSelection(bundle)
+        val selectionWthEmptyText: GeckoSession.SelectionActionDelegate.Selection = MockSelection(bundle)
         whenever(engineView.currentSelection?.selection).thenReturn(selectionWthEmptyText)
         assertFalse(engineView.canClearSelection())
     }

@@ -39,6 +39,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
 import mozilla.components.concept.engine.webpush.WebPushDelegate
 import mozilla.components.concept.engine.webpush.WebPushHandler
+import mozilla.components.support.ktx.kotlin.isResourceUrl
 import mozilla.components.support.utils.ThreadUtils
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
@@ -206,53 +207,32 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit),
         onError: ((String, Throwable) -> Unit)
     ): CancellableOperation {
-        val ext = GeckoWebExtension(id, url, runtime, true, true)
-        return installWebExtension(ext, onSuccess, onError)
-    }
 
-    @Suppress("Deprecation") // https://github.com/mozilla-mobile/android-components/issues/6356
-    internal fun installWebExtension(
-        ext: GeckoWebExtension,
-        onSuccess: ((WebExtension) -> Unit) = { },
-        onError: ((String, Throwable) -> Unit) = { _, _ -> }
-    ): CancellableOperation {
-        val geckoResult = if (ext.isBuiltIn()) {
-            if (ext.supportActions) {
-                // We currently have to install the global action handler before we
-                // install the extension which is why this is done here directly.
-                // This code can be removed from the engine once the new GV addon
-                // management API (specifically installBuiltIn) lands. Then the
-                // global handlers will be invoked with the latest state whenever
-                // they are registered:
-                // https://bugzilla.mozilla.org/show_bug.cgi?id=1599897
-                // https://bugzilla.mozilla.org/show_bug.cgi?id=1582185
-                ext.registerActionHandler(webExtensionActionHandler)
-                ext.registerTabHandler(webExtensionTabHandler)
-            }
+        val onInstallSuccess: ((org.mozilla.geckoview.WebExtension) -> Unit) = {
+            val installedExtension = GeckoWebExtension(it, runtime)
+            webExtensionDelegate?.onInstalled(installedExtension)
+            installedExtension.registerActionHandler(webExtensionActionHandler)
+            installedExtension.registerTabHandler(webExtensionTabHandler)
+            onSuccess(installedExtension)
+        }
 
-            // For now we have to use registerWebExtension for builtin extensions until we get the
-            // new installBuiltIn call on the controller: https://bugzilla.mozilla.org/show_bug.cgi?id=1601067
-            runtime.registerWebExtension(ext.nativeExtension).apply {
+        val geckoResult = if (url.isResourceUrl()) {
+            runtime.webExtensionController.ensureBuiltIn(url, id).apply {
                 then({
-                    webExtensionDelegate?.onInstalled(ext)
-                    onSuccess(ext)
+                    onInstallSuccess(it!!)
                     GeckoResult<Void>()
                 }, { throwable ->
-                    onError(ext.id, throwable)
+                    onError(id, throwable)
                     GeckoResult<Void>()
                 })
             }
         } else {
-            runtime.webExtensionController.install(ext.url).apply {
+            runtime.webExtensionController.install(url).apply {
                 then({
-                    val installedExtension = GeckoWebExtension(it!!, runtime)
-                    webExtensionDelegate?.onInstalled(installedExtension)
-                    installedExtension.registerActionHandler(webExtensionActionHandler)
-                    installedExtension.registerTabHandler(webExtensionTabHandler)
-                    onSuccess(installedExtension)
+                    onInstallSuccess(it!!)
                     GeckoResult<Void>()
                 }, { throwable ->
-                    onError(ext.id, throwable)
+                    onError(id, throwable)
                     GeckoResult<Void>()
                 })
             }
@@ -626,7 +606,9 @@ class GeckoEngine(
                 }
             }
 
-        override var loginAutofillEnabled: Boolean = false
+        override var loginAutofillEnabled: Boolean
+            get() = runtime.settings.loginAutofillEnabled
+            set(value) { runtime.settings.loginAutofillEnabled = value }
 
         override var forceUserScalableContent: Boolean
             get() = runtime.settings.forceUserScalableEnabled
