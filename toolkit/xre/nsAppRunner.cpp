@@ -3101,16 +3101,6 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     ChaosMode::SetChaosFeature(feature);
   }
 
-#ifdef MOZ_ASAN_REPORTER
-  // In ASan Reporter builds, we enable certain chaos features by default unless
-  // the user explicitly requests a particular set of features.
-  if (!PR_GetEnv("MOZ_CHAOSMODE")) {
-    ChaosMode::SetChaosFeature(static_cast<ChaosFeature>(
-        ChaosFeature::ThreadScheduling | ChaosFeature::NetworkScheduling |
-        ChaosFeature::TimerScheduling));
-  }
-#endif
-
   if (CheckArgExists("fxr")) {
     gFxREmbedded = true;
   }
