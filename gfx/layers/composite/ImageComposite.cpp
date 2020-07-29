@@ -92,40 +92,42 @@ int ImageComposite::ChooseImageIndex() {
   if (mImages.IsEmpty()) {
     return -1;
   }
-  TimeStamp now = GetCompositionTime();
 
-  if (now.IsNull()) {
-    // Not in a composition, so just return the last image we composited
-    // (if it's one of the current images).
-    for (uint32_t i = 0; i < mImages.Length(); ++i) {
-      if (mImages[i].mFrameID == mLastFrameID &&
-          mImages[i].mProducerID == mLastProducerID) {
-        return i;
-      }
-    }
-    return 0;
-  }
-
-  // We are inside a composition.
+  TimeStamp compositionTime = GetCompositionTime();
   auto compositionOpportunityId = GetCompositionOpportunityId();
+  if (compositionTime &&
+      compositionOpportunityId != mLastChooseImageIndexComposition) {
+    // We are inside a composition, in the first call to ChooseImageIndex during
+    // this composition.
+    // Find the newest frame whose biased timestamp is at or before
+    // `compositionTime`.
+    uint32_t imageIndex = 0;
+    while (imageIndex + 1 < mImages.Length() &&
+           GetBiasedTime(mImages[imageIndex + 1].mTimeStamp) <=
+               compositionTime) {
+      ++imageIndex;
+    }
 
-  // Find the newest frame whose biased timestamp is at or before `now`.
-  uint32_t result = 0;
-  while (result + 1 < mImages.Length() &&
-         GetBiasedTime(mImages[result + 1].mTimeStamp) <= now) {
-    ++result;
-  }
-
-  // If ChooseImageIndex is called for the first time during this composition,
-  // call UpdateCompositedFrame.
-  if (compositionOpportunityId != mLastChooseImageIndexComposition) {
     bool wasVisibleAtPreviousComposition =
         compositionOpportunityId == mLastChooseImageIndexComposition.Next();
-    UpdateCompositedFrame(result, wasVisibleAtPreviousComposition);
+    UpdateCompositedFrame(imageIndex, wasVisibleAtPreviousComposition);
+
     mLastChooseImageIndexComposition = compositionOpportunityId;
+
+    return imageIndex;
   }
 
-  return result;
+  // We've been called before during this composition, or we're not in a
+  // composition. Just return the last image we picked (if it's one of the
+  // current images).
+  for (uint32_t i = 0; i < mImages.Length(); ++i) {
+    if (mImages[i].mFrameID == mLastFrameID &&
+        mImages[i].mProducerID == mLastProducerID) {
+      return i;
+    }
+  }
+
+  return 0;
 }
 
 const ImageComposite::TimedImage* ImageComposite::ChooseImage() {
