@@ -258,95 +258,11 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
       bg, __func__,
       [destPath = nsString(aPath), toWrite = std::move(toWrite), aOptions]() {
         MOZ_ASSERT(!NS_IsMainThread());
-
-        // Check if the file exists and test it against the noOverwrite option.
-        const bool& noOverwrite = aOptions.mNoOverwrite;
-        bool exists = false;
-        {
-          UniquePtr<PRFileDesc, PR_CloseDelete> fd =
-              OpenExistingSync(destPath, PR_RDONLY);
-          exists = !!fd;
+        auto rv = WriteAtomicSync(destPath, toWrite, aOptions);
+        if (rv.isErr()) {
+          return IOWriteMozPromise::CreateAndReject(rv.unwrapErr(), __func__);
         }
-
-        if (noOverwrite && exists) {
-          return IOWriteMozPromise::CreateAndReject(
-              nsPrintfCString("Refusing to overwrite the file at %s",
-                              NS_ConvertUTF16toUTF8(destPath).get()),
-              __func__);
-        }
-
-        // If backupFile was specified, perform the backup as a move.
-        if (exists && aOptions.mBackupFile.WasPassed()) {
-          const nsString& backupFile(aOptions.mBackupFile.Value());
-          nsresult rv = MoveSync(destPath, backupFile, noOverwrite);
-          if (NS_FAILED(rv)) {
-            return IOWriteMozPromise::CreateAndReject(
-                FormatErrorMessage(rv,
-                                   "Failed to back up the file from %s to %s",
-                                   NS_ConvertUTF16toUTF8(destPath).get(),
-                                   NS_ConvertUTF16toUTF8(backupFile).get()),
-                __func__);
-          }
-        }
-
-        // If tmpPath was specified, we will write to there first, then perform
-        // a move to ensure the file ends up at the final requested destination.
-        nsString tmpPath = destPath;
-        if (aOptions.mTmpPath.WasPassed()) {
-          tmpPath = aOptions.mTmpPath.Value();
-        }
-        // The data to be written to file might be larger than can be
-        // written in any single call, so we must truncate the file and
-        // set the write mode to append to the file.
-        int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND;
-        if (aOptions.mFlush) {
-          flags |= PR_SYNC;
-        }
-
-        // Try to perform the write and ensure that the file is closed before
-        // continuing.
-        uint32_t result = 0;
-        {
-          UniquePtr<PRFileDesc, PR_CloseDelete> fd =
-              OpenExistingSync(tmpPath, flags);
-          if (!fd) {
-            fd = CreateFileSync(tmpPath, flags);
-          }
-          if (!fd) {
-            return IOWriteMozPromise::CreateAndReject(
-                nsPrintfCString("Could not open the file at %s",
-                                NS_ConvertUTF16toUTF8(tmpPath).get()),
-                __func__);
-          }
-
-          nsresult rv = IOUtils::WriteSync(fd.get(), toWrite, result);
-          if (NS_FAILED(rv)) {
-            return IOWriteMozPromise::CreateAndReject(
-                FormatErrorMessage(
-                    rv,
-                    "Unexpected error occurred while writing to the file at %s",
-                    NS_ConvertUTF16toUTF8(tmpPath).get()),
-                __func__);
-          }
-        }
-
-        // The requested destination was written to, so there is nothing left to
-        // do.
-        if (destPath == tmpPath) {
-          return IOWriteMozPromise::CreateAndResolve(result, __func__);
-        }
-        // Otherwise, if tmpPath was specified and different from the destPath,
-        // then the operation is finished by performing a move.
-        nsresult rv = MoveSync(tmpPath, destPath, false);
-        if (NS_FAILED(rv)) {
-          return IOWriteMozPromise::CreateAndReject(
-              FormatErrorMessage(
-                  rv, "Error moving temporary file at %s to destination at %s",
-                  NS_ConvertUTF16toUTF8(tmpPath).get(),
-                  NS_ConvertUTF16toUTF8(destPath).get()),
-              __func__);
-        }
-        return IOWriteMozPromise::CreateAndResolve(result, __func__);
+        return IOWriteMozPromise::CreateAndResolve(rv.unwrap(), __func__);
       })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
@@ -358,8 +274,41 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
             }
             promise->MaybeResolve(aBytesWritten);
           },
-          [promise = RefPtr(promise)](const nsACString& aMsg) {
-            promise->MaybeRejectWithOperationError(aMsg);
+          [promise = RefPtr(promise),
+           path = NS_ConvertUTF16toUTF8(aPath)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_ALREADY_EXISTS:
+                promise->MaybeRejectWithNoModificationAllowedError(
+                    nsPrintfCString("Refusing to overwrite the file at %s",
+                                    path.get()));
+                break;
+              // TODO: It would be nice to be able to distinguish between an
+              //       error with backing up the original file and moving the
+              //       temp file to overwrite the dest.
+              case NS_ERROR_FILE_COPY_OR_MOVE_FAILED:
+                promise->MaybeRejectWithOperationError(
+                    nsPrintfCString("Atomic write failed, but the destination "
+                                    "at %s should not have been changed",
+                                    path.get()));
+                break;
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    nsPrintfCString("Could not open file at %s", path.get()));
+                break;
+              case NS_ERROR_FILE_ACCESS_DENIED:
+                promise->MaybeRejectWithNotReadableError(nsPrintfCString(
+                    "Could not open the file at %s", path.get()));
+                break;
+              case NS_ERROR_FILE_TOO_BIG:
+                promise->MaybeRejectWithNotReadableError(nsPrintfCString(
+                    "File at %s is too large to be read", path.get()));
+                break;
+              default:
+                promise->MaybeRejectWithUnknownError(FormatErrorMessage(
+                    aError, "Unexpected error writing to file at %s",
+                    path.get()));
+            }
           });
 
   return promise.forget();
@@ -768,15 +717,83 @@ Result<nsTArray<uint8_t>, nsresult> IOUtils::ReadSync(
 }
 
 /* static */
-nsresult IOUtils::WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
-                            uint32_t& aResult) {
+Result<uint32_t, nsresult> IOUtils::WriteAtomicSync(
+    const nsAString& aDestPath, const nsTArray<uint8_t>& aByteArray,
+    const WriteAtomicOptions& aOptions) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  // Check if the file exists and test it against the noOverwrite option.
+  const bool& noOverwrite = aOptions.mNoOverwrite;
+  bool exists = false;
+  {
+    UniquePtr<PRFileDesc, PR_CloseDelete> fd =
+        OpenExistingSync(aDestPath, PR_RDONLY);
+    exists = !!fd;
+  }
+
+  if (noOverwrite && exists) {
+    return Err(NS_ERROR_FILE_ALREADY_EXISTS);
+  }
+
+  // If backupFile was specified, perform the backup as a move.
+  if (exists && aOptions.mBackupFile.WasPassed() &&
+      NS_FAILED(
+          MoveSync(aDestPath, aOptions.mBackupFile.Value(), noOverwrite))) {
+    return Err(NS_ERROR_FILE_COPY_OR_MOVE_FAILED);
+  }
+
+  // If tmpPath was specified, we will write to there first, then perform
+  // a move to ensure the file ends up at the final requested destination.
+  nsAutoString tmpPath;
+  if (aOptions.mTmpPath.WasPassed()) {
+    tmpPath = aOptions.mTmpPath.Value();
+  } else {
+    tmpPath = aDestPath;
+  }
+  // The data to be written to file might be larger than can be
+  // written in any single call, so we must truncate the file and
+  // set the write mode to append to the file.
+  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND;
+  if (aOptions.mFlush) {
+    flags |= PR_SYNC;
+  }
+
+  // Try to perform the write and ensure that the file is closed before
+  // continuing.
+  uint32_t result = 0;
+  {
+    UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(tmpPath, flags);
+    if (!fd) {
+      fd = CreateFileSync(tmpPath, flags);
+    }
+    if (!fd) {
+      return Err(NS_ERROR_FILE_ACCESS_DENIED);
+    }
+
+    auto rv = WriteSync(fd.get(), aByteArray);
+    if (rv.isErr()) {
+      return rv;
+    }
+    result = rv.unwrap();
+  }
+
+  // If tmpPath was specified and different from the destPath, then the
+  // operation is finished by performing a move.
+  if (aDestPath != tmpPath && NS_FAILED(MoveSync(tmpPath, aDestPath, false))) {
+    return Err(NS_ERROR_FILE_COPY_OR_MOVE_FAILED);
+  }
+  return result;
+}
+
+/* static */
+Result<uint32_t, nsresult> IOUtils::WriteSync(PRFileDesc* aFd,
+                                              const nsTArray<uint8_t>& aBytes) {
   // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max length.
   MOZ_ASSERT(aBytes.Length() <= UINT32_MAX);
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (aBytes.Length() == 0) {
-    aResult = 0;
-    return NS_OK;
+    return 0;
   }
 
   uint32_t bytesWritten = 0;
@@ -792,14 +809,13 @@ nsresult IOUtils::WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
     }
     int32_t rv = PR_Write(aFd, aBytes.Elements() + bytesWritten, chunkSize);
     if (rv < 0) {
-      return NS_ERROR_FILE_CORRUPTED;
+      return Err(NS_ERROR_FILE_CORRUPTED);
     }
     pendingBytes -= rv;
     bytesWritten += rv;
   }
 
-  aResult = bytesWritten;
-  return NS_OK;
+  return bytesWritten;
 }
 
 /* static */
