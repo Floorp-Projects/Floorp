@@ -8,21 +8,26 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::fs;
-use std::sync::Arc;
+use std::{
+    fs,
+    sync::Arc,
+};
 
 use tempfile::Builder;
 
-use rkv::backend::{
-    Lmdb,
-    LmdbEnvironment,
-    SafeMode,
-    SafeModeEnvironment,
+use rkv::{
+    backend::{
+        Lmdb,
+        LmdbEnvironment,
+        SafeMode,
+        SafeModeEnvironment,
+    },
+    Rkv,
 };
-use rkv::Rkv;
 
 /// Test that a manager can be created with simple type inference.
 #[test]
+#[allow(clippy::let_underscore_lock)]
 fn test_simple() {
     type Manager = rkv::Manager<LmdbEnvironment>;
 
@@ -31,6 +36,7 @@ fn test_simple() {
 
 /// Test that a manager can be created with simple type inference.
 #[test]
+#[allow(clippy::let_underscore_lock)]
 fn test_simple_safe() {
     type Manager = rkv::Manager<SafeModeEnvironment>;
 
