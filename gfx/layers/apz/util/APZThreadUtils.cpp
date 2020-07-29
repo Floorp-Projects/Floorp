@@ -85,6 +85,12 @@ bool APZThreadUtils::IsControllerThread() {
 }
 
 /*static*/
+bool APZThreadUtils::IsControllerThreadAlive() {
+  StaticMutexAutoLock lock(sControllerThreadMutex);
+  return !!sControllerThread;
+}
+
+/*static*/
 void APZThreadUtils::DelayedDispatch(already_AddRefed<Runnable> aRunnable,
                                      int aDelayMs) {
   MOZ_ASSERT(!XRE_IsContentProcess(),
