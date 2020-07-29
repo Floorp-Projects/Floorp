@@ -1939,6 +1939,19 @@ bool WarpCacheIRTranspiler::emitFrameIsConstructingResult() {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitFinishBoundFunctionInitResult(
+    ObjOperandId boundId, ObjOperandId targetId, Int32OperandId argCountId) {
+  MDefinition* bound = getOperand(boundId);
+  MDefinition* target = getOperand(targetId);
+  MDefinition* argCount = getOperand(argCountId);
+
+  auto* ins = MFinishBoundFunctionInit::New(alloc(), bound, target, argCount);
+  addEffectful(ins);
+
+  pushResult(constant(UndefinedValue()));
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
