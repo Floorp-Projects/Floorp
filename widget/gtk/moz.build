@@ -41,6 +41,7 @@ UNIFIED_SOURCES += [
     'nsGtkKeyUtils.cpp',
     'nsImageToPixbuf.cpp',
     'nsLookAndFeel.cpp',
+    'nsNativeBasicThemeGTK.cpp',
     'nsNativeThemeGTK.cpp',
     'nsSound.cpp',
     'nsToolkit.cpp',
@@ -134,6 +135,7 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/layout/base',
+    '/layout/forms',
     '/layout/generic',
     '/layout/xul',
     '/other-licenses/atk-1.0',
