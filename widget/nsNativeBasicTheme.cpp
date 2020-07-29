@@ -5,85 +5,26 @@
 
 #include "nsNativeBasicTheme.h"
 
-#include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "nsComboboxControlFrame.h"
 #include "nsCSSRendering.h"
-#include "nsDateTimeControlFrame.h"
-#include "nsDeviceContext.h"
 #include "PathHelpers.h"
 
-using namespace mozilla;
-using namespace mozilla::gfx;
 using namespace mozilla::widget;
-
-namespace mozilla {
-namespace widget {
-
-static const sRGBColor sBackgroundColor(sRGBColor(1.0f, 1.0f, 1.0f));
-static const sRGBColor sBackgroundActiveColor(sRGBColor(0.88f, 0.88f, 0.9f));
-static const sRGBColor sBackgroundActiveColorDisabled(sRGBColor(0.88f, 0.88f,
-                                                                0.9f, 0.4f));
-static const sRGBColor sBorderColor(sRGBColor(0.62f, 0.62f, 0.68f));
-static const sRGBColor sBorderColorDisabled(sRGBColor(0.44f, 0.44f, 0.44f,
-                                                      0.4f));
-static const sRGBColor sBorderHoverColor(sRGBColor(0.5f, 0.5f, 0.56f));
-static const sRGBColor sBorderHoverColorDisabled(sRGBColor(0.5f, 0.5f, 0.56f,
-                                                           0.4f));
-static const sRGBColor sBorderFocusColor(sRGBColor(0.04f, 0.52f, 1.0f));
-static const sRGBColor sCheckBackgroundColor(sRGBColor(0.18f, 0.39f, 0.89f));
-static const sRGBColor sCheckBackgroundColorDisabled(sRGBColor(0.18f, 0.39f,
-                                                               0.89f, 0.4f));
-static const sRGBColor sCheckBackgroundHoverColor(sRGBColor(0.02f, 0.24f,
-                                                            0.58f));
-static const sRGBColor sCheckBackgroundHoverColorDisabled(
-    sRGBColor(0.02f, 0.24f, 0.58f, 0.4f));
-static const sRGBColor sCheckBackgroundActiveColor(sRGBColor(0.03f, 0.19f,
-                                                             0.45f));
-static const sRGBColor sCheckBackgroundActiveColorDisabled(
-    sRGBColor(0.03f, 0.19f, 0.45f, 0.4f));
-static const sRGBColor sDisabledColor(sRGBColor(0.89f, 0.89f, 0.89f));
-static const sRGBColor sActiveColor(sRGBColor(0.47f, 0.47f, 0.48f));
-static const sRGBColor sInputHoverColor(sRGBColor(0.05f, 0.05f, 0.05f, 0.5f));
-static const sRGBColor sRangeInputBackgroundColor(sRGBColor(0.89f, 0.89f,
-                                                            0.89f));
-static const sRGBColor sScrollbarColor(sRGBColor(0.94f, 0.94f, 0.94f));
-static const sRGBColor sScrollbarBorderColor(sRGBColor(1.0f, 1.0f, 1.0f));
-static const sRGBColor sScrollbarThumbColor(sRGBColor(0.8f, 0.8f, 0.8f));
-static const sRGBColor sScrollbarThumbColorActive(sRGBColor(0.375f, 0.375f,
-                                                            0.375f));
-static const sRGBColor sScrollbarThumbColorHover(sRGBColor(0.65f, 0.65f,
-                                                           0.65f));
-static const sRGBColor sScrollbarArrowColor(sRGBColor(0.375f, 0.375f, 0.375f));
-static const sRGBColor sScrollbarArrowColorActive(sRGBColor(1.0f, 1.0f, 1.0f));
-static const sRGBColor sScrollbarArrowColorHover(sRGBColor(0.0f, 0.0f, 0.0f));
-static const sRGBColor sScrollbarButtonColor(sScrollbarColor);
-static const sRGBColor sScrollbarButtonActiveColor(sRGBColor(0.375f, 0.375f,
-                                                             0.375f));
-static const sRGBColor sScrollbarButtonHoverColor(sRGBColor(0.86f, 0.86f,
-                                                            0.86f));
-static const sRGBColor sButtonColor(sRGBColor(0.98f, 0.98f, 0.98f));
-static const sRGBColor sButtonHoverColor(sRGBColor(0.94f, 0.94f, 0.96f));
-static const sRGBColor sButtonActiveColor(sRGBColor(0.88f, 0.88f, 0.90f));
-static const sRGBColor sWhiteColor(sRGBColor(1.0f, 1.0f, 1.0f, 0.0f));
-
-static const CSSIntCoord kMinimumWidgetSize = 17;
-static const CSSCoord kButtonBorderWidth = 1.0f;
-static const CSSCoord kMenulistBorderWidth = 1.0f;
-static const CSSCoord kTextFieldBorderWidth = 1.0f;
-
-}  // namespace widget
-}  // namespace mozilla
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeBasicTheme, nsNativeTheme, nsITheme)
 
-static uint32_t GetDPIRatio(nsIFrame* aFrame) {
+/* static */
+uint32_t nsNativeBasicTheme::GetDPIRatio(nsIFrame* aFrame) {
   return AppUnitsPerCSSPixel() / aFrame->PresContext()
                                      ->DeviceContext()
                                      ->AppUnitsPerDevPixelAtUnitFullZoom();
 }
 
-static bool IsDateTimeResetButton(nsIFrame* aFrame) {
+/* static */
+bool nsNativeBasicTheme::IsDateTimeResetButton(nsIFrame* aFrame) {
+  if (!aFrame) {
+    return false;
+  }
+
   nsIFrame* parent = aFrame->GetParent();
   if (parent && (parent = parent->GetParent()) &&
       (parent = parent->GetParent())) {
@@ -95,60 +36,63 @@ static bool IsDateTimeResetButton(nsIFrame* aFrame) {
   return false;
 }
 
-static bool IsDateTimeTextField(nsIFrame* aFrame) {
+/* static */
+bool nsNativeBasicTheme::IsDateTimeTextField(nsIFrame* aFrame) {
   nsDateTimeControlFrame* dateTimeFrame = do_QueryFrame(aFrame);
   return dateTimeFrame;
 }
 
-static void ComputeCheckColors(const EventStates& aState,
-                               sRGBColor& aBackgroundColor,
-                               sRGBColor& aBorderColor) {
+/* static */
+bool nsNativeBasicTheme::IsColorPickerButton(nsIFrame* aFrame) {
+  nsColorControlFrame* colorPickerButton = do_QueryFrame(aFrame);
+  return colorPickerButton;
+}
+
+/* static */
+std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckColors(
+    const EventStates& aState) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
                                                       NS_EVENT_STATE_ACTIVE);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
-  bool isFocused = aState.HasState(NS_EVENT_STATE_FOCUS);
   bool isChecked = aState.HasState(NS_EVENT_STATE_CHECKED);
 
-  sRGBColor fillColor = sBackgroundColor;
-  sRGBColor borderColor = sBorderColor;
+  sRGBColor fillColor = sColorWhite;
+  sRGBColor borderColor = sColorGrey40;
   if (isDisabled) {
     if (isChecked) {
-      fillColor = borderColor = sCheckBackgroundColorDisabled;
+      fillColor = borderColor = sColorGrey40Alpha50;
     } else {
-      fillColor = sBackgroundColor;
-      borderColor = sBorderColorDisabled;
+      fillColor = sColorWhiteAlpha50;
+      borderColor = sColorGrey40Alpha50;
     }
   } else {
     if (isChecked) {
       if (isPressed) {
-        fillColor = borderColor = sCheckBackgroundActiveColor;
+        fillColor = borderColor = sColorAccentDarker;
       } else if (isHovered) {
-        fillColor = borderColor = sCheckBackgroundHoverColor;
+        fillColor = borderColor = sColorAccentDark;
       } else {
-        fillColor = borderColor = sCheckBackgroundColor;
+        fillColor = borderColor = sColorAccent;
       }
     } else if (isPressed) {
-      fillColor = sBackgroundActiveColor;
-      borderColor = sBorderHoverColor;
-    } else if (isFocused) {
-      fillColor = sBackgroundActiveColor;
-      borderColor = sBorderFocusColor;
+      fillColor = sColorGrey20;
+      borderColor = sColorGrey60;
     } else if (isHovered) {
-      fillColor = sBackgroundColor;
-      borderColor = sBorderHoverColor;
+      fillColor = sColorWhite;
+      borderColor = sColorGrey50;
     } else {
-      fillColor = sBackgroundColor;
-      borderColor = sBorderColor;
+      fillColor = sColorWhite;
+      borderColor = sColorGrey40;
     }
   }
 
-  aBackgroundColor = fillColor;
-  aBorderColor = borderColor;
+  return std::make_pair(fillColor, borderColor);
 }
 
-// Checkbox and radio need to preserve aspect-ratio for compat.
-static Rect FixAspectRatio(const Rect& aRect) {
+/* static */
+Rect nsNativeBasicTheme::FixAspectRatio(const Rect& aRect) {
+  // Checkbox and radio need to preserve aspect-ratio for compat.
   Rect rect(aRect);
   if (rect.width == rect.height) {
     return rect;
@@ -167,105 +111,170 @@ static Rect FixAspectRatio(const Rect& aRect) {
   return rect;
 }
 
-// This pushes and pops a clip rect to the draw target.
-//
-// This is done to reduce fuzz in places where we may have antialiasing, because
-// skia is not clip-invariant: given different clips, it does not guarantee the
-// same result, even if the painted content doesn't intersect the clips.
-//
-// This is a bit sad, overall, but...
-struct MOZ_RAII AutoClipRect {
-  AutoClipRect(DrawTarget& aDt, const Rect& aRect) : mDt(aDt) {
-    mDt.PushClipRect(aRect);
-  }
+/* static */
+void nsNativeBasicTheme::GetFocusStrokeRect(DrawTarget* aDrawTarget,
+                                            Rect& aFocusRect, CSSCoord aOffset,
+                                            const CSSCoord aRadius,
+                                            CSSCoord aFocusWidth,
+                                            RefPtr<Path>& aOutRect) {
+  RectCornerRadii radii(aRadius, aRadius, aRadius, aRadius);
+  aFocusRect.y -= aOffset;
+  aFocusRect.x -= aOffset;
+  aFocusRect.width += 2.0f * aOffset;
+  aFocusRect.height += 2.0f * aOffset;
+  // Deflate the rect by half the border width, so that the middle of the
+  // stroke fills exactly the area we want to fill and not more.
+  Rect focusRect(aFocusRect);
+  focusRect.Deflate(aFocusWidth * 0.5f);
+  aOutRect = MakePathForRoundedRect(*aDrawTarget, focusRect, radii);
+}
 
-  ~AutoClipRect() { mDt.PopClip(); }
+/* static */
+void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
+                                               const Rect& aRect,
+                                               uint32_t aDpiRatio,
+                                               CSSCoord aRadius,
+                                               CSSCoord aOffset) {
+  Rect focusRect(aRect);
+  RefPtr<Path> roundedRect;
+  CSSCoord offset = aOffset * aDpiRatio;
+  CSSCoord strokeRadius((aRadius * aDpiRatio) + offset);
+  CSSCoord strokeWidth(2.0f * aDpiRatio);
+  GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
+                     roundedRect);
+  aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(sColorAccent)),
+                      StrokeOptions(strokeWidth));
 
- private:
-  DrawTarget& mDt;
-};
+  offset = 1.0f * aDpiRatio;
+  strokeRadius += offset;
+  strokeWidth = 1.0f * aDpiRatio;
+  GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
+                     roundedRect);
+  aDrawTarget->Stroke(roundedRect,
+                      ColorPattern(ToDeviceColor(sColorWhiteAlpha80)),
+                      StrokeOptions(strokeWidth));
 
-static void PaintRoundedRectWithBorder(DrawTarget* aDrawTarget,
-                                       const Rect& aRect,
-                                       const sRGBColor& aBackgroundColor,
-                                       const sRGBColor& aBorderColor,
-                                       CSSCoord aBorderWidth, CSSCoord aRadius,
-                                       uint32_t aDpi) {
-  const LayoutDeviceCoord borderWidth(aBorderWidth * aDpi);
-  const LayoutDeviceCoord radius(aRadius * aDpi);
+  offset = 2.0f * aDpiRatio;
+  strokeRadius += offset;
+  strokeWidth = 2.0f * aDpiRatio;
+  GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
+                     roundedRect);
+  aDrawTarget->Stroke(roundedRect,
+                      ColorPattern(ToDeviceColor(sColorAccentLight)),
+                      StrokeOptions(strokeWidth));
+}
+
+/* static */
+void nsNativeBasicTheme::PaintRoundedRect(DrawTarget* aDrawTarget,
+                                          const Rect& aRect,
+                                          const sRGBColor& aBackgroundColor,
+                                          const sRGBColor& aBorderColor,
+                                          CSSCoord aBorderWidth,
+                                          RectCornerRadii aDpiAdjustedRadii,
+                                          uint32_t aDpiRatio) {
+  const CSSCoord borderWidth(aBorderWidth * aDpiRatio);
 
   Rect rect(aRect);
   // Deflate the rect by half the border width, so that the middle of the stroke
   // fills exactly the area we want to fill and not more.
   rect.Deflate(borderWidth * 0.5f);
 
-  RectCornerRadii radii(radius, radius, radius, radius);
-  RefPtr<Path> roundedRect = MakePathForRoundedRect(*aDrawTarget, rect, radii);
+  RefPtr<Path> roundedRect =
+      MakePathForRoundedRect(*aDrawTarget, rect, aDpiAdjustedRadii);
 
   aDrawTarget->Fill(roundedRect, ColorPattern(ToDeviceColor(aBackgroundColor)));
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(aBorderColor)),
                       StrokeOptions(borderWidth));
 }
 
-static void PaintCheckboxControl(DrawTarget* aDrawTarget, const Rect& aRect,
-                                 const EventStates& aState, uint32_t aDpi) {
-  const CSSCoord kBorderWidth = 2.0f;
-  const CSSCoord kRadius = 4.0f;
-
-  sRGBColor backgroundColor;
-  sRGBColor borderColor;
-  ComputeCheckColors(aState, backgroundColor, borderColor);
-  PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
-                             kBorderWidth, kRadius, aDpi);
+/* static */
+void nsNativeBasicTheme::PaintRoundedRectWithRadius(
+    DrawTarget* aDrawTarget, const Rect& aRect,
+    const sRGBColor& aBackgroundColor, const sRGBColor& aBorderColor,
+    CSSCoord aBorderWidth, CSSCoord aRadius, uint32_t aDpiRatio) {
+  const CSSCoord radius(aRadius * aDpiRatio);
+  RectCornerRadii radii(radius, radius, radius, radius);
+  PaintRoundedRect(aDrawTarget, aRect, aBackgroundColor, aBorderColor,
+                   aBorderWidth, radii, aDpiRatio);
 }
 
-static void PaintCheckMark(DrawTarget* aDrawTarget, const Rect& aRect,
-                           const EventStates& aState, uint32_t aDpi) {
-  // Points come from the coordinates on a 7X7 unit box centered at 0,0
-  const float checkPolygonX[] = {-2.5, -0.7, 2.5};
-  const float checkPolygonY[] = {-0.3, 1.7, -1.5};
+/* static */
+void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
+                                              const Rect& aRect,
+                                              const EventStates& aState,
+                                              uint32_t aDpiRatio) {
+  const CSSCoord borderWidth = 2.0f;
+  const CSSCoord radius = 3.0f - (borderWidth / 2.0f);
+  auto [backgroundColor, borderColor] = ComputeCheckColors(aState);
+  PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
+                             borderWidth, radius, aDpiRatio);
+
+  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
+  }
+}
+
+/* static */
+void nsNativeBasicTheme::PaintCheckMark(DrawTarget* aDrawTarget,
+                                        const Rect& aRect,
+                                        const EventStates& aState,
+                                        uint32_t aDpiRatio) {
+  // Points come from the coordinates on a 14X14 unit box centered at 0,0
+  const float checkPolygonX[] = {-4.5f, -1.5f, -0.5f, 5.0f, 4.75f,
+                                 3.5f,  -0.5f, -1.5f, -3.5f};
+  const float checkPolygonY[] = {0.5f,  4.0f, 4.0f,  -2.5f, -4.0f,
+                                 -4.0f, 1.0f, 1.25f, -1.0f};
   const int32_t checkNumPoints = sizeof(checkPolygonX) / sizeof(float);
-  const int32_t checkSize = 8;
+  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
+                      (kMinimumWidgetSize * (float)aDpiRatio);
 
   auto center = aRect.Center();
 
-  // Scale the checkmark based on the smallest dimension
-  nscoord paintScale = std::min(aRect.width, aRect.height) / checkSize;
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  Point p = center +
-            Point(checkPolygonX[0] * paintScale, checkPolygonY[0] * paintScale);
+  Point p = center + Point(checkPolygonX[0] * scale, checkPolygonY[0] * scale);
   builder->MoveTo(p);
-  for (int32_t polyIndex = 1; polyIndex < checkNumPoints; polyIndex++) {
-    p = center + Point(checkPolygonX[polyIndex] * paintScale,
-                       checkPolygonY[polyIndex] * paintScale);
+  for (int32_t i = 1; i < checkNumPoints; i++) {
+    p = center + Point(checkPolygonX[i] * scale, checkPolygonY[i] * scale);
     builder->LineTo(p);
   }
   RefPtr<Path> path = builder->Finish();
-  aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(sBackgroundColor)),
-                      StrokeOptions(2.0f * aDpi));
+
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  sRGBColor fillColor = isDisabled ? sColorWhiteAlpha50 : sColorWhite;
+  aDrawTarget->Fill(path, ColorPattern(ToDeviceColor(fillColor)));
 }
 
-static void PaintIndeterminateMark(DrawTarget* aDrawTarget, const Rect& aRect,
-                                   const EventStates& aState) {
-  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+/* static */
+void nsNativeBasicTheme::PaintIndeterminateMark(DrawTarget* aDrawTarget,
+                                                const Rect& aRect,
+                                                const EventStates& aState,
+                                                uint32_t aDpiRatio) {
+  const CSSCoord borderWidth = 2.0f;
+  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
+                      (kMinimumWidgetSize * (float)aDpiRatio);
 
   Rect rect(aRect);
-  rect.y += (rect.height - rect.height / 4) / 2;
-  rect.height /= 4;
+  rect.y += (rect.height / 2) - (borderWidth * scale / 2);
+  rect.height = borderWidth * scale;
+  rect.x += (borderWidth * scale) + (borderWidth * scale / 8);
+  rect.width -= ((borderWidth * scale) + (borderWidth * scale / 8)) * 2;
 
-  aDrawTarget->FillRect(
-      rect, ColorPattern(
-                ToDeviceColor(isDisabled ? sDisabledColor : sBackgroundColor)));
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  sRGBColor fillColor = isDisabled ? sColorWhiteAlpha50 : sColorWhite;
+  aDrawTarget->FillRect(rect, ColorPattern(ToDeviceColor(fillColor)));
 }
 
-static void PaintStrokedEllipse(DrawTarget* aDrawTarget, const Rect& aRect,
-                                const sRGBColor& aBackgroundColor,
-                                const sRGBColor& aBorderColor,
-                                const CSSCoord aBorderWidth, uint32_t aDpi) {
-  const LayoutDeviceCoord borderWidth(aBorderWidth * aDpi);
+/* static */
+void nsNativeBasicTheme::PaintStrokedEllipse(DrawTarget* aDrawTarget,
+                                             const Rect& aRect,
+                                             const sRGBColor& aBackgroundColor,
+                                             const sRGBColor& aBorderColor,
+                                             const CSSCoord aBorderWidth,
+                                             uint32_t aDpiRatio) {
+  const CSSCoord borderWidth(aBorderWidth * aDpiRatio);
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 
-  // Deflate for the same reason as PaintRoundedRectWithBorder. Note that the
+  // Deflate for the same reason as PaintRoundedRectWithRadius. Note that the
   // size is the diameter, so we just shrink by the border width once.
   Size size(aRect.Size() - Size(borderWidth, borderWidth));
   AppendEllipseToPath(builder, aRect.Center(), size);
@@ -276,60 +285,88 @@ static void PaintStrokedEllipse(DrawTarget* aDrawTarget, const Rect& aRect,
                       StrokeOptions(borderWidth));
 }
 
-static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
-                              const EventStates& aState, uint32_t aDpi) {
-  const CSSCoord kBorderWidth = 2.0f;
-
-  sRGBColor backgroundColor;
-  sRGBColor borderColor;
-  ComputeCheckColors(aState, backgroundColor, borderColor);
+/* static */
+void nsNativeBasicTheme::PaintRadioControl(DrawTarget* aDrawTarget,
+                                           const Rect& aRect,
+                                           const EventStates& aState,
+                                           uint32_t aDpiRatio) {
+  const CSSCoord borderWidth = 2.0f;
+  auto [backgroundColor, borderColor] = ComputeCheckColors(aState);
 
   PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
-                      kBorderWidth, aDpi);
+                      borderWidth, aDpiRatio);
+
+  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, 2.0f, 3.0f);
+  }
 }
 
-static void PaintCheckedRadioButton(DrawTarget* aDrawTarget, const Rect& aRect,
-                                    uint32_t aDpi) {
+/* static */
+void nsNativeBasicTheme::PaintRadioCheckMark(DrawTarget* aDrawTarget,
+                                             const Rect& aRect,
+                                             const EventStates& aState,
+                                             uint32_t aDpiRatio) {
+  const CSSCoord borderWidth = 2.0f;
+  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
+                      (kMinimumWidgetSize * (float)aDpiRatio);
+  auto [unusedColor, checkColor] = ComputeCheckColors(aState);
+  (void)unusedColor;
+
   Rect rect(aRect);
-  rect.x += 4.5f * aDpi;
-  rect.width -= 9.0f * aDpi;
-  rect.y += 4.5f * aDpi;
-  rect.height -= 9.0f * aDpi;
+  rect.y += borderWidth * scale;
+  rect.x += borderWidth * scale;
+  rect.height -= borderWidth * scale * 2;
+  rect.width -= borderWidth * scale * 2;
 
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  AppendEllipseToPath(builder, rect.Center(), rect.Size());
-  RefPtr<Path> ellipse = builder->Finish();
-  aDrawTarget->Fill(ellipse, ColorPattern(ToDeviceColor(sBackgroundColor)));
+  PaintStrokedEllipse(aDrawTarget, rect, checkColor, sColorWhite, borderWidth,
+                      aDpiRatio);
 }
 
-static sRGBColor ComputeBorderColor(const EventStates& aState) {
+/* static */
+sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isActive =
+      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
   bool isFocused = aState.HasState(NS_EVENT_STATE_FOCUS);
+  if (isDisabled) {
+    return sColorGrey40Alpha50;
+  }
   if (isFocused) {
-    return sBorderFocusColor;
+    return sColorAccent;
+  }
+  if (isActive) {
+    return sColorGrey60;
   }
   if (isHovered) {
-    return sBorderHoverColor;
+    return sColorGrey50;
   }
-  return sBorderColor;
+  return sColorGrey40;
 }
 
-static void PaintTextField(DrawTarget* aDrawTarget, const Rect& aRect,
-                           const EventStates& aState, uint32_t aDpi) {
+/* static */
+void nsNativeBasicTheme::PaintTextField(DrawTarget* aDrawTarget,
+                                        const Rect& aRect,
+                                        const EventStates& aState,
+                                        uint32_t aDpiRatio) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   const sRGBColor& backgroundColor =
-      isDisabled ? sDisabledColor : sBackgroundColor;
+      isDisabled ? sColorWhiteAlpha50 : sColorWhite;
   const sRGBColor borderColor = ComputeBorderColor(aState);
 
-  const CSSCoord kRadius = 4.0f;
+  const CSSCoord radius = 2.0f;
 
-  PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
-                             kTextFieldBorderWidth, kRadius, aDpi);
+  PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
+                             kTextFieldBorderWidth, radius, aDpiRatio);
+
+  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
+  }
 }
 
-std::pair<sRGBColor, sRGBColor> ComputeButtonColors(
-    const EventStates& aState, bool aIsDatetimeResetButton = false) {
+/* static */
+std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
+    const EventStates& aState, nsIFrame* aFrame) {
   bool isActive =
       aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
@@ -337,18 +374,18 @@ std::pair<sRGBColor, sRGBColor> ComputeButtonColors(
 
   const sRGBColor& backgroundColor = [&] {
     if (isDisabled) {
-      return sDisabledColor;
+      return sColorGrey10Alpha50;
     }
-    if (aIsDatetimeResetButton) {
-      return sWhiteColor;
+    if (IsDateTimeResetButton(aFrame)) {
+      return sColorWhite;
     }
     if (isActive) {
-      return sButtonActiveColor;
+      return sColorGrey30;
     }
     if (isHovered) {
-      return sButtonHoverColor;
+      return sColorGrey20;
     }
-    return sButtonColor;
+    return sColorGrey10;
   }();
 
   const sRGBColor borderColor = ComputeBorderColor(aState);
@@ -356,22 +393,149 @@ std::pair<sRGBColor, sRGBColor> ComputeButtonColors(
   return std::make_pair(backgroundColor, borderColor);
 }
 
-static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
-                          const EventStates& aState, uint32_t aDpi) {
-  const CSSCoord kRadius = 4.0f;
+sRGBColor nsNativeBasicTheme::ComputeRangeProgressBorderColor(
+    const EventStates& aState) {
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isActive =
+      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
+  bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
 
-  sRGBColor backgroundColor, borderColor;
-  std::tie(backgroundColor, borderColor) = ComputeButtonColors(aState);
-
-  PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
-                             kMenulistBorderWidth, kRadius, aDpi);
+  if (isDisabled) {
+    return sColorGrey40Alpha50;
+  }
+  if (isActive || isHovered) {
+    return sColorAccentDarker;
+  }
+  return sColorAccentDark;
 }
 
-static void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
-                       const int32_t aArrowPolygonX[],
-                       const int32_t aArrowPolygonY[],
-                       const int32_t aArrowNumPoints, const int32_t aArrowSize,
-                       const sRGBColor aFillColor, uint32_t aDpi) {
+/* static */
+sRGBColor nsNativeBasicTheme::ComputeRangeTrackBorderColor(
+    const EventStates& aState) {
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isActive =
+      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
+  bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
+
+  if (isDisabled) {
+    return sColorGrey40Alpha50;
+  }
+  if (isActive || isHovered) {
+    return sColorGrey50;
+  }
+  return sColorGrey40;
+}
+
+/* static */
+std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
+    const EventStates& aState) {
+  bool isActive =
+      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
+
+  const sRGBColor& backgroundColor = [&] {
+    if (isDisabled) {
+      return sColorGrey40Alpha50;
+    }
+    if (isActive || isHovered) {
+      return sColorAccentDark;
+    }
+    return sColorAccent;
+  }();
+
+  const sRGBColor borderColor = ComputeRangeProgressBorderColor(aState);
+
+  return std::make_pair(backgroundColor, borderColor);
+}
+
+/* static */
+std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
+    const EventStates& aState) {
+  bool isActive =
+      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
+
+  const sRGBColor& backgroundColor = [&] {
+    if (isDisabled) {
+      return sColorGrey10Alpha50;
+    }
+    if (isActive || isHovered) {
+      return sColorGrey20;
+    }
+    return sColorGrey10;
+  }();
+
+  const sRGBColor borderColor = ComputeRangeTrackBorderColor(aState);
+
+  return std::make_pair(backgroundColor, borderColor);
+}
+
+/* static */
+std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
+    const EventStates& aState) {
+  bool isActive =
+      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
+
+  const sRGBColor& backgroundColor = [&] {
+    if (isDisabled) {
+      return sColorGrey50Alpha50;
+    }
+    if (isActive) {
+      return sColorAccent;
+    }
+    if (isHovered) {
+      return sColorGrey60;
+    }
+    return sColorGrey50;
+  }();
+
+  const sRGBColor borderColor = sColorWhite;
+
+  return std::make_pair(backgroundColor, borderColor);
+}
+
+/* static */
+void nsNativeBasicTheme::PaintListbox(DrawTarget* aDrawTarget,
+                                      const Rect& aRect,
+                                      const EventStates& aState,
+                                      uint32_t aDpiRatio) {
+  const CSSCoord radius = 2.0f;
+  auto [unusedColor, borderColor] = ComputeButtonColors(aState);
+  (void)unusedColor;
+
+  PaintRoundedRectWithRadius(aDrawTarget, aRect, sColorWhite, borderColor,
+                             kMenulistBorderWidth, radius, aDpiRatio);
+
+  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
+  }
+}
+
+/* static */
+void nsNativeBasicTheme::PaintMenulist(DrawTarget* aDrawTarget,
+                                       const Rect& aRect,
+                                       const EventStates& aState,
+                                       uint32_t aDpiRatio) {
+  const CSSCoord radius = 4.0f;
+  auto [backgroundColor, borderColor] = ComputeButtonColors(aState);
+
+  PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
+                             kMenulistBorderWidth, radius, aDpiRatio);
+
+  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
+  }
+}
+
+/* static */
+void nsNativeBasicTheme::PaintArrow(
+    DrawTarget* aDrawTarget, const Rect& aRect, const int32_t aArrowPolygonX[],
+    const int32_t aArrowPolygonY[], const int32_t aArrowNumPoints,
+    const int32_t aArrowSize, const sRGBColor aFillColor, uint32_t aDpiRatio) {
   nscoord paintScale = std::min(aRect.width, aRect.height) / aArrowSize;
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   Point p = aRect.Center() + Point(aArrowPolygonX[0] * paintScale,
@@ -386,46 +550,76 @@ static void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
   RefPtr<Path> path = builder->Finish();
 
   aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(aFillColor)),
-                      StrokeOptions(2.0f * aDpi));
+                      StrokeOptions(2.0f * aDpiRatio));
 }
 
-static void PaintMenulistArrowButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                                     const Rect& aRect,
-                                     const EventStates& aState, uint32_t aDpi) {
-  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
-                                                      NS_EVENT_STATE_ACTIVE);
-  bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
-  bool isHTML = nsNativeTheme::IsHTMLContent(aFrame);
+/* static */
+void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
+                                                  DrawTarget* aDrawTarget,
+                                                  const Rect& aRect,
+                                                  const EventStates& aState,
+                                                  uint32_t aDpiRatio) {
+  const float arrowPolygonX[] = {-3.5f, -0.5f, 0.5f,  3.5f,  3.5f,
+                                 3.0f,  0.5f,  -0.5f, -3.0f, -3.5};
+  const float arrowPolygonY[] = {-0.5f, 2.5f, 2.5f, -0.5f, -2.0f,
+                                 -2.0f, 1.0f, 1.0f, -2.0f, -2.0f};
 
-  if (!isHTML && nsNativeTheme::CheckBooleanAttr(aFrame, nsGkAtoms::open)) {
-    isHovered = false;
+  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
+  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
+                      (kMinimumWidgetSize * (float)aDpiRatio);
+
+  auto center = aRect.Center();
+
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
+  Point p = center + Point(arrowPolygonX[0] * scale, arrowPolygonY[0] * scale);
+  builder->MoveTo(p);
+  for (int32_t i = 1; i < arrowNumPoints; i++) {
+    p = center + Point(arrowPolygonX[i] * scale, arrowPolygonY[i] * scale);
+    builder->LineTo(p);
   }
+  RefPtr<Path> path = builder->Finish();
 
-  const int32_t arrowSize = 8;
-  int32_t arrowPolygonX[] = {-4, -2, 0};
-  int32_t arrowPolygonY[] = {-1, 1, -1};
-  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(int32_t);
-
-  PaintArrow(
-      aDrawTarget, aRect, arrowPolygonX, arrowPolygonY, arrowNumPoints,
-      arrowSize,
-      isPressed ? sActiveColor : isHovered ? sBorderHoverColor : sBorderColor,
-      aDpi);
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  sRGBColor fillColor = isDisabled ? sColorGrey60Alpha50 : sColorGrey60;
+  aDrawTarget->Fill(path, ColorPattern(ToDeviceColor(fillColor)));
 }
 
-static void PaintSpinnerButton(DrawTarget* aDrawTarget, const Rect& aRect,
-                               const EventStates& aState,
-                               StyleAppearance aAppearance, uint32_t aDpi) {
-  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  bool isPressed = !isDisabled && aState.HasAllStates(NS_EVENT_STATE_HOVER |
-                                                      NS_EVENT_STATE_ACTIVE);
-  bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
+/* static */
+void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
+                                            DrawTarget* aDrawTarget,
+                                            const Rect& aRect,
+                                            const EventStates& aState,
+                                            StyleAppearance aAppearance,
+                                            uint32_t aDpiRatio) {
+  auto [backgroundColor, borderColor] = ComputeButtonColors(aState);
 
-  const int32_t arrowSize = 8;
-  int32_t arrowPolygonX[] = {0, 2, 4};
-  int32_t arrowPolygonY[] = {-3, -1, -3};
-  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(int32_t);
+  RefPtr<Path> pathRect = MakePathForRect(*aDrawTarget, aRect);
+
+  aDrawTarget->Fill(pathRect, ColorPattern(ToDeviceColor(backgroundColor)));
+
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
+  Point p;
+  if (IsFrameRTL(aFrame)) {
+    p = Point(aRect.x + aRect.width - 0.5f, aRect.y);
+  } else {
+    p = Point(aRect.x - 0.5f, aRect.y);
+  }
+  builder->MoveTo(p);
+  p = Point(p.x, p.y + aRect.height);
+  builder->LineTo(p);
+  RefPtr<Path> path = builder->Finish();
+
+  aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(borderColor)),
+                      StrokeOptions(kSpinnerBorderWidth * aDpiRatio));
+
+  const float arrowPolygonX[] = {-3.5f, -0.5f, 0.5f,  3.5f,  3.5f,
+                                 3.0f,  0.5f,  -0.5f, -3.0f, -3.5};
+  float arrowPolygonY[] = {-3.5f, -0.5f, -0.5f, -3.5f, -5.0f,
+                           -5.0f, -2.0f, -2.0f, -5.0f, -5.0f};
+
+  const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
+  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
+                      (kMinimumWidgetSize * (float)aDpiRatio);
 
   if (aAppearance == StyleAppearance::SpinnerUpbutton) {
     for (int32_t i = 0; i < arrowNumPoints; i++) {
@@ -433,37 +627,248 @@ static void PaintSpinnerButton(DrawTarget* aDrawTarget, const Rect& aRect,
     }
   }
 
-  PaintArrow(
-      aDrawTarget, aRect, arrowPolygonX, arrowPolygonY, arrowNumPoints,
-      arrowSize,
-      isPressed ? sActiveColor : isHovered ? sBorderHoverColor : sBorderColor,
-      aDpi);
+  auto center = aRect.Center();
+
+  builder = aDrawTarget->CreatePathBuilder();
+  p = center + Point(arrowPolygonX[0] * scale, arrowPolygonY[0] * scale);
+  builder->MoveTo(p);
+  for (int32_t i = 1; i < arrowNumPoints; i++) {
+    p = center + Point(arrowPolygonX[i] * scale, arrowPolygonY[i] * scale);
+    builder->LineTo(p);
+  }
+  path = builder->Finish();
+  aDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
 }
 
-static void PaintRangeInputBackground(DrawTarget* aDrawTarget,
-                                      const Rect& aRect,
-                                      const EventStates& aState, uint32_t aDpi,
-                                      bool aHorizontal) {
+/* static */
+void nsNativeBasicTheme::PaintRangeTrackBackground(
+    nsIFrame* aFrame, DrawTarget* aDrawTarget, const Rect& aRect,
+    const EventStates& aState, uint32_t aDpiRatio, bool aHorizontal) {
+  nsRangeFrame* rangeFrame = do_QueryFrame(aFrame);
+  if (!rangeFrame) {
+    return;
+  }
+
   Rect rect(aRect);
-  const LayoutDeviceCoord kVerticalSize = kMinimumWidgetSize * 0.25f * aDpi;
-
+  const CSSCoord verticalSize = kRangeHeight * aDpiRatio;
   if (aHorizontal) {
-    rect.y += (rect.height - kVerticalSize) / 2;
-    rect.height = kVerticalSize;
+    rect.y += (rect.height - verticalSize) / 2;
+    rect.height = verticalSize;
   } else {
-    rect.x += (rect.width - kVerticalSize) / 2;
-    rect.width = kVerticalSize;
+    rect.x += (rect.width - verticalSize) / 2;
+    rect.width = verticalSize;
   }
 
-  aDrawTarget->FillRect(
-      rect, ColorPattern(ToDeviceColor(sRangeInputBackgroundColor)));
-  aDrawTarget->StrokeRect(rect,
-                          ColorPattern(ToDeviceColor(sButtonActiveColor)));
+  double progress = rangeFrame->GetValueAsFractionOfRange();
+  Rect progressRect(rect);
+  Rect trackRect(rect);
+  if (aHorizontal) {
+    progressRect.width = rect.width * progress;
+    if (IsFrameRTL(aFrame)) {
+      progressRect.x += rect.width - progressRect.width;
+    } else {
+      trackRect.x += progressRect.width;
+    }
+    trackRect.width -= progressRect.width;
+  } else {
+    progressRect.height = rect.height * progress;
+    progressRect.y += rect.height - progressRect.height;
+    trackRect.height -= progressRect.height;
+  }
+
+  const CSSCoord borderWidth = 1.0f;
+  const CSSCoord radius = 2.0f;
+
+  // Avoid artifacts between thumb and track when progress is approaching
+  // 0.0f or 1.0f.
+  if ((aHorizontal && ((progressRect.width > (radius * 2.0f)))) ||
+      (!aHorizontal && ((progressRect.height > radius * 2.0f)))) {
+    sRGBColor progressColor, progressBorderColor;
+    std::tie(progressColor, progressBorderColor) =
+        ComputeRangeProgressColors(aState);
+    PaintRoundedRectWithRadius(aDrawTarget, progressRect, progressColor,
+                               progressBorderColor, borderWidth, radius,
+                               aDpiRatio);
+  }
+  if ((aHorizontal && ((trackRect.width > (radius * 2.0f)))) ||
+      (!aHorizontal && (trackRect.height > (radius * 2.0f)))) {
+    sRGBColor trackColor, trackBorderColor;
+    std::tie(trackColor, trackBorderColor) = ComputeRangeTrackColors(aState);
+    PaintRoundedRectWithRadius(aDrawTarget, trackRect, trackColor,
+                               trackBorderColor, borderWidth, radius,
+                               aDpiRatio);
+  }
+
+  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
+  }
 }
 
-static void PaintScrollbarthumbHorizontal(DrawTarget* aDrawTarget,
+/* static */
+void nsNativeBasicTheme::PaintRangeThumb(DrawTarget* aDrawTarget,
+                                         const Rect& aRect,
+                                         const EventStates& aState,
+                                         uint32_t aDpiRatio) {
+  const CSSCoord borderWidth = 2.0f;
+  auto [backgroundColor, borderColor] = ComputeRangeThumbColors(aState);
+
+  PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
+                      borderWidth, aDpiRatio);
+
+  // TODO: Paint thumb shadow.
+}
+
+/* static */
+void nsNativeBasicTheme::PaintProgressBar(DrawTarget* aDrawTarget,
                                           const Rect& aRect,
-                                          const EventStates& aState) {
+                                          const EventStates& aState,
+                                          uint32_t aDpiRatio) {
+  const CSSCoord borderWidth = 1.0f;
+  const CSSCoord radius = 2.0f;
+
+  Rect rect(aRect);
+  const CSSCoord height = kProgressbarHeight * aDpiRatio;
+  rect.y += (rect.height - height) / 2;
+  rect.height = height;
+
+  PaintRoundedRectWithRadius(aDrawTarget, rect, sColorGrey10, sColorGrey40,
+                             borderWidth, radius, aDpiRatio);
+}
+
+/* static */
+void nsNativeBasicTheme::PaintProgresschunk(nsIFrame* aFrame,
+                                            DrawTarget* aDrawTarget,
+                                            const Rect& aRect,
+                                            const EventStates& aState,
+                                            uint32_t aDpiRatio) {
+  // TODO: vertical?
+  // TODO: Address artifacts when position is between 0 and radius + border.
+  // TODO: Handle indeterminate case.
+  nsProgressFrame* progressFrame = do_QueryFrame(aFrame->GetParent());
+  if (!progressFrame) {
+    return;
+  }
+
+  const CSSCoord borderWidth = 1.0f;
+  const CSSCoord radius = 2.0f * aDpiRatio;
+  CSSCoord progressEndRadius = 0.0f;
+
+  Rect rect(aRect);
+  const CSSCoord height = kProgressbarHeight * aDpiRatio;
+  rect.y += (rect.height - height) / 2;
+  rect.height = height;
+
+  double position = GetProgressValue(aFrame) / GetProgressMaxValue(aFrame);
+  if (rect.width - (rect.width * position) < (borderWidth + radius)) {
+    // Round corners when the progress chunk approaches the maximum value to
+    // avoid artifacts.
+    progressEndRadius = radius;
+  }
+  RectCornerRadii radii;
+  if (IsFrameRTL(aFrame)) {
+    radii =
+        RectCornerRadii(progressEndRadius, radius, radius, progressEndRadius);
+  } else {
+    radii =
+        RectCornerRadii(radius, progressEndRadius, progressEndRadius, radius);
+  }
+
+  PaintRoundedRect(aDrawTarget, rect, sColorAccent, sColorAccentDark,
+                   borderWidth, radii, aDpiRatio);
+}
+
+/* static */
+void nsNativeBasicTheme::PaintMeter(DrawTarget* aDrawTarget, const Rect& aRect,
+                                    const EventStates& aState,
+                                    uint32_t aDpiRatio) {
+  const CSSCoord borderWidth = 1.0f;
+  const CSSCoord radius = 5.0f;
+
+  Rect rect(aRect);
+  const CSSCoord height = kMeterHeight * aDpiRatio;
+  rect.y += (rect.height - height) / 2;
+  rect.height = height;
+
+  PaintRoundedRectWithRadius(aDrawTarget, rect, sColorGrey10, sColorGrey40,
+                             borderWidth, radius, aDpiRatio);
+}
+
+/* static */
+void nsNativeBasicTheme::PaintMeterchunk(nsIFrame* aFrame,
+                                         DrawTarget* aDrawTarget,
+                                         const Rect& aRect,
+                                         const EventStates& aState,
+                                         uint32_t aDpiRatio) {
+  // TODO: Address artifacts when position is between 0 and (radius + border).
+  nsMeterFrame* meterFrame = do_QueryFrame(aFrame->GetParent());
+  if (!meterFrame) {
+    return;
+  }
+
+  const CSSCoord borderWidth = 1.0f;
+  const CSSCoord radius = 5.0f * aDpiRatio;
+  CSSCoord progressEndRadius = 0.0f;
+
+  Rect rect(aRect);
+  const CSSCoord height = kMeterHeight * aDpiRatio;
+  rect.y += (rect.height - height) / 2;
+  rect.height = height;
+
+  auto* meter =
+      static_cast<mozilla::dom::HTMLMeterElement*>(meterFrame->GetContent());
+  double value = meter->Value();
+  double max = meter->Max();
+  double position = value / max;
+  if (rect.width - (rect.width * position) < (borderWidth + radius)) {
+    // Round corners when the progress chunk approaches the maximum value to
+    // avoid artifacts.
+    progressEndRadius = radius;
+  }
+  RectCornerRadii radii;
+  if (IsFrameRTL(aFrame)) {
+    radii =
+        RectCornerRadii(progressEndRadius, radius, radius, progressEndRadius);
+  } else {
+    radii =
+        RectCornerRadii(radius, progressEndRadius, progressEndRadius, radius);
+  }
+
+  sRGBColor borderColor = sColorMeterGreen20;
+  sRGBColor chunkColor = sColorMeterGreen10;
+
+  double optimum = meter->Optimum();
+  if (value < optimum) {
+    double low = meter->Low();
+    if (value < low) {
+      borderColor = sColorMeterRed20;
+      chunkColor = sColorMeterRed10;
+    } else {
+      borderColor = sColorMeterYellow20;
+      chunkColor = sColorMeterYellow10;
+    }
+  }
+
+  PaintRoundedRect(aDrawTarget, rect, chunkColor, borderColor, borderWidth,
+                   radii, aDpiRatio);
+}
+
+void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+                                     const Rect& aRect,
+                                     const EventStates& aState,
+                                     uint32_t aDpiRatio) {
+  const CSSCoord radius = 4.0f;
+  auto [backgroundColor, borderColor] = ComputeButtonColors(aState, aFrame);
+
+  PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
+                             kButtonBorderWidth, radius, aDpiRatio);
+
+  if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 0.0f);
+  }
+}
+
+void nsNativeBasicTheme::PaintScrollbarthumbHorizontal(
+    DrawTarget* aDrawTarget, const Rect& aRect, const EventStates& aState) {
   sRGBColor thumbColor = sScrollbarThumbColor;
   if (aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
     thumbColor = sScrollbarThumbColorActive;
@@ -473,9 +878,8 @@ static void PaintScrollbarthumbHorizontal(DrawTarget* aDrawTarget,
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(thumbColor)));
 }
 
-static void PaintScrollbarthumbVertical(DrawTarget* aDrawTarget,
-                                        const Rect& aRect,
-                                        const EventStates& aState) {
+void nsNativeBasicTheme::PaintScrollbarthumbVertical(
+    DrawTarget* aDrawTarget, const Rect& aRect, const EventStates& aState) {
   sRGBColor thumbColor = sScrollbarThumbColor;
   if (aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
     thumbColor = sScrollbarThumbColorActive;
@@ -485,8 +889,8 @@ static void PaintScrollbarthumbVertical(DrawTarget* aDrawTarget,
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(thumbColor)));
 }
 
-static void PaintScrollbarHorizontal(DrawTarget* aDrawTarget,
-                                     const Rect& aRect) {
+void nsNativeBasicTheme::PaintScrollbarHorizontal(DrawTarget* aDrawTarget,
+                                                  const Rect& aRect) {
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(sScrollbarColor)));
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   builder->MoveTo(Point(aRect.x, aRect.y));
@@ -495,20 +899,22 @@ static void PaintScrollbarHorizontal(DrawTarget* aDrawTarget,
   aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(sScrollbarBorderColor)));
 }
 
-static void PaintScrollbarVerticalAndCorner(DrawTarget* aDrawTarget,
-                                            const Rect& aRect, uint32_t aDpi) {
+void nsNativeBasicTheme::PaintScrollbarVerticalAndCorner(
+    DrawTarget* aDrawTarget, const Rect& aRect, uint32_t aDpiRatio) {
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(sScrollbarColor)));
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   builder->MoveTo(Point(aRect.x, aRect.y));
   builder->LineTo(Point(aRect.x, aRect.y + aRect.height));
   RefPtr<Path> path = builder->Finish();
   aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(sScrollbarBorderColor)),
-                      StrokeOptions(1.0f * aDpi));
+                      StrokeOptions(1.0f * aDpiRatio));
 }
 
-static void PaintScrollbarbutton(DrawTarget* aDrawTarget,
-                                 StyleAppearance aAppearance, const Rect& aRect,
-                                 const EventStates& aState, uint32_t aDpi) {
+void nsNativeBasicTheme::PaintScrollbarbutton(DrawTarget* aDrawTarget,
+                                              StyleAppearance aAppearance,
+                                              const Rect& aRect,
+                                              const EventStates& aState,
+                                              uint32_t aDpiRatio) {
   bool isActive =
       aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
   bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
@@ -556,7 +962,7 @@ static void PaintScrollbarbutton(DrawTarget* aDrawTarget,
              isActive
                  ? sScrollbarArrowColorActive
                  : isHovered ? sScrollbarArrowColorHover : sScrollbarArrowColor,
-             aDpi);
+             aDpiRatio);
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   builder->MoveTo(Point(aRect.x, aRect.y));
@@ -569,32 +975,7 @@ static void PaintScrollbarbutton(DrawTarget* aDrawTarget,
 
   RefPtr<Path> path = builder->Finish();
   aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(sScrollbarBorderColor)),
-                      StrokeOptions(1.0f * aDpi));
-}
-
-static void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                        const Rect& aRect, const EventStates& aState,
-                        uint32_t aDpi) {
-  const CSSCoord kRadius = 4.0f;
-
-  // FIXME: The DateTimeResetButton bit feels like a bit of a hack.
-  sRGBColor backgroundColor, borderColor;
-  std::tie(backgroundColor, borderColor) =
-      ComputeButtonColors(aState, IsDateTimeResetButton(aFrame));
-
-  PaintRoundedRectWithBorder(aDrawTarget, aRect, backgroundColor, borderColor,
-                             kButtonBorderWidth, kRadius, aDpi);
-}
-
-static void PaintRangeThumb(DrawTarget* aDrawTarget, const Rect& aRect,
-                            const EventStates& aState, uint32_t aDpi) {
-  const CSSCoord kBorderWidth = 2.0f;
-
-  sRGBColor backgroundColor, borderColor;
-  std::tie(backgroundColor, borderColor) = ComputeButtonColors(aState);
-
-  PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
-                      kBorderWidth, aDpi);
+                      StrokeOptions(1.0f * aDpiRatio));
 }
 
 NS_IMETHODIMP
@@ -605,9 +986,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   DrawTarget* dt = aContext->GetDrawTarget();
   const nscoord twipsPerPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   EventStates eventState = GetContentState(aFrame, aAppearance);
-
   Rect devPxRect = NSRectToSnappedRect(aRect, twipsPerPixel, *dt);
-  AutoClipRect clip(*dt, devPxRect);
 
   if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     bool isHTML = IsHTMLContent(aFrame);
@@ -621,54 +1000,65 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     }
   }
 
-  uint32_t dpi = GetDPIRatio(aFrame);
+  uint32_t dpiRatio = GetDPIRatio(aFrame);
 
   switch (aAppearance) {
     case StyleAppearance::Radio: {
       auto rect = FixAspectRatio(devPxRect);
-      PaintRadioControl(dt, rect, eventState, dpi);
+      PaintRadioControl(dt, rect, eventState, dpiRatio);
       if (IsSelected(aFrame)) {
-        PaintCheckedRadioButton(dt, rect, dpi);
+        PaintRadioCheckMark(dt, rect, eventState, dpiRatio);
       }
       break;
     }
     case StyleAppearance::Checkbox: {
       auto rect = FixAspectRatio(devPxRect);
-      PaintCheckboxControl(dt, rect, eventState, dpi);
-      if (IsChecked(aFrame)) {
-        PaintCheckMark(dt, rect, eventState, dpi);
-      }
+      PaintCheckboxControl(dt, rect, eventState, dpiRatio);
       if (GetIndeterminate(aFrame)) {
-        PaintIndeterminateMark(dt, rect, eventState);
+        PaintIndeterminateMark(dt, rect, eventState, dpiRatio);
+      } else if (IsChecked(aFrame)) {
+        PaintCheckMark(dt, rect, eventState, dpiRatio);
       }
       break;
     }
     case StyleAppearance::Textarea:
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput:
-      PaintTextField(dt, devPxRect, eventState, dpi);
+      PaintTextField(dt, devPxRect, eventState, dpiRatio);
       break;
     case StyleAppearance::Listbox:
-    case StyleAppearance::Menulist:
+      PaintListbox(dt, devPxRect, eventState, dpiRatio);
+      break;
     case StyleAppearance::MenulistButton:
-      PaintMenulist(dt, devPxRect, eventState, dpi);
+    case StyleAppearance::Menulist:
+      PaintMenulist(dt, devPxRect, eventState, dpiRatio);
       break;
     case StyleAppearance::MozMenulistArrowButton:
-      PaintMenulistArrowButton(aFrame, dt, devPxRect, eventState, dpi);
+      PaintMenulistArrowButton(aFrame, dt, devPxRect, eventState, dpiRatio);
       break;
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
-      PaintSpinnerButton(dt, devPxRect, eventState, aAppearance, dpi);
+      PaintSpinnerButton(aFrame, dt, devPxRect, eventState, aAppearance,
+                         dpiRatio);
       break;
     case StyleAppearance::Range:
-      PaintRangeInputBackground(dt, devPxRect, eventState, dpi,
+      PaintRangeTrackBackground(aFrame, dt, devPxRect, eventState, dpiRatio,
                                 IsRangeHorizontal(aFrame));
       break;
     case StyleAppearance::RangeThumb:
-      // TODO(emilio): Do we want to enforce it being a circle using
-      // FixAspectRatio here? For now let authors tweak, it's a custom pseudo so
-      // it doesn't probably have much compat impact if at all.
-      PaintRangeThumb(dt, devPxRect, eventState, dpi);
+      PaintRangeThumb(dt, devPxRect, eventState, dpiRatio);
+      break;
+    case StyleAppearance::ProgressBar:
+      PaintProgressBar(dt, devPxRect, eventState, dpiRatio);
+      break;
+    case StyleAppearance::Progresschunk:
+      PaintProgresschunk(aFrame, dt, devPxRect, eventState, dpiRatio);
+      break;
+    case StyleAppearance::Meter:
+      PaintMeter(dt, devPxRect, eventState, dpiRatio);
+      break;
+    case StyleAppearance::Meterchunk:
+      PaintMeterchunk(aFrame, dt, devPxRect, eventState, dpiRatio);
       break;
     case StyleAppearance::ScrollbarthumbHorizontal:
       PaintScrollbarthumbHorizontal(dt, devPxRect, eventState);
@@ -681,16 +1071,16 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       break;
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::Scrollcorner:
-      PaintScrollbarVerticalAndCorner(dt, devPxRect, dpi);
+      PaintScrollbarVerticalAndCorner(dt, devPxRect, dpiRatio);
       break;
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight:
-      PaintScrollbarbutton(dt, aAppearance, devPxRect, eventState, dpi);
+      PaintScrollbarbutton(dt, aAppearance, devPxRect, eventState, dpiRatio);
       break;
     case StyleAppearance::Button:
-      PaintButton(aFrame, dt, devPxRect, eventState, dpi);
+      PaintButton(aFrame, dt, devPxRect, eventState, dpiRatio);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE(
@@ -711,22 +1101,22 @@ aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect) {
 
 LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  uint32_t dpi = GetDPIRatio(aFrame);
+  uint32_t dpiRatio = GetDPIRatio(aFrame);
   switch (aAppearance) {
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
     case StyleAppearance::NumberInput: {
-      const LayoutDeviceIntCoord w = kTextFieldBorderWidth * dpi;
+      LayoutDeviceIntCoord w = kTextFieldBorderWidth * dpiRatio;
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton: {
-      const LayoutDeviceIntCoord w = kMenulistBorderWidth * dpi;
+      const LayoutDeviceIntCoord w = kMenulistBorderWidth * dpiRatio;
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Button: {
-      const LayoutDeviceIntCoord w = kButtonBorderWidth * dpi;
+      LayoutDeviceIntCoord w = kButtonBorderWidth * dpiRatio;
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     default:
@@ -744,7 +1134,6 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     // author-specified padding.
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
-    case StyleAppearance::MozMenulistArrowButton:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
     default:
@@ -760,24 +1149,40 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     return false;
   }
 
-  uint32_t dpi = GetDPIRatio(aFrame);
+  uint32_t dpiRatio = GetDPIRatio(aFrame);
   switch (aAppearance) {
-    case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistButton:
+      aResult->SizeTo(0, 0, 0, 0);
+      return true;
     case StyleAppearance::NumberInput:
-      aResult->SizeTo(6 * dpi, 7 * dpi, 6 * dpi, 7 * dpi);
+      if (IsFrameRTL(aFrame)) {
+        aResult->SizeTo(1 * dpiRatio, 4 * dpiRatio, 1 * dpiRatio, 0);
+      } else {
+        aResult->SizeTo(1 * dpiRatio, 0, 1 * dpiRatio, 4 * dpiRatio);
+      }
+      return true;
+    case StyleAppearance::Textarea:
+    case StyleAppearance::MozMenulistArrowButton:
+    case StyleAppearance::Menuitemtext:
+    case StyleAppearance::Menuitem:
+    case StyleAppearance::MenulistText:
+    case StyleAppearance::MenulistButton:
+      aResult->SizeTo(1 * dpiRatio, 4 * dpiRatio, 1 * dpiRatio, 4 * dpiRatio);
       return true;
     case StyleAppearance::Button:
-      aResult->SizeTo(6 * dpi, 21 * dpi, 6 * dpi, 21 * dpi);
+      if (IsColorPickerButton(aFrame)) {
+        aResult->SizeTo(4 * dpiRatio, 4 * dpiRatio, 4 * dpiRatio, 4 * dpiRatio);
+        return true;
+      }
+      aResult->SizeTo(1 * dpiRatio, 4 * dpiRatio, 1 * dpiRatio, 4 * dpiRatio);
       return true;
     case StyleAppearance::Textfield:
       if (IsDateTimeTextField(aFrame)) {
-        aResult->SizeTo(7 * dpi, 7 * dpi, 5 * dpi, 7 * dpi);
+        aResult->SizeTo(2 * dpiRatio, 3 * dpiRatio, 0, 3 * dpiRatio);
         return true;
       }
-      aResult->SizeTo(6 * dpi, 7 * dpi, 6 * dpi, 7 * dpi);
+      aResult->SizeTo(1 * dpiRatio, 4 * dpiRatio, 1 * dpiRatio, 4 * dpiRatio);
       return true;
     default:
       return false;
@@ -790,7 +1195,24 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
                                            nsRect* aOverflowRect) {
   // TODO(bug 1620360): This should return non-zero for
   // StyleAppearance::FocusOutline, if we implement outline-style: auto.
-  return false;
+  nsIntMargin overflow;
+  switch (aAppearance) {
+    case StyleAppearance::Radio:
+    case StyleAppearance::Checkbox:
+    case StyleAppearance::Range:
+      overflow.SizeTo(6, 6, 6, 6);
+      break;
+    default:
+      overflow.SizeTo(4, 4, 4, 4);
+      break;
+  }
+
+  aOverflowRect->Inflate(nsMargin(CSSPixel::ToAppUnits(overflow.top),
+                                  CSSPixel::ToAppUnits(overflow.right),
+                                  CSSPixel::ToAppUnits(overflow.bottom),
+                                  CSSPixel::ToAppUnits(overflow.left)));
+
+  return true;
 }
 
 NS_IMETHODIMP
@@ -799,8 +1221,35 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          StyleAppearance aAppearance,
                                          LayoutDeviceIntSize* aResult,
                                          bool* aIsOverridable) {
+  uint32_t dpiRatio = GetDPIRatio(aFrame);
+
   aResult->width = aResult->height =
-      static_cast<uint32_t>(kMinimumWidgetSize) * GetDPIRatio(aFrame);
+      static_cast<uint32_t>(kMinimumWidgetSize) * dpiRatio;
+
+  switch (aAppearance) {
+    case StyleAppearance::Button:
+      if (IsColorPickerButton(aFrame)) {
+        aResult->height =
+            static_cast<uint32_t>(kMinimumColorPickerHeight) * dpiRatio;
+      }
+      break;
+    case StyleAppearance::RangeThumb:
+      aResult->SizeTo(static_cast<uint32_t>(kMinimumRangeThumbSize) * dpiRatio,
+                      static_cast<uint32_t>(kMinimumRangeThumbSize) * dpiRatio);
+      break;
+    case StyleAppearance::MozMenulistArrowButton:
+      aResult->width =
+          static_cast<uint32_t>(kMinimumDropdownArrowButtonWidth) * dpiRatio;
+      break;
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton:
+      aResult->width =
+          static_cast<uint32_t>(kMinimumSpinnerButtonWidth) * dpiRatio;
+      break;
+    default:
+      break;
+  }
+
   *aIsOverridable = true;
   return NS_OK;
 }
@@ -870,6 +1319,10 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Textfield:
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
+    case StyleAppearance::ProgressBar:
+    case StyleAppearance::Progresschunk:
+    case StyleAppearance::Meter:
+    case StyleAppearance::Meterchunk:
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
@@ -877,12 +1330,14 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbarNonDisappearing:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::Scrollcorner:
     case StyleAppearance::Button:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
+    case StyleAppearance::Menuitem:
+    case StyleAppearance::Menuitemtext:
+    case StyleAppearance::MenulistText:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::NumberInput:
     case StyleAppearance::MozMenulistArrowButton:
@@ -906,32 +1361,7 @@ bool nsNativeBasicTheme::WidgetIsContainer(StyleAppearance aAppearance) {
 }
 
 bool nsNativeBasicTheme::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::Range:
-    // TODO(emilio): Checkbox / Radio don't have focus indicators when checked.
-    // If they did, we could just return true here unconditionally.
-    case StyleAppearance::Checkbox:
-    case StyleAppearance::Radio:
-      return false;
-    default:
-      return true;
-  }
+  return true;
 }
 
 bool nsNativeBasicTheme::ThemeNeedsComboboxDropmarker() { return true; }
-
-already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
-  static StaticRefPtr<nsITheme> gInstance;
-  if (MOZ_UNLIKELY(!gInstance)) {
-    gInstance = new nsNativeBasicTheme();
-    ClearOnShutdown(&gInstance);
-  }
-  return do_AddRef(gInstance);
-}
-
-// On Android there's no native theme.
-#ifdef ANDROID
-already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
-  return do_GetBasicNativeThemeDoNotUseDirectly();
-}
-#endif
