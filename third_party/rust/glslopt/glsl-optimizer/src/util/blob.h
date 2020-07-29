@@ -184,6 +184,21 @@ bool
 blob_write_uint8(struct blob *blob, uint8_t value);
 
 /**
+ * Overwrite a uint8_t previously written to the blob.
+ *
+ * Writes a uint8_t value to an existing portion of the blob at an offset of
+ * \offset.  This data range must have previously been written to the blob by
+ * one of the blob_write_* calls.
+ *
+ * \return True unless the requested position or position+to_write lie outside
+ * the current blob's size.
+ */
+bool
+blob_overwrite_uint8(struct blob *blob,
+                     size_t offset,
+                     uint8_t value);
+
+/**
  * Add a uint16_t to a blob.
  *
  * \note This function will only write to a uint16_t-aligned offset from the

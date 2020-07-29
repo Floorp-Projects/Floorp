@@ -32,25 +32,9 @@
 
 #include "ir.h"
 #include "ir_visitor.h"
+#include "linker_util.h"
 #include "compiler/glsl_types.h"
 #include "util/bitset.h"
-
-/**
- * Describes an access of an array element or an access of the whole array
- */
-struct array_deref_range {
-   /**
-    * Index that was accessed.
-    *
-    * All valid array indices are less than the size of the array.  If index
-    * is equal to the size of the array, this means the entire array has been
-    * accessed (e.g., due to use of a non-constant index).
-    */
-   unsigned index;
-
-   /** Size of the array.  Used for offset calculations. */
-   unsigned size;
-};
 
 class ir_array_refcount_entry
 {
@@ -63,33 +47,11 @@ public:
    /** Has the variable been referenced? */
    bool is_referenced;
 
-   /**
-    * Mark a set of array elements as accessed.
-    *
-    * If every \c array_deref_range is for a single index, only a single
-    * element will be marked.  If any \c array_deref_range is for an entire
-    * array-of-, then multiple elements will be marked.
-    *
-    * Items in the \c array_deref_range list appear in least- to
-    * most-significant order.  This is the \b opposite order the indices
-    * appear in the GLSL shader text.  An array access like
-    *
-    *     x = y[1][i][3];
-    *
-    * would appear as
-    *
-    *     { { 3, n }, { m, m }, { 1, p } }
-    *
-    * where n, m, and p are the sizes of the arrays-of-arrays.
-    *
-    * The set of marked array elements can later be queried by
-    * \c ::is_linearized_index_referenced.
-    *
-    * \param dr     List of array_deref_range elements to be processed.
-    * \param count  Number of array_deref_range elements to be processed.
-    */
-   void mark_array_elements_referenced(const array_deref_range *dr,
-                                       unsigned count);
+   /** Count of nested arrays in the type. */
+   unsigned array_depth;
+
+   /** Set of bit-flags to note which array elements have been accessed. */
+   BITSET_WORD *bits;
 
    /** Has a linearized array index been referenced? */
    bool is_linearized_index_referenced(unsigned linearized_index) const
@@ -101,8 +63,6 @@ public:
    }
 
 private:
-   /** Set of bit-flags to note which array elements have been accessed. */
-   BITSET_WORD *bits;
 
    /**
     * Total number of bits referenced by \c bits.
@@ -110,27 +70,6 @@ private:
     * Also the total number of array(s-of-arrays) elements of \c var.
     */
    unsigned num_bits;
-
-   /** Count of nested arrays in the type. */
-   unsigned array_depth;
-
-   /**
-    * Recursive part of the public mark_array_elements_referenced method.
-    *
-    * The recursion occurs when an entire array-of- is accessed.  See the
-    * implementation for more details.
-    *
-    * \param dr                List of array_deref_range elements to be
-    *                          processed.
-    * \param count             Number of array_deref_range elements to be
-    *                          processed.
-    * \param scale             Current offset scale.
-    * \param linearized_index  Current accumulated linearized array index.
-    */
-   void mark_array_elements_referenced(const array_deref_range *dr,
-                                       unsigned count,
-                                       unsigned scale,
-                                       unsigned linearized_index);
 
    friend class array_refcount_test;
 };

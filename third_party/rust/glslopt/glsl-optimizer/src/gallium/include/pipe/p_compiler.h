@@ -128,7 +128,7 @@ typedef unsigned char boolean;
 /* See http://gcc.gnu.org/onlinedocs/gcc-4.4.2/gcc/Variable-Attributes.html */
 #define PIPE_ALIGN_VAR(_alignment) __attribute__((aligned(_alignment)))
 
-#if defined(__GNUC__) && !defined(PIPE_ARCH_X86_64)
+#if defined(__GNUC__) && defined(PIPE_ARCH_X86)
 #define PIPE_ALIGN_STACK __attribute__((force_align_arg_pointer))
 #else
 #define PIPE_ALIGN_STACK

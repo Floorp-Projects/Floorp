@@ -86,7 +86,7 @@
 #include "util/u_string.h"
 #include "util/u_math.h"
 
-#include "main/imports.h"
+
 #include "main/shaderobj.h"
 #include "main/enums.h"
 #include "main/mtypes.h"
@@ -260,6 +260,8 @@ public:
 
 class array_resize_visitor : public deref_type_updater {
 public:
+   using deref_type_updater::visit;
+
    unsigned num_vertices;
    gl_shader_program *prog;
    gl_shader_stage stage;
@@ -1511,6 +1513,8 @@ move_non_declarations(exec_list *instructions, exec_node *last,
  */
 class array_sizing_visitor : public deref_type_updater {
 public:
+   using deref_type_updater::visit;
+
    array_sizing_visitor()
       : mem_ctx(ralloc_context(NULL)),
         unnamed_interfaces(_mesa_pointer_hash_table_create(NULL))
@@ -1813,6 +1817,40 @@ link_bindless_layout_qualifiers(struct gl_shader_program *prog,
          linker_error(prog, "both bindless_sampler and bound_sampler, or "
                       "bindless_image and bound_image, can't be declared at "
                       "global scope");
+      }
+   }
+}
+
+/**
+ * Check for conflicting viewport_relative settings across shaders, and sets
+ * the value for the linked shader.
+ */
+static void
+link_layer_viewport_relative_qualifier(struct gl_shader_program *prog,
+                                       struct gl_program *gl_prog,
+                                       struct gl_shader **shader_list,
+                                       unsigned num_shaders)
+{
+   unsigned i;
+
+   /* Find first shader with explicit layer declaration */
+   for (i = 0; i < num_shaders; i++) {
+      if (shader_list[i]->redeclares_gl_layer) {
+         gl_prog->info.layer_viewport_relative =
+            shader_list[i]->layer_viewport_relative;
+         break;
+      }
+   }
+
+   /* Now make sure that each subsequent shader's explicit layer declaration
+    * matches the first one's.
+    */
+   for (; i < num_shaders; i++) {
+      if (shader_list[i]->redeclares_gl_layer &&
+          shader_list[i]->layer_viewport_relative !=
+          gl_prog->info.layer_viewport_relative) {
+         linker_error(prog, "all gl_Layer redeclarations must have identical "
+                      "viewport_relative settings");
       }
    }
 }
@@ -2434,9 +2472,7 @@ link_intrastage_shaders(void *mem_ctx,
 
    /* Create program and attach it to the linked shader */
    struct gl_program *gl_prog =
-      ctx->Driver.NewProgram(ctx,
-                             _mesa_shader_stage_to_program(shader_list[0]->Stage),
-                             prog->Name, false);
+      ctx->Driver.NewProgram(ctx, shader_list[0]->Stage, prog->Name, false);
    if (!gl_prog) {
       prog->data->LinkStatus = LINKING_FAILURE;
       _mesa_delete_linked_shader(ctx, linked);
@@ -2461,6 +2497,8 @@ link_intrastage_shaders(void *mem_ctx,
       link_xfb_stride_layout_qualifiers(ctx, prog, shader_list, num_shaders);
 
    link_bindless_layout_qualifiers(prog, shader_list, num_shaders);
+
+   link_layer_viewport_relative_qualifier(prog, gl_prog, shader_list, num_shaders);
 
    populate_symbol_table(linked, shader_list[0]->symbols);
 
@@ -4406,12 +4444,13 @@ link_and_validate_uniforms(struct gl_context *ctx,
                            struct gl_shader_program *prog)
 {
    update_array_sizes(prog);
-   link_assign_uniform_locations(prog, ctx);
-
-   if (prog->data->LinkStatus == LINKING_FAILURE)
-      return;
 
    if (!ctx->Const.UseNIRGLSLLinker) {
+      link_assign_uniform_locations(prog, ctx);
+
+      if (prog->data->LinkStatus == LINKING_FAILURE)
+         return;
+
       link_util_calculate_subroutine_compat(prog);
       link_util_check_uniform_resources(ctx, prog);
       link_util_check_subroutine_resources(prog);

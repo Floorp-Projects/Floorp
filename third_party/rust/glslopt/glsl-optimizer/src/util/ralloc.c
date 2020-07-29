@@ -53,7 +53,11 @@ _CRTIMP int _vscprintf(const char *format, va_list argptr);
  */
 struct
 #ifdef _MSC_VER
+#if _WIN64
+__declspec(align(16))
+#else
  __declspec(align(8))
+#endif
 #elif defined(__LP64__)
  __attribute__((aligned(16)))
 #else

@@ -18,33 +18,21 @@
 #include "program/program.h"
 
 static void
-init_gl_program(struct gl_program *prog, bool is_arb_asm, GLenum target)
+init_gl_program(struct gl_program *prog, bool is_arb_asm, gl_shader_stage stage)
 {
    prog->RefCount = 1;
    prog->Format = GL_PROGRAM_FORMAT_ASCII_ARB;
    prog->is_arb_asm = is_arb_asm;
-   prog->info.stage = (gl_shader_stage)_mesa_program_enum_to_shader_stage(target);
+   prog->info.stage = stage;
 }
 
 static struct gl_program *
-new_program(UNUSED struct gl_context *ctx, GLenum target,
+new_program(UNUSED struct gl_context *ctx, gl_shader_stage stage,
             UNUSED GLuint id, bool is_arb_asm)
 {
-   switch (target) {
-   case GL_VERTEX_PROGRAM_ARB: /* == GL_VERTEX_PROGRAM_NV */
-   case GL_GEOMETRY_PROGRAM_NV:
-   case GL_TESS_CONTROL_PROGRAM_NV:
-   case GL_TESS_EVALUATION_PROGRAM_NV:
-   case GL_FRAGMENT_PROGRAM_ARB:
-   case GL_COMPUTE_PROGRAM_NV: {
-      struct gl_program *prog = rzalloc(NULL, struct gl_program);
-      init_gl_program(prog, is_arb_asm, target);
-      return prog;
-   }
-   default:
-      printf("bad target in new_program\n");
-      return NULL;
-   }
+   struct gl_program *prog = rzalloc(NULL, struct gl_program);
+   init_gl_program(prog, is_arb_asm, stage);
+   return prog;
 }
 
 static void
@@ -84,7 +72,7 @@ initialize_mesa_context(struct gl_context *ctx, glslopt_target api)
 		ctx->Extensions.EXT_shader_framebuffer_fetch = true;
 		break;
 	case kGlslTargetOpenGLES30:
-		ctx->Extensions.ARB_ES3_compatibility = true;
+		ctx->Extensions.ARB_ES3_1_compatibility = true;
 		ctx->Extensions.EXT_shader_framebuffer_fetch = true;
 		break;
 	case kGlslTargetMetal:
@@ -677,7 +665,10 @@ glslopt_shader* glslopt_optimize (glslopt_ctx* ctx, glslopt_shader_type type, co
 		validate_ir_tree(ir);
 		shader->rawOutput = _mesa_print_ir_glsl(ir, state, ralloc_strdup(shader, ""), printMode);
 	}
-	
+
+	// Lower builtin functions prior to linking.
+	lower_builtins(ir);
+
 	// Link built-in functions
 	shader->shader->symbols = state->symbols;
 	

@@ -578,7 +578,8 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
                ir_rvalue *y_operand = inner_add->operands[1 - neg_pos];
                ir_rvalue *a_operand = mul->operands[1 - inner_add_pos];
 
-               if (x_operand->type != y_operand->type ||
+               if (!x_operand->type->is_float_16_32_64() ||
+                   x_operand->type != y_operand->type ||
                    x_operand->type != a_operand->type)
                   continue;
 
@@ -983,6 +984,9 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
          ir_constant *one;
 
          switch (ir->type->base_type) {
+         case GLSL_TYPE_FLOAT16:
+            one = new(mem_ctx) ir_constant(float16_t::one(), op2_components);
+            break;
          case GLSL_TYPE_FLOAT:
             one = new(mem_ctx) ir_constant(1.0f, op2_components);
             break;

@@ -38,6 +38,7 @@
 #include "program/prog_instruction.h"
 #include "compiler/glsl_types.h"
 #include "main/macros.h"
+#include "util/half_float.h"
 
 using namespace ir_builder;
 
@@ -125,6 +126,17 @@ compare_components(ir_constant *a, ir_constant *b)
          else
             foundequal = true;
          break;
+      case GLSL_TYPE_FLOAT16: {
+         float af = _mesa_half_to_float(a->value.f16[c0]);
+         float bf = _mesa_half_to_float(b->value.f16[c1]);
+         if (af < bf)
+            foundless = true;
+         else if (af > bf)
+            foundgreater = true;
+         else
+            foundequal = true;
+         break;
+      }
       case GLSL_TYPE_FLOAT:
          if (a->value.f[c0] < b->value.f[c1])
             foundless = true;
@@ -181,6 +193,13 @@ combine_constant(bool ismin, ir_constant *a, ir_constant *b)
              (!ismin && b->value.i[i] > c->value.i[i]))
             c->value.i[i] = b->value.i[i];
          break;
+      case GLSL_TYPE_FLOAT16: {
+         float bf = _mesa_half_to_float(b->value.f16[i]);
+         float cf = _mesa_half_to_float(c->value.f16[i]);
+         if ((ismin && bf < cf) || (!ismin && bf > cf))
+            c->value.f16[i] = b->value.f16[i];
+         break;
+      }
       case GLSL_TYPE_FLOAT:
          if ((ismin && b->value.f[i] < c->value.f[i]) ||
              (!ismin && b->value.f[i] > c->value.f[i]))

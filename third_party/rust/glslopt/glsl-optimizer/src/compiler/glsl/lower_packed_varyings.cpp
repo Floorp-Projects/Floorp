@@ -173,6 +173,7 @@ public:
                                  exec_list *out_instructions,
                                  exec_list *out_variables,
                                  bool disable_varying_packing,
+                                 bool disable_xfb_packing,
                                  bool xfb_enabled);
 
    void run(struct gl_linked_shader *shader);
@@ -240,6 +241,7 @@ private:
    exec_list *out_variables;
 
    bool disable_varying_packing;
+   bool disable_xfb_packing;
    bool xfb_enabled;
 };
 
@@ -250,7 +252,7 @@ lower_packed_varyings_visitor::lower_packed_varyings_visitor(
       ir_variable_mode mode,
       unsigned gs_input_vertices, exec_list *out_instructions,
       exec_list *out_variables, bool disable_varying_packing,
-      bool xfb_enabled)
+      bool disable_xfb_packing, bool xfb_enabled)
    : mem_ctx(mem_ctx),
      locations_used(locations_used),
      components(components),
@@ -262,6 +264,7 @@ lower_packed_varyings_visitor::lower_packed_varyings_visitor(
      out_instructions(out_instructions),
      out_variables(out_variables),
      disable_varying_packing(disable_varying_packing),
+     disable_xfb_packing(disable_xfb_packing),
      xfb_enabled(xfb_enabled)
 {
 }
@@ -769,12 +772,21 @@ lower_packed_varyings_visitor::needs_lowering(ir_variable *var)
    if (var->data.explicit_location || var->data.must_be_shader_input)
       return false;
 
+   const glsl_type *type = var->type;
+
+   /* Some drivers (e.g. panfrost) don't support packing of transform
+    * feedback varyings.
+    */
+   if (disable_xfb_packing && var->data.is_xfb &&
+       !(type->is_array() || type->is_struct() || type->is_matrix()) &&
+       xfb_enabled)
+      return false;
+
    /* Override disable_varying_packing if the var is only used by transform
     * feedback. Also override it if transform feedback is enabled and the
     * variable is an array, struct or matrix as the elements of these types
     * will always have the same interpolation and therefore are safe to pack.
     */
-   const glsl_type *type = var->type;
    if (disable_varying_packing && !var->data.is_xfb_only &&
        !((type->is_array() || type->is_struct() || type->is_matrix()) &&
          xfb_enabled))
@@ -874,7 +886,7 @@ lower_packed_varyings(void *mem_ctx, unsigned locations_used,
                       const uint8_t *components,
                       ir_variable_mode mode, unsigned gs_input_vertices,
                       gl_linked_shader *shader, bool disable_varying_packing,
-                      bool xfb_enabled)
+                      bool disable_xfb_packing, bool xfb_enabled)
 {
    exec_list *instructions = shader->ir;
    ir_function *main_func = shader->symbols->get_function("main");
@@ -890,6 +902,7 @@ lower_packed_varyings(void *mem_ctx, unsigned locations_used,
                                          &new_instructions,
                                          &new_variables,
                                          disable_varying_packing,
+                                         disable_xfb_packing,
                                          xfb_enabled);
    visitor.run(shader);
    if (mode == ir_var_shader_out) {

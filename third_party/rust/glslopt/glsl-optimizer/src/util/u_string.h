@@ -116,6 +116,10 @@ util_asprintf(char **str, const char *fmt, ...)
 
 #define strdup _strdup
 
+#if defined(_WIN32) && !defined(HAVE_STRTOK_R)
+#define strtok_r strtok_s
+#endif
+
 #endif
 
 

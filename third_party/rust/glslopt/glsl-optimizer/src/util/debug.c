@@ -23,7 +23,6 @@
 
 #include <errno.h>
 #include <string.h>
-#include "main/macros.h"
 #include "debug.h"
 #include "u_string.h"
 

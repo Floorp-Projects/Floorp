@@ -21,10 +21,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "main/imports.h"
+
 #include "main/errors.h"
 #include "symbol_table.h"
-#include "../../util/hash_table.h"
+#include "util/hash_table.h"
 #include "util/u_string.h"
 
 struct symbol {
@@ -63,7 +63,7 @@ struct symbol {
 struct scope_level {
     /** Link to next (inner) scope level. */
     struct scope_level *next;
-    
+
     /** Linked list of symbols with the same scope. */
     struct symbol *symbols;
 };

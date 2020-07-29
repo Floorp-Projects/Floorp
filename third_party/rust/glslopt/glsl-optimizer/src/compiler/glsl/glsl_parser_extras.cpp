@@ -723,6 +723,7 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(EXT_demote_to_helper_invocation),
    EXT(EXT_frag_depth),
    EXT(EXT_draw_buffers),
+   EXT(EXT_draw_instanced),
    EXT(EXT_clip_cull_distance),
    EXT(EXT_geometry_point_size),
    EXT_AEP(EXT_geometry_shader),
@@ -753,6 +754,7 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(NV_fragment_shader_interlock),
    EXT(NV_image_formats),
    EXT(NV_shader_atomic_float),
+   EXT(NV_viewport_array2),
 };
 
 #undef EXT
@@ -1931,6 +1933,8 @@ set_shader_inout_layout(struct gl_shader *shader,
    shader->bindless_image = state->bindless_image_specified;
    shader->bound_sampler = state->bound_sampler_specified;
    shader->bound_image = state->bound_image_specified;
+   shader->redeclares_gl_layer = state->redeclares_gl_layer;
+   shader->layer_viewport_relative = state->layer_viewport_relative;
 }
 
 /* src can be NULL if only the symbols found in the exec_list should be
@@ -2234,7 +2238,13 @@ _mesa_glsl_compile_shader(struct gl_context *ctx, struct gl_shader *shader,
    shader->Version = state->language_version;
    shader->IsES = state->es_shader;
 
+   struct gl_shader_compiler_options *options =
+      &ctx->Const.ShaderCompilerOptions[shader->Stage];
+
    if (!state->error && !shader->ir->is_empty()) {
+      if (options->LowerPrecision)
+         lower_precision(shader->ir);
+      lower_builtins(shader->ir);
       assign_subroutine_indexes(state);
       lower_subroutine(shader->ir, state);
       opt_shader_and_create_symbol_table(ctx, state->symbols, shader);
@@ -2347,7 +2357,20 @@ do_common_optimization(exec_list *ir, bool linked,
    OPT(lower_vector_insert, ir, false);
    OPT(optimize_swizzles, ir);
 
-   OPT(optimize_split_arrays, ir, linked);
+   /* Some drivers only call do_common_optimization() once rather than in a
+    * loop, and split arrays causes each element of a constant array to
+    * dereference is own copy of the entire array initilizer. This IR is not
+    * something that can be generated manually in a shader and is not
+    * accounted for by NIR optimisations, the result is an exponential slow
+    * down in compilation speed as a constant arrays element count grows. To
+    * avoid that here we make sure to always clean up the mess split arrays
+    * causes to constant arrays.
+    */
+   bool array_split = optimize_split_arrays(ir, linked);
+   if (array_split)
+      do_constant_propagation(ir);
+   progress |= array_split;
+
    OPT(optimize_redundant_jumps, ir);
 
    if (options->MaxUnrollIterations) {

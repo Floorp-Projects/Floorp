@@ -1373,6 +1373,21 @@ tfeedback_decl::find_candidate(gl_shader_program *prog,
    return this->matched_candidate;
 }
 
+/**
+ * Force a candidate over the previously matched one. It happens when a new
+ * varying needs to be created to match the xfb declaration, for example,
+ * to fullfil an alignment criteria.
+ */
+void
+tfeedback_decl::set_lowered_candidate(const tfeedback_candidate *candidate)
+{
+   this->matched_candidate = candidate;
+
+   /* The subscript part is no longer relevant */
+   this->is_subscripted = false;
+   this->array_subscript = 0;
+}
+
 
 /**
  * Parse all the transform feedback declarations that were passed to
@@ -1590,7 +1605,9 @@ namespace {
 class varying_matches
 {
 public:
-   varying_matches(bool disable_varying_packing, bool xfb_enabled,
+   varying_matches(bool disable_varying_packing,
+                   bool disable_xfb_packing,
+                   bool xfb_enabled,
                    bool enhanced_layouts_enabled,
                    gl_shader_stage producer_stage,
                    gl_shader_stage consumer_stage);
@@ -1617,10 +1634,16 @@ private:
    const bool disable_varying_packing;
 
    /**
+    * If true, this driver disables packing for varyings used by transform
+    * feedback.
+    */
+   const bool disable_xfb_packing;
+
+   /**
     * If true, this driver has transform feedback enabled. The transform
-    * feedback code requires at least some packing be done even when varying
-    * packing is disabled, fortunately where transform feedback requires
-    * packing it's safe to override the disabled setting. See
+    * feedback code usually requires at least some packing be done even
+    * when varying packing is disabled, fortunately where transform feedback
+    * requires packing it's safe to override the disabled setting. See
     * is_varying_packing_safe().
     */
    const bool xfb_enabled;
@@ -1647,6 +1670,7 @@ private:
    static packing_order_enum compute_packing_order(const ir_variable *var);
    static int match_comparator(const void *x_generic, const void *y_generic);
    static int xfb_comparator(const void *x_generic, const void *y_generic);
+   static int not_xfb_comparator(const void *x_generic, const void *y_generic);
 
    /**
     * Structure recording the relationship between a single producer output
@@ -1702,11 +1726,13 @@ private:
 } /* anonymous namespace */
 
 varying_matches::varying_matches(bool disable_varying_packing,
+                                 bool disable_xfb_packing,
                                  bool xfb_enabled,
                                  bool enhanced_layouts_enabled,
                                  gl_shader_stage producer_stage,
                                  gl_shader_stage consumer_stage)
    : disable_varying_packing(disable_varying_packing),
+     disable_xfb_packing(disable_xfb_packing),
      xfb_enabled(xfb_enabled),
      enhanced_layouts_enabled(enhanced_layouts_enabled),
      producer_stage(producer_stage),
@@ -1785,6 +1811,7 @@ varying_matches::record(ir_variable *producer_var, ir_variable *consumer_var)
        producer_var->type->contains_double());
 
    if (!disable_varying_packing &&
+       (!disable_xfb_packing || producer_var  == NULL || !producer_var->data.is_xfb) &&
        (needs_flat_qualifier ||
         (consumer_stage != MESA_SHADER_NONE && consumer_stage != MESA_SHADER_FRAGMENT))) {
       /* Since this varying is not being consumed by the fragment shader, its
@@ -1850,6 +1877,7 @@ varying_matches::record(ir_variable *producer_var, ir_variable *consumer_var)
    this->matches[this->num_matches].packing_order
       = this->compute_packing_order(var);
    if ((this->disable_varying_packing && !is_varying_packing_safe(type, var)) ||
+       (this->disable_xfb_packing && var->data.is_xfb) ||
        var->data.must_be_shader_input) {
       unsigned slots = type->count_attribute_slots(false);
       this->matches[this->num_matches].num_components = slots * 4;
@@ -1890,19 +1918,29 @@ varying_matches::assign_locations(struct gl_shader_program *prog,
     * When packing is disabled the sort orders varyings used by transform
     * feedback first, but also depends on *undefined behaviour* of qsort to
     * reverse the order of the varyings. See: xfb_comparator().
+    *
+    * If packing is only disabled for xfb varyings (mutually exclusive with
+    * disable_varying_packing), we then group varyings depending on if they
+    * are captured for transform feedback. The same *undefined behaviour* is
+    * taken advantage of.
     */
-   if (!this->disable_varying_packing) {
-      /* Sort varying matches into an order that makes them easy to pack. */
-      qsort(this->matches, this->num_matches, sizeof(*this->matches),
-            &varying_matches::match_comparator);
-   } else {
+   if (this->disable_varying_packing) {
       /* Only sort varyings that are only used by transform feedback. */
       qsort(this->matches, this->num_matches, sizeof(*this->matches),
             &varying_matches::xfb_comparator);
+   } else if (this->disable_xfb_packing) {
+      /* Only sort varyings that are NOT used by transform feedback. */
+      qsort(this->matches, this->num_matches, sizeof(*this->matches),
+            &varying_matches::not_xfb_comparator);
+   } else {
+      /* Sort varying matches into an order that makes them easy to pack. */
+      qsort(this->matches, this->num_matches, sizeof(*this->matches),
+            &varying_matches::match_comparator);
    }
 
    unsigned generic_location = 0;
    unsigned generic_patch_location = MAX_VARYING*4;
+   bool previous_var_xfb = false;
    bool previous_var_xfb_only = false;
    unsigned previous_packing_class = ~0u;
 
@@ -1939,6 +1977,9 @@ varying_matches::assign_locations(struct gl_shader_program *prog,
        * class than the previous one, and we're not already on a slot
        * boundary.
        *
+       * Also advance if varying packing is disabled for transform feedback,
+       * and previous or current varying is used for transform feedback.
+       *
        * Also advance to the next slot if packing is disabled. This makes sure
        * we don't assign varyings the same locations which is possible
        * because we still pack individual arrays, records and matrices even
@@ -1947,6 +1988,8 @@ varying_matches::assign_locations(struct gl_shader_program *prog,
        * feedback.
        */
       if (var->data.must_be_shader_input ||
+          (this->disable_xfb_packing &&
+           (previous_var_xfb || var->data.is_xfb)) ||
           (this->disable_varying_packing &&
            !(previous_var_xfb_only && var->data.is_xfb_only)) ||
           (previous_packing_class != this->matches[i].packing_class) ||
@@ -1955,6 +1998,7 @@ varying_matches::assign_locations(struct gl_shader_program *prog,
          *location = ALIGN(*location, 4);
       }
 
+      previous_var_xfb = var->data.is_xfb;
       previous_var_xfb_only = var->data.is_xfb_only;
       previous_packing_class = this->matches[i].packing_class;
 
@@ -2051,7 +2095,7 @@ varying_matches::store_locations() const
             const glsl_type *type =
                get_varying_type(producer_var, producer_stage);
             if (type->is_array() || type->is_matrix() || type->is_struct() ||
-                type->is_double()) {
+                type->is_64bit()) {
                unsigned comp_slots = type->component_slots() + offset;
                unsigned slots = comp_slots / 4;
                if (comp_slots % 4)
@@ -2195,6 +2239,32 @@ varying_matches::xfb_comparator(const void *x_generic, const void *y_generic)
    const match *x = (const match *) x_generic;
 
    if (x->producer_var != NULL && x->producer_var->data.is_xfb_only)
+      return match_comparator(x_generic, y_generic);
+
+   /* FIXME: When the comparator returns 0 it means the elements being
+    * compared are equivalent. However the qsort documentation says:
+    *
+    *    "The order of equivalent elements is undefined."
+    *
+    * In practice the sort ends up reversing the order of the varyings which
+    * means locations are also assigned in this reversed order and happens to
+    * be what we want. This is also whats happening in
+    * varying_matches::match_comparator().
+    */
+   return 0;
+}
+
+
+/**
+ * Comparison function passed to qsort() to sort varyings NOT used by
+ * transform feedback when packing of xfb varyings is disabled.
+ */
+int
+varying_matches::not_xfb_comparator(const void *x_generic, const void *y_generic)
+{
+   const match *x = (const match *) x_generic;
+
+   if (x->producer_var != NULL && !x->producer_var->data.is_xfb)
       return match_comparator(x_generic, y_generic);
 
    /* FIXME: When the comparator returns 0 it means the elements being
@@ -2558,10 +2628,16 @@ assign_varying_locations(struct gl_context *ctx,
 
    /* Transform feedback code assumes varying arrays are packed, so if the
     * driver has disabled varying packing, make sure to at least enable
-    * packing required by transform feedback.
+    * packing required by transform feedback. See below for exception.
     */
    bool xfb_enabled =
       ctx->Extensions.EXT_transform_feedback && !unpackable_tess;
+
+   /* Some drivers actually requires packing to be explicitly disabled
+    * for varyings used by transform feedback.
+    */
+   bool disable_xfb_packing =
+      ctx->Const.DisableTransformFeedbackPacking;
 
    /* Disable packing on outward facing interfaces for SSO because in ES we
     * need to retain the unpacked varying information for draw time
@@ -2577,7 +2653,9 @@ assign_varying_locations(struct gl_context *ctx,
    if (prog->SeparateShader && (producer == NULL || consumer == NULL))
       disable_varying_packing = true;
 
-   varying_matches matches(disable_varying_packing, xfb_enabled,
+   varying_matches matches(disable_varying_packing,
+                           disable_xfb_packing,
+                           xfb_enabled,
                            ctx->Extensions.ARB_enhanced_layouts,
                            producer ? producer->Stage : MESA_SHADER_NONE,
                            consumer ? consumer->Stage : MESA_SHADER_NONE);
@@ -2716,6 +2794,52 @@ assign_varying_locations(struct gl_context *ctx,
          return false;
       }
 
+      /* There are two situations where a new output varying is needed:
+       *
+       *  - If varying packing is disabled for xfb and the current declaration
+       *    is not aligned within the top level varying (e.g. vec3_arr[1]).
+       *
+       *  - If a builtin variable needs to be copied to a new variable
+       *    before its content is modified by another lowering pass (e.g.
+       *    \c gl_Position is transformed by \c nir_lower_viewport_transform).
+       */
+      const unsigned dmul =
+         matched_candidate->type->without_array()->is_64bit() ? 2 : 1;
+      const bool lowered =
+         (disable_xfb_packing &&
+          !tfeedback_decls[i].is_aligned(dmul, matched_candidate->offset)) ||
+         (matched_candidate->toplevel_var->data.explicit_location &&
+          matched_candidate->toplevel_var->data.location < VARYING_SLOT_VAR0 &&
+          (ctx->Const.ShaderCompilerOptions[producer->Stage].LowerBuiltinVariablesXfb &
+              BITFIELD_BIT(matched_candidate->toplevel_var->data.location)));
+
+      if (lowered) {
+         ir_variable *new_var;
+         tfeedback_candidate *new_candidate = NULL;
+
+         new_var = lower_xfb_varying(mem_ctx, producer, tfeedback_decls[i].name());
+         if (new_var == NULL) {
+            ralloc_free(hash_table_ctx);
+            return false;
+         }
+
+         /* Create new candidate and replace matched_candidate */
+         new_candidate = rzalloc(mem_ctx, tfeedback_candidate);
+         new_candidate->toplevel_var = new_var;
+         new_candidate->toplevel_var->data.is_unmatched_generic_inout = 1;
+         new_candidate->type = new_var->type;
+         new_candidate->offset = 0;
+         _mesa_hash_table_insert(tfeedback_candidates,
+                                 ralloc_strdup(mem_ctx, new_var->name),
+                                 new_candidate);
+
+         tfeedback_decls[i].set_lowered_candidate(new_candidate);
+         matched_candidate = new_candidate;
+      }
+
+      /* Mark as xfb varying */
+      matched_candidate->toplevel_var->data.is_xfb = 1;
+
       /* Mark xfb varyings as always active */
       matched_candidate->toplevel_var->data.always_active_io = 1;
 
@@ -2732,8 +2856,10 @@ assign_varying_locations(struct gl_context *ctx,
                                     consumer_inputs,
                                     consumer_interface_inputs,
                                     consumer_inputs_with_locations);
-      if (input_var)
+      if (input_var) {
+         input_var->data.is_xfb = 1;
          input_var->data.always_active_io = 1;
+      }
 
       if (matched_candidate->toplevel_var->data.is_unmatched_generic_inout) {
          matched_candidate->toplevel_var->data.is_xfb_only = 1;
@@ -2804,13 +2930,13 @@ assign_varying_locations(struct gl_context *ctx,
    if (producer) {
       lower_packed_varyings(mem_ctx, slots_used, components, ir_var_shader_out,
                             0, producer, disable_varying_packing,
-                            xfb_enabled);
+                            disable_xfb_packing, xfb_enabled);
    }
 
    if (consumer) {
       lower_packed_varyings(mem_ctx, slots_used, components, ir_var_shader_in,
-                            consumer_vertices, consumer,
-                            disable_varying_packing, xfb_enabled);
+                            consumer_vertices, consumer, disable_varying_packing,
+                            disable_xfb_packing, xfb_enabled);
    }
 
    return true;
