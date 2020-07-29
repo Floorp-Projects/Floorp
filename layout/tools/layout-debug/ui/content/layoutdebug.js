@@ -22,8 +22,6 @@ const { Preferences } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const HELPER_URL = "chrome://layoutdebug/content/layoutdebug-helper.js";
-
 const FEATURES = {
   paintFlashing: "nglayout.debug.paint_flashing",
   paintDumping: "nglayout.debug.paint_dumping",
@@ -76,7 +74,6 @@ class Debugger {
     }
     this._progressListener = new nsLDBBrowserContentListener();
     gBrowser.addProgressListener(this._progressListener);
-    gBrowser.messageManager.loadFrameScript(HELPER_URL, false);
     this._attached = true;
   }
 
@@ -128,8 +125,21 @@ class Debugger {
     this._sendMessage("setPagedMode", v);
   }
 
-  _sendMessage(name, arg) {
-    gBrowser.messageManager.sendAsyncMessage("LayoutDebug:Call", { name, arg });
+  async _sendMessage(name, arg) {
+    await this._sendMessageTo(gBrowser.browsingContext, name, arg);
+  }
+
+  async _sendMessageTo(context, name, arg) {
+    let global = context.currentWindowGlobal;
+    if (global) {
+      await global
+        .getActor("LayoutDebug")
+        .sendQuery("LayoutDebug:Call", { name, arg });
+    }
+
+    for (let c of context.children) {
+      await this._sendMessageTo(c, name, arg);
+    }
   }
 }
 
@@ -317,6 +327,17 @@ const TabCrashedObserver = {
 function OnLDBLoad() {
   gBrowser = document.getElementById("browser");
   gURLBar = document.getElementById("urlbar");
+
+  try {
+    ChromeUtils.registerWindowActor("LayoutDebug", {
+      child: {
+        moduleURI: "resource://gre/actors/LayoutDebugChild.jsm",
+      },
+      allFrames: true,
+    });
+  } catch (ex) {
+    // Only register the actor once.
+  }
 
   gDebugger = new Debugger();
 

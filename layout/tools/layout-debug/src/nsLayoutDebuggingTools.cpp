@@ -158,17 +158,6 @@ static void DumpContentRecur(nsIDocShell* aDocShell, FILE* out) {
     } else {
       fputs("no document\n", out);
     }
-    // dump the frames of the sub documents
-    int32_t i, n;
-    aDocShell->GetInProcessChildCount(&n);
-    for (i = 0; i < n; ++i) {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      aDocShell->GetInProcessChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-      if (child) {
-        DumpContentRecur(childAsShell, out);
-      }
-    }
   }
 #endif
 }
@@ -198,18 +187,6 @@ static void DumpFramesRecur(
   } else {
     fputs("null pres shell\n", out);
   }
-
-  // dump the frames of the sub documents
-  int32_t i, n;
-  aDocShell->GetInProcessChildCount(&n);
-  for (i = 0; i < n; ++i) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    aDocShell->GetInProcessChildAt(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-    if (childAsShell) {
-      DumpFramesRecur(childAsShell, out, aFlags);
-    }
-  }
 }
 
 static void DumpTextRunsRecur(nsIDocShell* aDocShell, FILE* out) {
@@ -223,18 +200,6 @@ static void DumpTextRunsRecur(nsIDocShell* aDocShell, FILE* out) {
     }
   } else {
     fputs("null pres shell\n", out);
-  }
-
-  // dump the text runs of the sub documents
-  int32_t i, n;
-  aDocShell->GetInProcessChildCount(&n);
-  for (i = 0; i < n; ++i) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    aDocShell->GetInProcessChildAt(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-    if (childAsShell) {
-      DumpTextRunsRecur(childAsShell, out);
-    }
   }
 }
 
@@ -270,18 +235,6 @@ static void DumpViewsRecur(nsIDocShell* aDocShell, FILE* out) {
     }
   } else {
     fputs("null view manager\n", out);
-  }
-
-  // dump the views of the sub documents
-  int32_t i, n;
-  aDocShell->GetInProcessChildCount(&n);
-  for (i = 0; i < n; i++) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    aDocShell->GetInProcessChildAt(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-    if (childAsShell) {
-      DumpViewsRecur(childAsShell, out);
-    }
   }
 #endif  // DEBUG
 }
