@@ -110,8 +110,15 @@ class IOUtils final {
   static UniquePtr<PRFileDesc, PR_CloseDelete> CreateFileSync(
       const nsAString& aPath, int32_t aFlags, int32_t aMode = 0666);
 
-  static nsresult ReadSync(PRFileDesc* aFd, const uint32_t aBufSize,
-                           nsTArray<uint8_t>& aResult);
+  /**
+   * Attempts to read the entire file at |aPath| into a buffer.
+   *
+   * @param aPath     The location of the file as an absolute path string.
+   * @param aMaxBytes If |Some|, then only read up this this number of bytes,
+   *                  otherwise attempt to read the whole file.
+   */
+  static Result<nsTArray<uint8_t>, nsresult> ReadSync(
+      const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes);
 
   static nsresult WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
                             uint32_t& aResult);
@@ -146,7 +153,7 @@ class IOUtils final {
       const nsAString& aPath);
 
   using IOReadMozPromise =
-      mozilla::MozPromise<nsTArray<uint8_t>, const nsCString,
+      mozilla::MozPromise<nsTArray<uint8_t>, const nsresult,
                           /* IsExclusive */ true>;
 
   using IOWriteMozPromise =

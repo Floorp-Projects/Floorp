@@ -174,70 +174,28 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   // Process arguments.
-  uint32_t toRead = 0;
+  Maybe<uint32_t> toRead = Nothing();
   if (aMaxBytes.WasPassed()) {
-    toRead = aMaxBytes.Value();
-    if (toRead == 0) {
+    if (aMaxBytes.Value() == 0) {
       // Resolve with an empty buffer.
       nsTArray<uint8_t> arr(0);
       TypedArrayCreator<Uint8Array> arrCreator(arr);
       promise->MaybeResolve(arrCreator);
       return promise.forget();
     }
+    toRead.emplace(aMaxBytes.Value());
   }
 
-  InvokeAsync(bg, __func__,
-              [path = nsAutoString(aPath), toRead]() {
-                MOZ_ASSERT(!NS_IsMainThread());
-
-                UniquePtr<PRFileDesc, PR_CloseDelete> fd =
-                    OpenExistingSync(path, PR_RDONLY);
-                if (!fd) {
-                  return IOReadMozPromise::CreateAndReject(
-                      nsPrintfCString("Could not open file at %s",
-                                      NS_ConvertUTF16toUTF8(path).get()),
-                      __func__);
-                }
-                uint32_t bufSize;
-                if (toRead == 0) {  // maxBytes was unspecified.
-                  // Limitation: We cannot read files that are larger than the
-                  //    max size of a TypedArray (UINT32_MAX bytes).
-                  //    Reject if the file is too big to be read.
-                  PRFileInfo64 info;
-                  if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
-                    return IOReadMozPromise::CreateAndReject(
-                        nsPrintfCString("Could not get info for file at %s",
-                                        NS_ConvertUTF16toUTF8(path).get()),
-                        __func__);
-                  }
-                  uint32_t fileSize = info.size;
-                  if (fileSize > UINT32_MAX) {
-                    return IOReadMozPromise::CreateAndReject(
-                        nsPrintfCString("File at %s is too large to read",
-                                        NS_ConvertUTF16toUTF8(path).get()),
-                        __func__);
-                  }
-                  bufSize = fileSize;
-                } else {
-                  bufSize = toRead;
-                }
-                nsTArray<uint8_t> fileContents;
-                nsresult rv =
-                    IOUtils::ReadSync(fd.get(), bufSize, fileContents);
-
-                if (NS_SUCCEEDED(rv)) {
-                  return IOReadMozPromise::CreateAndResolve(
-                      std::move(fileContents), __func__);
-                }
-                if (rv == NS_ERROR_OUT_OF_MEMORY) {
-                  return IOReadMozPromise::CreateAndReject("Out of memory"_ns,
-                                                           __func__);
-                }
-                return IOReadMozPromise::CreateAndReject(
-                    nsPrintfCString("Unexpected error reading file at %s",
-                                    NS_ConvertUTF16toUTF8(path).get()),
-                    __func__);
-              })
+  InvokeAsync(
+      bg, __func__,
+      [path = nsAutoString(aPath), toRead]() {
+        MOZ_ASSERT(!NS_IsMainThread());
+        auto rv = IOUtils::ReadSync(path, toRead);
+        if (rv.isErr()) {
+          return IOReadMozPromise::CreateAndReject(rv.unwrapErr(), __func__);
+        }
+        return IOReadMozPromise::CreateAndResolve(rv.unwrap(), __func__);
+      })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const nsTArray<uint8_t>& aBuf) {
@@ -250,8 +208,26 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
             const TypedArrayCreator<Uint8Array> arrayCreator(aBuf);
             promise->MaybeResolve(arrayCreator);
           },
-          [promise = RefPtr(promise)](const nsACString& aMsg) {
-            promise->MaybeRejectWithOperationError(aMsg);
+          [promise = RefPtr(promise),
+           path = NS_ConvertUTF16toUTF8(aPath)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    nsPrintfCString("Could not open file at %s", path.get()));
+                break;
+              case NS_ERROR_FILE_ACCESS_DENIED:
+                promise->MaybeRejectWithNotReadableError(nsPrintfCString(
+                    "Could not get info for file at %s", path.get()));
+                break;
+              case NS_ERROR_FILE_TOO_BIG:
+                promise->MaybeRejectWithNotReadableError(nsPrintfCString(
+                    "File at %s is too large to be read", path.get()));
+                break;
+              default:
+                promise->MaybeRejectWithUnknownError(FormatErrorMessage(
+                    aError, "Unexpected error reading file at %s", path.get()));
+            }
           });
 
   return promise.forget();
@@ -736,38 +712,59 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
 }
 
 /* static */
-nsresult IOUtils::ReadSync(PRFileDesc* aFd, const uint32_t aBufSize,
-                           nsTArray<uint8_t>& aResult) {
+Result<nsTArray<uint8_t>, nsresult> IOUtils::ReadSync(
+    const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes) {
   MOZ_ASSERT(!NS_IsMainThread());
 
+  UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(aPath, PR_RDONLY);
+  if (!fd) {
+    return Err(NS_ERROR_FILE_NOT_FOUND);
+  }
+  uint32_t bufSize;
+  if (aMaxBytes.isNothing()) {
+    // Limitation: We cannot read files that are larger than the max size of a
+    //             TypedArray (UINT32_MAX bytes). Reject if the file is too big
+    //             to be read.
+    PRFileInfo64 info;
+    if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
+      return Err(NS_ERROR_FILE_ACCESS_DENIED);
+    }
+    if (static_cast<uint64_t>(info.size) > UINT32_MAX) {
+      return Err(NS_ERROR_FILE_TOO_BIG);
+    }
+    bufSize = static_cast<uint32_t>(info.size);
+  } else {
+    bufSize = aMaxBytes.value();
+  }
+
   nsTArray<uint8_t> buffer;
-  if (!buffer.SetCapacity(aBufSize, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!buffer.SetCapacity(bufSize, fallible)) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   // If possible, advise the operating system that we will be reading the file
-  // pointed to by |aFD| sequentially, in full. This advice is not binding, it
+  // pointed to by |fd| sequentially, in full. This advice is not binding, it
   // informs the OS about our expectations as an application.
 #if defined(HAVE_POSIX_FADVISE)
-  posix_fadvise(PR_FileDesc2NativeHandle(aFd), 0, 0, POSIX_FADV_SEQUENTIAL);
+  posix_fadvise(PR_FileDesc2NativeHandle(fd.get()), 0, 0,
+                POSIX_FADV_SEQUENTIAL);
 #endif
 
   uint32_t totalRead = 0;
-  while (totalRead != aBufSize) {
+  while (totalRead != bufSize) {
     int32_t nRead =
-        PR_Read(aFd, buffer.Elements() + totalRead, aBufSize - totalRead);
+        PR_Read(fd.get(), buffer.Elements() + totalRead, bufSize - totalRead);
     if (nRead == 0) {
       break;
     }
     if (nRead < 0) {
-      return NS_ERROR_UNEXPECTED;
+      return Err(NS_ERROR_UNEXPECTED);
     }
     totalRead += nRead;
     DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
     MOZ_ASSERT(success);
   }
-  aResult = std::move(buffer);
-  return NS_OK;
+  return std::move(buffer);
 }
 
 /* static */
