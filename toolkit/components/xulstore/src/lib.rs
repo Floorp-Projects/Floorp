@@ -8,6 +8,7 @@ extern crate cstr;
 #[macro_use]
 extern crate failure;
 extern crate libc;
+extern crate lmdb;
 #[macro_use]
 extern crate log;
 extern crate moz_task;
