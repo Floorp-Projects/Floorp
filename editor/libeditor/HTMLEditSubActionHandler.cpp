@@ -2535,8 +2535,13 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
   MOZ_ASSERT(aDirectionAndAmount != nsIEditor::eNone);
 
   EditorDOMPoint startPoint(EditorBase::GetStartPoint(*SelectionRefPtr()));
-  if (NS_WARN_IF(!startPoint.IsSet())) {
+  if (NS_WARN_IF(!startPoint.IsInContentNode())) {
     return EditActionResult(NS_ERROR_FAILURE);
+  }
+
+  if (!EditorUtils::IsEditableContent(*startPoint.ContainerAsContent(),
+                                      EditorType::HTML)) {
+    return EditActionCanceled();
   }
 
   // What's in the direction we are deleting?
