@@ -119,13 +119,13 @@ protected:
 
   inline T_PointerType impl_malloc_in_sandbox(size_t size)
   {
-    void* p = std::malloc(size);
+    void* p = malloc(size);
     return reinterpret_cast<uintptr_t>(p);
   }
 
   inline void impl_free_in_sandbox(T_PointerType p)
   {
-    std::free(reinterpret_cast<void*>(p));
+    free(reinterpret_cast<void*>(p));
   }
 
   static inline bool impl_is_in_same_sandbox(const void*, const void*)

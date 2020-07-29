@@ -9,6 +9,13 @@ class tainted_opaque
 {
 private:
   T data{ 0 };
+
+public:
+  template<typename T2 = T>
+  void set_zero()
+  {
+    data = 0;
+  }
 };
 
 template<typename T, typename T_Sbx>
