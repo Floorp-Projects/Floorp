@@ -426,6 +426,12 @@ class HTMLMediaElement::MediaControlKeyListener final
     if (!Owner()->Paused()) {
       NotifyMediaStartedPlaying();
     }
+    if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+      auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
+          Owner(), u"MozStartMediaControl"_ns, CanBubble::eYes,
+          ChromeOnlyDispatch::eYes);
+      dispatcher->PostDOMEvent();
+    }
   }
 
   /**
