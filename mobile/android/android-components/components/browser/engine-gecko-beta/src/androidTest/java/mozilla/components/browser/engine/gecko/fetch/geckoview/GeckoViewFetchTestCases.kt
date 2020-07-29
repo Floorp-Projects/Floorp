@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.lib.fetch.geckoview
+package mozilla.components.browser.engine.gecko.fetch.geckoview
 
 import androidx.test.annotation.UiThreadTest
 import androidx.test.core.app.ApplicationProvider
@@ -10,7 +10,6 @@ import androidx.test.filters.MediumTest
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.concept.fetch.Client
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 
 @MediumTest
@@ -110,7 +109,6 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
 
     @Test
     @UiThreadTest
-    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1626335")
     override fun get200WithCookiePolicy() {
         super.get200WithCookiePolicy()
     }
