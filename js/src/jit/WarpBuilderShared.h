@@ -29,10 +29,6 @@ class WarpBuilderShared {
   WarpBuilderShared(WarpSnapshot& snapshot, MIRGenerator& mirGen,
                     MBasicBlock* current_);
 
-  WarpSnapshot& snapshot() const { return snapshot_; }
-  MIRGenerator& mirGen() { return mirGen_; }
-  TempAllocator& alloc() { return alloc_; }
-
   MOZ_MUST_USE bool resumeAfter(MInstruction* ins, BytecodeLocation loc);
 
   MConstant* constant(const Value& v);
@@ -40,6 +36,12 @@ class WarpBuilderShared {
 
   MCall* makeCall(CallInfo& callInfo, bool needsThisCheck,
                   WrappedFunction* target = nullptr);
+
+ public:
+  MBasicBlock* currentBlock() const { return current; }
+  WarpSnapshot& snapshot() const { return snapshot_; }
+  MIRGenerator& mirGen() { return mirGen_; }
+  TempAllocator& alloc() { return alloc_; }
 };
 
 }  // namespace jit

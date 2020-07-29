@@ -16,6 +16,7 @@
 #include "jit/MIRBuilderShared.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
+#include "jit/WarpBuilder.h"
 #include "jit/WarpBuilderShared.h"
 #include "jit/WarpSnapshot.h"
 
@@ -24,6 +25,7 @@ using namespace js::jit;
 
 // The CacheIR transpiler generates MIR from Baseline CacheIR.
 class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
+  WarpBuilder* builder_;
   BytecodeLocation loc_;
   const CacheIRStubInfo* stubInfo_;
   const uint8_t* stubData_;
@@ -148,10 +150,11 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   CACHE_IR_TRANSPILER_GENERATED
 
  public:
-  WarpCacheIRTranspiler(WarpSnapshot& snapshot, MIRGenerator& mirGen,
-                        BytecodeLocation loc, MBasicBlock* current,
+  WarpCacheIRTranspiler(WarpBuilder* builder, BytecodeLocation loc,
                         CallInfo* callInfo, const WarpCacheIR* cacheIRSnapshot)
-      : WarpBuilderShared(snapshot, mirGen, current),
+      : WarpBuilderShared(builder->snapshot(), builder->mirGen(),
+                          builder->currentBlock()),
+        builder_(builder),
         loc_(loc),
         stubInfo_(cacheIRSnapshot->stubInfo()),
         stubData_(cacheIRSnapshot->stubData()),
@@ -1888,6 +1891,19 @@ bool WarpCacheIRTranspiler::emitTypedArrayElementShiftResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitFrameIsConstructingResult() {
+  if (const CallInfo* callInfo = builder_->inlineCallInfo()) {
+    auto* ins = constant(BooleanValue(callInfo->constructing()));
+    pushResult(ins);
+    return true;
+  }
+
+  auto* ins = MIsConstructing::New(alloc());
+  add(ins);
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
@@ -2153,14 +2169,13 @@ static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
   input->setImplicitlyUsed();
 }
 
-bool jit::TranspileCacheIRToMIR(WarpSnapshot& snapshot, MIRGenerator& mirGen,
-                                BytecodeLocation loc, MBasicBlock* current,
+bool jit::TranspileCacheIRToMIR(WarpBuilder* builder, BytecodeLocation loc,
                                 const WarpCacheIR* cacheIRSnapshot,
                                 const MDefinitionStackVector& inputs) {
-  uint32_t numInstructionIdsBefore = mirGen.graph().getNumInstructionIds();
+  uint32_t numInstructionIdsBefore =
+      builder->mirGen().graph().getNumInstructionIds();
 
-  WarpCacheIRTranspiler transpiler(snapshot, mirGen, loc, current, nullptr,
-                                   cacheIRSnapshot);
+  WarpCacheIRTranspiler transpiler(builder, loc, nullptr, cacheIRSnapshot);
   if (!transpiler.transpile(inputs)) {
     return false;
   }
@@ -2172,23 +2187,22 @@ bool jit::TranspileCacheIRToMIR(WarpSnapshot& snapshot, MIRGenerator& mirGen,
   return true;
 }
 
-bool jit::TranspileCacheIRToMIR(WarpSnapshot& snapshot, MIRGenerator& mirGen,
-                                BytecodeLocation loc, MBasicBlock* current,
+bool jit::TranspileCacheIRToMIR(WarpBuilder* builder, BytecodeLocation loc,
                                 const WarpCacheIR* cacheIRSnapshot,
                                 CallInfo& callInfo) {
-  uint32_t numInstructionIdsBefore = mirGen.graph().getNumInstructionIds();
+  uint32_t numInstructionIdsBefore =
+      builder->mirGen().graph().getNumInstructionIds();
 
   // Synthesize the constant number of arguments for this call op.
-  auto* argc = MConstant::New(mirGen.alloc(), Int32Value(callInfo.argc()));
-  current->add(argc);
+  auto* argc = MConstant::New(builder->alloc(), Int32Value(callInfo.argc()));
+  builder->currentBlock()->add(argc);
 
   MDefinitionStackVector inputs;
   if (!inputs.append(argc)) {
     return false;
   }
 
-  WarpCacheIRTranspiler transpiler(snapshot, mirGen, loc, current, &callInfo,
-                                   cacheIRSnapshot);
+  WarpCacheIRTranspiler transpiler(builder, loc, &callInfo, cacheIRSnapshot);
   if (!transpiler.transpile(inputs)) {
     return false;
   }
