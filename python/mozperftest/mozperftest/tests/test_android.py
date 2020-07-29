@@ -88,6 +88,39 @@ def test_android_perf_tuning_nonrooted(device):
         mockfunc.assert_not_called()
 
 
+class Device:
+    def __init__(self, name, rooted=True):
+        self.device_name = name
+        self.is_rooted = rooted
+        self.call_counts = 0
+
+    @property
+    def _logger(self):
+        return self
+
+    def noop(self, *args, **kw):
+        pass
+
+    debug = error = info = clear_logcat = noop
+
+    def shell_bool(self, *args, **kw):
+        self.call_counts += 1
+        return True
+
+    def shell_output(self, *args, **kw):
+        self.call_counts += 1
+        return self.device_name
+
+
+def test_android_perf_tuning_all_calls():
+    # Check without mocking PerformanceTuner functions
+    for name in ("Moto G (5)", "Pixel 2", "?"):
+        device = Device(name)
+        tuner = PerformanceTuner(device)
+        tuner.tune_performance()
+        assert device.call_counts > 1
+
+
 @mock.patch("mozperftest.system.android_perf_tuner.PerformanceTuner")
 @mock.patch("mozperftest.system.android.ADBLoggedDevice")
 def test_android_with_perftuning(device, tuner):
