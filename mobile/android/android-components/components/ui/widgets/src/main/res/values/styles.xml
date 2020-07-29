@@ -4,6 +4,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="Mozac.Widgets.TestTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="mozac_widget_favicon_background_color">@color/photonWhite</item>
+        <item name="mozac_widget_favicon_border_color">@color/photonLightGrey30</item>
+        <item name="mozac_primary_text_color">@color/photonInk90</item>
+        <item name="mozac_caption_text_color">@color/photonInk50</item>
+    </style>
 
     <!-- Button styling -->
     <style name="Mozac.Widgets.NeutralButton" parent="Widget.MaterialComponents.Button.TextButton">

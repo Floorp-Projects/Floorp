@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package mozilla.components.ui.widgets
 
 import android.content.Context
@@ -9,12 +13,15 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 
 /**
  * Shared UI widget for showing a website in a list of websites,
- * such as in bookmarks or history.
+ * such as in bookmarks, history, site exceptions, or collections.
  */
 class WidgetSiteItemView @JvmOverloads constructor(
     context: Context,
@@ -38,6 +45,7 @@ class WidgetSiteItemView @JvmOverloads constructor(
 
     /**
      * Sets the text displayed inside of the site item view.
+     *
      * @param label Main label text, such as a site title.
      * @param caption Sub caption text, such as a URL. If null, the caption is hidden.
      */
@@ -56,10 +64,13 @@ class WidgetSiteItemView @JvmOverloads constructor(
 
     /**
      * Add a secondary button, such as an overflow menu.
+     *
      * @param icon Drawable to display in the button.
+     * @param contentDescription Accessible description of the button's purpose.
+     * @param onClickListener Listener called when the button is clicked.
      */
     fun setSecondaryButton(
-        icon: Drawable,
+        icon: Drawable?,
         contentDescription: CharSequence,
         onClickListener: (View) -> Unit
     ) {
@@ -68,6 +79,23 @@ class WidgetSiteItemView @JvmOverloads constructor(
         secondaryButton.contentDescription = contentDescription
         secondaryButton.setOnClickListener(onClickListener)
     }
+
+    /**
+     * Add a secondary button, such as an overflow menu.
+     *
+     * @param icon Drawable to display in the button.
+     * @param contentDescription Accessible description of the button's purpose.
+     * @param onClickListener Listener called when the button is clicked.
+     */
+    fun setSecondaryButton(
+        @DrawableRes icon: Int,
+        @StringRes contentDescription: Int,
+        onClickListener: (View) -> Unit
+    ) = setSecondaryButton(
+        icon = getDrawable(context, icon),
+        contentDescription = context.getString(contentDescription),
+        onClickListener = onClickListener
+    )
 
     /**
      * Removes the secondary button if it was previously set in [setSecondaryButton].

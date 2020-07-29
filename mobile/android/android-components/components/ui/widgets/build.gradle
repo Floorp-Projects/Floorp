@@ -33,6 +33,12 @@ dependencies {
     implementation Dependencies.androidx_constraintlayout
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.google_material
+
+    testImplementation project(":support-test")
+
+    testImplementation Dependencies.androidx_test_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'
