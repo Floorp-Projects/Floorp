@@ -1015,6 +1015,12 @@ void DXGITextureHostD3D11::PushResourceUpdates(
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
   }
+  // XXX Software WebRender is not handled yet.
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by DXGITextureHostD3D11.";
+    return;
+  }
 
   MOZ_ASSERT(mHandle);
   auto method = aOp == TextureHost::ADD_IMAGE
@@ -1064,6 +1070,17 @@ void DXGITextureHostD3D11::PushDisplayItems(
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
     const Range<wr::ImageKey>& aImageKeys,
     const bool aPreferCompositorSurface) {
+  if (!gfx::gfxVars::UseWebRenderANGLE()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
+    return;
+  }
+  // XXX Software WebRender is not handled yet.
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by DXGITextureHostD3D11.";
+    return;
+  }
+
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -1265,6 +1282,12 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
     MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
     return;
   }
+  // XXX Software WebRender is not handled yet.
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by DXGIYCbCrTextureHostD3D11.";
+    return;
+  }
 
   MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
   MOZ_ASSERT(aImageKeys.length() == 3);
@@ -1294,6 +1317,17 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
     const Range<wr::ImageKey>& aImageKeys,
     const bool aPreferCompositorSurface) {
+  if (!gfx::gfxVars::UseWebRenderANGLE()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
+    return;
+  }
+  // XXX Software WebRender is not handled yet.
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    gfxCriticalNoteOnce
+        << "Software WebRender is not suppored by DXGIYCbCrTextureHostD3D11.";
+    return;
+  }
+
   MOZ_ASSERT(aImageKeys.length() == 3);
 
   aBuilder.PushYCbCrPlanarImage(
