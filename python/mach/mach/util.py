@@ -10,13 +10,6 @@ import sys
 from six import text_type
 
 
-class UserError(Exception):
-    """Represents an error caused by something the user did wrong rather than
-    an internal `mach` failure. Exceptions that are subclasses of this class
-    will not be reported as failures to Sentry.
-    """
-
-
 def setenv(key, value):
     """Compatibility shim to ensure the proper string type is used with
     os.environ for the version of Python being used.
