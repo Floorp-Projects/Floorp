@@ -178,6 +178,11 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
       (xpc-service-name "com.apple.coremedia.videodecoder")
       (xpc-service-name "com.apple.coremedia.videoencoder")))
 
+  (if (>= macosVersion 1100)
+    (allow mach-lookup
+      ; bug 1655655
+      (global-name "com.apple.trustd.agent")))
+
   (allow iokit-open
      (iokit-user-client-class "IOHIDParamUserClient"))
 
