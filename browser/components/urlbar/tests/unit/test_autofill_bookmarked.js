@@ -146,15 +146,3 @@ add_task(async function test_www() {
     ],
   });
 });
-
-async function checkOriginsOrder(host, prefixOrder) {
-  await PlacesUtils.withConnectionWrapper("removeOrphans", async db => {
-    let prefixes = (
-      await db.execute(
-        `SELECT prefix FROM moz_origins WHERE host = :host ORDER BY ROWID`,
-        { host }
-      )
-    ).map(r => r.getResultByIndex(0));
-    Assert.deepEqual(prefixes, prefixOrder);
-  });
-}
