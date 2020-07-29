@@ -34,7 +34,7 @@
       const doesNotExist = OS.Path.join(tmpDir, "does_not_exist.tmp");
       await Assert.rejects(
         window.IOUtils.read(doesNotExist),
-        /Could not open file/,
+        /Could not open the file at .*/,
         "IOUtils::read rejects when file does not exist"
       );
     });
@@ -56,7 +56,7 @@
       );
       await Assert.rejects(
         window.IOUtils.makeDirectory(newDirectoryName, { ignoreExisting: false }),
-        /Could not create directory because file already exists/,
+        /Could not create directory because it already exists at .*/,
         "IOUtils::makeDirectory can throw if the target dir exists"
       )
 
@@ -68,7 +68,7 @@
       );
       await Assert.rejects(
         window.IOUtils.makeDirectory(nestedDirName, { createAncestors: false }),
-        /Target path has missing ancestors/,
+        /Could not create directory at .* because the path has missing ancestor components/,
         "IOUtils::makeDirectory can fail if the target is missing parents"
       );
       ok(!await OS.File.exists(nestedDirName), `Expected ${nestedDirName} not to exist`);
@@ -88,14 +88,14 @@
 
       await Assert.rejects(
         window.IOUtils.makeDirectory(notADirFileName, { ignoreExisting: false }),
-        /Target exists and is not a directory/,
+        /Could not create directory because the target file\(.*\) exists and is not a directory/,
         "IOUtils::makeDirectory [ignoreExisting: false] throws when the target is an existing file"
       );
       ok(await fileExists(notADirFileName), `Expected ${notADirFileName} to exist`);
 
       await Assert.rejects(
         window.IOUtils.makeDirectory(notADirFileName, { ignoreExisting: true }),
-        /Target exists and is not a directory/,
+        /Could not create directory because the target file\(.*\) exists and is not a directory/,
         "IOUtils::makeDirectory [ignoreExisting: true] throws when the target is an existing file"
       );
       ok(await fileExists(notADirFileName), `Expected ${notADirFileName} to exist`);
@@ -130,7 +130,7 @@
 
       await Assert.rejects(
         window.IOUtils.remove(tmpFileName, { ignoreAbsent: false }),
-        /Target file does not exist/,
+        /Could not remove the file at .* because it does not exist/,
         "IOUtils::remove can throw an error when target file is missing"
       );
       ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
@@ -156,7 +156,7 @@
 
       await Assert.rejects(
         window.IOUtils.remove(tmpParentDir, { recursive: false }),
-        /Could not remove non-empty directory.*/,
+        /Could not remove the non-empty directory at .*/,
         "IOUtils::remove fails if non-recursively removing directory with contents"
       );
 
@@ -444,7 +444,7 @@
       // Test.
       await Assert.rejects(
         window.IOUtils.move(tmpFileName, destFileName, { noOverwrite: true }),
-        /Destination file exists and overwrites are not allowed/,
+        /Could not move source file\(.*\) to destination\(.*\) because the destination already exists and overwrites are not allowed/,
         "IOUtils::move will refuse to move a file if overwrites are disabled"
       );
       ok(
@@ -549,7 +549,7 @@
       // Test.
       await Assert.rejects(
         window.IOUtils.move(notExistsSrc, notExistsDest),
-        /Source file does not exist/,
+        /Could not move source file\(.*\) because it does not exist/,
         "IOUtils::move throws if source file does not exist"
       );
       ok(
@@ -566,7 +566,7 @@
       // Test.
       await Assert.rejects(
         window.IOUtils.move(srcDir, destFile),
-        /Source is a directory but destination is not/,
+        /Could not move the source directory\(.*\) to the destination\(.*\) because the destination is not a directory/,
         "IOUtils::move throws if try to move dir into an existing file"
       );
 
@@ -627,7 +627,7 @@
 
       await Assert.rejects(
         window.IOUtils.stat(notExistsFile),
-        /Target file does not exist/,
+        /Could not stat file\(.*\) because it does not exist/,
         "IOUtils::stat throws if the target file does not exist"
       );
     });
