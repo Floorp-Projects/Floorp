@@ -1407,6 +1407,9 @@ class AsyncPanZoomController {
   float ComputePLPPI(ParentLayerPoint aPoint,
                      ParentLayerPoint aDirection) const;
 
+  Maybe<CSSPoint> GetCurrentAnimationDestination(
+      const RecursiveMutexAutoLock& aProofOfLock) const;
+
   /* ===================================================================
    * The functions and members in this section are used to make ancestor chains
    * out of APZC instances. These chains can only be walked or manipulated
