@@ -279,6 +279,15 @@ interface nsIPrincipal : nsISerializable
      */
     readonly attribute ACString asciiSpec;
 
+    /**
+      * Returns the Spec from the Principals URI.
+      * Might return the empty string, e.g. for the case of
+      * a SystemPrincipal or an EpxandedPrincipal.
+      *
+      * WARNING: Do not land new Code using, as this will be removed soon
+     */
+    readonly attribute ACString spec;
+
     /* Returns the Pre Path of the Principals URI with
     * user:pass stripped for privacy and spoof prevention
     */

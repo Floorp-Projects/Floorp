@@ -153,9 +153,7 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
       (!aBrowser.contentPrincipal ||
         aBrowser.contentPrincipal.isNullPrincipal)) ||
     (aBrowser.contentPrincipal &&
-      aBrowser.contentPrincipal.URI &&
-      aBrowser.contentPrincipal.URI.spec ==
-        "resource://pdf.js/web/viewer.html") ||
+      aBrowser.contentPrincipal.spec == "resource://pdf.js/web/viewer.html") ||
     (customizableZoomControls &&
       customizableZoomControls.getAttribute("cui-areatype") == "toolbar");
 

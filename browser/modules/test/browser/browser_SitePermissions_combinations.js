@@ -13,7 +13,7 @@ async function checkPermissionCombinations(combinations) {
     "https://example.com"
   );
 
-  await BrowserTestUtils.withNewTab(principal.URI.spec, function(browser) {
+  await BrowserTestUtils.withNewTab(principal.spec, function(browser) {
     let id = "geo";
     for (let { reverse, states, result } of combinations) {
       let loop = () => {

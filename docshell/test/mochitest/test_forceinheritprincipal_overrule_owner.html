@@ -12,9 +12,9 @@ var channel = SpecialPowers.wrap(window).docShell.currentDocumentChannel;
 var loadInfo = channel.loadInfo;
 
 // 1) perform some sanity checks
-var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
-var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
-var principalToInherit = channel.loadInfo.principalToInherit.URI.asciiSpec;
+var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.asciiSpec;
+var loadingPrincipal = channel.loadInfo.loadingPrincipal.asciiSpec;
+var principalToInherit = channel.loadInfo.principalToInherit.asciiSpec;
 
 ok(triggeringPrincipal.startsWith("http://mochi.test:8888/")
     || triggeringPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
@@ -30,8 +30,8 @@ ok(principalToInherit.startsWith("http://mochi.test:8888/")
 loadInfo.resetPrincipalToInheritToNullPrincipal();
 
 // 2) verify loadInfo contains the correct principals
-triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
-loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+triggeringPrincipal = channel.loadInfo.triggeringPrincipal.asciiSpec;
+loadingPrincipal = channel.loadInfo.loadingPrincipal.asciiSpec;
 principalToInherit = channel.loadInfo.principalToInherit;
 
 ok(triggeringPrincipal.startsWith("http://mochi.test:8888/")

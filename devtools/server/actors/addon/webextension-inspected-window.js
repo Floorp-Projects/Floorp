@@ -70,15 +70,15 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
 
   // System principals have a null nodePrincipal.URI and so we use
   // the url from window.location.href.
-  const reportedURI = isSystemPrincipalWindow(window)
+  const reportedURIorPrincipal = isSystemPrincipalWindow(window)
     ? Services.io.newURI(window.location.href)
-    : window.document.nodePrincipal.URI;
+    : window.document.nodePrincipal;
 
   const error = Cc["@mozilla.org/scripterror;1"].createInstance(
     Ci.nsIScriptError
   );
 
-  const msg = `The extension "${name}" is not allowed to access ${reportedURI.spec}`;
+  const msg = `The extension "${name}" is not allowed to access ${reportedURIorPrincipal.spec}`;
 
   const innerWindowId = window.windowUtils.currentInnerWindowID;
 

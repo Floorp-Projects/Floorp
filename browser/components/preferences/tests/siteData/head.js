@@ -278,7 +278,7 @@ function promiseServiceWorkerRegisteredFor(url) {
       );
       let sw = serviceWorkerManager.getRegistrationByPrincipal(
         principal,
-        principal.URI.spec
+        principal.spec
       );
       if (sw) {
         ok(true, `Found the service worker registered for ${url}`);

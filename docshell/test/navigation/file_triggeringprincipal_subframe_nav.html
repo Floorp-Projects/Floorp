@@ -9,8 +9,8 @@
     // query the uri of the loadingPrincipal and the TriggeringPrincipal and pass
     // that information on to the parent for verification.
     var channel = SpecialPowers.wrap(window).docShell.currentDocumentChannel;
-    var triggeringPrincipalURI = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
-    var loadingPrincipalURI = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+    var triggeringPrincipalURI = channel.loadInfo.triggeringPrincipal.asciiSpec;
+    var loadingPrincipalURI = channel.loadInfo.loadingPrincipal.asciiSpec;
     var referrerURI = document.referrer;
     window.parent.parent.postMessage({triggeringPrincipalURI,
                                     loadingPrincipalURI,
