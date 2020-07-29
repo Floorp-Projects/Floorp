@@ -1,0 +1,269 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by the Glean SDK. They are
+# automatically converted to platform-specific code at build time using the
+# `glean_parser` PyPI package.
+
+# This file is presently for Internal FOG Use Only.
+# You should not add metrics here until probably about January of 2021.
+# If you're looking for the metrics.yaml for Geckoveiw Streaming Telemetry,
+# you can find that one in toolkit/components/telemetry/geckoview/streaming.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+test:
+  boolean_metric:
+    type: boolean
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  labeled_boolean_metric:
+    type: labeled_boolean
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  labeled_boolean_metric_labels:
+    type: labeled_boolean
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    labels:
+      - one_label
+      - two_labels
+
+  counter_metric:
+    type: counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  labeled_counter_metric:
+    type: labeled_counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  labeled_counter_metric_labels:
+    type: labeled_counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    labels:
+      - one_label
+      - two_labels
+
+  string_metric:
+    type: string
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  labeled_string_metric:
+    type: labeled_string
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  labeled_string_metric_labels:
+    type: labeled_string
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    labels:
+      - one_label
+      - two_labels
+
+  string_list_metric:
+    type: string_list
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  timespan_metric:
+    type: timespan
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  timing_distribution_metric:
+    type: timing_distribution
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  memory_distribution_metric:
+    type: memory_distribution
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    memory_unit: kilobyte
+
+  uuid_metric:
+    type: uuid
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  datetime_metric:
+    type: datetime
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  event_metric:
+    type: event
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: ping
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+
+  event_metric_with_extra:
+    type: event
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: ping
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
+    extra_keys:
+      an_extra_key:
+        description: An extra key description
+      another_extra_key:
+        description: Another extra key description
