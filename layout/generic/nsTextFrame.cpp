@@ -10024,6 +10024,15 @@ void nsTextFrame::List(FILE* out, const char* aPrefix, ListFlags aFlags) const {
   }
   fprintf_stderr(out, "%s\n", str.get());
 }
+
+void nsTextFrame::ListTextRuns(FILE* out,
+                               nsTHashtable<nsVoidPtrHashKey>& aSeen) const {
+  if (!mTextRun || aSeen.Contains(mTextRun)) {
+    return;
+  }
+  aSeen.PutEntry(mTextRun);
+  mTextRun->Dump(out);
+}
 #endif
 
 void nsTextFrame::AdjustOffsetsForBidi(int32_t aStart, int32_t aEnd) {

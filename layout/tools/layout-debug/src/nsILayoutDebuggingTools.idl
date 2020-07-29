@@ -36,6 +36,7 @@ interface nsILayoutDebuggingTools : nsISupports
     void dumpContent();
     void dumpFrames();
     void dumpFramesInCSSPixels();
+    void dumpTextRuns();
     void dumpViews();
 
     void dumpStyleSheets();

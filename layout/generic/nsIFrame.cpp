@@ -7616,6 +7616,20 @@ void nsIFrame::List(FILE* out, const char* aPrefix, ListFlags aFlags) const {
   fprintf_stderr(out, "%s\n", str.get());
 }
 
+void nsIFrame::ListTextRuns(FILE* out) const {
+  nsTHashtable<nsVoidPtrHashKey> seen;
+  ListTextRuns(out, seen);
+}
+
+void nsIFrame::ListTextRuns(FILE* out,
+                            nsTHashtable<nsVoidPtrHashKey>& aSeen) const {
+  for (const auto& childList : ChildLists()) {
+    for (const nsIFrame* kid : childList.mList) {
+      kid->ListTextRuns(out, aSeen);
+    }
+  }
+}
+
 void nsIFrame::ListMatchedRules(FILE* out, const char* aPrefix) const {
   nsTArray<const RawServoStyleRule*> rawRuleList;
   Servo_ComputedValues_GetStyleRuleList(mComputedStyle, &rawRuleList);

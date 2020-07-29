@@ -247,6 +247,32 @@ static void DumpFramesRecur(
   }
 }
 
+static void DumpTextRunsRecur(nsIDocShell* aDocShell, FILE* out) {
+  fprintf(out, "Text runs:\n");
+
+  fprintf(out, "docshell=%p \n", aDocShell);
+  if (PresShell* presShell = GetPresShell(aDocShell)) {
+    nsIFrame* root = presShell->GetRootFrame();
+    if (root) {
+      root->ListTextRuns(out);
+    }
+  } else {
+    fputs("null pres shell\n", out);
+  }
+
+  // dump the text runs of the sub documents
+  int32_t i, n;
+  aDocShell->GetInProcessChildCount(&n);
+  for (i = 0; i < n; ++i) {
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    aDocShell->GetInProcessChildAt(i, getter_AddRefs(child));
+    nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+    if (childAsShell) {
+      DumpTextRunsRecur(childAsShell, out);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpFrames() {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
@@ -258,6 +284,13 @@ NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpFramesInCSSPixels() {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
   DumpFramesRecur(mDocShell, stdout, nsIFrame::ListFlag::DisplayInCSSPixels);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLayoutDebuggingTools::DumpTextRuns() {
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
+  DumpTextRunsRecur(mDocShell, stdout);
   return NS_OK;
 }
 
