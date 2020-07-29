@@ -153,6 +153,10 @@ def add_common_arguments(parser):
                         dest="headless",
                         help="Enable headless mode by default for tests which don't specify "
                              "whether to use headless mode")
+    parser.add_argument("--self-test",
+                        action="store_true", default=False,
+                        dest="self_test",
+                        help="Run self tests")
 
 
 def add_remote_arguments(parser):
