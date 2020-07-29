@@ -1233,10 +1233,8 @@ nsIFrame* nsSubDocumentFrame::ObtainIntrinsicSizeFrame() {
  * from the nearest display item reference frame (which we assume will be
  * inducing a ContainerLayer).
  */
-static mozilla::LayoutDeviceIntPoint GetContentRectLayerOffset(
-    nsIFrame* aContainerFrame, nsDisplayListBuilder* aBuilder) {
-  nscoord auPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
-
+static nsPoint GetContentRectLayerOffset(nsIFrame* aContainerFrame,
+                                         nsDisplayListBuilder* aBuilder) {
   // Offset to the content rect in case we have borders or padding
   // Note that aContainerFrame could be a reference frame itself, so
   // we need to be careful here to ensure that we call ToReferenceFrame
@@ -1245,8 +1243,7 @@ static mozilla::LayoutDeviceIntPoint GetContentRectLayerOffset(
       aBuilder->ToReferenceFrame(aContainerFrame) +
       aContainerFrame->GetContentRectRelativeToSelf().TopLeft();
 
-  return mozilla::LayoutDeviceIntPoint::FromAppUnitsToNearest(frameOffset,
-                                                              auPerDevPixel);
+  return frameOffset;
 }
 
 // Return true iff |aManager| is a "temporary layer manager".  They're
@@ -1357,7 +1354,12 @@ already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
   }
   RefLayer* refLayer = layer->AsRefLayer();
 
-  LayoutDeviceIntPoint offset = GetContentRectLayerOffset(Frame(), aBuilder);
+  nsPoint layerOffset = GetContentRectLayerOffset(Frame(), aBuilder);
+  nscoord auPerDevPixel = Frame()->PresContext()->AppUnitsPerDevPixel();
+  LayoutDeviceIntPoint offset =
+      mozilla::LayoutDeviceIntPoint::FromAppUnitsToNearest(layerOffset,
+                                                           auPerDevPixel);
+
   // We can only have an offset if we're a child of an inactive
   // container, but our display item is LAYER_ACTIVE_FORCE which
   // forces all layers above to be active.
@@ -1420,12 +1422,14 @@ bool nsDisplayRemote::CreateWebRenderCommands(
     userData->SetRemoteBrowser(remoteBrowser);
   }
 
-  mOffset = GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
+  nscoord auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsPoint layerOffset = GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
+  mOffset = LayoutDevicePoint::FromAppUnits(layerOffset, auPerDevPixel);
 
   nsRect contentRect = mFrame->GetContentRectRelativeToSelf();
   contentRect.MoveTo(0, 0);
-  LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(
-      contentRect, mFrame->PresContext()->AppUnitsPerDevPixel());
+  LayoutDeviceRect rect =
+      LayoutDeviceRect::FromAppUnits(contentRect, auPerDevPixel);
   rect += mOffset;
 
   aBuilder.PushIFrame(mozilla::wr::ToLayoutRect(rect), !BackfaceIsHidden(),
