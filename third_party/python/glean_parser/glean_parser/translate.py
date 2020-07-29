@@ -11,63 +11,89 @@ High-level interface for translating `metrics.yaml` into other formats.
 from pathlib import Path
 import os
 import shutil
-import sys
 import tempfile
+from typing import Any, Callable, Dict, Iterable, List
 
 from . import lint
 from . import parser
+from . import csharp
 from . import kotlin
 from . import markdown
+from . import metrics
 from . import swift
 from . import util
 
 
-# Each outputter in the table has the following keys:
-# - "output_func": the main function of the outputter, the one which
-#   does the actual translation.
-# - "clear_output_dir": a flag to clear the target directory before moving there
-#   the generated files.
+class Outputter:
+    """
+    Class to define an output format.
+
+    Each outputter in the table has the following member values:
+
+    - output_func: the main function of the outputter, the one which
+      does the actual translation.
+
+    - clear_patterns: A list of glob patterns to clear in the directory before
+      writing new results to it.
+    """
+
+    def __init__(
+        self,
+        output_func: Callable[[metrics.ObjectTree, Path, Dict[str, Any]], None],
+        clear_patterns: List[str] = [],
+    ):
+        self.output_func = output_func
+        self.clear_patterns = clear_patterns
+
+
 OUTPUTTERS = {
-    "kotlin": {
-        "output_func": kotlin.output_kotlin,
-        "clear_output_dir": True,
-        "extensions": ["*.kt"],
-    },
-    "markdown": {"output_func": markdown.output_markdown, "clear_output_dir": False},
-    "swift": {
-        "output_func": swift.output_swift,
-        "clear_output_dir": True,
-        "extensions": ["*.swift"],
-    },
+    "csharp": Outputter(csharp.output_csharp, ["*.cs"]),
+    "kotlin": Outputter(kotlin.output_kotlin, ["*.kt"]),
+    "markdown": Outputter(markdown.output_markdown),
+    "swift": Outputter(swift.output_swift, ["*.swift"]),
 }
 
 
-def translate(input_filepaths, output_format, output_dir, options={}, parser_config={}):
+def translate_metrics(
+    input_filepaths: Iterable[Path],
+    output_dir: Path,
+    translation_func: Callable[[metrics.ObjectTree, Path, Dict[str, Any]], None],
+    clear_patterns: List[str] = [],
+    options: Dict[str, Any] = {},
+    parser_config: Dict[str, Any] = {},
+):
     """
-    Translate the files in `input_filepaths` to the given `output_format` and
-    put the results in `output_dir`.
+    Translate the files in `input_filepaths` by running the metrics through a
+    translation function and writing the results in `output_dir`.
 
     :param input_filepaths: list of paths to input metrics.yaml files
-    :param output_format: the name of the output formats
     :param output_dir: the path to the output directory
+    :param translation_func: the function that actually performs the translation.
+        It is passed the following arguments:
+
+            - metrics_objects: The tree of metrics as pings as returned by
+              `parser.parse_objects`.
+            - output_dir: The path to the output directory.
+            - options: A dictionary of output format-specific options.
+
+        Examples of translation functions are in `kotlin.py` and `swift.py`.
+    :param clear_patterns: a list of glob patterns of files to clear before
+        generating the output files. By default, no files will be cleared (i.e.
+        the directory should be left alone).
     :param options: dictionary of options. The available options are backend
-        format specific.
+        format specific. These are passed unchanged to `translation_func`.
     :param parser_config: A dictionary of options that change parsing behavior.
         See `parser.parse_metrics` for more info.
     """
-    if output_format not in OUTPUTTERS:
-        raise ValueError("Unknown output format '{}'".format(output_format))
+    input_filepaths = util.ensure_list(input_filepaths)
+
+    if lint.glinter(input_filepaths, parser_config):
+        return 1
 
     all_objects = parser.parse_objects(input_filepaths, parser_config)
 
     if util.report_validation_errors(all_objects):
         return 1
-
-    if lint.lint_metrics(all_objects.value, parser_config):
-        print(
-            "NOTE: These warnings will become errors in a future release of Glean.",
-            file=sys.stderr,
-        )
 
     # allow_reserved is also relevant to the translators, so copy it there
     if parser_config.get("allow_reserved"):
@@ -77,19 +103,16 @@ def translate(input_filepaths, output_format, output_dir, options={}, parser_con
     # real directory, for transactional integrity.
     with tempfile.TemporaryDirectory() as tempdir:
         tempdir_path = Path(tempdir)
-        OUTPUTTERS[output_format]["output_func"](
-            all_objects.value, tempdir_path, options
-        )
+        translation_func(all_objects.value, tempdir_path, options)
 
-        if OUTPUTTERS[output_format]["clear_output_dir"]:
-            if output_dir.is_file():
-                output_dir.unlink()
-            elif output_dir.is_dir():
-                for extensions in OUTPUTTERS[output_format]["extensions"]:
-                    for filepath in output_dir.glob(extensions):
-                        filepath.unlink()
-                if len(list(output_dir.iterdir())):
-                    print("Extra contents found in '{}'.".format(output_dir))
+        if output_dir.is_file():
+            output_dir.unlink()
+        elif output_dir.is_dir() and len(clear_patterns):
+            for clear_pattern in clear_patterns:
+                for filepath in output_dir.glob(clear_pattern):
+                    filepath.unlink()
+            if len(list(output_dir.iterdir())):
+                print(f"Extra contents found in '{output_dir}'.")
 
         # We can't use shutil.copytree alone if the directory already exists.
         # However, if it doesn't exist, make sure to create one otherwise
@@ -99,3 +122,37 @@ def translate(input_filepaths, output_format, output_dir, options={}, parser_con
             shutil.copy(str(filename), str(output_dir))
 
     return 0
+
+
+def translate(
+    input_filepaths: Iterable[Path],
+    output_format: str,
+    output_dir: Path,
+    options: Dict[str, Any] = {},
+    parser_config: Dict[str, Any] = {},
+):
+    """
+    Translate the files in `input_filepaths` to the given `output_format` and
+    put the results in `output_dir`.
+
+    :param input_filepaths: list of paths to input metrics.yaml files
+    :param output_format: the name of the output format
+    :param output_dir: the path to the output directory
+    :param options: dictionary of options. The available options are backend
+        format specific.
+    :param parser_config: A dictionary of options that change parsing behavior.
+        See `parser.parse_metrics` for more info.
+    """
+    format_desc = OUTPUTTERS.get(output_format, None)
+
+    if format_desc is None:
+        raise ValueError(f"Unknown output format '{output_format}'")
+
+    return translate_metrics(
+        input_filepaths,
+        output_dir,
+        format_desc.output_func,
+        format_desc.clear_patterns,
+        options,
+        parser_config,
+    )

@@ -1,0 +1,87 @@
+[
+    {
+        "description": "Location-independent identifier",
+        "schema": {
+            "allOf": [{
+                "$ref": "#foo"
+            }],
+            "$defs": {
+                "A": {
+                    "$anchor": "foo",
+                    "type": "integer"
+                }
+            }
+        },
+        "tests": [
+            {
+                "data": 1,
+                "description": "match",
+                "valid": true
+            },
+            {
+                "data": "a",
+                "description": "mismatch",
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "Location-independent identifier with absolute URI",
+        "schema": {
+            "allOf": [{
+                "$ref": "http://localhost:1234/bar#foo"
+            }],
+            "$defs": {
+                "A": {
+                    "$id": "http://localhost:1234/bar",
+                    "$anchor": "foo",
+                    "type": "integer"
+                }
+            }
+        },
+        "tests": [
+            {
+                "data": 1,
+                "description": "match",
+                "valid": true
+            },
+            {
+                "data": "a",
+                "description": "mismatch",
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "Location-independent identifier with base URI change in subschema",
+        "schema": {
+            "$id": "http://localhost:1234/root",
+            "allOf": [{
+                "$ref": "http://localhost:1234/nested.json#foo"
+            }],
+            "$defs": {
+                "A": {
+                    "$id": "nested.json",
+                    "$defs": {
+                        "B": {
+                            "$anchor": "foo",
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "tests": [
+            {
+                "data": 1,
+                "description": "match",
+                "valid": true
+            },
+            {
+                "data": "a",
+                "description": "mismatch",
+                "valid": false
+            }
+        ]
+    }
+]
