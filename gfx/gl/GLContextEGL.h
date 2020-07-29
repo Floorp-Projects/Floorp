@@ -57,6 +57,8 @@ class GLContextEGL : public GLContext {
   void SetEGLSurfaceOverride(EGLSurface surf);
   EGLSurface GetEGLSurfaceOverride() { return mSurfaceOverride; }
 
+  virtual bool IsAliveImpl() const override;
+
   virtual bool MakeCurrentImpl() const override;
 
   virtual bool IsCurrentImpl() const override;

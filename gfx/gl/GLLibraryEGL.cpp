@@ -761,8 +761,13 @@ void GLLibraryEGL::Shutdown() {
     fTerminate(mEGLDisplay);
     mEGLDisplay = EGL_NO_DISPLAY;
   }
-  mSymbols = {};
   sEGLLibrary = nullptr;
+
+  mSymbols = {};
+}
+
+bool GLLibraryEGL::IsAlive() const {
+  return mSymbols.fGetCurrentContext != nullptr;
 }
 
 EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
