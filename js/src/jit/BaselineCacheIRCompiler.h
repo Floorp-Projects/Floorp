@@ -82,6 +82,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                                                      uint32_t getterOffset,
                                                      const CallVM& emitCallVM);
 
+  enum class StringCode { CodeUnit, CodePoint };
+  bool emitStringFromCodeResult(Int32OperandId codeId, StringCode stringCode);
+
  public:
   friend class AutoStubFrame;
 

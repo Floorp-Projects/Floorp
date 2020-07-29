@@ -933,6 +933,13 @@
   args:
     code: Int32Id
 
+- name: StringFromCodePointResult
+  shared: false
+  transpile: true
+  cost_estimate: 5
+  args:
+    code: Int32Id
+
 - name: MathAbsInt32Result
   shared: true
   transpile: true

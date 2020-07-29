@@ -1619,6 +1619,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachStringCharCodeAt(HandleFunction callee);
   AttachDecision tryAttachStringCharAt(HandleFunction callee);
   AttachDecision tryAttachStringFromCharCode(HandleFunction callee);
+  AttachDecision tryAttachStringFromCodePoint(HandleFunction callee);
   AttachDecision tryAttachMathRandom(HandleFunction callee);
   AttachDecision tryAttachMathAbs(HandleFunction callee);
   AttachDecision tryAttachMathClz32(HandleFunction callee);
