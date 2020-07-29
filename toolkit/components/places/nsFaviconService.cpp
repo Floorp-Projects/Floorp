@@ -398,8 +398,10 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI,
       PromiseFlatCString(aMimeType).get(),
       AcceptedMimeTypes::IMAGES_AND_DOCUMENTS));
 
-  if (aExpiration == 0) {
-    aExpiration = PR_Now() + MAX_FAVICON_EXPIRATION;
+  PRTime now = PR_Now();
+  if (aExpiration < now + MIN_FAVICON_EXPIRATION) {
+    // Invalid input, just use the default.
+    aExpiration = now + MAX_FAVICON_EXPIRATION;
   }
 
   UnassociatedIconHashKey* iconKey = mUnassociatedIcons.PutEntry(aFaviconURI);
@@ -476,8 +478,10 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(
     nsIPrincipal* aLoadingPrincipal) {
   NS_ENSURE_ARG(aFaviconURI);
   NS_ENSURE_TRUE(aDataURL.Length() > 0, NS_ERROR_INVALID_ARG);
-  if (aExpiration == 0) {
-    aExpiration = PR_Now() + MAX_FAVICON_EXPIRATION;
+  PRTime now = PR_Now();
+  if (aExpiration < now + MIN_FAVICON_EXPIRATION) {
+    // Invalid input, just use the default.
+    aExpiration = now + MAX_FAVICON_EXPIRATION;
   }
 
   nsCOMPtr<nsIURI> dataURI;

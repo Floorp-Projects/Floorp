@@ -251,6 +251,7 @@
       "CREATE TABLE moz_icons_to_pages ( "                                     \
       "page_id INTEGER NOT NULL, "                                             \
       "icon_id INTEGER NOT NULL, "                                             \
+      "expire_ms INTEGER NOT NULL DEFAULT 0, "                                 \
       "PRIMARY KEY (page_id, icon_id), "                                       \
       "FOREIGN KEY (page_id) REFERENCES moz_pages_w_icons ON DELETE CASCADE, " \
       "FOREIGN KEY (icon_id) REFERENCES moz_icons ON DELETE CASCADE "          \

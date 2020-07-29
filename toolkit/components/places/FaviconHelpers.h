@@ -34,12 +34,12 @@ class nsIPrincipal;
 #define PNG_MIME_TYPE "image/png"
 #define SVG_MIME_TYPE "image/svg+xml"
 
-/**
- * The maximum time we will keep a favicon around.  We always ask the cache, if
- * we can, but default to this value if we do not get a time back, or the time
- * is more in the future than this.
- * Currently set to one week from now.
- */
+// Always ensure a minimum expiration time, so icons are not already expired
+// on addition.
+#define MIN_FAVICON_EXPIRATION ((PRTime)1 * 24 * 60 * 60 * PR_USEC_PER_SEC)
+// The maximum time we will keep a favicon around.  We always ask the cache
+// first and default to this value if we can't get a time, or the time we get
+// is far in the future.
 #define MAX_FAVICON_EXPIRATION ((PRTime)7 * 24 * 60 * 60 * PR_USEC_PER_SEC)
 
 // Whether there are unsupported payloads to convert yet.

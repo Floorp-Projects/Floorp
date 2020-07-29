@@ -232,7 +232,7 @@ add_task(async function test_expire_icons() {
       desc: "Expired because it redirects",
       page: "http://source.old.org/",
       icon: "http://source.old.org/test_icon.png",
-      expire: new Date().setYear(2018) * 1000,
+      expired: true,
       redirect: "http://dest.old.org/",
       removed: true,
     },
@@ -240,7 +240,7 @@ add_task(async function test_expire_icons() {
       desc: "Not expired because recent",
       page: "http://source.new.org/",
       icon: "http://source.new.org/test_icon.png",
-      expire: 0,
+      expired: false,
       redirect: "http://dest.new.org/",
       removed: false,
     },
@@ -248,14 +248,14 @@ add_task(async function test_expire_icons() {
       desc: "Not expired because does not match, even if old",
       page: "http://stay.moz.org/",
       icon: "http://stay.moz.org/test_icon.png",
-      expire: new Date().setYear(2018) * 1000,
+      expired: true,
       removed: false,
     },
     {
       desc: "Not expired because does not have a root icon, even if old",
       page: "http://noroot.ref.org/#test",
       icon: "http://noroot.ref.org/test_icon.png",
-      expire: new Date().setYear(2018) * 1000,
+      expired: true,
       removed: false,
     },
     {
@@ -263,14 +263,14 @@ add_task(async function test_expire_icons() {
       page: "http://root.ref.org/#test",
       icon: "http://root.ref.org/test_icon.png",
       root: "http://root.ref.org/favicon.ico",
-      expire: new Date().setYear(2018) * 1000,
+      expired: true,
       removed: true,
     },
     {
       desc: "Not expired because recent",
       page: "http://new.ref.org/#test",
       icon: "http://new.ref.org/test_icon.png",
-      expire: 0,
+      expired: false,
       root: "http://new.ref.org/favicon.ico",
       removed: false,
     },
@@ -291,7 +291,7 @@ add_task(async function test_expire_icons() {
     PlacesUtils.favicons.replaceFaviconDataFromDataURL(
       Services.io.newURI(entry.icon),
       dataUrl,
-      entry.expire,
+      0,
       Services.scriptSecurityManager.getSystemPrincipal()
     );
     await PlacesTestUtils.addFavicons(new Map([[entry.page, entry.icon]]));
@@ -305,10 +305,25 @@ add_task(async function test_expire_icons() {
       PlacesUtils.favicons.replaceFaviconDataFromDataURL(
         Services.io.newURI(entry.root),
         dataUrl,
-        entry.expire,
+        0,
         Services.scriptSecurityManager.getSystemPrincipal()
       );
       await PlacesTestUtils.addFavicons(new Map([[entry.page, entry.root]]));
+    }
+    if (entry.expired) {
+      // Set an expired time on the icon.
+      await PlacesUtils.withConnectionWrapper("expireFavicon", async db => {
+        await db.execute(
+          `UPDATE moz_icons SET expire_ms = 1 WHERE icon_url = :url`,
+          { url: entry.icon }
+        );
+        if (entry.root) {
+          await db.execute(
+            `UPDATE moz_icons SET expire_ms = 1 WHERE icon_url = :url`,
+            { url: entry.root }
+          );
+        }
+      });
     }
   }
 
