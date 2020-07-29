@@ -99,12 +99,19 @@ void OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBu
   CFRelease(sysVersionPlist);
   CFRelease(versions);
 
-  // If 'major' isn't what we expect, assume the oldest version of OS X we
-  // currently support (OS X 10.6).
-  if (major != 10) {
+  if (major < 10) {
+    // If 'major' isn't what we expect, assume 10.6.
     aMajor = 10;
     aMinor = 6;
     aBugFix = 0;
+  } else if ((major == 10) && (minor >= 16)) {
+    // Account for SystemVersionCompat.plist being used which is
+    // automatically used for builds using older SDK versions and
+    // results in 11.0 being reported as 10.16. Assume the compat
+    // version will increase in step with the correct version.
+    aMajor = 11;
+    aMinor = minor - 16;
+    aBugFix = bugfix;
   } else {
     aMajor = major;
     aMinor = minor;
