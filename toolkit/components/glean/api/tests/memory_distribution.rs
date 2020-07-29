@@ -5,7 +5,7 @@
 mod common;
 use common::*;
 
-use glean::metrics::{CommonMetricData, Lifetime, MemoryDistributionMetric, MemoryUnit};
+use glean::private::{CommonMetricData, Lifetime, MemoryDistributionMetric, MemoryUnit};
 
 #[test]
 fn smoke_test_memory_distribution() {

@@ -6,7 +6,7 @@ mod common;
 use common::*;
 
 use glean::ipc;
-use glean::metrics::{CommonMetricData, CounterMetric, Lifetime};
+use glean::private::{CommonMetricData, CounterMetric, Lifetime};
 
 #[test]
 fn sets_counter_value_parent() {
