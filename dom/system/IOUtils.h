@@ -94,6 +94,8 @@ class IOUtils final {
    *
    * @param path  The location of the file as an absolute path string.
    * @param flags PRIO flags, excluding |PR_CREATE| and |PR_EXCL|.
+   *
+   * @return A pointer to the opened file descriptor, or |nullptr| on failure.
    */
   static UniquePtr<PRFileDesc, PR_CloseDelete> OpenExistingSync(
       const nsAString& aPath, int32_t aFlags);
@@ -106,6 +108,8 @@ class IOUtils final {
    *               |PR_EXCL|.
    * @param aMode  Optional file mode. Defaults to 0666 to allow the system
    *               umask to compute the best mode for the new file.
+   *
+   * @return A pointer to the opened file descriptor, or |nullptr| on failure.
    */
   static UniquePtr<PRFileDesc, PR_CloseDelete> CreateFileSync(
       const nsAString& aPath, int32_t aFlags, int32_t aMode = 0666);
@@ -116,6 +120,8 @@ class IOUtils final {
    * @param aPath     The location of the file as an absolute path string.
    * @param aMaxBytes If |Some|, then only read up this this number of bytes,
    *                  otherwise attempt to read the whole file.
+   *
+   * @return A byte array of the entire file contents, or an error.
    */
   static Result<nsTArray<uint8_t>, nsresult> ReadSync(
       const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes);
@@ -128,6 +134,9 @@ class IOUtils final {
    * @param aDestPath  The location of the file as an absolute path string.
    * @param aByteArray The data to write to the file.
    * @param aOptions   Options to modify the way the write is completed.
+   *
+   * @return The number of bytes written to the file, or an error if the write
+   *         failed or was incomplete.
    */
   static Result<uint32_t, nsresult> WriteAtomicSync(
       const nsAString& aDestPath, const nsTArray<uint8_t>& aByteArray,
@@ -139,18 +148,45 @@ class IOUtils final {
    * @param aFd    An open PRFileDesc for the destination file to be
    *               overwritten.
    * @param aBytes The data to write to the file.
+   *
+   * @return The number of bytes written to the file, or an error if the write
+   *         failed or was incomplete.
    */
   static Result<uint32_t, nsresult> WriteSync(PRFileDesc* aFd,
                                               const nsTArray<uint8_t>& aBytes);
 
-  static nsresult MoveSync(const nsAString& aSource, const nsAString& aDest,
-                           bool noOverwrite);
-
-  static nsresult RemoveSync(const nsAString& aPath, bool aIgnoreAbsent,
-                             bool aRecursive);
+  /**
+   * Attempts to move the file located at |aSource| to |aDest|.
+   *
+   * @param aSource     The location of the file to move as an absolute path
+   *                    string.
+   * @param aDest       The destination for the file as an absolute path string.
+   * @param noOverWrite If true, abort with an error if a file already exists at
+   *                    |aDest|. Otherwise, the file will be overwritten by the
+   *                    move.
+   *
+   * @return Ok if the file was moved successfully, or an error.
+   */
+  static Result<Ok, nsresult> MoveSync(const nsAString& aSource,
+                                       const nsAString& aDest,
+                                       bool noOverwrite);
 
   /**
-   * Creates a new directory at |aPath|.
+   * Attempts to remove the file located at |aPath|.
+   *
+   * @param aPath         The location of the file as an absolute path string.
+   * @param aIgnoreAbsent If true, suppress errors due to an absent target file.
+   * @param aRecursive    If true, attempt to recursively remove descendant
+   *                      files. This option is safe to use even if the target
+   *                      is not a directory.
+   *
+   * @return Ok if the file was removed successfully, or an error.
+   */
+  static Result<Ok, nsresult> RemoveSync(const nsAString& aPath,
+                                         bool aIgnoreAbsent, bool aRecursive);
+
+  /**
+   * Attempts to create a new directory at |aPath|.
    *
    * @param aPath             The location of the file as an absolute path
    *                          string.
@@ -163,12 +199,21 @@ class IOUtils final {
    * @param aMode             Optional file mode. Defaults to 0777 to allow the
    *                          system umask to compute the best mode for the new
    *                          directory.
+   *
+   * @return Ok if the directory was created successfully, or an error.
    */
-  static nsresult CreateDirectorySync(const nsAString& aPath,
-                                      bool aCreateAncestors,
-                                      bool aIgnoreExisting,
-                                      int32_t aMode = 0777);
+  static Result<Ok, nsresult> CreateDirectorySync(const nsAString& aPath,
+                                                  bool aCreateAncestors,
+                                                  bool aIgnoreExisting,
+                                                  int32_t aMode = 0777);
 
+  /**
+   * Attempts to stat a file at |aPath|.
+   *
+   * @param aPath The location of the file as an absolute path string.
+   *
+   * @return An |InternalFileInfo| struct if successful, or an error.
+   */
   static Result<IOUtils::InternalFileInfo, nsresult> StatSync(
       const nsAString& aPath);
 
@@ -183,7 +228,7 @@ class IOUtils final {
       mozilla::MozPromise<struct InternalFileInfo, const nsresult,
                           /* IsExclusive */ true>;
 
-  using IOMozPromise = mozilla::MozPromise<bool /* ignored */, const nsresult,
+  using IOMozPromise = mozilla::MozPromise<Ok /* ignored */, const nsresult,
                                            /* IsExclusive */ true>;
 };
 
