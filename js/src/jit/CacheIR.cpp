@@ -6799,6 +6799,43 @@ AttachDecision CallIRGenerator::tryAttachGetNextMapSetEntryForIterator(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachFinishBoundFunctionInit(
+    HandleFunction callee) {
+  // Self-hosted code calls this with (boundFunction, targetObj, argCount)
+  // arguments.
+  MOZ_ASSERT(argc_ == 3);
+  MOZ_ASSERT(args_[0].toObject().is<JSFunction>());
+  MOZ_ASSERT(args_[1].isObject());
+  MOZ_ASSERT(args_[2].isInt32());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId boundId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objBoundId = writer.guardToObject(boundId);
+
+  ValOperandId targetId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  ObjOperandId objTargetId = writer.guardToObject(targetId);
+
+  ValOperandId argCountId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  Int32OperandId int32ArgCountId = writer.guardToInt32(argCountId);
+
+  writer.finishBoundFunctionInitResult(objBoundId, objTargetId,
+                                       int32ArgCountId);
+
+  // This stub does not need to be monitored, it always returns |undefined|.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("FinishBoundFunctionInit");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
   if (calleeFunc->native() != fun_apply) {
@@ -6998,6 +7035,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachSubstringKernel(callee);
     case InlinableNative::IntrinsicIsConstructing:
       return tryAttachIsConstructing(callee);
+    case InlinableNative::IntrinsicFinishBoundFunctionInit:
+      return tryAttachFinishBoundFunctionInit(callee);
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:

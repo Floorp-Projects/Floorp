@@ -4005,6 +4005,30 @@ bool CacheIRCompiler::emitGetNextMapSetEntryForIteratorResult(
   return true;
 }
 
+bool CacheIRCompiler::emitFinishBoundFunctionInitResult(
+    ObjOperandId boundId, ObjOperandId targetId, Int32OperandId argCountId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register bound = allocator.useRegister(masm, boundId);
+  Register target = allocator.useRegister(masm, targetId);
+  Register argCount = allocator.useRegister(masm, argCountId);
+
+  callvm.prepare();
+
+  masm.Push(argCount);
+  masm.Push(target);
+  masm.Push(bound);
+
+  using Fn = bool (*)(JSContext * cx, HandleFunction bound, HandleObject target,
+                      int32_t argCount);
+  callvm.callNoResult<Fn, JSFunction::finishBoundFunctionInit>();
+
+  masm.moveValue(UndefinedValue(), callvm.outputValueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitMathAbsInt32Result(Int32OperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
@@ -7269,7 +7293,9 @@ void AutoCallVM::storeResult(JSValueType returnType) {
       }
     }
   }
+}
 
+void AutoCallVM::leaveBaselineStubFrame() {
   if (compiler_->mode_ == CacheIRCompiler::Mode::Baseline) {
     stubFrame_->leave(masm_);
   }

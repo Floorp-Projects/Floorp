@@ -940,6 +940,15 @@
   args:
     obj: ObjId
 
+- name: FinishBoundFunctionInitResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    bound: ObjId
+    target: ObjId
+    argCount: Int32Id
+
 - name: StringFromCharCodeResult
   shared: false
   transpile: true

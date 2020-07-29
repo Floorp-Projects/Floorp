@@ -1648,6 +1648,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachIsConstructing(HandleFunction callee);
   AttachDecision tryAttachGetNextMapSetEntryForIterator(HandleFunction callee,
                                                         bool isMap);
+  AttachDecision tryAttachFinishBoundFunctionInit(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
