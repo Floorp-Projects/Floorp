@@ -852,3 +852,24 @@ async function getOriginAutofillThreshold() {
     stddevMultiplier * Math.sqrt((squares - (sum * sum) / count) / count)
   );
 }
+
+/**
+ * Checks that origins appear in a given order in the database.
+ * @param {string} host The "fixed" host, without "www."
+ * @param {Array} prefixOrder The prefixes (scheme + www.) sorted appropriately.
+ */
+async function checkOriginsOrder(host, prefixOrder) {
+  await PlacesUtils.withConnectionWrapper("checkOriginsOrder", async db => {
+    let prefixes = (
+      await db.execute(
+        `SELECT prefix || iif(instr(host, "www.") = 1, "www.", "")
+         FROM moz_origins
+         WHERE host = :host OR host = "www." || :host
+         ORDER BY ROWID ASC
+        `,
+        { host }
+      )
+    ).map(r => r.getResultByIndex(0));
+    Assert.deepEqual(prefixes, prefixOrder);
+  });
+}
