@@ -18,6 +18,7 @@
 #include "jsmath.h"
 
 #include "builtin/DataViewObject.h"
+#include "builtin/MapObject.h"
 #include "gc/Allocator.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/IonCacheIRCompiler.h"
@@ -3971,6 +3972,36 @@ bool CacheIRCompiler::emitTypedArrayElementShiftResult(ObjOperandId objId) {
 
   masm.typedArrayElementShift(obj, scratch);
   masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitGetNextMapSetEntryForIteratorResult(
+    ObjOperandId iterId, ObjOperandId resultArrId, bool isMap) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Register iter = allocator.useRegister(masm, iterId);
+  Register resultArr = allocator.useRegister(masm, resultArrId);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  save.takeUnchecked(output.valueReg());
+  save.takeUnchecked(scratch);
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(iter);
+  masm.passABIArg(resultArr);
+  if (isMap) {
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, MapIteratorObject::next));
+  } else {
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, SetIteratorObject::next));
+  }
+  masm.storeCallBoolResult(scratch);
+
+  masm.PopRegsInMask(save);
+
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
   return true;
 }
 
