@@ -16,6 +16,12 @@ HOST_SOURCES += [
 ]
 HostLibrary('hostmar')
 
+# C11 for static_assert
+c11_flags = ['-std=gnu11']
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    c11_flags.insert(0, '-Xclang')
+HOST_CFLAGS += c11_flags
+
 LOCAL_INCLUDES += [
     '../../../other-licenses/nsis/Contrib/CityHash/cityhash',
 ]
@@ -24,6 +30,8 @@ if CONFIG['MOZ_BUILD_APP'] != 'tools/update-packaging':
     Library('mar')
 
     UNIFIED_SOURCES += HOST_SOURCES
+
+    CFLAGS += c11_flags
 
     FORCE_STATIC_LIB = True
 
