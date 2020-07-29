@@ -253,7 +253,12 @@ Here is the list of current Events sent, which can be found here in the code bas
   </tr>
   <tr>
     <td>`E_Changed_Default_To_Fenix`</td>
-    <td>The user has changed their default browser to Fenix while Fenix was in the background and then resumed the app</td>
+    <td>The user has changed their default browser to Fenix while Fenix was in the background and then resumed the app.</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/13003">#13003</a></td>
+  </tr>
+  <tr>
+    <td>`E_Changed_ETP`</td>
+    <td>The user has changed their enhanched tracking protection setting.</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/13003">#13003</a></td>
   </tr>
 </table>

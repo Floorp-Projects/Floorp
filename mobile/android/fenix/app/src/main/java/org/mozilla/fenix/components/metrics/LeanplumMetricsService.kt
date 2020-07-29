@@ -41,6 +41,7 @@ private val Event.name: String?
         is Event.AddonInstalled -> "E_Addon_Installed"
         is Event.SearchWidgetInstalled -> "E_Search_Widget_Added"
         is Event.ChangedToDefaultBrowser -> "E_Changed_Default_To_Fenix"
+        is Event.TrackingProtectionSettingChanged -> "E_Changed_ETP"
 
         // Do not track other events in Leanplum
         else -> null
