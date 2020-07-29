@@ -103,7 +103,8 @@ nsresult FetchImageHelper::ImageFetchListener::FetchDecodedImageFromURI(
   nsresult rv =
       NS_NewChannel(getter_AddRefs(channel), aURI, nullPrincipal,
                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-                    nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+                    nsIContentPolicy::TYPE_INTERNAL_IMAGE, nullptr, nullptr,
+                    nullptr, nullptr, nsIRequest::LOAD_ANONYMOUS);
   if (NS_FAILED(rv)) {
     return rv;
   }
