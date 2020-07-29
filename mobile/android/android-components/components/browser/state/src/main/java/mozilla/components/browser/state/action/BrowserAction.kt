@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.action
 
 import android.graphics.Bitmap
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContainerState
 import mozilla.components.browser.state.state.ContentState
@@ -19,6 +20,7 @@ import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.state.SearchState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
@@ -613,4 +615,29 @@ sealed class ContainerAction : BrowserAction() {
      * Removes all state of the removed container from [BrowserState.containers].
      */
     data class RemoveContainerAction(val contextId: String) : ContainerAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating search engines in [SearchState].
+ */
+sealed class SearchAction : BrowserAction() {
+    /**
+     * Updates [BrowserState.search] to add/modify [SearchState.searchEngines].
+     */
+    data class AddSearchEngineListAction(val searchEngineList: List<SearchEngine>) : SearchAction()
+
+    /**
+     * Updates [BrowserState.search] to add/modify a custom [SearchEngine].
+     */
+    data class SetCustomSearchEngineAction(val searchEngine: SearchEngine) : SearchAction()
+
+    /**
+     * Updates [BrowserState.search] to remove a custom [SearchEngine].
+     */
+    data class RemoveCustomSearchEngineAction(val searchEngineId: String) : SearchAction()
+
+    /**
+     * Updates [BrowserState.search] to update [SearchState.defaultSearchEngineId].
+     */
+    data class SetDefaultSearchEngineAction(val searchEngineId: String) : SearchAction()
 }
