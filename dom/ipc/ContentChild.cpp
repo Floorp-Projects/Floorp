@@ -774,15 +774,12 @@ void ContentChild::SetProcessName(const nsACString& aName,
   mProcessName = aName;
 #ifdef MOZ_GECKO_PROFILER
   if (aETLDplus1) {
-    mozilla::ipc::SetThisProcessName(PromiseFlatCString(*aETLDplus1).get());
     profiler_set_process_name(mProcessName, aETLDplus1);
   } else {
-    mozilla::ipc::SetThisProcessName(PromiseFlatCString(mProcessName).get());
     profiler_set_process_name(mProcessName);
   }
-#else
-  mozilla::ipc::SetThisProcessName(PromiseFlatCString(mProcessName).get());
 #endif
+  mozilla::ipc::SetThisProcessName(PromiseFlatCString(mProcessName).get());
 }
 
 static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
