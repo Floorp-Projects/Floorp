@@ -5,6 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
+ * SpiderMonkey error messages.
+ *
+ * These are largely for internal use, but they're exposed publicly as a
+ * "friend" interface for embedders that want to replicate SpiderMonkey's exact
+ * error message behavior in particular circumstances.  All names, arities,
+ * types, and messages are subject to change or removal.  However, the
+ * longer-lived the error message, the less likely it is to change.
+ */
+
+/*
  * This is the JavaScript error message file.
  *
  * The format for each JS error message is:
@@ -19,7 +29,7 @@
  * <ARGUMENT_COUNT> is an integer literal specifying the total number of
  * replaceable arguments in the following format string.
  *
- * <EXCEPTION_NAME> is an enum JSExnType value, defined in jsapi.h.
+ * <EXCEPTION_NAME> is an enum JSExnType value, defined in js/ErrorReport.h.
  *
  * <FORMAT_STRING> is a string literal, optionally containing sequences
  * {X} where X  is an integer representing the argument number that will

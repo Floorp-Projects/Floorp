@@ -659,21 +659,6 @@ JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
   return notesArray;
 }
 
-const JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
-#define MSG_DEF(name, count, exception, format) \
-  {#name, format, count, exception},
-#include "js.msg"
-#undef MSG_DEF
-};
-
-JS_FRIEND_API const JSErrorFormatString* js::GetErrorMessage(
-    void* userRef, const unsigned errorNumber) {
-  if (errorNumber > 0 && errorNumber < JSErr_Limit) {
-    return &js_ErrorFormatString[errorNumber];
-  }
-  return nullptr;
-}
-
 void JSContext::recoverFromOutOfMemory() {
   if (isHelperThreadContext()) {
     // Keep in sync with addPendingOutOfMemory.

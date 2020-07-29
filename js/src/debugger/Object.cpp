@@ -499,9 +499,9 @@ bool DebuggerObject::CallData::allocationSiteGetter() {
   return true;
 }
 
-// Returns the "name" field (see js.msg), which may be used as a unique
-// identifier, for any error object with a JSErrorReport or undefined
-// if the object has no JSErrorReport.
+// Returns the "name" field (see js/public/friend/ErrorNumbers.msg), which may
+// be used as a unique identifier, for any error object with a JSErrorReport or
+// undefined if the object has no JSErrorReport.
 bool DebuggerObject::CallData::errorMessageNameGetter() {
   RootedString result(cx);
   if (!DebuggerObject::getErrorMessageName(cx, object, &result)) {

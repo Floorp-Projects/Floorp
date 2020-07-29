@@ -1077,12 +1077,6 @@ extern bool ReportValueError(JSContext* cx, const unsigned errorNumber,
 
 JSObject* CreateErrorNotesArray(JSContext* cx, JSErrorReport* report);
 
-} /* namespace js */
-
-extern const JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
-
-namespace js {
-
 /************************************************************************/
 
 /*

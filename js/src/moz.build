@@ -113,7 +113,6 @@ if CONFIG['HAVE_DTRACE']:
 # doing!
 EXPORTS += [
     '!js-config.h',
-    'js.msg',
     'jsapi.h',
     'jsfriendapi.h',
     'jspubtd.h',
@@ -216,8 +215,21 @@ EXPORTS.js += [
     '../../mozglue/baseprofiler/public/ProfilingCategoryList.h',
 ]
 
+# Public APIs that are experimental: the precise contour of the APIs may still
+# change, but they're at least plausible first passes at designing something.
+# We expose them as-is, buyer beware.
 EXPORTS.js.experimental += [
     '../public/experimental/SourceHook.h',
+]
+
+# Friend APIs are APIs that either basically SpiderMonkey-internal, or their
+# contours are gross and terrible -- but the functionality is too important to
+# some embedder (often, Gecko) to just not expose anything or to agonize through
+# a clean design.  Use this only if you absolutely must, and feel free to
+# propose clean APIs to replace what's here!
+EXPORTS.js.friend += [
+    '../public/friend/ErrorMessages.h',
+    '../public/friend/ErrorNumbers.msg',
 ]
 
 UNIFIED_SOURCES += [
@@ -313,6 +325,7 @@ UNIFIED_SOURCES += [
     'vm/DateTime.cpp',
     'vm/EnvironmentObject.cpp',
     'vm/EqualityOperations.cpp',
+    'vm/ErrorMessages.cpp',
     'vm/ErrorObject.cpp',
     'vm/ErrorReporting.cpp',
     'vm/Exception.cpp',
@@ -477,7 +490,7 @@ if CONFIG['JS_JITSPEW']:
 FINAL_LIBRARY = 'js'
 
 selfhosted_inputs = [
-    'js.msg',
+    '../public/friend/ErrorNumbers.msg',
     'builtin/TypedObjectConstants.h',
     'builtin/SelfHostingDefines.h',
     'builtin/Utilities.js',

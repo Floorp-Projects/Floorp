@@ -78,9 +78,9 @@ namespace JS {
 class ObjectOpResult {
  private:
   /**
-   * code_ is either one of the special codes OkCode or Uninitialized, or
-   * an error code. For now the error codes are private to the JS engine;
-   * they're defined in js/src/js.msg.
+   * code_ is either one of the special codes OkCode or Uninitialized, or an
+   * error code. For now the error codes are JS friend API and are defined in
+   * js/public/friend/ErrorNumbers.msg.
    *
    * code_ is uintptr_t (rather than uint32_t) for the convenience of the
    * JITs, which would otherwise have to deal with either padding or stack
