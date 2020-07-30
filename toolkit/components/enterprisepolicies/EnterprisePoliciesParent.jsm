@@ -44,6 +44,9 @@ const PREF_LOGLEVEL = "browser.policies.loglevel";
 // To force disallowing enterprise-only policies during tests
 const PREF_DISALLOW_ENTERPRISE = "browser.policies.testing.disallowEnterprise";
 
+// To allow for cleaning up old policies
+const PREF_POLICIES_APPLIED = "browser.policies.applied";
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
@@ -89,6 +92,26 @@ EnterprisePoliciesManager.prototype = {
   ]),
 
   _initialize() {
+    if (Services.prefs.getBoolPref(PREF_POLICIES_APPLIED, false)) {
+      if ("_cleanup" in Policies) {
+        let policyImpl = Policies._cleanup;
+
+        for (let timing of Object.keys(this._callbacks)) {
+          let policyCallback = policyImpl[timing];
+          if (policyCallback) {
+            this._schedulePolicyCallback(
+              timing,
+              policyCallback.bind(
+                policyImpl,
+                this /* the EnterprisePoliciesManager */
+              )
+            );
+          }
+        }
+      }
+      Services.prefs.clearUserPref(PREF_POLICIES_APPLIED);
+    }
+
     let provider = this._chooseProvider();
 
     if (!provider) {
@@ -108,6 +131,8 @@ EnterprisePoliciesManager.prototype = {
       Object.keys(provider.policies).length
     );
     this._activatePolicies(provider.policies);
+
+    Services.prefs.setBoolPref(PREF_POLICIES_APPLIED, true);
   },
 
   _chooseProvider() {
