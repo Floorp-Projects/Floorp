@@ -1370,4 +1370,9 @@ public class WebExtensionController {
     /* package */ static GeckoResult<List<WebExtension.Menu>> getMenu(final GeckoBundle menuArrayBundle) {
         return null;
     }
+
+    // TODO: implement bug 1538348
+    /* package */ WebExtension.Download createDownload(final String id) {
+        return null;
+    }
 }
