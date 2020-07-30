@@ -84,12 +84,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'other/UntrustedModules.cpp',
     ]
 
-# KeyedStackCapturer entirely relies on profiler to be enabled.
-if CONFIG['MOZ_GECKO_PROFILER']:
-    SOURCES += [
-      'other/KeyedStackCapturer.cpp'
-    ]
-
 XPCOM_MANIFESTS += [
     'components.conf',
     'core/components.conf',
