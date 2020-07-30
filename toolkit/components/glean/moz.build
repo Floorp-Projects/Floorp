@@ -36,6 +36,10 @@ if CONFIG['MOZ_GLEAN']:
                   script='build_scripts/glean_parser_ext/run_glean_parser.py',
                   inputs=['pings.yaml'])
 
+    DIRS += [
+        'aboutGlean',
+    ]
+
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 

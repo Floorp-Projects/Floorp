@@ -132,6 +132,10 @@ static const RedirEntry kRedirMap[] = {
          nsIAboutModule::MAKE_LINKABLE | nsIAboutModule::URI_CAN_LOAD_IN_CHILD},
     {"support", "chrome://global/content/aboutSupport.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
+#ifdef MOZ_GLEAN
+    {"glean", "chrome://global/content/aboutGlean.html",
+     nsIAboutModule::HIDE_FROM_ABOUTABOUT | nsIAboutModule::ALLOW_SCRIPT},
+#endif
     {"telemetry", "chrome://global/content/aboutTelemetry.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
     {"url-classifier", "chrome://global/content/aboutUrlClassifier.xhtml",
