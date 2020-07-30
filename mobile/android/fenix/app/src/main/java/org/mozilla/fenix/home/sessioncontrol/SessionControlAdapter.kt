@@ -15,7 +15,6 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.home.OnboardingState
-import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionsMessageViewHolder
@@ -38,8 +37,17 @@ import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 sealed class AdapterItem(@LayoutRes val viewType: Int) {
     data class TipItem(val tip: Tip) : AdapterItem(
-        ButtonTipViewHolder.LAYOUT_ID)
-    data class TopSiteList(val topSites: List<TopSite>) : AdapterItem(TopSiteViewHolder.LAYOUT_ID)
+        ButtonTipViewHolder.LAYOUT_ID
+    )
+
+    data class TopSiteList(val topSites: List<TopSite>) : AdapterItem(TopSiteViewHolder.LAYOUT_ID) {
+        override fun contentsSameAs(other: AdapterItem): Boolean {
+            val newTopSites = (other as? TopSiteList)?.topSites?.asSequence() ?: return false
+            val oldTopSites = this.topSites.asSequence()
+            return newTopSites.zip(oldTopSites).all { (new, old) -> new.title == old.title }
+        }
+    }
+
     object PrivateBrowsingDescription : AdapterItem(PrivateBrowsingDescriptionViewHolder.LAYOUT_ID)
     object NoCollectionsMessage : AdapterItem(NoCollectionsMessageViewHolder.LAYOUT_ID)
 
@@ -48,32 +56,48 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
         val collection: TabCollection,
         val expanded: Boolean
     ) : AdapterItem(CollectionViewHolder.LAYOUT_ID) {
-        override fun sameAs(other: AdapterItem) = other is CollectionItem && collection.id == other.collection.id
+        override fun sameAs(other: AdapterItem) =
+            other is CollectionItem && collection.id == other.collection.id
+
+        override fun contentsSameAs(other: AdapterItem): Boolean {
+            (other as? CollectionItem)?.let {
+                return it.expanded == this.expanded && it.collection.title == this.collection.title
+            } ?: return false
+        }
     }
+
     data class TabInCollectionItem(
         val collection: TabCollection,
         val tab: ComponentTab,
         val isLastTab: Boolean
     ) : AdapterItem(TabInCollectionViewHolder.LAYOUT_ID) {
-        override fun sameAs(other: AdapterItem) = other is TabInCollectionItem && tab.id == other.tab.id
+        override fun sameAs(other: AdapterItem) =
+            other is TabInCollectionItem && tab.id == other.tab.id
     }
 
     object OnboardingHeader : AdapterItem(OnboardingHeaderViewHolder.LAYOUT_ID)
     data class OnboardingSectionHeader(
         val labelBuilder: (Context) -> String
     ) : AdapterItem(OnboardingSectionHeaderViewHolder.LAYOUT_ID) {
-        override fun sameAs(other: AdapterItem) = other is OnboardingSectionHeader && labelBuilder == other.labelBuilder
+        override fun sameAs(other: AdapterItem) =
+            other is OnboardingSectionHeader && labelBuilder == other.labelBuilder
     }
+
     object OnboardingManualSignIn : AdapterItem(OnboardingManualSignInViewHolder.LAYOUT_ID)
     data class OnboardingAutomaticSignIn(
         val state: OnboardingState.SignedOutCanAutoSignIn
     ) : AdapterItem(OnboardingAutomaticSignInViewHolder.LAYOUT_ID)
+
     object OnboardingThemePicker : AdapterItem(OnboardingThemePickerViewHolder.LAYOUT_ID)
-    object OnboardingTrackingProtection : AdapterItem(OnboardingTrackingProtectionViewHolder.LAYOUT_ID)
+    object OnboardingTrackingProtection :
+        AdapterItem(OnboardingTrackingProtectionViewHolder.LAYOUT_ID)
+
     object OnboardingPrivateBrowsing : AdapterItem(OnboardingPrivateBrowsingViewHolder.LAYOUT_ID)
     object OnboardingPrivacyNotice : AdapterItem(OnboardingPrivacyNoticeViewHolder.LAYOUT_ID)
     object OnboardingFinish : AdapterItem(OnboardingFinishViewHolder.LAYOUT_ID)
-    object OnboardingToolbarPositionPicker : AdapterItem(OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID)
+    object OnboardingToolbarPositionPicker :
+        AdapterItem(OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID)
+
     object OnboardingWhatsNew : AdapterItem(OnboardingWhatsNewViewHolder.LAYOUT_ID)
 
     /**
@@ -85,26 +109,21 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
      * Returns a payload if there's been a change, or null if not
      */
     open fun getChangePayload(newItem: AdapterItem): Any? = null
+
+    open fun contentsSameAs(other: AdapterItem) = this::class == other::class
 }
 
 class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
-    override fun areItemsTheSame(oldItem: AdapterItem, newItem: AdapterItem) = oldItem.sameAs(newItem)
+    override fun areItemsTheSame(oldItem: AdapterItem, newItem: AdapterItem) =
+        oldItem.sameAs(newItem)
 
     @Suppress("DiffUtilEquals")
-    override fun areContentsTheSame(oldItem: AdapterItem, newItem: AdapterItem) = oldItem == newItem
+    override fun areContentsTheSame(oldItem: AdapterItem, newItem: AdapterItem) =
+        oldItem.contentsSameAs(newItem)
 
     override fun getChangePayload(oldItem: AdapterItem, newItem: AdapterItem): Any? {
         return oldItem.getChangePayload(newItem) ?: return super.getChangePayload(oldItem, newItem)
     }
-
-    data class TabChangePayload(
-        val tab: Tab,
-        val shouldUpdateFavicon: Boolean,
-        val shouldUpdateHostname: Boolean,
-        val shouldUpdateTitle: Boolean,
-        val shouldUpdateSelected: Boolean,
-        val shouldUpdateMediaState: Boolean
-    )
 }
 
 class SessionControlAdapter(
@@ -119,23 +138,42 @@ class SessionControlAdapter(
         return when (viewType) {
             ButtonTipViewHolder.LAYOUT_ID -> ButtonTipViewHolder(view, interactor)
             TopSiteViewHolder.LAYOUT_ID -> TopSiteViewHolder(view, interactor)
-            PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, interactor)
+            PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(
+                view,
+                interactor
+            )
             NoCollectionsMessageViewHolder.LAYOUT_ID ->
                 NoCollectionsMessageViewHolder(view, interactor, hasNormalTabsOpened)
             CollectionHeaderViewHolder.LAYOUT_ID -> CollectionHeaderViewHolder(view)
             CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, interactor)
-            TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, interactor, differentLastItem = true)
+            TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(
+                view,
+                interactor,
+                differentLastItem = true
+            )
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
             OnboardingSectionHeaderViewHolder.LAYOUT_ID -> OnboardingSectionHeaderViewHolder(view)
-            OnboardingAutomaticSignInViewHolder.LAYOUT_ID -> OnboardingAutomaticSignInViewHolder(view)
+            OnboardingAutomaticSignInViewHolder.LAYOUT_ID -> OnboardingAutomaticSignInViewHolder(
+                view
+            )
             OnboardingManualSignInViewHolder.LAYOUT_ID -> OnboardingManualSignInViewHolder(view)
             OnboardingThemePickerViewHolder.LAYOUT_ID -> OnboardingThemePickerViewHolder(view)
-            OnboardingTrackingProtectionViewHolder.LAYOUT_ID -> OnboardingTrackingProtectionViewHolder(view)
-            OnboardingPrivateBrowsingViewHolder.LAYOUT_ID -> OnboardingPrivateBrowsingViewHolder(view, interactor)
-            OnboardingPrivacyNoticeViewHolder.LAYOUT_ID -> OnboardingPrivacyNoticeViewHolder(view, interactor)
+            OnboardingTrackingProtectionViewHolder.LAYOUT_ID -> OnboardingTrackingProtectionViewHolder(
+                view
+            )
+            OnboardingPrivateBrowsingViewHolder.LAYOUT_ID -> OnboardingPrivateBrowsingViewHolder(
+                view,
+                interactor
+            )
+            OnboardingPrivacyNoticeViewHolder.LAYOUT_ID -> OnboardingPrivacyNoticeViewHolder(
+                view,
+                interactor
+            )
             OnboardingFinishViewHolder.LAYOUT_ID -> OnboardingFinishViewHolder(view, interactor)
             OnboardingWhatsNewViewHolder.LAYOUT_ID -> OnboardingWhatsNewViewHolder(view, interactor)
-            OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID -> OnboardingToolbarPositionPickerViewHolder(view)
+            OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID -> OnboardingToolbarPositionPickerViewHolder(
+                view
+            )
             else -> throw IllegalStateException()
         }
     }
