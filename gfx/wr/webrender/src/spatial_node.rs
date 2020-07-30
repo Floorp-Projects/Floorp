@@ -899,14 +899,9 @@ impl ScrollFrameInfo {
         self,
         old_scroll_info: &ScrollFrameInfo
     ) -> ScrollFrameInfo {
-        let offset =
-            old_scroll_info.offset +
-            self.external_scroll_offset -
-            old_scroll_info.external_scroll_offset;
-
         ScrollFrameInfo {
             viewport_rect: self.viewport_rect,
-            offset,
+            offset: old_scroll_info.offset,
             scroll_sensitivity: self.scroll_sensitivity,
             scrollable_size: self.scrollable_size,
             external_id: self.external_id,
