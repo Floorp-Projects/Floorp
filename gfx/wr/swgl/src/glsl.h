@@ -1799,13 +1799,13 @@ bvec4 greaterThanEqual(vec4 x, vec4 y) {
                greaterThanEqual(x.z, y.z), greaterThanEqual(x.w, y.w));
 }
 
-enum TextureFormat { RGBA32F, RGBA32I, RGBA8, R8 };
+enum TextureFormat { RGBA32F, RGBA32I, RGBA8, R8, RG8 };
 
 enum TextureFilter { NEAREST, LINEAR };
 
 struct samplerCommon {
   uint32_t* buf = nullptr;
-  uint32_t stride = 0;  // in dwords
+  uint32_t stride = 0;  // in units of BPP if < 4, or dwords if BPP >= 4
   uint32_t height = 0;
   uint32_t width = 0;
   TextureFormat format = TextureFormat::RGBA8;
@@ -1813,7 +1813,7 @@ struct samplerCommon {
 
 struct samplerDepth {
   int depth = 0;
-  uint32_t height_stride = 0;  // in dwords
+  uint32_t height_stride = 0;  // in units of BPP if < 4, or dwords if BPP >= 4
 };
 
 struct samplerFilter {
@@ -1824,6 +1824,8 @@ struct sampler2DArray_impl : samplerCommon, samplerDepth, samplerFilter {};
 typedef sampler2DArray_impl* sampler2DArray;
 
 typedef struct sampler2DArrayR8_impl : sampler2DArray_impl{} * sampler2DArrayR8;
+typedef struct sampler2DArrayRG8_impl : sampler2DArray_impl{} *
+                                        sampler2DArrayRG8;
 typedef struct sampler2DArrayRGBA8_impl : sampler2DArray_impl{} *
                                           sampler2DArrayRGBA8;
 typedef struct sampler2DArrayRGBA32F_impl : sampler2DArray_impl{} *
@@ -1833,6 +1835,7 @@ struct sampler2D_impl : samplerCommon, samplerFilter {};
 typedef sampler2D_impl* sampler2D;
 
 typedef struct sampler2DR8_impl : sampler2D_impl{} * sampler2DR8;
+typedef struct sampler2DRG8_impl : sampler2D_impl{} * sampler2DRG8;
 typedef struct sampler2DRGBA8_impl : sampler2D_impl{} * sampler2DRGBA8;
 typedef struct sampler2DRGBA32F_impl : sampler2D_impl{} * sampler2DRGBA32F;
 
@@ -2278,6 +2281,26 @@ vec4 texelFetchR8(sampler2DArray sampler, ivec3 P) {
 }
 
 template <typename S>
+SI vec4 fetchOffsetsRG8(S sampler, I32 offset) {
+  uint16_t* buf = (uint16_t*)sampler->buf;
+  U16 pixels = {buf[offset.x], buf[offset.y], buf[offset.z], buf[offset.w]};
+  Float r = CONVERT(pixels & 0xFF, Float) * (1.0f / 255.0f);
+  Float g = CONVERT(pixels >> 8, Float) * (1.0f / 255.0f);
+  return vec4(r, g, 0.0f, 1.0f);
+}
+
+vec4 texelFetchRG8(sampler2D sampler, ivec2 P) {
+  I32 offset = P.x + P.y * sampler->stride;
+  return fetchOffsetsRG8(sampler, offset);
+}
+
+vec4 texelFetchRG8(sampler2DArray sampler, ivec3 P) {
+  assert(test_all(P.z == P.z.x));
+  I32 offset = P.x + P.y * sampler->stride + P.z.x * sampler->height_stride;
+  return fetchOffsetsRG8(sampler, offset);
+}
+
+template <typename S>
 SI vec4 fetchOffsetsFloat(S sampler, I32 offset) {
   return pixel_float_to_vec4(
       *(Float*)&sampler->buf[offset.x], *(Float*)&sampler->buf[offset.y],
@@ -2298,13 +2321,18 @@ SI vec4 texelFetchFloat(sampler2DArray sampler, ivec3 P) {
 vec4 texelFetch(sampler2D sampler, ivec2 P, int lod) {
   assert(lod == 0);
   P = clamp2D(P, sampler);
-  if (sampler->format == TextureFormat::RGBA32F) {
-    return texelFetchFloat(sampler, P);
-  } else if (sampler->format == TextureFormat::RGBA8) {
-    return texelFetchRGBA8(sampler, P);
-  } else {
-    assert(sampler->format == TextureFormat::R8);
-    return texelFetchR8(sampler, P);
+  switch (sampler->format) {
+    case TextureFormat::RGBA32F:
+      return texelFetchFloat(sampler, P);
+    case TextureFormat::RGBA8:
+      return texelFetchRGBA8(sampler, P);
+    case TextureFormat::R8:
+      return texelFetchR8(sampler, P);
+    case TextureFormat::RG8:
+      return texelFetchRG8(sampler, P);
+    default:
+      assert(false);
+      return vec4();
   }
 }
 
@@ -2327,6 +2355,13 @@ vec4 texelFetch(sampler2DR8 sampler, ivec2 P, int lod) {
   P = clamp2D(P, sampler);
   assert(sampler->format == TextureFormat::R8);
   return texelFetchR8(sampler, P);
+}
+
+vec4 texelFetch(sampler2DRG8 sampler, ivec2 P, int lod) {
+  assert(lod == 0);
+  P = clamp2D(P, sampler);
+  assert(sampler->format == TextureFormat::RG8);
+  return texelFetchRG8(sampler, P);
 }
 
 vec4_scalar texelFetch(sampler2D sampler, ivec2_scalar P, int lod) {
@@ -2360,7 +2395,15 @@ vec4_scalar texelFetch(sampler2DR8 sampler, ivec2_scalar P, int lod) {
   assert(sampler->format == TextureFormat::R8);
   return vec4_scalar{
       to_float(((uint8_t*)sampler->buf)[P.x + P.y * sampler->stride]), 0.0f,
-      0.0f, 0.0f};
+      0.0f, 1.0f};
+}
+
+vec4_scalar texelFetch(sampler2DRG8 sampler, ivec2_scalar P, int lod) {
+  assert(lod == 0);
+  P = clamp2D(P, sampler);
+  assert(sampler->format == TextureFormat::RG8);
+  uint16_t pixel = ((uint16_t*)sampler->buf)[P.x + P.y * sampler->stride];
+  return vec4_scalar{to_float(pixel & 0xFF), to_float(pixel >> 8), 0.0f, 1.0f};
 }
 
 vec4 texelFetch(sampler2DRect sampler, ivec2 P) {
@@ -2373,13 +2416,18 @@ vec4 texelFetch(sampler2DRect sampler, ivec2 P) {
 SI vec4 texelFetch(sampler2DArray sampler, ivec3 P, int lod) {
   assert(lod == 0);
   P = clamp2DArray(P, sampler);
-  if (sampler->format == TextureFormat::RGBA32F) {
-    return texelFetchFloat(sampler, P);
-  } else if (sampler->format == TextureFormat::R8) {
-    return texelFetchR8(sampler, P);
-  } else {
-    assert(sampler->format == TextureFormat::RGBA8);
-    return texelFetchRGBA8(sampler, P);
+  switch (sampler->format) {
+    case TextureFormat::RGBA32F:
+      return texelFetchFloat(sampler, P);
+    case TextureFormat::RGBA8:
+      return texelFetchRGBA8(sampler, P);
+    case TextureFormat::R8:
+      return texelFetchR8(sampler, P);
+    case TextureFormat::RG8:
+      return texelFetchRG8(sampler, P);
+    default:
+      assert(false);
+      return vec4();
   }
 }
 
@@ -2402,6 +2450,13 @@ vec4 texelFetch(sampler2DArrayR8 sampler, ivec3 P, int lod) {
   P = clamp2DArray(P, sampler);
   assert(sampler->format == TextureFormat::R8);
   return texelFetchR8(sampler, P);
+}
+
+vec4 texelFetch(sampler2DArrayRG8 sampler, ivec3 P, int lod) {
+  assert(lod == 0);
+  P = clamp2DArray(P, sampler);
+  assert(sampler->format == TextureFormat::RG8);
+  return texelFetchRG8(sampler, P);
 }
 
 template <typename S>
@@ -2761,6 +2816,64 @@ vec4 textureLinearR8(S sampler, vec2 P, int32_t zoffset = 0) {
 }
 
 template <typename S>
+vec4 textureLinearRG8(S sampler, vec2 P, int32_t zoffset = 0) {
+  assert(sampler->format == TextureFormat::RG8);
+
+  ivec2 i(linearQuantize(P, 128, sampler));
+  ivec2 frac = i & (I32)0x7F;
+  i >>= 7;
+
+  I32 row0 = clampCoord(i.x, sampler->width) +
+             clampCoord(i.y, sampler->height) * sampler->stride + zoffset;
+  I32 row1 = row0 + ((i.y >= 0 && i.y < int32_t(sampler->height) - 1) &
+                     I32(sampler->stride));
+  I16 fracx =
+      CONVERT(frac.x & (i.x >= 0 && i.x < int32_t(sampler->width) - 1), I16);
+  I16 fracy = CONVERT(frac.y, I16);
+
+  uint16_t* buf = (uint16_t*)sampler->buf;
+
+  // Load RG bytes for two adjacent pixels - rgRG
+  auto a0 = unaligned_load<V4<uint8_t> >(&buf[row0.x]);
+  auto b0 = unaligned_load<V4<uint8_t> >(&buf[row0.y]);
+  auto ab0 = CONVERT(combine(a0, b0), V8<int16_t>);
+  // Load two pixels for next row
+  auto a1 = unaligned_load<V4<uint8_t> >(&buf[row1.x]);
+  auto b1 = unaligned_load<V4<uint8_t> >(&buf[row1.y]);
+  auto ab1 = CONVERT(combine(a1, b1), V8<int16_t>);
+  // Blend rows
+  ab0 += ((ab1 - ab0) * fracy.xxxxyyyy) >> 7;
+
+  auto c0 = unaligned_load<V4<uint8_t> >(&buf[row0.z]);
+  auto d0 = unaligned_load<V4<uint8_t> >(&buf[row0.w]);
+  auto cd0 = CONVERT(combine(c0, d0), V8<int16_t>);
+  auto c1 = unaligned_load<V4<uint8_t> >(&buf[row1.z]);
+  auto d1 = unaligned_load<V4<uint8_t> >(&buf[row1.w]);
+  auto cd1 = CONVERT(combine(c1, d1), V8<int16_t>);
+  // Blend rows
+  cd0 += ((cd1 - cd0) * fracy.zzzzwwww) >> 7;
+
+  // ab = a.rgRG,b.rgRG
+  // cd = c.rgRG,d.rgRG
+  // ... ac = ar,cr,ag,cg,aR,cR,aG,cG
+  // ... bd = br,dr,bg,dg,bR,dR,bG,dG
+  auto ac = zipLow(ab0, cd0);
+  auto bd = zipHigh(ab0, cd0);
+  // ar,br,cr,dr,ag,bg,cg,dg
+  // aR,bR,cR,dR,aG,bG,cG,dG
+  auto abcdl = zipLow(ac, bd);
+  auto abcdh = zipHigh(ac, bd);
+  // Blend columns
+  abcdl += ((abcdh - abcdl) * fracx.xyzwxyzw) >> 7;
+
+  auto rg = CONVERT(V8<uint16_t>(abcdl), V8<float>) * (1.0f / 255.0f);
+  auto r = lowHalf(rg);
+  auto g = highHalf(rg);
+
+  return vec4(r, g, 0.0f, 1.0f);
+}
+
+template <typename S>
 vec4 textureLinearRGBA32F(S sampler, vec2 P, int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA32F);
   P.x *= sampler->width;
@@ -2800,13 +2913,18 @@ vec4 textureLinearRGBA32F(S sampler, vec2 P, int32_t zoffset = 0) {
 
 SI vec4 texture(sampler2D sampler, vec2 P) {
   if (sampler->filter == TextureFilter::LINEAR) {
-    if (sampler->format == TextureFormat::RGBA8) {
-      return textureLinearRGBA8(sampler, P);
-    } else if (sampler->format == TextureFormat::R8) {
-      return textureLinearR8(sampler, P);
-    } else {
-      assert(sampler->format == TextureFormat::RGBA32F);
-      return textureLinearRGBA32F(sampler, P);
+    switch (sampler->format) {
+      case TextureFormat::RGBA32F:
+        return textureLinearRGBA32F(sampler, P);
+      case TextureFormat::RGBA8:
+        return textureLinearRGBA8(sampler, P);
+      case TextureFormat::R8:
+        return textureLinearR8(sampler, P);
+      case TextureFormat::RG8:
+        return textureLinearRG8(sampler, P);
+      default:
+        assert(false);
+        return vec4();
     }
   } else {
     ivec2 coord(roundzero(P.x, sampler->width), roundzero(P.y, sampler->height));
@@ -2832,13 +2950,18 @@ SI vec4 texture(sampler2DArray sampler, vec3 P) {
     assert(test_all(P.z == P.z.x));
     int32_t zoffset =
         clampCoord(roundeven(P.z.x, 1.0f), sampler->depth) * sampler->height_stride;
-    if (sampler->format == TextureFormat::RGBA8) {
-      return textureLinearRGBA8(sampler, vec2(P.x, P.y), zoffset);
-    } else if (sampler->format == TextureFormat::R8) {
-      return textureLinearR8(sampler, vec2(P.x, P.y), zoffset);
-    } else {
-      assert(sampler->format == TextureFormat::RGBA32F);
-      return textureLinearRGBA32F(sampler, vec2(P.x, P.y), zoffset);
+    switch (sampler->format) {
+      case TextureFormat::RGBA32F:
+        return textureLinearRGBA32F(sampler, vec2(P.x, P.y), zoffset);
+      case TextureFormat::RGBA8:
+        return textureLinearRGBA8(sampler, vec2(P.x, P.y), zoffset);
+      case TextureFormat::R8:
+        return textureLinearR8(sampler, vec2(P.x, P.y), zoffset);
+      case TextureFormat::RG8:
+        return textureLinearRG8(sampler, vec2(P.x, P.y), zoffset);
+      default:
+        assert(false);
+        return vec4();
     }
   } else {
     // just do nearest for now

@@ -45,6 +45,7 @@ pub enum SamplerFormat {
     RGBA32F,
     RGBA32I,
     R8,
+    RG8,
 }
 
 impl SamplerFormat {
@@ -55,6 +56,7 @@ impl SamplerFormat {
             SamplerFormat::RGBA32F => Some("RGBA32F"),
             SamplerFormat::RGBA32I => Some("RGBA32I"),
             SamplerFormat::R8 => Some("R8"),
+            SamplerFormat::RG8 => Some("RG8"),
         }
     }
 }
@@ -1748,6 +1750,9 @@ fn translate_variable_declaration(
                                         }
                                         "r8" => {
                                             storage = StorageClass::Sampler(SamplerFormat::R8);
+                                        }
+                                        "rg8" => {
+                                            storage = StorageClass::Sampler(SamplerFormat::RG8);
                                         }
                                         _ => {}
                                     }
