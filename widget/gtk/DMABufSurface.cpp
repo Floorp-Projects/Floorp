@@ -60,6 +60,10 @@ using namespace mozilla::layers;
 #  define VA_FOURCC_NV12 0x3231564E
 #endif
 
+#ifndef VA_FOURCC_YV12
+#  define VA_FOURCC_YV12 0x32315659
+#endif
+
 bool DMABufSurface::IsGlobalRefSet() const {
   if (!mGlobalRefCountFd) {
     return false;
@@ -164,6 +168,7 @@ already_AddRefed<DMABufSurface> DMABufSurface::CreateDMABufSurface(
       surf = new DMABufSurfaceRGBA();
       break;
     case SURFACE_NV12:
+    case SURFACE_YUV420:
       surf = new DMABufSurfaceYUV();
       break;
     default:
@@ -727,7 +732,6 @@ already_AddRefed<DMABufSurfaceYUV> DMABufSurfaceYUV::CreateYUVSurface(
 
 DMABufSurfaceYUV::DMABufSurfaceYUV()
     : DMABufSurface(SURFACE_NV12),
-      mSurfaceFormat(gfx::SurfaceFormat::NV12),
       mWidth(),
       mHeight(),
       mTexture(),
@@ -740,9 +744,6 @@ DMABufSurfaceYUV::DMABufSurfaceYUV()
 DMABufSurfaceYUV::~DMABufSurfaceYUV() { ReleaseSurface(); }
 
 bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
-  if (aDesc.fourcc != VA_FOURCC_NV12) {
-    return false;
-  }
   if (aDesc.num_layers > DMABUF_BUFFER_PLANES ||
       aDesc.num_objects > DMABUF_BUFFER_PLANES) {
     return false;
@@ -750,8 +751,19 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
   if (mDmabufFds[0] >= 0) {
     ReleaseSurface();
   }
+  if (aDesc.fourcc == VA_FOURCC_NV12) {
+    mSurfaceType = SURFACE_NV12;
+  } else if (aDesc.fourcc == VA_FOURCC_YV12) {
+    mSurfaceType = SURFACE_YUV420;
+  } else {
+    NS_WARNING(
+        nsPrintfCString(
+            "UpdateYUVData(): Can't import surface data of 0x%x format\n",
+            aDesc.fourcc)
+            .get());
+    return false;
+  }
 
-  mSurfaceFormat = gfx::SurfaceFormat::NV12;
   mBufferPlaneCount = aDesc.num_layers;
   mBufferModifier = aDesc.objects[0].drm_format_modifier;
 
@@ -782,6 +794,7 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane, int aWidth, int aHeight,
       nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), aWidth, aHeight,
                        aDrmFormat, GBM_BO_USE_LINEAR | GBM_BO_USE_TEXTURING);
   if (!mGbmBufferObject[aPlane]) {
+    NS_WARNING("Failed to create GbmBufferObject!");
     return false;
   }
 
@@ -792,8 +805,13 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane, int aWidth, int aHeight,
 }
 
 bool DMABufSurfaceYUV::UpdateYUVData(void** aPixelData, int* aLineSizes) {
-  if (aLineSizes[0] != mWidth[0] || aLineSizes[1] != mWidth[1] ||
-      aLineSizes[2] != mWidth[1]) {
+  if (mSurfaceType != SURFACE_YUV420) {
+    NS_WARNING("UpdateYUVData can upload YUV420 surface type only!");
+    return false;
+  }
+
+  if (mBufferPlaneCount != 3 || aLineSizes[0] != mWidth[0] ||
+      aLineSizes[1] != mWidth[1] || aLineSizes[2] != mWidth[2]) {
     NS_WARNING("DMABufSurfaceYUV size does not match!");
     return false;
   }
@@ -801,44 +819,48 @@ bool DMABufSurfaceYUV::UpdateYUVData(void** aPixelData, int* aLineSizes) {
   auto unmapBuffers = MakeScopeExit([&] {
     Unmap(0);
     Unmap(1);
+    Unmap(2);
   });
 
   char* yData = (char*)MapInternal(0, 0, mWidth[0], mHeight[0], nullptr,
-                                   GBM_BO_TRANSFER_READ, 0);
+                                   GBM_BO_TRANSFER_WRITE, 0);
   if (!yData || (int)mMappedRegionStride[0] != mWidth[0]) {
     NS_WARNING("DMABufSurfaceYUV plane 1 size stride does not match!");
     return false;
   }
-  char* nvData = (char*)MapInternal(0, 0, mWidth[1], mHeight[1], nullptr,
-                                    GBM_BO_TRANSFER_READ, 1);
-  if (!nvData || (int)mMappedRegionStride[1] != mWidth[1] * 2) {
+  char* uData = (char*)MapInternal(0, 0, mWidth[1], mHeight[1], nullptr,
+                                   GBM_BO_TRANSFER_WRITE, 1);
+  if (!uData || (int)mMappedRegionStride[1] != mWidth[1]) {
     NS_WARNING("DMABufSurfaceYUV plane 2 size stride does not match!");
     return false;
   }
-
-  // Copy Y plane
-  memcpy(yData, aPixelData[0], aLineSizes[0] * mHeight[0]);
-
-  // Copy NV planes
-  char* nSrcPixels = (char*)aPixelData[1];
-  char* vSrcPixels = (char*)aPixelData[2];
-  int bufferLen = (aLineSizes[1] + aLineSizes[2]) * (mHeight[1]);
-  for (int i = 0; i < bufferLen; i += 2) {
-    *nvData++ = *nSrcPixels++;
-    *nvData++ = *vSrcPixels++;
+  char* vData = (char*)MapInternal(0, 0, mWidth[2], mHeight[2], nullptr,
+                                   GBM_BO_TRANSFER_WRITE, 2);
+  if (!vData || (int)mMappedRegionStride[2] != mWidth[2]) {
+    NS_WARNING("DMABufSurfaceYUV plane 3 size stride does not match!");
+    return false;
   }
+
+  // Copy planes
+  memcpy(yData, aPixelData[0], aLineSizes[0] * mHeight[0]);
+  memcpy(uData, aPixelData[1], aLineSizes[1] * mHeight[1]);
+  memcpy(vData, aPixelData[2], aLineSizes[2] * mHeight[2]);
 
   return true;
 }
 
 bool DMABufSurfaceYUV::Create(int aWidth, int aHeight, void** aPixelData,
                               int* aLineSizes) {
-  mBufferPlaneCount = 2;
+  mSurfaceType = SURFACE_YUV420;
+  mBufferPlaneCount = 3;
 
   if (!CreateYUVPlane(0, aWidth, aHeight, GBM_FORMAT_R8)) {
     return false;
   }
-  if (!CreateYUVPlane(1, aWidth >> 1, aHeight >> 1, GBM_FORMAT_GR88)) {
+  if (!CreateYUVPlane(1, aWidth >> 1, aHeight >> 1, GBM_FORMAT_R8)) {
+    return false;
+  }
+  if (!CreateYUVPlane(2, aWidth >> 1, aHeight >> 1, GBM_FORMAT_R8)) {
     return false;
   }
 
@@ -854,8 +876,8 @@ bool DMABufSurfaceYUV::Create(const SurfaceDescriptor& aDesc) {
 
 void DMABufSurfaceYUV::ImportSurfaceDescriptor(
     const SurfaceDescriptorDMABuf& aDesc) {
-  mSurfaceFormat = gfx::SurfaceFormat::NV12;
   mBufferPlaneCount = aDesc.fds().Length();
+  mSurfaceType = (mBufferPlaneCount == 2) ? SURFACE_NV12 : SURFACE_YUV420;
   mBufferModifier = aDesc.modifier();
   mColorSpace = aDesc.yUVColorSpace();
   mUID = aDesc.uid();
@@ -1010,12 +1032,30 @@ void DMABufSurfaceYUV::ReleaseTextures() {
 }
 
 gfx::SurfaceFormat DMABufSurfaceYUV::GetFormat() {
-  return gfx::SurfaceFormat::NV12;
+  switch (mSurfaceType) {
+    case SURFACE_NV12:
+      return gfx::SurfaceFormat::NV12;
+    case SURFACE_YUV420:
+      return gfx::SurfaceFormat::YUV;
+    default:
+      NS_WARNING("DMABufSurfaceYUV::GetFormat(): Wrong surface format!");
+      return gfx::SurfaceFormat::UNKNOWN;
+  }
 }
 
 // GL uses swapped R and B components so report accordingly.
-gfx::SurfaceFormat DMABufSurfaceYUV::GetFormatGL() {
-  return gfx::SurfaceFormat::NV12;
+gfx::SurfaceFormat DMABufSurfaceYUV::GetFormatGL() { return GetFormat(); }
+
+uint32_t DMABufSurfaceYUV::GetTextureCount() {
+  switch (mSurfaceType) {
+    case SURFACE_NV12:
+      return 2;
+    case SURFACE_YUV420:
+      return 3;
+    default:
+      NS_WARNING("DMABufSurfaceYUV::GetTextureCount(): Wrong surface format!");
+      return 1;
+  }
 }
 
 void DMABufSurfaceYUV::ReleaseSurface() {
