@@ -9,6 +9,7 @@ pub struct CoreMetrics {
     pub client_id: UuidMetric,
     pub first_run_date: DatetimeMetric,
     pub os: StringMetric,
+    pub ping_upload_failure: LabeledMetric<CounterMetric>,
 }
 
 impl CoreMetrics {
@@ -43,6 +44,24 @@ impl CoreMetrics {
                 disabled: false,
                 dynamic_label: None,
             }),
+
+            ping_upload_failure: LabeledMetric::new(
+                CounterMetric::new(CommonMetricData {
+                    name: "ping_upload_failure".into(),
+                    category: "glean.upload".into(),
+                    send_in_pings: vec!["metrics".into()],
+                    lifetime: Lifetime::Ping,
+                    disabled: false,
+                    dynamic_label: None,
+                }),
+                Some(vec![
+                    "status_code_4xx".into(),
+                    "status_code_5xx".into(),
+                    "status_code_unknown".into(),
+                    "unrecoverable".into(),
+                    "recoverable".into(),
+                ]),
+            ),
         }
     }
 }
