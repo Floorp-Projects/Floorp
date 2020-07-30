@@ -87,6 +87,8 @@ inline bool strimatch(const wchar_t* lowerstr, const wchar_t* mixedstr) {
   return internal::strimatch(&towlower, lowerstr, mixedstr);
 }
 
+const wchar_t kCommandLineDelimiter[] = L" \t";
+
 enum class FlagLiteral { osint, safemode };
 
 template <typename CharT, FlagLiteral Literal>
@@ -282,7 +284,7 @@ inline int ArgStrLen(const wchar_t* s) {
   int i = wcslen(s);
   bool hasDoubleQuote = wcschr(s, L'"') != nullptr;
   // Only add doublequotes if the string contains a space or a tab
-  bool addDoubleQuotes = wcspbrk(s, L" \t") != nullptr;
+  bool addDoubleQuotes = wcspbrk(s, kCommandLineDelimiter) != nullptr;
 
   if (addDoubleQuotes) {
     i += 2;  // initial and final duoblequote
@@ -322,7 +324,7 @@ inline wchar_t* ArgToString(wchar_t* d, const wchar_t* s) {
   int backslashes = 0;
   bool hasDoubleQuote = wcschr(s, L'"') != nullptr;
   // Only add doublequotes if the string contains a space or a tab
-  bool addDoubleQuotes = wcspbrk(s, L" \t") != nullptr;
+  bool addDoubleQuotes = wcspbrk(s, kCommandLineDelimiter) != nullptr;
 
   if (addDoubleQuotes) {
     *d = '"';  // initial doublequote
@@ -498,7 +500,7 @@ class CommandLineParserWin final {
       if (between) {
         // We are traversing whitespace between args.
         // Check for start of next arg.
-        if (*p != 0 && !isspace(*p)) {
+        if (*p != 0 && !wcschr(kCommandLineDelimiter, *p)) {
           // Start of another arg.
           between = 0;
           arg.Truncate();
@@ -522,7 +524,7 @@ class CommandLineParserWin final {
       } else {
         // We are processing the contents of an argument.
         // Check for whitespace or end.
-        if (*p == 0 || (!quoted && isspace(*p))) {
+        if (*p == 0 || (!quoted && wcschr(kCommandLineDelimiter, *p))) {
           // Process pending backslashes (interpret them
           // literally since they're not followed by a ").
           while (bSlashCount) {
