@@ -200,10 +200,12 @@ class RestoreSelectionState : public Runnable {
 
 class MOZ_RAII AutoRestoreEditorState final {
  public:
-  explicit AutoRestoreEditorState(TextEditor* aTextEditor)
+  explicit AutoRestoreEditorState(
+      TextEditor* aTextEditor MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mTextEditor(aTextEditor),
         mSavedFlags(mTextEditor->Flags()),
         mSavedMaxLength(mTextEditor->MaxTextLength()) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTextEditor);
 
     // EditorBase::SetFlags() is a virtual method.  Even though it does nothing
@@ -228,6 +230,7 @@ class MOZ_RAII AutoRestoreEditorState final {
   TextEditor* mTextEditor;
   uint32_t mSavedFlags;
   int32_t mSavedMaxLength;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /*****************************************************************************
@@ -236,8 +239,10 @@ class MOZ_RAII AutoRestoreEditorState final {
 
 class MOZ_RAII AutoDisableUndo final {
  public:
-  explicit AutoDisableUndo(TextEditor* aTextEditor)
+  explicit AutoDisableUndo(
+      TextEditor* aTextEditor MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mTextEditor(aTextEditor), mNumberOfMaximumTransactions(0) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTextEditor);
 
     mNumberOfMaximumTransactions =
@@ -271,6 +276,7 @@ class MOZ_RAII AutoDisableUndo final {
  private:
   TextEditor* mTextEditor;
   int32_t mNumberOfMaximumTransactions;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 static bool SuppressEventHandlers(nsPresContext* aPresContext) {

@@ -19,6 +19,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/RangeBoundary.h"
 
@@ -398,10 +399,14 @@ class nsRange final : public mozilla::dom::AbstractRange,
    private:
     nsRange& mRange;
     bool mOldValue;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
    public:
-    explicit AutoCalledByJSRestore(nsRange& aRange)
-        : mRange(aRange), mOldValue(aRange.mCalledByJS) {}
+    explicit AutoCalledByJSRestore(
+        nsRange& aRange MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mRange(aRange), mOldValue(aRange.mCalledByJS) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
     ~AutoCalledByJSRestore() { mRange.mCalledByJS = mOldValue; }
     bool SavedValue() const { return mOldValue; }
   };

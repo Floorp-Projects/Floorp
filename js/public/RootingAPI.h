@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 

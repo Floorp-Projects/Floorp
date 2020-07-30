@@ -37,8 +37,10 @@ static SVGViewElement* GetViewElement(Document* aDocument,
 // Handles setting/clearing the root's mSVGView pointer.
 class MOZ_RAII AutoSVGViewHandler {
  public:
-  explicit AutoSVGViewHandler(SVGSVGElement* aRoot)
+  explicit AutoSVGViewHandler(
+      SVGSVGElement* aRoot MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mRoot(aRoot), mValid(false) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     mWasOverridden = mRoot->UseCurrentView();
     mRoot->mSVGView = nullptr;
     mRoot->mCurrentViewID = nullptr;
@@ -111,6 +113,7 @@ class MOZ_RAII AutoSVGViewHandler {
   UniquePtr<SVGView> mSVGView;
   bool mValid;
   bool mWasOverridden;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 bool SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,

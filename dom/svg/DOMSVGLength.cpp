@@ -66,9 +66,11 @@ NS_INTERFACE_MAP_END
 // DidChangeLengthList.
 class MOZ_RAII AutoChangeLengthNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangeLengthNotifier(DOMSVGLength* aLength)
+  explicit AutoChangeLengthNotifier(
+      DOMSVGLength* aLength MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mozAutoDocUpdate(aLength->Element()->GetComposedDoc(), true),
         mLength(aLength) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mLength, "Expecting non-null length");
     MOZ_ASSERT(mLength->HasOwner(),
                "Expecting list to have an owner for notification");
@@ -89,6 +91,7 @@ class MOZ_RAII AutoChangeLengthNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGLength* const mLength;
   nsAttrValue mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 DOMSVGLength::DOMSVGLength(DOMSVGLengthList* aList, uint8_t aAttrEnum,

@@ -63,8 +63,10 @@ template <typename InterfaceType>
 class MOZ_RAII SpiderMonkeyInterfaceRooter : private JS::CustomAutoRooter {
  public:
   template <typename CX>
-  SpiderMonkeyInterfaceRooter(const CX& cx, InterfaceType* aInterface)
-      : JS::CustomAutoRooter(cx), mInterface(aInterface) {}
+  SpiderMonkeyInterfaceRooter(
+      const CX& cx, InterfaceType* aInterface MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+        mInterface(aInterface) {}
 
   virtual void trace(JSTracer* trc) override { mInterface->TraceSelf(trc); }
 
@@ -80,8 +82,10 @@ class MOZ_RAII SpiderMonkeyInterfaceRooter<Nullable<InterfaceType>>
     : private JS::CustomAutoRooter {
  public:
   template <typename CX>
-  SpiderMonkeyInterfaceRooter(const CX& cx, Nullable<InterfaceType>* aInterface)
-      : JS::CustomAutoRooter(cx), mInterface(aInterface) {}
+  SpiderMonkeyInterfaceRooter(const CX& cx, Nullable<InterfaceType>* aInterface
+                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+        mInterface(aInterface) {}
 
   virtual void trace(JSTracer* trc) override {
     if (!mInterface->IsNull()) {
@@ -101,13 +105,18 @@ class MOZ_RAII RootedSpiderMonkeyInterface final
       private SpiderMonkeyInterfaceRooter<InterfaceType> {
  public:
   template <typename CX>
-  explicit RootedSpiderMonkeyInterface(const CX& cx)
-      : InterfaceType(), SpiderMonkeyInterfaceRooter<InterfaceType>(cx, this) {}
+  explicit RootedSpiderMonkeyInterface(
+      const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : InterfaceType(),
+        SpiderMonkeyInterfaceRooter<InterfaceType>(
+            cx, this MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
 
   template <typename CX>
-  RootedSpiderMonkeyInterface(const CX& cx, JSObject* obj)
+  RootedSpiderMonkeyInterface(const CX& cx,
+                              JSObject* obj MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : InterfaceType(obj),
-        SpiderMonkeyInterfaceRooter<InterfaceType>(cx, this) {}
+        SpiderMonkeyInterfaceRooter<InterfaceType>(
+            cx, this MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
 };
 
 }  // namespace dom

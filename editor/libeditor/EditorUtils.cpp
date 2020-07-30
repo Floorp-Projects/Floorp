@@ -80,7 +80,9 @@ EditActionResult& EditActionResult::operator|=(
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-DOMIterator::DOMIterator(nsINode& aNode) : mIter(&mPostOrderIter) {
+DOMIterator::DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : mIter(&mPostOrderIter) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   DebugOnly<nsresult> rv = mIter->Init(&aNode);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
@@ -92,7 +94,10 @@ nsresult DOMIterator::Init(const RawRangeBoundary& aStartRef,
   return mIter->Init(aStartRef, aEndRef);
 }
 
-DOMIterator::DOMIterator() : mIter(&mPostOrderIter) {}
+DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+    : mIter(&mPostOrderIter) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
 
 template <class NodeClass>
 void DOMIterator::AppendAllNodesToArray(
@@ -116,7 +121,9 @@ void DOMIterator::AppendNodesToArray(
   }
 }
 
-DOMSubtreeIterator::DOMSubtreeIterator() : DOMIterator() {
+DOMSubtreeIterator::DOMSubtreeIterator(
+    MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+    : DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {
   mIter = &mSubtreeIter;
 }
 

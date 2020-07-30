@@ -79,10 +79,12 @@ namespace mozilla {
 // we only take the address of this:
 static gfx::UserDataKey sSVGAutoRenderStateKey;
 
-SVGAutoRenderState::SVGAutoRenderState(DrawTarget* aDrawTarget)
+SVGAutoRenderState::SVGAutoRenderState(
+    DrawTarget* aDrawTarget MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : mDrawTarget(aDrawTarget),
       mOriginalRenderState(nullptr),
       mPaintingToWindow(false) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   mOriginalRenderState = aDrawTarget->RemoveUserData(&sSVGAutoRenderStateKey);
   // We always remove ourselves from aContext before it dies, so
   // passing nullptr as the destroy function is okay.
