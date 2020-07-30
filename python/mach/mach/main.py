@@ -30,9 +30,6 @@ from .base import (
     FailedCommandError,
 )
 from .config import ConfigSettings
-from .decorators import (
-    CommandProvider,
-)
 from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
@@ -167,7 +164,6 @@ class ContextWrapper(object):
         setattr(object.__getattribute__(self, '_context'), key, value)
 
 
-@CommandProvider
 class Mach(object):
     """Main mach driver type.
 
