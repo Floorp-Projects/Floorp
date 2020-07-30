@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/dom/PContentParent.h"
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "nsCOMPtr.h"
 #include "nsIGfxInfo.h"
@@ -77,7 +76,7 @@ class GfxInfoBase : public nsIGfxInfo,
   NS_IMETHOD GetTargetFrameRate(uint32_t* aTargetFrameRate) override;
 
   // Non-XPCOM method to get IPC data:
-  void GetAllFeatures(dom::XPCOMInitData& xpcomInit);
+  nsTArray<mozilla::gfx::GfxInfoFeatureStatus> GetAllFeatures();
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.
@@ -112,7 +111,7 @@ class GfxInfoBase : public nsIGfxInfo,
   virtual nsresult FindMonitors(JSContext* cx, JS::HandleObject array);
 
   static void SetFeatureStatus(
-      const nsTArray<mozilla::gfx::GfxInfoFeatureStatus>& aFS);
+      nsTArray<mozilla::gfx::GfxInfoFeatureStatus>&& aFS);
 
  protected:
   virtual ~GfxInfoBase();

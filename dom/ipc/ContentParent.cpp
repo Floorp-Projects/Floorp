@@ -2672,7 +2672,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   if (gfxInfo) {
     GfxInfoBase* gfxInfoRaw = static_cast<GfxInfoBase*>(gfxInfo.get());
-    gfxInfoRaw->GetAllFeatures(xpcomInit);
+    xpcomInit.gfxFeatureStatus() = gfxInfoRaw->GetAllFeatures();
   }
 
 #ifdef XP_WIN

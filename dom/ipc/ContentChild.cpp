@@ -1330,7 +1330,7 @@ void ContentChild::InitXPCOM(
   nsCOMPtr<nsIURI> ucsURL = std::move(aXPCOMInit.userContentSheetURL());
   GlobalStyleSheetCache::SetUserContentCSSURL(ucsURL);
 
-  GfxInfoBase::SetFeatureStatus(aXPCOMInit.gfxFeatureStatus());
+  GfxInfoBase::SetFeatureStatus(std::move(aXPCOMInit.gfxFeatureStatus()));
 
   DataStorage::SetCachedStorageEntries(aXPCOMInit.dataStorage());
 
