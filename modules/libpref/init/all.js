@@ -1429,10 +1429,10 @@ pref("network.http.spdy.enable-hpack-dump", false);
 pref("network.http.http3.enabled", false);
 
 // Http3 qpack table size.
-pref("network.http.http3.default-qpack-table-size", 0);
+pref("network.http.http3.default-qpack-table-size", 65536); // 64k
 // Maximal number of streams that can be blocked on waiting for qpack
 // instructions.
-pref("network.http.http3.default-max-stream-blocked", 10);
+pref("network.http.http3.default-max-stream-blocked", 20);
 
 // alt-svc allows separation of transport routing from
 // the origin host without using a proxy.
