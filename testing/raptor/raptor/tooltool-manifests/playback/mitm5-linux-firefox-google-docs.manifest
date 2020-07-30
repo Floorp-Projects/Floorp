@@ -1,0 +1,10 @@
+[
+  {
+    "size": 55439914,
+    "visibility": "public",
+    "digest": "784a5b8ec1c6820429ed60cb1aed7bdbac9d120366ec2ac80a1de1799c04f0804419e4cf9efc01a974e8a96c501e62650acc7c6d9223f3dc4eefad0a6e99310d",
+    "algorithm": "sha512",
+    "filename": "mitm5-linux-firefox-google-docs.zip",
+    "unpack": true
+  }
+]
