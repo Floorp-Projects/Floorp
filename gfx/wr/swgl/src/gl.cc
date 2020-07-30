@@ -123,6 +123,9 @@ static int bytes_for_internal_format(GLenum internal_format) {
     case GL_R8:
     case GL_RED:
       return 1;
+    case GL_RG8:
+    case GL_RG:
+      return 2;
     case GL_DEPTH_COMPONENT:
     case GL_DEPTH_COMPONENT16:
       return 2;
@@ -148,6 +151,8 @@ static TextureFormat gl_format_to_texture_format(int type) {
       return TextureFormat::RGBA8;
     case GL_R8:
       return TextureFormat::R8;
+    case GL_RG8:
+      return TextureFormat::RG8;
     default:
       assert(0);
       return TextureFormat::RGBA8;
@@ -650,9 +655,12 @@ static inline void init_sampler(S* s, Texture& t) {
   s->width = t.width;
   s->height = t.height;
   s->stride = t.stride();
-  if (t.bpp() >= 4) s->stride /= 4;
-  // Use uint32_t* for easier sampling, but need to cast to uint8_t* for formats
-  // with bpp < 4.
+  int bpp = t.bpp();
+  if (bpp >= 4) s->stride /= 4;
+  else if (bpp == 2) s->stride /= 2;
+  else assert(bpp == 1);
+  // Use uint32_t* for easier sampling, but need to cast to uint8_t* or
+  // uint16_t* for formats with bpp < 4.
   s->buf = (uint32_t*)t.buf;
   s->format = gl_format_to_texture_format(t.internal_format);
 }
@@ -1301,6 +1309,8 @@ static GLenum remap_internal_format(GLenum format) {
       return GL_RGBA8;
     case GL_RED:
       return GL_R8;
+    case GL_RG:
+      return GL_RG8;
     default:
       return format;
   }
@@ -1371,6 +1381,8 @@ GLenum internal_format_for_data(GLenum format, GLenum ty) {
     return GL_RGBA32F;
   } else if (format == GL_RGBA_INTEGER && ty == GL_INT) {
     return GL_RGBA32I;
+  } else if (format == GL_RG && ty == GL_UNSIGNED_BYTE) {
+    return GL_RG8;
   } else {
     debugf("unknown internal format for format %x, type %x\n", format, ty);
     assert(false);
@@ -1949,6 +1961,9 @@ static void prepare_texture(Texture& t, const IntRect* skip) {
       case GL_R8:
         force_clear<uint8_t>(t, skip);
         break;
+      case GL_RG8:
+        force_clear<uint16_t>(t, skip);
+        break;
       case GL_DEPTH_COMPONENT16:
         force_clear<uint16_t>(t, skip);
         break;
@@ -1956,6 +1971,29 @@ static void prepare_texture(Texture& t, const IntRect* skip) {
         assert(false);
         break;
     }
+  }
+}
+
+static inline bool clear_requires_scissor(Texture& t) {
+  return ctx->scissortest && !ctx->scissor.contains(t.bounds());
+}
+
+// Setup a clear on a texture. This may either force an immediate clear or
+// potentially punt to a delayed clear, if applicable.
+template <typename T>
+static void request_clear(Texture& t, int layer, T value) {
+   // If the clear would require a scissor, force clear anything outside
+   // the scissor, and then immediately clear anything inside the scissor.
+   if (clear_requires_scissor(t)) {
+    force_clear<T>(t, &ctx->scissor);
+    clear_buffer<T>(t, value, layer);
+  } else if (t.depth > 1) {
+    // Delayed clear is not supported on texture arrays.
+    t.disable_delayed_clear();
+    clear_buffer<T>(t, value, layer);
+  } else {
+    // Do delayed clear for 2D texture without scissor.
+    t.enable_delayed_clear(value);
   }
 }
 
@@ -2011,10 +2049,6 @@ GLenum CheckFramebufferStatus(GLenum target) {
   return GL_FRAMEBUFFER_COMPLETE;
 }
 
-static inline bool clear_requires_scissor(Texture& t) {
-  return ctx->scissortest && !ctx->scissor.contains(t.bounds());
-}
-
 void Clear(GLbitfield mask) {
   Framebuffer& fb = *get_framebuffer(GL_DRAW_FRAMEBUFFER);
   if ((mask & GL_COLOR_BUFFER_BIT) && fb.color_attachment) {
@@ -2022,30 +2056,14 @@ void Clear(GLbitfield mask) {
     assert(!t.locked);
     if (t.internal_format == GL_RGBA8) {
       uint32_t color = ctx->clearcolor;
-      // If the clear would require a scissor, force clear anything outside
-      // the scissor, and then immediately clear anything inside the scissor.
-      if (clear_requires_scissor(t)) {
-        force_clear<uint32_t>(t, &ctx->scissor);
-        clear_buffer<uint32_t>(t, color, fb.layer);
-      } else if (t.depth > 1) {
-        // Delayed clear is not supported on texture arrays.
-        t.disable_delayed_clear();
-        clear_buffer<uint32_t>(t, color, fb.layer);
-      } else {
-        // Do delayed clear for 2D texture without scissor.
-        t.enable_delayed_clear(color);
-      }
+      request_clear<uint32_t>(t, fb.layer, color);
     } else if (t.internal_format == GL_R8) {
       uint8_t color = uint8_t((ctx->clearcolor >> 16) & 0xFF);
-      if (clear_requires_scissor(t)) {
-        force_clear<uint8_t>(t, &ctx->scissor);
-        clear_buffer<uint8_t>(t, color, fb.layer);
-      } else if (t.depth > 1) {
-        t.disable_delayed_clear();
-        clear_buffer<uint8_t>(t, color, fb.layer);
-      } else {
-        t.enable_delayed_clear(color);
-      }
+      request_clear<uint8_t>(t, fb.layer, color);
+    } else if (t.internal_format == GL_RG8) {
+      uint16_t color = uint16_t((ctx->clearcolor & 0xFF00) |
+                                ((ctx->clearcolor >> 16) & 0xFF));
+      request_clear<uint16_t>(t, fb.layer, color);
     } else {
       assert(false);
     }
@@ -2054,12 +2072,7 @@ void Clear(GLbitfield mask) {
     Texture& t = ctx->textures[fb.depth_attachment];
     assert(t.internal_format == GL_DEPTH_COMPONENT16);
     uint16_t depth = uint16_t(0xFFFF * ctx->cleardepth) - 0x8000;
-    if (clear_requires_scissor(t)) {
-      force_clear<uint16_t>(t, &ctx->scissor);
-      clear_buffer<uint16_t>(t, depth);
-    } else {
-      t.enable_delayed_clear(depth);
-    }
+    request_clear<uint16_t>(t, 0, depth);
   }
 }
 
@@ -2092,7 +2105,7 @@ void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
   Framebuffer* fb = get_framebuffer(GL_READ_FRAMEBUFFER);
   if (!fb) return;
   assert(format == GL_RED || format == GL_RGBA || format == GL_RGBA_INTEGER ||
-         format == GL_BGRA);
+         format == GL_BGRA || format == GL_RG);
   Texture& t = ctx->textures[fb->color_attachment];
   if (!t.buf) return;
   prepare_texture(t);
@@ -2239,6 +2252,19 @@ static inline PackedR8 pack(WideR8 p) {
   return lowHalf(bit_cast<V8<uint8_t>>(vqmovn_u16(expand(p))));
 #else
   return CONVERT(p, PackedR8);
+#endif
+}
+
+using PackedRG8 = V8<uint8_t>;
+using WideRG8 = V8<uint16_t>;
+
+static inline PackedRG8 pack(WideRG8 p) {
+#if USE_SSE2
+  return lowHalf(bit_cast<V16<uint8_t>>(_mm_packus_epi16(p, p)));
+#elif USE_NEON
+  return bit_cast<V8<uint8_t>>(vqmovn_u16(p));
+#else
+  return CONVERT(p, PackedRG8);
 #endif
 }
 
@@ -2563,6 +2589,10 @@ static inline WideR8 span_mask_R8(int span) {
 
 static inline WideR8 span_mask(uint8_t*, int span) {
   return span_mask_R8(span);
+}
+
+static inline PackedRG8 span_mask_RG8(int span) {
+  return bit_cast<PackedRG8>(I16(span) < I16{1, 2, 3, 4});
 }
 
 template <bool DISCARD, bool W, typename P, typename M>
@@ -3856,11 +3886,29 @@ static void linear_row(uint8_t* dest, int span, const vec2_scalar& srcUV,
   }
 }
 
+static void linear_row(uint16_t* dest, int span, const vec2_scalar& srcUV,
+                       float srcDU, int srcZOffset, sampler2DArray sampler) {
+  vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
+  for (; span >= 4; span -= 4) {
+    auto srcpx = textureLinearPackedRG8(sampler, ivec2(uv), srcZOffset);
+    unaligned_store(dest, srcpx);
+    dest += 4;
+    uv.x += 4 * srcDU;
+  }
+  if (span > 0) {
+    auto srcpx = textureLinearPackedRG8(sampler, ivec2(uv), srcZOffset);
+    auto mask = span_mask_RG8(span);
+    auto dstpx = unaligned_load<PackedRG8>(dest);
+    unaligned_store(dest, (mask & dstpx) | (~mask & srcpx));
+  }
+}
+
 static void linear_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
                         Texture& dsttex, const IntRect& dstReq, int dstZ,
                         bool invertY) {
   assert(srctex.internal_format == GL_RGBA8 ||
-         srctex.internal_format == GL_R8);
+         srctex.internal_format == GL_R8 ||
+         srctex.internal_format == GL_RG8);
   // Compute valid dest bounds
   IntRect dstBounds = dsttex.sample_bounds(dstReq, invertY);
   // Check if sampling bounds are empty
@@ -3895,6 +3943,10 @@ static void linear_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
     switch (bpp) {
       case 1:
         linear_row((uint8_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
+                   &sampler);
+        break;
+      case 2:
+        linear_row((uint16_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
                    &sampler);
         break;
       case 4:
@@ -3947,7 +3999,8 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   prepare_texture(dsttex, &dstReq);
   if (!srcReq.same_size(dstReq) && filter == GL_LINEAR &&
       (srctex.internal_format == GL_RGBA8 ||
-       srctex.internal_format == GL_R8)) {
+       srctex.internal_format == GL_R8 ||
+       srctex.internal_format == GL_RG8)) {
     linear_blit(srctex, srcReq, srcfb->layer, dsttex, dstReq, dstfb->layer,
                 invertY);
   } else {
