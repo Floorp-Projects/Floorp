@@ -193,23 +193,21 @@ class ProfilerMarkerPayload {
 class TracingMarkerPayload : public ProfilerMarkerPayload {
  public:
   TracingMarkerPayload(
-      const char* aCategory, TracingKind aKind,
+      const char* aCategory, TracingKind aKind, const mozilla::TimeStamp& aTime,
       const mozilla::Maybe<uint64_t>& aInnerWindowID = mozilla::Nothing(),
       UniqueProfilerBacktrace aCause = nullptr)
-      : ProfilerMarkerPayload(aInnerWindowID, std::move(aCause)),
-        mCategory(aCategory),
-        mKind(aKind) {}
-
-  TracingMarkerPayload(const char* aCategory, TracingKind aKind,
-                       const mozilla::TimeStamp& aTime)
-
-      : ProfilerMarkerPayload(aTime, aTime, mozilla::Nothing(), nullptr),
+      : ProfilerMarkerPayload((aKind != TracingKind::TRACING_INTERVAL_END)
+                                  ? aTime
+                                  : mozilla::TimeStamp{},
+                              (aKind != TracingKind::TRACING_INTERVAL_START)
+                                  ? aTime
+                                  : mozilla::TimeStamp{},
+                              aInnerWindowID, std::move(aCause)),
         mCategory(aCategory),
         mKind(aKind) {}
 
   TracingMarkerPayload(const char* aCategory, const mozilla::TimeStamp& aStart,
                        const mozilla::TimeStamp& aEnd)
-
       : ProfilerMarkerPayload(aStart, aEnd, mozilla::Nothing(), nullptr),
         mCategory(aCategory),
         mKind(TRACING_EVENT) {}
@@ -288,11 +286,15 @@ class FileIOMarkerPayload : public ProfilerMarkerPayload {
 
 class DOMEventMarkerPayload : public TracingMarkerPayload {
  public:
+  // `aTimeStamp` is the internal timestamp of the event, and recorded
+  // separately from the tracing marker timestamp, which is now (the time of
+  // this recording.)
   DOMEventMarkerPayload(const nsAString& aEventType,
                         const mozilla::TimeStamp& aTimeStamp,
                         const char* aCategory, TracingKind aKind,
                         const mozilla::Maybe<uint64_t>& aInnerWindowID)
-      : TracingMarkerPayload(aCategory, aKind, aInnerWindowID),
+      : TracingMarkerPayload(aCategory, aKind,
+                             mozilla::TimeStamp::NowUnfuzzed(), aInnerWindowID),
         mTimeStamp(aTimeStamp),
         mEventType(aEventType) {}
 

@@ -5554,7 +5554,8 @@ void profiler_tracing_marker(const char* aCategoryString,
   AUTO_PROFILER_STATS(add_marker_with_TracingMarkerPayload);
   profiler_add_marker(
       aMarkerName, aCategoryPair,
-      TracingMarkerPayload(aCategoryString, aKind, aInnerWindowID));
+      TracingMarkerPayload(aCategoryString, aKind, TimeStamp::NowUnfuzzed(),
+                           aInnerWindowID));
 }
 
 void profiler_tracing_marker(const char* aCategoryString,
@@ -5571,9 +5572,10 @@ void profiler_tracing_marker(const char* aCategoryString,
     return;
   }
 
-  profiler_add_marker(aMarkerName, aCategoryPair,
-                      TracingMarkerPayload(aCategoryString, aKind,
-                                           aInnerWindowID, std::move(aCause)));
+  profiler_add_marker(
+      aMarkerName, aCategoryPair,
+      TracingMarkerPayload(aCategoryString, aKind, TimeStamp::NowUnfuzzed(),
+                           aInnerWindowID, std::move(aCause)));
 }
 
 void profiler_add_text_marker(const char* aMarkerName, const nsACString& aText,
