@@ -18,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.clearInvocations
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -86,6 +87,43 @@ class SmallMenuCandidateViewHolderTest {
         )
 
         holder.onClick(null)
+        assertTrue(dismissed)
+        assertTrue(clicked)
+    }
+
+    @Test
+    fun `sets on long click listener`() {
+        var dismissed = false
+        var clicked = false
+        val holder = SmallMenuCandidateViewHolder(view) { dismissed = true }
+
+        holder.onLongClick(null)
+        assertTrue(dismissed)
+        assertFalse(clicked)
+
+        holder.bind(SmallMenuCandidate("hello", DrawableMenuIcon(null)))
+        verify(view).setOnClickListener(holder)
+        verify(view, atLeastOnce()).isLongClickable = false
+        dismissed = false
+
+        assertFalse(holder.onLongClick(null))
+        assertTrue(dismissed)
+        assertFalse(clicked)
+
+        dismissed = false
+        holder.bind(
+            SmallMenuCandidate(
+                "hello",
+                DrawableMenuIcon(null),
+                onLongClick = {
+                    clicked = true
+                    true
+                }
+            ) {}
+        )
+        verify(view).isLongClickable = true
+
+        assertTrue(holder.onLongClick(null))
         assertTrue(dismissed)
         assertTrue(clicked)
     }

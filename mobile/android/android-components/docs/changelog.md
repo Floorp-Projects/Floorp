@@ -28,6 +28,9 @@ permalink: /changelog/
 * **browser-menu**
   * ⚠️ **This is a breaking change**: `BrowserMenuItemToolbar.Button.longClickListener` is now nullable and defaults to null.
 
+* **concept-menu**
+  * Added `SmallMenuCandidate.onLongClick` to handle long click of row menu buttons.
+
 # 52.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v51.0.0...v52.0.0)
