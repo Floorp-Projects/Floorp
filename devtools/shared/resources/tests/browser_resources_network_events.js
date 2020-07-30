@@ -50,7 +50,7 @@ async function testNetworkEventResourcesWithExistingResources() {
         resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
         request: {
           url: `${EXAMPLE_DOMAIN}existing_post.html`,
-          method: "POST",
+          method: ["POST"],
         },
         // gets reset based on the type of request
         updates: [],
