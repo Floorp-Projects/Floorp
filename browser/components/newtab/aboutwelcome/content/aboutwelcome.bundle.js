@@ -278,10 +278,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const DEFAULT_SITES = ["youtube-com", "facebook-com", "amazon", "reddit-com", "wikipedia-org", "twitter-com"].map(site => ({
-  icon: `resource://activity-stream/data/content/tippytop/images/${site}@2x.png`,
-  title: site.split("-")[0]
-}));
 const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(0);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
@@ -326,20 +322,41 @@ const MultiStageAboutWelcome = props => {
       args: "home",
       where: "current"
     }
-  });
-  const useImportable = props.message_id.includes("IMPORTABLE");
-  const [topSites, setTopSites] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(DEFAULT_SITES);
+  }); // Update top sites with default sites by region when region is available
+
+  const [region, setRegion] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
+      setRegion((await window.AWWaitForRegionChange()));
+    })();
+  }, []);
+  const useImportable = props.message_id.includes("IMPORTABLE"); // Track whether we have already sent the importable sites impression telemetry
+
+  const [importTelemetrySent, setImportTelemetrySent] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
+  const [topSites, setTopSites] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])([]);
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    (async () => {
+      let DEFAULT_SITES = await window.AWGetDefaultSites();
       const importable = JSON.parse((await window.AWGetImportableSites()));
       const showImportable = useImportable && importable.length >= 5;
-      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_SITES`, {
-        display: showImportable ? "importable" : "static",
-        importable: importable.length
+
+      if (!importTelemetrySent) {
+        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_SITES`, {
+          display: showImportable ? "importable" : "static",
+          importable: importable.length
+        });
+        setImportTelemetrySent(true);
+      }
+
+      setTopSites(showImportable ? {
+        data: importable,
+        showImportable
+      } : {
+        data: DEFAULT_SITES,
+        showImportable
       });
-      setTopSites(showImportable ? importable : DEFAULT_SITES);
     })();
-  }, [useImportable]);
+  }, [useImportable, region]);
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `outer-wrapper multistageContainer`
   }, props.screens.map(screen => {
@@ -451,7 +468,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   renderTiles() {
     switch (this.props.content.tiles.type) {
       case "topsites":
-        return this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        return this.props.topSites && this.props.topSites.data ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: `tiles-container ${this.props.content.tiles.info ? "info" : ""}`
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "tiles-topsites-section",
@@ -459,7 +476,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           id: "topsites-section",
           "aria-labelledby": "topsites-disclaimer",
           role: "region"
-        }, this.props.topSites.slice(0, 5).map(({
+        }, this.props.topSites.data.slice(0, 5).map(({
           icon,
           label,
           title
@@ -474,7 +491,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
             backgroundColor: "transparent",
             backgroundImage: `url(${icon})`
           } : {}
-        }, icon ? "" : label[0].toUpperCase()), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }, icon ? "" : label && label[0].toUpperCase()), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "host"
         }, label))))) : null;
 
@@ -535,7 +552,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   }
 
   renderDisclaimer() {
-    if (this.props.content.tiles && this.props.content.tiles.type === "topsites") {
+    if (this.props.content.tiles && this.props.content.tiles.type === "topsites" && this.props.topSites && this.props.topSites.showImportable) {
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
         text: this.props.content.disclaimer
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
@@ -549,7 +566,8 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
 
   render() {
     const {
-      content
+      content,
+      topSites
     } = this.props;
     const hasSecondaryTopCTA = content.secondary_button && content.secondary_button.position === "top";
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
@@ -570,7 +588,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       value: "primary_button",
       onClick: this.handleAction
     }))), content.secondary_button && content.secondary_button.position !== "top" ? this.renderSecondaryCTA() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
-      className: content.tiles && content.tiles.type === "topsites" ? "steps has-disclaimer" : "steps",
+      className: content.tiles && content.tiles.type === "topsites" && topSites && topSites.showImportable ? "steps has-disclaimer" : "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": `{"current": ${parseInt(this.props.order, 10) + 1}, "total": ${this.props.totalNumberOfScreens}}`
     }, this.renderStepsIndicator()), this.renderDisclaimer());
