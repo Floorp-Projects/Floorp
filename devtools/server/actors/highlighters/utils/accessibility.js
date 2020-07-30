@@ -8,7 +8,6 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 const {
   moveInfobar,
-  createNode,
 } = require("devtools/server/actors/highlighters/utils/markup");
 const { truncateString } = require("devtools/shared/inspector/utils");
 
@@ -76,6 +75,10 @@ class Infobar {
     this.audit = new Audit(this);
   }
 
+  get markup() {
+    return this.highlighter.markup;
+  }
+
   get document() {
     return this.highlighter.win.document;
   }
@@ -117,7 +120,7 @@ class Infobar {
    *         Root element to build infobar with.
    */
   buildMarkup(root) {
-    const container = createNode(this.win, {
+    const container = this.markup.createNode({
       parent: root,
       attributes: {
         class: "infobar-container",
@@ -128,7 +131,7 @@ class Infobar {
       prefix: this.prefix,
     });
 
-    const infobar = createNode(this.win, {
+    const infobar = this.markup.createNode({
       parent: container,
       attributes: {
         class: "infobar",
@@ -137,7 +140,7 @@ class Infobar {
       prefix: this.prefix,
     });
 
-    const infobarText = createNode(this.win, {
+    const infobarText = this.markup.createNode({
       parent: infobar,
       attributes: {
         class: "infobar-text",
@@ -146,7 +149,7 @@ class Infobar {
       prefix: this.prefix,
     });
 
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: infobarText,
       attributes: {
@@ -156,7 +159,7 @@ class Infobar {
       prefix: this.prefix,
     });
 
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: infobarText,
       attributes: {
@@ -197,7 +200,7 @@ class Infobar {
    * @return {String} The text content of the element.
    */
   getTextContent(id) {
-    const anonymousContent = this.highlighter.markup.content;
+    const anonymousContent = this.markup.content;
     return anonymousContent.getTextContentForElement(`${this.prefix}${id}`);
   }
 
@@ -297,12 +300,12 @@ class Audit {
     return this.infobar.prefix;
   }
 
-  get win() {
-    return this.infobar.win;
+  get markup() {
+    return this.infobar.markup;
   }
 
   buildMarkup(root) {
-    const audit = createNode(this.win, {
+    const audit = this.markup.createNode({
       nodeType: "span",
       parent: root,
       attributes: {
@@ -359,8 +362,8 @@ class AuditReport {
     return this.audit.prefix;
   }
 
-  get win() {
-    return this.audit.win;
+  get markup() {
+    return this.audit.markup;
   }
 
   getElement(id) {
@@ -382,7 +385,7 @@ class AuditReport {
  */
 class ContrastRatio extends AuditReport {
   buildMarkup(root) {
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: root,
       attributes: {
@@ -392,7 +395,7 @@ class ContrastRatio extends AuditReport {
       prefix: this.prefix,
     });
 
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: root,
       attributes: {
@@ -403,7 +406,7 @@ class ContrastRatio extends AuditReport {
       text: L10N.getStr("accessibility.contrast.ratio.error"),
     });
 
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: root,
       attributes: {
@@ -413,7 +416,7 @@ class ContrastRatio extends AuditReport {
       prefix: this.prefix,
     });
 
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: root,
       attributes: {
@@ -423,7 +426,7 @@ class ContrastRatio extends AuditReport {
       prefix: this.prefix,
     });
 
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: root,
       attributes: {
@@ -549,7 +552,7 @@ class Keyboard extends AuditReport {
   }
 
   buildMarkup(root) {
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: root,
       attributes: {
@@ -628,7 +631,7 @@ class TextLabel extends AuditReport {
   }
 
   buildMarkup(root) {
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: root,
       attributes: {

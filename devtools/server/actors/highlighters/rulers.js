@@ -11,8 +11,6 @@ const {
 } = require("devtools/shared/layout/utils");
 const {
   CanvasFrameAnonymousContentHelper,
-  createSVGNode,
-  createNode,
 } = require("devtools/server/actors/highlighters/utils/markup");
 
 // Maximum size, in pixel, for the horizontal ruler and vertical ruler
@@ -49,10 +47,9 @@ RulersHighlighter.prototype = {
   ID_CLASS_PREFIX: "rulers-highlighter-",
 
   _buildMarkup: function() {
-    const { window } = this.env;
     const prefix = this.ID_CLASS_PREFIX;
 
-    function createRuler(axis, size) {
+    const createRuler = (axis, size) => {
       let width, height;
       let isHorizontal = true;
 
@@ -69,7 +66,7 @@ RulersHighlighter.prototype = {
         );
       }
 
-      const g = createSVGNode(window, {
+      const g = this.markup.createSVGNode({
         nodeType: "g",
         attributes: {
           id: `${axis}-axis`,
@@ -78,7 +75,7 @@ RulersHighlighter.prototype = {
         prefix,
       });
 
-      createSVGNode(window, {
+      this.markup.createSVGNode({
         nodeType: "rect",
         attributes: {
           y: isHorizontal ? 0 : 16,
@@ -88,7 +85,7 @@ RulersHighlighter.prototype = {
         parent: g,
       });
 
-      const gRule = createSVGNode(window, {
+      const gRule = this.markup.createSVGNode({
         nodeType: "g",
         attributes: {
           id: `${axis}-axis-ruler`,
@@ -97,7 +94,7 @@ RulersHighlighter.prototype = {
         prefix,
       });
 
-      const pathGraduations = createSVGNode(window, {
+      const pathGraduations = this.markup.createSVGNode({
         nodeType: "path",
         attributes: {
           class: "ruler-graduations",
@@ -108,7 +105,7 @@ RulersHighlighter.prototype = {
         prefix,
       });
 
-      const pathMarkers = createSVGNode(window, {
+      const pathMarkers = this.markup.createSVGNode({
         nodeType: "path",
         attributes: {
           class: "ruler-markers",
@@ -119,7 +116,7 @@ RulersHighlighter.prototype = {
         prefix,
       });
 
-      const gText = createSVGNode(window, {
+      const gText = this.markup.createSVGNode({
         nodeType: "g",
         attributes: {
           id: `${axis}-axis-text`,
@@ -142,7 +139,7 @@ RulersHighlighter.prototype = {
 
         if (i % RULERS_TEXT_STEP === 0) {
           graduationLength = 8;
-          createSVGNode(window, {
+          this.markup.createSVGNode({
             nodeType: "text",
             parent: gText,
             attributes: {
@@ -169,13 +166,13 @@ RulersHighlighter.prototype = {
       pathMarkers.setAttribute("d", dMarkers);
 
       return g;
-    }
+    };
 
-    const container = createNode(window, {
+    const container = this.markup.createNode({
       attributes: { class: "highlighter-container" },
     });
 
-    const root = createNode(window, {
+    const root = this.markup.createNode({
       parent: container,
       attributes: {
         id: "root",
@@ -184,7 +181,7 @@ RulersHighlighter.prototype = {
       prefix,
     });
 
-    const svg = createSVGNode(window, {
+    const svg = this.markup.createSVGNode({
       nodeType: "svg",
       parent: root,
       attributes: {
@@ -200,7 +197,7 @@ RulersHighlighter.prototype = {
     createRuler("x", RULERS_MAX_X_AXIS);
     createRuler("y", RULERS_MAX_Y_AXIS);
 
-    createNode(window, {
+    this.markup.createNode({
       parent: container,
       attributes: {
         class: "viewport-infobar-container",

@@ -9,8 +9,6 @@ const {
 } = require("devtools/server/actors/highlighters/auto-refresh");
 const {
   CanvasFrameAnonymousContentHelper,
-  createNode,
-  createSVGNode,
   isNodeValid,
 } = require("devtools/server/actors/highlighters/utils/markup");
 const {
@@ -118,14 +116,14 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
    * @return {Object} Container element for the highlighter markup.
    */
   _buildMarkup() {
-    const container = createNode(this.win, {
+    const container = this.markup.createNode({
       attributes: {
         class: "highlighter-container",
         "aria-hidden": "true",
       },
     });
 
-    const root = createNode(this.win, {
+    const root = this.markup.createNode({
       parent: container,
       attributes: {
         id: "root",
@@ -135,7 +133,7 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the SVG element.
-    const svg = createSVGNode(this.win, {
+    const svg = this.markup.createSVGNode({
       nodeType: "svg",
       parent: root,
       attributes: {
@@ -147,7 +145,7 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: svg,
       attributes: {

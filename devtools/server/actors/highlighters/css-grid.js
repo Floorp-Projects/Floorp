@@ -23,8 +23,6 @@ const {
 } = require("devtools/server/actors/highlighters/utils/canvas");
 const {
   CanvasFrameAnonymousContentHelper,
-  createNode,
-  createSVGNode,
   getComputedStyle,
   moveInfobar,
 } = require("devtools/server/actors/highlighters/utils/markup");
@@ -264,13 +262,13 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   }
 
   _buildMarkup() {
-    const container = createNode(this.win, {
+    const container = this.markup.createNode({
       attributes: {
         class: "highlighter-container",
       },
     });
 
-    const root = createNode(this.win, {
+    const root = this.markup.createNode({
       parent: container,
       attributes: {
         id: "root",
@@ -282,7 +280,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // We use a <canvas> element so that we can draw an arbitrary number of lines
     // which wouldn't be possible with HTML or SVG without having to insert and remove
     // the whole markup on every update.
-    createNode(this.win, {
+    this.markup.createNode({
       parent: root,
       nodeType: "canvas",
       attributes: {
@@ -296,7 +294,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the SVG element.
-    const svg = createSVGNode(this.win, {
+    const svg = this.markup.createSVGNode({
       nodeType: "svg",
       parent: root,
       attributes: {
@@ -308,7 +306,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const regions = createSVGNode(this.win, {
+    const regions = this.markup.createSVGNode({
       nodeType: "g",
       parent: svg,
       attributes: {
@@ -317,7 +315,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: regions,
       attributes: {
@@ -327,7 +325,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: regions,
       attributes: {
@@ -338,7 +336,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the grid area infobar markup.
-    const areaInfobarContainer = createNode(this.win, {
+    const areaInfobarContainer = this.markup.createNode({
       parent: container,
       attributes: {
         class: "area-infobar-container",
@@ -349,7 +347,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const areaInfobar = createNode(this.win, {
+    const areaInfobar = this.markup.createNode({
       parent: areaInfobarContainer,
       attributes: {
         class: "infobar",
@@ -357,14 +355,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const areaTextbox = createNode(this.win, {
+    const areaTextbox = this.markup.createNode({
       parent: areaInfobar,
       attributes: {
         class: "infobar-text",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: areaTextbox,
       attributes: {
@@ -373,7 +371,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: areaTextbox,
       attributes: {
@@ -384,7 +382,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the grid cell infobar markup.
-    const cellInfobarContainer = createNode(this.win, {
+    const cellInfobarContainer = this.markup.createNode({
       parent: container,
       attributes: {
         class: "cell-infobar-container",
@@ -395,7 +393,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const cellInfobar = createNode(this.win, {
+    const cellInfobar = this.markup.createNode({
       parent: cellInfobarContainer,
       attributes: {
         class: "infobar",
@@ -403,14 +401,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const cellTextbox = createNode(this.win, {
+    const cellTextbox = this.markup.createNode({
       parent: cellInfobar,
       attributes: {
         class: "infobar-text",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: cellTextbox,
       attributes: {
@@ -419,7 +417,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: cellTextbox,
       attributes: {
@@ -430,7 +428,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     });
 
     // Build the grid line infobar markup.
-    const lineInfobarContainer = createNode(this.win, {
+    const lineInfobarContainer = this.markup.createNode({
       parent: container,
       attributes: {
         class: "line-infobar-container",
@@ -441,7 +439,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const lineInfobar = createNode(this.win, {
+    const lineInfobar = this.markup.createNode({
       parent: lineInfobarContainer,
       attributes: {
         class: "infobar",
@@ -449,14 +447,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const lineTextbox = createNode(this.win, {
+    const lineTextbox = this.markup.createNode({
       parent: lineInfobar,
       attributes: {
         class: "infobar-text",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: lineTextbox,
       attributes: {
@@ -465,7 +463,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "span",
       parent: lineTextbox,
       attributes: {
@@ -567,7 +565,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     // Create the diagonal lines pattern for the rendering the grid gaps.
-    const canvas = createNode(this.win, { nodeType: "canvas" });
+    const canvas = this.markup.createNode({ nodeType: "canvas" });
     const width = (canvas.width = GRID_GAP_PATTERN_WIDTH * devicePixelRatio);
     const height = (canvas.height = GRID_GAP_PATTERN_HEIGHT * devicePixelRatio);
 
