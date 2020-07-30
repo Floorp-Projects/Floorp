@@ -107,6 +107,9 @@ nav-stop-shortcut =
 history-show-all-shortcut =
     .key = H
 
+history-show-all-shortcut-mac =
+    .key = Y
+
 history-sidebar-shortcut =
     .key = H
 
