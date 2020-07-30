@@ -630,6 +630,17 @@ int _r_log_init(int use_reg)
     char *log;
 #endif
 
+    if(r_log_initted==0) {
+#ifdef WIN32
+      r_log_env_verbose=1;
+#else
+      log=getenv("R_LOG_VERBOSE");
+      if(log)
+        r_log_env_verbose=atoi(log);
+#endif
+
+    }
+
     if(!use_reg){
       if(r_log_initted<R_LOG_INITTED1){
         r_log_get_default_level();
@@ -651,14 +662,6 @@ int _r_log_init(int use_reg)
         r_log_initted=R_LOG_INITTED2;
       }
     }
-
-#ifdef WIN32
-    r_log_env_verbose=1;
-#else
-    log=getenv("R_LOG_VERBOSE");
-    if(log)
-      r_log_env_verbose=atoi(log);
-#endif
 
     return(0);
   }
