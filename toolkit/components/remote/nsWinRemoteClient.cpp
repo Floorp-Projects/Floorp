@@ -8,6 +8,7 @@
 #include "nsWinRemoteClient.h"
 #include <windows.h>
 #include "RemoteUtils.h"
+#include "WinRemoteMessage.h"
 
 using namespace mozilla;
 
@@ -27,25 +28,15 @@ nsresult nsWinRemoteClient::SendCommandLine(
     return NS_OK;
   }
 
-  WCHAR* cmd = ::GetCommandLineW();
   WCHAR cwd[MAX_PATH];
   _wgetcwd(cwd, MAX_PATH);
+  WinRemoteMessageSender sender(::GetCommandLineW(), cwd);
 
-  // Construct a narrow UTF8 buffer <commandline>\0<workingdir>\0
-  NS_ConvertUTF16toUTF8 utf8buffer(cmd);
-  utf8buffer.Append('\0');
-  WCHAR* cwdPtr = cwd;
-  AppendUTF16toUTF8(MakeStringSpan(reinterpret_cast<char16_t*>(cwdPtr)),
-                    utf8buffer);
-  utf8buffer.Append('\0');
-
-  // We used to set dwData to zero, when we didn't send the working dir.
-  // Now we're using it as a version number.
-  COPYDATASTRUCT cds = {1, utf8buffer.Length(), (void*)utf8buffer.get()};
   // Bring the already running Mozilla process to the foreground.
   // nsWindow will restore the window (if minimized) and raise it.
   ::SetForegroundWindow(handle);
-  ::SendMessage(handle, WM_COPYDATA, 0, (LPARAM)&cds);
+  ::SendMessage(handle, WM_COPYDATA, 0,
+                reinterpret_cast<LPARAM>(sender.CopyData()));
 
   *aSucceeded = true;
 

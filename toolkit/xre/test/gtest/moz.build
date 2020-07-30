@@ -10,6 +10,10 @@ UNIFIED_SOURCES = [
     'TestCompatVersionCompare.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/toolkit/components/remote',
+]
+
 if CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
         'TestAssembleCommandLineWin.cpp',
