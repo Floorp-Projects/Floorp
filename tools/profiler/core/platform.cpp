@@ -2758,24 +2758,22 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
                             ? startTime
                             : CorePS::ProcessStartTime() +
                                   TimeDuration::FromMilliseconds(endTimeMs);
+    MarkerTiming timing = endTimeMs == 0
+                              ? MarkerTiming::Instant(startTime)
+                              : MarkerTiming::Interval(startTime, endTime);
 
-    // Text field is optional, create different type of payloads depending on
-    // this.
     if (!text) {
-      // This marker doesn't have a text
-      const TimingMarkerPayload payload(startTime, endTime);
-
-      // Put the marker inside the buffer
-      StoreMarker(aProfileBuffer, threadId, markerName.get(),
-                  JS::ProfilingCategoryPair::JAVA_ANDROID, &payload);
+      // This marker doesn't have a text.
+      StoreMarker(aProfileBuffer, threadId, markerName.get(), timing,
+                  JS::ProfilingCategoryPair::JAVA_ANDROID, nullptr);
     } else {
-      // This marker has a text
+      // This marker has a text.
       nsCString textString = text->ToCString();
       const TextMarkerPayload payload(textString, startTime, endTime, Nothing(),
                                       nullptr);
 
-      // Put the marker inside the buffer
-      StoreMarker(aProfileBuffer, threadId, markerName.get(),
+      // Put the marker inside the buffer.
+      StoreMarker(aProfileBuffer, threadId, markerName.get(), timing,
                   JS::ProfilingCategoryPair::JAVA_ANDROID, &payload);
     }
   }
