@@ -119,6 +119,33 @@ static nsCString FormatErrorMessage(nsresult aError,
                          static_cast<uint32_t>(aError));
 }
 
+/**
+ * Unwraps |aResult| into a |MozPromise|.
+ *
+ * If the result is an error, a new MozPromise is created and immediately
+ * rejected with the unwrapped error. Otherwise, if the result is ok, a new
+ * MozPromise is created and immediately resolved with the unwrapped result.
+ */
+template <class PromiseT, class OkT, class ErrT>
+static RefPtr<PromiseT> ToMozPromise(Result<OkT, ErrT>& aResult,
+                                     const char* aCallSite) {
+  if (aResult.isErr()) {
+    return PromiseT::CreateAndReject(aResult.unwrapErr(), aCallSite);
+  }
+  return PromiseT::CreateAndResolve(aResult.unwrap(), aCallSite);
+}
+
+MOZ_MUST_USE inline bool ToJSValue(
+    JSContext* aCx, const IOUtils::InternalFileInfo& aInternalFileInfo,
+    JS::MutableHandle<JS::Value> aValue) {
+  FileInfo info;
+  info.mPath.Construct(aInternalFileInfo.mPath);
+  info.mType.Construct(aInternalFileInfo.mType);
+  info.mSize.Construct(aInternalFileInfo.mSize);
+  info.mLastModified.Construct(aInternalFileInfo.mLastModified);
+  return ToJSValue(aCx, info, aValue);
+}
+
 #ifdef XP_WIN
 constexpr char PathSeparator = u'\\';
 #else
@@ -191,20 +218,12 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
       [path = nsAutoString(aPath), toRead]() {
         MOZ_ASSERT(!NS_IsMainThread());
         auto rv = IOUtils::ReadSync(path, toRead);
-        if (rv.isErr()) {
-          return IOReadMozPromise::CreateAndReject(rv.unwrapErr(), __func__);
-        }
-        return IOReadMozPromise::CreateAndResolve(rv.unwrap(), __func__);
+        return ToMozPromise<IOReadMozPromise, nsTArray<uint8_t>, nsresult>(
+            rv, __func__);
       })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const nsTArray<uint8_t>& aBuf) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeReject(NS_ERROR_UNEXPECTED);
-              return;
-            }
-
             const TypedArrayCreator<Uint8Array> arrayCreator(aBuf);
             promise->MaybeResolve(arrayCreator);
           },
@@ -259,19 +278,12 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
       [destPath = nsString(aPath), toWrite = std::move(toWrite), aOptions]() {
         MOZ_ASSERT(!NS_IsMainThread());
         auto rv = WriteAtomicSync(destPath, toWrite, aOptions);
-        if (rv.isErr()) {
-          return IOWriteMozPromise::CreateAndReject(rv.unwrapErr(), __func__);
-        }
-        return IOWriteMozPromise::CreateAndResolve(rv.unwrap(), __func__);
+        return ToMozPromise<IOWriteMozPromise, uint32_t, nsresult>(rv,
+                                                                   __func__);
       })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const uint32_t& aBytesWritten) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeReject(NS_ERROR_UNEXPECTED);
-              return;
-            }
             promise->MaybeResolve(aBytesWritten);
           },
           [promise = RefPtr(promise),
@@ -338,21 +350,13 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   InvokeAsync(bg, __func__,
               [srcPathString = nsAutoString(aSourcePath),
                destPathString = nsAutoString(aDestPath), noOverwrite]() {
+                MOZ_ASSERT(!NS_IsMainThread());
                 auto rv = MoveSync(srcPathString, destPathString, noOverwrite);
-                if (rv.isErr()) {
-                  return IOMozPromise::CreateAndReject(rv.unwrapErr(),
-                                                       __func__);
-                }
-                return IOMozPromise::CreateAndResolve(rv.unwrap(), __func__);
+                return ToMozPromise<IOMozPromise, Ok, nsresult>(rv, __func__);
               })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const Ok&) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeReject(NS_ERROR_UNEXPECTED);
-              return;
-            }
             promise->MaybeResolveWithUndefined();
           },
           [promise = RefPtr(promise)](const nsresult& aError) {
@@ -404,23 +408,16 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
-  InvokeAsync(
-      bg, __func__,
-      [path = nsAutoString(aPath), aOptions]() {
-        auto rv = RemoveSync(path, aOptions.mIgnoreAbsent, aOptions.mRecursive);
-        if (rv.isErr()) {
-          return IOMozPromise::CreateAndReject(rv.unwrapErr(), __func__);
-        }
-        return IOMozPromise::CreateAndResolve(rv.unwrap(), __func__);
-      })
+  InvokeAsync(bg, __func__,
+              [path = nsAutoString(aPath), aOptions]() {
+                MOZ_ASSERT(!NS_IsMainThread());
+                auto rv = RemoveSync(path, aOptions.mIgnoreAbsent,
+                                     aOptions.mRecursive);
+                return ToMozPromise<IOMozPromise, Ok, nsresult>(rv, __func__);
+              })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const Ok&) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeReject(NS_ERROR_UNEXPECTED);
-              return;
-            }
             promise->MaybeResolveWithUndefined();
           },
           [promise = RefPtr(promise)](const nsresult& aError) {
@@ -459,22 +456,14 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
 
   InvokeAsync(bg, __func__,
               [path = nsAutoString(aPath), aOptions]() {
+                MOZ_ASSERT(!NS_IsMainThread());
                 auto rv = CreateDirectorySync(path, aOptions.mCreateAncestors,
                                               aOptions.mIgnoreExisting);
-                if (rv.isErr()) {
-                  return IOMozPromise::CreateAndReject(rv.unwrapErr(),
-                                                       __func__);
-                }
-                return IOMozPromise::CreateAndResolve(rv.unwrap(), __func__);
+                return ToMozPromise<IOMozPromise, Ok, nsresult>(rv, __func__);
               })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const Ok&) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeReject(NS_ERROR_UNEXPECTED);
-              return;
-            }
             promise->MaybeResolveWithUndefined();
           },
           [promise = RefPtr(promise)](const nsresult& aError) {
@@ -517,25 +506,13 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
         MOZ_ASSERT(!NS_IsMainThread());
 
         auto rv = StatSync(path);
-        if (rv.isErr()) {
-          return IOStatMozPromise::CreateAndReject(rv.unwrapErr(), __func__);
-        }
-        return IOStatMozPromise::CreateAndResolve(rv.unwrap(), __func__);
+        return ToMozPromise<IOStatMozPromise, InternalFileInfo, nsresult>(
+            rv, __func__);
       })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(promise)](const InternalFileInfo& aInfo) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeReject(NS_ERROR_UNEXPECTED);
-              return;
-            }
-            FileInfo jsResult;
-            jsResult.mPath.Construct(aInfo.mPath);
-            jsResult.mType.Construct(aInfo.mType);
-            jsResult.mSize.Construct(aInfo.mSize);
-            jsResult.mLastModified.Construct(aInfo.mLastModified);
-            promise->MaybeResolve(jsResult);
+            promise->MaybeResolve(aInfo);
           },
           [promise = RefPtr(promise)](const nsresult& aError) {
             switch (aError) {
@@ -628,6 +605,7 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 /* static */
 UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
     const nsAString& aPath, int32_t aFlags) {
+  MOZ_ASSERT(!NS_IsMainThread());
   // Ensure that CREATE_FILE and EXCL flags were not included, as we do not
   // want to create a new file.
   MOZ_ASSERT((aFlags & (PR_CREATE_FILE | PR_EXCL)) == 0);
@@ -648,6 +626,7 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
 /* static */
 UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
     const nsAString& aPath, int32_t aFlags, int32_t aMode) {
+  MOZ_ASSERT(!NS_IsMainThread());
   // We open the file descriptor through an nsLocalFile to ensure that the paths
   // are interpreted/encoded correctly on all platforms.
   RefPtr<nsLocalFile> file = new nsLocalFile();
