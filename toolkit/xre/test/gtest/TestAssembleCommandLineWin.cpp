@@ -6,6 +6,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/AssembleCmdLine.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 using namespace mozilla;
@@ -78,5 +79,25 @@ TEST(AssembleCommandLineWin, assembleCmdLine)
     assembled.reset(assembledRaw);
 
     EXPECT_STREQ(assembled.get(), testCase.mExpected);
+  }
+}
+
+TEST(CommandLineParserWin, HandleCommandLine)
+{
+  CommandLineParserWin<char> parser;
+  for (const auto& testCase : testCases) {
+    NS_ConvertUTF16toUTF8 utf8(testCase.mExpected);
+    parser.HandleCommandLine(utf8.get());
+
+    if (utf8.Length() == 0) {
+      EXPECT_EQ(parser.Argc(), 0);
+      continue;
+    }
+
+    for (int i = 0; i < parser.Argc(); ++i) {
+      EXPECT_NE(testCase.mArgs[i], nullptr);
+      EXPECT_STREQ(parser.Argv()[i], testCase.mArgs[i]);
+    }
+    EXPECT_EQ(testCase.mArgs[parser.Argc()], nullptr);
   }
 }
