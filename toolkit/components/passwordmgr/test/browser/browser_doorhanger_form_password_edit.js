@@ -16,6 +16,7 @@ let testCases = [
   {
     name: "Enter password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [],
     formDefaults: {},
     formChanges: {
@@ -39,6 +40,7 @@ let testCases = [
   {
     name: "Change password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [],
     formDefaults: {
       [passwordInputSelector]: "pass1",
@@ -64,6 +66,7 @@ let testCases = [
   {
     name: "Change autofilled password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [{ username: "user1", password: "autopass" }],
     formDefaults: {},
     formChanges: {
@@ -86,6 +89,7 @@ let testCases = [
   {
     name: "Change autofilled username and password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [{ username: "user1", password: "pass1" }],
     formDefaults: {},
     formChanges: {
@@ -110,6 +114,7 @@ let testCases = [
   {
     name: "Change password pref disabled",
     prefEnabled: false,
+    isLoggedIn: true,
     logins: [],
     formDefaults: {
       [passwordInputSelector]: "pass1",
@@ -128,6 +133,7 @@ let testCases = [
   {
     name: "Change to new username",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [{ username: "user1", password: "pass1" }],
     formDefaults: {},
     formChanges: {
@@ -151,6 +157,7 @@ let testCases = [
   {
     name: "Change to existing username, different password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [{ username: "user-saved", password: "pass1" }],
     formDefaults: {
       [usernameInputSelector]: "user-prefilled",
@@ -177,6 +184,7 @@ let testCases = [
   {
     name: "Add username to existing password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [{ username: "", password: "pass1" }],
     formDefaults: {},
     formChanges: {
@@ -200,6 +208,7 @@ let testCases = [
   {
     name: "Change to existing username, password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [{ username: "user1", password: "pass1" }],
     formDefaults: {
       [usernameInputSelector]: "user",
@@ -221,6 +230,7 @@ let testCases = [
     name:
       "Ensure a dismissed password-save doorhanger appears on an input event when editing an unsaved password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [],
     formDefaults: {},
     formChanges: {
@@ -246,6 +256,7 @@ let testCases = [
     name:
       "Ensure a dismissed password-save doorhanger appears with the latest input value upon editing an unsaved password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [],
     formDefaults: {},
     formChanges: {
@@ -273,6 +284,7 @@ let testCases = [
     name:
       "Ensure a dismissed password-change doorhanger appears on an input event when editing a saved password",
     prefEnabled: true,
+    isLoggedIn: true,
     logins: [{ username: "", password: "pass1" }],
     formDefaults: {},
     formChanges: {
@@ -294,6 +306,44 @@ let testCases = [
       },
     },
   },
+  {
+    name:
+      "Ensure no dismissed doorhanger is shown on 'input' when Primary Password is locked",
+    prefEnabled: true,
+    isLoggedIn: false,
+    logins: [],
+    formDefaults: {},
+    formChanges: {
+      [passwordInputSelector]: "pass",
+    },
+    shouldBlur: false,
+    expected: {
+      initialForm: {
+        username: "",
+        password: "",
+      },
+      doorhanger: null,
+    },
+  },
+  {
+    name:
+      "Ensure no dismissed doorhanger is shown on 'change' when Primary Password is locked",
+    prefEnabled: true,
+    isLoggedIn: false,
+    logins: [],
+    formDefaults: {},
+    formChanges: {
+      [passwordInputSelector]: "pass",
+    },
+    shouldBlur: true,
+    expected: {
+      initialForm: {
+        username: "",
+        password: "",
+      },
+      doorhanger: null,
+    },
+  },
 ];
 
 requestLongerTimeout(2);
@@ -305,6 +355,10 @@ for (let testData of testCases) {
       await SpecialPowers.pushPrefEnv({
         set: [["signon.passwordEditCapture.enabled", testData.prefEnabled]],
       });
+      if (!testData.isLoggedIn) {
+        // Enable Primary Password
+        LoginTestUtils.masterPassword.enable();
+      }
       for (let passwordFieldType of ["password", "text"]) {
         info(
           "testing with type=" +
@@ -313,6 +367,9 @@ for (let testData of testCases) {
             JSON.stringify(testData)
         );
         await testPasswordChange(testData, { passwordFieldType });
+      }
+      if (!testData.isLoggedIn) {
+        LoginTestUtils.masterPassword.disable();
       }
       await SpecialPowers.popPrefEnv();
     },
@@ -337,6 +394,7 @@ async function testPasswordChange(
     formDefaults = {},
     formChanges = {},
     expected,
+    isLoggedIn,
     shouldBlur = true,
   },
   { passwordFieldType }
@@ -380,7 +438,8 @@ async function testPasswordChange(
 
       try {
         await waitForPromise(passwordEditedMessage, 5000);
-        ok(expected.doorhanger, "Message sent");
+        // A message is still sent to the parent process when Primary Password is enabled
+        ok(expected.doorhanger || !isLoggedIn, "Message sent");
       } catch (ex) {
         ok(!expected.doorhanger, "No message sent");
       }
