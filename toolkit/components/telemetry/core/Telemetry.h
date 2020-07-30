@@ -428,30 +428,6 @@ void EnteringShutdownStage();
 const uint32_t kSlowSQLThresholdForMainThread = 50;
 const uint32_t kSlowSQLThresholdForHelperThreads = 100;
 
-class ProcessedStack;
-
-/**
- * Record the main thread's call stack after it hangs.
- *
- * @param aDuration - Approximate duration of main thread hang, in seconds
- * @param aStack - Array of PCs from the hung call stack
- * @param aSystemUptime - System uptime at the time of the hang, in minutes
- * @param aFirefoxUptime - Firefox uptime at the time of the hang, in minutes
- * @param aAnnotations - Any annotations to be added to the report
- */
-#if defined(MOZ_GECKO_PROFILER)
-/**
- * Record the current thread's call stack on demand. Note that, the stack is
- * only captured once. Subsequent calls result in incrementing the capture
- * counter.
- *
- * @param aKey - A user defined key associated with the captured stack.
- *
- * NOTE: Unwinding call stacks is an expensive operation performance-wise.
- */
-void CaptureStack(const nsCString& aKey);
-#endif
-
 /**
  * Record a failed attempt at locking the user's profile.
  *
