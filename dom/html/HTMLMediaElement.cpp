@@ -449,6 +449,10 @@ class HTMLMediaElement::MediaControlKeyListener final
 
   bool IsStarted() const { return mState != MediaPlaybackState::eStopped; }
 
+  bool IsPlaying() const override {
+    return Owner() ? !Owner()->Paused() : false;
+  }
+
   /**
    * Following methods should only be used after starting listener.
    */
