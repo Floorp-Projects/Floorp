@@ -83,6 +83,28 @@ class IssueItem extends PureComponent {
     return testDataSet;
   }
 
+  _renderAliases() {
+    const { property } = this.props;
+    let { aliases } = this.props;
+
+    if (!aliases) {
+      return null;
+    }
+
+    aliases = aliases.filter(alias => alias !== property);
+
+    if (aliases.length === 0) {
+      return null;
+    }
+
+    return dom.ul(
+      {
+        className: "compatibility-issue-item__aliases",
+      },
+      aliases.map(alias => dom.li({ key: alias }, alias))
+    );
+  }
+
   _renderCauses() {
     const { deprecated, experimental, prefixNeeded } = this.props;
 
@@ -199,6 +221,7 @@ class IssueItem extends PureComponent {
         ...this._getTestDataAttributes(),
       },
       this._renderDescription(),
+      this._renderAliases(),
       this._renderNodeList()
     );
   }
