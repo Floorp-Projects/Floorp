@@ -422,11 +422,8 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
           d->mAdvance = 0;
         }
       }
-      bool isClusterStart = charGlyphs[offs].IsClusterStart();
-      aShapedText->SetGlyphs(
-          aOffset + offs,
-          CompressedGlyph::MakeComplex(isClusterStart, true, details.Length()),
-          details.Elements());
+      aShapedText->SetDetailedGlyphs(aOffset + offs, details.Length(),
+                                     details.Elements());
     }
 
     // check unexpected offset
