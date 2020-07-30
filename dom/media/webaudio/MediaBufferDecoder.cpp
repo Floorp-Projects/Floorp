@@ -698,13 +698,18 @@ void WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode) {
   const char* errorMessage;
   switch (aErrorCode) {
     case UnknownContent:
-      errorMessage = "MediaDecodeAudioDataUnknownContentType";
+      errorMessage =
+          "The buffer passed to decodeAudioData contains an unknown content "
+          "type.";
       break;
     case InvalidContent:
-      errorMessage = "MediaDecodeAudioDataInvalidContent";
+      errorMessage =
+          "The buffer passed to decodeAudioData contains invalid content which "
+          "cannot be decoded successfully.";
       break;
     case NoAudio:
-      errorMessage = "MediaDecodeAudioDataNoAudio";
+      errorMessage =
+          "The buffer passed to decodeAudioData does not contain any audio.";
       break;
     case NoError:
       MOZ_FALLTHROUGH_ASSERT("Who passed NoError to OnFailure?");
@@ -713,7 +718,8 @@ void WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode) {
     case UnknownError:
       [[fallthrough]];
     default:
-      errorMessage = "MediaDecodeAudioDataUnknownError";
+      errorMessage =
+          "An unknown error occurred while processing decodeAudioData.";
       break;
   }
 
@@ -721,21 +727,18 @@ void WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode) {
   if (nsPIDOMWindowInner* pWindow = mContext->GetParentObject()) {
     doc = pWindow->GetExtantDoc();
   }
-  nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "Media"_ns, doc,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  errorMessage);
 
   // Ignore errors in calling the callback, since there is not much that we can
   // do about it here.
+  nsAutoCString errorString(errorMessage);
   if (mFailureCallback) {
-    nsAutoCString errorString(errorMessage);
     RefPtr<DOMException> exception = DOMException::Create(
         NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR, errorString);
     RefPtr<DecodeErrorCallback> callback(mFailureCallback);
     callback->Call(*exception);
   }
 
-  mPromise->MaybeReject(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+  mPromise->MaybeRejectWithEncodingError(errorString);
 
   mContext->RemoveFromDecodeQueue(this);
 }
