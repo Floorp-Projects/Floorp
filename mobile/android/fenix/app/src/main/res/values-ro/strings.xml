@@ -780,7 +780,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Folosite recent</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Autentificare în Sync</string>
+    <string name="sync_sign_in">Autentifică-te în Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Trimite pe toate dispozitivele</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -984,7 +984,7 @@
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Autentificare…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Autentificare în Firefox</string>
+    <string name="onboarding_firefox_account_sign_in">Autentifică-te în Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Rămâi deconectat</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1244,7 +1244,7 @@
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Reconectare</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Autentificare în Sync</string>
+    <string name="preferences_passwords_sync_logins_sign_in">Autentifică-te în Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Date de autentificare salvate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->

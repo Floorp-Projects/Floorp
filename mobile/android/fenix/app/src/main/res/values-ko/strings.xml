@@ -289,7 +289,7 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">데이터 수집</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">개인 정보 정책</string>
+    <string name="preferences_privacy_link">개인정보 보호정책</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">개발자 도구</string>
     <!-- Preference for developers -->
@@ -1083,7 +1083,7 @@
     
     </string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">개인 정보 보호 정책 읽기</string>
+    <string name="onboarding_privacy_notice_read_button">개인정보 보호정책 읽기</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">닫기</string>
@@ -1237,7 +1237,7 @@
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">충돌</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">개인 정보 보호 정책</string>
+    <string name="about_privacy_notice">개인정보 보호정책</string>
 
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">권리 읽기</string>
