@@ -8,18 +8,6 @@ import { Zap } from "./Zap";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { addUtmParams } from "../../asrouter/templates/FirstRun/addUtmParams";
 
-const DEFAULT_SITES = [
-  "youtube-com",
-  "facebook-com",
-  "amazon",
-  "reddit-com",
-  "wikipedia-org",
-  "twitter-com",
-].map(site => ({
-  icon: `resource://activity-stream/data/content/tippytop/images/${site}@2x.png`,
-  title: site.split("-")[0],
-}));
-
 export const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = useState(0);
   useEffect(() => {
@@ -69,19 +57,37 @@ export const MultiStageAboutWelcome = props => {
           data: { args: "home", where: "current" },
         });
 
-  const useImportable = props.message_id.includes("IMPORTABLE");
-  const [topSites, setTopSites] = useState(DEFAULT_SITES);
+  // Update top sites with default sites by region when region is available
+  const [region, setRegion] = useState(null);
   useEffect(() => {
     (async () => {
+      setRegion(await window.AWWaitForRegionChange());
+    })();
+  }, []);
+
+  const useImportable = props.message_id.includes("IMPORTABLE");
+  // Track whether we have already sent the importable sites impression telemetry
+  const [importTelemetrySent, setImportTelemetrySent] = useState(null);
+  const [topSites, setTopSites] = useState([]);
+  useEffect(() => {
+    (async () => {
+      let DEFAULT_SITES = await window.AWGetDefaultSites();
       const importable = JSON.parse(await window.AWGetImportableSites());
       const showImportable = useImportable && importable.length >= 5;
-      AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_SITES`, {
-        display: showImportable ? "importable" : "static",
-        importable: importable.length,
-      });
-      setTopSites(showImportable ? importable : DEFAULT_SITES);
+      if (!importTelemetrySent) {
+        AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_SITES`, {
+          display: showImportable ? "importable" : "static",
+          importable: importable.length,
+        });
+        setImportTelemetrySent(true);
+      }
+      setTopSites(
+        showImportable
+          ? { data: importable, showImportable }
+          : { data: DEFAULT_SITES, showImportable }
+      );
     })();
-  }, [useImportable]);
+  }, [useImportable, region]);
 
   return (
     <React.Fragment>
@@ -198,7 +204,7 @@ export class WelcomeScreen extends React.PureComponent {
   renderTiles() {
     switch (this.props.content.tiles.type) {
       case "topsites":
-        return this.props.topSites ? (
+        return this.props.topSites && this.props.topSites.data ? (
           <div
             className={`tiles-container ${
               this.props.content.tiles.info ? "info" : ""
@@ -211,29 +217,31 @@ export class WelcomeScreen extends React.PureComponent {
               aria-labelledby="topsites-disclaimer"
               role="region"
             >
-              {this.props.topSites.slice(0, 5).map(({ icon, label, title }) => (
-                <div
-                  className="site"
-                  key={icon + label}
-                  aria-label={title ? title : label}
-                  role="img"
-                >
+              {this.props.topSites.data
+                .slice(0, 5)
+                .map(({ icon, label, title }) => (
                   <div
-                    className="icon"
-                    style={
-                      icon
-                        ? {
-                            backgroundColor: "transparent",
-                            backgroundImage: `url(${icon})`,
-                          }
-                        : {}
-                    }
+                    className="site"
+                    key={icon + label}
+                    aria-label={title ? title : label}
+                    role="img"
                   >
-                    {icon ? "" : label[0].toUpperCase()}
+                    <div
+                      className="icon"
+                      style={
+                        icon
+                          ? {
+                              backgroundColor: "transparent",
+                              backgroundImage: `url(${icon})`,
+                            }
+                          : {}
+                      }
+                    >
+                      {icon ? "" : label && label[0].toUpperCase()}
+                    </div>
+                    {label && <div className="host">{label}</div>}
                   </div>
-                  {label && <div className="host">{label}</div>}
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         ) : null;
@@ -294,7 +302,9 @@ export class WelcomeScreen extends React.PureComponent {
   renderDisclaimer() {
     if (
       this.props.content.tiles &&
-      this.props.content.tiles.type === "topsites"
+      this.props.content.tiles.type === "topsites" &&
+      this.props.topSites &&
+      this.props.topSites.showImportable
     ) {
       return (
         <Localized text={this.props.content.disclaimer}>
@@ -306,7 +316,7 @@ export class WelcomeScreen extends React.PureComponent {
   }
 
   render() {
-    const { content } = this.props;
+    const { content, topSites } = this.props;
     const hasSecondaryTopCTA =
       content.secondary_button && content.secondary_button.position === "top";
     return (
@@ -336,7 +346,10 @@ export class WelcomeScreen extends React.PureComponent {
           : null}
         <nav
           className={
-            content.tiles && content.tiles.type === "topsites"
+            content.tiles &&
+            content.tiles.type === "topsites" &&
+            topSites &&
+            topSites.showImportable
               ? "steps has-disclaimer"
               : "steps"
           }
