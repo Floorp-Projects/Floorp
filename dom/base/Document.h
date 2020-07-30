@@ -3905,6 +3905,8 @@ class Document : public nsINode,
   void AddPendingFrameStaticClone(nsFrameLoaderOwner* aElement,
                                   nsFrameLoader* aStaticCloneOf);
 
+  bool ShouldAvoidNativeTheme() const;
+
  protected:
   void DoUpdateSVGUseElementShadowTrees();
 
