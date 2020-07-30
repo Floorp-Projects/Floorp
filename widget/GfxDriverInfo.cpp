@@ -464,6 +464,47 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x160d);
       APPEND_DEVICE(0x160e);
 
+#ifdef EARLY_BETA_OR_EARLIER
+      // gen7 gt2
+      APPEND_DEVICE(0x0162);
+      APPEND_DEVICE(0x0166);
+      APPEND_DEVICE(0x016a);
+
+      // gen6 gt2
+      APPEND_DEVICE(0x0112);
+      APPEND_DEVICE(0x0116);
+      APPEND_DEVICE(0x0122);
+      APPEND_DEVICE(0x0126);
+
+      // gen7 gt1
+      APPEND_DEVICE(0x0152);
+      APPEND_DEVICE(0x0156);
+      APPEND_DEVICE(0x015a);
+#endif
+      [[fallthrough]];
+    case DeviceFamily::IntelModernRolloutWebRender:
+      // gen7.5 gt1
+      APPEND_DEVICE(0x0402);
+      APPEND_DEVICE(0x0406);
+      APPEND_DEVICE(0x040a);
+      APPEND_DEVICE(0x040b);
+      APPEND_DEVICE(0x040e);
+      APPEND_DEVICE(0x0a02);
+      APPEND_DEVICE(0x0a06);
+      APPEND_DEVICE(0x0a0a);
+      APPEND_DEVICE(0x0a0b);
+      APPEND_DEVICE(0x0a0e);
+      APPEND_DEVICE(0x0c02);
+      APPEND_DEVICE(0x0c06);
+      APPEND_DEVICE(0x0c0c);
+      APPEND_DEVICE(0x0c0b);
+      APPEND_DEVICE(0x0c0e);
+      APPEND_DEVICE(0x0d02);
+      APPEND_DEVICE(0x0d06);
+      APPEND_DEVICE(0x0d0a);
+      APPEND_DEVICE(0x0d0b);
+      APPEND_DEVICE(0x0d0e);
+
       // gen7.5 gt2
       APPEND_DEVICE(0x0412);
       APPEND_DEVICE(0x0416);
@@ -499,47 +540,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0d2b);
       APPEND_DEVICE(0x0d2e);
 
-#ifdef EARLY_BETA_OR_EARLIER
-      // gen7 gt2
-      APPEND_DEVICE(0x0162);
-      APPEND_DEVICE(0x0166);
-      APPEND_DEVICE(0x016a);
-
-      // gen6 gt2
-      APPEND_DEVICE(0x0112);
-      APPEND_DEVICE(0x0116);
-      APPEND_DEVICE(0x0122);
-      APPEND_DEVICE(0x0126);
-
-      // gen7.5 gt1
-      APPEND_DEVICE(0x0402);
-      APPEND_DEVICE(0x0406);
-      APPEND_DEVICE(0x040a);
-      APPEND_DEVICE(0x040b);
-      APPEND_DEVICE(0x040e);
-      APPEND_DEVICE(0x0a02);
-      APPEND_DEVICE(0x0a06);
-      APPEND_DEVICE(0x0a0a);
-      APPEND_DEVICE(0x0a0b);
-      APPEND_DEVICE(0x0a0e);
-      APPEND_DEVICE(0x0c02);
-      APPEND_DEVICE(0x0c06);
-      APPEND_DEVICE(0x0c0c);
-      APPEND_DEVICE(0x0c0b);
-      APPEND_DEVICE(0x0c0e);
-      APPEND_DEVICE(0x0d02);
-      APPEND_DEVICE(0x0d06);
-      APPEND_DEVICE(0x0d0a);
-      APPEND_DEVICE(0x0d0b);
-      APPEND_DEVICE(0x0d0e);
-
-      // gen7 gt1
-      APPEND_DEVICE(0x0152);
-      APPEND_DEVICE(0x0156);
-      APPEND_DEVICE(0x015a);
-#endif
-      [[fallthrough]];
-    case DeviceFamily::IntelModernRolloutWebRender:
 #ifdef EARLY_BETA_OR_EARLIER
       // broxton (apollolake)
       APPEND_DEVICE(0x0a84);
