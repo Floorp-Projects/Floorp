@@ -2,7 +2,7 @@
 
 # newInstance
 
-`fun newInstance(listener: `[`OnScanCompleteListener`](-on-scan-complete-listener/index.md)`, scanMessage: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null): `[`QrFragment`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFragment.kt#L494)
+`fun newInstance(listener: `[`OnScanCompleteListener`](-on-scan-complete-listener/index.md)`, scanMessage: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null): `[`QrFragment`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFragment.kt#L524)
 
 Returns a new instance of QR Fragment
 

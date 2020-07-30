@@ -2,7 +2,7 @@
 
 # SettingsMigrationResult
 
-`sealed class SettingsMigrationResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L100)
+`sealed class SettingsMigrationResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L104)
 
 Result of Fennec settings migration.
 

@@ -2,7 +2,7 @@
 
 # QrFragment
 
-`class QrFragment : Fragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFragment.kt#L74)
+`class QrFragment : Fragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFragment.kt#L76)
 
 A [Fragment](#) that displays a QR scanner.
 

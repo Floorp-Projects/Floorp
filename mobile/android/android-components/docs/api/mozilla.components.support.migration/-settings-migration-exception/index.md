@@ -2,7 +2,7 @@
 
 # SettingsMigrationException
 
-`class SettingsMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L95)
+`class SettingsMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L99)
 
 Wraps [SettingsMigrationResult](../-settings-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](../-result/-failure/index.md).
 

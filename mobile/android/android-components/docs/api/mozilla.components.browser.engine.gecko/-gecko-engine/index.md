@@ -2,7 +2,7 @@
 
 # GeckoEngine
 
-`class GeckoEngine : `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngine.kt#L59)
+`class GeckoEngine : `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngine.kt#L62)
 
 Gecko-based implementation of Engine interface.
 
@@ -16,7 +16,7 @@ Gecko-based implementation of Engine interface.
 
 | Name | Summary |
 |---|---|
-| [profiler](profiler.md) | `val profiler: `[`Profiler`](../../mozilla.components.concept.engine.profiler/-profiler/index.md)`?`<br>See [Engine.profiler](../../mozilla.components.concept.engine/-engine/profiler.md). |
+| [profiler](profiler.md) | `val profiler: `[`Profiler`](../../mozilla.components.browser.engine.gecko.profiler/-profiler/index.md)`?`<br>See [Engine.profiler](../../mozilla.components.concept.engine/-engine/profiler.md). |
 | [settings](settings.md) | `val settings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)<br>See [Engine.settings](../../mozilla.components.concept.engine/-engine/settings.md) |
 | [trackingProtectionExceptionStore](tracking-protection-exception-store.md) | `val trackingProtectionExceptionStore: `[`TrackingProtectionExceptionStorage`](../../mozilla.components.concept.engine.content.blocking/-tracking-protection-exception-storage/index.md)<br>Provides access to the tracking protection exception list for this engine. |
 | [version](version.md) | `val version: `[`EngineVersion`](../../mozilla.components.concept.engine.utils/-engine-version/index.md)<br>Returns the version of the engine as [EngineVersion](../../mozilla.components.concept.engine.utils/-engine-version/index.md) object. |
