@@ -26,6 +26,22 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 var UrlbarTestUtils = {
   /**
+   * This maps the categories used by the FX_URLBAR_SELECTED_RESULT_METHOD and
+   * FX_SEARCHBAR_SELECTED_RESULT_METHOD histograms to their indexes in the
+   * `labels` array.  This only needs to be used by tests that need to map from
+   * category names to indexes in histogram snapshots.  Actual app code can use
+   * these category names directly when they add to a histogram.
+   */
+  SELECTED_RESULT_METHODS: {
+    enter: 0,
+    enterSelection: 1,
+    click: 2,
+    arrowEnterSelection: 3,
+    tabEnterSelection: 4,
+    rightClickEnter: 5,
+  },
+
+  /**
    * Running this init allows helpers to access test scope helpers, like Assert
    * and SimpleTest. Note this initialization is not enforced, thus helpers
    * should always check _testScope and provide a fallback path.

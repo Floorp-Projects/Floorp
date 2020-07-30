@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
-  URLBAR_SELECTED_RESULT_METHODS:
-    "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
 function snapshotHistograms() {
@@ -109,7 +107,7 @@ add_task(async function test() {
     histograms,
     "tip",
     0,
-    URLBAR_SELECTED_RESULT_METHODS.enter
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter
   );
 
   UrlbarProvidersManager.unregisterProvider(provider);

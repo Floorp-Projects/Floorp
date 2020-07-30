@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
-  URLBAR_SELECTED_RESULT_METHODS:
-    "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
@@ -201,7 +199,7 @@ add_task(async function test_remotetab() {
     histograms,
     "remotetab",
     1,
-    URLBAR_SELECTED_RESULT_METHODS.arrowEnterSelection
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.arrowEnterSelection
   );
 
   BrowserTestUtils.removeTab(tab);
