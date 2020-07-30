@@ -100,6 +100,30 @@ var UrlbarUtils = {
     OTHER_NETWORK: 6,
   },
 
+  /**
+   * Buckets used for logging telemetry to the FX_URLBAR_SELECTED_RESULT_TYPE_2
+   * histogram.
+   */
+  SELECTED_RESULT_TYPES: {
+    autofill: 0,
+    bookmark: 1,
+    history: 2,
+    keyword: 3,
+    searchengine: 4,
+    searchsuggestion: 5,
+    switchtab: 6,
+    tag: 7,
+    visiturl: 8,
+    remotetab: 9,
+    extension: 10,
+    "preloaded-top-site": 11,
+    tip: 12,
+    topsite: 13,
+    formhistory: 14,
+    dynamic: 15,
+    // n_values = 32, so you'll need to create a new histogram if you need more.
+  },
+
   // This defines icon locations that are commonly used in the UI.
   ICON: {
     // DEFAULT is defined lazily so it doesn't eagerly initialize PlacesUtils.

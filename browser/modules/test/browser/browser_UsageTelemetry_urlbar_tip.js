@@ -13,7 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-  URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
 function snapshotHistograms() {
@@ -41,7 +40,7 @@ function assertHistogramResults(histograms, type, index, method) {
 
   TelemetryTestUtils.assertHistogram(
     histograms.resultTypeHist,
-    URLBAR_SELECTED_RESULT_TYPES[type],
+    UrlbarUtils.SELECTED_RESULT_TYPES[type],
     1
   );
 

@@ -18,7 +18,6 @@ const TEST_URL = getRootDirectory(gTestPath).replace(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-  URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
 function searchInAwesomebar(value, win = window) {
@@ -89,7 +88,7 @@ function assertHistogramResults(histograms, type, index, method) {
 
   TelemetryTestUtils.assertHistogram(
     histograms.resultTypeHist,
-    URLBAR_SELECTED_RESULT_TYPES[type],
+    UrlbarUtils.SELECTED_RESULT_TYPES[type],
     1
   );
 

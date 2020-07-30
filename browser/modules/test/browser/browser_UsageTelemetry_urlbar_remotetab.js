@@ -13,7 +13,6 @@ const SCALAR_URLBAR = "browser.engagement.navigation.urlbar";
 XPCOMUtils.defineLazyModuleGetters(this, {
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-  URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
@@ -76,7 +75,7 @@ function assertHistogramResults(histograms, type, index, method) {
 
   TelemetryTestUtils.assertHistogram(
     histograms.resultTypeHist,
-    URLBAR_SELECTED_RESULT_TYPES[type],
+    UrlbarUtils.SELECTED_RESULT_TYPES[type],
     1
   );
 

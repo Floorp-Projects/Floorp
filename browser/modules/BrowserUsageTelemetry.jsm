@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = [
   "BrowserUsageTelemetry",
   "getUniqueDomainsVisitedInPast24Hours",
   "URICountListener",
-  "URLBAR_SELECTED_RESULT_TYPES",
   "MINIMUM_TAB_COUNT_INTERVAL_MS",
 ];
 
@@ -78,30 +77,6 @@ const KNOWN_ONEOFF_SOURCES = [
   "oneoff-searchbar",
   "unknown", // Edge case: this is the searchbar (see bug 1195733 comment 7).
 ];
-
-/**
- * Buckets used for logging telemetry to the FX_URLBAR_SELECTED_RESULT_TYPE_2
- * histogram.
- */
-const URLBAR_SELECTED_RESULT_TYPES = {
-  autofill: 0,
-  bookmark: 1,
-  history: 2,
-  keyword: 3,
-  searchengine: 4,
-  searchsuggestion: 5,
-  switchtab: 6,
-  tag: 7,
-  visiturl: 8,
-  remotetab: 9,
-  extension: 10,
-  "preloaded-top-site": 11,
-  tip: 12,
-  topsite: 13,
-  formhistory: 14,
-  dynamic: 15,
-  // n_values = 32, so you'll need to create a new histogram if you need more.
-};
 
 const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
 
