@@ -890,6 +890,14 @@
   args:
     input: ValId
 
+- name: StoreFixedSlotUndefinedResult
+  shared: true
+  transpile: true
+  args:
+    obj: ObjId
+    offset: RawWordField
+    rhs: ValId
+
 - name: IsObjectResult
   shared: true
   transpile: true

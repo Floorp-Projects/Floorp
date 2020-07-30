@@ -1014,6 +1014,26 @@ bool WarpCacheIRTranspiler::emitStoreFixedSlot(ObjOperandId objId,
   return resumeAfter(store);
 }
 
+bool WarpCacheIRTranspiler::emitStoreFixedSlotUndefinedResult(
+    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId) {
+  int32_t offset = int32StubField(offsetOffset);
+
+  MDefinition* obj = getOperand(objId);
+  size_t slotIndex = NativeObject::getFixedSlotIndexFromOffset(offset);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
+  add(barrier);
+
+  auto* store = MStoreFixedSlot::NewBarriered(alloc(), obj, slotIndex, rhs);
+  addEffectful(store);
+
+  auto* undef = constant(UndefinedValue());
+  pushResult(undef);
+
+  return resumeAfter(store);
+}
+
 bool WarpCacheIRTranspiler::emitStoreDenseElement(ObjOperandId objId,
                                                   Int32OperandId indexId,
                                                   ValOperandId rhsId) {

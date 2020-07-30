@@ -746,9 +746,10 @@ static bool intrinsic_UnsafeSetReservedSlot(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args.length() == 3);
   MOZ_ASSERT(args[0].isObject());
   MOZ_RELEASE_ASSERT(args[1].isInt32());
+  MOZ_ASSERT(args[1].toInt32() >= 0);
 
-  args[0].toObject().as<NativeObject>().setReservedSlot(
-      args[1].toPrivateUint32(), args[2]);
+  uint32_t slot = uint32_t(args[1].toInt32());
+  args[0].toObject().as<NativeObject>().setReservedSlot(slot, args[2]);
   args.rval().setUndefined();
   return true;
 }
@@ -759,9 +760,10 @@ static bool intrinsic_UnsafeGetReservedSlot(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args.length() == 2);
   MOZ_ASSERT(args[0].isObject());
   MOZ_RELEASE_ASSERT(args[1].isInt32());
+  MOZ_ASSERT(args[1].toInt32() >= 0);
 
-  args.rval().set(args[0].toObject().as<NativeObject>().getReservedSlot(
-      args[1].toPrivateUint32()));
+  uint32_t slot = uint32_t(args[1].toInt32());
+  args.rval().set(args[0].toObject().as<NativeObject>().getReservedSlot(slot));
   return true;
 }
 
