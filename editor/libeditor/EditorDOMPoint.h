@@ -1063,9 +1063,10 @@ class EditorDOMRangeBase final {
            mStart.EqualsOrIsBefore(mEnd);
   }
   template <typename OtherPointType>
-  bool Contains(const OtherPointType& aPoint) const {
-    return IsPositioned() && mStart.EqualsOrIsBefore(aPoint) &&
-           mEnd.IsBefore(aPoint);
+  MOZ_NEVER_INLINE_DEBUG bool Contains(const OtherPointType& aPoint) const {
+    MOZ_ASSERT(aPoint.IsSetAndValid());
+    return IsPositioned() && aPoint.IsSet() &&
+           mStart.EqualsOrIsBefore(aPoint) && aPoint.IsBefore(mEnd);
   }
   bool InSameContainer() const {
     MOZ_ASSERT(IsPositioned());
