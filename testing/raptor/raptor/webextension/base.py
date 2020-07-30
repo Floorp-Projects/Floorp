@@ -156,7 +156,8 @@ class WebExtension(Perftest):
                     u'type': u'mozproxy',
                     u'test': test["name"],
                     u'unit': u'a.u.',
-                    u'values': confidence_values
+                    u'values': confidence_values,
+                    u'shouldAlert': False  # Bug 1655841 temporary disable confidence metrics
                 }
                 self.control_server.submit_supporting_data(mozproxy_replay)
             else:
