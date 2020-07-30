@@ -528,9 +528,7 @@ already_AddRefed<gfxTextRun> nsOpenTypeTable::MakeTextRun(
   detailedGlyph.mAdvance = NSToCoordRound(
       aAppUnitsPerDevPixel * aFontGroup->GetFirstValidFont()->GetGlyphHAdvance(
                                  aDrawTarget, aGlyph.glyphID));
-  textRun->SetGlyphs(0,
-                     gfxShapedText::CompressedGlyph::MakeComplex(true, true, 1),
-                     &detailedGlyph);
+  textRun->SetDetailedGlyphs(0, 1, &detailedGlyph);
 
   return textRun.forget();
 }
