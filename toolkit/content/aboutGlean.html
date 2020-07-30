@@ -1,0 +1,48 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'"/>
+    <title data-l10n-id="about-glean-page-title"></title>
+    <link rel="stylesheet" href="chrome://global/content/aboutGlean.css"
+          type="text/css"/>
+
+    <script src="chrome://global/content/aboutGlean.js"></script>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="toolkit/about/aboutGlean.ftl"/>
+  </head>
+
+  <body>
+    <section class="main-content">
+      <div id="description">
+        <p data-l10n-id="about-glean-description">
+          <a data-l10n-name="glean-sdk-doc-link" href="https://mozilla.github.io/glean/book/index.html"></a>
+          <a data-l10n-name="fog-debug-doc-link" href="https://firefox-source-docs.mozilla.org/toolkit/components/glean/testing.html"></a>
+        </p>
+        <p data-l10n-id="about-glean-warning"></p>
+      </div>
+      <div id="controls">
+        <div id="tag-pings-section">
+          <label for="tag-pings" data-l10n-id="tag-pings-label"></label>
+          <input type="text" name="tag-pings" id="tag-pings">
+        </div>
+        <div id="log-pings-section">
+          <label for="log-pings" data-l10n-id="log-pings-label"></label>
+          <input type="checkbox" name="log-pings" id="log-pings">
+        </div>
+        <div id="send-pings-section">
+          <label for="send-pings" data-l10n-id="send-pings-label"></label>
+          <input type="text" name="send-pings" id="send-pings">
+        </div>
+        <div id="submit">
+          <button id="controls-submit" data-l10n-id="controls-button-label"></button>
+        </div>
+      </div>
+    </section>
+  </body>
+
+</html>
