@@ -2,7 +2,7 @@
 
 # isProfilerActive
 
-`fun isProfilerActive(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/profiler/Profiler.kt#L21)
+`fun isProfilerActive(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/profiler/Profiler.kt#L21)
 
 Overrides [Profiler.isProfilerActive](../../mozilla.components.concept.engine.profiler/-profiler/is-profiler-active.md)
 

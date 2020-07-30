@@ -2,7 +2,7 @@
 
 # Failure
 
-`sealed class Failure : `[`SettingsMigrationResult`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L130)
+`sealed class Failure : `[`SettingsMigrationResult`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L134)
 
 Failed settings migrations.
 

@@ -138,6 +138,7 @@ mozilla.components.browser.session.storage
 mozilla.components.browser.session.usecases
 mozilla.components.browser.session.utils
 mozilla.components.browser.state.action
+mozilla.components.browser.state.search
 mozilla.components.browser.state.selector
 mozilla.components.browser.state.state
 mozilla.components.browser.state.state.content

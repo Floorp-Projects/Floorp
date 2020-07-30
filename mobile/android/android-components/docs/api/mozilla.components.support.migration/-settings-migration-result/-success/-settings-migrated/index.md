@@ -2,7 +2,7 @@
 
 # SettingsMigrated
 
-`data class SettingsMigrated : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L120)
+`data class SettingsMigrated : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L124)
 
 Migration work completed successfully.
 

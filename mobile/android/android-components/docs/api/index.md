@@ -57,6 +57,7 @@
 | [mozilla.components.browser.session.usecases](mozilla.components.browser.session.usecases/index.md) |  |
 | [mozilla.components.browser.session.utils](mozilla.components.browser.session.utils/index.md) |  |
 | [mozilla.components.browser.state.action](mozilla.components.browser.state.action/index.md) |  |
+| [mozilla.components.browser.state.search](mozilla.components.browser.state.search/index.md) |  |
 | [mozilla.components.browser.state.selector](mozilla.components.browser.state.selector/index.md) |  |
 | [mozilla.components.browser.state.state](mozilla.components.browser.state.state/index.md) |  |
 | [mozilla.components.browser.state.state.content](mozilla.components.browser.state.state.content/index.md) |  |

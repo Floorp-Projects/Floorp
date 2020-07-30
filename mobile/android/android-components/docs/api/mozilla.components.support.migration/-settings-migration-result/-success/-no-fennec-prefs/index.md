@@ -2,7 +2,7 @@
 
 # NoFennecPrefs
 
-`object NoFennecPrefs : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L111)
+`object NoFennecPrefs : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L115)
 
 Fennec app SharedPreference file is not accessible.
 

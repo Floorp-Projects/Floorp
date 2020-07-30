@@ -2,7 +2,7 @@
 
 # MissingFHRPrefValue
 
-`object MissingFHRPrefValue : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L134)
+`object MissingFHRPrefValue : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecSettingsMigrator.kt#L138)
 
 Couldn't find FHR pref value in non-empty Fennec prefs.
 

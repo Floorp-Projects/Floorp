@@ -2,7 +2,7 @@
 
 # Profiler
 
-`class Profiler : `[`Profiler`](../../mozilla.components.concept.engine.profiler/-profiler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/profiler/Profiler.kt#L14)
+`class Profiler : `[`Profiler`](../../mozilla.components.concept.engine.profiler/-profiler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/profiler/Profiler.kt#L14)
 
 Gecko-based implementation of [Profiler](../../mozilla.components.concept.engine.profiler/-profiler/index.md), wrapping the
 ProfilerController object provided by GeckoView.

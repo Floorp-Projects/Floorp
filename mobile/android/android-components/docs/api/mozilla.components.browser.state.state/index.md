@@ -17,6 +17,7 @@
 | [ExternalAppType](-external-app-type/index.md) | `enum class ExternalAppType`<br>Represents different contexts that a custom tab session can be displayed in. |
 | [MediaState](-media-state/index.md) | `data class MediaState`<br>Value type that represents the state of the media elements and playback states. |
 | [ReaderState](-reader-state/index.md) | `data class ReaderState`<br>Value type that represents the state of reader mode/view. |
+| [SearchState](-search-state/index.md) | `data class SearchState`<br>Value type that represents the state of search. |
 | [SecurityInfoState](-security-info-state/index.md) | `data class SecurityInfoState`<br>A value type holding security information for a Session. |
 | [SessionState](-session-state/index.md) | `interface SessionState`<br>Interface for states that contain a [ContentState](-content-state/index.md) and can be accessed via an [id](-session-state/id.md). |
 | [TabSessionState](-tab-session-state/index.md) | `data class TabSessionState : `[`SessionState`](-session-state/index.md)<br>Value type that represents the state of a tab (private or normal). |
