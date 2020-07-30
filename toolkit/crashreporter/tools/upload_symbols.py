@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# This script uploads a symbol zip file from a path or URL passed on the commandline
+# This script uploads a symbol archive file from a path or URL passed on the commandline
 # to the symbol server at https://symbols.mozilla.org/ .
 #
 # Using this script requires you to have generated an authentication
@@ -19,6 +19,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
+import redo
+import requests
+import shutil
 import sys
 from mozbuild.base import MozbuildObject
 log = logging.getLogger('upload-symbols')
@@ -43,8 +46,6 @@ def print_error(r):
 
 
 def get_taskcluster_secret(secret_name):
-    import requests
-
     secrets_url = 'http://taskcluster/secrets/v1/secret/{}'.format(secret_name)
     log.info(
         'Using symbol upload token from the secrets service: "{}"'.format(secrets_url))
@@ -60,14 +61,11 @@ def main():
     config = MozbuildObject.from_environment()
     config.activate_virtualenv()
 
-    import redo
-    import requests
-
     logging.basicConfig()
     parser = argparse.ArgumentParser(
         description='Upload symbols in ZIP using token from Taskcluster secrets service.')
-    parser.add_argument('zip',
-                        help='Symbols zip file - URL or path to local file')
+    parser.add_argument('archive',
+                        help='Symbols archive file - URL or path to local file')
     parser.add_argument('--ignore-missing',
                         help='No error on missing files',
                         action='store_true')
@@ -83,17 +81,100 @@ def main():
             log.info('Retrying...')
         return False
 
-    if args.zip.startswith('http'):
-        is_existing = check_file_exists(args.zip)
+    zip_path = args.archive
+
+    if args.archive.endswith('.tar.zst'):
+        from mozpack.files import File
+        from mozpack.mozjar import JarWriter
+        import tarfile
+        import tempfile
+
+        config._ensure_zstd()
+        import zstandard
+
+        def prepare_zip_from(archive, tmpdir):
+            if archive.startswith('http'):
+                resp = requests.get(archive, allow_redirects=True, stream=True)
+                resp.raise_for_status()
+                reader = resp.raw
+            else:
+                reader = open(archive, 'rb')
+
+            ctx = zstandard.ZstdDecompressor()
+            uncompressed = ctx.stream_reader(reader)
+            with tarfile.open(mode='r|', fileobj=uncompressed, bufsize=1024*1024) as tar:
+                while True:
+                    info = tar.next()
+                    if info is None:
+                        break
+                    log.info(info.name)
+                    data = tar.extractfile(info)
+                    path = os.path.join(tmpdir, info.name.lstrip('/'))
+                    if info.name.endswith('.dbg'):
+                        import gzip
+                        os.makedirs(os.path.dirname(path), exist_ok=True)
+                        with open(path, 'wb') as fh:
+                            with gzip.GzipFile(fileobj=fh, mode='wb', compresslevel=5) as c:
+                                shutil.copyfileobj(data, c)
+                        jar.add(info.name + '.gz', File(path), compress=False)
+                    elif info.name.endswith('.dSYM.tar'):
+                        import bz2
+                        os.makedirs(os.path.dirname(path), exist_ok=True)
+                        with open(path, 'wb') as fh:
+                            c = bz2.BZ2Compressor()
+                            while True:
+                                buf = data.read(16384)
+                                if not buf:
+                                    break
+                                fh.write(c.compress(buf))
+                            fh.write(c.flush())
+                        jar.add(info.name + '.bz2', File(path), compress=False)
+                    elif info.name.endswith('.pdb'):
+                        import subprocess
+                        makecab = os.environ.get('MAKECAB', 'makecab')
+                        os.makedirs(os.path.dirname(path), exist_ok=True)
+                        with open(path, 'wb') as fh:
+                            shutil.copyfileobj(data, fh)
+
+                        subprocess.check_call(
+                            [makecab, '-D', 'CompressionType=MSZIP', path, path + '_'],
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.STDOUT)
+
+                        jar.add(info.name[:-1] + '_', File(path + '_'), compress=False)
+                    else:
+                        jar.add(info.name, data)
+            reader.close()
+
+        tmpdir = tempfile.TemporaryDirectory()
+        zip_path = os.path.join(tmpdir.name, 'symbols.zip')
+        log.info('Preparing symbol archive "{0}" from "{1}"'.format(zip_path, args.archive))
+        is_existing = False
+        try:
+            for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
+                with JarWriter(zip_path, compress_level=5) as jar:
+                    try:
+                        prepare_zip_from(args.archive, tmpdir.name)
+                        is_existing = True
+                        break
+                    except requests.exceptions.RequestException as e:
+                        log.error('Error: {0}'.format(e))
+                    log.info('Retrying...')
+        except Exception:
+            os.remove(zip_path)
+            raise
+
+    elif args.archive.startswith('http'):
+        is_existing = check_file_exists(args.archive)
     else:
-        is_existing = os.path.isfile(args.zip)
+        is_existing = os.path.isfile(args.archive)
 
     if not is_existing:
         if args.ignore_missing:
-            log.info('Zip file "{0}" does not exist!'.format(args.zip))
+            log.info('Archive file "{0}" does not exist!'.format(args.archive))
             return 0
         else:
-            log.error('Error: zip file "{0}" does not exist!'.format(args.zip))
+            log.error('Error: archive file "{0}" does not exist!'.format(args.archive))
             return 1
 
     secret_name = os.environ.get('SYMBOL_SECRET')
@@ -117,15 +198,15 @@ def main():
     else:
         url = DEFAULT_URL
 
-    log.info('Uploading symbol file "{0}" to "{1}"'.format(args.zip, url))
+    log.info('Uploading symbol file "{0}" to "{1}"'.format(zip_path, url))
 
     for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
         log.info('Attempt %d of %d...' % (i, MAX_RETRIES))
         try:
-            if args.zip.startswith('http'):
-                zip_arg = {'data': {'url': args.zip}}
+            if zip_path.startswith('http'):
+                zip_arg = {'data': {'url': zip_path}}
             else:
-                zip_arg = {'files': {'symbols.zip': open(args.zip, 'rb')}}
+                zip_arg = {'files': {'symbols.zip': open(zip_path, 'rb')}}
             r = requests.post(
                 url,
                 headers={'Auth-Token': auth_token},
@@ -133,7 +214,7 @@ def main():
                 # Allow a longer read timeout because uploading by URL means the server
                 # has to fetch the entire zip file, which can take a while. The load balancer
                 # in front of symbols.mozilla.org has a 300 second timeout, so we'll use that.
-                timeout=(10, 300),
+                timeout=(300, 300),
                 **zip_arg)
             # 429 or any 5XX is likely to be a transient failure.
             # Break out for success or other error codes.
