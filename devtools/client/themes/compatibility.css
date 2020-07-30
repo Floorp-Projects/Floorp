@@ -46,17 +46,14 @@
  *  +--------+-------------------+
  *  | [icon] | issue description |
  *  +--------+-------------------+
- *  |        | aliases           |
- *  +--------+-------------------+
  *  |        | occurrences       |
  *  +--------+-------------------+
  */
 .compatibility-issue-item {
   display: grid;
-  column-gap: var(--compatibility-base-unit);
+  gap: var(--compatibility-base-unit);
   padding: calc(var(--compatibility-base-unit) * 2);
   grid-template-areas: "icon description"
-                       ".    aliases"
                        ".    node-pane";
   grid-template-columns: auto 1fr;
 }
@@ -114,14 +111,6 @@
 .compatibility-issue-item__mdn-link {
   color: var(--theme-highlight-blue);
   text-decoration: none;
-}
-
-.compatibility-issue-item__aliases {
-  grid-area: aliases;
-  list-style: none;
-  margin: 0;
-  padding-inline-start: calc(var(--compatibility-base-unit) * 2);
-  padding-block-end: var(--compatibility-base-unit);
 }
 
 .compatibility-unsupported-browser-list {
