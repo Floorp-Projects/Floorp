@@ -44,6 +44,14 @@ s! {
         pub l_pid: ::pid_t,
     }
 
+    pub struct flock64 {
+        pub l_type: ::c_short,
+        pub l_whence: ::c_short,
+        pub l_start: ::off64_t,
+        pub l_len: ::off64_t,
+        pub l_pid: ::pid_t,
+    }
+
     pub struct siginfo_t {
         pub si_signo: ::c_int,
         pub si_errno: ::c_int,
@@ -213,7 +221,7 @@ s! {
     }
 }
 
-s_no_extra_traits!{
+s_no_extra_traits! {
     // FIXME: This is actually a union.
     pub struct fpreg_t {
         pub d: ::c_double,
@@ -498,10 +506,7 @@ pub const SIGURG: ::c_int = 23;
 pub const SIGIO: ::c_int = 29;
 pub const SIGSYS: ::c_int = 31;
 pub const SIGSTKFLT: ::c_int = 16;
-#[deprecated(
-    since = "0.2.55",
-    note = "Use SIGSYS instead"
-)]
+#[deprecated(since = "0.2.55", note = "Use SIGSYS instead")]
 pub const SIGUNUSED: ::c_int = 31;
 pub const SIGPOLL: ::c_int = 29;
 pub const SIGPWR: ::c_int = 30;
@@ -535,6 +540,9 @@ pub const F_GETOWN: ::c_int = 9;
 pub const F_SETOWN: ::c_int = 8;
 pub const F_SETLK: ::c_int = 6;
 pub const F_SETLKW: ::c_int = 7;
+pub const F_OFD_GETLK: ::c_int = 36;
+pub const F_OFD_SETLK: ::c_int = 37;
+pub const F_OFD_SETLKW: ::c_int = 38;
 
 pub const SFD_NONBLOCK: ::c_int = 0x0800;
 
@@ -567,6 +575,8 @@ pub const TIOCMBIC: ::c_ulong = 0x5417;
 pub const TIOCMSET: ::c_ulong = 0x5418;
 pub const FIONREAD: ::c_ulong = 0x541B;
 pub const TIOCCONS: ::c_ulong = 0x541D;
+pub const TIOCSBRK: ::c_ulong = 0x5427;
+pub const TIOCCBRK: ::c_ulong = 0x5428;
 
 pub const TCSANOW: ::c_int = 0;
 pub const TCSADRAIN: ::c_int = 1;
@@ -593,20 +603,20 @@ pub const OLCUC: ::tcflag_t = 0o000002;
 pub const ONLCR: ::tcflag_t = 0o000004;
 pub const NLDLY: ::tcflag_t = 0o000400;
 pub const CRDLY: ::tcflag_t = 0o003000;
-pub const CR1: ::tcflag_t  = 0x00000200;
-pub const CR2: ::tcflag_t  = 0x00000400;
-pub const CR3: ::tcflag_t  = 0x00000600;
+pub const CR1: ::tcflag_t = 0x00000200;
+pub const CR2: ::tcflag_t = 0x00000400;
+pub const CR3: ::tcflag_t = 0x00000600;
 pub const TABDLY: ::tcflag_t = 0o014000;
 pub const TAB1: ::tcflag_t = 0x00000800;
 pub const TAB2: ::tcflag_t = 0x00001000;
 pub const TAB3: ::tcflag_t = 0x00001800;
-pub const BSDLY:  ::tcflag_t = 0o020000;
-pub const BS1: ::tcflag_t  = 0x00002000;
-pub const FFDLY:  ::tcflag_t = 0o100000;
-pub const FF1: ::tcflag_t  = 0x00008000;
-pub const VTDLY:  ::tcflag_t = 0o040000;
-pub const VT1: ::tcflag_t  = 0x00004000;
-pub const XTABS:  ::tcflag_t = 0o014000;
+pub const BSDLY: ::tcflag_t = 0o020000;
+pub const BS1: ::tcflag_t = 0x00002000;
+pub const FFDLY: ::tcflag_t = 0o100000;
+pub const FF1: ::tcflag_t = 0x00008000;
+pub const VTDLY: ::tcflag_t = 0o040000;
+pub const VT1: ::tcflag_t = 0x00004000;
+pub const XTABS: ::tcflag_t = 0o014000;
 
 pub const CBAUD: ::speed_t = 0o010017;
 pub const B0: ::speed_t = 0o000000;
@@ -996,23 +1006,29 @@ pub const SYS_chown: ::c_long = 212;
 pub const SYS_setfsuid: ::c_long = 215;
 pub const SYS_setfsgid: ::c_long = 216;
 pub const SYS_newfstatat: ::c_long = 293;
+pub const SYS_statx: ::c_long = 379;
 
 #[link(name = "util")]
-extern {
+extern "C" {
 
-    pub fn sysctl(name: *mut ::c_int,
-                  namelen: ::c_int,
-                  oldp: *mut ::c_void,
-                  oldlenp: *mut ::size_t,
-                  newp: *mut ::c_void,
-                  newlen: ::size_t)
-                  -> ::c_int;
+    pub fn sysctl(
+        name: *mut ::c_int,
+        namelen: ::c_int,
+        oldp: *mut ::c_void,
+        oldlenp: *mut ::size_t,
+        newp: *mut ::c_void,
+        newlen: ::size_t,
+    ) -> ::c_int;
     pub fn getcontext(ucp: *mut ::ucontext_t) -> ::c_int;
     pub fn setcontext(ucp: *const ::ucontext_t) -> ::c_int;
-    pub fn makecontext(ucp: *mut ::ucontext_t,
-                       func:  extern fn (),
-                       argc: ::c_int, ...);
-    pub fn swapcontext(uocp: *mut ::ucontext_t,
-                       ucp: *const ::ucontext_t) -> ::c_int;
+    pub fn makecontext(
+        ucp: *mut ::ucontext_t,
+        func: extern "C" fn(),
+        argc: ::c_int,
+        ...
+    );
+    pub fn swapcontext(
+        uocp: *mut ::ucontext_t,
+        ucp: *const ::ucontext_t,
+    ) -> ::c_int;
 }
-

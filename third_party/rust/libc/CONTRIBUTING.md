@@ -21,7 +21,7 @@ Consequently, this indicates where an API should be added! Adding an API at a
 particular level in the hierarchy means that it is supported on all the child
 platforms of that level. For example, when adding a Unix API it should be added
 to `src/unix/mod.rs`, but when adding a Linux-only API it should be added to
-`src/unix/notbsd/linux/mod.rs`.
+`src/unix/linux_like/linux/mod.rs`.
 
 If you're not 100% sure at what level of the hierarchy an API should be added
 at, fear not! This crate has CI support which tests any binding against all
@@ -38,9 +38,9 @@ With that in mind, the steps for adding a new API are:
 
 ### Test before you commit
 
-We have two automated tests running on [Travis](https://travis-ci.org/rust-lang/libc):
+We have two automated tests running on [Azure Pipelines](https://dev.azure.com/rust-lang2/libc/_build?definitionId=1&_a=summary):
 
-1. [`libc-test`](https://github.com/alexcrichton/ctest)
+1. [`libc-test`](https://github.com/gnzlbg/ctest)
   - `cd libc-test && cargo test`
   - Use the `skip_*()` functions in `build.rs` if you really need a workaround.
 2. Style checker
@@ -53,14 +53,11 @@ platform in this crate, the next step is to get that sweet, sweet usage from
 crates.io! The only next step is to bump the version of libc and then publish
 it. If you'd like to get a release out ASAP you can follow these steps:
 
-1. Update the version number in `Cargo.toml`, you'll just be bumping the patch
-   version number.
-2. Run `cargo update` to regenerate the lockfile to encode your version bump in
-   the lock file. You may pull in some other updated dependencies, that's ok.
-3. Send a PR to this repository. It should [look like this][example], but it'd
+1. Increment the patch version number in `Cargo.toml`.
+1. Send a PR to this repository. It should [look like this][example], but it'd
    also be nice to fill out the description with a small rationale for the
    release (any rationale is ok though!)
-4. Once merged the release will be tagged and published by one of the libc crate
+1. Once merged, the release will be tagged and published by one of the libc crate
    maintainers.
 
 [example]: https://github.com/rust-lang/libc/pull/583

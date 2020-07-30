@@ -239,91 +239,91 @@ pub const SYS_close: ::c_long = 4000 + 6;
 pub const SYS_waitpid: ::c_long = 4000 + 7;
 pub const SYS_creat: ::c_long = 4000 + 8;
 pub const SYS_link: ::c_long = 4000 + 9;
-pub const SYS_unlink: ::c_long = 4000 +  10;
-pub const SYS_execve: ::c_long = 4000 +  11;
-pub const SYS_chdir: ::c_long = 4000 +  12;
-pub const SYS_time: ::c_long = 4000 +  13;
-pub const SYS_mknod: ::c_long = 4000 +  14;
-pub const SYS_chmod: ::c_long = 4000 +  15;
-pub const SYS_lchown: ::c_long = 4000 +  16;
-pub const SYS_break: ::c_long = 4000 +  17;
-pub const SYS_lseek: ::c_long = 4000 +  19;
-pub const SYS_getpid: ::c_long = 4000 +  20;
-pub const SYS_mount: ::c_long = 4000 +  21;
-pub const SYS_umount: ::c_long = 4000 +  22;
-pub const SYS_setuid: ::c_long = 4000 +  23;
-pub const SYS_getuid: ::c_long = 4000 +  24;
-pub const SYS_stime: ::c_long = 4000 +  25;
-pub const SYS_ptrace: ::c_long = 4000 +  26;
-pub const SYS_alarm: ::c_long = 4000 +  27;
-pub const SYS_pause: ::c_long = 4000 +  29;
-pub const SYS_utime: ::c_long = 4000 +  30;
-pub const SYS_stty: ::c_long = 4000 +  31;
-pub const SYS_gtty: ::c_long = 4000 +  32;
-pub const SYS_access: ::c_long = 4000 +  33;
-pub const SYS_nice: ::c_long = 4000 +  34;
-pub const SYS_ftime: ::c_long = 4000 +  35;
-pub const SYS_sync: ::c_long = 4000 +  36;
-pub const SYS_kill: ::c_long = 4000 +  37;
-pub const SYS_rename: ::c_long = 4000 +  38;
-pub const SYS_mkdir: ::c_long = 4000 +  39;
-pub const SYS_rmdir: ::c_long = 4000 +  40;
-pub const SYS_dup: ::c_long = 4000 +  41;
-pub const SYS_pipe: ::c_long = 4000 +  42;
-pub const SYS_times: ::c_long = 4000 +  43;
-pub const SYS_prof: ::c_long = 4000 +  44;
-pub const SYS_brk: ::c_long = 4000 +  45;
-pub const SYS_setgid: ::c_long = 4000 +  46;
-pub const SYS_getgid: ::c_long = 4000 +  47;
-pub const SYS_signal: ::c_long = 4000 +  48;
-pub const SYS_geteuid: ::c_long = 4000 +  49;
-pub const SYS_getegid: ::c_long = 4000 +  50;
-pub const SYS_acct: ::c_long = 4000 +  51;
-pub const SYS_umount2: ::c_long = 4000 +  52;
-pub const SYS_lock: ::c_long = 4000 +  53;
-pub const SYS_ioctl: ::c_long = 4000 +  54;
-pub const SYS_fcntl: ::c_long = 4000 +  55;
-pub const SYS_mpx: ::c_long = 4000 +  56;
-pub const SYS_setpgid: ::c_long = 4000 +  57;
-pub const SYS_ulimit: ::c_long = 4000 +  58;
-pub const SYS_umask: ::c_long = 4000 +  60;
-pub const SYS_chroot: ::c_long = 4000 +  61;
-pub const SYS_ustat: ::c_long = 4000 +  62;
-pub const SYS_dup2: ::c_long = 4000 +  63;
-pub const SYS_getppid: ::c_long = 4000 +  64;
-pub const SYS_getpgrp: ::c_long = 4000 +  65;
-pub const SYS_setsid: ::c_long = 4000 +  66;
-pub const SYS_sigaction: ::c_long = 4000 +  67;
-pub const SYS_sgetmask: ::c_long = 4000 +  68;
-pub const SYS_ssetmask: ::c_long = 4000 +  69;
-pub const SYS_setreuid: ::c_long = 4000 +  70;
-pub const SYS_setregid: ::c_long = 4000 +  71;
-pub const SYS_sigsuspend: ::c_long = 4000 +  72;
-pub const SYS_sigpending: ::c_long = 4000 +  73;
-pub const SYS_sethostname: ::c_long = 4000 +  74;
-pub const SYS_setrlimit: ::c_long = 4000 +  75;
-pub const SYS_getrlimit: ::c_long = 4000 +  76;
-pub const SYS_getrusage: ::c_long = 4000 +  77;
-pub const SYS_gettimeofday: ::c_long = 4000 +  78;
-pub const SYS_settimeofday: ::c_long = 4000 +  79;
-pub const SYS_getgroups: ::c_long = 4000 +  80;
-pub const SYS_setgroups: ::c_long = 4000 +  81;
-pub const SYS_symlink: ::c_long = 4000 +  83;
-pub const SYS_readlink: ::c_long = 4000 +  85;
-pub const SYS_uselib: ::c_long = 4000 +  86;
-pub const SYS_swapon: ::c_long = 4000 +  87;
-pub const SYS_reboot: ::c_long = 4000 +  88;
-pub const SYS_readdir: ::c_long = 4000 +  89;
-pub const SYS_mmap: ::c_long = 4000 +  90;
-pub const SYS_munmap: ::c_long = 4000 +  91;
-pub const SYS_truncate: ::c_long = 4000 +  92;
-pub const SYS_ftruncate: ::c_long = 4000 +  93;
-pub const SYS_fchmod: ::c_long = 4000 +  94;
-pub const SYS_fchown: ::c_long = 4000 +  95;
-pub const SYS_getpriority: ::c_long = 4000 +  96;
-pub const SYS_setpriority: ::c_long = 4000 +  97;
-pub const SYS_profil: ::c_long = 4000 +  98;
-pub const SYS_statfs: ::c_long = 4000 +  99;
+pub const SYS_unlink: ::c_long = 4000 + 10;
+pub const SYS_execve: ::c_long = 4000 + 11;
+pub const SYS_chdir: ::c_long = 4000 + 12;
+pub const SYS_time: ::c_long = 4000 + 13;
+pub const SYS_mknod: ::c_long = 4000 + 14;
+pub const SYS_chmod: ::c_long = 4000 + 15;
+pub const SYS_lchown: ::c_long = 4000 + 16;
+pub const SYS_break: ::c_long = 4000 + 17;
+pub const SYS_lseek: ::c_long = 4000 + 19;
+pub const SYS_getpid: ::c_long = 4000 + 20;
+pub const SYS_mount: ::c_long = 4000 + 21;
+pub const SYS_umount: ::c_long = 4000 + 22;
+pub const SYS_setuid: ::c_long = 4000 + 23;
+pub const SYS_getuid: ::c_long = 4000 + 24;
+pub const SYS_stime: ::c_long = 4000 + 25;
+pub const SYS_ptrace: ::c_long = 4000 + 26;
+pub const SYS_alarm: ::c_long = 4000 + 27;
+pub const SYS_pause: ::c_long = 4000 + 29;
+pub const SYS_utime: ::c_long = 4000 + 30;
+pub const SYS_stty: ::c_long = 4000 + 31;
+pub const SYS_gtty: ::c_long = 4000 + 32;
+pub const SYS_access: ::c_long = 4000 + 33;
+pub const SYS_nice: ::c_long = 4000 + 34;
+pub const SYS_ftime: ::c_long = 4000 + 35;
+pub const SYS_sync: ::c_long = 4000 + 36;
+pub const SYS_kill: ::c_long = 4000 + 37;
+pub const SYS_rename: ::c_long = 4000 + 38;
+pub const SYS_mkdir: ::c_long = 4000 + 39;
+pub const SYS_rmdir: ::c_long = 4000 + 40;
+pub const SYS_dup: ::c_long = 4000 + 41;
+pub const SYS_pipe: ::c_long = 4000 + 42;
+pub const SYS_times: ::c_long = 4000 + 43;
+pub const SYS_prof: ::c_long = 4000 + 44;
+pub const SYS_brk: ::c_long = 4000 + 45;
+pub const SYS_setgid: ::c_long = 4000 + 46;
+pub const SYS_getgid: ::c_long = 4000 + 47;
+pub const SYS_signal: ::c_long = 4000 + 48;
+pub const SYS_geteuid: ::c_long = 4000 + 49;
+pub const SYS_getegid: ::c_long = 4000 + 50;
+pub const SYS_acct: ::c_long = 4000 + 51;
+pub const SYS_umount2: ::c_long = 4000 + 52;
+pub const SYS_lock: ::c_long = 4000 + 53;
+pub const SYS_ioctl: ::c_long = 4000 + 54;
+pub const SYS_fcntl: ::c_long = 4000 + 55;
+pub const SYS_mpx: ::c_long = 4000 + 56;
+pub const SYS_setpgid: ::c_long = 4000 + 57;
+pub const SYS_ulimit: ::c_long = 4000 + 58;
+pub const SYS_umask: ::c_long = 4000 + 60;
+pub const SYS_chroot: ::c_long = 4000 + 61;
+pub const SYS_ustat: ::c_long = 4000 + 62;
+pub const SYS_dup2: ::c_long = 4000 + 63;
+pub const SYS_getppid: ::c_long = 4000 + 64;
+pub const SYS_getpgrp: ::c_long = 4000 + 65;
+pub const SYS_setsid: ::c_long = 4000 + 66;
+pub const SYS_sigaction: ::c_long = 4000 + 67;
+pub const SYS_sgetmask: ::c_long = 4000 + 68;
+pub const SYS_ssetmask: ::c_long = 4000 + 69;
+pub const SYS_setreuid: ::c_long = 4000 + 70;
+pub const SYS_setregid: ::c_long = 4000 + 71;
+pub const SYS_sigsuspend: ::c_long = 4000 + 72;
+pub const SYS_sigpending: ::c_long = 4000 + 73;
+pub const SYS_sethostname: ::c_long = 4000 + 74;
+pub const SYS_setrlimit: ::c_long = 4000 + 75;
+pub const SYS_getrlimit: ::c_long = 4000 + 76;
+pub const SYS_getrusage: ::c_long = 4000 + 77;
+pub const SYS_gettimeofday: ::c_long = 4000 + 78;
+pub const SYS_settimeofday: ::c_long = 4000 + 79;
+pub const SYS_getgroups: ::c_long = 4000 + 80;
+pub const SYS_setgroups: ::c_long = 4000 + 81;
+pub const SYS_symlink: ::c_long = 4000 + 83;
+pub const SYS_readlink: ::c_long = 4000 + 85;
+pub const SYS_uselib: ::c_long = 4000 + 86;
+pub const SYS_swapon: ::c_long = 4000 + 87;
+pub const SYS_reboot: ::c_long = 4000 + 88;
+pub const SYS_readdir: ::c_long = 4000 + 89;
+pub const SYS_mmap: ::c_long = 4000 + 90;
+pub const SYS_munmap: ::c_long = 4000 + 91;
+pub const SYS_truncate: ::c_long = 4000 + 92;
+pub const SYS_ftruncate: ::c_long = 4000 + 93;
+pub const SYS_fchmod: ::c_long = 4000 + 94;
+pub const SYS_fchown: ::c_long = 4000 + 95;
+pub const SYS_getpriority: ::c_long = 4000 + 96;
+pub const SYS_setpriority: ::c_long = 4000 + 97;
+pub const SYS_profil: ::c_long = 4000 + 98;
+pub const SYS_statfs: ::c_long = 4000 + 99;
 pub const SYS_fstatfs: ::c_long = 4000 + 100;
 pub const SYS_ioperm: ::c_long = 4000 + 101;
 pub const SYS_socketcall: ::c_long = 4000 + 102;
@@ -589,31 +589,37 @@ pub const SYS_pkey_alloc: ::c_long = 4000 + 364;
 pub const SYS_pkey_free: ::c_long = 4000 + 365;
 
 #[link(name = "util")]
-extern {
-    pub fn sysctl(name: *mut ::c_int,
-                  namelen: ::c_int,
-                  oldp: *mut ::c_void,
-                  oldlenp: *mut ::size_t,
-                  newp: *mut ::c_void,
-                  newlen: ::size_t)
-                  -> ::c_int;
+extern "C" {
+    pub fn sysctl(
+        name: *mut ::c_int,
+        namelen: ::c_int,
+        oldp: *mut ::c_void,
+        oldlenp: *mut ::size_t,
+        newp: *mut ::c_void,
+        newlen: ::size_t,
+    ) -> ::c_int;
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
-    pub fn backtrace(buf: *mut *mut ::c_void,
-                     sz: ::c_int) -> ::c_int;
-    pub fn glob64(pattern: *const ::c_char,
-                  flags: ::c_int,
-                  errfunc: ::Option<extern fn(epath: *const ::c_char,
-                                                   errno: ::c_int)
-                                                   -> ::c_int>,
-                  pglob: *mut glob64_t) -> ::c_int;
+    pub fn backtrace(buf: *mut *mut ::c_void, sz: ::c_int) -> ::c_int;
+    pub fn glob64(
+        pattern: *const ::c_char,
+        flags: ::c_int,
+        errfunc: ::Option<
+            extern "C" fn(epath: *const ::c_char, errno: ::c_int) -> ::c_int,
+        >,
+        pglob: *mut glob64_t,
+    ) -> ::c_int;
     pub fn globfree64(pglob: *mut glob64_t);
     pub fn ptrace(request: ::c_uint, ...) -> ::c_long;
-    pub fn pthread_attr_getaffinity_np(attr: *const ::pthread_attr_t,
-                                       cpusetsize: ::size_t,
-                                       cpuset: *mut ::cpu_set_t) -> ::c_int;
-    pub fn pthread_attr_setaffinity_np(attr: *mut ::pthread_attr_t,
-                                       cpusetsize: ::size_t,
-                                       cpuset: *const ::cpu_set_t) -> ::c_int;
+    pub fn pthread_attr_getaffinity_np(
+        attr: *const ::pthread_attr_t,
+        cpusetsize: ::size_t,
+        cpuset: *mut ::cpu_set_t,
+    ) -> ::c_int;
+    pub fn pthread_attr_setaffinity_np(
+        attr: *mut ::pthread_attr_t,
+        cpusetsize: ::size_t,
+        cpuset: *const ::cpu_set_t,
+    ) -> ::c_int;
 }
 
 cfg_if! {

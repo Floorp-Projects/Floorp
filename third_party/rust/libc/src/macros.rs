@@ -122,15 +122,125 @@ macro_rules! s_no_extra_traits {
 }
 
 #[allow(unused_macros)]
-macro_rules! f {
-    ($(pub fn $i:ident($($arg:ident: $argty:ty),*) -> $ret:ty {
-        $($body:stmt);*
-    })*) => ($(
-        #[inline]
-        pub unsafe extern fn $i($($arg: $argty),*) -> $ret {
-            $($body);*
+macro_rules! e {
+    ($($(#[$attr:meta])* pub enum $i:ident { $($field:tt)* })*) => ($(
+        __item! {
+            #[cfg_attr(feature = "extra_traits", derive(Debug, Eq, Hash, PartialEq))]
+            $(#[$attr])*
+            pub enum $i { $($field)* }
         }
-    )*)
+        impl ::Copy for $i {}
+        impl ::Clone for $i {
+            fn clone(&self) -> $i { *self }
+        }
+    )*);
+}
+
+#[allow(unused_macros)]
+macro_rules! s_paren {
+    ($($(#[$attr:meta])* pub struct $i:ident ( $($field:tt)* ); )* ) => ($(
+        __item! {
+            #[cfg_attr(feature = "extra_traits", derive(Debug, Eq, Hash, PartialEq))]
+            $(#[$attr])*
+            pub struct $i ( $($field)* );
+        }
+        impl ::Copy for $i {}
+        impl ::Clone for $i {
+            fn clone(&self) -> $i { *self }
+        }
+    )*);
+}
+
+// This is a pretty horrible hack to allow us to conditionally mark
+// some functions as 'const', without requiring users of this macro
+// to care about the "const-extern-fn" feature.
+//
+// When 'const-extern-fn' is enabled, we emit the captured 'const' keyword
+// in the expanded function.
+//
+// When 'const-extern-fn' is disabled, we always emit a plain 'pub unsafe extern fn'.
+// Note that the expression matched by the macro is exactly the same - this allows
+// users of this macro to work whether or not 'const-extern-fn' is enabled
+//
+// Unfortunately, we need to duplicate most of this macro between the 'cfg_if' blocks.
+// This is because 'const unsafe extern fn' won't even parse on older compilers,
+// so we need to avoid emitting it at all of 'const-extern-fn'.
+//
+// Specifically, moving the 'cfg_if' into the macro body will *not* work.
+// Doing so would cause the '#[cfg(feature = "const-extern-fn")]' to be emiited
+// into user code. The 'cfg' gate will not stop Rust from trying to parse the
+// 'pub const unsafe extern fn', so users would get a compiler error even when
+// the 'const-extern-fn' feature is disabled
+//
+// Note that users of this macro need to place 'const' in a weird position
+// (after the closing ')' for the arguments, but before the return type).
+// This was the only way I could satisfy the following two requirements:
+// 1. Avoid ambuguity errors from 'macro_rules!' (which happen when writing '$foo:ident fn'
+// 2. Allow users of this macro to mix 'pub fn foo' and 'pub const fn bar' within the same
+// 'f!' block
+cfg_if! {
+    if #[cfg(libc_const_extern_fn)] {
+        #[allow(unused_macros)]
+        macro_rules! f {
+            ($(pub $({$constness:ident})* fn $i:ident(
+                        $($arg:ident: $argty:ty),*
+            ) -> $ret:ty {
+                $($body:stmt);*
+            })*) => ($(
+                #[inline]
+                pub $($constness)* unsafe extern fn $i($($arg: $argty),*
+                ) -> $ret {
+                    $($body);*
+                }
+            )*)
+        }
+
+        #[allow(unused_macros)]
+        macro_rules! const_fn {
+            ($($({$constness:ident})* fn $i:ident(
+                        $($arg:ident: $argty:ty),*
+            ) -> $ret:ty {
+                $($body:stmt);*
+            })*) => ($(
+                #[inline]
+                $($constness)* fn $i($($arg: $argty),*
+                ) -> $ret {
+                    $($body);*
+                }
+            )*)
+        }
+
+    } else {
+        #[allow(unused_macros)]
+        macro_rules! f {
+            ($(pub $({$constness:ident})* fn $i:ident(
+                        $($arg:ident: $argty:ty),*
+            ) -> $ret:ty {
+                $($body:stmt);*
+            })*) => ($(
+                #[inline]
+                pub unsafe extern fn $i($($arg: $argty),*
+                ) -> $ret {
+                    $($body);*
+                }
+            )*)
+        }
+
+        #[allow(unused_macros)]
+        macro_rules! const_fn {
+            ($($({$constness:ident})* fn $i:ident(
+                        $($arg:ident: $argty:ty),*
+            ) -> $ret:ty {
+                $($body:stmt);*
+            })*) => ($(
+                #[inline]
+                fn $i($($arg: $argty),*
+                ) -> $ret {
+                    $($body);*
+                }
+            )*)
+        }
+    }
 }
 
 #[allow(unused_macros)]

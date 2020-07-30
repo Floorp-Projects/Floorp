@@ -15,24 +15,24 @@ option(DEV "Use settings suitable for dev contributions to rlbox" OFF)
 
 file(GLOB_RECURSE
      ALL_CXX_SOURCE_FILES
-     include/*.[chi]pp
-     include/*.[chi]xx
-     include/*.cc
-     include/*.hh
-     include/*.ii
-     include/*.[CHI]
-     test/*.[chi]pp
-     test/*.[chi]xx
-     test/*.cc
-     test/*.hh
-     test/*.ii
-     test/*.[CHI]
-     c_src/*.[chi]pp
-     c_src/*.[chi]xx
-     c_src/*.cc
-     c_src/*.hh
-     c_src/*.ii
-     c_src/*.[CHI])
+     ${CMAKE_SOURCE_DIR}/include/*.[chi]pp
+     ${CMAKE_SOURCE_DIR}/include/*.[chi]xx
+     ${CMAKE_SOURCE_DIR}/include/*.cc
+     ${CMAKE_SOURCE_DIR}/include/*.hh
+     ${CMAKE_SOURCE_DIR}/include/*.ii
+     ${CMAKE_SOURCE_DIR}/include/*.[CHI]
+     ${CMAKE_SOURCE_DIR}/test/*.[chi]pp
+     ${CMAKE_SOURCE_DIR}/test/*.[chi]xx
+     ${CMAKE_SOURCE_DIR}/test/*.cc
+     ${CMAKE_SOURCE_DIR}/test/*.hh
+     ${CMAKE_SOURCE_DIR}/test/*.ii
+     ${CMAKE_SOURCE_DIR}/test/*.[CHI]
+     ${CMAKE_SOURCE_DIR}/c_src/*.[chi]pp
+     ${CMAKE_SOURCE_DIR}/c_src/*.[chi]xx
+     ${CMAKE_SOURCE_DIR}/c_src/*.cc
+     ${CMAKE_SOURCE_DIR}/c_src/*.hh
+     ${CMAKE_SOURCE_DIR}/c_src/*.ii
+     ${CMAKE_SOURCE_DIR}/c_src/*.[CHI])
 
 # Dev Tools ###################
 
@@ -150,7 +150,7 @@ add_custom_target(lucet_release ALL DEPENDS ${LUCET_PATH})
 # set(LUCET_DIR "${mod_lucet_SOURCE_DIR}/target/debug/")
 # set(LUCET_PATH "${LUCET_DIR}/lucetc")
 
-file(GLOB_RECURSE RUST_SOURCE_FILES src/*.rs)
+file(GLOB_RECURSE RUST_SOURCE_FILES ${CMAKE_SOURCE_DIR}/src/*.rs)
 
 set(RUST_LIB_DEBUG_PATH
     "${CMAKE_BINARY_DIR}/cargo/debug/librlbox_lucet_sandbox.a")
@@ -204,7 +204,7 @@ if(!WASMCLANG)
     )
 endif()
 
-file(GLOB_RECURSE C_SOURCE_FILES c_src/*)
+file(GLOB_RECURSE C_SOURCE_FILES ${CMAKE_SOURCE_DIR}/c_src/*)
 set(GLUE_LIB_WASM "${CMAKE_BINARY_DIR}/wasm/glue_lib_lucet.wasm")
 set(GLUE_LIB_SO "${CMAKE_BINARY_DIR}/wasm/glue_lib_lucet.${DYLIB_EXT}")
 
@@ -249,9 +249,15 @@ target_compile_definitions(test_rlbox_glue PUBLIC
 
 add_dependencies(test_rlbox_glue lucet_sandbox_rustlib_debug lucet_sandbox_rustlib_release)
 
+if(MSVC)
+  set(LINK_LUCET_LIB -WHOLEARCHIVE lucet_sandbox_rustlib)
+else()
+  set(LINK_LUCET_LIB -Wl,--whole-archive lucet_sandbox_rustlib -Wl,--no-whole-archive)
+endif()
+
 target_link_libraries(test_rlbox_glue
                       Catch2::Catch2
-                      lucet_sandbox_rustlib
+                      ${LINK_LUCET_LIB}
                       ${CMAKE_THREAD_LIBS_INIT}
                       ${CMAKE_DL_LIBS}
                       # glue_lib_lucet

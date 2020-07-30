@@ -62,5 +62,5 @@ macro_rules! expand_align {
                 size: [u8; ::__SIZEOF_PTHREAD_RWLOCK_T],
             }
         }
-    }
+    };
 }

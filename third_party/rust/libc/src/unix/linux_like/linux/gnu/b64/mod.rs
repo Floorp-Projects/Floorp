@@ -78,6 +78,9 @@ cfg_if! {
     } else if #[cfg(any(target_arch = "x86_64"))] {
         mod x86_64;
         pub use self::x86_64::*;
+    } else if #[cfg(any(target_arch = "riscv64"))] {
+        mod riscv64;
+        pub use self::riscv64::*;
     } else {
         // Unknown target_arch
     }
