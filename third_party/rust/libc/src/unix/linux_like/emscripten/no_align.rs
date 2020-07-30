@@ -59,5 +59,5 @@ macro_rules! expand_align {
                 }
             }
         }
-    }
+    };
 }

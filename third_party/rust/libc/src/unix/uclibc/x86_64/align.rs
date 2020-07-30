@@ -5,7 +5,7 @@ macro_rules! expand_align {
                        repr(align(4)))]
             #[cfg_attr(target_pointer_width = "64",
                        repr(align(8)))]
-            pub struct sem_t { // ToDo
+            pub struct sem_t { // FIXME
                 #[cfg(target_pointer_width = "32")]
                 __size: [::c_char; 16],
                 #[cfg(target_pointer_width = "64")]
@@ -26,12 +26,12 @@ macro_rules! expand_align {
                                target_arch = "s390x",
                                target_arch = "sparc64")),
                        repr(align(8)))]
-            pub struct pthread_mutexattr_t { // ToDo
+            pub struct pthread_mutexattr_t { // FIXME
                 size: [u8; ::__SIZEOF_PTHREAD_MUTEXATTR_T],
             }
 
             #[repr(align(4))]
-            pub struct pthread_condattr_t { // ToDo
+            pub struct pthread_condattr_t { // FIXME
                 size: [u8; ::__SIZEOF_PTHREAD_CONDATTR_T],
             }
         }
@@ -48,13 +48,13 @@ macro_rules! expand_align {
                                        target_arch = "powerpc")))),
                        repr(align(8)))]
             #[allow(missing_debug_implementations)]
-            pub struct pthread_mutex_t { // ToDo
+            pub struct pthread_mutex_t { // FIXME
                 size: [u8; ::__SIZEOF_PTHREAD_MUTEX_T],
             }
 
             #[repr(align(8))]
             #[allow(missing_debug_implementations)]
-            pub struct pthread_cond_t { // ToDo
+            pub struct pthread_cond_t { // FIXME
                 size: [u8; ::__SIZEOF_PTHREAD_COND_T],
             }
 
@@ -69,9 +69,9 @@ macro_rules! expand_align {
                                    target_arch = "powerpc"))),
                        repr(align(8)))]
             #[allow(missing_debug_implementations)]
-            pub struct pthread_rwlock_t { // ToDo
+            pub struct pthread_rwlock_t { // FIXME
                 size: [u8; ::__SIZEOF_PTHREAD_RWLOCK_T],
             }
         }
-    }
+    };
 }

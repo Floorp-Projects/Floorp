@@ -13,6 +13,36 @@ pub type fsblkcnt_t = ::c_ulonglong;
 pub type fsfilcnt_t = ::c_ulonglong;
 pub type rlim_t = ::c_ulonglong;
 
+pub type flock64 = flock;
+
+impl siginfo_t {
+    pub unsafe fn si_addr(&self) -> *mut ::c_void {
+        #[repr(C)]
+        struct siginfo_sigfault {
+            _si_signo: ::c_int,
+            _si_errno: ::c_int,
+            _si_code: ::c_int,
+            si_addr: *mut ::c_void,
+        }
+
+        (*(self as *const siginfo_t as *const siginfo_sigfault)).si_addr
+    }
+
+    pub unsafe fn si_value(&self) -> ::sigval {
+        #[repr(C)]
+        struct siginfo_si_value {
+            _si_signo: ::c_int,
+            _si_errno: ::c_int,
+            _si_code: ::c_int,
+            _si_timerid: ::c_int,
+            _si_overrun: ::c_int,
+            si_value: ::sigval,
+        }
+
+        (*(self as *const siginfo_t as *const siginfo_si_value)).si_value
+    }
+}
+
 s! {
     pub struct aiocb {
         pub aio_fildes: ::c_int,
@@ -79,9 +109,49 @@ s! {
         pub l_len: ::off_t,
         pub l_pid: ::pid_t,
     }
+
+    pub struct regex_t {
+        __re_nsub: ::size_t,
+        __opaque: *mut ::c_void,
+        __padding: [*mut ::c_void; 4usize],
+        __nsub2: ::size_t,
+        __padding2: ::c_char,
+    }
+
+    pub struct rtentry {
+        pub rt_pad1: ::c_ulong,
+        pub rt_dst: ::sockaddr,
+        pub rt_gateway: ::sockaddr,
+        pub rt_genmask: ::sockaddr,
+        pub rt_flags: ::c_ushort,
+        pub rt_pad2: ::c_short,
+        pub rt_pad3: ::c_ulong,
+        pub rt_tos: ::c_uchar,
+        pub rt_class: ::c_uchar,
+        #[cfg(target_pointer_width = "64")]
+        pub rt_pad4: [::c_short; 3usize],
+        #[cfg(not(target_pointer_width = "64"))]
+        pub rt_pad4: [::c_short; 1usize],
+        pub rt_metric: ::c_short,
+        pub rt_dev: *mut ::c_char,
+        pub rt_mtu: ::c_ulong,
+        pub rt_window: ::c_ulong,
+        pub rt_irtt: ::c_ushort,
+    }
+
+    pub struct ip_mreqn {
+        pub imr_multiaddr: ::in_addr,
+        pub imr_address: ::in_addr,
+        pub imr_ifindex: ::c_int,
+    }
+
+    pub struct __exit_status {
+        pub e_termination: ::c_short,
+        pub e_exit: ::c_short,
+    }
 }
 
-s_no_extra_traits!{
+s_no_extra_traits! {
     pub struct sysinfo {
         pub uptime: ::c_ulong,
         pub loads: [::c_ulong; 3],
@@ -97,6 +167,36 @@ s_no_extra_traits!{
         pub freehigh: ::c_ulong,
         pub mem_unit: ::c_uint,
         pub __reserved: [::c_char; 256],
+    }
+
+    // FIXME: musl added paddings and adjusted
+    // layout in 1.2.0 but our CI is still 1.1.24.
+    // So, I'm leaving some fields as comments for now.
+    // ref. https://github.com/bminor/musl/commit/
+    // 1e7f0fcd7ff2096904fd93a2ee6d12a2392be392
+    pub struct utmpx {
+        pub ut_type: ::c_short,
+        //__ut_pad1: ::c_short,
+        pub ut_pid: ::pid_t,
+        pub ut_line: [::c_char; 32],
+        pub ut_id: [::c_char; 4],
+        pub ut_user: [::c_char; 32],
+        pub ut_host: [::c_char; 256],
+        pub ut_exit: __exit_status,
+
+        //#[cfg(target_endian = "little")]
+        pub ut_session: ::c_long,
+        //#[cfg(target_endian = "little")]
+        //__ut_pad2: ::c_long,
+
+        //#[cfg(not(target_endian = "little"))]
+        //__ut_pad2: ::c_int,
+        //#[cfg(not(target_endian = "little"))]
+        //pub ut_session: ::c_int,
+
+        pub ut_tv: ::timeval,
+        pub ut_addr_v6: [::c_uint; 4],
+        __unused: [::c_char; 20],
     }
 }
 
@@ -166,8 +266,94 @@ cfg_if! {
                 self.__reserved.hash(state);
             }
         }
+
+        impl PartialEq for utmpx {
+            fn eq(&self, other: &utmpx) -> bool {
+                self.ut_type == other.ut_type
+                    //&& self.__ut_pad1 == other.__ut_pad1
+                    && self.ut_pid == other.ut_pid
+                    && self.ut_line == other.ut_line
+                    && self.ut_id == other.ut_id
+                    && self.ut_user == other.ut_user
+                    && self
+                        .ut_host
+                        .iter()
+                        .zip(other.ut_host.iter())
+                        .all(|(a,b)| a == b)
+                    && self.ut_exit == other.ut_exit
+                    && self.ut_session == other.ut_session
+                    //&& self.__ut_pad2 == other.__ut_pad2
+                    && self.ut_tv == other.ut_tv
+                    && self.ut_addr_v6 == other.ut_addr_v6
+                    && self.__unused == other.__unused
+            }
+        }
+
+        impl Eq for utmpx {}
+
+        impl ::fmt::Debug for utmpx {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("utmpx")
+                    .field("ut_type", &self.ut_type)
+                    //.field("__ut_pad1", &self.__ut_pad1)
+                    .field("ut_pid", &self.ut_pid)
+                    .field("ut_line", &self.ut_line)
+                    .field("ut_id", &self.ut_id)
+                    .field("ut_user", &self.ut_user)
+                    //FIXME: .field("ut_host", &self.ut_host)
+                    .field("ut_exit", &self.ut_exit)
+                    .field("ut_session", &self.ut_session)
+                    //.field("__ut_pad2", &self.__ut_pad2)
+                    .field("ut_tv", &self.ut_tv)
+                    .field("ut_addr_v6", &self.ut_addr_v6)
+                    .field("__unused", &self.__unused)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for utmpx {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ut_type.hash(state);
+                //self.__ut_pad1.hash(state);
+                self.ut_pid.hash(state);
+                self.ut_line.hash(state);
+                self.ut_id.hash(state);
+                self.ut_user.hash(state);
+                self.ut_host.hash(state);
+                self.ut_exit.hash(state);
+                self.ut_session.hash(state);
+                //self.__ut_pad2.hash(state);
+                self.ut_tv.hash(state);
+                self.ut_addr_v6.hash(state);
+                self.__unused.hash(state);
+            }
+        }
     }
 }
+
+// include/sys/mman.h
+/*
+ * Huge page size encoding when MAP_HUGETLB is specified, and a huge page
+ * size other than the default is desired.  See hugetlb_encode.h.
+ * All known huge page size encodings are provided here.  It is the
+ * responsibility of the application to know which sizes are supported on
+ * the running system.  See mmap(2) man page for details.
+ */
+pub const MAP_HUGE_SHIFT: ::c_int = 26;
+pub const MAP_HUGE_MASK:  ::c_int = 0x3f;
+
+pub const MAP_HUGE_64KB:  ::c_int = 16 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_512KB: ::c_int = 19 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_1MB:   ::c_int = 20 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_2MB:   ::c_int = 21 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_8MB:   ::c_int = 23 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_16MB:  ::c_int = 24 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_32MB:  ::c_int = 25 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_256MB: ::c_int = 28 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_512MB: ::c_int = 29 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_1GB:   ::c_int = 30 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_2GB:   ::c_int = 31 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_16GB:  ::c_int = 34 << MAP_HUGE_SHIFT;
 
 pub const MS_RMT_MASK: ::c_ulong = 0x02800051;
 
@@ -241,11 +427,9 @@ pub const TCP_QUEUE_SEQ: ::c_int = 21;
 pub const TCP_REPAIR_OPTIONS: ::c_int = 22;
 pub const TCP_FASTOPEN: ::c_int = 23;
 pub const TCP_TIMESTAMP: ::c_int = 24;
+pub const TCP_FASTOPEN_CONNECT: ::c_int = 30;
 
-#[deprecated(
-    since = "0.2.55",
-    note = "Use SIGSYS instead"
-)]
+#[deprecated(since = "0.2.55", note = "Use SIGSYS instead")]
 pub const SIGUNUSED: ::c_int = ::SIGSYS;
 
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
@@ -300,10 +484,7 @@ pub const TCSAFLUSH: ::c_int = 2;
 pub const RTLD_GLOBAL: ::c_int = 0x100;
 pub const RTLD_NOLOAD: ::c_int = 0x4;
 
-// TODO(#247) Temporarily musl-specific (available since musl 0.9.12 / Linux
-// kernel 3.10).  See also linux_like/mod.rs
 pub const CLOCK_SGI_CYCLE: ::clockid_t = 10;
-pub const CLOCK_TAI: ::clockid_t = 11;
 
 pub const B0: ::speed_t = 0o000000;
 pub const B50: ::speed_t = 0o000001;
@@ -342,52 +523,92 @@ pub const RLIMIT_MSGQUEUE: ::c_int = 12;
 pub const RLIMIT_NICE: ::c_int = 13;
 pub const RLIMIT_RTPRIO: ::c_int = 14;
 
-extern {
-    pub fn sendmmsg(sockfd: ::c_int, msgvec: *mut ::mmsghdr, vlen: ::c_uint,
-                    flags: ::c_uint) -> ::c_int;
-    pub fn recvmmsg(sockfd: ::c_int, msgvec: *mut ::mmsghdr, vlen: ::c_uint,
-                    flags: ::c_uint, timeout: *mut ::timespec) -> ::c_int;
+pub const REG_OK: ::c_int = 0;
 
-    pub fn getrlimit64(resource: ::c_int,
-                       rlim: *mut ::rlimit64) -> ::c_int;
-    pub fn setrlimit64(resource: ::c_int,
-                       rlim: *const ::rlimit64) -> ::c_int;
-    pub fn getrlimit(resource: ::c_int,
-                     rlim: *mut ::rlimit) -> ::c_int;
-    pub fn setrlimit(resource: ::c_int,
-                     rlim: *const ::rlimit) -> ::c_int;
-    pub fn prlimit(pid: ::pid_t,
-                   resource: ::c_int, new_limit: *const ::rlimit,
-                   old_limit: *mut ::rlimit) -> ::c_int;
-    pub fn prlimit64(pid: ::pid_t,
-                     resource: ::c_int,
-                     new_limit: *const ::rlimit64,
-                     old_limit: *mut ::rlimit64) -> ::c_int;
+pub const TIOCSBRK: ::c_int = 0x5427;
+pub const TIOCCBRK: ::c_int = 0x5428;
 
-    pub fn gettimeofday(tp: *mut ::timeval,
-                        tz: *mut ::c_void) -> ::c_int;
+pub const PRIO_PROCESS: ::c_int = 0;
+pub const PRIO_PGRP: ::c_int = 1;
+pub const PRIO_USER: ::c_int = 2;
+
+extern "C" {
+    pub fn sendmmsg(
+        sockfd: ::c_int,
+        msgvec: *mut ::mmsghdr,
+        vlen: ::c_uint,
+        flags: ::c_uint,
+    ) -> ::c_int;
+    pub fn recvmmsg(
+        sockfd: ::c_int,
+        msgvec: *mut ::mmsghdr,
+        vlen: ::c_uint,
+        flags: ::c_uint,
+        timeout: *mut ::timespec,
+    ) -> ::c_int;
+
+    pub fn getrlimit64(resource: ::c_int, rlim: *mut ::rlimit64) -> ::c_int;
+    pub fn setrlimit64(resource: ::c_int, rlim: *const ::rlimit64) -> ::c_int;
+    pub fn getrlimit(resource: ::c_int, rlim: *mut ::rlimit) -> ::c_int;
+    pub fn setrlimit(resource: ::c_int, rlim: *const ::rlimit) -> ::c_int;
+    pub fn prlimit(
+        pid: ::pid_t,
+        resource: ::c_int,
+        new_limit: *const ::rlimit,
+        old_limit: *mut ::rlimit,
+    ) -> ::c_int;
+    pub fn prlimit64(
+        pid: ::pid_t,
+        resource: ::c_int,
+        new_limit: *const ::rlimit64,
+        old_limit: *mut ::rlimit64,
+    ) -> ::c_int;
+
+    pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::c_void) -> ::c_int;
     pub fn ptrace(request: ::c_int, ...) -> ::c_long;
     pub fn getpriority(which: ::c_int, who: ::id_t) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: ::id_t, prio: ::c_int) -> ::c_int;
-    pub fn pthread_getaffinity_np(thread: ::pthread_t,
-                                  cpusetsize: ::size_t,
-                                  cpuset: *mut ::cpu_set_t) -> ::c_int;
-    pub fn pthread_setaffinity_np(thread: ::pthread_t,
-                                  cpusetsize: ::size_t,
-                                  cpuset: *const ::cpu_set_t) -> ::c_int;
+    pub fn pthread_getaffinity_np(
+        thread: ::pthread_t,
+        cpusetsize: ::size_t,
+        cpuset: *mut ::cpu_set_t,
+    ) -> ::c_int;
+    pub fn pthread_setaffinity_np(
+        thread: ::pthread_t,
+        cpusetsize: ::size_t,
+        cpuset: *const ::cpu_set_t,
+    ) -> ::c_int;
     pub fn sched_getcpu() -> ::c_int;
+    pub fn memmem(
+        haystack: *const ::c_void,
+        haystacklen: ::size_t,
+        needle: *const ::c_void,
+        needlelen: ::size_t,
+    ) -> *mut ::c_void;
+    // Musl targets need the `mask` argument of `fanotify_mark` be specified
+    // `::c_ulonglong` instead of `u64` or there will be a type mismatch between
+    // `long long unsigned int` and the expected `uint64_t`.
+    pub fn fanotify_mark(
+        fd: ::c_int,
+        flags: ::c_uint,
+        mask: ::c_ulonglong,
+        dirfd: ::c_int,
+        path: *const ::c_char,
+    ) -> ::c_int;
 }
 
 cfg_if! {
     if #[cfg(any(target_arch = "x86_64",
                  target_arch = "aarch64",
+                 target_arch = "mips64",
                  target_arch = "powerpc64"))] {
         mod b64;
         pub use self::b64::*;
     } else if #[cfg(any(target_arch = "x86",
                         target_arch = "mips",
-                        target_arch = "arm",
-                        target_arch = "powerpc"))] {
+                        target_arch = "powerpc",
+                        target_arch = "hexagon",
+                        target_arch = "arm"))] {
         mod b32;
         pub use self::b32::*;
     } else { }

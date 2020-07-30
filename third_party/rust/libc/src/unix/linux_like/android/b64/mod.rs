@@ -107,7 +107,7 @@ s! {
     }
 }
 
-s_no_extra_traits!{
+s_no_extra_traits! {
     pub struct pthread_mutex_t {
         value: ::c_int,
         __reserved: [::c_char; 36],
@@ -125,6 +125,10 @@ s_no_extra_traits!{
         pendingWriters: ::c_int,
         attr: i32,
         __reserved: [::c_char; 36],
+    }
+
+    pub struct sigset64_t {
+        __bits: [::c_ulong; 1]
     }
 }
 
@@ -226,6 +230,14 @@ cfg_if! {
                 self.pendingWriters.hash(state);
                 self.attr.hash(state);
                 self.__reserved.hash(state);
+            }
+        }
+
+        impl ::fmt::Debug for sigset64_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sigset64_t")
+                    .field("__bits", &self.__bits)
+                    .finish()
             }
         }
     }

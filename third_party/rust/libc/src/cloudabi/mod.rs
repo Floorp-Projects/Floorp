@@ -115,16 +115,20 @@ pub const SOCK_STREAM: ::c_int = 130;
 pub enum FILE {}
 impl ::Copy for FILE {}
 impl ::Clone for FILE {
-    fn clone(&self) -> FILE { *self }
+    fn clone(&self) -> FILE {
+        *self
+    }
 }
 #[cfg_attr(feature = "extra_traits", derive(Debug))]
-pub enum fpos_t {} // TODO: fill this out with a struct
+pub enum fpos_t {} // FIXME: fill this out with a struct
 impl ::Copy for fpos_t {}
 impl ::Clone for fpos_t {
-    fn clone(&self) -> fpos_t { *self }
+    fn clone(&self) -> fpos_t {
+        *self
+    }
 }
 
-extern {
+extern "C" {
     pub fn isalnum(c: c_int) -> c_int;
     pub fn isalpha(c: c_int) -> c_int;
     pub fn iscntrl(c: c_int) -> c_int;
@@ -136,31 +140,48 @@ extern {
     pub fn isspace(c: c_int) -> c_int;
     pub fn isupper(c: c_int) -> c_int;
     pub fn isxdigit(c: c_int) -> c_int;
+    pub fn isblank(c: c_int) -> c_int;
     pub fn tolower(c: c_int) -> c_int;
     pub fn toupper(c: c_int) -> c_int;
     pub fn fopen(filename: *const c_char, mode: *const c_char) -> *mut FILE;
-    pub fn freopen(filename: *const c_char, mode: *const c_char,
-                   file: *mut FILE) -> *mut FILE;
+    pub fn freopen(
+        filename: *const c_char,
+        mode: *const c_char,
+        file: *mut FILE,
+    ) -> *mut FILE;
     pub fn fflush(file: *mut FILE) -> c_int;
     pub fn fclose(file: *mut FILE) -> c_int;
     pub fn remove(filename: *const c_char) -> c_int;
     pub fn rename(oldname: *const c_char, newname: *const c_char) -> c_int;
     pub fn tmpfile() -> *mut FILE;
-    pub fn setvbuf(stream: *mut FILE, buffer: *mut c_char, mode: c_int,
-                   size: size_t) -> c_int;
+    pub fn setvbuf(
+        stream: *mut FILE,
+        buffer: *mut c_char,
+        mode: c_int,
+        size: size_t,
+    ) -> c_int;
     pub fn setbuf(stream: *mut FILE, buf: *mut c_char);
     pub fn getchar() -> c_int;
     pub fn putchar(c: c_int) -> c_int;
     pub fn fgetc(stream: *mut FILE) -> c_int;
-    pub fn fgets(buf: *mut c_char, n: c_int, stream: *mut FILE) -> *mut c_char;
+    pub fn fgets(buf: *mut c_char, n: c_int, stream: *mut FILE)
+        -> *mut c_char;
     pub fn fputc(c: c_int, stream: *mut FILE) -> c_int;
     pub fn fputs(s: *const c_char, stream: *mut FILE) -> c_int;
     pub fn puts(s: *const c_char) -> c_int;
     pub fn ungetc(c: c_int, stream: *mut FILE) -> c_int;
-    pub fn fread(ptr: *mut c_void, size: size_t, nobj: size_t,
-                 stream: *mut FILE) -> size_t;
-    pub fn fwrite(ptr: *const c_void, size: size_t, nobj: size_t,
-                  stream: *mut FILE) -> size_t;
+    pub fn fread(
+        ptr: *mut c_void,
+        size: size_t,
+        nobj: size_t,
+        stream: *mut FILE,
+    ) -> size_t;
+    pub fn fwrite(
+        ptr: *const c_void,
+        size: size_t,
+        nobj: size_t,
+        stream: *mut FILE,
+    ) -> size_t;
     pub fn fseek(stream: *mut FILE, offset: c_long, whence: c_int) -> c_int;
     pub fn ftell(stream: *mut FILE) -> c_long;
     pub fn rewind(stream: *mut FILE);
@@ -171,10 +192,16 @@ extern {
     pub fn perror(s: *const c_char);
     pub fn atoi(s: *const c_char) -> c_int;
     pub fn strtod(s: *const c_char, endp: *mut *mut c_char) -> c_double;
-    pub fn strtol(s: *const c_char, endp: *mut *mut c_char,
-                  base: c_int) -> c_long;
-    pub fn strtoul(s: *const c_char, endp: *mut *mut c_char,
-                   base: c_int) -> c_ulong;
+    pub fn strtol(
+        s: *const c_char,
+        endp: *mut *mut c_char,
+        base: c_int,
+    ) -> c_long;
+    pub fn strtoul(
+        s: *const c_char,
+        endp: *mut *mut c_char,
+        base: c_int,
+    ) -> c_ulong;
     pub fn calloc(nobj: size_t, size: size_t) -> *mut c_void;
     pub fn malloc(size: size_t) -> *mut c_void;
     pub fn realloc(p: *mut c_void, size: size_t) -> *mut c_void;
@@ -182,17 +209,27 @@ extern {
     pub fn abort() -> !;
     pub fn exit(status: c_int) -> !;
     pub fn _exit(status: c_int) -> !;
-    pub fn atexit(cb: extern fn()) -> c_int;
+    pub fn atexit(cb: extern "C" fn()) -> c_int;
     pub fn system(s: *const c_char) -> c_int;
     pub fn getenv(s: *const c_char) -> *mut c_char;
-    pub fn getline (lineptr: *mut *mut c_char, n: *mut size_t,
-        stream: *mut FILE) -> ssize_t;
+    pub fn getline(
+        lineptr: *mut *mut c_char,
+        n: *mut size_t,
+        stream: *mut FILE,
+    ) -> ssize_t;
 
     pub fn strcpy(dst: *mut c_char, src: *const c_char) -> *mut c_char;
-    pub fn strncpy(dst: *mut c_char, src: *const c_char,
-                   n: size_t) -> *mut c_char;
+    pub fn strncpy(
+        dst: *mut c_char,
+        src: *const c_char,
+        n: size_t,
+    ) -> *mut c_char;
     pub fn strcat(s: *mut c_char, ct: *const c_char) -> *mut c_char;
-    pub fn strncat(s: *mut c_char, ct: *const c_char, n: size_t) -> *mut c_char;
+    pub fn strncat(
+        s: *mut c_char,
+        ct: *const c_char,
+        n: size_t,
+    ) -> *mut c_char;
     pub fn strcmp(cs: *const c_char, ct: *const c_char) -> c_int;
     pub fn strncmp(cs: *const c_char, ct: *const c_char, n: size_t) -> c_int;
     pub fn strcoll(cs: *const c_char, ct: *const c_char) -> c_int;
@@ -204,23 +241,36 @@ extern {
     pub fn strpbrk(cs: *const c_char, ct: *const c_char) -> *mut c_char;
     pub fn strstr(cs: *const c_char, ct: *const c_char) -> *mut c_char;
     pub fn strcasecmp(s1: *const c_char, s2: *const c_char) -> c_int;
-    pub fn strncasecmp(s1: *const c_char, s2: *const c_char,
-                       n: size_t) -> c_int;
+    pub fn strncasecmp(
+        s1: *const c_char,
+        s2: *const c_char,
+        n: size_t,
+    ) -> c_int;
     pub fn strlen(cs: *const c_char) -> size_t;
     pub fn strnlen(cs: *const c_char, maxlen: size_t) -> size_t;
     pub fn strerror(n: c_int) -> *mut c_char;
     pub fn strtok(s: *mut c_char, t: *const c_char) -> *mut c_char;
     pub fn strxfrm(s: *mut c_char, ct: *const c_char, n: size_t) -> size_t;
     pub fn wcslen(buf: *const wchar_t) -> size_t;
-    pub fn wcstombs(dest: *mut c_char, src: *const wchar_t,
-                    n: size_t) -> ::size_t;
+    pub fn wcstombs(
+        dest: *mut c_char,
+        src: *const wchar_t,
+        n: size_t,
+    ) -> ::size_t;
 
     pub fn memchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;
+    pub fn wmemchr(cx: *const wchar_t, c: wchar_t, n: size_t) -> *mut wchar_t;
     pub fn memcmp(cx: *const c_void, ct: *const c_void, n: size_t) -> c_int;
-    pub fn memcpy(dest: *mut c_void, src: *const c_void,
-                  n: size_t) -> *mut c_void;
-    pub fn memmove(dest: *mut c_void, src: *const c_void,
-                   n: size_t) -> *mut c_void;
+    pub fn memcpy(
+        dest: *mut c_void,
+        src: *const c_void,
+        n: size_t,
+    ) -> *mut c_void;
+    pub fn memmove(
+        dest: *mut c_void,
+        src: *const c_void,
+        n: size_t,
+    ) -> *mut c_void;
     pub fn memset(dest: *mut c_void, c: c_int, n: size_t) -> *mut c_void;
 
     pub fn abs(i: c_int) -> c_int;
@@ -259,7 +309,7 @@ extern {
     pub fn pthread_create(
         native: *mut ::pthread_t,
         attr: *const ::pthread_attr_t,
-        f: extern fn(*mut ::c_void) -> *mut ::c_void,
+        f: extern "C" fn(*mut ::c_void) -> *mut ::c_void,
         value: *mut ::c_void,
     ) -> ::c_int;
     pub fn pthread_detach(thread: ::pthread_t) -> ::c_int;
@@ -270,7 +320,7 @@ extern {
     ) -> ::c_int;
     pub fn pthread_key_create(
         key: *mut pthread_key_t,
-        dtor: ::Option<unsafe extern fn(*mut ::c_void)>,
+        dtor: ::Option<unsafe extern "C" fn(*mut ::c_void)>,
     ) -> ::c_int;
     pub fn pthread_key_delete(key: pthread_key_t) -> ::c_int;
     pub fn pthread_setspecific(

@@ -792,7 +792,7 @@ source = "git+https://github.com/bytecodealliance/wasmtime?rev=1b3b2dbfd00492161
 [[package]]
 name = "cranelift-entity"
 version = "0.41.0"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=5e870faf6f95d79d11efc813e56370ad124bbed5#5e870faf6f95d79d11efc813e56370ad124bbed5"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730#6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730"
 
 [[package]]
 name = "cranelift-entity"
@@ -2557,9 +2557,9 @@ checksum = "3576a87f2ba00f6f106fdfcd16db1d698d648a26ad8e0573cad8537c3c362d2a"
 
 [[package]]
 name = "libc"
-version = "0.2.59"
+version = "0.2.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3262021842bf00fe07dbd6cf34ff25c99d7a7ebef8deea84db72be3ea3bb0aff"
+checksum = "a2f02823cf78b754822df5f7f268fb59822e7296276d3e069d8e8cb26a14bd10"
 
 [[package]]
 name = "libdbus-sys"
@@ -2696,9 +2696,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "lucet-module"
+name = "lucet-module-wasmsbx"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=5e870faf6f95d79d11efc813e56370ad124bbed5#5e870faf6f95d79d11efc813e56370ad124bbed5"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730#6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730"
 dependencies = [
  "bincode",
  "byteorder",
@@ -2712,33 +2712,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "lucet-runtime"
+name = "lucet-runtime-internals-wasmsbx"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=5e870faf6f95d79d11efc813e56370ad124bbed5#5e870faf6f95d79d11efc813e56370ad124bbed5"
-dependencies = [
- "cc",
- "libc",
- "lucet-module",
- "lucet-runtime-internals",
- "num-derive",
- "num-traits",
-]
-
-[[package]]
-name = "lucet-runtime-internals"
-version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=5e870faf6f95d79d11efc813e56370ad124bbed5#5e870faf6f95d79d11efc813e56370ad124bbed5"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730#6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730"
 dependencies = [
  "bincode",
  "bitflags",
  "byteorder",
  "cc",
  "failure",
- "getrandom",
  "lazy_static",
  "libc",
  "libloading 0.5.2",
- "lucet-module",
+ "lucet-module-wasmsbx",
  "memoffset",
  "nix",
  "num-derive",
@@ -2748,16 +2734,29 @@ dependencies = [
 ]
 
 [[package]]
-name = "lucet-wasi"
+name = "lucet-runtime-wasmsbx"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=5e870faf6f95d79d11efc813e56370ad124bbed5#5e870faf6f95d79d11efc813e56370ad124bbed5"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730#6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730"
+dependencies = [
+ "cc",
+ "libc",
+ "lucet-module-wasmsbx",
+ "lucet-runtime-internals-wasmsbx",
+ "num-derive",
+ "num-traits",
+]
+
+[[package]]
+name = "lucet-wasi-wasmsbx"
+version = "0.1.1"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730#6594bb9dfab7e67eb6eb2fefbc66ab7c491ce730"
 dependencies = [
  "cast",
  "failure",
  "libc",
- "lucet-module",
- "lucet-runtime",
- "lucet-runtime-internals",
+ "lucet-module-wasmsbx",
+ "lucet-runtime-internals-wasmsbx",
+ "lucet-runtime-wasmsbx",
  "mach",
  "nix",
  "rand",
@@ -4124,14 +4123,14 @@ dependencies = [
 [[package]]
 name = "rlbox_lucet_sandbox"
 version = "0.1.0"
-source = "git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=d510da5999a744c563b0acd18056069d1698273f#d510da5999a744c563b0acd18056069d1698273f"
+source = "git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=9bf4cdada11b2afd18efae5520bb8d3bb5bbc785#9bf4cdada11b2afd18efae5520bb8d3bb5bbc785"
 dependencies = [
  "failure",
  "goblin",
- "lucet-module",
- "lucet-runtime",
- "lucet-runtime-internals",
- "lucet-wasi",
+ "lucet-module-wasmsbx",
+ "lucet-runtime-internals-wasmsbx",
+ "lucet-runtime-wasmsbx",
+ "lucet-wasi-wasmsbx",
 ]
 
 [[package]]

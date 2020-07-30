@@ -1,6 +1,8 @@
 pub type pthread_t = c_ulong;
 pub type __priority_which_t = ::c_uint;
 pub type __rlimit_resource_t = ::c_uint;
+pub type Lmid_t = ::c_long;
+pub type regoff_t = ::c_int;
 
 s! {
     pub struct statx {
@@ -98,11 +100,13 @@ s! {
         pub c_line: ::cc_t,
         pub c_cc: [::cc_t; ::NCCS],
         #[cfg(not(any(
+            target_arch = "sparc",
             target_arch = "sparc64",
             target_arch = "mips",
             target_arch = "mips64")))]
         pub c_ispeed: ::speed_t,
         #[cfg(not(any(
+            target_arch = "sparc",
             target_arch = "sparc64",
             target_arch = "mips",
             target_arch = "mips64")))]
@@ -180,6 +184,107 @@ s! {
         pub rt_window: ::c_ulong,
         pub rt_irtt: ::c_ushort,
     }
+
+    pub struct timex {
+        pub modes: ::c_uint,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub offset: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub offset: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub freq: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub freq: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub maxerror: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub maxerror: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub esterror: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub esterror: ::c_long,
+        pub status: ::c_int,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub constant: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub constant: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub precision: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub precision: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub tolerance: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub tolerance: ::c_long,
+        pub time: ::timeval,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub tick: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub tick: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub ppsfreq: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub ppsfreq: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub jitter: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub jitter: ::c_long,
+        pub shift: ::c_int,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub stabil: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub stabil: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub jitcnt: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub jitcnt: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub calcnt: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub calcnt: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub errcnt: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub errcnt: ::c_long,
+        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+        pub stbcnt: i64,
+        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+        pub stbcnt: ::c_long,
+        pub tai: ::c_int,
+        pub __unused1: i32,
+        pub __unused2: i32,
+        pub __unused3: i32,
+        pub __unused4: i32,
+        pub __unused5: i32,
+        pub __unused6: i32,
+        pub __unused7: i32,
+        pub __unused8: i32,
+        pub __unused9: i32,
+        pub __unused10: i32,
+        pub __unused11: i32,
+    }
+
+    pub struct ntptimeval {
+        pub time: ::timeval,
+        pub maxerror: ::c_long,
+        pub esterror: ::c_long,
+        pub tai: ::c_long,
+        pub __glibc_reserved1: ::c_long,
+        pub __glibc_reserved2: ::c_long,
+        pub __glibc_reserved3: ::c_long,
+        pub __glibc_reserved4: ::c_long,
+    }
+
+    pub struct regex_t {
+        __buffer: *mut ::c_void,
+        __allocated: ::size_t,
+        __used: ::size_t,
+        __syntax: ::c_ulong,
+        __fastmap: *mut ::c_char,
+        __translate: *mut ::c_char,
+        __re_nsub: ::size_t,
+        __bitfield: u8,
+    }
 }
 
 impl siginfo_t {
@@ -189,9 +294,22 @@ impl siginfo_t {
             _si_signo: ::c_int,
             _si_errno: ::c_int,
             _si_code: ::c_int,
-            si_addr: *mut ::c_void
+            si_addr: *mut ::c_void,
         }
         (*(self as *const siginfo_t as *const siginfo_sigfault)).si_addr
+    }
+
+    pub unsafe fn si_value(&self) -> ::sigval {
+        #[repr(C)]
+        struct siginfo_timer {
+            _si_signo: ::c_int,
+            _si_errno: ::c_int,
+            _si_code: ::c_int,
+            _si_tid: ::c_int,
+            _si_overrun: ::c_int,
+            si_sigval: ::sigval,
+        }
+        (*(self as *const siginfo_t as *const siginfo_timer)).si_sigval
     }
 }
 
@@ -293,6 +411,47 @@ cfg_if! {
     }
 }
 
+// include/uapi/asm-generic/hugetlb_encode.h
+pub const HUGETLB_FLAG_ENCODE_SHIFT: ::c_int = 26;
+pub const HUGETLB_FLAG_ENCODE_MASK:  ::c_int = 0x3f;
+
+pub const HUGETLB_FLAG_ENCODE_64KB:  ::c_int = 16 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_512KB: ::c_int = 19 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_1MB:   ::c_int = 20 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_2MB:   ::c_int = 21 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_8MB:   ::c_int = 23 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_16MB:  ::c_int = 24 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_32MB:  ::c_int = 25 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_256MB: ::c_int = 28 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_512MB: ::c_int = 29 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_1GB:   ::c_int = 30 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_2GB:   ::c_int = 31 << HUGETLB_FLAG_ENCODE_SHIFT;
+pub const HUGETLB_FLAG_ENCODE_16GB:  ::c_int = 34 << HUGETLB_FLAG_ENCODE_SHIFT;
+
+// include/uapi/linux/mman.h
+/*
+ * Huge page size encoding when MAP_HUGETLB is specified, and a huge page
+ * size other than the default is desired.  See hugetlb_encode.h.
+ * All known huge page size encodings are provided here.  It is the
+ * responsibility of the application to know which sizes are supported on
+ * the running system.  See mmap(2) man page for details.
+ */
+pub const MAP_HUGE_SHIFT: ::c_int = HUGETLB_FLAG_ENCODE_SHIFT;
+pub const MAP_HUGE_MASK:  ::c_int = HUGETLB_FLAG_ENCODE_MASK;
+
+pub const MAP_HUGE_64KB:  ::c_int = HUGETLB_FLAG_ENCODE_64KB;
+pub const MAP_HUGE_512KB: ::c_int = HUGETLB_FLAG_ENCODE_512KB;
+pub const MAP_HUGE_1MB:   ::c_int = HUGETLB_FLAG_ENCODE_1MB;
+pub const MAP_HUGE_2MB:   ::c_int = HUGETLB_FLAG_ENCODE_2MB;
+pub const MAP_HUGE_8MB:   ::c_int = HUGETLB_FLAG_ENCODE_8MB;
+pub const MAP_HUGE_16MB:  ::c_int = HUGETLB_FLAG_ENCODE_16MB;
+pub const MAP_HUGE_32MB:  ::c_int = HUGETLB_FLAG_ENCODE_32MB;
+pub const MAP_HUGE_256MB: ::c_int = HUGETLB_FLAG_ENCODE_256MB;
+pub const MAP_HUGE_512MB: ::c_int = HUGETLB_FLAG_ENCODE_512MB;
+pub const MAP_HUGE_1GB:   ::c_int = HUGETLB_FLAG_ENCODE_1GB;
+pub const MAP_HUGE_2GB:   ::c_int = HUGETLB_FLAG_ENCODE_2GB;
+pub const MAP_HUGE_16GB:  ::c_int = HUGETLB_FLAG_ENCODE_16GB;
+
 pub const RLIMIT_CPU: ::__rlimit_resource_t = 0;
 pub const RLIMIT_FSIZE: ::__rlimit_resource_t = 1;
 pub const RLIMIT_DATA: ::__rlimit_resource_t = 2;
@@ -305,6 +464,10 @@ pub const RLIMIT_NICE: ::__rlimit_resource_t = 13;
 pub const RLIMIT_RTPRIO: ::__rlimit_resource_t = 14;
 pub const RLIMIT_RTTIME: ::__rlimit_resource_t = 15;
 pub const RLIMIT_NLIMITS: ::__rlimit_resource_t = 16;
+
+pub const PRIO_PROCESS: ::__priority_which_t = 0;
+pub const PRIO_PGRP: ::__priority_which_t = 1;
+pub const PRIO_USER: ::__priority_which_t = 2;
 
 pub const MS_RMT_MASK: ::c_ulong = 0x02800051;
 
@@ -321,6 +484,21 @@ pub const LOGIN_PROCESS: ::c_short = 6;
 pub const USER_PROCESS: ::c_short = 7;
 pub const DEAD_PROCESS: ::c_short = 8;
 pub const ACCOUNTING: ::c_short = 9;
+
+// dlfcn.h
+pub const LM_ID_BASE: ::c_long = 0;
+pub const LM_ID_NEWLM: ::c_long = -1;
+
+pub const RTLD_DI_LMID: ::c_int = 1;
+pub const RTLD_DI_LINKMAP: ::c_int = 2;
+pub const RTLD_DI_CONFIGADDR: ::c_int = 3;
+pub const RTLD_DI_SERINFO: ::c_int = 4;
+pub const RTLD_DI_SERINFOSIZE: ::c_int = 5;
+pub const RTLD_DI_ORIGIN: ::c_int = 6;
+pub const RTLD_DI_PROFILENAME: ::c_int = 7;
+pub const RTLD_DI_PROFILEOUT: ::c_int = 8;
+pub const RTLD_DI_TLS_MODID: ::c_int = 9;
+pub const RTLD_DI_TLS_DATA: ::c_int = 10;
 
 pub const SOCK_NONBLOCK: ::c_int = O_NONBLOCK;
 
@@ -341,27 +519,24 @@ pub const LC_ADDRESS: ::c_int = 9;
 pub const LC_TELEPHONE: ::c_int = 10;
 pub const LC_MEASUREMENT: ::c_int = 11;
 pub const LC_IDENTIFICATION: ::c_int = 12;
-pub const LC_PAPER_MASK: ::c_int = (1 << LC_PAPER);
-pub const LC_NAME_MASK: ::c_int = (1 << LC_NAME);
-pub const LC_ADDRESS_MASK: ::c_int = (1 << LC_ADDRESS);
-pub const LC_TELEPHONE_MASK: ::c_int = (1 << LC_TELEPHONE);
-pub const LC_MEASUREMENT_MASK: ::c_int = (1 << LC_MEASUREMENT);
-pub const LC_IDENTIFICATION_MASK: ::c_int = (1 << LC_IDENTIFICATION);
+pub const LC_PAPER_MASK: ::c_int = 1 << LC_PAPER;
+pub const LC_NAME_MASK: ::c_int = 1 << LC_NAME;
+pub const LC_ADDRESS_MASK: ::c_int = 1 << LC_ADDRESS;
+pub const LC_TELEPHONE_MASK: ::c_int = 1 << LC_TELEPHONE;
+pub const LC_MEASUREMENT_MASK: ::c_int = 1 << LC_MEASUREMENT;
+pub const LC_IDENTIFICATION_MASK: ::c_int = 1 << LC_IDENTIFICATION;
 pub const LC_ALL_MASK: ::c_int = ::LC_CTYPE_MASK
-                               | ::LC_NUMERIC_MASK
-                               | ::LC_TIME_MASK
-                               | ::LC_COLLATE_MASK
-                               | ::LC_MONETARY_MASK
-                               | ::LC_MESSAGES_MASK
-                               | LC_PAPER_MASK
-                               | LC_NAME_MASK
-                               | LC_ADDRESS_MASK
-                               | LC_TELEPHONE_MASK
-                               | LC_MEASUREMENT_MASK
-                               | LC_IDENTIFICATION_MASK;
-
-pub const MAP_SHARED_VALIDATE: ::c_int = 0x3;
-pub const MAP_FIXED_NOREPLACE: ::c_int = 0x100000;
+    | ::LC_NUMERIC_MASK
+    | ::LC_TIME_MASK
+    | ::LC_COLLATE_MASK
+    | ::LC_MONETARY_MASK
+    | ::LC_MESSAGES_MASK
+    | LC_PAPER_MASK
+    | LC_NAME_MASK
+    | LC_ADDRESS_MASK
+    | LC_TELEPHONE_MASK
+    | LC_MEASUREMENT_MASK
+    | LC_IDENTIFICATION_MASK;
 
 pub const ENOTSUP: ::c_int = EOPNOTSUPP;
 
@@ -379,6 +554,7 @@ pub const TCP_QUEUE_SEQ: ::c_int = 21;
 pub const TCP_REPAIR_OPTIONS: ::c_int = 22;
 pub const TCP_FASTOPEN: ::c_int = 23;
 pub const TCP_TIMESTAMP: ::c_int = 24;
+pub const TCP_FASTOPEN_CONNECT: ::c_int = 30;
 
 /* DCCP socket options */
 pub const DCCP_SOCKOPT_PACKET_SIZE: ::c_int = 1;
@@ -488,30 +664,50 @@ pub const NI_MAXHOST: ::socklen_t = 1025;
 
 pub const ADFS_SUPER_MAGIC: ::c_long = 0x0000adf5;
 pub const AFFS_SUPER_MAGIC: ::c_long = 0x0000adff;
+pub const AFS_SUPER_MAGIC: ::c_long = 0x5346414f;
+pub const AUTOFS_SUPER_MAGIC: ::c_long = 0x0187;
+pub const BINDERFS_SUPER_MAGIC: ::c_long = 0x6c6f6f70;
+pub const BTRFS_SUPER_MAGIC: ::c_long = 0x9123683e;
+pub const CGROUP2_SUPER_MAGIC: ::c_long = 0x63677270;
+pub const CGROUP_SUPER_MAGIC: ::c_long = 0x27e0eb;
 pub const CODA_SUPER_MAGIC: ::c_long = 0x73757245;
 pub const CRAMFS_MAGIC: ::c_long = 0x28cd3d45;
+pub const DEVPTS_SUPER_MAGIC: ::c_long = 0x1cd1;
+pub const ECRYPTFS_SUPER_MAGIC: ::c_long = 0xf15f;
 pub const EFS_SUPER_MAGIC: ::c_long = 0x00414a53;
 pub const EXT2_SUPER_MAGIC: ::c_long = 0x0000ef53;
 pub const EXT3_SUPER_MAGIC: ::c_long = 0x0000ef53;
 pub const EXT4_SUPER_MAGIC: ::c_long = 0x0000ef53;
+pub const F2FS_SUPER_MAGIC: ::c_long = 0xf2f52010;
+pub const FUTEXFS_SUPER_MAGIC: ::c_long = 0xbad1dea;
+pub const HOSTFS_SUPER_MAGIC: ::c_long = 0x00c0ffee;
 pub const HPFS_SUPER_MAGIC: ::c_long = 0xf995e849;
 pub const HUGETLBFS_MAGIC: ::c_long = 0x958458f6;
 pub const ISOFS_SUPER_MAGIC: ::c_long = 0x00009660;
 pub const JFFS2_SUPER_MAGIC: ::c_long = 0x000072b6;
-pub const MINIX_SUPER_MAGIC: ::c_long = 0x0000137f;
-pub const MINIX_SUPER_MAGIC2: ::c_long = 0x0000138f;
-pub const MINIX2_SUPER_MAGIC: ::c_long = 0x00002468;
 pub const MINIX2_SUPER_MAGIC2: ::c_long = 0x00002478;
+pub const MINIX2_SUPER_MAGIC: ::c_long = 0x00002468;
+pub const MINIX3_SUPER_MAGIC: ::c_long = 0x4d5a;
+pub const MINIX_SUPER_MAGIC2: ::c_long = 0x0000138f;
+pub const MINIX_SUPER_MAGIC: ::c_long = 0x0000137f;
 pub const MSDOS_SUPER_MAGIC: ::c_long = 0x00004d44;
 pub const NCP_SUPER_MAGIC: ::c_long = 0x0000564c;
 pub const NFS_SUPER_MAGIC: ::c_long = 0x00006969;
+pub const NILFS_SUPER_MAGIC: ::c_long = 0x3434;
+pub const OCFS2_SUPER_MAGIC: ::c_long = 0x7461636f;
 pub const OPENPROM_SUPER_MAGIC: ::c_long = 0x00009fa1;
+pub const OVERLAYFS_SUPER_MAGIC: ::c_long = 0x794c7630;
 pub const PROC_SUPER_MAGIC: ::c_long = 0x00009fa0;
 pub const QNX4_SUPER_MAGIC: ::c_long = 0x0000002f;
+pub const QNX6_SUPER_MAGIC: ::c_long = 0x68191122;
+pub const RDTGROUP_SUPER_MAGIC: ::c_long = 0x7655821;
 pub const REISERFS_SUPER_MAGIC: ::c_long = 0x52654973;
 pub const SMB_SUPER_MAGIC: ::c_long = 0x0000517b;
 pub const TMPFS_MAGIC: ::c_long = 0x01021994;
+pub const UDF_SUPER_MAGIC: ::c_long = 0x15013346;
 pub const USBDEVICE_SUPER_MAGIC: ::c_long = 0x00009fa2;
+pub const XENFS_SUPER_MAGIC: ::c_long = 0xabba1974;
+pub const XFS_SUPER_MAGIC: ::c_long = 0x58465342;
 
 pub const CPU_SETSIZE: ::c_int = 0x400;
 
@@ -542,21 +738,6 @@ pub const EPOLLWAKEUP: ::c_int = 0x20000000;
 
 pub const SEEK_DATA: ::c_int = 3;
 pub const SEEK_HOLE: ::c_int = 4;
-
-pub const LINUX_REBOOT_MAGIC1: ::c_int = 0xfee1dead;
-pub const LINUX_REBOOT_MAGIC2: ::c_int = 672274793;
-pub const LINUX_REBOOT_MAGIC2A: ::c_int = 85072278;
-pub const LINUX_REBOOT_MAGIC2B: ::c_int = 369367448;
-pub const LINUX_REBOOT_MAGIC2C: ::c_int = 537993216;
-
-pub const LINUX_REBOOT_CMD_RESTART: ::c_int = 0x01234567;
-pub const LINUX_REBOOT_CMD_HALT: ::c_int = 0xCDEF0123;
-pub const LINUX_REBOOT_CMD_CAD_ON: ::c_int = 0x89ABCDEF;
-pub const LINUX_REBOOT_CMD_CAD_OFF: ::c_int = 0x00000000;
-pub const LINUX_REBOOT_CMD_POWER_OFF: ::c_int = 0x4321FEDC;
-pub const LINUX_REBOOT_CMD_RESTART2: ::c_int = 0xA1B2C3D4;
-pub const LINUX_REBOOT_CMD_SW_SUSPEND: ::c_int = 0xD000FCE2;
-pub const LINUX_REBOOT_CMD_KEXEC: ::c_int = 0x45584543;
 
 // linux/rtnetlink.h
 pub const TCA_PAD: ::c_ushort = 9;
@@ -598,64 +779,7 @@ pub const IFA_F_NOPREFIXROUTE: u32 = 0x200;
 pub const IFA_F_MCAUTOJOIN: u32 = 0x400;
 pub const IFA_F_STABLE_PRIVACY: u32 = 0x800;
 
-pub const NETLINK_ROUTE: ::c_int = 0;
-pub const NETLINK_UNUSED: ::c_int = 1;
-pub const NETLINK_USERSOCK: ::c_int = 2;
-pub const NETLINK_FIREWALL: ::c_int = 3;
-pub const NETLINK_SOCK_DIAG: ::c_int = 4;
-pub const NETLINK_NFLOG: ::c_int = 5;
-pub const NETLINK_XFRM: ::c_int = 6;
-pub const NETLINK_SELINUX: ::c_int = 7;
-pub const NETLINK_ISCSI: ::c_int = 8;
-pub const NETLINK_AUDIT: ::c_int = 9;
-pub const NETLINK_FIB_LOOKUP: ::c_int = 10;
-pub const NETLINK_CONNECTOR: ::c_int = 11;
-pub const NETLINK_NETFILTER: ::c_int = 12;
-pub const NETLINK_IP6_FW: ::c_int = 13;
-pub const NETLINK_DNRTMSG: ::c_int = 14;
-pub const NETLINK_KOBJECT_UEVENT: ::c_int = 15;
-pub const NETLINK_GENERIC: ::c_int = 16;
-pub const NETLINK_SCSITRANSPORT: ::c_int = 18;
-pub const NETLINK_ECRYPTFS: ::c_int = 19;
-pub const NETLINK_RDMA: ::c_int = 20;
-pub const NETLINK_CRYPTO: ::c_int = 21;
-pub const NETLINK_INET_DIAG: ::c_int = NETLINK_SOCK_DIAG;
-
 pub const MAX_LINKS: ::c_int = 32;
-
-pub const NLM_F_REQUEST: ::c_int = 1;
-pub const NLM_F_MULTI: ::c_int = 2;
-pub const NLM_F_ACK: ::c_int = 4;
-pub const NLM_F_ECHO: ::c_int = 8;
-pub const NLM_F_DUMP_INTR: ::c_int = 16;
-pub const NLM_F_DUMP_FILTERED: ::c_int = 32;
-
-pub const NLM_F_ROOT: ::c_int = 0x100;
-pub const NLM_F_MATCH: ::c_int = 0x200;
-pub const NLM_F_ATOMIC: ::c_int = 0x400;
-pub const NLM_F_DUMP: ::c_int = NLM_F_ROOT | NLM_F_MATCH;
-
-pub const NLM_F_REPLACE: ::c_int = 0x100;
-pub const NLM_F_EXCL: ::c_int = 0x200;
-pub const NLM_F_CREATE: ::c_int = 0x400;
-pub const NLM_F_APPEND: ::c_int = 0x800;
-
-pub const NETLINK_ADD_MEMBERSHIP: ::c_int = 1;
-pub const NETLINK_DROP_MEMBERSHIP: ::c_int = 2;
-pub const NETLINK_PKTINFO: ::c_int = 3;
-pub const NETLINK_BROADCAST_ERROR: ::c_int = 4;
-pub const NETLINK_NO_ENOBUFS: ::c_int = 5;
-pub const NETLINK_RX_RING: ::c_int = 6;
-pub const NETLINK_TX_RING: ::c_int = 7;
-pub const NETLINK_LISTEN_ALL_NSID: ::c_int = 8;
-pub const NETLINK_LIST_MEMBERSHIPS: ::c_int = 9;
-pub const NETLINK_CAP_ACK: ::c_int = 10;
-
-pub const NLA_F_NESTED: ::c_int = 1 << 15;
-pub const NLA_F_NET_BYTEORDER: ::c_int = 1 << 14;
-pub const NLA_TYPE_MASK: ::c_int = !(NLA_F_NESTED | NLA_F_NET_BYTEORDER);
-
-pub const NLA_ALIGNTO: ::c_int = 4;
 
 pub const GENL_UNS_ADMIN_PERM: ::c_int = 0x10;
 
@@ -673,6 +797,37 @@ pub const NF_NETDEV_NUMHOOKS: ::c_int = 1;
 
 pub const NFPROTO_INET: ::c_int = 1;
 pub const NFPROTO_NETDEV: ::c_int = 5;
+
+// linux/keyctl.h
+pub const KEYCTL_DH_COMPUTE: u32 = 23;
+pub const KEYCTL_PKEY_QUERY: u32 = 24;
+pub const KEYCTL_PKEY_ENCRYPT: u32 = 25;
+pub const KEYCTL_PKEY_DECRYPT: u32 = 26;
+pub const KEYCTL_PKEY_SIGN: u32 = 27;
+pub const KEYCTL_PKEY_VERIFY: u32 = 28;
+pub const KEYCTL_RESTRICT_KEYRING: u32 = 29;
+
+pub const KEYCTL_SUPPORTS_ENCRYPT: u32 = 0x01;
+pub const KEYCTL_SUPPORTS_DECRYPT: u32 = 0x02;
+pub const KEYCTL_SUPPORTS_SIGN: u32 = 0x04;
+pub const KEYCTL_SUPPORTS_VERIFY: u32 = 0x08;
+cfg_if! {
+    if #[cfg(not(any(target_arch="mips", target_arch="mips64")))] {
+        pub const KEYCTL_MOVE: u32 = 30;
+        pub const KEYCTL_CAPABILITIES: u32 = 31;
+
+        pub const KEYCTL_CAPS0_CAPABILITIES: u32 = 0x01;
+        pub const KEYCTL_CAPS0_PERSISTENT_KEYRINGS: u32 = 0x02;
+        pub const KEYCTL_CAPS0_DIFFIE_HELLMAN: u32 = 0x04;
+        pub const KEYCTL_CAPS0_PUBLIC_KEY: u32 = 0x08;
+        pub const KEYCTL_CAPS0_BIG_KEY: u32 = 0x10;
+        pub const KEYCTL_CAPS0_INVALIDATE: u32 = 0x20;
+        pub const KEYCTL_CAPS0_RESTRICT_KEYRING: u32 = 0x40;
+        pub const KEYCTL_CAPS0_MOVE: u32 = 0x80;
+        pub const KEYCTL_CAPS1_NS_KEYRING_NAME: u32 = 0x01;
+        pub const KEYCTL_CAPS1_NS_KEY_TAG: u32 = 0x02;
+    }
+}
 
 // linux/netfilter/nf_tables.h
 pub const NFT_TABLE_MAXNAMELEN: ::c_int = 256;
@@ -773,12 +928,12 @@ pub const NFT_CMP_GTE: ::c_int = 5;
 pub const NFT_RANGE_EQ: ::c_int = 0;
 pub const NFT_RANGE_NEQ: ::c_int = 1;
 
-pub const NFT_LOOKUP_F_INV: ::c_int = (1 << 0);
+pub const NFT_LOOKUP_F_INV: ::c_int = 1 << 0;
 
 pub const NFT_DYNSET_OP_ADD: ::c_int = 0;
 pub const NFT_DYNSET_OP_UPDATE: ::c_int = 1;
 
-pub const NFT_DYNSET_F_INV: ::c_int = (1 << 0);
+pub const NFT_DYNSET_F_INV: ::c_int = 1 << 0;
 
 pub const NFT_PAYLOAD_LL_HEADER: ::c_int = 0;
 pub const NFT_PAYLOAD_NETWORK_HEADER: ::c_int = 1;
@@ -833,13 +988,13 @@ pub const NFT_CT_BYTES: ::c_int = 15;
 pub const NFT_LIMIT_PKTS: ::c_int = 0;
 pub const NFT_LIMIT_PKT_BYTES: ::c_int = 1;
 
-pub const NFT_LIMIT_F_INV: ::c_int = (1 << 0);
+pub const NFT_LIMIT_F_INV: ::c_int = 1 << 0;
 
 pub const NFT_QUEUE_FLAG_BYPASS: ::c_int = 0x01;
 pub const NFT_QUEUE_FLAG_CPU_FANOUT: ::c_int = 0x02;
 pub const NFT_QUEUE_FLAG_MASK: ::c_int = 0x03;
 
-pub const NFT_QUOTA_F_INV: ::c_int = (1 << 0);
+pub const NFT_QUOTA_F_INV: ::c_int = 1 << 0;
 
 pub const NFT_REJECT_ICMP_UNREACH: ::c_int = 0;
 pub const NFT_REJECT_TCP_RST: ::c_int = 1;
@@ -900,15 +1055,105 @@ pub const STATX_ATTR_NODUMP: ::c_int = 0x0040;
 pub const STATX_ATTR_ENCRYPTED: ::c_int = 0x0800;
 pub const STATX_ATTR_AUTOMOUNT: ::c_int = 0x1000;
 
+// sys/auxv.h
+pub const AT_NULL: ::c_ulong = 0;
+pub const AT_IGNORE: ::c_ulong = 1;
+pub const AT_EXECFD: ::c_ulong = 2;
+pub const AT_PHDR: ::c_ulong = 3;
+pub const AT_PHENT: ::c_ulong = 4;
+pub const AT_PHNUM: ::c_ulong = 5;
+pub const AT_PAGESZ: ::c_ulong = 6;
+pub const AT_BASE: ::c_ulong = 7;
+pub const AT_FLAGS: ::c_ulong = 8;
+pub const AT_ENTRY: ::c_ulong = 9;
+pub const AT_NOTELF: ::c_ulong = 10;
+pub const AT_UID: ::c_ulong = 11;
+pub const AT_EUID: ::c_ulong = 12;
+pub const AT_GID: ::c_ulong = 13;
+pub const AT_EGID: ::c_ulong = 14;
+pub const AT_PLATFORM: ::c_ulong = 15;
+pub const AT_HWCAP: ::c_ulong = 16;
+pub const AT_CLKTCK: ::c_ulong = 17;
+// AT_* values 18 through 22 are reserved
+pub const AT_SECURE: ::c_ulong = 23;
+pub const AT_BASE_PLATFORM: ::c_ulong = 24;
+pub const AT_RANDOM: ::c_ulong = 25;
+pub const AT_HWCAP2: ::c_ulong = 26;
+
+pub const AT_EXECFN: ::c_ulong = 31;
+
+//sys/timex.h
+pub const ADJ_OFFSET: ::c_uint = 0x0001;
+pub const ADJ_FREQUENCY: ::c_uint = 0x0002;
+pub const ADJ_MAXERROR: ::c_uint = 0x0004;
+pub const ADJ_ESTERROR: ::c_uint = 0x0008;
+pub const ADJ_STATUS: ::c_uint = 0x0010;
+pub const ADJ_TIMECONST: ::c_uint = 0x0020;
+pub const ADJ_TAI: ::c_uint = 0x0080;
+pub const ADJ_SETOFFSET: ::c_uint = 0x0100;
+pub const ADJ_MICRO: ::c_uint = 0x1000;
+pub const ADJ_NANO: ::c_uint = 0x2000;
+pub const ADJ_TICK: ::c_uint = 0x4000;
+pub const ADJ_OFFSET_SINGLESHOT: ::c_uint = 0x8001;
+pub const ADJ_OFFSET_SS_READ: ::c_uint = 0xa001;
+pub const MOD_OFFSET: ::c_uint = ADJ_OFFSET;
+pub const MOD_FREQUENCY: ::c_uint = ADJ_FREQUENCY;
+pub const MOD_MAXERROR: ::c_uint = ADJ_MAXERROR;
+pub const MOD_ESTERROR: ::c_uint = ADJ_ESTERROR;
+pub const MOD_STATUS: ::c_uint = ADJ_STATUS;
+pub const MOD_TIMECONST: ::c_uint = ADJ_TIMECONST;
+pub const MOD_CLKB: ::c_uint = ADJ_TICK;
+pub const MOD_CLKA: ::c_uint = ADJ_OFFSET_SINGLESHOT;
+pub const MOD_TAI: ::c_uint = ADJ_TAI;
+pub const MOD_MICRO: ::c_uint = ADJ_MICRO;
+pub const MOD_NANO: ::c_uint = ADJ_NANO;
+pub const STA_PLL: ::c_int = 0x0001;
+pub const STA_PPSFREQ: ::c_int = 0x0002;
+pub const STA_PPSTIME: ::c_int = 0x0004;
+pub const STA_FLL: ::c_int = 0x0008;
+pub const STA_INS: ::c_int = 0x0010;
+pub const STA_DEL: ::c_int = 0x0020;
+pub const STA_UNSYNC: ::c_int = 0x0040;
+pub const STA_FREQHOLD: ::c_int = 0x0080;
+pub const STA_PPSSIGNAL: ::c_int = 0x0100;
+pub const STA_PPSJITTER: ::c_int = 0x0200;
+pub const STA_PPSWANDER: ::c_int = 0x0400;
+pub const STA_PPSERROR: ::c_int = 0x0800;
+pub const STA_CLOCKERR: ::c_int = 0x1000;
+pub const STA_NANO: ::c_int = 0x2000;
+pub const STA_MODE: ::c_int = 0x4000;
+pub const STA_CLK: ::c_int = 0x8000;
+pub const STA_RONLY: ::c_int = STA_PPSSIGNAL
+    | STA_PPSJITTER
+    | STA_PPSWANDER
+    | STA_PPSERROR
+    | STA_CLOCKERR
+    | STA_NANO
+    | STA_MODE
+    | STA_CLK;
+pub const NTP_API: ::c_int = 4;
+pub const TIME_OK: ::c_int = 0;
+pub const TIME_INS: ::c_int = 1;
+pub const TIME_DEL: ::c_int = 2;
+pub const TIME_OOP: ::c_int = 3;
+pub const TIME_WAIT: ::c_int = 4;
+pub const TIME_ERROR: ::c_int = 5;
+pub const TIME_BAD: ::c_int = TIME_ERROR;
+pub const MAXTC: ::c_long = 6;
+
 cfg_if! {
     if #[cfg(any(
         target_arch = "arm",
         target_arch = "x86",
         target_arch = "x86_64",
-        target_arch = "s390x"
+        target_arch = "s390x",
+        target_arch = "riscv64"
     ))] {
         pub const PTHREAD_STACK_MIN: ::size_t = 16384;
-    } else if #[cfg(target_arch = "sparc64")] {
+    } else if #[cfg(any(
+               target_arch = "sparc",
+               target_arch = "sparc64"
+           ))] {
         pub const PTHREAD_STACK_MIN: ::size_t = 0x6000;
     } else {
         pub const PTHREAD_STACK_MIN: ::size_t = 131072;
@@ -916,33 +1161,89 @@ cfg_if! {
 }
 pub const PTHREAD_MUTEX_ADAPTIVE_NP: ::c_int = 3;
 
-f! {
-    pub fn NLA_ALIGN(len: ::c_int) -> ::c_int {
-        return ((len) + NLA_ALIGNTO - 1) & !(NLA_ALIGNTO - 1)
-    }
-}
+pub const REG_STARTEND: ::c_int = 4;
 
-extern {
-    pub fn sendmmsg(sockfd: ::c_int, msgvec: *mut ::mmsghdr, vlen: ::c_uint,
-                    flags: ::c_int) -> ::c_int;
-    pub fn recvmmsg(sockfd: ::c_int, msgvec: *mut ::mmsghdr, vlen: ::c_uint,
-                    flags: ::c_int, timeout: *mut ::timespec) -> ::c_int;
+pub const REG_EEND: ::c_int = 14;
+pub const REG_ESIZE: ::c_int = 15;
+pub const REG_ERPAREN: ::c_int = 16;
 
-    pub fn getrlimit64(resource: ::__rlimit_resource_t,
-                       rlim: *mut ::rlimit64) -> ::c_int;
-    pub fn setrlimit64(resource: ::__rlimit_resource_t,
-                       rlim: *const ::rlimit64) -> ::c_int;
-    pub fn getrlimit(resource: ::__rlimit_resource_t,
-                     rlim: *mut ::rlimit) -> ::c_int;
-    pub fn setrlimit(resource: ::__rlimit_resource_t,
-                     rlim: *const ::rlimit) -> ::c_int;
-    pub fn prlimit(pid: ::pid_t,
-                   resource: ::__rlimit_resource_t, new_limit: *const ::rlimit,
-                   old_limit: *mut ::rlimit) -> ::c_int;
-    pub fn prlimit64(pid: ::pid_t,
-                     resource: ::__rlimit_resource_t,
-                     new_limit: *const ::rlimit64,
-                     old_limit: *mut ::rlimit64) -> ::c_int;
+extern "C" {
+    pub fn fgetspent_r(
+        fp: *mut ::FILE,
+        spbuf: *mut ::spwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        spbufp: *mut *mut ::spwd,
+    ) -> ::c_int;
+    pub fn sgetspent_r(
+        s: *const ::c_char,
+        spbuf: *mut ::spwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        spbufp: *mut *mut ::spwd,
+    ) -> ::c_int;
+    pub fn getspent_r(
+        spbuf: *mut ::spwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        spbufp: *mut *mut ::spwd,
+    ) -> ::c_int;
+    pub fn qsort_r(
+        base: *mut ::c_void,
+        num: ::size_t,
+        size: ::size_t,
+        compar: ::Option<
+            unsafe extern "C" fn(
+                *const ::c_void,
+                *const ::c_void,
+                *mut ::c_void,
+            ) -> ::c_int,
+        >,
+        arg: *mut ::c_void,
+    );
+    pub fn sendmmsg(
+        sockfd: ::c_int,
+        msgvec: *mut ::mmsghdr,
+        vlen: ::c_uint,
+        flags: ::c_int,
+    ) -> ::c_int;
+    pub fn recvmmsg(
+        sockfd: ::c_int,
+        msgvec: *mut ::mmsghdr,
+        vlen: ::c_uint,
+        flags: ::c_int,
+        timeout: *mut ::timespec,
+    ) -> ::c_int;
+
+    pub fn getrlimit64(
+        resource: ::__rlimit_resource_t,
+        rlim: *mut ::rlimit64,
+    ) -> ::c_int;
+    pub fn setrlimit64(
+        resource: ::__rlimit_resource_t,
+        rlim: *const ::rlimit64,
+    ) -> ::c_int;
+    pub fn getrlimit(
+        resource: ::__rlimit_resource_t,
+        rlim: *mut ::rlimit,
+    ) -> ::c_int;
+    pub fn setrlimit(
+        resource: ::__rlimit_resource_t,
+        rlim: *const ::rlimit,
+    ) -> ::c_int;
+    pub fn prlimit(
+        pid: ::pid_t,
+        resource: ::__rlimit_resource_t,
+        new_limit: *const ::rlimit,
+        old_limit: *mut ::rlimit,
+    ) -> ::c_int;
+    pub fn prlimit64(
+        pid: ::pid_t,
+        resource: ::__rlimit_resource_t,
+        new_limit: *const ::rlimit64,
+        old_limit: *mut ::rlimit64,
+    ) -> ::c_int;
+    pub fn utmpname(file: *const ::c_char) -> ::c_int;
     pub fn utmpxname(file: *const ::c_char) -> ::c_int;
     pub fn getutxent() -> *mut utmpx;
     pub fn getutxid(ut: *const utmpx) -> *mut utmpx;
@@ -952,72 +1253,143 @@ extern {
     pub fn endutxent();
     pub fn getpt() -> ::c_int;
     pub fn mallopt(param: ::c_int, value: ::c_int) -> ::c_int;
-    pub fn gettimeofday(tp: *mut ::timeval,
-                        tz: *mut ::timezone) -> ::c_int;
-    pub fn statx(dirfd: ::c_int, pathname: *const c_char, flags: ::c_int,
-                 mask: ::c_uint, statxbuf: *mut statx) -> ::c_int;
+    pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::timezone) -> ::c_int;
+    pub fn statx(
+        dirfd: ::c_int,
+        pathname: *const c_char,
+        flags: ::c_int,
+        mask: ::c_uint,
+        statxbuf: *mut statx,
+    ) -> ::c_int;
     pub fn getrandom(
         buf: *mut ::c_void,
         buflen: ::size_t,
         flags: ::c_uint,
     ) -> ::ssize_t;
+
+    pub fn memmem(
+        haystack: *const ::c_void,
+        haystacklen: ::size_t,
+        needle: *const ::c_void,
+        needlelen: ::size_t,
+    ) -> *mut ::c_void;
+    pub fn getauxval(type_: ::c_ulong) -> ::c_ulong;
+
+    pub fn adjtimex(buf: *mut timex) -> ::c_int;
+    pub fn ntp_adjtime(buf: *mut timex) -> ::c_int;
+    #[link_name = "ntp_gettimex"]
+    pub fn ntp_gettime(buf: *mut ntptimeval) -> ::c_int;
+    pub fn copy_file_range(
+        fd_in: ::c_int,
+        off_in: *mut ::off64_t,
+        fd_out: ::c_int,
+        off_out: *mut ::off64_t,
+        len: ::size_t,
+        flags: ::c_uint,
+    ) -> ::ssize_t;
+    pub fn fanotify_mark(
+        fd: ::c_int,
+        flags: ::c_uint,
+        mask: u64,
+        dirfd: ::c_int,
+        path: *const ::c_char,
+    ) -> ::c_int;
 }
 
 #[link(name = "util")]
-extern {
+extern "C" {
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
-    pub fn backtrace(buf: *mut *mut ::c_void,
-                     sz: ::c_int) -> ::c_int;
-    pub fn glob64(pattern: *const ::c_char,
-                  flags: ::c_int,
-                  errfunc: ::Option<extern fn(epath: *const ::c_char,
-                                                   errno: ::c_int)
-                                                   -> ::c_int>,
-                  pglob: *mut glob64_t) -> ::c_int;
+    pub fn backtrace(buf: *mut *mut ::c_void, sz: ::c_int) -> ::c_int;
+    pub fn glob64(
+        pattern: *const ::c_char,
+        flags: ::c_int,
+        errfunc: ::Option<
+            extern "C" fn(epath: *const ::c_char, errno: ::c_int) -> ::c_int,
+        >,
+        pglob: *mut glob64_t,
+    ) -> ::c_int;
     pub fn globfree64(pglob: *mut glob64_t);
     pub fn ptrace(request: ::c_uint, ...) -> ::c_long;
-    pub fn pthread_attr_getaffinity_np(attr: *const ::pthread_attr_t,
-                                       cpusetsize: ::size_t,
-                                       cpuset: *mut ::cpu_set_t) -> ::c_int;
-    pub fn pthread_attr_setaffinity_np(attr: *mut ::pthread_attr_t,
-                                       cpusetsize: ::size_t,
-                                       cpuset: *const ::cpu_set_t) -> ::c_int;
+    pub fn pthread_attr_getaffinity_np(
+        attr: *const ::pthread_attr_t,
+        cpusetsize: ::size_t,
+        cpuset: *mut ::cpu_set_t,
+    ) -> ::c_int;
+    pub fn pthread_attr_setaffinity_np(
+        attr: *mut ::pthread_attr_t,
+        cpusetsize: ::size_t,
+        cpuset: *const ::cpu_set_t,
+    ) -> ::c_int;
     pub fn getpriority(which: ::__priority_which_t, who: ::id_t) -> ::c_int;
-    pub fn setpriority(which: ::__priority_which_t, who: ::id_t,
-                                       prio: ::c_int) -> ::c_int;
-    pub fn pthread_getaffinity_np(thread: ::pthread_t,
-                                  cpusetsize: ::size_t,
-                                  cpuset: *mut ::cpu_set_t) -> ::c_int;
-    pub fn pthread_setaffinity_np(thread: ::pthread_t,
-                                  cpusetsize: ::size_t,
-                                  cpuset: *const ::cpu_set_t) -> ::c_int;
-    pub fn pthread_rwlockattr_getkind_np(attr: *const ::pthread_rwlockattr_t,
-                                         val: *mut ::c_int) -> ::c_int;
-    pub fn pthread_rwlockattr_setkind_np(attr: *mut ::pthread_rwlockattr_t,
-                                         val: ::c_int) -> ::c_int;
+    pub fn setpriority(
+        which: ::__priority_which_t,
+        who: ::id_t,
+        prio: ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_getaffinity_np(
+        thread: ::pthread_t,
+        cpusetsize: ::size_t,
+        cpuset: *mut ::cpu_set_t,
+    ) -> ::c_int;
+    pub fn pthread_setaffinity_np(
+        thread: ::pthread_t,
+        cpusetsize: ::size_t,
+        cpuset: *const ::cpu_set_t,
+    ) -> ::c_int;
+    pub fn pthread_rwlockattr_getkind_np(
+        attr: *const ::pthread_rwlockattr_t,
+        val: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_rwlockattr_setkind_np(
+        attr: *mut ::pthread_rwlockattr_t,
+        val: ::c_int,
+    ) -> ::c_int;
     pub fn sched_getcpu() -> ::c_int;
     pub fn mallinfo() -> ::mallinfo;
     pub fn malloc_usable_size(ptr: *mut ::c_void) -> ::size_t;
-    pub fn getauxval(type_: ::c_ulong) -> ::c_ulong;
-    #[cfg_attr(target_os = "netbsd", link_name = "__getpwent_r50")]
-    #[cfg_attr(target_os = "solaris", link_name = "__posix_getpwent_r")]
-    pub fn getpwent_r(pwd: *mut ::passwd,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut ::passwd) -> ::c_int;
-    #[cfg_attr(target_os = "netbsd", link_name = "__getgrent_r50")]
-    #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrent_r")]
-    pub fn getgrent_r(grp: *mut ::group,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut ::group) -> ::c_int;
+    pub fn getpwent_r(
+        pwd: *mut ::passwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut ::passwd,
+    ) -> ::c_int;
+    pub fn getgrent_r(
+        grp: *mut ::group,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut ::group,
+    ) -> ::c_int;
+    pub fn pthread_getname_np(
+        thread: ::pthread_t,
+        name: *mut ::c_char,
+        len: ::size_t,
+    ) -> ::c_int;
+    pub fn pthread_setname_np(
+        thread: ::pthread_t,
+        name: *const ::c_char,
+    ) -> ::c_int;
+}
+
+#[link(name = "dl")]
+extern "C" {
+    pub fn dlmopen(
+        lmid: Lmid_t,
+        filename: *const ::c_char,
+        flag: ::c_int,
+    ) -> *mut ::c_void;
+    pub fn dlinfo(
+        handle: *mut ::c_void,
+        request: ::c_int,
+        info: *mut ::c_void,
+    ) -> ::c_int;
 }
 
 cfg_if! {
     if #[cfg(any(target_arch = "x86",
                  target_arch = "arm",
                  target_arch = "mips",
-                 target_arch = "powerpc"))] {
+                 target_arch = "powerpc",
+                 target_arch = "sparc"))] {
         mod b32;
         pub use self::b32::*;
     } else if #[cfg(any(target_arch = "x86_64",
@@ -1025,7 +1397,8 @@ cfg_if! {
                         target_arch = "powerpc64",
                         target_arch = "mips64",
                         target_arch = "s390x",
-                        target_arch = "sparc64"))] {
+                        target_arch = "sparc64",
+                        target_arch = "riscv64"))] {
         mod b64;
         pub use self::b64::*;
     } else {

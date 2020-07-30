@@ -408,10 +408,6 @@ pub const F_SETLKW: ::c_int = 0x7;
 pub const HUPCL: ::tcflag_t = 0x400;
 pub const ICANON: ::tcflag_t = 0x2;
 pub const IEXTEN: ::tcflag_t = 0x8000;
-pub const IPV6_MULTICAST_HOPS: ::c_int = 0x12;
-pub const IPV6_MULTICAST_IF: ::c_int = 0x11;
-pub const IPV6_UNICAST_HOPS: ::c_int = 0x10;
-pub const IP_MULTICAST_IF: ::c_int = 0x20;
 pub const ISIG: ::tcflag_t = 0x1;
 pub const IUTF8: ::tcflag_t = 0x4000;
 pub const IXOFF: ::tcflag_t = 0x1000;
@@ -1018,22 +1014,28 @@ f! {
 
 }
 
-extern {
+extern "C" {
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
-    pub fn openpty(amaster: *mut ::c_int,
-                aslave: *mut ::c_int,
-                name: *mut ::c_char,
-                termp: *mut termios,
-                winp: *mut ::winsize) -> ::c_int;
+    pub fn openpty(
+        amaster: *mut ::c_int,
+        aslave: *mut ::c_int,
+        name: *mut ::c_char,
+        termp: *mut termios,
+        winp: *mut ::winsize,
+    ) -> ::c_int;
     pub fn setns(fd: ::c_int, nstype: ::c_int) -> ::c_int;
-    pub fn pwritev(fd: ::c_int,
-                   iov: *const ::iovec,
-                   iovcnt: ::c_int,
-                   offset: ::off_t) -> ::ssize_t;
-    pub fn preadv(fd: ::c_int,
-                  iov: *const ::iovec,
-                  iovcnt: ::c_int,
-                  offset: ::off_t) -> ::ssize_t;
+    pub fn pwritev(
+        fd: ::c_int,
+        iov: *const ::iovec,
+        iovcnt: ::c_int,
+        offset: ::off_t,
+    ) -> ::ssize_t;
+    pub fn preadv(
+        fd: ::c_int,
+        iov: *const ::iovec,
+        iovcnt: ::c_int,
+        offset: ::off_t,
+    ) -> ::ssize_t;
 }
 
 cfg_if! {
