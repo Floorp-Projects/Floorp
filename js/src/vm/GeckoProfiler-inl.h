@@ -35,22 +35,19 @@ inline void GeckoProfilerThread::updatePC(JSContext* cx, JSScript* script,
  */
 class MOZ_RAII AutoSuppressProfilerSampling {
  public:
-  explicit AutoSuppressProfilerSampling(
-      JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  explicit AutoSuppressProfilerSampling(JSContext* cx);
 
   ~AutoSuppressProfilerSampling();
 
  private:
   JSContext* cx_;
   bool previouslyEnabled_;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 MOZ_ALWAYS_INLINE
-GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(
-    JSContext* cx, JSScript* script MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(JSContext* cx,
+                                                   JSScript* script)
     : profiler_(&cx->geckoProfiler()) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (MOZ_LIKELY(!profiler_->infraInstalled())) {
     profiler_ = nullptr;
 #ifdef DEBUG
@@ -86,9 +83,8 @@ GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker() {
 MOZ_ALWAYS_INLINE
 AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(
     JSContext* cx, const char* label, JS::ProfilingCategoryPair categoryPair,
-    uint32_t flags MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    uint32_t flags)
     : profiler_(&cx->geckoProfiler()) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (MOZ_LIKELY(!profiler_->infraInstalled())) {
     profiler_ = nullptr;
 #ifdef DEBUG

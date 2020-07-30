@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_RootedDictionary_h__
 #define mozilla_dom_RootedDictionary_h__
 
-#include "mozilla/GuardObjects.h"
 #include "mozilla/dom/Nullable.h"
 #include "jsapi.h"
 
@@ -18,9 +17,7 @@ template <typename T>
 class MOZ_RAII RootedDictionary final : public T, private JS::CustomAutoRooter {
  public:
   template <typename CX>
-  explicit RootedDictionary(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : T(),
-        JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
+  explicit RootedDictionary(const CX& cx) : T(), JS::CustomAutoRooter(cx) {}
 
   virtual void trace(JSTracer* trc) override { this->TraceDictionary(trc); }
 };
@@ -30,10 +27,8 @@ class MOZ_RAII NullableRootedDictionary final : public Nullable<T>,
                                                 private JS::CustomAutoRooter {
  public:
   template <typename CX>
-  explicit NullableRootedDictionary(
-      const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : Nullable<T>(),
-        JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
+  explicit NullableRootedDictionary(const CX& cx)
+      : Nullable<T>(), JS::CustomAutoRooter(cx) {}
 
   virtual void trace(JSTracer* trc) override {
     if (!this->IsNull()) {

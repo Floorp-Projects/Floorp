@@ -69,7 +69,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/FlushType.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
@@ -1374,19 +1373,17 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
 
 class MOZ_RAII AutoResetInFrameSwap final {
  public:
-  AutoResetInFrameSwap(
-      nsFrameLoader* aThisFrameLoader, nsFrameLoader* aOtherFrameLoader,
-      nsDocShell* aThisDocShell, nsDocShell* aOtherDocShell,
-      EventTarget* aThisEventTarget,
-      EventTarget* aOtherEventTarget MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoResetInFrameSwap(nsFrameLoader* aThisFrameLoader,
+                       nsFrameLoader* aOtherFrameLoader,
+                       nsDocShell* aThisDocShell, nsDocShell* aOtherDocShell,
+                       EventTarget* aThisEventTarget,
+                       EventTarget* aOtherEventTarget)
       : mThisFrameLoader(aThisFrameLoader),
         mOtherFrameLoader(aOtherFrameLoader),
         mThisDocShell(aThisDocShell),
         mOtherDocShell(aOtherDocShell),
         mThisEventTarget(aThisEventTarget),
         mOtherEventTarget(aOtherEventTarget) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
     mThisFrameLoader->mInSwap = true;
     mOtherFrameLoader->mInSwap = true;
     mThisDocShell->SetInFrameSwap(true);
@@ -1433,7 +1430,6 @@ class MOZ_RAII AutoResetInFrameSwap final {
   RefPtr<nsDocShell> mOtherDocShell;
   nsCOMPtr<EventTarget> mThisEventTarget;
   nsCOMPtr<EventTarget> mOtherEventTarget;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
