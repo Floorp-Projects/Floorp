@@ -361,14 +361,22 @@ var gPermissionManager = {
 
   onHostKeyPress(event) {
     if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
-      document.getElementById("btnAllow").click();
+      if (!document.getElementById("btnAllow").hidden) {
+        document.getElementById("btnAllow").click();
+      } else if (!document.getElementById("btnBlock").hidden) {
+        document.getElementById("btnBlock").click();
+      }
     }
   },
 
   onHostInput(siteField) {
-    document.getElementById("btnSession").disabled = !siteField.value;
-    document.getElementById("btnBlock").disabled = !siteField.value;
-    document.getElementById("btnAllow").disabled = !siteField.value;
+    let btnSession = document.getElementById("btnSession");
+    let btnBlock = document.getElementById("btnBlock");
+    let btnAllow = document.getElementById("btnAllow");
+
+    btnSession.disabled = btnSession.hidden || !siteField.value;
+    btnBlock.disabled = btnBlock.hidden || !siteField.value;
+    btnAllow.disabled = btnAllow.hidden || !siteField.value;
   },
 
   _setRemoveButtonState() {
