@@ -1816,7 +1816,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         BatteryStatus::Present, DesktopEnvironment::All, WindowProtocol::All,
         DriverVendor::All, DeviceFamily::IntelModernRolloutWebRender,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
-        DRIVER_GREATER_THAN_OR_EQUAL, V(24, 20, 100, 6286),
+        DRIVER_GREATER_THAN_OR_EQUAL, V(23, 20, 16, 4973),
         "FEATURE_ROLLOUT_BATTERY_INTEL");
 
     APPEND_TO_DRIVER_BLOCKLIST2_EXT(
