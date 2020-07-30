@@ -157,8 +157,8 @@ fn register_uploader() {
             log::info!("FOG Ping uploader uploading to {:?}", url);
 
             let mut req = Request::post(url).body(ping_request.body.clone());
-            for (&header_key, header_value) in ping_request.headers.iter() {
-                req = req.header(header_key, header_value)?;
+            for (header_key, header_value) in &ping_request.headers {
+                req = req.header(header_key.to_owned(), header_value)?;
             }
 
             log::trace!(

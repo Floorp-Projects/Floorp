@@ -32,6 +32,7 @@ pub fn setup_glean(tempdir: Option<tempfile::TempDir>) -> tempfile::TempDir {
         upload_enabled: true,
         max_events: None,
         delay_ping_lifetime_io: false,
+        language_binding_name: "Rust".into(),
     };
     let glean = glean_core::Glean::new(cfg).unwrap();
     glean_core::setup_glean(glean).expect("can't set up global Glean object");
