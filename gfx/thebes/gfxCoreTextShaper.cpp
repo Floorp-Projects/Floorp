@@ -517,9 +517,11 @@ nsresult gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText* aShapedText,
         advance = int32_t(toNextGlyph * appUnitsPerDevUnit);
       }
 
-      aShapedText->SetDetailedGlyphs(aOffset + baseCharIndex,
-                                     detailedGlyphs.Length(),
-                                     detailedGlyphs.Elements());
+      bool isClusterStart = charGlyphs[baseCharIndex].IsClusterStart();
+      aShapedText->SetGlyphs(aOffset + baseCharIndex,
+                             CompressedGlyph::MakeComplex(
+                                 isClusterStart, true, detailedGlyphs.Length()),
+                             detailedGlyphs.Elements());
 
       detailedGlyphs.Clear();
     }

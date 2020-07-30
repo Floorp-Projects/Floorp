@@ -1434,12 +1434,13 @@ void gfxTextRun::CopyGlyphDataFrom(gfxShapedWord* aShapedWord,
   if (aShapedWord->HasDetailedGlyphs()) {
     for (uint32_t i = 0; i < wordLen; ++i, ++aOffset) {
       const CompressedGlyph& g = wordGlyphs[i];
-      if (!g.IsSimpleGlyph()) {
+      if (g.IsSimpleGlyph()) {
+        charGlyphs[aOffset] = g;
+      } else {
         const DetailedGlyph* details =
             g.GetGlyphCount() > 0 ? aShapedWord->GetDetailedGlyphs(i) : nullptr;
-        SetDetailedGlyphs(aOffset, g.GetGlyphCount(), details);
+        SetGlyphs(aOffset, g, details);
       }
-      charGlyphs[aOffset] = g;
     }
   } else {
     memcpy(charGlyphs + aOffset, wordGlyphs, wordLen * sizeof(CompressedGlyph));
@@ -2843,7 +2844,8 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
               gfxTextRun::DetailedGlyph detailedGlyph;
               detailedGlyph.mGlyphID = mainFont->GetSpaceGlyph();
               detailedGlyph.mAdvance = advance;
-              aTextRun->SetDetailedGlyphs(aOffset + index, 1, &detailedGlyph);
+              CompressedGlyph g = CompressedGlyph::MakeComplex(true, true, 1);
+              aTextRun->SetGlyphs(aOffset + index, g, &detailedGlyph);
             }
             continue;
           }
