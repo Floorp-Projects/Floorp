@@ -32,6 +32,17 @@ class SaveToCollectionsButtonAdapter(
         return ViewHolder(itemView, interactor)
     }
 
+    override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isNullOrEmpty()) {
+            onBindViewHolder(holder, position)
+            return
+        }
+
+        (payloads[0] as TabTrayView.TabChange).let {
+            holder.itemView.isVisible = it == TabTrayView.TabChange.NORMAL
+        }
+    }
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.itemView.isVisible =
             interactor.onModeRequested() is TabTrayDialogFragmentState.Mode.Normal

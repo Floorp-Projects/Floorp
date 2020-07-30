@@ -233,9 +233,21 @@ class TabTrayView(
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
+    enum class TabChange {
+        PRIVATE, NORMAL
+    }
+
+    private fun toggleSaveToCollectionButton(isPrivate: Boolean) {
+        collectionsButtonAdapter.notifyItemChanged(
+            0,
+            if (isPrivate) TabChange.PRIVATE else TabChange.NORMAL
+        )
+    }
+
     override fun onTabSelected(tab: TabLayout.Tab?) {
         toggleFabText(isPrivateModeSelected)
         filterTabs.invoke(isPrivateModeSelected)
+        toggleSaveToCollectionButton(isPrivateModeSelected)
 
         updateUINormalMode(view.context.components.core.store.state)
         scrollToTab(view.context.components.core.store.state.selectedTabId)
