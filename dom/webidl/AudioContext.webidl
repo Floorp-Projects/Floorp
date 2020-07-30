@@ -11,7 +11,7 @@
  */
 
 dictionary AudioContextOptions {
-             float        sampleRate = 0;
+             float        sampleRate;
 };
 
 dictionary AudioTimestamp {

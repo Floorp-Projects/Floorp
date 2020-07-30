@@ -261,17 +261,18 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-
-  float sampleRate = MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE;
-  if (aOptions.mSampleRate > 0 &&
-      (aOptions.mSampleRate - WebAudioUtils::MinSampleRate < 0.0 ||
-       WebAudioUtils::MaxSampleRate - aOptions.mSampleRate < 0.0)) {
+  if (aOptions.mSampleRate.WasPassed() &&
+      (aOptions.mSampleRate.Value() < WebAudioUtils::MinSampleRate ||
+       aOptions.mSampleRate.Value() > WebAudioUtils::MaxSampleRate)) {
     aRv.ThrowNotSupportedError(nsPrintfCString(
-        "Sample rate %g is not in the range [%u, %u]", aOptions.mSampleRate,
-        WebAudioUtils::MinSampleRate, WebAudioUtils::MaxSampleRate));
+        "Sample rate %g is not in the range [%u, %u]",
+        aOptions.mSampleRate.Value(), WebAudioUtils::MinSampleRate,
+        WebAudioUtils::MaxSampleRate));
     return nullptr;
   }
-  sampleRate = aOptions.mSampleRate;
+  float sampleRate = aOptions.mSampleRate.WasPassed()
+                         ? aOptions.mSampleRate.Value()
+                         : MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE;
 
   RefPtr<AudioContext> object =
       new AudioContext(window, false, 2, 0, sampleRate);
