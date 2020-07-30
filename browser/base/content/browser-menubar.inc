@@ -252,9 +252,7 @@
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
                 <menuitem id="menu_showAllHistory"
-#ifndef XP_MACOSX
                           key="showAllHistoryKb"
-#endif
                           command="Browser:ShowAllHistory" data-l10n-id="menu-history-show-all-history"/>
                 <menuitem id="sanitizeItem"
                           key="key_sanitize"
