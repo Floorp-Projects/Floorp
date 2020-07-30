@@ -758,7 +758,7 @@ add_task(async function test_update_autofill_form_exp_date() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
-  is(creditCards[0]["cc-exp-year"], "2019", "cc-exp-year field is updated");
+  is(creditCards[0]["cc-exp-year"], 2019, "cc-exp-year field is updated");
   is(
     creditCards[0]["cc-number"],
     "************1111",
