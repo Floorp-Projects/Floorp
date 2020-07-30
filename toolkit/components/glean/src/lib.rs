@@ -91,6 +91,7 @@ pub unsafe extern "C" fn fog_init(
         application_id: "org-mozilla-firefox".to_string(),
         max_events: None,
         delay_ping_lifetime_io: false,
+        language_binding_name: "Rust".into(),
     };
 
     log::debug!("Configuration: {:#?}", configuration);
