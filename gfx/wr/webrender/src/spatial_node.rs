@@ -856,7 +856,14 @@ pub struct ScrollFrameInfo {
     /// pre-scrolled in their local coordinates.
     pub external_scroll_offset: LayoutVector2D,
 
-    /// The current offset of this scroll node.
+    /// The negated scroll offset of this scroll node. including the
+    /// pre-scrolled amount. If, for example, a scroll node was pre-scrolled
+    /// to y=10 (10 pixels down from the initial unscrolled position), then
+    /// `external_scroll_offset` would be (0,10), and this `offset` field would
+    /// be (0,-10). If WebRender is then asked to change the scroll position by
+    /// an additional 10 pixels (without changing the pre-scroll amount in the
+    /// display list), `external_scroll_offset` would remain at (0,10) and
+    /// `offset` would change to (0,-20).
     pub offset: LayoutVector2D,
 }
 

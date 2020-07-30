@@ -323,7 +323,17 @@ impl Transaction {
         self.frame_ops.push(FrameMsg::Scroll(scroll_location, cursor));
     }
 
-    ///
+    /// Scrolls the node identified by the given external scroll id to the
+    /// given scroll position, relative to the pre-scrolled offset for the
+    /// scrolling layer. That is, providing an origin of (0,0) will reset
+    /// any WR-side scrolling and just render the display items at the
+    /// pre-scrolled offsets as provided in the display list. Larger `origin`
+    /// values will cause the layer to be scrolled further towards the end of
+    /// the scroll range.
+    /// If the ScrollClamping argument is set to clamp, the scroll position
+    /// is clamped to what WebRender understands to be the bounds of the
+    /// scroll range, based on the sizes of the scrollable content and the
+    /// scroll port.
     pub fn scroll_node_with_id(
         &mut self,
         origin: LayoutPoint,
