@@ -179,6 +179,8 @@ defaults pref(layers.low-precision-buffer,false)
 skip-if(!asyncPan||!browserIsRemote) != async-scroll-1b.html async-scroll-1-ref.html
 defaults
 
+skip-if(!asyncPan||!browserIsRemote) == async-scroll-1c.html async-scroll-1-ref.html
+
 skip-if(!Android) pref(apz.allow_zooming,true) != async-zoom-1.html async-zoom-1-ref.html
 fuzzy(0-112,0-800) skip-if(!Android) pref(apz.allow_zooming,true) == async-zoom-2.html async-zoom-2-ref.html
 
