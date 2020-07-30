@@ -345,7 +345,8 @@ void ContentMediaController::HandleMediaKey(MediaControlKey aKey) {
   // https://w3c.github.io/mediasession/#ref-for-dom-mediasessionaction-play%E2%91%A3
   switch (aKey) {
     case MediaControlKey::Pause:
-      [[fallthrough]];
+      PauseOrStopMedia();
+      return;
     case MediaControlKey::Play:
       [[fallthrough]];
     case MediaControlKey::Stop:
@@ -358,6 +359,31 @@ void ContentMediaController::HandleMediaKey(MediaControlKey aKey) {
       return;
     default:
       MOZ_ASSERT_UNREACHABLE("Not supported media key for default handler");
+  }
+}
+
+void ContentMediaController::PauseOrStopMedia() {
+  // When receiving `pause`, if a page contains playing media and paused media
+  // at that moment, that means a user intends to pause those playing
+  // media, not the already paused ones. Then, we're going to stop those already
+  // paused media and keep those latest paused media in `mReceivers`.
+  // The reason for doing that is, when resuming paused media, we only want to
+  // resume latest paused media, not all media, in order to get a better user
+  // experience, which matches Chrome's behavior.
+  bool isAnyMediaPlaying = false;
+  for (const auto& receiver : mReceivers) {
+    if (receiver->IsPlaying()) {
+      isAnyMediaPlaying = true;
+      break;
+    }
+  }
+
+  for (auto& receiver : Reversed(mReceivers)) {
+    if (isAnyMediaPlaying && !receiver->IsPlaying()) {
+      receiver->HandleMediaKey(MediaControlKey::Stop);
+    } else {
+      receiver->HandleMediaKey(MediaControlKey::Pause);
+    }
   }
 }
 
