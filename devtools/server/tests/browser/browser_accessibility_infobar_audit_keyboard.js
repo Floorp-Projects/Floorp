@@ -99,6 +99,7 @@ add_task(async function() {
         const node = content.document.createElement("div");
         content.document.body.append(node);
         const highlighter = new AccessibleHighlighter(env);
+        await highlighter.isReady;
         const infobar = highlighter.accessibleInfobar;
         const bounds = {
           x: 0,

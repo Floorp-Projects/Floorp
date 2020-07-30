@@ -45,6 +45,7 @@ add_task(async function() {
     const env = new HighlighterEnvironment();
     env.initFromWindow(doc.defaultView);
     const helper = new CanvasFrameAnonymousContentHelper(env, nodeBuilder);
+    await helper.initialize();
 
     info("Getting the parent and child elements");
     const parentEl = helper.getElement("parent-element");

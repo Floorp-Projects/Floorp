@@ -119,6 +119,13 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     return this._inspector && this._inspector.conn;
   },
 
+  /**
+   * Get an instance of the box model highlighter.
+   */
+  get instance() {
+    return this._highlighter;
+  },
+
   form: function() {
     return {
       actor: this.actorID,
@@ -431,7 +438,12 @@ HighlighterEnvironment.prototype = {
     }
     const win = this._targetActor ? this._targetActor.window : this._win;
 
-    return Cu.isDeadWrapper(win) ? null : win;
+    try {
+      return Cu.isDeadWrapper(win) ? null : win;
+    } catch (e) {
+      // win is null
+      return null;
+    }
   },
 
   get document() {
