@@ -14,6 +14,7 @@
 #define vm_HelperThreads_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
@@ -670,18 +671,26 @@ void RunPendingSourceCompressions(JSRuntime* runtime);
 class MOZ_RAII AutoLockHelperThreadState : public LockGuard<Mutex> {
   using Base = LockGuard<Mutex>;
 
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
  public:
-  explicit AutoLockHelperThreadState() : Base(HelperThreadState().helperLock) {}
+  explicit AutoLockHelperThreadState(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+      : Base(HelperThreadState().helperLock) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 };
 
 class MOZ_RAII AutoUnlockHelperThreadState : public UnlockGuard<Mutex> {
   using Base = UnlockGuard<Mutex>;
 
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
  public:
-  explicit AutoUnlockHelperThreadState(AutoLockHelperThreadState& locked)
-      : Base(locked) {}
+  explicit AutoUnlockHelperThreadState(
+      AutoLockHelperThreadState& locked MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : Base(locked) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 };
 
 struct MOZ_RAII AutoSetHelperThreadContext {

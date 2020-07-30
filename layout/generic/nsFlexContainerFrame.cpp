@@ -4597,8 +4597,11 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 // instead of using this class.)
 class MOZ_RAII AutoFlexItemMainSizeOverride final {
  public:
-  explicit AutoFlexItemMainSizeOverride(FlexItem& aItem)
+  explicit AutoFlexItemMainSizeOverride(
+      FlexItem& aItem MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mItemFrame(aItem.Frame()) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
     MOZ_ASSERT(!mItemFrame->HasProperty(nsIFrame::FlexItemMainSizeOverride()),
                "FlexItemMainSizeOverride prop shouldn't be set already; "
                "it should only be set temporarily (& not recursively)");
@@ -4624,6 +4627,7 @@ class MOZ_RAII AutoFlexItemMainSizeOverride final {
 
  private:
   nsIFrame* mItemFrame;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 void nsFlexContainerFrame::CalculatePackingSpace(

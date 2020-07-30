@@ -211,7 +211,10 @@ bool nsFrameSelection::IsValidSelectionPoint(nsINode* aNode) const {
 namespace mozilla {
 struct MOZ_RAII AutoPrepareFocusRange {
   AutoPrepareFocusRange(Selection* aSelection,
-                        const bool aMultiRangeSelection) {
+                        const bool aMultiRangeSelection
+                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
     MOZ_ASSERT(aSelection);
     MOZ_ASSERT(aSelection->GetType() == SelectionType::eNormal);
 
@@ -318,6 +321,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
   }
 
   Maybe<Selection::AutoUserInitiated> mUserSelect;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 }  // namespace mozilla

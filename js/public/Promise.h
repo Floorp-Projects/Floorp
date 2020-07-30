@@ -8,6 +8,7 @@
 #define js_Promise_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/GuardObjects.h"
 
 #include "jspubtd.h"
 #include "js/RootingAPI.h"
@@ -222,7 +223,8 @@ extern JS_PUBLIC_API void SetJobQueue(JSContext* cx, JobQueue* queue);
  */
 class MOZ_RAII JS_PUBLIC_API AutoDebuggerJobQueueInterruption {
  public:
-  explicit AutoDebuggerJobQueueInterruption();
+  explicit AutoDebuggerJobQueueInterruption(
+      MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   ~AutoDebuggerJobQueueInterruption();
 
   bool init(JSContext* cx);
@@ -250,6 +252,7 @@ class MOZ_RAII JS_PUBLIC_API AutoDebuggerJobQueueInterruption {
   void runJobs();
 
  private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
   JSContext* cx;
   js::UniquePtr<JobQueue::SavedJobQueue> saved;
 };

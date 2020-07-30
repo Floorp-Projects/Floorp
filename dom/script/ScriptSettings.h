@@ -436,12 +436,13 @@ class AutoNoJSAPI : protected ScriptSettingsStackEntry,
  */
 class MOZ_RAII AutoJSContext {
  public:
-  explicit AutoJSContext();
+  explicit AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*() const;
 
  protected:
   JSContext* mCx;
   dom::AutoJSAPI mJSAPI;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /**
@@ -453,10 +454,11 @@ class MOZ_RAII AutoJSContext {
  */
 class MOZ_RAII AutoSafeJSContext : public dom::AutoJSAPI {
  public:
-  explicit AutoSafeJSContext();
+  explicit AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*() const { return cx(); }
 
  private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /**
@@ -471,10 +473,11 @@ class MOZ_RAII AutoSafeJSContext : public dom::AutoJSAPI {
  */
 class MOZ_RAII AutoSlowOperation {
  public:
-  explicit AutoSlowOperation();
+  explicit AutoSlowOperation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   void CheckForInterrupt();
 
  private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mIsMainThread;
   Maybe<xpc::AutoScriptActivity> mScriptActivity;
 };

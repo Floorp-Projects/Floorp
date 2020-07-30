@@ -1272,28 +1272,39 @@ const JSClass RuntimeLexicalErrorObject::class_ = {
 
 /*****************************************************************************/
 
-EnvironmentIter::EnvironmentIter(JSContext* cx, const EnvironmentIter& ei)
-    : si_(cx, ei.si_.get()), env_(cx, ei.env_), frame_(ei.frame_) {}
+EnvironmentIter::EnvironmentIter(JSContext* cx,
+                                 const EnvironmentIter& ei
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : si_(cx, ei.si_.get()), env_(cx, ei.env_), frame_(ei.frame_) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
 
-EnvironmentIter::EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope)
+EnvironmentIter::EnvironmentIter(JSContext* cx, JSObject* env,
+                                 Scope* scope
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : si_(cx, ScopeIter(scope)), env_(cx, env), frame_(NullFramePtr()) {
   settle();
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
 EnvironmentIter::EnvironmentIter(JSContext* cx, AbstractFramePtr frame,
-                                 jsbytecode* pc)
+                                 jsbytecode* pc
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : si_(cx, frame.script()->innermostScope(pc)),
       env_(cx, frame.environmentChain()),
       frame_(frame) {
   cx->check(frame);
   settle();
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
 EnvironmentIter::EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope,
-                                 AbstractFramePtr frame)
+                                 AbstractFramePtr frame
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : si_(cx, ScopeIter(scope)), env_(cx, env), frame_(frame) {
   cx->check(frame);
   settle();
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
 void EnvironmentIter::incrementScopeIter() {

@@ -81,9 +81,11 @@ JSObject* DOMSVGTransformList::WrapObject(JSContext* cx,
 // DidChangeTransformList.
 class MOZ_RAII AutoChangeTransformListNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangeTransformListNotifier(DOMSVGTransformList* aTransformList)
+  explicit AutoChangeTransformListNotifier(
+      DOMSVGTransformList* aTransformList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mozAutoDocUpdate(aTransformList->Element()->GetComposedDoc(), true),
         mTransformList(aTransformList) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTransformList, "Expecting non-null transformList");
     mEmptyOrOldValue =
         mTransformList->Element()->WillChangeTransformList(*this);
@@ -99,6 +101,7 @@ class MOZ_RAII AutoChangeTransformListNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGTransformList* const mTransformList;
   nsAttrValue mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 void DOMSVGTransformList::InternalListLengthWillChange(uint32_t aNewLength) {

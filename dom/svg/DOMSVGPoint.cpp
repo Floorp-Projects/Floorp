@@ -28,9 +28,11 @@ namespace dom {
 // DidChangePointList.
 class MOZ_RAII AutoChangePointNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangePointNotifier(DOMSVGPoint* aPoint)
+  explicit AutoChangePointNotifier(
+      DOMSVGPoint* aPoint MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mozAutoDocUpdate(aPoint->Element()->GetComposedDoc(), true),
         mPoint(aPoint) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mPoint, "Expecting non-null point");
     MOZ_ASSERT(mPoint->HasOwner(),
                "Expecting list to have an owner for notification");
@@ -49,6 +51,7 @@ class MOZ_RAII AutoChangePointNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGPoint* const mPoint;
   nsAttrValue mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 float DOMSVGPoint::X() {

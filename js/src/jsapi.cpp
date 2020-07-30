@@ -555,23 +555,30 @@ JS_PUBLIC_API void JS::LeaveRealm(JSContext* cx, JS::Realm* oldRealm) {
   cx->leaveRealm(oldRealm);
 }
 
-JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target)
+JSAutoRealm::JSAutoRealm(
+    JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : cx_(cx), oldRealm_(cx->realm()) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_DIAGNOSTIC_ASSERT(!js::IsCrossCompartmentWrapper(target));
   AssertHeapIsIdleOrIterating();
   cx_->enterRealmOf(target);
 }
 
-JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target)
+JSAutoRealm::JSAutoRealm(
+    JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : cx_(cx), oldRealm_(cx->realm()) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   AssertHeapIsIdleOrIterating();
   cx_->enterRealmOf(target);
 }
 
 JSAutoRealm::~JSAutoRealm() { cx_->leaveRealm(oldRealm_); }
 
-JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx, JSObject* targetOrNull)
+JSAutoNullableRealm::JSAutoNullableRealm(
+    JSContext* cx,
+    JSObject* targetOrNull MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : cx_(cx), oldRealm_(cx->realm()) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   AssertHeapIsIdleOrIterating();
   if (targetOrNull) {
     MOZ_DIAGNOSTIC_ASSERT(!js::IsCrossCompartmentWrapper(targetOrNull));

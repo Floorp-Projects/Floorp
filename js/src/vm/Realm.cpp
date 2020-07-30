@@ -786,9 +786,11 @@ mozilla::HashCodeScrambler Realm::randomHashCodeScrambler() {
                                     randomKeyGenerator_.next());
 }
 
-AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(JSContext* cx)
+AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(
+    JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : cx_(cx->isHelperThreadContext() ? nullptr : cx),
       prevState_(cx, cx->realm()->objectMetadataState_) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (cx_) {
     cx_->realm()->objectMetadataState_ =
         NewObjectMetadataState(DelayMetadata());

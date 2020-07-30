@@ -703,11 +703,13 @@ AutoNoJSAPI::~AutoNoJSAPI() {
 
 }  // namespace dom
 
-AutoJSContext::AutoJSContext() : mCx(nullptr) {
+AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+    : mCx(nullptr) {
   JS::AutoSuppressGCAnalysis nogc;
   MOZ_ASSERT(!mCx, "mCx should not be initialized!");
   MOZ_ASSERT(NS_IsMainThread());
 
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
   if (dom::IsJSAPIActive()) {
     mCx = dom::danger::GetJSContext();
@@ -719,9 +721,12 @@ AutoJSContext::AutoJSContext() : mCx(nullptr) {
 
 AutoJSContext::operator JSContext*() const { return mCx; }
 
-AutoSafeJSContext::AutoSafeJSContext() : AutoJSAPI() {
+AutoSafeJSContext::AutoSafeJSContext(
+    MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+    : AutoJSAPI() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
   DebugOnly<bool> ok = Init(xpc::UnprivilegedJunkScope());
   MOZ_ASSERT(ok,
@@ -730,7 +735,10 @@ AutoSafeJSContext::AutoSafeJSContext() : AutoJSAPI() {
              "returned null, and inited correctly otherwise!");
 }
 
-AutoSlowOperation::AutoSlowOperation() : mIsMainThread(NS_IsMainThread()) {
+AutoSlowOperation::AutoSlowOperation(
+    MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+    : mIsMainThread(NS_IsMainThread()) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (mIsMainThread) {
     mScriptActivity.emplace(true);
   }

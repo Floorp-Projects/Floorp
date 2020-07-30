@@ -81,9 +81,11 @@ JSObject* DOMSVGNumberList::WrapObject(JSContext* cx,
 // DidChangeNumberList.
 class MOZ_RAII AutoChangeNumberListNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangeNumberListNotifier(DOMSVGNumberList* aNumberList)
+  explicit AutoChangeNumberListNotifier(
+      DOMSVGNumberList* aNumberList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mozAutoDocUpdate(aNumberList->Element()->GetComposedDoc(), true),
         mNumberList(aNumberList) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mNumberList, "Expecting non-null numberList");
     mEmptyOrOldValue = mNumberList->Element()->WillChangeNumberList(
         mNumberList->AttrEnum(), *this);
@@ -100,6 +102,7 @@ class MOZ_RAII AutoChangeNumberListNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGNumberList* const mNumberList;
   nsAttrValue mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 void DOMSVGNumberList::InternalListLengthWillChange(uint32_t aNewLength) {

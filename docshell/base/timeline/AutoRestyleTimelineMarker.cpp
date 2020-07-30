@@ -13,9 +13,11 @@
 
 namespace mozilla {
 
-AutoRestyleTimelineMarker::AutoRestyleTimelineMarker(nsIDocShell* aDocShell,
-                                                     bool aIsAnimationOnly)
+AutoRestyleTimelineMarker::AutoRestyleTimelineMarker(
+    nsIDocShell* aDocShell,
+    bool aIsAnimationOnly MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : mDocShell(nullptr), mIsAnimationOnly(aIsAnimationOnly) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aDocShell) {

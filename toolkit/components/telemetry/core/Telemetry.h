@@ -6,6 +6,7 @@
 #ifndef Telemetry_h__
 #define Telemetry_h__
 
+#include "mozilla/GuardObjects.h"
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/TelemetryOriginEnums.h"
@@ -242,12 +243,17 @@ const char* GetHistogramName(HistogramID id);
 class MOZ_RAII RuntimeAutoTimer {
  public:
   explicit RuntimeAutoTimer(Telemetry::HistogramID aId,
-                            TimeStamp aStart = TimeStamp::Now())
-      : id(aId), start(aStart) {}
+                            TimeStamp aStart = TimeStamp::Now()
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : id(aId), start(aStart) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
   explicit RuntimeAutoTimer(Telemetry::HistogramID aId, const nsCString& aKey,
-                            TimeStamp aStart = TimeStamp::Now())
+                            TimeStamp aStart = TimeStamp::Now()
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : id(aId), key(aKey), start(aStart) {
     MOZ_ASSERT(!aKey.IsEmpty(), "The key must not be empty.");
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
   ~RuntimeAutoTimer() {
@@ -262,16 +268,23 @@ class MOZ_RAII RuntimeAutoTimer {
   Telemetry::HistogramID id;
   const nsCString key;
   const TimeStamp start;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 template <HistogramID id>
 class MOZ_RAII AutoTimer {
  public:
-  explicit AutoTimer(TimeStamp aStart = TimeStamp::Now()) : start(aStart) {}
+  explicit AutoTimer(TimeStamp aStart = TimeStamp::Now()
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : start(aStart) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
-  explicit AutoTimer(const nsCString& aKey, TimeStamp aStart = TimeStamp::Now())
+  explicit AutoTimer(const nsCString& aKey, TimeStamp aStart = TimeStamp::Now()
+                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : start(aStart), key(aKey) {
     MOZ_ASSERT(!aKey.IsEmpty(), "The key must not be empty.");
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
   ~AutoTimer() {
@@ -285,12 +298,17 @@ class MOZ_RAII AutoTimer {
  private:
   const TimeStamp start;
   const nsCString key;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII RuntimeAutoCounter {
  public:
-  explicit RuntimeAutoCounter(HistogramID aId, uint32_t counterStart = 0)
-      : id(aId), counter(counterStart) {}
+  explicit RuntimeAutoCounter(
+      HistogramID aId,
+      uint32_t counterStart = 0 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : id(aId), counter(counterStart) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   ~RuntimeAutoCounter() { Accumulate(id, counter); }
 
@@ -321,12 +339,17 @@ class MOZ_RAII RuntimeAutoCounter {
  private:
   HistogramID id;
   uint32_t counter;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 template <HistogramID id>
 class MOZ_RAII AutoCounter {
  public:
-  explicit AutoCounter(uint32_t counterStart = 0) : counter(counterStart) {}
+  explicit AutoCounter(
+      uint32_t counterStart = 0 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : counter(counterStart) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   ~AutoCounter() { Accumulate(id, counter); }
 
@@ -356,6 +379,7 @@ class MOZ_RAII AutoCounter {
 
  private:
   uint32_t counter;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /**
@@ -545,13 +569,18 @@ void ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 template <ScalarID id>
 class MOZ_RAII AutoScalarTimer {
  public:
-  explicit AutoScalarTimer(TimeStamp aStart = TimeStamp::Now())
-      : start(aStart) {}
+  explicit AutoScalarTimer(TimeStamp aStart = TimeStamp::Now()
+                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : start(aStart) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   explicit AutoScalarTimer(const nsAString& aKey,
-                           TimeStamp aStart = TimeStamp::Now())
+                           TimeStamp aStart = TimeStamp::Now()
+                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : start(aStart), key(aKey) {
     MOZ_ASSERT(!aKey.IsEmpty(), "The key must not be empty.");
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
   ~AutoScalarTimer() {
@@ -567,6 +596,7 @@ class MOZ_RAII AutoScalarTimer {
  private:
   const TimeStamp start;
   const nsString key;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /**

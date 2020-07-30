@@ -1402,8 +1402,11 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
 class MOZ_RAII AutoChangeNumPendingSpellChecks final {
  public:
   explicit AutoChangeNumPendingSpellChecks(mozInlineSpellChecker* aSpellChecker,
-                                           int32_t aDelta)
-      : mSpellChecker(aSpellChecker), mDelta(aDelta) {}
+                                           int32_t aDelta
+                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mSpellChecker(aSpellChecker), mDelta(aDelta) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   ~AutoChangeNumPendingSpellChecks() {
     mSpellChecker->ChangeNumPendingSpellChecks(mDelta);
@@ -1412,6 +1415,7 @@ class MOZ_RAII AutoChangeNumPendingSpellChecks final {
  private:
   RefPtr<mozInlineSpellChecker> mSpellChecker;
   int32_t mDelta;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(

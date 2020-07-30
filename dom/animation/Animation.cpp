@@ -59,7 +59,9 @@ namespace {
 // appropriate document from the supplied animation.
 class MOZ_RAII AutoMutationBatchForAnimation {
  public:
-  explicit AutoMutationBatchForAnimation(const Animation& aAnimation) {
+  explicit AutoMutationBatchForAnimation(
+      const Animation& aAnimation MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     NonOwningAnimationTarget target = aAnimation.GetTargetForAnimation();
     if (!target) {
       return;
@@ -70,6 +72,7 @@ class MOZ_RAII AutoMutationBatchForAnimation {
   }
 
  private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   Maybe<nsAutoAnimationMutationBatch> mAutoBatch;
 };
 }  // namespace

@@ -7466,8 +7466,10 @@ AbstractThread* nsGlobalWindowOuter::AbstractMainThreadFor(
 }
 
 nsGlobalWindowOuter::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
-    nsGlobalWindowOuter* aWindow)
+    nsGlobalWindowOuter* aWindow MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : mSavedDialogsEnabled(false) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
   MOZ_ASSERT(aWindow);
   nsGlobalWindowOuter* topWindowOuter =
       aWindow->GetInProcessScriptableTopInternal();

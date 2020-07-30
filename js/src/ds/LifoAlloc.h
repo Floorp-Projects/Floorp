@@ -723,9 +723,12 @@ class LifoAlloc {
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     LifoAlloc* lifoAlloc_;
     bool prevFallibleScope_;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
    public:
-    explicit AutoFallibleScope(LifoAlloc* lifoAlloc) {
+    explicit AutoFallibleScope(
+        LifoAlloc* lifoAlloc MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       lifoAlloc_ = lifoAlloc;
       prevFallibleScope_ = lifoAlloc->fallibleScope_;
       lifoAlloc->fallibleScope_ = true;
@@ -948,12 +951,15 @@ class MOZ_NON_TEMPORARY_CLASS LifoAllocScope {
   LifoAlloc* lifoAlloc;
   LifoAlloc::Mark mark;
   LifoAlloc::AutoFallibleScope fallibleScope;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
  public:
-  explicit LifoAllocScope(LifoAlloc* lifoAlloc)
+  explicit LifoAllocScope(LifoAlloc* lifoAlloc MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : lifoAlloc(lifoAlloc),
         mark(lifoAlloc->mark()),
-        fallibleScope(lifoAlloc) {}
+        fallibleScope(lifoAlloc) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   ~LifoAllocScope() {
     lifoAlloc->release(mark);

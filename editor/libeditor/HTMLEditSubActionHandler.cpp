@@ -101,11 +101,14 @@ static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
 }
 
 class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
  public:
-  explicit AutoSetTemporaryAncestorLimiter(HTMLEditor& aHTMLEditor,
-                                           Selection& aSelection,
-                                           nsINode& aStartPointNode) {
+  explicit AutoSetTemporaryAncestorLimiter(
+      HTMLEditor& aHTMLEditor, Selection& aSelection,
+      nsINode& aStartPointNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
     MOZ_ASSERT(aSelection.GetType() == SelectionType::eNormal);
 
     if (aSelection.GetAncestorLimiter()) {
