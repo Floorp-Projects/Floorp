@@ -40,6 +40,7 @@ class FxAccountsTelemetry {
   constructor(fxai) {
     this._fxai = fxai;
     Services.telemetry.setEventRecordingEnabled("fxa", true);
+    this._promiseEnsureEcosystemAnonId = null;
   }
 
   // Records an event *in the Fxa/Sync ping*.
@@ -82,15 +83,16 @@ class FxAccountsTelemetry {
   async getEcosystemAnonId() {
     try {
       // N.B. `getProfile()` may kick off a silent background update but won't await network requests.
-      const profile = await this._internal.profile.getProfile();
-      if (profile.hasOwnProperty("ecosystemAnonId")) {
+      const profile = await this._fxai.profile.getProfile();
+      if (profile && profile.hasOwnProperty("ecosystemAnonId")) {
         return profile.ecosystemAnonId;
       }
     } catch (err) {
       log.error("Getting ecosystemAnonId from profile failed", err);
     }
-    // Calling `ensureEcosystemAnonId()` so the calling code doesn't have to do this when a call
-    // to `getProfile()` doesn't produce `ecosystemAnonId`.
+    // Calling `ensureEcosystemAnonId()` so the calling code doesn't have to do
+    // this when a call/ to `getProfile()` doesn't produce `ecosystemAnonId`.
+    // (ie, so that the next call to `getEcosystemAnonId() will return it)
     this.ensureEcosystemAnonId().catch(err => {
       log.error("Failed ensuring we have an anon-id in the background ", err);
     });
@@ -102,11 +104,30 @@ class FxAccountsTelemetry {
   // This asynchronous method resolves with the "ecosystemAnonId" value on success, and rejects
   // with an error if no user is signed in or if the value could not be obtained from the
   // FxA server.
-  async ensureEcosystemAnonId(generatePlaceholder = true) {
+  //
+  // If a call to this is already in-flight, the promise from that original
+  // call is returned.
+  async ensureEcosystemAnonId() {
+    if (!this._promiseEnsureEcosystemAnonId) {
+      this._promiseEnsureEcosystemAnonId = this._ensureEcosystemAnonId().finally(
+        () => {
+          this._promiseEnsureEcosystemAnonId = null;
+        }
+      );
+    }
+    return this._promiseEnsureEcosystemAnonId;
+  }
+
+  async _ensureEcosystemAnonId(generatePlaceholder = true) {
     const telemetry = this;
     return this._fxai.withCurrentAccountState(async function(state) {
-      const profile = await telemetry._fxai.profile.ensureProfile();
-      if (profile.hasOwnProperty("ecosystemAnonId")) {
+      // Fetching a fresh profile should never update the ID, and saving a
+      // network request matters for telemetry, so we are fine with a slightly
+      // stale profile.
+      const profile = await telemetry._fxai.profile.ensureProfile({
+        staleOk: true,
+      });
+      if (profile && profile.hasOwnProperty("ecosystemAnonId")) {
         return profile.ecosystemAnonId;
       }
       if (!generatePlaceholder) {
@@ -140,7 +161,7 @@ class FxAccountsTelemetry {
       } catch (err) {
         if (err && err.code && err.code === 412) {
           // Another client raced us to upload the placeholder, fetch it.
-          return telemetry.ensureEcosystemAnonId(false);
+          return telemetry._ensureEcosystemAnonId(false);
         }
         throw err;
       }
