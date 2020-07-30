@@ -21,6 +21,7 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.os.Process
+import android.provider.ContactsContract
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
@@ -162,6 +163,34 @@ fun Context.call(
         }
 
         startActivity(callIntent)
+        true
+    } catch (e: ActivityNotFoundException) {
+        Logger.warn("No activity found to handle dial intent", throwable = e)
+        false
+    }
+}
+
+/**
+ * Add to contact via [ContactsContract.Intents.Insert.ACTION]
+ *
+ * @param address the email address to add to [ContactsContract.Intents.Insert.EMAIL]
+ * @return true it is able to share email false otherwise.
+ */
+fun Context.addContact(
+    address: String
+): Boolean {
+    return try {
+        val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
+            type = ContactsContract.RawContacts.CONTENT_TYPE
+            putExtra(ContactsContract.Intents.Insert.EMAIL, address)
+            putExtra(
+                ContactsContract.Intents.Insert.EMAIL_TYPE,
+                ContactsContract.CommonDataKinds.Email.TYPE_WORK
+            )
+            addFlags(FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        startActivity(intent)
         true
     } catch (e: ActivityNotFoundException) {
         Logger.warn("No activity found to handle dial intent", throwable = e)

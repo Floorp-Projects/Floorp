@@ -26,6 +26,8 @@ private val re = object {
     val geoish = "^\\s*geo:\\S*\\d+\\S*\\s*$".toRegex(IGNORE_CASE)
 }
 
+private const val MAILTO = "mailto:"
+
 /**
  * Checks if this String is a URL.
  */
@@ -144,4 +146,14 @@ fun String.sanitizeURL(): String {
  */
 fun String.sanitizeFileName(): String {
     return this.substringAfterLast(File.separatorChar)
+}
+
+/**
+ * Remove leading mailto from the string.
+ * For example for an input of "mailto:example@example.com" you will get "example@example.com"
+ */
+fun String.stripMailToProtocol(): String {
+    return if (this.startsWith(MAILTO)) {
+        this.replaceFirst(MAILTO, "")
+    } else this
 }
