@@ -41,6 +41,8 @@ const issue = {
   unsupportedBrowsers: PropTypes.arrayOf(PropTypes.shape(browser)).isRequired,
   // Nodes that caused this issue. This will be available for top-level target issues only.
   nodes: PropTypes.arrayOf(node),
+  // Prefixed properties that the user set.
+  aliases: PropTypes.arrayOf(PropTypes.string),
 };
 
 exports.browser = browser;
