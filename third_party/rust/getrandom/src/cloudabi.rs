@@ -7,19 +7,19 @@
 // except according to those terms.
 
 //! Implementation for CloudABI
-use core::num::NonZeroU32;
 use crate::Error;
+use core::num::NonZeroU32;
 
-pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
-    let errno = unsafe { cloudabi::random_get(dest) };
-    if errno == cloudabi::errno::SUCCESS {
-        Ok(())
-    } else {
-        let code = NonZeroU32::new(errno as u32).unwrap();
-        error!("cloudabi::random_get syscall failed with code {}", code);
-        Err(Error::from(code))
-    }
+extern "C" {
+    fn cloudabi_sys_random_get(buf: *mut u8, buf_len: usize) -> u16;
 }
 
-#[inline(always)]
-pub fn error_msg_inner(_: NonZeroU32) -> Option<&'static str> { None }
+pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
+    let errno = unsafe { cloudabi_sys_random_get(dest.as_mut_ptr(), dest.len()) };
+    if let Some(code) = NonZeroU32::new(errno as u32) {
+        error!("cloudabi_sys_random_get: failed with {}", errno);
+        Err(Error::from(code))
+    } else {
+        Ok(()) // Zero means success for CloudABI
+    }
+}

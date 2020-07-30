@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "getrandom"
-version = "0.1.3"
+version = "0.1.14"
 authors = ["The Rand Project Developers"]
 exclude = ["utils/*", ".*", "appveyor.yml"]
 description = "A small cross-platform library for retrieving random data from system source"
@@ -21,30 +21,41 @@ documentation = "https://docs.rs/getrandom"
 categories = ["os", "no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-random/getrandom"
+[dependencies.cfg-if]
+version = "0.1.2"
+
+[dependencies.compiler_builtins]
+version = "0.1"
+optional = true
+
+[dependencies.core]
+version = "1.0"
+optional = true
+package = "rustc-std-workspace-core"
+
 [dependencies.log]
 version = "0.4"
 optional = true
 
 [features]
+dummy = []
+rustc-dep-of-std = ["compiler_builtins", "core"]
 std = []
-[target."cfg(fuchsia)".dependencies.fuchsia-cprng]
-version = "0.1"
-[target."cfg(target_os = \"cloudabi\")".dependencies.cloudabi]
-version = "0.0.3"
+test-in-browser = ["wasm-bindgen"]
+[target."cfg(target_os = \"wasi\")".dependencies.wasi]
+version = "0.9"
 [target."cfg(unix)".dependencies.libc]
-version = "0.2.29"
-[target."cfg(windows)".dependencies.winapi]
-version = "0.3.6"
-features = ["minwindef", "ntsecapi", "winnt"]
+version = "0.2.64"
+default-features = false
 [target.wasm32-unknown-unknown.dependencies.stdweb]
-version = "0.4.9"
+version = "0.4.18"
 optional = true
 
 [target.wasm32-unknown-unknown.dependencies.wasm-bindgen]
 version = "0.2.29"
 optional = true
-[target.wasm32-wasi.dependencies.libc]
-version = "0.2.54"
+[target.wasm32-unknown-unknown.dev-dependencies.wasm-bindgen-test]
+version = "0.2"
 [badges.appveyor]
 repository = "rust-random/getrandom"
 

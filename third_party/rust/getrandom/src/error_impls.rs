@@ -7,28 +7,29 @@
 // except according to those terms.
 extern crate std;
 
-use std::{io, error};
+use crate::{error::UNKNOWN_IO_ERROR, Error};
 use core::convert::From;
 use core::num::NonZeroU32;
-use crate::error::Error;
+use std::io;
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        err.raw_os_error()
-            .and_then(|code| NonZeroU32::new(code as u32))
-            .map(|code| Error(code))
-            // in practice this should never happen
-            .unwrap_or(Error::UNKNOWN)
+        if let Some(errno) = err.raw_os_error() {
+            if let Some(code) = NonZeroU32::new(errno as u32) {
+                return Error::from(code);
+            }
+        }
+        UNKNOWN_IO_ERROR
     }
 }
 
 impl From<Error> for io::Error {
     fn from(err: Error) -> Self {
-        match err.msg() {
-            Some(msg) => io::Error::new(io::ErrorKind::Other, msg),
-            None => io::Error::from_raw_os_error(err.0.get() as i32),
+        match err.raw_os_error() {
+            Some(errno) => io::Error::from_raw_os_error(errno),
+            None => io::Error::new(io::ErrorKind::Other, err),
         }
     }
 }
 
-impl error::Error for Error { }
+impl std::error::Error for Error {}
