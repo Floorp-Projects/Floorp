@@ -46,9 +46,11 @@ namespace wasm {
 bool HasPlatformSupport(JSContext* cx);
 
 // Return whether WebAssembly is supported on this platform. This determines
-// whether the WebAssembly object is exposed to JS and takes into account
-// configuration options that disable various modes.  It also checks that at
-// least one compiler is (currently) available.
+// whether the WebAssembly object is exposed to JS in this context / realm and
+//
+// It does *not* guarantee that a compiler is actually available; that has to be
+// checked separately, as it is sometimes run-time variant, depending on whether
+// a debugger has been created or not.
 
 bool HasSupport(JSContext* cx);
 
@@ -65,6 +67,10 @@ bool HasSupport(JSContext* cx);
 bool BaselineAvailable(JSContext* cx);
 bool IonAvailable(JSContext* cx);
 bool CraneliftAvailable(JSContext* cx);
+
+// Test all three.
+
+bool AnyCompilerAvailable(JSContext* cx);
 
 // Predicates for white-box compiler disablement testing.
 //
