@@ -522,19 +522,9 @@ already_AddRefed<PeriodicWave> AudioContext::CreatePeriodicWave(
   aRealData.ComputeState();
   aImagData.ComputeState();
 
-  if (aRealData.Length() != aImagData.Length()) {
-    aRv.ThrowIndexSizeError("\"real\" and \"imag\" must be the same length");
-    return nullptr;
-  }
-
-  if (aRealData.Length() == 0) {
-    aRv.ThrowIndexSizeError("\"real\" and \"imag\" are both empty arrays");
-    return nullptr;
-  }
-
   RefPtr<PeriodicWave> periodicWave = new PeriodicWave(
-      this, aRealData.Data(), aImagData.Data(), aImagData.Length(),
-      aConstraints.mDisableNormalization, aRv);
+      this, aRealData.Data(), aRealData.Length(), aImagData.Data(),
+      aImagData.Length(), aConstraints.mDisableNormalization, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

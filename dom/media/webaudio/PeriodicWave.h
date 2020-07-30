@@ -23,8 +23,9 @@ struct PeriodicWaveOptions;
 class PeriodicWave final : public nsWrapperCache {
  public:
   PeriodicWave(AudioContext* aContext, const float* aRealData,
-               const float* aImagData, const uint32_t aLength,
-               const bool aDisableNormalization, ErrorResult& aRv);
+               const uint32_t aRealSize, const float* aImagData,
+               const uint32_t aImagSize, const bool aDisableNormalization,
+               ErrorResult& aRv);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PeriodicWave)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PeriodicWave)
