@@ -770,6 +770,24 @@ var UrlbarUtils = {
     }
     return this._logger;
   },
+
+  /**
+   * Returns the name of a result source.  The name is the lowercase name of the
+   * corresponding property in the RESULT_SOURCE object.
+   *
+   * @param {string} source A UrlbarUtils.RESULT_SOURCE value.
+   * @returns {string} The token's name, a lowercased name in the RESULT_SOURCE
+   *   object.
+   */
+  getResultSourceName(source) {
+    if (!this._resultSourceNamesBySource) {
+      this._resultSourceNamesBySource = new Map();
+      for (let [name, src] of Object.entries(this.RESULT_SOURCE)) {
+        this._resultSourceNamesBySource.set(src, name.toLowerCase());
+      }
+    }
+    return this._resultSourceNamesBySource.get(source);
+  },
 };
 
 XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {

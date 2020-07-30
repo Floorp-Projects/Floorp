@@ -56,10 +56,10 @@ async function enterSearchMode(window) {
   EventUtils.synthesizeMouseAtCenter(oneOffs[0], {});
   await searchPromise;
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Urlbar view is still open.");
-  Assert.ok(
-    UrlbarTestUtils.isInSearchMode(window, oneOffs[0].engine.name),
-    "The Urlbar is in search mode."
-  );
+  UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    engineName: oneOffs[0].engine.name,
+  });
 }
 
 /**
@@ -91,10 +91,7 @@ async function exitSearchMode(
       EventUtils.synthesizeKey("KEY_Backspace");
     }
     Assert.equal(gURLBar.value, urlbarValue, "Urlbar value hasn't changed.");
-    Assert.ok(
-      !UrlbarTestUtils.isInSearchMode(window),
-      "The Urlbar is no longer in search mode."
-    );
+    UrlbarTestUtils.assertSearchMode(window, null);
   } else if (clickClose) {
     // We need to hover the indicator to make the close button clickable in the
     // test.
@@ -110,10 +107,7 @@ async function exitSearchMode(
     } else {
       EventUtils.synthesizeMouseAtCenter(closeButton, {});
     }
-    Assert.ok(
-      !UrlbarTestUtils.isInSearchMode(window),
-      "The Urlbar is no longer in search mode."
-    );
+    UrlbarTestUtils.assertSearchMode(window, null);
   }
 }
 
@@ -223,18 +217,19 @@ add_task(async function escape() {
   EventUtils.synthesizeKey("KEY_Escape");
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
   Assert.equal(gURLBar.value, TEST_QUERY, "Urlbar value hasn't changed.");
-  Assert.ok(
-    UrlbarTestUtils.isInSearchMode(window),
-    "The Urlbar is in search mode."
-  );
+
+  let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
+    window
+  ).getSelectableButtons(true);
+  UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    engineName: oneOffs[0].engine.name,
+  });
 
   EventUtils.synthesizeKey("KEY_Escape");
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
   Assert.ok(!gURLBar.value, "Urlbar value is empty.");
-  Assert.ok(
-    !UrlbarTestUtils.isInSearchMode(window),
-    "The Urlbar is not in search mode."
-  );
+  UrlbarTestUtils.assertSearchMode(window, null);
 });
 
 // Tests that the indicator is removed when its close button is clicked.
