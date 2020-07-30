@@ -23,6 +23,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoSystemStateListener;
@@ -30,6 +31,8 @@ import org.mozilla.gecko.util.GeckoBundle;
 
 @AnyThread
 public final class GeckoRuntimeSettings extends RuntimeSettings {
+    private static final String LOGTAG = "GeckoRuntimeSettings";
+
     /**
      * Settings builder used to construct the settings object.
      */
@@ -917,13 +920,24 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         return setFontSizeFactorInternal(fontSizeFactor);
     }
 
-    /* package */ @NonNull GeckoRuntimeSettings setFontSizeFactorInternal(
-            final float fontSizeFactor) {
+    private final static float DEFAULT_FONT_SIZE_FACTOR = 1f;
+
+    private float sanitizeFontSizeFactor(final float fontSizeFactor) {
         if (fontSizeFactor < 0) {
-            throw new IllegalArgumentException("fontSizeFactor cannot be < 0");
+            if (BuildConfig.DEBUG) {
+                throw new IllegalArgumentException("fontSizeFactor cannot be < 0");
+            } else {
+                Log.e(LOGTAG, "fontSizeFactor cannot be < 0");
+                return DEFAULT_FONT_SIZE_FACTOR;
+            }
         }
 
-        final int fontSizePercentage = Math.round(fontSizeFactor * 100);
+        return fontSizeFactor;
+    }
+
+    /* package */ @NonNull GeckoRuntimeSettings setFontSizeFactorInternal(
+            final float fontSizeFactor) {
+        final int fontSizePercentage = Math.round(sanitizeFontSizeFactor(fontSizeFactor) * 100);
         mFontSizeFactor.commit(fontSizePercentage);
         if (getFontInflationEnabled()) {
             final int scaledFontInflation = Math.round(FONT_INFLATION_BASE_VALUE * fontSizeFactor);
