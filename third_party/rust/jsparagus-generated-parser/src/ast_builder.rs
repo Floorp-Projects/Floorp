@@ -1238,14 +1238,15 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         start_token: arena::Box<'alloc, Token>,
         private_identifier: arena::Box<'alloc, Token>,
-    ) -> arena::Box<'alloc, Expression<'alloc>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let private_identifier_loc = private_identifier.loc;
-        self.alloc_with(|| {
+        let field = self.private_identifier(private_identifier)?;
+        Ok(self.alloc_with(|| {
             Expression::OptionalChain(OptionalChain::PrivateFieldExpressionTail {
-                field: self.private_identifier(private_identifier),
+                field,
                 loc: SourceLocation::from_parts(start_token.loc, private_identifier_loc),
             })
-        })
+        }))
     }
 
     // OptionalChain : `?.` Arguments
@@ -1313,18 +1314,19 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         object: arena::Box<'alloc, Expression<'alloc>>,
         private_identifier: arena::Box<'alloc, Token>,
-    ) -> arena::Box<'alloc, Expression<'alloc>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let object_loc = object.get_loc();
         let private_identifier_loc = private_identifier.loc;
-        self.alloc_with(|| {
+        let field = self.private_identifier(private_identifier)?;
+        Ok(self.alloc_with(|| {
             Expression::OptionalChain(OptionalChain::PrivateFieldExpression(
                 PrivateFieldExpression {
                     object: ExpressionOrSuper::Expression(object),
-                    field: self.private_identifier(private_identifier),
+                    field,
                     loc: SourceLocation::from_parts(object_loc, private_identifier_loc),
                 },
             ))
-        })
+        }))
     }
 
     // OptionalChain : OptionalChain Arguments
@@ -1358,11 +1360,20 @@ impl<'alloc> AstBuilder<'alloc> {
         }
     }
 
-    fn private_identifier(&self, token: arena::Box<'alloc, Token>) -> PrivateIdentifier {
-        PrivateIdentifier {
-            value: token.value.as_atom(),
-            loc: token.loc,
-        }
+    fn private_identifier(
+        &self,
+        _token: arena::Box<'alloc, Token>,
+    ) -> Result<'alloc, PrivateIdentifier> {
+        Err(ParseError::NotImplemented(
+            "private fields depends on shell switch, that is not supported",
+        )
+        .into())
+        /*
+                PrivateIdentifier {
+                    value: token.value.as_atom(),
+                    loc: token.loc,
+                }
+        */
     }
 
     // MemberExpression : MemberExpression `.` IdentifierName
@@ -1416,18 +1427,19 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         object: arena::Box<'alloc, Expression<'alloc>>,
         private_identifier: arena::Box<'alloc, Token>,
-    ) -> arena::Box<'alloc, Expression<'alloc>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
         let object_loc = object.get_loc();
         let field_loc = private_identifier.loc;
-        self.alloc_with(|| {
+        let field = self.private_identifier(private_identifier)?;
+        Ok(self.alloc_with(|| {
             Expression::MemberExpression(MemberExpression::PrivateFieldExpression(
                 PrivateFieldExpression {
                     object: ExpressionOrSuper::Expression(object),
-                    field: self.private_identifier(private_identifier),
+                    field,
                     loc: SourceLocation::from_parts(object_loc, field_loc),
                 },
             ))
-        })
+        }))
     }
 
     // SuperProperty : `super` `[` Expression `]`
@@ -1436,9 +1448,11 @@ impl<'alloc> AstBuilder<'alloc> {
         super_token: arena::Box<'alloc, Token>,
         expression: arena::Box<'alloc, Expression<'alloc>>,
         close_token: arena::Box<'alloc, Token>,
-    ) -> arena::Box<'alloc, Expression<'alloc>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
+        self.check_super()?;
+
         let super_loc = super_token.loc;
-        self.alloc_with(|| {
+        Ok(self.alloc_with(|| {
             Expression::MemberExpression(MemberExpression::ComputedMemberExpression(
                 ComputedMemberExpression {
                     object: ExpressionOrSuper::Super { loc: super_loc },
@@ -1446,7 +1460,7 @@ impl<'alloc> AstBuilder<'alloc> {
                     loc: SourceLocation::from_parts(super_loc, close_token.loc),
                 },
             ))
-        })
+        }))
     }
 
     // SuperProperty : `super` `.` IdentifierName
@@ -1454,10 +1468,12 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         super_token: arena::Box<'alloc, Token>,
         identifier_token: arena::Box<'alloc, Token>,
-    ) -> arena::Box<'alloc, Expression<'alloc>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
+        self.check_super()?;
+
         let super_loc = super_token.loc;
         let identifier_loc = identifier_token.loc;
-        self.alloc_with(|| {
+        Ok(self.alloc_with(|| {
             Expression::MemberExpression(MemberExpression::StaticMemberExpression(
                 StaticMemberExpression {
                     object: ExpressionOrSuper::Super { loc: super_loc },
@@ -1465,7 +1481,7 @@ impl<'alloc> AstBuilder<'alloc> {
                     loc: SourceLocation::from_parts(super_loc, identifier_loc),
                 },
             ))
-        })
+        }))
     }
 
     // NewTarget : `new` `.` `target`
@@ -1520,16 +1536,18 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         super_token: arena::Box<'alloc, Token>,
         arguments: arena::Box<'alloc, Arguments<'alloc>>,
-    ) -> arena::Box<'alloc, Expression<'alloc>> {
+    ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
+        self.check_super()?;
+
         let super_loc = super_token.loc;
         let arguments_loc = arguments.loc;
-        self.alloc_with(|| {
+        Ok(self.alloc_with(|| {
             Expression::CallExpression(CallExpression {
                 callee: ExpressionOrSuper::Super { loc: super_loc },
                 arguments: arguments.unbox(),
                 loc: SourceLocation::from_parts(super_loc, arguments_loc),
             })
-        })
+        }))
     }
 
     // ImportCall : `import` `(` AssignmentExpression `)`
@@ -4168,10 +4186,9 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn class_element_name_private(
         &self,
         private_identifier: arena::Box<'alloc, Token>,
-    ) -> arena::Box<'alloc, ClassElementName<'alloc>> {
-        self.alloc_with(|| {
-            ClassElementName::PrivateFieldName(self.private_identifier(private_identifier))
-        })
+    ) -> Result<'alloc, arena::Box<'alloc, ClassElementName<'alloc>>> {
+        let name = self.private_identifier(private_identifier)?;
+        Ok(self.alloc_with(|| ClassElementName::PrivateFieldName(name)))
     }
 
     // ClassElement : MethodDefinition

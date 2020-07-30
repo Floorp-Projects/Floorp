@@ -137,9 +137,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
 
         TopLevelFunctionDeclarationEmitter { fun_index }.emit(self);
 
-        Err(EmitError::NotImplemented(
-            "TODO: Populate ScriptStencil fields",
-        ))
+        Ok(())
     }
 
     fn emit_non_top_level_function_declaration(&mut self, fun: &Function) -> Result<(), EmitError> {
@@ -176,9 +174,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             LexicalFunctionDeclarationEmitter { fun_index, name }.emit(self)?;
         }
 
-        Err(EmitError::NotImplemented(
-            "TODO: Populate ScriptStencil fields",
-        ))
+        Ok(())
     }
 
     fn emit_statement(&mut self, ast: &Statement) -> Result<(), EmitError> {

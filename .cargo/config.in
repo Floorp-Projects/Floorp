@@ -25,7 +25,7 @@ rev = "61dcc364ac0d6d0816ab88a494bbf20d824b009b"
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
-rev = "fb2a93267697c33d54e71be4bb5e8e768760c27c"
+rev = "16bc2e48694c2a5b3cca854271f58cf8aae18a0e"
 
 [source."https://github.com/kvark/spirv_cross"]
 branch = "wgpu3"

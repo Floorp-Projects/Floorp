@@ -95,6 +95,11 @@ class GCVector {
     return vector.emplaceBack(std::forward<Args>(args)...);
   }
 
+  template <typename... Args>
+  void infallibleEmplaceBack(Args&&... args) {
+    vector.infallibleEmplaceBack(std::forward<Args>(args)...);
+  }
+
   template <typename U>
   void infallibleAppend(U&& aU) {
     return vector.infallibleAppend(std::forward<U>(aU));
@@ -253,6 +258,10 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>,
   template <typename... Args>
   MOZ_MUST_USE bool emplaceBack(Args&&... aArgs) {
     return vec().emplaceBack(std::forward<Args>(aArgs)...);
+  }
+  template <typename... Args>
+  void infallibleEmplaceBack(Args&&... args) {
+    vec().infallibleEmplaceBack(std::forward<Args>(args)...);
   }
   template <typename U>
   MOZ_MUST_USE bool appendAll(const U& aU) {

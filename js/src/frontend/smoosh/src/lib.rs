@@ -31,8 +31,8 @@ use jsparagus::stencil::script::{ImmutableScriptData, ScriptStencil, SourceExten
 use std::boxed::Box;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::os::raw::{c_char, c_void};
 use std::convert::TryInto;
+use std::os::raw::{c_char, c_void};
 use std::rc::Rc;
 use std::{mem, slice, str};
 
@@ -76,6 +76,7 @@ pub struct SmooshCompileOptions {
 pub enum SmooshGCThing {
     Null,
     Atom(usize),
+    Function(usize),
     Scope(usize),
     RegExp(usize),
 }
@@ -84,9 +85,7 @@ fn convert_gcthing(item: GCThing, scope_index_map: &HashMap<usize, usize>) -> Sm
     match item {
         GCThing::Null => SmooshGCThing::Null,
         GCThing::Atom(index) => SmooshGCThing::Atom(index.into()),
-        GCThing::Function(_index) => {
-            panic!("Not yet implemented");
-        }
+        GCThing::Function(index) => SmooshGCThing::Function(index.into()),
         GCThing::RegExp(index) => SmooshGCThing::RegExp(index.into()),
         GCThing::Scope(index) => {
             let mapped_index = *scope_index_map

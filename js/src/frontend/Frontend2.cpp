@@ -226,7 +226,6 @@ bool ConvertScopeCreationData(JSContext* cx, const SmooshResult& result,
 
         bool hasParameterExprs = function.has_parameter_exprs;
         bool needsEnvironment = function.non_positional_formal_start;
-        // FIXME: Prepare function pointed by this index.
         FunctionIndex functionIndex = FunctionIndex(function.function_index);
         bool isArrow = function.is_arrow;
 
@@ -369,6 +368,11 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
             mozilla::AsVariant(allAtoms[item.AsAtom()].get()));
         break;
       }
+      case SmooshGCThing::Tag::Function: {
+        gcThings.infallibleAppend(
+            mozilla::AsVariant(FunctionIndex(item.AsFunction())));
+        break;
+      }
       case SmooshGCThing::Tag::Scope: {
         gcThings.infallibleAppend(
             mozilla::AsVariant(ScopeIndex(item.AsScope())));
@@ -435,6 +439,21 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   stencil.get().extent.toStringEnd = smooshStencil.extent.to_string_end;
   stencil.get().extent.lineno = smooshStencil.extent.lineno;
   stencil.get().extent.column = smooshStencil.extent.column;
+
+  if (isFunction) {
+    if (smooshStencil.fun_name.IsSome()) {
+      stencil.get().functionAtom = allAtoms[smooshStencil.fun_name.AsSome()];
+    }
+    stencil.get().functionFlags = FunctionFlags(smooshStencil.fun_flags);
+    stencil.get().nargs = smooshStencil.fun_nargs;
+    if (smooshStencil.lazy_function_enclosing_scope_index.IsSome()) {
+      stencil.get().lazyFunctionEnclosingScopeIndex_ = mozilla::Some(ScopeIndex(
+          smooshStencil.lazy_function_enclosing_scope_index.AsSome()));
+    }
+    stencil.get().isStandaloneFunction = smooshStencil.is_standalone_function;
+    stencil.get().wasFunctionEmitted = smooshStencil.was_function_emitted;
+    stencil.get().isSingletonFunction = smooshStencil.is_singleton_function;
+  }
 
   if (!ConvertGCThings(cx, result, smooshStencil, allAtoms, stencil)) {
     return false;
@@ -537,10 +556,22 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
-  // FIXME: Support functions.
   if (!ConvertScriptStencil(cx, result, result.top_level_script, allAtoms,
                             compilationInfo, &compilationInfo.topLevel)) {
     return nullptr;
+  }
+
+  if (!compilationInfo.funcData.reserve(result.functions.len)) {
+    return nullptr;
+  }
+
+  for (size_t i = 0; i < result.functions.len; i++) {
+    compilationInfo.funcData.infallibleEmplaceBack(cx);
+
+    if (!ConvertScriptStencil(cx, result, result.functions.data[i], allAtoms,
+                              compilationInfo, compilationInfo.funcData[i])) {
+      return nullptr;
+    }
   }
 
   if (!compilationInfo.instantiateStencils()) {
