@@ -148,6 +148,29 @@ nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
   return NS_OK;
 }
 
+bool imgRequest::CanReuseWithoutValidation(dom::Document* aDoc) const {
+  // If the request's loadId is the same as the aLoadingDocument, then it is ok
+  // to use this one because it has already been validated for this context.
+  // XXX: nullptr seems to be a 'special' key value that indicates that NO
+  //      validation is required.
+  // XXX: we also check the window ID because the loadID() can return a reused
+  //      pointer of a document. This can still happen for non-document image
+  //      cache entries.
+  void* key = (void*)aDoc;
+  uint64_t innerWindowID = aDoc ? aDoc->InnerWindowID() : 0;
+  if (LoadId() == key && InnerWindowID() == innerWindowID) {
+    return true;
+  }
+
+  // As a special-case, if this is a print preview document, also validate on
+  // the original document. This allows to print uncacheable images.
+  if (dom::Document* original = aDoc ? aDoc->GetOriginalDocument() : nullptr) {
+    return CanReuseWithoutValidation(original);
+  }
+
+  return false;
+}
+
 void imgRequest::ClearLoader() { mLoader = nullptr; }
 
 already_AddRefed<ProgressTracker> imgRequest::GetProgressTracker() const {
