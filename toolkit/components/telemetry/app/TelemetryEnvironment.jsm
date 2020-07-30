@@ -262,7 +262,16 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["extensions.enabledScopes", { what: RECORD_PREF_VALUE }],
   ["extensions.blocklist.enabled", { what: RECORD_PREF_VALUE }],
   ["extensions.formautofill.addresses.enabled", { what: RECORD_PREF_VALUE }],
+  [
+    "extensions.formautofill.addresses.capture.enabled",
+    { what: RECORD_PREF_VALUE },
+  ],
   ["extensions.formautofill.creditCards.enabled", { what: RECORD_PREF_VALUE }],
+  [
+    "extensions.formautofill.creditCards.available",
+    { what: RECORD_PREF_VALUE },
+  ],
+  ["extensions.formautofill.creditCards.used", { what: RECORD_PREF_VALUE }],
   ["extensions.strictCompatibility", { what: RECORD_PREF_VALUE }],
   ["extensions.update.enabled", { what: RECORD_PREF_VALUE }],
   ["extensions.update.url", { what: RECORD_PREF_VALUE }],
