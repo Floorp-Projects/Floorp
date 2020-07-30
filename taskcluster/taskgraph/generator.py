@@ -363,7 +363,8 @@ class TaskGraphGenerator(object):
         yield verifications('optimized_task_graph', optimized_task_graph, graph_config, parameters)
 
         morphed_task_graph, label_to_taskid = morph(
-            optimized_task_graph, label_to_taskid, parameters, graph_config)
+            optimized_task_graph, label_to_taskid, parameters, graph_config,
+            self._decision_task_id)
 
         yield 'label_to_taskid', label_to_taskid
         yield verifications('morphed_task_graph', morphed_task_graph, graph_config, parameters)
