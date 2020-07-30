@@ -11,7 +11,6 @@
 const { Ci, Cc } = require("chrome");
 const {
   CanvasFrameAnonymousContentHelper,
-  createNode,
 } = require("devtools/server/actors/highlighters/utils/markup");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -76,12 +75,12 @@ EyeDropper.prototype = {
 
   _buildMarkup() {
     // Highlighter main container.
-    const container = createNode(this.win, {
+    const container = this.markup.createNode({
       attributes: { class: "highlighter-container" },
     });
 
     // Wrapper element.
-    const wrapper = createNode(this.win, {
+    const wrapper = this.markup.createNode({
       parent: container,
       attributes: {
         id: "root",
@@ -92,7 +91,7 @@ EyeDropper.prototype = {
     });
 
     // The magnifier canvas element.
-    createNode(this.win, {
+    this.markup.createNode({
       parent: wrapper,
       nodeType: "canvas",
       attributes: {
@@ -105,18 +104,18 @@ EyeDropper.prototype = {
     });
 
     // The color label element.
-    const colorLabelContainer = createNode(this.win, {
+    const colorLabelContainer = this.markup.createNode({
       parent: wrapper,
       attributes: { class: "color-container" },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "div",
       parent: colorLabelContainer,
       attributes: { id: "color-preview", class: "color-preview" },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createNode(this.win, {
+    this.markup.createNode({
       nodeType: "div",
       parent: colorLabelContainer,
       attributes: { id: "color-value", class: "color-value" },

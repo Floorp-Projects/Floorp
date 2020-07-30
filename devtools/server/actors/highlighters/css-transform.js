@@ -10,8 +10,6 @@ const {
 const {
   CanvasFrameAnonymousContentHelper,
   getComputedStyle,
-  createSVGNode,
-  createNode,
 } = require("devtools/server/actors/highlighters/utils/markup");
 const {
   setIgnoreLayoutChanges,
@@ -42,14 +40,14 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
   }
 
   _buildMarkup() {
-    const container = createNode(this.win, {
+    const container = this.markup.createNode({
       attributes: {
         class: "highlighter-container",
       },
     });
 
     // The root wrapper is used to unzoom the highlighter when needed.
-    const rootWrapper = createNode(this.win, {
+    const rootWrapper = this.markup.createNode({
       parent: container,
       attributes: {
         id: "root",
@@ -58,7 +56,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const svg = createSVGNode(this.win, {
+    const svg = this.markup.createSVGNode({
       nodeType: "svg",
       parent: rootWrapper,
       attributes: {
@@ -73,7 +71,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
     // Add a marker tag to the svg root for the arrow tip
     this.markerId = "arrow-marker-" + MARKER_COUNTER;
     MARKER_COUNTER++;
-    const marker = createSVGNode(this.win, {
+    const marker = this.markup.createSVGNode({
       nodeType: "marker",
       parent: svg,
       attributes: {
@@ -88,7 +86,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: marker,
       attributes: {
@@ -97,13 +95,13 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       },
     });
 
-    const shapesGroup = createSVGNode(this.win, {
+    const shapesGroup = this.markup.createSVGNode({
       nodeType: "g",
       parent: svg,
     });
 
     // Create the 2 polygons (transformed and untransformed)
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "polygon",
       parent: shapesGroup,
       attributes: {
@@ -112,7 +110,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       },
       prefix: this.ID_CLASS_PREFIX,
     });
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "polygon",
       parent: shapesGroup,
       attributes: {
@@ -124,7 +122,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
 
     // Create the arrows
     for (const nb of ["1", "2", "3", "4"]) {
-      createSVGNode(this.win, {
+      this.markup.createSVGNode({
         nodeType: "line",
         parent: shapesGroup,
         attributes: {
