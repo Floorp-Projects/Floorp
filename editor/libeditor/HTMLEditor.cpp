@@ -4217,16 +4217,6 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
                                newLeftContent);
   }
 
-  if (!mActionListeners.IsEmpty()) {
-    for (auto& listener : mActionListeners.Clone()) {
-      DebugOnly<nsresult> rvIgnored = listener->DidSplitNode(
-          aStartOfRightNode.GetContainer(), newLeftContent);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "nsIEditActionListener::DidSplitNode() failed, but ignored");
-    }
-  }
-
   if (aError.Failed()) {
     return nullptr;
   }

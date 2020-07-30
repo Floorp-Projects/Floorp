@@ -1490,16 +1490,6 @@ already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
     TopLevelEditSubActionDataRef().DidCreateElement(*this, *newElement);
   }
 
-  if (!mActionListeners.IsEmpty()) {
-    for (auto& listener : mActionListeners.Clone()) {
-      DebugOnly<nsresult> rvIgnored = listener->DidCreateNode(
-          nsDependentAtomString(&aTagName), newElement, rv);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "nsIEditActionListener::DidCreateNode() failed, but ignored");
-    }
-  }
-
   return newElement.forget();
 }
 
@@ -1561,16 +1551,6 @@ nsresult EditorBase::InsertNodeWithTransaction(
 
   if (AsHTMLEditor()) {
     TopLevelEditSubActionDataRef().DidInsertContent(*this, aContentToInsert);
-  }
-
-  if (!mActionListeners.IsEmpty()) {
-    for (auto& listener : mActionListeners.Clone()) {
-      DebugOnly<nsresult> rvIgnored =
-          listener->DidInsertNode(&aContentToInsert, rv);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "nsIEditActionListener::DidInsertNode() failed, but ignored");
-    }
   }
 
   return rv;
@@ -4093,21 +4073,8 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
         "TextServicesDocument::DidDeleteNode() must not destroy the editor");
   }
 
-  // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
-  AutoActionListenerArray listeners(mActionListeners.Clone());
-  if (!deleteContent) {
-    for (auto& listener : mActionListeners) {
-      DebugOnly<nsresult> rvIgnored =
-          listener->DidDeleteSelection(SelectionRefPtr());
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "nsIEditActionListener::DidDeleteSelection() failed, but ignored");
-      MOZ_DIAGNOSTIC_ASSERT(destroyedByTransaction || !Destroyed(),
-                            "nsIEditActionListener::DidDeleteSelection() must "
-                            "not destroy the editor");
-    }
-  } else if (!deleteCharData) {
-    for (auto& listener : mActionListeners) {
+  if (!mActionListeners.IsEmpty() && deleteContent && !deleteCharData) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored =
           listener->DidDeleteNode(deleteContent, rv);
       NS_WARNING_ASSERTION(

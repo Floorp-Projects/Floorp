@@ -29,39 +29,11 @@ Editor Action Listener interface to outside world
 interface nsIEditActionListener : nsISupports
 {
   /**
-   * Called after the editor creates a node.
-   * @param aTag      The tag name of the DOM Node to create.
-   * @param aNewNode  The DOM Node that was created.
-   * @param aResult   The result of the create node operation.
-   */
-  void DidCreateNode(in AString aTag,
-                     in Node aNewNode,
-                     in nsresult aResult);
-
-  /**
-   * Called after the editor inserts a node.
-   * @param aNode     The DOM Node to insert.
-   * @param aResult   The result of the insert node operation.
-   */
-  void DidInsertNode(in Node aNode,
-                     in nsresult aResult);
-
-  /**
    * Called after the editor deletes a node.
    * @param aChild    The node to delete
    * @param aResult   The result of the delete node operation.
    */
   void DidDeleteNode(in Node aChild, in nsresult aResult);
-
-  /**
-   * Called after the editor splits a node.
-   * @param aExistingRightNode   The node which was split.  It will become the
-   *                             next sibling of the new left node.
-   * @param aNewLeftNode         The new node resulting from the split, becomes
-   *                             the previous sibling of aExistingRightNode.
-   */
-  void DidSplitNode(in Node aExistingRightNode,
-                    in Node aNewLeftNode);
 
   /**
    * Called after the editor joins 2 nodes.
@@ -104,10 +76,4 @@ interface nsIEditActionListener : nsISupports
    * @param aSelection   The selection to be deleted
    */
   void WillDeleteSelection(in Selection aSelection);
-
-  /**
-   * Called after the editor deletes the selection.
-   * @param aSelection   The selection, after deletion
-   */
-  void DidDeleteSelection(in Selection aSelection);
 };
