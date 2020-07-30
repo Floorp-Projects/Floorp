@@ -10,19 +10,20 @@ import io.mockk.verify
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.SessionUseCases
 import org.junit.Test
+import org.mozilla.fenix.R
 
 class TabHistoryControllerTest {
 
-    val sessionManager: SessionManager = mockk(relaxed = true)
-    val navController: NavController = mockk(relaxed = true)
-    val sessionUseCases = SessionUseCases(sessionManager)
-    val goToHistoryIndexUseCase = sessionUseCases.goToHistoryIndex
-    val controller = DefaultTabHistoryController(
+    private val sessionManager: SessionManager = mockk(relaxed = true)
+    private val navController: NavController = mockk(relaxed = true)
+    private val sessionUseCases = SessionUseCases(sessionManager)
+    private val goToHistoryIndexUseCase = sessionUseCases.goToHistoryIndex
+    private val controller = DefaultTabHistoryController(
         navController = navController,
         goToHistoryIndexUseCase = goToHistoryIndexUseCase
     )
 
-    val currentItem = TabHistoryItem(
+    private val currentItem = TabHistoryItem(
         index = 0,
         title = "",
         url = "",
@@ -33,6 +34,7 @@ class TabHistoryControllerTest {
     fun handleGoToHistoryIndex() {
         controller.handleGoToHistoryItem(currentItem)
 
+        verify { navController.popBackStack(R.id.browserFragment, false) }
         verify { goToHistoryIndexUseCase.invoke(currentItem.index) }
     }
 }
