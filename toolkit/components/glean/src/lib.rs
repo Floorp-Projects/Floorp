@@ -29,7 +29,7 @@ extern crate xpcom;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
-use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
+use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_CONTENT, NS_OK};
 use nsstring::{nsACString, nsCStr};
 use xpcom::interfaces::{mozIViaduct, nsIObserver, nsIPrefBranch, nsISupports};
 use xpcom::{RefPtr, XpCom};
@@ -209,4 +209,40 @@ pub unsafe extern "C" fn fog_use_ipc_buf(buf: *const u8, buf_len: usize) {
     /*if res.is_err() {
         // TODO: Record the error.
     }*/
+}
+
+#[no_mangle]
+/// Sets the debug tag for pings assembled in the future.
+/// Returns an error result if the provided value is not a valid tag.
+pub unsafe extern "C" fn fog_set_debug_view_tag(value: &nsACString) -> nsresult {
+    let result = api::set_debug_view_tag(&value.to_string());
+    if result {
+        return NS_OK;
+    } else {
+        return NS_ERROR_FAILURE;
+    }
+}
+
+#[no_mangle]
+/// Submits a ping by name.
+/// Returns NS_OK if the ping was successfully submitted, NS_ERROR_NO_CONTENT
+/// if the ping wasn't sent, or NS_ERROR_FAILURE if some part of the ping
+/// submission mechanism failed.
+pub unsafe extern "C" fn fog_submit_ping(ping_name: &nsACString) -> nsresult {
+    match api::submit_ping(&ping_name.to_string()) {
+        Ok(true) => NS_OK,
+        Ok(false) => NS_ERROR_NO_CONTENT,
+        _ => NS_ERROR_FAILURE,
+    }
+}
+
+#[no_mangle]
+/// Turns ping logging on or off.
+/// Returns an error if the logging failed to be configured.
+pub unsafe extern "C" fn fog_set_log_pings(value: bool) -> nsresult {
+    if api::set_log_pings(value) {
+        return NS_OK;
+    } else {
+        return NS_ERROR_FAILURE;
+    }
 }
