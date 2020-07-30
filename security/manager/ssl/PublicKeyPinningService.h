@@ -11,6 +11,7 @@
 #include "nsNSSCertificate.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/Span.h"
 #include "mozpkix/Time.h"
 
 namespace mozilla {
@@ -34,7 +35,7 @@ class PublicKeyPinningService {
    * that would otherwise be valid for it
    */
   static nsresult ChainHasValidPins(
-      const nsTArray<RefPtr<nsIX509Cert>>& certList, const char* hostname,
+      const nsTArray<Span<const uint8_t>>& certList, const char* hostname,
       mozilla::pkix::Time time, bool enforceTestMode,
       const OriginAttributes& originAttributes,
       /*out*/ bool& chainHasValidPins,

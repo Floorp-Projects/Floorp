@@ -26,10 +26,10 @@ namespace psm {
 #define ROOT_CERTIFICATE_ENTERPRISE_ROOT 3
 #define ROOT_CERTIFICATE_HASH_FAILURE -1
 
-int32_t RootCABinNumber(const Span<uint8_t> cert);
+int32_t RootCABinNumber(Span<const uint8_t> cert);
 
 void AccumulateTelemetryForRootCA(mozilla::Telemetry::HistogramID probe,
-                                  const Span<uint8_t> cert);
+                                  const Span<const uint8_t> cert);
 
 }  // namespace psm
 }  // namespace mozilla
