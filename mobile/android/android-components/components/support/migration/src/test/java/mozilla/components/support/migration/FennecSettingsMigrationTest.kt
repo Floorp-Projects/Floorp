@@ -6,6 +6,8 @@ package mozilla.components.support.migration
 
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.migration.FennecSettingsMigration.FENIX_PREFS_EXPERIMENTATION_KEY
+import mozilla.components.support.migration.FennecSettingsMigration.FENIX_PREFS_MARKETING_TELEMETRY_KEY
 import mozilla.components.support.migration.FennecSettingsMigration.FENIX_PREFS_TELEMETRY_KEY
 import mozilla.components.support.migration.FennecSettingsMigration.FENIX_SHARED_PREFS_NAME
 import mozilla.components.support.migration.FennecSettingsMigration.FENNEC_APP_SHARED_PREFS_NAME
@@ -67,5 +69,7 @@ class FennecSettingsMigrationTest {
         }
 
         assertEquals(isFHREnabled, fenixPrefs.getBoolean(FENIX_PREFS_TELEMETRY_KEY, !isFHREnabled))
+        assertEquals(isFHREnabled, fenixPrefs.getBoolean(FENIX_PREFS_MARKETING_TELEMETRY_KEY, !isFHREnabled))
+        assertEquals(isFHREnabled, fenixPrefs.getBoolean(FENIX_PREFS_EXPERIMENTATION_KEY, !isFHREnabled))
     }
 }

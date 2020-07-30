@@ -22,6 +22,8 @@ internal object FennecSettingsMigration {
     @VisibleForTesting const val FENIX_SHARED_PREFS_NAME = "fenix_preferences"
     const val FENNEC_PREFS_FHR_KEY = "android.not_a_preference.healthreport.uploadEnabled"
     const val FENIX_PREFS_TELEMETRY_KEY = "pref_key_telemetry"
+    const val FENIX_PREFS_MARKETING_TELEMETRY_KEY = "pref_key_marketing_telemetry"
+    const val FENIX_PREFS_EXPERIMENTATION_KEY = "pref_key_experimentation"
 
     /**
      * Migrate all Fennec - Fenix common SharedPreferences.
@@ -70,6 +72,8 @@ internal object FennecSettingsMigration {
         // Update Fenix prefs.
         fenixPrefs.edit()
             .putBoolean(FENIX_PREFS_TELEMETRY_KEY, fennecFHRState)
+            .putBoolean(FENIX_PREFS_MARKETING_TELEMETRY_KEY, fennecFHRState)
+            .putBoolean(FENIX_PREFS_EXPERIMENTATION_KEY, fennecFHRState)
             .apply()
 
         // Make sure it worked.
