@@ -1664,8 +1664,7 @@ template <typename Buffer>
 static void StoreMarker(Buffer& aBuffer, int aThreadId, const char* aMarkerName,
                         const MarkerTiming& aMarkerTiming,
                         JS::ProfilingCategoryPair aCategoryPair,
-                        const ProfilerMarkerPayload* aPayload,
-                        const mozilla::TimeStamp& aTime) {
+                        const ProfilerMarkerPayload* aPayload) {
   aBuffer.PutObjects(ProfileBufferEntry::Kind::MarkerData, aThreadId,
                      WrapProfileBufferUnownedCString(aMarkerName),
                      aMarkerTiming.GetStartTime(), aMarkerTiming.GetEndTime(),
@@ -2768,7 +2767,7 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
       // Put the marker inside the buffer
       StoreMarker(aProfileBuffer, threadId, markerName.get(),
-                  JS::ProfilingCategoryPair::JAVA_ANDROID, &payload, startTime);
+                  JS::ProfilingCategoryPair::JAVA_ANDROID, &payload);
     } else {
       // This marker has a text
       nsCString textString = text->ToCString();
@@ -2777,7 +2776,7 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
       // Put the marker inside the buffer
       StoreMarker(aProfileBuffer, threadId, markerName.get(),
-                  JS::ProfilingCategoryPair::JAVA_ANDROID, &payload, startTime);
+                  JS::ProfilingCategoryPair::JAVA_ANDROID, &payload);
     }
   }
 }
@@ -5373,11 +5372,8 @@ static void racy_profiler_add_marker(const char* aMarkerName,
     return;
   }
 
-  TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
-                         ? aPayload->GetStartTime()
-                         : TimeStamp::NowUnfuzzed();
   StoreMarker(CorePS::CoreBuffer(), racyRegisteredThread->ThreadId(),
-              aMarkerName, aMarkerTiming, aCategoryPair, aPayload, origin);
+              aMarkerName, aMarkerTiming, aCategoryPair, aPayload);
 }
 
 void profiler_add_marker(const char* aMarkerName,
@@ -5495,13 +5491,9 @@ static void maybelocked_profiler_add_marker_for_thread(
   }
 #endif
 
-  TimeStamp origin = (!aPayload.GetStartTime().IsNull())
-                         ? aPayload.GetStartTime()
-                         : TimeStamp::NowUnfuzzed();
-
   StoreMarker(CorePS::CoreBuffer(), aThreadId, aMarkerName,
               get_marker_timing_from_payload(aPayload), aCategoryPair,
-              &aPayload, origin);
+              &aPayload);
 }
 
 void profiler_add_marker_for_thread(int aThreadId,
