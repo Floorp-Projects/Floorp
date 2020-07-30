@@ -19,7 +19,6 @@ const SUGGESTION_ENGINE_NAME =
 XPCOMUtils.defineLazyModuleGetters(this, {
   SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-  URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
 function searchInAwesomebar(value, win = window) {
@@ -219,7 +218,7 @@ add_task(async function test_simpleQuery() {
 
   TelemetryTestUtils.assertHistogram(
     resultTypeHist,
-    URLBAR_SELECTED_RESULT_TYPES.searchengine,
+    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
     1
   );
 
@@ -316,7 +315,7 @@ add_task(async function test_searchAlias() {
 
   TelemetryTestUtils.assertHistogram(
     resultTypeHist,
-    URLBAR_SELECTED_RESULT_TYPES.searchengine,
+    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
     1
   );
 
@@ -467,7 +466,7 @@ add_task(async function test_oneOff_enter() {
 
   TelemetryTestUtils.assertHistogram(
     resultTypeHist,
-    URLBAR_SELECTED_RESULT_TYPES.searchengine,
+    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
     1
   );
 
@@ -633,7 +632,7 @@ add_task(async function test_suggestion_click() {
 
     TelemetryTestUtils.assertHistogram(
       resultTypeHist,
-      URLBAR_SELECTED_RESULT_TYPES.searchsuggestion,
+      UrlbarUtils.SELECTED_RESULT_TYPES.searchsuggestion,
       1
     );
 
@@ -832,7 +831,7 @@ add_task(async function test_formHistory_click() {
 
     TelemetryTestUtils.assertHistogram(
       resultTypeHist,
-      URLBAR_SELECTED_RESULT_TYPES.formhistory,
+      UrlbarUtils.SELECTED_RESULT_TYPES.formhistory,
       1
     );
 
