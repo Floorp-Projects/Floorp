@@ -671,11 +671,14 @@ class Selection final : public nsSupportsWeakReference,
 
   friend struct AutoUserInitiated;
   struct MOZ_RAII AutoUserInitiated {
-    explicit AutoUserInitiated(Selection* aSelection)
+    explicit AutoUserInitiated(
+        Selection* aSelection MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mSavedValue(aSelection->mUserInitiated) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       aSelection->mUserInitiated = true;
     }
     AutoRestore<bool> mSavedValue;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
  private:
@@ -917,11 +920,14 @@ class MOZ_STACK_CLASS SelectionBatcher final {
 class MOZ_RAII AutoHideSelectionChanges final {
  private:
   RefPtr<Selection> mSelection;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
  public:
   explicit AutoHideSelectionChanges(const nsFrameSelection* aFrame);
 
-  explicit AutoHideSelectionChanges(Selection* aSelection)
+  explicit AutoHideSelectionChanges(
+      Selection* aSelection MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mSelection(aSelection) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     mSelection = aSelection;
     if (mSelection) {
       mSelection->AddSelectionChangeBlocker();

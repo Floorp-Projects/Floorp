@@ -49,10 +49,11 @@ static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAngle>
 // DidChangeOrient with mozAutoDocUpdate.
 class MOZ_RAII AutoChangeOrientNotifier {
  public:
-  explicit AutoChangeOrientNotifier(SVGAnimatedOrient* aOrient,
-                                    SVGElement* aSVGElement,
-                                    bool aDoSetAttr = true)
+  explicit AutoChangeOrientNotifier(
+      SVGAnimatedOrient* aOrient, SVGElement* aSVGElement,
+      bool aDoSetAttr = true MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mOrient(aOrient), mSVGElement(aSVGElement), mDoSetAttr(aDoSetAttr) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mOrient, "Expecting non-null orient");
     if (mSVGElement && mDoSetAttr) {
       mUpdateBatch.emplace(mSVGElement->GetComposedDoc(), true);
@@ -77,6 +78,7 @@ class MOZ_RAII AutoChangeOrientNotifier {
   SVGElement* const mSVGElement;
   nsAttrValue mEmptyOrOldValue;
   bool mDoSetAttr;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 static bool IsValidAngleUnitType(uint16_t unit) {

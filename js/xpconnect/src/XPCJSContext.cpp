@@ -93,10 +93,12 @@ static void WatchdogMain(void* arg);
 class Watchdog;
 class WatchdogManager;
 class MOZ_RAII AutoLockWatchdog final {
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   Watchdog* const mWatchdog;
 
  public:
-  explicit AutoLockWatchdog(Watchdog* aWatchdog);
+  explicit AutoLockWatchdog(
+      Watchdog* aWatchdog MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~AutoLockWatchdog();
 };
 
@@ -448,7 +450,10 @@ class WatchdogManager {
   PRTime mTimestamps[kWatchdogTimestampCategoryCount - 1];
 };
 
-AutoLockWatchdog::AutoLockWatchdog(Watchdog* aWatchdog) : mWatchdog(aWatchdog) {
+AutoLockWatchdog::AutoLockWatchdog(
+    Watchdog* aWatchdog MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : mWatchdog(aWatchdog) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (mWatchdog) {
     PR_Lock(mWatchdog->GetLock());
   }

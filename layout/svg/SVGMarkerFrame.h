@@ -111,11 +111,13 @@ class SVGMarkerFrame final : public SVGContainerFrame {
   class MOZ_RAII AutoMarkerReferencer {
    public:
     AutoMarkerReferencer(SVGMarkerFrame* aFrame,
-                         SVGGeometryFrame* aMarkedFrame);
+                         SVGGeometryFrame* aMarkedFrame
+                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~AutoMarkerReferencer();
 
    private:
     SVGMarkerFrame* mFrame;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
   // SVGMarkerFrame methods:

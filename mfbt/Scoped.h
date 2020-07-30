@@ -46,6 +46,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/GuardObjects.h"
 
 namespace mozilla {
 
@@ -69,12 +70,20 @@ class MOZ_NON_TEMPORARY_CLASS Scoped {
  public:
   typedef typename Traits::type Resource;
 
-  explicit Scoped() : mValue(Traits::empty()) {}
+  explicit Scoped(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+      : mValue(Traits::empty()) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
-  explicit Scoped(const Resource& aValue) : mValue(aValue) {}
+  explicit Scoped(const Resource& aValue MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mValue(aValue) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   /* Move constructor. */
-  Scoped(Scoped&& aOther) : mValue(std::move(aOther.mValue)) {
+  Scoped(Scoped&& aOther MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mValue(std::move(aOther.mValue)) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     aOther.mValue = Traits::empty();
   }
 
@@ -144,6 +153,7 @@ class MOZ_NON_TEMPORARY_CLASS Scoped {
 
  private:
   Resource mValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /*
@@ -154,25 +164,28 @@ class MOZ_NON_TEMPORARY_CLASS Scoped {
  * @param Traits A struct implementing clean-up. See the implementations
  * for more details.
  */
-#define SCOPED_TEMPLATE(name, Traits)             \
-  template <typename Type>                        \
-  struct MOZ_NON_TEMPORARY_CLASS name             \
-      : public mozilla::Scoped<Traits<Type> > {   \
-    typedef mozilla::Scoped<Traits<Type> > Super; \
-    typedef typename Super::Resource Resource;    \
-    name& operator=(Resource aRhs) {              \
-      Super::operator=(aRhs);                     \
-      return *this;                               \
-    }                                             \
-    name& operator=(name&& aRhs) = default;       \
-                                                  \
-    explicit name() : Super() {}                  \
-    explicit name(Resource aRhs) : Super(aRhs) {} \
-    name(name&& aRhs) : Super(std::move(aRhs)) {} \
-                                                  \
-   private:                                       \
-    explicit name(const name&) = delete;          \
-    name& operator=(const name&) = delete;        \
+#define SCOPED_TEMPLATE(name, Traits)                                         \
+  template <typename Type>                                                    \
+  struct MOZ_NON_TEMPORARY_CLASS name                                         \
+      : public mozilla::Scoped<Traits<Type> > {                               \
+    typedef mozilla::Scoped<Traits<Type> > Super;                             \
+    typedef typename Super::Resource Resource;                                \
+    name& operator=(Resource aRhs) {                                          \
+      Super::operator=(aRhs);                                                 \
+      return *this;                                                           \
+    }                                                                         \
+    name& operator=(name&& aRhs) = default;                                   \
+                                                                              \
+    explicit name(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)                       \
+        : Super(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {}            \
+    explicit name(Resource aRhs MOZ_GUARD_OBJECT_NOTIFIER_PARAM)              \
+        : Super(aRhs MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}            \
+    name(name&& aRhs MOZ_GUARD_OBJECT_NOTIFIER_PARAM)                         \
+        : Super(std::move(aRhs) MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {} \
+                                                                              \
+   private:                                                                   \
+    explicit name(const name&) = delete;                                      \
+    name& operator=(const name&) = delete;                                    \
   };
 
 /*

@@ -74,8 +74,10 @@ JSObject* DOMSVGTransform::WrapObject(JSContext* aCx,
 // and DidChangeTransformList.
 class MOZ_RAII AutoChangeTransformNotifier {
  public:
-  explicit AutoChangeTransformNotifier(DOMSVGTransform* aTransform)
+  explicit AutoChangeTransformNotifier(
+      DOMSVGTransform* aTransform MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mTransform(aTransform) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTransform, "Expecting non-null transform");
     if (mTransform->HasOwner()) {
       mUpdateBatch.emplace(mTransform->Element()->GetComposedDoc(), true);
@@ -100,6 +102,7 @@ class MOZ_RAII AutoChangeTransformNotifier {
   Maybe<mozAutoDocUpdate> mUpdateBatch;
   DOMSVGTransform* const mTransform;
   nsAttrValue mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 //----------------------------------------------------------------------

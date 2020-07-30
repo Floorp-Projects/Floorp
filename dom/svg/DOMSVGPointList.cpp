@@ -74,9 +74,11 @@ NS_INTERFACE_MAP_END
 // DidChangePointList.
 class MOZ_RAII AutoChangePointListNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangePointListNotifier(DOMSVGPointList* aPointList)
+  explicit AutoChangePointListNotifier(
+      DOMSVGPointList* aPointList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mozAutoDocUpdate(aPointList->Element()->GetComposedDoc(), true),
         mPointList(aPointList) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mPointList, "Expecting non-null pointList");
     mEmptyOrOldValue = mPointList->Element()->WillChangePointList(*this);
   }
@@ -91,6 +93,7 @@ class MOZ_RAII AutoChangePointListNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGPointList* const mPointList;
   nsAttrValue mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /* static */

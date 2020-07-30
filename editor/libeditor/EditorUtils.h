@@ -10,6 +10,7 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
@@ -699,8 +700,9 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
 class MOZ_RAII AutoTransactionBatchExternal final {
  public:
   MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatchExternal(
-      EditorBase& aEditorBase)
+      EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mEditorBase(aEditorBase) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_KnownLive(mEditorBase).BeginTransaction();
   }
 
@@ -710,6 +712,7 @@ class MOZ_RAII AutoTransactionBatchExternal final {
 
  private:
   EditorBase& mEditorBase;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_STACK_CLASS AutoRangeArray final {
@@ -733,8 +736,8 @@ class MOZ_STACK_CLASS AutoRangeArray final {
 
 class MOZ_RAII DOMIterator {
  public:
-  explicit DOMIterator();
-  explicit DOMIterator(nsINode& aNode);
+  explicit DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   virtual ~DOMIterator() = default;
 
   nsresult Init(nsRange& aRange);
@@ -763,18 +766,20 @@ class MOZ_RAII DOMIterator {
  protected:
   ContentIteratorBase* mIter;
   PostContentIterator mPostOrderIter;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII DOMSubtreeIterator final : public DOMIterator {
  public:
-  explicit DOMSubtreeIterator();
+  explicit DOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   virtual ~DOMSubtreeIterator() = default;
 
   nsresult Init(nsRange& aRange);
 
  private:
   ContentSubtreeIterator mSubtreeIter;
-  explicit DOMSubtreeIterator(nsINode& aNode) = delete;
+  explicit DOMSubtreeIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM) =
+      delete;
 };
 
 /**

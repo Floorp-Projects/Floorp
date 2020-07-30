@@ -7,6 +7,7 @@
 #ifndef mozilla_AutoGlobalTimelineMarker_h_
 #define mozilla_AutoGlobalTimelineMarker_h_
 
+#include "mozilla/GuardObjects.h"
 #include "TimelineMarkerEnums.h"
 
 namespace mozilla {
@@ -27,6 +28,7 @@ namespace mozilla {
 //       ...
 //     }
 class MOZ_RAII AutoGlobalTimelineMarker {
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
   // The name of the marker we are adding.
   const char* mName;
@@ -36,7 +38,8 @@ class MOZ_RAII AutoGlobalTimelineMarker {
  public:
   explicit AutoGlobalTimelineMarker(
       const char* aName,
-      MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
+      MarkerStackRequest aStackRequest =
+          MarkerStackRequest::STACK MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~AutoGlobalTimelineMarker();
 
   AutoGlobalTimelineMarker(const AutoGlobalTimelineMarker& aOther) = delete;

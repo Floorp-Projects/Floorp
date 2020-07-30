@@ -192,6 +192,7 @@ using NewObjectMetadataState =
     mozilla::Variant<ImmediateMetadata, DelayMetadata, PendingMetadata>;
 
 class MOZ_RAII AutoSetNewObjectMetadata {
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
   JSContext* cx_;
   Rooted<NewObjectMetadataState> prevState_;
@@ -200,7 +201,8 @@ class MOZ_RAII AutoSetNewObjectMetadata {
   void operator=(const AutoSetNewObjectMetadata& aOther) = delete;
 
  public:
-  explicit AutoSetNewObjectMetadata(JSContext* cx);
+  explicit AutoSetNewObjectMetadata(
+      JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~AutoSetNewObjectMetadata();
 };
 
@@ -851,14 +853,17 @@ namespace js {
 
 class MOZ_RAII AssertRealmUnchanged {
  public:
-  explicit AssertRealmUnchanged(JSContext* cx)
-      : cx(cx), oldRealm(cx->realm()) {}
+  explicit AssertRealmUnchanged(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx), oldRealm(cx->realm()) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   ~AssertRealmUnchanged() { MOZ_ASSERT(cx->realm() == oldRealm); }
 
  protected:
   JSContext* const cx;
   JS::Realm* const oldRealm;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 // AutoRealm can be used to enter the realm of a JSObject, JSScript or

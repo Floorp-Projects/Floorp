@@ -27,8 +27,15 @@ class AutoUnlockGC;
  */
 class MOZ_RAII AutoLockGC {
  public:
-  explicit AutoLockGC(gc::GCRuntime* gc) : gc(gc) { lock(); }
-  explicit AutoLockGC(JSRuntime* rt) : AutoLockGC(&rt->gc) {}
+  explicit AutoLockGC(gc::GCRuntime* gc MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : gc(gc) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    lock();
+  }
+  explicit AutoLockGC(JSRuntime* rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoLockGC(&rt->gc) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   ~AutoLockGC() { lockGuard_.reset(); }
 
@@ -49,6 +56,7 @@ class MOZ_RAII AutoLockGC {
 
  private:
   mozilla::Maybe<js::LockGuard<js::Mutex>> lockGuard_;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   AutoLockGC(const AutoLockGC&) = delete;
   AutoLockGC& operator=(const AutoLockGC&) = delete;
@@ -94,12 +102,17 @@ class MOZ_RAII AutoLockGCBgAlloc : public AutoLockGC {
 
 class MOZ_RAII AutoUnlockGC {
  public:
-  explicit AutoUnlockGC(AutoLockGC& lock) : lock(lock) { lock.unlock(); }
+  explicit AutoUnlockGC(AutoLockGC& lock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : lock(lock) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    lock.unlock();
+  }
 
   ~AutoUnlockGC() { lock.lock(); }
 
  private:
   AutoLockGC& lock;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   AutoUnlockGC(const AutoUnlockGC&) = delete;
   AutoUnlockGC& operator=(const AutoUnlockGC&) = delete;

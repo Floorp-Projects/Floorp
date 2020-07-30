@@ -25,6 +25,7 @@
 #include "mozilla/CallState.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"
@@ -3460,10 +3461,14 @@ nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(
 
 class MOZ_RAII nsAutoScriptBlocker {
  public:
-  explicit nsAutoScriptBlocker() { nsContentUtils::AddScriptBlocker(); }
+  explicit nsAutoScriptBlocker(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    nsContentUtils::AddScriptBlocker();
+  }
   ~nsAutoScriptBlocker() { nsContentUtils::RemoveScriptBlocker(); }
 
  private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_STACK_CLASS nsAutoScriptBlockerSuppressNodeRemoved

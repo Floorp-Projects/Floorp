@@ -262,9 +262,11 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
 class MOZ_RAII AutoSVGTimeSetRestore {
  public:
-  AutoSVGTimeSetRestore(dom::SVGSVGElement* aRootElem, float aFrameTime)
+  AutoSVGTimeSetRestore(dom::SVGSVGElement* aRootElem,
+                        float aFrameTime MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mRootElem(aRootElem),
         mOriginalTime(mRootElem->GetCurrentTimeAsFloat()) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     mRootElem->SetCurrentTime(
         aFrameTime);  // Does nothing if there's no change.
   }
@@ -274,13 +276,16 @@ class MOZ_RAII AutoSVGTimeSetRestore {
  private:
   const RefPtr<dom::SVGSVGElement> mRootElem;
   const float mOriginalTime;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII AutoPreserveAspectRatioOverride {
  public:
   AutoPreserveAspectRatioOverride(const Maybe<SVGImageContext>& aSVGContext,
-                                  dom::SVGSVGElement* aRootElem)
+                                  dom::SVGSVGElement* aRootElem
+                                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mRootElem(aRootElem), mDidOverride(false) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mRootElem, "No SVG/Symbol node to manage?");
 
     if (aSVGContext.isSome() &&
@@ -303,6 +308,7 @@ class MOZ_RAII AutoPreserveAspectRatioOverride {
  private:
   const RefPtr<dom::SVGSVGElement> mRootElem;
   bool mDidOverride;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 }  // namespace mozilla

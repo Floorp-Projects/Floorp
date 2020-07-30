@@ -2292,8 +2292,10 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoTransactionBatch final {
    public:
-    MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatch(EditorBase& aEditorBase)
+    MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatch(
+        EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       MOZ_KnownLive(mEditorBase).BeginTransactionInternal();
     }
 
@@ -2303,6 +2305,7 @@ class EditorBase : public nsIEditor,
 
    protected:
     EditorBase& mEditorBase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
   /**
@@ -2313,14 +2316,18 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoPlaceholderBatch final {
    public:
-    explicit AutoPlaceholderBatch(EditorBase& aEditorBase)
+    explicit AutoPlaceholderBatch(
+        EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       mEditorBase->BeginPlaceholderTransaction(*nsGkAtoms::_empty);
     }
 
     AutoPlaceholderBatch(EditorBase& aEditorBase,
-                         nsStaticAtom& aTransactionName)
+                         nsStaticAtom& aTransactionName
+                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       mEditorBase->BeginPlaceholderTransaction(aTransactionName);
     }
 
@@ -2328,6 +2335,7 @@ class EditorBase : public nsIEditor,
 
    protected:
     OwningNonNull<EditorBase> mEditorBase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
   /**
@@ -2340,7 +2348,8 @@ class EditorBase : public nsIEditor,
      * Constructor responsible for remembering all state needed to restore
      * aSelection.
      */
-    explicit AutoSelectionRestorer(EditorBase& aEditorBase);
+    explicit AutoSelectionRestorer(
+        EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /**
      * Destructor restores mSelection to its former state
@@ -2354,6 +2363,7 @@ class EditorBase : public nsIEditor,
 
    protected:
     EditorBase* mEditorBase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
   /**
@@ -2364,8 +2374,10 @@ class EditorBase : public nsIEditor,
    public:
     MOZ_CAN_RUN_SCRIPT AutoEditSubActionNotifier(
         EditorBase& aEditorBase, EditSubAction aEditSubAction,
-        nsIEditor::EDirection aDirection, ErrorResult& aRv)
+        nsIEditor::EDirection aDirection,
+        ErrorResult& aRv MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase), mIsTopLevel(true) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       // The top level edit sub action has already be set if this is nested call
       // XXX Looks like that this is not aware of unexpected nested edit action
       //     handling via selectionchange event listener or mutation event
@@ -2390,6 +2402,7 @@ class EditorBase : public nsIEditor,
    protected:
     EditorBase& mEditorBase;
     bool mIsTopLevel;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
   /**
@@ -2398,10 +2411,12 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoTransactionsConserveSelection final {
    public:
-    explicit AutoTransactionsConserveSelection(EditorBase& aEditorBase)
+    explicit AutoTransactionsConserveSelection(
+        EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase),
           mAllowedTransactionsToChangeSelection(
               aEditorBase.AllowsTransactionsToChangeSelection()) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       mEditorBase.MakeThisAllowTransactionsToChangeSelection(false);
     }
 
@@ -2413,6 +2428,7 @@ class EditorBase : public nsIEditor,
    protected:
     EditorBase& mEditorBase;
     bool mAllowedTransactionsToChangeSelection;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
   /***************************************************************************
@@ -2420,8 +2436,10 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoUpdateViewBatch final {
    public:
-    MOZ_CAN_RUN_SCRIPT explicit AutoUpdateViewBatch(EditorBase& aEditorBase)
+    MOZ_CAN_RUN_SCRIPT explicit AutoUpdateViewBatch(
+        EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       mEditorBase.BeginUpdateViewBatch();
     }
 
@@ -2431,6 +2449,7 @@ class EditorBase : public nsIEditor,
 
    protected:
     EditorBase& mEditorBase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
  protected:

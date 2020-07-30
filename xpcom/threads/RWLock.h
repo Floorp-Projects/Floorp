@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/BlockingResourceBase.h"
+#include "mozilla/GuardObjects.h"
 
 #ifndef XP_WIN
 #  include <pthread.h>
@@ -92,7 +93,9 @@ class RWLock : public BlockingResourceBase {
 template <typename T>
 class MOZ_RAII BaseAutoReadLock {
  public:
-  explicit BaseAutoReadLock(T& aLock) : mLock(&aLock) {
+  explicit BaseAutoReadLock(T& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mLock(&aLock) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mLock, "null lock");
     mLock->ReadLock();
   }
@@ -105,12 +108,15 @@ class MOZ_RAII BaseAutoReadLock {
   BaseAutoReadLock& operator=(const BaseAutoReadLock&) = delete;
 
   T* mLock;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 template <typename T>
 class MOZ_RAII BaseAutoWriteLock final {
  public:
-  explicit BaseAutoWriteLock(T& aLock) : mLock(&aLock) {
+  explicit BaseAutoWriteLock(T& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mLock(&aLock) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mLock, "null lock");
     mLock->WriteLock();
   }
@@ -123,6 +129,7 @@ class MOZ_RAII BaseAutoWriteLock final {
   BaseAutoWriteLock& operator=(const BaseAutoWriteLock&) = delete;
 
   T* mLock;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 // Read lock and unlock a RWLock with RAII semantics.  Much preferred to bare
