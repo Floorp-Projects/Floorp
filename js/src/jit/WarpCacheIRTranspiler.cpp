@@ -131,6 +131,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
                                       MCompare::CompareType compareType);
 
+  MOZ_MUST_USE bool emitNewIteratorResult(MNewIterator::Type type,
+                                          uint32_t templateObjectOffset);
+
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
   void addDataViewData(MDefinition* obj, Scalar::Type type,
@@ -1981,6 +1984,37 @@ bool WarpCacheIRTranspiler::emitFinishBoundFunctionInitResult(
 
   pushResult(constant(UndefinedValue()));
   return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitNewIteratorResult(
+    MNewIterator::Type type, uint32_t templateObjectOffset) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+
+  auto* templateConst = constant(ObjectValue(*templateObj));
+  auto* iter = MNewIterator::New(alloc(), /* constraints = */ nullptr,
+                                 templateConst, type);
+  add(iter);
+
+  pushResult(iter);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitNewArrayIteratorResult(
+    uint32_t templateObjectOffset) {
+  return emitNewIteratorResult(MNewIterator::ArrayIterator,
+                               templateObjectOffset);
+}
+
+bool WarpCacheIRTranspiler::emitNewStringIteratorResult(
+    uint32_t templateObjectOffset) {
+  return emitNewIteratorResult(MNewIterator::StringIterator,
+                               templateObjectOffset);
+}
+
+bool WarpCacheIRTranspiler::emitNewRegExpStringIteratorResult(
+    uint32_t templateObjectOffset) {
+  return emitNewIteratorResult(MNewIterator::RegExpStringIterator,
+                               templateObjectOffset);
 }
 
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
