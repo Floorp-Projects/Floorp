@@ -183,8 +183,20 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
     bool chainHasValidPins;
     bool enforceTestMode =
         (pinningMode == mozilla::psm::CertVerifier::pinningEnforceTestMode);
+
+    nsTArray<nsTArray<uint8_t>> rawDerCertList;
+    nsTArray<Span<const uint8_t>> derCertSpanList;
+    for (const auto& cert : mSucceededCertChain) {
+      rawDerCertList.EmplaceBack();
+      nsresult nsrv = cert->GetRawDER(rawDerCertList.LastElement());
+      if (NS_FAILED(nsrv)) {
+        return nsrv;
+      }
+      derCertSpanList.EmplaceBack(MakeSpan(rawDerCertList.LastElement()));
+    }
+
     nsresult nsrv = mozilla::psm::PublicKeyPinningService::ChainHasValidPins(
-        mSucceededCertChain, PromiseFlatCString(hostname).BeginReading(), Now(),
+        derCertSpanList, PromiseFlatCString(hostname).BeginReading(), Now(),
         enforceTestMode, GetOriginAttributes(), chainHasValidPins, nullptr);
     if (NS_FAILED(nsrv)) {
       return NS_OK;

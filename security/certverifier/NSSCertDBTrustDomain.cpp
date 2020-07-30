@@ -1250,8 +1250,20 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     bool enforceTestMode =
         (mPinningMode == CertVerifier::pinningEnforceTestMode);
     bool chainHasValidPins;
+
+    nsTArray<Span<const uint8_t>> derCertSpanList;
+    size_t numCerts = certArray.GetLength();
+    for (size_t i = numCerts; i > 0; --i) {
+      const Input* der = certArray.GetDER(i - 1);
+      if (!der) {
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      }
+      derCertSpanList.EmplaceBack(
+          MakeSpan(der->UnsafeGetData(), der->GetLength()));
+    }
+
     nsrv = PublicKeyPinningService::ChainHasValidPins(
-        nssCertList, mHostname, time, enforceTestMode, mOriginAttributes,
+        derCertSpanList, mHostname, time, enforceTestMode, mOriginAttributes,
         chainHasValidPins, mPinningTelemetryInfo);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
