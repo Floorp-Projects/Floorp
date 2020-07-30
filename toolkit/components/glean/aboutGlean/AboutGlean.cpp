@@ -24,19 +24,25 @@ already_AddRefed<AboutGlean> AboutGlean::GetSingleton() {
   return do_AddRef(gAboutGlean);
 }
 
+extern "C" {
+nsresult fog_set_log_pings(bool aEnableLogPings);
+nsresult fog_set_debug_view_tag(const nsACString* aDebugTag);
+nsresult fog_submit_ping(const nsACString* aPingName);
+}
+
 NS_IMETHODIMP
 AboutGlean::SetLogPings(bool aEnableLogPings) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return fog_set_log_pings(aEnableLogPings);
 }
 
 NS_IMETHODIMP
 AboutGlean::SetTagPings(const nsACString& aDebugTag) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return fog_set_debug_view_tag(&aDebugTag);
 }
 
 NS_IMETHODIMP
 AboutGlean::SendPing(const nsACString& aPingName) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return fog_submit_ping(&aPingName);
 }
 
 NS_IMPL_ISUPPORTS(AboutGlean, nsIAboutGlean)

@@ -185,3 +185,15 @@ fn register_uploader() {
         );
     }
 }
+
+pub fn set_debug_view_tag(value: &str) -> bool {
+    with_glean_mut(|glean| glean.set_debug_view_tag(value))
+}
+
+pub fn submit_ping(ping_name: &str) -> Result<bool> {
+    with_glean_mut(|glean| glean.submit_ping_by_name(ping_name, None))
+}
+
+pub fn set_log_pings(value: bool) -> bool {
+    with_glean_mut(|glean| glean.set_log_pings(value))
+}
