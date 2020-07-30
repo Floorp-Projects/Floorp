@@ -160,6 +160,8 @@ class ProfilerMarkerPayload {
   void StreamCommonProps(const char* aMarkerType, SpliceableJSONWriter& aWriter,
                          const mozilla::TimeStamp& aProcessStartTime,
                          UniqueStacks& aUniqueStacks) const;
+  void StreamStartEndTime(SpliceableJSONWriter& aWriter,
+                          const mozilla::TimeStamp& aProcessStartTime) const;
 
  private:
   // Compute the number of bytes needed to serialize payload in
