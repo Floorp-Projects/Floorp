@@ -10,6 +10,7 @@ const {
   getWindowDimensions,
   getViewportDimensions,
   loadSheet,
+  removeSheet,
 } = require("devtools/shared/layout/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const InspectorUtils = require("InspectorUtils");
@@ -40,6 +41,22 @@ exports.removePseudoClassLock = (...args) =>
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+// Highlighter in parent process will create an iframe relative to its target
+// window. We need to make sure that the iframe is styled correctly. Note:
+// this styles are taken from browser/base/content/browser.css
+// iframe.devtools-highlighter-renderer rules.
+const XUL_HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
+:root > iframe.devtools-highlighter-renderer {
+  border: none;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}`;
+
 const STYLESHEET_URI =
   "resource://devtools/server/actors/" + "highlighters.css";
 
@@ -236,11 +253,9 @@ exports.createNode = createNode;
 function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
   this.highlighterEnv = highlighterEnv;
   this.nodeBuilder = nodeBuilder;
-  this.anonymousContentDocument = this.highlighterEnv.document;
-  // XXX the next line is a wallpaper for bug 1123362.
-  this.anonymousContentGlobal = Cu.getGlobalForObject(
-    this.anonymousContentDocument
-  );
+
+  this._insert = this._insert.bind(this);
+  this._onWindowReady = this._onWindowReady.bind(this);
 
   // Only try to create the highlighter when the document is loaded,
   // otherwise, wait for the window-ready event to fire.
@@ -249,7 +264,6 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
     this._insert();
   }
 
-  this._onWindowReady = this._onWindowReady.bind(this);
   this.highlighterEnv.on("window-ready", this._onWindowReady);
 
   this.listeners = new Map();
@@ -259,35 +273,94 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
 CanvasFrameAnonymousContentHelper.prototype = {
   destroy() {
     this._remove();
+    if (this._iframe) {
+      // If iframe is used, remove one ref count from its numberOfHighlighters
+      // data attribute.
+      const numberOfHighlighters =
+        parseInt(this._iframe.dataset.numberOfHighlighters, 10) - 1;
+      this._iframe.dataset.numberOfHighlighters = numberOfHighlighters;
+      // If we reached 0, we can now remove the iframe and its styling from
+      // target window.
+      if (numberOfHighlighters === 0) {
+        this._iframe.remove();
+        removeSheet(this.highlighterEnv.window, XUL_HIGHLIGHTER_STYLES_SHEET);
+      }
+      this._iframe = null;
+    }
+
     this.highlighterEnv.off("window-ready", this._onWindowReady);
     this.highlighterEnv = this.nodeBuilder = this._content = null;
     this.anonymousContentDocument = null;
-    this.anonymousContentGlobal = null;
+    this.anonymousContentWindow = null;
+    this.pageListenerTarget = null;
 
     this._removeAllListeners();
     this.elements.clear();
   },
 
-  _insert() {
-    const doc = this.highlighterEnv.document;
-    // Wait for DOMContentLoaded before injecting the anonymous content.
-    if (doc.readyState != "interactive" && doc.readyState != "complete") {
-      doc.addEventListener("DOMContentLoaded", this._insert.bind(this), {
-        once: true,
-      });
+  async _insert() {
+    await waitForContentLoaded(this.highlighterEnv.window);
+    if (!this.highlighterEnv) {
+      // CanvasFrameAnonymousContentHelper was already destroyed.
       return;
     }
-    // Reject XUL documents. Check that after DOMContentLoaded as we query
-    // documentElement which is only available after this event.
     if (isXUL(this.highlighterEnv.window)) {
-      return;
+      // In order to use anonymous content, we need to create and use an IFRAME
+      // inside a XUL document first and use its window/document the same way we
+      // would normally use highlighter environment's window/document. See
+      // TODO: bug 1594587 for more details.
+      //
+      // Note: xul:window is not necessarily the top chrome window (as it's the
+      // case with about:devtools-toolbox). We need to ensure that we use the
+      // top chrome window to look up or create the iframe.
+      if (!this._iframe) {
+        const { documentElement } = this.highlighterEnv.window.document;
+        this._iframe = documentElement.querySelector(
+          ":scope > .devtools-highlighter-renderer"
+        );
+        if (this._iframe) {
+          // If iframe is used and already exists, add one ref count to its
+          // numberOfHighlighters data attribute.
+          const numberOfHighlighters =
+            parseInt(this._iframe.dataset.numberOfHighlighters, 10) + 1;
+          this._iframe.dataset.numberOfHighlighters = numberOfHighlighters;
+        } else {
+          this._iframe = this.highlighterEnv.window.document.createElement(
+            "iframe"
+          );
+          this._iframe.classList.add("devtools-highlighter-renderer");
+          // If iframe is used for the first time, add ref count of one to its
+          // numberOfHighlighters data attribute.
+          this._iframe.dataset.numberOfHighlighters = 1;
+          documentElement.append(this._iframe);
+          loadSheet(this.highlighterEnv.window, XUL_HIGHLIGHTER_STYLES_SHEET);
+        }
+      }
+
+      await waitForContentLoaded(this._iframe);
+      if (!this.highlighterEnv) {
+        // CanvasFrameAnonymousContentHelper was already destroyed.
+        return;
+      }
+
+      // If it's a XUL window anonymous content will be inserted inside a newly
+      // created IFRAME in the chrome window.
+      this.anonymousContentDocument = this._iframe.contentDocument;
+      this.anonymousContentWindow = this._iframe.contentWindow;
+      this.pageListenerTarget = this._iframe.contentWindow;
+    } else {
+      // Regular highlighters are drawn inside the anonymous content of the
+      // highlighter environment document.
+      this.anonymousContentDocument = this.highlighterEnv.document;
+      this.anonymousContentWindow = this.highlighterEnv.window;
+      this.pageListenerTarget = this.highlighterEnv.pageListenerTarget;
     }
 
     // For now highlighters.css is injected in content as a ua sheet because
     // we no longer support scoped style sheets (see bug 1345702).
     // If it did, highlighters.css would be injected as an anonymous content
     // node using CanvasFrameAnonymousContentHelper instead.
-    loadSheet(this.highlighterEnv.window, STYLESHEET_URI);
+    loadSheet(this.anonymousContentWindow, STYLESHEET_URI);
 
     const node = this.nodeBuilder();
 
@@ -297,7 +370,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
     // that scenario, fixes when we're adding anonymous content in a tab that
     // is not the active one (see bug 1260043 and bug 1260044)
     try {
-      this._content = doc.insertAnonymousContent(node);
+      this._content = this.anonymousContentDocument.insertAnonymousContent(
+        node
+      );
     } catch (e) {
       // If the `insertAnonymousContent` fails throwing a `NS_ERROR_UNEXPECTED`, it means
       // we don't have access to a `CustomContentContainer` yet (see bug 1365075).
@@ -306,15 +381,18 @@ CanvasFrameAnonymousContentHelper.prototype = {
       // again.
       if (
         e.result === Cr.NS_ERROR_UNEXPECTED &&
-        doc.readyState === "interactive"
+        this.anonymousContentDocument.readyState === "interactive"
       ) {
         // The next state change will be "complete" since the current is "interactive"
-        doc.addEventListener(
-          "readystatechange",
-          () => {
-            this._content = doc.insertAnonymousContent(node);
-          },
-          { once: true }
+        await new Promise(resolve => {
+          this.anonymousContentDocument.addEventListener(
+            "readystatechange",
+            resolve,
+            { once: true }
+          );
+        });
+        this._content = this.anonymousContentDocument.insertAnonymousContent(
+          node
         );
       } else {
         throw e;
@@ -324,8 +402,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
   _remove() {
     try {
-      const doc = this.anonymousContentDocument;
-      doc.removeAnonymousContent(this._content);
+      this.anonymousContentDocument.removeAnonymousContent(this._content);
     } catch (e) {
       // If the current window isn't the one the content was inserted into, this
       // will fail, but that's fine.
@@ -343,8 +420,16 @@ CanvasFrameAnonymousContentHelper.prototype = {
     if (isTopLevel) {
       this._removeAllListeners();
       this.elements.clear();
+      if (this._iframe) {
+        // When we are switching top level targets, we can remove the iframe and
+        // its styling as well, since it will be re-created for the new top
+        // level target document.
+        this._iframe.remove();
+        removeSheet(this.highlighterEnv.window, XUL_HIGHLIGHTER_STYLES_SHEET);
+        this._iframe = null;
+      }
+
       this._insert();
-      this.anonymousContentDocument = this.highlighterEnv.document;
     }
   },
 
@@ -433,7 +518,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
     // If no one is listening for this type of event yet, add one listener.
     if (!this.listeners.has(type)) {
-      const target = this.highlighterEnv.pageListenerTarget;
+      const target = this.pageListenerTarget;
       target.addEventListener(type, this, true);
       // Each type entry in the map is a map of ids:handlers.
       this.listeners.set(type, new Map());
@@ -458,7 +543,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
     // If no one is listening for event type anymore, remove the listener.
     if (!this.listeners.has(type)) {
-      const target = this.highlighterEnv.pageListenerTarget;
+      const target = this.pageListenerTarget;
       target.removeEventListener(type, this, true);
     }
   },
@@ -501,8 +586,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   _removeAllListeners() {
-    if (this.highlighterEnv && this.highlighterEnv.pageListenerTarget) {
-      const target = this.highlighterEnv.pageListenerTarget;
+    if (this.pageListenerTarget) {
+      const target = this.pageListenerTarget;
       for (const [type] of this.listeners) {
         target.removeEventListener(type, this, true);
       }
@@ -598,6 +683,33 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 };
 exports.CanvasFrameAnonymousContentHelper = CanvasFrameAnonymousContentHelper;
+
+/**
+ * Wait for document readyness.
+ * @param {Object} iframeOrWindow
+ *        IFrame or Window for which the content should be loaded.
+ */
+function waitForContentLoaded(iframeOrWindow) {
+  let loadEvent = "DOMContentLoaded";
+  // If we are waiting for an iframe to load and it is for a XUL window
+  // highlighter that is not browser toolbox, we must wait for IFRAME's "load".
+  if (
+    iframeOrWindow.contentWindow &&
+    iframeOrWindow.ownerGlobal !==
+      iframeOrWindow.contentWindow.browsingContext.topChromeWindow
+  ) {
+    loadEvent = "load";
+  }
+
+  const doc = iframeOrWindow.contentDocument || iframeOrWindow.document;
+  if (doc.readyState == "interactive" || doc.readyState == "complete") {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    iframeOrWindow.addEventListener(loadEvent, resolve, { once: true });
+  });
+}
 
 /**
  * Move the infobar to the right place in the highlighter. This helper method is utilized
