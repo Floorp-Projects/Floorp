@@ -9,7 +9,7 @@
  * preferences for the urlbar.
  */
 
-var EXPORTED_SYMBOLS = ["UrlbarPrefs"];
+var EXPORTED_SYMBOLS = ["UrlbarPrefs", "UrlbarPrefsObserver"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -233,14 +233,7 @@ class Preferences {
    */
   constructor() {
     this._map = new Map();
-    this.QueryInterface = ChromeUtils.generateQI([
-      "nsIObserver",
-      "nsISupportsWeakReference",
-    ]);
-    Services.prefs.addObserver(PREF_URLBAR_BRANCH, this, true);
-    for (let pref of PREF_OTHER_DEFAULTS.keys()) {
-      Services.prefs.addObserver(pref, this, true);
-    }
+    this._observer = new UrlbarPrefsObserver(pref => this._onPrefChanged(pref));
   }
 
   /**
@@ -279,17 +272,13 @@ class Preferences {
   }
 
   /**
-   * Observes preference changes.
+   * Called when a pref tracked by UrlbarPrefs changes.
    *
-   * @param {nsISupports} subject
-   * @param {string} topic
-   * @param {string} data
+   * @param {string} pref
+   *        The name of the pref, relative to `browser.urlbar.` if the pref is
+   *        in that branch.
    */
-  observe(subject, topic, data) {
-    let pref = data.replace(PREF_URLBAR_BRANCH, "");
-    if (!PREF_URLBAR_DEFAULTS.has(pref) && !PREF_OTHER_DEFAULTS.has(pref)) {
-      return;
-    }
+  _onPrefChanged(pref) {
     this._map.delete(pref);
     // Some prefs may influence others.
     if (pref == "matchBuckets") {
@@ -411,6 +400,47 @@ class Preferences {
       // Float prefs are stored as Char.
       setter: branch[`set${type == "Float" ? "Char" : type}Pref`],
     };
+  }
+}
+
+/**
+ * A weak preferences observer.  You must hold on to instances of this class
+ * because otherwise they will be garbage collected.
+ */
+class UrlbarPrefsObserver {
+  /**
+   * Constructor.
+   *
+   * @param {function} callback
+   *   Called when a urlbar preference changes.  It will be passed the pref
+   *   name.  For prefs in the `browser.urlbar.` branch, the name will be
+   *   relative to the branch.  For other prefs, the name will be the full name.
+   */
+  constructor(callback) {
+    this._callback = callback;
+    this.QueryInterface = ChromeUtils.generateQI([
+      "nsIObserver",
+      "nsISupportsWeakReference",
+    ]);
+    Services.prefs.addObserver(PREF_URLBAR_BRANCH, this, true);
+    for (let pref of PREF_OTHER_DEFAULTS.keys()) {
+      Services.prefs.addObserver(pref, this, true);
+    }
+  }
+
+  /**
+   * Observes preference changes.
+   *
+   * @param {nsISupports} subject
+   * @param {string} topic
+   * @param {string} data
+   */
+  observe(subject, topic, data) {
+    let pref = data.replace(PREF_URLBAR_BRANCH, "");
+    if (!PREF_URLBAR_DEFAULTS.has(pref) && !PREF_OTHER_DEFAULTS.has(pref)) {
+      return;
+    }
+    this._callback(pref);
   }
 }
 
