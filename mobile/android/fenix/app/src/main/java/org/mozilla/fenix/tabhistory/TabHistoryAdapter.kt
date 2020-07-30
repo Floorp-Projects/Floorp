@@ -23,7 +23,7 @@ class TabHistoryAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabHistoryViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.history_list_item, parent, false)
+            .inflate(R.layout.tab_history_list_item, parent, false)
         return TabHistoryViewHolder(view, interactor)
     }
 

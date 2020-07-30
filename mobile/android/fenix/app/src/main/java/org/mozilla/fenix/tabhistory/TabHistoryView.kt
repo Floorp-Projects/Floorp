@@ -57,7 +57,6 @@ class TabHistoryView(
     init {
         tabHistoryRecyclerView.adapter = adapter
         tabHistoryRecyclerView.layoutManager = layoutManager
-        tabHistoryRecyclerView.itemAnimator = null
     }
 
     fun updateState(state: BrowserState) {

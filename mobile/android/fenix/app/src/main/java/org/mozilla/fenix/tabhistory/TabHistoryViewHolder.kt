@@ -7,7 +7,8 @@ package org.mozilla.fenix.tabhistory
 import android.view.View
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
-import kotlinx.android.synthetic.main.history_list_item.*
+import androidx.core.view.isVisible
+import kotlinx.android.synthetic.main.tab_history_list_item.*
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.utils.view.ViewHolder
 
@@ -19,13 +20,14 @@ class TabHistoryViewHolder(
     private lateinit var item: TabHistoryItem
 
     init {
-        itemView.setOnClickListener { interactor.goToHistoryItem(item) }
+        history_layout.setOnClickListener { interactor.goToHistoryItem(item) }
     }
 
     fun bind(item: TabHistoryItem) {
         this.item = item
 
         history_layout.displayAs(LibrarySiteItemView.ItemType.SITE)
+        history_layout.overflowView.isVisible = false
         history_layout.urlView.text = item.url
         history_layout.loadFavicon(item.url)
 

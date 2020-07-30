@@ -28,7 +28,7 @@ class TabHistoryViewHolderTest {
         MockKAnnotations.init(this)
         onClick = slot()
 
-        every { view.setOnClickListener(capture(onClick)) } just Runs
+        every { siteItemView.setOnClickListener(capture(onClick)) } just Runs
         every { view.findViewById<LibrarySiteItemView>(R.id.history_layout) } returns siteItemView
 
         holder = TabHistoryViewHolder(view, interactor)
