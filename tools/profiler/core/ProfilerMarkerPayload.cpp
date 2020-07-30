@@ -136,12 +136,21 @@ ProfilerMarkerPayload::DeserializeCommonProps(
   return props;
 }
 
+// Deprecated: This function is providing a way for a few payloads to use the
+// start time and end time in their payloads, which is currently deprecated.
+// The startTime and endTime were removed from most payloads, in favor of
+// the MarkerPhase idea. However, IPC and Network markers still have them as
+// it was harder to upgrade the front-end without them.
+void ProfilerMarkerPayload::StreamStartEndTime(
+    SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime) const {
+  WriteTime(aWriter, aProcessStartTime, mCommonProps.mStartTime, "startTime");
+  WriteTime(aWriter, aProcessStartTime, mCommonProps.mEndTime, "endTime");
+}
+
 void ProfilerMarkerPayload::StreamCommonProps(
     const char* aMarkerType, SpliceableJSONWriter& aWriter,
     const TimeStamp& aProcessStartTime, UniqueStacks& aUniqueStacks) const {
   StreamType(aMarkerType, aWriter);
-  WriteTime(aWriter, aProcessStartTime, mCommonProps.mStartTime, "startTime");
-  WriteTime(aWriter, aProcessStartTime, mCommonProps.mEndTime, "endTime");
   if (mCommonProps.mInnerWindowID) {
     // Here, we are converting uint64_t to double. Both Browsing Context and
     // Inner Window IDs are creating using
@@ -692,6 +701,10 @@ void NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                          const TimeStamp& aProcessStartTime,
                                          UniqueStacks& aUniqueStacks) const {
   StreamCommonProps("Network", aWriter, aProcessStartTime, aUniqueStacks);
+  // This payload still streams a startTime and endTime property because it made
+  // the migration to MarkerTiming on the front-end easier.
+  StreamStartEndTime(aWriter, aProcessStartTime);
+
   aWriter.IntProperty("id", mID);
   const char* typeString = GetNetworkState(mType);
   const char* cacheString = GetCacheState(mCacheDisposition);
@@ -1169,6 +1182,11 @@ void IPCMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                      UniqueStacks& aUniqueStacks) const {
   using namespace mozilla::ipc;
   StreamCommonProps("IPC", aWriter, aProcessStartTime, aUniqueStacks);
+
+  // This payload still streams a startTime and endTime property because it made
+  // the migration to MarkerTiming on the front-end easier.
+  StreamStartEndTime(aWriter, aProcessStartTime);
+
   aWriter.IntProperty("otherPid", mOtherPid);
   aWriter.IntProperty("messageSeqno", mMessageSeqno);
   aWriter.StringProperty("messageType",
