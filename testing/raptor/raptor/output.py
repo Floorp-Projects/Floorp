@@ -98,6 +98,7 @@ class PerftestOutput(object):
 
             if "mozproxy" in data_type:
                 self.mozproxy_data = True
+                LOG.info("data: {}".format(self.supporting_data))
 
             if data_type not in support_data_by_type:
                 support_data_by_type[data_type] = {
