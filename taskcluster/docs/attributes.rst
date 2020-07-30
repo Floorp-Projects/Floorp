@@ -327,6 +327,13 @@ identify the current version of the artifacts. See :py:mod:`taskgraph.util.cache
        name: debian7-base
        type: docker-images.v2
 
+eager_indexes
+=============
+A list of strings of indexes to populate before the task ever completes. Some tasks (e.g. cached tasks) we
+want to exist in the index before they even run/complete. Our current use is to allow us to depend on an
+unfinished cached task in future pushes. This avoids extra overhead from multiple tasks running, and
+can allow us to have our results in just a bit earlier.
+
 required_signoffs
 =================
 A list of release signoffs that this kind requires, should the release also
