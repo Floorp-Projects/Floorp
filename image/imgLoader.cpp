@@ -672,7 +672,7 @@ static bool ShouldLoadCachedImage(imgRequest* aImgRequest,
   /* Call content policies on cached images - Bug 1082837
    * Cached images are keyed off of the first uri in a redirect chain.
    * Hence content policies don't get a chance to test the intermediate hops
-   * or the final desitnation.  Here we test the final destination using
+   * or the final destination.  Here we test the final destination using
    * mFinalURI off of the imgRequest and passing it into content policies.
    * For Mixed Content Blocker, we do an additional check to determine if any
    * of the intermediary hops went through an insecure redirect with the
@@ -1845,18 +1845,7 @@ bool imgLoader::ValidateEntry(
 
   bool validateRequest = false;
 
-  // If the request's loadId is the same as the aLoadingDocument, then it is ok
-  // to use this one because it has already been validated for this context.
-  //
-  // XXX: nullptr seems to be a 'special' key value that indicates that NO
-  //      validation is required.
-  // XXX: we also check the window ID because the loadID() can return a reused
-  //      pointer of a document. This can still happen for non-document image
-  //      cache entries.
-  void* key = (void*)aLoadingDocument;
-  uint64_t innerWindowID =
-      aLoadingDocument ? aLoadingDocument->InnerWindowID() : 0;
-  if (request->LoadId() != key || request->InnerWindowID() != innerWindowID) {
+  if (!request->CanReuseWithoutValidation(aLoadingDocument)) {
     // If we would need to revalidate this entry, but we're being told to
     // bypass the cache, we don't allow this entry to be used.
     if (aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE) {
@@ -1876,10 +1865,10 @@ bool imgLoader::ValidateEntry(
             ("imgLoader::ValidateEntry validating cache entry. "
              "validateRequest = %d",
              validateRequest));
-  } else if (!key && MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
+  } else if (!aLoadingDocument && MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     MOZ_LOG(gImgLog, LogLevel::Debug,
             ("imgLoader::ValidateEntry BYPASSING cache validation for %s "
-             "because of NULL LoadID",
+             "because of NULL loading document",
              aURI->GetSpecOrDefault().get()));
   }
 
@@ -1954,6 +1943,8 @@ bool imgLoader::ValidateEntry(
   if (validateRequest && aCanMakeNewChannel) {
     LOG_SCOPE(gImgLog, "imgLoader::ValidateRequest |cache hit| must validate");
 
+    uint64_t innerWindowID =
+        aLoadingDocument ? aLoadingDocument->InnerWindowID() : 0;
     return ValidateRequestWithNewChannel(
         request, aURI, aInitialDocumentURI, aReferrerInfo, aLoadGroup,
         aObserver, aLoadingDocument, innerWindowID, aLoadFlags, aLoadPolicyType,

@@ -74,6 +74,10 @@ class imgRequest final : public nsIStreamListener,
   // Callers must call imgRequestProxy::Notify later.
   void AddProxy(imgRequestProxy* proxy);
 
+  // Whether a given document is allowed to reuse this request without any
+  // revalidation.
+  bool CanReuseWithoutValidation(mozilla::dom::Document*) const;
+
   nsresult RemoveProxy(imgRequestProxy* proxy, nsresult aStatus);
 
   // Cancel, but also ensure that all work done in Init() is undone. Call this
