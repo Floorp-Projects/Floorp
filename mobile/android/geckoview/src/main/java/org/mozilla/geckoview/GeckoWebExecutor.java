@@ -54,8 +54,15 @@ public class GeckoWebExecutor {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({FETCH_FLAGS_NONE, FETCH_FLAGS_ANONYMOUS, FETCH_FLAGS_NO_REDIRECTS, FETCH_FLAGS_STREAM_FAILURE_TEST})
-    /* package */ @interface FetchFlags {};
+    @IntDef({
+            FETCH_FLAGS_NONE,
+            FETCH_FLAGS_ANONYMOUS,
+            FETCH_FLAGS_NO_REDIRECTS,
+            FETCH_FLAGS_ALLOW_SOME_ERRORS,
+            FETCH_FLAGS_PRIVATE,
+            FETCH_FLAGS_STREAM_FAILURE_TEST,
+    })
+    /* package */ @interface FetchFlags {}
 
     /**
      * No special treatment.
@@ -73,6 +80,21 @@ public class GeckoWebExecutor {
      */
     @WrapForJNI
     public static final int FETCH_FLAGS_NO_REDIRECTS = 1 << 1;
+
+    // TODO: implement in WebExecutorSupport and make public bug 1538348
+    /**
+     * Enables downloads to continue even if they encounter HTTP errors.
+     * Using this flag, for example, enables the download of server error pages.
+     */
+    @WrapForJNI
+    /* package */ static final int FETCH_FLAGS_ALLOW_SOME_ERRORS = 1 << 2;
+
+    // TODO: implement in WebExecutorSupport and make public bug 1538348
+    /**
+     * Associates this download with a private browsing session
+     */
+    @WrapForJNI
+    /* package */ static final int FETCH_FLAGS_PRIVATE = 1 << 3;
 
     /**
      * This flag causes a read error in the {@link WebResponse} body. Useful for testing.
@@ -139,6 +161,11 @@ public class GeckoWebExecutor {
         }
 
         return result;
+    }
+
+    // TODO: make public bug 1538348
+    /* package */ @NonNull GeckoResult<WebResponse> fetch(final @NonNull WebExtension.DownloadRequest request) {
+        return fetch(request.request, request.downloadFlags);
     }
 
     /**
