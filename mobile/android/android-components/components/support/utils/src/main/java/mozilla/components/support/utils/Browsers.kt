@@ -8,9 +8,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
+import androidx.annotation.VisibleForTesting
 import java.util.HashMap
+import androidx.core.net.toUri
 
 /**
  * Helpful tools for dealing with other browsers on this device.
@@ -204,20 +207,10 @@ class Browsers private constructor(
         uri: Uri
     ): MutableMap<String, ActivityInfo> {
         val browsers = HashMap<String, ActivityInfo>()
+        val resolvers = findResolvers(context, packageManager, includeThisApp = false, url = uri.toString())
 
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = uri
-
-        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PackageManager.MATCH_ALL
-        } else {
-            PackageManager.MATCH_DEFAULT_ONLY
-        }
-
-        for (info in packageManager.queryIntentActivities(intent, flag)) {
-            if (context.packageName != info.activityInfo.packageName && info.activityInfo.exported) {
-                browsers[info.activityInfo.packageName] = info.activityInfo
-            }
+        for (info in resolvers) {
+            browsers[info.activityInfo.packageName] = info.activityInfo
         }
 
         return browsers
@@ -246,6 +239,7 @@ class Browsers private constructor(
             val intent = Intent(Intent.ACTION_VIEW)
             intent.data = uri
             intent.setPackage(browser.packageName)
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
             val info = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
                 ?: continue
@@ -260,6 +254,7 @@ class Browsers private constructor(
 
     private fun findDefault(context: Context, packageManager: PackageManager, uri: Uri): ActivityInfo? {
         val intent = Intent(Intent.ACTION_VIEW, uri)
+        intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
         val resolveInfo = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
             ?: return null
@@ -279,18 +274,82 @@ class Browsers private constructor(
     }
 
     companion object {
+        @VisibleForTesting
+        internal const val SAMPLE_BROWSER_HTTP_URL = "http://www.mozilla.org/index.html"
+        private const val SAMPLE_BROWSER_HTTPS_URL = "https://www.mozilla.org/index.html"
         // Sample URL handled by traditional web browsers. Used to find installed (basic) web browsers.
-        private val SAMPLE_BROWSER_URL = Uri.parse("http://www.mozilla.org")
+        private val SAMPLE_BROWSER_URI = Uri.parse(SAMPLE_BROWSER_HTTP_URL)
 
         /**
          * Collect information about all installed browsers and return a [Browsers] object containing that data.
          */
-        fun all(context: Context): Browsers = Browsers(context, SAMPLE_BROWSER_URL)
+        fun all(context: Context): Browsers = Browsers(context, SAMPLE_BROWSER_URI)
 
         /**
          * Collect information about all installed browsers that can handle the specified URL and return a [Browsers]
          * object containing that data.
          */
         fun forUrl(context: Context, url: String) = Browsers(context, Uri.parse(url))
+
+        /**
+         * Finds all the [ResolveInfo] for the installed browsers.
+         * @return A list of all [ResolveInfo] for the installed browsers.
+         */
+        fun findResolvers(
+            context: Context,
+            packageManager: PackageManager,
+            includeThisApp: Boolean = true
+        ): List<ResolveInfo> {
+            val httpIntent = Intent.parseUri(SAMPLE_BROWSER_HTTP_URL, Intent.URI_INTENT_SCHEME)
+            val httpsIntent = Intent.parseUri(SAMPLE_BROWSER_HTTPS_URL, Intent.URI_INTENT_SCHEME)
+
+            val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PackageManager.MATCH_ALL
+            } else {
+                PackageManager.MATCH_DEFAULT_ONLY
+            }
+
+            val httpResults = packageManager.queryIntentActivities(httpIntent, flag)
+                    .orEmpty()
+                    .filter { it.activityInfo.exported &&
+                            (includeThisApp || it.activityInfo.packageName != context.packageName) }
+
+            val httpsResults = packageManager.queryIntentActivities(httpsIntent, flag)
+                    .orEmpty()
+                    .filter { it.activityInfo.exported &&
+                            (includeThisApp || it.activityInfo.packageName != context.packageName) }
+
+            // There apps that have the same activityInfo.name to make it unique we
+            // combine the activityInfo.packageName + activityInfo.name
+            return (httpResults + httpsResults).distinctBy { it.activityInfo.packageName + it.activityInfo.name }
+        }
+
+        /**
+         * Finds all the [ResolveInfo] for the installed browsers that can handle the specified URL [url].
+         * @return A list of all [ResolveInfo] that correspond to the given [url].
+         */
+        fun findResolvers(
+            context: Context,
+            packageManager: PackageManager,
+            url: String,
+            includeThisApp: Boolean = true,
+            contentType: String? = null
+        ): List<ResolveInfo> {
+            val uri = url.toUri()
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                if (contentType != null) setDataAndTypeAndNormalize(uri, contentType) else data = uri
+                addCategory(Intent.CATEGORY_BROWSABLE)
+            }
+
+            val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PackageManager.MATCH_ALL
+            } else {
+                PackageManager.MATCH_DEFAULT_ONLY
+            }
+            return packageManager.queryIntentActivities(intent, flag)
+                    .orEmpty()
+                    .filter { it.activityInfo.exported && (includeThisApp ||
+                            it.activityInfo.packageName != context.packageName) }
+        }
     }
 }

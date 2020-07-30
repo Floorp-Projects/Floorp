@@ -30,6 +30,7 @@ dependencies {
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.androidx_annotation
     implementation Dependencies.androidx_core
+    implementation Dependencies.androidx_core_ktx
 
     // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
     api Dependencies.androidx_appcompat

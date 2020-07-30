@@ -41,6 +41,8 @@ dependencies {
     implementation Dependencies.androidx_localbroadcastmanager
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.androidx_recyclerview
+    implementation Dependencies.androidx_constraintlayout
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit

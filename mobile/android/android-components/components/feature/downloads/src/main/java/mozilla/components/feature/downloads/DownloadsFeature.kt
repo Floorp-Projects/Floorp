@@ -4,11 +4,16 @@
 
 package mozilla.components.feature.downloads
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.ResolveInfo
 import android.widget.Toast
 import androidx.annotation.ColorRes
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.core.net.toUri
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -24,6 +29,8 @@ import mozilla.components.feature.downloads.manager.AndroidDownloadManager
 import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.feature.downloads.manager.noop
 import mozilla.components.feature.downloads.manager.onDownloadStopped
+import mozilla.components.feature.downloads.ui.DownloaderApp
+import mozilla.components.feature.downloads.ui.DownloadAppChooserDialog
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
@@ -31,6 +38,7 @@ import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.components.support.utils.Browsers
 
 /**
  * Feature implementation to provide download functionality for the selected
@@ -49,18 +57,22 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * @property fragmentManager a reference to a [FragmentManager]. If a fragment
  * manager is provided, a dialog will be shown before every download.
  * @property promptsStyling styling properties for the dialog.
+ * @property shouldForwardToThirdParties Indicates if downloads should be forward to third party apps,
+ * if there are multiple apps a chooser dialog will shown.
  */
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "LargeClass")
 class DownloadsFeature(
     private val applicationContext: Context,
     private val store: BrowserStore,
-    private val useCases: DownloadsUseCases,
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal val useCases: DownloadsUseCases,
     override var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     onDownloadStopped: onDownloadStopped = noop,
     private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext, store),
     private val tabId: String? = null,
     private val fragmentManager: FragmentManager? = null,
-    private val promptsStyling: PromptsStyling? = null
+    private val promptsStyling: PromptsStyling? = null,
+    private val shouldForwardToThirdParties: () -> Boolean = { false }
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     var onDownloadStopped: onDownloadStopped
@@ -109,11 +121,22 @@ class DownloadsFeature(
     /**
      * Notifies the [DownloadManager] that a new download must be processed.
      */
-    private fun processDownload(tab: SessionState, download: DownloadState): Boolean {
+    @VisibleForTesting
+    internal fun processDownload(tab: SessionState, download: DownloadState): Boolean {
         return if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
 
+            if (shouldForwardToThirdParties()) {
+                val apps = getDownloaderApps(applicationContext, download)
+
+                // We only show the dialog If we have multiple apps that can handle the download.
+                if (apps.size > 1) {
+                    showAppDownloaderDialog(tab, download, apps)
+                    return false
+                }
+            }
+
             if (fragmentManager != null && !download.skipConfirmation) {
-                showDialog(tab, download)
+                showDownloadDialog(tab, download)
                 false
             } else {
                 useCases.consumeDownload(tab.id, download.id)
@@ -125,7 +148,8 @@ class DownloadsFeature(
         }
     }
 
-    private fun startDownload(download: DownloadState): Boolean {
+    @VisibleForTesting
+    internal fun startDownload(download: DownloadState): Boolean {
         val id = downloadManager.download(download)
         return if (id != null) {
             true
@@ -168,12 +192,10 @@ class DownloadsFeature(
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun showDialog(
+    internal fun showDownloadDialog(
         tab: SessionState,
         download: DownloadState,
-        dialog: DownloadDialogFragment = findPreviousDialogFragment() ?: SimpleDownloadDialogFragment.newInstance(
-            promptsStyling = promptsStyling
-        )
+        dialog: DownloadDialogFragment = getDownloadDialog()
     ) {
         dialog.setDownload(download)
 
@@ -186,17 +208,72 @@ class DownloadsFeature(
             useCases.consumeDownload.invoke(tab.id, download.id)
         }
 
-        if (!isAlreadyADialogCreated() && fragmentManager != null) {
+        if (!isAlreadyADownloadDialog() && fragmentManager != null) {
             dialog.showNow(fragmentManager, FRAGMENT_TAG)
         }
     }
 
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun isAlreadyADialogCreated(): Boolean {
-        return findPreviousDialogFragment() != null
+    private fun getDownloadDialog(): DownloadDialogFragment {
+        return findPreviousDownloadDialogFragment() ?: SimpleDownloadDialogFragment.newInstance(
+                promptsStyling = promptsStyling
+        )
     }
 
-    private fun findPreviousDialogFragment(): DownloadDialogFragment? {
+    @VisibleForTesting
+    internal fun showAppDownloaderDialog(
+        tab: SessionState,
+        download: DownloadState,
+        apps: List<DownloaderApp>,
+        appChooserDialog: DownloadAppChooserDialog = getAppDownloaderDialog()
+    ) {
+        appChooserDialog.setApps(apps)
+        appChooserDialog.onAppSelected = { app ->
+            if (app.packageName == applicationContext.packageName) {
+                startDownload(download)
+            } else {
+                try {
+                    applicationContext.startActivity(app.toIntent())
+                } catch (error: ActivityNotFoundException) {
+                    val errorMessage = applicationContext.getString(
+                        R.string.mozac_feature_downloads_unable_to_open_third_party_app,
+                        app.name
+                    )
+                    Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
+                }
+            }
+            useCases.consumeDownload(tab.id, download.id)
+        }
+
+        appChooserDialog.onDismiss = {
+            useCases.consumeDownload.invoke(tab.id, download.id)
+        }
+
+        if (!isAlreadyAppDownloaderDialog() && fragmentManager != null) {
+            appChooserDialog.showNow(fragmentManager, DownloadAppChooserDialog.FRAGMENT_TAG)
+        }
+    }
+
+    private fun getAppDownloaderDialog() = findPreviousAppDownloaderDialogFragment()
+            ?: DownloadAppChooserDialog.newInstance(
+                    promptsStyling?.gravity,
+                    promptsStyling?.shouldWidthMatchParent
+            )
+
+    @VisibleForTesting
+    internal fun isAlreadyAppDownloaderDialog(): Boolean {
+        return findPreviousAppDownloaderDialogFragment() != null
+    }
+
+    private fun findPreviousAppDownloaderDialogFragment(): DownloadAppChooserDialog? {
+        return fragmentManager?.findFragmentByTag(DownloadAppChooserDialog.FRAGMENT_TAG) as? DownloadAppChooserDialog
+    }
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun isAlreadyADownloadDialog(): Boolean {
+        return findPreviousDownloadDialogFragment() != null
+    }
+
+    private fun findPreviousDownloadDialogFragment(): DownloadDialogFragment? {
         return fragmentManager?.findFragmentByTag(FRAGMENT_TAG) as? DownloadDialogFragment
     }
 
@@ -204,6 +281,43 @@ class DownloadsFeature(
         val state = store.state.findCustomTabOrSelectedTab(tabId) ?: return
         val download = state.content.download ?: return
         block(Pair(state, download))
+    }
+
+    /**
+     * Find all apps that can perform a download, including this app.
+     */
+    @VisibleForTesting
+    internal fun getDownloaderApps(context: Context, download: DownloadState): List<DownloaderApp> {
+        val packageManager = context.packageManager
+
+        val browsers = Browsers.findResolvers(context, packageManager, includeThisApp = true)
+                .associateBy { it.activityInfo.identifier }
+
+        val thisApp = browsers.values
+                .firstOrNull { it.activityInfo.packageName == context.packageName }
+                ?.toDownloaderApp(context, download)
+
+        val apps = Browsers.findResolvers(
+                context,
+                packageManager,
+                includeThisApp = false,
+                url = download.url,
+                contentType = download.contentType
+        )
+        // Remove browsers and returns only the apps that can perform a download plus this app.
+        return apps.filter { !browsers.contains(it.activityInfo.identifier) }
+                .map { it.toDownloaderApp(context, download) } + listOfNotNull(thisApp)
+    }
+
+    private val ActivityInfo.identifier: String get() = packageName + name
+
+    private fun DownloaderApp.toIntent(): Intent {
+        return Intent(Intent.ACTION_VIEW).apply {
+            setDataAndTypeAndNormalize(url.toUri(), contentType)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            setClassName(packageName, activityName)
+            addCategory(Intent.CATEGORY_BROWSABLE)
+        }
     }
 
     /**
@@ -217,5 +331,17 @@ class DownloadsFeature(
         @ColorRes
         val positiveButtonTextColor: Int? = null,
         val positiveButtonRadius: Float? = null
+    )
+}
+
+@VisibleForTesting
+internal fun ResolveInfo.toDownloaderApp(context: Context, download: DownloadState): DownloaderApp {
+    return DownloaderApp(
+        loadLabel(context.packageManager).toString(),
+        this,
+        activityInfo.packageName,
+        activityInfo.name,
+        download.url,
+        download.contentType
     )
 }
