@@ -752,32 +752,10 @@ class Dumper_Win32(Dumper):
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         file = locate_pdb(file)
 
-        def compress(path):
-            compressed_file = path[:-1] + "_"
-            # ignore makecab's output
-            makecab = buildconfig.substs["MAKECAB"]
-            wine = buildconfig.substs.get("WINE")
-            if wine and makecab.lower().endswith(".exe"):
-                cmd = [wine, makecab]
-            else:
-                cmd = [makecab]
-            success = subprocess.call(
-                cmd + ["-D", "CompressionType=MSZIP", path, compressed_file],
-                stdout=open(os.devnull, "w"),
-                stderr=subprocess.STDOUT,
-            )
-            if success == 0 and os.path.exists(compressed_file):
-                os.unlink(path)
-                return True
-            return False
-
         rel_path = os.path.join(debug_file, guid, debug_file).replace("\\", "/")
         full_path = os.path.normpath(os.path.join(self.symbol_path, rel_path))
         shutil.copyfile(file, full_path)
-        if compress(full_path):
-            print(rel_path[:-1] + "_")
-        else:
-            print(rel_path)
+        print(rel_path)
 
         # Copy the binary file as well
         if code_file and code_id:
@@ -793,10 +771,7 @@ class Dumper_Win32(Dumper):
                     if e.errno != errno.EEXIST:
                         raise
                 shutil.copyfile(full_code_path, full_path)
-                if compress(full_path):
-                    print(rel_path[:-1] + "_")
-                else:
-                    print(rel_path)
+                print(rel_path)
 
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream, vcs_root):
         # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
@@ -862,9 +837,7 @@ class Dumper_Linux(Dumper):
             rel_path = os.path.join(debug_file, guid, debug_file + ".dbg")
             full_path = os.path.normpath(os.path.join(self.symbol_path, rel_path))
             shutil.move(file_dbg, full_path)
-            # gzip the shipped debug files
-            os.system("gzip -4 -f %s" % full_path)
-            print(rel_path + ".gz")
+            print(rel_path)
         else:
             if os.path.isfile(file_dbg):
                 os.unlink(file_dbg)
@@ -989,16 +962,15 @@ class Dumper_Mac(Dumper):
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         """ProcessFile has already produced a dSYM bundle, so we should just
         copy that to the destination directory. However, we'll package it
-        into a .tar.bz2 because the debug symbols are pretty huge, and
-        also because it's a bundle, so it's a directory. |file| here is the
+        into a .tar because it's a bundle, so it's a directory. |file| here is
         the original filename."""
         dsymbundle = file + ".dSYM"
         rel_path = os.path.join(
-            debug_file, guid, os.path.basename(dsymbundle) + ".tar.bz2"
+            debug_file, guid, os.path.basename(dsymbundle) + ".tar"
         )
         full_path = os.path.abspath(os.path.join(self.symbol_path, rel_path))
         success = subprocess.call(
-            ["tar", "cjf", full_path, os.path.basename(dsymbundle)],
+            ["tar", "cf", full_path, os.path.basename(dsymbundle)],
             cwd=os.path.dirname(dsymbundle),
             stdout=open(os.devnull, "w"),
             stderr=subprocess.STDOUT,
