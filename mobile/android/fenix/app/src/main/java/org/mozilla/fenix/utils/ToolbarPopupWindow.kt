@@ -32,8 +32,11 @@ object ToolbarPopupWindow {
         copyVisible: Boolean = true
     ) {
         val context = view.get()?.context ?: return
-        val isCustomTabSession = customTabSession != null
         val clipboard = context.components.clipboardHandler
+        if (!copyVisible && clipboard.text.isNullOrEmpty()) return
+
+        val isCustomTabSession = customTabSession != null
+
         val customView = LayoutInflater.from(context)
             .inflate(R.layout.browser_toolbar_popup_window, null)
         val popupWindow = PopupWindow(
