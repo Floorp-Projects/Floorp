@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from mozperftest.metrics.common import filtered_metrics
+from mozperftest.metrics.common import filtered_metrics, COMMON_ARGS
 from mozperftest.layers import Layer
 
 
@@ -22,20 +22,7 @@ class ConsoleOutput(Layer):
 
     name = "console"
     activated = False
-
-    arguments = {
-        "metrics": {
-            "nargs": "*",
-            "default": [],
-            "help": "The metrics that should be retrieved from the data.",
-        },
-        # XXX can we guess this by asking the metrics storage ??
-        "prefix": {
-            "type": str,
-            "default": "",
-            "help": "Prefix used by the output files.",
-        },
-    }
+    arguments = COMMON_ARGS
 
     def run(self, metadata):
         # Get filtered metrics
@@ -44,6 +31,7 @@ class ConsoleOutput(Layer):
             self.get_arg("output"),
             self.get_arg("prefix"),
             metrics=self.get_arg("metrics"),
+            split_by=self.get_arg("split-by"),
         )
 
         if not results:

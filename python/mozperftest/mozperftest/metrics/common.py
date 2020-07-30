@@ -8,8 +8,26 @@ from mozperftest.metrics.exceptions import (
     MetricsMultipleTransformsError,
     MetricsMissingResultsError,
 )
-from mozperftest.metrics.utils import validate_intermediate_results
+from mozperftest.metrics.utils import validate_intermediate_results, metric_fields
 from mozperftest.metrics.notebook import PerftestETL
+
+
+COMMON_ARGS = {
+    "metrics": {
+        "type": metric_fields,
+        "nargs": "*",
+        "default": [],
+        "help": "The metrics that should be retrieved from the data.",
+    },
+    "prefix": {"type": str, "default": "", "help": "Prefix used by the output files."},
+    "split-by": {
+        "type": str,
+        "default": None,
+        "help": "A metric name to use for splitting the data. For instance, "
+        "using browserScripts.pageinfo.url will split the data by the unique "
+        "URLs that are found.",
+    },
+}
 
 
 class MetricsStorage(object):
@@ -153,6 +171,7 @@ class MetricsStorage(object):
         transformer="SingleJsonRetriever",
         metrics=None,
         exclude=None,
+        split_by=None,
     ):
 
         """Filters the metrics to only those that were requested by `metrics`.
@@ -175,6 +194,20 @@ class MetricsStorage(object):
         if not exclude:
             exclude = []
 
+        # Get the field to split the results by (if any)
+        if split_by is not None:
+            splitting_entry = None
+            for data_type, data_info in results.items():
+                for res in data_info:
+                    if split_by in res["subtest"]:
+                        splitting_entry = res
+                        break
+            if splitting_entry is not None:
+                split_by = defaultdict(list)
+                for c, entry in enumerate(splitting_entry["data"]):
+                    split_by[entry["value"]].append(c)
+
+        # Filter metrics
         filtered = {}
         for data_type, data_info in results.items():
             newresults = []
@@ -184,6 +217,29 @@ class MetricsStorage(object):
                 ):
                     newresults.append(res)
             filtered[data_type] = newresults
+
+        # Split the filtered results
+        if split_by is not None:
+            newfilt = {}
+            total_iterations = sum([len(inds) for _, inds in split_by.items()])
+            for data_type in filtered:
+                if not filtered[data_type]:
+                    # Ignore empty data types
+                    continue
+
+                newresults = []
+                newfilt[data_type] = newresults
+                for split, indices in split_by.items():
+                    for res in filtered[data_type]:
+                        if len(res["data"]) != total_iterations:
+                            # Skip data that cannot be split
+                            continue
+                        splitres = {key: val for key, val in res.items()}
+                        splitres["subtest"] += " " + split
+                        splitres["data"] = [res["data"][i] for i in indices]
+                        newresults.append(splitres)
+
+            filtered = newfilt
 
         return filtered
 
@@ -200,6 +256,7 @@ def filtered_metrics(
     metrics=None,
     settings=False,
     exclude=None,
+    split_by=None,
 ):
     """Returns standardized data extracted from the metadata instance.
 
@@ -214,7 +271,11 @@ def filtered_metrics(
         storage = _metrics[key]
 
     results = storage.filtered_metrics(
-        group_name=group_name, transformer=transformer, metrics=metrics, exclude=exclude
+        group_name=group_name,
+        transformer=transformer,
+        metrics=metrics,
+        exclude=exclude,
+        split_by=split_by,
     )
 
     # XXX returning two different types is a problem
