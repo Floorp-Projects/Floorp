@@ -107,6 +107,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       this.highlighterEnv,
       this._buildMarkup.bind(this)
     );
+    this.isReady = this.markup.initialize();
 
     /**
      * Optionally customize each region's fill color by adding an entry to the

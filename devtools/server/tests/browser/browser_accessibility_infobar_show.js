@@ -173,6 +173,7 @@ add_task(async function() {
 
         info("Checks for Infobar's show method");
         const highlighter = new AccessibleHighlighter(env);
+        await highlighter.isReady;
         testInfobar(node, highlighter);
       });
     }
