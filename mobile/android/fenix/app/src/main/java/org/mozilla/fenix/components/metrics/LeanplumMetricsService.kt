@@ -21,6 +21,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.components.metrics.MozillaProductDetector.MozillaProducts
 import org.mozilla.fenix.ext.settings
 import java.util.Locale
+import java.util.MissingResourceException
 import java.util.UUID.randomUUID
 
 private val Event.name: String?
@@ -83,12 +84,19 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
         leanplumJob = scope.launch {
 
             val applicationSetLocale = LocaleManager.getCurrentLocale(application)
-            val currentLocale = when (applicationSetLocale != null) {
-                true -> applicationSetLocale.isO3Language
-                false -> Locale.getDefault().isO3Language
-            }
-            if (!isLeanplumEnabled(currentLocale)) {
-                Log.i(LOGTAG, "Leanplum is not available for this locale: $currentLocale")
+            val currentLocale = applicationSetLocale ?: Locale.getDefault()
+            val languageCode =
+                currentLocale.iso3LanguageOrNull
+                ?: currentLocale.language.let {
+                    if (it.isNotBlank()) {
+                        it
+                    } else {
+                        currentLocale.toString()
+                    }
+                }
+
+            if (!isLeanplumEnabled(languageCode)) {
+                Log.i(LOGTAG, "Leanplum is not available for this locale: $languageCode")
                 return@launch
             }
 
@@ -170,6 +178,12 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
         return LEANPLUM_ENABLED_LOCALES.contains(locale)
     }
 
+    private val Locale.iso3LanguageOrNull: String?
+        get() =
+            try {
+                this.isO3Language
+            } catch (_: MissingResourceException) { null }
+
     companion object {
         private const val LOGTAG = "LeanplumMetricsService"
 
@@ -181,7 +195,7 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
             get() = BuildConfig.LEANPLUM_TOKEN.orEmpty()
         // Leanplum needs to be enabled for the following locales.
         // Irrespective of the actual device location.
-        private val LEANPLUM_ENABLED_LOCALES = listOf(
+        private val LEANPLUM_ENABLED_LOCALES = setOf(
             "eng", // English
             "zho", // Chinese
             "deu", // German
