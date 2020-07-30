@@ -48,7 +48,7 @@ job-template:
     run-time:
         by-build-platform:
             default: 900
-            win.*: 1800
+            win.*: 2700
     fetches:
         toolchain:
             by-build-platform:
