@@ -4,9 +4,9 @@
 import pathlib
 
 from mozperftest.layers import Layer
-from mozperftest.metrics.common import filtered_metrics
+from mozperftest.metrics.common import filtered_metrics, COMMON_ARGS
 from mozperftest.metrics.notebook import PerftestNotebook
-from mozperftest.metrics.utils import is_number, metric_fields
+from mozperftest.metrics.utils import is_number
 
 
 class Notebook(Layer):
@@ -15,49 +15,43 @@ class Notebook(Layer):
     name = "notebook"
     activated = False
 
-    arguments = {
-        "metrics": {
-            "type": metric_fields,
-            "nargs": "*",
-            "default": [],
-            "help": "The metrics that should be retrieved from the data.",
-        },
-        "prefix": {
-            "type": str,
-            "default": "",
-            "help": "Prefix used by the output files.",
-        },
-        "analysis": {
-            "nargs": "*",
-            "default": [],
-            "help": "List of analyses to run in Iodide.",
-        },
-        "analyze-strings": {
-            "action": "store_true",
-            "default": False,
-            "help": "If set, strings won't be filtered out of the results to analyze in Iodide.",
-        },
-        "no-server": {
-            "action": "store_true",
-            "default": False,
-            "help": "f set, the data won't be opened in Iodide.",
-        },
-        "compare-to": {
-            "nargs": "*",
-            "default": [],
-            "help": (
-                "Compare the results from this test to the historical data in the folder(s) "
-                "specified through this option. Only JSON data can be processed for the moment."
-                "Each folder containing those JSONs is considered as a distinct data point "
-                "to compare with the newest run."
-            ),
-        },
-        "stats": {
-            "action": "store_true",
-            "default": False,
-            "help": "If set, browsertime statistics will be reported.",
-        },
-    }
+    arguments = COMMON_ARGS
+    arguments.update(
+        {
+            "analysis": {
+                "nargs": "*",
+                "default": [],
+                "help": "List of analyses to run in Iodide.",
+            },
+            "analyze-strings": {
+                "action": "store_true",
+                "default": False,
+                "help": (
+                    "If set, strings won't be filtered out of the results to analyze in Iodide."
+                ),
+            },
+            "no-server": {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, the data won't be opened in Iodide.",
+            },
+            "compare-to": {
+                "nargs": "*",
+                "default": [],
+                "help": (
+                    "Compare the results from this test to the historical data in the folder(s) "
+                    "specified through this option. Only JSON data can be processed for the "
+                    "moment. Each folder containing those JSONs is considered as a distinct "
+                    "data point to compare with the newest run."
+                ),
+            },
+            "stats": {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, browsertime statistics will be reported.",
+            },
+        }
+    )
 
     def run(self, metadata):
         exclusions = None
@@ -92,6 +86,7 @@ class Notebook(Layer):
             self.get_arg("prefix"),
             metrics=self.get_arg("metrics"),
             exclude=exclusions,
+            split_by=self.get_arg("split-by"),
         )
 
         if not results:

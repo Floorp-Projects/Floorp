@@ -196,7 +196,8 @@ def test_perfherder_exlude_stats():
     assert len(output["suites"][0]["subtests"]) == 1
     assert output["suites"][0]["value"] > 0
 
-    # Check if only one firstPaint metric was obtained
+    # Check if only firstPaint metric was obtained with 2 replicates
+    assert len(output["suites"][0]["subtests"][0]["replicates"]) == 2
     assert (
         "browserScripts.timings.firstPaint"
         == output["suites"][0]["subtests"][0]["name"]
@@ -224,6 +225,41 @@ def test_perfherder_app_name():
     # Make sure that application setting is correct
     assert output["application"]["name"] == "fenix"
     assert "version" not in output["application"]
+
+
+def test_perfherder_split_by():
+    options = {
+        "perfherder": True,
+        "perfherder-prefix": "",
+        "perfherder-app": "fenix",
+        "perfherder-metrics": [metric_fields("firstPaint")],
+        "perfherder-split-by": "browserScripts.pageinfo.url",
+    }
+
+    metrics, metadata, env = setup_env(options)
+
+    with temp_file() as output:
+        env.set_arg("output", output)
+        with metrics as m, silence():
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
+    # Sanity check
+    assert len(output["suites"]) == 1
+
+    # We should have 2 subtests (1 per URL)
+    assert len(output["suites"][0]["subtests"]) == 2
+
+    # Check to make sure that they were properly split
+    names = [subtest["name"] for subtest in output["suites"][0]["subtests"]]
+    assert sorted(names) == [
+        "browserScripts.timings.firstPaint https://www.mozilla.org/en-US/",
+        "browserScripts.timings.firstPaint https://www.sitespeed.io/",
+    ]
+    for i in range(2):
+        assert len(output["suites"][0]["subtests"][i]["replicates"]) == 1
 
 
 def test_perfherder_bad_app_name():
