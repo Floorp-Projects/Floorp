@@ -16,6 +16,7 @@ from taskgraph.util.bugbug import (
     CT_MEDIUM,
     CT_LOW,
 )
+from taskgraph.util.hg import get_push_data
 
 
 @register_strategy("bugbug-low", args=(CT_LOW,))
@@ -28,6 +29,7 @@ from taskgraph.util.bugbug import (
 @register_strategy("bugbug-reduced-high", args=(CT_HIGH, True, True))
 @register_strategy("bugbug-reduced-manifests", args=(CT_MEDIUM, False, True))
 @register_strategy("bugbug-reduced-manifests-fallback", args=(CT_MEDIUM, False, True, True))
+@register_strategy("bugbug-reduced-fallback-last-10-pushes", args=(0.3, False, True, True, 10))
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
 
@@ -40,6 +42,8 @@ class BugBugPushSchedules(OptimizationStrategy):
             provided by the bugbug service (default: False).
         fallback (bool): Whether or not to fallback to SETA if there was a failure
             in bugbug (default: False)
+        num_pushes (int): The number of pushes to consider for the selection
+            (default: 1).
     """
 
     def __init__(
@@ -48,31 +52,64 @@ class BugBugPushSchedules(OptimizationStrategy):
         tasks_only=False,
         use_reduced_tasks=False,
         fallback=False,
+        num_pushes=1,
     ):
         self.confidence_threshold = confidence_threshold
         self.use_reduced_tasks = use_reduced_tasks
         self.fallback = fallback
         self.tasks_only = tasks_only
+        self.num_pushes = num_pushes
         self.timedout = False
 
     def should_remove_task(self, task, params, importance):
-        if params['project'] not in ("autoland", "try"):
+        project = params['project']
+
+        if project not in ("autoland", "try"):
             return False
+
+        current_push_id = int(params['pushlog_id'])
 
         branch = urlsplit(params['head_repository']).path.strip('/')
         rev = params['head_rev']
 
         if self.timedout:
-            return seta.is_low_value_task(task.label, params['project'])
+            return seta.is_low_value_task(task.label, project)
 
-        try:
-            data = push_schedules(branch, rev)
-        except BugbugTimeoutException:
-            if not self.fallback:
-                raise
+        data = {}
 
-            self.timedout = True
-            return self.should_remove_task(task, params, importance)
+        start_push_id = current_push_id - self.num_pushes + 1
+        if self.num_pushes != 1:
+            push_data = get_push_data(
+                params["head_repository"], project, start_push_id, current_push_id - 1
+            )
+
+        for push_id in range(start_push_id, current_push_id + 1):
+            if push_id == current_push_id:
+                rev = params["head_rev"]
+            else:
+                rev = push_data[push_id]["changesets"][-1]
+
+            try:
+                new_data = push_schedules(branch, rev)
+                for key, value in new_data.items():
+                    if isinstance(value, dict):
+                        if key not in data:
+                            data[key] = {}
+
+                        for name, confidence in value.items():
+                            if name not in data[key] or data[key][name] < confidence:
+                                data[key][name] = confidence
+                    elif isinstance(value, list):
+                        if key not in data:
+                            data[key] = set()
+
+                        data[key].update(value)
+            except BugbugTimeoutException:
+                if not self.fallback:
+                    raise
+
+                self.timedout = True
+                return self.should_remove_task(task, params, importance)
 
         key = "reduced_tasks" if self.use_reduced_tasks else "tasks"
         tasks = set(

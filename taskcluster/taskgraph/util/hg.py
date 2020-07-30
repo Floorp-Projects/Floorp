@@ -6,44 +6,93 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import logging
+
 import requests
 import six
 import subprocess
 from redo import retry
 
-PUSHLOG_TMPL = '{}/json-pushes?version=2&changeset={}&tipsonly=1'
+from mozbuild.util import memoize
+
+logger = logging.getLogger(__name__)
+
+PUSHLOG_CHANGESET_TMPL = (
+    "{repository}/json-pushes?version=2&changeset={revision}&tipsonly=1"
+)
+PUSHLOG_PUSHES_TMPL = (
+    "{repository}/json-pushes/?version=2&startID={push_id_start}&endID={push_id_end}"
+)
+
+
+def _query_pushlog(url):
+    response = retry(requests.get, attempts=5, sleeptime=10,
+                     args=(url, ),
+                     kwargs={'timeout': 60, 'headers': {'User-Agent': 'TaskCluster'}})
+
+    return response.json()["pushes"]
 
 
 def find_hg_revision_push_info(repository, revision):
     """Given the parameters for this action and a revision, find the
     pushlog_id of the revision."""
-    pushlog_url = PUSHLOG_TMPL.format(repository, revision)
-
-    def extract_pushes(response_json):
-        pushes = response_json['pushes']
-        if len(pushes) != 1:
-            raise RuntimeError(
-                "Found {} pushlog_ids, expected 1, for {} revision {}: {}".format(
-                    len(pushes), repository, revision, pushes
-                )
-            )
-        return pushes
-
-    def query_pushlog(url):
-        r = requests.get(pushlog_url, timeout=60)
-        r.raise_for_status()
-        return extract_pushes(r.json())
-
-    pushes = retry(
-        query_pushlog, args=(pushlog_url,),
-        attempts=5, sleeptime=10,
+    url = PUSHLOG_CHANGESET_TMPL.format(
+        repository=repository, revision=revision
     )
+
+    pushes = _query_pushlog(url)
+
+    if len(pushes) != 1:
+        raise RuntimeError(
+            "Found {} pushlog_ids, expected 1, for {} revision {}: {}".format(
+                len(pushes), repository, revision, pushes
+            )
+        )
+
     pushid = list(pushes.keys())[0]
     return {
         'pushdate': pushes[pushid]['date'],
         'pushid': pushid,
         'user': pushes[pushid]['user'],
     }
+
+
+@memoize
+def get_push_data(repository, project, push_id_start, push_id_end):
+    url = PUSHLOG_PUSHES_TMPL.format(
+        repository=repository,
+        push_id_start=push_id_start - 1,
+        push_id_end=push_id_end,
+    )
+
+    try:
+        pushes = _query_pushlog(url)
+
+        return {push_id: pushes[str(push_id)] for push_id in range(push_id_start, push_id_end + 1)}
+
+    # In the event of request times out, requests will raise a TimeoutError.
+    except requests.exceptions.Timeout:
+        logger.warning("json-pushes timeout")
+
+    # In the event of a network problem (e.g. DNS failure, refused connection, etc),
+    # requests will raise a ConnectionError.
+    except requests.exceptions.ConnectionError:
+        logger.warning("json-pushes connection error")
+
+    # In the event of the rare invalid HTTP response(e.g 404, 401),
+    # requests will raise an HTTPError exception
+    except requests.exceptions.HTTPError:
+        logger.warning("Bad Http response")
+
+    # When we get invalid JSON (i.e. 500 error), it results in a ValueError (bug 1313426)
+    except ValueError as error:
+        logger.warning("Invalid JSON, possible server error: {}".format(error))
+
+    # We just print the error out as a debug message if we failed to catch the exception above
+    except requests.exceptions.RequestException as error:
+        logger.warning(error)
+
+    return None
 
 
 def get_hg_revision_branch(root, revision):
