@@ -18,6 +18,7 @@ import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.profiler.Profiler
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
@@ -25,18 +26,18 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.sessionsOfType
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultTabTrayControllerTest {
-    private val activity: HomeActivity = mockk(relaxed = true)
+    private val profiler: Profiler? = mockk(relaxed = true)
     private val navController: NavController = mockk()
     private val sessionManager: SessionManager = mockk(relaxed = true)
+    private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
     private val dismissTabTray: (() -> Unit) = mockk(relaxed = true)
     private val dismissTabTrayAndNavigateHome: ((String) -> Unit) = mockk(relaxed = true)
     private val registerCollectionStorageObserver: (() -> Unit) = mockk(relaxed = true)
@@ -64,9 +65,6 @@ class DefaultTabTrayControllerTest {
     @Before
     fun setUp() {
         mockkStatic("org.mozilla.fenix.ext.SessionManagerKt")
-        every { activity.components.core.sessionManager } returns sessionManager
-        every { activity.components.core.tabCollectionStorage } returns tabCollectionStorage
-        every { activity.components.core.engine.profiler } returns mockk(relaxed = true)
 
         every { sessionManager.sessionsOfType(private = true) } returns listOf(session).asSequence()
         every { sessionManager.sessionsOfType(private = false) } returns listOf(nonPrivateSession).asSequence()
@@ -83,7 +81,10 @@ class DefaultTabTrayControllerTest {
         every { tabCollection.title } returns "Collection title"
 
         controller = DefaultTabTrayController(
-            activity = activity,
+            profiler = profiler,
+            sessionManager = sessionManager,
+            browsingModeManager = browsingModeManager,
+            tabCollectionStorage = tabCollectionStorage,
             navController = navController,
             dismissTabTray = dismissTabTray,
             dismissTabTrayAndNavigateHome = dismissTabTrayAndNavigateHome,
@@ -100,7 +101,7 @@ class DefaultTabTrayControllerTest {
         controller.onNewTabTapped(private = false)
 
         verifyOrder {
-            activity.browsingModeManager.mode = BrowsingMode.fromBoolean(false)
+            browsingModeManager.mode = BrowsingMode.fromBoolean(false)
             navController.navigate(
                 TabTrayDialogFragmentDirections.actionGlobalHome(
                     focusOnAddressBar = true
@@ -112,7 +113,7 @@ class DefaultTabTrayControllerTest {
         controller.onNewTabTapped(private = true)
 
         verifyOrder {
-            activity.browsingModeManager.mode = BrowsingMode.fromBoolean(true)
+            browsingModeManager.mode = BrowsingMode.fromBoolean(true)
             navController.navigate(
                 TabTrayDialogFragmentDirections.actionGlobalHome(
                     focusOnAddressBar = true

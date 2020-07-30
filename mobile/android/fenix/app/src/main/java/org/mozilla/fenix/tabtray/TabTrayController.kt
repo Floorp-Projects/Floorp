@@ -8,13 +8,15 @@ import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.profiler.Profiler
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.home.HomeFragment
 
@@ -41,7 +43,9 @@ interface TabTrayController {
 /**
  * Default behavior of [TabTrayController]. Other implementations are possible.
  *
- * @param activity [HomeActivity] used for context and other Android interactions.
+ * @param profiler [Profiler] used for profiling.
+ * @param sessionManager [HomeActivity] used for retrieving a list of sessions.
+ * @param browsingModeManager [HomeActivity] used for registering browsing mode.
  * @param navController [NavController] used for navigation.
  * @param dismissTabTray callback allowing to request this entire Fragment to be dismissed.
  * @param tabTrayDialogFragmentStore [TabTrayDialogFragmentStore] holding the State for all Views displayed
@@ -55,7 +59,10 @@ interface TabTrayController {
  */
 @Suppress("TooManyFunctions")
 class DefaultTabTrayController(
-    private val activity: HomeActivity,
+    private val profiler: Profiler?,
+    private val sessionManager: SessionManager,
+    private val browsingModeManager: BrowsingModeManager,
+    private val tabCollectionStorage: TabCollectionStorage,
     private val navController: NavController,
     private val dismissTabTray: () -> Unit,
     private val dismissTabTrayAndNavigateHome: (String) -> Unit,
@@ -65,14 +72,13 @@ class DefaultTabTrayController(
     private val showChooseCollectionDialog: (List<Session>) -> Unit,
     private val showAddNewCollectionDialog: (List<Session>) -> Unit
 ) : TabTrayController {
-    private val tabCollectionStorage = activity.components.core.tabCollectionStorage
 
     override fun onNewTabTapped(private: Boolean) {
-        val startTime = activity.components.core.engine.profiler?.getProfilerTime()
-        activity.browsingModeManager.mode = BrowsingMode.fromBoolean(private)
+        val startTime = profiler?.getProfilerTime()
+        browsingModeManager.mode = BrowsingMode.fromBoolean(private)
         navController.navigate(TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
         dismissTabTray()
-        activity.components.core.engine.profiler?.addMarker(
+        profiler?.addMarker(
             "DefaultTabTrayController.onNewTabTapped",
             startTime
         )
@@ -84,7 +90,7 @@ class DefaultTabTrayController(
 
     override fun onSaveToCollectionClicked(selectedTabs: Set<Tab>) {
         val sessionList = selectedTabs.map {
-            activity.components.core.sessionManager.findSessionById(it.id) ?: return
+            sessionManager.findSessionById(it.id) ?: return
         }
 
         // Only register the observer right before moving to collection creation
@@ -141,7 +147,7 @@ class DefaultTabTrayController(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     private fun getListOfSessions(private: Boolean): List<Session> {
-        return activity.components.core.sessionManager.sessionsOfType(private = private).toList()
+        return sessionManager.sessionsOfType(private = private).toList()
     }
 
     override fun onModeRequested(): TabTrayDialogFragmentState.Mode {

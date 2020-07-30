@@ -163,7 +163,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
+        val activity = activity as HomeActivity
+        val isPrivate = activity.browsingModeManager.mode.isPrivate
 
         val thumbnailLoader = ThumbnailLoader(requireContext().components.core.thumbnailStorage)
         val adapter = FenixTabsAdapter(requireContext(), thumbnailLoader)
@@ -173,7 +174,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             adapter,
             interactor = TabTrayFragmentInteractor(
                 DefaultTabTrayController(
-                    activity = (activity as HomeActivity),
+                    profiler = activity.components.core.engine.profiler,
+                    sessionManager = activity.components.core.sessionManager,
+                    browsingModeManager = activity.browsingModeManager,
+                    tabCollectionStorage = activity.components.core.tabCollectionStorage,
                     navController = findNavController(),
                     dismissTabTray = ::dismissAllowingStateLoss,
                     dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
