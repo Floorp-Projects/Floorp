@@ -10,8 +10,8 @@ import statistics
 from mozperftest.utils import strtobool
 from mozperftest.layers import Layer
 from mozperftest.metrics.exceptions import PerfherderValidDataError
-from mozperftest.metrics.common import filtered_metrics
-from mozperftest.metrics.utils import write_json, is_number, metric_fields
+from mozperftest.metrics.common import filtered_metrics, COMMON_ARGS
+from mozperftest.metrics.utils import write_json, is_number
 
 
 PERFHERDER_SCHEMA = pathlib.Path(
@@ -26,42 +26,34 @@ class Perfherder(Layer):
     name = "perfherder"
     activated = False
 
-    arguments = {
-        "prefix": {
-            "type": str,
-            "default": "",
-            "help": "Prefix the output files with this string.",
-        },
-        "app": {
-            "type": str,
-            "default": "firefox",
-            "choices": [
-                "firefox",
-                "chrome-m",
-                "chrome",
-                "chromium",
-                "fennec",
-                "geckoview",
-                "fenix",
-                "refbrow",
-            ],
-            "help": (
-                "Shorthand name of application that is "
-                "being tested (used in perfherder data)."
-            ),
-        },
-        "metrics": {
-            "type": metric_fields,
-            "nargs": "*",
-            "default": [],
-            "help": "The metrics that should be retrieved from the data.",
-        },
-        "stats": {
-            "action": "store_true",
-            "default": False,
-            "help": "If set, browsertime statistics will be reported.",
-        },
-    }
+    arguments = COMMON_ARGS
+    arguments.update(
+        {
+            "app": {
+                "type": str,
+                "default": "firefox",
+                "choices": [
+                    "firefox",
+                    "chrome-m",
+                    "chrome",
+                    "chromium",
+                    "fennec",
+                    "geckoview",
+                    "fenix",
+                    "refbrow",
+                ],
+                "help": (
+                    "Shorthand name of application that is "
+                    "being tested (used in perfherder data)."
+                ),
+            },
+            "stats": {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, browsertime statistics will be reported.",
+            },
+        }
+    )
 
     def run(self, metadata):
         """Processes the given results into a perfherder-formatted data blob.
@@ -96,6 +88,7 @@ class Perfherder(Layer):
             metrics=metrics,
             settings=True,
             exclude=exclusions,
+            split_by=self.get_arg("split-by"),
         )
 
         if not any([results[name] for name in results]):
