@@ -220,6 +220,48 @@ def test_bugbug_push_schedules(responses, params, args, data, expected):
     assert sorted(labels) == sorted(expected)
 
 
+def test_bugbug_multiple_pushes(responses, params):
+    pushes = {str(pid): {"changesets": ["c{}".format(pid)]} for pid in range(8, 10)}
+
+    responses.add(
+        responses.GET,
+        "https://hg.mozilla.org/integration/autoland/json-pushes/?version=2&startID=8&endID=9",
+        json={"pushes": pushes},
+        status=200,
+    )
+
+    responses.add(
+        responses.GET,
+        BUGBUG_BASE_URL + "/push/{}/c9/schedules".format(params["branch"]),
+        json={
+            'tasks': {'task-2': 0.2, 'task-4': 0.5},
+            'groups': {'foo/test.ini': 0.2, 'bar/test.ini': 0.25},
+            'known_tasks': ['task-4'],
+        },
+        status=200,
+    )
+
+    # Tasks with a lower confidence don't override task with a higher one.
+    # Tasks with a higher confidence override tasks with a lower one.
+    # Known tasks are merged.
+    responses.add(
+        responses.GET,
+        BUGBUG_BASE_URL + "/push/{branch}/{head_rev}/schedules".format(**params),
+        json={
+            'tasks': {'task-2': 0.2, 'task-4': 0.2},
+            'groups': {'foo/test.ini': 0.65, 'bar/test.ini': 0.25},
+            'known_tasks': ['task-1', 'task-3'],
+        },
+        status=200,
+    )
+
+    params["pushlog_id"] = 10
+
+    opt = BugBugPushSchedules(0.3, False, False, False, 2)
+    labels = [t.label for t in default_tasks if not opt.should_remove_task(t, params, {})]
+    assert sorted(labels) == sorted(['task-0', 'task-2', 'task-4'])
+
+
 def test_bugbug_timeout(monkeypatch, responses, params):
     query = "/push/{branch}/{head_rev}/schedules".format(**params)
     url = BUGBUG_BASE_URL + query
