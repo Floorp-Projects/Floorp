@@ -4,6 +4,10 @@ The test filename is significant in determining the type of test it
 contains, and enabling specific optional features. This page documents
 the various flags available and their meaning.
 
+In some cases flags can also be set via a directory name, such that any file
+that is a (recursive) descendent of the directory inherits the flag value.
+These are individually documented for each flag that supports it.
+
 
 ### Test Type
 
@@ -60,6 +64,10 @@ themselves precede any test type flag, but are otherwise unordered.
    experience is needed to inform the specification. It should be apparent in
    context why the test is tentative and what needs to be resolved to make it
    non-tentative.
+
+   This flag can be enabled for an entire directory (and all its descendents),
+   by naming the directory 'tentative'. For example, every test underneath
+   'foo/tentative/' will be considered tentative.
 
 It's preferable that `.window`, `.worker`, and `.any` are immediately followed
 by their final `.js` extension.
