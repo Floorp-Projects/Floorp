@@ -410,7 +410,7 @@ class ScriptMixin(PlatformMixin):
         # http://bugs.python.org/issue13359 - urllib2 does not automatically quote the URL
         url_quoted = quote(url, safe='%/:=&?~#+!$,;\'@()*[]|')
         # windows certificates need to be refreshed (https://bugs.python.org/issue36011)
-        if self.platform_name() in ('win64',):
+        if self.platform_name() in ('win64',) and platform.architecture()[0] in ('x64',):
             if self.ssl_context is None:
                 self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
                 self.ssl_context.load_default_certs()
