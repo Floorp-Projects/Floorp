@@ -261,7 +261,9 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
     {
       JSONSchemaWriter schema(aWriter);
       schema.WriteField("name");
-      schema.WriteField("time");
+      schema.WriteField("startTime");
+      schema.WriteField("endTime");
+      schema.WriteField("phase");
       schema.WriteField("category");
       schema.WriteField("data");
     }

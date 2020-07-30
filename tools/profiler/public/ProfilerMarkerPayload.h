@@ -94,7 +94,10 @@ class ProfilerMarkerPayload {
                              const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) const = 0;
 
-  mozilla::TimeStamp GetStartTime() const { return mCommonProps.mStartTime; }
+  const mozilla::TimeStamp& GetStartTime() const {
+    return mCommonProps.mStartTime;
+  }
+  const mozilla::TimeStamp& GetEndTime() const { return mCommonProps.mEndTime; }
 
  protected:
   // A `Deserializer` is a free function that can read a serialized payload from

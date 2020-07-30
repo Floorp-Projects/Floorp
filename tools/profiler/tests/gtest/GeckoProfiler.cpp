@@ -992,19 +992,23 @@ TEST(GeckoProfiler, Markers)
 
           for (const Json::Value& marker : data) {
             ASSERT_TRUE(marker.isArray());
-            ASSERT_GE(marker.size(), 3u);
-            ASSERT_LE(marker.size(), 4u);
+            ASSERT_GE(marker.size(), 5u);
+            ASSERT_LE(marker.size(), 6u);
 
-            // root.threads[0].markers.data[i] is an array with 3 or 4 elements.
+            // root.threads[0].markers.data[i] is an array with 5 or 6 elements.
 
             ASSERT_TRUE(marker[0].isUInt());  // name id
             const Json::Value& name = stringTable[marker[0].asUInt()];
             ASSERT_TRUE(name.isString());
             std::string nameString = name.asString();
 
-            EXPECT_TRUE(marker[1].isNumeric());  // timestamp
+            EXPECT_TRUE(marker[1].isNumeric() ||
+                        marker[1].isNull());  // startTime
+            EXPECT_TRUE(marker[2].isNumeric() ||
+                        marker[2].isNull());     // endTime
+            EXPECT_TRUE(marker[3].isNumeric());  // phase
 
-            EXPECT_TRUE(marker[2].isUInt());  // category
+            EXPECT_TRUE(marker[4].isUInt());  // category
 
             if (marker.size() == 3u) {
               // root.threads[0].markers.data[i] is an array with 3 elements,
@@ -1019,7 +1023,7 @@ TEST(GeckoProfiler, Markers)
             } else {
               // root.threads[0].markers.data[i] is an array with 4 elements,
               // so there is a payload.
-              const Json::Value& payload = marker[3];
+              const Json::Value& payload = marker[5];
               ASSERT_TRUE(payload.isObject());
 
               // root.threads[0].markers.data[i][3] is an object (payload).
