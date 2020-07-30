@@ -7,25 +7,20 @@
 // except according to those terms.
 
 //! Implementation for Windows
-extern crate std;
+use crate::{error::RTL_GEN_RANDOM_FAILED, Error};
 
-use winapi::shared::minwindef::ULONG;
-use winapi::um::ntsecapi::RtlGenRandom;
-use winapi::um::winnt::PVOID;
-use std::io;
-use core::num::NonZeroU32;
-use crate::Error;
+extern "system" {
+    #[link_name = "SystemFunction036"]
+    fn RtlGenRandom(RandomBuffer: *mut u8, RandomBufferLength: u32) -> u8;
+}
 
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
-    let ret = unsafe {
-        RtlGenRandom(dest.as_mut_ptr() as PVOID, dest.len() as ULONG)
-    };
-    if ret == 0 {
-        error!("RtlGenRandom call failed");
-        return Err(io::Error::last_os_error().into());
+    // Prevent overflow of u32
+    for chunk in dest.chunks_mut(u32::max_value() as usize) {
+        let ret = unsafe { RtlGenRandom(chunk.as_mut_ptr(), chunk.len() as u32) };
+        if ret == 0 {
+            return Err(RTL_GEN_RANDOM_FAILED);
+        }
     }
     Ok(())
 }
-
-#[inline(always)]
-pub fn error_msg_inner(_: NonZeroU32) -> Option<&'static str> { None }
