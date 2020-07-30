@@ -11,7 +11,6 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_IMPLICIT, MOZ_RAII
-#include "mozilla/GuardObjects.h"  // MOZ_GUARD_OBJECT_NOTIFIER_{INIT,PARAM}, MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #include <stdint.h>  // size_t
 

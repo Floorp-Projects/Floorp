@@ -268,8 +268,7 @@ class PluginModuleMapping : public PRCList {
 
   class MOZ_RAII NotifyLoadingModule {
    public:
-    explicit NotifyLoadingModule(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
-      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    explicit NotifyLoadingModule() {
       PluginModuleMapping::sIsLoadModuleOnStack = true;
     }
 
@@ -278,7 +277,6 @@ class PluginModuleMapping : public PRCList {
     }
 
    private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
  private:

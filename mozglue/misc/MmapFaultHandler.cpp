@@ -10,7 +10,6 @@
 
 #  include "PlatformMutex.h"
 #  include "mozilla/Atomics.h"
-#  include "mozilla/GuardObjects.h"
 #  include "mozilla/MemoryChecking.h"
 #  include "mozilla/ThreadLocal.h"
 #  include <signal.h>

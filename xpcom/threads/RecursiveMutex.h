@@ -10,7 +10,6 @@
 #define mozilla_RecursiveMutex_h
 
 #include "mozilla/BlockingResourceBase.h"
-#include "mozilla/GuardObjects.h"
 
 #ifndef XP_WIN
 #  include <pthread.h>
@@ -72,10 +71,8 @@ class RecursiveMutex : public BlockingResourceBase {
 
 class MOZ_RAII RecursiveMutexAutoLock {
  public:
-  explicit RecursiveMutexAutoLock(
-      RecursiveMutex& aRecursiveMutex MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit RecursiveMutexAutoLock(RecursiveMutex& aRecursiveMutex)
       : mRecursiveMutex(&aRecursiveMutex) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     NS_ASSERTION(mRecursiveMutex, "null mutex");
     mRecursiveMutex->Lock();
   }
@@ -89,15 +86,12 @@ class MOZ_RAII RecursiveMutexAutoLock {
   static void* operator new(size_t) noexcept(true);
 
   mozilla::RecursiveMutex* mRecursiveMutex;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII RecursiveMutexAutoUnlock {
  public:
-  explicit RecursiveMutexAutoUnlock(
-      RecursiveMutex& aRecursiveMutex MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit RecursiveMutexAutoUnlock(RecursiveMutex& aRecursiveMutex)
       : mRecursiveMutex(&aRecursiveMutex) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     NS_ASSERTION(mRecursiveMutex, "null mutex");
     mRecursiveMutex->Unlock();
   }
@@ -111,7 +105,6 @@ class MOZ_RAII RecursiveMutexAutoUnlock {
   static void* operator new(size_t) noexcept(true);
 
   mozilla::RecursiveMutex* mRecursiveMutex;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 }  // namespace mozilla

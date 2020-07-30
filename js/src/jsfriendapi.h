@@ -2189,12 +2189,10 @@ class MOZ_RAII JS_FRIEND_API AutoCTypesActivityCallback {
   JSContext* cx;
   CTypesActivityCallback callback;
   CTypesActivityType endType;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
  public:
   AutoCTypesActivityCallback(JSContext* cx, CTypesActivityType beginType,
-                             CTypesActivityType endType
-                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+                             CTypesActivityType endType);
   ~AutoCTypesActivityCallback() { DoEndCallback(); }
   void DoEndCallback() {
     if (callback) {

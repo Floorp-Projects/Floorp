@@ -30,10 +30,7 @@ class DrawTarget;
  */
 class MOZ_RAII AutoSetRestorePaintServerState {
  public:
-  explicit AutoSetRestorePaintServerState(
-      nsIFrame* aFrame MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mFrame(aFrame) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  explicit AutoSetRestorePaintServerState(nsIFrame* aFrame) : mFrame(aFrame) {
     mFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }
   ~AutoSetRestorePaintServerState() {
@@ -42,7 +39,6 @@ class MOZ_RAII AutoSetRestorePaintServerState {
 
  private:
   nsIFrame* mFrame;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class SVGPaintServerFrame : public SVGContainerFrame {

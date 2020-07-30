@@ -8,7 +8,6 @@
 #define vm_Shape_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
@@ -1498,12 +1497,10 @@ class MOZ_RAII AutoRooterGetterSetter {
 
  public:
   inline AutoRooterGetterSetter(JSContext* cx, uint8_t attrs, GetterOp* pgetter,
-                                SetterOp* psetter
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+                                SetterOp* psetter);
 
  private:
   mozilla::Maybe<Rooted<Inner>> inner;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 struct EmptyShape : public js::Shape {

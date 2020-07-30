@@ -57,11 +57,9 @@ NS_INTERFACE_MAP_END
 // DidChangePathSegList.
 class MOZ_RAII AutoChangePathSegListNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangePathSegListNotifier(
-      DOMSVGPathSegList* aPathSegList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangePathSegListNotifier(DOMSVGPathSegList* aPathSegList)
       : mozAutoDocUpdate(aPathSegList->Element()->GetComposedDoc(), true),
         mPathSegList(aPathSegList) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mPathSegList, "Expecting non-null pathSegList");
     mEmptyOrOldValue = mPathSegList->Element()->WillChangePathSegList(*this);
   }
@@ -76,7 +74,6 @@ class MOZ_RAII AutoChangePathSegListNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGPathSegList* const mPathSegList;
   nsAttrValue mEmptyOrOldValue;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /* static */

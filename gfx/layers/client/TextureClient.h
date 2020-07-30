@@ -784,14 +784,10 @@ class TextureClientReleaseTask : public Runnable {
 // Automatically lock and unlock a texture. Since texture locking is fallible,
 // Succeeded() must be checked on the guard object before proceeding.
 class MOZ_RAII TextureClientAutoLock {
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
  public:
-  TextureClientAutoLock(TextureClient* aTexture,
-                        OpenMode aMode MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  TextureClientAutoLock(TextureClient* aTexture, OpenMode aMode)
       : mTexture(aTexture), mSucceeded(false) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
     mSucceeded = mTexture->Lock(aMode);
 #ifdef DEBUG
     mChecked = false;

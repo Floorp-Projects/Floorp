@@ -196,10 +196,8 @@ void SVGMarkerFrame::AppendDirectlyOwnedAnonBoxes(
 // helper class
 
 SVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
-    SVGMarkerFrame* aFrame,
-    SVGGeometryFrame* aMarkedFrame MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    SVGMarkerFrame* aFrame, SVGGeometryFrame* aMarkedFrame)
     : mFrame(aFrame) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   mFrame->mInUse = true;
   mFrame->mMarkedFrame = aMarkedFrame;
 

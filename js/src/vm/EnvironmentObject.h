@@ -719,23 +719,20 @@ class MOZ_RAII EnvironmentIter {
 
  public:
   // Constructing from a copy of an existing EnvironmentIter.
-  EnvironmentIter(JSContext* cx,
-                  const EnvironmentIter& ei MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  EnvironmentIter(JSContext* cx, const EnvironmentIter& ei);
 
   // Constructing from an environment, scope pair. All environments
   // considered not to be withinInitialFrame, since no frame is given.
-  EnvironmentIter(JSContext* cx, JSObject* env,
-                  Scope* scope MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope);
 
   // Constructing from a frame. Places the EnvironmentIter on the innermost
   // environment at pc.
-  EnvironmentIter(JSContext* cx, AbstractFramePtr frame,
-                  jsbytecode* pc MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  EnvironmentIter(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc);
 
   // Constructing from an environment, scope and frame. The frame is given
   // to initialize to proper enclosing environment/scope.
   EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope,
-                  AbstractFramePtr frame MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+                  AbstractFramePtr frame);
 
   bool done() const { return si_.done(); }
 
@@ -791,7 +788,6 @@ class MOZ_RAII EnvironmentIter {
 
   AbstractFramePtr maybeInitialFrame() const { return frame_; }
 
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 // The key in MissingEnvironmentMap. For live frames, maps live frames to
