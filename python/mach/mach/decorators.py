@@ -124,13 +124,14 @@ def CommandProvider(cls):
     if isfunc(cls.__init__):
         spec = inspect.getargspec(cls.__init__)
 
-        if len(spec.args) > 2:
+        if any([arg for arg in spec.args if arg not in ('self', 'context')]):
             msg = 'Mach @CommandProvider class %s implemented incorrectly. ' + \
-                  '__init__() must take 1 or 2 arguments. From %s'
+                  '__init__() must not take any arguments other than "context". ' + \
+                  'From %s'
             msg = msg % (cls.__name__, inspect.getsourcefile(cls))
             raise MachError(msg)
 
-        if len(spec.args) == 2:
+        if 'context' in spec.args:
             pass_context = True
 
     seen_commands = set()
