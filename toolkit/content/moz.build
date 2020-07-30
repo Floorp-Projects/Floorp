@@ -53,9 +53,6 @@ DEFINES['TOPOBJDIR'] = TOPOBJDIR
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
-with Files('aboutTelemetry.*'):
-    BUG_COMPONENT = ('Toolkit', 'Telemetry')
-
 with Files('aboutwebrtc/*'):
     BUG_COMPONENT = ('Core', 'WebRTC')
 
@@ -214,6 +211,9 @@ with Files('TopLevelVideoDocument.js'):
 
 with Files('about*'):
     BUG_COMPONENT = ('Firefox', 'General')
+
+with Files('aboutGlean.*'):
+    BUG_COMPONENT = ('Toolkit', 'Telemetry')
 
 with Files('aboutNetworking*'):
     BUG_COMPONENT = ('Core', 'Networking')

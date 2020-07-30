@@ -19,6 +19,39 @@ To turn on logging for FOG, use any of the following:
 For more information on logging in Firefox Desktop, see the
 [Gecko Logging docs](https://developer.mozilla.org/docs/Mozilla/Developer_guide/Gecko_Logging).
 
+## `about:glean`
+
+`about:glean` is a page in a running Firefox that allows you to
+[debug the Glean SDK](https://mozilla.github.io/glean/book/user/debugging/index.html)
+in Firefox Desktop.
+It does this through query parameters:
+* `logPings=true` To turn on debug-level logging of ping assembly and sending in
+  `glean_core`.
+  (Note you need to set `glean_core`'s log level to at least Debug
+  (3) for these logs to make it out through `RUST_LOG` or `MOZ_LOG`)
+* `tagPings=my-debug-tag` Set the
+  [debug ping tag](https://mozilla.github.io/glean/book/dev/core/internal/debug-pings.html)
+  to "my-debug-tag" for all pings assembled from this point on.
+  Tagged pings are rerouted to the
+  [Debug Ping Viewer](https://glean-debug-view-dev-237806.firebaseapp.com/)
+  for ease of manual testing.
+* `sendPing=ping-name` Send the ping named
+  "ping-name" immediately with whatever data we have on hand for it.
+
+If multiple query parameters are specified,
+`logPings` will take effect before
+`tagPings` which will take effect before
+`sendPing`. That means
+`about:glean?sendPing=baseline&tagPings=my-debug-tag&logPings=true`
+will log and assemble the
+"baseline" ping immediately with a debug tag of "my-debug-tag".
+
+**Note:** At present no pings are registered in FOG so `sendPing` will not work.
+However, builtin pings like "deletion-request" will respect the
+`logPings` and `tagPings` values you set.
+This will be fixed in
+[bug 1653605](https://bugzilla.mozilla.org/show_bug.cgi?id=1653605).
+
 ## Rust
 
 Not all of our Rust code can be tested in a single fashion, unfortunately.

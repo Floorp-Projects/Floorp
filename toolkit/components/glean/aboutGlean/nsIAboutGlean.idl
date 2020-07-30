@@ -1,0 +1,42 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(98d0e975-9cad-4ce3-ae2f-f878b8be6307)]
+interface nsIAboutGlean : nsISupports
+{
+
+  /**
+   * Enable or Disable the logging of pings in the Glean SDK.
+   * See https://firefox-source-docs.mozilla.org/toolkit/components/glean/testing.html
+   * for details.
+   *
+   * @param aEnableLogPings - true to enable logging, false to disable.
+   */
+  void setLogPings(in boolean aEnableLogPings);
+
+  /**
+   * Set the tag to be applied to pings assembled from now on.
+   * See https://firefox-source-docs.mozilla.org/toolkit/components/glean/testing.html
+   * for details.
+   *
+   * @param aDebugTag - The string tag to apply.
+   *                    If it cannot be applied (e.g it contains characters that are
+   *                    forbidden in HTTP headers) the old value will remain.
+   */
+  void setTagPings(in ACString aDebugTag);
+
+  /**
+   * Send the named ping.
+   * See https://firefox-source-docs.mozilla.org/toolkit/components/glean/testing.html
+   * for details.
+   *
+   * @param aPingName - The name of the ping to send. If no ping of that name
+   *                    exists, or the ping is known but cannot be assembled
+   *                    (e.g if it is empty), no ping will be sent.
+   */
+  void sendPing(in ACString aPingName);
+};
