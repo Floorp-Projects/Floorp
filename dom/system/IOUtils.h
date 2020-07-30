@@ -120,8 +120,28 @@ class IOUtils final {
   static Result<nsTArray<uint8_t>, nsresult> ReadSync(
       const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes);
 
-  static nsresult WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
-                            uint32_t& aResult);
+  /**
+   * Attempts to write the entirety of |aByteArray| to the file at |aPath|.
+   * This may occur by writing to an intermediate destination and performing a
+   * move, depending on |aOptions|.
+   *
+   * @param aDestPath  The location of the file as an absolute path string.
+   * @param aByteArray The data to write to the file.
+   * @param aOptions   Options to modify the way the write is completed.
+   */
+  static Result<uint32_t, nsresult> WriteAtomicSync(
+      const nsAString& aDestPath, const nsTArray<uint8_t>& aByteArray,
+      const WriteAtomicOptions& aOptions);
+
+  /**
+   * Attempts to write |aBytes| to the file pointed by |aFd|.
+   *
+   * @param aFd    An open PRFileDesc for the destination file to be
+   *               overwritten.
+   * @param aBytes The data to write to the file.
+   */
+  static Result<uint32_t, nsresult> WriteSync(PRFileDesc* aFd,
+                                              const nsTArray<uint8_t>& aBytes);
 
   static nsresult MoveSync(const nsAString& aSource, const nsAString& aDest,
                            bool noOverwrite);
@@ -157,7 +177,7 @@ class IOUtils final {
                           /* IsExclusive */ true>;
 
   using IOWriteMozPromise =
-      mozilla::MozPromise<uint32_t, const nsCString, /* IsExclusive */ true>;
+      mozilla::MozPromise<uint32_t, const nsresult, /* IsExclusive */ true>;
 
   using IOStatMozPromise =
       mozilla::MozPromise<struct InternalFileInfo, const nsresult,
