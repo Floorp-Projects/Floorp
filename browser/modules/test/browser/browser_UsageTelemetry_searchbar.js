@@ -4,8 +4,8 @@ const SCALAR_SEARCHBAR = "browser.engagement.navigation.searchbar";
 
 ChromeUtils.defineModuleGetter(
   this,
-  "URLBAR_SELECTED_RESULT_METHODS",
-  "resource:///modules/BrowserUsageTelemetry.jsm"
+  "UrlbarTestUtils",
+  "resource://testing-common/UrlbarTestUtils.jsm"
 );
 
 ChromeUtils.import(
@@ -175,7 +175,7 @@ add_task(async function test_plainQuery() {
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(
     resultMethods,
-    URLBAR_SELECTED_RESULT_METHODS.enter,
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
 
@@ -246,7 +246,7 @@ add_task(async function test_oneOff_enter() {
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(
     resultMethods,
-    URLBAR_SELECTED_RESULT_METHODS.enter,
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
 
@@ -291,7 +291,7 @@ add_task(async function test_oneOff_enterSelection() {
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(
     resultMethods,
-    URLBAR_SELECTED_RESULT_METHODS.enterSelection,
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enterSelection,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
 
@@ -327,7 +327,7 @@ add_task(async function test_oneOff_click() {
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(
     resultMethods,
-    URLBAR_SELECTED_RESULT_METHODS.click,
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.click,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
 
@@ -404,7 +404,7 @@ add_task(async function test_suggestion_click() {
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(
     resultMethods,
-    URLBAR_SELECTED_RESULT_METHODS.click,
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.click,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
 
@@ -448,7 +448,7 @@ add_task(async function test_suggestion_enterSelection() {
   let resultMethods = resultMethodHist.snapshot();
   checkHistogramResults(
     resultMethods,
-    URLBAR_SELECTED_RESULT_METHODS.enterSelection,
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enterSelection,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
 

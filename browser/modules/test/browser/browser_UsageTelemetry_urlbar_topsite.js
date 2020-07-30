@@ -12,8 +12,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
-  URLBAR_SELECTED_RESULT_METHODS:
-    "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
 const EN_US_TOPSITES =
@@ -138,7 +136,7 @@ add_task(async function test() {
       histograms,
       "topsite",
       0,
-      URLBAR_SELECTED_RESULT_METHODS.arrowEnterSelection
+      UrlbarTestUtils.SELECTED_RESULT_METHODS.arrowEnterSelection
     );
     await UrlbarTestUtils.promisePopupClose(window, () => {
       gURLBar.blur();
