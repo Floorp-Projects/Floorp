@@ -12,27 +12,20 @@ use serde_json::json;
 use glean_core::metrics::*;
 use glean_core::storage::StorageManager;
 use glean_core::{test_get_num_recorded_errors, ErrorType};
-use glean_core::{CommonMetricData, Glean, Lifetime};
+use glean_core::{CommonMetricData, Lifetime};
 
 // Tests ported from glean-ac
 
 #[test]
 fn serializer_should_correctly_serialize_timing_distribution() {
-    let (_t, tmpname) = tempdir();
+    let (mut tempdir, _) = tempdir();
 
     let duration = 60;
     let time_unit = TimeUnit::Nanosecond;
 
-    let cfg = glean_core::Configuration {
-        data_path: tmpname,
-        application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-    };
-
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        let (glean, dir) = new_glean(Some(tempdir));
+        tempdir = dir;
 
         let mut metric = TimingDistributionMetric::new(
             CommonMetricData {
@@ -59,7 +52,7 @@ fn serializer_should_correctly_serialize_timing_distribution() {
     // Make a new Glean instance here, which should force reloading of the data from disk
     // so we can ensure it persisted, because it has User lifetime
     {
-        let glean = Glean::new(cfg).unwrap();
+        let (glean, _) = new_glean(Some(tempdir));
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
             .unwrap();

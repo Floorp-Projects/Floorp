@@ -10,15 +10,8 @@ use glean_core::ping::PingMaker;
 use glean_core::{CommonMetricData, Glean, Lifetime};
 
 fn set_up_basic_ping() -> (Glean, PingMaker, PingType, tempfile::TempDir) {
-    let (t, tmpname) = tempdir();
-    let cfg = glean_core::Configuration {
-        data_path: tmpname,
-        application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-    };
-    let mut glean = Glean::new(cfg).unwrap();
+    let (tempdir, _) = tempdir();
+    let (mut glean, t) = new_glean(Some(tempdir));
     let ping_maker = PingMaker::new();
     let ping_type = PingType::new("store1", true, false, vec![]);
     glean.register_ping_type(&ping_type);
@@ -154,7 +147,7 @@ fn seq_number_must_be_sequential() {
 }
 
 #[test]
-fn test_clear_pending_pings() {
+fn clear_pending_pings() {
     let (mut glean, _) = new_glean(None);
     let ping_maker = PingMaker::new();
     let ping_type = PingType::new("store1", true, false, vec![]);
@@ -181,7 +174,7 @@ fn test_clear_pending_pings() {
 }
 
 #[test]
-fn test_no_pings_submitted_if_upload_disabled() {
+fn no_pings_submitted_if_upload_disabled() {
     // Regression test, bug 1603571
 
     let (mut glean, _) = new_glean(None);
@@ -200,4 +193,18 @@ fn test_no_pings_submitted_if_upload_disabled() {
     // Test again through the direct call
     assert!(ping_type.submit(&glean, None).is_ok());
     assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
+}
+
+#[test]
+fn metadata_is_correctly_added_when_necessary() {
+    let (mut glean, _) = new_glean(None);
+    glean.set_debug_view_tag("valid-tag");
+    let ping_type = PingType::new("store1", true, true, vec![]);
+    glean.register_ping_type(&ping_type);
+
+    assert!(glean.submit_ping(&ping_type, None).is_ok());
+
+    let (_, _, metadata) = &get_queued_pings(glean.get_data_path()).unwrap()[0];
+    let headers = metadata.as_ref().unwrap().get("headers").unwrap();
+    assert_eq!(headers.get("X-Debug-ID").unwrap(), "valid-tag");
 }

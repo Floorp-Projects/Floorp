@@ -159,6 +159,39 @@ impl PingMaker {
         json!(map)
     }
 
+    /// Build the metadata JSON to be persisted with a ping.
+    ///
+    /// Currently the only type of metadata we need to persist is the value of the `X-Debug-ID` header.
+    ///
+    /// ## Arguments
+    ///
+    /// * `glean` - the Glean instance to collect metadata from.
+    ///
+    /// ## Return value
+    ///
+    /// Returns a JSON object representing the metadata that needs to be persisted with this ping.
+    ///
+    /// The structure of the metadata json is:
+    ///
+    /// ```json
+    /// {
+    ///     "headers": {
+    ///         "X-Debug-ID": "test-tag"
+    ///     }
+    /// }
+    /// ```
+    fn get_metadata(&self, glean: &Glean) -> Option<JsonValue> {
+        if let Some(debug_view_tag) = glean.debug_view_tag() {
+            Some(json!({
+                "headers": {
+                    "X-Debug-ID": debug_view_tag,
+                },
+            }))
+        } else {
+            None
+        }
+    }
+
     /// Collect a snapshot for the given ping from storage and attach required meta information.
     ///
     /// ## Arguments
@@ -261,6 +294,7 @@ impl PingMaker {
     /// Store a ping to disk in the pings directory.
     pub fn store_ping(
         &self,
+        glean: &Glean,
         doc_id: &str,
         ping_name: &str,
         data_path: &Path,
@@ -282,6 +316,10 @@ impl PingMaker {
             file.write_all(url_path.as_bytes())?;
             file.write_all(b"\n")?;
             file.write_all(::serde_json::to_string(ping_content)?.as_bytes())?;
+            if let Some(metadata) = self.get_metadata(glean) {
+                file.write_all(b"\n")?;
+                file.write_all(::serde_json::to_string(&metadata)?.as_bytes())?;
+            }
         }
 
         if let Err(e) = std::fs::rename(&temp_ping_path, &ping_path) {

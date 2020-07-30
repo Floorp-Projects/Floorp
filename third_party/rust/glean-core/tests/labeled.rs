@@ -14,7 +14,7 @@ use glean_core::{CommonMetricData, Lifetime};
 #[test]
 fn can_create_labeled_counter_metric() {
     let (glean, _t) = new_glean(None);
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
@@ -46,7 +46,7 @@ fn can_create_labeled_counter_metric() {
 #[test]
 fn can_create_labeled_string_metric() {
     let (glean, _t) = new_glean(None);
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         StringMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
@@ -78,7 +78,7 @@ fn can_create_labeled_string_metric() {
 #[test]
 fn can_create_labeled_bool_metric() {
     let (glean, _t) = new_glean(None);
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         BooleanMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
@@ -110,7 +110,7 @@ fn can_create_labeled_bool_metric() {
 #[test]
 fn can_use_multiple_labels() {
     let (glean, _t) = new_glean(None);
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
@@ -148,7 +148,7 @@ fn can_use_multiple_labels() {
 #[test]
 fn labels_are_checked_against_static_list() {
     let (glean, _t) = new_glean(None);
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
@@ -193,7 +193,7 @@ fn labels_are_checked_against_static_list() {
 #[test]
 fn dynamic_labels_too_long() {
     let (glean, _t) = new_glean(None);
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
@@ -228,7 +228,7 @@ fn dynamic_labels_too_long() {
 #[test]
 fn dynamic_labels_regex_mismatch() {
     let (glean, _t) = new_glean(None);
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
@@ -275,7 +275,7 @@ fn dynamic_labels_regex_mismatch() {
 #[test]
 fn dynamic_labels_regex_allowed() {
     let (glean, _t) = new_glean(None);
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
@@ -330,7 +330,7 @@ fn seen_labels_get_reloaded_from_disk() {
     let (glean, dir) = new_glean(Some(tempdir));
     tempdir = dir;
 
-    let mut labeled = LabeledMetric::new(
+    let labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
             category: "telemetry".into(),
