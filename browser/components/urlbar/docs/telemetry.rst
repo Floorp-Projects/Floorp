@@ -101,14 +101,14 @@ FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE
   This probe tracks picked result type, for each one it tracks the index where
   it appeared.
   It's a keyed histogram where the keys are result types (see
-  URLBAR_SELECTED_RESULT_TYPES). For each key, this records the indexes of
+  SELECTED_RESULT_TYPES). For each key, this records the indexes of
   picked results for that result type.
 
 FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2
   This probe tracks picked result type, for each one it tracks the index where
   it appeared.
   It's a keyed histogram where the keys are result types (see
-  URLBAR_SELECTED_RESULT_TYPES). For each key, this records the indexes of
+  SELECTED_RESULT_TYPES). For each key, this records the indexes of
   picked results for that result type.
 
 Scalars
