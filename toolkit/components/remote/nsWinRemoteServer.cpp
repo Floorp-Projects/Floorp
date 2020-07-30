@@ -47,20 +47,50 @@ static nsresult GetMostRecentWindow(mozIDOMWindowProxy** aWindow) {
   return NS_ERROR_FAILURE;
 }
 
-void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir,
-                       uint32_t aState) {
-  nsresult rv;
+// This class converts a command line string into an array of the arguments.
+// It's basically the opposite of MakeCommandLine.  However, the behavior is
+// different from ::CommandLineToArgvW in several ways, such as escaping a
+// backslash or quoting an argument containing whitespaces.
+template <typename T>
+class CommandLineParserWin final {
+  int mArgc;
+  T** mArgv;
+
+  void Release() {
+    if (mArgv) {
+      while (mArgc) {
+        delete[] mArgv[--mArgc];
+      }
+      delete[] mArgv;
+      mArgv = nullptr;
+    }
+  }
+
+ public:
+  CommandLineParserWin() : mArgc(0), mArgv(nullptr) {}
+  ~CommandLineParserWin() { Release(); }
+
+  CommandLineParserWin(const CommandLineParserWin&) = delete;
+  CommandLineParserWin(CommandLineParserWin&&) = delete;
+  CommandLineParserWin& operator=(const CommandLineParserWin&) = delete;
+  CommandLineParserWin& operator=(CommandLineParserWin&&) = delete;
+
+  int Argc() const { return mArgc; }
+  const T* const* Argv() const { return mArgv; }
+
+  void HandleCommandLine(const T* aCmdLineString);
+};
+
+template <typename T>
+void CommandLineParserWin<T>::HandleCommandLine(const T* aCmdLineString) {
+  Release();
 
   int justCounting = 1;
-  char** argv = 0;
   // Flags, etc.
   int init = 1;
   int between, quoted, bSlashCount;
-  int argc;
-  const char* p;
-  nsAutoCString arg;
-
-  nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
+  const T* p;
+  nsTAutoString<T> arg;
 
   // Parse command line args according to MS spec
   // (see "Parsing C++ Command-Line Arguments" at
@@ -71,7 +101,7 @@ void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir,
     if (init) {
       p = aCmdLineString;
       between = 1;
-      argc = quoted = bSlashCount = 0;
+      mArgc = quoted = bSlashCount = 0;
 
       init = 0;
     }
@@ -81,7 +111,7 @@ void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir,
       if (*p != 0 && !isspace(*p)) {
         // Start of another arg.
         between = 0;
-        arg = "";
+        arg.Truncate();
         switch (*p) {
           case '\\':
             // Count the backslash.
@@ -111,10 +141,10 @@ void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir,
         }
         // End current arg.
         if (!justCounting) {
-          argv[argc] = new char[arg.Length() + 1];
-          strcpy(argv[argc], arg.get());
+          mArgv[mArgc] = new T[arg.Length() + 1];
+          memcpy(mArgv[mArgc], arg.get(), (arg.Length() + 1) * sizeof(T));
         }
-        argc++;
+        mArgc++;
         // We're now between args.
         between = 1;
       } else {
@@ -173,7 +203,7 @@ void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir,
       // If on first pass, go on to second.
       if (justCounting) {
         // Allocate argv array.
-        argv = new char*[argc];
+        mArgv = new T*[mArgc];
 
         // Start second pass
         justCounting = 0;
@@ -184,21 +214,6 @@ void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir,
       }
     }
   }
-
-  rv = cmdLine->Init(argc, argv, aWorkingDir, aState);
-
-  // Cleanup.
-  while (argc) {
-    delete[] argv[--argc];
-  }
-  delete[] argv;
-
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Error initializing command line.");
-    return;
-  }
-
-  cmdLine->Run();
 }
 
 LRESULT CALLBACK WindowProc(HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp) {
@@ -218,8 +233,17 @@ LRESULT CALLBACK WindowProc(HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp) {
       NS_NewLocalFile(NS_ConvertUTF8toUTF16(wdpath), false,
                       getter_AddRefs(workingDir));
     }
-    HandleCommandLine((char*)cds->lpData, workingDir,
-                      nsICommandLine::STATE_REMOTE_AUTO);
+
+    CommandLineParserWin<char> parser;
+    parser.HandleCommandLine(reinterpret_cast<char*>(cds->lpData));
+
+    nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
+    if (NS_SUCCEEDED(cmdLine->Init(parser.Argc(), parser.Argv(), workingDir,
+                                   nsICommandLine::STATE_REMOTE_AUTO))) {
+      cmdLine->Run();
+    } else {
+      NS_ERROR("Error initializing command line.");
+    }
 
     // Get current window and return its window handle.
     nsCOMPtr<mozIDOMWindowProxy> win;
