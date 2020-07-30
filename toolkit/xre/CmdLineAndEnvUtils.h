@@ -441,6 +441,172 @@ inline bool SetArgv0ToFullBinaryPath(wchar_t* aArgv[]) {
   return true;
 }
 
+// This class converts a command line string into an array of the arguments.
+// It's basically the opposite of MakeCommandLine.  However, the behavior is
+// different from ::CommandLineToArgvW in several ways, such as escaping a
+// backslash or quoting an argument containing whitespaces.
+template <typename T>
+class CommandLineParserWin final {
+  int mArgc;
+  T** mArgv;
+
+  void Release() {
+    if (mArgv) {
+      while (mArgc) {
+        delete[] mArgv[--mArgc];
+      }
+      delete[] mArgv;
+      mArgv = nullptr;
+    }
+  }
+
+ public:
+  CommandLineParserWin() : mArgc(0), mArgv(nullptr) {}
+  ~CommandLineParserWin() { Release(); }
+
+  CommandLineParserWin(const CommandLineParserWin&) = delete;
+  CommandLineParserWin(CommandLineParserWin&&) = delete;
+  CommandLineParserWin& operator=(const CommandLineParserWin&) = delete;
+  CommandLineParserWin& operator=(CommandLineParserWin&&) = delete;
+
+  int Argc() const { return mArgc; }
+  const T* const* Argv() const { return mArgv; }
+
+  void HandleCommandLine(const T* aCmdLineString) {
+    Release();
+
+    int justCounting = 1;
+    // Flags, etc.
+    int init = 1;
+    int between, quoted, bSlashCount;
+    const T* p;
+    nsTAutoString<T> arg;
+
+    // Parse command line args according to MS spec
+    // (see "Parsing C++ Command-Line Arguments" at
+    // http://msdn.microsoft.com/library/devprods/vs6/visualc/vclang/_pluslang_parsing_c.2b2b_.command.2d.line_arguments.htm).
+    // We loop if we've not finished the second pass through.
+    while (1) {
+      // Initialize if required.
+      if (init) {
+        p = aCmdLineString;
+        between = 1;
+        mArgc = quoted = bSlashCount = 0;
+
+        init = 0;
+      }
+      if (between) {
+        // We are traversing whitespace between args.
+        // Check for start of next arg.
+        if (*p != 0 && !isspace(*p)) {
+          // Start of another arg.
+          between = 0;
+          arg.Truncate();
+          switch (*p) {
+            case '\\':
+              // Count the backslash.
+              bSlashCount = 1;
+              break;
+            case '"':
+              // Remember we're inside quotes.
+              quoted = 1;
+              break;
+            default:
+              // Add character to arg.
+              arg += *p;
+              break;
+          }
+        } else {
+          // Another space between args, ignore it.
+        }
+      } else {
+        // We are processing the contents of an argument.
+        // Check for whitespace or end.
+        if (*p == 0 || (!quoted && isspace(*p))) {
+          // Process pending backslashes (interpret them
+          // literally since they're not followed by a ").
+          while (bSlashCount) {
+            arg += '\\';
+            bSlashCount--;
+          }
+          // End current arg.
+          if (!justCounting) {
+            mArgv[mArgc] = new T[arg.Length() + 1];
+            memcpy(mArgv[mArgc], arg.get(), (arg.Length() + 1) * sizeof(T));
+          }
+          mArgc++;
+          // We're now between args.
+          between = 1;
+        } else {
+          // Still inside argument, process the character.
+          switch (*p) {
+            case '"':
+              // First, digest preceding backslashes (if any).
+              while (bSlashCount > 1) {
+                // Put one backsplash in arg for each pair.
+                arg += '\\';
+                bSlashCount -= 2;
+              }
+              if (bSlashCount) {
+                // Quote is literal.
+                arg += '"';
+                bSlashCount = 0;
+              } else {
+                // Quote starts or ends a quoted section.
+                if (quoted) {
+                  // Check for special case of consecutive double
+                  // quotes inside a quoted section.
+                  if (*(p + 1) == '"') {
+                    // This implies a literal double-quote.  Fake that
+                    // out by causing next double-quote to look as
+                    // if it was preceded by a backslash.
+                    bSlashCount = 1;
+                  } else {
+                    quoted = 0;
+                  }
+                } else {
+                  quoted = 1;
+                }
+              }
+              break;
+            case '\\':
+              // Add to count.
+              bSlashCount++;
+              break;
+            default:
+              // Accept any preceding backslashes literally.
+              while (bSlashCount) {
+                arg += '\\';
+                bSlashCount--;
+              }
+              // Just add next char to the current arg.
+              arg += *p;
+              break;
+          }
+        }
+      }
+      // Check for end of input.
+      if (*p) {
+        // Go to next character.
+        p++;
+      } else {
+        // If on first pass, go on to second.
+        if (justCounting) {
+          // Allocate argv array.
+          mArgv = new T*[mArgc];
+
+          // Start second pass
+          justCounting = 0;
+          init = 1;
+        } else {
+          // Quit.
+          break;
+        }
+      }
+    }
+  }
+};
+
 #endif  // defined(XP_WIN)
 
 // SaveToEnv and EnvHasValue are only available on Windows or when
