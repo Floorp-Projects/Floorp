@@ -358,10 +358,6 @@ const SNAPSHOT_SCHEMA = {
           required: false,
           type: "boolean",
         },
-        "dom.ipc.processCount.webIsolated": {
-          required: false,
-          type: "number",
-        },
       },
     },
     graphics: {
