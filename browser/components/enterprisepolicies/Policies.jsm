@@ -40,6 +40,11 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["File", "FileReader"]);
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 const BROWSER_DOCUMENT_URL = AppConstants.BROWSER_CHROME_URL;
 
+let env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
+const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
@@ -80,6 +85,31 @@ var EXPORTED_SYMBOLS = ["Policies"];
  * The callbacks will be bound to their parent policy object.
  */
 var Policies = {
+  // Used for cleaning up policies.
+  // Use the same timing that you used for setting up the policy.
+  _cleanup: {
+    onBeforeAddons(manager) {
+      if (Cu.isInAutomation || isXpcshell) {
+        console.log("_cleanup from onBeforeAddons");
+      }
+    },
+    onProfileAfterChange(manager) {
+      if (Cu.isInAutomation || isXpcshell) {
+        console.log("_cleanup from onProfileAfterChange");
+      }
+    },
+    onBeforeUIStartup(manager) {
+      if (Cu.isInAutomation || isXpcshell) {
+        console.log("_cleanup from onBeforeUIStartup");
+      }
+    },
+    onAllWindowsRestored(manager) {
+      if (Cu.isInAutomation || isXpcshell) {
+        console.log("_cleanup from onAllWindowsRestored");
+      }
+    },
+  },
+
   "3rdparty": {
     onBeforeAddons(manager, param) {
       manager.setExtensionPolicies(param.Extensions);
