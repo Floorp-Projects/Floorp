@@ -192,6 +192,7 @@ fails-if(Android) == 1463020-letter-spacing-text-transform-2.html 1463020-letter
 == 1507661-spurious-hyphenation-after-explicit.html 1507661-spurious-hyphenation-after-explicit-ref.html
 fuzzy-if(!webrender,12-66,288-1660) fails-if(gtkWidget&&!webrender) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
 != 1637405-pua-shaping-1.html 1637405-pua-shaping-1-notref.html
+fuzzy-if(!webrender,0-42,0-1553) fuzzy-if(gtkWidget&&!webrender,0-255,0-50) == 1655364-1.html 1655364-1-ref.html
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
 # should at least render hexboxes if there's no font support
