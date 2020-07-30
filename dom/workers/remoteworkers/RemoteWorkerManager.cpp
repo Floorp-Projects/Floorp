@@ -589,7 +589,6 @@ void RemoteWorkerManager::LaunchNewContentProcess(
             workerRemoteType.IsEmpty() ? DEFAULT_REMOTE_TYPE : workerRemoteType;
 
         ContentParent::GetNewOrUsedBrowserProcessAsync(
-            /* aFrameElement = */ nullptr,
             /* aRemoteType = */ remoteType)
             ->Then(GetCurrentSerialEventTarget(), __func__,
                    [callback = std::move(callback),
