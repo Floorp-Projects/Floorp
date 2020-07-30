@@ -1069,26 +1069,6 @@
   value: 2048
   mirror: always
 
-# If set, use DocumentChannel with nsDocShell in place of HttpChannel.
-- name: browser.tabs.documentchannel
-  type: bool
-  value: true
-  mirror: always
-
-# If set, use DocumentChannel with parent process' sDocShell
-- name: browser.tabs.documentchannel.ppdc
-  type: bool
-  value: true
-  mirror: always
-
-# If set, use DocumentChannel to initiate loads from
-# parent-process BrowsingContexts in parallel with the content
-# process.
-- name: browser.tabs.documentchannel.parent-initiated
-  type: bool
-  value: true
-  mirror: always
-
 # If set, use DocumentChannel to directly initiate loads entirely
 # from parent-process BrowsingContexts
 - name: browser.tabs.documentchannel.parent-controlled
