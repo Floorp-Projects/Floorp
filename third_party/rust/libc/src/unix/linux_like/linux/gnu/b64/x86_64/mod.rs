@@ -42,6 +42,14 @@ s! {
         pub l_pid: ::pid_t,
     }
 
+    pub struct flock64 {
+        pub l_type: ::c_short,
+        pub l_whence: ::c_short,
+        pub l_start: ::off64_t,
+        pub l_len: ::off64_t,
+        pub l_pid: ::pid_t,
+    }
+
     pub struct siginfo_t {
         pub si_signo: ::c_int,
         pub si_errno: ::c_int,
@@ -260,6 +268,12 @@ s! {
         pub c_cc: [::cc_t; 19],
         pub c_ispeed: ::speed_t,
         pub c_ospeed: ::speed_t,
+    }
+
+    pub struct ip_mreqn {
+        pub imr_multiaddr: ::in_addr,
+        pub imr_address: ::in_addr,
+        pub imr_ifindex: ::c_int,
     }
 }
 
@@ -581,10 +595,7 @@ pub const SIGURG: ::c_int = 23;
 pub const SIGIO: ::c_int = 29;
 pub const SIGSYS: ::c_int = 31;
 pub const SIGSTKFLT: ::c_int = 16;
-#[deprecated(
-    since = "0.2.55",
-    note = "Use SIGSYS instead"
-)]
+#[deprecated(since = "0.2.55", note = "Use SIGSYS instead")]
 pub const SIGUNUSED: ::c_int = 31;
 pub const SIGPOLL: ::c_int = 29;
 pub const SIGPWR: ::c_int = 30;
@@ -607,6 +618,9 @@ pub const F_GETOWN: ::c_int = 9;
 pub const F_SETOWN: ::c_int = 8;
 pub const F_SETLK: ::c_int = 6;
 pub const F_SETLKW: ::c_int = 7;
+pub const F_OFD_GETLK: ::c_int = 36;
+pub const F_OFD_SETLK: ::c_int = 37;
+pub const F_OFD_SETLKW: ::c_int = 38;
 
 pub const F_RDLCK: ::c_int = 0;
 pub const F_WRLCK: ::c_int = 1;
@@ -687,6 +701,7 @@ pub const MAP_EXECUTABLE: ::c_int = 0x01000;
 pub const MAP_POPULATE: ::c_int = 0x08000;
 pub const MAP_NONBLOCK: ::c_int = 0x010000;
 pub const MAP_STACK: ::c_int = 0x020000;
+pub const MAP_SYNC : ::c_int = 0x080000;
 
 pub const EDEADLOCK: ::c_int = 35;
 pub const EUCLEAN: ::c_int = 117;
@@ -706,6 +721,8 @@ pub const PTRACE_SETFPXREGS: ::c_uint = 19;
 pub const PTRACE_GETREGS: ::c_uint = 12;
 pub const PTRACE_SETREGS: ::c_uint = 13;
 pub const PTRACE_PEEKSIGINFO_SHARED: ::c_uint = 1;
+pub const PTRACE_SYSEMU: ::c_uint = 31;
+pub const PTRACE_SYSEMU_SINGLESTEP: ::c_uint = 32;
 
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
@@ -755,14 +772,14 @@ pub const NOFLSH: ::tcflag_t = 0x00000080;
 pub const CIBAUD: ::tcflag_t = 0o02003600000;
 pub const CBAUDEX: ::tcflag_t = 0o010000;
 pub const VSWTC: usize = 7;
-pub const OLCUC:  ::tcflag_t = 0o000002;
-pub const NLDLY:  ::tcflag_t = 0o000400;
-pub const CRDLY:  ::tcflag_t = 0o003000;
+pub const OLCUC: ::tcflag_t = 0o000002;
+pub const NLDLY: ::tcflag_t = 0o000400;
+pub const CRDLY: ::tcflag_t = 0o003000;
 pub const TABDLY: ::tcflag_t = 0o014000;
-pub const BSDLY:  ::tcflag_t = 0o020000;
-pub const FFDLY:  ::tcflag_t = 0o100000;
-pub const VTDLY:  ::tcflag_t = 0o040000;
-pub const XTABS:  ::tcflag_t = 0o014000;
+pub const BSDLY: ::tcflag_t = 0o020000;
+pub const FFDLY: ::tcflag_t = 0o100000;
+pub const VTDLY: ::tcflag_t = 0o040000;
+pub const XTABS: ::tcflag_t = 0o014000;
 
 pub const B0: ::speed_t = 0o000000;
 pub const B50: ::speed_t = 0o000001;
@@ -824,6 +841,8 @@ pub const TIOCOUTQ: ::c_ulong = 0x5411;
 pub const TIOCGWINSZ: ::c_ulong = 0x5413;
 pub const TIOCSWINSZ: ::c_ulong = 0x5414;
 pub const FIONREAD: ::c_ulong = 0x541B;
+pub const TIOCSBRK: ::c_ulong = 0x5427;
+pub const TIOCCBRK: ::c_ulong = 0x5428;
 
 // offsets in user_regs_structs, from sys/reg.h
 pub const R15: ::c_int = 0;
@@ -879,17 +898,25 @@ pub const REG_TRAPNO: ::c_int = 20;
 pub const REG_OLDMASK: ::c_int = 21;
 pub const REG_CR2: ::c_int = 22;
 
-extern {
+extern "C" {
     pub fn getcontext(ucp: *mut ucontext_t) -> ::c_int;
     pub fn setcontext(ucp: *const ucontext_t) -> ::c_int;
-    pub fn makecontext(ucp: *mut ucontext_t,
-                       func:  extern fn (),
-                       argc: ::c_int, ...);
-    pub fn swapcontext(uocp: *mut ucontext_t,
-                       ucp: *const ucontext_t) -> ::c_int;
+    pub fn makecontext(
+        ucp: *mut ucontext_t,
+        func: extern "C" fn(),
+        argc: ::c_int,
+        ...
+    );
+    pub fn swapcontext(
+        uocp: *mut ucontext_t,
+        ucp: *const ucontext_t,
+    ) -> ::c_int;
     pub fn iopl(level: ::c_int) -> ::c_int;
-    pub fn ioperm(from: ::c_ulong, num: ::c_ulong,
-                  turn_on: ::c_int) -> ::c_int;
+    pub fn ioperm(
+        from: ::c_ulong,
+        num: ::c_ulong,
+        turn_on: ::c_int,
+    ) -> ::c_int;
 }
 
 cfg_if! {
@@ -899,5 +926,12 @@ cfg_if! {
     } else {
         mod not_x32;
         pub use self::not_x32::*;
+    }
+}
+
+cfg_if! {
+    if #[cfg(libc_align)] {
+        mod align;
+        pub use self::align::*;
     }
 }

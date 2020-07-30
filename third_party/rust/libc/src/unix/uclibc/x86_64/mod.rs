@@ -147,13 +147,13 @@ s! {
         pub sa_mask: ::sigset_t,
     }
 
-    pub struct stack_t { // ToDo
+    pub struct stack_t { // FIXME
         pub ss_sp: *mut ::c_void,
         pub ss_flags: ::c_int,
         pub ss_size: ::size_t
     }
 
-    pub struct statfs { // ToDo
+    pub struct statfs { // FIXME
         pub f_type: fsword_t,
         pub f_bsize: fsword_t,
         pub f_blocks: ::fsblkcnt_t,
@@ -167,7 +167,7 @@ s! {
         f_spare: [fsword_t; 5],
     }
 
-    pub struct msghdr { // ToDo
+    pub struct msghdr { // FIXME
         pub msg_name: *mut ::c_void,
         pub msg_namelen: ::socklen_t,
         pub msg_iov: *mut ::iovec,
@@ -177,7 +177,7 @@ s! {
         pub msg_flags: ::c_int,
     }
 
-    pub struct termios { // ToDo
+    pub struct termios { // FIXME
         pub c_iflag: ::tcflag_t,
         pub c_oflag: ::tcflag_t,
         pub c_cflag: ::tcflag_t,
@@ -186,11 +186,11 @@ s! {
         pub c_cc: [::cc_t; ::NCCS],
     }
 
-    pub struct sigset_t { // ToDo
+    pub struct sigset_t { // FIXME
         __val: [::c_ulong; 16],
     }
 
-    pub struct sysinfo { // ToDo
+    pub struct sysinfo { // FIXME
         pub uptime: ::c_long,
         pub loads: [::c_ulong; 3],
         pub totalram: ::c_ulong,
@@ -207,7 +207,7 @@ s! {
         pub _f: [::c_char; 0],
     }
 
-    pub struct glob_t { // ToDo
+    pub struct glob_t { // FIXME
         pub gl_pathc: ::size_t,
         pub gl_pathv: *mut *mut c_char,
         pub gl_offs: ::size_t,
@@ -219,19 +219,19 @@ s! {
         __unused5: *mut ::c_void,
     }
 
-    pub struct rlimit64 { // ToDo
+    pub struct rlimit64 { // FIXME
         pub rlim_cur: rlim64_t,
         pub rlim_max: rlim64_t,
     }
 
-    pub struct cpu_set_t { // ToDo
+    pub struct cpu_set_t { // FIXME
         #[cfg(target_pointer_width = "32")]
         bits: [u32; 32],
         #[cfg(target_pointer_width = "64")]
         bits: [u64; 16],
     }
 
-    pub struct fsid_t { // ToDo
+    pub struct fsid_t { // FIXME
         __val: [::c_int; 2],
     }
 }

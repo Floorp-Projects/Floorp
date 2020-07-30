@@ -182,12 +182,12 @@ pub const CBAUD: ::tcflag_t = 0o0000377;
 pub const TAB1: ::c_int = 0x00000400;
 pub const TAB2: ::c_int = 0x00000800;
 pub const TAB3: ::c_int = 0x00000C00;
-pub const CR1: ::c_int  = 0x00001000;
-pub const CR2: ::c_int  = 0x00002000;
-pub const CR3: ::c_int  = 0x00003000;
-pub const FF1: ::c_int  = 0x00004000;
-pub const BS1: ::c_int  = 0x00008000;
-pub const VT1: ::c_int  = 0x00010000;
+pub const CR1: ::c_int = 0x00001000;
+pub const CR2: ::c_int = 0x00002000;
+pub const CR3: ::c_int = 0x00003000;
+pub const FF1: ::c_int = 0x00004000;
+pub const BS1: ::c_int = 0x00008000;
+pub const VT1: ::c_int = 0x00010000;
 pub const VWERASE: usize = 10;
 pub const VREPRINT: usize = 11;
 pub const VSUSP: usize = 12;
@@ -221,14 +221,14 @@ pub const NOFLSH: ::tcflag_t = 0x80000000;
 pub const CIBAUD: ::tcflag_t = 0o00077600000;
 pub const CBAUDEX: ::tcflag_t = 0o000020;
 pub const VSWTC: usize = 9;
-pub const OLCUC:  ::tcflag_t = 0o000004;
-pub const NLDLY:  ::tcflag_t = 0o001400;
-pub const CRDLY:  ::tcflag_t = 0o030000;
+pub const OLCUC: ::tcflag_t = 0o000004;
+pub const NLDLY: ::tcflag_t = 0o001400;
+pub const CRDLY: ::tcflag_t = 0o030000;
 pub const TABDLY: ::tcflag_t = 0o006000;
-pub const BSDLY:  ::tcflag_t = 0o100000;
-pub const FFDLY:  ::tcflag_t = 0o040000;
-pub const VTDLY:  ::tcflag_t = 0o200000;
-pub const XTABS:  ::tcflag_t = 0o006000;
+pub const BSDLY: ::tcflag_t = 0o100000;
+pub const FFDLY: ::tcflag_t = 0o040000;
+pub const VTDLY: ::tcflag_t = 0o200000;
+pub const XTABS: ::tcflag_t = 0o006000;
 pub const B57600: ::speed_t = 0o000020;
 pub const B115200: ::speed_t = 0o000021;
 pub const B230400: ::speed_t = 0o000022;
@@ -421,6 +421,9 @@ pub const F_GETOWN: ::c_int = 9;
 pub const F_SETLK: ::c_int = 13;
 pub const F_SETLKW: ::c_int = 14;
 pub const F_SETOWN: ::c_int = 8;
+pub const F_OFD_GETLK: ::c_int = 36;
+pub const F_OFD_SETLK: ::c_int = 37;
+pub const F_OFD_SETLKW: ::c_int = 38;
 
 pub const VEOF: usize = 4;
 pub const VEOL: usize = 6;
@@ -854,7 +857,7 @@ pub const SYS_pkey_alloc: ::c_long = 384;
 pub const SYS_pkey_free: ::c_long = 385;
 pub const SYS_pkey_mprotect: ::c_long = 386;
 
-extern {
+extern "C" {
     pub fn getrandom(
         buf: *mut ::c_void,
         buflen: ::size_t,

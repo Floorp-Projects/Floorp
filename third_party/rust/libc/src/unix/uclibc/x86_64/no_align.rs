@@ -1,7 +1,7 @@
 macro_rules! expand_align {
     () => {
         s! {
-            pub struct sem_t { // ToDo
+            pub struct sem_t { // FIXME
                 #[cfg(target_pointer_width = "32")]
                 __size: [::c_char; 16],
                 #[cfg(target_pointer_width = "64")]
@@ -9,7 +9,7 @@ macro_rules! expand_align {
                 __align: [::c_long; 0],
             }
 
-            pub struct pthread_mutex_t { // ToDo
+            pub struct pthread_mutex_t { // FIXME
                 #[cfg(any(target_arch = "mips",
                           target_arch = "arm",
                           target_arch = "powerpc"))]
@@ -21,7 +21,7 @@ macro_rules! expand_align {
                 size: [u8; ::__SIZEOF_PTHREAD_MUTEX_T],
             }
 
-            pub struct pthread_mutexattr_t { // ToDo
+            pub struct pthread_mutexattr_t { // FIXME
                 #[cfg(any(target_arch = "x86_64", target_arch = "powerpc64",
                           target_arch = "mips64", target_arch = "s390x",
                           target_arch = "sparc64"))]
@@ -33,17 +33,17 @@ macro_rules! expand_align {
                 size: [u8; ::__SIZEOF_PTHREAD_MUTEXATTR_T],
             }
 
-            pub struct pthread_cond_t { // ToDo
+            pub struct pthread_cond_t { // FIXME
                 __align: [::c_longlong; 0],
                 size: [u8; ::__SIZEOF_PTHREAD_COND_T],
             }
 
-            pub struct pthread_condattr_t { // ToDo
+            pub struct pthread_condattr_t { // FIXME
                 __align: [::c_int; 0],
                 size: [u8; ::__SIZEOF_PTHREAD_CONDATTR_T],
             }
 
-            pub struct pthread_rwlock_t { // ToDo
+            pub struct pthread_rwlock_t { // FIXME
                 #[cfg(any(target_arch = "mips",
                           target_arch = "arm",
                           target_arch = "powerpc"))]
