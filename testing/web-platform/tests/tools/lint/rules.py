@@ -420,6 +420,11 @@ class WebPlatformTestRegexp(Regexp):
     pattern = br"web\-platform\.test"
     name = "WEB-PLATFORM.TEST"
     description = "Internal web-platform.test domain used"
+    to_fix = """
+        use [server-side substitution](https://web-platform-tests.org/writing-tests/server-pipes.html#sub),
+        along with the [`.sub` filename-flag](https://web-platform-tests.org/writing-tests/file-names.html#test-features),
+        to replace web-platform.test with `{{domains[]}}`
+    """
 
 
 class Webidl2Regexp(Regexp):
