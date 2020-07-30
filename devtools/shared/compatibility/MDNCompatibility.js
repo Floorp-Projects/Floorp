@@ -9,7 +9,6 @@ const _SUPPORT_STATE = {
   DATA_NOT_FOUND: "DATA_NOT_FOUND",
   SUPPORTED: "SUPPORTED",
   UNSUPPORTED: "UNSUPPORTED",
-  UNSUPPORTED_PREFIX_NEEDED: "UNSUPPORTED_PREFIX_NEEDED",
 };
 
 const _ISSUE_TYPE = {
@@ -110,13 +109,7 @@ class MDNCompatibility {
   _classifyCSSCompatSummaries(summaries, browsers) {
     const aliasSummariesMap = new Map();
     const normalSummaries = summaries.filter(s => {
-      const {
-        database,
-        invalid,
-        terms,
-        unsupportedBrowsers,
-        prefixNeededBrowsers,
-      } = s;
+      const { database, invalid, terms, unsupportedBrowsers } = s;
 
       if (invalid) {
         return true;
@@ -134,7 +127,6 @@ class MDNCompatibility {
             property: alias,
             aliases: [],
             unsupportedBrowsers: browsers,
-            prefixNeededBrowsers: browsers,
           })
         );
       }
@@ -148,18 +140,10 @@ class MDNCompatibility {
       aliasSummary.unsupportedBrowsers = aliasSummary.unsupportedBrowsers.filter(
         b => unsupportedBrowsers.includes(b)
       );
-      aliasSummary.prefixNeededBrowsers = aliasSummary.prefixNeededBrowsers.filter(
-        b => prefixNeededBrowsers.includes(b)
-      );
       return false;
     });
 
-    const aliasSummaries = [...aliasSummariesMap.values()].map(s => {
-      s.prefixNeeded = s.prefixNeededBrowsers.length !== 0;
-      return s;
-    });
-
-    return { aliasSummaries, normalSummaries };
+    return { aliasSummaries: [...aliasSummariesMap.values()], normalSummaries };
   }
 
   _findAliasesFrom(compatTable) {
@@ -262,40 +246,6 @@ class MDNCompatibility {
     return compatNode;
   }
 
-  /**
-   * Return the compatibility table from given compatNode and specified terms.
-   * For example, if the terms is ["background-color"],
-   * this function returns compatNode["background-color"].__compat.
-   *
-   * @return {Object} compatibility table
-   *   {
-   *     description: {String} Description of this compatibility table.
-   *     mdn_url: {String} Document in the MDN.
-   *     support: {
-   *       $browserName: {String} $browserName is such as firefox, firefox_android and so on.
-   *         [
-   *           {
-   *              version_added: {String}
-   *                The version this feature was added.
-   *              version_removed: {String} Optional.
-   *                The version this feature was removed. Optional.
-   *              prefix: {String} Optional.
-   *                The prefix this feature is needed such as "-moz-".
-   *              alternative_name: {String} Optional.
-   *                The alternative name of this feature such as "-moz-osx-font-smoothing" of "font-smooth".
-   *              notes: {String} Optional.
-   *                A simple note for this support.
-   *           },
-   *           ...
-   *         ],
-   *    },
-   *    status: {
-   *      experimental: {Boolean} If true, this feature is experimental.
-   *      standard_track: {Boolean}, If true, this feature is on the standard track.
-   *      deprecated: {Boolean} If true, this feature is deprecated.
-   *    }
-   *  }
-   */
   _getCompatTable(compatNode, terms) {
     let targetNode = this._getCompatNode(compatNode, terms);
 
@@ -346,27 +296,10 @@ class MDNCompatibility {
       return { invalid: true, unsupportedBrowsers: [] };
     }
 
-    const { unsupportedBrowsers, prefixNeededBrowsers } = browsers.reduce(
-      (value, browser) => {
-        const state = this._getSupportState(browser, database, ...terms);
-
-        switch (state) {
-          case _SUPPORT_STATE.UNSUPPORTED_PREFIX_NEEDED: {
-            value.prefixNeededBrowsers.push(browser);
-            value.unsupportedBrowsers.push(browser);
-            break;
-          }
-          case _SUPPORT_STATE.UNSUPPORTED: {
-            value.unsupportedBrowsers.push(browser);
-            break;
-          }
-        }
-
-        return value;
-      },
-      { unsupportedBrowsers: [], prefixNeededBrowsers: [] }
-    );
-
+    const unsupportedBrowsers = browsers.filter(browser => {
+      const state = this._getSupportState(browser, database, ...terms);
+      return state === _SUPPORT_STATE.UNSUPPORTED;
+    });
     const { deprecated, experimental } = this._getStatus(database, ...terms);
     const url = this._getMDNLink(database, ...terms);
 
@@ -377,7 +310,6 @@ class MDNCompatibility {
       deprecated,
       experimental,
       unsupportedBrowsers,
-      prefixNeededBrowsers,
     };
   }
 
@@ -432,30 +364,23 @@ class MDNCompatibility {
     // In this case, we don't have to check the prefix.
     const isPrefixedData = prefix && !this._getAlias(compatNode, ...terms);
 
-    let prefixNeeded = false;
     for (const support of supportList) {
-      const { version_added: added, version_removed: removed } = support;
-      const addedVersion = this._asFloatVersion(added === null ? true : added);
-      const removedVersion = this._asFloatVersion(
-        removed === null ? false : removed
-      );
+      if (isPrefixedData || support.prefix === prefix) {
+        const { version_added: added, version_removed: removed } = support;
+        const addedVersion = this._asFloatVersion(
+          added === null ? true : added
+        );
+        const removedVersion = this._asFloatVersion(
+          removed === null ? false : removed
+        );
 
-      if (addedVersion <= version && version < removedVersion) {
-        if (support.alternative_name) {
-          if (support.alternative_name === terminal) {
-            return _SUPPORT_STATE.SUPPORTED;
-          }
-        } else if (isPrefixedData || support.prefix === prefix) {
+        if (addedVersion <= version && version < removedVersion) {
           return _SUPPORT_STATE.SUPPORTED;
         }
-
-        prefixNeeded = true;
       }
     }
 
-    return prefixNeeded
-      ? _SUPPORT_STATE.UNSUPPORTED_PREFIX_NEEDED
-      : _SUPPORT_STATE.UNSUPPORTED;
+    return _SUPPORT_STATE.UNSUPPORTED;
   }
 
   _getStatus(compatNode, ...terms) {
@@ -478,7 +403,6 @@ class MDNCompatibility {
     const issue = Object.assign({}, summary, { type });
     delete issue.database;
     delete issue.terms;
-    delete issue.prefixNeededBrowsers;
     return issue;
   }
 

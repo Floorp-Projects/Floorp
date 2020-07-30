@@ -24,11 +24,6 @@ const FIREFOX_69 = {
   version: "69",
 };
 
-const FIREFOX_ANDROID_1 = {
-  id: "firefox_android",
-  version: "1",
-};
-
 const SAFARI_13 = {
   id: "safari",
   version: "13",
@@ -100,8 +95,7 @@ const TEST_DATA = [
     ],
   },
   {
-    description:
-      "Test for an aliased property not supported in all browsers with prefix needed",
+    description: "Test for an aliased property not supported in all browsers",
     declarations: [{ name: "-moz-user-select" }],
     browsers: [FIREFOX_69, SAFARI_13],
     expectedIssues: [
@@ -112,29 +106,7 @@ const TEST_DATA = [
         url: "https://developer.mozilla.org/docs/Web/CSS/user-select",
         deprecated: false,
         experimental: false,
-        prefixNeeded: true,
         unsupportedBrowsers: [SAFARI_13],
-      },
-    ],
-  },
-  {
-    description:
-      "Test for an aliased property not supported in all browsers without prefix needed",
-    declarations: [
-      { name: "-moz-user-select" },
-      { name: "-webkit-user-select" },
-    ],
-    browsers: [FIREFOX_ANDROID_1, FIREFOX_69, SAFARI_13],
-    expectedIssues: [
-      {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
-        property: "user-select",
-        aliases: ["-moz-user-select", "-webkit-user-select"],
-        url: "https://developer.mozilla.org/docs/Web/CSS/user-select",
-        deprecated: false,
-        experimental: false,
-        prefixNeeded: false,
-        unsupportedBrowsers: [FIREFOX_ANDROID_1],
       },
     ],
   },

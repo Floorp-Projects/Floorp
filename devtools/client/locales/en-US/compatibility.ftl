@@ -11,11 +11,7 @@ compatibility-all-elements-header = All Issues
 
 compatibility-issue-deprecated = (deprecated)
 compatibility-issue-experimental = (experimental)
-compatibility-issue-prefixneeded = (prefix needed)
 compatibility-issue-deprecated-experimental = (deprecated, experimental)
-compatibility-issue-deprecated-prefixneeded = (deprecated, prefix needed)
-compatibility-issue-experimental-prefixneeded = (experimental, prefix needed)
-compatibility-issue-deprecated-experimental-prefixneeded = (deprecated, experimental, prefix needed)
 
 ## Messages used as labels and titles for buttons in the footer
 
