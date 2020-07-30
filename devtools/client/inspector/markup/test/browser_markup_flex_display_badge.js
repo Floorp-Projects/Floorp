@@ -23,6 +23,14 @@ add_task(async function() {
 
   info("Check the flex display badge is shown and not active.");
   await selectNode("#flex", inspector);
+
+  info("Wait until the flexbox store has been updated");
+  await waitUntilState(
+    store,
+    state =>
+      state.flexbox.flexContainer.nodeFront === inspector.selection.nodeFront
+  );
+
   const flexContainer = await getContainerForSelector("#flex", inspector);
   const flexDisplayBadge = flexContainer.elt.querySelector(
     ".inspector-badge.interactive[data-display]"
