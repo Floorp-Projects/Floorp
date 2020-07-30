@@ -915,6 +915,7 @@ class LoginManagerParent extends JSWindowActorParent {
    * @param {Element?} options.oldPasswordField
    * @param {boolean} [options.triggeredByFillingGenerated = false]
    */
+  /* eslint-disable-next-line complexity */
   async _onPasswordEditedOrGenerated(
     browser,
     formOrigin,
@@ -957,6 +958,15 @@ class LoginManagerParent extends JSWindowActorParent {
 
     let browsingContext = this.getBrowsingContextToUse();
     if (!browsingContext) {
+      return;
+    }
+
+    if (!triggeredByFillingGenerated && !Services.logins.isLoggedIn) {
+      // Don't show the dismissed doorhanger on "input" or "change" events
+      // when the Primary Password is locked
+      log(
+        "_onPasswordEditedOrGenerated: edited field is not a generated password field, and Primary Password is locked"
+      );
       return;
     }
 
