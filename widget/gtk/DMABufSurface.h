@@ -261,7 +261,7 @@ class DMABufSurfaceYUV : public DMABufSurface {
   GLuint GetTexture(int aPlane = 0) { return mTexture[aPlane]; };
   EGLImageKHR GetEGLImage(int aPlane = 0) { return mEGLImage[aPlane]; };
 
-  uint32_t GetTextureCount() { return 2; };
+  uint32_t GetTextureCount();
 
   void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
     mColorSpace = aColorSpace;
@@ -284,8 +284,6 @@ class DMABufSurfaceYUV : public DMABufSurface {
 
   void ImportSurfaceDescriptor(
       const mozilla::layers::SurfaceDescriptorDMABuf& aDesc);
-
-  mozilla::gfx::SurfaceFormat mSurfaceFormat;
 
   int mWidth[DMABUF_BUFFER_PLANES];
   int mHeight[DMABUF_BUFFER_PLANES];
