@@ -12,27 +12,14 @@
     android:focusable="true"
     android:minHeight="?android:attr/listPreferredItemHeight">
 
-    <FrameLayout
-        android:id="@+id/favicon_wrapper"
-        android:layout_width="@dimen/history_favicon_width_height"
-        android:layout_height="@dimen/history_favicon_width_height"
-        android:padding="@dimen/saved_logins_item_padding"
-        android:layout_marginStart="@dimen/saved_logins_item_margin_start"
-        android:background="@drawable/top_sites_background"
-        android:layout_gravity="center"
-        android:importantForAccessibility="noHideDescendants"
+    <ImageView
+        android:id="@+id/favicon_image"
+        style="@style/Mozac.Widgets.Favicon"
+        android:layout_marginStart="16dp"
+        android:importantForAccessibility="no"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
-        <ImageView
-            android:id="@+id/favicon_image"
-            android:layout_width="@dimen/preference_icon_drawable_size"
-            android:layout_height="@dimen/preference_icon_drawable_size"
-            android:layout_gravity="center"
-            android:adjustViewBounds="true"
-            android:importantForAccessibility="no"
-            android:scaleType="fitCenter" />
-    </FrameLayout>
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <TextView
         android:id="@+id/webAddressView"
@@ -46,7 +33,7 @@
         android:textColor="?primaryText"
         app:layout_constraintBottom_toTopOf="@id/usernameView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/favicon_wrapper"
+        app:layout_constraintStart_toEndOf="@+id/favicon_image"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="mozilla.org" />
@@ -62,7 +49,7 @@
         android:textColor="?secondaryText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/favicon_wrapper"
+        app:layout_constraintStart_toEndOf="@+id/favicon_image"
         app:layout_constraintTop_toBottomOf="@id/webAddressView"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="mozilla.org" />

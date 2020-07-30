@@ -4,30 +4,17 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/top_site_item"
     android:layout_width="64dp"
     android:layout_height="wrap_content"
     android:padding="8dp"
     android:orientation="vertical">
 
-    <FrameLayout
-        android:id="@+id/favicon_wrapper"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:padding="4dp"
-        android:background="@drawable/top_sites_background"
+    <ImageView
+        android:id="@+id/favicon_image"
+        style="@style/Mozac.Widgets.Favicon"
         android:layout_gravity="center"
-       >
-        <ImageView
-            android:id="@+id/favicon_image"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center"
-            android:adjustViewBounds="true"
-            android:importantForAccessibility="no"
-            android:scaleType="fitCenter" />
-    </FrameLayout>
+        android:importantForAccessibility="no" />
 
     <TextView
         android:id="@+id/top_site_title"

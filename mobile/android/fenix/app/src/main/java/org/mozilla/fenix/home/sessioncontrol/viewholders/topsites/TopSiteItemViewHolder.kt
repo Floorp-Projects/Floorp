@@ -11,7 +11,6 @@ import android.view.View
 import android.widget.PopupWindow
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import kotlinx.android.synthetic.main.top_site_item.*
-import kotlinx.android.synthetic.main.top_site_item.view.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
@@ -44,7 +43,7 @@ class TopSiteItemViewHolder(
         }
 
         top_site_item.setOnLongClickListener {
-            val menu = topSiteMenu.menuBuilder.build(view.context).show(anchor = it.top_site_title)
+            val menu = topSiteMenu.menuBuilder.build(view.context).show(anchor = it)
             it.setOnTouchListener @SuppressLint("ClickableViewAccessibility") { v, event ->
                 onTouchEvent(v, event, menu)
             }

@@ -9,5 +9,5 @@
         android:width="14dp"
         android:height="14dp" />
     <solid android:color="?accentBright" />
-    <stroke android:color="@color/light_grey_05"/>
+    <stroke android:color="@color/photonLightGrey05"/>
 </shape>

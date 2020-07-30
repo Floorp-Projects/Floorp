@@ -4,21 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Photon colors -->
-    <color name="dark_grey_05">#5B5B66</color>
-    <color name="dark_grey_10">#52525E</color>
-    <color name="dark_grey_50">#32313C</color>
-    <color name="dark_grey_80">#1C1B22</color>
     <color name="ink_20">#312A65</color>
     <color name="ink_20_48a">#7A312A65</color>
-    <color name="ink_50">#291D4F</color>
-    <color name="ink_80">#20123A</color>
-    <color name="ink_90">#1D1133</color>
-    <color name="light_grey_05">#FBFBFE</color>
-    <color name="light_grey_10">#F9F9FB</color>
-    <color name="light_grey_30">#E0E0E6</color>
-    <color name="light_grey_60">#AFAFBB</color>
-    <color name="light_grey_80">#8F8F9D</color>
-    <color name="light_grey_90">#80808E</color>
     <color name="violet_50">#9059FF</color>
     <color name="violet_50_32a">#529059FF</color>
     <color name="violet_50_48a">#7A9059FF</color>
@@ -45,10 +32,8 @@
     <color name="scrimEnd_light_theme">#F542414D</color>
     <color name="dark_grey_90_gradient_start">#FF15141A</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
-    <color name="top_site_background_light_theme">@android:color/white</color>
-    <color name="top_site_border_light_theme">@color/light_grey_30</color>
-    <color name="synced_tabs_separator_light_theme">@color/light_grey_30</color>
-    <color name="top_site_title_text_light_theme">@color/light_grey_80</color>
+    <color name="synced_tabs_separator_light_theme">@color/photonLightGrey30</color>
+    <color name="top_site_title_text_light_theme">@color/photonLightGrey80</color>
     <color name="collection_icon_color_violet_light_theme">#7542E5</color>
     <color name="collection_icon_color_blue_light_theme">#0250BB</color>
     <color name="collection_icon_color_pink_light_theme">#E31587</color>
@@ -74,19 +59,22 @@
     <color name="search_suggestion_indicator_icon_color_light_theme">#008787</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_light_theme">#0060df</color>
 
+    <color name="mozac_widget_favicon_background_light_theme">@color/photonWhite</color>
+    <color name="mozac_widget_favicon_border_light_theme">@color/photonLightGrey30</color>
+
     <!-- Tab Tray -->
-    <color name="tab_tray_item_text_light_theme">@color/ink_80</color>
-    <color name="tab_tray_item_url_light_theme">@color/dark_grey_05</color>
-    <color name="tab_tray_item_background_light_theme">@color/light_grey_10</color>
+    <color name="tab_tray_item_text_light_theme">@color/photonInk80</color>
+    <color name="tab_tray_item_url_light_theme">@color/photonDarkGrey05</color>
+    <color name="tab_tray_item_background_light_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_selected_background_light_theme">#E5DFF4</color>
-    <color name="tab_tray_toolbar_background_light_theme">@color/light_grey_10</color>
-    <color name="tab_tray_item_divider_light_theme">@color/light_grey_30</color>
+    <color name="tab_tray_toolbar_background_light_theme">@color/photonLightGrey10</color>
+    <color name="tab_tray_item_divider_light_theme">@color/photonLightGrey30</color>
     <color name="tab_tray_item_media_stroke">#ffffff</color>
     <color name="tab_tray_item_media_background_light_theme">#312A65</color>
     <color name="tab_tray_heading_icon_light_theme">@color/ink_20</color>
     <color name="tab_tray_heading_icon_inactive_light_theme">@color/ink_20_48a</color>
-    <color name="tab_tray_item_thumbnail_background_light_theme">@color/light_grey_10</color>
-    <color name="tab_tray_item_thumbnail_icon_light_theme">@color/light_grey_60</color>
+    <color name="tab_tray_item_thumbnail_background_light_theme">@color/photonLightGrey10</color>
+    <color name="tab_tray_item_thumbnail_icon_light_theme">@color/photonLightGrey60</color>
     <color name="tab_tray_selected_mask_light_theme">@color/violet_70_12a</color>
 
     <!-- Dark theme color palette -->
@@ -108,10 +96,8 @@
     <color name="disabled_dark_theme">#66FBFBFE</color>
     <color name="scrimStart_dark_theme">#F520123A</color>
     <color name="scrimEnd_dark_theme">#F515141A</color>
-    <color name="top_site_background_dark_theme">@color/dark_grey_50</color>
-    <color name="top_site_border_dark_theme">@color/dark_grey_10</color>
-    <color name="synced_tabs_separator_dark_theme">@color/dark_grey_10</color>
-    <color name="top_site_title_text_dark_theme">@color/light_grey_90</color>
+    <color name="synced_tabs_separator_dark_theme">@color/photonDarkGrey10</color>
+    <color name="top_site_title_text_dark_theme">@color/photonLightGrey90</color>
     <color name="collection_icon_color_violet_dark_theme">#AB71FF</color>
     <color name="collection_icon_color_blue_dark_theme">#00B3F4</color>
     <color name="collection_icon_color_pink_dark_theme">#FF6BBA</color>
@@ -137,18 +123,21 @@
     <color name="search_suggestion_indicator_icon_color_dark_theme">#2ac3a2</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_dark_theme">#0090ed</color>
 
+    <color name="mozac_widget_favicon_background_dark_theme">@color/photonDarkGrey50</color>
+    <color name="mozac_widget_favicon_border_dark_theme">@color/photonDarkGrey10</color>
+
     <!-- Tab Tray -->
-    <color name="tab_tray_item_text_dark_theme">@color/light_grey_05</color>
-    <color name="tab_tray_item_url_dark_theme">@color/light_grey_60</color>
-    <color name="tab_tray_item_background_dark_theme">@color/dark_grey_80</color>
+    <color name="tab_tray_item_text_dark_theme">@color/photonLightGrey05</color>
+    <color name="tab_tray_item_url_dark_theme">@color/photonLightGrey60</color>
+    <color name="tab_tray_item_background_dark_theme">@color/photonDarkGrey80</color>
     <color name="tab_tray_item_selected_background_dark_theme">#412E69</color>
-    <color name="tab_tray_toolbar_background_dark_theme">@color/dark_grey_50</color>
-    <color name="tab_tray_item_divider_dark_theme">@color/dark_grey_10</color>
+    <color name="tab_tray_toolbar_background_dark_theme">@color/photonDarkGrey50</color>
+    <color name="tab_tray_item_divider_dark_theme">@color/photonDarkGrey10</color>
     <color name="tab_tray_item_media_background_dark_theme">#9059FF</color>
     <color name="tab_tray_heading_icon_dark_theme">@color/violet_50</color>
     <color name="tab_tray_heading_icon_inactive_dark_theme">@color/violet_50_48a</color>
-    <color name="tab_tray_item_thumbnail_background_dark_theme">@color/dark_grey_50</color>
-    <color name="tab_tray_item_thumbnail_icon_dark_theme">@color/dark_grey_05</color>
+    <color name="tab_tray_item_thumbnail_background_dark_theme">@color/photonDarkGrey50</color>
+    <color name="tab_tray_item_thumbnail_icon_dark_theme">@color/photonDarkGrey05</color>
     <color name="tab_tray_selected_mask_dark_theme">@color/violet_50_32a</color>
 
     <!-- Private theme color palette -->
@@ -156,8 +145,8 @@
     <color name="secondary_text_private_theme">#A7A2B7</color>
     <color name="contrast_text_private_theme">@color/primary_text_private_theme</color>
     <color name="foundation_private_theme">#261E4B</color>
-    <color name="inset_private_theme">#291D4F</color>
-    <color name="above_private_theme">#291D4F</color>
+    <color name="inset_private_theme">@color/photonInk50</color>
+    <color name="above_private_theme">@color/photonInk50</color>
     <color name="accent_private_theme">#9059FF</color>
     <color name="accent_bright_private_theme">#592ACB</color>
     <color name="about_link_private_theme">#AB71FF</color>
@@ -192,13 +181,16 @@
     <color name="add_on_private_browsing_interior_icon_background_private_theme">#FFFFFF</color>
     <color name="prompt_login_edit_text_cursor_color_private_theme">#9059ff</color>
 
+    <color name="mozac_widget_favicon_background_private_theme">@color/photonInk50</color>
+    <color name="mozac_widget_favicon_border_private_theme">@color/photonInk50</color>
+
     <!-- Tab Tray -->
-    <color name="tab_tray_item_text_private_theme">@color/light_grey_05</color>
-    <color name="tab_tray_item_url_private_theme">@color/light_grey_60</color>
-    <color name="tab_tray_item_background_private_theme">@color/ink_90</color>
+    <color name="tab_tray_item_text_private_theme">@color/photonLightGrey05</color>
+    <color name="tab_tray_item_url_private_theme">@color/photonLightGrey60</color>
+    <color name="tab_tray_item_background_private_theme">@color/photonInk90</color>
     <color name="tab_tray_item_selected_background_private_theme">#422875</color>
-    <color name="tab_tray_toolbar_background_private_theme">@color/ink_50</color>
-    <color name="tab_tray_item_divider_private_theme">@color/dark_grey_10</color>
+    <color name="tab_tray_toolbar_background_private_theme">@color/photonInk50</color>
+    <color name="tab_tray_item_divider_private_theme">@color/photonDarkGrey10</color>
     <color name="tab_tray_item_media_background_private_theme">#9059FF</color>
     <color name="tab_tray_heading_icon_private_theme">@color/violet_50</color>
     <color name="tab_tray_heading_icon_inactive_private_theme">@color/violet_50_48a</color>
@@ -245,6 +237,9 @@
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/search_suggestion_indicator_icon_color_light_theme</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/search_suggestion_indicator_icon_bookmark_color_light_theme</color>
 
+    <color name="mozac_widget_favicon_background_normal_theme">@color/mozac_widget_favicon_background_light_theme</color>
+    <color name="mozac_widget_favicon_border_normal_theme">@color/mozac_widget_favicon_border_light_theme</color>
+
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_light_theme</color>
     <color name="tab_tray_item_url_normal_theme">@color/tab_tray_item_url_light_theme</color>
@@ -263,8 +258,6 @@
     <color name="bookmark_favicon_background">#DFDFE3</color>
 
     <!-- Top site colors -->
-    <color name="top_site_background">@color/top_site_background_light_theme</color>
-    <color name="top_site_border">@color/top_site_border_light_theme</color>
     <color name="top_site_title_text">@color/top_site_title_text_light_theme</color>
 
     <!-- Synced tabs colors-->
@@ -330,8 +323,8 @@
     <!-- Toggle Colors -->
     <color name="toggle_off_knob_light_theme">@color/photonGrey10</color>
     <color name="toggle_off_track_light_theme">@color/dark_grey_90</color>
-    <color name="toggle_off_knob_dark_theme">@color/light_grey_05</color>
-    <color name="toggle_off_track_dark_theme">@color/light_grey_05</color>
+    <color name="toggle_off_knob_dark_theme">@color/photonLightGrey05</color>
+    <color name="toggle_off_track_dark_theme">@color/photonLightGrey05</color>
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_light_theme</color>
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_light_theme</color>
 
