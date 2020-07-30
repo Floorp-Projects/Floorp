@@ -640,13 +640,6 @@ skip script test262/intl402/DisplayNames/options-type-invalid-throws.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1648202
 skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
 
-# Proxy Support isn't complete
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1644160
-skip script test262/language/expressions/class/elements/static-private-fields-proxy-default-handler-throws.js
-skip script test262/language/expressions/class/elements/private-fields-proxy-default-handler-throws.js
-skip script test262/language/statements/class/elements/static-private-fields-proxy-default-handler-throws.js
-skip script test262/language/statements/class/elements/privatefield-on-proxy.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
