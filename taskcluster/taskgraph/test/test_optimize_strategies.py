@@ -304,14 +304,28 @@ def test_bugbug_fallback(monkeypatch, responses, params):
     assert not opt.should_remove_task(default_tasks[1], params, None)
 
 
-def test_backstop(params):
+def test_backstop(responses, params):
     all_labels = {t.label for t in default_tasks}
     opt = Backstop(10, 60, {'try'})  # every 10th push or 1 hour
+
+    responses.add(
+        responses.GET,
+        "https://hg.mozilla.org/integration/autoland/json-pushes/?version=2&startID=6&endID=7",  # noqa
+        json={"pushes": {"7": {}}},
+        status=200,
+    )
 
     # If there's no previous push date, run tasks
     params['pushlog_id'] = 8
     scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
     assert scheduled == all_labels
+
+    responses.add(
+        responses.GET,
+        "https://hg.mozilla.org/integration/autoland/json-pushes/?version=2&startID=7&endID=8",  # noqa
+        json={"pushes": {"8": {"date": params['pushdate']}}},
+        status=200,
+    )
 
     # Only multiples of 10 schedule tasks. Pushdate from push 8 was cached.
     params['pushlog_id'] = 9
@@ -323,6 +337,13 @@ def test_backstop(params):
     params['pushdate'] += 1
     scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
     assert scheduled == all_labels
+
+    responses.add(
+        responses.GET,
+        "https://hg.mozilla.org/integration/autoland/json-pushes/?version=2&startID=9&endID=10",  # noqa
+        json={"pushes": {"10": {"date": params['pushdate']}}},
+        status=200,
+    )
 
     # Tasks are also scheduled if an hour has passed.
     params['pushlog_id'] = 11
