@@ -57,7 +57,8 @@ parent:
   // Sent by the UI process to initiate core settings.
   async Init(GfxVarUpdate[] vars,
              DevicePrefs devicePrefs,
-             LayerTreeIdMapping[] mapping);
+             LayerTreeIdMapping[] mapping,
+             GfxInfoFeatureStatus[] features);
 
   async InitCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
