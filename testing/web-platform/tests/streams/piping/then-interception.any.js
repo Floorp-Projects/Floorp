@@ -5,7 +5,7 @@
 
 function interceptThen() {
   const intercepted = [];
-  const callCount = 0;
+  let callCount = 0;
   Object.prototype.then = function(resolver) {
     if (!this.done) {
       intercepted.push(this.value);
