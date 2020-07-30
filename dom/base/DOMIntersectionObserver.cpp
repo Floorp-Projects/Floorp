@@ -336,11 +336,9 @@ static Maybe<nsRect> ComputeTheIntersection(
   // 1. Let intersectionRect be the result of running the
   // getBoundingClientRect() algorithm on the target.
   //
-  // FIXME(emilio, mstange): Spec uses `getBoundingClientRect()` (which is the
-  // union of all continuations), but this code doesn't handle continuations.
-  //
   // `intersectionRect` is kept relative to `target` during the loop.
-  Maybe<nsRect> intersectionRect = Some(target->GetRectRelativeToSelf());
+  Maybe<nsRect> intersectionRect = Some(nsLayoutUtils::GetAllInFlowRectsUnion(
+      target, target, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS));
 
   // 2. Let container be the containing block of the target.
   // (We go through the parent chain and only look at scroll frames)
