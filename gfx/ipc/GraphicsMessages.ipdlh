@@ -81,5 +81,12 @@ struct GfxVarUpdate
   GfxVarValue value;
 };
 
+struct GfxInfoFeatureStatus
+{
+    int32_t feature;
+    int32_t status;
+    nsCString failureId;
+};
+
 } // namespace gfx
 } // namespace mozilla
