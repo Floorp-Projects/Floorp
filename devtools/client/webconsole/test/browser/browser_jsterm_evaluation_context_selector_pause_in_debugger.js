@@ -61,6 +61,10 @@ add_task(async function() {
   );
   ok(true, "Evaluation result is the expected one");
 
+  // Cleanup
+  await clearOutput(hud);
+  setInputValue(hud, "");
+
   info("Resume the debugger");
   await resume(dbg);
 
