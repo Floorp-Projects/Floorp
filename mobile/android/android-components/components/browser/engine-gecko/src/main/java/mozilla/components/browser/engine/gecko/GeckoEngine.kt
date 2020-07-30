@@ -499,7 +499,15 @@ class GeckoEngine(
 
         override var automaticFontSizeAdjustment: Boolean
             get() = runtime.settings.automaticFontSizeAdjustment
-            set(value) { runtime.settings.automaticFontSizeAdjustment = value }
+            set(value) {
+                try {
+                    runtime.settings.automaticFontSizeAdjustment = value
+                } catch (e: IllegalArgumentException) {
+                    // Catching exception here as a temporary workaround for:
+                    // - https://github.com/mozilla-mobile/android-components/issues/7922
+                    // - https://bugzilla.mozilla.org/show_bug.cgi?id=1656078
+                }
+            }
 
         override var automaticLanguageAdjustment: Boolean
             get() = localeUpdater.enabled
