@@ -389,12 +389,14 @@ export class SubmitFormSnippet extends React.PureComponent {
     if (this.state.signupSubmitted) {
       return this.renderSignupSubmitted();
     }
-    if (this.state.expanded) {
-      return this.renderSignupView();
-    }
-    // Render only scene 2 (signup view)
+    // Render only scene 2 (signup view). Must check before `renderSignupView`
+    // to catch the Failure/Try again scenario where we want to return and render
+    // the scene again.
     if (this.props.expandedAlt) {
       return this.renderSignupViewAlt();
+    }
+    if (this.state.expanded) {
+      return this.renderSignupView();
     }
     return (
       <SimpleSnippet
