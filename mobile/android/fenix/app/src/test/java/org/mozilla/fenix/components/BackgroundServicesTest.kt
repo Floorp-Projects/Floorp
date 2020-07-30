@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.components
 
+import io.mockk.Called
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.just
@@ -23,8 +25,11 @@ import org.mozilla.fenix.utils.Settings
 
 class BackgroundServicesTest {
 
-    @MockK private lateinit var metrics: MetricController
-    @MockK private lateinit var settings: Settings
+    @MockK
+    private lateinit var metrics: MetricController
+
+    @MockK
+    private lateinit var settings: Settings
 
     private lateinit var observer: TelemetryAccountObserver
     private lateinit var registry: ObserverRegistry<AccountObserver>
@@ -35,101 +40,95 @@ class BackgroundServicesTest {
         every { metrics.track(any()) } just Runs
         every { settings.fxaSignedIn = any() } just Runs
 
-        observer = TelemetryAccountObserver(mockk(relaxed = true), metrics)
+        observer = TelemetryAccountObserver(settings, metrics)
         registry = ObserverRegistry<AccountObserver>().apply { register(observer) }
     }
 
     @Test
-    fun `telemetry account observer`() {
+    fun `telemetry account observer tracks sign in event`() {
         val account = mockk<OAuthAccount>()
 
-        // Sign-in
         registry.notifyObservers { onAuthenticated(account, AuthType.Signin) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics.track(Event.SyncAuthSignIn) }
+        verify { settings.fxaSignedIn = true }
+        confirmVerified(metrics, settings)
+    }
 
-        // Sign-up
+    @Test
+    fun `telemetry account observer tracks sign up event`() {
+        val account = mockk<OAuthAccount>()
+
         registry.notifyObservers { onAuthenticated(account, AuthType.Signup) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics.track(Event.SyncAuthSignUp) }
+        verify { settings.fxaSignedIn = true }
+        confirmVerified(metrics, settings)
+    }
 
-        // Pairing
+    @Test
+    fun `telemetry account observer tracks pairing event`() {
+        val account = mockk<OAuthAccount>()
+
         registry.notifyObservers { onAuthenticated(account, AuthType.Pairing) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics.track(Event.SyncAuthPaired) }
+        verify { settings.fxaSignedIn = true }
+        confirmVerified(metrics, settings)
+    }
 
-        // Auto-login/shared account
+    @Test
+    fun `telemetry account observer tracks shared event`() {
+        val account = mockk<OAuthAccount>()
+
         registry.notifyObservers { onAuthenticated(account, AuthType.Shared) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics.track(Event.SyncAuthFromShared) }
+        verify { settings.fxaSignedIn = true }
+        confirmVerified(metrics, settings)
+    }
 
-        // Internally recovered
+    @Test
+    fun `telemetry account observer tracks recovered event`() {
+        val account = mockk<OAuthAccount>()
+
         registry.notifyObservers { onAuthenticated(account, AuthType.Recovered) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics.track(Event.SyncAuthRecovered) }
+        verify { settings.fxaSignedIn = true }
+        confirmVerified(metrics, settings)
+    }
 
-        // Other external
+    @Test
+    fun `telemetry account observer tracks external creation event with null action`() {
+        val account = mockk<OAuthAccount>()
+
         registry.notifyObservers { onAuthenticated(account, AuthType.OtherExternal(null)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics.track(Event.SyncAuthOtherExternal) }
+        verify { settings.fxaSignedIn = true }
+        confirmVerified(metrics, settings)
+    }
+
+    @Test
+    fun `telemetry account observer tracks external creation event with some action`() {
+        val account = mockk<OAuthAccount>()
 
         registry.notifyObservers { onAuthenticated(account, AuthType.OtherExternal("someAction")) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 2) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics.track(Event.SyncAuthOtherExternal) }
+        verify { settings.fxaSignedIn = true }
+        confirmVerified(metrics, settings)
+    }
 
-        // NB: 'Existing' auth type isn't expected to record any auth telemetry.
+    @Test
+    fun `telemetry account observer does not track existing account`() {
+        val account = mockk<OAuthAccount>()
+
         registry.notifyObservers { onAuthenticated(account, AuthType.Existing) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 2) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 0) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics wasNot Called }
+        verify { settings.fxaSignedIn = true }
+        confirmVerified(metrics, settings)
+    }
 
-        // Logout
+    @Test
+    fun `telemetry account observer tracks sign out event`() {
         registry.notifyObservers { onLoggedOut() }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignIn)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignUp)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthPaired)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthFromShared)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthRecovered)) }
-        verify(exactly = 2) { metrics.track(eq(Event.SyncAuthOtherExternal)) }
-        verify(exactly = 1) { metrics.track(eq(Event.SyncAuthSignOut)) }
+        verify { metrics.track(Event.SyncAuthSignOut) }
+        verify { settings.fxaSignedIn = false }
+        confirmVerified(metrics, settings)
     }
 }
