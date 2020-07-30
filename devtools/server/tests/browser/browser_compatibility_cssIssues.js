@@ -72,6 +72,7 @@ const ISSUE_USER_SELECT = {
   url: "https://developer.mozilla.org/docs/Web/CSS/user-select",
   deprecated: false,
   experimental: false,
+  prefixNeeded: true,
   unsupportedBrowsers: [
     CHROME_81,
     CHROME_ANDROID,
