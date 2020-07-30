@@ -150,7 +150,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
 
     @Test
     fun aboutConfig() {
-        // This is broken in automation with browser.tabs.documentchannel == true
+        // This is broken in automation because document channel is enabled by default
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         val settings = sessionRule.runtime.settings
 

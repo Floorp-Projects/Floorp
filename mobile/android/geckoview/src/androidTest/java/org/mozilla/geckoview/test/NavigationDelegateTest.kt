@@ -1508,7 +1508,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("URL should match", currentUrl!!, equalTo(url))
 
         // History navigation to or from the extension process does not trigger
-        // an about:blank load when browser.tabs.documentchannel == true
+        // an about:blank load
         sessionRule.session.goBack()
         sessionRule.waitForPageStops(if (isRemoteExtension) 1 else 2)
 
