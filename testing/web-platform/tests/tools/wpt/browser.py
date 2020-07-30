@@ -560,6 +560,11 @@ class Chrome(Browser):
         os.remove(installer_path)
         return self.find_nightly_binary(dest, channel)
 
+    def install_mojojs(self, dest):
+        url = self._latest_chromium_snapshot_url() + "mojojs.zip"
+        self.logger.info("Downloading Mojo bindings from %s" % url)
+        unzip(get(url).raw, dest)
+
     def _chromedriver_platform_string(self):
         platform = self.platforms.get(uname[0])
 
