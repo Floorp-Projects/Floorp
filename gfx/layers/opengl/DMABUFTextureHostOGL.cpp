@@ -162,6 +162,20 @@ void DMABUFTextureHostOGL::PushResourceUpdates(
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
       break;
     }
+    case gfx::SurfaceFormat::YUV: {
+      MOZ_ASSERT(aImageKeys.length() == 3);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 3);
+      wr::ImageDescriptor descriptor0(
+          gfx::IntSize(mSurface->GetWidth(0), mSurface->GetHeight(0)),
+          gfx::SurfaceFormat::A8);
+      wr::ImageDescriptor descriptor1(
+          gfx::IntSize(mSurface->GetWidth(1), mSurface->GetHeight(1)),
+          gfx::SurfaceFormat::A8);
+      (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);
+      (aResources.*method)(aImageKeys[1], descriptor1, aExtID, imageType, 1);
+      (aResources.*method)(aImageKeys[2], descriptor1, aExtID, imageType, 2);
+      break;
+    }
     default: {
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     }
@@ -195,6 +209,18 @@ void DMABUFTextureHostOGL::PushDisplayItems(
                              wr::ToWrYuvColorSpace(GetYUVColorSpace()),
                              wr::ToWrColorRange(GetColorRange()), aFilter,
                              aPreferCompositorSurface);
+      break;
+    }
+    case gfx::SurfaceFormat::YUV: {
+      MOZ_ASSERT(aImageKeys.length() == 3);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 3);
+      // Those images can only be generated at present by the VAAPI vp8 decoder
+      // which only supports 8 bits color depth.
+      aBuilder.PushYCbCrPlanarImage(
+          aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
+          wr::ColorDepth::Color8, wr::ToWrYuvColorSpace(GetYUVColorSpace()),
+          wr::ToWrColorRange(GetColorRange()), aFilter,
+          aPreferCompositorSurface);
       break;
     }
     default: {
