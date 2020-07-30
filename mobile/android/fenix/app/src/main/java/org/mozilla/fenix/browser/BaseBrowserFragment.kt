@@ -167,9 +167,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         customTabSessionId = arguments?.getString(EXTRA_SESSION_ID)
 
         val view = if (FeatureFlags.browserChromeGestures) {
-            inflater.inflate(R.layout.browser_gesture_wrapper, container, false).apply {
-                inflater.inflate(R.layout.fragment_browser, this as SwipeGestureLayout, true)
-            }
+            inflater.inflate(R.layout.browser_gesture_wrapper, container, false)
         } else {
             inflater.inflate(R.layout.fragment_browser, container, false)
         }
