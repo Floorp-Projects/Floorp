@@ -358,7 +358,7 @@ add_task(async function test_ensureProfile() {
     // profile retrieval when there is no cached profile info
     {
       threshold: 1000,
-      hasRecentCachedProfile: false,
+      expectsCachedProfileReturned: false,
       cachedProfile: null,
       fetchedProfile: {
         uid: ACCOUNT_UID,
@@ -371,7 +371,7 @@ add_task(async function test_ensureProfile() {
       // Note: The threshold for this test case is being set to an arbitrary value that will
       // be greater than Date.now() so the retrieved cached profile will be deemed recent.
       threshold: Date.now() + 5000,
-      hasRecentCachedProfile: true,
+      expectsCachedProfileReturned: true,
       cachedProfile: {
         uid: `${ACCOUNT_UID}2`,
         email: `${ACCOUNT_EMAIL}2`,
@@ -381,7 +381,7 @@ add_task(async function test_ensureProfile() {
     // profile retrieval when the cached profile is old and a new profile is fetched
     {
       threshold: 1000,
-      hasRecentCachedProfile: false,
+      expectsCachedProfileReturned: false,
       cachedProfile: {
         uid: `${ACCOUNT_UID}3`,
         email: `${ACCOUNT_EMAIL}3`,
@@ -397,7 +397,7 @@ add_task(async function test_ensureProfile() {
     // profile retrieval when the cached profile is old and a null profile is fetched
     {
       threshold: 1000,
-      hasRecentCachedProfile: false,
+      expectsCachedProfileReturned: false,
       cachedProfile: {
         uid: `${ACCOUNT_UID}5`,
         email: `${ACCOUNT_EMAIL}5`,
@@ -409,7 +409,7 @@ add_task(async function test_ensureProfile() {
     // profile retrieval when the cached profile is old and fetching a new profile errors
     {
       threshold: 1000,
-      hasRecentCachedProfile: false,
+      expectsCachedProfileReturned: false,
       cachedProfile: {
         uid: `${ACCOUNT_UID}6`,
         email: `${ACCOUNT_EMAIL}6`,
@@ -422,7 +422,7 @@ add_task(async function test_ensureProfile() {
       // Note: The threshold for this test case is being set to an arbitrary value that will
       // be greater than Date.now() so the retrieved cached profile will be deemed recent.
       threshold: Date.now() + 5000,
-      hasRecentCachedProfile: false,
+      expectsCachedProfileReturned: false,
       cachedProfile: null,
       fetchedProfile: {
         uid: `${ACCOUNT_UID}7`,
@@ -431,9 +431,34 @@ add_task(async function test_ensureProfile() {
       },
       fetchAndCacheProfileResolves: true,
     },
+    // profile retrieval when the cached profile is old but staleOk is true.
+    {
+      threshold: 1000,
+      expectsCachedProfileReturned: true,
+      cachedProfile: {
+        uid: `${ACCOUNT_UID}5`,
+        email: `${ACCOUNT_EMAIL}5`,
+        avatar: "myimg5",
+      },
+      fetchAndCacheProfileResolves: false,
+      staleOk: true,
+    },
+    // staleOk but no cached profile
+    {
+      threshold: 1000,
+      expectsCachedProfileReturned: false,
+      cachedProfile: null,
+      fetchedProfile: {
+        uid: ACCOUNT_UID,
+        email: ACCOUNT_EMAIL,
+        avatar: "myimg",
+      },
+      staleOk: true,
+    },
   ];
 
   for (const tc of testCases) {
+    print(`test case: ${JSON.stringify(tc)}`);
     let mockProfile = sinon.mock(profile);
     mockProfile
       .expects("_getProfileCache")
@@ -447,10 +472,13 @@ add_task(async function test_ensureProfile() {
       );
     profile.PROFILE_FRESHNESS_THRESHOLD = tc.threshold;
 
-    if (tc.hasRecentCachedProfile) {
+    let options = {};
+    if (tc.staleOk || false) {
+      options.staleOk = true;
+    }
+    if (tc.expectsCachedProfileReturned) {
       mockProfile.expects("_fetchAndCacheProfile").never();
-
-      let actualProfile = await profile.ensureProfile();
+      let actualProfile = await profile.ensureProfile(options);
       mockProfile.verify();
       Assert.equal(actualProfile, tc.cachedProfile);
     } else if (tc.fetchAndCacheProfileResolves) {
@@ -459,7 +487,7 @@ add_task(async function test_ensureProfile() {
         .once()
         .resolves(tc.fetchedProfile);
 
-      let actualProfile = await profile.ensureProfile();
+      let actualProfile = await profile.ensureProfile(options);
       let expectedProfile = tc.fetchedProfile
         ? tc.fetchedProfile
         : tc.cachedProfile;
@@ -471,7 +499,7 @@ add_task(async function test_ensureProfile() {
         .once()
         .rejects();
 
-      let actualProfile = await profile.ensureProfile();
+      let actualProfile = await profile.ensureProfile(options);
       mockProfile.verify();
       Assert.equal(actualProfile, tc.cachedProfile);
     }
