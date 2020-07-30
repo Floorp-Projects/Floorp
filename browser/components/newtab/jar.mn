@@ -4,6 +4,7 @@
 
 browser.jar:
 % resource activity-stream %res/activity-stream/ contentaccessible=yes
+% content activity-stream %content/activity-stream/ contentaccessible=yes
   res/activity-stream/lib/ (./lib/*)
   res/activity-stream/common/ (./common/*)
   res/activity-stream/aboutwelcome/ (./aboutwelcome/content/*)
@@ -28,11 +29,11 @@ browser.jar:
   res/activity-stream/data/content/newtab-render.js (./data/content/newtab-render.js)
   res/activity-stream/data/custom-elements/ (./components/CustomElements/*)
 #ifdef XP_MACOSX
-  res/activity-stream/css/activity-stream.css (./css/activity-stream-mac.css)
+  content/activity-stream/css/activity-stream.css (./css/activity-stream-mac.css)
 #elifdef XP_WIN
-  res/activity-stream/css/activity-stream.css (./css/activity-stream-windows.css)
+  content/activity-stream/css/activity-stream.css (./css/activity-stream-windows.css)
 #else
-  res/activity-stream/css/activity-stream.css (./css/activity-stream-linux.css)
+  content/activity-stream/css/activity-stream.css (./css/activity-stream-linux.css)
 #endif
   res/activity-stream/prerendered/activity-stream.html (./prerendered/activity-stream.html)
 #ifndef RELEASE_OR_BETA
