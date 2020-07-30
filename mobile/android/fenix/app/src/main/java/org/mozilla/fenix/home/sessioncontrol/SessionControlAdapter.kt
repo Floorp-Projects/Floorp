@@ -41,10 +41,17 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     )
 
     data class TopSiteList(val topSites: List<TopSite>) : AdapterItem(TopSiteViewHolder.LAYOUT_ID) {
+        override fun sameAs(other: AdapterItem): Boolean {
+            val newTopSites = (other as? TopSiteList) ?: return false
+            return newTopSites.topSites == this.topSites
+        }
+
         override fun contentsSameAs(other: AdapterItem): Boolean {
-            val newTopSites = (other as? TopSiteList)?.topSites?.asSequence() ?: return false
+            val newTopSites = (other as? TopSiteList) ?: return false
+            if (newTopSites.topSites.size != this.topSites.size) return false
+            val newSitesSequence = newTopSites.topSites.asSequence()
             val oldTopSites = this.topSites.asSequence()
-            return newTopSites.zip(oldTopSites).all { (new, old) -> new.title == old.title }
+            return newSitesSequence.zip(oldTopSites).all { (new, old) -> new.title == old.title }
         }
     }
 
