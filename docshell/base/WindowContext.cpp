@@ -172,6 +172,11 @@ bool WindowContext::CanSet(FieldIndex<IDX_AutoplayPermission>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_ShortcutsPermission>,
+                           const uint32_t& aValue, ContentParent* aSource) {
+  return GetBrowsingContext()->IsTop() && CheckOnlyOwningProcessCanSet(aSource);
+}
+
 bool WindowContext::CanSet(
     FieldIndex<IDX_DelegatedPermissions>,
     const PermissionDelegateHandler::DelegatedPermissionList& aValue,
