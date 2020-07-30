@@ -14,8 +14,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 class LayoutDebugChild extends JSWindowActorChild {
   receiveMessage(msg) {
     if (!this._debuggingTools) {
-      this._debuggingTools = Cc[NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID]
-        .createInstance(Ci.nsILayoutDebuggingTools);
+      this._debuggingTools = Cc[
+        NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID
+      ].createInstance(Ci.nsILayoutDebuggingTools);
       this._debuggingTools.init(this.contentWindow);
     }
     switch (msg.name) {
