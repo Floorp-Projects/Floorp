@@ -1128,7 +1128,7 @@ bool nsContentSecurityUtils::IsDownloadAllowed(
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
       new LoadInfo(loadingPrincipal, loadInfo->TriggeringPrincipal(), nullptr,
                    nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-                   nsIContentPolicy::TYPE_OTHER);
+                   nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD);
 
   int16_t decission = nsIContentPolicy::ACCEPT;
   nsMixedContentBlocker::ShouldLoad(false,  //  aHadInsecureImageRedirect
