@@ -12,7 +12,7 @@ using namespace mozilla::a11y;
 
 @implementation MOXWebAreaAccessible
 
-- (NSURL* _Nullable)moxURL {
+- (NSURL*)moxURL {
   if ([self isExpired]) {
     return nil;
   }
@@ -34,7 +34,7 @@ using namespace mozilla::a11y;
   return [NSURL URLWithString:nsCocoaUtils::ToNSString(url)];
 }
 
-- (NSNumber* _Nullable)moxLoaded {
+- (NSNumber*)moxLoaded {
   if ([self isExpired]) {
     return nil;
   }
@@ -43,7 +43,7 @@ using namespace mozilla::a11y;
 }
 
 // overrides
-- (NSNumber* _Nullable)moxLoadingProgress {
+- (NSNumber*)moxLoadingProgress {
   if ([self isExpired]) {
     return nil;
   }
@@ -83,6 +83,39 @@ using namespace mozilla::a11y;
   }
 
   [super handleAccessibleEvent:eventType];
+}
+
+@end
+
+@implementation MOXSearchInfo
+
+- (id)initWithParameters:(NSDictionary*)params andRoot:(AccessibleOrProxy)root {
+  if (id searchKeyParam = [params objectForKey:@"AXSearchKey"]) {
+    mSearchKeys =
+        [searchKeyParam isKindOfClass:[NSString class]] ? @[ searchKeyParam ] : searchKeyParam;
+  }
+
+  if (id startElemParam = [params objectForKey:@"AXStartElement"]) {
+    mStartElem = [startElemParam geckoAccessible];
+  } else {
+    mStartElem = root;
+  }
+  MOZ_ASSERT(!mStartElem.IsNull(), "Performing search with null gecko accessible!");
+
+  mWebArea = root;
+
+  mResultLimit = [[params objectForKey:@"AXResultsLimit"] intValue];
+
+  mSearchForward = [[params objectForKey:@"AXDirection"] isEqualToString:@"AXDirectionNext"];
+
+  mImmediateDescendantsOnly = [[params objectForKey:@"AXImmediateDescendantsOnly"] boolValue];
+
+  return [super init];
+}
+
+- (void)dealloc {
+  [mSearchKeys release];
+  [super dealloc];
 }
 
 @end
