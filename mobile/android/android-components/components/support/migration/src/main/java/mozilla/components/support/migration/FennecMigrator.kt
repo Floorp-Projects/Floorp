@@ -91,7 +91,7 @@ sealed class Migration(val currentVersion: Int) {
     /**
      * Migrates all Fennec settings backed by SharedPreferences.
      */
-    object Settings : Migration(currentVersion = 1)
+    object Settings : Migration(currentVersion = 2)
 
     /**
      * Migrates / Disables all currently unsupported Add-ons.
