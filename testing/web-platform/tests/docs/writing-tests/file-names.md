@@ -37,7 +37,7 @@ themselves precede any test type flag, but are otherwise unordered.
  : Indicates that a test is loaded over HTTP/2.
 
 `.sub`
- : Indicates that a test uses the [server-side substitution][]
+ : Indicates that a test uses the [server-side substitution](server-pipes.html#sub)
    feature.
 
 `.window`
@@ -72,5 +72,4 @@ themselves precede any test type flag, but are otherwise unordered.
 It's preferable that `.window`, `.worker`, and `.any` are immediately followed
 by their final `.js` extension.
 
-[server-side substitution]: https://wptserve.readthedocs.io/en/latest/pipes.html#sub
 [RFC 2119]: https://tools.ietf.org/html/rfc2119
