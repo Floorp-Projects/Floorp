@@ -2874,22 +2874,11 @@ nsresult TextServicesDocument::FindWordBounds(
  */
 
 NS_IMETHODIMP
-TextServicesDocument::DidInsertNode(nsINode* aNode, nsresult aResult) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TextServicesDocument::DidDeleteNode(nsINode* aChild, nsresult aResult) {
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return NS_OK;
   }
   DidDeleteNode(aChild);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TextServicesDocument::DidSplitNode(nsINode* aExistingRightNode,
-                                   nsINode* aNewLeftNode) {
   return NS_OK;
 }
 
@@ -2903,12 +2892,6 @@ TextServicesDocument::DidJoinNodes(nsINode* aLeftNode, nsINode* aRightNode,
     return NS_OK;
   }
   DidJoinNodes(*aLeftNode, *aRightNode);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TextServicesDocument::DidCreateNode(const nsAString& aTag, nsINode* aNewNode,
-                                    nsresult aResult) {
   return NS_OK;
 }
 
@@ -2927,11 +2910,6 @@ TextServicesDocument::WillDeleteText(CharacterData* aTextNode, int32_t aOffset,
 
 NS_IMETHODIMP
 TextServicesDocument::WillDeleteSelection(Selection* aSelection) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TextServicesDocument::DidDeleteSelection(Selection* aSelection) {
   return NS_OK;
 }
 
