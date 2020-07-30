@@ -630,19 +630,18 @@ gfxShapedText::DetailedGlyph* gfxShapedText::AllocateDetailedGlyphs(
   return mDetailedGlyphs->Allocate(aIndex, aCount);
 }
 
-void gfxShapedText::SetDetailedGlyphs(uint32_t aIndex, uint32_t aGlyphCount,
-                                      const DetailedGlyph* aGlyphs) {
-  CompressedGlyph& g = GetCharacterGlyphs()[aIndex];
+void gfxShapedText::SetGlyphs(uint32_t aIndex, CompressedGlyph aGlyph,
+                              const DetailedGlyph* aGlyphs) {
+  NS_ASSERTION(!aGlyph.IsSimpleGlyph(), "Simple glyphs not handled here");
+  NS_ASSERTION(aIndex > 0 || aGlyph.IsLigatureGroupStart(),
+               "First character can't be a ligature continuation!");
 
-  MOZ_ASSERT(aIndex > 0 || g.IsLigatureGroupStart(),
-             "First character can't be a ligature continuation!");
-
-  if (aGlyphCount > 0) {
-    DetailedGlyph* details = AllocateDetailedGlyphs(aIndex, aGlyphCount);
-    memcpy(details, aGlyphs, sizeof(DetailedGlyph) * aGlyphCount);
+  uint32_t glyphCount = aGlyph.GetGlyphCount();
+  if (glyphCount > 0) {
+    DetailedGlyph* details = AllocateDetailedGlyphs(aIndex, glyphCount);
+    memcpy(details, aGlyphs, sizeof(DetailedGlyph) * glyphCount);
   }
-
-  g.SetGlyphCount(aGlyphCount);
+  GetCharacterGlyphs()[aIndex] = aGlyph;
 }
 
 #define ZWNJ 0x200C
@@ -713,8 +712,9 @@ void gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
         } else {
           // rare case, tested by making this the default
           uint32_t glyphIndex = glyphData->GetSimpleGlyph();
+          glyphData->SetComplex(true, true, 1);
           DetailedGlyph detail = {glyphIndex, advance, gfx::Point()};
-          SetDetailedGlyphs(i, 1, &detail);
+          SetGlyphs(i, *glyphData, &detail);
         }
       }
     } else {

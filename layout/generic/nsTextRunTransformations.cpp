@@ -130,8 +130,6 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
   AutoTArray<gfxTextRun::DetailedGlyph, 2> glyphs;
   const gfxTextRun::CompressedGlyph continuationGlyph =
       gfxTextRun::CompressedGlyph::MakeComplex(false, false, 0);
-  const gfxTextRun::CompressedGlyph* srcGlyphs = aSrc->GetCharacterGlyphs();
-  gfxTextRun::CompressedGlyph* destGlyphs = aDest->GetCharacterGlyphs();
   while (iter.NextRun()) {
     const gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
     aDest->AddGlyphRun(run->mFont, run->mMatchType, offset, false,
@@ -139,6 +137,7 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 
     bool anyMissing = false;
     uint32_t mergeRunStart = iter.GetStringStart();
+    const gfxTextRun::CompressedGlyph* srcGlyphs = aSrc->GetCharacterGlyphs();
     gfxTextRun::CompressedGlyph mergedGlyph = srcGlyphs[mergeRunStart];
     uint32_t stringEnd = iter.GetStringEnd();
     for (uint32_t k = iter.GetStringStart(); k < stringEnd; ++k) {
@@ -183,11 +182,11 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
                                  mergedGlyph.IsLigatureGroupStart(),
                                  glyphs.Length());
         }
-        aDest->SetDetailedGlyphs(offset, glyphs.Length(), glyphs.Elements());
-        destGlyphs[offset++] = mergedGlyph;
+        aDest->SetGlyphs(offset, mergedGlyph, glyphs.Elements());
+        ++offset;
 
         while (offset < aDest->GetLength() && aDeletedChars[offset]) {
-          destGlyphs[offset++] = continuationGlyph;
+          aDest->SetGlyphs(offset++, continuationGlyph, nullptr);
         }
       }
 

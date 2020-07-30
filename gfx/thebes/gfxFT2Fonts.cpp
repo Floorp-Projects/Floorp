@@ -144,7 +144,10 @@ void gfxFT2Font::AddRange(const char16_t* aText, uint32_t aOffset,
       NS_ASSERTION(details.mGlyphID == gid,
                    "Seriously weird glyph ID detected!");
       details.mAdvance = advance;
-      aShapedText->SetDetailedGlyphs(aOffset, 1, &details);
+      bool isClusterStart = charGlyphs[aOffset].IsClusterStart();
+      aShapedText->SetGlyphs(
+          aOffset, CompressedGlyph::MakeComplex(isClusterStart, true, 1),
+          &details);
     }
   }
 }
