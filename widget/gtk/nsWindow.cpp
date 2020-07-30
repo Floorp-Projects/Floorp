@@ -1898,7 +1898,6 @@ static bool WorkspaceManagementDisabled(GdkWindow* gdk_window) {
       gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopMutterSchema),
                                         getter_AddRefs(mutterSettings));
       if (mutterSettings) {
-        bool usesDynamicWorkspaces;
         if (NS_SUCCEEDED(mutterSettings->GetBoolean(
                 nsLiteralCString(kDesktopDynamicWorkspacesKey),
                 &usesDynamicWorkspaces))) {
