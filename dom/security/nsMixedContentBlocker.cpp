@@ -465,9 +465,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // properties as WebSockets w.r.t. mixed content. XHR's handling of redirects
   // amplifies these concerns.
   //
-  // TYPE_SAVEAS_DOWNLOAD: Save-link-as feature is used to download a resource
-  // without involving a docShell. This kind of loading must be always be
-  // allowed.
 
   static_assert(TYPE_DATAREQUEST == TYPE_XMLHTTPREQUEST,
                 "TYPE_DATAREQUEST is not a synonym for "
@@ -485,12 +482,20 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       *aDecision = ACCEPT;
       return NS_OK;
 
-    // Creating insecure connections for a save-as link download is acceptable.
-    // This download is completely disconnected from the docShell, but still
-    // using the same loading principal.
+      // TYPE_SAVEAS_DOWNLOAD: Save-link-as feature is used to download a
+      // resource
+      // without involving a docShell. This kind of loading must be
+      // allowed, if not disabled in the preferences.
+      // Creating insecure connections for a save-as link download is
+      // acceptable. This download is completely disconnected from the docShell,
+      // but still using the same loading principal.
+
     case TYPE_SAVEAS_DOWNLOAD:
-      *aDecision = ACCEPT;
-      return NS_OK;
+      if (!StaticPrefs::dom_block_download_insecure()) {
+        *aDecision = ACCEPT;
+        return NS_OK;
+      }
+      break;
 
     // Static display content is considered moderate risk for mixed content so
     // these will be blocked according to the mixed display preference
