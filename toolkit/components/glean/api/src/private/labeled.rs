@@ -161,7 +161,7 @@ where
         if need_ipc() {
             panic!("Use of labeled metrics in IPC land not yet implemented!");
         } else {
-            let mut core = self
+            let core = self
                 .core
                 .write()
                 .expect("lock of wrapped metric was poisoned");
