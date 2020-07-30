@@ -249,7 +249,11 @@
 
 - name: apz.allow_zooming
   type: RelaxedAtomicBool
-  value: @IS_ANDROID@
+#if defined(ANDROID)
+  value: true
+#else
+  value: @NIGHTLY_BUILD@
+#endif
   mirror: always
 
 - name: apz.allow_zooming_out

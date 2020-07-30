@@ -40,6 +40,7 @@ var tests = [
     SpecialPowers.pushPrefEnv(
       {
         set: [
+          ["apz.allow_zooming", false],
           ["devtools.inspector.compatibility.enabled", false],
           ["devtools.webconsole.input.context", false],
           ["dom.media.mediasession.enabled", false],
