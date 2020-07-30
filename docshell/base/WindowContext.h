@@ -56,6 +56,7 @@ class BrowsingContextGroup;
    * played audibly. This should only be set on top level context. */  \
   FIELD(DocTreeHadAudibleMedia, bool)                                  \
   FIELD(AutoplayPermission, uint32_t)                                  \
+  FIELD(ShortcutsPermission, uint32_t)                                 \
   FIELD(DelegatedPermissions,                                          \
         PermissionDelegateHandler::DelegatedPermissionList)            \
   FIELD(DelegatedExactHostMatchPermissions,                            \
@@ -167,6 +168,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_DocTreeHadAudibleMedia>, const bool& aValue,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AutoplayPermission>, const uint32_t& aValue,
+              ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_ShortcutsPermission>, const uint32_t& aValue,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_SHEntryHasUserInteraction>,
               const bool& aSHEntryHasUserInteraction, ContentParent* aSource) {
