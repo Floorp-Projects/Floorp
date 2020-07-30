@@ -8,6 +8,7 @@
 #include "mozilla/AssembleCmdLine.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "WinRemoteMessage.h"
 
 using namespace mozilla;
 
@@ -21,6 +22,10 @@ struct TestCase {
 #define OMEGA_IN_UTF8 "\xe3\x82\xaa\xe3\x83\xa1\xe3\x82\xac"
 #define ALPHA_IN_UTF16 L"\u30A2\u30EB\u30D5\u30A1"
 #define OMEGA_IN_UTF16 L"\u30AA\u30E1\u30AC"
+#define UPPER_CYRILLIC_P_IN_UTF8 "\xd0\xa0"
+#define LOWER_CYRILLIC_P_IN_UTF8 "\xd1\x80"
+#define UPPER_CYRILLIC_P_IN_UTF16 L"\u0420"
+#define LOWER_CYRILLIC_P_IN_UTF16 L"\u0440"
 
 TestCase<char> testCases[] = {
     // Copied from TestXREMakeCommandLineWin.ini
@@ -100,4 +105,69 @@ TEST(CommandLineParserWin, HandleCommandLine)
     }
     EXPECT_EQ(testCase.mArgs[parser.Argc()], nullptr);
   }
+}
+
+TEST(WinRemoteMessage, SendReceive)
+{
+  const char kCommandline[] =
+      "dummy.exe /arg1 --arg2 \"3rd arg\" "
+      "4th=\"" UPPER_CYRILLIC_P_IN_UTF8 " " LOWER_CYRILLIC_P_IN_UTF8 "\"";
+  const wchar_t kCommandlineW[] =
+      L"dummy.exe /arg1 --arg2 \"3rd arg\" "
+      L"4th=\"" UPPER_CYRILLIC_P_IN_UTF16 L" " LOWER_CYRILLIC_P_IN_UTF16 L"\"";
+  const wchar_t* kExpectedArgsW[] = {
+      L"-arg1", L"-arg2", L"3rd arg",
+      L"4th=" UPPER_CYRILLIC_P_IN_UTF16 L" " LOWER_CYRILLIC_P_IN_UTF16};
+
+  char workingDirA[MAX_PATH];
+  wchar_t workingDirW[MAX_PATH];
+  EXPECT_NE(getcwd(workingDirA, MAX_PATH), nullptr);
+  EXPECT_NE(_wgetcwd(workingDirW, MAX_PATH), nullptr);
+
+  WinRemoteMessageSender v0(kCommandline);
+  WinRemoteMessageSender v1(kCommandline, workingDirA);
+  WinRemoteMessageSender v2(kCommandlineW, workingDirW);
+
+  WinRemoteMessageReceiver receiver;
+  int32_t len;
+  nsAutoString arg;
+  nsCOMPtr<nsIFile> workingDir;
+
+  receiver.Parse(v0.CopyData());
+  EXPECT_TRUE(NS_SUCCEEDED(receiver.CommandLineRunner()->GetLength(&len)));
+  EXPECT_EQ(len, ArrayLength(kExpectedArgsW));
+  for (int i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
+    EXPECT_TRUE(
+        NS_SUCCEEDED(receiver.CommandLineRunner()->GetArgument(i, arg)));
+    EXPECT_STREQ(arg.get(), kExpectedArgsW[i]);
+  }
+  EXPECT_EQ(receiver.CommandLineRunner()->GetWorkingDirectory(
+                getter_AddRefs(workingDir)),
+            NS_ERROR_NOT_INITIALIZED);
+
+  receiver.Parse(v1.CopyData());
+  EXPECT_TRUE(NS_SUCCEEDED(receiver.CommandLineRunner()->GetLength(&len)));
+  EXPECT_EQ(len, ArrayLength(kExpectedArgsW));
+  for (int i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
+    EXPECT_TRUE(
+        NS_SUCCEEDED(receiver.CommandLineRunner()->GetArgument(i, arg)));
+    EXPECT_STREQ(arg.get(), kExpectedArgsW[i]);
+  }
+  EXPECT_TRUE(NS_SUCCEEDED(receiver.CommandLineRunner()->GetWorkingDirectory(
+      getter_AddRefs(workingDir))));
+  EXPECT_TRUE(NS_SUCCEEDED(workingDir->GetPath(arg)));
+  EXPECT_STREQ(arg.get(), workingDirW);
+
+  receiver.Parse(v2.CopyData());
+  EXPECT_TRUE(NS_SUCCEEDED(receiver.CommandLineRunner()->GetLength(&len)));
+  EXPECT_EQ(len, ArrayLength(kExpectedArgsW));
+  for (int i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
+    EXPECT_TRUE(
+        NS_SUCCEEDED(receiver.CommandLineRunner()->GetArgument(i, arg)));
+    EXPECT_STREQ(arg.get(), kExpectedArgsW[i]);
+  }
+  EXPECT_TRUE(NS_SUCCEEDED(receiver.CommandLineRunner()->GetWorkingDirectory(
+      getter_AddRefs(workingDir))));
+  EXPECT_TRUE(NS_SUCCEEDED(workingDir->GetPath(arg)));
+  EXPECT_STREQ(arg.get(), workingDirW);
 }

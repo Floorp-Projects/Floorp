@@ -18,6 +18,7 @@
 #include "nsICommandLine.h"
 #include "nsCommandLine.h"
 #include "nsIDocShell.h"
+#include "WinRemoteMessage.h"
 
 HWND hwndForDOMWindow(mozIDOMWindowProxy* window) {
   if (!window) {
@@ -50,29 +51,9 @@ static nsresult GetMostRecentWindow(mozIDOMWindowProxy** aWindow) {
 
 LRESULT CALLBACK WindowProc(HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp) {
   if (msg == WM_COPYDATA) {
-    // This is an incoming request.
-    COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
-    nsCOMPtr<nsIFile> workingDir;
-
-    if (1 >= cds->dwData) {
-      char* wdpath = (char*)cds->lpData;
-      // skip the command line, and get the working dir of the
-      // other process, which is after the first null char
-      while (*wdpath) ++wdpath;
-
-      ++wdpath;
-
-      NS_NewLocalFile(NS_ConvertUTF8toUTF16(wdpath), false,
-                      getter_AddRefs(workingDir));
-    }
-
-    mozilla::CommandLineParserWin<char> parser;
-    parser.HandleCommandLine(reinterpret_cast<char*>(cds->lpData));
-
-    nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
-    if (NS_SUCCEEDED(cmdLine->Init(parser.Argc(), parser.Argv(), workingDir,
-                                   nsICommandLine::STATE_REMOTE_AUTO))) {
-      cmdLine->Run();
+    WinRemoteMessageReceiver receiver;
+    if (NS_SUCCEEDED(receiver.Parse(reinterpret_cast<COPYDATASTRUCT*>(lp)))) {
+      receiver.CommandLineRunner()->Run();
     } else {
       NS_ERROR("Error initializing command line.");
     }
