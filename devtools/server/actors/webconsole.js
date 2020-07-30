@@ -712,10 +712,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
                 module:
                   "devtools/server/actors/network-monitor/network-monitor",
                 constructor: "NetworkMonitorActor",
-                args: [
-                  { browsingContextID: this.parentActor.browsingContextID },
-                  this.actorID,
-                ],
+                args: [{ browserId: this.parentActor.browserId }, this.actorID],
               });
               this.netmonitors.push({
                 messageManager: this.parentActor.messageManager,
