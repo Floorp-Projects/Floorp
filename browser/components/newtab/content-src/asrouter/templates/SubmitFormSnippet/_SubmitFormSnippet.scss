@@ -144,8 +144,13 @@
       width: 100%;
 
       .icon {
-        margin-inline-end: 0;
+        width: 16px;
+        height: 16px;
       }
+    }
+
+    .section-title {
+      font-size: 13px;
     }
 
     .section-title a {
