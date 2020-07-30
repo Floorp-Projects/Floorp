@@ -77,14 +77,12 @@ class MOZ_RAII AutoReferenceChainGuard {
    */
   AutoReferenceChainGuard(nsIFrame* aFrame, bool* aFrameInUse,
                           int16_t* aChainCounter,
-                          int16_t aMaxChainLength = sDefaultMaxChainLength
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                          int16_t aMaxChainLength = sDefaultMaxChainLength)
       : mFrame(aFrame),
         mFrameInUse(aFrameInUse),
         mChainCounter(aChainCounter),
         mMaxChainLength(aMaxChainLength),
         mBrokeReference(false) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(aFrame && aFrameInUse && aChainCounter);
     MOZ_ASSERT(aMaxChainLength > 0);
     MOZ_ASSERT(*aChainCounter == noChain ||
@@ -164,7 +162,6 @@ class MOZ_RAII AutoReferenceChainGuard {
   int16_t* mChainCounter;
   const int16_t mMaxChainLength;
   bool mBrokeReference;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 }  // namespace mozilla

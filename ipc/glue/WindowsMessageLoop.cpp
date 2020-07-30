@@ -796,11 +796,9 @@ static void StopNeutering() {
   MessageChannel::SetIsPumpingMessages(false);
 }
 
-NeuteredWindowRegion::NeuteredWindowRegion(
-    bool aDoNeuter MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+NeuteredWindowRegion::NeuteredWindowRegion(bool aDoNeuter)
     : mNeuteredByThis(!gWindowHook && aDoNeuter &&
                       XRE_UseNativeEventProcessing()) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (mNeuteredByThis) {
     StartNeutering();
   }
@@ -828,10 +826,8 @@ void NeuteredWindowRegion::PumpOnce() {
   ::PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE);
 }
 
-DeneuteredWindowRegion::DeneuteredWindowRegion(
-    MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+DeneuteredWindowRegion::DeneuteredWindowRegion()
     : mReneuter(gWindowHook != NULL) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (mReneuter) {
     StopNeutering();
   }
@@ -843,10 +839,8 @@ DeneuteredWindowRegion::~DeneuteredWindowRegion() {
   }
 }
 
-SuppressedNeuteringRegion::SuppressedNeuteringRegion(
-    MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+SuppressedNeuteringRegion::SuppressedNeuteringRegion()
     : mReenable(::gUIThreadId == ::GetCurrentThreadId() && ::gWindowHook) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (mReenable) {
     MOZ_ASSERT(!sSuppressNeutering);
     sSuppressNeutering = true;

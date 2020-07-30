@@ -57,11 +57,9 @@ NS_INTERFACE_MAP_END
 // DidChangeNumberList.
 class MOZ_RAII AutoChangeNumberNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangeNumberNotifier(
-      DOMSVGNumber* aNumber MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangeNumberNotifier(DOMSVGNumber* aNumber)
       : mozAutoDocUpdate(aNumber->Element()->GetComposedDoc(), true),
         mNumber(aNumber) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mNumber, "Expecting non-null number");
     MOZ_ASSERT(mNumber->HasOwner(),
                "Expecting list to have an owner for notification");
@@ -82,7 +80,6 @@ class MOZ_RAII AutoChangeNumberNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGNumber* const mNumber;
   nsAttrValue mEmptyOrOldValue;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList* aList, uint8_t aAttrEnum,

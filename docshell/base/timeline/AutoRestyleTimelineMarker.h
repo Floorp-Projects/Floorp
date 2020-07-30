@@ -7,7 +7,6 @@
 #ifndef mozilla_AutoRestyleTimelineMarker_h_
 #define mozilla_AutoRestyleTimelineMarker_h_
 
-#include "mozilla/GuardObjects.h"
 #include "mozilla/RefPtr.h"
 
 class nsIDocShell;
@@ -15,15 +14,12 @@ class nsIDocShell;
 namespace mozilla {
 
 class MOZ_RAII AutoRestyleTimelineMarker {
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
   RefPtr<nsIDocShell> mDocShell;
   bool mIsAnimationOnly;
 
  public:
-  AutoRestyleTimelineMarker(nsIDocShell* aDocShell,
-                            bool aIsAnimationOnly
-                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  AutoRestyleTimelineMarker(nsIDocShell* aDocShell, bool aIsAnimationOnly);
   ~AutoRestyleTimelineMarker();
 
   AutoRestyleTimelineMarker(const AutoRestyleTimelineMarker& aOther) = delete;

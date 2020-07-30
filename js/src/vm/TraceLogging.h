@@ -7,7 +7,6 @@
 #ifndef TraceLogging_h
 #define TraceLogging_h
 
-#include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -644,10 +643,8 @@ class MOZ_RAII AutoTraceLog {
   AutoTraceLog* prev;
 
  public:
-  AutoTraceLog(TraceLoggerThread* logger,
-               const TraceLoggerEvent& event MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoTraceLog(TraceLoggerThread* logger, const TraceLoggerEvent& event)
       : logger(logger), isEvent(true), executed(false), prev(nullptr) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     payload.event = &event;
     if (logger) {
       logger->startEvent(event);
@@ -657,10 +654,8 @@ class MOZ_RAII AutoTraceLog {
     }
   }
 
-  AutoTraceLog(TraceLoggerThread* logger,
-               TraceLoggerTextId id MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoTraceLog(TraceLoggerThread* logger, TraceLoggerTextId id)
       : logger(logger), isEvent(false), executed(false), prev(nullptr) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     payload.id = id;
     if (logger) {
       logger->startEvent(id);
@@ -696,18 +691,11 @@ class MOZ_RAII AutoTraceLog {
   }
 #else
  public:
-  AutoTraceLog(TraceLoggerThread* logger,
-               uint32_t textId MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
-  AutoTraceLog(TraceLoggerThread* logger,
-               const TraceLoggerEvent& event MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
+  AutoTraceLog(TraceLoggerThread* logger, uint32_t textId) {}
+  AutoTraceLog(TraceLoggerThread* logger, const TraceLoggerEvent& event) {}
 #endif
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 }  // namespace js

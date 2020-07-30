@@ -733,28 +733,22 @@ class DisplayListBuilder final {
 class MOZ_RAII SpaceAndClipChainHelper final {
  public:
   SpaceAndClipChainHelper(DisplayListBuilder& aBuilder,
-                          wr::WrSpaceAndClipChain aSpaceAndClipChain
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                          wr::WrSpaceAndClipChain aSpaceAndClipChain)
       : mBuilder(aBuilder),
         mOldSpaceAndClipChain(aBuilder.mCurrentSpaceAndClipChain) {
     aBuilder.mCurrentSpaceAndClipChain = aSpaceAndClipChain;
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
   SpaceAndClipChainHelper(DisplayListBuilder& aBuilder,
-                          wr::WrSpatialId aSpatialId
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                          wr::WrSpatialId aSpatialId)
       : mBuilder(aBuilder),
         mOldSpaceAndClipChain(aBuilder.mCurrentSpaceAndClipChain) {
     aBuilder.mCurrentSpaceAndClipChain.space = aSpatialId;
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
   SpaceAndClipChainHelper(DisplayListBuilder& aBuilder,
-                          wr::WrClipChainId aClipChainId
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                          wr::WrClipChainId aClipChainId)
       : mBuilder(aBuilder),
         mOldSpaceAndClipChain(aBuilder.mCurrentSpaceAndClipChain) {
     aBuilder.mCurrentSpaceAndClipChain.clip_chain = aClipChainId.id;
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
   ~SpaceAndClipChainHelper() {
@@ -766,7 +760,6 @@ class MOZ_RAII SpaceAndClipChainHelper final {
 
   DisplayListBuilder& mBuilder;
   wr::WrSpaceAndClipChain mOldSpaceAndClipChain;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 Maybe<wr::ImageFormat> SurfaceFormatToImageFormat(gfx::SurfaceFormat aFormat);

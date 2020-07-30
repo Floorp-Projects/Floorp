@@ -8,7 +8,6 @@
 #define mozilla_IOInterposer_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
 #include "nsString.h"
 
@@ -272,14 +271,10 @@ class IOInterposerInit {
 
 class MOZ_RAII AutoIOInterposerDisable final {
  public:
-  explicit AutoIOInterposerDisable(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    IOInterposer::Disable();
-  }
+  explicit AutoIOInterposerDisable() { IOInterposer::Disable(); }
   ~AutoIOInterposerDisable() { IOInterposer::Enable(); }
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 }  // namespace mozilla

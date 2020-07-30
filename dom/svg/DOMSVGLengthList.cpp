@@ -88,11 +88,9 @@ JSObject* DOMSVGLengthList::WrapObject(JSContext* cx,
 // DidChangeLengthList.
 class MOZ_RAII AutoChangeLengthListNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangeLengthListNotifier(
-      DOMSVGLengthList* aLengthList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangeLengthListNotifier(DOMSVGLengthList* aLengthList)
       : mozAutoDocUpdate(aLengthList->Element()->GetComposedDoc(), true),
         mLengthList(aLengthList) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mLengthList, "Expecting non-null lengthList");
     mEmptyOrOldValue = mLengthList->Element()->WillChangeLengthList(
         mLengthList->AttrEnum(), *this);
@@ -109,7 +107,6 @@ class MOZ_RAII AutoChangeLengthListNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGLengthList* const mLengthList;
   nsAttrValue mEmptyOrOldValue;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 void DOMSVGLengthList::InternalListLengthWillChange(uint32_t aNewLength) {

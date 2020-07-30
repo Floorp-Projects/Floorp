@@ -495,25 +495,19 @@ struct WrapperValue {
 class MOZ_RAII AutoWrapperVector : public JS::GCVector<WrapperValue, 8>,
                                    public JS::AutoGCRooter {
  public:
-  explicit AutoWrapperVector(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoWrapperVector(JSContext* cx)
       : JS::GCVector<WrapperValue, 8>(cx),
-        JS::AutoGCRooter(cx, JS::AutoGCRooter::Kind::WrapperVector) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
+        JS::AutoGCRooter(cx, JS::AutoGCRooter::Kind::WrapperVector) {}
 
   void trace(JSTracer* trc);
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII AutoWrapperRooter : public JS::AutoGCRooter {
  public:
-  AutoWrapperRooter(JSContext* cx,
-                    const WrapperValue& v MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::AutoGCRooter(cx, JS::AutoGCRooter::Kind::Wrapper), value(v) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
+  AutoWrapperRooter(JSContext* cx, const WrapperValue& v)
+      : JS::AutoGCRooter(cx, JS::AutoGCRooter::Kind::Wrapper), value(v) {}
 
   operator JSObject*() const { return value; }
 
@@ -521,7 +515,6 @@ class MOZ_RAII AutoWrapperRooter : public JS::AutoGCRooter {
 
  private:
   WrapperValue value;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } /* namespace js */

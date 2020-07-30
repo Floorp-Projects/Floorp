@@ -1196,10 +1196,7 @@ void AutoEnterOOMUnsafeRegion::crash(size_t size, const char* reason) {
   crash(reason);
 }
 
-AutoKeepAtoms::AutoKeepAtoms(
-    JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : cx(cx) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+AutoKeepAtoms::AutoKeepAtoms(JSContext* cx) : cx(cx) {
   cx->zone()->keepAtoms();
 }
 

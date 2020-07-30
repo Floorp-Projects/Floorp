@@ -77,7 +77,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DefineEnum.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -1952,10 +1951,8 @@ class MOZ_RAII AutoScriptEvaluate {
    * Saves the JSContext as well as initializing our state
    * @param cx The JSContext, this can be null, we don't do anything then
    */
-  explicit AutoScriptEvaluate(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mJSContext(cx), mEvaluated(false) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
+  explicit AutoScriptEvaluate(JSContext* cx)
+      : mJSContext(cx), mEvaluated(false) {}
 
   /**
    * Does the pre script evaluation.
@@ -1975,7 +1972,6 @@ class MOZ_RAII AutoScriptEvaluate {
   mozilla::Maybe<JS::AutoSaveExceptionState> mState;
   bool mEvaluated;
   mozilla::Maybe<JSAutoRealm> mAutoRealm;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   // No copying or assignment allowed
   AutoScriptEvaluate(const AutoScriptEvaluate&) = delete;
@@ -1985,8 +1981,7 @@ class MOZ_RAII AutoScriptEvaluate {
 /***************************************************************************/
 class MOZ_RAII AutoResolveName {
  public:
-  AutoResolveName(XPCCallContext& ccx,
-                  JS::HandleId name MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoResolveName(XPCCallContext& ccx, JS::HandleId name)
       : mContext(ccx.GetContext()),
         mOld(ccx, mContext->SetResolveName(name))
 #ifdef DEBUG
@@ -1994,7 +1989,6 @@ class MOZ_RAII AutoResolveName {
         mCheck(ccx, name)
 #endif
   {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
   ~AutoResolveName() {
@@ -2008,7 +2002,6 @@ class MOZ_RAII AutoResolveName {
 #ifdef DEBUG
   JS::RootedId mCheck;
 #endif
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /***************************************************************************/
