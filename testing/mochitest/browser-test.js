@@ -1325,18 +1325,18 @@ function testScope(aTester, aTest, expected) {
   };
   this.is = function test_is(a, b, name) {
     self.record(
-      a == b,
+      Object.is(a, b),
       name,
-      "Got " + a + ", expected " + b,
+      `Got ${self.repr(a)}, expected ${self.repr(b)}`,
       false,
       Components.stack.caller
     );
   };
   this.isnot = function test_isnot(a, b, name) {
     self.record(
-      a != b,
+      !Object.is(a, b),
       name,
-      "Didn't expect " + a + ", but got it",
+      `Didn't expect ${self.repr(a)}, but got it`,
       false,
       Components.stack.caller
     );
@@ -1355,22 +1355,65 @@ function testScope(aTester, aTest, expected) {
   };
   this.todo_is = function test_todo_is(a, b, name) {
     self.todo(
-      a == b,
+      Object.is(a, b),
       name,
-      "Got " + a + ", expected " + b,
+      `Got ${self.repr(a)}, expected ${self.repr(b)}`,
       Components.stack.caller
     );
   };
   this.todo_isnot = function test_todo_isnot(a, b, name) {
     self.todo(
-      a != b,
+      !Object.is(a, b),
       name,
-      "Didn't expect " + a + ", but got it",
+      `Didn't expect ${self.repr(a)}, but got it`,
       Components.stack.caller
     );
   };
   this.info = function test_info(name) {
     aTest.addResult(new testMessage(name));
+  };
+  this.repr = function repr(o) {
+    if (typeof o == "undefined") {
+      return "undefined";
+    } else if (o === null) {
+      return "null";
+    }
+    try {
+      if (typeof o.__repr__ == "function") {
+        return o.__repr__();
+      } else if (typeof o.repr == "function" && o.repr != repr) {
+        return o.repr();
+      }
+    } catch (e) {}
+    try {
+      if (
+        typeof o.NAME == "string" &&
+        (o.toString == Function.prototype.toString ||
+          o.toString == Object.prototype.toString)
+      ) {
+        return o.NAME;
+      }
+    } catch (e) {}
+    var ostring;
+    try {
+      if (Object.is(o, +0)) {
+        ostring = "+0";
+      } else if (Object.is(o, -0)) {
+        ostring = "-0";
+      } else if (typeof o === "string") {
+        ostring = JSON.stringify(o);
+      } else if (Array.isArray(o)) {
+        ostring = "[" + o.map(val => repr(val)).join(", ") + "]";
+      } else {
+        ostring = String(o);
+      }
+    } catch (e) {
+      return `[${Object.prototype.toString.call(o)}]`;
+    }
+    if (typeof o == "function") {
+      ostring = ostring.replace(/\) \{[^]*/, ") { ... }");
+    }
+    return ostring;
   };
 
   this.executeSoon = function test_executeSoon(func) {
