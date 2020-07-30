@@ -230,23 +230,7 @@ function _updateTopLevelTargetIssues(targetIssues, node, issues) {
       indexOfIssue < 0 || _indexOfNode(targetIssues[indexOfIssue], node) < 0
     );
   });
-  targetIssues = _appendTopLevelTargetIssues(targetIssues, node, appendables);
-
-  // Update fields.
-  for (const issue of issues) {
-    const indexOfIssue = _indexOfIssue(targetIssues, issue);
-
-    if (indexOfIssue < 0) {
-      continue;
-    }
-
-    const targetIssue = targetIssues[indexOfIssue];
-    targetIssues[indexOfIssue] = Object.assign(issue, {
-      nodes: targetIssue.nodes,
-    });
-  }
-
-  return targetIssues;
+  return _appendTopLevelTargetIssues(targetIssues, node, appendables);
 }
 
 function _showError(action, error) {
