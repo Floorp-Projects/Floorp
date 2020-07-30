@@ -11,8 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.jsm",
   ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
   shortURL: "resource://activity-stream/lib/ShortURL.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   TippyTopProvider: "resource://activity-stream/lib/TippyTopProvider.jsm",
 });
 
@@ -22,6 +24,14 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   );
   return new Logger("AboutWelcomeChild");
 });
+
+XPCOMUtils.defineLazyGetter(this, "tippyTopProvider", () =>
+  (async () => {
+    const provider = new TippyTopProvider();
+    await provider.init();
+    return provider;
+  })()
+);
 
 function _parseOverrideContent(value) {
   let result = {};
@@ -42,6 +52,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   _parseOverrideContent
 );
 
+const SEARCH_REGION_PREF = "browser.search.region";
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "searchRegion",
+  SEARCH_REGION_PREF,
+  ""
+);
+
 /**
  * Lazily get importable sites from parent or reuse cached ones.
  */
@@ -50,9 +69,7 @@ function getImportableSites(child) {
     getImportableSites.cache ??
     (getImportableSites.cache = (async () => {
       // Use tippy top to get packaged rich icons
-      const tippyTop = new TippyTopProvider();
-      await tippyTop.init();
-
+      const tippyTop = await tippyTopProvider;
       // Remove duplicate entries if they would appear the same
       return `[${[
         ...new Set(
@@ -69,6 +86,25 @@ function getImportableSites(child) {
       ]}]`;
     })())
   );
+}
+
+async function getDefaultSites(child) {
+  // Get default TopSites by region
+  let sites = DEFAULT_SITES.get(
+    DEFAULT_SITES.has(searchRegion) ? searchRegion : ""
+  );
+
+  // Use tippy top to get packaged rich icons
+  const tippyTop = await tippyTopProvider;
+  let defaultSites = sites.split(",").map(link => {
+    let site = { url: link };
+    tippyTop.processSite(site);
+    return {
+      icon: site.tippyTopIcon,
+      title: shortURL(site),
+    };
+  });
+  return Cu.cloneInto(defaultSites, child.contentWindow);
 }
 
 class AboutWelcomeChild extends JSWindowActorChild {
@@ -135,6 +171,14 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
     Cu.exportFunction(this.AWGetImportableSites.bind(this), window, {
       defineAs: "AWGetImportableSites",
+    });
+
+    Cu.exportFunction(this.AWGetDefaultSites.bind(this), window, {
+      defineAs: "AWGetDefaultSites",
+    });
+
+    Cu.exportFunction(this.AWWaitForRegionChange.bind(this), window, {
+      defineAs: "AWWaitForRegionChange",
     });
 
     Cu.exportFunction(this.AWSelectTheme.bind(this), window, {
@@ -212,6 +256,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
     return this.wrapPromise(getImportableSites(this));
   }
 
+  AWGetDefaultSites() {
+    return this.wrapPromise(getDefaultSites(this));
+  }
+
   /**
    * Send Event Telemetry
    * @param {object} eventData
@@ -237,6 +285,23 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   AWWaitForMigrationClose() {
     return this.wrapPromise(this.sendQuery("AWPage:WAIT_FOR_MIGRATION_CLOSE"));
+  }
+
+  AWWaitForRegionChange() {
+    return this.wrapPromise(
+      new Promise(resolve =>
+        Services.prefs.addObserver(SEARCH_REGION_PREF, function observer(
+          subject,
+          topic,
+          data
+        ) {
+          if (data === SEARCH_REGION_PREF && topic === "nsPref:changed") {
+            Services.prefs.removeObserver(SEARCH_REGION_PREF, observer);
+            resolve(searchRegion);
+          }
+        })
+      )
+    );
   }
 
   /**
