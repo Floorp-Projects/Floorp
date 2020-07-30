@@ -62,7 +62,7 @@ function templateHTML(options) {
     <link rel="localization" href="browser/branding/brandings.ftl" />
     <link rel="localization" href="browser/newtab/newtab.ftl" />
     <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
-    <link rel="stylesheet" href="${options.baseUrl}css/activity-stream.css" />
+    <link rel="stylesheet" href="chrome://activity-stream/content/css/activity-stream.css" />
   </head>
   <body class="activity-stream">
     <div id="header-asrouter-container" role="presentation"></div>
