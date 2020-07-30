@@ -243,7 +243,7 @@ class OriginKeyStore : public nsISupports {
         if (f < 0) {
           continue;
         }
-        int64_t secondsstamp = nsCString(Substring(s, 0, f)).ToInteger64(&rv);
+        int64_t secondsstamp = Substring(s, 0, f).ToInteger64(&rv);
         if (NS_FAILED(rv)) {
           continue;
         }

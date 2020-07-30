@@ -3776,10 +3776,9 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, "getUserMedia:revoke")) {
     nsresult rv;
     // may be windowid or screen:windowid
-    nsDependentString data(aData);
+    const nsDependentString data(aData);
     if (Substring(data, 0, strlen("screen:")).EqualsLiteral("screen:")) {
-      uint64_t windowID = PromiseFlatString(Substring(data, strlen("screen:")))
-                              .ToInteger64(&rv);
+      uint64_t windowID = Substring(data, strlen("screen:")).ToInteger64(&rv);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       if (NS_SUCCEEDED(rv)) {
         LOG("Revoking Screen/windowCapture access for window %" PRIu64,
@@ -3787,7 +3786,7 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
         StopScreensharing(windowID);
       }
     } else {
-      uint64_t windowID = nsString(aData).ToInteger64(&rv);
+      uint64_t windowID = data.ToInteger64(&rv);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       if (NS_SUCCEEDED(rv)) {
         LOG("Revoking MediaCapture access for window %" PRIu64, windowID);
