@@ -5,10 +5,7 @@
 "use strict";
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const {
-  getCurrentZoom,
-  getViewportDimensions,
-} = require("devtools/shared/layout/utils");
+const { getCurrentZoom } = require("devtools/shared/layout/utils");
 const {
   moveInfobar,
   createNode,
@@ -275,148 +272,6 @@ class Infobar {
    */
   updateRole(role, el) {
     this.setTextContent(el, role);
-  }
-}
-
-/**
- * The XULAccessibleInfobar handles building the XUL infobar markup where it isn't
- * possible with the regular accessible highlighter.
- */
-class XULWindowInfobar extends Infobar {
-  /**
-   * A helper function that calculates the positioning of a XUL accessible's infobar.
-   *
-   * @param  {Object} container
-   *         The infobar container.
-   */
-  _moveInfobar(container) {
-    const arrow = this.getElement("arrow");
-
-    // Show the container and arrow elements first.
-    container.removeAttribute("hidden");
-    arrow.removeAttribute("hidden");
-
-    // Set the left value of the infobar container in relation to
-    // highlighter's bounds position.
-    const {
-      left: boundsLeft,
-      right: boundsRight,
-      top: boundsTop,
-      bottom: boundsBottom,
-    } = this.bounds;
-    const boundsMidPoint = (boundsLeft + boundsRight) / 2;
-    container.style.left = `${boundsMidPoint}px`;
-
-    const zoom = getCurrentZoom(this.win);
-    let {
-      width: viewportWidth,
-      height: viewportHeight,
-    } = getViewportDimensions(this.win);
-
-    const { width, height, left } = container.getBoundingClientRect();
-
-    const containerHalfWidth = width / 2;
-    const containerHeight = height;
-    const margin = 100 * zoom;
-
-    viewportHeight *= zoom;
-    viewportWidth *= zoom;
-
-    // Determine viewport boundaries for infobar.
-    const topBoundary = margin;
-    const bottomBoundary = viewportHeight - containerHeight;
-    const leftBoundary = containerHalfWidth;
-    const rightBoundary = viewportWidth - containerHalfWidth;
-
-    // Determine if an infobar's position is offscreen.
-    const isOffScreenOnTop = boundsBottom < topBoundary;
-    const isOffScreenOnBottom = boundsBottom > bottomBoundary;
-    const isOffScreenOnLeft = left < leftBoundary;
-    const isOffScreenOnRight = left > rightBoundary;
-
-    // Check if infobar is offscreen on either left/right of viewport and position.
-    if (isOffScreenOnLeft) {
-      container.style.left = `${leftBoundary + boundsLeft}px`;
-      arrow.setAttribute("hidden", "true");
-    } else if (isOffScreenOnRight) {
-      const leftOffset = rightBoundary - boundsRight;
-      container.style.left = `${rightBoundary -
-        leftOffset -
-        containerHalfWidth}px`;
-      arrow.setAttribute("hidden", "true");
-    }
-
-    // Check if infobar is offscreen on either top/bottom of viewport and position.
-    const bubbleArrowSize = "var(--highlighter-bubble-arrow-size)";
-
-    if (isOffScreenOnTop) {
-      if (boundsTop < 0) {
-        container.style.top = bubbleArrowSize;
-      } else {
-        container.style.top = `calc(${boundsBottom}px + ${bubbleArrowSize})`;
-      }
-      arrow.setAttribute("class", "accessible-arrow top");
-    } else if (isOffScreenOnBottom) {
-      container.style.top = `calc(${bottomBoundary}px - ${bubbleArrowSize})`;
-      arrow.setAttribute("hidden", "true");
-    } else {
-      container.style.top = `calc(${boundsTop}px -
-        (${containerHeight}px + ${bubbleArrowSize}))`;
-      arrow.setAttribute("class", "accessible-arrow bottom");
-    }
-  }
-
-  /**
-   * Build markup for XUL window infobar.
-   *
-   * @param  {Element} root
-   *         Root element to build infobar with.
-   */
-  buildMarkup(root) {
-    super.buildMarkup(root, createNode);
-
-    createNode(this.win, {
-      parent: this.getElement("infobar"),
-      attributes: {
-        class: "arrow",
-        id: "arrow",
-      },
-      prefix: this.prefix,
-    });
-  }
-
-  /**
-   * Override of Infobar class's getTextContent method.
-   *
-   * @param  {String} id
-   *         Element ID to retrieve text content from.
-   * @return {String} Returns the text content of the element.
-   */
-  getTextContent(id) {
-    return this.getElement(id).textContent;
-  }
-
-  /**
-   * Override of Infobar class's getElement method.
-   *
-   * @param  {String} id
-   *         Element ID.
-   * @return {String} Returns the specified element.
-   */
-  getElement(id) {
-    return this.win.document.getElementById(`${this.prefix}${id}`);
-  }
-
-  /**
-   * Override of Infobar class's setTextContent method.
-   *
-   * @param  {Element} el
-   *         Element to set text content on.
-   * @param  {String} text
-   *         Text for content.
-   */
-  setTextContent(el, text) {
-    el.textContent = text;
   }
 }
 
@@ -834,38 +689,70 @@ class TextLabel extends AuditReport {
  *           width of the the accessible object
  *         - {Number} h
  *           height of the the accessible object
- *         - {Number} zoom
- *           zoom level of the accessible object's parent window
  * @return {Object|null} Returns, if available, positioning and bounds information for
  *                 the accessible object.
  */
-function getBounds(win, { x, y, w, h, zoom }) {
-  let { mozInnerScreenX, mozInnerScreenY, scrollX, scrollY } = win;
-  let zoomFactor = getCurrentZoom(win);
+function getBounds(win, { x, y, w, h }) {
+  const { mozInnerScreenX, mozInnerScreenY, scrollX, scrollY } = win;
+  const zoom = getCurrentZoom(win);
   let left = x;
   let right = x + w;
   let top = y;
   let bottom = y + h;
-
-  // For a XUL accessible, normalize the top-level window with its current zoom level.
-  // We need to do this because top-level browser content does not allow zooming.
-  if (zoom) {
-    zoomFactor = zoom;
-    mozInnerScreenX /= zoomFactor;
-    mozInnerScreenY /= zoomFactor;
-    scrollX /= zoomFactor;
-    scrollY /= zoomFactor;
-  }
 
   left -= mozInnerScreenX - scrollX;
   right -= mozInnerScreenX - scrollX;
   top -= mozInnerScreenY - scrollY;
   bottom -= mozInnerScreenY - scrollY;
 
-  left *= zoomFactor;
-  right *= zoomFactor;
-  top *= zoomFactor;
-  bottom *= zoomFactor;
+  left *= zoom;
+  right *= zoom;
+  top *= zoom;
+  bottom *= zoom;
+
+  const width = right - left;
+  const height = bottom - top;
+
+  return { left, right, top, bottom, width, height };
+}
+
+/**
+ * A helper function that calculate accessible object bounds and positioning to
+ * be used for highlighting in browser toolbox.
+ *
+ * @param  {Object} win
+ *         window that contains accessible object.
+ * @param  {Object} options
+ *         Object used for passing options:
+ *         - {Number} x
+ *           x coordinate of the top left corner of the accessible object
+ *         - {Number} y
+ *           y coordinate of the top left corner of the accessible object
+ *         - {Number} w
+ *           width of the the accessible object
+ *         - {Number} h
+ *           height of the the accessible object
+ *         - {Number} zoom
+ *           zoom level of the accessible object's parent window
+ * @return {Object|null} Returns, if available, positioning and bounds information for
+ *                 the accessible object.
+ */
+function getBoundsXUL(win, { x, y, w, h, zoom }) {
+  const { mozInnerScreenX, mozInnerScreenY } = win;
+  let left = x;
+  let right = x + w;
+  let top = y;
+  let bottom = y + h;
+
+  left *= zoom;
+  right *= zoom;
+  top *= zoom;
+  bottom *= zoom;
+
+  left -= mozInnerScreenX;
+  right -= mozInnerScreenX;
+  top -= mozInnerScreenY;
+  bottom -= mozInnerScreenY;
 
   const width = right - left;
   const height = bottom - top;
@@ -875,5 +762,5 @@ function getBounds(win, { x, y, w, h, zoom }) {
 
 exports.MAX_STRING_LENGTH = MAX_STRING_LENGTH;
 exports.getBounds = getBounds;
+exports.getBoundsXUL = getBoundsXUL;
 exports.Infobar = Infobar;
-exports.XULWindowInfobar = XULWindowInfobar;

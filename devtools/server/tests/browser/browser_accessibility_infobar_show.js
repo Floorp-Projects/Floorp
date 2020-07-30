@@ -23,9 +23,6 @@ add_task(async function() {
         const {
           AccessibleHighlighter,
         } = require("devtools/server/actors/highlighters/accessible");
-        const {
-          XULWindowAccessibleHighlighter,
-        } = require("devtools/server/actors/highlighters/xul-accessible");
 
         /**
          * Get whether or not infobar container is hidden.
@@ -177,10 +174,6 @@ add_task(async function() {
         info("Checks for Infobar's show method");
         const highlighter = new AccessibleHighlighter(env);
         testInfobar(node, highlighter);
-
-        info("Checks for XULWindowInfobar's show method");
-        const xulWindowHighlighter = new XULWindowAccessibleHighlighter(env);
-        testInfobar(node, xulWindowHighlighter);
       });
     }
   );

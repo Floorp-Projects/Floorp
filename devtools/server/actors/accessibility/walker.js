@@ -287,25 +287,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
   get highlighter() {
     if (!this._highlighter) {
-      if (isXUL(this.rootWin)) {
-        if (!isTypeRegistered("XULWindowAccessibleHighlighter")) {
-          register("XULWindowAccessibleHighlighter", "xul-accessible");
-        }
-
-        this._highlighter = CustomHighlighterActor(
-          this,
-          "XULWindowAccessibleHighlighter"
-        );
-      } else {
-        if (!isTypeRegistered("AccessibleHighlighter")) {
-          register("AccessibleHighlighter", "accessible");
-        }
-
-        this._highlighter = CustomHighlighterActor(
-          this,
-          "AccessibleHighlighter"
-        );
+      if (!isTypeRegistered("AccessibleHighlighter")) {
+        register("AccessibleHighlighter", "accessible");
       }
+      this._highlighter = CustomHighlighterActor(this, "AccessibleHighlighter");
 
       this.manage(this._highlighter);
       this._highlighter.on("highlighter-event", this.onHighlighterEvent);
@@ -329,6 +314,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
   get rootDoc() {
     return this.targetActor && this.targetActor.window.document;
+  },
+
+  get isXUL() {
+    return isXUL(this.rootWin);
   },
 
   get colorMatrix() {
@@ -468,7 +457,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       return this.once("document-ready").then(docAcc => this.addRef(docAcc));
     }
 
-    if (isXUL(this.rootWin)) {
+    if (this.isXUL) {
       const doc = this.addRef(this.getRawAccessibleFor(this.rootDoc));
       return Promise.resolve(doc);
     }
@@ -851,7 +840,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     const { name, role } = accessible;
     const shown = this.highlighter.show(
       { rawNode },
-      { ...options, ...bounds, name, role, audit }
+      { ...options, ...bounds, name, role, audit, isXUL: this.isXUL }
     );
     this._highlightingAccessible = null;
 
@@ -1119,7 +1108,8 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     const target = event.originalTarget || event.target;
     const docAcc = this.getRawAccessibleFor(this.rootDoc);
     const win = target.ownerGlobal;
-    const scale = this.pixelRatio / getCurrentZoom(win);
+    const zoom = this.isXUL ? 1 : getCurrentZoom(win);
+    const scale = this.pixelRatio / zoom;
     const rawAccessible = docAcc.getDeepestChildAtPointInProcess(
       event.screenX * scale,
       event.screenY * scale
