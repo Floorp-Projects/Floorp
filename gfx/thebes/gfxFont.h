@@ -909,6 +909,12 @@ class gfxShapedText {
       NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
       return (mValue & GLYPH_COUNT_MASK) >> GLYPH_COUNT_SHIFT;
     }
+    void SetGlyphCount(uint32_t aGlyphCount) {
+      MOZ_ASSERT(!IsSimpleGlyph(), "Expected non-simple-glyph");
+      MOZ_ASSERT(GetGlyphCount() == 0, "Glyph count already set");
+      MOZ_ASSERT(aGlyphCount <= 0xffff, "Glyph count out of range");
+      mValue |= FLAG_NOT_MISSING | (aGlyphCount << GLYPH_COUNT_SHIFT);
+    }
 
     void SetIsSpace() { mValue |= FLAG_CHAR_IS_SPACE; }
     void SetIsTab() {
@@ -955,8 +961,10 @@ class gfxShapedText {
     mozilla::gfx::Point mOffset;
   };
 
-  void SetGlyphs(uint32_t aCharIndex, CompressedGlyph aGlyph,
-                 const DetailedGlyph* aGlyphs);
+  // Store DetailedGlyph records for the given index. (This does not modify
+  // the associated CompressedGlyph character-type or break flags.)
+  void SetDetailedGlyphs(uint32_t aIndex, uint32_t aGlyphCount,
+                         const DetailedGlyph* aGlyphs);
 
   void SetMissingGlyph(uint32_t aIndex, uint32_t aChar, gfxFont* aFont);
 
@@ -1056,7 +1064,8 @@ class gfxShapedText {
       DetailedGlyph details = {aGlyph.GetSimpleGlyph(),
                                (int32_t)aGlyph.GetSimpleAdvance(),
                                mozilla::gfx::Point()};
-      SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1), &details);
+      aGlyph.SetComplex(true, true, 0);
+      SetDetailedGlyphs(aIndex, 1, &details);
     }
   }
 
