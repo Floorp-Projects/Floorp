@@ -21,7 +21,9 @@ ChromeUtils.defineModuleGetter(
 );
 
 var TopSiteAttribution = {
-  async makeRequest({ searchProvider, source }) {
+  async makeRequest({ targetURL, source }) {
+    let searchProvider = targetURL.match(/^https?:\/\/(?:www.)?([^.]*)/)[1];
+
     function record(objectString, value = "") {
       recordTelemetryEvent("search_override_exp", objectString, value, {
         searchProvider,
@@ -41,6 +43,7 @@ var TopSiteAttribution = {
     const request = new Request(attributionUrl);
     request.headers.set("X-Region", Region.home);
     request.headers.set("X-Source", source);
+    request.headers.set("X-Target-URL", targetURL);
     const response = await fetch(request);
     record("attribution", response.ok ? "success" : "failure");
   },
