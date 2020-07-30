@@ -89,12 +89,8 @@ def test_make_index_tasks(make_taskgraph, graph_config):
         docker_task.label: docker_task,
     })
 
-    index_paths = [
-            r.split(".", 1)[1] for r in task_def["routes"] if r.startswith("index.")
-        ]
     index_task = morph.make_index_task(
-        task, taskgraph, label_to_taskid, Parameters(strict=False), graph_config,
-        index_paths=index_paths, index_rank=1540722354, purpose="index-task", dependencies={},
+        task, taskgraph, label_to_taskid, Parameters(strict=False), graph_config
     )
 
     assert index_task.task['payload']['command'][0] == 'insert-indexes.js'

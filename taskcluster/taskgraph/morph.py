@@ -51,71 +51,56 @@ def amend_taskgraph(taskgraph, label_to_taskid, to_add):
     return taskgraph, label_to_taskid
 
 
-def derive_misc_task(
-    target_task,
-    purpose,
-    image,
-    taskgraph,
-    label_to_taskid,
-    parameters,
-    graph_config,
-    dependencies,
-):
-    """Create the shell of a task that depends on `dependencies` and on the given docker
+def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid, parameters, graph_config):
+    """Create the shell of a task that depends on `task` and on the given docker
     image."""
-    label = "{}-{}".format(purpose, target_task.label)
+    label = '{}-{}'.format(purpose, task.label)
 
     # this is why all docker image tasks are included in the target task graph: we
-    # need to find them in label_to_taskid, even if nothing else required them
-    image_taskid = label_to_taskid["build-docker-image-" + image]
+    # need to find them in label_to_taskid, if if nothing else required them
+    image_taskid = label_to_taskid['build-docker-image-' + image]
 
     provisioner_id, worker_type = get_worker_type(
-        graph_config, "misc", parameters["level"], parameters.release_level()
+        graph_config, 'misc', parameters['level'], parameters.release_level()
     )
 
-    deps = copy.copy(dependencies)
-    deps["docker-image"] = image_taskid
-
     task_def = {
-        "provisionerId": "gecko-t",
-        "workerType": "misc",
-        "dependencies": [d for d in deps.values()],
-        "created": {"relative-datestamp": "0 seconds"},
-        "deadline": target_task.task["deadline"],
+        'provisionerId': 'gecko-t',
+        'workerType': 'misc',
+        'dependencies': [task.task_id, image_taskid],
+        'created': {'relative-datestamp': '0 seconds'},
+        'deadline': task.task['deadline'],
         # no point existing past the parent task's deadline
-        "expires": target_task.task["deadline"],
-        "metadata": {
-            "name": label,
-            "description": "{} for {}".format(
-                purpose, target_task.description
-            ),
-            "owner": target_task.task["metadata"]["owner"],
-            "source": target_task.task["metadata"]["source"],
+        'expires': task.task['deadline'],
+        'metadata': {
+            'name': label,
+            'description': '{} for {}'.format(purpose, task.description),
+            'owner': task.task['metadata']['owner'],
+            'source': task.task['metadata']['source'],
         },
-        "scopes": [],
-        "payload": {
-            "image": {
-                "path": "public/image.tar.zst",
-                "taskId": image_taskid,
-                "type": "task-image",
+        'scopes': [],
+        'payload': {
+            'image': {
+                'path': 'public/image.tar.zst',
+                'taskId': image_taskid,
+                'type': 'task-image',
             },
-            "features": {"taskclusterProxy": True},
-            "maxRunTime": 600,
+            'features': {
+                'taskclusterProxy': True,
+            },
+            'maxRunTime': 600,
         },
     }
 
-    if image_taskid not in taskgraph.tasks:
-        # The task above depends on the replaced docker-image not one in
-        # this current graph.
-        del deps["docker-image"]
+    # only include the docker-image dependency here if it is actually in the
+    # taskgraph (has not been optimized).  It is included in
+    # task_def['dependencies'] unconditionally.
+    dependencies = {'parent': task.task_id}
+    if image_taskid in taskgraph.tasks:
+        dependencies['docker-image'] = image_taskid
 
-    task = Task(
-        kind="misc",
-        label=label,
-        attributes={},
-        task=task_def,
-        dependencies=deps,
-    )
+    task = Task(kind='misc', label=label, attributes={}, task=task_def,
+                dependencies=dependencies)
     task.task_id = slugid().decode('ascii')
     return task
 
@@ -124,59 +109,44 @@ def derive_misc_task(
 # scope, allowing them to be summarized.  Each should correspond to a star scope
 # in each Gecko `assume:repo:hg.mozilla.org/...` role.
 SCOPE_SUMMARY_REGEXPS = [
-    re.compile(r"(index:insert-task:docker\.images\.v1\.[^.]*\.).*"),
-    re.compile(r"(index:insert-task:gecko\.v2\.[^.]*\.).*"),
-    re.compile(r"(index:insert-task:comm\.v2\.[^.]*\.).*"),
+    re.compile(r'(index:insert-task:docker\.images\.v1\.[^.]*\.).*'),
+    re.compile(r'(index:insert-task:gecko\.v2\.[^.]*\.).*'),
+    re.compile(r'(index:insert-task:comm\.v2\.[^.]*\.).*'),
 ]
 
 
-def make_index_task(
-    parent_task,
-    taskgraph,
-    label_to_taskid,
-    parameters,
-    graph_config,
-    index_paths,
-    index_rank,
-    purpose,
-    dependencies,
-):
-    task = derive_misc_task(
-        parent_task,
-        purpose,
-        "index-task",
-        taskgraph,
-        label_to_taskid,
-        parameters,
-        graph_config,
-        dependencies,
-    )
+def make_index_task(parent_task, taskgraph, label_to_taskid, parameters, graph_config):
+    index_paths = [r.split('.', 1)[1] for r in parent_task.task['routes']
+                   if r.startswith('index.')]
+    parent_task.task['routes'] = [r for r in parent_task.task['routes']
+                                  if not r.startswith('index.')]
+
+    task = derive_misc_task(parent_task, 'index-task', 'index-task',
+                            taskgraph, label_to_taskid, parameters, graph_config)
 
     # we need to "summarize" the scopes, otherwise a particularly
     # namespace-heavy index task might have more scopes than can fit in a
     # temporary credential.
     scopes = set()
     for path in index_paths:
-        scope = "index:insert-task:{}".format(path)
+        scope = 'index:insert-task:{}'.format(path)
         for summ_re in SCOPE_SUMMARY_REGEXPS:
             match = summ_re.match(scope)
             if match:
-                scope = match.group(1) + "*"
+                scope = match.group(1) + '*'
                 break
         scopes.add(scope)
-    task.task["scopes"] = sorted(scopes)
+    task.task['scopes'] = sorted(scopes)
 
-    task.task["payload"]["command"] = ["insert-indexes.js"] + index_paths
-    task.task["payload"]["env"] = {
-        "TARGET_TASKID": parent_task.task_id,
-        "INDEX_RANK": index_rank,
+    task.task['payload']['command'] = ['insert-indexes.js'] + index_paths
+    task.task['payload']['env'] = {
+        'TARGET_TASKID': parent_task.task_id,
+        'INDEX_RANK': parent_task.task.get('extra', {}).get('index', {}).get('rank', 0),
     }
     return task
 
 
-def add_index_tasks(
-    taskgraph, label_to_taskid, parameters, graph_config, decision_task_id
-):
+def add_index_tasks(taskgraph, label_to_taskid, parameters, graph_config):
     """
     The TaskCluster queue only allows 10 routes on a task, but we have tasks
     with many more routes, for purposes of indexing. This graph morph adds
@@ -189,25 +159,7 @@ def add_index_tasks(
     for label, task in six.iteritems(taskgraph.tasks):
         if len(task.task.get('routes', [])) <= MAX_ROUTES:
             continue
-        index_paths = [
-            r.split(".", 1)[1] for r in task.task["routes"] if r.startswith("index.")
-        ]
-        task.task["routes"] = [
-            r for r in task.task["routes"] if not r.startswith("index.")
-        ]
-        added.append(
-            make_index_task(
-                task,
-                taskgraph,
-                label_to_taskid,
-                parameters,
-                graph_config,
-                index_paths=index_paths,
-                index_rank=task.task.get("extra", {}).get("index", {}).get("rank", 0),
-                purpose="index-task",
-                dependencies={'parent': task.task_id}
-            )
-        )
+        added.append(make_index_task(task, taskgraph, label_to_taskid, parameters, graph_config))
 
     if added:
         taskgraph, label_to_taskid = amend_taskgraph(
@@ -217,46 +169,7 @@ def add_index_tasks(
     return taskgraph, label_to_taskid
 
 
-def add_eager_cache_index_tasks(
-    taskgraph, label_to_taskid, parameters, graph_config, decision_task_id
-):
-    """
-    Some tasks (e.g. cached tasks) we want to exist in the index before they even
-    run/complete. Our current use is to allow us to depend on an unfinished cached
-    task in future pushes. This graph morph adds "eager-index tasks" that depend on
-    the decision task and do the index insertions directly, which does not need to
-    wait on the pointed at task to complete.
-    """
-    logger.debug("Morphing: Adding eager cached index's")
-
-    added = []
-    for label, task in six.iteritems(taskgraph.tasks):
-        if "eager_indexes" not in task.attributes:
-            continue
-        eager_indexes = task.attributes["eager_indexes"]
-        added.append(
-            make_index_task(
-                task,
-                taskgraph,
-                label_to_taskid,
-                parameters,
-                graph_config,
-                index_paths=eager_indexes,
-                index_rank=0,  # Be sure complete tasks get priority
-                purpose="eager-index",
-                dependencies={},
-            )
-        )
-
-    if added:
-        taskgraph, label_to_taskid = amend_taskgraph(taskgraph, label_to_taskid, added)
-        logger.info("Added {} index tasks".format(len(added)))
-    return taskgraph, label_to_taskid
-
-
-def add_try_task_duplicates(
-    taskgraph, label_to_taskid, parameters, graph_config, decision_task_id
-):
+def add_try_task_duplicates(taskgraph, label_to_taskid, parameters, graph_config):
     try_config = parameters['try_task_config']
     rebuild = try_config.get('rebuild')
     if rebuild:
@@ -266,16 +179,13 @@ def add_try_task_duplicates(
     return taskgraph, label_to_taskid
 
 
-def morph(taskgraph, label_to_taskid, parameters, graph_config, decision_task_id):
+def morph(taskgraph, label_to_taskid, parameters, graph_config):
     """Apply all morphs"""
     morphs = [
-        add_eager_cache_index_tasks,
         add_index_tasks,
         add_try_task_duplicates,
     ]
 
     for m in morphs:
-        taskgraph, label_to_taskid = m(
-            taskgraph, label_to_taskid, parameters, graph_config, decision_task_id
-        )
+        taskgraph, label_to_taskid = m(taskgraph, label_to_taskid, parameters, graph_config)
     return taskgraph, label_to_taskid
