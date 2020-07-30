@@ -3131,6 +3131,9 @@ class WebProgressListenerToPromise final : public nsIWebProgressListener {
                            uint32_t aStateFlags, nsresult aStatus) override {
     if (aStateFlags & nsIWebProgressListener::STATE_STOP &&
         aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+      MOZ_RELEASE_ASSERT(mPromise,
+                         "Got duplicate load notification, "
+                         "or load after an error");
       mPromise->MaybeResolveWithUndefined();
       mPromise = nullptr;
     }
@@ -3139,7 +3142,7 @@ class WebProgressListenerToPromise final : public nsIWebProgressListener {
   NS_IMETHOD OnStatusChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
                             nsresult aStatus,
                             const char16_t* aMessage) override {
-    if (aStatus != NS_OK) {
+    if (aStatus != NS_OK && mPromise) {
       mPromise->MaybeReject(ErrorResult(aStatus));
       mPromise = nullptr;
     }
