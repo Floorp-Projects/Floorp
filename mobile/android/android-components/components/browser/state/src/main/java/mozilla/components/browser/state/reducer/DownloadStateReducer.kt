@@ -11,23 +11,23 @@ import mozilla.components.browser.state.state.content.DownloadState
 internal object DownloadStateReducer {
 
     /**
-     * [DownloadAction] Reducer function for modifying [BrowserState.queuedDownloads].
+     * [DownloadAction] Reducer function for modifying [BrowserState.downloads].
      */
     fun reduce(state: BrowserState, action: DownloadAction): BrowserState {
         return when (action) {
-            is DownloadAction.QueueDownloadAction -> updateQueuedDownloads(state, action.download)
-            is DownloadAction.UpdateQueuedDownloadAction -> {
-                updateQueuedDownloads(state, action.download)
+            is DownloadAction.AddDownloadAction -> updateDownloads(state, action.download)
+            is DownloadAction.UpdateDownloadAction -> {
+                updateDownloads(state, action.download)
             }
-            is DownloadAction.RemoveQueuedDownloadAction -> {
-                state.copy(queuedDownloads = state.queuedDownloads - action.downloadId)
+            is DownloadAction.RemoveDownloadAction -> {
+                state.copy(downloads = state.downloads - action.downloadId)
             }
-            is DownloadAction.RemoveAllQueuedDownloadsAction -> {
-                state.copy(queuedDownloads = emptyMap())
+            is DownloadAction.RemoveAllDownloadsAction -> {
+                state.copy(downloads = emptyMap())
             }
         }
     }
 
-    private fun updateQueuedDownloads(state: BrowserState, download: DownloadState) =
-            state.copy(queuedDownloads = state.queuedDownloads + (download.id to download))
+    private fun updateDownloads(state: BrowserState, download: DownloadState) =
+            state.copy(downloads = state.downloads + (download.id to download))
 }

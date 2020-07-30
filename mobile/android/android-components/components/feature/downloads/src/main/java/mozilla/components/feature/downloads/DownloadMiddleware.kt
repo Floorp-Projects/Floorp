@@ -15,7 +15,7 @@ import mozilla.components.lib.state.MiddlewareStore
 
 /**
  * [Middleware] implementation for managing downloads via the provided download service. Its
- * purpose is to react to global download state changes (e.g. of [BrowserState.queuedDownloads])
+ * purpose is to react to global download state changes (e.g. of [BrowserState.downloads])
  * and notify the download service, as needed.
  */
 class DownloadMiddleware(
@@ -30,7 +30,7 @@ class DownloadMiddleware(
     ) {
         next(action)
         when (action) {
-            is DownloadAction.QueueDownloadAction -> {
+            is DownloadAction.AddDownloadAction -> {
                 val intent = Intent(applicationContext, downloadServiceClass)
                 intent.putExtra(DownloadManager.EXTRA_DOWNLOAD_ID, action.download.id)
                 applicationContext.startService(intent)

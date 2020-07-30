@@ -16,64 +16,64 @@ import org.junit.Test
 class DownloadActionTest {
 
     @Test
-    fun `QueueDownloadAction adds download`() {
+    fun `AddDownloadAction adds download`() {
         val store = BrowserStore(BrowserState())
 
         val download1 = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
-        store.dispatch(DownloadAction.QueueDownloadAction(download1)).joinBlocking()
-        assertEquals(download1, store.state.queuedDownloads[download1.id])
-        assertEquals(1, store.state.queuedDownloads.size)
+        store.dispatch(DownloadAction.AddDownloadAction(download1)).joinBlocking()
+        assertEquals(download1, store.state.downloads[download1.id])
+        assertEquals(1, store.state.downloads.size)
 
         val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "")
-        store.dispatch(DownloadAction.QueueDownloadAction(download2)).joinBlocking()
-        assertEquals(download2, store.state.queuedDownloads[download2.id])
-        assertEquals(2, store.state.queuedDownloads.size)
+        store.dispatch(DownloadAction.AddDownloadAction(download2)).joinBlocking()
+        assertEquals(download2, store.state.downloads[download2.id])
+        assertEquals(2, store.state.downloads.size)
     }
 
     @Test
-    fun `RemoveQueuedDownloadAction removes download`() {
+    fun `RemoveDownloadAction removes download`() {
         val store = BrowserStore(BrowserState())
 
         val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
-        store.dispatch(DownloadAction.QueueDownloadAction(download)).joinBlocking()
-        assertEquals(download, store.state.queuedDownloads[download.id])
-        assertFalse(store.state.queuedDownloads.isEmpty())
+        store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
+        assertEquals(download, store.state.downloads[download.id])
+        assertFalse(store.state.downloads.isEmpty())
 
-        store.dispatch(DownloadAction.RemoveQueuedDownloadAction(download.id)).joinBlocking()
-        assertTrue(store.state.queuedDownloads.isEmpty())
+        store.dispatch(DownloadAction.RemoveDownloadAction(download.id)).joinBlocking()
+        assertTrue(store.state.downloads.isEmpty())
     }
 
     @Test
-    fun `RemoveAllQueuedDownloadsAction removes all downloads`() {
+    fun `RemoveAllDownloadsAction removes all downloads`() {
         val store = BrowserStore(BrowserState())
 
         val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
         val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "")
-        store.dispatch(DownloadAction.QueueDownloadAction(download)).joinBlocking()
-        store.dispatch(DownloadAction.QueueDownloadAction(download2)).joinBlocking()
+        store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
+        store.dispatch(DownloadAction.AddDownloadAction(download2)).joinBlocking()
 
-        assertFalse(store.state.queuedDownloads.isEmpty())
-        assertEquals(2, store.state.queuedDownloads.size)
+        assertFalse(store.state.downloads.isEmpty())
+        assertEquals(2, store.state.downloads.size)
 
-        store.dispatch(DownloadAction.RemoveAllQueuedDownloadsAction).joinBlocking()
-        assertTrue(store.state.queuedDownloads.isEmpty())
+        store.dispatch(DownloadAction.RemoveAllDownloadsAction).joinBlocking()
+        assertTrue(store.state.downloads.isEmpty())
     }
 
     @Test
-    fun `UpdateQueuedDownloadAction updates the provided download`() {
+    fun `UpdateDownloadAction updates the provided download`() {
         val store = BrowserStore(BrowserState())
         val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
         val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "")
 
-        store.dispatch(DownloadAction.QueueDownloadAction(download)).joinBlocking()
-        store.dispatch(DownloadAction.QueueDownloadAction(download2)).joinBlocking()
+        store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
+        store.dispatch(DownloadAction.AddDownloadAction(download2)).joinBlocking()
 
         val updatedDownload = download.copy(fileName = "filename.txt")
 
-        store.dispatch(DownloadAction.UpdateQueuedDownloadAction(updatedDownload)).joinBlocking()
+        store.dispatch(DownloadAction.UpdateDownloadAction(updatedDownload)).joinBlocking()
 
-        assertFalse(store.state.queuedDownloads.isEmpty())
-        assertEquals(2, store.state.queuedDownloads.size)
-        assertEquals(updatedDownload, store.state.queuedDownloads[updatedDownload.id])
+        assertFalse(store.state.downloads.isEmpty())
+        assertEquals(2, store.state.downloads.size)
+        assertEquals(updatedDownload, store.state.downloads[updatedDownload.id])
     }
 }

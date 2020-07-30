@@ -244,7 +244,7 @@ abstract class AbstractFetchDownloadService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val download = intent?.getLongExtra(EXTRA_DOWNLOAD_ID, -1)?.let {
-            store.state.queuedDownloads[it]
+            store.state.downloads[it]
         } ?: return START_REDELIVER_INTENT
 
         // If the job already exists, then don't create a new ID. This can happen when calling tryAgain
@@ -256,7 +256,7 @@ abstract class AbstractFetchDownloadService : Service() {
             foregroundServiceId = foregroundServiceId
         )
 
-        store.dispatch(DownloadAction.UpdateQueuedDownloadAction(downloadJobState.state))
+        store.dispatch(DownloadAction.UpdateDownloadAction(downloadJobState.state))
 
         downloadJobState.job = CoroutineScope(IO).launch {
             startDownloadJob(downloadJobState)
@@ -429,7 +429,6 @@ abstract class AbstractFetchDownloadService : Service() {
     @VisibleForTesting
     internal fun removeDownloadJob(downloadJobState: DownloadJobState) {
         downloadJobs.remove(downloadJobState.state.id)
-        store.dispatch(DownloadAction.RemoveQueuedDownloadAction(downloadJobState.state.id))
         if (downloadJobs.isEmpty()) {
             stopSelf()
         } else {
@@ -684,7 +683,7 @@ abstract class AbstractFetchDownloadService : Service() {
     @VisibleForTesting
     internal fun updateDownloadState(updatedDownload: DownloadState) {
         downloadJobs[updatedDownload.id]?.state = updatedDownload
-        store.dispatch(DownloadAction.UpdateQueuedDownloadAction(updatedDownload))
+        store.dispatch(DownloadAction.UpdateDownloadAction(updatedDownload))
     }
 
     /**
