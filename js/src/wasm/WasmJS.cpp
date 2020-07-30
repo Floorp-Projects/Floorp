@@ -338,6 +338,11 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
   return true;
 }
 
+bool wasm::AnyCompilerAvailable(JSContext* cx) {
+  return wasm::BaselineAvailable(cx) || wasm::IonAvailable(cx) ||
+         wasm::CraneliftAvailable(cx);
+}
+
 // Feature predicates.  These must be kept in sync with the predicates in the
 // section above.
 //
@@ -348,8 +353,7 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
 
 bool wasm::ReftypesAvailable(JSContext* cx) {
   // All compilers support reference types.
-  return WasmReftypesFlag(cx) &&
-         (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
+  return WasmReftypesFlag(cx) && AnyCompilerAvailable(cx);
 }
 
 bool wasm::GcTypesAvailable(JSContext* cx) {
@@ -358,8 +362,7 @@ bool wasm::GcTypesAvailable(JSContext* cx) {
 }
 
 bool wasm::MultiValuesAvailable(JSContext* cx) {
-  return WasmMultiValueFlag(cx) &&
-         (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
+  return WasmMultiValueFlag(cx) && AnyCompilerAvailable(cx);
 }
 
 bool wasm::SimdAvailable(JSContext* cx) {
@@ -419,13 +422,14 @@ bool wasm::HasSupport(JSContext* cx) {
                   cx->realm()->principals() &&
                   cx->realm()->principals()->isSystemOrAddonPrincipal();
   }
-  return prefEnabled && HasPlatformSupport(cx) &&
-         (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
+  // Do not check for compiler availability, as that may be run-time variant.
+  // For HasSupport() we want a stable answer depending only on prefs.
+  return prefEnabled && HasPlatformSupport(cx);
 }
 
 bool wasm::StreamingCompilationAvailable(JSContext* cx) {
   // This should match EnsureStreamSupport().
-  return HasSupport(cx) &&
+  return HasSupport(cx) && AnyCompilerAvailable(cx) &&
          cx->runtime()->offThreadPromiseState.ref().initialized() &&
          CanUseExtraThreads() && cx->runtime()->consumeStreamCallback &&
          cx->runtime()->reportStreamErrorCallback;

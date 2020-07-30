@@ -748,7 +748,8 @@ static bool IsProxy(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool WasmIsSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::HasSupport(cx));
+  args.rval().setBoolean(wasm::HasSupport(cx) &&
+                         wasm::AnyCompilerAvailable(cx));
   return true;
 }
 
@@ -854,30 +855,32 @@ static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
   bool baseline = wasm::BaselineAvailable(cx);
   bool ion = wasm::IonAvailable(cx);
   bool cranelift = wasm::CraneliftAvailable(cx);
+  bool none = !baseline && !ion && !cranelift;
+  bool tiered = baseline && (ion || cranelift);
 
   MOZ_ASSERT(!(ion && cranelift));
 
-  JSString* result;
-  if (!wasm::HasSupport(cx)) {
-    result = JS_NewStringCopyZ(cx, "none");
-  } else if (baseline && ion) {
-    result = JS_NewStringCopyZ(cx, "baseline+ion");
-  } else if (baseline && cranelift) {
-    result = JS_NewStringCopyZ(cx, "baseline+cranelift");
-  } else if (baseline) {
-    result = JS_NewStringCopyZ(cx, "baseline");
-  } else if (cranelift) {
-    result = JS_NewStringCopyZ(cx, "cranelift");
-  } else {
-    result = JS_NewStringCopyZ(cx, "ion");
-  }
-
-  if (!result) {
+  JSStringBuilder result(cx);
+  if (none && !result.append("none", 4)) {
     return false;
   }
-
-  args.rval().setString(result);
-  return true;
+  if (baseline && !result.append("baseline", 8)) {
+    return false;
+  }
+  if (tiered && !result.append("+", 1)) {
+    return false;
+  }
+  if (ion && !result.append("ion", 3)) {
+    return false;
+  }
+  if (cranelift && !result.append("cranelift", 9)) {
+    return false;
+  }
+  if (JSString* str = result.finishString()) {
+    args.rval().setString(str);
+    return true;
+  }
+  return false;
 }
 
 static bool WasmCraneliftDisabledByFeatures(JSContext* cx, unsigned argc,
