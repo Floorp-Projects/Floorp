@@ -77,7 +77,11 @@ def generate_tasks(params=None, full=False):
     os.chdir(build.topsrcdir)
 
     root = os.path.join(build.topsrcdir, 'taskcluster', 'ci')
-    params = parameters_loader(params, strict=False, overrides={'try_mode': 'try_select'})
+    params = parameters_loader(
+        params,
+        strict=False,
+        overrides={'try_mode': 'try_select', 'target_tasks_method': 'try_select_tasks'}
+    )
 
     # Cache both full_task_set and target_task_set regardless of whether or not
     # --full was requested. Caching is cheap and can potentially save a lot of
