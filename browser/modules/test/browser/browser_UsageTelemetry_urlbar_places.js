@@ -19,8 +19,6 @@ const TEST_URL = getRootDirectory(gTestPath).replace(
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
-  URLBAR_SELECTED_RESULT_METHODS:
-    "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
 function searchInAwesomebar(value, win = window) {
@@ -174,7 +172,7 @@ add_task(async function test_history() {
     histograms,
     "history",
     1,
-    URLBAR_SELECTED_RESULT_METHODS.arrowEnterSelection
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.arrowEnterSelection
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -205,7 +203,7 @@ add_task(async function test_bookmark() {
     histograms,
     "bookmark",
     1,
-    URLBAR_SELECTED_RESULT_METHODS.arrowEnterSelection
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.arrowEnterSelection
   );
 
   await PlacesUtils.bookmarks.remove(bm);
@@ -231,7 +229,7 @@ add_task(async function test_keyword() {
     histograms,
     "keyword",
     0,
-    URLBAR_SELECTED_RESULT_METHODS.enter
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -260,7 +258,7 @@ add_task(async function test_switchtab() {
     histograms,
     "switchtab",
     1,
-    URLBAR_SELECTED_RESULT_METHODS.arrowEnterSelection
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.arrowEnterSelection
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -285,7 +283,7 @@ add_task(async function test_visitURL() {
     histograms,
     "visiturl",
     0,
-    URLBAR_SELECTED_RESULT_METHODS.enter
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -319,7 +317,7 @@ add_task(async function test_autofill() {
     histograms,
     "autofill",
     0,
-    URLBAR_SELECTED_RESULT_METHODS.enter
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter
   );
 
   BrowserTestUtils.removeTab(tab);
