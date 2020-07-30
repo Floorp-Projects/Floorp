@@ -45,12 +45,6 @@
         {"description": "A url, section_title_text links to this"}
       ]
     },
-    "scene2_title": {
-      "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Title displayed before text in scene 2. Should be plain text."}
-      ]
-    },
     "scene2_text": {
       "allOf": [
         {"$ref": "#/definitions/richText"},

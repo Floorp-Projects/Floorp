@@ -397,15 +397,12 @@ const MESSAGES = () => [
         "https://snippets.cdn.mozilla.net/media/icons/094b0707-ab65-4b2e-99a1-a84122b6ab26.png",
       section_title_text: "Messages from Firefox",
       section_title_url: "https://support.mozilla.org/kb",
-
       scene2_button_label: "Send",
       scene2_disclaimer_html:
         "The intended recipient of the email must have consented. <privacyLink>Learn more</privacyLink>.",
       scene2_input_placeholder: "Your email address or phone number",
       scene2_text:
         "Send Firefox to your phone and take a powerful independent browser with you.",
-      scene2_title: "Let's do this!",
-
       error_text: "Oops, there was a problem.",
       success_title: "Your download link was sent.",
       success_text: "Check your device for the email message!",

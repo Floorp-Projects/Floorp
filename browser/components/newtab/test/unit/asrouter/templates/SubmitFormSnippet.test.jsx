@@ -329,5 +329,13 @@ describe("SubmitFormSnippet", () => {
       assert.calledOnce(onBlockStub);
       assert.calledWithExactly(onBlockStub, { preventDismiss: true });
     });
+    it("should return to scene 2 alt when clicking the retry button", async () => {
+      wrapper.setState({ signupSubmitted: true });
+      wrapper.setProps({ expandedAlt: true });
+
+      wrapper.find(".ASRouterButton").simulate("click");
+
+      assert.isTrue(wrapper.find(".scene2Alt").exists());
+    });
   });
 });
