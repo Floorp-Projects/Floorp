@@ -9,15 +9,22 @@
 #include "mozilla/dom/IOUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ErrorNames.h"
+#include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Services.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 #include "nspr/prio.h"
 #include "nspr/private/pprio.h"
 #include "nspr/prtypes.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
 #include "nsThreadManager.h"
+#include "SpecialSystemDirectory.h"
 
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #  include <fcntl.h>
@@ -41,18 +48,6 @@
               "Shutting down and refusing additional I/O tasks"); \
       return (aJSPromise).forget();                               \
     }                                                             \
-  } while (false)
-
-#define REJECT_IF_RELATIVE_PATH(aPath, aJSPromise)                    \
-  do {                                                                \
-    if (!IsAbsolutePath(aPath)) {                                     \
-      (aJSPromise)                                                    \
-          ->MaybeRejectWithOperationError(nsPrintfCString(            \
-              "Refusing to work with path(%s) because only absolute " \
-              "file paths are permitted",                             \
-              NS_ConvertUTF16toUTF8(aPath).get()));                   \
-      return (aJSPromise).forget();                                   \
-    }                                                                 \
   } while (false)
 
 namespace mozilla {
@@ -112,33 +107,6 @@ static nsCString FormatErrorMessage(nsresult aError,
                          static_cast<uint32_t>(aError));
 }
 
-/**
- * Unwraps |aResult| into a |MozPromise|.
- *
- * If the result is an error, a new MozPromise is created and immediately
- * rejected with the unwrapped error. Otherwise, if the result is ok, a new
- * MozPromise is created and immediately resolved with the unwrapped result.
- */
-template <class PromiseT, class OkT, class ErrT>
-static RefPtr<PromiseT> ToMozPromise(Result<OkT, ErrT>& aResult,
-                                     const char* aCallSite) {
-  if (aResult.isErr()) {
-    return PromiseT::CreateAndReject(aResult.unwrapErr(), aCallSite);
-  }
-  return PromiseT::CreateAndResolve(aResult.unwrap(), aCallSite);
-}
-
-MOZ_MUST_USE inline bool ToJSValue(
-    JSContext* aCx, const IOUtils::InternalFileInfo& aInternalFileInfo,
-    JS::MutableHandle<JS::Value> aValue) {
-  FileInfo info;
-  info.mPath.Construct(aInternalFileInfo.mPath);
-  info.mType.Construct(aInternalFileInfo.mType);
-  info.mSize.Construct(aInternalFileInfo.mSize);
-  info.mLastModified.Construct(aInternalFileInfo.mLastModified);
-  return ToJSValue(aCx, info, aValue);
-}
-
 #ifdef XP_WIN
 constexpr char PathSeparator = u'\\';
 #else
@@ -180,77 +148,105 @@ StaticRefPtr<nsIAsyncShutdownClient> IOUtils::sBarrier;
 /* static */
 Atomic<bool> IOUtils::sShutdownStarted = Atomic<bool>(false);
 
-template <typename MozPromiseT, typename Fn, typename... Args>
-static RefPtr<MozPromiseT> InvokeToMozPromise(Fn aFunc, Args... aArgs) {
-  MOZ_ASSERT(!NS_IsMainThread());
-  auto rv = aFunc(std::forward<Args>(aArgs)...);
-  if (rv.isErr()) {
-    return MozPromiseT::CreateAndReject(rv.unwrapErr(), __func__);
-  }
-  return MozPromiseT::CreateAndResolve(rv.unwrap(), __func__);
-}
-
-/* static */
-template <typename OkT, typename Fn, typename... Args>
-already_AddRefed<Promise> IOUtils::RunOnBackgroundThread(
-    RefPtr<Promise>& aPromise, Fn aFunc, Args... aArgs) {
-  REJECT_IF_SHUTTING_DOWN(aPromise);
-
-  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  REJECT_IF_NULL_EVENT_TARGET(bg, aPromise);
-
-  InvokeAsync(
-      bg, __func__,
-      [fn = aFunc, argsTuple = std::make_tuple(std::move(aArgs)...)]() mutable {
-        return std::apply(
-            [fn](Args... args) mutable {
-              using MozPromiseT = MozPromise<OkT, IOError, true>;
-              return InvokeToMozPromise<MozPromiseT>(
-                  fn, std::forward<Args>(args)...);
-            },
-            std::move(argsTuple));
-      })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(aPromise)](const OkT& ok) {
-            if constexpr (std::is_same_v<OkT, nsTArray<uint8_t>>) {
-              TypedArrayCreator<Uint8Array> arr(ok);
-              promise->MaybeResolve(arr);
-            } else if constexpr (std::is_same_v<OkT, Ok>) {
-              promise->MaybeResolveWithUndefined();
-            } else {
-              promise->MaybeResolve(ok);
-            }
-          },
-          [promise = RefPtr(aPromise)](const IOError& err) {
-            RejectJSPromise(promise, err);
-          });
-  return aPromise.forget();
-}
-
 /* static */
 already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
                                         const Optional<uint32_t>& aMaxBytes) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
-  Maybe<uint32_t> toRead = Nothing();
-  if (aMaxBytes.WasPassed()) {
-    if (aMaxBytes.Value() == 0) {
-      // Resolve with an empty buffer.
-      nsTArray<uint8_t> arr(0);
-      promise->MaybeResolve(TypedArrayCreator<Uint8Array>(arr));
-      return promise.forget();
-    }
-    toRead.emplace(aMaxBytes.Value());
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
   }
 
-  return RunOnBackgroundThread<nsTArray<uint8_t>>(promise, &ReadSync, path,
-                                                  toRead);
+  uint32_t toRead = 0;
+  if (aMaxBytes.WasPassed()) {
+    toRead = aMaxBytes.Value();
+    if (toRead == 0) {
+      // Resolve with an empty buffer.
+      nsTArray<uint8_t> arr(0);
+      TypedArrayCreator<Uint8Array> arrCreator(arr);
+      promise->MaybeResolve(arrCreator);
+      return promise.forget();
+    }
+  }
+
+  InvokeAsync(bg, __func__,
+              [path = nsAutoString(aPath), toRead]() {
+                MOZ_ASSERT(!NS_IsMainThread());
+
+                UniquePtr<PRFileDesc, PR_CloseDelete> fd =
+                    OpenExistingSync(path, PR_RDONLY);
+                if (!fd) {
+                  return IOReadMozPromise::CreateAndReject(
+                      nsPrintfCString("Could not open file at %s",
+                                      NS_ConvertUTF16toUTF8(path).get()),
+                      __func__);
+                }
+                uint32_t bufSize;
+                if (toRead == 0) {  // maxBytes was unspecified.
+                  // Limitation: We cannot read files that are larger than the
+                  //    max size of a TypedArray (UINT32_MAX bytes).
+                  //    Reject if the file is too big to be read.
+                  PRFileInfo64 info;
+                  if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
+                    return IOReadMozPromise::CreateAndReject(
+                        nsPrintfCString("Could not get info for file at %s",
+                                        NS_ConvertUTF16toUTF8(path).get()),
+                        __func__);
+                  }
+                  uint32_t fileSize = info.size;
+                  if (fileSize > UINT32_MAX) {
+                    return IOReadMozPromise::CreateAndReject(
+                        nsPrintfCString("File at %s is too large to read",
+                                        NS_ConvertUTF16toUTF8(path).get()),
+                        __func__);
+                  }
+                  bufSize = fileSize;
+                } else {
+                  bufSize = toRead;
+                }
+                nsTArray<uint8_t> fileContents;
+                nsresult rv =
+                    IOUtils::ReadSync(fd.get(), bufSize, fileContents);
+
+                if (NS_SUCCEEDED(rv)) {
+                  return IOReadMozPromise::CreateAndResolve(
+                      std::move(fileContents), __func__);
+                }
+                if (rv == NS_ERROR_OUT_OF_MEMORY) {
+                  return IOReadMozPromise::CreateAndReject("Out of memory"_ns,
+                                                           __func__);
+                }
+                return IOReadMozPromise::CreateAndReject(
+                    nsPrintfCString("Unexpected error reading file at %s",
+                                    NS_ConvertUTF16toUTF8(path).get()),
+                    __func__);
+              })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const nsTArray<uint8_t>& aBuf) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+
+            const TypedArrayCreator<Uint8Array> arrayCreator(aBuf);
+            promise->MaybeResolve(arrayCreator);
+          },
+          [promise = RefPtr(promise)](const nsACString& aMsg) {
+            promise->MaybeRejectWithOperationError(aMsg);
+          });
+
+  return promise.forget();
 }
 
 /* static */
@@ -259,33 +255,133 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
     const WriteAtomicOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
-
   REJECT_IF_SHUTTING_DOWN(promise);
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
 
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   // Process arguments.
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
+  }
   aData.ComputeState();
-  auto buf = Buffer<uint8_t>::CopyFrom(MakeSpan(aData.Data(), aData.Length()));
-  if (buf.isNothing()) {
+  FallibleTArray<uint8_t> toWrite;
+  if (!toWrite.InsertElementsAt(0, aData.Data(), aData.Length(), fallible)) {
     promise->MaybeRejectWithOperationError("Out of memory");
     return promise.forget();
   }
-  nsAutoString destPath(aPath);
-  InternalWriteAtomicOpts opts;
-  opts.mFlush = aOptions.mFlush;
-  opts.mNoOverwrite = aOptions.mNoOverwrite;
-  if (aOptions.mBackupFile.WasPassed()) {
-    opts.mBackupFile.emplace(aOptions.mBackupFile.Value());
-  }
-  if (aOptions.mTmpPath.WasPassed()) {
-    opts.mTmpPath.emplace(aOptions.mTmpPath.Value());
-  }
 
-  return RunOnBackgroundThread<uint32_t>(promise, &WriteAtomicSync, destPath,
-                                         std::move(*buf), std::move(opts));
+  InvokeAsync(
+      bg, __func__,
+      [destPath = nsString(aPath), toWrite = std::move(toWrite), aOptions]() {
+        MOZ_ASSERT(!NS_IsMainThread());
+
+        // Check if the file exists and test it against the noOverwrite option.
+        const bool& noOverwrite = aOptions.mNoOverwrite;
+        bool exists = false;
+        {
+          UniquePtr<PRFileDesc, PR_CloseDelete> fd =
+              OpenExistingSync(destPath, PR_RDONLY);
+          exists = !!fd;
+        }
+
+        if (noOverwrite && exists) {
+          return IOWriteMozPromise::CreateAndReject(
+              nsPrintfCString("Refusing to overwrite the file at %s",
+                              NS_ConvertUTF16toUTF8(destPath).get()),
+              __func__);
+        }
+
+        // If backupFile was specified, perform the backup as a move.
+        if (exists && aOptions.mBackupFile.WasPassed()) {
+          const nsString& backupFile(aOptions.mBackupFile.Value());
+          nsresult rv = MoveSync(destPath, backupFile, noOverwrite);
+          if (NS_FAILED(rv)) {
+            return IOWriteMozPromise::CreateAndReject(
+                FormatErrorMessage(rv,
+                                   "Failed to back up the file from %s to %s",
+                                   NS_ConvertUTF16toUTF8(destPath).get(),
+                                   NS_ConvertUTF16toUTF8(backupFile).get()),
+                __func__);
+          }
+        }
+
+        // If tmpPath was specified, we will write to there first, then perform
+        // a move to ensure the file ends up at the final requested destination.
+        nsString tmpPath = destPath;
+        if (aOptions.mTmpPath.WasPassed()) {
+          tmpPath = aOptions.mTmpPath.Value();
+        }
+        // The data to be written to file might be larger than can be
+        // written in any single call, so we must truncate the file and
+        // set the write mode to append to the file.
+        int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND;
+        if (aOptions.mFlush) {
+          flags |= PR_SYNC;
+        }
+
+        // Try to perform the write and ensure that the file is closed before
+        // continuing.
+        uint32_t result = 0;
+        {
+          UniquePtr<PRFileDesc, PR_CloseDelete> fd =
+              OpenExistingSync(tmpPath, flags);
+          if (!fd) {
+            fd = CreateFileSync(tmpPath, flags);
+          }
+          if (!fd) {
+            return IOWriteMozPromise::CreateAndReject(
+                nsPrintfCString("Could not open the file at %s",
+                                NS_ConvertUTF16toUTF8(tmpPath).get()),
+                __func__);
+          }
+
+          nsresult rv = IOUtils::WriteSync(fd.get(), toWrite, result);
+          if (NS_FAILED(rv)) {
+            return IOWriteMozPromise::CreateAndReject(
+                FormatErrorMessage(
+                    rv,
+                    "Unexpected error occurred while writing to the file at %s",
+                    NS_ConvertUTF16toUTF8(tmpPath).get()),
+                __func__);
+          }
+        }
+
+        // The requested destination was written to, so there is nothing left to
+        // do.
+        if (destPath == tmpPath) {
+          return IOWriteMozPromise::CreateAndResolve(result, __func__);
+        }
+        // Otherwise, if tmpPath was specified and different from the destPath,
+        // then the operation is finished by performing a move.
+        nsresult rv = MoveSync(tmpPath, destPath, false);
+        if (NS_FAILED(rv)) {
+          return IOWriteMozPromise::CreateAndReject(
+              FormatErrorMessage(
+                  rv, "Error moving temporary file at %s to destination at %s",
+                  NS_ConvertUTF16toUTF8(tmpPath).get(),
+                  NS_ConvertUTF16toUTF8(destPath).get()),
+              __func__);
+        }
+        return IOWriteMozPromise::CreateAndResolve(result, __func__);
+      })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const uint32_t& aBytesWritten) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+            promise->MaybeResolve(aBytesWritten);
+          },
+          [promise = RefPtr(promise)](const nsACString& aMsg) {
+            promise->MaybeRejectWithOperationError(aMsg);
+          });
+
+  return promise.forget();
 }
 
 /* static */
@@ -295,19 +391,71 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const MoveOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
   // Process arguments.
-  REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
-  REJECT_IF_RELATIVE_PATH(aDestPath, promise);
-  nsAutoString sourcePath(aSourcePath);
-  nsAutoString destPath(aDestPath);
   bool noOverwrite = false;
   if (aOptions.IsAnyMemberPresent()) {
     noOverwrite = aOptions.mNoOverwrite;
   }
 
-  return RunOnBackgroundThread<Ok>(promise, &MoveSync, sourcePath, destPath,
-                                   noOverwrite);
+  InvokeAsync(bg, __func__,
+              [srcPathString = nsAutoString(aSourcePath),
+               destPathString = nsAutoString(aDestPath), noOverwrite]() {
+                nsresult rv =
+                    MoveSync(srcPathString, destPathString, noOverwrite);
+                if (NS_FAILED(rv)) {
+                  return IOMozPromise::CreateAndReject(rv, __func__);
+                }
+                return IOMozPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const bool&) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+            promise->MaybeResolveWithUndefined();
+          },
+          [promise = RefPtr(promise)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_ACCESS_DENIED:
+                promise->MaybeRejectWithInvalidAccessError("Access denied");
+                break;
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    "Source file does not exist");
+                break;
+              case NS_ERROR_FILE_ALREADY_EXISTS:
+                promise->MaybeRejectWithNoModificationAllowedError(
+                    "Destination file exists and overwrites are not allowed");
+                break;
+              case NS_ERROR_FILE_READ_ONLY:
+                promise->MaybeRejectWithNoModificationAllowedError(
+                    "Destination is read only");
+                break;
+              case NS_ERROR_FILE_DESTINATION_NOT_DIR:
+                promise->MaybeRejectWithInvalidAccessError(
+                    "Source is a directory but destination is not");
+                break;
+              case NS_ERROR_FILE_UNRECOGNIZED_PATH:
+                promise->MaybeRejectWithOperationError(
+                    "Only absolute file paths are permitted");
+                break;
+              default: {
+                promise->MaybeRejectWithUnknownError(
+                    FormatErrorMessage(aError, "Unexpected error moving file"));
+              }
+            }
+          });
+
+  return promise.forget();
 }
 
 /* static */
@@ -315,13 +463,57 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                                           const nsAString& aPath,
                                           const RemoveOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  // Do the IO on a background thread and return the result to this thread.
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &RemoveSync, path,
-                                   aOptions.mIgnoreAbsent, aOptions.mRecursive);
+  // Process arguments.
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
+  }
+
+  InvokeAsync(bg, __func__,
+              [path = nsAutoString(aPath), aOptions]() {
+                nsresult rv = RemoveSync(path, aOptions.mIgnoreAbsent,
+                                         aOptions.mRecursive);
+                if (NS_FAILED(rv)) {
+                  return IOMozPromise::CreateAndReject(rv, __func__);
+                }
+                return IOMozPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const bool&) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+            promise->MaybeResolveWithUndefined();
+          },
+          [promise = RefPtr(promise)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    "Target file does not exist");
+                break;
+              case NS_ERROR_FILE_DIR_NOT_EMPTY:
+                promise->MaybeRejectWithOperationError(
+                    "Could not remove non-empty directory, specify the "
+                    "`recursive: true` option to mitigate this error");
+                break;
+              default:
+                promise->MaybeRejectWithUnknownError(FormatErrorMessage(
+                    aError, "Unexpected error removing file"));
+            }
+          });
+
+  return promise.forget();
 }
 
 /* static */
@@ -329,25 +521,117 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
     GlobalObject& aGlobal, const nsAString& aPath,
     const MakeDirectoryOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  // Do the IO on a background thread and return the result to this thread.
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
-  return RunOnBackgroundThread<Ok>(promise, &CreateDirectorySync, path,
-                                   aOptions.mCreateAncestors,
-                                   aOptions.mIgnoreExisting, 0777);
+  // Process arguments.
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
+  }
+
+  InvokeAsync(bg, __func__,
+              [path = nsAutoString(aPath), aOptions]() {
+                nsresult rv = CreateDirectorySync(
+                    path, aOptions.mCreateAncestors, aOptions.mIgnoreExisting);
+                if (NS_FAILED(rv)) {
+                  return IOMozPromise::CreateAndReject(rv, __func__);
+                }
+                return IOMozPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const bool&) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+            promise->MaybeResolveWithUndefined();
+          },
+          [promise = RefPtr(promise)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_ALREADY_EXISTS:
+                promise->MaybeRejectWithNoModificationAllowedError(
+                    "Could not create directory because file already exists");
+                break;
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    "Target path has missing ancestors");
+                break;
+              case NS_ERROR_FILE_NOT_DIRECTORY:
+                promise->MaybeRejectWithOperationError(
+                    "Target exists and is not a directory");
+                break;
+              default:
+                promise->MaybeRejectWithUnknownError(FormatErrorMessage(
+                    aError, "Unexpected error creating directory"));
+            }
+          });
+  return promise.forget();
 }
 
 already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
                                         const nsAString& aPath) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
-  REJECT_IF_RELATIVE_PATH(aPath, promise);
-  nsAutoString path(aPath);
+  // Do the IO on a background thread and return the result to this thread.
+  RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  REJECT_IF_NULL_EVENT_TARGET(bg, promise);
 
-  return RunOnBackgroundThread<InternalFileInfo>(promise, &StatSync, path);
+  // Process arguments.
+  if (!IsAbsolutePath(aPath)) {
+    promise->MaybeRejectWithOperationError(
+        "Only absolute file paths are permitted");
+    return promise.forget();
+  }
+
+  InvokeAsync(
+      bg, __func__,
+      [path = nsAutoString(aPath)]() {
+        MOZ_ASSERT(!NS_IsMainThread());
+
+        auto rv = StatSync(path);
+        if (rv.isErr()) {
+          return IOStatMozPromise::CreateAndReject(rv.propagateErr(), __func__);
+        }
+        return IOStatMozPromise::CreateAndResolve(rv.unwrap(), __func__);
+      })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(promise)](const InternalFileInfo& aInfo) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+              return;
+            }
+            FileInfo jsResult;
+            jsResult.mPath.Construct(aInfo.mPath);
+            jsResult.mType.Construct(aInfo.mType);
+            jsResult.mSize.Construct(aInfo.mSize);
+            jsResult.mLastModified.Construct(aInfo.mLastModified);
+            promise->MaybeResolve(jsResult);
+          },
+          [promise = RefPtr(promise)](const nsresult& aError) {
+            switch (aError) {
+              case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
+              case NS_ERROR_FILE_NOT_FOUND:
+                promise->MaybeRejectWithNotFoundError(
+                    "Target file does not exist");
+                break;
+              default:
+                promise->MaybeRejectWithUnknownError(FormatErrorMessage(
+                    aError, "Unexpected error accessing file"));
+            }
+          });
+
+  return promise.forget();
 }
 
 /* static */
@@ -423,58 +707,8 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 }
 
 /* static */
-void IOUtils::RejectJSPromise(const RefPtr<Promise>& aPromise,
-                              const IOError& aError) {
-  const auto& errMsg = aError.Message();
-
-  switch (aError.Code()) {
-    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
-    case NS_ERROR_FILE_NOT_FOUND:
-      aPromise->MaybeRejectWithNotFoundError(errMsg.refOr("File not found"_ns));
-      break;
-    case NS_ERROR_FILE_ACCESS_DENIED:
-      aPromise->MaybeRejectWithNotAllowedError(
-          errMsg.refOr("Access was denied to the target file"_ns));
-      break;
-    case NS_ERROR_FILE_TOO_BIG:
-      aPromise->MaybeRejectWithNotReadableError(
-          errMsg.refOr("Target file is too big"_ns));
-      break;
-    case NS_ERROR_FILE_ALREADY_EXISTS:
-      aPromise->MaybeRejectWithNoModificationAllowedError(
-          errMsg.refOr("Target file already exists"_ns));
-      break;
-    case NS_ERROR_FILE_COPY_OR_MOVE_FAILED:
-      aPromise->MaybeRejectWithOperationError(
-          errMsg.refOr("Failed to copy or move the target file"_ns));
-      break;
-    case NS_ERROR_FILE_READ_ONLY:
-      aPromise->MaybeRejectWithReadOnlyError(
-          errMsg.refOr("Target file is read only"_ns));
-      break;
-    case NS_ERROR_FILE_NOT_DIRECTORY:
-    case NS_ERROR_FILE_DESTINATION_NOT_DIR:
-      aPromise->MaybeRejectWithInvalidAccessError(
-          errMsg.refOr("Target file is not a directory"_ns));
-      break;
-    case NS_ERROR_FILE_UNRECOGNIZED_PATH:
-      aPromise->MaybeRejectWithOperationError(
-          errMsg.refOr("Target file path is not recognized"_ns));
-      break;
-    case NS_ERROR_FILE_DIR_NOT_EMPTY:
-      aPromise->MaybeRejectWithOperationError(
-          errMsg.refOr("Target directory is not empty"_ns));
-      break;
-    default:
-      aPromise->MaybeRejectWithUnknownError(
-          errMsg.refOr(FormatErrorMessage(aError.Code(), "Unexpected error")));
-  }
-}
-
-/* static */
 UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
     const nsAString& aPath, int32_t aFlags) {
-  MOZ_ASSERT(!NS_IsMainThread());
   // Ensure that CREATE_FILE and EXCL flags were not included, as we do not
   // want to create a new file.
   MOZ_ASSERT((aFlags & (PR_CREATE_FILE | PR_EXCL)) == 0);
@@ -495,7 +729,6 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::OpenExistingSync(
 /* static */
 UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
     const nsAString& aPath, int32_t aFlags, int32_t aMode) {
-  MOZ_ASSERT(!NS_IsMainThread());
   // We open the file descriptor through an nsLocalFile to ensure that the paths
   // are interpreted/encoded correctly on all platforms.
   RefPtr<nsLocalFile> file = new nsLocalFile();
@@ -510,166 +743,50 @@ UniquePtr<PRFileDesc, PR_CloseDelete> IOUtils::CreateFileSync(
 }
 
 /* static */
-Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::ReadSync(
-    const nsAString& aPath, const Maybe<uint32_t>& aMaxBytes) {
+nsresult IOUtils::ReadSync(PRFileDesc* aFd, const uint32_t aBufSize,
+                           nsTArray<uint8_t>& aResult) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(aPath, PR_RDONLY);
-  if (!fd) {
-    return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
-                   .WithMessage("Could not open the file at %s",
-                                NS_ConvertUTF16toUTF8(aPath).get()));
-  }
-  uint32_t bufSize;
-  if (aMaxBytes.isNothing()) {
-    // Limitation: We cannot read files that are larger than the max size of a
-    //             TypedArray (UINT32_MAX bytes). Reject if the file is too
-    //             big to be read.
-    PRFileInfo64 info;
-    if (PR_FAILURE == PR_GetOpenFileInfo64(fd.get(), &info)) {
-      return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
-                     .WithMessage("Could not get info for the file at %s",
-                                  NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    if (static_cast<uint64_t>(info.size) > UINT32_MAX) {
-      return Err(
-          IOError(NS_ERROR_FILE_TOO_BIG)
-              .WithMessage("Could not read the file at %s because it is too "
-                           "large(size=%" PRIu64 " bytes)",
-                           NS_ConvertUTF16toUTF8(aPath).get(),
-                           static_cast<uint64_t>(info.size)));
-    }
-    bufSize = static_cast<uint32_t>(info.size);
-  } else {
-    bufSize = aMaxBytes.value();
-  }
-
   nsTArray<uint8_t> buffer;
-  if (!buffer.SetCapacity(bufSize, fallible)) {
-    return Err(IOError(NS_ERROR_OUT_OF_MEMORY));
+  if (!buffer.SetCapacity(aBufSize, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // If possible, advise the operating system that we will be reading the file
-  // pointed to by |fd| sequentially, in full. This advice is not binding, it
+  // pointed to by |aFD| sequentially, in full. This advice is not binding, it
   // informs the OS about our expectations as an application.
 #if defined(HAVE_POSIX_FADVISE)
-  posix_fadvise(PR_FileDesc2NativeHandle(fd.get()), 0, 0,
-                POSIX_FADV_SEQUENTIAL);
+  posix_fadvise(PR_FileDesc2NativeHandle(aFd), 0, 0, POSIX_FADV_SEQUENTIAL);
 #endif
 
   uint32_t totalRead = 0;
-  while (totalRead != bufSize) {
+  while (totalRead != aBufSize) {
     int32_t nRead =
-        PR_Read(fd.get(), buffer.Elements() + totalRead, bufSize - totalRead);
+        PR_Read(aFd, buffer.Elements() + totalRead, aBufSize - totalRead);
     if (nRead == 0) {
       break;
     }
     if (nRead < 0) {
-      return Err(
-          IOError(NS_ERROR_UNEXPECTED)
-              .WithMessage("Encountered an unexpected error while reading %s",
-                           NS_ConvertUTF16toUTF8(aPath).get()));
+      return NS_ERROR_UNEXPECTED;
     }
     totalRead += nRead;
     DebugOnly<bool> success = buffer.SetLength(totalRead, fallible);
     MOZ_ASSERT(success);
   }
-  return std::move(buffer);
+  aResult = std::move(buffer);
+  return NS_OK;
 }
 
 /* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
-    const nsAString& aDestPath, const Buffer<uint8_t>& aByteArray,
-    const IOUtils::InternalWriteAtomicOpts& aOptions) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  // Check if the file exists and test it against the noOverwrite option.
-  const bool& noOverwrite = aOptions.mNoOverwrite;
-  bool exists = false;
-  {
-    UniquePtr<PRFileDesc, PR_CloseDelete> fd =
-        OpenExistingSync(aDestPath, PR_RDONLY);
-    exists = !!fd;
-  }
-
-  if (noOverwrite && exists) {
-    return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS)
-                   .WithMessage("Refusing to overwrite the file at %s\n"
-                                "Specify `noOverwrite: false` to allow "
-                                "overwriting the destination",
-                                NS_ConvertUTF16toUTF8(aDestPath).get()));
-  }
-
-  // If backupFile was specified, perform the backup as a move.
-  if (exists && aOptions.mBackupFile.isSome() &&
-      MoveSync(aDestPath, aOptions.mBackupFile.value(), noOverwrite).isErr()) {
-    return Err(
-        IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
-            .WithMessage(
-                "Failed to backup the source file(%s) to %s",
-                NS_ConvertUTF16toUTF8(aDestPath).get(),
-                NS_ConvertUTF16toUTF8(aOptions.mBackupFile.value()).get()));
-  }
-
-  // If tmpPath was specified, we will write to there first, then perform
-  // a move to ensure the file ends up at the final requested destination.
-  nsAutoString tmpPath;
-  if (aOptions.mTmpPath.isSome()) {
-    tmpPath = aOptions.mTmpPath.value();
-  } else {
-    tmpPath = aDestPath;
-  }
-  // The data to be written to file might be larger than can be
-  // written in any single call, so we must truncate the file and
-  // set the write mode to append to the file.
-  int32_t flags = PR_WRONLY | PR_TRUNCATE | PR_APPEND;
-  if (aOptions.mFlush) {
-    flags |= PR_SYNC;
-  }
-
-  // Try to perform the write and ensure that the file is closed before
-  // continuing.
-  uint32_t result = 0;
-  {
-    UniquePtr<PRFileDesc, PR_CloseDelete> fd = OpenExistingSync(tmpPath, flags);
-    if (!fd) {
-      fd = CreateFileSync(tmpPath, flags);
-    }
-    if (!fd) {
-      return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
-                     .WithMessage("Could not open the file at %s for writing",
-                                  NS_ConvertUTF16toUTF8(tmpPath).get()));
-    }
-
-    auto rv = WriteSync(fd.get(), NS_ConvertUTF16toUTF8(tmpPath), aByteArray);
-    if (rv.isErr()) {
-      return rv.propagateErr();
-    }
-    result = rv.unwrap();
-  }
-
-  // If tmpPath was specified and different from the destPath, then the
-  // operation is finished by performing a move.
-  if (aDestPath != tmpPath && MoveSync(tmpPath, aDestPath, false).isErr()) {
-    return Err(
-        IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
-            .WithMessage("Could not move temporary file(%s) to destination(%s)",
-                         NS_ConvertUTF16toUTF8(tmpPath).get(),
-                         NS_ConvertUTF16toUTF8(aDestPath).get()));
-  }
-  return result;
-}
-
-/* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
-    PRFileDesc* aFd, const nsACString& aPath, const Buffer<uint8_t>& aBytes) {
-  // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max
-  // length.
+nsresult IOUtils::WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
+                            uint32_t& aResult) {
+  // aBytes comes from a JavaScript TypedArray, which has UINT32_MAX max length.
   MOZ_ASSERT(aBytes.Length() <= UINT32_MAX);
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (aBytes.Length() == 0) {
-    return 0;
+    aResult = 0;
+    return NS_OK;
   }
 
   uint32_t bytesWritten = 0;
@@ -683,54 +800,36 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     if (pendingBytes < chunkSize) {
       chunkSize = pendingBytes;
     }
-    int32_t rv = PR_Write(aFd, aBytes.begin() + bytesWritten, chunkSize);
+    int32_t rv = PR_Write(aFd, aBytes.Elements() + bytesWritten, chunkSize);
     if (rv < 0) {
-      return Err(IOError(NS_ERROR_FILE_CORRUPTED)
-                     .WithMessage("Could not write chunk(size=%" PRIu32
-                                  ") to %s\n"
-                                  "The file may be corrupt",
-                                  chunkSize, aPath.BeginReading()));
+      return NS_ERROR_FILE_CORRUPTED;
     }
     pendingBytes -= rv;
     bytesWritten += rv;
   }
 
-  return bytesWritten;
+  aResult = bytesWritten;
+  return NS_OK;
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::MoveSync(const nsAString& aSourcePath,
-                                               const nsAString& aDestPath,
-                                               bool noOverwrite) {
+nsresult IOUtils::MoveSync(const nsAString& aSourcePath,
+                           const nsAString& aDestPath, bool noOverwrite) {
   MOZ_ASSERT(!NS_IsMainThread());
   nsresult rv = NS_OK;
 
-  // Assess the source file.
   nsCOMPtr<nsIFile> srcFile = new nsLocalFile();
   MOZ_TRY(srcFile->InitWithPath(aSourcePath));  // Fails if not absolute.
-  bool srcExists;
-  // Ensure the source file exists before continuing. If it doesn't exist, the
-  // following operations can fail in different ways on different platforms.
-  MOZ_TRY(srcFile->Exists(&srcExists));
-  if (!srcExists) {
-    return Err(
-        IOError(NS_ERROR_FILE_NOT_FOUND)
-            .WithMessage(
-                "Could not move source file(%s) because it does not exist",
-                NS_ConvertUTF16toUTF8(aSourcePath).get()));
-  }
-  MOZ_TRY(srcFile->Normalize());
+  MOZ_TRY(srcFile->Normalize());                // Fails if path does not exist.
 
-  // Prepare the destination file.
   nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-  MOZ_TRY(destFile->InitWithPath(aDestPath));  // Fails if not absolute.
+  MOZ_TRY(destFile->InitWithPath(aDestPath));
   rv = destFile->Normalize();
   // Normalize can fail for a number of reasons, including if the file doesn't
   // exist. It is expected that the file might not exist for a number of calls
   // (e.g. if we want to rename a file to a new location).
-  if (NS_FAILED(rv) && !IsFileNotFound(rv)) {
-    // Deliberately ignore "not found" errors, but propagate all others.
-    return Err(IOError(rv));
+  if (!IsFileNotFound(rv)) {  // Deliberately ignore "not found" errors.
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Case 1: Destination is an existing directory. Move source into dest.
@@ -739,37 +838,21 @@ Result<Ok, IOUtils::IOError> IOUtils::MoveSync(const nsAString& aSourcePath,
 
   rv = destFile->IsDirectory(&destIsDir);
   if (NS_SUCCEEDED(rv) && destIsDir) {
-    rv = srcFile->MoveTo(destFile, EmptyString());
-    if (NS_FAILED(rv)) {
-      return Err(IOError(rv).WithMessage(
-          "Could not move source file(%s) to destination(%s)",
-          NS_ConvertUTF16toUTF8(aSourcePath).get(),
-          NS_ConvertUTF16toUTF8(aDestPath).get()));
-    }
-    return Ok();
+    return srcFile->MoveTo(destFile, EmptyString());
   }
-
-  if (NS_FAILED(rv)) {
-    if (!IsFileNotFound(rv)) {
-      // It's ok if the dest file doesn't exist. Case 2 handles this below.
-      // Bail out early for any other kind of error though.
-      return Err(IOError(rv));
-    }
+  if (IsFileNotFound(rv)) {
+    // It's ok if the file doesn't exist. Case 2 handles this below.
     destExists = false;
+  } else {
+    // Bail out early for any other kind of error though.
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Case 2: Destination is a file which may or may not exist. Try to rename the
-  //         source to the destination. If the destination exists and the source
-  //         is not a regular file, then this may fail.
+  //         source to the destination. This will fail if the source is a not a
+  //         regular file.
   if (noOverwrite && destExists) {
-    return Err(
-        IOError(NS_ERROR_FILE_ALREADY_EXISTS)
-            .WithMessage(
-                "Could not move source file(%s) to destination(%s) because the "
-                "destination already exists and overwrites are not allowed\n"
-                "Specify the `noOverwrite: false` option to mitigate this "
-                "error",
-                NS_ConvertUTF16toUTF8(aDestPath).get()));
+    return NS_ERROR_FILE_ALREADY_EXISTS;
   }
   if (destExists && !destIsDir) {
     // If the source file is a directory, but the target is a file, abort early.
@@ -778,12 +861,7 @@ Result<Ok, IOUtils::IOError> IOUtils::MoveSync(const nsAString& aSourcePath,
     bool srcIsDir = false;
     MOZ_TRY(srcFile->IsDirectory(&srcIsDir));
     if (srcIsDir) {
-      return Err(IOError(NS_ERROR_FILE_DESTINATION_NOT_DIR)
-                     .WithMessage("Could not move the source directory(%s) to "
-                                  "the destination(%s) "
-                                  "because the destination is not a directory",
-                                  NS_ConvertUTF16toUTF8(aSourcePath).get(),
-                                  NS_ConvertUTF16toUTF8(aDestPath).get()));
+      return NS_ERROR_FILE_DESTINATION_NOT_DIR;
     }
   }
 
@@ -793,111 +871,61 @@ Result<Ok, IOUtils::IOError> IOUtils::MoveSync(const nsAString& aSourcePath,
   MOZ_TRY(destFile->GetParent(getter_AddRefs(destDir)));
 
   // NB: if destDir doesn't exist, then MoveTo will create it.
-  rv = srcFile->MoveTo(destDir, destName);
-  if (NS_FAILED(rv)) {
-    return Err(IOError(rv).WithMessage(
-        "Could not move the source file(%s) to the destination(%s)",
-        NS_ConvertUTF16toUTF8(aSourcePath).get(),
-        NS_ConvertUTF16toUTF8(aDestPath).get()));
-  }
-  return Ok();
+  return srcFile->MoveTo(destDir, destName);
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(const nsAString& aPath,
-                                                 bool aIgnoreAbsent,
-                                                 bool aRecursive) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
+nsresult IOUtils::RemoveSync(const nsAString& aPath, bool aIgnoreAbsent,
+                             bool aRecursive) {
   RefPtr<nsLocalFile> file = new nsLocalFile();
   MOZ_TRY(file->InitWithPath(aPath));
 
   nsresult rv = file->Remove(aRecursive);
   if (aIgnoreAbsent && IsFileNotFound(rv)) {
-    return Ok();
+    return NS_OK;
   }
-  if (NS_FAILED(rv)) {
-    IOError err(rv);
-    if (IsFileNotFound(rv)) {
-      return Err(err.WithMessage(
-          "Could not remove the file at %s because it does not exist.\n"
-          "Specify the `ignoreAbsent: true` option to mitigate this error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    if (rv == NS_ERROR_FILE_DIR_NOT_EMPTY) {
-      return Err(err.WithMessage(
-          "Could not remove the non-empty directory at %s.\n"
-          "Specify the `recursive: true` option to mitigate this error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    return Err(err.WithMessage("Could not remove the file at %s",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
-  }
-  return Ok();
+  return rv;
 }
 
 /* static */
-Result<Ok, IOUtils::IOError> IOUtils::CreateDirectorySync(
-    const nsAString& aPath, bool aCreateAncestors, bool aIgnoreExisting,
-    int32_t aMode) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
+nsresult IOUtils::CreateDirectorySync(const nsAString& aPath,
+                                      bool aCreateAncestors,
+                                      bool aIgnoreExisting, int32_t aMode) {
   RefPtr<nsLocalFile> targetFile = new nsLocalFile();
   MOZ_TRY(targetFile->InitWithPath(aPath));
 
   // nsIFile::Create will create ancestor directories by default.
-  // If the caller does not want this behaviour, then check and possibly
-  // return an error.
+  // If the caller does not want this behaviour, then check and possibly return
+  // an error.
   if (!aCreateAncestors) {
     nsCOMPtr<nsIFile> parent;
     MOZ_TRY(targetFile->GetParent(getter_AddRefs(parent)));
     bool parentExists;
     MOZ_TRY(parent->Exists(&parentExists));
     if (!parentExists) {
-      return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
-                     .WithMessage("Could not create directory at %s because "
-                                  "the path has missing "
-                                  "ancestor components",
-                                  NS_ConvertUTF16toUTF8(aPath).get()));
+      return NS_ERROR_FILE_NOT_FOUND;
     }
   }
 
   nsresult rv = targetFile->Create(nsIFile::DIRECTORY_TYPE, aMode);
-  if (NS_FAILED(rv)) {
-    IOError err(rv);
-    if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
-      // NB: We may report a success only if the target is an existing
-      // directory. We don't want to silence errors that occur if the target is
-      // an existing file, since trying to create a directory where a regular
-      // file exists may be indicative of a logic error.
-      bool isDirectory;
-      MOZ_TRY(targetFile->IsDirectory(&isDirectory));
-      if (!isDirectory) {
-        return Err(IOError(NS_ERROR_FILE_NOT_DIRECTORY)
-                       .WithMessage("Could not create directory because the "
-                                    "target file(%s) exists "
-                                    "and is not a directory",
-                                    NS_ConvertUTF16toUTF8(aPath).get()));
-      }
-      // The directory exists.
-      // The caller may suppress this error.
-      if (aIgnoreExisting) {
-        return Ok();
-      }
-      // Otherwise, forward it.
-      return Err(err.WithMessage(
-          "Could not create directory because it already exists at %s\n"
-          "Specify the `ignoreExisting: true` option to mitigate this "
-          "error",
-          NS_ConvertUTF16toUTF8(aPath).get()));
+  if (NS_FAILED(rv) && rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+    // NB: We may report a success only if the target is an existing directory.
+    // We don't want to silence errors that occur if the target is an existing
+    // file, since trying to create a directory where a regular file exists
+    // may be indicative of a logic error.
+    bool isDirectory;
+    MOZ_TRY(targetFile->IsDirectory(&isDirectory));
+    if (!isDirectory) {
+      return NS_ERROR_FILE_NOT_DIRECTORY;
     }
-    return Err(err.WithMessage("Could not create directory at %s",
-                               NS_ConvertUTF16toUTF8(aPath).get()));
+    if (aIgnoreExisting) {
+      return NS_OK;
+    }
   }
-  return Ok();
+  return rv;
 }
 
-Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
+Result<IOUtils::InternalFileInfo, nsresult> IOUtils::StatSync(
     const nsAString& aPath) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -907,23 +935,9 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   InternalFileInfo info;
   info.mPath = nsString(aPath);
 
-  bool isRegular;
-  // IsFile will stat and cache info in the file object. If the file doesn't
-  // exist, or there is an access error, we'll discover it here.
-  // Any subsequent errors are unexpected and will just be forwarded.
-  nsresult rv = file->IsFile(&isRegular);
-  if (NS_FAILED(rv)) {
-    IOError err(rv);
-    if (IsFileNotFound(rv)) {
-      return Err(
-          err.WithMessage("Could not stat file(%s) because it does not exist",
-                          NS_ConvertUTF16toUTF8(aPath).get()));
-    }
-    return Err(err);
-  }
-
-  // Now we can populate the info object by querying the file.
   info.mType = FileType::Regular;
+  bool isRegular;
+  MOZ_TRY(file->IsFile(&isRegular));
   if (!isRegular) {
     bool isDir;
     MOZ_TRY(file->IsDirectory(&isDir));
@@ -990,4 +1004,3 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::GetState(nsIPropertyBag** aState) {
 
 #undef REJECT_IF_NULL_EVENT_TARGET
 #undef REJECT_IF_SHUTTING_DOWN
-#undef REJECT_IF_RELATIVE_PATH

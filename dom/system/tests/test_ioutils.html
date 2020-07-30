@@ -34,7 +34,7 @@
       const doesNotExist = OS.Path.join(tmpDir, "does_not_exist.tmp");
       await Assert.rejects(
         window.IOUtils.read(doesNotExist),
-        /Could not open the file at .*/,
+        /Could not open file/,
         "IOUtils::read rejects when file does not exist"
       );
     });
@@ -56,7 +56,7 @@
       );
       await Assert.rejects(
         window.IOUtils.makeDirectory(newDirectoryName, { ignoreExisting: false }),
-        /Could not create directory because it already exists at .*/,
+        /Could not create directory because file already exists/,
         "IOUtils::makeDirectory can throw if the target dir exists"
       )
 
@@ -68,7 +68,7 @@
       );
       await Assert.rejects(
         window.IOUtils.makeDirectory(nestedDirName, { createAncestors: false }),
-        /Could not create directory at .* because the path has missing ancestor components/,
+        /Target path has missing ancestors/,
         "IOUtils::makeDirectory can fail if the target is missing parents"
       );
       ok(!await OS.File.exists(nestedDirName), `Expected ${nestedDirName} not to exist`);
@@ -88,14 +88,14 @@
 
       await Assert.rejects(
         window.IOUtils.makeDirectory(notADirFileName, { ignoreExisting: false }),
-        /Could not create directory because the target file\(.*\) exists and is not a directory/,
+        /Target exists and is not a directory/,
         "IOUtils::makeDirectory [ignoreExisting: false] throws when the target is an existing file"
       );
       ok(await fileExists(notADirFileName), `Expected ${notADirFileName} to exist`);
 
       await Assert.rejects(
         window.IOUtils.makeDirectory(notADirFileName, { ignoreExisting: true }),
-        /Could not create directory because the target file\(.*\) exists and is not a directory/,
+        /Target exists and is not a directory/,
         "IOUtils::makeDirectory [ignoreExisting: true] throws when the target is an existing file"
       );
       ok(await fileExists(notADirFileName), `Expected ${notADirFileName} to exist`);
@@ -130,7 +130,7 @@
 
       await Assert.rejects(
         window.IOUtils.remove(tmpFileName, { ignoreAbsent: false }),
-        /Could not remove the file at .* because it does not exist/,
+        /Target file does not exist/,
         "IOUtils::remove can throw an error when target file is missing"
       );
       ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
@@ -156,7 +156,7 @@
 
       await Assert.rejects(
         window.IOUtils.remove(tmpParentDir, { recursive: false }),
-        /Could not remove the non-empty directory at .*/,
+        /Could not remove non-empty directory.*/,
         "IOUtils::remove fails if non-recursively removing directory with contents"
       );
 
@@ -388,7 +388,7 @@
       info("Test writing a file at a relative destination");
       await Assert.rejects(
         window.IOUtils.writeAtomic(tmpFileName, bytes),
-        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        /Only absolute file paths are permitted/,
         "IOUtils::writeAtomic only works with absolute paths"
       );
     });
@@ -399,7 +399,7 @@
       info("Test reading a file at a relative destination");
       await Assert.rejects(
         window.IOUtils.read(tmpFileName),
-        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        /Only absolute file paths are permitted/,
         "IOUtils::writeAtomic only works with absolute paths"
       );
     });
@@ -412,7 +412,7 @@
       info("Test moving a file to a relative destination");
       await Assert.rejects(
         window.IOUtils.move(tmpFileName, dest),
-        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        /Only absolute file paths are permitted/,
         "IOUtils::move only works with absolute paths"
       );
       ok(
@@ -444,7 +444,7 @@
       // Test.
       await Assert.rejects(
         window.IOUtils.move(tmpFileName, destFileName, { noOverwrite: true }),
-        /Could not move source file\(.*\) to destination\(.*\) because the destination already exists and overwrites are not allowed/,
+        /Destination file exists and overwrites are not allowed/,
         "IOUtils::move will refuse to move a file if overwrites are disabled"
       );
       ok(
@@ -549,7 +549,7 @@
       // Test.
       await Assert.rejects(
         window.IOUtils.move(notExistsSrc, notExistsDest),
-        /Could not move source file\(.*\) because it does not exist/,
+        /Source file does not exist/,
         "IOUtils::move throws if source file does not exist"
       );
       ok(
@@ -566,7 +566,7 @@
       // Test.
       await Assert.rejects(
         window.IOUtils.move(srcDir, destFile),
-        /Could not move the source directory\(.*\) to the destination\(.*\) because the destination is not a directory/,
+        /Source is a directory but destination is not/,
         "IOUtils::move throws if try to move dir into an existing file"
       );
 
@@ -627,7 +627,7 @@
 
       await Assert.rejects(
         window.IOUtils.stat(notExistsFile),
-        /Could not stat file\(.*\) because it does not exist/,
+        /Target file does not exist/,
         "IOUtils::stat throws if the target file does not exist"
       );
     });
