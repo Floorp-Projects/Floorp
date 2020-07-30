@@ -50,11 +50,9 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGPathSeg, Release)
 // and DidChangePathSegList.
 class MOZ_RAII AutoChangePathSegNotifier : public mozAutoDocUpdate {
  public:
-  explicit AutoChangePathSegNotifier(
-      DOMSVGPathSeg* aPathSeg MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoChangePathSegNotifier(DOMSVGPathSeg* aPathSeg)
       : mozAutoDocUpdate(aPathSeg->Element()->GetComposedDoc(), true),
         mPathSeg(aPathSeg) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mPathSeg, "Expecting non-null pathSeg");
     MOZ_ASSERT(mPathSeg->HasOwner(),
                "Expecting list to have an owner for notification");
@@ -73,7 +71,6 @@ class MOZ_RAII AutoChangePathSegNotifier : public mozAutoDocUpdate {
  private:
   DOMSVGPathSeg* const mPathSeg;
   nsAttrValue mEmptyOrOldValue;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList* aList, uint32_t aListIndex,

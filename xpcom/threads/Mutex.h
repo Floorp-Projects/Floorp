@@ -8,7 +8,6 @@
 #define mozilla_Mutex_h
 
 #include "mozilla/BlockingResourceBase.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/PlatformMutex.h"
 
 //
@@ -155,11 +154,7 @@ class MOZ_RAII BaseAutoLock {
    * @param aLock A valid mozilla::Mutex* returned by
    *              mozilla::Mutex::NewMutex.
    **/
-  explicit BaseAutoLock(T aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mLock(aLock) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mLock.Lock();
-  }
+  explicit BaseAutoLock(T aLock) : mLock(aLock) { mLock.Lock(); }
 
   ~BaseAutoLock(void) { mLock.Unlock(); }
 
@@ -202,7 +197,6 @@ class MOZ_RAII BaseAutoLock {
   friend class BaseAutoUnlock<T>;
 
   T mLock;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 template <typename MutexType>
@@ -223,16 +217,9 @@ namespace detail {
 template <typename T>
 class MOZ_RAII BaseAutoUnlock {
  public:
-  explicit BaseAutoUnlock(T aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mLock(aLock) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mLock.Unlock();
-  }
+  explicit BaseAutoUnlock(T aLock) : mLock(aLock) { mLock.Unlock(); }
 
-  explicit BaseAutoUnlock(
-      BaseAutoLock<T>& aAutoLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mLock(aAutoLock.mLock) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  explicit BaseAutoUnlock(BaseAutoLock<T>& aAutoLock) : mLock(aAutoLock.mLock) {
     NS_ASSERTION(mLock, "null lock");
     mLock->Unlock();
   }
@@ -246,7 +233,6 @@ class MOZ_RAII BaseAutoUnlock {
   static void* operator new(size_t) noexcept(true);
 
   T mLock;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 template <typename MutexType>

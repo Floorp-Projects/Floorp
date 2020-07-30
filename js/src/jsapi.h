@@ -75,10 +75,8 @@ using StringVector = JS::GCVector<JSString*>;
 class MOZ_RAII JS_PUBLIC_API CustomAutoRooter : private AutoGCRooter {
  public:
   template <typename CX>
-  explicit CustomAutoRooter(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, AutoGCRooter::Kind::Custom) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
+  explicit CustomAutoRooter(const CX& cx)
+      : AutoGCRooter(cx, AutoGCRooter::Kind::Custom) {}
 
   friend void AutoGCRooter::trace(JSTracer* trc);
 
@@ -89,7 +87,6 @@ class MOZ_RAII JS_PUBLIC_API CustomAutoRooter : private AutoGCRooter {
   virtual void trace(JSTracer* trc) = 0;
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } /* namespace JS */
@@ -419,11 +416,10 @@ class MOZ_RAII JS_PUBLIC_API JSAutoRealm {
   JS::Realm* oldRealm_;
 
  public:
-  JSAutoRealm(JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-  JSAutoRealm(JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  JSAutoRealm(JSContext* cx, JSObject* target);
+  JSAutoRealm(JSContext* cx, JSScript* target);
   ~JSAutoRealm();
 
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII JS_PUBLIC_API JSAutoNullableRealm {
@@ -431,11 +427,9 @@ class MOZ_RAII JS_PUBLIC_API JSAutoNullableRealm {
   JS::Realm* oldRealm_;
 
  public:
-  explicit JSAutoNullableRealm(
-      JSContext* cx, JSObject* targetOrNull MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  explicit JSAutoNullableRealm(JSContext* cx, JSObject* targetOrNull);
   ~JSAutoNullableRealm();
 
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 namespace JS {
@@ -2822,16 +2816,13 @@ extern JS_PUBLIC_API void UnhideScriptedCaller(JSContext* cx);
 
 class MOZ_RAII AutoHideScriptedCaller {
  public:
-  explicit AutoHideScriptedCaller(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mContext(cx) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  explicit AutoHideScriptedCaller(JSContext* cx) : mContext(cx) {
     HideScriptedCaller(mContext);
   }
   ~AutoHideScriptedCaller() { UnhideScriptedCaller(mContext); }
 
  protected:
   JSContext* mContext;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } /* namespace JS */

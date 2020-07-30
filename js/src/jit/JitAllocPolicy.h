@@ -8,7 +8,6 @@
 #define jit_JitAllocPolicy_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/OperatorNewExtensions.h"
 
 #include <algorithm>

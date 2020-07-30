@@ -7,7 +7,6 @@
 #ifndef mozilla_ipc_Neutering_h
 #define mozilla_ipc_Neutering_h
 
-#include "mozilla/GuardObjects.h"
 
 /**
  * This header declares RAII wrappers for Window neutering. See
@@ -25,7 +24,7 @@ namespace ipc {
  */
 class MOZ_RAII NeuteredWindowRegion {
  public:
-  explicit NeuteredWindowRegion(bool aDoNeuter MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  explicit NeuteredWindowRegion(bool aDoNeuter);
   ~NeuteredWindowRegion();
 
   /**
@@ -35,7 +34,6 @@ class MOZ_RAII NeuteredWindowRegion {
   void PumpOnce();
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mNeuteredByThis;
 };
 
@@ -47,23 +45,21 @@ class MOZ_RAII NeuteredWindowRegion {
  */
 class MOZ_RAII DeneuteredWindowRegion {
  public:
-  explicit DeneuteredWindowRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit DeneuteredWindowRegion();
   ~DeneuteredWindowRegion();
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mReneuter;
 };
 
 class MOZ_RAII SuppressedNeuteringRegion {
  public:
-  explicit SuppressedNeuteringRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit SuppressedNeuteringRegion();
   ~SuppressedNeuteringRegion();
 
   static inline bool IsNeuteringSuppressed() { return sSuppressNeutering; }
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mReenable;
 
   static bool sSuppressNeutering;

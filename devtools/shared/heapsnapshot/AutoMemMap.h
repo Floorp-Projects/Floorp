@@ -10,7 +10,6 @@
 #include <prio.h>
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 
 namespace mozilla {
 namespace devtools {
@@ -34,7 +33,6 @@ namespace devtools {
 //     }
 //     // The memory is automatically unmapped when the AutoMemMap leaves scope.
 class MOZ_RAII AutoMemMap {
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
   PRFileInfo64 fileInfo;
   PRFileDesc* fd;
@@ -45,10 +43,8 @@ class MOZ_RAII AutoMemMap {
   void operator=(const AutoMemMap& aOther) = delete;
 
  public:
-  explicit AutoMemMap(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-      : fileInfo(), fd(nullptr), fileMap(nullptr), addr(nullptr) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  };
+  explicit AutoMemMap()
+      : fileInfo(), fd(nullptr), fileMap(nullptr), addr(nullptr){};
   ~AutoMemMap();
 
   // Initialize this AutoMemMap.
