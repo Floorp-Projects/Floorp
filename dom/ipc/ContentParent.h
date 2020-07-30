@@ -188,12 +188,12 @@ class ContentParent final
    * 3. normal iframe
    */
   static RefPtr<ContentParent::LaunchPromise> GetNewOrUsedBrowserProcessAsync(
-      const nsACString& aRemoteType,
+      const nsACString& aRemoteType, BrowsingContextGroup* aGroup = nullptr,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
   static already_AddRefed<ContentParent> GetNewOrUsedBrowserProcess(
-      const nsACString& aRemoteType,
+      const nsACString& aRemoteType, BrowsingContextGroup* aGroup = nullptr,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
@@ -209,7 +209,7 @@ class ContentParent final
    * the process to be fully launched.
    */
   static already_AddRefed<ContentParent> GetNewOrUsedLaunchingBrowserProcess(
-      const nsACString& aRemoteType,
+      const nsACString& aRemoteType, BrowsingContextGroup* aGroup = nullptr,
       hal::ProcessPriority aPriority =
           hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
       bool aPreferUsed = false);
@@ -1355,8 +1355,8 @@ class ContentParent final
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<FileDescriptor>& aDMDFile) override;
 
-  void OnBrowsingContextGroupSubscribe(BrowsingContextGroup* aGroup);
-  void OnBrowsingContextGroupUnsubscribe(BrowsingContextGroup* aGroup);
+  void AddBrowsingContextGroup(BrowsingContextGroup* aGroup);
+  void RemoveBrowsingContextGroup(BrowsingContextGroup* aGroup);
 
   // See `BrowsingContext::mEpochs` for an explanation of this field.
   uint64_t GetBrowsingContextFieldEpoch() const {
