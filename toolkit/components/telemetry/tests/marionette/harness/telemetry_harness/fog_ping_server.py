@@ -28,7 +28,8 @@ class FOGPingServer(object):
             request_url = request.route_match.copy()
 
             self.pings.append(
-                {"request_url": request_url, "payload": json.loads(request_data)}
+                {"request_url": request_url, "payload": json.loads(
+                    request_data), "debug_tag": request.headers.get("X-Debug-ID")}
             )
 
             self._logger.info(
