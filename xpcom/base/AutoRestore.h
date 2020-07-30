@@ -10,7 +10,6 @@
 #define mozilla_AutoRestore_h_
 
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
-#include "mozilla/GuardObjects.h"
 
 namespace mozilla {
 
@@ -31,12 +30,8 @@ class MOZ_RAII AutoRestore {
  private:
   T& mLocation;
   T mValue;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
  public:
-  explicit AutoRestore(T& aValue MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mLocation(aValue), mValue(aValue) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
+  explicit AutoRestore(T& aValue) : mLocation(aValue), mValue(aValue) {}
   ~AutoRestore() { mLocation = mValue; }
   T SavedValue() const { return mValue; }
 };
