@@ -1,4 +1,4 @@
-// META: script=../websocket.sub.js
+// META: script=../../websocket.sub.js
 // META: script=resources/url-constants.js
 // META: script=/common/utils.js
 // META: global=window,worker
