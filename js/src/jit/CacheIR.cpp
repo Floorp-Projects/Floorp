@@ -5265,13 +5265,14 @@ AttachDecision CallIRGenerator::tryAttachDataViewSet(HandleFunction callee,
 
 AttachDecision CallIRGenerator::tryAttachUnsafeGetReservedSlot(
     HandleFunction callee, InlinableNative native) {
-  // Need an object and int32 slot argument.
-  if (argc_ != 2 || !args_[0].isObject() || !args_[1].isInt32()) {
-    return AttachDecision::NoAction;
-  }
+  // Self-hosted code calls this with (object, int32) arguments.
+  MOZ_ASSERT(argc_ == 2);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isInt32());
+  MOZ_ASSERT(args_[1].toInt32() >= 0);
 
-  int32_t slot = args_[1].toInt32();
-  if (slot < 0 || uint32_t(slot) >= NativeObject::MAX_FIXED_SLOTS) {
+  uint32_t slot = uint32_t(args_[1].toInt32());
+  if (slot >= NativeObject::MAX_FIXED_SLOTS) {
     return AttachDecision::NoAction;
   }
   size_t offset = NativeObject::getFixedSlotOffset(slot);
@@ -5279,8 +5280,7 @@ AttachDecision CallIRGenerator::tryAttachUnsafeGetReservedSlot(
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the correct intrinsic native function.
-  emitNativeCalleeGuard(callee);
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   // Guard that the first argument is an object.
   ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -5314,6 +5314,46 @@ AttachDecision CallIRGenerator::tryAttachUnsafeGetReservedSlot(
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("UnsafeGetReservedSlot");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachUnsafeSetReservedSlot(
+    HandleFunction callee) {
+  // Self-hosted code calls this with (object, int32, value) arguments.
+  MOZ_ASSERT(argc_ == 3);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isInt32());
+  MOZ_ASSERT(args_[1].toInt32() >= 0);
+
+  uint32_t slot = uint32_t(args_[1].toInt32());
+  if (slot >= NativeObject::MAX_FIXED_SLOTS) {
+    return AttachDecision::NoAction;
+  }
+  size_t offset = NativeObject::getFixedSlotOffset(slot);
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  // Guard that the first argument is an object.
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(arg0Id);
+
+  // BytecodeEmitter::checkSelfHostedUnsafeSetReservedSlot ensures that the
+  // slot argument is constant. (At least for direct calls)
+
+  // Get the value to set.
+  ValOperandId valId = writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+
+  // Set the fixed slot and return undefined.
+  writer.storeFixedSlotUndefinedResult(objId, offset, valId);
+
+  // This stub always returns undefined.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("UnsafeSetReservedSlot");
   return AttachDecision::Attach;
 }
 
@@ -7026,6 +7066,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     case InlinableNative::IntrinsicUnsafeGetStringFromReservedSlot:
     case InlinableNative::IntrinsicUnsafeGetBooleanFromReservedSlot:
       return tryAttachUnsafeGetReservedSlot(callee, native);
+    case InlinableNative::IntrinsicUnsafeSetReservedSlot:
+      return tryAttachUnsafeSetReservedSlot(callee);
 
     // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:

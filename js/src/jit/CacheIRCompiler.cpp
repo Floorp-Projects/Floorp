@@ -5310,6 +5310,28 @@ bool CacheIRCompiler::emitLoadTypedObjectResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitStoreFixedSlotUndefinedResult(ObjOperandId objId,
+                                                        uint32_t offsetOffset,
+                                                        ValOperandId rhsId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawWord);
+  emitLoadStubField(offset, scratch);
+
+  BaseIndex slot(obj, scratch, TimesOne);
+  EmitPreBarrier(masm, slot, MIRType::Value);
+  masm.storeValue(val, slot);
+  emitPostBarrierSlot(obj, val, scratch);
+
+  masm.moveValue(UndefinedValue(), output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadObjectResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

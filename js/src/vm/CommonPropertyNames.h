@@ -471,6 +471,7 @@
         "UnsafeGetStringFromReservedSlot")                                     \
   MACRO(UnsafeGetBooleanFromReservedSlot, UnsafeGetBooleanFromReservedSlot,    \
         "UnsafeGetBooleanFromReservedSlot")                                    \
+  MACRO(UnsafeSetReservedSlot, UnsafeSetReservedSlot, "UnsafeSetReservedSlot") \
   MACRO(unsized, unsized, "unsized")                                           \
   MACRO(unwatch, unwatch, "unwatch")                                           \
   MACRO(url, url, "url")                                                       \
