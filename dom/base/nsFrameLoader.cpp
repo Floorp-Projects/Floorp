@@ -2110,13 +2110,14 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     return NS_ERROR_FAILURE;
   }
 
+  mPendingBrowsingContext->SetEmbedderElement(mOwnerContent);
+
   // nsDocShell::Create will attach itself to the passed browsing
   // context inside of nsDocShell::Create
   RefPtr<nsDocShell> docShell = nsDocShell::Create(mPendingBrowsingContext);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   mDocShell = docShell;
 
-  mPendingBrowsingContext->SetEmbedderElement(mOwnerContent);
   mPendingBrowsingContext->Embed();
 
   InvokeBrowsingContextReadyCallback();
