@@ -74,7 +74,7 @@ const HTTP_TEMPORARY_REDIRECT = 307;
  */
 function matchRequest(channel, filters) {
   // Log everything if no filter is specified
-  if (!filters.browsingContextID && !filters.window) {
+  if (!filters.browserId && !filters.window) {
     return true;
   }
 
@@ -105,10 +105,10 @@ function matchRequest(channel, filters) {
     }
   }
 
-  if (filters.browsingContextID) {
+  if (filters.browserId) {
     const topFrame = NetworkHelper.getTopFrameForRequest(channel);
     // topFrame is typically null for some chrome requests like favicons
-    if (topFrame && topFrame.browsingContext.id == filters.browsingContextID) {
+    if (topFrame && topFrame.browsingContext.browserId == filters.browserId) {
       return true;
     }
 
@@ -116,7 +116,8 @@ function matchRequest(channel, filters) {
     // look for it on channel.loadInfo instead.
     if (
       channel.loadInfo &&
-      channel.loadInfo.browsingContextID == filters.browsingContextID
+      channel.loadInfo.browsingContext &&
+      channel.loadInfo.browsingContext.browserId == filters.browserId
     ) {
       return true;
     }
@@ -137,7 +138,7 @@ exports.matchRequest = matchRequest;
  *        Object with the filters to use for network requests:
  *        - window (nsIDOMWindow): filter network requests by the associated
  *          window object.
- *        - browsingContextID (number): filter requests by their top frame's BrowsingContext.
+ *        - browserId (number): filter requests by their top frame's Browser Element.
  *        Filters are optional. If any of these filters match the request is
  *        logged (OR is applied). If no filter is provided then all requests are
  *        logged.
