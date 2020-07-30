@@ -53,26 +53,21 @@ BrowsingContextGroup::BrowsingContextGroup(uint64_t aId)
 }
 
 void BrowsingContextGroup::Register(nsISupports* aContext) {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aContext);
   mContexts.PutEntry(aContext);
 }
 
 void BrowsingContextGroup::Unregister(nsISupports* aContext) {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aContext);
   mContexts.RemoveEntry(aContext);
 
-  if (mContexts.IsEmpty()) {
-    // There are no synced contexts still referencing this group. We can clear
-    // all subscribers.
-    UnsubscribeAllContentParents();
-
-    // We may have been deleted here as the ContentChild/Parent may
-    // have held the last references to `this`.
-    // Do not access any members at this point.
-  }
+  MaybeDestroy();
 }
 
 void BrowsingContextGroup::EnsureHostProcess(ContentParent* aProcess) {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(this != sChromeGroup,
                         "cannot have content host for chrome group");
   MOZ_DIAGNOSTIC_ASSERT(aProcess->GetRemoteType() != PREALLOC_REMOTE_TYPE,
@@ -121,6 +116,7 @@ static void CollectContextInitializers(
 }
 
 void BrowsingContextGroup::Subscribe(ContentParent* aProcess) {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aProcess && !aProcess->IsLaunching());
 
   // Check if we're already subscribed to this process.
@@ -212,11 +208,19 @@ void BrowsingContextGroup::SetToplevelsSuspended(bool aSuspended) {
   mToplevelsSuspended = aSuspended;
 }
 
-BrowsingContextGroup::~BrowsingContextGroup() {
-  UnsubscribeAllContentParents();
-}
+BrowsingContextGroup::~BrowsingContextGroup() { Destroy(); }
 
-void BrowsingContextGroup::UnsubscribeAllContentParents() {
+void BrowsingContextGroup::Destroy() {
+#ifdef DEBUG
+  if (mDestroyed) {
+    MOZ_ASSERT(mHosts.Count() == 0);
+    MOZ_ASSERT(mSubscribers.Count() == 0);
+    MOZ_ASSERT_IF(sBrowsingContextGroups,
+                  sBrowsingContextGroups->Get(Id()) != this);
+  }
+  mDestroyed = true;
+#endif
+
   mHosts.Clear();
   for (auto& entry : mSubscribers) {
     entry.GetKey()->RemoveBrowsingContextGroup(this);
@@ -225,6 +229,31 @@ void BrowsingContextGroup::UnsubscribeAllContentParents() {
 
   if (sBrowsingContextGroups) {
     sBrowsingContextGroups->Remove(Id());
+  }
+}
+
+void BrowsingContextGroup::AddKeepAlive() {
+  MOZ_ASSERT(!mDestroyed);
+  mKeepAliveCount++;
+}
+
+void BrowsingContextGroup::RemoveKeepAlive() {
+  MOZ_ASSERT(!mDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(mKeepAliveCount > 0);
+  mKeepAliveCount--;
+
+  MaybeDestroy();
+}
+
+void BrowsingContextGroup::MaybeDestroy() {
+  if (mContexts.IsEmpty() && mKeepAliveCount == 0 && this != sChromeGroup) {
+    // There are no synced contexts still referencing this group. We can clear
+    // all subscribers, and destroy ourselves.
+    Destroy();
+
+    // We may have been deleted here as the ContentChild/Parent may
+    // have held the last references to `this`.
+    // Do not access any members at this point.
   }
 }
 
