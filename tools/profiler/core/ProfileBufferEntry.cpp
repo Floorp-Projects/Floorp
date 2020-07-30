@@ -1183,21 +1183,38 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
     if (type == ProfileBufferEntry::Kind::MarkerData &&
         aER.ReadObject<int>() == aThreadId) {
-      // Schema:
-      //   [name, time, category, data]
-
       aWriter.StartArrayElement();
       {
-        std::string name = aER.ReadObject<std::string>();
+        // Extract the information from the buffer:
+        // Each entry is made up of the following:
+        //
+        // [
+        //   ProfileBufferEntry::Kind::MarkerData,  <- already read
+        //   threadId,                              <- already read
+        //   name,                                  <- next location in entries
+        //   startTime,
+        //   endTime,
+        //   phase,
+        //   categoryPair,
+        //   payload,
+        // ]
+        auto name = aER.ReadObject<std::string>();
+        auto startTime = aER.ReadObject<double>();
+        auto endTime = aER.ReadObject<double>();
+        auto phase = aER.ReadObject<uint8_t>();
         const JS::ProfilingCategoryPairInfo& info =
             GetProfilingCategoryPairInfo(static_cast<JS::ProfilingCategoryPair>(
                 aER.ReadObject<uint32_t>()));
         auto payload = aER.ReadObject<UniquePtr<ProfilerMarkerPayload>>();
-        double time = aER.ReadObject<double>();
+
         MOZ_ASSERT(aER.RemainingBytes() == 0);
 
+        // Now write this information to JSON with the following schema:
+        // [name, startTime, endTime, phase, category, data]
         aUniqueStacks.mUniqueStrings->WriteElement(aWriter, name.c_str());
-        aWriter.DoubleElement(time);
+        aWriter.DoubleElement(startTime);
+        aWriter.DoubleElement(endTime);
+        aWriter.IntElement(phase);
         aWriter.IntElement(unsigned(info.mCategory));
         if (payload) {
           aWriter.StartObjectElement(SpliceableJSONWriter::SingleLineStyle);
