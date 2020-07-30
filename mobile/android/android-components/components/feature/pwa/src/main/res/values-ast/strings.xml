@@ -3,6 +3,8 @@
     <!-- Default shortcut label used if website has no title -->
     <string name="mozac_feature_pwa_default_shortcut_label">Sitiu web</string>
 
+    <!-- Refresh button in site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_refresh">Refrescar</string>
     <!-- Toast displayed when the website URL is copied. -->
     <string name="mozac_feature_pwa_copy_success">Copióse la URL.</string>
 </resources>
