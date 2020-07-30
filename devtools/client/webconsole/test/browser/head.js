@@ -307,6 +307,7 @@ function keyboardExecuteAndWaitForMessage(
   matchingText,
   selector = ".message"
 ) {
+  hud.jsterm.focus();
   setInputValue(hud, input);
   const onMessage = waitForMessage(hud, matchingText, selector);
   if (isEditorModeEnabled(hud)) {
