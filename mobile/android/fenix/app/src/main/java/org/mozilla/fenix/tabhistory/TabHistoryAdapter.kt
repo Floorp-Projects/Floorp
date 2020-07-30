@@ -6,7 +6,8 @@ package org.mozilla.fenix.tabhistory
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import org.mozilla.fenix.R
 
 data class TabHistoryItem(
@@ -18,23 +19,23 @@ data class TabHistoryItem(
 
 class TabHistoryAdapter(
     private val interactor: TabHistoryViewInteractor
-) : RecyclerView.Adapter<TabHistoryViewHolder>() {
-
-    var historyList: List<TabHistoryItem> = emptyList()
-        set(value) {
-            field = value
-            notifyDataSetChanged()
-        }
+) : ListAdapter<TabHistoryItem, TabHistoryViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabHistoryViewHolder {
-        val view =
-            LayoutInflater.from(parent.context).inflate(R.layout.history_list_item, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.history_list_item, parent, false)
         return TabHistoryViewHolder(view, interactor)
     }
 
     override fun onBindViewHolder(holder: TabHistoryViewHolder, position: Int) {
-        holder.bind(historyList[position])
+        holder.bind(getItem(position))
     }
 
-    override fun getItemCount(): Int = historyList.size
+    internal object DiffCallback : DiffUtil.ItemCallback<TabHistoryItem>() {
+        override fun areItemsTheSame(oldItem: TabHistoryItem, newItem: TabHistoryItem) =
+            oldItem.url == newItem.url
+
+        override fun areContentsTheSame(oldItem: TabHistoryItem, newItem: TabHistoryItem) =
+            oldItem == newItem
+    }
 }

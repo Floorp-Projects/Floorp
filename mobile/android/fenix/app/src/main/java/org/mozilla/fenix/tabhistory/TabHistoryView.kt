@@ -24,19 +24,16 @@ interface TabHistoryViewInteractor {
 }
 
 class TabHistoryView(
-    private val container: ViewGroup,
+    container: ViewGroup,
     private val expandDialog: () -> Unit,
     interactor: TabHistoryViewInteractor
 ) : LayoutContainer {
 
-    override val containerView: View?
-        get() = container
-
-    val view: View = LayoutInflater.from(container.context)
+    override val containerView: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabhistory, container, true)
 
     private val adapter = TabHistoryAdapter(interactor)
-    private val layoutManager = object : LinearLayoutManager(view.context) {
+    private val layoutManager = object : LinearLayoutManager(containerView.context) {
         override fun onLayoutCompleted(state: RecyclerView.State?) {
             super.onLayoutCompleted(state)
             currentIndex?.let { index ->
@@ -60,6 +57,7 @@ class TabHistoryView(
     init {
         tabHistoryRecyclerView.adapter = adapter
         tabHistoryRecyclerView.layoutManager = layoutManager
+        tabHistoryRecyclerView.itemAnimator = null
     }
 
     fun updateState(state: BrowserState) {
@@ -73,7 +71,7 @@ class TabHistoryView(
                     isSelected = index == historyState.currentIndex
                 )
             }
-            adapter.historyList = items
+            adapter.submitList(items)
         }
     }
 }
