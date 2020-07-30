@@ -7103,7 +7103,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-07-18T17:05:44Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-07-29T17:11:44Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8797,7 +8797,7 @@ law
 // lawyer : 2014-03-20 Dog Beach, LLC
 lawyer
 
-// lds : 2014-03-20 IRI Domain Management, LLC ("Applicant")
+// lds : 2014-03-20 IRI Domain Management, LLC
 lds
 
 // lease : 2014-03-06 Binky Moon, LLC
@@ -9064,7 +9064,7 @@ money
 // monster : 2015-09-11 XYZ.COM LLC
 monster
 
-// mormon : 2013-12-05 IRI Domain Management, LLC ("Applicant")
+// mormon : 2013-12-05 IRI Domain Management, LLC
 mormon
 
 // mortgage : 2014-03-20 Dog Beach, LLC
@@ -9546,9 +9546,6 @@ richardli
 
 // ricoh : 2014-11-20 Ricoh Company, Ltd.
 ricoh
-
-// rightathome : 2015-07-23 Johnson Shareholdings, Inc.
-rightathome
 
 // ril : 2015-04-02 Reliance Industries Limited
 ril
