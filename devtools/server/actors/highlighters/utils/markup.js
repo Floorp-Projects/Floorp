@@ -172,66 +172,6 @@ function isNodeValid(node, nodeType = Node.ELEMENT_NODE) {
 exports.isNodeValid = isNodeValid;
 
 /**
- * Helper function that creates SVG DOM nodes.
- * @param {Window} This window's document will be used to create the element
- * @param {Object} Options for the node include:
- * - nodeType: the type of node, defaults to "box".
- * - attributes: a {name:value} object to be used as attributes for the node.
- * - prefix: a string that will be used to prefix the values of the id and class
- *   attributes.
- * - parent: if provided, the newly created element will be appended to this
- *   node.
- */
-function createSVGNode(win, options) {
-  if (!options.nodeType) {
-    options.nodeType = "box";
-  }
-  options.namespace = SVG_NS;
-  return createNode(win, options);
-}
-exports.createSVGNode = createSVGNode;
-
-/**
- * Helper function that creates DOM nodes.
- * @param {Window} This window's document will be used to create the element
- * @param {Object} Options for the node include:
- * - nodeType: the type of node, defaults to "div".
- * - namespace: the namespace to use to create the node, defaults to XHTML namespace.
- * - attributes: a {name:value} object to be used as attributes for the node.
- * - prefix: a string that will be used to prefix the values of the id and class
- *   attributes.
- * - parent: if provided, the newly created element will be appended to this
- *   node.
- * - text: if provided, set the text content of the element.
- */
-function createNode(win, options) {
-  const type = options.nodeType || "div";
-  const namespace = options.namespace || XHTML_NS;
-  const doc = win.document;
-
-  const node = doc.createElementNS(namespace, type);
-
-  for (const name in options.attributes || {}) {
-    let value = options.attributes[name];
-    if (options.prefix && (name === "class" || name === "id")) {
-      value = options.prefix + value;
-    }
-    node.setAttribute(name, value);
-  }
-
-  if (options.parent) {
-    options.parent.appendChild(node);
-  }
-
-  if (options.text) {
-    node.appendChild(doc.createTextNode(options.text));
-  }
-
-  return node;
-}
-exports.createNode = createNode;
-
-/**
  * Every highlighters should insert their markup content into the document's
  * canvasFrame anonymous content container (see dom/webidl/Document.webidl).
  *
@@ -688,6 +628,64 @@ CanvasFrameAnonymousContentHelper.prototype = {
     value += `position:absolute; width:${width}px;height:${height}px; overflow:hidden`;
 
     this.setAttributeForElement(id, "style", value);
+  },
+
+  /**
+   * Helper function that creates SVG DOM nodes.
+   * @param {Object} Options for the node include:
+   * - nodeType: the type of node, defaults to "box".
+   * - attributes: a {name:value} object to be used as attributes for the node.
+   * - prefix: a string that will be used to prefix the values of the id and class
+   *   attributes.
+   * - parent: if provided, the newly created element will be appended to this
+   *   node.
+   */
+  createSVGNode(options) {
+    if (!options.nodeType) {
+      options.nodeType = "box";
+    }
+
+    options.namespace = SVG_NS;
+
+    return this.createNode(options);
+  },
+
+  /**
+   * Helper function that creates DOM nodes.
+   * @param {Object} Options for the node include:
+   * - nodeType: the type of node, defaults to "div".
+   * - namespace: the namespace to use to create the node, defaults to XHTML namespace.
+   * - attributes: a {name:value} object to be used as attributes for the node.
+   * - prefix: a string that will be used to prefix the values of the id and class
+   *   attributes.
+   * - parent: if provided, the newly created element will be appended to this
+   *   node.
+   * - text: if provided, set the text content of the element.
+   */
+  createNode(options) {
+    const type = options.nodeType || "div";
+    const namespace = options.namespace || XHTML_NS;
+    const doc = this.anonymousContentDocument;
+
+    const node = doc.createElementNS(namespace, type);
+
+    for (const name in options.attributes || {}) {
+      let value = options.attributes[name];
+      if (options.prefix && (name === "class" || name === "id")) {
+        value = options.prefix + value;
+      }
+      node.setAttribute(name, value);
+    }
+
+    if (options.parent) {
+      options.parent.appendChild(node);
+    }
+
+    if (options.text) {
+      node.appendChild(doc.createTextNode(options.text));
+    }
+
+    return node;
   },
 };
 exports.CanvasFrameAnonymousContentHelper = CanvasFrameAnonymousContentHelper;

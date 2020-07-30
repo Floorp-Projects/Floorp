@@ -10,8 +10,6 @@ const {
 const {
   CanvasFrameAnonymousContentHelper,
   getComputedStyle,
-  createSVGNode,
-  createNode,
 } = require("devtools/server/actors/highlighters/utils/markup");
 const {
   setIgnoreLayoutChanges,
@@ -250,11 +248,11 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
   }
 
   _buildMarkup() {
-    const container = createNode(this.win, {
+    const container = this.markup.createNode({
       attributes: { class: "highlighter-container" },
     });
 
-    const root = createNode(this.win, {
+    const root = this.markup.createNode({
       parent: container,
       attributes: {
         id: "root",
@@ -264,7 +262,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const svg = createSVGNode(this.win, {
+    const svg = this.markup.createSVGNode({
       nodeType: "svg",
       parent: root,
       attributes: {
@@ -276,7 +274,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
     });
 
     // Offset parent node highlighter.
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "polygon",
       parent: svg,
       attributes: {
@@ -288,7 +286,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
     });
 
     // Current node highlighter (margin box).
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "polygon",
       parent: svg,
       attributes: {
@@ -301,7 +299,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
 
     // Build the 4 side arrows, handlers and labels.
     for (const name of GeoProp.SIDES) {
-      createSVGNode(this.win, {
+      this.markup.createSVGNode({
         nodeType: "line",
         parent: svg,
         attributes: {
@@ -312,7 +310,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         prefix: this.ID_CLASS_PREFIX,
       });
 
-      createSVGNode(this.win, {
+      this.markup.createSVGNode({
         nodeType: "circle",
         parent: svg,
         attributes: {
@@ -329,7 +327,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       // a path and text that are themselves positioned using another translated
       // <g>. This is so that the label arrow points at the 0,0 coordinates of
       // parent <g>.
-      const labelG = createSVGNode(this.win, {
+      const labelG = this.markup.createSVGNode({
         nodeType: "g",
         parent: svg,
         attributes: {
@@ -339,7 +337,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         prefix: this.ID_CLASS_PREFIX,
       });
 
-      const subG = createSVGNode(this.win, {
+      const subG = this.markup.createSVGNode({
         nodeType: "g",
         parent: labelG,
         attributes: {
@@ -349,7 +347,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         },
       });
 
-      createSVGNode(this.win, {
+      this.markup.createSVGNode({
         nodeType: "path",
         parent: subG,
         attributes: {
@@ -361,7 +359,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         prefix: this.ID_CLASS_PREFIX,
       });
 
-      createSVGNode(this.win, {
+      this.markup.createSVGNode({
         nodeType: "text",
         parent: subG,
         attributes: {

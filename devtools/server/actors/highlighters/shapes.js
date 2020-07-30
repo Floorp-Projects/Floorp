@@ -6,8 +6,6 @@
 
 const {
   CanvasFrameAnonymousContentHelper,
-  createSVGNode,
-  createNode,
   getComputedStyle,
 } = require("devtools/server/actors/highlighters/utils/markup");
 const {
@@ -114,14 +112,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   _buildMarkup() {
-    const container = createNode(this.win, {
+    const container = this.markup.createNode({
       attributes: {
         class: "highlighter-container",
       },
     });
 
     // The root wrapper is used to unzoom the highlighter when needed.
-    const rootWrapper = createNode(this.win, {
+    const rootWrapper = this.markup.createNode({
       parent: container,
       attributes: {
         id: "root",
@@ -130,7 +128,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const mainSvg = createSVGNode(this.win, {
+    const mainSvg = this.markup.createSVGNode({
       nodeType: "svg",
       parent: rootWrapper,
       attributes: {
@@ -144,7 +142,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     // This clipPath and its children make sure the element quad outline
     // is only shown when the shape extends past the element quads.
-    const clipSvg = createSVGNode(this.win, {
+    const clipSvg = this.markup.createSVGNode({
       nodeType: "clipPath",
       parent: mainSvg,
       attributes: {
@@ -154,7 +152,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "polygon",
       parent: clipSvg,
       attributes: {
@@ -165,7 +163,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "ellipse",
       parent: clipSvg,
       attributes: {
@@ -176,7 +174,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "rect",
       parent: clipSvg,
       attributes: {
@@ -189,7 +187,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     // Rectangle that displays the element quads. Only shown for shape-outside.
     // Only the parts of the rectangle's outline that overlap with the shape is shown.
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "rect",
       parent: mainSvg,
       attributes: {
@@ -208,7 +206,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // clipPath that corresponds to the element's quads. Only applied for shape-outside.
     // This ensures only the parts of the shape that are within the element's quads are
     // outlined by a solid line.
-    const shapeClipSvg = createSVGNode(this.win, {
+    const shapeClipSvg = this.markup.createSVGNode({
       nodeType: "clipPath",
       parent: mainSvg,
       attributes: {
@@ -218,7 +216,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "rect",
       parent: shapeClipSvg,
       attributes: {
@@ -232,7 +230,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    const mainGroup = createSVGNode(this.win, {
+    const mainGroup = this.markup.createSVGNode({
       nodeType: "g",
       parent: mainSvg,
       attributes: {
@@ -242,7 +240,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     });
 
     // Append a polygon for polygon shapes.
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "polygon",
       parent: mainGroup,
       attributes: {
@@ -254,7 +252,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     });
 
     // Append an ellipse for circle/ellipse shapes.
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "ellipse",
       parent: mainGroup,
       attributes: {
@@ -266,7 +264,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     });
 
     // Append a rect for inset().
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "rect",
       parent: mainGroup,
       attributes: {
@@ -279,7 +277,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     // Dashed versions of each shape. Only shown for the parts of the shape
     // that extends past the element's quads.
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "polygon",
       parent: mainGroup,
       attributes: {
@@ -291,7 +289,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "ellipse",
       parent: mainGroup,
       attributes: {
@@ -303,7 +301,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "rect",
       parent: mainGroup,
       attributes: {
@@ -315,7 +313,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: mainGroup,
       attributes: {
@@ -327,7 +325,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: mainGroup,
       attributes: {
@@ -338,7 +336,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     });
 
     // Append a path to display the markers for the shape.
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: mainGroup,
       attributes: {
@@ -348,7 +346,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: mainGroup,
       attributes: {
@@ -358,7 +356,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX,
     });
 
-    createSVGNode(this.win, {
+    this.markup.createSVGNode({
       nodeType: "path",
       parent: mainGroup,
       attributes: {

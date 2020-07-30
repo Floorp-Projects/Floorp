@@ -20,7 +20,6 @@ const {
 } = require("devtools/server/actors/highlighters/utils/canvas");
 const {
   CanvasFrameAnonymousContentHelper,
-  createNode,
   getComputedStyle,
 } = require("devtools/server/actors/highlighters/utils/markup");
 const {
@@ -115,13 +114,13 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   }
 
   _buildMarkup() {
-    const container = createNode(this.win, {
+    const container = this.markup.createNode({
       attributes: {
         class: "highlighter-container",
       },
     });
 
-    const root = createNode(this.win, {
+    const root = this.markup.createNode({
       parent: container,
       attributes: {
         id: "root",
@@ -133,7 +132,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     // We use a <canvas> element because there is an arbitrary number of items and texts
     // to draw which wouldn't be possible with HTML or SVG without having to insert and
     // remove the whole markup on every update.
-    createNode(this.win, {
+    this.markup.createNode({
       parent: root,
       nodeType: "canvas",
       attributes: {
@@ -228,7 +227,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     // Create the diagonal lines pattern for the rendering the flexbox gaps.
-    const canvas = createNode(this.win, { nodeType: "canvas" });
+    const canvas = this.markup.createNode({ nodeType: "canvas" });
     const width = (canvas.width =
       FLEXBOX_CONTAINER_PATTERN_WIDTH * devicePixelRatio);
     const height = (canvas.height =
@@ -276,7 +275,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     // Create the inversed diagonal lines pattern
     // for the rendering the justify content gaps.
-    const canvas = createNode(this.win, { nodeType: "canvas" });
+    const canvas = this.markup.createNode({ nodeType: "canvas" });
     const zoom = getCurrentZoom(this.win);
     const width = (canvas.width =
       FLEXBOX_JUSTIFY_CONTENT_PATTERN_WIDTH * devicePixelRatio * zoom);
