@@ -2380,8 +2380,10 @@ class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
                MConstant* templateConst, Type type)
       : MUnaryInstruction(classOpcode, templateConst), type_(type) {
     setResultType(MIRType::Object);
-    setResultTypeSet(
-        MakeSingletonTypeSet(alloc, constraints, templateObject()));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(
+          MakeSingletonTypeSet(alloc, constraints, templateObject()));
+    }
     templateConst->setEmittedAtUses();
   }
 

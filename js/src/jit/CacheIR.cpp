@@ -6900,6 +6900,90 @@ AttachDecision CallIRGenerator::tryAttachFinishBoundFunctionInit(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachNewArrayIterator(
+    HandleFunction callee) {
+  // Self-hosted code calls this without any arguments
+  MOZ_ASSERT(argc_ == 0);
+
+  JSObject* templateObj = NewArrayIteratorTemplate(cx_);
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  if (!JitOptions.warpBuilder) {
+    // Store the template object for BaselineInspector.
+    writer.metaNativeTemplateObject(callee, templateObj);
+  }
+  writer.newArrayIteratorResult(templateObj);
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("NewArrayIterator");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachNewStringIterator(
+    HandleFunction callee) {
+  // Self-hosted code calls this without any arguments
+  MOZ_ASSERT(argc_ == 0);
+
+  JSObject* templateObj = NewStringIteratorTemplate(cx_);
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  if (!JitOptions.warpBuilder) {
+    // Store the template object for BaselineInspector.
+    writer.metaNativeTemplateObject(callee, templateObj);
+  }
+  writer.newStringIteratorResult(templateObj);
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("NewStringIterator");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachNewRegExpStringIterator(
+    HandleFunction callee) {
+  // Self-hosted code calls this without any arguments
+  MOZ_ASSERT(argc_ == 0);
+
+  JSObject* templateObj = NewRegExpStringIteratorTemplate(cx_);
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  if (!JitOptions.warpBuilder) {
+    // Store the template object for BaselineInspector.
+    writer.metaNativeTemplateObject(callee, templateObj);
+  }
+  writer.newRegExpStringIteratorResult(templateObj);
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("NewRegExpStringIterator");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
   if (calleeFunc->native() != fun_apply) {
@@ -7103,6 +7187,12 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachIsConstructing(callee);
     case InlinableNative::IntrinsicFinishBoundFunctionInit:
       return tryAttachFinishBoundFunctionInit(callee);
+    case InlinableNative::IntrinsicNewArrayIterator:
+      return tryAttachNewArrayIterator(callee);
+    case InlinableNative::IntrinsicNewStringIterator:
+      return tryAttachNewStringIterator(callee);
+    case InlinableNative::IntrinsicNewRegExpStringIterator:
+      return tryAttachNewRegExpStringIterator(callee);
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:
@@ -7498,21 +7588,6 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
       }
       RootedObject proto(cx_, args_[0].toObjectOrNull());
       res.set(ObjectCreateImpl(cx_, proto, TenuredObject));
-      return !!res;
-    }
-
-    case InlinableNative::IntrinsicNewArrayIterator: {
-      res.set(NewArrayIteratorTemplate(cx_));
-      return !!res;
-    }
-
-    case InlinableNative::IntrinsicNewStringIterator: {
-      res.set(NewStringIteratorTemplate(cx_));
-      return !!res;
-    }
-
-    case InlinableNative::IntrinsicNewRegExpStringIterator: {
-      res.set(NewRegExpStringIteratorTemplate(cx_));
       return !!res;
     }
 
