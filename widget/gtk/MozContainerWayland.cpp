@@ -32,11 +32,6 @@ extern mozilla::LazyLogModule gWidgetWaylandLog;
 using namespace mozilla;
 using namespace mozilla::widget;
 
-// Declaration from nsWindow, we don't want to include whole nsWindow.h file
-// here just for it.
-wl_region* CreateOpaqueRegionWayland(int aX, int aY, int aWidth, int aHeight,
-                                     bool aSubtractCorners);
-
 /* init methods */
 static void moz_container_wayland_destroy(GtkWidget* widget);
 
@@ -125,7 +120,6 @@ void moz_container_wayland_init(MozContainerWayland* container) {
   container->ready_to_draw = false;
   container->opaque_region_needs_update = false;
   container->opaque_region_subtract_corners = false;
-  container->opaque_region_fullscreen = false;
   container->surface_needs_clear = true;
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
@@ -310,6 +304,20 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
   }
 }
 
+static wl_region* moz_container_wayland_create_opaque_region(
+    int aX, int aY, int aWidth, int aHeight, bool aSubtractCorners) {
+  struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
+  wl_region* region = wl_compositor_create_region(compositor);
+  wl_region_add(region, aX, aY, aWidth, aHeight);
+  if (aSubtractCorners) {
+    wl_region_subtract(region, aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
+                       TITLEBAR_SHAPE_MASK_HEIGHT);
+    wl_region_subtract(region, aX + aWidth - TITLEBAR_SHAPE_MASK_HEIGHT, aY,
+                       TITLEBAR_SHAPE_MASK_HEIGHT, TITLEBAR_SHAPE_MASK_HEIGHT);
+  }
+  return region;
+}
+
 static void moz_container_wayland_set_opaque_region_locked(
     MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
@@ -321,16 +329,11 @@ static void moz_container_wayland_set_opaque_region_locked(
   GtkAllocation allocation;
   gtk_widget_get_allocation(GTK_WIDGET(container), &allocation);
 
-  // Set region to mozcontainer for normal state only
-  if (!wl_container->opaque_region_fullscreen) {
-    wl_region* region =
-        CreateOpaqueRegionWayland(0, 0, allocation.width, allocation.height,
-                                  wl_container->opaque_region_subtract_corners);
-    wl_surface_set_opaque_region(wl_container->surface, region);
-    wl_region_destroy(region);
-  } else {
-    wl_surface_set_opaque_region(wl_container->surface, nullptr);
-  }
+  wl_region* region = moz_container_wayland_create_opaque_region(
+      0, 0, allocation.width, allocation.height,
+      wl_container->opaque_region_subtract_corners);
+  wl_surface_set_opaque_region(wl_container->surface, region);
+  wl_region_destroy(region);
 
   wl_container->opaque_region_needs_update = false;
 }
@@ -494,12 +497,10 @@ gboolean moz_container_wayland_surface_needs_clear(MozContainer* container) {
 }
 
 void moz_container_wayland_update_opaque_region(MozContainer* container,
-                                                bool aSubtractCorners,
-                                                bool aFullScreen) {
+                                                bool aSubtractCorners) {
   MozContainerWayland* wl_container = &container->wl_container;
   wl_container->opaque_region_needs_update = true;
   wl_container->opaque_region_subtract_corners = aSubtractCorners;
-  wl_container->opaque_region_fullscreen = aFullScreen;
 
   // When GL compositor / WebRender is used,
   // moz_container_wayland_get_egl_window() is called only once when window
