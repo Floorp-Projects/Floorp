@@ -1304,11 +1304,12 @@ class FxaAccountManagerTest {
 
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
+        verify(accountStorage, times(1)).clear()
 
         assertTrue(manager.finishAuthenticationAsync(FxaAuthData(AuthType.Signin, "dummyCode", EXPECTED_AUTH_STATE)).await())
 
         verify(accountStorage, times(1)).read()
-        verify(accountStorage, never()).clear()
+        verify(accountStorage, times(1)).clear()
 
         verify(accountObserver, times(1)).onAuthenticated(mockAccount, AuthType.Signin)
         verify(accountObserver, times(1)).onProfileUpdated(profile)
@@ -1350,11 +1351,12 @@ class FxaAccountManagerTest {
 
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
+        verify(accountStorage, times(1)).clear()
 
         assertTrue(manager.finishAuthenticationAsync(FxaAuthData(AuthType.Signin, "dummyCode", EXPECTED_AUTH_STATE)).await())
 
         verify(accountStorage, times(1)).read()
-        verify(accountStorage, never()).clear()
+        verify(accountStorage, times(1)).clear()
 
         verify(accountObserver, times(1)).onAuthenticated(mockAccount, AuthType.Signin)
         verify(accountObserver, times(1)).onProfileUpdated(profile)
@@ -1930,6 +1932,7 @@ class FxaAccountManagerTest {
     ): FxaAccountManager {
         `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
 
+        `when`(mockAccount.disconnectAsync()).thenReturn(CompletableDeferred(true))
         `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(value = null))
         `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(value = null))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))

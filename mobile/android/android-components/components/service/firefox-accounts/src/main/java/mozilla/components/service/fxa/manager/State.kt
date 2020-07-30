@@ -151,6 +151,7 @@ internal object FxaStateMatrix {
                 Event.FetchProfile -> AccountState.AuthenticatedNoProfile
                 Event.FetchedProfile -> AccountState.AuthenticatedWithProfile
                 Event.FailedToFetchProfile -> AccountState.AuthenticatedNoProfile
+                Event.FailedToAuthenticate -> AccountState.NotAuthenticated
                 Event.Logout -> AccountState.NotAuthenticated
                 else -> null
             }
