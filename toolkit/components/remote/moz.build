@@ -35,6 +35,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
         'nsWinRemoteClient.cpp',
         'nsWinRemoteServer.cpp',
+        'WinRemoteMessage.cpp',
     ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
