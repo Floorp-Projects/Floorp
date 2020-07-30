@@ -1,3 +1,5 @@
+// META: global=window,dedicatedworker,jsshell
+
 "use strict";
 // https://heycam.github.io/webidl/#es-namespaces
 // https://webassembly.github.io/spec/js-api/#namespacedef-webassembly
