@@ -17,10 +17,10 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_add_on_details.*
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translatedDescription
+import mozilla.components.feature.addons.ui.updatedAtDate
 import org.mozilla.fenix.R
 import java.text.DateFormat
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.util.Locale
 
 interface AddonDetailsInteractor {
@@ -44,7 +44,6 @@ class AddonDetailsView(
     private val interactor: AddonDetailsInteractor
 ) : LayoutContainer {
 
-    private val dateParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
     private val dateFormatter = DateFormat.getDateInstance()
     private val numberFormatter = NumberFormat.getNumberInstance(Locale.getDefault())
 
@@ -76,7 +75,7 @@ class AddonDetailsView(
     }
 
     private fun bindLastUpdated(addon: Addon) {
-        last_updated_text.text = formatDate(addon.updatedAt)
+        last_updated_text.text = dateFormatter.format(addon.updatedAtDate)
     }
 
     private fun bindVersion(addon: Addon) {
@@ -131,9 +130,5 @@ class AddonDetailsView(
         }
         spannableStringBuilder.setSpan(clickable, start, end, flags)
         spannableStringBuilder.removeSpan(link)
-    }
-
-    private fun formatDate(text: String): String {
-        return dateFormatter.format(dateParser.parse(text)!!)
     }
 }
