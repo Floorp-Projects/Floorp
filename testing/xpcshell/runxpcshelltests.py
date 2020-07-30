@@ -1418,6 +1418,28 @@ class XPCShellTests(object):
 
         return True
 
+    def runSelfTest(self):
+        import selftest
+        import unittest
+        this = self
+
+        class XPCShellTestsTests(selftest.XPCShellTestsTests):
+            def __init__(self, name):
+                unittest.TestCase.__init__(self, name)
+                self.testing_modules = this.testingModulesDir
+                self.xpcshellBin = this.xpcshell
+                self.utility_path = this.utility_path
+                self.symbols_path = this.symbolsPath
+
+        old_info = dict(mozinfo.info)
+        try:
+            suite = unittest.TestLoader().loadTestsFromTestCase(XPCShellTestsTests)
+            return unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful()
+        finally:
+            # The self tests modify mozinfo, so we need to reset it.
+            mozinfo.info.clear()
+            mozinfo.update(old_info)
+
     def runTests(self, options, testClass=XPCShellTestThread, mobileArgs=None):
         """
           Run xpcshell tests.
@@ -1491,7 +1513,7 @@ class XPCShellTests(object):
         self.verboseIfFails = options.get('verboseIfFails')
         self.keepGoing = options.get('keepGoing')
         self.logfiles = options.get('logfiles')
-        self.totalChunks = options.get('totalChunks')
+        self.totalChunks = options.get('totalChunks', 1)
         self.thisChunk = options.get('thisChunk')
         self.profileName = options.get('profileName') or "xpcshell"
         self.mozInfo = options.get('mozInfo')
@@ -1517,6 +1539,10 @@ class XPCShellTests(object):
 
         if not self.updateMozinfo(prefs, options):
             return False
+
+        if options.get('self_test'):
+            if not self.runSelfTest():
+                return False
 
         if "tsan" in self.mozInfo and self.mozInfo["tsan"] and not options.get('threadCount'):
             # TSan requires significantly more memory, so reduce the amount of parallel
