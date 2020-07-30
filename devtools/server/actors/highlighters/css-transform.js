@@ -38,6 +38,7 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       this.highlighterEnv,
       this._buildMarkup.bind(this)
     );
+    this.isReady = this.markup.initialize();
   }
 
   _buildMarkup() {

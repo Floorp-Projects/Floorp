@@ -507,7 +507,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     // Keep the reference to the walker actor in case the actor gets destroyed
     // during the colour contrast ratio calculation.
     const { walker } = this;
-    walker.clearStyles(win);
+    await walker.clearStyles(win);
     const contrastRatio = await getContrastRatioFor(rawNode.parentNode, {
       bounds: getBounds(win, bounds),
       win,
@@ -518,7 +518,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       // This accessible actor is destroyed.
       return null;
     }
-    walker.restoreStyles(win);
+    await walker.restoreStyles(win);
 
     return contrastRatio;
   },

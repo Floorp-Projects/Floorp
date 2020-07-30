@@ -515,7 +515,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return highlighter;
   },
 
-  showOverlay() {
+  async showOverlay() {
     if (
       this._options.shouldShowOverlay &&
       this.isPaused() &&
@@ -525,6 +525,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.pauseOverlay
     ) {
       const reason = this._priorPause.why.type;
+      await this.pauseOverlay.isReady;
       this.pauseOverlay.show(null, { reason });
     }
   },
@@ -533,7 +534,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (
       this._parent.window.document &&
       this._parent.on &&
-      !this._parent.window.isChromeWindow
+      !this._parent.window.isChromeWindow &&
+      this._pauseOverlay
     ) {
       this.pauseOverlay.hide();
     }

@@ -254,16 +254,7 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
   this.highlighterEnv = highlighterEnv;
   this.nodeBuilder = nodeBuilder;
 
-  this._insert = this._insert.bind(this);
   this._onWindowReady = this._onWindowReady.bind(this);
-
-  // Only try to create the highlighter when the document is loaded,
-  // otherwise, wait for the window-ready event to fire.
-  const doc = this.highlighterEnv.document;
-  if (doc.documentElement && doc.readyState != "uninitialized") {
-    this._insert();
-  }
-
   this.highlighterEnv.on("window-ready", this._onWindowReady);
 
   this.listeners = new Map();
@@ -271,6 +262,21 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
 }
 
 CanvasFrameAnonymousContentHelper.prototype = {
+  initialize() {
+    // _insert will resolve this promise once the markup is displayed
+    const onInitialized = new Promise(resolve => {
+      this._initialized = resolve;
+    });
+    // Only try to create the highlighter when the document is loaded,
+    // otherwise, wait for the window-ready event to fire.
+    const doc = this.highlighterEnv.document;
+    if (doc.documentElement && doc.readyState != "uninitialized") {
+      this._insert();
+    }
+
+    return onInitialized;
+  },
+
   destroy() {
     this._remove();
     if (this._iframe) {
@@ -398,6 +404,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
         throw e;
       }
     }
+
+    this._initialized();
   },
 
   _remove() {
