@@ -177,7 +177,7 @@ fn test_sending_of_event_ping_when_it_fills_up() {
 
     assert_eq!(10, click.test_get_value(&glean, "events").unwrap().len());
 
-    let (url, json) = &get_queued_pings(glean.get_data_path()).unwrap()[0];
+    let (url, json, _) = &get_queued_pings(glean.get_data_path()).unwrap()[0];
     assert!(url.starts_with(format!("/submit/{}/events/", glean.get_application_id()).as_str()));
     assert_eq!(500, json["events"].as_array().unwrap().len());
     assert_eq!(

@@ -153,20 +153,11 @@ pub fn test_get_num_recorded_errors(
 mod test {
     use super::*;
     use crate::metrics::*;
-
-    const GLOBAL_APPLICATION_ID: &str = "org.mozilla.glean.test.app";
-    pub fn new_glean() -> (Glean, tempfile::TempDir) {
-        let dir = tempfile::tempdir().unwrap();
-        let tmpname = dir.path().display().to_string();
-
-        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true).unwrap();
-
-        (glean, dir)
-    }
+    use crate::tests::new_glean;
 
     #[test]
     fn recording_of_all_error_types() {
-        let (glean, _t) = new_glean();
+        let (glean, _t) = new_glean(None);
 
         let string_metric = StringMetric::new(CommonMetricData {
             name: "string_metric".into(),

@@ -12,6 +12,7 @@ use crate::Glean;
 ///
 /// A metric's lifetime determines when its stored data gets reset.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(i32)] // Use i32 to be compatible with our JNA definition
 pub enum Lifetime {
     /// The metric is reset with each sent ping
     Ping,

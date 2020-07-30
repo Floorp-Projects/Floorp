@@ -763,3 +763,43 @@ fn timing_distribution_truncation_accumulate() {
         assert!(snapshot.values.len() < 316);
     }
 }
+
+#[test]
+fn test_setting_debug_view_tag() {
+    let dir = tempfile::tempdir().unwrap();
+
+    let (mut glean, _) = new_glean(Some(dir));
+
+    let valid_tag = "valid-tag";
+    assert_eq!(true, glean.set_debug_view_tag(valid_tag));
+    assert_eq!(valid_tag, glean.debug_view_tag().unwrap());
+
+    let invalid_tag = "invalid tag";
+    assert_eq!(false, glean.set_debug_view_tag(invalid_tag));
+    assert_eq!(valid_tag, glean.debug_view_tag().unwrap());
+}
+
+#[test]
+fn test_setting_log_pings() {
+    let dir = tempfile::tempdir().unwrap();
+
+    let (mut glean, _) = new_glean(Some(dir));
+    assert!(!glean.log_pings());
+
+    glean.set_log_pings(true);
+    assert!(glean.log_pings());
+
+    glean.set_log_pings(false);
+    assert!(!glean.log_pings());
+}
+
+#[test]
+#[should_panic]
+fn test_empty_application_id() {
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+
+    let glean = Glean::with_options(&tmpname, "", true).unwrap();
+    // Check that this is indeed the first run.
+    assert!(glean.is_first_run());
+}

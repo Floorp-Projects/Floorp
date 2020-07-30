@@ -12,14 +12,15 @@ use crate::error::{Error, ErrorKind};
 /// MemoryDistributionMetric).
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[repr(i32)] // use i32 to be compatible with our JNA definition
 pub enum MemoryUnit {
-    ///
+    /// 1 byte
     Byte,
-    ///
+    /// 2^10 bytes
     Kilobyte,
-    ///
+    /// 2^20 bytes
     Megabyte,
-    ///
+    /// 2^30 bytes
     Gigabyte,
 }
 
