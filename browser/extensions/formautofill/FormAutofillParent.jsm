@@ -97,6 +97,8 @@ let FormAutofillStatus = {
       this.injectElements(win.document);
     }
     Services.wm.addListener(this);
+
+    Services.telemetry.setEventRecordingEnabled("creditcard", true);
   },
 
   /**
