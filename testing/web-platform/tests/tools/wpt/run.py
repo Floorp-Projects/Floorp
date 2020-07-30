@@ -321,6 +321,13 @@ class Chrome(BrowserSetup):
                 kwargs["binary"] = binary
             else:
                 raise WptrunError("Unable to locate Chrome binary")
+        if browser_channel == "nightly":
+            try:
+                self.browser.install_mojojs(self.venv.path)
+                kwargs["enable_mojojs"] = True
+                logger.info("MojoJS enabled")
+            except Exception as e:
+                logger.error("Cannot enable MojoJS: %s" % e)
         if kwargs["webdriver_binary"] is None:
             webdriver_binary = None
             if not kwargs["install_webdriver"]:
