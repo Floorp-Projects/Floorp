@@ -163,17 +163,15 @@ bool nsDMABufDevice::IsDMABufEnabled() {
   }
 
   mIsDMABufConfigured = true;
-  bool isDMABufUsed =
-      gfx::gfxVars::UseEGL() &&
-      (
+  bool isDMABufUsed = (
 #ifdef NIGHTLY_BUILD
-          StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() ||
-          StaticPrefs::widget_dmabuf_textures_enabled() ||
+      StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() ||
+      StaticPrefs::widget_dmabuf_textures_enabled() ||
 #endif
-          StaticPrefs::widget_dmabuf_webgl_enabled() ||
-          StaticPrefs::media_ffmpeg_dmabuf_textures_enabled() ||
-          StaticPrefs::media_ffmpeg_vaapi_enabled() ||
-          StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled());
+      StaticPrefs::widget_dmabuf_webgl_enabled() ||
+      StaticPrefs::media_ffmpeg_dmabuf_textures_enabled() ||
+      StaticPrefs::media_ffmpeg_vaapi_enabled() ||
+      StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled());
 
   if (!isDMABufUsed) {
     // Disabled by user, just quit.
@@ -196,21 +194,23 @@ bool nsDMABufDevice::IsDMABufBasicEnabled() {
          StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled();
 }
 bool nsDMABufDevice::IsDMABufTexturesEnabled() {
-  return IsDMABufEnabled() && StaticPrefs::widget_dmabuf_textures_enabled();
+  return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
+         StaticPrefs::widget_dmabuf_textures_enabled();
 }
 #else
 bool nsDMABufDevice::IsDMABufBasicEnabled() { return false; }
 bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
 bool nsDMABufDevice::IsDMABufVideoTexturesEnabled() {
-  return IsDMABufEnabled() &&
+  return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::media_ffmpeg_dmabuf_textures_enabled();
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
-  return IsDMABufEnabled() && StaticPrefs::widget_dmabuf_webgl_enabled();
+  return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
+         StaticPrefs::widget_dmabuf_webgl_enabled();
 }
 bool nsDMABufDevice::IsDRMVAAPIDisplayEnabled() {
-  return IsDMABufEnabled() &&
+  return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled();
 }
 
