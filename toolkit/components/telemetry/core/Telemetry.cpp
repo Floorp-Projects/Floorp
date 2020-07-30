@@ -42,7 +42,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ProcessedStack.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
@@ -88,10 +87,6 @@
 #include "other/CombinedStacks.h"
 #include "other/TelemetryIOInterposeObserver.h"
 #include "plstr.h"
-#if defined(MOZ_GECKO_PROFILER)
-#  include "shared-libraries.h"
-#  include "other/KeyedStackCapturer.h"
-#endif  // MOZ_GECKO_PROFILER
 #include "TelemetryCommon.h"
 #include "TelemetryEvent.h"
 #include "TelemetryHistogram.h"
@@ -111,10 +106,6 @@ using Telemetry::Common::GetCurrentProduct;
 using Telemetry::Common::StringHashSet;
 using Telemetry::Common::SupportedProduct;
 using Telemetry::Common::ToJSString;
-
-#if defined(MOZ_GECKO_PROFILER)
-using mozilla::Telemetry::KeyedStackCapturer;
-#endif
 
 // This is not a member of TelemetryImpl because we want to record I/O during
 // startup.
@@ -141,9 +132,6 @@ class TelemetryImpl final : public nsITelemetry, public nsIMemoryReporter {
   static void ShutdownTelemetry();
   static void RecordSlowStatement(const nsACString& sql,
                                   const nsACString& dbName, uint32_t delay);
-#if defined(MOZ_GECKO_PROFILER)
-  static void DoStackCapture(const nsACString& aKey);
-#endif
   struct Stat {
     uint32_t hitCount;
     uint32_t totalTime;
@@ -193,11 +181,6 @@ class TelemetryImpl final : public nsITelemetry, public nsIMemoryReporter {
   Atomic<bool, SequentiallyConsistent> mCanRecordBase;
   Atomic<bool, SequentiallyConsistent> mCanRecordExtended;
 
-#if defined(MOZ_GECKO_PROFILER)
-  // Stores data about stacks captured on demand.
-  KeyedStackCapturer mStackCapturer;
-#endif
-
   CombinedStacks
       mLateWritesStacks;  // This is collected out of the main thread.
   bool mCachedTelemetryData;
@@ -243,12 +226,6 @@ TelemetryImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
                    sTelemetryIOObserver->SizeOfIncludingThis(aMallocSizeOf),
                    "Memory used by the Telemetry IO Observer");
   }
-
-#if defined(MOZ_GECKO_PROFILER)
-  COLLECT_REPORT("explicit/telemetry/StackCapturer",
-                 mStackCapturer.SizeOfExcludingThis(aMallocSizeOf),
-                 "Memory used by the Telemetry Stack capturer");
-#endif
 
   COLLECT_REPORT("explicit/telemetry/LateWritesStacks",
                  mLateWritesStacks.SizeOfExcludingThis(),
@@ -696,20 +673,6 @@ TelemetryImpl::GetUntrustedModuleLoadEvents(JSContext* cx, Promise** aPromise) {
   return Telemetry::GetUntrustedModuleLoadEvents(cx, aPromise);
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP
-TelemetryImpl::SnapshotCapturedStacks(bool clear, JSContext* cx,
-                                      JS::MutableHandle<JS::Value> ret) {
-#if defined(MOZ_GECKO_PROFILER)
-  nsresult rv = mStackCapturer.ReflectCapturedStacks(cx, ret);
-  if (clear) {
-    mStackCapturer.Clear();
-  }
-  return rv;
-#else
-  return NS_OK;
 #endif
 }
 
@@ -1558,24 +1521,6 @@ void TelemetryImpl::RecordSlowStatement(const nsACString& sql,
   StoreSlowSQL(fullSQL, delay, Unsanitized);
 }
 
-#if defined(MOZ_GECKO_PROFILER)
-
-void TelemetryImpl::DoStackCapture(const nsACString& aKey) {
-  if (Telemetry::CanRecordExtended() && XRE_IsParentProcess()) {
-    auto lock = sTelemetry.Lock();
-    auto telemetry = lock.ref();
-    telemetry->mStackCapturer.Capture(aKey);
-  }
-}
-#endif
-
-nsresult TelemetryImpl::CaptureStack(const nsACString& aKey) {
-#ifdef MOZ_GECKO_PROFILER
-  TelemetryImpl::DoStackCapture(aKey);
-#endif
-  return NS_OK;
-}
-
 bool TelemetryImpl::CanRecordBase() {
   auto lock = sTelemetry.Lock();
   auto telemetry = lock.ref();
@@ -2058,12 +2003,6 @@ void Init() {
       do_GetService("@mozilla.org/base/telemetry;1");
   MOZ_ASSERT(telemetryService);
 }
-
-#if defined(MOZ_GECKO_PROFILER)
-void CaptureStack(const nsACString& aKey) {
-  TelemetryImpl::DoStackCapture(aKey);
-}
-#endif
 
 void WriteFailedProfileLock(nsIFile* aProfileDir) {
   nsCOMPtr<nsIFile> file;
