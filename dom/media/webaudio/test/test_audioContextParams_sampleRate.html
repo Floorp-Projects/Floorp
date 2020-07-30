@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -70,6 +71,15 @@
     let dest_ac3 = ac3.createMediaStreamDestination();
     let source_ac2 = ac2.createMediaStreamSource(dest_ac3.stream);
     ok(true, "Connect nodes with the same sample rate is ok");
+
+    expectException(function() {
+      new AudioContext({sampleRate: 0});
+    }, DOMException.NOT_SUPPORTED_ERR);
+
+    expectException(function() {
+      new AudioContext({sampleRate: -1});
+    }, DOMException.NOT_SUPPORTED_ERR);
+
   }))
   .then(() => finish())
 </script>
