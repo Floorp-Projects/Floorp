@@ -1,4 +1,4 @@
-// Copyright 2018 Developers of the Rand project.
+// Copyright 2019 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -6,41 +6,29 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Implementation for MacOS / iOS
-extern crate std;
+//! Implementation for macOS
+use crate::util_libc::{last_os_error, Weak};
+use crate::{use_file, Error};
+use core::mem;
 
-use crate::Error;
-use std::io;
-use core::num::NonZeroU32;
-
-enum SecRandom {}
-
-/// Essentially a null pointer (type `SecRandomRef`)
-#[allow(non_upper_case_globals)]
-const kSecRandomDefault: *const SecRandom = 0 as *const SecRandom;
-
-#[link(name = "Security", kind = "framework")]
-extern {
-    fn SecRandomCopyBytes(
-        rnd: *const SecRandom, count: libc::size_t, bytes: *mut u8,
-    ) -> libc::c_int;
-}
+type GetEntropyFn = unsafe extern "C" fn(*mut u8, libc::size_t) -> libc::c_int;
 
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
-    let ret = unsafe {
-        SecRandomCopyBytes(
-            kSecRandomDefault,
-            dest.len() as libc::size_t,
-            dest.as_mut_ptr(),
-        )
-    };
-    if ret == -1 {
-        error!("SecRandomCopyBytes call failed");
-        Err(io::Error::last_os_error().into())
-    } else {
+    static GETENTROPY: Weak = unsafe { Weak::new("getentropy\0") };
+    if let Some(fptr) = GETENTROPY.ptr() {
+        let func: GetEntropyFn = unsafe { mem::transmute(fptr) };
+        for chunk in dest.chunks_mut(256) {
+            let ret = unsafe { func(chunk.as_mut_ptr(), chunk.len()) };
+            if ret != 0 {
+                let err = last_os_error();
+                error!("getentropy syscall failed");
+                return Err(err);
+            }
+        }
         Ok(())
+    } else {
+        // We fallback to reading from /dev/random instead of SecRandomCopyBytes
+        // to avoid high startup costs and linking the Security framework.
+        use_file::getrandom_inner(dest)
     }
 }
-
-#[inline(always)]
-pub fn error_msg_inner(_: NonZeroU32) -> Option<&'static str> { None }

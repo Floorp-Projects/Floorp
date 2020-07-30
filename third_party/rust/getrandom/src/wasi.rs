@@ -9,19 +9,11 @@
 //! Implementation for WASI
 use crate::Error;
 use core::num::NonZeroU32;
-use std::io;
+use wasi::random_get;
 
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
-    let ret = unsafe { 
-        libc::__wasi_random_get(dest.as_mut_ptr() as *mut libc::c_void, dest.len())
-    };
-    if ret == libc::__WASI_ESUCCESS {
-        Ok(())
-    } else {
-        error!("WASI: __wasi_random_get failed with return value {}", ret);
-        Err(io::Error::last_os_error().into())
-    }
+    unsafe { random_get(dest.as_mut_ptr(), dest.len()) }.map_err(|e: wasi::Error| {
+        // convert wasi's Error into getrandom's NonZeroU32 error
+        NonZeroU32::new(e.raw_error() as u32).unwrap().into()
+    })
 }
-
-#[inline(always)]
-pub fn error_msg_inner(_: NonZeroU32) -> Option<&'static str> { None }
