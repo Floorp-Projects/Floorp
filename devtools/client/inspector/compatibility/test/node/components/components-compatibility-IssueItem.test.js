@@ -24,6 +24,7 @@ describe("IssueItem component", () => {
         url: "test-url",
         deprecated: false,
         experimental: false,
+        prefixNeeded: false,
         unsupportedBrowsers: [
           { id: "firefox", name: "Firefox", version: "70", status: "nightly" },
         ],
@@ -40,6 +41,7 @@ describe("IssueItem component", () => {
         url: "test-url",
         deprecated: true,
         experimental: false,
+        prefixNeeded: false,
         unsupportedBrowsers: [],
       })
     );
@@ -54,20 +56,87 @@ describe("IssueItem component", () => {
         url: "test-url",
         deprecated: false,
         experimental: true,
+        prefixNeeded: false,
         unsupportedBrowsers: [],
       })
     );
     expect(targetComponent).toMatchSnapshot();
   });
 
-  it("renders an issue which has both deprecated and experimental", () => {
+  it("renders a prefixNeeded issue of CSS property", () => {
     const targetComponent = shallow(
       IssueItem({
         type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
         property: "test-property",
         url: "test-url",
+        aliases: ["test-alias-1", "test-alias-2"],
+        deprecated: false,
+        experimental: false,
+        prefixNeeded: true,
+        unsupportedBrowsers: [],
+      })
+    );
+    expect(targetComponent).toMatchSnapshot();
+  });
+
+  it("renders an issue which has deprecated and experimental", () => {
+    const targetComponent = shallow(
+      IssueItem({
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "test-property",
+        url: "test-url",
+        aliases: ["test-alias-1", "test-alias-2"],
         deprecated: true,
         experimental: true,
+        prefixNeeded: false,
+        unsupportedBrowsers: [],
+      })
+    );
+    expect(targetComponent).toMatchSnapshot();
+  });
+
+  it("renders an issue which has deprecated and prefixNeeded", () => {
+    const targetComponent = shallow(
+      IssueItem({
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "test-property",
+        url: "test-url",
+        aliases: ["test-alias-1", "test-alias-2"],
+        deprecated: true,
+        experimental: false,
+        prefixNeeded: true,
+        unsupportedBrowsers: [],
+      })
+    );
+    expect(targetComponent).toMatchSnapshot();
+  });
+
+  it("renders an issue which has experimental and prefixNeeded", () => {
+    const targetComponent = shallow(
+      IssueItem({
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "test-property",
+        url: "test-url",
+        aliases: ["test-alias-1", "test-alias-2"],
+        deprecated: false,
+        experimental: true,
+        prefixNeeded: true,
+        unsupportedBrowsers: [],
+      })
+    );
+    expect(targetComponent).toMatchSnapshot();
+  });
+
+  it("renders an issue which has deprecated, experimental and prefixNeeded", () => {
+    const targetComponent = shallow(
+      IssueItem({
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "test-property",
+        url: "test-url",
+        aliases: ["test-alias-1", "test-alias-2"],
+        deprecated: true,
+        experimental: true,
+        prefixNeeded: true,
         unsupportedBrowsers: [],
       })
     );
