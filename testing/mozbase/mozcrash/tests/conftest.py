@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 from __future__ import absolute_import
 
 import uuid
@@ -60,7 +62,40 @@ def minidump_files(request, tmpdir):
         dmp.write('foo')
 
         extra = tmpdir.join('{}.extra'.format(name))
-        extra.write('bar')
+
+        extra.write_text(u'''
+{
+  "ContentSandboxLevel":"2",
+  "TelemetryEnvironment":"{🍪}",
+  "EMCheckCompatibility":"true",
+  "ProductName":"Firefox",
+  "ContentSandboxCapabilities":"119",
+  "TelemetryClientId":"",
+  "Vendor":"Mozilla",
+  "InstallTime":"1000000000",
+  "Theme":"classic/1.0",
+  "ReleaseChannel":"default",
+  "ServerURL":"https://crash-reports.mozilla.com",
+  "SafeMode":"0",
+  "ContentSandboxCapable":"1",
+  "useragent_locale":"en-US",
+  "Version":"55.0a1",
+  "BuildID":"20170512114708",
+  "ProductID":"{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+  "MozCrashReason": "MOZ_CRASH()",
+  "TelemetryServerURL":"",
+  "DOMIPCEnabled":"1",
+  "Add-ons":"",
+  "CrashTime":"1494582646",
+  "UptimeTS":"14.9179586",
+  "ThreadIdNameMapping":"",
+  "ContentSandboxEnabled":"1",
+  "ProcessType":"content",
+  "StartupTime":"1000000000",
+  "URL":"about:home"
+}
+
+        ''', encoding='utf-8')
 
         files.append({'dmp': dmp, 'extra': extra})
 
