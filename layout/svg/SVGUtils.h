@@ -131,8 +131,7 @@ class MOZ_RAII SVGAutoRenderState final {
   using DrawTarget = gfx::DrawTarget;
 
  public:
-  explicit SVGAutoRenderState(
-      DrawTarget* aDrawTarget MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  explicit SVGAutoRenderState(DrawTarget* aDrawTarget);
   ~SVGAutoRenderState();
 
   void SetPaintingToWindow(bool aPaintingToWindow);
@@ -143,7 +142,6 @@ class MOZ_RAII SVGAutoRenderState final {
   DrawTarget* mDrawTarget;
   void* mOriginalRenderState;
   bool mPaintingToWindow;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /**

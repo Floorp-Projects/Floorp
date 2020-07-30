@@ -5175,9 +5175,8 @@ nsresult EditorBase::InsertLineBreakAsSubAction() {
  *****************************************************************************/
 
 EditorBase::AutoSelectionRestorer::AutoSelectionRestorer(
-    EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    EditorBase& aEditorBase)
     : mEditorBase(nullptr) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (aEditorBase.ArePreservingSelection()) {
     // We already have initialized mParentData::mSavedSelection, so this must
     // be nested call.

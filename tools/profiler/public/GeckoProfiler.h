@@ -96,7 +96,6 @@ static inline UniqueProfilerBacktrace profiler_get_backtrace() {
 #  include "mozilla/Assertions.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Attributes.h"
-#  include "mozilla/GuardObjects.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/Sprintf.h"
@@ -995,16 +994,13 @@ class MOZ_RAII AutoProfilerTextMarker {
   AutoProfilerTextMarker(const char* aMarkerName, const nsACString& aText,
                          JS::ProfilingCategoryPair aCategoryPair,
                          const mozilla::Maybe<uint64_t>& aInnerWindowID,
-                         UniqueProfilerBacktrace&& aCause =
-                             nullptr MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                         UniqueProfilerBacktrace&& aCause = nullptr)
       : mMarkerName(aMarkerName),
         mText(aText),
         mCategoryPair(aCategoryPair),
         mStartTime(mozilla::TimeStamp::NowUnfuzzed()),
         mCause(std::move(aCause)),
-        mInnerWindowID(aInnerWindowID) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
+        mInnerWindowID(aInnerWindowID) {}
 
   ~AutoProfilerTextMarker() {
     profiler_add_text_marker(mMarkerName, mText, mCategoryPair, mStartTime,
@@ -1013,7 +1009,6 @@ class MOZ_RAII AutoProfilerTextMarker {
   }
 
  protected:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   const char* mMarkerName;
   nsCString mText;
   const JS::ProfilingCategoryPair mCategoryPair;
@@ -1081,35 +1076,25 @@ namespace mozilla {
 
 class MOZ_RAII AutoProfilerInit {
  public:
-  explicit AutoProfilerInit(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_init(this);
-  }
+  explicit AutoProfilerInit() { profiler_init(this); }
 
   ~AutoProfilerInit() { profiler_shutdown(); }
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII AutoProfilerInit2 {
  public:
-  explicit AutoProfilerInit2(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_init_threadmanager();
-  }
+  explicit AutoProfilerInit2() { profiler_init_threadmanager(); }
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 // Convenience class to register and unregister a thread with the profiler.
 // Needs to be the first object on the stack of the thread.
 class MOZ_RAII AutoProfilerRegisterThread final {
  public:
-  explicit AutoProfilerRegisterThread(
-      const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  explicit AutoProfilerRegisterThread(const char* aName) {
     profiler_register_thread(aName, this);
   }
 
@@ -1119,29 +1104,23 @@ class MOZ_RAII AutoProfilerRegisterThread final {
   AutoProfilerRegisterThread(const AutoProfilerRegisterThread&) = delete;
   AutoProfilerRegisterThread& operator=(const AutoProfilerRegisterThread&) =
       delete;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII AutoProfilerThreadSleep {
  public:
-  explicit AutoProfilerThreadSleep(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_thread_sleep();
-  }
+  explicit AutoProfilerThreadSleep() { profiler_thread_sleep(); }
 
   ~AutoProfilerThreadSleep() { profiler_thread_wake(); }
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 // Temporarily wake up the profiling of a thread while servicing events such as
 // Asynchronous Procedure Calls (APCs).
 class MOZ_RAII AutoProfilerThreadWake {
  public:
-  explicit AutoProfilerThreadWake(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+  explicit AutoProfilerThreadWake()
       : mIssuedWake(profiler_thread_is_sleeping()) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (mIssuedWake) {
       profiler_thread_wake();
     }
@@ -1155,7 +1134,6 @@ class MOZ_RAII AutoProfilerThreadWake {
   }
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   bool mIssuedWake;
 };
 
@@ -1200,9 +1178,7 @@ class MOZ_RAII AutoProfilerLabel {
   // This is the AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC variant.
   AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
                     JS::ProfilingCategoryPair aCategoryPair,
-                    uint32_t aFlags = 0 MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
+                    uint32_t aFlags = 0) {
     // Get the ProfilingStack from TLS.
     ProfilingStackOwner* profilingStackOwner = sProfilingStackOwnerTLS.get();
     Push(profilingStackOwner ? &profilingStackOwner->ProfilingStack() : nullptr,
@@ -1214,9 +1190,7 @@ class MOZ_RAII AutoProfilerLabel {
   // inactive.
   AutoProfilerLabel(JSContext* aJSContext, const char* aLabel,
                     const char* aDynamicString,
-                    JS::ProfilingCategoryPair aCategoryPair,
-                    uint32_t aFlags MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+                    JS::ProfilingCategoryPair aCategoryPair, uint32_t aFlags) {
     Push(js::GetContextProfilingStackIfEnabled(aJSContext), aLabel,
          aDynamicString, aCategoryPair, aFlags);
   }
@@ -1242,7 +1216,6 @@ class MOZ_RAII AutoProfilerLabel {
   }
 
  private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   // We save a ProfilingStack pointer in the ctor so we don't have to redo the
   // TLS lookup in the dtor.
@@ -1257,13 +1230,11 @@ class MOZ_RAII AutoProfilerTracing {
  public:
   AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
                       JS::ProfilingCategoryPair aCategoryPair,
-                      const mozilla::Maybe<uint64_t>& aInnerWindowID
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                      const mozilla::Maybe<uint64_t>& aInnerWindowID)
       : mCategoryString(aCategoryString),
         mMarkerName(aMarkerName),
         mCategoryPair(aCategoryPair),
         mInnerWindowID(aInnerWindowID) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     profiler_tracing_marker(mCategoryString, mMarkerName, aCategoryPair,
                             TRACING_INTERVAL_START, mInnerWindowID);
   }
@@ -1271,13 +1242,11 @@ class MOZ_RAII AutoProfilerTracing {
   AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
                       JS::ProfilingCategoryPair aCategoryPair,
                       UniqueProfilerBacktrace aBacktrace,
-                      const mozilla::Maybe<uint64_t>& aInnerWindowID
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                      const mozilla::Maybe<uint64_t>& aInnerWindowID)
       : mCategoryString(aCategoryString),
         mMarkerName(aMarkerName),
         mCategoryPair(aCategoryPair),
         mInnerWindowID(aInnerWindowID) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     profiler_tracing_marker(mCategoryString, mMarkerName, aCategoryPair,
                             TRACING_INTERVAL_START, std::move(aBacktrace),
                             mInnerWindowID);
@@ -1289,7 +1258,6 @@ class MOZ_RAII AutoProfilerTracing {
   }
 
  protected:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   const char* mCategoryString;
   const char* mMarkerName;
   const JS::ProfilingCategoryPair mCategoryPair;
