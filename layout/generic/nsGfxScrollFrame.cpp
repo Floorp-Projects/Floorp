@@ -4314,7 +4314,8 @@ ScrollStyles ScrollFrameHelper::GetScrollStylesFromFrame() const {
   }
 
   if (!mIsRoot) {
-    return ScrollStyles(*mOuter->StyleDisplay());
+    return ScrollStyles(*mOuter->StyleDisplay(),
+                        ScrollStyles::MapOverflowToValidScrollStyle);
   }
 
   ScrollStyles result = presContext->GetViewportScrollStylesOverride();
