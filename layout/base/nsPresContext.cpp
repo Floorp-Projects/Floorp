@@ -523,14 +523,14 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   if (prefName.EqualsLiteral("font.internaluseonly.changed")) {
     mChangeHintForPrefChange |= nsChangeHint_ReconstructFrame;
   } else if (StringBeginsWith(prefName, "font."_ns) ||
-      // Changes to font family preferences don't change anything in the
-      // computed style data, so the style system won't generate a reflow
-      // hint for us.  We need to do that manually.
-      prefName.EqualsLiteral("intl.accept_languages") ||
-      // Changes to bidi prefs need to trigger a reflow (see bug 443629)
-      StringBeginsWith(prefName, "bidi."_ns) ||
-      // Changes to font_rendering prefs need to trigger a reflow
-      StringBeginsWith(prefName, "gfx.font_rendering."_ns)) {
+             // Changes to font family preferences don't change anything in the
+             // computed style data, so the style system won't generate a reflow
+             // hint for us.  We need to do that manually.
+             prefName.EqualsLiteral("intl.accept_languages") ||
+             // Changes to bidi prefs need to trigger a reflow (see bug 443629)
+             StringBeginsWith(prefName, "bidi."_ns) ||
+             // Changes to font_rendering prefs need to trigger a reflow
+             StringBeginsWith(prefName, "gfx.font_rendering."_ns)) {
     mChangeHintForPrefChange |= NS_STYLE_HINT_REFLOW;
   }
 
@@ -1345,9 +1345,9 @@ void nsPresContext::ThemeChangedInternal() {
     if (XRE_IsParentProcess()) {
       nsTArray<ContentParent*> cp;
       ContentParent::GetAll(cp);
-      auto cache = LookAndFeel::GetIntCache();
+      LookAndFeelCache lnfCache = LookAndFeel::GetCache();
       for (ContentParent* c : cp) {
-        Unused << c->SendThemeChanged(cache);
+        Unused << c->SendThemeChanged(lnfCache);
       }
     }
   }

@@ -481,24 +481,21 @@ void nsLookAndFeel::EnsureInitShowPassword() {
   }
 }
 
-nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
-  nsTArray<LookAndFeelInt> lookAndFeelIntCache =
-      nsXPLookAndFeel::GetIntCacheImpl();
+LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
+  LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
 
   const IntID kIdsToCache[] = {IntID::PrefersReducedMotion,
                                IntID::SystemUsesDarkTheme};
 
   for (IntID id : kIdsToCache) {
-    lookAndFeelIntCache.AppendElement(
-        LookAndFeelInt{.id = id, .value = GetInt(id)});
+    cache.mInts.AppendElement(LookAndFeelInt{.id = id, .value = GetInt(id)});
   }
 
-  return lookAndFeelIntCache;
+  return cache;
 }
 
-void nsLookAndFeel::SetIntCacheImpl(
-    const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
-  for (const auto& entry : aLookAndFeelIntCache) {
+void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
+  for (const auto& entry : aCache.mInts) {
     switch (entry.id) {
       case IntID::PrefersReducedMotion:
         mPrefersReducedMotion = entry.value;

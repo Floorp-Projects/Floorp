@@ -2643,7 +2643,8 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   // at present.
   nsTArray<SystemFontListEntry> fontList;
   gfxPlatform::GetPlatform()->ReadSystemFontList(&fontList);
-  nsTArray<LookAndFeelInt> lnfCache = LookAndFeel::GetIntCache();
+
+  LookAndFeelCache lnfCache = LookAndFeel::GetCache();
 
   // If the shared fontlist is in use, collect its shmem block handles to pass
   // to the child.

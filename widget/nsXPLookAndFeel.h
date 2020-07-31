@@ -72,9 +72,8 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual uint32_t GetPasswordMaskDelayImpl() { return 600; }
 
-  virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
-  virtual void SetIntCacheImpl(
-      const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {}
+  virtual LookAndFeelCache GetCacheImpl();
+  virtual void SetCacheImpl(const LookAndFeelCache& aCache) {}
 
   virtual void NativeInit() = 0;
 
