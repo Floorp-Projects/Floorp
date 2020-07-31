@@ -309,6 +309,9 @@ class AndroidVsyncSource final : public VsyncSource {
     Display()
         : mJavaVsync(java::VsyncSource::INSTANCE()), mObservingVsync(false) {
       JavaVsyncSupport::Init();  // To register native methods.
+
+      float fps = mJavaVsync->GetRefreshRate();
+      mVsyncDuration = TimeDuration::FromMilliseconds(1000.0 / fps);
     }
 
     ~Display() { DisableVsync(); }
@@ -327,12 +330,7 @@ class AndroidVsyncSource final : public VsyncSource {
       if (mObservingVsync) {
         return;
       }
-      bool ok = mJavaVsync->ObserveVsync(true);
-      if (ok && !mVsyncDuration) {
-        float fps = mJavaVsync->GetRefreshRate();
-        mVsyncDuration = TimeDuration::FromMilliseconds(1000.0 / fps);
-      }
-      mObservingVsync = ok;
+      mObservingVsync = mJavaVsync->ObserveVsync(true);
       MOZ_ASSERT(mObservingVsync);
     }
 
