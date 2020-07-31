@@ -5841,6 +5841,40 @@ AttachDecision CallIRGenerator::tryAttachSubstringKernel(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachObjectHasPrototype(
+    HandleFunction callee) {
+  // Self-hosted code calls this with (object, object) arguments.
+  MOZ_ASSERT(argc_ == 2);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isObject());
+
+  auto* obj = &args_[0].toObject().as<NativeObject>();
+  auto* proto = &args_[1].toObject().as<NativeObject>();
+
+  // Only attach when obj.__proto__ is proto.
+  if (obj->staticPrototype() != proto) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(arg0Id);
+
+  writer.guardProto(objId, proto);
+  writer.loadBooleanResult(true);
+
+  // No type monitoring because this always returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("ObjectHasPrototype");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachString(HandleFunction callee) {
   // Need a single string argument.
   // TODO(Warp): Support all or more conversions to strings.
@@ -7193,6 +7227,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachNewStringIterator(callee);
     case InlinableNative::IntrinsicNewRegExpStringIterator:
       return tryAttachNewRegExpStringIterator(callee);
+    case InlinableNative::IntrinsicObjectHasPrototype:
+      return tryAttachObjectHasPrototype(callee);
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:
