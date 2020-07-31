@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/IntegerTypeTraits.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/EnumTypeTraits.h"
+#include "mozilla/IntegerTypeTraits.h"
 
 using namespace mozilla;
 
@@ -29,7 +30,7 @@ static void TestShouldNotFit() {
                 "Should not fit within");
 }
 
-int main() {
+void TestFitForTypes() {
   // check for int8_t
   MAKE_FIXED_EMUM_FOR_TYPE(int8_t);
   TestShouldFit<FixedEnumFor_int8_t, int8_t>();
@@ -125,6 +126,33 @@ int main() {
   TestShouldNotFit<FixedEnumFor_uint64_t, int16_t>();
   TestShouldNotFit<FixedEnumFor_uint64_t, int32_t>();
   TestShouldNotFit<FixedEnumFor_uint64_t, int64_t>();
+}
 
+// -
+
+template <typename T, typename U>
+static constexpr void AssertSameTypeAndValue(T a, U b) {
+  static_assert(std::is_same_v<T, U>);
+  MOZ_ASSERT(a == b);
+}
+
+void TestUnderlyingValue() {
+  enum class Pet : int16_t { Cat, Dog, Fish };
+  enum class Plant { Flower, Tree, Vine };
+
+  AssertSameTypeAndValue(UnderlyingValue(Pet::Cat), int16_t(0));
+  AssertSameTypeAndValue(UnderlyingValue(Pet::Dog), int16_t(1));
+  AssertSameTypeAndValue(UnderlyingValue(Pet::Fish), int16_t(2));
+
+  AssertSameTypeAndValue(UnderlyingValue(Plant::Flower), int(0));
+  AssertSameTypeAndValue(UnderlyingValue(Plant::Tree), int(1));
+  AssertSameTypeAndValue(UnderlyingValue(Plant::Vine), int(2));
+}
+
+// -
+
+int main() {
+  TestFitForTypes();
+  TestUnderlyingValue();
   return 0;
 }

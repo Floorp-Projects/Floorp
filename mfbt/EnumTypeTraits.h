@@ -84,6 +84,30 @@ struct EnumTypeFitsWithin
 template <typename T>
 struct MaxEnumValue;  // no need to define the primary template
 
+/**
+ * Get the underlying value of an enum, but typesafe.
+ *
+ * example:
+ *
+ *   enum class Pet : int16_t {
+ *     Cat,
+ *     Dog,
+ *     Fish
+ *   };
+ *   enum class Plant {
+ *     Flower,
+ *     Tree,
+ *     Vine
+ *   };
+ *   UnderlyingValue(Pet::Fish) -> int16_t(2)
+ *   UnderlyingValue(Plant::Tree) -> int(1)
+ */
+template <typename T>
+inline constexpr auto UnderlyingValue(const T v) {
+  static_assert(std::is_enum_v<T>);
+  return static_cast<typename std::underlying_type<T>::type>(v);
+}
+
 }  // namespace mozilla
 
 #endif /* mozilla_EnumTypeTraits_h */

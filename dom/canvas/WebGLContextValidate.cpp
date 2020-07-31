@@ -184,7 +184,7 @@ bool WebGLContext::ValidateAttribArraySetter(uint32_t setterElemSize,
 static webgl::Limits MakeLimits(const WebGLContext& webgl) {
   webgl::Limits limits;
 
-  for (const auto i : IntegerRange(EnumValue(WebGLExtensionID::Max))) {
+  for (const auto i : IntegerRange(UnderlyingValue(WebGLExtensionID::Max))) {
     const auto ext = WebGLExtensionID(i);
     limits.supportedExtensions[ext] = webgl.IsExtensionSupported(ext);
   }

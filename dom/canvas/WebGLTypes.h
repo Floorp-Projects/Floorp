@@ -246,11 +246,6 @@ enum class WebGLExtensionID : uint8_t {
   Max
 };
 
-template <typename T>
-inline constexpr auto EnumValue(const T v) {
-  return static_cast<typename std::underlying_type<T>::type>(v);
-}
-
 class UniqueBuffer {
   // Like UniquePtr<>, but for void* and malloc/calloc/free.
   void* mBuffer;
