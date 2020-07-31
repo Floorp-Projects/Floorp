@@ -20,7 +20,7 @@ window.addEventListener(
   { once: true }
 );
 
-const PrintEventHandler = {
+var PrintEventHandler = {
   init() {
     this.sourceBrowser = this.getSourceBrowser();
     this.settings = PrintUtils.getPrintSettings();
