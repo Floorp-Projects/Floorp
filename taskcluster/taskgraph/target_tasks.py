@@ -1111,6 +1111,32 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
 
 
+@_target_task('raptor_tp6_windows10_64_ref_hw_2017')
+def target_tasks_raptor_tp6_windows10_64_ref_hw_2017(full_task_graph, parameters, graph_config):
+    """
+    Select tasks required for running raptor cold tests on raptor_tp6_windows10_64_ref_hw_2017
+    """
+    def filter(task):
+        platform = task.attributes.get('test_platform')
+        attributes = task.attributes
+
+        if attributes.get('unittest_suite') != 'raptor':
+            return False
+
+        if 'windows10-64-ref-hw-2017/opt' not in platform:
+            return False
+
+        try_name = attributes.get('raptor_try_name')
+        if 'raptor' in try_name:
+            if '-tp6' in try_name:
+                if '-cold' in try_name:
+                    return True
+                return False
+            return True
+
+    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+
+
 @_target_task('condprof')
 def target_tasks_condprof(full_task_graph, parameters, graph_config):
     """

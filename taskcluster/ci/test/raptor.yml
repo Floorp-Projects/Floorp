@@ -29,13 +29,11 @@ job-defaults:
                                     default: ["mozilla-central"]
                             cold:
                                 by-test-platform:
-                                    windows10-64-ref-hw-2017/opt: ["mozilla-central"]
                                     macosx.*64(?:-qr)?/opt: ["mozilla-central"]
                                     (linux|windows|macos)(?!.*shippable).*: []
                                     default: ["trunk", "mozilla-beta"]
                     default:
                         by-test-platform:
-                            windows10-64-ref-hw-2017/opt: ["mozilla-central"]
                             macosx.*64(?:-qr)?/opt: ["mozilla-central"]
                             (linux|windows|macos)(?!.*shippable).*: []
                             default: ["trunk", "mozilla-beta"]
@@ -49,7 +47,6 @@ job-defaults:
                             default: ["mozilla-central"]
                     default:
                         by-test-platform:
-                            windows10-64-ref-hw-2017/opt: ["mozilla-central"]
                             macosx.*64(?:-qr)?/opt: ["mozilla-central"]
                             (linux|windows|macos)(?!.*shippable).*: []
                             default: ["trunk", "mozilla-beta"]
@@ -573,7 +570,6 @@ raptor-youtube-playback-firefox:
     treeherder-symbol: Rap(ytp)
     run-on-projects:
         by-test-platform:
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time: 3000
@@ -776,7 +772,6 @@ raptor-jetstream2-firefox:
     treeherder-symbol: Rap(js2)
     run-on-projects:
         by-test-platform:
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     tier: 3
