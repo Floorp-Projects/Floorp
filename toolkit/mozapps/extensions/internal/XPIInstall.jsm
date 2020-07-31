@@ -2650,6 +2650,10 @@ AddonInstallWrapper.prototype = {
     installFor(this).promptHandler = handler;
   },
 
+  get promptHandler() {
+    return installFor(this).promptHandler;
+  },
+
   get installTelemetryInfo() {
     return installFor(this).installTelemetryInfo;
   },
