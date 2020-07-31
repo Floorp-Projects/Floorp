@@ -7,6 +7,7 @@
 #include "RenderCompositorOGL.h"
 
 #include "GLContext.h"
+#include "GLContextEGL.h"
 #include "GLContextProvider.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -33,12 +34,10 @@ UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
 
 RenderCompositorOGL::RenderCompositorOGL(
     RefPtr<gl::GLContext>&& aGL, RefPtr<widget::CompositorWidget>&& aWidget)
-    : RenderCompositor(std::move(aWidget)),
-      mGL(aGL),
-      mUsePartialPresent(false) {
+    : RenderCompositor(std::move(aWidget)), mGL(aGL) {
   MOZ_ASSERT(mGL);
-  mUsePartialPresent = gfx::gfxVars::WebRenderMaxPartialPresentRects() > 0 &&
-                       mGL->HasCopySubBuffer();
+
+  mIsEGL = aGL->GetContextType() == mozilla::gl::GLContextType::EGL;
 }
 
 RenderCompositorOGL::~RenderCompositorOGL() {
@@ -50,14 +49,6 @@ RenderCompositorOGL::~RenderCompositorOGL() {
   }
 }
 
-uint32_t RenderCompositorOGL::GetMaxPartialPresentRects() {
-  if (mUsePartialPresent) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
 bool RenderCompositorOGL::BeginFrame() {
   if (!mGL->MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
@@ -65,29 +56,33 @@ bool RenderCompositorOGL::BeginFrame() {
   }
 
   mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGL->GetDefaultFramebuffer());
+
+  if (mIsEGL) {
+    // sets 0 if buffer_age is not supported
+    mBufferAge = gl::GLContextEGL::Cast(gl())->GetBufferAge();
+  }
+
   return true;
 }
 
 RenderedFrameId RenderCompositorOGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
-  if (!mUsePartialPresent || aDirtyRects.IsEmpty()) {
-    mGL->SwapBuffers();
-  } else {
-    gfx::IntRect rect;
-    auto bufferSize = GetBufferSize();
-    for (const DeviceIntRect& r : aDirtyRects) {
-      const auto width = std::min(r.size.width, bufferSize.width);
-      const auto height = std::min(r.size.height, bufferSize.height);
-      const auto left = std::max(0, std::min(r.origin.x, bufferSize.width));
+  if (UsePartialPresent() && aDirtyRects.Length() > 0) {
+    gfx::IntRegion bufferInvalid;
+    for (const DeviceIntRect& rect : aDirtyRects) {
+      const auto width = std::min(rect.size.width, GetBufferSize().width);
+      const auto height = std::min(rect.size.height, GetBufferSize().height);
+      const auto left =
+          std::max(0, std::min(rect.origin.x, GetBufferSize().width));
       const auto bottom =
-          std::max(0, std::min(r.origin.y + height, bufferSize.height));
-      rect.OrWith(
-          gfx::IntRect(left, (bufferSize.height - bottom), width, height));
+          std::max(0, std::min(rect.origin.y + height, GetBufferSize().height));
+      bufferInvalid.OrWith(
+          gfx::IntRect(left, (GetBufferSize().height - bottom), width, height));
     }
-
-    mGL->CopySubBuffer(rect.x, rect.y, rect.width, rect.height);
+    gl()->SetDamage(bufferInvalid);
   }
+  mGL->SwapBuffers();
   return frameId;
 }
 
@@ -105,6 +100,22 @@ CompositorCapabilities RenderCompositorOGL::GetCompositorCapabilities() {
   caps.virtual_surface_size = 0;
 
   return caps;
+}
+
+uint32_t RenderCompositorOGL::GetMaxPartialPresentRects() {
+  return mIsEGL ? gfx::gfxVars::WebRenderMaxPartialPresentRects() : 0;
+}
+
+bool RenderCompositorOGL::RequestFullRender() {
+  return mIsEGL && (mBufferAge != 2);
+}
+
+bool RenderCompositorOGL::UsePartialPresent() {
+  return mIsEGL && gfx::gfxVars::WebRenderMaxPartialPresentRects() > 0;
+}
+
+bool RenderCompositorOGL::ShouldDrawPreviousPartialPresentRegions() {
+  return mIsEGL && gl::GLContextEGL::Cast(gl())->HasBufferAge();
 }
 
 }  // namespace wr

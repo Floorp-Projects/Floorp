@@ -171,9 +171,6 @@ bool GLXLibrary::EnsureInitialized() {
   const SymLoadStruct symbols_swapcontrol[] = {SYMBOL(SwapIntervalEXT),
                                                END_OF_SYMBOLS};
 
-  const SymLoadStruct symbols_copysubbuffer[] = {SYMBOL(CopySubBufferMESA),
-                                                 END_OF_SYMBOLS};
-
   const auto fnLoadSymbols = [&](const SymLoadStruct* symbols) {
     if (pfnLoader.LoadSymbols(symbols)) return true;
 
@@ -218,11 +215,6 @@ bool GLXLibrary::EnsureInitialized() {
     NS_WARNING(
         "GLX_swap_control unsupported, ASAP mode may still block on buffer "
         "swaps.");
-  }
-
-  if (HasExtension(extensionsStr, "GLX_MESA_copy_sub_buffer") &&
-      fnLoadSymbols(symbols_copysubbuffer)) {
-    mHasCopySubBuffer = true;
   }
 
   mIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
@@ -627,16 +619,6 @@ bool GLContextGLX::SwapBuffers() {
   if (!mDoubleBuffered) return false;
   mGLX->fSwapBuffers(mDisplay, mDrawable);
   return true;
-}
-
-bool GLContextGLX::HasCopySubBuffer() const {
-  return mDoubleBuffered && mGLX->HasCopySubBuffer();
-}
-
-void GLContextGLX::CopySubBuffer(int x, int y, int w, int h) {
-  MOZ_ASSERT(HasCopySubBuffer());
-
-  mGLX->fCopySubBufferMESA(mDisplay, mDrawable, x, y, w, h);
 }
 
 void GLContextGLX::GetWSIInfo(nsCString* const out) const {
