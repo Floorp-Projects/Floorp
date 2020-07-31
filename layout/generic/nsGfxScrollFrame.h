@@ -376,6 +376,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
     return mWillBuildScrollableLayer;
   }
   bool IsMaybeScrollingActive() const;
+  bool IsProcessingAsyncScroll() const {
+    return mAsyncScroll != nullptr || mAsyncSmoothMSDScroll != nullptr;
+  }
   void ResetScrollPositionForLayerPixelAlignment() {
     mScrollPosForLayerPixelAlignment = GetScrollPosition();
   }
@@ -460,22 +463,13 @@ class ScrollFrameHelper : public nsIReflowCallback {
   ScrollOrigin LastSmoothScrollOrigin() const {
     return mLastSmoothScrollOrigin;
   }
-  bool IsApzAnimationInProgress() const { return mApzAnimationInProgress; }
   uint32_t CurrentScrollGeneration() const { return mScrollGeneration; }
   nsPoint LastScrollDestination() const { return mDestination; }
-
-  using IncludeApzAnimation = nsIScrollableFrame::IncludeApzAnimation;
-  bool IsScrollAnimating(IncludeApzAnimation = IncludeApzAnimation::Yes) const;
-
-  void ResetScrollInfoIfNeeded(uint32_t aGeneration,
-                               bool aApzAnimationInProgress) {
+  void ResetScrollInfoIfGeneration(uint32_t aGeneration) {
     if (aGeneration == mScrollGeneration) {
       mLastScrollOrigin = ScrollOrigin::NotSpecified;
       mLastSmoothScrollOrigin = ScrollOrigin::None;
     }
-    // We can reset this regardless of scroll generation, as this is only set
-    // here, as a response to APZ requesting a repaint.
-    mApzAnimationInProgress = aApzAnimationInProgress;
   }
   Maybe<nsPoint> GetRelativeOffset() const { return mRelativeOffset; }
   bool WantAsyncScroll() const;
@@ -710,13 +704,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   // True if we're processing an scroll event.
   bool mProcessingScrollEvent : 1;
-
-  // Whether an APZ animation is in progress. Note that this is only set to true
-  // when repainted via APZ, which means that there may be a request for an APZ
-  // animation in flight for example, while this is still false. In order to
-  // answer "is an APZ animation in the process of starting or in progress" you
-  // need to check both mLastSmoothScrollOrigin and this bit.
-  bool mApzAnimationInProgress : 1;
 
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
@@ -1031,6 +1018,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   bool IsMaybeAsynchronouslyScrolled() final {
     return mHelper.IsMaybeAsynchronouslyScrolled();
   }
+  bool IsProcessingAsyncScroll() final {
+    return mHelper.IsProcessingAsyncScroll();
+  }
   void ResetScrollPositionForLayerPixelAlignment() final {
     mHelper.ResetScrollPositionForLayerPixelAlignment();
   }
@@ -1047,18 +1037,14 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   ScrollOrigin LastSmoothScrollOrigin() final {
     return mHelper.LastSmoothScrollOrigin();
   }
-  bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
-    return mHelper.IsScrollAnimating(aIncludeApz);
-  }
   uint32_t CurrentScrollGeneration() final {
     return mHelper.CurrentScrollGeneration();
   }
   nsPoint LastScrollDestination() final {
     return mHelper.LastScrollDestination();
   }
-  void ResetScrollInfoIfNeeded(uint32_t aGeneration,
-                               bool aApzAnimationInProgress) final {
-    mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
+  void ResetScrollInfoIfGeneration(uint32_t aGeneration) final {
+    mHelper.ResetScrollInfoIfGeneration(aGeneration);
   }
   Maybe<nsPoint> GetRelativeOffset() const final {
     return mHelper.GetRelativeOffset();
@@ -1507,6 +1493,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   bool IsMaybeAsynchronouslyScrolled() final {
     return mHelper.IsMaybeAsynchronouslyScrolled();
   }
+  bool IsProcessingAsyncScroll() final {
+    return mHelper.IsProcessingAsyncScroll();
+  }
   void ResetScrollPositionForLayerPixelAlignment() final {
     mHelper.ResetScrollPositionForLayerPixelAlignment();
   }
@@ -1523,18 +1512,14 @@ class nsXULScrollFrame final : public nsBoxFrame,
   ScrollOrigin LastSmoothScrollOrigin() final {
     return mHelper.LastSmoothScrollOrigin();
   }
-  bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
-    return mHelper.IsScrollAnimating(aIncludeApz);
-  }
   uint32_t CurrentScrollGeneration() final {
     return mHelper.CurrentScrollGeneration();
   }
   nsPoint LastScrollDestination() final {
     return mHelper.LastScrollDestination();
   }
-  void ResetScrollInfoIfNeeded(uint32_t aGeneration,
-                               bool aApzAnimationInProgress) final {
-    mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
+  void ResetScrollInfoIfGeneration(uint32_t aGeneration) final {
+    mHelper.ResetScrollInfoIfGeneration(aGeneration);
   }
   Maybe<nsPoint> GetRelativeOffset() const final {
     return mHelper.GetRelativeOffset();
