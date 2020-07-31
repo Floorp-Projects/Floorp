@@ -32,11 +32,11 @@ hw-p2:
         symbol: perftest-p2
     platform: android-hw-p2-8-0-android-aarch64/opt
 
-hw-g5-applink-fenix:
+hw-g5-view-fenix:
     worker-type: t-bitbar-gw-perf-g5
-    description: Run applink perftest on Fenix on a G5
+    description: Run VIEW perftest on Fenix on a G5
     treeherder:
-        symbol: perftest(applink-fenix)
+        symbol: perftest(view-fenix)
     platform: android-hw-g5-7-0-arm7-api-16/opt
     attributes:
         cron: true
@@ -54,7 +54,7 @@ hw-g5-applink-fenix:
             --android-capture-logcat logcat
             --perfherder-metrics processLaunchToNavStart
             --android-install-apk fenix_nightlysim_multicommit_armeabi_v7a
-            --hooks testing/performance/hooks_applink.py
+            --hooks testing/performance/hooks_android_view.py
             --perfherder
             --perfherder-app fenix
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
@@ -63,13 +63,13 @@ hw-g5-applink-fenix:
             --profile-conditioned-scenario settled
             --profile-conditioned-platform g5-fenix.nightly
             --output $MOZ_FETCHES_DIR/../artifacts
-            testing/performance/perftest_applink.js
+            testing/performance/perftest_android_view.js
 
-hw-p2-applink-fenix:
+hw-p2-view-fenix:
     worker-type: t-bitbar-gw-perf-p2
-    description: Run applink perftest on Fenix on a Pixel2
+    description: Run VIEW perftest on Fenix on a Pixel2
     treeherder:
-        symbol: perftest(applink-fenix)
+        symbol: perftest(view-fenix)
     platform: android-hw-p2-8-0-android-aarch64/opt
     attributes:
         cron: true
@@ -88,7 +88,7 @@ hw-p2-applink-fenix:
             --android-clear-logcat
             --android-capture-logcat logcat
             --android-perf-tuning
-            --hooks testing/performance/hooks_applink.py
+            --hooks testing/performance/hooks_android_view.py
             --perfherder
             --perfherder-app fenix
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
@@ -97,13 +97,13 @@ hw-p2-applink-fenix:
             --profile-conditioned-scenario settled
             --profile-conditioned-platform p2_aarch64-fenix.nightly
             --output $MOZ_FETCHES_DIR/../artifacts
-            testing/performance/perftest_applink.js
+            testing/performance/perftest_android_view.js
 
-hw-g5-applink-gv:
+hw-g5-view-gv:
     worker-type: t-bitbar-gw-perf-g5
-    description: Run applink perftest on GV on a G5
+    description: Run VIEW perftest on GV on a G5
     treeherder:
-        symbol: perftest(applink-gv)
+        symbol: perftest(view-gv)
     platform: android-hw-g5-7-0-arm7-api-16/opt
     attributes:
         cron: true
@@ -120,7 +120,7 @@ hw-g5-applink-gv:
             --android-capture-logcat logcat
             --perfherder-metrics processLaunchToNavStart
             --android-install-apk gve_nightly_api16
-            --hooks testing/performance/hooks_applink.py
+            --hooks testing/performance/hooks_android_view.py
             --perfherder
             --perfherder-app geckoview
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
@@ -129,13 +129,13 @@ hw-g5-applink-gv:
             --profile-conditioned-scenario settled
             --profile-conditioned-platform g5-geckoview_example
             --output $MOZ_FETCHES_DIR/../artifacts
-            testing/performance/perftest_applink.js
+            testing/performance/perftest_android_view.js
 
-hw-p2-applink-gv:
+hw-p2-view-gv:
     worker-type: t-bitbar-gw-perf-p2
-    description: Run applink perftest on GV on a Pixel 2
+    description: Run VIEW perftest on GV on a Pixel 2
     treeherder:
-        symbol: perftest(applink-gv)
+        symbol: perftest(view-gv)
     platform: android-hw-p2-8-0-android-aarch64/opt
     attributes:
         cron: true
@@ -153,7 +153,7 @@ hw-p2-applink-gv:
             --android-perf-tuning
             --perfherder-metrics processLaunchToNavStart
             --android-install-apk gve_nightly_api16
-            --hooks testing/performance/hooks_applink.py
+            --hooks testing/performance/hooks_android_view.py
             --perfherder
             --perfherder-app geckoview
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
@@ -162,7 +162,7 @@ hw-p2-applink-gv:
             --profile-conditioned-scenario settled
             --profile-conditioned-platform p2_aarch64-geckoview_example
             --output $MOZ_FETCHES_DIR/../artifacts
-            testing/performance/perftest_applink.js
+            testing/performance/perftest_android_view.js
 
 android-hw-g5-applink-refbrow:
     worker-type: t-bitbar-gw-perf-g5
@@ -248,7 +248,7 @@ hw-g5-main-fenix:
             --androidlog-second-timestamp ".*Fully drawn.*org\.mozilla\..*"
             --androidlog-subtest-name "MAIN"
             --android-install-apk fenix_nightly_armeabi_v7a
-            --hooks testing/performance/hooks_home_activity.py
+            --hooks testing/performance/hooks_android_main.py
             --perfherder
             --perfherder-app fenix
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
@@ -257,7 +257,7 @@ hw-g5-main-fenix:
             --profile-conditioned
             --profile-conditioned-scenario settled
             --profile-conditioned-platform g5-fenix.nightly
-            testing/performance/perftest_home_activity.js
+            testing/performance/perftest_android_main.js
 
 hw-p2-main-fenix:
     worker-type: t-bitbar-gw-perf-p2
@@ -284,7 +284,7 @@ hw-p2-main-fenix:
             --androidlog-second-timestamp ".*Fully drawn.*org\.mozilla\..*"
             --androidlog-subtest-name "MAIN"
             --android-install-apk fenix_nightly_arm64_v8a
-            --hooks testing/performance/hooks_home_activity.py
+            --hooks testing/performance/hooks_android_main.py
             --perfherder
             --perfherder-app fenix
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
@@ -293,4 +293,4 @@ hw-p2-main-fenix:
             --profile-conditioned
             --profile-conditioned-scenario settled
             --profile-conditioned-platform p2_aarch64-fenix.nightly
-            testing/performance/perftest_home_activity.js
+            testing/performance/perftest_android_main.js

@@ -24,19 +24,19 @@ async function test(context, commands) {
 module.exports = {
   test,
   owner: "Performance Team",
-  name: "App-link",
-  description: "Measures cold process applink time",
+  name: "VIEW",
+  description: "Measures cold process view time",
   longDescription: `
-  This test launches the appropriate android app, simulating an app link
+  This test launches the appropriate android app, simulating a opening a link through VIEW intent
   workflow. The application is launched with the intent action
   android.intent.action.VIEW loading a trivially simple website. The reported
   metric is the time from process start to navigationStart, reported as processLaunchToNavStart
   `,
   usage: `
-  ./mach perftest testing/performance/perftest_applink.js \
+  ./mach perftest testing/performance/perftest_android_view.js \
     --android-install-apk ~/fenix.v2.fennec-nightly.2020.04.22-arm32.apk \
-    --hooks testing/performance/hooks_applink.py \
-    --android-app-name org.mozilla.fennec_aurora \
+    --hooks testing/performance/hooks_android_view.py \
+    --android-app-name org.mozilla.fenix \
     --perfherder-metrics processLaunchToNavStart
   `,
   supportedBrowsers: ["Fenix nightly", "Geckoview_example", "Fennec"],
