@@ -50,6 +50,7 @@
 #include "jit/VMFunctions.h"
 #include "jit/WarpSnapshot.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag
+#include "js/ScalarType.h"   // js::Scalar::Type
 #include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
 #include "vm/ArrayBufferViewObject.h"

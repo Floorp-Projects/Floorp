@@ -138,7 +138,7 @@
 #  include "jit/mips-shared/Assembler-mips-shared.h"
 #  include "jit/mips64/Assembler-mips64.h"
 #endif
-
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"
 #include "wasm/WasmGC.h"
 #include "wasm/WasmGenerator.h"

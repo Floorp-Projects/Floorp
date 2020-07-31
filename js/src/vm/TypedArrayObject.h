@@ -14,7 +14,9 @@
 #include "gc/Barrier.h"
 #include "gc/MaybeRooted.h"
 #include "js/Class.h"
+#include "js/experimental/TypedData.h"  // js::detail::TypedArrayLengthSlot
 #include "js/Result.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/ArrayBufferObject.h"
 #include "vm/ArrayBufferViewObject.h"
 #include "vm/JSObject.h"
@@ -46,7 +48,7 @@ namespace js {
 class TypedArrayObject : public ArrayBufferViewObject {
  public:
   static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
-                "bad inlined constant in jsfriendapi.h");
+                "bad inlined constant in TypedData.h");
 
   static bool sameBuffer(Handle<TypedArrayObject*> a,
                          Handle<TypedArrayObject*> b) {

@@ -31,7 +31,9 @@
 #include "gc/MaybeRooted.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
+#include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType, JS_GetTypedArray{Length,ByteOffset,ByteLength}, JS_IsTypedArrayObject
 #include "js/PropertySpec.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
 #include "util/Text.h"

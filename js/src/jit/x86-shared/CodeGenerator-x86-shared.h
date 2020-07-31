@@ -8,6 +8,7 @@
 #define jit_x86_shared_CodeGenerator_x86_shared_h
 
 #include "jit/shared/CodeGenerator-shared.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 
 namespace js {
 namespace jit {

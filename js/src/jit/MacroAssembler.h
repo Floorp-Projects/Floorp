@@ -36,6 +36,7 @@
 #include "jit/JitRealm.h"
 #include "jit/TemplateObject.h"
 #include "jit/VMFunctions.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"

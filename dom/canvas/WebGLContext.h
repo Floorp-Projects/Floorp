@@ -12,6 +12,7 @@
 #include "GLContextTypes.h"
 #include "GLDefs.h"
 #include "GLScreenBuffer.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BindingDeclarations.h"

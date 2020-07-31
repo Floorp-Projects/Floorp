@@ -30,6 +30,7 @@
 #include "jit/TIOracle.h"
 #include "jit/TypePolicy.h"
 #include "js/HeapAPI.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/ArrayObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags

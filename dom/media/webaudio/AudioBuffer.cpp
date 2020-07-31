@@ -8,6 +8,7 @@
 #include "mozilla/dom/AudioBufferBinding.h"
 #include "jsfriendapi.h"
 #include "js/ArrayBuffer.h"  // JS::StealArrayBufferContents
+#include "js/experimental/TypedData.h"  // JS_NewFloat32Array, JS_GetFloat32ArrayData, JS_GetTypedArrayLength, JS_GetArrayBufferViewBuffer
 #include "mozilla/ErrorResult.h"
 #include "AudioSegment.h"
 #include "AudioChannelFormat.h"

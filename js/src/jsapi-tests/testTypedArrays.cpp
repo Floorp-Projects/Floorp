@@ -8,6 +8,7 @@
 #include "jsfriendapi.h"
 
 #include "js/ArrayBuffer.h"  // JS::{NewArrayBuffer,IsArrayBufferObject,GetArrayBuffer{ByteLength,Data}}
+#include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewBuffer, JS_GetTypedArray{Length,ByteOffset,ByteLength}, JS_Get{{Ui,I}nt{8,16,32},Float{32,64},Uint8Clamped}ArrayData, JS_IsTypedArrayObject, JS_New{{Ui,I}nt{8,16,32},Float{32,64},Uint8Clamped}Array{,FromArray,WithBuffer}
 #include "js/SharedArrayBuffer.h"  // JS::{NewSharedArrayBuffer,GetSharedArrayBufferData}
 #include "jsapi-tests/tests.h"
 #include "vm/Realm.h"

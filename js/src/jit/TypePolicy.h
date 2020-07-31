@@ -9,6 +9,7 @@
 
 #include "jit/IonTypes.h"
 #include "jit/JitAllocPolicy.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 
 namespace js {
 namespace jit {

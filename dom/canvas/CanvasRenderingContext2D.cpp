@@ -67,6 +67,7 @@
 #include "jsfriendapi.h"
 #include "js/Array.h"  // JS::GetArrayLength
 #include "js/Conversions.h"
+#include "js/experimental/TypedData.h"  // JS_NewUint8ClampedArray, JS_GetUint8ClampedArrayData
 #include "js/HeapAPI.h"
 #include "js/Warnings.h"  // JS::WarnASCII
 

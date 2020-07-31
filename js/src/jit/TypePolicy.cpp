@@ -9,6 +9,7 @@
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 
 #include "jit/shared/Lowering-shared-inl.h"
 

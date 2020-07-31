@@ -42,6 +42,7 @@
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,GetArrayBufferData,GetArrayBuffer{ByteLength,Data}}
 #include "js/CharacterEncoding.h"
+#include "js/experimental/TypedData.h"  // JS_GetArrayBufferView{Type,Data}, JS_GetTypedArrayByteLength, JS_IsArrayBufferViewObject, JS_IsTypedArrayObject
 #include "js/PropertySpec.h"
 #include "js/SharedArrayBuffer.h"  // JS::{GetSharedArrayBuffer{ByteLength,Data},IsSharedArrayBufferObject}
 #include "js/StableStringChars.h"

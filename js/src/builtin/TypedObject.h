@@ -13,6 +13,7 @@
 #include "gc/Allocator.h"
 #include "gc/WeakMap.h"
 #include "js/Conversions.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 

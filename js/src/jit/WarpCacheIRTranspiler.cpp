@@ -19,6 +19,7 @@
 #include "jit/WarpBuilder.h"
 #include "jit/WarpBuilderShared.h"
 #include "jit/WarpSnapshot.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 
 using namespace js;
 using namespace js::jit;

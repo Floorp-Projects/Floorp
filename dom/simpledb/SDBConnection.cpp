@@ -7,8 +7,8 @@
 #include "SDBConnection.h"
 
 #include "ActorsChild.h"
-#include "jsfriendapi.h"     // JS_GetObjectAsArrayBufferView
 #include "js/ArrayBuffer.h"  // JS::{GetObjectAsArrayBuffer,IsArrayBufferObject}
+#include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject, JS_GetObjectAsArrayBufferView
 #include "js/RootingAPI.h"   // JS::{Handle,Rooted}
 #include "js/Value.h"        // JS::Value
 #include "mozilla/ipc/BackgroundChild.h"

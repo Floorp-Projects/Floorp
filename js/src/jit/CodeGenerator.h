@@ -7,12 +7,11 @@
 #ifndef jit_CodeGenerator_h
 #define jit_CodeGenerator_h
 
-#include "jsfriendapi.h"
-
 #include "jit/CacheIR.h"
 #if defined(JS_ION_PERF)
 #  include "jit/PerfSpewer.h"
 #endif
+#include "js/ScalarType.h"  // js::Scalar::Type
 
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/CodeGenerator-x86.h"

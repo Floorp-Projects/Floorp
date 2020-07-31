@@ -8,6 +8,7 @@
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{GetArrayBuffer{ByteLength,Data},IsArrayBufferObject,NewArrayBuffer{,WithContents},StealArrayBufferContents}
 #include "js/Exception.h"
+#include "js/experimental/TypedData.h"  // JS_New{Int32,Uint8}ArrayWithBuffer
 #include "js/MemoryFunctions.h"
 #include "jsapi-tests/tests.h"
 

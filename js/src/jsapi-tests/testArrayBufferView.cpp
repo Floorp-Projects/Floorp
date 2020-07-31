@@ -5,6 +5,8 @@
 #include "jsfriendapi.h"
 
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
+#include "js/experimental/TypedData.h"  // JS_GetArrayBufferView{Type,ByteLength,Data}, JS_GetObjectAsArrayBufferView, JS_GetObjectAs{{Ui,I}nt{8,16,32},Float{32,64}}Array, JS_IsArrayBufferViewObject, JS_NewDataView, JS_New{{Ui,I}nt{8,16,32},Float{32,64},Uint8Clamped}Array
+#include "js/ScalarType.h"              // js::Scalar::Type
 #include "jsapi-tests/tests.h"
 #include "vm/ProxyObject.h"
 #include "vm/Realm.h"
