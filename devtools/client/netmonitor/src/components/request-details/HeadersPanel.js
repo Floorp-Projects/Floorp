@@ -48,6 +48,7 @@ const Accordion = createFactory(
 const UrlPreview = createFactory(
   require("devtools/client/netmonitor/src/components/previews/UrlPreview")
 );
+const HeadersPanelContextMenu = require("devtools/client/netmonitor/src/widgets/HeadersPanelContextMenu");
 const StatusCode = createFactory(
   require("devtools/client/netmonitor/src/components/StatusCode")
 );
@@ -145,6 +146,7 @@ class HeadersPanel extends Component {
     this.renderValue = this.renderValue.bind(this);
     this.renderRawHeadersBtn = this.renderRawHeadersBtn.bind(this);
     this.onShowResendMenu = this.onShowResendMenu.bind(this);
+    this.onShowHeadersContextMenu = this.onShowHeadersContextMenu.bind(this);
   }
 
   componentDidMount() {
@@ -500,6 +502,13 @@ class HeadersPanel extends Component {
     showMenu(menuItems, { button: event.target });
   }
 
+  onShowHeadersContextMenu(event) {
+    if (!this.contextMenu) {
+      this.contextMenu = new HeadersPanelContextMenu();
+    }
+    this.contextMenu.open(event, window.getSelection());
+  }
+
   render() {
     const {
       targetSearchResult,
@@ -767,7 +776,13 @@ class HeadersPanel extends Component {
             shouldExpandPreview,
             onTogglePreview: expanded => setHeadersUrlPreviewExpanded(expanded),
           }),
-          div({ className: "summary" }, summaryItems)
+          div(
+            {
+              className: "summary",
+              onContextMenu: this.onShowHeadersContextMenu,
+            },
+            summaryItems
+          )
         ),
         Accordion({ items })
       )
