@@ -12,6 +12,7 @@
 #include "TextLeafAccessible.h"
 
 #import "mozTextAccessible.h"
+#import "GeckoTextMarker.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -354,12 +355,48 @@ inline NSString* ToNSString(id aValue) {
 
 #pragma mark - mozAccessible
 
+enum AXTextEditType {
+  AXTextEditTypeUnknown,
+  AXTextEditTypeDelete,
+  AXTextEditTypeInsert,
+  AXTextEditTypeTyping,
+  AXTextEditTypeDictation,
+  AXTextEditTypeCut,
+  AXTextEditTypePaste,
+  AXTextEditTypeAttributesChange
+};
+
+enum AXTextStateChangeType {
+  AXTextStateChangeTypeUnknown,
+  AXTextStateChangeTypeEdit,
+  AXTextStateChangeTypeSelectionMove,
+  AXTextStateChangeTypeSelectionExtend
+};
+
+- (void)handleAccessibleTextChangeEvent:(NSString*)change
+                               inserted:(BOOL)isInserted
+                            inContainer:(const AccessibleOrProxy&)container
+                                     at:(int32_t)start {
+  GeckoTextMarker startMarker(container, start);
+  NSDictionary* userInfo = @{
+    @"AXTextChangeElement" : self,
+    @"AXTextStateChangeType" : @(AXTextStateChangeTypeEdit),
+    @"AXTextChangeValues" : @[ @{
+      @"AXTextChangeValue" : (change ? change : @""),
+      @"AXTextChangeValueStartMarker" : startMarker.CreateAXTextMarker(),
+      @"AXTextEditType" : isInserted ? @(AXTextEditTypeTyping) : @(AXTextEditTypeDelete)
+    } ]
+  };
+
+  mozAccessible* webArea = GetNativeFromGeckoAccessible([self geckoDocument]);
+  [webArea moxPostNotification:NSAccessibilityValueChangedNotification withUserInfo:userInfo];
+  [self moxPostNotification:NSAccessibilityValueChangedNotification withUserInfo:userInfo];
+
+  [self moxPostNotification:NSAccessibilityValueChangedNotification];
+}
+
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   switch (eventType) {
-    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
-    case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
-      [self moxPostNotification:NSAccessibilityValueChangedNotification];
-      break;
     default:
       [super handleAccessibleEvent:eventType];
       break;

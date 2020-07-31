@@ -110,9 +110,15 @@ void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset, bool aIsSele
 
 void ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr, int32_t aStart,
                           uint32_t aLen, bool aIsInsert, bool aFromUser) {
-  mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
+  ProxyAccessible* acc = aTarget;
+  // If there is a text input ancestor, use it as the event source.
+  while (acc && GetTypeFromRole(acc->Role()) != [mozTextAccessible class]) {
+    acc = acc->Parent();
+  }
+  mozAccessible* wrapper = GetNativeFromGeckoAccessible(acc ? acc : aTarget);
   [wrapper handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(aStr)
                                   inserted:aIsInsert
+                               inContainer:aTarget
                                         at:aStart];
 }
 
