@@ -3263,10 +3263,11 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
 
   ALLOW_CLONE(MCompare)
 
- protected:
+ private:
   MOZ_MUST_USE bool tryFoldEqualOperands(bool* result);
-  MOZ_MUST_USE bool tryFoldTypeOf(bool* result);
+  MOZ_MUST_USE bool tryFoldConstantTypeOf(bool* result);
 
+ public:
   bool congruentTo(const MDefinition* ins) const override {
     if (!binaryCongruentTo(ins)) {
       return false;
