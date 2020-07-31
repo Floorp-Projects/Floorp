@@ -84,7 +84,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
 
     companion object {
 
-        private fun pullToRefreshEnableState(error: SyncedTabsView.ErrorType) = when (error) {
+        internal fun pullToRefreshEnableState(error: SyncedTabsView.ErrorType) = when (error) {
             // Disable "pull-to-refresh" when we clearly can't sync tabs, and user needs to take an
             // action within the app.
             SyncedTabsView.ErrorType.SYNC_UNAVAILABLE,
@@ -97,7 +97,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
             SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> true
         }
 
-        private fun stringResourceForError(error: SyncedTabsView.ErrorType) = when (error) {
+        internal fun stringResourceForError(error: SyncedTabsView.ErrorType) = when (error) {
             SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE -> R.string.synced_tabs_connect_another_device
             SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE -> R.string.synced_tabs_enable_tab_syncing
             SyncedTabsView.ErrorType.SYNC_UNAVAILABLE -> R.string.synced_tabs_sign_in_message
@@ -105,7 +105,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
             SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> R.string.synced_tabs_no_tabs
         }
 
-        private fun getErrorItem(
+        internal fun getErrorItem(
             navController: NavController?,
             error: SyncedTabsView.ErrorType,
             @StringRes stringResId: Int
