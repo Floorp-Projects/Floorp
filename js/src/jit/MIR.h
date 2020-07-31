@@ -1255,21 +1255,15 @@ class MBinaryInstruction : public MAryInstruction<2> {
 
     const MDefinition* left = getOperand(0);
     const MDefinition* right = getOperand(1);
-    const MDefinition* tmp;
-
     if (isCommutative() && left->id() > right->id()) {
-      tmp = right;
-      right = left;
-      left = tmp;
+      std::swap(left, right);
     }
 
     const MBinaryInstruction* bi = static_cast<const MBinaryInstruction*>(ins);
     const MDefinition* insLeft = bi->getOperand(0);
     const MDefinition* insRight = bi->getOperand(1);
-    if (isCommutative() && insLeft->id() > insRight->id()) {
-      tmp = insRight;
-      insRight = insLeft;
-      insLeft = tmp;
+    if (bi->isCommutative() && insLeft->id() > insRight->id()) {
+      std::swap(insLeft, insRight);
     }
 
     return left == insLeft && right == insRight;
