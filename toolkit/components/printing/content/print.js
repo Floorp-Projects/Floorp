@@ -23,6 +23,8 @@ window.addEventListener(
 var PrintEventHandler = {
   init() {
     this.sourceBrowser = this.getSourceBrowser();
+    this.updatePrintPreview();
+
     this.settings = PrintUtils.getPrintSettings();
 
     document.addEventListener("print", e => this.print({ silent: true }));
@@ -49,8 +51,9 @@ var PrintEventHandler = {
     };
     this.settingFlags = {
       orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
-      scaling: Ci.nsIPrintSettings.kInitSaveScaling,
       printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
+      scaling: Ci.nsIPrintSettings.kInitSaveScaling,
+      shrinkToFit: Ci.nsIPrintSettings.kInitSaveShrinkToFit,
     };
 
     document.dispatchEvent(
@@ -99,7 +102,36 @@ var PrintEventHandler = {
         })
       );
 
-      PrintUtils.updatePrintPreview(this.sourceBrowser);
+      this.updatePrintPreview();
+    }
+  },
+
+  async updatePrintPreview() {
+    if (this._previewUpdatingPromise) {
+      if (!this._queuedPreviewUpdatePromise) {
+        this._queuedPreviewUpdatePromise = this._previewUpdatingPromise.then(
+          () => this._updatePrintPreview()
+        );
+      }
+      // else there's already an update queued.
+    } else {
+      this._previewUpdatingPromise = this._updatePrintPreview();
+    }
+  },
+
+  async _updatePrintPreview() {
+    let numPages = await PrintUtils.updatePrintPreview(this.sourceBrowser);
+    document.dispatchEvent(
+      new CustomEvent("page-count", { detail: { numPages } })
+    );
+
+    if (this._queuedPreviewUpdatePromise) {
+      // Now that we're done, the queued update (if there is one) will start.
+      this._previewUpdatingPromise = this._queuedPreviewUpdatePromise;
+      this._queuedPreviewUpdatePromise = null;
+    } else {
+      // Nothing queued so throw our promise away.
+      this._previewUpdatingPromise = null;
     }
   },
 
@@ -365,3 +397,21 @@ class TwistySummary extends PrintUIControlMixin(HTMLElement) {
   }
 }
 customElements.define("twisty-summary", TwistySummary);
+
+class PageCount extends HTMLParagraphElement {
+  constructor() {
+    super();
+    document.addEventListener("page-count", this);
+  }
+
+  handleEvent(e) {
+    let { numPages } = e.detail;
+    document.l10n.setAttributes(this, "printui-sheets-count", {
+      sheetCount: numPages,
+    });
+    if (this.hidden) {
+      document.l10n.translateElements([this]).then(() => (this.hidden = false));
+    }
+  }
+}
+customElements.define("page-count", PageCount, { extends: "p" });
