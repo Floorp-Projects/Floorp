@@ -7,6 +7,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include "gc/PublicIterators.h"
+#include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Iteration.h"

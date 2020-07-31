@@ -20,6 +20,7 @@
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
 #include "js/CharacterEncoding.h"
+#include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
 #include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
@@ -1399,51 +1400,6 @@ JS_FRIEND_API JSAtom* js::GetPropertyNameFromPC(JSScript* script,
     return nullptr;
   }
   return script->getName(pc);
-}
-
-JS_FRIEND_API void js::SetWindowProxyClass(JSContext* cx,
-                                           const JSClass* clasp) {
-  MOZ_ASSERT(!cx->runtime()->maybeWindowProxyClass());
-  cx->runtime()->setWindowProxyClass(clasp);
-}
-
-JS_FRIEND_API void js::SetWindowProxy(JSContext* cx, HandleObject global,
-                                      HandleObject windowProxy) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  cx->check(global, windowProxy);
-  MOZ_ASSERT(IsWindowProxy(windowProxy));
-
-  GlobalObject& globalObj = global->as<GlobalObject>();
-  globalObj.setWindowProxy(windowProxy);
-  globalObj.lexicalEnvironment().setWindowProxyThisObject(windowProxy);
-}
-
-JS_FRIEND_API JSObject* js::ToWindowIfWindowProxy(JSObject* obj) {
-  if (IsWindowProxy(obj)) {
-    return &obj->nonCCWGlobal();
-  }
-  return obj;
-}
-
-JS_FRIEND_API JSObject* js::detail::ToWindowProxyIfWindowSlow(JSObject* obj) {
-  if (JSObject* windowProxy = obj->as<GlobalObject>().maybeWindowProxy()) {
-    return windowProxy;
-  }
-  return obj;
-}
-
-JS_FRIEND_API bool js::IsWindowProxy(JSObject* obj) {
-  // Note: simply checking `obj == obj->global().windowProxy()` is not
-  // sufficient: we may have transplanted the window proxy with a CCW.
-  // Check the Class to ensure we really have a window proxy.
-  return obj->getClass() ==
-         obj->runtimeFromAnyThread()->maybeWindowProxyClass();
-}
-
-JS_FRIEND_API bool js::detail::IsWindowSlow(JSObject* obj) {
-  return obj->as<GlobalObject>().maybeWindowProxy();
 }
 
 AutoAssertNoContentJS::AutoAssertNoContentJS(JSContext* cx)

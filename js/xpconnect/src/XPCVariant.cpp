@@ -12,6 +12,7 @@
 
 #include "jsfriendapi.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
+#include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
 #include "js/Wrapper.h"
 
 using namespace JS;
