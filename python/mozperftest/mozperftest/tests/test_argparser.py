@@ -49,7 +49,7 @@ def test_perfherder_metrics():
 
     res = parser.parse_args(args)
     assert res.perfherder_metrics[0]["name"] == "foo"
-    assert res.perfherder_metrics[1]["alertThreshold"] == "2"
+    assert res.perfherder_metrics[1]["alertThreshold"] == 2
 
     args = [
         "test_one.js",
