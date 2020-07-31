@@ -386,7 +386,7 @@ nsHttpChannel::nsHttpChannel()
       mHasBeenIsolatedChecked(0),
       mIsIsolated(0),
       mTopWindowOriginComputed(0),
-      mDataAlreadySent(0),
+      mDataSentToChildProcess(0),
       mPushedStreamId(0),
       mLocalBlocklist(false),
       mOnTailUnblock(nullptr),
@@ -2039,6 +2039,10 @@ nsresult nsHttpChannel::CallOnStartRequest() {
       return rv;
     }
     if (listener) {
+      MOZ_ASSERT(!mDataSentToChildProcess,
+                 "mDataSentToChildProcess being true means ODAs are sent to "
+                 "the child process directly. We MUST NOT apply content "
+                 "converter in this case.");
       mListener = listener;
       mCompressListener = listener;
       mHasAppliedConversion = true;
@@ -7540,6 +7544,9 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
 
   if (mTransaction) {
     mProxyConnectResponseCode = mTransaction->GetProxyConnectResponseCode();
+    if (request == mTransactionPump) {
+      mDataSentToChildProcess = mTransaction->DataSentToChildProcess();
+    }
 
     if (!mSecurityInfo && !mCachePump) {
       // grab the security info from the connection object; the transaction
@@ -8282,10 +8289,6 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
       seekable = nullptr;
     }
 
-    mDataAlreadySent = false;
-    if (mTransaction) {
-      mDataAlreadySent = mTransaction->DataAlreadySent();
-    }
     nsresult rv =
         mListener->OnDataAvailable(this, input, mLogicalOffset, count);
     if (NS_SUCCEEDED(rv)) {
