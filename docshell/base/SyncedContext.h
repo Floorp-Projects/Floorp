@@ -198,11 +198,20 @@ class FieldStorage {
   const type& Get##name() const { return mFields.template Get<IDX_##name>(); } \
                                                                                \
   template <typename U>                                                        \
-  void Set##name(U&& aValue) {                                                 \
+  nsresult Set##name(U&& aValue) {                                             \
     Transaction txn;                                                           \
     txn.template Set<IDX_##name>(std::forward<U>(aValue));                     \
-    txn.Commit(this);                                                          \
+    return txn.Commit(this);                                                   \
+  }                                                                            \
+  template <typename U>                                                        \
+  void Set##name(U&& aValue, ErrorResult& aRv) {                               \
+    nsresult rv = this->Set##name(std::forward<U>(aValue));                    \
+    if (NS_FAILED(rv)) {                                                       \
+      aRv.ThrowInvalidStateError("cannot set synced field '" #name             \
+                                 "': context is discarded");                   \
+    }                                                                          \
   }
+
 #define MOZ_DECL_SYNCED_CONTEXT_TRANSACTION_SET(name, type)  \
   template <typename U>                                      \
   void Set##name(U&& aValue) {                               \
