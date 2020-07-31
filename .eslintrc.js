@@ -446,18 +446,6 @@ module.exports = {
     },
     {
       files: [
-        "editor/composer/test/test_bug434998.xhtml",
-        "editor/libeditor/tests/test_bug607584.xhtml",
-        "editor/libeditor/tests/test_bug616590.xhtml",
-        "editor/libeditor/tests/test_bug780908.xhtml",
-      ],
-      rules: {
-        "object-shorthand": "off",
-        "no-undef": "off",
-      },
-    },
-    {
-      files: [
         "widget/tests/native_menus_window.xhtml",
         "widget/tests/native_mouse_mac_window.xhtml",
         "widget/tests/standalone_native_menu_window.xhtml",
