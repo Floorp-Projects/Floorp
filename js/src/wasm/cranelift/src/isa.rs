@@ -42,7 +42,7 @@ pub mod platform {
     pub const IS_SUPPORTED: bool = true;
     pub const USES_HEAP_REG: bool = true;
 
-    pub fn make_isa_builder(env: &StaticEnvironment) -> DashResult<isa::Builder> {
+    pub(crate) fn make_isa_builder(env: &StaticEnvironment) -> DashResult<isa::Builder> {
         let mut ib = isa::lookup_by_name("x86_64-unknown-unknown").map_err(BasicError::from)?;
 
         if !env.has_sse2 {
@@ -85,7 +85,7 @@ pub mod platform {
     pub const IS_SUPPORTED: bool = true;
     pub const USES_HEAP_REG: bool = true;
 
-    pub fn make_isa_builder(_env: &StaticEnvironment) -> DashResult<isa::Builder> {
+    pub(crate) fn make_isa_builder(_env: &StaticEnvironment) -> DashResult<isa::Builder> {
         let ib = isa::lookup_by_name("aarch64-unknown-unknown").map_err(BasicError::from)?;
         Ok(ib)
     }
@@ -98,7 +98,7 @@ pub mod platform {
     pub const IS_SUPPORTED: bool = false;
     pub const USES_HEAP_REG: bool = false;
 
-    pub fn make_isa_builder(_env: &StaticEnvironment) -> DashResult<isa::Builder> {
+    pub(crate) fn make_isa_builder(_env: &StaticEnvironment) -> DashResult<isa::Builder> {
         Err("Platform not supported yet!".into())
     }
 }

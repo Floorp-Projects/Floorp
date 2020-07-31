@@ -24,7 +24,7 @@ bindgen = {version = "0.53", default-features = false} # disable `logging` to re
 
 [features]
 default = ['cranelift-codegen/std']
-cranelift_x86 = ['cranelift-codegen/x86']
+cranelift_x86 = ['cranelift-codegen/x64']
 cranelift_arm32 = ['cranelift-codegen/arm32']
 cranelift_arm64 = ['cranelift-codegen/arm64']
 

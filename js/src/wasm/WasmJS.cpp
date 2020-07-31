@@ -101,11 +101,6 @@ static inline bool IsFuzzingCranelift(JSContext* cx) {
 
 static inline bool WasmMultiValueFlag(JSContext* cx) {
 #ifdef ENABLE_WASM_MULTI_VALUE
-  if (IsFuzzingCranelift(cx)) {
-#  ifdef JS_CODEGEN_X64
-    return false;
-#  endif
-  }
   return cx->options().wasmMultiValue();
 #else
   return false;
@@ -311,10 +306,6 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
   bool debug = WasmDebuggerActive(cx);
   bool gc = WasmGcFlag(cx);
   bool threads = WasmThreadsFlag(cx);
-  bool multiValueOnX64 = false;
-#if defined(JS_CODEGEN_X64)
-  multiValueOnX64 = WasmMultiValueFlag(cx);
-#endif
   bool simd = WasmSimdFlag(cx);
   if (reason) {
     char sep = 0;
@@ -324,9 +315,6 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (gc && !Append(reason, "gc", &sep)) {
       return false;
     }
-    if (multiValueOnX64 && !Append(reason, "multi-value", &sep)) {
-      return false;
-    }
     if (threads && !Append(reason, "threads", &sep)) {
       return false;
     }
@@ -334,7 +322,7 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
       return false;
     }
   }
-  *isDisabled = debug || gc || multiValueOnX64 || threads || simd;
+  *isDisabled = debug || gc || threads || simd;
   return true;
 }
 
