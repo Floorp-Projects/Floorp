@@ -6,9 +6,7 @@ package org.mozilla.fenix
 
 enum class ReleaseChannel {
     FenixDebug,
-
     FenixProduction,
-
     FennecProduction,
     FennecBeta;
 
@@ -32,6 +30,12 @@ enum class ReleaseChannel {
         get() = when (this) {
             FennecProduction -> true
             FennecBeta -> true
+            else -> false
+        }
+
+    val isRelease: Boolean
+        get() = when (this) {
+            FennecProduction -> true
             else -> false
         }
 

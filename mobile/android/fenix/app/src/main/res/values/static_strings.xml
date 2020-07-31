@@ -36,4 +36,7 @@
 
     <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
     <string name="link_text_view_type_announcement" translatable="false">link</string>
+
+    <!-- Name of the application for about page -->
+    <string name="daylight_app_name" translatable="false">Firefox Daylight</string>
 </resources>
