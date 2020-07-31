@@ -3608,15 +3608,11 @@ impl Renderer {
             self.cpu_profiles.push_back(cpu_profile);
         }
 
-        if self.debug_flags.intersects(DebugFlags::PROFILER_DBG | DebugFlags::PROFILER_CAPTURE) {
+        if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
             if let Some(device_size) = device_size {
                 //TODO: take device/pixel ratio into equation?
                 if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
-                    let style = if !self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
-                        // Don't draw the profiler, but collect samples for captures
-                        assert!(self.debug_flags.contains(DebugFlags::PROFILER_CAPTURE));
-                        ProfileStyle::NoDraw
-                    } else if self.debug_flags.contains(DebugFlags::SMART_PROFILER) {
+                    let style = if self.debug_flags.contains(DebugFlags::SMART_PROFILER) {
                         ProfileStyle::Smart
                     } else if self.debug_flags.contains(DebugFlags::COMPACT_PROFILER) {
                         ProfileStyle::Compact
@@ -7519,15 +7515,6 @@ impl Renderer {
 
         self.device.reset_read_target();
         self.device.end_frame();
-
-        let mut stats_file = fs::File::create(config.root.join("profiler-stats.txt"))
-            .expect(&format!("Unable to create profiler-stats.txt"));
-        if self.debug_flags.intersects(DebugFlags::PROFILER_DBG | DebugFlags::PROFILER_CAPTURE) {
-            self.profiler.dump_stats(&mut stats_file).unwrap();
-        } else {
-            writeln!(stats_file, "Turn on PROFILER_DBG or PROFILER_CAPTURE to get stats here!").unwrap();
-        }
-
         info!("done.");
     }
 
