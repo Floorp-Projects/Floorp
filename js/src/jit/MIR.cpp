@@ -6013,6 +6013,67 @@ MDefinition* MCheckObjCoercible::foldsTo(TempAllocator& alloc) {
   return input;
 }
 
+MDefinition* MLoadValueTag::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = value();
+  if (!input->isBox()) {
+    return this;
+  }
+
+  MIRType type = input->getOperand(0)->type();
+  if (type >= MIRType::Value) {
+    return this;
+  }
+
+  JSValueTag tag;
+  switch (type) {
+    case MIRType::Undefined:
+      tag = JSVAL_TAG_UNDEFINED;
+      break;
+    case MIRType::Null:
+      tag = JSVAL_TAG_NULL;
+      break;
+    case MIRType::Boolean:
+      tag = JSVAL_TAG_BOOLEAN;
+      break;
+    case MIRType::Int32:
+      tag = JSVAL_TAG_INT32;
+      break;
+    case MIRType::Double:
+    case MIRType::Float32:
+      tag = JSVAL_TAG_MAX_DOUBLE;
+      break;
+    case MIRType::String:
+      tag = JSVAL_TAG_STRING;
+      break;
+    case MIRType::Symbol:
+      tag = JSVAL_TAG_SYMBOL;
+      break;
+    case MIRType::BigInt:
+      tag = JSVAL_TAG_BIGINT;
+      break;
+    case MIRType::Object:
+      tag = JSVAL_TAG_OBJECT;
+      break;
+    case MIRType::MagicOptimizedArguments:
+    case MIRType::MagicOptimizedOut:
+    case MIRType::MagicHole:
+    case MIRType::MagicIsConstructing:
+    case MIRType::MagicUninitializedLexical:
+      tag = JSVAL_TAG_MAGIC;
+      break;
+
+    case MIRType::Int64:
+    case MIRType::Simd128:
+      // Specialized value, but not expected for now.
+
+    default:
+      MOZ_CRASH("Unexpected type");
+  }
+  MOZ_ASSERT(tag <= INT32_MAX);
+
+  return MConstant::New(alloc, Int32Value(tag));
+}
+
 bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                      MDefinition* obj, MDefinition* id) {
   if (obj->mightBeType(MIRType::String)) {
