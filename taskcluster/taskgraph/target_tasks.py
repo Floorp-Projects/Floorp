@@ -182,18 +182,27 @@ def filter_release_tasks(task, parameters):
         return True
 
     # code below here is intended to reduce beta/release debug tasks
-    platform = task.attributes.get('test_platform', '')
-    if 'debug' in platform:
-        if 'linux' not in platform:
-            # filter out mac/windows/android debug
+    build_type = task.attributes.get('build_type', '')
+    build_platform = task.attributes.get('build_platform', '')
+    test_platform = task.attributes.get('test_platform', '')
+    if task.kind == 'hazard' or 'toolchain' in build_platform:
+        # keep hazard and toolchain builds around
+        return True
+
+    if build_type == 'debug':
+        if 'linux' not in build_platform:
+            # filter out windows/mac/android
             return False
-        elif 'spidermonkey' not in platform and '-qr' in platform:
-            # filter out linux tests except -qr and spidermonkey
+        elif task.kind not in ['spidermonkey'] and '-qr' in test_platform:
+            # filter out linux-qr tests, leave spidermonkey
+            return False
+        elif '64' not in build_platform:
+            # filter out linux32 builds
             return False
 
-    if task.attributes.get('build_type', '') == 'debug':
-        if 'linux' not in task.attributes.get('build_platform', ''):
-            return False
+    # webrender-android-*-debug doesn't have attributes to find 'debug', using task.label.
+    if task.kind == 'webrender' and 'debug' in task.label:
+        return False
     return True
 
 
