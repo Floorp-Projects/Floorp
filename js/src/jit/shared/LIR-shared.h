@@ -7682,13 +7682,13 @@ class LObjectStaticProto : public LInstructionHelper<1, 1, 0> {
   }
 };
 
-class LBuiltinObject : public LCallInstructionHelper<1, 0, 0> {
+class LFunctionProto : public LCallInstructionHelper<1, 0, 0> {
  public:
-  LIR_HEADER(BuiltinObject)
+  LIR_HEADER(FunctionProto)
 
-  LBuiltinObject() : LCallInstructionHelper(classOpcode) {}
+  LFunctionProto() : LCallInstructionHelper(classOpcode) {}
 
-  MBuiltinObject* mir() const { return mir_->toBuiltinObject(); }
+  MFunctionProto* mir() const { return mir_->toFunctionProto(); }
 };
 
 class LSuperFunction : public LInstructionHelper<BOX_PIECES, 1, 1> {
@@ -7718,32 +7718,6 @@ class LInitHomeObject : public LInstructionHelper<0, 1 + BOX_PIECES, 0> {
   }
 
   const LAllocation* function() { return getOperand(0); }
-};
-
-class LLoadValueTag : public LInstructionHelper<1, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(LoadValueTag)
-
-  static const size_t Value = 0;
-
-  explicit LLoadValueTag(const LBoxAllocation& value)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Value, value);
-  }
-};
-
-class LGuardTagNotEqual : public LInstructionHelper<0, 2, 0> {
- public:
-  LIR_HEADER(GuardTagNotEqual)
-
-  LGuardTagNotEqual(const LAllocation& lhs, const LAllocation& rhs)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, lhs);
-    setOperand(1, rhs);
-  }
-
-  const LAllocation* lhs() { return getOperand(0); }
-  const LAllocation* rhs() { return getOperand(1); }
 };
 
 template <size_t NumDefs>

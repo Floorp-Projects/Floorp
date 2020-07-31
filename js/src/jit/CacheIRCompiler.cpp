@@ -7174,53 +7174,6 @@ bool CacheIRCompiler::emitCallSubstringKernelResult(StringOperandId strId,
   return true;
 }
 
-bool CacheIRCompiler::emitCallStringReplaceStringResult(
-    StringOperandId strId, StringOperandId patternId,
-    StringOperandId replacementId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoCallVM callvm(masm, this, allocator);
-
-  Register str = allocator.useRegister(masm, strId);
-  Register pattern = allocator.useRegister(masm, patternId);
-  Register replacement = allocator.useRegister(masm, replacementId);
-
-  callvm.prepare();
-  masm.Push(replacement);
-  masm.Push(pattern);
-  masm.Push(str);
-
-  using Fn =
-      JSString* (*)(JSContext*, HandleString, HandleString, HandleString);
-  callvm.call<Fn, jit::StringReplace>();
-  return true;
-}
-
-bool CacheIRCompiler::emitCallStringSplitStringResult(
-    StringOperandId strId, StringOperandId separatorId, uint32_t groupOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoCallVM callvm(masm, this, allocator);
-
-  Register str = allocator.useRegister(masm, strId);
-  Register separator = allocator.useRegister(masm, separatorId);
-  AutoScratchRegister scratch(allocator, masm);
-
-  StubFieldOffset group(groupOffset, StubField::Type::ObjectGroup);
-  emitLoadStubField(group, scratch);
-
-  callvm.prepare();
-  masm.Push(Imm32(INT32_MAX));
-  masm.Push(separator);
-  masm.Push(str);
-  masm.Push(scratch);
-
-  using Fn = ArrayObject* (*)(JSContext*, HandleObjectGroup, HandleString,
-                              HandleString, uint32_t);
-  callvm.call<Fn, js::StringSplitString>();
-  return true;
-}
-
 bool CacheIRCompiler::emitRegExpPrototypeOptimizableResult(
     ObjOperandId protoId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -7460,10 +7413,6 @@ struct ReturnTypeToJSValueType<JSString*> {
 template <>
 struct ReturnTypeToJSValueType<BigInt*> {
   static constexpr JSValueType result = JSVAL_TYPE_BIGINT;
-};
-template <>
-struct ReturnTypeToJSValueType<ArrayObject*> {
-  static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
 };
 template <>
 struct ReturnTypeToJSValueType<ArrayIteratorObject*> {

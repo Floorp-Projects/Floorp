@@ -314,24 +314,6 @@
     begin: Int32Id
     length: Int32Id
 
-- name: CallStringReplaceStringResult
-  shared: true
-  transpile: true
-  cost_estimate: 5
-  args:
-    str: StringId
-    pattern: StringId
-    replacement: StringId
-
-- name: CallStringSplitStringResult
-  shared: true
-  transpile: true
-  cost_estimate: 5
-  args:
-    str: StringId
-    separator: StringId
-    group: GroupField
-
 - name: RegExpPrototypeOptimizableResult
   shared: true
   transpile: true
@@ -560,7 +542,7 @@
 
 - name: GuardTagNotEqual
   shared: true
-  transpile: true
+  transpile: false
   cost_estimate: 1
   args:
     lhs: ValueTagId
@@ -675,7 +657,7 @@
 
 - name: LoadValueTag
   shared: true
-  transpile: true
+  transpile: false
   cost_estimate: 1
   args:
     val: ValId

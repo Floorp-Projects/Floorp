@@ -2550,7 +2550,9 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
         MDefinition* first = use_def->toAdd()->lhs();
         MDefinition* second = use_def->toAdd()->rhs();
         if (first->id() > second->id()) {
-          std::swap(first, second);
+          MDefinition* temp = first;
+          first = second;
+          second = temp;
         }
         // Negative zero checks can be removed on the first executed
         // operand only if it is guaranteed the second executed operand
@@ -3436,10 +3438,9 @@ MCompare::CompareType MCompare::determineCompareType(JSOp op, MDefinition* left,
   MIRType lhs = left->type();
   MIRType rhs = right->type();
 
-  bool looseEq = IsLooseEqualityOp(op);
-  bool strictEq = IsStrictEqualityOp(op);
+  bool looseEq = op == JSOp::Eq || op == JSOp::Ne;
+  bool strictEq = op == JSOp::StrictEq || op == JSOp::StrictNe;
   bool relationalEq = !(looseEq || strictEq);
-  MOZ_ASSERT(IsRelationalOp(op) == relationalEq);
 
   // Comparisons on unsigned integers may be treated as UInt32.
   if (unsignedOperands(left, right)) {
@@ -4125,12 +4126,12 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
     return false;
   }
 
-  // Intuitively somebody would think that if lhs === rhs,
+  // Intuitively somebody would think that if lhs == rhs,
   // then we can just return true. (Or false for !==)
   // However NaN !== NaN is true! So we spend some time trying
   // to eliminate this case.
 
-  if (!IsStrictEqualityOp(jsop())) {
+  if (jsop() != JSOp::StrictEq && jsop() != JSOp::StrictNe) {
     return false;
   }
 
@@ -4163,7 +4164,7 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
   return true;
 }
 
-bool MCompare::isTypeOfCompare() {
+bool MCompare::tryFoldTypeOf(bool* result) {
   if (!lhs()->isTypeOf() && !rhs()->isTypeOf()) {
     return false;
   }
@@ -4171,6 +4172,7 @@ bool MCompare::isTypeOfCompare() {
     return false;
   }
 
+  MTypeOf* typeOf = lhs()->isTypeOf() ? lhs()->toTypeOf() : rhs()->toTypeOf();
   MConstant* constant =
       lhs()->isConstant() ? lhs()->toConstant() : rhs()->toConstant();
 
@@ -4178,21 +4180,10 @@ bool MCompare::isTypeOfCompare() {
     return false;
   }
 
-  if (!IsEqualityOp(jsop())) {
+  if (jsop() != JSOp::StrictEq && jsop() != JSOp::StrictNe &&
+      jsop() != JSOp::Eq && jsop() != JSOp::Ne) {
     return false;
   }
-
-  return true;
-}
-
-bool MCompare::tryFoldConstantTypeOf(bool* result) {
-  if (!isTypeOfCompare()) {
-    return false;
-  }
-
-  MTypeOf* typeOf = lhs()->isTypeOf() ? lhs()->toTypeOf() : rhs()->toTypeOf();
-  MConstant* constant =
-      lhs()->isConstant() ? lhs()->toConstant() : rhs()->toConstant();
 
   const JSAtomState& names = GetJitContext()->runtime->names();
   if (constant->toString() == TypeName(JSTYPE_UNDEFINED, names)) {
@@ -4251,13 +4242,13 @@ bool MCompare::tryFold(bool* result) {
     return true;
   }
 
-  if (tryFoldConstantTypeOf(result)) {
+  if (tryFoldTypeOf(result)) {
     return true;
   }
 
   if (compareType_ == Compare_Null || compareType_ == Compare_Undefined) {
     // The LHS is the value we want to test against null or undefined.
-    if (IsStrictEqualityOp(op)) {
+    if (op == JSOp::StrictEq || op == JSOp::StrictNe) {
       if (lhs()->type() == inputType()) {
         *result = (op == JSOp::StrictEq);
         return true;
@@ -4267,7 +4258,7 @@ bool MCompare::tryFold(bool* result) {
         return true;
       }
     } else {
-      MOZ_ASSERT(IsLooseEqualityOp(op));
+      MOZ_ASSERT(op == JSOp::Eq || op == JSOp::Ne);
       if (IsNullOrUndefined(lhs()->type())) {
         *result = (op == JSOp::Eq);
         return true;
@@ -4284,7 +4275,7 @@ bool MCompare::tryFold(bool* result) {
   }
 
   if (compareType_ == Compare_Boolean) {
-    MOZ_ASSERT(IsStrictEqualityOp(op));
+    MOZ_ASSERT(op == JSOp::StrictEq || op == JSOp::StrictNe);
     MOZ_ASSERT(rhs()->type() == MIRType::Boolean);
     MOZ_ASSERT(lhs()->type() != MIRType::Boolean,
                "Should use Int32 comparison");
@@ -4297,7 +4288,7 @@ bool MCompare::tryFold(bool* result) {
   }
 
   if (compareType_ == Compare_StrictString) {
-    MOZ_ASSERT(IsStrictEqualityOp(op));
+    MOZ_ASSERT(op == JSOp::StrictEq || op == JSOp::StrictNe);
     MOZ_ASSERT(rhs()->type() == MIRType::String);
     MOZ_ASSERT(lhs()->type() != MIRType::String,
                "Should use String comparison");
@@ -4310,50 +4301,6 @@ bool MCompare::tryFold(bool* result) {
   }
 
   return false;
-}
-
-MDefinition* MCompare::tryFoldTypeOf(TempAllocator& alloc) {
-  if (!isTypeOfCompare()) {
-    return this;
-  }
-
-  MTypeOf* typeOf = lhs()->isTypeOf() ? lhs()->toTypeOf() : rhs()->toTypeOf();
-  MConstant* constant =
-      lhs()->isConstant() ? lhs()->toConstant() : rhs()->toConstant();
-
-  // Objects emulating undefined make it difficult to check for the |typeof|
-  // constants "undefined", "object", or "function", so we don't yet handle
-  // them here. Numbers can't be compared by tag, so "number" isn't handled
-  // either. That leaves "boolean", "string", "symbol", and "bigint".
-
-  JSValueTag valueTag;
-  const JSAtomState& names = GetJitContext()->runtime->names();
-  if (constant->toString() == TypeName(JSTYPE_BOOLEAN, names)) {
-    valueTag = JSVAL_TAG_BOOLEAN;
-  } else if (constant->toString() == TypeName(JSTYPE_STRING, names)) {
-    valueTag = JSVAL_TAG_STRING;
-  } else if (constant->toString() == TypeName(JSTYPE_SYMBOL, names)) {
-    valueTag = JSVAL_TAG_SYMBOL;
-  } else if (constant->toString() == TypeName(JSTYPE_BIGINT, names)) {
-    valueTag = JSVAL_TAG_BIGINT;
-  } else {
-    return this;
-  }
-
-  auto* valueTagOp = MLoadValueTag::New(alloc, typeOf->input());
-  block()->insertBefore(this, valueTagOp);
-
-  auto* valueTagCst = MConstant::New(alloc, Int32Value(valueTag));
-  block()->insertBefore(this, valueTagCst);
-
-  auto* compare = MCompare::New(alloc, valueTagOp, valueTagCst, jsop());
-  compare->setCompareType(Compare_Int32);
-
-  if (!operandMightEmulateUndefined()) {
-    compare->markNoOperandEmulatesUndefined();
-  }
-
-  return compare;
 }
 
 template <typename T>
@@ -4527,10 +4474,6 @@ MDefinition* MCompare::foldsTo(TempAllocator& alloc) {
     return MConstant::New(alloc, BooleanValue(result));
   }
 
-  if (MDefinition* replacement = tryFoldTypeOf(alloc); replacement != this) {
-    return replacement;
-  }
-
   return this;
 }
 
@@ -4561,7 +4504,8 @@ void MCompare::filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
     return;
   }
 
-  MOZ_ASSERT(IsEqualityOp(jsop()));
+  MOZ_ASSERT(jsop() == JSOp::StrictNe || jsop() == JSOp::Ne ||
+             jsop() == JSOp::StrictEq || jsop() == JSOp::Eq);
 
   // JSOp::*Ne only removes undefined/null from if/true branch
   if (!trueBranch && (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne)) {
@@ -4573,7 +4517,7 @@ void MCompare::filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
     return;
   }
 
-  if (IsStrictEqualityOp(jsop())) {
+  if (jsop() == JSOp::StrictEq || jsop() == JSOp::StrictNe) {
     *filtersUndefined = compareType() == Compare_Undefined;
     *filtersNull = compareType() == Compare_Null;
   } else {
@@ -5979,21 +5923,6 @@ MDefinition* MGuardSpecificSymbol::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
-MDefinition* MGuardTagNotEqual::foldsTo(TempAllocator& alloc) {
-  if (!lhs()->isConstant() || !rhs()->isConstant()) {
-    return this;
-  }
-
-  int32_t lhsTag = lhs()->toConstant()->toInt32();
-  int32_t rhsTag = rhs()->toConstant()->toInt32();
-
-  // No need to fold if we get a bailout anyway.
-  if (lhsTag == rhsTag) {
-    return this;
-  }
-  return MNop::New(alloc);
-}
-
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
   const JSClass* clasp = GetObjectKnownJSClass(object());
   if (!clasp || getClass() != clasp) {
@@ -6083,21 +6012,6 @@ MDefinition* MCheckObjCoercible::foldsTo(TempAllocator& alloc) {
   }
 
   return input;
-}
-
-MDefinition* MLoadValueTag::foldsTo(TempAllocator& alloc) {
-  MDefinition* input = value();
-  if (!input->isBox()) {
-    return this;
-  }
-
-  MIRType type = input->getOperand(0)->type();
-  if (type >= MIRType::Value) {
-    return this;
-  }
-
-  JSValueTag tag = MIRTypeToTag(type);
-  return MConstant::New(alloc, Int32Value(tag));
 }
 
 bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,

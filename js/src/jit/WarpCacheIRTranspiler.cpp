@@ -97,9 +97,6 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   JS::Symbol* symbolStubField(uint32_t offset) {
     return reinterpret_cast<JS::Symbol*>(readStubWord(offset));
   }
-  ObjectGroup* groupStubField(uint32_t offset) {
-    return reinterpret_cast<ObjectGroup*>(readStubWord(offset));
-  }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
   }
@@ -499,17 +496,6 @@ bool WarpCacheIRTranspiler::emitGuardIsUndefined(ValOperandId inputId) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardTagNotEqual(ValueTagOperandId lhsId,
-                                                 ValueTagOperandId rhsId) {
-  MDefinition* lhs = getOperand(lhsId);
-  MDefinition* rhs = getOperand(rhsId);
-
-  auto* ins = MGuardTagNotEqual::New(alloc(), lhs, rhs);
-  add(ins);
-
-  return true;
-}
-
 bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
                                                   Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
@@ -678,16 +664,6 @@ bool WarpCacheIRTranspiler::emitLoadProto(ObjOperandId objId,
   MDefinition* obj = getOperand(objId);
 
   auto* ins = MObjectStaticProto::New(alloc(), obj);
-  add(ins);
-
-  return defineOperand(resultId, ins);
-}
-
-bool WarpCacheIRTranspiler::emitLoadValueTag(ValOperandId valId,
-                                             ValueTagOperandId resultId) {
-  MDefinition* val = getOperand(valId);
-
-  auto* ins = MLoadValueTag::New(alloc(), val);
   add(ins);
 
   return defineOperand(resultId, ins);
@@ -1826,34 +1802,6 @@ bool WarpCacheIRTranspiler::emitCallSubstringKernelResult(
   add(substr);
 
   pushResult(substr);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitCallStringReplaceStringResult(
-    StringOperandId strId, StringOperandId patternId,
-    StringOperandId replacementId) {
-  MDefinition* str = getOperand(strId);
-  MDefinition* pattern = getOperand(patternId);
-  MDefinition* replacement = getOperand(replacementId);
-
-  auto* replace = MStringReplace::New(alloc(), str, pattern, replacement);
-  add(replace);
-
-  pushResult(replace);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitCallStringSplitStringResult(
-    StringOperandId strId, StringOperandId separatorId, uint32_t groupOffset) {
-  MDefinition* str = getOperand(strId);
-  MDefinition* separator = getOperand(separatorId);
-  ObjectGroup* group = groupStubField(groupOffset);
-
-  auto* replace = MStringSplit::New(alloc(), /* constraints = */ nullptr, str,
-                                    separator, group);
-  add(replace);
-
-  pushResult(replace);
   return true;
 }
 
