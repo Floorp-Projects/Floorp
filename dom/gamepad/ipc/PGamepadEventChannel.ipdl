@@ -10,8 +10,8 @@ namespace dom {
 async protocol PGamepadEventChannel {
   manager PBackground;
   parent:
-    async GamepadListenerAdded();
-    async GamepadListenerRemoved();
+    async __delete__();
+
     async VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                         double aIntensity, double aDuration, uint32_t aPromiseID);
     async StopVibrateHaptic(uint32_t aControllerIdx);
@@ -19,7 +19,6 @@ async protocol PGamepadEventChannel {
                               uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint32_t aPromiseID);
 
   child:
-    async __delete__();
     async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
     async ReplyGamepadPromise(uint32_t aPromiseID);
 };

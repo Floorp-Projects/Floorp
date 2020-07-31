@@ -329,6 +329,9 @@ class BackgroundParentImpl : public PBackgroundParent,
   virtual bool DeallocPGamepadEventChannelParent(
       PGamepadEventChannelParent* aActor) override;
 
+  virtual mozilla::ipc::IPCResult RecvPGamepadEventChannelConstructor(
+      PGamepadEventChannelParent* aActor);
+
   virtual PGamepadTestChannelParent* AllocPGamepadTestChannelParent() override;
 
   virtual bool DeallocPGamepadTestChannelParent(
