@@ -45,12 +45,10 @@ const TELEMETRY_SIMULATION_ACTIVATED =
   "devtools.accessibility.simulation_activated";
 const SIMULATION_MENU_LABELS = {
   NONE: "accessibility.filter.none",
-  [SIMULATION_TYPE.DEUTERANOMALY]: "accessibility.simulation.deuteranomaly",
-  [SIMULATION_TYPE.PROTANOMALY]: "accessibility.simulation.protanomaly",
+  [SIMULATION_TYPE.ACHROMATOPSIA]: "accessibility.simulation.achromatopsia",
   [SIMULATION_TYPE.PROTANOPIA]: "accessibility.simulation.protanopia",
   [SIMULATION_TYPE.DEUTERANOPIA]: "accessibility.simulation.deuteranopia",
   [SIMULATION_TYPE.TRITANOPIA]: "accessibility.simulation.tritanopia",
-  [SIMULATION_TYPE.TRITANOMALY]: "accessibility.simulation.tritanomaly",
   [SIMULATION_TYPE.CONTRAST_LOSS]: "accessibility.simulation.contrastLoss",
   DOCUMENTATION: "accessibility.documentation.label",
 };

@@ -14,9 +14,7 @@ const { SIMULATE } = require("devtools/client/accessibility/constants");
  */
 function getInitialState() {
   return {
-    [SIMULATION_TYPE.PROTANOMALY]: false,
-    [SIMULATION_TYPE.DEUTERANOMALY]: false,
-    [SIMULATION_TYPE.TRITANOMALY]: false,
+    [SIMULATION_TYPE.ACHROMATOPSIA]: false,
     [SIMULATION_TYPE.PROTANOPIA]: false,
     [SIMULATION_TYPE.DEUTERANOPIA]: false,
     [SIMULATION_TYPE.TRITANOPIA]: false,
