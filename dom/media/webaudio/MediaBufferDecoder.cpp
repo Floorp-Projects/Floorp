@@ -723,11 +723,6 @@ void WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode) {
       break;
   }
 
-  Document* doc = nullptr;
-  if (nsPIDOMWindowInner* pWindow = mContext->GetParentObject()) {
-    doc = pWindow->GetExtantDoc();
-  }
-
   // Ignore errors in calling the callback, since there is not much that we can
   // do about it here.
   nsAutoCString errorString(errorMessage);
