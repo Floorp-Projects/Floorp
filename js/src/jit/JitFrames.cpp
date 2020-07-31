@@ -26,6 +26,7 @@
 #include "jit/Safepoints.h"
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
+#include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue
 #include "vm/ArgumentsObject.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/Interpreter.h"

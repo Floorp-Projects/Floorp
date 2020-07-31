@@ -228,6 +228,7 @@ EXPORTS.js.experimental += [
 # a clean design.  Use this only if you absolutely must, and feel free to
 # propose clean APIs to replace what's here!
 EXPORTS.js.friend += [
+    '../public/friend/DumpFunctions.h',
     '../public/friend/ErrorMessages.h',
     '../public/friend/ErrorNumbers.msg',
     '../public/friend/UsageStatistics.h',
@@ -300,6 +301,7 @@ UNIFIED_SOURCES += [
     'threading/Thread.cpp',
     'util/AllocPolicy.cpp',
     'util/CompleteFile.cpp',
+    'util/DumpFunctions.cpp',
     'util/NativeStack.cpp',
     'util/Printf.cpp',
     'util/StringBuffer.cpp',

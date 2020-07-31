@@ -15,6 +15,7 @@
 
 #include "debugger/Debugger.h"  // for Debugger
 #include "gc/Barrier.h"         // for GCPtrNativeObject
+#include "js/friend/DumpFunctions.h"  // for DumpBacktrace
 #include "js/Promise.h"         // for AutoDebuggerJobQueueInterruption
 #include "vm/JSContext.h"       // for ProtectedDataContextArg, JSContext
 #include "vm/JSScript.h"        // for JSScript

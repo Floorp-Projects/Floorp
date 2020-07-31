@@ -60,6 +60,7 @@
 
 #include "GeckoProfiler.h"
 #include "js/Debug.h"
+#include "js/friend/DumpFunctions.h"  // js::DumpHeap
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
 #include "js/Warnings.h"  // JS::SetWarningReporter

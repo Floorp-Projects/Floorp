@@ -13,6 +13,7 @@
 #include "jit/JitFrames.h"
 #include "jit/JitScript.h"
 #include "jit/Safepoints.h"
+#include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue
 
 #include "vm/JSScript-inl.h"
 
