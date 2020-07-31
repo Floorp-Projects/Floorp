@@ -9,14 +9,21 @@
 #ifndef nsPresContext_h___
 #define nsPresContext_h___
 
+#include "mozilla/AppUnits.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/MediaEmulationData.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/ScrollStyles.h"
 #include "mozilla/PreferenceSheet.h"
+#include "mozilla/PresShellForwards.h"
+#include "mozilla/ScrollStyles.h"
+#include "mozilla/ServoStyleSet.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsColor.h"
+#include "nsCompatibility.h"
 #include "nsCoord.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"
@@ -32,11 +39,6 @@
 #include "gfxTypes.h"
 #include "gfxRect.h"
 #include "nsTArray.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/AppUnits.h"
-#include "mozilla/MediaEmulationData.h"
-#include "mozilla/PresShellForwards.h"
 #include "prclist.h"
 #include "nsThreadUtils.h"
 #include "Units.h"
@@ -131,6 +133,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   using Encoding = mozilla::Encoding;
   template <typename T>
   using NotNull = mozilla::NotNull<T>;
+  template <typename T>
+  using Maybe = mozilla::Maybe<T>;
   using MediaEmulationData = mozilla::MediaEmulationData;
   using StylePrefersColorScheme = mozilla::StylePrefersColorScheme;
 
@@ -1220,7 +1224,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   mozilla::TimeStamp mReflowStartTime;
 
-  mozilla::Maybe<TransactionId> mFirstContentfulPaintTransactionId;
+  Maybe<TransactionId> mFirstContentfulPaintTransactionId;
 
   mozilla::UniquePtr<mozilla::MediaFeatureChange>
       mPendingMediaFeatureValuesChange;
