@@ -2383,6 +2383,8 @@ STATIC_ATOMS = [
     Atom("onboundary", "onboundary"),
 
     # Media Controller
+    Atom("onactivated", "onactivated"),
+    Atom("ondeactivated", "ondeactivated"),
     Atom("onpositionstatechange", "onpositionstatechange"),
     Atom("onsupportedkeyschange", "onsupportedkeyschange"),
 

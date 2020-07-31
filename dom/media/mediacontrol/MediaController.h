@@ -46,6 +46,7 @@ class IMediaController {
   virtual uint64_t Id() const = 0;
   virtual bool IsAudible() const = 0;
   virtual bool IsPlaying() const = 0;
+  virtual bool IsActive() const = 0;
 };
 
 /**
@@ -87,6 +88,8 @@ class MediaController final : public DOMEventTargetHelper,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
   void GetSupportedKeys(nsTArray<MediaControlKey>& aRetVal) const;
+  IMPL_EVENT_HANDLER(activated);
+  IMPL_EVENT_HANDLER(deactivated);
   IMPL_EVENT_HANDLER(supportedkeyschange);
   IMPL_EVENT_HANDLER(positionstatechange);
 
@@ -105,6 +108,7 @@ class MediaController final : public DOMEventTargetHelper,
   uint64_t Id() const override;
   bool IsAudible() const override;
   bool IsPlaying() const override;
+  bool IsActive() const override;
 
   // IMediaInfoUpdater's methods
   void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
