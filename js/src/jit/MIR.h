@@ -31,6 +31,7 @@
 #include "jit/TypePolicy.h"
 #include "js/HeapAPI.h"
 #include "vm/ArrayObject.h"
+#include "vm/BuiltinObjectKind.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/RegExpObject.h"
@@ -11559,14 +11560,19 @@ class MObjectStaticProto : public MUnaryInstruction,
   }
 };
 
-class MFunctionProto : public MNullaryInstruction {
-  explicit MFunctionProto() : MNullaryInstruction(classOpcode) {
+class MBuiltinObject : public MNullaryInstruction {
+  BuiltinObjectKind builtinObjectKind_;
+
+  explicit MBuiltinObject(BuiltinObjectKind kind)
+      : MNullaryInstruction(classOpcode), builtinObjectKind_(kind) {
     setResultType(MIRType::Object);
   }
 
  public:
-  INSTRUCTION_HEADER(FunctionProto)
+  INSTRUCTION_HEADER(BuiltinObject)
   TRIVIAL_NEW_WRAPPERS
+
+  BuiltinObjectKind builtinObjectKind() const { return builtinObjectKind_; }
 
   bool possiblyCalls() const override { return true; }
 };
