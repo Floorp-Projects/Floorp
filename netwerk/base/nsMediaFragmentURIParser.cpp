@@ -113,7 +113,7 @@ bool nsMediaFragmentURIParser::ParseNPTSec(nsDependentSubstring& aString,
 
   nsDependentSubstring n(aString, 0, index);
   nsresult ec;
-  int32_t s = PromiseFlatString(n).ToInteger(&ec);
+  int32_t s = n.ToInteger(&ec);
   if (NS_FAILED(ec)) {
     return false;
   }
@@ -218,7 +218,7 @@ bool nsMediaFragmentURIParser::ParseNPTHH(nsDependentSubstring& aString,
 
   nsDependentSubstring n(aString, 0, index);
   nsresult ec;
-  int32_t u = PromiseFlatString(n).ToInteger(&ec);
+  int32_t u = n.ToInteger(&ec);
   if (NS_FAILED(ec)) {
     return false;
   }
@@ -242,7 +242,7 @@ bool nsMediaFragmentURIParser::ParseNPTSS(nsDependentSubstring& aString,
   if (IsDigit(aString[0]) && IsDigit(aString[1])) {
     nsDependentSubstring n(aString, 0, 2);
     nsresult ec;
-    int32_t u = PromiseFlatString(n).ToInteger(&ec);
+    int32_t u = n.ToInteger(&ec);
     if (NS_FAILED(ec)) {
       return false;
     }
@@ -265,7 +265,7 @@ static bool ParseInteger(nsDependentSubstring& aString, int32_t& aResult) {
 
   nsDependentSubstring n(aString, 0, index);
   nsresult ec;
-  int32_t s = PromiseFlatString(n).ToInteger(&ec);
+  int32_t s = n.ToInteger(&ec);
   if (NS_FAILED(ec)) {
     return false;
   }
