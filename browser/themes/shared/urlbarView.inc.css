@@ -47,7 +47,7 @@
 
   display: block;
   text-shadow: none;
-  overflow: clip;
+  overflow: -moz-hidden-unscrollable;
   margin-inline: @urlbarViewMarginInline@;
   width: calc(100% - 2 * @urlbarViewMarginInline@);
 

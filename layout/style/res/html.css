@@ -683,7 +683,7 @@ img[usemap], object[usemap] {
 
 frameset {
   display: block ! important;
-  overflow: clip;
+  overflow: -moz-hidden-unscrollable;
   position: static ! important;
   float: none ! important;
   border: none ! important;

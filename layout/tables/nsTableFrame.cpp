@@ -1926,8 +1926,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   // make sure the table overflow area does include the table rect.
   nsRect tableRect(0, 0, aDesiredSize.Width(), aDesiredSize.Height());
 
-  if (ShouldApplyOverflowClipping(aReflowInput.mStyleDisplay) !=
-      PhysicalAxes::Both) {
+  if (!ShouldApplyOverflowClipping(aReflowInput.mStyleDisplay)) {
     // collapsed border may leak out
     LogicalMargin bcMargin = GetExcludedOuterBCBorder(wm);
     tableRect.Inflate(bcMargin.GetPhysicalMargin(wm));
@@ -2002,7 +2001,7 @@ void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
 bool nsTableFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
   // As above in Reflow, make sure the table overflow area includes the table
   // rect, and check for collapsed borders leaking out.
-  if (ShouldApplyOverflowClipping(StyleDisplay()) != PhysicalAxes::Both) {
+  if (!ShouldApplyOverflowClipping(StyleDisplay())) {
     nsRect bounds(nsPoint(0, 0), GetSize());
     WritingMode wm = GetWritingMode();
     LogicalMargin bcMargin = GetExcludedOuterBCBorder(wm);

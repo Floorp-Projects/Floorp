@@ -92,7 +92,7 @@ const gTestcases = [
   // * switching overflow between things that shouldn't create scrollframes.
   {
     beforeStyle: "overflow: visible",
-    afterStyle: "overflow: clip",
+    afterStyle: "overflow: -moz-hidden-unscrollable",
   },
 
   // Things that *should* cause reflow:

@@ -228,7 +228,7 @@ select {
   user-select: none;
   border-width: 2px;
   border-style: inset;
-  overflow: clip;
+  overflow: -moz-hidden-unscrollable;
   /* No text-decoration reaching inside, by default */
   display: inline-block;
   page-break-inside: avoid;
@@ -298,7 +298,7 @@ select > button[orientation="right"]:active {
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
-  overflow: clip;
+  overflow: -moz-hidden-unscrollable;
   /* This block-start/end padding plus the combobox block-start/end border need to
      add up to the block-start/end borderpadding of text inputs and buttons */
   padding-block: 1px;
@@ -920,7 +920,7 @@ input:is([type=number], [type=search])::-moz-complex-control-wrapper {
   block-size: 100%;
   /* The align-self: center bit below allows the editor to be potentially
    * bigger than us. Clip it to match other text fields. */
-  overflow: clip;
+  overflow: -moz-hidden-unscrollable;
 }
 
 input:is([type=number], [type=search])::-moz-text-control-editing-root {

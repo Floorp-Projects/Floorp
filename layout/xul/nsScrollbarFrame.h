@@ -97,7 +97,7 @@ class nsScrollbarFrame final : public nsBoxFrame,
    * scrollframe by setting its height or width to zero, that will
    * hide the children too.
    */
-  virtual bool DoesClipChildrenInBothAxes() override { return true; }
+  virtual bool DoesClipChildren() override { return true; }
 
   virtual nsresult GetXULMargin(nsMargin& aMargin) override;
 

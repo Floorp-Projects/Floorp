@@ -1778,7 +1778,7 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
     return false;
   }
 
-  return ShouldApplyOverflowClipping(disp) == PhysicalAxes::None &&
+  return !ShouldApplyOverflowClipping(disp) &&
          !GetClipPropClipRect(disp, effects, GetSize()) &&
          !SVGIntegrationUtils::UsingEffectsForFrame(this);
 }
@@ -2653,18 +2653,18 @@ Maybe<nsRect> nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
  * handled by constructing a dedicated nsHTML/XULScrollFrame, set up clipping
  * for that overflow in aBuilder->ClipState() to clip all containing-block
  * descendants.
+ *
+ * Return true if clipping was applied.
  */
 static void ApplyOverflowClipping(
     nsDisplayListBuilder* aBuilder, const nsIFrame* aFrame,
-    nsIFrame::PhysicalAxes aClipAxes,
     DisplayListClipState::AutoClipMultiple& aClipState) {
-  // Only 'clip' is handled here (and 'hidden' for table frames, and any
-  // non-'visible' value for blocks in a paginated context).
-  // We allow 'clip' to apply to any kind of frame. This is required by
-  // comboboxes which make their display text (an inline frame) have clipping.
-  MOZ_ASSERT(aClipAxes != nsIFrame::PhysicalAxes::None);
-  MOZ_ASSERT(aFrame->ShouldApplyOverflowClipping(aFrame->StyleDisplay()) ==
-	     aClipAxes);
+  // Only -moz-hidden-unscrollable is handled here (and 'hidden' for table
+  // frames, and any non-visible value for blocks in a paginated context).
+  // We allow -moz-hidden-unscrollable to apply to any kind of frame. This
+  // is required by comboboxes which make their display text (an inline frame)
+  // have clipping.
+  MOZ_ASSERT(aFrame->ShouldApplyOverflowClipping(aFrame->StyleDisplay()));
 
   nsRect clipRect;
   bool haveRadii = false;
@@ -2690,20 +2690,6 @@ static void ApplyOverflowClipping(
   bp.ApplySkipSides(aFrame->GetSkipSides());
   nsRect rect(nsPoint(0, 0), aFrame->GetSize());
   rect.Deflate(bp);
-  if (MOZ_UNLIKELY(!(aClipAxes & nsIFrame::PhysicalAxes::Horizontal))) {
-    // NOTE(mats) We shouldn't be clipping at all in this dimension really,
-    // but clipping in just one axis isn't supported by our GFX APIs so we
-    // clip to our visual overflow rect instead.
-    nsRect o = aFrame->InkOverflowRect();
-    rect.x = o.x;
-    rect.width = o.width;
-  }
-  if (MOZ_UNLIKELY(!(aClipAxes & nsIFrame::PhysicalAxes::Vertical))) {
-    // See the note above.
-    nsRect o = aFrame->InkOverflowRect();
-    rect.y = o.y;
-    rect.height = o.height;
-  }
   clipRect = rect + aBuilder->ToReferenceFrame(aFrame);
   haveRadii = aFrame->GetBoxBorderRadii(radii, bp, false);
   aClipState.ClipContainingBlockDescendantsExtra(clipRect,
@@ -4004,9 +3990,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       placeholder ? placeholder->GetOutOfFlowFrame() : child;
 
   nsIFrame* parent = childOrOutOfFlow->GetParent();
-  const auto* parentDisplay = parent->StyleDisplay();
-  const auto overflowClipAxes =
-      parent->ShouldApplyOverflowClipping(parentDisplay);
+  const bool shouldApplyOverflowClip =
+      parent->ShouldApplyOverflowClipping(parent->StyleDisplay());
 
   const bool isPaintingToWindow = aBuilder->IsPaintingToWindow();
   const bool doingShortcut =
@@ -4015,8 +4000,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       // Animations may change the stacking context state.
       // ShouldApplyOverflowClipping is affected by the parent style, which does
       // not invalidate the NS_FRAME_SIMPLE_DISPLAYLIST bit.
-      !(overflowClipAxes != PhysicalAxes::None ||
-        child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
+      !(shouldApplyOverflowClip || child->MayHaveTransformAnimation() ||
+        child->MayHaveOpacityAnimation());
 
   if (aBuilder->IsForPainting()) {
     aBuilder->ClearWillChangeBudgetStatus(child);
@@ -4184,7 +4169,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     clipState.SetClipChainForContainingBlockDescendants(nullptr);
   }
 
-  // Setup clipping for the parent's overflow:clip,
+  // Setup clipping for the parent's overflow:-moz-hidden-unscrollable,
   // or overflow:hidden on elements that don't support scrolling (and therefore
   // don't create nsHTML/XULScrollFrame). This clipping needs to not clip
   // anything directly rendered by the parent, only the rendering of its
@@ -4196,8 +4181,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // FIXME(emilio): Why can't we handle this more similarly to `clip` (on the
   // parent, rather than on the children)? Would ClipContentDescendants do what
   // we want?
-  if (overflowClipAxes != PhysicalAxes::None) {
-    ApplyOverflowClipping(aBuilder, parent, overflowClipAxes, clipState);
+  if (shouldApplyOverflowClip) {
+    ApplyOverflowClipping(aBuilder, parent, clipState);
     awayFromCommonPath = true;
   }
 
@@ -7397,7 +7382,7 @@ bool nsIFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
 
 /* virtual */
 void nsIFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
-  if (!DoesClipChildrenInBothAxes() &&
+  if (!DoesClipChildren() &&
       !(IsXULCollapsed() && (IsXULBoxFrame() || ::IsXULBoxWrapped(this)))) {
     nsLayoutUtils::UnionChildOverflow(this, aOverflowAreas);
   }
@@ -9037,8 +9022,7 @@ static nsRect UnionBorderBoxes(
   }
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   LayoutFrameType fType = aFrame->Type();
-  auto overflowClipAxes = aFrame->ShouldApplyOverflowClipping(disp);
-  if (overflowClipAxes == nsIFrame::PhysicalAxes::Both ||
+  if (aFrame->ShouldApplyOverflowClipping(disp) ||
       fType == LayoutFrameType::Scroll ||
       fType == LayoutFrameType::ListControl ||
       fType == LayoutFrameType::SVGOuterSVG) {
@@ -9107,15 +9091,6 @@ static nsRect UnionBorderBoxes(
         u.UnionRectEdges(u, childRect);
       }
     }
-  }
-
-  if (overflowClipAxes & nsIFrame::PhysicalAxes::Vertical) {
-    u.y = bounds.y;
-    u.height = bounds.height;
-  }
-  if (overflowClipAxes & nsIFrame::PhysicalAxes::Horizontal) {
-    u.x = bounds.x;
-    u.width = bounds.width;
   }
 
   return u;
@@ -9263,12 +9238,12 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // changed.
   SetSize(aNewSize, false);
 
-  const auto overflowClipAxes = ShouldApplyOverflowClipping(disp);
+  const bool applyOverflowClipping = ShouldApplyOverflowClipping(disp);
 
   if (ChildrenHavePerspective(disp) && sizeChanged) {
     RecomputePerspectiveChildrenOverflow(this);
 
-    if (overflowClipAxes != PhysicalAxes::Both) {
+    if (!applyOverflowClipping) {
       aOverflowAreas.SetAllTo(bounds);
       DebugOnly<bool> ok = ComputeCustomOverflow(aOverflowAreas);
 
@@ -9297,25 +9272,16 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                  "Computed overflow area must contain frame bounds");
   }
 
-  // If we clip our children, clear accumulated overflow area in the affected
-  // dimension(s). The children are actually clipped to the padding-box, but
-  // since the overflow area should include the entire border-box, just set it
-  // to the border-box size here.
-  if (overflowClipAxes != PhysicalAxes::None) {
-    nsRect& ink = aOverflowAreas.InkOverflow();
-    nsRect& scrollable = aOverflowAreas.ScrollableOverflow();
-    if (overflowClipAxes & PhysicalAxes::Vertical) {
-      ink.y = bounds.y;
-      scrollable.y = bounds.y;
-      ink.height = bounds.height;
-      scrollable.height = bounds.height;
-    }
-    if (overflowClipAxes & PhysicalAxes::Horizontal) {
-      ink.x = bounds.x;
-      scrollable.x = bounds.x;
-      ink.width = bounds.width;
-      scrollable.width = bounds.width;
-    }
+  // If we clip our children, clear accumulated overflow area. The
+  // children are actually clipped to the padding-box, but since the
+  // overflow area should include the entire border-box, just set it to
+  // the border-box here.
+  NS_ASSERTION((disp->mOverflowY == StyleOverflow::MozHiddenUnscrollable) ==
+                   (disp->mOverflowX == StyleOverflow::MozHiddenUnscrollable),
+               "If one overflow is clip, the other should be too");
+  if (applyOverflowClipping) {
+    // The contents are actually clipped to the padding area
+    aOverflowAreas.SetAllTo(bounds);
   }
 
   // Overflow area must always include the frame's top-left and bottom-right,
@@ -9332,7 +9298,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     }
   }
 
-  // Note that StyleOverflow::Clip doesn't clip the frame
+  // Note that StyleOverflow::MozHiddenUnscrollable doesn't clip the frame
   // background, so we add theme background overflow here so it's not clipped.
   if (!::IsXULBoxWrapped(this) && IsThemed(disp)) {
     nsRect r(bounds);
@@ -11055,21 +11021,26 @@ void nsIFrame::UpdateVisibleDescendantsState() {
   }
 }
 
-nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
-    const nsStyleDisplay* aDisp) const {
+bool nsIFrame::ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const {
   MOZ_ASSERT(aDisp == StyleDisplay(), "Wrong display struct");
-
-  // 'contain:paint', which we handle as 'overflow:clip' here. Except for
-  // scrollframes we don't need contain:paint to add any clipping, because
-  // the scrollable frame will already clip overflowing content, and because
-  // 'contain:paint' should prevent all means of escaping that clipping
-  // (e.g. because it forms a fixed-pos containing block).
-  if (aDisp->IsContainPaint() && !IsScrollFrame() &&
-      IsFrameOfType(eSupportsContainLayoutAndPaint)) {
-    return PhysicalAxes::Both;
+  // clip overflow:-moz-hidden-unscrollable, except for nsListControlFrame,
+  // which is an nsHTMLScrollFrame.
+  if (MOZ_UNLIKELY(aDisp->mOverflowX == StyleOverflow::MozHiddenUnscrollable &&
+                   !IsListControlFrame())) {
+    return true;
   }
 
-  // and overflow:hidden that we should interpret as clip
+  // contain: paint, which we interpret as -moz-hidden-unscrollable
+  // Exception: for scrollframes, we don't need contain:paint to add any
+  // clipping, because the scrollable frame will already clip overflowing
+  // content, and because contain:paint should prevent all means of escaping
+  // that clipping (e.g. because it forms a fixed-pos containing block).
+  if (aDisp->IsContainPaint() && !IsScrollFrame() &&
+      IsFrameOfType(eSupportsContainLayoutAndPaint)) {
+    return true;
+  }
+
+  // and overflow:hidden that we should interpret as -moz-hidden-unscrollable
   if (aDisp->mOverflowX == StyleOverflow::Hidden &&
       aDisp->mOverflowY == StyleOverflow::Hidden) {
     // REVIEW: these are the frame types that set up clipping.
@@ -11081,48 +11052,24 @@ nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
       case LayoutFrameType::SVGInnerSVG:
       case LayoutFrameType::SVGSymbol:
       case LayoutFrameType::SVGForeignObject:
-        return PhysicalAxes::Both;
+        return true;
       default:
         if (IsFrameOfType(nsIFrame::eReplacedContainsBlock)) {
-          if (type == mozilla::LayoutFrameType::TextInput) {
-            // It has an anonymous scroll frame that handles any overflow.
-            return PhysicalAxes::None;
-          }
-          return PhysicalAxes::Both;
+          // It has an anonymous scroll frame that handles any overflow
+          // except TextInput.
+          return type != LayoutFrameType::TextInput;
         }
     }
   }
 
-  // clip overflow:clip, except for nsListControlFrame which is
-  // an nsHTMLScrollFrame sub-class.
-  if (MOZ_UNLIKELY((aDisp->mOverflowX == mozilla::StyleOverflow::Clip ||
-                    aDisp->mOverflowY == mozilla::StyleOverflow::Clip) &&
-                   !IsListControlFrame())) {
-    // FIXME: we could use GetViewportScrollStylesOverrideElement() here instead
-    // if that worked correctly in a print context. (see bug 1654667)
-    const auto* element = Element::FromNodeOrNull(GetContent());
-    if (!element ||
-        !PresContext()->ElementWouldPropagateScrollStyles(*element)) {
-      uint8_t axes = uint8_t(PhysicalAxes::None);
-      if (aDisp->mOverflowX == mozilla::StyleOverflow::Clip) {
-	axes |= uint8_t(PhysicalAxes::Horizontal);
-      }
-      if (aDisp->mOverflowY == mozilla::StyleOverflow::Clip) {
-	axes |= uint8_t(PhysicalAxes::Vertical);
-      }
-      return PhysicalAxes(axes);
-    }
-  }
-
   if (HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
-    return PhysicalAxes::None;
+    return false;
   }
 
   // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
   // set, then we want to clip our overflow.
-  bool clip = HasAnyStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW) &&
-              PresContext()->IsPaginated() && IsBlockFrame();
-  return clip ? PhysicalAxes::Both : PhysicalAxes::None;
+  return HasAnyStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW) &&
+         PresContext()->IsPaginated() && IsBlockFrame();
 }
 
 // Box layout debugging
