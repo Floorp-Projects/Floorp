@@ -902,7 +902,7 @@ class TestInfoReport(TestInfo):
                             if t.get('skip-if'):
                                 manifest_info['skipped'] += 1
             for key in by_component['manifests']:
-                by_component['manifests'][key].sort()
+                by_component['manifests'][key].sort(key=lambda k: k['manifest'])
 
         if show_tests:
             by_component['tests'] = {}
