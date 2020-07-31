@@ -477,10 +477,13 @@ void Family::SetupFamilyCharMap(FontList* aList) {
   for (size_t i = 0; i < NumFaces(); i++) {
     auto f = static_cast<Face*>(faces[i].ToPtr(aList));
     if (!f) {
-      continue;
+      continue;  // Skip missing face (in an incomplete "simple" family)
     }
     auto faceMap = static_cast<SharedBitSet*>(f->mCharacterMap.ToPtr(aList));
-    MOZ_ASSERT(faceMap);
+    if (!faceMap) {
+      return;  // If there's a face where setting up the cmap failed or is not
+               // yet complete, just bail out of creating the family charmap.
+    }
     if (!firstMap) {
       firstMap = faceMap;
       firstMapShmPointer = f->mCharacterMap;

@@ -1297,7 +1297,9 @@ bool gfxPlatformFontList::InitializeFamily(fontlist::Family* aFamily,
       return false;
     }
     uint32_t index = aFamily - families;
-    MOZ_ASSERT(index < list->NumFamilies());
+    if (index >= list->NumFamilies()) {
+      return false;
+    }
     if (NS_IsMainThread()) {
       dom::ContentChild::GetSingleton()->SendInitializeFamily(
           list->GetGeneration(), index, aLoadCmaps);
