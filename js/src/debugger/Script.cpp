@@ -1544,7 +1544,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::CheckClassHeritage:
     case JSOp::FunWithProto:
     case JSOp::ObjWithProto:
-    case JSOp::FunctionProto:
+    case JSOp::BuiltinObject:
     case JSOp::DerivedConstructor:
     case JSOp::CheckThis:
     case JSOp::CheckReturn:
