@@ -380,6 +380,10 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // increase 1 to mAsyncOpenBarrier and invoke TryInvokeAsyncOpen after
   // finished. This attribute is main thread only.
   uint8_t mAsyncOpenBarrier = 0;
+
+  // When true, ODAs are sent from the socket process to the child process
+  // directly.
+  uint8_t mDataSentToChildProcess : 1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelParent, HTTP_CHANNEL_PARENT_IID)
