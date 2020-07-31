@@ -509,6 +509,10 @@ bool BytecodeEmitter::emitCheckIsObj(CheckIsObjectKind kind) {
   return emit2(JSOp::CheckIsObj, uint8_t(kind));
 }
 
+bool BytecodeEmitter::emitBuiltinObject(BuiltinObjectKind kind) {
+  return emit2(JSOp::BuiltinObject, uint8_t(kind));
+}
+
 /* Updates line number notes, not column notes. */
 bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
   if (skipLocationSrcNotes()) {
@@ -7293,6 +7297,54 @@ bool BytecodeEmitter::emitSelfHostedToString(BinaryNode* callNode) {
   return emit1(JSOp::ToString);
 }
 
+bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructorOrPrototype(
+    BinaryNode* callNode, bool isConstructor) {
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+
+  if (argsList->count() != 1) {
+    const char* name =
+        isConstructor ? "GetBuiltinConstructor" : "GetBuiltinPrototype";
+    reportNeedMoreArgsError(callNode, name, "1", "", argsList);
+    return false;
+  }
+
+  ParseNode* argNode = argsList->head();
+
+  if (!argNode->isKind(ParseNodeKind::StringExpr)) {
+    reportError(callNode, JSMSG_UNEXPECTED_TYPE, "built-in name",
+                "not a string constant");
+    return false;
+  }
+
+  JSAtom* name = argNode->as<NameNode>().atom();
+
+  BuiltinObjectKind kind;
+  if (isConstructor) {
+    kind = BuiltinConstructorForName(cx, name);
+  } else {
+    kind = BuiltinPrototypeForName(cx, name);
+  }
+
+  if (kind == BuiltinObjectKind::None) {
+    reportError(callNode, JSMSG_UNEXPECTED_TYPE, "built-in name",
+                "not a valid built-in");
+    return false;
+  }
+
+  return emitBuiltinObject(kind);
+}
+
+bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructor(
+    BinaryNode* callNode) {
+  return emitSelfHostedGetBuiltinConstructorOrPrototype(
+      callNode, /* isConstructor = */ true);
+}
+
+bool BytecodeEmitter::emitSelfHostedGetBuiltinPrototype(BinaryNode* callNode) {
+  return emitSelfHostedGetBuiltinConstructorOrPrototype(
+      callNode, /* isConstructor = */ false);
+}
+
 #ifdef DEBUG
 bool BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot(
     BinaryNode* callNode) {
@@ -7813,6 +7865,12 @@ bool BytecodeEmitter::emitCallOrNew(
     }
     if (calleeName == cx->parserNames().ToString) {
       return emitSelfHostedToString(callNode);
+    }
+    if (calleeName == cx->parserNames().GetBuiltinConstructor) {
+      return emitSelfHostedGetBuiltinConstructor(callNode);
+    }
+    if (calleeName == cx->parserNames().GetBuiltinPrototype) {
+      return emitSelfHostedGetBuiltinPrototype(callNode);
     }
 #ifdef DEBUG
     if (calleeName == cx->parserNames().UnsafeGetReservedSlot ||

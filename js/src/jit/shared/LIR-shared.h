@@ -7682,13 +7682,13 @@ class LObjectStaticProto : public LInstructionHelper<1, 1, 0> {
   }
 };
 
-class LFunctionProto : public LCallInstructionHelper<1, 0, 0> {
+class LBuiltinObject : public LCallInstructionHelper<1, 0, 0> {
  public:
-  LIR_HEADER(FunctionProto)
+  LIR_HEADER(BuiltinObject)
 
-  LFunctionProto() : LCallInstructionHelper(classOpcode) {}
+  LBuiltinObject() : LCallInstructionHelper(classOpcode) {}
 
-  MFunctionProto* mir() const { return mir_->toFunctionProto(); }
+  MBuiltinObject* mir() const { return mir_->toBuiltinObject(); }
 };
 
 class LSuperFunction : public LInstructionHelper<BOX_PIECES, 1, 1> {
