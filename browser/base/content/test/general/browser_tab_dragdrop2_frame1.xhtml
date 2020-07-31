@@ -111,40 +111,41 @@ var tests = [
   {
     testname: "normal panel",
     attrs: { },
-    test: function(panel) {
+    test(panel) {
       panel.openPopupAtScreen(200, 210);
     },
-    result: function(testname, panel) {
+    result(testname, panel) {
       if (my_debug) alert(testname);
-      var panelrect = panel.getBoundingClientRect();
+      panel.getBoundingClientRect();
     }
   },
   {
     // only noautohide panels support titlebars, so one shouldn't be shown here
     testname: "autohide panel with titlebar",
     attrs: { titlebar: "normal" },
-    test: function(panel) {
+    test(panel) {
       panel.openPopupAtScreen(200, 210);
     },
-    result: function(testname, panel) {
+    result(testname, panel) {
       if (my_debug) alert(testname);
-      var panelrect = panel.getBoundingClientRect();
+      panel.getBoundingClientRect();
     }
   },
   {
     testname: "noautohide panel with titlebar",
     attrs: { noautohide: true, titlebar: "normal" },
-    test: function(panel) {
+    test(panel) {
       waitSteps = 25;
       panel.openPopupAtScreen(200, 210);
     },
-    result: function(testname, panel) {
+    result(testname, panel) {
       if (my_debug) alert(testname);
-      var panelrect = panel.getBoundingClientRect();
+      panel.getBoundingClientRect();
 
       var gotMouseEvent = false;
       function mouseMoved(event)
       {
+        // eslint-disable-next-line no-unused-vars
         gotMouseEvent = true;
       }
 

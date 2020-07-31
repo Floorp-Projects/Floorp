@@ -68,7 +68,7 @@
       for (let queryName of topLevelGuids) {
         let found = false;
         for (let i = 0; i < tree.view.rowCount && !found; i++) {
-          rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
+          let rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
           found = rowProperties.includes("OrganizerQuery_" + queryName);
         }
         ok(found, `OrganizerQuery_${queryName} is set`);
@@ -83,7 +83,7 @@
       for (let guid of folderGuids) {
         let found = false;
         for (let i = 0; i < tree.view.rowCount && !found; i++) {
-          rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
+          let rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
           found = rowProperties.includes("queryFolder_" + guid);
         }
         ok(found, `queryFolder_${guid} is set`);
