@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 
 const val FXA_STATE_PREFS_KEY = "fxaAppState"

@@ -13,7 +13,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.CrashTelemetryService
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
@@ -421,7 +421,13 @@ class CrashReporterTest {
         ).install(testContext))
 
         val throwable = RuntimeException()
-        val breadcrumb = Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+        val breadcrumb = Breadcrumb(
+            testMessage,
+            testData,
+            testCategory,
+            testLevel,
+            testType
+        )
         reporter.recordCrashBreadcrumb(breadcrumb)
 
         reporter.submitCaughtException(throwable).joinBlocking()
@@ -468,7 +474,13 @@ class CrashReporterTest {
 
         val throwable = RuntimeException()
         throwable.stackTrace = emptyArray()
-        val breadcrumb = Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+        val breadcrumb = Breadcrumb(
+            testMessage,
+            testData,
+            testCategory,
+            testLevel,
+            testType
+        )
         reporter.recordCrashBreadcrumb(breadcrumb)
 
         reporter.submitCaughtException(throwable).joinBlocking()

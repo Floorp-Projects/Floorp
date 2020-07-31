@@ -11,7 +11,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.crash.Crash
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
 import org.json.JSONException

@@ -8,8 +8,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
 import mozilla.appservices.rustlog.LogAdapterCannotEnable
 import mozilla.appservices.rustlog.LogLevelFilter
-import mozilla.components.support.base.crash.Breadcrumb
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.Log
 import org.junit.Test
 import mozilla.components.support.test.mock
@@ -122,7 +122,8 @@ class RustLogTest {
         assertEquals(LogLevelFilter.ERROR, Log.Priority.ERROR.asLevelFilter(true))
     }
 
-    private class TestCrashReporter : CrashReporting {
+    private class TestCrashReporter :
+        CrashReporting {
         val exceptions: MutableList<Throwable> = mutableListOf()
 
         override fun submitCaughtException(throwable: Throwable): Job {

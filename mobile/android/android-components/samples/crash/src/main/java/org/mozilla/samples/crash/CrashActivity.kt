@@ -16,7 +16,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_crash.*
 import mozilla.components.lib.crash.Crash
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 
 class CrashActivity : AppCompatActivity(), View.OnClickListener {
     private val receiver = object : BroadcastReceiver() {
@@ -44,8 +44,13 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
         crashList.setOnClickListener(this)
 
         crashReporter.recordCrashBreadcrumb(
-            Breadcrumb("CrashActivity onCreate", emptyMap(), "sample", Breadcrumb.Level.DEBUG,
-                Breadcrumb.Type.NAVIGATION)
+            Breadcrumb(
+                "CrashActivity onCreate",
+                emptyMap(),
+                "sample",
+                Breadcrumb.Level.DEBUG,
+                Breadcrumb.Type.NAVIGATION
+            )
         )
     }
 
@@ -54,8 +59,13 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
         registerReceiver(receiver, IntentFilter(CrashApplication.NON_FATAL_CRASH_BROADCAST))
 
         crashReporter.recordCrashBreadcrumb(
-            Breadcrumb("CrashActivity onResume", emptyMap(), "sample", Breadcrumb.Level.DEBUG,
-                Breadcrumb.Type.NAVIGATION)
+            Breadcrumb(
+                "CrashActivity onResume",
+                emptyMap(),
+                "sample",
+                Breadcrumb.Level.DEBUG,
+                Breadcrumb.Type.NAVIGATION
+            )
         )
     }
 
@@ -64,8 +74,13 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
         unregisterReceiver(receiver)
 
         crashReporter.recordCrashBreadcrumb(
-            Breadcrumb("CrashActivity onPause", emptyMap(), "sample", Breadcrumb.Level.DEBUG,
-                Breadcrumb.Type.NAVIGATION)
+            Breadcrumb(
+                "CrashActivity onPause",
+                emptyMap(),
+                "sample",
+                Breadcrumb.Level.DEBUG,
+                Breadcrumb.Type.NAVIGATION
+            )
         )
     }
 
@@ -74,8 +89,13 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
         when (view) {
             fatalCrashButton -> {
                 crashReporter.recordCrashBreadcrumb(
-                    Breadcrumb("fatal crash button clicked", emptyMap(), "sample",
-                        Breadcrumb.Level.INFO, Breadcrumb.Type.USER)
+                    Breadcrumb(
+                        "fatal crash button clicked",
+                        emptyMap(),
+                        "sample",
+                        Breadcrumb.Level.INFO,
+                        Breadcrumb.Type.USER
+                    )
                 )
 
                 throw RuntimeException("Boom!")
@@ -83,8 +103,13 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
 
             crashButton -> {
                 crashReporter.recordCrashBreadcrumb(
-                    Breadcrumb("crash button clicked", emptyMap(), "sample", Breadcrumb.Level.INFO,
-                        Breadcrumb.Type.USER)
+                    Breadcrumb(
+                        "crash button clicked",
+                        emptyMap(),
+                        "sample",
+                        Breadcrumb.Level.INFO,
+                        Breadcrumb.Type.USER
+                    )
                 )
 
                 // Pretend GeckoView has crashed by re-building a crash Intent and launching the CrashHandlerService.
@@ -109,8 +134,13 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
 
             fatalServiceCrashButton -> {
                 crashReporter.recordCrashBreadcrumb(
-                    Breadcrumb("fatal service crash button clicked", emptyMap(), "sample",
-                        Breadcrumb.Level.INFO, Breadcrumb.Type.USER)
+                    Breadcrumb(
+                        "fatal service crash button clicked",
+                        emptyMap(),
+                        "sample",
+                        Breadcrumb.Level.INFO,
+                        Breadcrumb.Type.USER
+                    )
                 )
 
                 startService(Intent(this, CrashService::class.java))

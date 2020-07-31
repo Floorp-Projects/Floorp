@@ -6,7 +6,7 @@ package mozilla.components.support.migration
 
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals

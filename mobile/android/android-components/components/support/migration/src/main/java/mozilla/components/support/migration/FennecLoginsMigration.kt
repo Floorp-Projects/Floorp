@@ -12,7 +12,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.service.sync.logins.toLogin
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.pkcs7unpad
 import mozilla.components.support.ktx.kotlin.toHexString

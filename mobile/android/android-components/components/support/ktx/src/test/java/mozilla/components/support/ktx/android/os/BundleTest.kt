@@ -6,7 +6,7 @@ package mozilla.components.support.ktx.android.os
 
 import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -54,7 +54,11 @@ class BundleTest {
         val date = Date()
         val (bundle1, bundle2) = (0..1).map {
             bundleOf(
-                "crumbs" to Breadcrumb(message = "msg", level = Breadcrumb.Level.DEBUG, date = date)
+                "crumbs" to Breadcrumb(
+                    message = "msg",
+                    level = Breadcrumb.Level.DEBUG,
+                    date = date
+                )
             )
         }
         assertTrue(bundle1.contentEquals(bundle2))

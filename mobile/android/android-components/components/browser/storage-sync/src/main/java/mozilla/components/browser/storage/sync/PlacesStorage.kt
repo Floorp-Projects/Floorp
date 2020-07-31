@@ -18,7 +18,7 @@ import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
 import java.util.concurrent.Executors

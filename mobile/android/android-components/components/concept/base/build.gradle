@@ -4,6 +4,7 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -25,7 +26,7 @@ android {
 
 dependencies {
     implementation Dependencies.kotlin_stdlib
-    testImplementation Dependencies.kotlin_coroutines
+    implementation Dependencies.kotlin_coroutines
 
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric

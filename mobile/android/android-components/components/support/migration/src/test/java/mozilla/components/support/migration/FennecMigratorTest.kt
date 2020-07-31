@@ -38,7 +38,7 @@ import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.eq

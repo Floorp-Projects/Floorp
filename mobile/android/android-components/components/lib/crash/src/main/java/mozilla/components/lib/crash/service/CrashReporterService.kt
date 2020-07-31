@@ -5,7 +5,7 @@
 package mozilla.components.lib.crash.service
 
 import mozilla.components.lib.crash.Crash
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 
 internal const val INFO_PREFIX = "[INFO]"
 
