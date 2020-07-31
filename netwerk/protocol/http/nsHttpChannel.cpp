@@ -1916,10 +1916,20 @@ nsresult nsHttpChannel::CallOnStartRequest() {
   });
 
   nsresult rv = EnsureMIMEOfScript(this, mURI, mResponseHead.get(), mLoadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Since ODA and OnStopRequest could be sent from socket process directly, we
+  // need to update the channel status before calling mListener->OnStartRequest.
+  // This is the only way to let child process discard the already received ODA
+  // messages.
+  if (NS_FAILED(rv)) {
+    mStatus = rv;
+    return mStatus;
+  }
 
   rv = ProcessXCTO(this, mURI, mResponseHead.get(), mLoadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    mStatus = rv;
+    return mStatus;
+  }
 
   WarnWrongMIMEOfScript(this, mURI, mResponseHead.get(), mLoadInfo);
 
