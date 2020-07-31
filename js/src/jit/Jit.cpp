@@ -10,6 +10,7 @@
 #include "jit/Ion.h"
 #include "jit/JitCommon.h"
 #include "jit/JitRealm.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "vm/Interpreter.h"
 
 #include "vm/Stack-inl.h"

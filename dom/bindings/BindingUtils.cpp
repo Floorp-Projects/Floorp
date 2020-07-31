@@ -19,6 +19,7 @@
 #include "mozilla/UseCounter.h"
 
 #include "AccessCheck.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimitConservative
 #include "js/Id.h"
 #include "js/JSON.h"
 #include "js/StableStringChars.h"

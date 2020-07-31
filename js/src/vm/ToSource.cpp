@@ -19,6 +19,7 @@
 #include "builtin/Object.h"   // ObjectToSource
 #include "gc/Allocator.h"     // CanGC
 #include "js/Class.h"         // ESClass
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "js/Symbol.h"        // SymbolCode, JS::WellKnownSymbolLimit
 #include "js/TypeDecls.h"  // Rooted{Function, Object, String, Value}, HandleValue, Latin1Char
 #include "js/Utility.h"         // UniqueChars
