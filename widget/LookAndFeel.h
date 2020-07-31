@@ -12,11 +12,13 @@
 
 #include "nsDebug.h"
 #include "nsColor.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 struct gfxFontStyle;
 
 struct LookAndFeelInt;
+struct LookAndFeelFontInfo;
 
 namespace mozilla {
 
@@ -554,6 +556,14 @@ class LookAndFeel {
 struct LookAndFeelInt {
   mozilla::LookAndFeel::IntID id;
   int32_t value;
+};
+
+struct LookAndFeelFontInfo {
+  bool haveFont;
+  nsString fontName;
+  float pixelHeight;
+  bool italic;
+  bool bold;
 };
 
 // On the Mac, GetColor(ColorID::TextSelectForeground, color) returns this
