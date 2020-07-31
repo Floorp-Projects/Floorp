@@ -5967,7 +5967,7 @@
 # Whether the ::-moz-focus-outer pseudo-class is parsed.
 - name: layout.css.moz-focus-outer.enabled
   type: RelaxedAtomicBool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
