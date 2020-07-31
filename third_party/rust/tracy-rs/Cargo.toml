@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "tracy-rs"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Glenn Watson <git@intuitionlibrary.com>"]
 description = "Rust bindings for the tracy realtime profiler"
 license = "MPL-2.0"
