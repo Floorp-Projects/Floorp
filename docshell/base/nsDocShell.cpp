@@ -783,7 +783,8 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
   } else if (aLoadState->LoadFlags() & LOAD_FLAGS_DISABLE_TRR) {
     defaultLoadFlags |= nsIRequest::LOAD_TRR_DISABLED_MODE;
   }
-  mBrowsingContext->SetDefaultLoadFlags(defaultLoadFlags);
+
+  MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetDefaultLoadFlags(defaultLoadFlags));
 
   if (!StartupTimeline::HasRecord(StartupTimeline::FIRST_LOAD_URI) &&
       mItemType == typeContent && !NS_IsAboutBlank(aLoadState->URI())) {
@@ -1484,9 +1485,8 @@ nsDocShell::GetAllowPlugins(bool* aAllowPlugins) {
 
 NS_IMETHODIMP
 nsDocShell::SetAllowPlugins(bool aAllowPlugins) {
-  mBrowsingContext->SetAllowPlugins(aAllowPlugins);
   // XXX should enable or disable a plugin host
-  return NS_OK;
+  return mBrowsingContext->SetAllowPlugins(aAllowPlugins);
 }
 
 NS_IMETHODIMP
@@ -1759,8 +1759,7 @@ nsDocShell::GetAllowContentRetargeting(bool* aAllowContentRetargeting) {
 
 NS_IMETHODIMP
 nsDocShell::SetAllowContentRetargeting(bool aAllowContentRetargeting) {
-  mBrowsingContext->SetAllowContentRetargeting(aAllowContentRetargeting);
-  return NS_OK;
+  return mBrowsingContext->SetAllowContentRetargeting(aAllowContentRetargeting);
 }
 
 NS_IMETHODIMP
@@ -1774,9 +1773,8 @@ nsDocShell::GetAllowContentRetargetingOnChildren(
 NS_IMETHODIMP
 nsDocShell::SetAllowContentRetargetingOnChildren(
     bool aAllowContentRetargetingOnChildren) {
-  mBrowsingContext->SetAllowContentRetargetingOnChildren(
+  return mBrowsingContext->SetAllowContentRetargetingOnChildren(
       aAllowContentRetargetingOnChildren);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1926,8 +1924,7 @@ nsDocShell::GetUseErrorPages(bool* aUseErrorPages) {
 
 NS_IMETHODIMP
 nsDocShell::SetUseErrorPages(bool aUseErrorPages) {
-  mBrowsingContext->SetUseErrorPages(aUseErrorPages);
-  return NS_OK;
+  return mBrowsingContext->SetUseErrorPages(aUseErrorPages);
 }
 
 NS_IMETHODIMP
@@ -2172,8 +2169,7 @@ nsDocShell::GetName(nsAString& aName) {
 
 NS_IMETHODIMP
 nsDocShell::SetName(const nsAString& aName) {
-  mBrowsingContext->SetName(aName);
-  return NS_OK;
+  return mBrowsingContext->SetName(aName);
 }
 
 NS_IMETHODIMP
@@ -2196,8 +2192,7 @@ nsDocShell::SetCustomUserAgent(const nsAString& aCustomUserAgent) {
     return NS_ERROR_FAILURE;
   }
 
-  mBrowsingContext->SetCustomUserAgent(aCustomUserAgent);
-  return NS_OK;
+  return mBrowsingContext->SetCustomUserAgent(aCustomUserAgent);
 }
 
 NS_IMETHODIMP
@@ -8905,7 +8900,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
   // here because orientation is only set on top-level browsing contexts.
   if (mBrowsingContext->GetOrientationLock() != hal::eScreenOrientation_None) {
     MOZ_ASSERT(mBrowsingContext->IsTop());
-    mBrowsingContext->SetOrientationLock(hal::eScreenOrientation_None);
+    MOZ_ALWAYS_SUCCEEDS(
+        mBrowsingContext->SetOrientationLock(hal::eScreenOrientation_None));
     if (mBrowsingContext->GetIsActive()) {
       ScreenOrientation::UpdateActiveOrientationLock(
           hal::eScreenOrientation_None);
@@ -8959,7 +8955,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
       // We're making history navigation or a reload. Make sure our history ID
       // points to the same ID as SHEntry's docshell ID.
       aLoadState->SHEntry()->GetDocshellID(mHistoryID);
-      mBrowsingContext->SetHistoryID(mHistoryID);
+
+      MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetHistoryID(mHistoryID));
     }
   }
 
@@ -11074,16 +11071,16 @@ nsresult nsDocShell::AddToSessionHistory(
     // user interaction flag.
     if (aCloneChildren) {
       WindowContext* topWc = mBrowsingContext->GetTopWindowContext();
-      if (topWc) {
-        topWc->SetSHEntryHasUserInteraction(false);
+      if (topWc && !topWc->IsDiscarded()) {
+        MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(false));
       }
     }
   } else {
     // This is a subframe, make sure that this new SHEntry will be
     // marked with user interaction.
     WindowContext* topWc = mBrowsingContext->GetTopWindowContext();
-    if (topWc) {
-      topWc->SetSHEntryHasUserInteraction(false);
+    if (topWc && !topWc->IsDiscarded()) {
+      MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(false));
     }
     if (!mOSHE || !LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {
       rv = AddChildSHEntryToParent(entry, mChildOffset, aCloneChildren);

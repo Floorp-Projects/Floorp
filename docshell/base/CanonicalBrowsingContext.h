@@ -125,7 +125,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // This function is used to mute or unmute all media within a tab. It would
   // set the media mute property for the top level window and propagate it to
   // other top level windows in other processes.
-  void NotifyMediaMutedChanged(bool aMuted);
+  void NotifyMediaMutedChanged(bool aMuted, ErrorResult& aRv);
 
   // Return the number of unique site origins by iterating all given BCs,
   // including their subtrees.

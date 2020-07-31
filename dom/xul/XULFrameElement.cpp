@@ -186,7 +186,7 @@ nsresult XULFrameElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       LoadSrc();
     } else if (aName == nsGkAtoms::disablefullscreen && mFrameLoader) {
       if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
-        bc->SetFullscreenAllowedByOwner(!aValue);
+        MOZ_ALWAYS_SUCCEEDS(bc->SetFullscreenAllowedByOwner(!aValue));
       }
     }
   }

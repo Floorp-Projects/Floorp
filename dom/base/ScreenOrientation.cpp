@@ -79,8 +79,8 @@ ScreenOrientation::ScreenOrientation(nsPIDOMWindowInner* aWindow,
 
   Document* doc = GetResponsibleDocument();
   BrowsingContext* bc = doc ? doc->GetBrowsingContext() : nullptr;
-  if (bc && !bc->InRDMPane()) {
-    bc->SetCurrentOrientation(mType, mAngle);
+  if (bc && !bc->IsDiscarded() && !bc->InRDMPane()) {
+    MOZ_ALWAYS_SUCCEEDS(bc->SetCurrentOrientation(mType, mAngle));
   }
 }
 
@@ -317,7 +317,11 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
     return nullptr;
   }
 
-  bc->SetOrientationLock(aOrientation);
+  bc->SetOrientationLock(aOrientation, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   AbortInProcessOrientationPromises(bc);
   dom::ContentChild::GetSingleton()->SendAbortOtherOrientationPendingPromises(
       bc);
@@ -523,7 +527,8 @@ void ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration) {
   }
 
   if (mType != bc->GetCurrentOrientationType()) {
-    bc->SetCurrentOrientation(mType, mAngle);
+    rv = bc->SetCurrentOrientation(mType, mAngle);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetCurrentOrientation failed");
 
     nsCOMPtr<nsIRunnable> runnable = DispatchChangeEventAndResolvePromise();
     rv = NS_DispatchToMainThread(runnable);
@@ -606,8 +611,10 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
   BrowsingContext* bc = doc->GetBrowsingContext();
   if (bc && bc->GetCurrentOrientationType() !=
                 orientation->DeviceType(CallerType::System)) {
-    bc->SetCurrentOrientation(orientation->DeviceType(CallerType::System),
-                              orientation->DeviceAngle(CallerType::System));
+    nsresult result =
+        bc->SetCurrentOrientation(orientation->DeviceType(CallerType::System),
+                                  orientation->DeviceAngle(CallerType::System));
+    NS_ENSURE_SUCCESS(result, result);
 
     nsCOMPtr<nsIRunnable> runnable =
         orientation->DispatchChangeEventAndResolvePromise();

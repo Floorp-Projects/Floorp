@@ -305,7 +305,7 @@ void PermissionDelegateHandler::PopulateAllDelegatedPermissions() {
   }
 
   RefPtr<WindowContext> wc = mDocument->GetWindowContext();
-  NS_ENSURE_TRUE_VOID(wc);
+  NS_ENSURE_TRUE_VOID(wc && !wc->IsDiscarded());
 
   DelegatedPermissionList list;
   DelegatedPermissionList exactHostMatchList;
@@ -330,7 +330,7 @@ void PermissionDelegateHandler::PopulateAllDelegatedPermissions() {
   WindowContext::Transaction txn;
   txn.SetDelegatedPermissions(list);
   txn.SetDelegatedExactHostMatchPermissions(exactHostMatchList);
-  txn.Commit(wc);
+  MOZ_ALWAYS_SUCCEEDS(txn.Commit(wc));
 }
 
 void PermissionDelegateHandler::UpdateDelegatedPermission(
@@ -374,7 +374,7 @@ void PermissionDelegateHandler::UpdateDelegatedPermission(
 
   // We only commit if there is any change of permissions.
   if (changed) {
-    txn.Commit(wc);
+    MOZ_ALWAYS_SUCCEEDS(txn.Commit(wc));
   }
 }
 

@@ -338,7 +338,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SetOpener(BrowsingContext* aOpener) {
     MOZ_DIAGNOSTIC_ASSERT(!aOpener || aOpener->Group() == Group());
     MOZ_DIAGNOSTIC_ASSERT(!aOpener || aOpener->mType == mType);
-    SetOpenerId(aOpener ? aOpener->Id() : 0);
+
+    MOZ_ALWAYS_SUCCEEDS(SetOpenerId(aOpener ? aOpener->Id() : 0));
   }
 
   bool HasOpener() const;
@@ -356,12 +357,15 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   already_AddRefed<BrowsingContext> GetOnePermittedSandboxedNavigator() const {
     return Get(GetOnePermittedSandboxedNavigatorId());
   }
-  void SetOnePermittedSandboxedNavigator(BrowsingContext* aNavigator) {
+  MOZ_MUST_USE nsresult
+  SetOnePermittedSandboxedNavigator(BrowsingContext* aNavigator) {
     if (GetOnePermittedSandboxedNavigatorId()) {
       MOZ_ASSERT(false,
                  "One Permitted Sandboxed Navigator should only be set once.");
+      return NS_ERROR_FAILURE;
     } else {
-      SetOnePermittedSandboxedNavigatorId(aNavigator ? aNavigator->Id() : 0);
+      return SetOnePermittedSandboxedNavigatorId(aNavigator ? aNavigator->Id()
+                                                            : 0);
     }
   }
 
@@ -398,7 +402,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SetUsePrivateBrowsing(bool aUsePrivateBrowsing, ErrorResult& aError);
   // Needs a different name to disambiguate from the xpidl method with
   // the same signature but different return value.
-  void SetUseTrackingProtectionWebIDL(bool aUseTrackingProtection);
+  void SetUseTrackingProtectionWebIDL(bool aUseTrackingProtection,
+                                      ErrorResult& aRv);
   bool UseTrackingProtectionWebIDL() { return UseTrackingProtection(); }
   void GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal,
                            ErrorResult& aError);
@@ -434,24 +439,30 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   // ScreenOrientation related APIs
-  void SetCurrentOrientation(OrientationType aType, float aAngle) {
-    SetCurrentOrientationType(aType);
-    SetCurrentOrientationAngle(aAngle);
+  MOZ_MUST_USE nsresult SetCurrentOrientation(OrientationType aType,
+                                              float aAngle) {
+    Transaction txn;
+    txn.SetCurrentOrientationType(aType);
+    txn.SetCurrentOrientationAngle(aAngle);
+    return txn.Commit(this);
   }
 
-  void SetRDMPaneOrientation(OrientationType aType, float aAngle) {
+  void SetRDMPaneOrientation(OrientationType aType, float aAngle,
+                             ErrorResult& aRv) {
     if (InRDMPane()) {
-      SetCurrentOrientation(aType, aAngle);
+      if (NS_FAILED(SetCurrentOrientation(aType, aAngle))) {
+        aRv.ThrowInvalidStateError("Browsing context is discarded");
+      }
     }
   }
 
-  void SetRDMPaneMaxTouchPoints(uint8_t aMaxTouchPoints) {
+  void SetRDMPaneMaxTouchPoints(uint8_t aMaxTouchPoints, ErrorResult& aRv) {
     if (InRDMPane()) {
-      SetMaxTouchPointsOverride(aMaxTouchPoints);
+      SetMaxTouchPointsOverride(aMaxTouchPoints, aRv);
     }
   }
 
-  void SetAllowContentRetargeting(bool aAllowContentRetargeting);
+  nsresult SetAllowContentRetargeting(bool aAllowContentRetargeting);
 
   // Using the rules for choosing a browsing context we try to find
   // the browsing context with the given name in the set of
@@ -551,12 +562,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void GetCustomUserAgent(nsAString& aUserAgent) {
     aUserAgent = Top()->GetUserAgentOverride();
   }
-  void SetCustomUserAgent(const nsAString& aUserAgent);
+  nsresult SetCustomUserAgent(const nsAString& aUserAgent);
+  void SetCustomUserAgent(const nsAString& aUserAgent, ErrorResult& aRv);
 
   void GetCustomPlatform(nsAString& aPlatform) {
     aPlatform = Top()->GetPlatformOverride();
   }
-  void SetCustomPlatform(const nsAString& aPlatform);
+  void SetCustomPlatform(const nsAString& aPlatform, ErrorResult& aRv);
 
   JSObject* WrapObject(JSContext* aCx);
 
@@ -568,7 +580,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void StartDelayedAutoplayMediaComponents();
 
-  void ResetGVAutoplayRequestStatus();
+  MOZ_MUST_USE nsresult ResetGVAutoplayRequestStatus();
 
   /**
    * Information required to initialize a BrowsingContext in another process.

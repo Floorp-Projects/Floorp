@@ -23,7 +23,7 @@ interface mixin LoadContextMixin {
 
   readonly attribute boolean useRemoteSubframes;
 
-  [BinaryName="useTrackingProtectionWebIDL"]
+  [BinaryName="useTrackingProtectionWebIDL", SetterThrows]
   attribute boolean useTrackingProtection;
 
   [NewObject, Throws]
@@ -68,9 +68,9 @@ interface BrowsingContext {
 
   readonly attribute WindowContext? topWindowContext;
 
-  attribute [TreatNullAs=EmptyString] DOMString customPlatform;
+  [SetterThrows] attribute [TreatNullAs=EmptyString] DOMString customPlatform;
 
-  attribute [TreatNullAs=EmptyString] DOMString customUserAgent;
+  [SetterThrows] attribute [TreatNullAs=EmptyString] DOMString customUserAgent;
 
   readonly attribute DOMString embedderElementType;
 
@@ -103,11 +103,11 @@ interface BrowsingContext {
 
   // Extension to give chrome JS the ability to set the window screen
   // orientation while in RDM.
-  void setRDMPaneOrientation(OrientationType type, float rotationAngle);
+  [Throws] void setRDMPaneOrientation(OrientationType type, float rotationAngle);
 
   // Extension to give chrome JS the ability to set a maxTouchPoints override
   // while in RDM.
-  void setRDMPaneMaxTouchPoints(octet maxTouchPoints);
+  [Throws] void setRDMPaneMaxTouchPoints(octet maxTouchPoints);
 
   // The watchedByDevTools flag indicates whether or not DevTools are currently
   // debugging this browsing context.
@@ -143,7 +143,7 @@ interface CanonicalBrowsingContext : BrowsingContext {
   readonly attribute WindowGlobalParent? embedderWindowGlobal;
 
   void notifyStartDelayedAutoplayMedia();
-  void notifyMediaMutedChanged(boolean muted);
+  [Throws] void notifyMediaMutedChanged(boolean muted);
 
   readonly attribute nsISecureBrowserUI? secureBrowserUI;
 

@@ -15287,8 +15287,8 @@ bool Document::ConsumeTransientUserGestureActivation() {
 
 void Document::SetDocTreeHadAudibleMedia() {
   RefPtr<WindowContext> topWc = GetTopLevelWindowContext();
-  if (topWc && !topWc->GetDocTreeHadAudibleMedia()) {
-    topWc->SetDocTreeHadAudibleMedia(true);
+  if (topWc && !topWc->IsDiscarded() && !topWc->GetDocTreeHadAudibleMedia()) {
+    MOZ_ALWAYS_SUCCEEDS(topWc->SetDocTreeHadAudibleMedia(true));
   }
 }
 
@@ -16283,7 +16283,7 @@ void Document::ReportShadowDOMUsage() {
   }
 
   WindowContext* wc = inner->GetWindowContext();
-  if (NS_WARN_IF(!wc)) {
+  if (NS_WARN_IF(!wc || wc->IsDiscarded())) {
     return;
   }
 
@@ -16292,7 +16292,7 @@ void Document::ReportShadowDOMUsage() {
     return;
   }
 
-  topWc->SetHasReportedShadowDOMUsage(true);
+  MOZ_ALWAYS_SUCCEEDS(topWc->SetHasReportedShadowDOMUsage(true));
 }
 
 // static

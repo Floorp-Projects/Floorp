@@ -732,7 +732,7 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
         // page in that process.
         mBrowsingContext->SetOwnerProcessId(
             bridge->Manager()->Manager()->ChildID());
-        mBrowsingContext->SetCurrentInnerWindowId(0);
+        MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetCurrentInnerWindowId(0));
 
         // Tell the browser bridge to show the subframe crashed page.
         Unused << bridge->SendSubFrameCrashed();

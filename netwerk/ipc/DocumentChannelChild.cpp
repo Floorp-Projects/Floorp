@@ -132,8 +132,8 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   switch (mLoadInfo->GetExternalContentPolicyType()) {
     case nsIContentPolicy::TYPE_DOCUMENT:
     case nsIContentPolicy::TYPE_SUBDOCUMENT:
-      loadingContext->SetCurrentLoadIdentifier(
-          Some(mLoadState->GetLoadIdentifier()));
+      MOZ_ALWAYS_SUCCEEDS(loadingContext->SetCurrentLoadIdentifier(
+          Some(mLoadState->GetLoadIdentifier())));
       break;
 
     default:
