@@ -1,8 +1,10 @@
 //! Implementation of the standard x64 ABI.
 
-use alloc::vec::Vec;
 use log::trace;
 use regalloc::{RealReg, Reg, RegClass, Set, SpillSlot, Writable};
+
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 use std::mem;
 
 use crate::binemit::Stackmap;
@@ -81,7 +83,9 @@ fn in_int_reg(ty: types::Type) -> bool {
         | types::B8
         | types::B16
         | types::B32
-        | types::B64 => true,
+        | types::B64
+        | types::R64 => true,
+        types::R32 => panic!("unexpected 32-bits refs on x64!"),
         _ => false,
     }
 }
@@ -89,6 +93,7 @@ fn in_int_reg(ty: types::Type) -> bool {
 fn in_vec_reg(ty: types::Type) -> bool {
     match ty {
         types::F32 | types::F64 => true,
+        _ if ty.is_vector() => true,
         _ => false,
     }
 }
@@ -127,15 +132,19 @@ fn get_fltreg_for_arg_systemv(call_conv: &CallConv, idx: usize) -> Option<Reg> {
     }
 }
 
-fn get_intreg_for_retval_systemv(call_conv: &CallConv, idx: usize) -> Option<Reg> {
+fn get_intreg_for_retval_systemv(
+    call_conv: &CallConv,
+    intreg_idx: usize,
+    retval_idx: usize,
+) -> Option<Reg> {
     match call_conv {
-        CallConv::Fast | CallConv::Cold | CallConv::SystemV => match idx {
+        CallConv::Fast | CallConv::Cold | CallConv::SystemV => match intreg_idx {
             0 => Some(regs::rax()),
             1 => Some(regs::rdx()),
             _ => None,
         },
         CallConv::BaldrdashSystemV => {
-            if idx == 0 {
+            if intreg_idx == 0 && retval_idx == 0 {
                 Some(regs::rax())
             } else {
                 None
@@ -145,15 +154,19 @@ fn get_intreg_for_retval_systemv(call_conv: &CallConv, idx: usize) -> Option<Reg
     }
 }
 
-fn get_fltreg_for_retval_systemv(call_conv: &CallConv, idx: usize) -> Option<Reg> {
+fn get_fltreg_for_retval_systemv(
+    call_conv: &CallConv,
+    fltreg_idx: usize,
+    retval_idx: usize,
+) -> Option<Reg> {
     match call_conv {
-        CallConv::Fast | CallConv::Cold | CallConv::SystemV => match idx {
+        CallConv::Fast | CallConv::Cold | CallConv::SystemV => match fltreg_idx {
             0 => Some(regs::xmm0()),
             1 => Some(regs::xmm1()),
             _ => None,
         },
         CallConv::BaldrdashSystemV => {
-            if idx == 0 {
+            if fltreg_idx == 0 && retval_idx == 0 {
                 Some(regs::xmm0())
             } else {
                 None
@@ -353,7 +366,7 @@ impl ABIBody for X64ABIBody {
                     1 | 8 => Some(ExtMode::BQ),
                     16 => Some(ExtMode::WQ),
                     32 => Some(ExtMode::LQ),
-                    64 => None,
+                    64 | 128 => None,
                     _ => unreachable!(),
                 };
 
@@ -487,8 +500,26 @@ impl ABIBody for X64ABIBody {
         )
     }
 
-    fn spillslots_to_stackmap(&self, _slots: &[SpillSlot], _state: &EmitState) -> Stackmap {
-        unimplemented!("spillslots_to_stackmap")
+    fn spillslots_to_stackmap(&self, slots: &[SpillSlot], state: &EmitState) -> Stackmap {
+        assert!(state.virtual_sp_offset >= 0);
+        trace!(
+            "spillslots_to_stackmap: slots = {:?}, state = {:?}",
+            slots,
+            state
+        );
+        let map_size = (state.virtual_sp_offset + state.nominal_sp_to_fp) as u32;
+        let map_words = (map_size + 7) / 8;
+        let mut bits = std::iter::repeat(false)
+            .take(map_words as usize)
+            .collect::<Vec<bool>>();
+
+        let first_spillslot_word = (self.stack_slots_size + state.virtual_sp_offset as usize) / 8;
+        for &slot in slots {
+            let slot = slot.get() as usize;
+            bits[first_spillslot_word + slot] = true;
+        }
+
+        Stackmap::from_slice(&bits[..])
     }
 
     fn gen_prologue(&mut self) -> Vec<Inst> {
@@ -821,7 +852,7 @@ fn compute_arg_locs(
         let (next_reg, candidate) = if intreg {
             let candidate = match args_or_rets {
                 ArgsOrRets::Args => get_intreg_for_arg_systemv(&call_conv, next_gpr),
-                ArgsOrRets::Rets => get_intreg_for_retval_systemv(&call_conv, next_gpr),
+                ArgsOrRets::Rets => get_intreg_for_retval_systemv(&call_conv, next_gpr, i),
             };
             debug_assert!(candidate
                 .map(|r| r.get_class() == RegClass::I64)
@@ -830,7 +861,7 @@ fn compute_arg_locs(
         } else {
             let candidate = match args_or_rets {
                 ArgsOrRets::Args => get_fltreg_for_arg_systemv(&call_conv, next_vreg),
-                ArgsOrRets::Rets => get_fltreg_for_retval_systemv(&call_conv, next_vreg),
+                ArgsOrRets::Rets => get_fltreg_for_retval_systemv(&call_conv, next_vreg, i),
             };
             debug_assert!(candidate
                 .map(|r| r.get_class() == RegClass::V128)
@@ -961,7 +992,7 @@ fn load_stack(mem: impl Into<SyntheticAmode>, into_reg: Writable<Reg>, ty: Type)
         types::B1 | types::B8 | types::I8 => (true, Some(ExtMode::BQ)),
         types::B16 | types::I16 => (true, Some(ExtMode::WQ)),
         types::B32 | types::I32 => (true, Some(ExtMode::LQ)),
-        types::B64 | types::I64 => (true, None),
+        types::B64 | types::I64 | types::R64 => (true, None),
         types::F32 | types::F64 => (false, None),
         _ => panic!("load_stack({})", ty),
     };
@@ -998,7 +1029,7 @@ fn store_stack(mem: impl Into<SyntheticAmode>, from_reg: Reg, ty: Type) -> Inst 
         types::B1 | types::B8 | types::I8 => (true, 1),
         types::B16 | types::I16 => (true, 2),
         types::B32 | types::I32 => (true, 4),
-        types::B64 | types::I64 => (true, 8),
+        types::B64 | types::I64 | types::R64 => (true, 8),
         types::F32 => (false, 4),
         types::F64 => (false, 8),
         _ => unimplemented!("store_stack({})", ty),
@@ -1156,14 +1187,26 @@ impl ABICall for X64ABICall {
         }
 
         match &self.dest {
-            &CallDest::ExtName(ref name, ref _reloc_distance) => ctx.emit(Inst::call_known(
-                name.clone(),
-                uses,
-                defs,
-                self.loc,
-                self.opcode,
-            )),
-            &CallDest::Reg(reg) => ctx.emit(Inst::call_unknown(
+            &CallDest::ExtName(ref name, RelocDistance::Near) => ctx.emit_safepoint(
+                Inst::call_known(name.clone(), uses, defs, self.loc, self.opcode),
+            ),
+            &CallDest::ExtName(ref name, RelocDistance::Far) => {
+                let tmp = ctx.alloc_tmp(RegClass::I64, I64);
+                ctx.emit(Inst::LoadExtName {
+                    dst: tmp,
+                    name: Box::new(name.clone()),
+                    offset: 0,
+                    srcloc: self.loc,
+                });
+                ctx.emit_safepoint(Inst::call_unknown(
+                    RegMem::reg(tmp.to_reg()),
+                    uses,
+                    defs,
+                    self.loc,
+                    self.opcode,
+                ));
+            }
+            &CallDest::Reg(reg) => ctx.emit_safepoint(Inst::call_unknown(
                 RegMem::reg(reg),
                 uses,
                 defs,

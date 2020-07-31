@@ -352,11 +352,16 @@ fn enc_fround(top22: u32, rd: Writable<Reg>, rn: Reg) -> u32 {
     (top22 << 10) | (machreg_to_vec(rn) << 5) | machreg_to_vec(rd.to_reg())
 }
 
-fn enc_vec_rr_misc(size: u32, bits_12_16: u32, rd: Writable<Reg>, rn: Reg) -> u32 {
+fn enc_vec_rr_misc(u: u32, size: u32, bits_12_16: u32, rd: Writable<Reg>, rn: Reg) -> u32 {
+    debug_assert_eq!(u & 0b1, u);
     debug_assert_eq!(size & 0b11, size);
     debug_assert_eq!(bits_12_16 & 0b11111, bits_12_16);
-    let bits = 0b0_1_1_01110_00_10000_00000_10_00000_00000;
-    bits | size << 22 | bits_12_16 << 12 | machreg_to_vec(rn) << 5 | machreg_to_vec(rd.to_reg())
+    let bits = 0b0_1_0_01110_00_10000_00000_10_00000_00000;
+    bits | u << 29
+        | size << 22
+        | bits_12_16 << 12
+        | machreg_to_vec(rn) << 5
+        | machreg_to_vec(rd.to_reg())
 }
 
 fn enc_vec_lanes(q: u32, u: u32, size: u32, opcode: u32, rd: Writable<Reg>, rn: Reg) -> u32 {
@@ -1114,11 +1119,24 @@ impl MachInstEmit for Inst {
                     VectorSize::Size64x2 => 0b11,
                     _ => unimplemented!(),
                 };
-                let (bits_12_16, size) = match op {
-                    VecMisc2::Not => (0b00101, 0b00),
-                    VecMisc2::Neg => (0b01011, enc_size),
+                let (u, bits_12_16, size) = match op {
+                    VecMisc2::Not => (0b1, 0b00101, 0b00),
+                    VecMisc2::Neg => (0b1, 0b01011, enc_size),
+                    VecMisc2::Abs => (0b0, 0b01011, enc_size),
+                    VecMisc2::Fabs => {
+                        debug_assert!(size == VectorSize::Size32x4 || size == VectorSize::Size64x2);
+                        (0b0, 0b01111, enc_size)
+                    }
+                    VecMisc2::Fneg => {
+                        debug_assert!(size == VectorSize::Size32x4 || size == VectorSize::Size64x2);
+                        (0b1, 0b01111, enc_size)
+                    }
+                    VecMisc2::Fsqrt => {
+                        debug_assert!(size == VectorSize::Size32x4 || size == VectorSize::Size64x2);
+                        (0b1, 0b11111, enc_size)
+                    }
                 };
-                sink.put4(enc_vec_rr_misc(size, bits_12_16, rd, rn));
+                sink.put4(enc_vec_rr_misc(u, size, bits_12_16, rd, rn));
             }
             &Inst::VecLanes { op, rd, rn, size } => {
                 let (q, size) = match size {
@@ -1266,6 +1284,38 @@ impl MachInstEmit for Inst {
                         | machreg_to_gpr(rd.to_reg()),
                 );
             }
+            &Inst::MovFromVecSigned {
+                rd,
+                rn,
+                idx,
+                size,
+                scalar_size,
+            } => {
+                let (imm5, shift, half) = match size {
+                    VectorSize::Size8x8 => (0b00001, 1, true),
+                    VectorSize::Size8x16 => (0b00001, 1, false),
+                    VectorSize::Size16x4 => (0b00010, 2, true),
+                    VectorSize::Size16x8 => (0b00010, 2, false),
+                    VectorSize::Size32x2 => {
+                        debug_assert_ne!(scalar_size, OperandSize::Size32);
+                        (0b00100, 3, true)
+                    }
+                    VectorSize::Size32x4 => {
+                        debug_assert_ne!(scalar_size, OperandSize::Size32);
+                        (0b00100, 3, false)
+                    }
+                    _ => panic!("Unexpected vector operand size"),
+                };
+                debug_assert_eq!(idx & (0b11111 >> (half as u32 + shift)), idx);
+                let imm5 = imm5 | ((idx as u32) << shift);
+                sink.put4(
+                    0b000_01110000_00000_0_0101_1_00000_00000
+                        | (scalar_size.is64() as u32) << 30
+                        | (imm5 << 16)
+                        | (machreg_to_vec(rn) << 5)
+                        | machreg_to_gpr(rd.to_reg()),
+                );
+            }
             &Inst::VecDup { rd, rn, size } => {
                 let imm5 = match size {
                     VectorSize::Size8x16 => 0b00001,
@@ -1325,9 +1375,22 @@ impl MachInstEmit for Inst {
                     VectorSize::Size64x2 => 0b11,
                     _ => 0,
                 };
-                let enc_size_for_fcmp = match size {
-                    VectorSize::Size32x4 => 0b0,
-                    VectorSize::Size64x2 => 0b1,
+                let is_float = match alu_op {
+                    VecALUOp::Fcmeq
+                    | VecALUOp::Fcmgt
+                    | VecALUOp::Fcmge
+                    | VecALUOp::Fadd
+                    | VecALUOp::Fsub
+                    | VecALUOp::Fdiv
+                    | VecALUOp::Fmax
+                    | VecALUOp::Fmin
+                    | VecALUOp::Fmul => true,
+                    _ => false,
+                };
+                let enc_float_size = match (is_float, size) {
+                    (true, VectorSize::Size32x4) => 0b0,
+                    (true, VectorSize::Size64x2) => 0b1,
+                    (true, _) => unimplemented!(),
                     _ => 0,
                 };
 
@@ -1341,9 +1404,9 @@ impl MachInstEmit for Inst {
                     VecALUOp::Cmgt => (0b010_01110_00_1 | enc_size << 1, 0b001101),
                     VecALUOp::Cmhi => (0b011_01110_00_1 | enc_size << 1, 0b001101),
                     VecALUOp::Cmhs => (0b011_01110_00_1 | enc_size << 1, 0b001111),
-                    VecALUOp::Fcmeq => (0b010_01110_00_1 | enc_size_for_fcmp << 1, 0b111001),
-                    VecALUOp::Fcmgt => (0b011_01110_10_1 | enc_size_for_fcmp << 1, 0b111001),
-                    VecALUOp::Fcmge => (0b011_01110_00_1 | enc_size_for_fcmp << 1, 0b111001),
+                    VecALUOp::Fcmeq => (0b010_01110_00_1, 0b111001),
+                    VecALUOp::Fcmgt => (0b011_01110_10_1, 0b111001),
+                    VecALUOp::Fcmge => (0b011_01110_00_1, 0b111001),
                     // The following logical instructions operate on bytes, so are not encoded differently
                     // for the different vector types.
                     VecALUOp::And => (0b010_01110_00_1, 0b000111),
@@ -1360,6 +1423,22 @@ impl MachInstEmit for Inst {
                     }
                     VecALUOp::Sshl => (0b010_01110_00_1 | enc_size << 1, 0b010001),
                     VecALUOp::Ushl => (0b011_01110_00_1 | enc_size << 1, 0b010001),
+                    VecALUOp::Umin => (0b011_01110_00_1 | enc_size << 1, 0b011011),
+                    VecALUOp::Smin => (0b010_01110_00_1 | enc_size << 1, 0b011011),
+                    VecALUOp::Umax => (0b011_01110_00_1 | enc_size << 1, 0b011001),
+                    VecALUOp::Smax => (0b010_01110_00_1 | enc_size << 1, 0b011001),
+                    VecALUOp::Urhadd => (0b011_01110_00_1 | enc_size << 1, 0b000101),
+                    VecALUOp::Fadd => (0b010_01110_00_1, 0b110101),
+                    VecALUOp::Fsub => (0b010_01110_10_1, 0b110101),
+                    VecALUOp::Fdiv => (0b011_01110_00_1, 0b111111),
+                    VecALUOp::Fmax => (0b010_01110_00_1, 0b111101),
+                    VecALUOp::Fmin => (0b010_01110_10_1, 0b111101),
+                    VecALUOp::Fmul => (0b011_01110_00_1, 0b110111),
+                };
+                let top11 = if is_float {
+                    top11 | enc_float_size << 1
+                } else {
+                    top11
                 };
                 sink.put4(enc_vec_rrr(top11, rm, bit15_10, rn, rd));
             }
@@ -1368,13 +1447,6 @@ impl MachInstEmit for Inst {
             }
             &Inst::MovFromNZCV { rd } => {
                 sink.put4(0xd53b4200 | machreg_to_gpr(rd.to_reg()));
-            }
-            &Inst::CondSet { rd, cond } => {
-                sink.put4(
-                    0b100_11010100_11111_0000_01_11111_00000
-                        | (cond.invert().bits() << 12)
-                        | machreg_to_gpr(rd.to_reg()),
-                );
             }
             &Inst::Extend {
                 rd,
@@ -1465,7 +1537,7 @@ impl MachInstEmit for Inst {
             }
             &Inst::Call { ref info } => {
                 if let Some(s) = state.take_stackmap() {
-                    sink.add_stackmap(4, s);
+                    sink.add_stackmap(StackmapExtent::UpcomingBytes(4), s);
                 }
                 sink.add_reloc(info.loc, Reloc::Arm64Call, &info.dest, 0);
                 sink.put4(enc_jump26(0b100101, 0));
@@ -1475,7 +1547,7 @@ impl MachInstEmit for Inst {
             }
             &Inst::CallInd { ref info } => {
                 if let Some(s) = state.take_stackmap() {
-                    sink.add_stackmap(4, s);
+                    sink.add_stackmap(StackmapExtent::UpcomingBytes(4), s);
                 }
                 sink.put4(0b1101011_0001_11111_000000_00000_00000 | (machreg_to_gpr(info.rn) << 5));
                 if info.opcode.is_call() {
@@ -1533,7 +1605,7 @@ impl MachInstEmit for Inst {
                 let (srcloc, code) = trap_info;
                 sink.add_trap(srcloc, code);
                 if let Some(s) = state.take_stackmap() {
-                    sink.add_stackmap(4, s);
+                    sink.add_stackmap(StackmapExtent::UpcomingBytes(4), s);
                 }
                 sink.put4(0xd4a00000);
             }
