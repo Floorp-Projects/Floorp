@@ -217,8 +217,7 @@ const startupPhases = {
       path: "ProfD:xulstore/data.mdb",
       condition: WIN,
       read: 1,
-      write: 3,
-      fsync: 1,
+      write: 1,
     },
   ],
 
@@ -278,12 +277,6 @@ const startupPhases = {
       // sometimes before first paint
       condition: WIN,
       stat: 1,
-    },
-    {
-      // bug 1546838
-      path: "ProfD:xulstore/data.mdb",
-      condition: WIN,
-      read: 2,
     },
   ],
 
@@ -364,7 +357,7 @@ const startupPhases = {
       // bug 1546838
       path: "ProfD:xulstore/data.mdb",
       condition: MAC,
-      write: 3,
+      write: 1,
     },
   ],
 
