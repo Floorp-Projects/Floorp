@@ -86,20 +86,20 @@ interface BrowsingContext {
    * browsing context and of its parent document, if any.
    * See nsSandboxFlags.h for the possible flags.
    */
-  attribute unsigned long sandboxFlags;
+  [SetterThrows] attribute unsigned long sandboxFlags;
 
   // The inRDMPane flag indicates whether or not Responsive Design Mode is
   // active for the browsing context.
-  attribute boolean inRDMPane;
+  [SetterThrows] attribute boolean inRDMPane;
 
-  attribute float fullZoom;
+  [SetterThrows] attribute float fullZoom;
 
-  attribute float textZoom;
+  [SetterThrows] attribute float textZoom;
 
   /**
    * Whether this docshell should save entries in global history.
    */
-  attribute boolean useGlobalHistory;
+  [SetterThrows] attribute boolean useGlobalHistory;
 
   // Extension to give chrome JS the ability to set the window screen
   // orientation while in RDM.
@@ -121,7 +121,7 @@ interface BrowsingContext {
    * another browser element this ID will remain the same but hosted under the
    * under the new browser element.
    */
-  attribute unsigned long long browserId;
+  [SetterThrows] attribute unsigned long long browserId;
 };
 
 BrowsingContext includes LoadContextMixin;
