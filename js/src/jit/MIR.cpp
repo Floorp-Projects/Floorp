@@ -4162,7 +4162,7 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
   return true;
 }
 
-bool MCompare::tryFoldTypeOf(bool* result) {
+bool MCompare::tryFoldConstantTypeOf(bool* result) {
   if (!lhs()->isTypeOf() && !rhs()->isTypeOf()) {
     return false;
   }
@@ -4239,7 +4239,7 @@ bool MCompare::tryFold(bool* result) {
     return true;
   }
 
-  if (tryFoldTypeOf(result)) {
+  if (tryFoldConstantTypeOf(result)) {
     return true;
   }
 
