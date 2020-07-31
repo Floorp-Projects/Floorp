@@ -145,7 +145,9 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
             requirePreference(R.string.pref_key_password_sync_logins),
             lifecycleOwner = viewLifecycleOwner,
             accountManager = requireComponents.backgroundServices.accountManager,
-            navController = findNavController()
+            navController = findNavController(),
+            accountsAuthFeature = requireComponents.services.accountsAuthFeature,
+            metrics = requireComponents.analytics.metrics
         )
 
         togglePrefsEnabledWhileAuthenticating(enabled = true)

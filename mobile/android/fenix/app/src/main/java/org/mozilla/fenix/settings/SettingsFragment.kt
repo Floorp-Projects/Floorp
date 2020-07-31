@@ -25,6 +25,7 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.support.ktx.android.content.hasCamera
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
@@ -188,7 +189,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val directions: NavDirections? = when (preference.key) {
             resources.getString(R.string.pref_key_sign_in) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment()
+                // App can be installed on devices with no camera modules. Like Android TV boxes.
+                // Let's skip presenting the option to sign in by scanning a qr code in this case
+                // and default to login with email and password.
+                if (requireContext().hasCamera()) {
+                    SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment()
+                } else {
+                    requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
+                    requireComponents.analytics.metrics.track(Event.SyncAuthUseEmail)
+                    null
+                }
             }
             resources.getString(R.string.pref_key_search_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
