@@ -1352,6 +1352,13 @@ nsresult nsHttpChannel::SetupTransaction() {
     LOG1(("nsHttpChannel %p created HttpTransactionParent %p\n", this,
           transParent.get()));
 
+    // Since OnStopRequest could be sent to child process from socket process
+    // directly, we need to store these two values in HttpTransactionChild and
+    // forward to child process until HttpTransactionChild::OnStopRequest is
+    // called.
+    transParent->SetRedirectTimestamp(mRedirectStartTimeStamp,
+                                      mRedirectEndTimeStamp);
+
     SocketProcessParent* socketProcess = SocketProcessParent::GetSingleton();
     if (socketProcess) {
       Unused << socketProcess->SendPHttpTransactionConstructor(transParent);
