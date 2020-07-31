@@ -2956,10 +2956,18 @@ class nsIFrame : public nsQueryFrame {
    */
   virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas);
 
+  // Represents zero or more physical axes.
+  enum class PhysicalAxes : uint8_t {
+    None = 0x0,
+    Horizontal = 0x1,
+    Vertical = 0x2,
+    Both = Horizontal | Vertical,
+  };
+
   /**
    * Returns true if this frame should apply overflow clipping.
    */
-  bool ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const;
+  PhysicalAxes ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const;
 
   /**
    * Helper method used by block reflow to identify runs of text so
@@ -4254,7 +4262,7 @@ class nsIFrame : public nsQueryFrame {
    * Returns true if this box clips its children, e.g., if this box is an
    * scrollbox.
    */
-  virtual bool DoesClipChildren();
+  virtual bool DoesClipChildrenInBothAxes();
 
   // We compute and store the HTML content's overflow area. So don't
   // try to compute it in the box code.
@@ -5381,6 +5389,7 @@ class nsIFrame : public nsQueryFrame {
 #endif
 };
 
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsIFrame::PhysicalAxes)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsIFrame::ReflowChildFlags)
 
 //----------------------------------------------------------------------
