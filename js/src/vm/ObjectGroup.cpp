@@ -17,6 +17,7 @@
 #include "gc/Policy.h"
 #include "gc/StoreBuffer.h"
 #include "js/CharacterEncoding.h"
+#include "js/friend/WindowProxy.h"  // js::IsWindow
 #include "js/UniquePtr.h"
 #include "vm/ArrayObject.h"
 #include "vm/ErrorObject.h"

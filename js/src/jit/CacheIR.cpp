@@ -17,6 +17,7 @@
 #include "jit/CacheIRSpewer.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"  // IsIonEnabled
+#include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
 #include "util/Unicode.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/SelfHosting.h"

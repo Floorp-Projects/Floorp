@@ -13,6 +13,7 @@
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/CompilationInfo.h"
 #include "gc/HashUtil.h"
+#include "js/friend/WindowProxy.h"  // js::IsWindowProxy
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "vm/GlobalObject.h"

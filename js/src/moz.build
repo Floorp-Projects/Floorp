@@ -231,6 +231,7 @@ EXPORTS.js.friend += [
     '../public/friend/ErrorMessages.h',
     '../public/friend/ErrorNumbers.msg',
     '../public/friend/UsageStatistics.h',
+    '../public/friend/WindowProxy.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -389,6 +390,7 @@ UNIFIED_SOURCES += [
     'vm/UsageStatistics.cpp',
     'vm/Value.cpp',
     'vm/Warnings.cpp',
+    'vm/WindowProxy.cpp',
     'vm/Xdr.cpp',
 ]
 
