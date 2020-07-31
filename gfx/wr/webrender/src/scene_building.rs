@@ -8,8 +8,8 @@ use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData,
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
-use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
-use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDisplayItem, ImageMask};
+use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
+use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDisplayItem, ImageMask};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding};
 use api::image_tiling::simplify_repeated_primitive;
@@ -36,7 +36,7 @@ use crate::prim_store::picture::{Picture, PictureCompositeKey, PictureKey};
 use crate::prim_store::text_run::TextRun;
 use crate::render_backend::SceneView;
 use crate::resource_cache::ImageRequest;
-use crate::scene::{Scene, BuiltScene, SceneStats, StackingContextHelpers};
+use crate::scene::{Scene, ScenePipeline, BuiltScene, SceneStats, StackingContextHelpers};
 use crate::scene_builder_thread::Interners;
 use crate::space::SpaceSnapper;
 use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind};
@@ -264,7 +264,6 @@ pub struct SceneBuilder<'a> {
 
     /// The current recursion depth of iframes encountered. Used to restrict picture
     /// caching slices to only the top-level content frame.
-    iframe_depth: usize,
     iframe_size: Vec<LayoutSize>,
 
     /// The current quality / performance settings for this scene.
@@ -324,38 +323,13 @@ impl<'a> SceneBuilder<'a> {
             interners,
             rf_mapper: ReferenceFrameMapper::new(),
             external_scroll_mapper: ScrollOffsetMapper::new(),
-            iframe_depth: 0,
             iframe_size: Vec::new(),
             quality_settings: view.quality_settings,
             tile_cache_builder: TileCacheBuilder::new(),
             snap_to_device,
         };
 
-        builder.clip_store.register_clip_template(
-            ClipId::root(root_pipeline_id),
-            ClipId::root(root_pipeline_id),
-            &[],
-        );
-
-        builder.clip_store.push_clip_root(
-            Some(ClipId::root(root_pipeline_id)),
-            false,
-        );
-
-        builder.push_root(
-            root_pipeline_id,
-            &root_pipeline.viewport_size,
-            &root_pipeline.content_size,
-        );
-
-        builder.build_items(
-            &mut root_pipeline.display_list.iter(),
-            root_pipeline.pipeline_id,
-        );
-
-        builder.clip_store.pop_clip_root();
-
-        debug_assert!(builder.sc_stack.is_empty());
+        builder.build_all(&root_pipeline);
 
         // Construct the picture cache primitive instance(s) from the tile cache builder
         let (tile_cache_config, prim_list) = builder.tile_cache_builder.build(
@@ -417,76 +391,224 @@ impl<'a> SceneBuilder<'a> {
         rf_offset + scroll_offset
     }
 
-    fn build_items(
-        &mut self,
-        traversal: &mut BuiltDisplayListIter<'a>,
-        pipeline_id: PipelineId,
-    ) {
-        loop {
-            let item = match traversal.next() {
-                Some(item) => item,
-                None => break,
-            };
+    fn build_all(&mut self, root_pipeline: &ScenePipeline) {
+        enum ContextKind<'a> {
+            Root,
+            StackingContext {
+                is_useful: bool,
+                has_clip: bool,
+            },
+            ReferenceFrame,
+            Iframe {
+                parent_traversal: BuiltDisplayListIter<'a>,
+            }
+        }
+        struct BuildContext<'a> {
+            pipeline_id: PipelineId,
+            kind: ContextKind<'a>,
+        }
 
-            let subtraversal = match item.item() {
-                DisplayItem::PushStackingContext(ref info) => {
-                    let space = self.get_space(info.spatial_id);
-                    let mut subtraversal = item.sub_iter();
-                    self.build_stacking_context(
-                        &mut subtraversal,
-                        pipeline_id,
-                        &info.stacking_context,
-                        space,
-                        info.origin,
-                        item.filters(),
-                        &item.filter_datas(),
-                        item.filter_primitives(),
-                        info.prim_flags,
-                    );
-                    Some(subtraversal)
-                }
-                DisplayItem::PushReferenceFrame(ref info) => {
-                    let parent_space = self.get_space(info.parent_spatial_id);
-                    let mut subtraversal = item.sub_iter();
-                    self.build_reference_frame(
-                        &mut subtraversal,
-                        pipeline_id,
-                        parent_space,
-                        info.origin,
-                        &info.reference_frame,
-                    );
-                    Some(subtraversal)
-                }
-                DisplayItem::PopReferenceFrame |
-                DisplayItem::PopStackingContext => return,
-                _ => None,
-            };
+        let root_clip_id = ClipId::root(root_pipeline.pipeline_id);
+        self.clip_store.register_clip_template(root_clip_id, root_clip_id, &[]);
+        self.clip_store.push_clip_root(Some(root_clip_id), false);
+        self.push_root(
+            root_pipeline.pipeline_id,
+            &root_pipeline.viewport_size,
+            &root_pipeline.content_size,
+        );
 
-            // If build_item created a sub-traversal, we need `traversal` to have the
-            // same state as the completed subtraversal, so we reinitialize it here.
-            if let Some(mut subtraversal) = subtraversal {
-                subtraversal.merge_debug_stats_from(traversal);
-                *traversal = subtraversal;
-            } else {
-                self.build_item(item, pipeline_id);
+        let mut stack = vec![BuildContext {
+            pipeline_id: root_pipeline.pipeline_id,
+            kind: ContextKind::Root,
+        }];
+        let mut traversal = root_pipeline.display_list.iter();
+
+        'outer: while let Some(bc) = stack.pop() {
+            loop {
+                let item = match traversal.next() {
+                    Some(item) => item,
+                    None => break,
+                };
+
+                match item.item() {
+                    DisplayItem::PushStackingContext(ref info) => {
+                        profile_scope!("build_stacking_context");
+                        let spatial_node_index = self.get_space(info.spatial_id);
+                        let mut subtraversal = item.sub_iter();
+                        // Avoid doing unnecessary work for empty stacking contexts.
+                        if subtraversal.current_stacking_context_empty() {
+                            subtraversal.skip_current_stacking_context();
+                            traversal = subtraversal;
+                            continue;
+                        }
+
+                        let composition_operations = CompositeOps::new(
+                            filter_ops_for_compositing(item.filters()),
+                            filter_datas_for_compositing(item.filter_datas()),
+                            filter_primitives_for_compositing(item.filter_primitives()),
+                            info.stacking_context.mix_blend_mode_for_compositing(),
+                        );
+
+                        let is_useful = self.push_stacking_context(
+                            bc.pipeline_id,
+                            composition_operations,
+                            info.stacking_context.transform_style,
+                            info.prim_flags,
+                            spatial_node_index,
+                            info.stacking_context.clip_id,
+                            info.stacking_context.raster_space,
+                            info.stacking_context.flags,
+                        );
+
+                        self.rf_mapper.push_offset(info.origin.to_vector());
+                        let new_context = BuildContext {
+                            pipeline_id: bc.pipeline_id,
+                            kind: ContextKind::StackingContext {
+                                is_useful,
+                                has_clip: info.stacking_context.clip_id.is_some(),
+                            },
+                        };
+                        stack.push(bc);
+                        stack.push(new_context);
+
+                        subtraversal.merge_debug_stats_from(&mut traversal);
+                        traversal = subtraversal;
+                        continue 'outer;
+                    }
+                    DisplayItem::PushReferenceFrame(ref info) => {
+                        profile_scope!("build_reference_frame");
+                        let parent_space = self.get_space(info.parent_spatial_id);
+                        let mut subtraversal = item.sub_iter();
+                        let current_offset = self.current_offset(parent_space);
+
+                        let transform = match info.reference_frame.transform {
+                            ReferenceTransformBinding::Static { binding } => binding,
+                            ReferenceTransformBinding::Computed { scale_from, vertical_flip } => {
+                                let mut transform = if let Some(scale_from) = scale_from {
+                                    let content_size = &self.iframe_size.last().unwrap();
+                                    LayoutTransform::create_scale(
+                                        content_size.width / scale_from.width,
+                                        content_size.height / scale_from.height,
+                                        1.0
+                                    )
+                                } else {
+                                    LayoutTransform::identity()
+                                };
+
+                                if vertical_flip {
+                                    let content_size = &self.iframe_size.last().unwrap();
+                                    transform = transform
+                                        .post_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
+                                        .pre_scale(1.0, -1.0, 1.0);
+                                }
+
+                                PropertyBinding::Value(transform)
+                            },
+                        };
+
+                        self.push_reference_frame(
+                            info.reference_frame.id,
+                            Some(parent_space),
+                            bc.pipeline_id,
+                            info.reference_frame.transform_style,
+                            transform,
+                            info.reference_frame.kind,
+                            current_offset + info.origin.to_vector(),
+                        );
+
+                        self.rf_mapper.push_scope();
+                        let new_context = BuildContext {
+                            pipeline_id: bc.pipeline_id,
+                            kind: ContextKind::ReferenceFrame,
+                        };
+                        stack.push(bc);
+                        stack.push(new_context);
+
+                        subtraversal.merge_debug_stats_from(&mut traversal);
+                        traversal = subtraversal;
+                        continue 'outer;
+                    }
+                    DisplayItem::PopReferenceFrame |
+                    DisplayItem::PopStackingContext => break,
+                    DisplayItem::Iframe(ref info) => {
+                        profile_scope!("iframe");
+
+                        let space = self.get_space(info.space_and_clip.spatial_id);
+                        let (size, subtraversal) = match self.push_iframe(info, space) {
+                            Some(pair) => pair,
+                            None => continue,
+                        };
+
+                        // If this is a root iframe, force a new tile cache both before and after
+                        // adding primitives for this iframe.
+                        if self.iframe_size.is_empty() {
+                            self.tile_cache_builder.add_tile_cache_barrier();
+                        }
+
+                        self.rf_mapper.push_scope();
+                        self.iframe_size.push(size);
+
+                        let new_context = BuildContext {
+                            pipeline_id: info.pipeline_id,
+                            kind: ContextKind::Iframe {
+                                parent_traversal: mem::replace(&mut traversal, subtraversal),
+                            },
+                        };
+                        stack.push(bc);
+                        stack.push(new_context);
+                        continue 'outer;
+                    }
+                    _ => {
+                        self.build_item(item, bc.pipeline_id);
+                    }
+                };
+            }
+
+            match bc.kind {
+                ContextKind::Root => {}
+                ContextKind::StackingContext { is_useful, has_clip } => {
+                    self.rf_mapper.pop_offset();
+                    if is_useful {
+                        self.pop_stacking_context();
+                    } else if has_clip {
+                        self.clip_store.pop_clip_root();
+                    }
+                }
+                ContextKind::ReferenceFrame => {
+                    self.rf_mapper.pop_scope();
+                }
+                ContextKind::Iframe { parent_traversal } => {
+                    self.iframe_size.pop();
+                    self.rf_mapper.pop_scope();
+
+                    self.clip_store.pop_clip_root();
+                    if self.iframe_size.is_empty() {
+                        self.tile_cache_builder.add_tile_cache_barrier();
+                    }
+
+                    traversal = parent_traversal;
+                }
+            }
+
+            // TODO: factor this out to be part of capture
+            if cfg!(feature = "display_list_stats") {
+                let stats = traversal.debug_stats();
+                let total_bytes: usize = stats.iter().map(|(_, stats)| stats.num_bytes).sum();
+                println!("item, total count, total bytes, % of DL bytes, bytes per item");
+                for (label, stats) in stats {
+                    println!("{}, {}, {}kb, {}%, {}",
+                        label,
+                        stats.total_count,
+                        stats.num_bytes / 1000,
+                        ((stats.num_bytes as f32 / total_bytes.max(1) as f32) * 100.0) as usize,
+                        stats.num_bytes / stats.total_count.max(1));
+                }
+                println!();
             }
         }
 
-        // TODO: factor this out to be part of capture
-        if cfg!(feature = "display_list_stats") {
-            let stats = traversal.debug_stats();
-            let total_bytes: usize = stats.iter().map(|(_, stats)| stats.num_bytes).sum();
-            println!("item, total count, total bytes, % of DL bytes, bytes per item");
-            for (label, stats) in stats {
-                println!("{}, {}, {}kb, {}%, {}",
-                    label,
-                    stats.total_count,
-                    stats.num_bytes / 1000,
-                    ((stats.num_bytes as f32 / total_bytes.max(1) as f32) * 100.0) as usize,
-                    stats.num_bytes / stats.total_count.max(1));
-            }
-            println!();
-        }
+        self.clip_store.pop_clip_root();
+        debug_assert!(self.sc_stack.is_empty());
     }
 
     fn build_sticky_frame(
@@ -545,124 +667,17 @@ impl<'a> SceneBuilder<'a> {
         );
     }
 
-    fn build_reference_frame(
-        &mut self,
-        traversal: &mut BuiltDisplayListIter<'a>,
-        pipeline_id: PipelineId,
-        parent_spatial_node: SpatialNodeIndex,
-        origin: LayoutPoint,
-        reference_frame: &ReferenceFrame,
-    ) {
-        profile_scope!("build_reference_frame");
-        let current_offset = self.current_offset(parent_spatial_node);
-
-        let transform = match reference_frame.transform {
-            ReferenceTransformBinding::Static { binding } => binding,
-            ReferenceTransformBinding::Computed { scale_from, vertical_flip } => {
-                let mut transform = if let Some(scale_from) = scale_from {
-                    let content_size = &self.iframe_size.last().unwrap();
-                    LayoutTransform::create_scale(
-                        content_size.width / scale_from.width,
-                        content_size.height / scale_from.height,
-                        1.0
-                    )
-                } else {
-                    LayoutTransform::identity()
-                };
-
-                if vertical_flip {
-                    let content_size = &self.iframe_size.last().unwrap();
-                    transform = transform
-                        .post_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
-                        .pre_scale(1.0, -1.0, 1.0);
-                }
-
-                PropertyBinding::Value(transform)
-            },
-        };
-
-        self.push_reference_frame(
-            reference_frame.id,
-            Some(parent_spatial_node),
-            pipeline_id,
-            reference_frame.transform_style,
-            transform,
-            reference_frame.kind,
-            current_offset + origin.to_vector(),
-        );
-
-        self.rf_mapper.push_scope();
-        self.build_items(
-            traversal,
-            pipeline_id,
-        );
-        self.rf_mapper.pop_scope();
-    }
-
-    fn build_stacking_context(
-        &mut self,
-        traversal: &mut BuiltDisplayListIter<'a>,
-        pipeline_id: PipelineId,
-        stacking_context: &StackingContext,
-        spatial_node_index: SpatialNodeIndex,
-        origin: LayoutPoint,
-        filters: ItemRange<FilterOp>,
-        filter_datas: &[TempFilterData],
-        filter_primitives: ItemRange<FilterPrimitive>,
-        prim_flags: PrimitiveFlags,
-    ) {
-        profile_scope!("build_stacking_context");
-        // Avoid doing unnecessary work for empty stacking contexts.
-        if traversal.current_stacking_context_empty() {
-            traversal.skip_current_stacking_context();
-            return;
-        }
-
-        let composition_operations = {
-            CompositeOps::new(
-                filter_ops_for_compositing(filters),
-                filter_datas_for_compositing(filter_datas),
-                filter_primitives_for_compositing(filter_primitives),
-                stacking_context.mix_blend_mode_for_compositing(),
-            )
-        };
-
-        let is_useful = self.push_stacking_context(
-            pipeline_id,
-            composition_operations,
-            stacking_context.transform_style,
-            prim_flags,
-            spatial_node_index,
-            stacking_context.clip_id,
-            stacking_context.raster_space,
-            stacking_context.flags,
-        );
-
-        self.rf_mapper.push_offset(origin.to_vector());
-        self.build_items(
-            traversal,
-            pipeline_id,
-        );
-        self.rf_mapper.pop_offset();
-
-        if is_useful {
-            self.pop_stacking_context();
-        } else if stacking_context.clip_id.is_some() {
-            self.clip_store.pop_clip_root();
-        }
-    }
-
-    fn build_iframe(
+    fn push_iframe(
         &mut self,
         info: &IframeDisplayItem,
         spatial_node_index: SpatialNodeIndex,
-    ) {
+    ) -> Option<(LayoutSize, BuiltDisplayListIter<'a>)> {
         let iframe_pipeline_id = info.pipeline_id;
         let pipeline = match self.scene.pipelines.get(&iframe_pipeline_id) {
             Some(pipeline) => pipeline,
             None => {
                 debug_assert!(info.ignore_missing_pipeline);
-                return
+                return None
             },
         };
 
@@ -713,30 +728,7 @@ impl<'a> SceneBuilder<'a> {
             LayoutVector2D::zero(),
         );
 
-        // If this is a root iframe, force a new tile cache both before and after
-        // adding primitives for this iframe.
-
-        let is_root_iframe = self.iframe_depth == 0;
-        if is_root_iframe {
-            self.tile_cache_builder.add_tile_cache_barrier();
-        }
-
-        self.rf_mapper.push_scope();
-        self.iframe_depth += 1;
-        self.iframe_size.push(bounds.size);
-
-        self.build_items(
-            &mut pipeline.display_list.iter(),
-            pipeline.pipeline_id,
-        );
-        self.iframe_size.pop();
-        self.iframe_depth -= 1;
-        self.rf_mapper.pop_scope();
-
-        self.clip_store.pop_clip_root();
-        if is_root_iframe {
-            self.tile_cache_builder.add_tile_cache_barrier();
-        }
+        Some((bounds.size, pipeline.display_list.iter()))
     }
 
     fn get_space(
@@ -1122,15 +1114,6 @@ impl<'a> SceneBuilder<'a> {
                     item.gradient_stops(),
                 );
             }
-            DisplayItem::Iframe(ref info) => {
-                profile_scope!("iframe");
-
-                let space = self.get_space(info.space_and_clip.spatial_id);
-                self.build_iframe(
-                    info,
-                    space,
-                );
-            }
             DisplayItem::ImageMaskClip(ref info) => {
                 profile_scope!("image_clip");
 
@@ -1254,8 +1237,9 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::PushStackingContext(..) |
             DisplayItem::PushReferenceFrame(..) |
             DisplayItem::PopReferenceFrame |
-            DisplayItem::PopStackingContext => {
-                unreachable!("Should have returned in parent method.")
+            DisplayItem::PopStackingContext |
+            DisplayItem::Iframe(_) => {
+                unreachable!("Handled in `build_all`")
             }
 
             DisplayItem::ReuseItems(key) |
