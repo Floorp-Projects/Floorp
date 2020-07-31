@@ -16,13 +16,17 @@ import mozilla.components.concept.menu.candidate.SmallMenuCandidate
 internal class SmallMenuCandidateViewHolder(
     itemView: View,
     private val dismiss: () -> Unit
-) : LastItemViewHolder<SmallMenuCandidate>(itemView), View.OnClickListener {
+) : LastItemViewHolder<SmallMenuCandidate>(itemView),
+    View.OnClickListener, View.OnLongClickListener {
 
     private val iconView = itemView as AppCompatImageButton
     private var onClickListener: (() -> Unit)? = null
+    private var onLongClickListener: (() -> Boolean)? = null
 
     init {
         iconView.setOnClickListener(this)
+        iconView.setOnLongClickListener(this)
+        iconView.isLongClickable = false
     }
 
     override fun bind(newCandidate: SmallMenuCandidate, oldCandidate: SmallMenuCandidate?) {
@@ -31,6 +35,8 @@ internal class SmallMenuCandidateViewHolder(
             TooltipCompat.setTooltipText(iconView, newCandidate.contentDescription)
         }
         onClickListener = newCandidate.onClick
+        onLongClickListener = newCandidate.onLongClick
+        iconView.isLongClickable = newCandidate.onLongClick != null
         iconView.applyIcon(newCandidate.icon, oldCandidate?.icon)
         iconView.applyStyle(newCandidate.containerStyle, oldCandidate?.containerStyle)
     }
@@ -38,6 +44,12 @@ internal class SmallMenuCandidateViewHolder(
     override fun onClick(v: View?) {
         onClickListener?.invoke()
         dismiss()
+    }
+
+    override fun onLongClick(v: View?): Boolean {
+        val result = onLongClickListener?.invoke() ?: false
+        dismiss()
+        return result
     }
 
     companion object {
