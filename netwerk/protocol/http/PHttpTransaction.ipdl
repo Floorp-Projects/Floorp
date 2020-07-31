@@ -44,23 +44,22 @@ parent:
                        TimingStructArgs           timings,
                        int32_t                    proxyConnectResponseCode,
                        uint8_t[]                  dataForSniffer,
-                       nsCString?                 altSvcUsed,
-                       bool                       dataToChildProcess);
+                       nsCString?                 altSvcUsed);
   async OnTransportStatus(nsresult status,
                           int64_t progress,
                           int64_t progressMax,
                           NetworkAddressArg? networkAddressArg);
   async OnDataAvailable(nsCString data,
                         uint64_t  offset,
-                        uint32_t  count);
+                        uint32_t  count,
+                        bool      dataSentToChildProcess);
   async OnStopRequest(nsresult status,
                       bool responseIsComplete,
                       int64_t transferSize,
                       TimingStructArgs timings,
                       nsHttpHeaderArray? responseTrailers,
                       bool hasStickyConn,
-                      TransactionObserverResult? transactionObserverResult,
-                      TimeStamp lastActiveTabOptimization);
+                      TransactionObserverResult? transactionObserverResult);
   async OnInitFailed(nsresult status);
   async OnH2PushStream(uint32_t pushedStreamId,
                        nsCString resourceUrl,
@@ -84,9 +83,7 @@ child:
              bool hasTransactionObserver,
              H2PushedStreamArg? pushedStreamArg,
              PInputChannelThrottleQueue? throttleQueue,
-             bool aIsDocumentLoad,
-             TimeStamp aRedirectStart,
-             TimeStamp aRedirectEnd);
+             bool aIsDocumentLoad);
 
   async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);

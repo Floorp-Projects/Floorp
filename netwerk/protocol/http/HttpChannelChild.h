@@ -245,14 +245,10 @@ class HttpChannelChild final : public PHttpChannelChild,
                                  const uint64_t& aOffset,
                                  const uint32_t& aCount,
                                  const nsCString& aData);
-  void ProcessOnStopRequest(const nsresult& aChannelStatus,
-                            const ResourceTimingStructArgs& aTiming,
-                            const nsHttpHeaderArray& aResponseTrailers,
-                            nsTArray<ConsoleReportCollected>&& aConsoleReports,
-                            bool aFromSocketProcess);
-  void ProcessOnConsoleReport(
-      nsTArray<ConsoleReportCollected>&& aConsoleReports);
-
+  void ProcessOnStopRequest(
+      const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
+      const nsHttpHeaderArray& aResponseTrailers,
+      const nsTArray<ConsoleReportCollected>& aConsoleReports);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
   void ProcessNotifyClassificationFlags(uint32_t aClassificationFlags,
@@ -277,7 +273,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   bool NeedToReportBytesRead();
   int32_t mUnreportBytesRead = 0;
 
-  void DoOnConsoleReport(nsTArray<ConsoleReportCollected>&& aConsoleReports);
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
   void DoOnStatus(nsIRequest* aRequest, nsresult status);
   void DoOnProgress(nsIRequest* aRequest, int64_t progress,
@@ -288,7 +283,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   void DoPreOnStopRequest(nsresult aStatus);
   void DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus,
                        nsISupports* aContext);
-  void ContinueOnStopRequest();
 
   bool ShouldInterceptURI(nsIURI* aURI, bool& aShouldUpgrade);
 
@@ -514,7 +508,8 @@ class HttpChannelChild final : public PHttpChannelChild,
                           const nsCString& data);
   void OnStopRequest(const nsresult& channelStatus,
                      const ResourceTimingStructArgs& timing,
-                     const nsHttpHeaderArray& aResponseTrailers);
+                     const nsHttpHeaderArray& aResponseTrailers,
+                     const nsTArray<ConsoleReportCollected>& aConsoleReports);
   void MaybeDivertOnStop(const nsresult& aChannelStatus);
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();

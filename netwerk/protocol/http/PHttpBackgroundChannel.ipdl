@@ -43,10 +43,7 @@ child:
                       ResourceTimingStructArgs timing,
                       TimeStamp lastActiveTabOptimization,
                       nsHttpHeaderArray responseTrailers,
-                      ConsoleReportCollected[] consoleReport,
-                      bool fromSocketProcess);
-
-  async OnConsoleReport(ConsoleReportCollected[] consoleReport);
+                      ConsoleReportCollected[] consoleReport);
 
   async OnProgress(int64_t progress, int64_t progressMax);
 

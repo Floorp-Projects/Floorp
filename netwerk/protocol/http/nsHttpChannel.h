@@ -198,7 +198,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter);
   HttpChannelSecurityWarningReporter* GetWarningReporter();
 
-  bool DataSentToChildProcess() { return mDataSentToChildProcess; }
+  bool OnDataAlreadySent() { return mDataAlreadySent; }
 
  public: /* internal necko use only */
   uint32_t GetRequestTime() const { return mRequestTime; }
@@ -732,9 +732,9 @@ class nsHttpChannel final : public HttpBaseChannel,
   // True only when we have computed the value of the top window origin.
   uint32_t mTopWindowOriginComputed : 1;
 
-  // True if the data will be sent from the socket process to the
-  // content process directly.
-  uint32_t mDataSentToChildProcess : 1;
+  // True if the data has already been sent from the socket process to the
+  // content process.
+  uint32_t mDataAlreadySent : 1;
 
   // The origin of the top window, only valid when mTopWindowOriginComputed is
   // true.
