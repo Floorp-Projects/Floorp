@@ -142,6 +142,31 @@ function callListeners(name, args, listeners) {
   }
 }
 
+function getUpdateInstall(addon) {
+  return (
+    // Install object for a pending update.
+    addon.updateInstall ||
+    // Install object for a postponed upgrade (only for extensions,
+    // because is the only addon type that can postpone their own
+    // updates).
+    (addon.type === "extension" &&
+      addon.pendingUpgrade &&
+      addon.pendingUpgrade.install)
+  );
+}
+
+function isManualUpdate(install) {
+  let isManual =
+    install.existingAddon &&
+    !AddonManager.shouldAutoUpdate(install.existingAddon);
+  let isExtension =
+    install.existingAddon && install.existingAddon.type == "extension";
+  return (
+    (isManual && isInState(install, "available")) ||
+    (isExtension && isInState(install, "postponed"))
+  );
+}
+
 const AddonManagerListenerHandler = {
   listeners: new Set(),
 
@@ -348,6 +373,10 @@ function checkForUpdate(addon) {
             onInstallEnded: (...args) => {
               install.removeListener(updateListener);
               resolve({ installed: true, pending: false, found: true });
+            },
+            onInstallPostponed: (...args) => {
+              install.removeListener(updateListener);
+              resolve({ installed: false, pending: true, found: true });
             },
           };
           install.addListener(updateListener);
@@ -1843,21 +1872,18 @@ class CategoriesBox extends customElements.get("button-group") {
     this.updateAvailableCount();
   }
 
-  onInstallCancelled() {
+  onInstallPostponed() {
     this.updateAvailableCount();
   }
 
-  isManualUpdate(install) {
-    let isManual =
-      install.existingAddon &&
-      !AddonManager.shouldAutoUpdate(install.existingAddon);
-    return isManual && isInState(install, "available");
+  onInstallCancelled() {
+    this.updateAvailableCount();
   }
 
   async updateAvailableCount() {
     let installs = await AddonManager.getAllInstalls();
     var count = installs.filter(install => {
-      return this.isManualUpdate(install, true) && !install.installed;
+      return isManualUpdate(install) && !install.installed;
     }).length;
     let availableButton = this.getButtonByName("available-updates");
     availableButton.hidden = !availableButton.selected && count == 0;
@@ -2546,9 +2572,8 @@ class AddonDetails extends HTMLElement {
   }
 
   get releaseNotesUri() {
-    return this.addon.updateInstall
-      ? this.addon.updateInstall.releaseNotesURI
-      : this.addon.releaseNotesURI;
+    let { releaseNotesURI } = getUpdateInstall(this.addon) || this.addon;
+    return releaseNotesURI;
   }
 
   setAddon(addon) {
@@ -2798,8 +2823,11 @@ class AddonCard extends HTMLElement {
    */
   setAddon(addon) {
     this.addon = addon;
-    let install = addon.updateInstall;
-    if (install && install.state == AddonManager.STATE_AVAILABLE) {
+    let install = getUpdateInstall(addon);
+    if (
+      install &&
+      (isInState(install, "available") || isInState(install, "postponed"))
+    ) {
       this.updateInstall = install;
     } else {
       this.updateInstall = null;
@@ -2850,6 +2878,13 @@ class AddonCard extends HTMLElement {
           }
           break;
         }
+        case "install-postponed": {
+          const { updateInstall } = this;
+          if (updateInstall && isInState(updateInstall, "postponed")) {
+            updateInstall.continuePostponedInstall();
+          }
+          break;
+        }
         case "install-update":
           // Make sure that an update handler is attached to the install object
           // before starting the update installation (otherwise the user would
@@ -2858,7 +2893,6 @@ class AddonCard extends HTMLElement {
           // about:addons tab is replaced by the one attached by the currently
           // active about:addons tab.
           attachUpdateHandler(this.updateInstall);
-
           this.updateInstall.install().then(
             () => {
               // The card will update with the new add-on when it gets
@@ -3017,6 +3051,10 @@ class AddonCard extends HTMLElement {
     return this.card.querySelector("panel-list");
   }
 
+  get postponedMessageBar() {
+    return this.card.querySelector(".update-postponed-bar");
+  }
+
   registerListeners() {
     this.addEventListener("change", this);
     this.addEventListener("click", this);
@@ -3097,8 +3135,13 @@ class AddonCard extends HTMLElement {
     let moreOptionsButton = card.querySelector(".more-options-button");
     moreOptionsButton.classList.toggle(
       "more-options-button-badged",
-      !!this.updateInstall
+      !!(this.updateInstall && isInState(this.updateInstall, "available"))
     );
+
+    // Postponed update addon card message bar.
+    const hasPostponedInstall =
+      this.updateInstall && isInState(this.updateInstall, "postponed");
+    this.postponedMessageBar.hidden = !hasPostponedInstall;
 
     // Hide the more options button if it's empty.
     moreOptionsButton.hidden = this.options.visibleItems.length === 0;
@@ -3263,6 +3306,11 @@ class AddonCard extends HTMLElement {
 
   onInstallEnded(install) {
     this.setAddon(install.addon);
+  }
+
+  onInstallPostponed(install) {
+    this.updateInstall = install;
+    this.sendEvent("update-postponed");
   }
 
   onDisabled(addon) {
@@ -4396,7 +4444,13 @@ class UpdatesView {
       list.setSections([
         {
           headingId: "available-updates-heading",
-          filterFn: addon => addon.updateInstall,
+          filterFn: addon => {
+            // Filter the addons visible in the updates view using the same
+            // criteria that is being used to compute the counter on the
+            // available updates category button badge.
+            const install = getUpdateInstall(addon);
+            return install && isManualUpdate(install) && !install.installed;
+          },
         },
       ]);
     } else if (this.param == "recent") {

@@ -238,15 +238,30 @@ addon-list addon-card > .addon.card {
   -moz-user-select: none;
 }
 
-.addon-card-message {
+.addon-card-message,
+.update-postponed-bar {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   margin: 8px calc(var(--card-padding) * -1) calc(var(--card-padding) * -1);
 }
 
-addon-card[expanded] .addon-card-message {
+addon-card[expanded] .addon-card-message,
+addon-card[expanded] .update-postponed-bar {
   border-radius: 0;
   margin-bottom: 0;
+}
+
+addon-card[expanded] .update-postponed-bar + .addon-card-message {
+  /* Remove margin between the two message bars when they are both
+   * visible in the detail view */
+  margin-top: 0px;
+}
+
+.update-postponed-bar + .addon-card-message {
+  /* Prevent the small overlapping between the two message bars
+   * when they are both visible at the same time one after the
+   * other on the same addon card */
+  margin-top: 12px;
 }
 
 /* Theme preview image. */

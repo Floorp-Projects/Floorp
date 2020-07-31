@@ -1364,6 +1364,17 @@ class AddonInstall {
     return this._installPromise;
   }
 
+  continuePostponedInstall() {
+    if (this.state !== AddonManager.STATE_POSTPONED) {
+      throw new Error("AddonInstall not in postponed state");
+    }
+
+    // Force the postponed install to continue.
+    logger.info(`${this.addon.id} has resumed a previously postponed upgrade`);
+    this.state = AddonManager.STATE_READY;
+    this.install();
+  }
+
   /**
    * Called during XPIProvider shutdown so that we can do any necessary
    * pre-shutdown cleanup.
@@ -1652,11 +1663,7 @@ class AddonInstall {
         `add-on ${this.addon.id} has an upgrade listener, postponing upgrade until restart`
       );
       let resumeFn = () => {
-        logger.info(
-          `${this.addon.id} has resumed a previously postponed upgrade`
-        );
-        this.state = AddonManager.STATE_READY;
-        this.install();
+        this.continuePostponedInstall();
       };
       this.postpone(resumeFn);
       return;
@@ -2665,6 +2672,10 @@ AddonInstallWrapper.prototype = {
 
   cancel() {
     installFor(this).cancel();
+  },
+
+  continuePostponedInstall() {
+    return installFor(this).continuePostponedInstall();
   },
 
   addListener(listener) {
