@@ -225,7 +225,12 @@ Here is the list of current Events sent, which can be found here in the code bas
     <td>`E_Sign_In_FxA`</td>
     <td>The user successfully signed in to FxA</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
-  </tr> 
+  </tr>
+  <tr>
+    <td>`E_Sign_In_FxA_Fennec_to_Fenix`</td>
+    <td>The user successfully signed in to FxA using previously signed in Fennec account</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
+  </tr>
   <tr>
     <td>`E_Sign_Out_FxA`</td>
     <td>The user successfully signed out of FxA</td>
