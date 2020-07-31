@@ -89,18 +89,14 @@ const SCORES = {
 
 // List of simulation types.
 const SIMULATION_TYPE = {
-  // Low red color blindness
-  PROTANOMALY: "PROTANOMALY",
-  // Low green color blindness
-  DEUTERANOMALY: "DEUTERANOMALY",
-  // Low blue color blindness
-  TRITANOMALY: "TRITANOMALY",
   // No red color blindness
   PROTANOPIA: "PROTANOPIA",
   // No green color blindness
   DEUTERANOPIA: "DEUTERANOPIA",
   // No blue color blindness
   TRITANOPIA: "TRITANOPIA",
+  // Absense of color vision
+  ACHROMATOPSIA: "ACHROMATOPSIA",
   // Low contrast
   CONTRAST_LOSS: "CONTRAST_LOSS",
 };
