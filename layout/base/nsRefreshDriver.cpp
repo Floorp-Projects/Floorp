@@ -360,8 +360,6 @@ class RefreshDriverTimer {
     mLastFireTime = now;
 
     LOG("[%p] ticking drivers...", this);
-    // RD is short for RefreshDriver
-    AUTO_PROFILER_TRACING_MARKER("Paint", "RefreshDriverTick", GRAPHICS);
 
     TickRefreshDrivers(aId, now, mContentRefreshDrivers);
     TickRefreshDrivers(aId, now, mRootRefreshDrivers);
@@ -1399,6 +1397,12 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
 
   if (mTestControllingRefreshes) return;
 
+#ifdef MOZ_GECKO_PROFILER
+  if (!mRefreshTimerStartedCause) {
+    mRefreshTimerStartedCause = profiler_get_backtrace();
+  }
+#endif
+
   // will it already fire, and no other changes needed?
   if (mActiveTimer && !(aFlags & eForceAdjustTimer)) return;
 
@@ -1467,6 +1471,7 @@ void nsRefreshDriver::StopTimer() {
 
   mActiveTimer->RemoveRefreshDriver(this);
   mActiveTimer = nullptr;
+  mRefreshTimerStartedCause = nullptr;
 }
 
 uint32_t nsRefreshDriver::ObserverCount() const {
@@ -1862,8 +1867,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     return;
   }
 
-  AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
-
   // We're either frozen or we were disconnected (likely in the middle
   // of a tick iteration).  Just do nothing here, since our
   // prescontext went away.
@@ -1932,6 +1935,11 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     }
     return;
   }
+
+  AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
+  AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE(
+      "RefreshDriverTick", ""_ns, GRAPHICS, GetDocShell(mPresContext),
+      std::move(mRefreshTimerStartedCause));
 
   mResizeSuppressed = false;
 

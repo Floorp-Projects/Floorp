@@ -502,6 +502,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   mozilla::RefreshDriverTimer* ChooseTimer();
   mozilla::RefreshDriverTimer* mActiveTimer;
   RefPtr<mozilla::RefreshDriverTimer> mOwnTimer;
+  UniqueProfilerBacktrace mRefreshTimerStartedCause;
 
   // nsPresContext passed in constructor and unset in Disconnect.
   mozilla::WeakPtr<nsPresContext> mPresContext;
