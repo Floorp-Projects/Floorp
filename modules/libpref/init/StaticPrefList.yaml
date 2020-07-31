@@ -8802,7 +8802,7 @@
 
 - name: security.bad_cert_domain_error.url_fix_enabled
   type: bool
-  value: true
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: security.csp.enable
