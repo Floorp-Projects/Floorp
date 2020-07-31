@@ -9,34 +9,8 @@
 
 namespace mozilla {
 
-// https://drafts.csswg.org/css-overflow/#overflow-propagation
-// "If `visible` is applied to the viewport, it must be interpreted as `auto`.
-//  If `clip` is applied to the viewport, it must be interpreted as `hidden`."
-static StyleOverflow MapOverflowValueForViewportPropagation(StyleOverflow aOverflow) {
-  switch (aOverflow) {
-    case StyleOverflow::Visible:
-      return StyleOverflow::Auto;
-    case StyleOverflow::Clip:
-      return StyleOverflow::Hidden;
-    default:
-      return aOverflow;
-  }
-}
-
-ScrollStyles::ScrollStyles(StyleOverflow aH, StyleOverflow aV)
-    : mHorizontal(aH), mVertical(aV) {
-  MOZ_ASSERT(mHorizontal == StyleOverflow::Auto ||
-             mHorizontal == StyleOverflow::Hidden ||
-             mHorizontal == StyleOverflow::Scroll);
-  MOZ_ASSERT(mVertical == StyleOverflow::Auto ||
-             mVertical == StyleOverflow::Hidden ||
-             mVertical == StyleOverflow::Scroll);
-}
-
-ScrollStyles::ScrollStyles(const nsStyleDisplay& aDisplay,
-                           MapOverflowToValidScrollStyleTag)
-    : ScrollStyles(MapOverflowValueForViewportPropagation(aDisplay.mOverflowX),
-                   MapOverflowValueForViewportPropagation(aDisplay.mOverflowY)) {}
+ScrollStyles::ScrollStyles(const nsStyleDisplay& aDisplay)
+    : mHorizontal(aDisplay.mOverflowX), mVertical(aDisplay.mOverflowY) {}
 
 bool ScrollStyles::IsHiddenInBothDirections() const {
   return mHorizontal == StyleOverflow::Hidden &&

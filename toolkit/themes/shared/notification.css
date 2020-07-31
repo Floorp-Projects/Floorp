@@ -5,7 +5,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .notificationbox-stack {
-  overflow: clip;
+  overflow: -moz-hidden-unscrollable;
 }
 
 notification {

@@ -854,7 +854,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.GetScrolledFrame()->GetContentInsertionFrame();
   }
 
-  bool DoesClipChildrenInBothAxes() final { return true; }
+  bool DoesClipChildren() final { return true; }
 
   nsPoint GetPositionOfChildIgnoringScrolling(const nsIFrame* aChild) final {
     nsPoint pt = aChild->GetPosition();
@@ -1298,7 +1298,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
     return mHelper.GetScrolledFrame()->GetContentInsertionFrame();
   }
 
-  bool DoesClipChildrenInBothAxes() final { return true; }
+  bool DoesClipChildren() final { return true; }
 
   nsPoint GetPositionOfChildIgnoringScrolling(const nsIFrame* aChild) final {
     nsPoint pt = aChild->GetPosition();

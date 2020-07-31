@@ -8,6 +8,7 @@
 #define mozilla_ScrollStyles_h
 
 #include <stdint.h>
+#include "mozilla/dom/WindowBinding.h"
 
 // Forward declarations
 struct nsStyleDisplay;
@@ -16,20 +17,17 @@ namespace mozilla {
 
 enum class StyleOverflow : uint8_t;
 
+// NOTE: Only styles that are propagated from the <body> should end up in this
+// class.
 struct ScrollStyles {
-  // Always one of Scroll, Hidden, or Auto.
+  // Always one of Scroll, Hidden, or Auto
   StyleOverflow mHorizontal;
   StyleOverflow mVertical;
 
-  ScrollStyles(StyleOverflow aH, StyleOverflow aV);
+  ScrollStyles(StyleOverflow aH, StyleOverflow aV)
+      : mHorizontal(aH), mVertical(aV) {}
 
-  // NOTE: This ctor maps `visible` to `auto` and `clip` to `hidden`.
-  // It's used for styles that are propagated from the <body> and for
-  // scroll frames (which we create also for overflow:clip/visible in
-  // some cases, e.g. form controls).
-  enum MapOverflowToValidScrollStyleTag { MapOverflowToValidScrollStyle };
-  ScrollStyles(const nsStyleDisplay&, MapOverflowToValidScrollStyleTag);
-
+  explicit ScrollStyles(const nsStyleDisplay&);
   bool operator==(const ScrollStyles& aStyles) const {
     return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical;
   }

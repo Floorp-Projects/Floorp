@@ -2506,9 +2506,9 @@ nsChangeHint nsStyleDisplay::CalcDifference(
         hint |= nsChangeHint_ReflowHintsForScrollbarChange;
       }
     } else {
-      // Otherwise this is a change between 'visible' and 'clip'.
-      // Here only whether we have a 'clip' changes, so just repaint and
-      // update our overflow areas in that case.
+      // Otherwise this is a change between visible and
+      // -moz-hidden-unscrollable. Here only whether we have a clip changes, so
+      // just repaint and update our overflow areas in that case.
       hint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
     }
   }
