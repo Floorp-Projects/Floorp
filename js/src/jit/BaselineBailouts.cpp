@@ -2028,6 +2028,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::NonInt32ArrayLength:
     case BailoutKind::ProtoGuard:
     case BailoutKind::NotProxyGuard:
+    case BailoutKind::TagNotEqualGuard:
       // Do nothing.
       break;
 

@@ -7732,6 +7732,20 @@ class LLoadValueTag : public LInstructionHelper<1, BOX_PIECES, 0> {
   }
 };
 
+class LGuardTagNotEqual : public LInstructionHelper<0, 2, 0> {
+ public:
+  LIR_HEADER(GuardTagNotEqual)
+
+  LGuardTagNotEqual(const LAllocation& lhs, const LAllocation& rhs)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, lhs);
+    setOperand(1, rhs);
+  }
+
+  const LAllocation* lhs() { return getOperand(0); }
+  const LAllocation* rhs() { return getOperand(1); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
