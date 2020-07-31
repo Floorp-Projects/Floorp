@@ -590,10 +590,14 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStopRequest(
     const int64_t& aTransferSize, const TimingStructArgs& aTimings,
     const Maybe<nsHttpHeaderArray>& aResponseTrailers,
     const bool& aHasStickyConn,
-    Maybe<TransactionObserverResult>&& aTransactionObserverResult) {
+    Maybe<TransactionObserverResult>&& aTransactionObserverResult,
+    const TimeStamp& aLastActiveTabOptHit) {
   LOG(("HttpTransactionParent::RecvOnStopRequest [this=%p status=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
+
+  nsHttp::SetLastActiveTabLoadOptimizationHit(aLastActiveTabOptHit);
+
   if (mCanceled) {
     return IPC_OK();
   }
