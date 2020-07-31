@@ -16,8 +16,6 @@ import android.view.Surface;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
-import java.nio.ByteBuffer;
-
 /**
  * Applications use a GeckoDisplay instance to provide {@link GeckoSession} with a {@link Surface} for
  * displaying content. To ensure drawing only happens on a valid {@link Surface}, {@link GeckoSession}
@@ -337,7 +335,7 @@ public class GeckoDisplay {
                 throw new IllegalStateException("Compositor must be ready before pixels can be captured");
             }
 
-            final GeckoResult<ByteBuffer> result = new GeckoResult<>();
+            final GeckoResult<Bitmap> result = new GeckoResult<>();
             final Bitmap target;
             final Rect rect = new Rect();
 
@@ -383,12 +381,10 @@ public class GeckoDisplay {
                 target = mRecycle;
             }
 
-            mSession.mCompositor.requestScreenPixels(result, mOffsetX, mOffsetY, mSrcWidth, mSrcHeight, mOutWidth, mOutHeight);
+            mSession.mCompositor.requestScreenPixels(result, target, mOffsetX, mOffsetY,
+                                                     mSrcWidth, mSrcHeight, mOutWidth, mOutHeight);
 
-            return result.then( buffer -> {
-                target.copyPixelsFromBuffer(buffer);
-                return GeckoResult.fromValue(target);
-            });
+            return result;
         }
     }
 
