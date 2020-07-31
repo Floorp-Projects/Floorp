@@ -40,10 +40,8 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
   if (loadState->GetChannelInitialized()) {
     promise = DocumentLoadListener::ClaimParentLoad(
         getter_AddRefs(mDocumentLoadListener), loadState->GetLoadIdentifier());
-    if (!promise) {
-      return false;
-    }
-  } else {
+  }
+  if (!promise) {
     bool isDocumentLoad =
         aArgs.elementCreationArgs().type() ==
         DocumentChannelElementCreationArgs::TDocumentCreationArgs;
