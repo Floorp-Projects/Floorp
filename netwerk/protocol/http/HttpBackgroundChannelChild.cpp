@@ -47,6 +47,7 @@ nsresult HttpBackgroundChannelChild::Init(HttpChannelChild* aChannelChild) {
     return NS_ERROR_FAILURE;
   }
 
+  mFirstODASource = ODA_PENDING;
   return NS_OK;
 }
 
@@ -187,12 +188,16 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
     const HttpChannelOnStartRequestArgs& aArgs) {
-  LOG(("HttpBackgroundChannelChild::RecvOnStartRequest [this=%p]\n", this));
+  LOG(("HttpBackgroundChannelChild::RecvOnStartRequest [this=%p, status=%x]\n",
+       this, aArgs.channelStatus()));
   MOZ_ASSERT(OnSocketThread());
 
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
+
+  mFirstODASource =
+      aArgs.dataFromSocketProcess() ? ODA_FROM_SOCKET : ODA_FROM_PARENT;
 
   mChannelChild->ProcessOnStartRequest(aResponseHead, aUseResponseHead,
                                        aRequestHeaders, aArgs);
@@ -209,11 +214,16 @@ IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
     const bool& aDataFromSocketProcess) {
   LOG(
       ("HttpBackgroundChannelChild::RecvOnTransportAndData [this=%p, "
-       "aDataFromSocketProcess=%d]\n",
-       this, aDataFromSocketProcess));
+       "aDataFromSocketProcess=%d, mFirstODASource=%d]\n",
+       this, aDataFromSocketProcess, mFirstODASource));
   MOZ_ASSERT(OnSocketThread());
 
   if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  if (((mFirstODASource == ODA_FROM_SOCKET) && !aDataFromSocketProcess) ||
+      ((mFirstODASource == ODA_FROM_PARENT) && aDataFromSocketProcess)) {
     return IPC_OK();
   }
 

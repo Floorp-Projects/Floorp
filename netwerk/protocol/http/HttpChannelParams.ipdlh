@@ -50,6 +50,7 @@ struct HttpChannelOnStartRequestArgs
   nsIReferrerInfo overrideReferrerInfo;
   bool shouldWaitForOnStartRequestSent;
   nsCString cookie;
+  bool dataFromSocketProcess;
 };
 
 } // namespace ipc
