@@ -37,3 +37,81 @@ domcount:
             --perfherder-metrics name:totalDOMCount,unit:count name:panelMenuCount,unit:count name:lightDOMCount,unit:count name:lightDOMDetails,unit:count
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
+
+
+livesites:
+    description: Live site performance testing
+    variants: [http3]
+    treeherder:
+        symbol: perftest({symbol})
+    attributes:
+        batch: false
+        cron: true
+    perftest:
+        - [cloudflare, netwerk/test/perf/perftest_http3_cloudflareblog.js]
+        - [fb-scroll, netwerk/test/perf/perftest_http3_facebook_scroll.js]
+        - [g-image, netwerk/test/perf/perftest_http3_google_image.js]
+        - [g-search, netwerk/test/perf/perftest_http3_google_search.js]
+        - [ytw, netwerk/test/perf/perftest_http3_youtube_watch.js]
+        - [ytw-scroll, netwerk/test/perf/perftest_http3_youtube_watch_scroll.js]
+    perftest-metrics:
+        by-perftest:
+            cloudflare:
+                # Example of how the specify settings for each metric
+                resourceTiming:
+                    extraOptions: []
+                firstPaint: {}
+            fb-scroll: [resourceTiming, firstPaint, firstContentfulPaint, requestsPerSecond]
+            g-image: [resourceTiming, firstPaint, firstContentfulPaint, imagesPerSecond, imageLoadTime]
+            g-search: [resourceTiming, firstPaint, firstContentfulPaint]
+            ytw: [resourceTiming, firstPaint, firstContentfulPaint, droppedFrames, decodedFrames]
+            ytw-scroll: [resourceTiming, firstPaint, firstContentfulPaint, droppedFrames, decodedFrames]
+            default: [firstPaint]
+    # Leave this here so people know this exists when looking
+    # for examples
+    perftest-perfherder-global:
+        extraOptions: []
+    perftest-extra-options:
+        by-perftest:
+            cloudflare:
+                - --perfherder-split-by browserScripts.pageinfo.url
+            g-search:
+                - --perfherder-split-by browserScripts.pageinfo.url
+            default: []
+    perftest-btime-variants:
+        by-perftest:
+            cloudflare:
+                - ["10s", browsertime.waitTime=10000]
+                - ["25s", browsertime.waitTime=25000]
+                - ["35s", browsertime.waitTime=35000]
+                - ["60s", browsertime.waitTime=60000]
+            g-search:
+                - ["10s", browsertime.waitTime=10000]
+                - ["25s", browsertime.waitTime=25000]
+                - ["35s", browsertime.waitTime=35000]
+                - ["60s", browsertime.waitTime=60000]
+            fb-scroll:
+                - ["10s", browsertime.waitTime=10000]
+                - ["25s", browsertime.waitTime=25000]
+                - ["35s", browsertime.waitTime=35000]
+                - ["60s", browsertime.waitTime=60000]
+            ytw:
+                - [null, browsertime.waitTime=20000]
+            ytw-scroll:
+                - [null, browsertime.waitTime=20000]
+            default:
+                - [null, browsertime.waitTime=1000]
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            {perftest_testname}
+            --browsertime-binary ${MOZ_FETCHES_DIR}/target.dmg
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
+            --flavor desktop-browser
+            --perfherder
+            --perfherder-metrics {perftest_metrics}
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts
