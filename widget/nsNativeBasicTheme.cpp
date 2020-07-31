@@ -8,7 +8,9 @@
 #include "nsCSSRendering.h"
 #include "PathHelpers.h"
 
+using namespace mozilla;
 using namespace mozilla::widget;
+using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeBasicTheme, nsNativeTheme, nsITheme)
 
