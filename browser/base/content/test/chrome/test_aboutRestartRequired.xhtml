@@ -19,7 +19,7 @@
     function waitForErrorPage(frame) {
       return new Promise(resolve => {
         let progressListener = {
-          onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+          onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
             if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
               frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebProgress)
