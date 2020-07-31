@@ -9458,6 +9458,29 @@ class MGuardNoDenseElements : public MUnaryInstruction,
   }
 };
 
+class MGuardTagNotEqual
+    : public MBinaryInstruction,
+      public MixPolicy<UnboxedInt32Policy<0>, UnboxedInt32Policy<1>>::Data {
+  MGuardTagNotEqual(MDefinition* left, MDefinition* right)
+      : MBinaryInstruction(classOpcode, left, right) {
+    setGuard();
+    setMovable();
+    setCommutative();
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardTagNotEqual)
+  TRIVIAL_NEW_WRAPPERS
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return binaryCongruentTo(ins);
+  }
+};
+
 // Load from vp[slot] (slots that are not inline in an object).
 class MLoadDynamicSlot : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t slot_;
