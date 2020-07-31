@@ -7173,6 +7173,28 @@ bool CacheIRCompiler::emitCallSubstringKernelResult(StringOperandId strId,
   return true;
 }
 
+bool CacheIRCompiler::emitCallStringReplaceStringResult(
+    StringOperandId strId, StringOperandId patternId,
+    StringOperandId replacementId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+  Register pattern = allocator.useRegister(masm, patternId);
+  Register replacement = allocator.useRegister(masm, replacementId);
+
+  callvm.prepare();
+  masm.Push(replacement);
+  masm.Push(pattern);
+  masm.Push(str);
+
+  using Fn =
+      JSString* (*)(JSContext*, HandleString, HandleString, HandleString);
+  callvm.call<Fn, jit::StringReplace>();
+  return true;
+}
+
 bool CacheIRCompiler::emitRegExpPrototypeOptimizableResult(
     ObjOperandId protoId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
