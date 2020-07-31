@@ -159,6 +159,7 @@ treeherder:
         'doc': 'Documentation'
         'GhS': 'GitHub Synchronization'
         'perftest': 'Performance tests'
+        'perftest-http3': 'Performance tests with HTTP/3'
 
 index:
     products:
