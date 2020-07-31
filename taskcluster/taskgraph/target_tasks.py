@@ -40,9 +40,9 @@ UNCOMMON_TRY_TASK_LABELS = [
     r'web-platform-tests.*backlog',  # hide wpt jobs that are not implemented yet - bug 1572820
     r'-ccov/',
     r'-profiling-',  # talos/raptor profiling jobs are run too often
-    # Hide shippable versions of non perf tests. The non-shippable versions are faster
-    # to run.
-    r'-shippable(?!.*(awsy|browsertime|marionette-headless|raptor|talos|web-platform-tests-wdspec-headless))',  # noqa - too long
+    # Hide shippable versions of tests we have opt versions of because the non-shippable
+    # versions are faster to run. This is mostly perf tests.
+    r'-shippable(?!.*(awsy|browsertime|marionette-headless|mochitest-devtools-chrome-fis|raptor|talos|web-platform-tests-wdspec-headless))',  # noqa - too long
 ]
 
 
