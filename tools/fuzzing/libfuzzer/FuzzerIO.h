@@ -24,6 +24,9 @@ std::string FileToString(const std::string &Path);
 
 void CopyFileToErr(const std::string &Path);
 
+void WriteToFile(const uint8_t *Data, size_t Size, const std::string &Path);
+// Write Data.c_str() to the file without terminating null character.
+void WriteToFile(const std::string &Data, const std::string &Path);
 void WriteToFile(const Unit &U, const std::string &Path);
 
 void ReadDirToVectorOfUnits(const char *Path, Vector<Unit> *V,
@@ -39,7 +42,7 @@ std::string DirName(const std::string &FileName);
 // Returns path to a TmpDir.
 std::string TmpDir();
 
-std::string TempPath(const char *Extension);
+std::string TempPath(const char *Prefix, const char *Extension);
 
 bool IsInterestingCoverageFile(const std::string &FileName);
 
@@ -89,8 +92,7 @@ int CloseFile(int Fd);
 int DuplicateFile(int Fd);
 
 void RemoveFile(const std::string &Path);
-
-void DiscardOutput(int Fd);
+void RenameFile(const std::string &OldPath, const std::string &NewPath);
 
 intptr_t GetHandleFromFd(int fd);
 

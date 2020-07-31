@@ -1,15 +1,15 @@
 # HG changeset patch
 # User Christian Holler <choller@mozilla.com>
-# Date 1586345242 -7200
-#      Wed Apr 08 13:27:22 2020 +0200
-# Node ID 142bb91a6f14a721fea81c75d18da92edb6e6ea3
-# Parent  ab10fba76a52a5b205038150ad198dfc4583c566
+# Date 1596126448 -7200
+#      Thu Jul 30 18:27:28 2020 +0200
+# Node ID ea198a0331a6db043cb5978512226977514104db
+# Parent  8a2a26b33d516c43c366b2f24d731d27d9843349
 [libFuzzer] Change libFuzzer callback contract to allow positive return values
 
 diff --git a/tools/fuzzing/libfuzzer/FuzzerInternal.h b/tools/fuzzing/libfuzzer/FuzzerInternal.h
 --- a/tools/fuzzing/libfuzzer/FuzzerInternal.h
 +++ b/tools/fuzzing/libfuzzer/FuzzerInternal.h
-@@ -62,17 +62,17 @@ public:
+@@ -60,17 +60,17 @@ public:
  
    static void StaticAlarmCallback();
    static void StaticCrashSignalCallback();
@@ -31,8 +31,8 @@ diff --git a/tools/fuzzing/libfuzzer/FuzzerInternal.h b/tools/fuzzing/libfuzzer/
 diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
 --- a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
 +++ b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
-@@ -445,17 +445,19 @@ void Fuzzer::PrintPulseAndReportSlowInpu
-   }
+@@ -463,17 +463,19 @@ static void RenameFeatureSetFile(const s
+              DirPlusFile(FeaturesDir, NewFile));
  }
  
  bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
@@ -51,8 +51,8 @@ diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/Fu
    TPC.CollectFeatures([&](size_t Feature) {
      if (Corpus.AddFeature(Feature, Size, Options.Shrink))
        UniqFeatureSetTmp.push_back(Feature);
-     if (Options.ReduceInputs && II)
-@@ -502,46 +504,47 @@ static bool LooseMemeq(const uint8_t *A,
+     if (Options.Entropic)
+@@ -530,48 +532,49 @@ static bool LooseMemeq(const uint8_t *A,
    const size_t Limit = 64;
    if (Size <= 64)
      return !memcmp(A, B, Size);
@@ -72,6 +72,8 @@ diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/Fu
    memcpy(DataCopy, Data, Size);
    if (EF->__msan_unpoison)
      EF->__msan_unpoison(DataCopy, Size);
+   if (EF->__msan_unpoison_param)
+     EF->__msan_unpoison_param(2);
    if (CurrentUnitData && CurrentUnitData != Data)
      memcpy(CurrentUnitData, Data, Size);
    CurrentUnitSize = Size;
@@ -107,10 +109,10 @@ diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/Fu
 diff --git a/tools/fuzzing/libfuzzer/FuzzerMerge.cpp b/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
 --- a/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
 +++ b/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
-@@ -219,17 +219,19 @@ void Fuzzer::CrashResistantMergeInternal
+@@ -223,17 +223,19 @@ void Fuzzer::CrashResistantMergeInternal
        U.shrink_to_fit();
      }
-     std::ostringstream StartedLine;
+ 
      // Write the pre-run marker.
      OF << "STARTED " << i << " " << U.size() << "\n";
      OF.flush();  // Flush is important since Command::Execute may crash.

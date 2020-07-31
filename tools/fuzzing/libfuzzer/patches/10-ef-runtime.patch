@@ -1,17 +1,17 @@
 # HG changeset patch
 # User Christian Holler <choller@mozilla.com>
-# Date 1586344236 -7200
-#      Wed Apr 08 13:10:36 2020 +0200
-# Node ID ab10fba76a52a5b205038150ad198dfc4583c566
-# Parent  5f0446b8b0b20f432fa5dc016b781270c469fe83
+# Date 1596126054 -7200
+#      Thu Jul 30 18:20:54 2020 +0200
+# Node ID 8a2a26b33d516c43c366b2f24d731d27d9843349
+# Parent  997c4109edd112695097fd8c55cbacd976cab24a
 [libFuzzer] Allow external functions to be defined at runtime
 
 diff --git a/tools/fuzzing/libfuzzer/FuzzerDriver.cpp b/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
 --- a/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
 +++ b/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
-@@ -560,17 +560,18 @@ int AnalyzeDictionary(Fuzzer *F, const V
-   Printf("###### End of useless dictionary elements. ######\n");
-   return 0;
+@@ -608,17 +608,18 @@ static Vector<SizedFile> ReadCorpora(con
+       SizedFiles.push_back({File, Size});
+   return SizedFiles;
  }
  
  int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
