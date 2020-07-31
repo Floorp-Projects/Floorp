@@ -280,6 +280,7 @@ add_task(async function test_ensureEcosystemAnonId_clientRace() {
 
     mockProfile
       .expects("ensureProfile")
+      .withArgs(sinon.match({ staleOk: true }))
       .once()
       .returns({});
 
@@ -306,6 +307,7 @@ add_task(async function test_ensureEcosystemAnonId_clientRace() {
     if (tc.errorCode === 412) {
       mockProfile
         .expects("ensureProfile")
+        .withArgs(sinon.match({ forceFresh: true }))
         .once()
         .returns({
           ecosystemAnonId: expectedEcosystemAnonId,

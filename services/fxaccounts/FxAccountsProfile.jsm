@@ -166,9 +166,13 @@ FxAccountsProfile.prototype = {
   // Get the user's profile data, fetching from the network if necessary.
   // Most callers should instead use `getProfile()`; this methods exists to support
   // callers who need to await the underlying network request.
-  async ensureProfile({ staleOk = false } = {}) {
+  async ensureProfile({ staleOk = false, forceFresh = false } = {}) {
+    if (staleOk && forceFresh) {
+      throw new Error("contradictory options specified");
+    }
     const profileCache = await this._getProfileCache();
     if (
+      forceFresh ||
       !profileCache ||
       (Date.now() > this._cachedAt + this.PROFILE_FRESHNESS_THRESHOLD &&
         !staleOk)
