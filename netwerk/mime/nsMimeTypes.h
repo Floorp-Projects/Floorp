@@ -170,6 +170,7 @@
 #define VIDEO_AVI "video/avi"
 #define VIDEO_MATROSKA "video/x-matroska"
 #define APPLICATION_OGG "application/ogg"
+#define APPLICATION_MPEGURL "application/vnd.apple.mpegurl"
 
 /* x-uuencode-apple-single. QuickMail made me do this. */
 #define UUENCODE_APPLE_SINGLE "x-uuencode-apple-single"
