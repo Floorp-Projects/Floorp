@@ -14449,6 +14449,13 @@ void CodeGenerator::visitLoadValueTag(LLoadValueTag* lir) {
   }
 }
 
+void CodeGenerator::visitGuardTagNotEqual(LGuardTagNotEqual* lir) {
+  Register lhs = ToRegister(lir->lhs());
+  Register rhs = ToRegister(lir->rhs());
+
+  bailoutCmp32(Assembler::Equal, lhs, rhs, lir->snapshot());
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;

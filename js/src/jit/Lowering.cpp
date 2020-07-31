@@ -5204,6 +5204,19 @@ void LIRGenerator::visitLoadValueTag(MLoadValueTag* ins) {
   define(new (alloc()) LLoadValueTag(useBoxAtStart(value)), ins);
 }
 
+void LIRGenerator::visitGuardTagNotEqual(MGuardTagNotEqual* ins) {
+  MDefinition* lhs = ins->lhs();
+  MOZ_ASSERT(lhs->type() == MIRType::Int32);
+
+  MDefinition* rhs = ins->rhs();
+  MOZ_ASSERT(rhs->type() == MIRType::Int32);
+
+  auto* guard =
+      new (alloc()) LGuardTagNotEqual(useRegister(lhs), useRegister(rhs));
+  assignSnapshot(guard, BailoutKind::TagNotEqualGuard);
+  add(guard, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);
