@@ -460,7 +460,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Find out whether the docshell is currently in the middle of a page
    * transition. This is set just before the pagehide/unload events fire.
    */
-  [infallible] readonly attribute boolean isInUnload;
+  readonly attribute boolean isInUnload;
 
   /**
    * Disconnects this docshell's editor from its window, and stores the
