@@ -127,6 +127,17 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   // Should be flushed after OnStartRequest is received and handled.
   // Should only access on STS thread.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
+
+  enum ODASource {
+    ODA_PENDING = 0,      // ODA is pending
+    ODA_FROM_PARENT = 1,  // ODA from parent process.
+    ODA_FROM_SOCKET = 2   // response coming from the network
+  };
+  // We need to know the first ODA will be from socket process or parent
+  // process. This information is from OnStartRequest message from parent
+  // process.
+  ODASource mFirstODASource;
+
 };
 
 }  // namespace net
