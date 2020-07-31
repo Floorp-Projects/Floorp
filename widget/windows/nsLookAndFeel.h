@@ -81,6 +81,14 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   nscolor GetColorForSysColorIndex(int index);
 
+  LookAndFeelFontInfo GetLookAndFeelFontInfoInternal(const LOGFONTW& aLogFont,
+                                                     bool aUseShellDlg);
+
+  LookAndFeelFontInfo GetLookAndFeelFontInfo(LookAndFeel::FontID anID);
+
+  bool GetSysFontInfo(LookAndFeel::FontID anID, nsString& aFontName,
+                      gfxFontStyle& aFontStyle);
+
   // Content process cached values that get shipped over from the browser
   // process.
   int32_t mUseAccessibilityTheme;
