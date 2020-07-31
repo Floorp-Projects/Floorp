@@ -5920,6 +5920,21 @@ MDefinition* MGuardSpecificSymbol::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MGuardTagNotEqual::foldsTo(TempAllocator& alloc) {
+  if (!lhs()->isConstant() || !rhs()->isConstant()) {
+    return this;
+  }
+
+  int32_t lhsTag = lhs()->toConstant()->toInt32();
+  int32_t rhsTag = rhs()->toConstant()->toInt32();
+
+  // No need to fold if we get a bailout anyway.
+  if (lhsTag == rhsTag) {
+    return this;
+  }
+  return MNop::New(alloc);
+}
+
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
   const JSClass* clasp = GetObjectKnownJSClass(object());
   if (!clasp || getClass() != clasp) {
