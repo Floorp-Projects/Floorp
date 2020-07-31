@@ -231,6 +231,18 @@ class UrlPreview extends Component {
             onTogglePreview(!member.open);
           }
         },
+        contextMenuFormatters: {
+          copyFormatter: (member, baseCopyFormatter) => {
+            const { value, level, hasChildren } = member;
+            if (hasChildren && level == 0) {
+              const { scheme, filename, host, query } = value;
+              return `${scheme}://${host}${filename}${
+                query ? "?" + new URLSearchParams(query).toString() : ""
+              }`;
+            }
+            return baseCopyFormatter(member);
+          },
+        },
       })
     );
   }
