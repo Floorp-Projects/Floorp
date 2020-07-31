@@ -126,3 +126,19 @@ class PerftestArgumentParser(ArgumentParser):
             self.add_argument(name, **options)
 
         mozlog.commandline.add_logging_group(self)
+
+    def parse_helper(self, args):
+        for arg in args:
+            arg_part = arg.partition("--")[-1].partition("-")
+            layer_name = f"--{arg_part[0]}"
+            layer_exists = arg_part[1] and layer_name in Options.args
+            if layer_exists:
+                args.append(layer_name)
+
+    def parse_args(self, args=None, namespace=None):
+        self.parse_helper(args)
+        return super().parse_args(args, namespace)
+
+    def parse_known_args(self, args=None, namespace=None):
+        self.parse_helper(args)
+        return super().parse_known_args(args, namespace)

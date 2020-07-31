@@ -23,6 +23,16 @@ def test_options():
     )
 
 
+def test_layer_option():
+    parser = PerftestArgumentParser()
+    assert parser.parse_args(["--notebook-metrics"]) == parser.parse_args(
+        ["--notebook-metrics", "--notebook"]
+    )
+    assert parser.parse_known_args(["--notebook-metrics"]) == parser.parse_known_args(
+        ["--notebook-metrics", "--notebook"]
+    )
+
+
 def test_bad_test_date():
     parser = PerftestArgumentParser()
     args = ["test_one.js", "--test-date", "bleh"]
