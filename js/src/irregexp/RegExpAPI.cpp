@@ -24,6 +24,7 @@
 #include "irregexp/imported/regexp.h"
 #include "irregexp/RegExpShim.h"
 #include "jit/JitCommon.h"
+#include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpShared.h"

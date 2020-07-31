@@ -20,6 +20,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimitWithStackPointer
 #include "util/Memory.h"
 #include "util/StructuredSpewer.h"
 #include "vm/Interpreter.h"

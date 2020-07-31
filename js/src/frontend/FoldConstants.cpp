@@ -15,6 +15,7 @@
 #include "frontend/ParseNodeVisitor.h"
 #include "frontend/Parser.h"
 #include "js/Conversions.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "vm/StringType.h"
 
 using namespace js;
