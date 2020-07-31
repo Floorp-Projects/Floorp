@@ -23,9 +23,4 @@ interface nsIPrinter : nsISupports
    * Whether this printer supports duplex printing.
    */
   readonly attribute boolean supportsDuplex;
-
-  /**
-   * Whether this printer supports color printing.
-   */
-  readonly attribute boolean supportsColor;
 };
