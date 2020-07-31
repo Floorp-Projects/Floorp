@@ -159,7 +159,7 @@ class ArtifactJob(object):
         self._substs = substs
         self._symbols_archive_suffix = None
         if download_symbols == 'full':
-            self._symbols_archive_suffix = 'crashreporter-symbols-full.zip'
+            self._symbols_archive_suffix = 'crashreporter-symbols-full.tar.zst'
         elif download_symbols:
             self._symbols_archive_suffix = 'crashreporter-symbols.zip'
         self._mozbuild = mozbuild
