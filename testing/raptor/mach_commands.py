@@ -138,8 +138,8 @@ class RaptorRunner(MozbuildObject):
     def make_config(self):
         default_actions = [
             'populate-webroot',
-            'install-chromium-distribution',
             'create-virtualenv',
+            'install-chromium-distribution',
             'run-tests'
         ]
         self.config = {
