@@ -347,7 +347,7 @@
 
     <fragment
         android:id="@+id/loginExceptionsFragment"
-        android:name="org.mozilla.fenix.loginexceptions.LoginExceptionsFragment"
+        android:name="org.mozilla.fenix.exceptions.login.LoginExceptionsFragment"
         android:label="@string/preferences_passwords_exceptions"
         tools:layout="@layout/fragment_exceptions" />
 
@@ -609,7 +609,7 @@
         android:label="@string/preferences_delete_browsing_data" />
     <fragment
         android:id="@+id/trackingProtectionExceptionsFragment"
-        android:name="org.mozilla.fenix.trackingprotectionexceptions.TrackingProtectionExceptionsFragment"
+        android:name="org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragment"
         android:label="@string/preference_exceptions" />
     <dialog
         android:id="@+id/collectionCreationFragment"

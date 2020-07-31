@@ -45,5 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        tools:listitem="@layout/exception_item" />
+        tools:listheader="@layout/exceptions_description"
+        tools:listitem="@layout/exception_item"
+        tools:listfooter="@layout/delete_exceptions_button" />
 </FrameLayout>
