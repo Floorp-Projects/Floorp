@@ -43,7 +43,9 @@ class FFTBlock final {
   static void MainThreadInit() {
 #ifdef MOZ_LIBAV_FFT
     FFVPXRuntimeLinker::Init();
-    FFVPXRuntimeLinker::GetRDFTFuncs(&sRDFTFuncs);
+    if (!sRDFTFuncs.init) {
+      FFVPXRuntimeLinker::GetRDFTFuncs(&sRDFTFuncs);
+    }
 #endif
   }
 
