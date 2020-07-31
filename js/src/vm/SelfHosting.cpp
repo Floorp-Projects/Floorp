@@ -1620,7 +1620,8 @@ static bool intrinsic_StringReplaceAllString(JSContext* cx, unsigned argc,
   return true;
 }
 
-bool js::intrinsic_StringSplitString(JSContext* cx, unsigned argc, Value* vp) {
+static bool intrinsic_StringSplitString(JSContext* cx, unsigned argc,
+                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
 

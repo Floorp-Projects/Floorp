@@ -323,6 +323,15 @@
     pattern: StringId
     replacement: StringId
 
+- name: CallStringSplitStringResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+    separator: StringId
+    group: GroupField
+
 - name: RegExpPrototypeOptimizableResult
   shared: true
   transpile: true
