@@ -124,9 +124,9 @@ class PCUuidGenerator : public mozilla::JsepUuidGenerator {
 // count and records the elapsed time when the count falls to zero. The
 // elapsed time is recorded in seconds.
 struct PeerConnectionAutoTimer {
-  PeerConnectionAutoTimer() : mRefCnt(1), mStart(TimeStamp::Now()){};
-  void AddRef();
-  void Release();
+  PeerConnectionAutoTimer() : mRefCnt(0), mStart(TimeStamp::Now()){};
+  void RegisterConnection();
+  void UnregisterConnection();
   bool IsStopped();
 
  private:
@@ -381,7 +381,7 @@ class PeerConnectionImpl final
 
   bool PluginCrash(uint32_t aPluginID, const nsAString& aPluginName);
 
-  void RecordEndOfCallTelemetry() const;
+  void RecordEndOfCallTelemetry();
 
   nsresult InitializeDataChannel();
 
@@ -405,7 +405,7 @@ class PeerConnectionImpl final
   bool HasMedia() const;
 
   // initialize telemetry for when calls start
-  void startCallTelem();
+  void StartCallTelem();
 
   RefPtr<dom::RTCStatsReportPromise> GetStats(dom::MediaStreamTrack* aSelector,
                                               bool aInternalStats);
@@ -574,10 +574,13 @@ class PeerConnectionImpl final
   unsigned long mIceRollbackCount;
 
   // The following are used for Telemetry:
+  bool mCallTelemStarted = false;
+  bool mCallTelemEnded = false;
+
   // Start time of ICE.
   mozilla::TimeStamp mIceStartTime;
   // Hold PeerConnectionAutoTimer instances for each window.
-  static std::map<std::string, PeerConnectionAutoTimer> mAutoTimers;
+  static std::map<uint64_t, PeerConnectionAutoTimer> sCallDurationTimers;
 
   bool mHaveConfiguredCodecs;
 
