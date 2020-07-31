@@ -528,8 +528,7 @@ class PuppeteerTest(MachCommandBase):
 
         if enable_fission:
             prefs.update({"fission.autostart": True,
-                          "dom.serviceWorkers.parent_intercept": True,
-                          "browser.tabs.documentchannel": True})
+                          "dom.serviceWorkers.parent_intercept": True})
 
         if verbosity == 1:
             prefs["remote.log.level"] = "Debug"
