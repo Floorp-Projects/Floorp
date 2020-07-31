@@ -860,7 +860,6 @@ class MochitestArguments(ArgumentContainer):
         if options.enable_fission:
             options.extraPrefs.append("fission.autostart=true")
             options.extraPrefs.append("dom.serviceWorkers.parent_intercept=true")
-            options.extraPrefs.append("browser.tabs.documentchannel=true")
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
