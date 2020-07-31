@@ -186,64 +186,9 @@ JS_FRIEND_API void RemoveRawValueRoot(JSContext* cx, JS::Value* vp);
 
 JS_FRIEND_API JSAtom* GetPropertyNameFromPC(JSScript* script, jsbytecode* pc);
 
-/*
- * Routines to print out values during debugging. These are FRIEND_API to help
- * the debugger find them and to support temporarily hacking js::Dump* calls
- * into other code. Note that there are overloads that do not require the FILE*
- * parameter, which will default to stderr.
- *
- * These functions are no-ops unless built with DEBUG or JS_JITSPEW.
- */
-
-extern JS_FRIEND_API void DumpString(JSString* str, FILE* fp);
-
-extern JS_FRIEND_API void DumpAtom(JSAtom* atom, FILE* fp);
-
-extern JS_FRIEND_API void DumpObject(JSObject* obj, FILE* fp);
-
-extern JS_FRIEND_API void DumpChars(const char16_t* s, size_t n, FILE* fp);
-
-extern JS_FRIEND_API void DumpValue(const JS::Value& val, FILE* fp);
-
-extern JS_FRIEND_API void DumpId(jsid id, FILE* fp);
-
-extern JS_FRIEND_API void DumpInterpreterFrame(
-    JSContext* cx, FILE* fp, InterpreterFrame* start = nullptr);
-
-extern JS_FRIEND_API bool DumpPC(JSContext* cx, FILE* fp);
-
-extern JS_FRIEND_API bool DumpScript(JSContext* cx, JSScript* scriptArg,
-                                     FILE* fp);
-
-// Versions for use directly in a debugger (default parameters are not handled
-// well in gdb; built-in handles like stderr are not handled well in lldb.)
-extern JS_FRIEND_API void DumpString(JSString* str);
-extern JS_FRIEND_API void DumpAtom(JSAtom* atom);
-extern JS_FRIEND_API void DumpObject(JSObject* obj);
-extern JS_FRIEND_API void DumpChars(const char16_t* s, size_t n);
-extern JS_FRIEND_API void DumpValue(const JS::Value& val);
-extern JS_FRIEND_API void DumpId(jsid id);
-extern JS_FRIEND_API void DumpInterpreterFrame(
-    JSContext* cx, InterpreterFrame* start = nullptr);
-extern JS_FRIEND_API bool DumpPC(JSContext* cx);
-extern JS_FRIEND_API bool DumpScript(JSContext* cx, JSScript* scriptArg);
-
-// DumpBacktrace(), unlike the other dump functions, always dumps a backtrace --
-// regardless of DEBUG or JS_JITSPEW.
-
-extern JS_FRIEND_API void DumpBacktrace(JSContext* cx, FILE* fp);
-
-extern JS_FRIEND_API void DumpBacktrace(JSContext* cx);
-
 }  // namespace js
 
 namespace JS {
-
-/** Exposed for DumpJSStack */
-extern JS_FRIEND_API JS::UniqueChars FormatStackDump(JSContext* cx,
-                                                     bool showArgs,
-                                                     bool showLocals,
-                                                     bool showThisProps);
 
 /**
  * Set all of the uninitialized lexicals on an object to undefined. Return
@@ -363,19 +308,6 @@ extern JS_FRIEND_API JS::Zone* GetRealmZone(JS::Realm* realm);
 
 using PreserveWrapperCallback = bool (*)(JSContext*, JS::HandleObject);
 using HasReleasedWrapperCallback = bool (*)(JS::HandleObject);
-
-typedef enum {
-  CollectNurseryBeforeDump,
-  IgnoreNurseryObjects
-} DumpHeapNurseryBehaviour;
-
-/**
- * Dump the complete object graph of heap-allocated things.
- * fp is the file for the dump output.
- */
-extern JS_FRIEND_API void DumpHeap(
-    JSContext* cx, FILE* fp, DumpHeapNurseryBehaviour nurseryBehaviour,
-    mozilla::MallocSizeOf mallocSizeOf = nullptr);
 
 extern JS_FRIEND_API bool IsSystemRealm(JS::Realm* realm);
 

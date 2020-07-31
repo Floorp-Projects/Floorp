@@ -11,6 +11,7 @@
 
 #include "debugger/DebugAPI.h"
 #include "jit/JitFrames.h"
+#include "js/friend/DumpFunctions.h"  // js::DumpValue
 #include "vm/ArgumentsObject.h"
 
 #include "jit/JitFrames-inl.h"

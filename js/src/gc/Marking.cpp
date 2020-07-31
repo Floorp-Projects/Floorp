@@ -26,6 +26,7 @@
 #include "gc/GCProbes.h"
 #include "gc/Policy.h"
 #include "jit/JitCode.h"
+#include "js/friend/DumpFunctions.h"  // js::DumpObject
 #include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_{,TAGGED_}GC_POINTER_TYPE
 #include "js/SliceBudget.h"
 #include "util/DiagnosticAssertions.h"
