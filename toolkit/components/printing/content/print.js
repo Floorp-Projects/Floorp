@@ -23,9 +23,8 @@ window.addEventListener(
 var PrintEventHandler = {
   init() {
     this.sourceBrowser = this.getSourceBrowser();
-    this.updatePrintPreview();
-
     this.settings = PrintUtils.getPrintSettings();
+    this.updatePrintPreview();
 
     document.addEventListener("print", e => this.print({ silent: true }));
     document.addEventListener("update-print-setting", e =>
@@ -51,7 +50,7 @@ var PrintEventHandler = {
     };
     this.settingFlags = {
       orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
-      printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
+      printerName: Ci.nsIPrintSettings.kInitSaveAll,
       scaling: Ci.nsIPrintSettings.kInitSaveScaling,
       shrinkToFit: Ci.nsIPrintSettings.kInitSaveShrinkToFit,
     };
@@ -96,13 +95,13 @@ var PrintEventHandler = {
         PSSVC.savePrintSettingsToPrefs(this.settings, true, flag);
       }
 
+      this.updatePrintPreview();
+
       document.dispatchEvent(
         new CustomEvent("print-settings", {
           detail: this.settings,
         })
       );
-
-      this.updatePrintPreview();
     }
   },
 
@@ -120,7 +119,10 @@ var PrintEventHandler = {
   },
 
   async _updatePrintPreview() {
-    let numPages = await PrintUtils.updatePrintPreview(this.sourceBrowser);
+    let numPages = await PrintUtils.updatePrintPreview(
+      this.sourceBrowser,
+      this.settings
+    );
     document.dispatchEvent(
       new CustomEvent("page-count", { detail: { numPages } })
     );
