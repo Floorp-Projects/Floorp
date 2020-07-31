@@ -147,18 +147,6 @@ void CompositorVsyncScheduler::ScheduleComposition() {
     // Used only for performance testing purposes, and when recording/replaying
     // to ensure that graphics are up to date.
     PostCompositeTask(vsyncEvent);
-#ifdef MOZ_WIDGET_ANDROID
-  } else if (mIsObservingVsync && mCompositeRequestedAt &&
-             (TimeStamp::Now() - mCompositeRequestedAt) >=
-                 mVsyncSchedulerOwner->GetVsyncInterval() * 2) {
-    // uh-oh, we already requested a composite at least two vsyncs ago, and a
-    // composite hasn't happened yet. It is possible that the vsync observation
-    // is blocked on the main thread, so let's just composite ASAP and not
-    // wait for the vsync. Note that this should only ever happen on Fennec
-    // because there content runs in the same process as the compositor, and so
-    // content can actually block the main thread in this process.
-    PostCompositeTask(vsyncEvent);
-#endif
   } else {
     if (!mCompositeRequestedAt) {
       mCompositeRequestedAt = TimeStamp::Now();
