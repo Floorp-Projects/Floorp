@@ -25,6 +25,8 @@
 #include "mozilla/Telemetry.h"  // for Accumulate
 #include "mozilla/ToString.h"
 #include "mozilla/dom/Animation.h"              // for dom::Animation
+#include "mozilla/dom/KeyframeEffect.h"         // for dom::Animation
+#include "mozilla/EffectSet.h"                  // for dom::Animation
 #include "mozilla/gfx/2D.h"                     // for DrawTarget
 #include "mozilla/gfx/BaseSize.h"               // for BaseSize
 #include "mozilla/gfx/Matrix.h"                 // for Matrix4x4
@@ -180,8 +182,15 @@ void LayerManager::RemovePartialPrerenderedAnimation(
 #ifdef DEBUG
   RefPtr<dom::Animation> animation;
   if (mPartialPrerenderedAnimations.Remove(aCompositorAnimationId,
-                                           getter_AddRefs(animation))) {
-    MOZ_ASSERT(aAnimation == animation.get());
+                                           getter_AddRefs(animation)) &&
+      // It may be possible that either animation's effect has already been
+      // nulled out via Animation::SetEffect() so ignore such cases.
+      aAnimation->GetEffect() && aAnimation->GetEffect()->AsKeyframeEffect() &&
+      animation->GetEffect() && animation->GetEffect()->AsKeyframeEffect()) {
+    MOZ_ASSERT(EffectSet::GetEffectSetForEffect(
+                   aAnimation->GetEffect()->AsKeyframeEffect()) ==
+               EffectSet::GetEffectSetForEffect(
+                   animation->GetEffect()->AsKeyframeEffect()));
   }
 #else
   mPartialPrerenderedAnimations.Remove(aCompositorAnimationId);

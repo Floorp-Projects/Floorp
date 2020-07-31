@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+#target {
+  width: 200vw;
+  height: 200vh;
+}
+</style>
+<div id="target"></div>
+<script>
+const animA = target.animate(
+  { transform: 'translateX(100px)' },
+  { duration: 50 }
+);
+const animB = target.animate(
+  { transform: 'translateX(100px)', composite: 'add' },
+  { duration: 100 }
+);
+animB.finished.then(() => {
+  document.documentElement.classList.remove("reftest-wait");
+});
+</script>
+</html>
