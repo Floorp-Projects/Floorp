@@ -134,18 +134,3 @@ nsPrinterWin::GetSupportsDuplex(bool* aSupportsDuplex) {
   *aSupportsDuplex = mSupportsDuplex.value();
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsPrinterWin::GetSupportsColor(bool* aSupportsColor) {
-  MOZ_ASSERT(aSupportsColor);
-
-  if (mSupportsColor.isNothing()) {
-    // Note: this is a blocking call, which could be slow.
-    mSupportsColor =
-        Some(::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLORDEVICE,
-                                   nullptr, nullptr) == 1);
-  }
-
-  *aSupportsColor = mSupportsColor.value();
-  return NS_OK;
-}
