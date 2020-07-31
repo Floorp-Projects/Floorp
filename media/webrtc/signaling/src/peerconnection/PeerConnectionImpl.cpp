@@ -210,10 +210,9 @@ class DataChannel;
 
 namespace mozilla {
 
-void PeerConnectionAutoTimer::RegisterConnection() { mRefCnt++; }
+void PeerConnectionAutoTimer::AddRef() { mRefCnt++; }
 
-void PeerConnectionAutoTimer::UnregisterConnection() {
-  MOZ_ASSERT(mRefCnt);
+void PeerConnectionAutoTimer::Release() {
   mRefCnt--;
   if (mRefCnt == 0) {
     Telemetry::Accumulate(
@@ -1496,6 +1495,8 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
     }
 
     OnSetDescriptionSuccess(sdpType == kJsepSdpRollback, true);
+
+    startCallTelem();
   }
 
   appendHistory();
@@ -2046,12 +2047,16 @@ bool PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
   return true;
 }
 
-void PeerConnectionImpl::RecordEndOfCallTelemetry() {
-  MOZ_RELEASE_ASSERT(!mCallTelemEnded, "Don't end telemetry twice");
-  MOZ_RELEASE_ASSERT(mJsepSession,
-                     "Call telemetry only starts after jsep session start");
-  MOZ_RELEASE_ASSERT(mJsepSession->GetNegotiations() > 0,
-                     "Call telemetry only starts after first connection");
+void PeerConnectionImpl::RecordEndOfCallTelemetry() const {
+  if (!mJsepSession) {
+    return;
+  }
+
+  // Exit early if no connection information was ever exchanged,
+  // This prevents distortion of telemetry data.
+  if (mLocalRequestedSDP.empty() && mRemoteRequestedSDP.empty()) {
+    return;
+  }
 
   // Bitmask used for WEBRTC/LOOP_CALL_TYPE telemetry reporting
   static const uint32_t kAudioTypeMask = 1;
@@ -2059,8 +2064,10 @@ void PeerConnectionImpl::RecordEndOfCallTelemetry() {
   static const uint32_t kDataChannelTypeMask = 4;
 
   // Report end-of-call Telemetry
-  Telemetry::Accumulate(Telemetry::WEBRTC_RENEGOTIATIONS,
-                        mJsepSession->GetNegotiations() - 1);
+  if (mJsepSession->GetNegotiations() > 0) {
+    Telemetry::Accumulate(Telemetry::WEBRTC_RENEGOTIATIONS,
+                          mJsepSession->GetNegotiations() - 1);
+  }
   Telemetry::Accumulate(Telemetry::WEBRTC_MAX_VIDEO_SEND_TRACK,
                         mMaxSending[SdpMediaSection::MediaType::kVideo]);
   Telemetry::Accumulate(Telemetry::WEBRTC_MAX_VIDEO_RECEIVE_TRACK,
@@ -2088,15 +2095,19 @@ void PeerConnectionImpl::RecordEndOfCallTelemetry() {
   }
   Telemetry::Accumulate(Telemetry::WEBRTC_CALL_TYPE, type);
 
-  MOZ_RELEASE_ASSERT(mWindow);
-  auto found = sCallDurationTimers.find(mWindow->WindowID());
-  if (found != sCallDurationTimers.end()) {
-    found->second.UnregisterConnection();
-    if (found->second.IsStopped()) {
-      sCallDurationTimers.erase(found);
+  if (mWindow) {
+    nsCString spec;
+    nsresult rv = mWindow->GetDocumentURI()->GetSpec(spec);
+    if (NS_SUCCEEDED(rv)) {
+      auto itor = mAutoTimers.find(spec.BeginReading());
+      if (itor != mAutoTimers.end()) {
+        itor->second.Release();
+        if (itor->second.IsStopped()) {
+          mAutoTimers.erase(itor);
+        }
+      }
     }
   }
-  mCallTelemEnded = true;
 }
 
 nsresult PeerConnectionImpl::CloseInt() {
@@ -2471,7 +2482,6 @@ void PeerConnectionImpl::IceConnectionStateChange(
       break;
     case RTCIceConnectionState::Connected:
       STAMP_TIMECARD(mTimeCard, "Ice state: connected");
-      StartCallTelem();
       break;
     case RTCIceConnectionState::Completed:
       STAMP_TIMECARD(mTimeCard, "Ice state: completed");
@@ -2982,28 +2992,24 @@ PeerConnectionImpl::GetLastSdpParsingErrors() const {
 }
 
 // Telemetry for when calls start
-void PeerConnectionImpl::StartCallTelem() {
-  if (mCallTelemStarted) {
-    return;
+void PeerConnectionImpl::startCallTelem() {
+  if (mWindow) {
+    nsCString spec;
+    nsresult rv = mWindow->GetDocumentURI()->GetSpec(spec);
+    if (NS_SUCCEEDED(rv)) {
+      auto itor = mAutoTimers.find(spec.BeginReading());
+      if (itor == mAutoTimers.end()) {
+        mAutoTimers.emplace(spec.BeginReading(), PeerConnectionAutoTimer());
+      } else {
+        itor->second.AddRef();
+      }
+    }
   }
-  MOZ_RELEASE_ASSERT(mWindow);
-  uint64_t windowId = mWindow->WindowID();
-  auto found = sCallDurationTimers.find(windowId);
-  if (found == sCallDurationTimers.end()) {
-    found =
-        sCallDurationTimers.emplace(windowId, PeerConnectionAutoTimer()).first;
-  }
-  found->second.RegisterConnection();
-  mCallTelemStarted = true;
 
   // Increment session call counter
   // If we want to track Loop calls independently here, we need two histograms.
-  //
-  // NOTE: As of bug 1654248 landing we are no longer counting renegotiations
-  // as separate calls. Expect numbers to drop compared to WEBRTC_CALL_COUNT_2.
-  Telemetry::Accumulate(Telemetry::WEBRTC_CALL_COUNT_3, 1);
+  Telemetry::Accumulate(Telemetry::WEBRTC_CALL_COUNT_2, 1);
 }
 
-std::map<uint64_t, PeerConnectionAutoTimer>
-    PeerConnectionImpl::sCallDurationTimers;
+std::map<std::string, PeerConnectionAutoTimer> PeerConnectionImpl::mAutoTimers;
 }  // namespace mozilla
