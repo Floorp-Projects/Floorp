@@ -13527,7 +13527,7 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
   // Remove the topmost element that qualifies aPredicate; This
   // is required is because the top layer contains not only
   // fullscreen elements, but also dialog elements.
-  Element* removedElement;
+  Element* removedElement = nullptr;
   for (auto i : Reversed(IntegerRange(mTopLayer.Length()))) {
     nsCOMPtr<Element> element(do_QueryReferent(mTopLayer[i]));
     if (element && aPredicateFunc(element)) {
