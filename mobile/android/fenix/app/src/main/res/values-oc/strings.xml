@@ -35,6 +35,10 @@
     <string name="tab_tray_select_collection">Seleccionar una colleccion</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Enregistrar los onglets seleccionats dins la colleccion</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s seleccionat</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s deseleccionat</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Seleccionat</string>
 
@@ -929,6 +933,9 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly a mudat los catons</string>
 
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Passar la Nightly nòu</string>
+
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly a mudat los catons</string>
     <!-- text for firefox preview moving tip button  -->
@@ -1019,6 +1026,10 @@
     <string name="sign_in_with_camera">Connectatz-vos amb la camèra</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Utilizar una adreça electronica allòc</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox quitarà de sincronizar vòstre compte mas escafarà pas las donadas de navegacion d’aqueste periferic.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s quitarà de sincronizar vòstre compte mas escafarà pas las donadas de navegacion d’aqueste periferic.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Se desconectar</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1034,14 +1045,20 @@
     <string name="preference_enhanced_tracking_protection">Proteccion renfortida contra lo seguiment</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Navegatz sens èsser seguit</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Gardatz vòstras donadas per vos. %s vos protegís de la màger part dels traçadors mai comuns que vos seguisson en linha.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ne saber mai</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estandarda (per defaut)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloca mens de traçadors. Las paginas se cargan normalament.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Çò que la proteccion contra lo seguiment estandarda bloca</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricte</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloca mai d’elements de seguiment, publicitats e fenèstras sorgissentas. Las paginas se cargament rapidament, mas pòt arribar que d’unas foncionalitats sián copadas.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Çò que la proteccion contra lo seguiment estricta bloca</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

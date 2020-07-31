@@ -142,13 +142,9 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">ಸ್ಕ್ಯಾನ್</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">ಕಿರುಹಾದಿಗಳು</string>
+    <string name="search_engines_shortcut_button">ಸರ್ಚ್ ಎಂಜಿನ್</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">ಸರ್ಚ್ ಎಂಜಿನ್ ಸಿದ್ದತೆಗಳು</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">ಇದರೊಂದಿಗೆ ಹುಡುಕು</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">ಈ ಸಮಯದಲ್ಲಿ, ಇದರೊಂದಿಗೆ ಹುಡುಕಿ:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ನಿಂದ ಲಿಂಕ್ ಅನ್ನು ಭರ್ತಿ ಮಾಡಿ</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -254,8 +250,6 @@
     <string name="developer_tools_category">ವಿಕಸನಾ ಉಪಕರಣಗಳು</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">ರಿಮೋಟ್ ಡೀಬಗ್ಗಿಂಗ್ USB ಮೂಲಕ</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">ಹುಡುಕಾಟ ಶಾರ್ಟ್‌ಕಟ್‌ಗಳನ್ನು ತೋರಿಸಿ</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">ಹುಡುಕಲು ಸಲಹೆಗಳನ್ನು ತೋರಿಸು</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -498,6 +492,9 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (ಖಾಸಗಿ ಮೋಡ್)</string>
 
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">ಉಳಿಸು</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ಇತಿಹಾಸವನ್ನು ಅಳಿಸಿ</string>
@@ -618,7 +615,7 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s ಅಳಿಸಲಾಗಿದೆ</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">ಬುಕ್‌ಮಾರ್ಕ್‌ಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ರದ್ದುಗೊಳಿಸಿ</string>
@@ -712,6 +709,8 @@
     <string name="create_collection_save_to_collection_tab_selected">%d ಟ್ಯಾಬ್‌ಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">ಸಂಗ್ರಹವನ್ನು ಉಳಿಸಲಾಗಿದೆ!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -816,6 +815,8 @@
     <string name="qr_scanner_dialog_negative">ನಿರಾಕರಿಸು</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">%1$s ಅನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">‍%1$s ಅನ್ನು ಅಳಿಸುವುದೇ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">ಅಳಿಸು</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1208,6 +1209,8 @@
     <string name="preferences_passwords_exceptions_description_empty">ಉಳಿಸದ ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು ಇಲ್ಲಿ ತೋರಿಸಲಾಗುತ್ತದೆ.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">ಈ ಸೈಟ್‌ಗಳಿಗೆ ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗುವುದಿಲ್ಲ.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">ಎಲ್ಲಾ ವಿನಾಯಿತಿಗಳನ್ನು ಅಳಿಸಿ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">ಹುಡುಕು ಎಂಜಿನ್‌ಗಳು</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1418,4 +1421,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ಸರಿ, ಗೊತ್ತಾಯಿತು</string>
 
-</resources>
+    <!-- DEPRECATED STRINGS -->
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">ಕಿರುಹಾದಿಗಳು</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">ಇದರೊಂದಿಗೆ ಹುಡುಕು</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">ಈ ಸಮಯದಲ್ಲಿ, ಇದರೊಂದಿಗೆ ಹುಡುಕಿ:</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">ಹುಡುಕಾಟ ಶಾರ್ಟ್‌ಕಟ್‌ಗಳನ್ನು ತೋರಿಸಿ</string>
+    </resources>

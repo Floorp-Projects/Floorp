@@ -171,7 +171,7 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">搜索</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">依照设备语言显示</string>
+    <string name="default_locale_text">依照设备语言显示 (ISO 3166 / 639)</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">搜索语言</string>
 
@@ -282,7 +282,7 @@
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">重新连接以恢复同步</string>
     <!-- Preference for language -->
-    <string name="preferences_language">语言(地区)</string>
+    <string name="preferences_language">语言</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">数据反馈</string>
     <!-- Preference for data collection -->

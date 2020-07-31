@@ -24,6 +24,8 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s לשוניות פתוחות. יש להקיש כדי להחליף לשוניות.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d נבחרו</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">הוספת אוסף חדש</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -35,10 +37,17 @@
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">שמירת הלשוניות שנבחרו לאוסף</string>
 
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">נבחר %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">בוטלה הבחירה של %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">בוצעה יציאה ממצב בחירה מרובה</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
     <string name="tab_tray_enter_multiselect_content_description">בוצעה כניסה למצב בחירה מרובה, יש לבחור בלשוניות כדי לשמור לאוסף</string>
+
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">נבחר</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">‏%1$s נוצר על־ידי Mozilla.</string>
@@ -64,6 +73,8 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">לא תודה</string>
 
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">הוספת וידג׳ט</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">לא כעת</string>
 
@@ -710,6 +721,10 @@
     <string name="collections_header">אוספים</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">תפריט אוסף</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">לאסוף את הדברים החשובים לך</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">ניתן לקבץ חיפושים, אתרים ולשוניות דומים יחד כדי לגשת אליהם מהר יותר בהמשך.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">בחירת לשוניות</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1280,6 +1295,8 @@
     <string name="saved_login_hide_password">הסתרת ססמה</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">יש לבטל את הנעילה כדי להציג את הכניסות השמורות שלך</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">שמירה מאובטחת של הכניסות והססמאות שלך</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">מאוחר יותר</string>
 

@@ -29,7 +29,7 @@
     <string name="open_tab_tray_plural">開啟了 %1$s 個分頁，點擊即可切換分頁。</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
-    <string name="tab_tray_multi_select_title">已選擇 ％1$d 個分頁</string>
+    <string name="tab_tray_multi_select_title">已選擇 %1$d 個分頁</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">新增收藏集</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
