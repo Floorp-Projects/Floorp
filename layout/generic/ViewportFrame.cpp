@@ -282,7 +282,7 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
   if (mFrames.NotEmpty()) {
     // Deal with a non-incremental reflow or an incremental reflow
     // targeted at our one-and-only principal child frame.
-    if (aReflowInput.ShouldReflowAllKids() || aReflowInput.IsBResize() ||
+    if (aReflowInput.ShouldReflowAllKids() ||
         mFrames.FirstChild()->IsSubtreeDirty()) {
       // Reflow our one-and-only principal child frame
       nsIFrame* kidFrame = mFrames.FirstChild();
