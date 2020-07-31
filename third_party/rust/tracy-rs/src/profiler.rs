@@ -85,6 +85,10 @@ impl ProfileScope {
             ctx,
         }
     }
+
+    pub fn text(&self, text: &[u8]) {
+        unsafe { EMIT_ZONE_TEXT(self.ctx, text.as_ptr(), text.len()) };
+    }
 }
 
 impl Drop for ProfileScope {
@@ -96,9 +100,34 @@ impl Drop for ProfileScope {
 }
 
 /// Define a profiling scope.
+///
+/// This macro records a Tracy 'zone' starting at the point at which the macro
+/// occurs, and extending to the end of the block. More precisely, the zone ends
+/// when a variable declared by this macro would be dropped, so early returns
+/// exit the zone.
+///
+/// For example:
+///
+///     fn an_operation_that_may_well_take_a_long_time() {
+///         profile_scope!("an_operation_that_may_well_take_a_long_time");
+///         ...
+///     }
+///
+/// The first argument to `profile_scope!` is the name of the zone, and must be
+/// a string literal.
+///
+/// Tracy zones can also have associated 'text' values that vary from one
+/// execution to the next - for example, a zone's text might record the name of
+/// the file being processed. The text must be a `CStr` value. You can provide
+/// zone text like this:
+///
+///     fn run_reftest(test_name: &str) {
+///         profile_scope!("run_reftest", text: test_name);
+///         ...
+///     }
 #[macro_export]
 macro_rules! profile_scope {
-    ($string:expr) => {
+    ($string:literal $(, text: $text:expr )? ) => {
         const CALLSITE: $crate::profiler::SourceLocation = $crate::profiler::SourceLocation {
             name: concat!($string, "\0").as_ptr(),
             function: concat!(module_path!(), "\0").as_ptr(),
@@ -108,6 +137,10 @@ macro_rules! profile_scope {
         };
 
         let _profile_scope = $crate::profiler::ProfileScope::new(&CALLSITE);
+
+        $(
+            _profile_scope.text(str::as_bytes($text));
+        )?
     }
 }
 

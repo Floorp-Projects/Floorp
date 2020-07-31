@@ -54,7 +54,7 @@ webrender_build = { version = "0.0.1", path = "../webrender_build" }
 malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
 ws = { optional = true, version = "0.9" }
 svg_fmt = "0.4"
-tracy-rs = { version = "0.1" }
+tracy-rs = "0.1.2"
 
 [dev-dependencies]
 mozangle = "0.3.1"
