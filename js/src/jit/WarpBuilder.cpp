@@ -1504,6 +1504,15 @@ bool WarpBuilder::build_Not(BytecodeLocation loc) {
 
 bool WarpBuilder::build_ToString(BytecodeLocation loc) {
   MDefinition* value = current->pop();
+
+  // TODO: Consider making MToString non-effectul similar to Ion. That way GVN
+  // will be able to fold away MToString(string) automatically. For now simply
+  // handle this case here.
+  if (value->type() == MIRType::String) {
+    current->push(value);
+    return true;
+  }
+
   MToString* ins =
       MToString::New(alloc(), value, MToString::SideEffectHandling::Supported);
   current->add(ins);
