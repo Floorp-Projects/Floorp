@@ -18,7 +18,8 @@ class nsPrinter final : public nsIPrinter {
   nsPrinter() = delete;
   nsPrinter(const nsAString& aName,
             const nsTArray<RefPtr<nsIPaper>>& aPaperList,
-            const bool aSupportsDuplex = false);
+            const bool aSupportsDuplex = false,
+            const bool aSupportsColor = false);
 
  private:
   ~nsPrinter() = default;
@@ -26,6 +27,7 @@ class nsPrinter final : public nsIPrinter {
   nsString mName;
   nsTArray<RefPtr<nsIPaper>> mPaperList;
   bool mSupportsDuplex = false;
+  bool mSupportsColor = false;
 };
 
 #endif /* nsPrinter_h__ */
