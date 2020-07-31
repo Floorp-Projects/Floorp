@@ -36,6 +36,7 @@ private val Event.name: String?
         is Event.InteractWithSearchURLArea -> "E_Interact_With_Search_URL_Area"
         is Event.CollectionSaved -> "E_Collection_Created"
         is Event.CollectionTabRestored -> "E_Collection_Tab_Opened"
+        is Event.SyncAuthSignUp -> "E_FxA_New_Signup"
         is Event.SyncAuthSignIn -> "E_Sign_In_FxA"
         is Event.SyncAuthSignOut -> "E_Sign_Out_FxA"
         is Event.ClearedPrivateData -> "E_Cleared_Private_Data"

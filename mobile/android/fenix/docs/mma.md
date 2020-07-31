@@ -215,7 +215,12 @@ Here is the list of current Events sent, which can be found here in the code bas
     <td>`E_Collection_Tab_Opened`</td>
     <td>The user opened a tab from a previously created collection</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
-  </tr> 
+  </tr>
+  <tr>
+    <td>`E_FxA_New_Signup`</td>
+    <td>The user completed the signup process to new FxA account</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
+  </tr>
   <tr>
     <td>`E_Sign_In_FxA`</td>
     <td>The user successfully signed in to FxA</td>
