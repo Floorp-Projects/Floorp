@@ -35,5 +35,23 @@ void BackgroundDataBridgeParent::Destroy() {
       NS_DISPATCH_NORMAL));
 }
 
+void BackgroundDataBridgeParent::OnStopRequest(
+    nsresult aStatus, const ResourceTimingStructArgs& aTiming,
+    const TimeStamp& aLastActiveTabOptHit,
+    const nsHttpHeaderArray& aResponseTrailers) {
+  RefPtr<BackgroundDataBridgeParent> self = this;
+  MOZ_ALWAYS_SUCCEEDS(mBackgroundThread->Dispatch(
+      NS_NewRunnableFunction(
+          "BackgroundDataBridgeParent::OnStopRequest",
+          [self, aStatus, aTiming, aLastActiveTabOptHit, aResponseTrailers]() {
+            if (self->CanSend()) {
+              Unused << self->SendOnStopRequest(
+                  aStatus, aTiming, aLastActiveTabOptHit, aResponseTrailers);
+              Unused << self->Send__delete__(self);
+            }
+          }),
+      NS_DISPATCH_NORMAL));
+}
+
 }  // namespace net
 }  // namespace mozilla
