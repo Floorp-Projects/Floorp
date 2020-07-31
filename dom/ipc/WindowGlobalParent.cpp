@@ -142,7 +142,8 @@ void WindowGlobalParent::Init() {
   // If there is no current window global, assume we're about to become it
   // optimistically.
   if (!BrowsingContext()->IsDiscarded()) {
-    BrowsingContext()->SetCurrentInnerWindowId(InnerWindowId());
+    MOZ_ALWAYS_SUCCEEDS(
+        BrowsingContext()->SetCurrentInnerWindowId(InnerWindowId()));
   }
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

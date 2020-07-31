@@ -414,10 +414,11 @@ void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
   });
 }
 
-void CanonicalBrowsingContext::NotifyMediaMutedChanged(bool aMuted) {
+void CanonicalBrowsingContext::NotifyMediaMutedChanged(bool aMuted,
+                                                       ErrorResult& aRv) {
   MOZ_ASSERT(!GetParent(),
              "Notify media mute change on non top-level context!");
-  SetMuted(aMuted);
+  SetMuted(aMuted, aRv);
 }
 
 uint32_t CanonicalBrowsingContext::CountSiteOrigins(
@@ -1135,7 +1136,12 @@ bool CanonicalBrowsingContext::StartDocumentLoad(
     mCurrentLoad->Cancel(NS_BINDING_ABORTED);
   }
   mCurrentLoad = aLoad;
-  SetCurrentLoadIdentifier(Some(aLoad->GetLoadIdentifier()));
+
+  if (NS_FAILED(SetCurrentLoadIdentifier(Some(aLoad->GetLoadIdentifier())))) {
+    mCurrentLoad = nullptr;
+    return false;
+  }
+
   return true;
 }
 

@@ -235,7 +235,8 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   if (mixedChannel && (mixedChannel == aDocument->GetChannel())) {
     txn.SetAllowMixedContent(true);
   }
-  txn.Commit(mWindowContext);
+
+  MOZ_ALWAYS_SUCCEEDS(txn.Commit(mWindowContext));
 }
 
 /* static */
