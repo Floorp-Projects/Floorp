@@ -12509,14 +12509,20 @@ nsDocShell::GetAsyncPanZoomEnabled(bool* aOut) {
 }
 
 bool nsDocShell::HasUnloadedParent() {
-  RefPtr<nsDocShell> parent = GetInProcessParentDocshell();
-  while (parent) {
-    bool inUnload = false;
-    parent->GetIsInUnload(&inUnload);
-    if (inUnload) {
+  for (WindowContext* wc = GetBrowsingContext()->GetParentWindowContext(); wc;
+       wc->GetParentWindowContext()) {
+    if (wc->IsCached() || wc->IsDiscarded() ||
+        wc->GetBrowsingContext()->IsDiscarded()) {
+      // If a parent is OOP and the parent WindowContext is no
+      // longer current, we can assume the parent was unloaded.
       return true;
     }
-    parent = parent->GetInProcessParentDocshell();
+
+    if (wc->GetBrowsingContext()->IsInProcess() &&
+        (!wc->GetBrowsingContext()->GetDocShell() ||
+         wc->GetBrowsingContext()->GetDocShell()->GetIsInUnload())) {
+      return true;
+    }
   }
   return false;
 }
