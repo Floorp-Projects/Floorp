@@ -655,6 +655,31 @@ class LWasmReduceSimd128 : public LInstructionHelper<1, 1, 0> {
   wasm::SimdOp simdOp() const { return mir_->toWasmReduceSimd128()->simdOp(); }
 };
 
+// (v128, onTrue, onFalse) test-and-branch operations.
+class LWasmReduceAndBranchSimd128 : public LControlInstructionHelper<2, 1, 0> {
+  wasm::SimdOp op_;
+
+ public:
+  LIR_HEADER(WasmReduceAndBranchSimd128)
+
+  static constexpr uint32_t Src = 0;
+  static constexpr uint32_t IfTrue = 0;
+  static constexpr uint32_t IfFalse = 1;
+
+  LWasmReduceAndBranchSimd128(const LAllocation& src, wasm::SimdOp op,
+                              MBasicBlock* ifTrue, MBasicBlock* ifFalse)
+      : LControlInstructionHelper(classOpcode), op_(op) {
+    setOperand(Src, src);
+    setSuccessor(IfTrue, ifTrue);
+    setSuccessor(IfFalse, ifFalse);
+  }
+
+  const LAllocation* src() { return getOperand(Src); }
+  wasm::SimdOp simdOp() const { return op_; }
+  MBasicBlock* ifTrue() const { return getSuccessor(IfTrue); }
+  MBasicBlock* ifFalse() const { return getSuccessor(IfFalse); }
+};
+
 // (v128, imm) -> i64 effect-free operations
 class LWasmReduceSimd128ToInt64
     : public LInstructionHelper<INT64_PIECES, 1, 0> {
