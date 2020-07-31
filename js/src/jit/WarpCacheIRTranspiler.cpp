@@ -669,6 +669,16 @@ bool WarpCacheIRTranspiler::emitLoadProto(ObjOperandId objId,
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitLoadValueTag(ValOperandId valId,
+                                             ValueTagOperandId resultId) {
+  MDefinition* val = getOperand(valId);
+
+  auto* ins = MLoadValueTag::New(alloc(), val);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadDynamicSlotResult(ObjOperandId objId,
                                                       uint32_t offsetOffset) {
   int32_t offset = int32StubField(offsetOffset);

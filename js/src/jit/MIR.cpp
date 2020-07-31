@@ -6014,6 +6014,21 @@ MDefinition* MCheckObjCoercible::foldsTo(TempAllocator& alloc) {
   return input;
 }
 
+MDefinition* MLoadValueTag::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = value();
+  if (!input->isBox()) {
+    return this;
+  }
+
+  MIRType type = input->getOperand(0)->type();
+  if (type >= MIRType::Value) {
+    return this;
+  }
+
+  JSValueTag tag = MIRTypeToTag(type);
+  return MConstant::New(alloc, Int32Value(tag));
+}
+
 bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                      MDefinition* obj, MDefinition* id) {
   if (obj->mightBeType(MIRType::String)) {
