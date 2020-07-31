@@ -11585,6 +11585,27 @@ class MInitHomeObject : public MBinaryInstruction,
   }
 };
 
+class MLoadValueTag : public MUnaryInstruction, public BoxInputsPolicy::Data {
+  explicit MLoadValueTag(MDefinition* value)
+      : MUnaryInstruction(classOpcode, value) {
+    setResultType(MIRType::Int32);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadValueTag)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, value))
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.
