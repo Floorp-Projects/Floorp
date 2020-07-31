@@ -188,8 +188,8 @@ def enable_full_crashsymbols(config, jobs):
         enable_full_crashsymbols = job['attributes'].get('enable-full-crashsymbols')
         if enable_full_crashsymbols and config.params['project'] in branches:
             logger.debug("Enabling full symbol generation for %s", job['name'])
-            job['worker']['env']['MOZ_ENABLE_FULL_SYMBOLS'] = '1'
         else:
             logger.debug("Disabling full symbol generation for %s", job['name'])
+            job['worker']['env']['MOZ_DISABLE_FULL_SYMBOLS'] = '1'
             job['attributes'].pop('enable-full-crashsymbols', None)
         yield job
