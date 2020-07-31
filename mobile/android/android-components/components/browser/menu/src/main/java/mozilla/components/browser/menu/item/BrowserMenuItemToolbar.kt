@@ -54,10 +54,11 @@ class BrowserMenuItemToolbar(
                 menu.dismiss()
             }
             button.setOnLongClickListener {
-                item.longClickListener()
+                item.longClickListener?.invoke()
                 menu.dismiss()
                 true
             }
+            button.isLongClickable = item.longClickListener != null
 
             layout.addView(button, LinearLayout.LayoutParams(0, MATCH_PARENT, 1f))
         }
@@ -91,7 +92,7 @@ class BrowserMenuItemToolbar(
         val contentDescription: String,
         @ColorRes val iconTintColorResource: Int = NO_ID,
         val isEnabled: () -> Boolean = { true },
-        val longClickListener: () -> Unit = {},
+        val longClickListener: (() -> Unit)? = null,
         val listener: () -> Unit
     ) {
 
@@ -152,7 +153,7 @@ class BrowserMenuItemToolbar(
         @ColorRes val secondaryImageTintResource: Int = primaryImageTintResource,
         val isInPrimaryState: () -> Boolean = { true },
         val disableInSecondaryState: Boolean = false,
-        longClickListener: () -> Unit = {},
+        longClickListener: (() -> Unit)? = null,
         listener: () -> Unit
     ) : Button(
         primaryImageResource,
