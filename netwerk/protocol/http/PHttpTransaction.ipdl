@@ -83,7 +83,9 @@ child:
              bool hasTransactionObserver,
              H2PushedStreamArg? pushedStreamArg,
              PInputChannelThrottleQueue? throttleQueue,
-             bool aIsDocumentLoad);
+             bool aIsDocumentLoad,
+             TimeStamp aRedirectStart,
+             TimeStamp aRedirectEnd);
 
   async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);

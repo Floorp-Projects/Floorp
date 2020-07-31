@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
+include HttpChannelParams;
+include NeckoChannelParams;
 
 namespace mozilla {
 namespace net {
@@ -16,6 +18,11 @@ child:
   async OnTransportAndData(uint64_t  offset,
                            uint32_t  count,
                            nsCString data);
+
+  async OnStopRequest(nsresult aStatus,
+                      ResourceTimingStructArgs timing,
+                      TimeStamp lastActiveTabOptimization,
+                      nsHttpHeaderArray responseTrailers);
 
 both:
   async __delete__();

@@ -993,8 +993,12 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
 void HttpChannelChild::ProcessOnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const nsHttpHeaderArray& aResponseTrailers,
-    const nsTArray<ConsoleReportCollected>& aConsoleReports) {
-  LOG(("HttpChannelChild::ProcessOnStopRequest [this=%p]\n", this));
+    nsTArray<ConsoleReportCollected>&& aConsoleReports,
+    bool aFromSocketProcess) {
+  LOG(
+      ("HttpChannelChild::ProcessOnStopRequest [this=%p, "
+       "aFromSocketProcess=%d]\n",
+       this, aFromSocketProcess));
   MOZ_ASSERT(OnSocketThread());
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
                      "Should not be receiving any more callbacks from parent!");
@@ -1004,9 +1008,31 @@ void HttpChannelChild::ProcessOnStopRequest(
           this,
           [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
            aResponseTrailers,
-           consoleReports = CopyableTArray{aConsoleReports.Clone()}]() {
-            self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers,
-                                consoleReports);
+           consoleReports = CopyableTArray{aConsoleReports.Clone()},
+           aFromSocketProcess]() mutable {
+            self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
+            if (!aFromSocketProcess) {
+              self->DoOnConsoleReport(std::move(consoleReports));
+              self->ContinueOnStopRequest();
+            }
+          }),
+      mDivertingToParent);
+}
+
+void HttpChannelChild::ProcessOnConsoleReport(
+    nsTArray<ConsoleReportCollected>&& aConsoleReports) {
+  LOG(("HttpChannelChild::ProcessOnConsoleReport [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
+  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+                     "Should not be receiving any more callbacks from parent!");
+
+  mEventQ->RunOrEnqueue(
+      new NeckoTargetChannelFunctionEvent(
+          this,
+          [self = UnsafePtr<HttpChannelChild>(this),
+           consoleReports = CopyableTArray{aConsoleReports.Clone()}]() mutable {
+            self->DoOnConsoleReport(std::move(consoleReports));
+            self->ContinueOnStopRequest();
           }),
       mDivertingToParent);
 }
@@ -1022,10 +1048,28 @@ void HttpChannelChild::MaybeDivertOnStop(const nsresult& aChannelStatus) {
   }
 }
 
+void HttpChannelChild::DoOnConsoleReport(
+    nsTArray<ConsoleReportCollected>&& aConsoleReports) {
+  if (aConsoleReports.IsEmpty()) {
+    return;
+  }
+
+  for (ConsoleReportCollected& report : aConsoleReports) {
+    if (report.propertiesFile() <
+        nsContentUtils::PropertiesFile::PropertiesFile_COUNT) {
+      AddConsoleReport(report.errorFlags(), report.category(),
+                       nsContentUtils::PropertiesFile(report.propertiesFile()),
+                       report.sourceFileURI(), report.lineNumber(),
+                       report.columnNumber(), report.messageName(),
+                       report.stringParams());
+    }
+  }
+  MaybeFlushConsoleReports();
+}
+
 void HttpChannelChild::OnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
-    const nsHttpHeaderArray& aResponseTrailers,
-    const nsTArray<ConsoleReportCollected>& aConsoleReports) {
+    const nsHttpHeaderArray& aResponseTrailers) {
   LOG(("HttpChannelChild::OnStopRequest [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(aChannelStatus)));
   MOZ_ASSERT(NS_IsMainThread());
@@ -1056,21 +1100,6 @@ void HttpChannelChild::OnStopRequest(
             this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus]() {
               self->MaybeDivertOnStop(aChannelStatus);
             }));
-  }
-
-  if (!aConsoleReports.IsEmpty()) {
-    for (const ConsoleReportCollected& report : aConsoleReports) {
-      if (report.propertiesFile() <
-          nsContentUtils::PropertiesFile::PropertiesFile_COUNT) {
-        AddConsoleReport(
-            report.errorFlags(), report.category(),
-            nsContentUtils::PropertiesFile(report.propertiesFile()),
-            report.sourceFileURI(), report.lineNumber(), report.columnNumber(),
-            report.messageName(), report.stringParams());
-      }
-    }
-
-    MaybeFlushConsoleReports();
   }
 
   nsCOMPtr<nsICompressConvStats> conv = do_QueryInterface(mCompressListener);
@@ -1124,7 +1153,9 @@ void HttpChannelChild::OnStopRequest(
     DoOnStopRequest(this, aChannelStatus, nullptr);
     // DoOnStopRequest() calls ReleaseListeners()
   }
+}
 
+void HttpChannelChild::ContinueOnStopRequest() {
   // If unknownDecoder is involved and the received content is short we will
   // know whether we need to divert to parent only after OnStopRequest of the
   // listeners chain is called in DoOnStopRequest. At that moment
@@ -1155,7 +1186,7 @@ void HttpChannelChild::OnStopRequest(
   // message but request the cache entry to be kept by the parent.
   // If the channel has failed, the cache entry is in a non-writtable state and
   // we want to release it to not block following consumers.
-  if (NS_SUCCEEDED(aChannelStatus) && !mPreferredCachedAltDataTypes.IsEmpty()) {
+  if (NS_SUCCEEDED(mStatus) && !mPreferredCachedAltDataTypes.IsEmpty()) {
     mKeptAlive = true;
     SendDocumentChannelCleanup(false);  // don't clear cache entry
     return;
