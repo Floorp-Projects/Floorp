@@ -1522,6 +1522,33 @@ bool nsRefreshDriver::HasImageRequests() const {
   return !mRequests.IsEmpty();
 }
 
+bool nsRefreshDriver::HasReasonToTick() const {
+  return HasObservers() || HasImageRequests() ||
+         mNeedToUpdateIntersectionObservations ||
+         !mVisualViewportResizeEvents.IsEmpty() || !mScrollEvents.IsEmpty() ||
+         !mVisualViewportScrollEvents.IsEmpty();
+}
+
+bool nsRefreshDriver::
+    ShouldKeepTimerRunningWhileWaitingForFirstContentfulPaint() {
+  // On top level content pages keep the timer running initially so that we
+  // paint the page soon enough.
+  if (mThrottled || mTestControllingRefreshes || !XRE_IsContentProcess() ||
+      !mPresContext->Document()->IsTopLevelContentDocument() ||
+      gfxPlatform::IsInLayoutAsapMode() || mPresContext->HadContentfulPaint() ||
+      mPresContext->Document()->GetReadyStateEnum() ==
+          Document::READYSTATE_COMPLETE) {
+    return false;
+  }
+  if (mBeforeFirstContentfulPaintTimerRunningLimit.IsNull()) {
+    // Don't let the timer to run forever, so limit to 4s for now.
+    mBeforeFirstContentfulPaintTimerRunningLimit =
+        TimeStamp::Now() + TimeDuration::FromSeconds(4.0f);
+  }
+
+  return TimeStamp::Now() <= mBeforeFirstContentfulPaintTimerRunningLimit;
+}
+
 nsRefreshDriver::ObserverArray& nsRefreshDriver::ArrayFor(
     FlushType aFlushType) {
   switch (aFlushType) {
@@ -1881,12 +1908,13 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   mWarningThreshold = 1;
 
   RefPtr<PresShell> presShell = mPresContext->GetPresShell();
-  if (!presShell ||
-      (!HasObservers() && !HasImageRequests() &&
-       !mNeedToUpdateIntersectionObservations &&
-       mVisualViewportResizeEvents.IsEmpty() && mScrollEvents.IsEmpty() &&
-       mVisualViewportScrollEvents.IsEmpty())) {
-    // Things are being destroyed, or we no longer have any observers.
+  if (!presShell) {
+    StopTimer();
+    return;
+  }
+
+  if (!HasReasonToTick()) {
+    // We no longer have any observers.
     // We don't want to stop the timer when observers are initially
     // removed, because sometimes observers can be added and removed
     // often depending on what other things are going on and in that
@@ -1895,20 +1923,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // before stopping the timer.
     // On top level content pages keep the timer running initially so that we
     // paint the page soon enough.
-    if (presShell && !mThrottled && !mTestControllingRefreshes &&
-        XRE_IsContentProcess() &&
-        mPresContext->Document()->IsTopLevelContentDocument() &&
-        !gfxPlatform::IsInLayoutAsapMode() &&
-        !mPresContext->HadContentfulPaint() &&
-        mPresContext->Document()->GetReadyStateEnum() <
-            Document::READYSTATE_COMPLETE) {
-      if (mInitialTimerRunningLimit.IsNull()) {
-        mInitialTimerRunningLimit =
-            TimeStamp::Now() + TimeDuration::FromSeconds(4.0f);
-        // Don't let the timer to run forever, so limit to 4s for now.
-      } else if (mInitialTimerRunningLimit < TimeStamp::Now()) {
-        StopTimer();
-      }
+    if (ShouldKeepTimerRunningWhileWaitingForFirstContentfulPaint()) {
+      PROFILER_TRACING_MARKER(
+          "Paint", "RefreshDriver waiting for first contentful paint", GRAPHICS,
+          TRACING_EVENT);
     } else {
       StopTimer();
     }

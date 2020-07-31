@@ -482,6 +482,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // Note: This should only be called in the dtor of nsRefreshDriver.
   uint32_t ObserverCount() const;
   bool HasImageRequests() const;
+  bool HasReasonToTick() const;
+  bool ShouldKeepTimerRunningWhileWaitingForFirstContentfulPaint();
   ObserverArray& ArrayFor(mozilla::FlushType aFlushType);
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
   void DoRefresh();
@@ -575,7 +577,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   mozilla::TimeStamp mTickVsyncTime;
   mozilla::TimeStamp mNextThrottledFrameRequestTick;
   mozilla::TimeStamp mNextRecomputeVisibilityTick;
-  mozilla::TimeStamp mInitialTimerRunningLimit;
+  mozilla::TimeStamp mBeforeFirstContentfulPaintTimerRunningLimit;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[4];
