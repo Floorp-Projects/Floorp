@@ -38,7 +38,7 @@ adapted from test_bug607584.xhtml by Kent James <kent@caspia.com>
   }
 
   EditorContentListener.prototype = {
-    init : function(aEditor)
+    init(aEditor)
       {
         this.mEditor = aEditor;
       },
@@ -46,7 +46,7 @@ adapted from test_bug607584.xhtml by Kent James <kent@caspia.com>
     QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
                                             "nsISupportsWeakReference"]),
 
-    onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus)
     {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
         {
@@ -55,7 +55,7 @@ adapted from test_bug607584.xhtml by Kent James <kent@caspia.com>
               this.mEditor.focus();
               editor instanceof Ci.nsIHTMLEditor;
               editor.returnInParagraphCreatesNewParagraph = true;
-              source = "<html><body><table><head></table></body></html>";
+              let source = "<html><body><table><head></table></body></html>";
               editor.rebuildDocumentFromSource(source);
               ok(true, "Don't crash when head appears after body");
               source = "<html></head><head><body></body></html>";
@@ -69,28 +69,28 @@ adapted from test_bug607584.xhtml by Kent James <kent@caspia.com>
     },
   
   
-    onProgressChange : function(aWebProgress, aRequest,
+    onProgressChange(aWebProgress, aRequest,
                                 aCurSelfProgress, aMaxSelfProgress,
                                 aCurTotalProgress, aMaxTotalProgress)
       {
       },
   
-    onLocationChange : function(aWebProgress, aRequest, aLocation, aFlags)
+    onLocationChange(aWebProgress, aRequest, aLocation, aFlags)
       {
       },
   
-    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+    onStatusChange(aWebProgress, aRequest, aStatus, aMessage)
       {
       },
   
-    onSecurityChange : function(aWebProgress, aRequest, aState)
+    onSecurityChange(aWebProgress, aRequest, aState)
       {
       },
-  
-    onContentBlockingEvent : function(aWebProgress, aRequest, aEvent)
+
+    onContentBlockingEvent(aWebProgress, aRequest, aEvent)
       {
       },
-  
+
       mEditor: null
   };
 
