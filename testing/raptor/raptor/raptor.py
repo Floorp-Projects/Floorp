@@ -52,7 +52,6 @@ def main(args=sys.argv[1:]):
             {
                 "fission.autostart": True,
                 "dom.serviceWorkers.parent_intercept": True,
-                "browser.tabs.documentchannel": True,
             }
         )
 
