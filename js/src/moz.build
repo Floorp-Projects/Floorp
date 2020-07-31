@@ -230,6 +230,7 @@ EXPORTS.js.experimental += [
 EXPORTS.js.friend += [
     '../public/friend/ErrorMessages.h',
     '../public/friend/ErrorNumbers.msg',
+    '../public/friend/UsageStatistics.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -385,6 +386,7 @@ UNIFIED_SOURCES += [
     'vm/UbiNode.cpp',
     'vm/UbiNodeCensus.cpp',
     'vm/UbiNodeShortestPaths.cpp',
+    'vm/UsageStatistics.cpp',
     'vm/Value.cpp',
     'vm/Warnings.cpp',
     'vm/Xdr.cpp',
