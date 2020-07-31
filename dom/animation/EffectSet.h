@@ -89,6 +89,8 @@ class EffectSet {
   // to use this.
   static EffectSet* GetEffectSetForStyleFrame(const nsIFrame* aStyleFrame);
 
+  static EffectSet* GetEffectSetForEffect(const dom::KeyframeEffect* aEffect);
+
   static void DestroyEffectSet(dom::Element* aElement,
                                PseudoStyleType aPseudoType);
 
