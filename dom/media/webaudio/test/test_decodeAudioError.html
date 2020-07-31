@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the decodeAudioData Errors</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script src="webaudio.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+
+var finished = 0;
+
+var ctx = new AudioContext();
+
+function errorExpectedWithFile(file, errorMsg) {
+  var xhr = new XMLHttpRequest();
+  function test(e) {
+    ok(e instanceof DOMException,
+      "The exception should be an instance of DOMException");
+    ok(e.name == "EncodingError",
+      "The exception name should be EncodingError");
+    ok(e.message == errorMsg,
+       "The exception message is not the one intended.\n" +
+       "\tExpected : " + errorMsg + "\n" +
+       "\tGot      : " + e.message );
+    finish();
+  }
+  xhr.open("GET", file, true);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = function() {
+    ctx.decodeAudioData(xhr.response, buffer => {
+      ok(false, "You should not be able to decode that");
+      finish();
+    }, e => test(e))
+    .then(buffer => {
+      ok(false, "You should not be able to decode that");
+      finish();
+    })
+    .catch(e => test(e));
+  };
+  xhr.send();
+}
+
+function finish() {
+  if (++finished == 4) {
+    SimpleTest.finish();
+  }
+}
+
+// Unknown Content
+errorExpectedWithFile("404", "The buffer passed to decodeAudioData contains an unknown content type.");
+
+// Invalid Content
+errorExpectedWithFile("invalidContent.flac", "The buffer passed to decodeAudioData contains invalid content which cannot be decoded successfully.");
+
+// No Audio
+// # Bug 1656032
+// Think about increasing the finish counter to 6 when activating this line
+// errorExpectedWithFile("noaudio.webm", "The buffer passed to decodeAudioData does not contain any audio.");
+
+// Unknown Error
+// errorExpectedWithFile("There is no file we can't handle", "An unknown error occurred while processing decodeAudioData.");
+});
+
+</script>
+</pre>
+</body>
+</html>
