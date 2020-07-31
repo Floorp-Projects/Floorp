@@ -22,32 +22,51 @@ loader.lazyRequireGetter(
   true
 );
 
-class PropertiesViewContextMenu {
+class HeadersPanelContextMenu {
   constructor(props = {}) {
     this.props = props;
+    this.copyAll = this.copyAll.bind(this);
+    this.copy = this.copy.bind(this);
   }
 
   /**
    * Handle the context menu opening.
    * @param {Object} event open event
    * @param {Object} selection object representing the current selection
-   * @param {Object} data object containing information
-   * @param {Object} data.member member of the right-clicked row
-   * @param {Object} data.object the whole tree data
    */
-  open(event = {}, selection, { member, object }) {
+  open(event = {}, selection) {
+    const { target } = event;
     const menuItems = [
       {
-        id: "properties-view-context-menu-copy",
+        id: "headers-panel-context-menu-copy",
         label: L10N.getStr("netmonitor.context.copy"),
         accesskey: L10N.getStr("netmonitor.context.copy.accesskey"),
-        click: () => this.copy(member, selection),
+        click: () => {
+          const { name, value } = getSummaryContent(
+            target.closest(".tabpanel-summary-container")
+          );
+          this.copy(
+            { name, value, object: null, hasChildren: false },
+            selection
+          );
+        },
       },
       {
-        id: "properties-view-context-menu-copyall",
+        id: "headers-panel-context-menu-copyall",
         label: L10N.getStr("netmonitor.context.copyAll"),
         accesskey: L10N.getStr("netmonitor.context.copyAll.accesskey"),
-        click: () => this.copyAll(object, selection),
+        click: () => {
+          const root = target.closest(".summary");
+          const object = {};
+          if (root) {
+            const { children } = root;
+            for (let i = 0; i < children.length; i++) {
+              const content = getSummaryContent(children[i]);
+              object[content.name] = content.value;
+            }
+          }
+          return this.copyAll(object, selection);
+        },
       },
     ];
 
@@ -83,19 +102,19 @@ class PropertiesViewContextMenu {
 
   /**
    * Copies single item.
-   * @param {Object} member member of the right-clicked row
+   * @param {Object} object data object for specific node
    * @param {Object} selection object representing the current selection
    */
-  copy(member, selection) {
+  copy(object, selection) {
     let buffer = "";
     if (selection.toString() !== "") {
       buffer = selection.toString();
     } else {
       const { customFormatters } = this.props;
-      buffer = contextMenuFormatters.baseCopyFormatter(member);
+      buffer = contextMenuFormatters.baseCopyFormatter(object);
       if (customFormatters?.copyFormatter) {
         buffer = customFormatters.copyFormatter(
-          member,
+          object,
           contextMenuFormatters.baseCopyFormatter
         );
       }
@@ -106,4 +125,11 @@ class PropertiesViewContextMenu {
   }
 }
 
-module.exports = PropertiesViewContextMenu;
+function getSummaryContent(el) {
+  return {
+    name: el.querySelector(".tabpanel-summary-label").textContent,
+    value: el.querySelector(".tabpanel-summary-value").textContent,
+  };
+}
+
+module.exports = HeadersPanelContextMenu;

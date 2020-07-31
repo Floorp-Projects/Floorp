@@ -64,6 +64,7 @@ class PropertiesView extends Component {
       defaultSelectFirstNode: PropTypes.bool,
       useQuotes: PropTypes.bool,
       onClickRow: PropTypes.func,
+      contextMenuFormatters: PropTypes.object,
     };
   }
 
@@ -74,6 +75,7 @@ class PropertiesView extends Component {
       expandableStrings: false,
       cropLimit: 1024,
       useQuotes: true,
+      contextMenuFormatters: {},
     };
   }
 
@@ -157,9 +159,14 @@ class PropertiesView extends Component {
     // if data exists and can be copied, then show the contextmenu
     if (typeof object === "object") {
       if (!this.contextMenu) {
-        this.contextMenu = new PropertiesViewContextMenu({});
+        this.contextMenu = new PropertiesViewContextMenu({
+          customFormatters: this.props.contextMenuFormatters,
+        });
       }
-      this.contextMenu.open(evt, { member, object: this.props.object });
+      this.contextMenu.open(evt, window.getSelection(), {
+        member,
+        object: this.props.object,
+      });
     }
   }
 

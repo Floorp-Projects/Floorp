@@ -8,6 +8,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'context-menu-utils.js',
     'filter-autocomplete-provider.js',
     'filter-predicates.js',
     'filter-text-utils.js',
