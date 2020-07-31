@@ -3184,6 +3184,51 @@ void CodeGenerator::visitWasmReduceSimd128(LWasmReduceSimd128* ins) {
 #endif
 }
 
+void CodeGenerator::visitWasmReduceAndBranchSimd128(
+    LWasmReduceAndBranchSimd128* ins) {
+#ifdef ENABLE_WASM_SIMD
+  FloatRegister src = ToFloatRegister(ins->src());
+
+  switch (ins->simdOp()) {
+    case wasm::SimdOp::I8x16AnyTrue:
+    case wasm::SimdOp::I16x8AnyTrue:
+    case wasm::SimdOp::I32x4AnyTrue:
+      // Set the zero flag if all of the lanes are zero, and branch on that.
+      masm.vptest(src, src);
+      emitBranch(Assembler::NotEqual, ins->ifTrue(), ins->ifFalse());
+      break;
+    case wasm::SimdOp::I8x16AllTrue:
+    case wasm::SimdOp::I16x8AllTrue:
+    case wasm::SimdOp::I32x4AllTrue: {
+      // Compare all lanes to zero, set the zero flag if none of the lanes are
+      // zero, and branch on that.
+      ScratchSimd128Scope tmp(masm);
+      masm.vpxor(tmp, tmp, tmp);
+      switch (ins->simdOp()) {
+        case wasm::SimdOp::I8x16AllTrue:
+          masm.vpcmpeqb(Operand(src), tmp, tmp);
+          break;
+        case wasm::SimdOp::I16x8AllTrue:
+          masm.vpcmpeqw(Operand(src), tmp, tmp);
+          break;
+        case wasm::SimdOp::I32x4AllTrue:
+          masm.vpcmpeqd(Operand(src), tmp, tmp);
+          break;
+        default:
+          MOZ_CRASH();
+      }
+      masm.vptest(tmp, tmp);
+      emitBranch(Assembler::Equal, ins->ifTrue(), ins->ifFalse());
+      break;
+    }
+    default:
+      MOZ_CRASH("Reduce-and-branch SimdOp not implemented");
+  }
+#else
+  MOZ_CRASH("No SIMD");
+#endif
+}
+
 void CodeGenerator::visitWasmReduceSimd128ToInt64(
     LWasmReduceSimd128ToInt64* ins) {
 #ifdef ENABLE_WASM_SIMD
