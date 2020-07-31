@@ -44,15 +44,15 @@ parent:
                        TimingStructArgs           timings,
                        int32_t                    proxyConnectResponseCode,
                        uint8_t[]                  dataForSniffer,
-                       nsCString?                 altSvcUsed);
+                       nsCString?                 altSvcUsed,
+                       bool                       dataToChildProcess);
   async OnTransportStatus(nsresult status,
                           int64_t progress,
                           int64_t progressMax,
                           NetworkAddressArg? networkAddressArg);
   async OnDataAvailable(nsCString data,
                         uint64_t  offset,
-                        uint32_t  count,
-                        bool      dataSentToChildProcess);
+                        uint32_t  count);
   async OnStopRequest(nsresult status,
                       bool responseIsComplete,
                       int64_t transferSize,

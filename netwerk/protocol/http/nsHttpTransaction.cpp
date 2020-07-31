@@ -981,7 +981,7 @@ nsresult nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
 
 bool nsHttpTransaction::ProxyConnectFailed() { return mProxyConnectFailed; }
 
-bool nsHttpTransaction::DataAlreadySent() { return false; }
+bool nsHttpTransaction::DataSentToChildProcess() { return false; }
 
 nsISupports* nsHttpTransaction::SecurityInfo() { return mSecurityInfo; }
 

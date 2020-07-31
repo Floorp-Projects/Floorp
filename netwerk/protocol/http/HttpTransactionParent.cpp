@@ -91,7 +91,7 @@ HttpTransactionParent::HttpTransactionParent(bool aIsDocumentLoad)
       mResolvedByTRR(false),
       mProxyConnectResponseCode(0),
       mChannelId(0),
-      mDataAlreadySent(false),
+      mDataSentToChildProcess(false),
       mIsDocumentLoad(aIsDocumentLoad) {
   LOG(("Creating HttpTransactionParent @%p\n", this));
 
@@ -360,7 +360,9 @@ int64_t HttpTransactionParent::GetTransferSize() { return mTransferSize; }
 
 int64_t HttpTransactionParent::GetRequestSize() { return mRequestSize; }
 
-bool HttpTransactionParent::DataAlreadySent() { return mDataAlreadySent; }
+bool HttpTransactionParent::DataSentToChildProcess() {
+  return mDataSentToChildProcess;
+}
 
 nsISupports* HttpTransactionParent::SecurityInfo() { return mSecurityInfo; }
 
@@ -415,17 +417,18 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const nsCString& aSecurityInfoSerialization,
     const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
     const int32_t& aProxyConnectResponseCode,
-    nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed) {
+    nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
+    const bool& aDataToChildProcess) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
              aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
              aTimings, aProxyConnectResponseCode,
              aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
-             aAltSvcUsed]() mutable {
-        self->DoOnStartRequest(aStatus, aResponseHead,
-                               aSecurityInfoSerialization, aProxyConnectFailed,
-                               aTimings, aProxyConnectResponseCode,
-                               std::move(aDataForSniffer), aAltSvcUsed);
+             aAltSvcUsed, aDataToChildProcess]() mutable {
+        self->DoOnStartRequest(
+            aStatus, aResponseHead, aSecurityInfoSerialization,
+            aProxyConnectFailed, aTimings, aProxyConnectResponseCode,
+            std::move(aDataForSniffer), aAltSvcUsed, aDataToChildProcess);
       }));
   return IPC_OK();
 }
@@ -453,7 +456,8 @@ void HttpTransactionParent::DoOnStartRequest(
     const nsCString& aSecurityInfoSerialization,
     const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
     const int32_t& aProxyConnectResponseCode,
-    nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed) {
+    nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
+    const bool& aDataToChildProcess) {
   LOG(("HttpTransactionParent::DoOnStartRequest [this=%p aStatus=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -465,6 +469,7 @@ void HttpTransactionParent::DoOnStartRequest(
   MOZ_ASSERT(!mOnStartRequestCalled);
 
   mStatus = aStatus;
+  mDataSentToChildProcess = aDataToChildProcess;
 
   if (!aSecurityInfoSerialization.IsEmpty()) {
     NS_DeserializeObject(aSecurityInfoSerialization,
@@ -512,8 +517,7 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnTransportStatus(
 }
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnDataAvailable(
-    const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount,
-    const bool& aDataSentToChildProcess) {
+    const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount) {
   LOG(("HttpTransactionParent::RecvOnDataAvailable [this=%p, aOffset= %" PRIu64
        " aCount=%" PRIu32,
        this, aOffset, aCount));
@@ -531,23 +535,19 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnDataAvailable(
       [self = UnsafePtr<HttpTransactionParent>(this)]() {
         return self->GetODATarget();
       },
-      [self = UnsafePtr<HttpTransactionParent>(this), aData, aOffset, aCount,
-       aDataSentToChildProcess]() {
-        self->DoOnDataAvailable(aData, aOffset, aCount,
-                                aDataSentToChildProcess);
-      }));
+      [self = UnsafePtr<HttpTransactionParent>(this), aData, aOffset,
+       aCount]() { self->DoOnDataAvailable(aData, aOffset, aCount); }));
   return IPC_OK();
 }
 
-void HttpTransactionParent::DoOnDataAvailable(
-    const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount,
-    const bool& aDataSentToChildProcess) {
+void HttpTransactionParent::DoOnDataAvailable(const nsCString& aData,
+                                              const uint64_t& aOffset,
+                                              const uint32_t& aCount) {
   LOG(("HttpTransactionParent::DoOnDataAvailable [this=%p]\n", this));
   if (mCanceled) {
     return;
   }
 
-  mDataAlreadySent = aDataSentToChildProcess;
   nsCOMPtr<nsIInputStream> stringStream;
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(stringStream),
                                       MakeSpan(aData.get(), aCount),
