@@ -95,7 +95,7 @@ iframe {
 /******** window & page ******/
 
 window {
-  overflow: -moz-hidden-unscrollable;
+  overflow: clip;
   -moz-box-orient: vertical;
 }
 
@@ -474,7 +474,7 @@ search-textbox {
 .autocomplete-richlistitem {
   -moz-box-orient: vertical;
   -moz-box-align: center;
-  overflow: -moz-hidden-unscrollable;
+  overflow: clip;
 }
 
 %endif

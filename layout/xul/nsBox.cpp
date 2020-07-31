@@ -258,10 +258,10 @@ nsresult nsIFrame::XULLayout(nsBoxLayoutState& aState) {
 bool nsIFrame::DoesClipChildren() {
   const nsStyleDisplay* display = StyleDisplay();
   NS_ASSERTION(
-      (display->mOverflowY == StyleOverflow::MozHiddenUnscrollable) ==
-          (display->mOverflowX == StyleOverflow::MozHiddenUnscrollable),
-      "If one overflow is -moz-hidden-unscrollable, the other should be too");
-  return display->mOverflowX == StyleOverflow::MozHiddenUnscrollable;
+      (display->mOverflowY == StyleOverflow::Clip) ==
+          (display->mOverflowX == StyleOverflow::Clip),
+      "If one overflow is clip, the other should be too");
+  return display->mOverflowX == StyleOverflow::Clip;
 }
 
 nsresult nsIFrame::SyncXULLayout(nsBoxLayoutState& aBoxLayoutState) {
