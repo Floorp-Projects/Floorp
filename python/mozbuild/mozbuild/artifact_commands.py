@@ -124,7 +124,7 @@ class PackageFrontend(MachCommandBase):
                               download_symbols=download_symbols,
                               download_host_bins=download_host_bins,
                               download_maven_zip=download_maven_zip,
-                              no_process=no_process, mozbuild=self)
+                              no_process=no_process)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',

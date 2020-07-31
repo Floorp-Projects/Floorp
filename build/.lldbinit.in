@@ -11,7 +11,7 @@ settings set symbols.enable-external-lookup true
 settings append target.exec-search-paths @topobjdir@/toolkit/library
 settings append target.exec-search-paths @topobjdir@/mozglue/build
 
-# This is where artifact builds unpacks "crashreporter-symbols-full" uncompressed ELF debug symbols.
+# This is where artifact builds unpacks "crashreporter-symbols-full.zip" uncompressed ELF debug symbols.
 settings append target.debug-file-search-paths @topobjdir@/dist/crashreporter-symbols
 
 # These are specific paths encoded into Mozilla's automation outputs.
