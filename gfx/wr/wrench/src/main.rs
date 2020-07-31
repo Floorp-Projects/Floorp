@@ -8,6 +8,8 @@ extern crate clap;
 extern crate log;
 #[macro_use]
 extern crate serde;
+#[macro_use]
+extern crate tracy_rs;
 
 mod angle;
 mod blob;
