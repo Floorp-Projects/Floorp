@@ -1159,11 +1159,13 @@ JSObject* BrowsingContext::ReadStructuredClone(JSContext* aCx,
 }
 
 void BrowsingContext::NotifyUserGestureActivation() {
-  SetUserActivationState(UserActivation::State::FullActivated);
+  // Return value of setting synced field should be checked. See bug 1656492.
+  Unused << SetUserActivationState(UserActivation::State::FullActivated);
 }
 
 void BrowsingContext::NotifyResetUserGestureActivation() {
-  SetUserActivationState(UserActivation::State::None);
+  // Return value of setting synced field should be checked. See bug 1656492.
+  Unused << SetUserActivationState(UserActivation::State::None);
 }
 
 bool BrowsingContext::HasBeenUserGestureActivated() {
@@ -1201,7 +1203,9 @@ bool BrowsingContext::ConsumeTransientUserGestureActivation() {
   top->PreOrderWalk([&](BrowsingContext* aContext) {
     if (aContext->GetUserActivationState() ==
         UserActivation::State::FullActivated) {
-      aContext->SetUserActivationState(UserActivation::State::HasBeenActivated);
+      // Updating user activation state on a discarded context has no effect.
+      Unused << aContext->SetUserActivationState(
+          UserActivation::State::HasBeenActivated);
     }
   });
 
@@ -2222,7 +2226,8 @@ void BrowsingContext::DidSet(FieldIndex<IDX_DefaultLoadFlags>) {
   if (XRE_IsParentProcess()) {
     PreOrderWalk([&](BrowsingContext* aContext) {
       if (aContext != this) {
-        aContext->SetDefaultLoadFlags(loadFlags);
+        // Setting load flags on a discarded context has no effect.
+        Unused << aContext->SetDefaultLoadFlags(loadFlags);
       }
     });
   }
@@ -2428,7 +2433,8 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TextZoom>, float aOldValue) {
     }
 
     for (BrowsingContext* child : Children()) {
-      child->SetTextZoom(GetTextZoom());
+      // Setting text zoom on a discarded context has no effect.
+      Unused << child->SetTextZoom(GetTextZoom());
     }
   }
 
@@ -2458,7 +2464,8 @@ void BrowsingContext::DidSet(FieldIndex<IDX_FullZoom>, float aOldValue) {
     }
 
     for (BrowsingContext* child : Children()) {
-      child->SetFullZoom(GetFullZoom());
+      // Setting full zoom on a discarded context has no effect.
+      Unused << child->SetFullZoom(GetFullZoom());
     }
   }
 

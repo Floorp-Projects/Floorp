@@ -1559,7 +1559,9 @@ void nsGlobalWindowInner::UpdateAutoplayPermission() {
   if (GetWindowContext()->GetAutoplayPermission() == perm) {
     return;
   }
-  GetWindowContext()->SetAutoplayPermission(perm);
+
+  // Setting autoplay permission on a discarded context has no effect.
+  Unused << GetWindowContext()->SetAutoplayPermission(perm);
 }
 
 void nsGlobalWindowInner::UpdateShortcutsPermission() {
@@ -1583,7 +1585,7 @@ void nsGlobalWindowInner::UpdateShortcutsPermission() {
   }
 
   // If the WindowContext is discarded this has no effect.
-  GetWindowContext()->SetShortcutsPermission(perm);
+  Unused << GetWindowContext()->SetShortcutsPermission(perm);
 }
 
 void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
@@ -1631,7 +1633,8 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
   // previous document.
   if (mWindowGlobalChild && GetBrowsingContext() &&
       !GetBrowsingContext()->GetParent()) {
-    GetBrowsingContext()->ResetGVAutoplayRequestStatus();
+    // Return value of setting synced field should be checked. See bug 1656492.
+    Unused << GetBrowsingContext()->ResetGVAutoplayRequestStatus();
   }
 #endif
 
@@ -2618,7 +2621,8 @@ void nsGlobalWindowInner::SetActiveLoadingState(bool aIsLoading) {
       gTimeoutLog, mozilla::LogLevel::Debug,
       ("SetActiveLoadingState innerwindow %p: %d", (void*)this, aIsLoading));
   if (GetBrowsingContext()) {
-    GetBrowsingContext()->SetLoading(aIsLoading);
+    // Setting loading on a discarded context has no effect.
+    Unused << GetBrowsingContext()->SetLoading(aIsLoading);
   }
 
   if (!nsGlobalWindowInner::Cast(this)->IsChromeWindow()) {
