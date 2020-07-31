@@ -812,16 +812,18 @@ struct RoleDescrComparator {
     case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
       // We consider any caret move event to be a selected text change event.
       // So dispatching an event for EVENT_TEXT_SELECTION_CHANGED would be reduntant.
-      id<MOXTextMarkerSupport> delegate =  [self moxTextMarkerDelegate];
+      id<MOXTextMarkerSupport> delegate = [self moxTextMarkerDelegate];
       id selectedRange = [delegate moxSelectedTextMarkerRange];
       NSDictionary* userInfo = @{
-        @"AXTextChangeElement": self,
-        @"AXSelectedTextMarkerRange": (selectedRange ? selectedRange : [NSNull null])
+        @"AXTextChangeElement" : self,
+        @"AXSelectedTextMarkerRange" : (selectedRange ? selectedRange : [NSNull null])
       };
 
       mozAccessible* webArea = GetNativeFromGeckoAccessible([self geckoDocument]);
-      [webArea moxPostNotification:NSAccessibilitySelectedTextChangedNotification withUserInfo:userInfo];
-      [self moxPostNotification:NSAccessibilitySelectedTextChangedNotification withUserInfo:userInfo];
+      [webArea moxPostNotification:NSAccessibilitySelectedTextChangedNotification
+                      withUserInfo:userInfo];
+      [self moxPostNotification:NSAccessibilitySelectedTextChangedNotification
+                   withUserInfo:userInfo];
       break;
     }
   }

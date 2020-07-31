@@ -199,8 +199,8 @@ endif
 
 .PHONY: symbolsfullarchive
 symbolsfullarchive: prepsymbolsarchive
-	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst'
-	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst' \
+	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
+	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' \
                                      $(abspath $(DIST)/crashreporter-symbols) \
                                      --full-archive)
 
@@ -211,20 +211,20 @@ symbolsarchive: prepsymbolsarchive
                                      $(abspath $(DIST)/crashreporter-symbols))
 
 ifdef MOZ_CRASHREPORTER
-# Set MOZ_ENABLE_FULL_SYMBOLS to enable generation and upload of the full
+# Set MOZ_DISABLE_FULL_SYMBOLS to disable generation and upload of the full
 # crashreporter symbols archives
-ifdef MOZ_ENABLE_FULL_SYMBOLS
-buildsymbols: symbolsfullarchive symbolsarchive
-else
+ifdef MOZ_DISABLE_FULL_SYMBOLS
 buildsymbols: symbolsarchive
-endif # MOZ_ENABLE_FULL_SYMBOLS
+else
+buildsymbols: symbolsfullarchive symbolsarchive
+endif # MOZ_DISABLE_FULL_SYMBOLS
 else
 buildsymbols:
 endif
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
-	$(PYTHON3) -u $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.py '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst'
+	$(PYTHON3) -u $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.py '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
 endif
 
 .PHONY: update-packaging
