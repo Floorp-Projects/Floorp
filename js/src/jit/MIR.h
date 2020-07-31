@@ -5916,8 +5916,10 @@ class MStringSplit : public MBinaryInstruction,
                MDefinition* string, MDefinition* sep, ObjectGroup* group)
       : MBinaryInstruction(classOpcode, string, sep), group_(group) {
     setResultType(MIRType::Object);
-    TemporaryTypeSet* types = MakeSingletonTypeSet(alloc, constraints, group);
-    setResultTypeSet(types);
+    if (!JitOptions.warpBuilder) {
+      TemporaryTypeSet* types = MakeSingletonTypeSet(alloc, constraints, group);
+      setResultTypeSet(types);
+    }
   }
 
  public:
