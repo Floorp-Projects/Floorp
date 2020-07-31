@@ -279,7 +279,7 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
     }
 
     LOG(("  ODA to parent process"));
-    Unused << SendOnDataAvailable(data, aOffset, aCount, false);
+    Unused << SendOnDataAvailable(data, aOffset, aCount);
     return NS_OK;
   }
 
@@ -307,7 +307,7 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
       NS_NewRunnableFunction(
           "HttpTransactionChild::OnDataAvailable",
           [self, offset(aOffset), count(aCount), data(data)]() {
-            if (!self->SendOnDataAvailable(data, offset, count, true)) {
+            if (!self->SendOnDataAvailable(data, offset, count)) {
               self->CancelInternal(NS_ERROR_FAILURE);
             }
           }),
@@ -454,7 +454,7 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
                                mTransaction->ProxyConnectFailed(),
                                ToTimingStructArgs(mTransaction->Timings()),
                                proxyConnectResponseCode, dataForSniffer,
-                               optionalAltSvcUsed);
+                               optionalAltSvcUsed, !!mDataBridgeParent);
   return NS_OK;
 }
 
