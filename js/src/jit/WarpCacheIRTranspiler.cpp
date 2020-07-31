@@ -1826,6 +1826,20 @@ bool WarpCacheIRTranspiler::emitCallSubstringKernelResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitCallStringReplaceStringResult(
+    StringOperandId strId, StringOperandId patternId,
+    StringOperandId replacementId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* pattern = getOperand(patternId);
+  MDefinition* replacement = getOperand(replacementId);
+
+  auto* replace = MStringReplace::New(alloc(), str, pattern, replacement);
+  add(replace);
+
+  pushResult(replace);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitRegExpPrototypeOptimizableResult(
     ObjOperandId protoId) {
   MDefinition* proto = getOperand(protoId);

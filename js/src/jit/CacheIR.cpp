@@ -5906,6 +5906,38 @@ AttachDecision CallIRGenerator::tryAttachString(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachStringReplaceString(
+    HandleFunction callee) {
+  // Self-hosted code calls this with (string, string, string) arguments.
+  MOZ_ASSERT(argc_ == 3);
+  MOZ_ASSERT(args_[0].isString());
+  MOZ_ASSERT(args_[1].isString());
+  MOZ_ASSERT(args_[2].isString());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  StringOperandId strId = writer.guardToString(arg0Id);
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  StringOperandId patternId = writer.guardToString(arg1Id);
+
+  ValOperandId arg2Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  StringOperandId replacementId = writer.guardToString(arg2Id);
+
+  writer.callStringReplaceStringResult(strId, patternId, replacementId);
+
+  // No type monitoring because this always returns a string.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("StringReplaceString");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
                                                     StringChar kind) {
   // Need one argument.
@@ -7261,6 +7293,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachStringToLowerCase(callee);
     case InlinableNative::StringToUpperCase:
       return tryAttachStringToUpperCase(callee);
+    case InlinableNative::IntrinsicStringReplaceString:
+      return tryAttachStringReplaceString(callee);
 
     // Math natives.
     case InlinableNative::MathRandom:
