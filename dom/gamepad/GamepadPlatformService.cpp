@@ -261,7 +261,12 @@ bool GamepadPlatformService::HasGamepadListeners() {
 
   // We use mutex here to prevent race condition with monitor thread
   MutexAutoLock autoLock(mMutex);
-  return !mChannelParents.IsEmpty();
+  for (uint32_t i = 0; i < mChannelParents.Length(); i++) {
+    if (mChannelParents[i]->HasGamepadListener()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void GamepadPlatformService::MaybeShutdown() {

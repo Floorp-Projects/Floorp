@@ -113,7 +113,7 @@ GamepadManager::Observe(nsISupports* aSubject, const char* aTopic,
 
 void GamepadManager::StopMonitoring() {
   for (uint32_t i = 0; i < mChannelChildren.Length(); ++i) {
-    PGamepadEventChannelChild::Send__delete__(mChannelChildren[i]);
+    mChannelChildren[i]->SendGamepadListenerRemoved();
   }
   if (gfx::VRManagerChild::IsCreated()) {
     gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
@@ -155,6 +155,7 @@ void GamepadManager::AddListener(nsGlobalWindowInner* aWindow) {
     }
 
     MOZ_ASSERT(initedChild == child);
+    child->SendGamepadListenerAdded();
     mChannelChildren.AppendElement(child);
 
     if (gfx::VRManagerChild::IsCreated()) {
