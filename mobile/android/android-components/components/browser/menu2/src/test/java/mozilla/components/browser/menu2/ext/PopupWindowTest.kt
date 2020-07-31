@@ -38,7 +38,7 @@ class PopupWindowTest {
 
         popupWindow.displayPopup(menuContentView, anchor, Orientation.DOWN)
 
-        assertEquals(popupWindow.animationStyle, R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop, popupWindow.animationStyle)
         verify(popupWindow).showAsDropDown(anchor, 0, 10)
     }
 
@@ -55,7 +55,7 @@ class PopupWindowTest {
 
         popupWindow.displayPopup(menuContentView, anchor, Orientation.UP)
 
-        assertEquals(popupWindow.animationStyle, R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop, popupWindow.animationStyle)
         verify(popupWindow).showAsDropDown(anchor, 0, 10)
     }
 
@@ -75,7 +75,7 @@ class PopupWindowTest {
 
         popupWindow.displayPopup(containerView, anchor, Orientation.UP)
 
-        assertEquals(popupWindow.animationStyle, R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom, popupWindow.animationStyle)
         verify(popupWindow).showAsDropDown(anchor, 0, -9)
     }
 
@@ -96,7 +96,7 @@ class PopupWindowTest {
 
         popupWindow.displayPopup(containerView, anchor, Orientation.DOWN)
 
-        assertEquals(popupWindow.animationStyle, R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom, popupWindow.animationStyle)
         verify(popupWindow).showAsDropDown(anchor, 0, -contentHeight)
     }
 
@@ -118,7 +118,7 @@ class PopupWindowTest {
 
         popupWindow.displayPopup(containerView, anchor, Orientation.UP)
 
-        assertEquals(popupWindow.animationStyle, R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom, popupWindow.animationStyle)
         verify(popupWindow).showAsDropDown(anchor, 0, screenHeight - contentHeight)
     }
 
@@ -130,7 +130,7 @@ class PopupWindowTest {
         doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
 
         popupWindow.displayPopup(containerView, anchor, Orientation.DOWN)
-        assertEquals(popupWindow.animationStyle, -1)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop, popupWindow.animationStyle)
         verify(popupWindow).showAtLocation(anchor, Gravity.START or Gravity.TOP, 0, 0)
     }
 

@@ -171,9 +171,7 @@ internal fun PopupWindow.displayPopup(
     val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
     containerView.measure(spec, spec)
 
-    val topAndBottomPair = getMaxAvailableHeightToTopAndBottom(anchor)
-    val availableHeightToTop = topAndBottomPair.first
-    val availableHeightToBottom = topAndBottomPair.second
+    val (availableHeightToTop, availableHeightToBottom) = getMaxAvailableHeightToTopAndBottom(anchor)
     val containerHeight = containerView.measuredHeight
 
     val fitsUp = availableHeightToTop >= containerHeight
@@ -254,8 +252,7 @@ private fun PopupWindow.showAtAnchorLocation(anchor: View, isCloserToTop: Boolea
     }
 
     anchor.getLocationOnScreen(anchorPosition)
-    val x = anchorPosition[0]
-    val y = anchorPosition[1]
+    val (x, y) = anchorPosition
     PopupWindowCompat.setOverlapAnchor(this, true)
     showAtLocation(anchor, Gravity.START or Gravity.TOP, x, y)
 }

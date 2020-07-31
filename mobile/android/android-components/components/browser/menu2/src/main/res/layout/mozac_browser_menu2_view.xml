@@ -23,6 +23,7 @@
             android:paddingBottom="@dimen/mozac_browser_menu2_padding_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:overScrollMode="never"
             tools:listitem="@layout/mozac_browser_menu2_candidate_text" />
 
     </androidx.cardview.widget.CardView>
