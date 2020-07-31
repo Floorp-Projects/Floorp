@@ -1600,6 +1600,14 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   // is ready to send OnStopRequest.
   MOZ_ASSERT(mIPCClosed || mBgParent);
 
+  if (mDataSentToChildProcess) {
+    if (mIPCClosed || !mBgParent ||
+        !mBgParent->OnConsoleReport(consoleReports)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    return NS_OK;
+  }
+
   // If we're handling a multi-part stream, then send this directly
   // over PHttpChannel to make synchronization easier.
   if (mIPCClosed || !mBgParent ||
