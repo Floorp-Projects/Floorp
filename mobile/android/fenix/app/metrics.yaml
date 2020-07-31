@@ -3250,12 +3250,12 @@ storage.stats:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/12802
     data_reviews:
-      - todo
+      - https://github.com/mozilla-mobile/fenix/pull/12876#issuecomment-666770732
     notification_emails:
       - fenix-core@mozilla.com
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-12-21"
+    expires: "2021-02-01"
   app_bytes:
     send_in_pings:
       - metrics
@@ -3271,12 +3271,12 @@ storage.stats:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/12802
     data_reviews:
-      - todo
+      - https://github.com/mozilla-mobile/fenix/pull/12876#issuecomment-666770732
     notification_emails:
       - fenix-core@mozilla.com
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-12-21"
+    expires: "2021-02-01"
   cache_bytes:
     send_in_pings:
       - metrics
@@ -3289,12 +3289,12 @@ storage.stats:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/12802
     data_reviews:
-      - todo
+      - https://github.com/mozilla-mobile/fenix/pull/12876#issuecomment-666770732
     notification_emails:
       - fenix-core@mozilla.com
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-12-21"
+    expires: "2021-02-01"
   data_dir_bytes:
     send_in_pings:
       - metrics
@@ -3309,9 +3309,9 @@ storage.stats:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/12802
     data_reviews:
-      - todo
+      - https://github.com/mozilla-mobile/fenix/pull/12876#issuecomment-666770732
     notification_emails:
       - fenix-core@mozilla.com
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2020-12-21"
+    expires: "2021-02-01"
