@@ -12,6 +12,7 @@ import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.ReaderAction
+import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
@@ -43,6 +44,7 @@ internal object BrowserStateReducer {
             is WebExtensionAction -> WebExtensionReducer.reduce(state, action)
             is MediaAction -> MediaReducer.reduce(state, action)
             is DownloadAction -> DownloadStateReducer.reduce(state, action)
+            is SearchAction -> SearchReducer.reduce(state, action)
         }
     }
 }
