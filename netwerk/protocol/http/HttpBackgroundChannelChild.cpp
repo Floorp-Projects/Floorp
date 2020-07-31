@@ -48,6 +48,7 @@ nsresult HttpBackgroundChannelChild::Init(HttpChannelChild* aChannelChild) {
   }
 
   mFirstODASource = ODA_PENDING;
+  mOnStopRequestCalled = false;
   return NS_OK;
 }
 
@@ -87,6 +88,7 @@ void HttpBackgroundChannelChild::OnChannelClosed() {
 
   // Remove pending IPC messages as well.
   mQueuedRunnables.Clear();
+  mConsoleReportTask = nullptr;
 }
 
 bool HttpBackgroundChannelChild::ChannelClosed() {
@@ -262,8 +264,12 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const TimeStamp& aLastActiveTabOptHit,
     const nsHttpHeaderArray& aResponseTrailers,
-    const nsTArray<ConsoleReportCollected>& aConsoleReports) {
-  LOG(("HttpBackgroundChannelChild::RecvOnStopRequest [this=%p]\n", this));
+    nsTArray<ConsoleReportCollected>&& aConsoleReports,
+    const bool& aFromSocketProcess) {
+  LOG(
+      ("HttpBackgroundChannelChild::RecvOnStopRequest [this=%p, "
+       "aFromSocketProcess=%d, mFirstODASource=%d]\n",
+       this, aFromSocketProcess, mFirstODASource));
   MOZ_ASSERT(gSocketTransportService);
   MOZ_ASSERT(gSocketTransportService->IsOnCurrentThreadInfallible());
 
@@ -286,17 +292,77 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
         "HttpBackgroundChannelChild::RecvOnStopRequest",
         [self, aChannelStatus, aTiming, aLastActiveTabOptHit, aResponseTrailers,
-         consoleReports = aConsoleReports.Clone()] {
+         consoleReports = CopyableTArray{std::move(aConsoleReports)},
+         aFromSocketProcess]() mutable {
           self->RecvOnStopRequest(aChannelStatus, aTiming, aLastActiveTabOptHit,
-                                  aResponseTrailers, consoleReports);
+                                  aResponseTrailers, std::move(consoleReports),
+                                  aFromSocketProcess);
         });
 
     mQueuedRunnables.AppendElement(task.forget());
     return IPC_OK();
   }
 
-  mChannelChild->ProcessOnStopRequest(aChannelStatus, aTiming,
-                                      aResponseTrailers, aConsoleReports);
+  if (mFirstODASource != ODA_FROM_SOCKET) {
+    if (!aFromSocketProcess) {
+      mOnStopRequestCalled = true;
+      mChannelChild->ProcessOnStopRequest(aChannelStatus, aTiming,
+                                          aResponseTrailers,
+                                          std::move(aConsoleReports), false);
+    }
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(mFirstODASource == ODA_FROM_SOCKET);
+
+  if (aFromSocketProcess) {
+    MOZ_ASSERT(!mOnStopRequestCalled);
+    mOnStopRequestCalled = true;
+    mChannelChild->ProcessOnStopRequest(aChannelStatus, aTiming,
+                                        aResponseTrailers,
+                                        std::move(aConsoleReports), true);
+    if (mConsoleReportTask) {
+      mConsoleReportTask();
+      mConsoleReportTask = nullptr;
+    }
+    return IPC_OK();
+  }
+
+  return IPC_OK();
+}
+
+IPCResult HttpBackgroundChannelChild::RecvOnConsoleReport(
+    nsTArray<ConsoleReportCollected>&& aConsoleReports) {
+  LOG(("HttpBackgroundChannelChild::RecvOnConsoleReport [this=%p]\n", this));
+  MOZ_ASSERT(mFirstODASource == ODA_FROM_SOCKET);
+  MOZ_ASSERT(gSocketTransportService);
+  MOZ_ASSERT(gSocketTransportService->IsOnCurrentThreadInfallible());
+
+  if (IsWaitingOnStartRequest()) {
+    LOG(("  > pending until OnStartRequest\n"));
+
+    RefPtr<HttpBackgroundChannelChild> self = this;
+
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
+        "HttpBackgroundChannelChild::RecvOnConsoleReport",
+        [self, consoleReports =
+                   CopyableTArray{std::move(aConsoleReports)}]() mutable {
+          self->RecvOnConsoleReport(std::move(consoleReports));
+        });
+
+    mQueuedRunnables.AppendElement(task.forget());
+    return IPC_OK();
+  }
+
+  if (mOnStopRequestCalled) {
+    mChannelChild->ProcessOnConsoleReport(std::move(aConsoleReports));
+  } else {
+    RefPtr<HttpBackgroundChannelChild> self = this;
+    mConsoleReportTask = [self, consoleReports = CopyableTArray{
+                                    std::move(aConsoleReports)}]() mutable {
+      self->mChannelChild->ProcessOnConsoleReport(std::move(consoleReports));
+    };
+  }
 
   return IPC_OK();
 }

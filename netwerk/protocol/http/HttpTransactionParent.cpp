@@ -184,7 +184,7 @@ nsresult HttpTransactionParent::Init(
                 static_cast<uint8_t>(trafficCategory), requestContextID,
                 classOfService, initialRwin, responseTimeoutEnabled, mChannelId,
                 !!mTransactionObserver, pushedStreamArg, throttleQueue,
-                mIsDocumentLoad)) {
+                mIsDocumentLoad, mRedirectStart, mRedirectEnd)) {
     return NS_ERROR_FAILURE;
   }
 

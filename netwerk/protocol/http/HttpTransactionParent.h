@@ -79,6 +79,11 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       nsInputStreamPump::PeekSegmentFun aCallTypeSniffers,
       nsIChannel* aChannel);
 
+  void SetRedirectTimestamp(TimeStamp aRedirectStart, TimeStamp aRedirectEnd) {
+    mRedirectStart = aRedirectStart;
+    mRedirectEnd = aRedirectEnd;
+  }
+
  private:
   virtual ~HttpTransactionParent();
 
@@ -135,6 +140,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   uint64_t mChannelId;
   bool mDataSentToChildProcess;
   bool mIsDocumentLoad;
+  TimeStamp mRedirectStart;
+  TimeStamp mRedirectEnd;
 
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;

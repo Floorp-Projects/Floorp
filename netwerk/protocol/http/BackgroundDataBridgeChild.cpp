@@ -35,5 +35,23 @@ mozilla::ipc::IPCResult BackgroundDataBridgeChild::RecvOnTransportAndData(
                                           offset, count, data, true);
 }
 
+mozilla::ipc::IPCResult BackgroundDataBridgeChild::RecvOnStopRequest(
+    nsresult aStatus, const ResourceTimingStructArgs& aTiming,
+    const TimeStamp& aLastActiveTabOptHit,
+    const nsHttpHeaderArray& aResponseTrailers) {
+  if (!mBgChild) {
+    return IPC_OK();
+  }
+
+  if (mBgChild->ChannelClosed()) {
+    Unused << Send__delete__(this);
+    return IPC_OK();
+  }
+
+  return mBgChild->RecvOnStopRequest(aStatus, aTiming, aLastActiveTabOptHit,
+                                     aResponseTrailers,
+                                     nsTArray<ConsoleReportCollected>(), true);
+}
+
 }  // namespace net
 }  // namespace mozilla
