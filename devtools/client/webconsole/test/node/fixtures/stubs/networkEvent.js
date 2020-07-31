@@ -55,6 +55,7 @@ rawPackets.set(`GET request`, {
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
+    "waitingTime": 1,
     "bodySize": 418,
     "transferredSize": 578
   },
@@ -112,6 +113,7 @@ rawPackets.set(`GET request update`, {
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
+    "waitingTime": 1,
     "bodySize": 418,
     "transferredSize": 578
   },
@@ -172,6 +174,7 @@ rawPackets.set(`XHR GET request`, {
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
+    "waitingTime": 2,
     "bodySize": 418,
     "transferredSize": 578
   },
@@ -228,6 +231,7 @@ rawPackets.set(`XHR GET request update`, {
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
+    "waitingTime": 2,
     "bodySize": 418,
     "transferredSize": 578
   },
@@ -287,6 +291,7 @@ rawPackets.set(`XHR POST request`, {
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
+    "waitingTime": 2,
     "bodySize": 418,
     "transferredSize": 578
   },
@@ -343,6 +348,7 @@ rawPackets.set(`XHR POST request update`, {
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
+    "waitingTime": 2,
     "bodySize": 418,
     "transferredSize": 578
   },
