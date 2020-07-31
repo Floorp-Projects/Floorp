@@ -52,14 +52,15 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const nsCString& aSecurityInfoSerialization,
       const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
       const int32_t& aProxyConnectResponseCode,
-      nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed);
+      nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
+      const bool& aDataToChildProcess);
   mozilla::ipc::IPCResult RecvOnTransportStatus(
       const nsresult& aStatus, const int64_t& aProgress,
       const int64_t& aProgressMax,
       Maybe<NetworkAddressArg>&& aNetworkAddressArg);
-  mozilla::ipc::IPCResult RecvOnDataAvailable(
-      const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount,
-      const bool& aDataSentToChildProcess);
+  mozilla::ipc::IPCResult RecvOnDataAvailable(const nsCString& aData,
+                                              const uint64_t& aOffset,
+                                              const uint32_t& aCount);
   mozilla::ipc::IPCResult RecvOnStopRequest(
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
@@ -90,10 +91,10 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                         const TimingStructArgs& aTimings,
                         const int32_t& aProxyConnectResponseCode,
                         nsTArray<uint8_t>&& aDataForSniffer,
-                        const Maybe<nsCString>& aAltSvcUsed);
+                        const Maybe<nsCString>& aAltSvcUsed,
+                        const bool& aDataToChildProcess);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
-                         const uint32_t& aCount,
-                         const bool& aDataSentToChildProcess);
+                         const uint32_t& aCount);
   void DoOnStopRequest(
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
@@ -132,7 +133,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   bool mResolvedByTRR;
   int32_t mProxyConnectResponseCode;
   uint64_t mChannelId;
-  bool mDataAlreadySent;
+  bool mDataSentToChildProcess;
   bool mIsDocumentLoad;
 
   NetAddr mSelfAddr;
