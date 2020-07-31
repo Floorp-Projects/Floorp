@@ -208,7 +208,8 @@ struct NotLostData final {
   UniquePtr<HostWebGLContext> inProcess;
 
   webgl::ContextGenerationInfo state;
-  std::array<RefPtr<ClientWebGLExtensionBase>, EnumValue(WebGLExtensionID::Max)>
+  std::array<RefPtr<ClientWebGLExtensionBase>,
+             UnderlyingValue(WebGLExtensionID::Max)>
       extensions;
 
   explicit NotLostData(ClientWebGLContext& context);
@@ -2076,7 +2077,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
  public:
   bool IsExtensionEnabled(const WebGLExtensionID id) const {
-    return bool(mNotLost->extensions[EnumValue(id)]);
+    return bool(mNotLost->extensions[UnderlyingValue(id)]);
   }
 
   void AddCompressedFormat(GLenum);

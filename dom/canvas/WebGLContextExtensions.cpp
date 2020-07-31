@@ -121,7 +121,7 @@ RefPtr<ClientWebGLExtensionBase> ClientWebGLContext::GetExtension(
 
   if (!IsSupported(ext, callerType)) return nullptr;
 
-  auto& extSlot = mNotLost->extensions[EnumValue(ext)];
+  auto& extSlot = mNotLost->extensions[UnderlyingValue(ext)];
   if (MOZ_UNLIKELY(!extSlot)) {
     extSlot = [&]() -> RefPtr<ClientWebGLExtensionBase> {
       switch (ext) {
