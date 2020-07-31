@@ -121,12 +121,18 @@ class FxAccountsTelemetry {
   async _ensureEcosystemAnonId(generatePlaceholder = true) {
     const telemetry = this;
     return this._fxai.withCurrentAccountState(async function(state) {
-      // Fetching a fresh profile should never update the ID, and saving a
-      // network request matters for telemetry, so we are fine with a slightly
-      // stale profile.
-      const profile = await telemetry._fxai.profile.ensureProfile({
-        staleOk: true,
-      });
+      // Fetching a fresh profile should never *change* the ID, but it might
+      // fetch the first value we see, and saving a network request matters for
+      // telemetry, so:
+      // * first time around we are fine with a slightly stale profile - if it
+      //   has an ID, it's a stable ID we can be sure is good.
+      // * But if we didn't have one, so generated a new one, but then raced
+      //   with another client to update it, we *must* fetch a new profile, even
+      //   if our current version is fresh.
+      let options = generatePlaceholder
+        ? { staleOk: true }
+        : { forceFresh: true };
+      const profile = await telemetry._fxai.profile.ensureProfile(options);
       if (profile && profile.hasOwnProperty("ecosystemAnonId")) {
         return profile.ecosystemAnonId;
       }
