@@ -23,6 +23,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/TIOracle.h"
+#include "js/ScalarType.h"     // js::Scalar::Type
 #include "vm/SharedStencil.h"  // GCThingIndex
 
 namespace js {

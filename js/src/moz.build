@@ -178,6 +178,7 @@ EXPORTS.js += [
     '../public/Result.h',
     '../public/RootingAPI.h',
     '../public/SavedFrameAPI.h',
+    '../public/ScalarType.h',
     '../public/SharedArrayBuffer.h',
     '../public/SliceBudget.h',
     '../public/SourceText.h',
@@ -220,6 +221,7 @@ EXPORTS.js += [
 # We expose them as-is, buyer beware.
 EXPORTS.js.experimental += [
     '../public/experimental/SourceHook.h',
+    '../public/experimental/TypedData.h',
 ]
 
 # Friend APIs are APIs that either basically SpiderMonkey-internal, or their

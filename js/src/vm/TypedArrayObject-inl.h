@@ -23,6 +23,7 @@
 #include "builtin/Array.h"
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/Value.h"
 #include "util/Memory.h"
 #include "vm/BigIntType.h"

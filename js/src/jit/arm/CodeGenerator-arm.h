@@ -9,6 +9,7 @@
 
 #include "jit/arm/Assembler-arm.h"
 #include "jit/shared/CodeGenerator-shared.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 
 namespace js {
 namespace jit {

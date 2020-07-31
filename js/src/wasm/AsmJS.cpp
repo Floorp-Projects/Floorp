@@ -41,6 +41,7 @@
 #include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"

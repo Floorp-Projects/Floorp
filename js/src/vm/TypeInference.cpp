@@ -27,6 +27,7 @@
 #include "jit/IonAnalysis.h"
 #include "jit/JitRealm.h"
 #include "js/MemoryMetrics.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/UniquePtr.h"
 #include "util/DiagnosticAssertions.h"
 #include "util/Poison.h"

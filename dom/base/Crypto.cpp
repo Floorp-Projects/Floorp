@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "Crypto.h"
 #include "jsfriendapi.h"
+#include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
 #include "nsCOMPtr.h"
 #include "nsIRandomGenerator.h"
 #include "MainThreadUtils.h"
