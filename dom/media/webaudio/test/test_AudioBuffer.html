@@ -42,6 +42,7 @@ addLoadEvent(function() {
   for (var i = 0; i < copy.length; ++i) {
     is(copy[i], 1024 + i, "Correct sample");
   }
+
   // Test copying the channel data out of a playing buffer
   var srcNode = context.createBufferSource();
   srcNode.buffer = buffer;
@@ -70,13 +71,13 @@ addLoadEvent(function() {
   worker.postMessage(data, [data]);
   SpecialPowers.gc();
 
-  expectNoException(function() {
+  expectException(function() {
     buffer.copyFromChannel(copy, 0, 1024);
-  });
+  }, DOMException.INDEX_SIZE_ERR);
 
-  expectNoException(function() {
+  expectException(function() {
     buffer.copyToChannel(newData, 0, 100);
-  });
+  }, DOMException.INDEX_SIZE_ERR);
 
   expectException(function() {
     context.createBuffer(2, 2048, 7999);
