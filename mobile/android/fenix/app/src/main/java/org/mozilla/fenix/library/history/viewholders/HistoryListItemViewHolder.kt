@@ -68,10 +68,10 @@ class HistoryListItemViewHolder(
             itemView.history_layout.loadFavicon(item.url)
         }
 
-        if (item !in selectionHolder.selectedItems) {
-            itemView.overflow_menu.showAndEnable()
-        } else {
+        if (mode is HistoryFragmentState.Mode.Editing) {
             itemView.overflow_menu.hideAndDisable()
+        } else {
+            itemView.overflow_menu.showAndEnable()
         }
 
         this.item = item
