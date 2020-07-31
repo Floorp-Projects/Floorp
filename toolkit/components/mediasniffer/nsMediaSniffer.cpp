@@ -38,7 +38,9 @@ nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
     // mp3 with ID3 tags, the string "ID3".
     PATTERN_ENTRY("\xFF\xFF\xFF", "ID3", AUDIO_MP3),
     // FLAC with standard header
-    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "fLaC", AUDIO_FLAC)};
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "fLaC", AUDIO_FLAC),
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF\xFF\xFF\xFF", "#EXTM3U",
+                  APPLICATION_MPEGURL)};
 
 // For a complete list of file types, see http://www.ftyps.com/index.html
 nsMediaSnifferEntry sFtypEntries[] = {
