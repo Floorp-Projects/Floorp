@@ -11023,12 +11023,6 @@ void nsIFrame::UpdateVisibleDescendantsState() {
 
 bool nsIFrame::ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const {
   MOZ_ASSERT(aDisp == StyleDisplay(), "Wrong display struct");
-  // clip overflow:-moz-hidden-unscrollable, except for nsListControlFrame,
-  // which is an nsHTMLScrollFrame.
-  if (MOZ_UNLIKELY(aDisp->mOverflowX == StyleOverflow::MozHiddenUnscrollable &&
-                   !IsListControlFrame())) {
-    return true;
-  }
 
   // contain: paint, which we interpret as -moz-hidden-unscrollable
   // Exception: for scrollframes, we don't need contain:paint to add any
@@ -11059,6 +11053,17 @@ bool nsIFrame::ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const {
           // except TextInput.
           return type != LayoutFrameType::TextInput;
         }
+    }
+  }
+
+  // clip overflow:-moz-hidden-unscrollable, except for nsListControlFrame,
+  // which is an nsHTMLScrollFrame.
+  if (MOZ_UNLIKELY(aDisp->mOverflowX == StyleOverflow::MozHiddenUnscrollable &&
+                   !IsListControlFrame())) {
+    const auto* element = Element::FromNodeOrNull(GetContent());
+    if (!element ||
+        !PresContext()->ElementWouldPropagateScrollStyles(*element)) {
+      return true;
     }
   }
 
