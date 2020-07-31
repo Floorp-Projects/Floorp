@@ -18,6 +18,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
 
+#include "AppleUtils.h"
 #include "CUPSPrinterList.h"
 #include "nsCocoaUtils.h"
 #include "nsCRT.h"
@@ -70,14 +71,14 @@ static nsresult FillPaperListForPrinter(PMPrinter aPrinter,
     // The units for width and height are points.
     double width = 0.0;
     double height = 0.0;
-    CFStringRef pmPaperName;
+    AutoCFRelease<CFStringRef> pmPaperName(nullptr);
     if (PMPaperGetWidth(pmPaper, &width) != noErr || PMPaperGetHeight(pmPaper, &height) != noErr ||
-        PMPaperCreateLocalizedName(pmPaper, aPrinter, &pmPaperName) != noErr) {
+        PMPaperCreateLocalizedName(pmPaper, aPrinter, pmPaperName.receive()) != noErr) {
       return NS_ERROR_UNEXPECTED;
     }
 
     nsAutoString name;
-    nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(pmPaperName), name);
+    nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(CFStringRef(pmPaperName)), name);
 
     PMPaperMargins unwriteableMargins;
     if (PMPaperGetMargins(pmPaper, &unwriteableMargins) != noErr) {
@@ -148,8 +149,8 @@ nsPrinterListX::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
       return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
     }
   }
-  CFArrayRef pmPrinterList;
-  OSStatus status = PMServerCreatePrinterList(kPMServerLocal, &pmPrinterList);
+  AutoCFRelease<CFArrayRef> pmPrinterList(nullptr);
+  OSStatus status = PMServerCreatePrinterList(kPMServerLocal, pmPrinterList.receive());
   NS_ENSURE_TRUE(status == noErr && pmPrinterList, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE);
 
   const CFIndex printerCount = CFArrayGetCount(pmPrinterList);
@@ -268,11 +269,11 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
       if (destination == kPMDestinationPrinter || destination == kPMDestinationPreview) {
         mPrintViaSkPDF = true;
       } else if (destination == kPMDestinationFile) {
-        CFURLRef destURL;
-        status = ::PMSessionCopyDestinationLocation(mPrintSession, mPrintSettings, &destURL);
+        AutoCFRelease<CFURLRef> destURL(nullptr);
+        status = ::PMSessionCopyDestinationLocation(mPrintSession, mPrintSettings, destURL.receive());
         if (status == noErr) {
-          CFStringRef destPathRef = CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
-          NSString* destPath = (NSString*)destPathRef;
+          AutoCFRelease<CFStringRef> destPathRef = CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
+          NSString* destPath = (NSString*)CFStringRef(destPathRef);
           NSString* destPathExt = [destPath pathExtension];
           if ([destPathExt isEqualToString:@"pdf"]) {
             mPrintViaSkPDF = true;
@@ -334,8 +335,11 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndDocument() {
     if (!tmpPDFFile) {
       return NS_ERROR_FAILURE;
     }
-    CFURLRef pdfURL;
-    nsresult rv = tmpPDFFile->GetCFURL(&pdfURL);
+    AutoCFRelease<CFURLRef> pdfURL(nullptr);
+    // Note that the caller is responsible to release pdfURL according to nsILocalFileMac.idl,
+    // even though we didn't follow the Core Foundation naming conventions here (the method
+    // should've been called CopyCFURL).
+    nsresult rv = tmpPDFFile->GetCFURL(pdfURL.receive());
     NS_ENSURE_SUCCESS(rv, rv);
 
     PMDestinationType destination;
@@ -355,21 +359,21 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndDocument() {
       }
       case kPMDestinationPreview: {
         // XXXjwatt Or should we use CocoaFileUtils::RevealFileInFinder(pdfURL);
-        CFStringRef pdfPath = CFURLCopyFileSystemPath(pdfURL, kCFURLPOSIXPathStyle);
-        NSString* path = (NSString*)pdfPath;
+        AutoCFRelease<CFStringRef> pdfPath = CFURLCopyFileSystemPath(pdfURL, kCFURLPOSIXPathStyle);
+        NSString* path = (NSString*)CFStringRef(pdfPath);
         NSWorkspace* ws = [NSWorkspace sharedWorkspace];
         [ws openFile:path];
         break;
       }
       case kPMDestinationFile: {
-        CFURLRef destURL;
-        status = ::PMSessionCopyDestinationLocation(mPrintSession, mPrintSettings, &destURL);
+        AutoCFRelease<CFURLRef> destURL(nullptr);
+        status = ::PMSessionCopyDestinationLocation(mPrintSession, mPrintSettings, destURL.receive());
         if (status == noErr) {
-          CFStringRef sourcePathRef = CFURLCopyFileSystemPath(pdfURL, kCFURLPOSIXPathStyle);
-          NSString* sourcePath = (NSString*)sourcePathRef;
+          AutoCFRelease<CFStringRef> sourcePathRef = CFURLCopyFileSystemPath(pdfURL, kCFURLPOSIXPathStyle);
+          NSString* sourcePath = (NSString*)CFStringRef(sourcePathRef);
 #  ifdef DEBUG
-          CFStringRef destPathRef = CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
-          NSString* destPath = (NSString*)destPathRef;
+          AutoCFRelease<CFStringRef> destPathRef = CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
+          NSString* destPath = (NSString*)CFStringRef(destPathRef);
           NSString* destPathExt = [destPath pathExtension];
           MOZ_ASSERT([destPathExt isEqualToString:@"pdf"],
                      "nsDeviceContextSpecX::Init only allows '.pdf' for now");
@@ -378,8 +382,8 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndDocument() {
 #  endif
           NSFileManager* fileManager = [NSFileManager defaultManager];
           if ([fileManager fileExistsAtPath:sourcePath]) {
-            NSURL* src = static_cast<NSURL*>(pdfURL);
-            NSURL* dest = static_cast<NSURL*>(destURL);
+            NSURL* src = static_cast<NSURL*>(CFURLRef(pdfURL));
+            NSURL* dest = static_cast<NSURL*>(CFURLRef(destURL));
             bool ok = [fileManager replaceItemAtURL:dest
                                       withItemAtURL:src
                                      backupItemName:nil
