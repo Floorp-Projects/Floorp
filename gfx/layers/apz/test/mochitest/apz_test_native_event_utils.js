@@ -343,7 +343,9 @@ function synthesizeNativeWheelAndWaitForWheelEvent(
   targetWindow.addEventListener(
     "wheel",
     function(e) {
-      setTimeout(aCallback, 0);
+      if (aCallback) {
+        setTimeout(aCallback, 0);
+      }
     },
     { once: true }
   );
