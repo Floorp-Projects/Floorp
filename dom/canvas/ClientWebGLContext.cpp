@@ -3728,7 +3728,7 @@ static std::string ToString(const js::Scalar::Type type) {
       break;
   }
   MOZ_ASSERT(false);
-  return std::string("#") + std::to_string(EnumValue(type));
+  return std::string("#") + std::to_string(UnderlyingValue(type));
 }
 
 /////////////////////////////////////////////////
