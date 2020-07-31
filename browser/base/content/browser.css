@@ -10,7 +10,7 @@ body {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: clip;
+  overflow: -moz-hidden-unscrollable;
 }
 
 :root {
@@ -269,7 +269,7 @@ panelview[mainview] > .panel-header {
  * from the overflow menu, but we still don't want to render them outside of
  * the customization target. */
 toolbar[overflowable][customizing] > .customization-target {
-  overflow: clip;
+  overflow: -moz-hidden-unscrollable;
 }
 
 toolbar:not([overflowing]) > .overflow-button,

@@ -1504,10 +1504,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   }
 
   bool IsScrollableOverflow() const {
-    // Visible and Clip can be combined but not with other values,
-    // so checking mOverflowX is enough.
+    // mOverflowX and mOverflowY always match when one of them is
+    // Visible or MozHiddenUnscrollable.
     return mOverflowX != mozilla::StyleOverflow::Visible &&
-           mOverflowX != mozilla::StyleOverflow::Clip;
+           mOverflowX != mozilla::StyleOverflow::MozHiddenUnscrollable;
   }
 
   bool IsContainPaint() const {
