@@ -27,9 +27,6 @@ class RenderCompositorOGL : public RenderCompositor {
   void Pause() override;
   bool Resume() override;
 
-  bool UsePartialPresent() override { return mUsePartialPresent; }
-  uint32_t GetMaxPartialPresentRects() override;
-
   gl::GLContext* gl() const override { return mGL; }
 
   LayoutDeviceIntSize GetBufferSize() override;
@@ -37,9 +34,16 @@ class RenderCompositorOGL : public RenderCompositor {
   // Interface for wr::Compositor
   CompositorCapabilities GetCompositorCapabilities() override;
 
+  // Interface for partial present
+  bool UsePartialPresent() override;
+  bool RequestFullRender() override;
+  uint32_t GetMaxPartialPresentRects() override;
+  bool ShouldDrawPreviousPartialPresentRegions() override;
+
  protected:
   RefPtr<gl::GLContext> mGL;
-  bool mUsePartialPresent;
+  bool mIsEGL;
+  EGLint mBufferAge;
 };
 
 }  // namespace wr
