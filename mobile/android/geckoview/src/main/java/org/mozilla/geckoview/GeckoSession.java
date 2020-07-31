@@ -10,7 +10,6 @@ import java.io.ByteArrayInputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
-import java.nio.ByteBuffer;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -44,6 +43,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -219,7 +219,8 @@ public class GeckoSession implements Parcelable {
         public native void setDefaultClearColor(int color);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void requestScreenPixels(final GeckoResult<ByteBuffer> result,
+        /* package */ native void requestScreenPixels(final GeckoResult<Bitmap> result,
+                                                      final Bitmap target,
                                                       final int x, final int y,
                                                       final int srcWidth, final int srcHeight,
                                                       final int outWidth, final int outHeight);
