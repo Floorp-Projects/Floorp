@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434998
   }
 
   EditorContentListener.prototype = {
-    init : function(aEditor)
+    init(aEditor)
     {
       this.mEditor = aEditor;
     },
@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434998
     QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
                                             "nsISupportsWeakReference"]),
 
-    onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus)
     {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
       {
@@ -65,25 +65,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434998
     },
 
 
-    onProgressChange : function(aWebProgress, aRequest,
+    onProgressChange(aWebProgress, aRequest,
                                 aCurSelfProgress, aMaxSelfProgress,
                                 aCurTotalProgress, aMaxTotalProgress)
     {
-    },
+  },
 
-    onLocationChange : function(aWebProgress, aRequest, aLocation, aFlags)
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags)
     {
     },
 
-    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+    onStatusChange(aWebProgress, aRequest, aStatus, aMessage)
     {
     },
 
-    onSecurityChange : function(aWebProgress, aRequest, aState)
+    onSecurityChange(aWebProgress, aRequest, aState)
     {
     },
 
-    onContentBlockingEvent : function(aWebProgress, aRequest, aEvent)
+    onContentBlockingEvent(aWebProgress, aRequest, aEvent)
     {
     },
 
