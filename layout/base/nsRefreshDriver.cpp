@@ -122,6 +122,8 @@ static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
 #  define REFRESH_WAIT_WARNING 1
 #endif
 
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsRefreshDriver::TickReasons);
+
 namespace {
 // `true` if we are currently in jank-critical mode.
 //
@@ -1527,11 +1529,54 @@ bool nsRefreshDriver::HasImageRequests() const {
   return !mRequests.IsEmpty();
 }
 
-bool nsRefreshDriver::HasReasonToTick() const {
-  return HasObservers() || HasImageRequests() ||
-         mNeedToUpdateIntersectionObservations ||
-         !mVisualViewportResizeEvents.IsEmpty() || !mScrollEvents.IsEmpty() ||
-         !mVisualViewportScrollEvents.IsEmpty();
+auto nsRefreshDriver::GetReasonsToTick() const -> TickReasons {
+  TickReasons reasons = TickReasons::eNone;
+  if (HasObservers()) {
+    reasons |= TickReasons::eHasObservers;
+  }
+  if (HasImageRequests()) {
+    reasons |= TickReasons::eHasImageRequests;
+  }
+  if (mNeedToUpdateIntersectionObservations) {
+    reasons |= TickReasons::eNeedsToUpdateIntersectionObservations;
+  }
+  if (!mVisualViewportResizeEvents.IsEmpty()) {
+    reasons |= TickReasons::eHasVisualViewportResizeEvents;
+  }
+  if (!mScrollEvents.IsEmpty()) {
+    reasons |= TickReasons::eHasScrollEvents;
+  }
+  if (!mVisualViewportScrollEvents.IsEmpty()) {
+    reasons |= TickReasons::eHasVisualVieportScrollEvents;
+  }
+  return reasons;
+}
+
+void nsRefreshDriver::AppendTickReasonsToString(TickReasons aReasons,
+                                                nsACString& aStr) const {
+  if (aReasons == TickReasons::eNone) {
+    aStr.AppendLiteral(" <none>");
+    return;
+  }
+
+  if (aReasons & TickReasons::eHasObservers) {
+    aStr.AppendLiteral(" HasObservers");
+  }
+  if (aReasons & TickReasons::eHasImageRequests) {
+    aStr.AppendLiteral(" HasImageRequests");
+  }
+  if (aReasons & TickReasons::eNeedsToUpdateIntersectionObservations) {
+    aStr.AppendLiteral(" NeedsToUpdateIntersectionObservations");
+  }
+  if (aReasons & TickReasons::eHasVisualViewportResizeEvents) {
+    aStr.AppendLiteral(" HasVisualViewportResizeEvents");
+  }
+  if (aReasons & TickReasons::eHasScrollEvents) {
+    aStr.AppendLiteral(" HasScrollEvents");
+  }
+  if (aReasons & TickReasons::eHasVisualVieportScrollEvents) {
+    aStr.AppendLiteral(" HasVisualVieportScrollEvents");
+  }
 }
 
 bool nsRefreshDriver::
@@ -1916,7 +1961,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     return;
   }
 
-  if (!HasReasonToTick()) {
+  TickReasons tickReasons = GetReasonsToTick();
+  if (tickReasons == TickReasons::eNone) {
     // We no longer have any observers.
     // We don't want to stop the timer when observers are initially
     // removed, because sometimes observers can be added and removed
@@ -1937,8 +1983,16 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   }
 
   AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
+
+  nsAutoCString profilerStr;
+#if MOZ_GECKO_PROFILER
+  if (profiler_can_accept_markers()) {
+    profilerStr.AppendLiteral("Tick reasons:");
+    AppendTickReasonsToString(tickReasons, profilerStr);
+  }
+#endif
   AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE(
-      "RefreshDriverTick", ""_ns, GRAPHICS, GetDocShell(mPresContext),
+      "RefreshDriverTick", profilerStr, GRAPHICS, GetDocShell(mPresContext),
       std::move(mRefreshTimerStartedCause));
 
   mResizeSuppressed = false;
