@@ -3265,8 +3265,10 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   ALLOW_CLONE(MCompare)
 
  private:
+  bool isTypeOfCompare();
   MOZ_MUST_USE bool tryFoldEqualOperands(bool* result);
   MOZ_MUST_USE bool tryFoldConstantTypeOf(bool* result);
+  MOZ_MUST_USE MDefinition* tryFoldTypeOf(TempAllocator& alloc);
 
  public:
   bool congruentTo(const MDefinition* ins) const override {
