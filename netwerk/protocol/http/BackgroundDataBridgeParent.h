@@ -18,9 +18,6 @@ class BackgroundDataBridgeParent final : public PBackgroundDataBridgeParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
   already_AddRefed<nsIThread> GetBackgroundThread();
   void Destroy();
-  void OnStopRequest(nsresult aStatus, const ResourceTimingStructArgs& aTiming,
-                     const TimeStamp& aLastActiveTabOptHit,
-                     const nsHttpHeaderArray& aResponseTrailers);
 
  private:
   virtual ~BackgroundDataBridgeParent() = default;

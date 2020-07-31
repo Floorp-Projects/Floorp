@@ -67,11 +67,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
       const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
       const TimeStamp& aLastActiveTabOptHit,
       const nsHttpHeaderArray& aResponseTrailers,
-      nsTArray<ConsoleReportCollected>&& aConsoleReports,
-      const bool& aFromSocketProcess);
-
-  IPCResult RecvOnConsoleReport(
-      nsTArray<ConsoleReportCollected>&& aConsoleReports);
+      const nsTArray<ConsoleReportCollected>& aConsoleReports);
 
   IPCResult RecvOnAfterLastPart(const nsresult& aStatus);
 
@@ -131,23 +127,6 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   // Should be flushed after OnStartRequest is received and handled.
   // Should only access on STS thread.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
-
-  enum ODASource {
-    ODA_PENDING = 0,      // ODA is pending
-    ODA_FROM_PARENT = 1,  // ODA from parent process.
-    ODA_FROM_SOCKET = 2   // response coming from the network
-  };
-  // We need to know the first ODA will be from socket process or parent
-  // process. This information is from OnStartRequest message from parent
-  // process.
-  ODASource mFirstODASource;
-
-  // Indicate whether HttpChannelChild::ProcessOnStopRequest is called.
-  bool mOnStopRequestCalled;
-
-  // This is used when we receive the console report from parent process, but
-  // still not get the OnStopRequest from socket process.
-  std::function<void()> mConsoleReportTask;
 };
 
 }  // namespace net
