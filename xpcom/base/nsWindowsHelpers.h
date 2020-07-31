@@ -58,6 +58,19 @@ class nsAutoRefTraits<HDC> {
 };
 
 template <>
+class nsAutoRefTraits<HFONT> {
+ public:
+  typedef HFONT RawRef;
+  static HFONT Void() { return nullptr; }
+
+  static void Release(RawRef aFD) {
+    if (aFD != Void()) {
+      ::DeleteObject(aFD);
+    }
+  }
+};
+
+template <>
 class nsAutoRefTraits<HBRUSH> {
  public:
   typedef HBRUSH RawRef;
@@ -214,6 +227,7 @@ class nsAutoRefTraits<nsHPRINTER> {
 
 typedef nsAutoRef<HKEY> nsAutoRegKey;
 typedef nsAutoRef<HDC> nsAutoHDC;
+typedef nsAutoRef<HFONT> nsAutoFont;
 typedef nsAutoRef<HBRUSH> nsAutoBrush;
 typedef nsAutoRef<HRGN> nsAutoRegion;
 typedef nsAutoRef<HBITMAP> nsAutoBitmap;
