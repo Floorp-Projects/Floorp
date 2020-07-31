@@ -31,17 +31,18 @@ void OnPrefChange(const char* aPrefName, void*) {
       continue;
     }
 
-    nsCOMPtr<nsIDocShell> rootDocShell = window->GetDocShell();
-    nsTArray<RefPtr<nsIDocShell>> docShells;
-    rootDocShell->GetAllDocShellsInSubtree(
-        nsIDocShell::typeAll, nsIDocShell::ENUMERATE_FORWARDS, docShells);
-    for (auto& docShell : docShells) {
-      if (nsCOMPtr<nsPIDOMWindowOuter> win = do_GetInterface(docShell)) {
-        if (dom::Document* doc = win->GetExtantDoc()) {
-          doc->ResetDocumentDirection();
-        }
-      }
+    RefPtr<BrowsingContext> context = window->GetBrowsingContext();
+    MOZ_DIAGNOSTIC_ASSERT(context);
+
+    if (context->IsDiscarded()) {
+      continue;
     }
+
+    context->PreOrderWalk([](BrowsingContext* aContext) {
+      if (dom::Document* doc = aContext->GetDocument()) {
+        doc->ResetDocumentDirection();
+      }
+    });
   }
 }
 
