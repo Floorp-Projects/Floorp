@@ -93,6 +93,9 @@
         <item name="tabTrayThumbnailItemBackground">@color/tab_tray_item_thumbnail_background_normal_theme</item>
         <item name="tabTrayThumbnailIcon">@color/tab_tray_item_thumbnail_icon_normal_theme</item>
 
+        <!-- Tab History -->
+        <item name="tabHistoryItemSelectedBackground">@color/tab_history_item_selected_background_normal_theme</item>
+
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
         <item name="homeBackground">@color/foundation_normal_theme</item>
@@ -230,6 +233,9 @@
         <item name="tabTrayHeadingIconInactive">@color/tab_tray_heading_icon_inactive_dark_theme</item>
         <item name="tabTrayThumbnailItemBackground">@color/tab_tray_item_thumbnail_background_normal_theme</item>
         <item name="tabTrayThumbnailIcon">@color/tab_tray_item_thumbnail_icon_normal_theme</item>
+
+        <!-- Tab History -->
+        <item name="tabHistoryItemSelectedBackground">@color/tab_history_item_selected_background_private_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_private</item>

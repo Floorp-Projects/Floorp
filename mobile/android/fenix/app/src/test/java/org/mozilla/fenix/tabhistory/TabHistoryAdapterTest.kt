@@ -4,12 +4,14 @@
 
 package org.mozilla.fenix.tabhistory
 
-import android.text.Spanned
+import android.content.Context
+import android.graphics.drawable.ColorDrawable
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.core.text.HtmlCompat
-import io.mockk.mockk
+import io.mockk.MockKAnnotations
+import io.mockk.impl.annotations.MockK
 import kotlinx.android.synthetic.main.history_list_item.*
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -23,8 +25,10 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @RunWith(FenixRobolectricTestRunner::class)
 class TabHistoryAdapterTest {
 
-    private lateinit var parent: FrameLayout
+    @MockK
     private lateinit var interactor: TabHistoryInteractor
+    private lateinit var context: Context
+    private lateinit var parent: FrameLayout
     private lateinit var adapter: TabHistoryAdapter
 
     private val selectedItem = TabHistoryItem(
@@ -42,8 +46,9 @@ class TabHistoryAdapterTest {
 
     @Before
     fun setup() {
-        parent = FrameLayout(ContextThemeWrapper(testContext, R.style.NormalTheme))
-        interactor = mockk()
+        MockKAnnotations.init(this)
+        context = ContextThemeWrapper(testContext, R.style.NormalTheme)
+        parent = FrameLayout(context)
         adapter = TabHistoryAdapter(interactor)
     }
 
@@ -54,12 +59,15 @@ class TabHistoryAdapterTest {
         val holder = adapter.createViewHolder(parent, 0)
 
         adapter.bindViewHolder(holder, 0)
-        val htmlSelected = HtmlCompat.toHtml(holder.history_layout.titleView.text as Spanned, 0)
-        assertTrue(htmlSelected, "<b>Mozilla</b>" in htmlSelected)
+        assertEquals("Mozilla", holder.history_layout.titleView.text)
+        assertEquals(
+            context.getColorFromAttr(R.attr.tabHistoryItemSelectedBackground),
+            (holder.history_layout.background as ColorDrawable).color
+        )
 
         adapter.bindViewHolder(holder, 1)
-        assertFalse(holder.history_layout.titleView.text is Spanned)
         assertEquals("Firefox", holder.history_layout.titleView.text)
+        assertEquals(null, holder.history_layout.background)
     }
 
     @Test

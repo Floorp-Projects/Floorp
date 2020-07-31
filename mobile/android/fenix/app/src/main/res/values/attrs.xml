@@ -66,6 +66,9 @@
     <attr name="tabTrayItemSelectedBackground" format="reference" />
     <attr name="tabTrayToolbarBackground" format="reference" />
 
+    <!-- Tab History -->
+    <attr name="tabHistoryItemSelectedBackground" format="reference" />
+
     <declare-styleable name="TrackingProtectionCategory">
         <attr name="categoryItemTitle" format="reference" />
         <attr name="categoryItemDescription" format="reference" />

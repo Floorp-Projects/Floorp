@@ -67,6 +67,9 @@
     <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/tab_tray_item_thumbnail_icon_dark_theme</color>
     <color name="tab_tray_selected_mask_normal_theme">@color/tab_tray_selected_mask_dark_theme</color>
 
+    <!-- Tab History -->
+    <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
+
     <!--Top site colors -->
     <color name="top_site_title_text">@color/top_site_title_text_dark_theme</color>
 
