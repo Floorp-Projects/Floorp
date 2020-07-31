@@ -19,6 +19,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "js/Conversions.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"

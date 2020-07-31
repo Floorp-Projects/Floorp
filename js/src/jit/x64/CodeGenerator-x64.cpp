@@ -10,6 +10,7 @@
 
 #include "jit/CodeGenerator.h"
 #include "jit/MIR.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"

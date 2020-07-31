@@ -55,6 +55,7 @@
 #include "js/CompileOptions.h"
 #include "js/Date.h"
 #include "js/Debug.h"
+#include "js/experimental/TypedData.h"  // JS_GetObjectAsUint8Array
 #include "js/friend/DumpFunctions.h"  // js::Dump{Backtrace,Heap,Object}, JS::FormatStackDump, js::IgnoreNurseryObjects
 #include "js/friend/WindowProxy.h"  // js::ToWindowProxyIfWindow
 #include "js/HashTable.h"

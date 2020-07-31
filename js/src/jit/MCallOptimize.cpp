@@ -21,6 +21,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
+#include "js/ScalarType.h"   // js::Scalar::Type
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"

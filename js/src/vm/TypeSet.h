@@ -23,6 +23,7 @@
 #include "jit/JitOptions.h"
 #include "js/GCAnnotations.h"  // JS_HAZ_GC_POINTER
 #include "js/Id.h"
+#include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/TracingAPI.h"  // JSTracer
 #include "js/TypeDecls.h"   // IF_BIGINT
 #include "js/Utility.h"     // UniqueChars
