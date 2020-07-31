@@ -436,12 +436,12 @@ add_task(async function test_ensureProfile() {
       threshold: 1000,
       expectsCachedProfileReturned: true,
       cachedProfile: {
-        uid: `${ACCOUNT_UID}5`,
-        email: `${ACCOUNT_EMAIL}5`,
-        avatar: "myimg5",
+        uid: `${ACCOUNT_UID}8`,
+        email: `${ACCOUNT_EMAIL}8`,
+        avatar: "myimg8",
       },
       fetchAndCacheProfileResolves: false,
-      staleOk: true,
+      options: { staleOk: true },
     },
     // staleOk but no cached profile
     {
@@ -449,11 +449,24 @@ add_task(async function test_ensureProfile() {
       expectsCachedProfileReturned: false,
       cachedProfile: null,
       fetchedProfile: {
-        uid: ACCOUNT_UID,
-        email: ACCOUNT_EMAIL,
-        avatar: "myimg",
+        uid: `${ACCOUNT_UID}9`,
+        email: `${ACCOUNT_EMAIL}9`,
+        avatar: "myimg9",
       },
-      staleOk: true,
+      options: { staleOk: true },
+    },
+    // fresh profile but forceFresh = true
+    {
+      // Note: The threshold for this test case is being set to an arbitrary value that will
+      // be greater than Date.now() so the retrieved cached profile will be deemed recent.
+      threshold: Date.now() + 5000,
+      expectsCachedProfileReturned: false,
+      fetchedProfile: {
+        uid: `${ACCOUNT_UID}10`,
+        email: `${ACCOUNT_EMAIL}10`,
+        avatar: "myimg10",
+      },
+      options: { forceFresh: true },
     },
   ];
 
@@ -472,10 +485,7 @@ add_task(async function test_ensureProfile() {
       );
     profile.PROFILE_FRESHNESS_THRESHOLD = tc.threshold;
 
-    let options = {};
-    if (tc.staleOk || false) {
-      options.staleOk = true;
-    }
+    let options = tc.options || {};
     if (tc.expectsCachedProfileReturned) {
       mockProfile.expects("_fetchAndCacheProfile").never();
       let actualProfile = await profile.ensureProfile(options);
