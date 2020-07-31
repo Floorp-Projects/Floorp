@@ -5,10 +5,11 @@
 
 "use strict";
 
-/* exported attachUpdateHandler, gBrowser, getBrowserElement,
- *          installAddonsFromFilePicker, isCorrectlySigned, isDisabledUnsigned,
- *          isDiscoverEnabled, isPending, loadReleaseNotes, openOptionsInTab,
- *          promiseEvent, shouldShowPermissionsPrompt, showPermissionsPrompt,
+/* exported attachUpdateHandler, detachUpdateHandler, gBrowser,
+ *          getBrowserElement, installAddonsFromFilePicker,
+ *          isCorrectlySigned, isDisabledUnsigned, isDiscoverEnabled,
+ *          isPending, loadReleaseNotes, openOptionsInTab, promiseEvent,
+ *          shouldShowPermissionsPrompt, showPermissionsPrompt,
  *          PREF_UI_LASTCATEGORY */
 
 const { AddonSettings } = ChromeUtils.import(
@@ -68,48 +69,58 @@ function promiseEvent(event, target, capture = false) {
   });
 }
 
+function installPromptHandler(info) {
+  const install = this;
+
+  let oldPerms = info.existingAddon.userPermissions;
+  if (!oldPerms) {
+    // Updating from a legacy add-on, let it proceed
+    return Promise.resolve();
+  }
+
+  let newPerms = info.addon.userPermissions;
+
+  let difference = Extension.comparePermissions(oldPerms, newPerms);
+
+  // If there are no new permissions, just proceed
+  if (!difference.origins.length && !difference.permissions.length) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    let subject = {
+      wrappedJSObject: {
+        target: getBrowserElement(),
+        info: {
+          type: "update",
+          addon: info.addon,
+          icon: info.addon.iconURL,
+          // Reference to the related AddonInstall object (used in
+          // AMTelemetry to link the recorded event to the other events from
+          // the same install flow).
+          install,
+          permissions: difference,
+          resolve,
+          reject,
+        },
+      },
+    };
+    Services.obs.notifyObservers(subject, "webextension-permission-prompt");
+  });
+}
+
 function attachUpdateHandler(install) {
   if (!WEBEXT_PERMISSION_PROMPTS) {
     return;
   }
 
-  install.promptHandler = info => {
-    let oldPerms = info.existingAddon.userPermissions;
-    if (!oldPerms) {
-      // Updating from a legacy add-on, let it proceed
-      return Promise.resolve();
-    }
+  install.promptHandler = installPromptHandler;
+}
 
-    let newPerms = info.addon.userPermissions;
-
-    let difference = Extension.comparePermissions(oldPerms, newPerms);
-
-    // If there are no new permissions, just proceed
-    if (!difference.origins.length && !difference.permissions.length) {
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      let subject = {
-        wrappedJSObject: {
-          target: getBrowserElement(),
-          info: {
-            type: "update",
-            addon: info.addon,
-            icon: info.addon.iconURL,
-            // Reference to the related AddonInstall object (used in
-            // AMTelemetry to link the recorded event to the other events from
-            // the same install flow).
-            install,
-            permissions: difference,
-            resolve,
-            reject,
-          },
-        },
-      };
-      Services.obs.notifyObservers(subject, "webextension-permission-prompt");
-    });
-  };
+function detachUpdateHandler(install) {
+  if (install?.promptHandler === installPromptHandler) {
+    install.promptHandler = null;
+  }
 }
 
 async function loadReleaseNotes(uri) {
