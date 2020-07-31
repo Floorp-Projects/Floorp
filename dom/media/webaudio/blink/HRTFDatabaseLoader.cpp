@@ -72,7 +72,8 @@ HRTFDatabaseLoader::HRTFDatabaseLoader(float sampleRate)
     : m_refCnt(0),
       m_threadLock("HRTFDatabaseLoader"),
       m_databaseLoaderThread(nullptr),
-      m_databaseSampleRate(sampleRate) {
+      m_databaseSampleRate(sampleRate),
+      m_databaseLoaded(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -162,6 +163,7 @@ void HRTFDatabaseLoader::load() {
   MOZ_ASSERT(!m_hrtfDatabase.get(), "Called twice");
   // Load the default HRTF database.
   m_hrtfDatabase = HRTFDatabase::create(m_databaseSampleRate);
+  m_databaseLoaded = true;
   // Notifies the main thread of completion.  See loadAsynchronously().
   Release();
 }
