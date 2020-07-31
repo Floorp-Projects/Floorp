@@ -9880,14 +9880,14 @@
     "description": "The length of time (in seconds) that a call lasted.",
     "releaseChannelCollection": "opt-out"
   },
-  "WEBRTC_CALL_COUNT_2": {
+  "WEBRTC_CALL_COUNT_3": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1261063],
+    "bug_numbers": [875097, 1261063, 1654248],
     "expires_in_version": "never",
     "kind": "count",
-    "description": "The number of calls made during a session."
+    "description": "The number of successfully connected calls made during a session (discounting re-negotiations)."
   },
   "WEBRTC_GET_USER_MEDIA_TYPE": {
     "record_in_processes": ["main", "content"],
