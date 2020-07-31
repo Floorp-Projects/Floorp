@@ -1504,15 +1504,6 @@ bool WarpBuilder::build_Not(BytecodeLocation loc) {
 
 bool WarpBuilder::build_ToString(BytecodeLocation loc) {
   MDefinition* value = current->pop();
-
-  // TODO: Consider making MToString non-effectul similar to Ion. That way GVN
-  // will be able to fold away MToString(string) automatically. For now simply
-  // handle this case here.
-  if (value->type() == MIRType::String) {
-    current->push(value);
-    return true;
-  }
-
   MToString* ins =
       MToString::New(alloc(), value, MToString::SideEffectHandling::Supported);
   current->add(ins);
@@ -2209,15 +2200,14 @@ bool WarpBuilder::build_SuperFun(BytecodeLocation) {
   return true;
 }
 
-bool WarpBuilder::build_BuiltinObject(BytecodeLocation loc) {
-  if (auto* snapshot = getOpSnapshot<WarpBuiltinObject>(loc)) {
-    JSObject* builtin = snapshot->builtin();
-    pushConstant(ObjectValue(*builtin));
+bool WarpBuilder::build_FunctionProto(BytecodeLocation loc) {
+  if (auto* snapshot = getOpSnapshot<WarpFunctionProto>(loc)) {
+    JSObject* proto = snapshot->proto();
+    pushConstant(ObjectValue(*proto));
     return true;
   }
 
-  auto kind = loc.getBuiltinObjectKind();
-  auto* ins = MBuiltinObject::New(alloc(), kind);
+  auto* ins = MFunctionProto::New(alloc());
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);

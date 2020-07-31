@@ -565,7 +565,7 @@ bool ClassEmitter::emitDerivedClass(JS::Handle<JSAtom*> name,
     //              [stack]
     return false;
   }
-  if (!bce_->emitBuiltinObject(BuiltinObjectKind::FunctionPrototype)) {
+  if (!bce_->emit1(JSOp::FunctionProto)) {
     //              [stack] PROTO
     return false;
   }
