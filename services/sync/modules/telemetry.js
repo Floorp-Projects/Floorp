@@ -23,6 +23,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Async: "resource://services-common/async.js",
   AuthenticationError: "resource://services-sync/browserid_identity.js",
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   Log: "resource://gre/modules/Log.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   Observers: "resource://services-common/observers.js",
@@ -46,11 +48,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/base/telemetry;1",
   "nsITelemetry"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm"
-);
+
 XPCOMUtils.defineLazyGetter(
   this,
   "WeaveService",
@@ -737,8 +735,12 @@ class SyncTelemetryImpl {
   }
 
   isProductionSyncUser() {
+    // If FxA isn't production then we treat sync as not being production.
+    // Further, there's the deprecated "services.sync.tokenServerURI" pref we
+    // need to consider - fxa doesn't consider that as if that's the only
+    // pref set, they *are* running a production fxa, just not production sync.
     if (
-      Services.prefs.prefHasUserValue("identity.sync.tokenserver.uri") ||
+      !FxAccounts.config.isProductionConfig() ||
       Services.prefs.prefHasUserValue("services.sync.tokenServerURI")
     ) {
       log.trace(`Not sending telemetry ping for self-hosted Sync user`);
