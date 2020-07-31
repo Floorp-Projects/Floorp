@@ -5938,6 +5938,39 @@ AttachDecision CallIRGenerator::tryAttachStringReplaceString(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachStringSplitString(
+    HandleFunction callee) {
+  // Self-hosted code calls this with (string, string) arguments.
+  MOZ_ASSERT(argc_ == 2);
+  MOZ_ASSERT(args_[0].isString());
+  MOZ_ASSERT(args_[1].isString());
+
+  ObjectGroup* group = ObjectGroupRealm::getStringSplitStringGroup(cx_);
+  if (!group) {
+    cx_->clearPendingException();
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  StringOperandId strId = writer.guardToString(arg0Id);
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  StringOperandId separatorId = writer.guardToString(arg1Id);
+
+  writer.callStringSplitStringResult(strId, separatorId, group);
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("StringSplitString");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
                                                     StringChar kind) {
   // Need one argument.
@@ -7295,6 +7328,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachStringToUpperCase(callee);
     case InlinableNative::IntrinsicStringReplaceString:
       return tryAttachStringReplaceString(callee);
+    case InlinableNative::IntrinsicStringSplitString:
+      return tryAttachStringSplitString(callee);
 
     // Math natives.
     case InlinableNative::MathRandom:
