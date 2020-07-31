@@ -1,5 +1,5 @@
-//! This module defines x86_64-specific machine instruction types.
-
+//! This module defines x86_64-specific machine instruction types.an explanation of what it's
+//! doing.
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
@@ -13,7 +13,7 @@ use regalloc::RegUsageCollector;
 use regalloc::{RealRegUniverse, Reg, RegClass, RegUsageMapper, SpillSlot, VirtualReg, Writable};
 use smallvec::SmallVec;
 
-use crate::binemit::CodeOffset;
+use crate::binemit::{CodeOffset, Stackmap};
 use crate::ir::types::*;
 use crate::ir::{ExternalName, Opcode, SourceLoc, TrapCode, Type};
 use crate::machinst::*;
@@ -83,7 +83,9 @@ pub enum Inst {
     CheckedDivOrRemSeq {
         kind: DivOrRemKind,
         size: u8,
-        divisor: Reg,
+        /// The divisor operand. Note it's marked as modified so that it gets assigned a register
+        /// different from the temporary.
+        divisor: Writable<Reg>,
         tmp: Option<Writable<Reg>>,
         loc: SourceLoc,
     },
@@ -160,6 +162,13 @@ pub enum Inst {
         dst: Writable<Reg>,
     },
 
+    /// Arithmetic SIMD shifts.
+    XmmRmiReg {
+        opcode: SseOpcode,
+        src: RegMemImm,
+        dst: Writable<Reg>,
+    },
+
     /// Integer comparisons/tests: cmp (b w l q) (reg addr imm) reg.
     Cmp_RMI_R {
         size: u8, // 1, 2, 4 or 8
@@ -220,18 +229,81 @@ pub enum Inst {
         srcloc: Option<SourceLoc>,
     },
 
-    /// XMM (scalar) unary op (from xmm to integer reg): movd, movq
+    /// XMM (vector) unary op (to move a constant value into an xmm register): movups
+    XmmLoadConstSeq {
+        val: Vec<u8>,
+        dst: Writable<Reg>,
+        ty: Type,
+    },
+
+    /// XMM (scalar) unary op (from xmm to integer reg): movd, movq, cvtts{s,d}2si
     XmmToGpr {
         op: SseOpcode,
         src: Reg,
         dst: Writable<Reg>,
+        dst_size: OperandSize,
     },
 
-    /// XMM (scalar) unary op (from integer to float reg): movd, movq
+    /// XMM (scalar) unary op (from integer to float reg): movd, movq, cvtsi2s{s,d}
     GprToXmm {
         op: SseOpcode,
         src: RegMem,
         dst: Writable<Reg>,
+        src_size: OperandSize,
+    },
+
+    /// Converts an unsigned int64 to a float32/float64.
+    CvtUint64ToFloatSeq {
+        /// Is the target a 64-bits or 32-bits register?
+        to_f64: bool,
+        /// A copy of the source register, fed by lowering. It is marked as modified during
+        /// register allocation to make sure that the temporary registers differ from the src
+        /// register, since both registers are live at the same time in the generated code
+        /// sequence.
+        src: Writable<Reg>,
+        dst: Writable<Reg>,
+        tmp_gpr1: Writable<Reg>,
+        tmp_gpr2: Writable<Reg>,
+    },
+
+    /// Converts a scalar xmm to a signed int32/int64.
+    CvtFloatToSintSeq {
+        dst_size: OperandSize,
+        src_size: OperandSize,
+        is_saturating: bool,
+        /// A copy of the source register, fed by lowering. It is marked as modified during
+        /// register allocation to make sure that the temporary xmm register differs from the src
+        /// register, since both registers are live at the same time in the generated code
+        /// sequence.
+        src: Writable<Reg>,
+        dst: Writable<Reg>,
+        tmp_gpr: Writable<Reg>,
+        tmp_xmm: Writable<Reg>,
+        srcloc: SourceLoc,
+    },
+
+    /// Converts a scalar xmm to an unsigned int32/int64.
+    CvtFloatToUintSeq {
+        src_size: OperandSize,
+        dst_size: OperandSize,
+        is_saturating: bool,
+        /// A copy of the source register, fed by lowering, reused as a temporary. It is marked as
+        /// modified during register allocation to make sure that the temporary xmm register
+        /// differs from the src register, since both registers are live at the same time in the
+        /// generated code sequence.
+        src: Writable<Reg>,
+        dst: Writable<Reg>,
+        tmp_gpr: Writable<Reg>,
+        tmp_xmm: Writable<Reg>,
+        srcloc: SourceLoc,
+    },
+
+    /// A sequence to compute min/max with the proper NaN semantics for xmm registers.
+    XmmMinMaxSeq {
+        size: OperandSize,
+        is_min: bool,
+        lhs: Reg,
+        rhs_dst: Writable<Reg>,
     },
 
     /// XMM (scalar) conditional move.
@@ -249,6 +321,14 @@ pub enum Inst {
         op: SseOpcode,
         src: RegMem,
         dst: Reg,
+    },
+
+    /// A binary XMM instruction with an 8-bit immediate: cmp (ps pd) imm (reg addr) reg
+    XmmRmRImm {
+        op: SseOpcode,
+        src: RegMem,
+        dst: Writable<Reg>,
+        imm: u8,
     },
 
     // =====================================
@@ -292,6 +372,7 @@ pub enum Inst {
     /// Jump-table sequence, as one compound instruction (see note in lower.rs for rationale).
     /// The generated code sequence is described in the emit's function match arm for this
     /// instruction.
+    /// See comment in lowering about the temporaries signedness.
     JmpTableSeq {
         idx: Reg,
         tmp1: Writable<Reg>,
@@ -390,6 +471,27 @@ impl Inst {
         Inst::MulHi { size, signed, rhs }
     }
 
+    pub(crate) fn checked_div_or_rem_seq(
+        kind: DivOrRemKind,
+        size: u8,
+        divisor: Writable<Reg>,
+        tmp: Option<Writable<Reg>>,
+        loc: SourceLoc,
+    ) -> Inst {
+        debug_assert!(size == 8 || size == 4 || size == 2 || size == 1);
+        debug_assert!(divisor.to_reg().get_class() == RegClass::I64);
+        debug_assert!(tmp
+            .map(|tmp| tmp.to_reg().get_class() == RegClass::I64)
+            .unwrap_or(true));
+        Inst::CheckedDivOrRemSeq {
+            kind,
+            size,
+            divisor,
+            tmp,
+            loc,
+        }
+    }
+
     pub(crate) fn sign_extend_rax_to_rdx(size: u8) -> Inst {
         debug_assert!(size == 8 || size == 4 || size == 2);
         Inst::SignExtendRaxRdx { size }
@@ -442,6 +544,13 @@ impl Inst {
         }
     }
 
+    pub(crate) fn xmm_load_const_seq(val: Vec<u8>, dst: Writable<Reg>, ty: Type) -> Inst {
+        debug_assert!(val.len() == 16);
+        debug_assert!(dst.to_reg().get_class() == RegClass::V128);
+        debug_assert!(ty.is_vector() && ty.bits() == 128);
+        Inst::XmmLoadConstSeq { val, dst, ty }
+    }
+
     /// Convenient helper for unary float operations.
     pub(crate) fn xmm_unary_rm_r(op: SseOpcode, src: RegMem, dst: Writable<Reg>) -> Inst {
         src.assert_regclass_is(RegClass::V128);
@@ -475,22 +584,137 @@ impl Inst {
         }
     }
 
-    pub(crate) fn xmm_to_gpr(op: SseOpcode, src: Reg, dst: Writable<Reg>) -> Inst {
+    pub(crate) fn xmm_to_gpr(
+        op: SseOpcode,
+        src: Reg,
+        dst: Writable<Reg>,
+        dst_size: OperandSize,
+    ) -> Inst {
         debug_assert!(src.get_class() == RegClass::V128);
         debug_assert!(dst.to_reg().get_class() == RegClass::I64);
-        Inst::XmmToGpr { op, src, dst }
+        Inst::XmmToGpr {
+            op,
+            src,
+            dst,
+            dst_size,
+        }
     }
 
-    pub(crate) fn gpr_to_xmm(op: SseOpcode, src: RegMem, dst: Writable<Reg>) -> Inst {
+    pub(crate) fn gpr_to_xmm(
+        op: SseOpcode,
+        src: RegMem,
+        src_size: OperandSize,
+        dst: Writable<Reg>,
+    ) -> Inst {
         src.assert_regclass_is(RegClass::I64);
         debug_assert!(dst.to_reg().get_class() == RegClass::V128);
-        Inst::GprToXmm { op, src, dst }
+        Inst::GprToXmm {
+            op,
+            src,
+            dst,
+            src_size,
+        }
     }
 
     pub(crate) fn xmm_cmp_rm_r(op: SseOpcode, src: RegMem, dst: Reg) -> Inst {
-        //TODO:: Add assert_reg_type helper
+        src.assert_regclass_is(RegClass::V128);
         debug_assert!(dst.get_class() == RegClass::V128);
         Inst::XMM_Cmp_RM_R { op, src, dst }
+    }
+
+    pub(crate) fn cvt_u64_to_float_seq(
+        to_f64: bool,
+        src: Writable<Reg>,
+        tmp_gpr1: Writable<Reg>,
+        tmp_gpr2: Writable<Reg>,
+        dst: Writable<Reg>,
+    ) -> Inst {
+        debug_assert!(src.to_reg().get_class() == RegClass::I64);
+        debug_assert!(tmp_gpr1.to_reg().get_class() == RegClass::I64);
+        debug_assert!(tmp_gpr2.to_reg().get_class() == RegClass::I64);
+        debug_assert!(dst.to_reg().get_class() == RegClass::V128);
+        Inst::CvtUint64ToFloatSeq {
+            src,
+            dst,
+            tmp_gpr1,
+            tmp_gpr2,
+            to_f64,
+        }
+    }
+
+    pub(crate) fn cvt_float_to_sint_seq(
+        src_size: OperandSize,
+        dst_size: OperandSize,
+        is_saturating: bool,
+        src: Writable<Reg>,
+        dst: Writable<Reg>,
+        tmp_gpr: Writable<Reg>,
+        tmp_xmm: Writable<Reg>,
+        srcloc: SourceLoc,
+    ) -> Inst {
+        debug_assert!(src.to_reg().get_class() == RegClass::V128);
+        debug_assert!(tmp_xmm.to_reg().get_class() == RegClass::V128);
+        debug_assert!(tmp_gpr.to_reg().get_class() == RegClass::I64);
+        debug_assert!(dst.to_reg().get_class() == RegClass::I64);
+        Inst::CvtFloatToSintSeq {
+            src_size,
+            dst_size,
+            is_saturating,
+            src,
+            dst,
+            tmp_gpr,
+            tmp_xmm,
+            srcloc,
+        }
+    }
+
+    pub(crate) fn cvt_float_to_uint_seq(
+        src_size: OperandSize,
+        dst_size: OperandSize,
+        is_saturating: bool,
+        src: Writable<Reg>,
+        dst: Writable<Reg>,
+        tmp_gpr: Writable<Reg>,
+        tmp_xmm: Writable<Reg>,
+        srcloc: SourceLoc,
+    ) -> Inst {
+        debug_assert!(src.to_reg().get_class() == RegClass::V128);
+        debug_assert!(tmp_xmm.to_reg().get_class() == RegClass::V128);
+        debug_assert!(tmp_gpr.to_reg().get_class() == RegClass::I64);
+        debug_assert!(dst.to_reg().get_class() == RegClass::I64);
+        Inst::CvtFloatToUintSeq {
+            src_size,
+            dst_size,
+            is_saturating,
+            src,
+            dst,
+            tmp_gpr,
+            tmp_xmm,
+            srcloc,
+        }
+    }
+
+    pub(crate) fn xmm_min_max_seq(
+        size: OperandSize,
+        is_min: bool,
+        lhs: Reg,
+        rhs_dst: Writable<Reg>,
+    ) -> Inst {
+        debug_assert_eq!(lhs.get_class(), RegClass::V128);
+        debug_assert_eq!(rhs_dst.to_reg().get_class(), RegClass::V128);
+        Inst::XmmMinMaxSeq {
+            size,
+            is_min,
+            lhs,
+            rhs_dst,
+        }
+    }
+
+    pub(crate) fn xmm_rm_r_imm(op: SseOpcode, src: RegMem, dst: Writable<Reg>, imm: u8) -> Inst {
+        src.assert_regclass_is(RegClass::V128);
+        debug_assert!(dst.to_reg().get_class() == RegClass::V128);
+        debug_assert!(imm < 8);
+        Inst::XmmRmRImm { op, src, dst, imm }
     }
 
     pub(crate) fn movzx_rm_r(
@@ -507,6 +731,12 @@ impl Inst {
             dst,
             srcloc,
         }
+    }
+
+    pub(crate) fn xmm_rmi_reg(opcode: SseOpcode, src: RegMemImm, dst: Writable<Reg>) -> Inst {
+        src.assert_regclass_is(RegClass::V128);
+        debug_assert!(dst.to_reg().get_class() == RegClass::V128);
+        Inst::XmmRmiReg { opcode, src, dst }
     }
 
     pub(crate) fn movsx_rm_r(
@@ -812,7 +1042,7 @@ impl ShowWithRRU for Inst {
                     DivOrRemKind::SignedRem => "srem",
                     DivOrRemKind::UnsignedRem => "urem",
                 },
-                show_ireg_sized(*divisor, mb_rru, *size),
+                show_ireg_sized(divisor.to_reg(), mb_rru, *size),
             ),
 
             Inst::SignExtendRaxRdx { size } => match size {
@@ -844,11 +1074,50 @@ impl ShowWithRRU for Inst {
                 show_ireg_sized(dst.to_reg(), mb_rru, 8),
             ),
 
-            Inst::XmmToGpr { op, src, dst } => {
-                let dst_size = match op {
-                    SseOpcode::Movd => 4,
-                    SseOpcode::Movq => 8,
-                    _ => panic!("unexpected sse opcode"),
+            Inst::XmmMinMaxSeq {
+                lhs,
+                rhs_dst,
+                is_min,
+                size,
+            } => format!(
+                "{} {}, {}",
+                ljustify2(
+                    if *is_min {
+                        "xmm min seq ".to_string()
+                    } else {
+                        "xmm max seq ".to_string()
+                    },
+                    match size {
+                        OperandSize::Size32 => "f32",
+                        OperandSize::Size64 => "f64",
+                    }
+                    .into()
+                ),
+                show_ireg_sized(*lhs, mb_rru, 8),
+                show_ireg_sized(rhs_dst.to_reg(), mb_rru, 8),
+            ),
+
+            Inst::XmmRmRImm { op, src, dst, imm } => format!(
+                "{} ${}, {}, {}",
+                ljustify(op.to_string()),
+                imm,
+                src.show_rru(mb_rru),
+                dst.show_rru(mb_rru),
+            ),
+
+            Inst::XmmLoadConstSeq { val, dst, .. } => {
+                format!("load_const ${:?}, {}", val, dst.show_rru(mb_rru),)
+            }
+
+            Inst::XmmToGpr {
+                op,
+                src,
+                dst,
+                dst_size,
+            } => {
+                let dst_size = match dst_size {
+                    OperandSize::Size32 => 4,
+                    OperandSize::Size64 => 8,
                 };
                 format!(
                     "{} {}, {}",
@@ -858,19 +1127,17 @@ impl ShowWithRRU for Inst {
                 )
             }
 
-            Inst::GprToXmm { op, src, dst } => {
-                let src_size = match op {
-                    SseOpcode::Movd => 4,
-                    SseOpcode::Movq => 8,
-                    _ => panic!("unexpected sse opcode"),
-                };
-                format!(
-                    "{} {}, {}",
-                    ljustify(op.to_string()),
-                    src.show_rru_sized(mb_rru, src_size),
-                    dst.show_rru(mb_rru)
-                )
-            }
+            Inst::GprToXmm {
+                op,
+                src,
+                src_size,
+                dst,
+            } => format!(
+                "{} {}, {}",
+                ljustify(op.to_string()),
+                src.show_rru_sized(mb_rru, src_size.to_bytes()),
+                dst.show_rru(mb_rru)
+            ),
 
             Inst::XMM_Cmp_RM_R { op, src, dst } => format!(
                 "{} {}, {}",
@@ -878,6 +1145,69 @@ impl ShowWithRRU for Inst {
                 src.show_rru_sized(mb_rru, 8),
                 show_ireg_sized(*dst, mb_rru, 8),
             ),
+
+            Inst::CvtUint64ToFloatSeq {
+                src, dst, to_f64, ..
+            } => format!(
+                "{} {}, {}",
+                ljustify(format!(
+                    "u64_to_{}_seq",
+                    if *to_f64 { "f64" } else { "f32" }
+                )),
+                show_ireg_sized(src.to_reg(), mb_rru, 8),
+                dst.show_rru(mb_rru),
+            ),
+
+            Inst::CvtFloatToSintSeq {
+                src,
+                dst,
+                src_size,
+                dst_size,
+                ..
+            } => format!(
+                "{} {}, {}",
+                ljustify(format!(
+                    "cvt_float{}_to_sint{}_seq",
+                    if *src_size == OperandSize::Size64 {
+                        "64"
+                    } else {
+                        "32"
+                    },
+                    if *dst_size == OperandSize::Size64 {
+                        "64"
+                    } else {
+                        "32"
+                    }
+                )),
+                show_ireg_sized(src.to_reg(), mb_rru, 8),
+                show_ireg_sized(dst.to_reg(), mb_rru, dst_size.to_bytes()),
+            ),
+
+            Inst::CvtFloatToUintSeq {
+                src,
+                dst,
+                src_size,
+                dst_size,
+                ..
+            } => format!(
+                "{} {}, {}",
+                ljustify(format!(
+                    "cvt_float{}_to_uint{}_seq",
+                    if *src_size == OperandSize::Size64 {
+                        "64"
+                    } else {
+                        "32"
+                    },
+                    if *dst_size == OperandSize::Size64 {
+                        "64"
+                    } else {
+                        "32"
+                    }
+                )),
+                show_ireg_sized(src.to_reg(), mb_rru, 8),
+                show_ireg_sized(dst.to_reg(), mb_rru, dst_size.to_bytes()),
+            ),
+
             Inst::Imm_R {
                 dst_is_64,
                 simm64,
@@ -976,6 +1306,13 @@ impl ShowWithRRU for Inst {
                     show_ireg_sized(dst.to_reg(), mb_rru, sizeLQ(*is_64))
                 ),
             },
+
+            Inst::XmmRmiReg { opcode, src, dst } => format!(
+                "{} {}, {}",
+                ljustify(opcode.to_string()),
+                src.show_rru(mb_rru),
+                dst.to_reg().show_rru(mb_rru)
+            ),
 
             Inst::Cmp_RMI_R { size, src, dst } => format!(
                 "{} {}, {}",
@@ -1115,20 +1452,52 @@ fn x64_get_regs(inst: &Inst, collector: &mut RegUsageCollector) {
             // the rdx register *before* the instruction, which is not too bad.
             collector.add_mod(Writable::from_reg(regs::rax()));
             collector.add_mod(Writable::from_reg(regs::rdx()));
-            collector.add_use(*divisor);
+            collector.add_mod(*divisor);
             if let Some(tmp) = tmp {
                 collector.add_def(*tmp);
             }
         }
         Inst::SignExtendRaxRdx { .. } => {
             collector.add_use(regs::rax());
-            collector.add_mod(Writable::from_reg(regs::rdx()));
+            collector.add_def(Writable::from_reg(regs::rdx()));
         }
         Inst::UnaryRmR { src, dst, .. } | Inst::XmmUnaryRmR { src, dst, .. } => {
             src.get_regs_as_uses(collector);
             collector.add_def(*dst);
         }
         Inst::XMM_RM_R { src, dst, .. } => {
+            src.get_regs_as_uses(collector);
+            collector.add_mod(*dst);
+        }
+        Inst::XmmRmRImm { src, dst, op, imm } => {
+            // In certain cases, instructions of this format can act as a definition of an XMM
+            // register, producing a value that is independent of its initial value. For example,
+            // a vector equality comparison (`cmppd` or `cmpps`) that compares a register to itself
+            // will generate all ones as a result, regardless of its value. From the register
+            // allocator's point of view, we should (i) record the first register, which is normally
+            // a mod, as a def instread; and (ii) not record the second register as a use, because
+            // it is the same as the first register (already handled). TODO Re-factored in #2071.
+            let is_def = if let RegMem::Reg { reg } = src {
+                (*op == SseOpcode::Cmppd || *op == SseOpcode::Cmpps)
+                    && *imm == FcmpImm::Equal.encode()
+                    && *reg == dst.to_reg()
+            } else {
+                false
+            };
+
+            if is_def {
+                collector.add_def(*dst);
+            } else {
+                src.get_regs_as_uses(collector);
+                collector.add_mod(*dst);
+            }
+        }
+        Inst::XmmLoadConstSeq { dst, .. } => collector.add_def(*dst),
+        Inst::XmmMinMaxSeq { lhs, rhs_dst, .. } => {
+            collector.add_use(*lhs);
+            collector.add_mod(*rhs_dst);
+        }
+        Inst::XmmRmiReg { src, dst, .. } => {
             src.get_regs_as_uses(collector);
             collector.add_mod(*dst);
         }
@@ -1150,6 +1519,37 @@ fn x64_get_regs(inst: &Inst, collector: &mut RegUsageCollector) {
         Inst::GprToXmm { src, dst, .. } => {
             src.get_regs_as_uses(collector);
             collector.add_def(*dst);
+        }
+        Inst::CvtUint64ToFloatSeq {
+            src,
+            dst,
+            tmp_gpr1,
+            tmp_gpr2,
+            ..
+        } => {
+            collector.add_mod(*src);
+            collector.add_def(*dst);
+            collector.add_def(*tmp_gpr1);
+            collector.add_def(*tmp_gpr2);
+        }
+        Inst::CvtFloatToSintSeq {
+            src,
+            dst,
+            tmp_xmm,
+            tmp_gpr,
+            ..
+        }
+        | Inst::CvtFloatToUintSeq {
+            src,
+            dst,
+            tmp_gpr,
+            tmp_xmm,
+            ..
+        } => {
+            collector.add_mod(*src);
+            collector.add_def(*dst);
+            collector.add_def(*tmp_gpr);
+            collector.add_def(*tmp_xmm);
         }
         Inst::MovZX_RM_R { src, dst, .. } => {
             src.get_regs_as_uses(collector);
@@ -1320,7 +1720,7 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
         Inst::Div { divisor, .. } => divisor.map_uses(mapper),
         Inst::MulHi { rhs, .. } => rhs.map_uses(mapper),
         Inst::CheckedDivOrRemSeq { divisor, tmp, .. } => {
-            map_use(mapper, divisor);
+            map_mod(mapper, divisor);
             if let Some(tmp) = tmp {
                 map_def(mapper, tmp)
             }
@@ -1339,6 +1739,35 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
             src.map_uses(mapper);
             map_def(mapper, dst);
         }
+        Inst::XmmRmRImm {
+            ref mut src,
+            ref mut dst,
+            ref op,
+            ref imm,
+        } => {
+            // In certain cases, instructions of this format can convert an XMM register into a
+            // define (e.g. an equality comparison); this extra logic is necessary to inform the
+            // registry allocator of a different register usage. TODO Re-factored in #2071.
+            if let RegMem::Reg { reg } = src {
+                if (*op == SseOpcode::Cmppd || *op == SseOpcode::Cmpps)
+                    && *imm == FcmpImm::Equal.encode()
+                    && *reg == dst.to_reg()
+                {
+                    let mut writable_src = Writable::from_reg(*reg);
+                    map_def(mapper, &mut writable_src);
+                    *reg = writable_src.to_reg();
+                    map_def(mapper, dst);
+                } else {
+                    // Otherwise, we map the instruction as usual.
+                    src.map_uses(mapper);
+                    map_mod(mapper, dst);
+                }
+            } else {
+                // TODO this is duplicated because there seems to be no way to join the `if let` and `if`?
+                src.map_uses(mapper);
+                map_mod(mapper, dst);
+            }
+        }
         Inst::XMM_RM_R {
             ref mut src,
             ref mut dst,
@@ -1346,6 +1775,25 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
         } => {
             src.map_uses(mapper);
             map_mod(mapper, dst);
+        }
+        Inst::XmmRmiReg {
+            ref mut src,
+            ref mut dst,
+            ..
+        } => {
+            src.map_uses(mapper);
+            map_mod(mapper, dst);
+        }
+        Inst::XmmLoadConstSeq { ref mut dst, .. } => {
+            map_def(mapper, dst);
+        }
+        Inst::XmmMinMaxSeq {
+            ref mut lhs,
+            ref mut rhs_dst,
+            ..
+        } => {
+            map_use(mapper, lhs);
+            map_mod(mapper, rhs_dst);
         }
         Inst::Xmm_Mov_R_M {
             ref mut src,
@@ -1384,6 +1832,37 @@ fn x64_map_regs<RUM: RegUsageMapper>(inst: &mut Inst, mapper: &RUM) {
         } => {
             src.map_uses(mapper);
             map_def(mapper, dst);
+        }
+        Inst::CvtUint64ToFloatSeq {
+            ref mut src,
+            ref mut dst,
+            ref mut tmp_gpr1,
+            ref mut tmp_gpr2,
+            ..
+        } => {
+            map_mod(mapper, src);
+            map_def(mapper, dst);
+            map_def(mapper, tmp_gpr1);
+            map_def(mapper, tmp_gpr2);
+        }
+        Inst::CvtFloatToSintSeq {
+            ref mut src,
+            ref mut dst,
+            ref mut tmp_xmm,
+            ref mut tmp_gpr,
+            ..
+        }
+        | Inst::CvtFloatToUintSeq {
+            ref mut src,
+            ref mut dst,
+            ref mut tmp_gpr,
+            ref mut tmp_xmm,
+            ..
+        } => {
+            map_mod(mapper, src);
+            map_def(mapper, dst);
+            map_def(mapper, tmp_gpr);
+            map_def(mapper, tmp_xmm);
         }
         Inst::MovZX_RM_R {
             ref mut src,
@@ -1571,7 +2050,11 @@ impl MachInst for Inst {
             RegClass::V128 => match ty {
                 F32 => Inst::xmm_mov(SseOpcode::Movss, RegMem::reg(src_reg), dst_reg, None),
                 F64 => Inst::xmm_mov(SseOpcode::Movsd, RegMem::reg(src_reg), dst_reg, None),
-                _ => panic!("unexpected V128 type in gen_move"),
+                _ if ty.is_vector() && ty.bits() == 128 => {
+                    // TODO Specialize this move for different types: MOVUPD, MOVDQU, etc.
+                    Inst::xmm_mov(SseOpcode::Movups, RegMem::reg(src_reg), dst_reg, None)
+                }
+                _ => panic!("unexpected type {:?} in gen_move of regclass V128", ty),
             },
             _ => panic!("gen_move(x64): unhandled regclass"),
         }
@@ -1591,8 +2074,9 @@ impl MachInst for Inst {
 
     fn rc_for_type(ty: Type) -> CodegenResult<RegClass> {
         match ty {
-            I8 | I16 | I32 | I64 | B1 | B8 | B16 | B32 | B64 => Ok(RegClass::I64),
-            F32 | F64 | I128 | B128 => Ok(RegClass::V128),
+            I8 | I16 | I32 | I64 | B1 | B8 | B16 | B32 | B64 | R32 | R64 => Ok(RegClass::I64),
+            F32 | F64 => Ok(RegClass::V128),
+            _ if ty.bits() == 128 => Ok(RegClass::V128),
             IFLAGS | FFLAGS => Ok(RegClass::I64),
             _ => Err(CodegenError::Unsupported(format!(
                 "Unexpected SSA-value type: {}",
@@ -1624,6 +2108,7 @@ impl MachInst for Inst {
                     ret.push(Inst::gpr_to_xmm(
                         SseOpcode::Movd,
                         RegMem::reg(tmp.to_reg()),
+                        OperandSize::Size32,
                         to_reg,
                     ));
                 }
@@ -1635,6 +2120,7 @@ impl MachInst for Inst {
                     ret.push(Inst::gpr_to_xmm(
                         SseOpcode::Movq,
                         RegMem::reg(tmp.to_reg()),
+                        OperandSize::Size64,
                         to_reg,
                     ));
                 }
@@ -1663,7 +2149,13 @@ impl MachInst for Inst {
 /// State carried between emissions of a sequence of instructions.
 #[derive(Default, Clone, Debug)]
 pub struct EmitState {
-    virtual_sp_offset: i64,
+    /// Addend to convert nominal-SP offsets to real-SP offsets at the current
+    /// program point.
+    pub(crate) virtual_sp_offset: i64,
+    /// Offset of FP from nominal-SP.
+    pub(crate) nominal_sp_to_fp: i64,
+    /// Safepoint stackmap for upcoming instruction, as provided to `pre_safepoint()`.
+    stackmap: Option<Stackmap>,
 }
 
 impl MachInstEmit for Inst {
@@ -1679,10 +2171,26 @@ impl MachInstEmit for Inst {
 }
 
 impl MachInstEmitState<Inst> for EmitState {
-    fn new(_: &dyn ABIBody<I = Inst>) -> Self {
+    fn new(abi: &dyn ABIBody<I = Inst>) -> Self {
         EmitState {
             virtual_sp_offset: 0,
+            nominal_sp_to_fp: abi.frame_size() as i64,
+            stackmap: None,
         }
+    }
+
+    fn pre_safepoint(&mut self, stackmap: Stackmap) {
+        self.stackmap = Some(stackmap);
+    }
+}
+
+impl EmitState {
+    fn take_stackmap(&mut self) -> Option<Stackmap> {
+        self.stackmap.take()
+    }
+
+    fn clear_post_insn(&mut self) {
+        self.stackmap = None;
     }
 }
 

@@ -12,6 +12,7 @@ use super::{
     regs::{self, show_ireg_sized},
     EmitState,
 };
+use core::fmt::Debug;
 
 /// A possible addressing mode (amode) that can be used in instructions.
 /// These denote a 64-bit value only.
@@ -184,7 +185,7 @@ pub enum RegMemImm {
 
 impl RegMemImm {
     pub(crate) fn reg(reg: Reg) -> Self {
-        debug_assert!(reg.get_class() == RegClass::I64);
+        debug_assert!(reg.get_class() == RegClass::I64 || reg.get_class() == RegClass::V128);
         Self::Reg { reg }
     }
     pub(crate) fn mem(addr: impl Into<SyntheticAmode>) -> Self {
@@ -226,7 +227,7 @@ impl ShowWithRRU for RegMemImm {
 }
 
 /// An operand which is either an integer Register or a value in Memory.  This can denote an 8, 16,
-/// 32 or 64 bit value.
+/// 32, 64, or 128 bit value.
 #[derive(Clone)]
 pub enum RegMem {
     Reg { reg: Reg },
@@ -330,16 +331,21 @@ pub(crate) enum InstructionSet {
     SSE41,
 }
 
-/// Some scalar SSE operations requiring 2 operands r/m and r.
-/// TODO: Below only includes scalar operations. To be seen if packed will be added here.
-#[derive(Clone, PartialEq)]
+/// Some SSE operations requiring 2 operands r/m and r.
+#[derive(Clone, Copy, PartialEq)]
 pub enum SseOpcode {
+    Addps,
+    Addpd,
     Addss,
     Addsd,
     Andps,
+    Andpd,
     Andnps,
+    Andnpd,
     Comiss,
     Comisd,
+    Cmpps,
+    Cmppd,
     Cmpss,
     Cmpsd,
     Cvtsd2ss,
@@ -350,31 +356,57 @@ pub enum SseOpcode {
     Cvtss2sd,
     Cvttss2si,
     Cvttsd2si,
+    Divps,
+    Divpd,
     Divss,
     Divsd,
     Insertps,
+    Maxps,
+    Maxpd,
     Maxss,
     Maxsd,
+    Minps,
+    Minpd,
     Minss,
     Minsd,
     Movaps,
+    Movapd,
     Movd,
     Movq,
     Movss,
     Movsd,
+    Movups,
+    Movupd,
+    Mulps,
+    Mulpd,
     Mulss,
     Mulsd,
     Orps,
+    Orpd,
+    Psllw,
+    Pslld,
+    Psllq,
+    Psraw,
+    Psrad,
+    Psrlw,
+    Psrld,
+    Psrlq,
     Rcpss,
     Roundss,
     Roundsd,
     Rsqrtss,
+    Sqrtps,
+    Sqrtpd,
     Sqrtss,
     Sqrtsd,
+    Subps,
+    Subpd,
     Subss,
     Subsd,
     Ucomiss,
     Ucomisd,
+    Xorps,
+    Xorpd,
 }
 
 impl SseOpcode {
@@ -382,45 +414,77 @@ impl SseOpcode {
     pub(crate) fn available_from(&self) -> InstructionSet {
         use InstructionSet::*;
         match self {
-            SseOpcode::Addss
+            SseOpcode::Addps
+            | SseOpcode::Addss
             | SseOpcode::Andps
             | SseOpcode::Andnps
+            | SseOpcode::Comiss
+            | SseOpcode::Cmpps
+            | SseOpcode::Cmpss
             | SseOpcode::Cvtsi2ss
             | SseOpcode::Cvtss2si
             | SseOpcode::Cvttss2si
+            | SseOpcode::Divps
             | SseOpcode::Divss
+            | SseOpcode::Maxps
             | SseOpcode::Maxss
-            | SseOpcode::Movaps
+            | SseOpcode::Minps
             | SseOpcode::Minss
+            | SseOpcode::Movaps
             | SseOpcode::Movss
+            | SseOpcode::Movups
+            | SseOpcode::Mulps
             | SseOpcode::Mulss
             | SseOpcode::Orps
             | SseOpcode::Rcpss
             | SseOpcode::Rsqrtss
+            | SseOpcode::Sqrtps
+            | SseOpcode::Sqrtss
+            | SseOpcode::Subps
             | SseOpcode::Subss
             | SseOpcode::Ucomiss
-            | SseOpcode::Sqrtss
-            | SseOpcode::Comiss
-            | SseOpcode::Cmpss => SSE,
+            | SseOpcode::Xorps => SSE,
 
-            SseOpcode::Addsd
+            SseOpcode::Addpd
+            | SseOpcode::Addsd
+            | SseOpcode::Andpd
+            | SseOpcode::Andnpd
+            | SseOpcode::Cmppd
+            | SseOpcode::Cmpsd
+            | SseOpcode::Comisd
             | SseOpcode::Cvtsd2ss
             | SseOpcode::Cvtsd2si
             | SseOpcode::Cvtsi2sd
             | SseOpcode::Cvtss2sd
             | SseOpcode::Cvttsd2si
+            | SseOpcode::Divpd
             | SseOpcode::Divsd
+            | SseOpcode::Maxpd
             | SseOpcode::Maxsd
+            | SseOpcode::Minpd
             | SseOpcode::Minsd
+            | SseOpcode::Movapd
             | SseOpcode::Movd
             | SseOpcode::Movq
             | SseOpcode::Movsd
+            | SseOpcode::Movupd
+            | SseOpcode::Mulpd
             | SseOpcode::Mulsd
+            | SseOpcode::Orpd
+            | SseOpcode::Psllw
+            | SseOpcode::Pslld
+            | SseOpcode::Psllq
+            | SseOpcode::Psraw
+            | SseOpcode::Psrad
+            | SseOpcode::Psrlw
+            | SseOpcode::Psrld
+            | SseOpcode::Psrlq
+            | SseOpcode::Sqrtpd
             | SseOpcode::Sqrtsd
+            | SseOpcode::Subpd
             | SseOpcode::Subsd
             | SseOpcode::Ucomisd
-            | SseOpcode::Comisd
-            | SseOpcode::Cmpsd => SSE2,
+            | SseOpcode::Xorpd => SSE2,
 
             SseOpcode::Insertps | SseOpcode::Roundss | SseOpcode::Roundsd => SSE41,
         }
@@ -438,10 +502,18 @@ impl SseOpcode {
 impl fmt::Debug for SseOpcode {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let name = match self {
+            SseOpcode::Addps => "addps",
+            SseOpcode::Addpd => "addpd",
             SseOpcode::Addss => "addss",
             SseOpcode::Addsd => "addsd",
+            SseOpcode::Andpd => "andpd",
             SseOpcode::Andps => "andps",
             SseOpcode::Andnps => "andnps",
+            SseOpcode::Andnpd => "andnpd",
+            SseOpcode::Cmpps => "cmpps",
+            SseOpcode::Cmppd => "cmppd",
+            SseOpcode::Cmpss => "cmpss",
+            SseOpcode::Cmpsd => "cmpsd",
             SseOpcode::Comiss => "comiss",
             SseOpcode::Comisd => "comisd",
             SseOpcode::Cvtsd2ss => "cvtsd2ss",
@@ -452,33 +524,57 @@ impl fmt::Debug for SseOpcode {
             SseOpcode::Cvtss2sd => "cvtss2sd",
             SseOpcode::Cvttss2si => "cvttss2si",
             SseOpcode::Cvttsd2si => "cvttsd2si",
+            SseOpcode::Divps => "divps",
+            SseOpcode::Divpd => "divpd",
             SseOpcode::Divss => "divss",
             SseOpcode::Divsd => "divsd",
+            SseOpcode::Insertps => "insertps",
+            SseOpcode::Maxps => "maxps",
+            SseOpcode::Maxpd => "maxpd",
             SseOpcode::Maxss => "maxss",
             SseOpcode::Maxsd => "maxsd",
+            SseOpcode::Minps => "minps",
+            SseOpcode::Minpd => "minpd",
             SseOpcode::Minss => "minss",
             SseOpcode::Minsd => "minsd",
             SseOpcode::Movaps => "movaps",
+            SseOpcode::Movapd => "movapd",
             SseOpcode::Movd => "movd",
             SseOpcode::Movq => "movq",
             SseOpcode::Movss => "movss",
             SseOpcode::Movsd => "movsd",
+            SseOpcode::Movups => "movups",
+            SseOpcode::Movupd => "movupd",
+            SseOpcode::Mulps => "mulps",
+            SseOpcode::Mulpd => "mulpd",
             SseOpcode::Mulss => "mulss",
             SseOpcode::Mulsd => "mulsd",
+            SseOpcode::Orpd => "orpd",
             SseOpcode::Orps => "orps",
+            SseOpcode::Psllw => "psllw",
+            SseOpcode::Pslld => "pslld",
+            SseOpcode::Psllq => "psllq",
+            SseOpcode::Psraw => "psraw",
+            SseOpcode::Psrad => "psrad",
+            SseOpcode::Psrlw => "psrlw",
+            SseOpcode::Psrld => "psrld",
+            SseOpcode::Psrlq => "psrlq",
             SseOpcode::Rcpss => "rcpss",
             SseOpcode::Roundss => "roundss",
             SseOpcode::Roundsd => "roundsd",
             SseOpcode::Rsqrtss => "rsqrtss",
+            SseOpcode::Sqrtps => "sqrtps",
+            SseOpcode::Sqrtpd => "sqrtpd",
             SseOpcode::Sqrtss => "sqrtss",
             SseOpcode::Sqrtsd => "sqrtsd",
+            SseOpcode::Subps => "subps",
+            SseOpcode::Subpd => "subpd",
             SseOpcode::Subss => "subss",
             SseOpcode::Subsd => "subsd",
             SseOpcode::Ucomiss => "ucomiss",
             SseOpcode::Ucomisd => "ucomisd",
-            SseOpcode::Cmpss => "cmpss",
-            SseOpcode::Cmpsd => "cmpsd",
-            SseOpcode::Insertps => "insertps",
+            SseOpcode::Xorps => "xorps",
+            SseOpcode::Xorpd => "xorpd",
         };
         write!(fmt, "{}", name)
     }
@@ -708,9 +804,9 @@ impl CC {
             | FloatCC::LessThan
             | FloatCC::LessThanOrEqual
             | FloatCC::UnorderedOrGreaterThan
-            | FloatCC::UnorderedOrGreaterThanOrEqual => unimplemented!(
-                "No single condition code to guarantee ordered. Treat as special case."
-            ),
+            | FloatCC::UnorderedOrGreaterThanOrEqual => {
+                panic!("No single condition code to guarantee ordered. Treat as special case.")
+            }
         }
     }
 
@@ -746,6 +842,42 @@ impl fmt::Debug for CC {
 impl fmt::Display for CC {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Debug::fmt(self, f)
+    }
+}
+
+/// Encode the ways that floats can be compared. This is used in float comparisons such as `cmpps`,
+/// e.g.; it is distinguished from other float comparisons (e.g. `ucomiss`) in that those use EFLAGS
+/// whereas [FcmpImm] is used as an immediate.
+pub(crate) enum FcmpImm {
+    Equal = 0x00,
+    LessThan = 0x01,
+    LessThanOrEqual = 0x02,
+    Unordered = 0x03,
+    NotEqual = 0x04,
+    UnorderedOrGreaterThanOrEqual = 0x05,
+    UnorderedOrGreaterThan = 0x06,
+    Ordered = 0x07,
+}
+
+impl FcmpImm {
+    pub(crate) fn encode(self) -> u8 {
+        self as u8
+    }
+}
+
+impl From<FloatCC> for FcmpImm {
+    fn from(cond: FloatCC) -> Self {
+        match cond {
+            FloatCC::Equal => FcmpImm::Equal,
+            FloatCC::LessThan => FcmpImm::LessThan,
+            FloatCC::LessThanOrEqual => FcmpImm::LessThanOrEqual,
+            FloatCC::Unordered => FcmpImm::Unordered,
+            FloatCC::NotEqual => FcmpImm::NotEqual,
+            FloatCC::UnorderedOrGreaterThanOrEqual => FcmpImm::UnorderedOrGreaterThanOrEqual,
+            FloatCC::UnorderedOrGreaterThan => FcmpImm::UnorderedOrGreaterThan,
+            FloatCC::Ordered => FcmpImm::Ordered,
+            _ => panic!("unable to create comparison predicate for {}", cond),
+        }
     }
 }
 
@@ -794,6 +926,29 @@ impl BranchTarget {
                 off as i32
             }
             _ => 0,
+        }
+    }
+}
+
+/// An operand's size in bits.
+#[derive(Clone, Copy, PartialEq)]
+pub enum OperandSize {
+    Size32,
+    Size64,
+}
+
+impl OperandSize {
+    pub(crate) fn to_bytes(&self) -> u8 {
+        match self {
+            Self::Size32 => 4,
+            Self::Size64 => 8,
+        }
+    }
+
+    pub(crate) fn to_bits(&self) -> u8 {
+        match self {
+            Self::Size32 => 32,
+            Self::Size64 => 64,
         }
     }
 }
