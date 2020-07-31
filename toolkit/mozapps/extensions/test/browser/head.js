@@ -1760,3 +1760,64 @@ async function testUndoPendingUninstall(addonList, addon) {
 function loadTestSubscript(filePath) {
   Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
 }
+
+function cleanupPendingNotifications() {
+  const { ExtensionsUI } = ChromeUtils.import(
+    "resource:///modules/ExtensionsUI.jsm"
+  );
+  info("Cleanup any pending notification before exiting the test");
+  const keys = ChromeUtils.nondeterministicGetWeakSetKeys(
+    ExtensionsUI.pendingNotifications
+  );
+  if (keys) {
+    keys.forEach(key => ExtensionsUI.pendingNotifications.delete(key));
+  }
+}
+
+function promisePermissionPrompt(addonId) {
+  return BrowserUtils.promiseObserved(
+    "webextension-permission-prompt",
+    subject => {
+      const { info } = subject.wrappedJSObject || {};
+      return !addonId || (info.addon && info.addon.id === addonId);
+    }
+  ).then(({ subject }) => {
+    return subject.wrappedJSObject.info;
+  });
+}
+
+async function handlePermissionPrompt({
+  addonId,
+  reject = false,
+  assertIcon = true,
+} = {}) {
+  const info = await promisePermissionPrompt(addonId);
+  // Assert that info.addon and info.icon are defined as expected.
+  is(
+    info.addon && info.addon.id,
+    addonId,
+    "Got the AddonWrapper in the permission prompt info"
+  );
+
+  if (assertIcon) {
+    ok(info.icon != null, "Got an addon icon in the permission prompt info");
+  }
+
+  if (reject) {
+    info.reject();
+  } else {
+    info.resolve();
+  }
+}
+
+async function switchToDetailView({ id, win }) {
+  let card = getAddonCard(win, id);
+  ok(card, `Addon card found for ${id}`);
+  ok(!card.querySelector("addon-details"), "The card doesn't have details");
+  let loaded = waitForViewLoad(win);
+  EventUtils.synthesizeMouseAtCenter(card, { clickCount: 1 }, win);
+  await loaded;
+  card = getAddonCard(win, id);
+  ok(card.querySelector("addon-details"), "The card does have details");
+  return card;
+}

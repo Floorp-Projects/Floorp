@@ -20,11 +20,7 @@ add_task(async function setup() {
 
   Services.telemetry.clearEvents();
   registerCleanupFunction(() => {
-    const { ExtensionsUI } = ChromeUtils.import(
-      "resource:///modules/ExtensionsUI.jsm"
-    );
-    info("Cleanup any pending notification before exiting the test");
-    ExtensionsUI.pendingNotifications.delete(window);
+    cleanupPendingNotifications();
   });
 });
 
@@ -171,35 +167,6 @@ add_task(async function testChangeAutoUpdates() {
     ],
   ]);
 });
-
-function promisePermissionPrompt(addonId) {
-  return BrowserUtils.promiseObserved(
-    "webextension-permission-prompt",
-    subject => {
-      const { info } = subject.wrappedJSObject || {};
-      return !addonId || (info.addon && info.addon.id === addonId);
-    }
-  ).then(({ subject }) => {
-    return subject.wrappedJSObject.info;
-  });
-}
-
-async function handlePermissionPrompt({ addonId, reject = false } = {}) {
-  const info = await promisePermissionPrompt(addonId);
-  // Assert that info.addon and info.icon are defined as expected.
-  is(
-    info.addon && info.addon.id,
-    addonId,
-    "Got the AddonWrapper in the permission prompt info"
-  );
-  ok(info.icon != null, "Got an addon icon in the permission prompt info");
-
-  if (reject) {
-    info.reject();
-  } else {
-    info.resolve();
-  }
-}
 
 async function setupExtensionWithUpdate(
   id,
