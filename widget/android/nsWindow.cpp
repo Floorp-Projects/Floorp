@@ -837,19 +837,12 @@ class nsWindow::LayerViewSupport final
   struct CaptureRequest {
     explicit CaptureRequest() : mResult(nullptr) {}
     explicit CaptureRequest(java::GeckoResult::GlobalRef aResult,
-                            java::sdk::Bitmap::GlobalRef aBitmap,
                             const ScreenRect& aSource,
                             const IntSize& aOutputSize)
-        : mResult(aResult),
-          mBitmap(aBitmap),
-          mSource(aSource),
-          mOutputSize(aOutputSize) {}
+        : mResult(aResult), mSource(aSource), mOutputSize(aOutputSize) {}
 
     // where to send the pixels
     java::GeckoResult::GlobalRef mResult;
-
-    // where to store the pixels
-    java::sdk::Bitmap::GlobalRef mBitmap;
 
     ScreenRect mSource;
 
@@ -956,21 +949,16 @@ class nsWindow::LayerViewSupport final
     return child.forget();
   }
 
-  already_AddRefed<DataSourceSurface> FlipScreenPixels(
-      Shmem& aMem, const ScreenIntSize& aInSize, const ScreenRect& aInRegion,
-      const IntSize& aOutSize) {
-    RefPtr<DataSourceSurface> image =
-        gfx::Factory::CreateWrappingDataSourceSurface(
-            aMem.get<uint8_t>(),
-            StrideForFormatAndWidth(SurfaceFormat::B8G8R8A8, aInSize.width),
-            IntSize(aInSize.width, aInSize.height), SurfaceFormat::B8G8R8A8);
+  int8_t* FlipScreenPixels(Shmem& aMem, const ScreenIntSize& aInSize,
+                           const ScreenRect& aInRegion,
+                           const IntSize& aOutSize) {
+    RefPtr<DataSourceSurface> image = gfx::CreateDataSourceSurfaceFromData(
+        IntSize(aInSize.width, aInSize.height), SurfaceFormat::B8G8R8A8,
+        aMem.get<uint8_t>(),
+        StrideForFormatAndWidth(SurfaceFormat::B8G8R8A8, aInSize.width));
     RefPtr<DrawTarget> drawTarget =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
             aOutSize, SurfaceFormat::B8G8R8A8);
-    if (!drawTarget) {
-      return nullptr;
-    }
-
     drawTarget->SetTransform(Matrix::Scaling(1.0, -1.0) *
                              Matrix::Translation(0, aOutSize.height));
 
@@ -982,7 +970,9 @@ class nsWindow::LayerViewSupport final
 
     RefPtr<SourceSurface> snapshot = drawTarget->Snapshot();
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-    return data.forget();
+    DataSourceSurface::ScopedMap* smap =
+        new DataSourceSurface::ScopedMap(data, DataSourceSurface::READ);
+    return reinterpret_cast<int8_t*>(smap->GetData());
   }
 
   /**
@@ -1201,8 +1191,7 @@ class nsWindow::LayerViewSupport final
     }
   }
 
-  void RequestScreenPixels(jni::Object::Param aResult,
-                           jni::Object::Param aTarget, int32_t aXOffset,
+  void RequestScreenPixels(jni::Object::Param aResult, int32_t aXOffset,
                            int32_t aYOffset, int32_t aSrcWidth,
                            int32_t aSrcHeight, int32_t aOutWidth,
                            int32_t aOutHeight) {
@@ -1212,7 +1201,6 @@ class nsWindow::LayerViewSupport final
     if (LockedWindowPtr window{mWindow}) {
       mCapturePixelsResults.push(CaptureRequest(
           java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)),
-          java::sdk::Bitmap::GlobalRef(java::sdk::Bitmap::LocalRef(aTarget)),
           ScreenRect(aXOffset, aYOffset, aSrcWidth, aSrcHeight),
           IntSize(aOutWidth, aOutHeight)));
       size = mCapturePixelsResults.size();
@@ -1230,41 +1218,21 @@ class nsWindow::LayerViewSupport final
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     CaptureRequest request;
     java::GeckoResult::LocalRef result = nullptr;
-    java::sdk::Bitmap::LocalRef bitmap = nullptr;
     if (LockedWindowPtr window{mWindow}) {
       // The result might have been already rejected if the compositor was
       // detached from the session
       if (!mCapturePixelsResults.empty()) {
         request = mCapturePixelsResults.front();
         result = java::GeckoResult::LocalRef(request.mResult);
-        bitmap = java::sdk::Bitmap::LocalRef(request.mBitmap);
         mCapturePixelsResults.pop();
       }
     }
 
     if (result) {
-      if (bitmap) {
-        RefPtr<DataSourceSurface> surf =
-            FlipScreenPixels(aMem, aSize, request.mSource, request.mOutputSize);
-        if (surf) {
-          DataSourceSurface::ScopedMap smap(surf, DataSourceSurface::READ);
-          auto pixels = mozilla::jni::ByteBuffer::New(
-              reinterpret_cast<int8_t*>(smap.GetData()),
-              smap.GetStride() * request.mOutputSize.height);
-          bitmap->CopyPixelsFromBuffer(pixels);
-          result->Complete(bitmap);
-        } else {
-          result->CompleteExceptionally(
-              java::sdk::IllegalStateException::New(
-                  "Failed to create flipped snapshot surface (probably out of "
-                  "memory)")
-                  .Cast<jni::Throwable>());
-        }
-      } else {
-        result->CompleteExceptionally(java::sdk::IllegalArgumentException::New(
-                                          "No target bitmap argument provided")
-                                          .Cast<jni::Throwable>());
-      }
+      auto pixels = mozilla::jni::ByteBuffer::New(
+          FlipScreenPixels(aMem, aSize, request.mSource, request.mOutputSize),
+          aMem.Size<int8_t>());
+      result->Complete(pixels);
     }
 
     // Pixels have been copied, so Dealloc Shmem

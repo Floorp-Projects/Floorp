@@ -337,7 +337,7 @@ public class GeckoDisplay {
                 throw new IllegalStateException("Compositor must be ready before pixels can be captured");
             }
 
-            final GeckoResult<Bitmap> result = new GeckoResult<>();
+            final GeckoResult<ByteBuffer> result = new GeckoResult<>();
             final Bitmap target;
             final Rect rect = new Rect();
 
@@ -383,10 +383,12 @@ public class GeckoDisplay {
                 target = mRecycle;
             }
 
-            mSession.mCompositor.requestScreenPixels(result, target, mOffsetX, mOffsetY,
-                                                     mSrcWidth, mSrcHeight, mOutWidth, mOutHeight);
+            mSession.mCompositor.requestScreenPixels(result, mOffsetX, mOffsetY, mSrcWidth, mSrcHeight, mOutWidth, mOutHeight);
 
-            return result;
+            return result.then( buffer -> {
+                target.copyPixelsFromBuffer(buffer);
+                return GeckoResult.fromValue(target);
+            });
         }
     }
 
