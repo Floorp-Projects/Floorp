@@ -746,7 +746,9 @@ impl<'a> ReftestHarness<'a> {
     }
 
     fn run_reftest(&mut self, t: &Reftest) -> bool {
-        println!("REFTEST {}", t);
+        let test_name = t.to_string();
+        println!("REFTEST {}", test_name);
+        profile_scope!("wrench reftest", text: &test_name);
 
         self.wrench
             .api
