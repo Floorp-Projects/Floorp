@@ -145,9 +145,11 @@ void GVAutoplayPermissionRequest::SetRequestStatus(RStatus aStatus) {
   MOZ_ASSERT(mContext);
   AssertIsOnMainThread();
   if (mType == RType::eAUDIBLE) {
-    mContext->SetGVAudibleAutoplayRequestStatus(aStatus);
+    // Return value of setting synced field should be checked. See bug 1656492.
+    Unused << mContext->SetGVAudibleAutoplayRequestStatus(aStatus);
   } else {
-    mContext->SetGVInaudibleAutoplayRequestStatus(aStatus);
+    // Return value of setting synced field should be checked. See bug 1656492.
+    Unused << mContext->SetGVInaudibleAutoplayRequestStatus(aStatus);
   }
 }
 

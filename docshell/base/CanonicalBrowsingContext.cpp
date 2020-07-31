@@ -1143,7 +1143,9 @@ void CanonicalBrowsingContext::EndDocumentLoad(bool aForProcessSwitch) {
   mCurrentLoad = nullptr;
 
   if (!aForProcessSwitch) {
-    SetCurrentLoadIdentifier(Nothing());
+    // Resetting the current load identifier on a discarded context
+    // has no effect when a document load has finished.
+    Unused << SetCurrentLoadIdentifier(Nothing());
   }
 }
 

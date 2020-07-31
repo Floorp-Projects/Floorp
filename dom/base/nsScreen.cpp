@@ -211,7 +211,9 @@ static void UpdateDocShellOrientationLock(nsPIDOMWindowInner* aWindow,
   if (!bc) {
     return;
   }
-  bc->SetOrientationLock(aOrientation);
+
+  // Setting orientation lock on a discarded context has no effect.
+  Unused << bc->SetOrientationLock(aOrientation);
 }
 
 bool nsScreen::MozLockOrientation(const nsAString& aOrientation,

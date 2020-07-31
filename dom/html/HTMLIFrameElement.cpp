@@ -279,7 +279,8 @@ void HTMLIFrameElement::MaybeStoreCrossOriginFeaturePolicy() {
     return;
   }
 
-  browsingContext->SetFeaturePolicy(mFeaturePolicy);
+  // Return value of setting synced field should be checked. See bug 1656492.
+  Unused << browsingContext->SetFeaturePolicy(mFeaturePolicy);
 }
 
 already_AddRefed<nsIPrincipal>

@@ -562,7 +562,8 @@ void BrowserChild::NotifyTabContextUpdated() {
 
   // Set SANDBOXED_AUXILIARY_NAVIGATION flag if this is a receiver page.
   if (!PresentationURL().IsEmpty()) {
-    mBrowsingContext->SetSandboxFlags(SANDBOXED_AUXILIARY_NAVIGATION);
+    // Return value of setting synced field should be checked. See bug 1656492.
+    Unused << mBrowsingContext->SetSandboxFlags(SANDBOXED_AUXILIARY_NAVIGATION);
   }
 }
 
