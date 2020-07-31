@@ -18,30 +18,30 @@
 
 using namespace mozilla;
 
-RefPtr<SharedThreadPool> sFuzzThreadPool;
-
 class FuzzRunner {
  public:
   explicit FuzzRunner(Benchmark* aBenchmark) : mBenchmark(aBenchmark) {}
 
   void Run() {
+    // Assert we're on the main thread, otherwise `done` must be synchronized.
+    MOZ_ASSERT(NS_IsMainThread());
+    bool done = false;
+
     mBenchmark->Init();
-    media::Await(
-        GetMediaThreadPool(MediaThreadType::PLAYBACK), mBenchmark->Run(),
-        [&](uint32_t aDecodeFps) {}, [&](const MediaResult& aError) {});
+    mBenchmark->Run()->Then(
+        // Non DocGroup-version of AbstractThread::MainThread() is fine for
+        // testing.
+        AbstractThread::MainThread(), __func__,
+        [&](uint32_t aDecodeFps) { done = true; }, [&]() { done = true; });
+
+    // Wait until benchmark completes.
+    SpinEventLoopUntil([&]() { return done; });
     return;
   }
 
  private:
   RefPtr<Benchmark> mBenchmark;
 };
-
-static int FuzzingInitMedia(int* argc, char*** argv) {
-  // Grab a strong reference to the media thread pool to avoid thread
-  // leaks. For more information, see bug 1567170.
-  sFuzzThreadPool = GetMediaThreadPool(MediaThreadType::PLAYBACK);
-  return 0;
-}
 
 #define MOZ_MEDIA_FUZZER(_name)                                         \
   static int FuzzingRunMedia##_name(const uint8_t* data, size_t size) { \
@@ -54,8 +54,7 @@ static int FuzzingInitMedia(int* argc, char*** argv) {
     runner.Run();                                                       \
     return 0;                                                           \
   }                                                                     \
-  MOZ_FUZZING_INTERFACE_RAW(FuzzingInitMedia, FuzzingRunMedia##_name,   \
-                            Media##_name);
+  MOZ_FUZZING_INTERFACE_RAW(nullptr, FuzzingRunMedia##_name, Media##_name);
 
 MOZ_MEDIA_FUZZER(ADTS);
 MOZ_MEDIA_FUZZER(Flac);

@@ -894,7 +894,13 @@ auto DocumentLoadListener::ClaimParentLoad(DocumentLoadListener** aListener,
   RefPtr<DocumentLoadListener> loadListener = do_QueryObject(parentChannel);
   registrar->DeregisterChannels(aLoadIdent);
 
-  MOZ_ASSERT(loadListener && loadListener->mOpenPromise);
+  if (!loadListener) {
+    // The parent went away unexpectedly.
+    *aListener = nullptr;
+    return nullptr;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(loadListener->mOpenPromise);
   loadListener.forget(aListener);
 
   return (*aListener)->mOpenPromise;
