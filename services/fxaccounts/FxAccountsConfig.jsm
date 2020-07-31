@@ -216,6 +216,31 @@ var FxAccountsConfig = {
     }
   },
 
+  // Returns true if this user is using the FxA "production" systems, false
+  // if using any other configuration, including self-hosting or the FxA
+  // non-production systems such as "dev" or "staging".
+  // It's typically used as a proxy for "is this likely to be a self-hosted
+  // user?", but it's named this way to make the implementation less
+  // surprising. As a result, it's fairly conservative and would prefer to have
+  // a false-negative than a false-position as it determines things which users
+  // might consider sensitive (notably, telemetry).
+  // Note also that while it's possible to self-host just sync and not FxA, we
+  // don't make that distinction - that's a self-hoster from the POV of this
+  // function.
+  isProductionConfig() {
+    // Specifically, if the autoconfig URLs, or *any* of the URLs that
+    // we consider configurable are modified, we assume self-hosted.
+    if (this.getAutoConfigURL()) {
+      return false;
+    }
+    for (let pref of CONFIG_PREFS) {
+      if (Services.prefs.prefHasUserValue(pref)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
   // Read expected client configuration from the fxa auth server
   // (from `identity.fxaccounts.autoconfig.uri`/.well-known/fxa-client-configuration)
   // and replace all the relevant our prefs with the information found there.
