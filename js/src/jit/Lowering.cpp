@@ -869,7 +869,8 @@ void LIRGenerator::visitTest(MTest* test) {
       case wasm::SimdOp::I32x4AnyTrue:
       case wasm::SimdOp::I8x16AllTrue:
       case wasm::SimdOp::I16x8AllTrue:
-      case wasm::SimdOp::I32x4AllTrue: {
+      case wasm::SimdOp::I32x4AllTrue:
+      case wasm::SimdOp::I16x8Bitmask: {
 #  ifdef DEBUG
         js::wasm::ReportSimdAnalysis("simd128-to-scalar-and-branch -> folded");
 #  endif

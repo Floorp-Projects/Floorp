@@ -1695,6 +1695,7 @@ static bool CanEmitWasmReduceSimd128AtUses(MWasmReduceSimd128* ins) {
     case wasm::SimdOp::I8x16AllTrue:
     case wasm::SimdOp::I16x8AllTrue:
     case wasm::SimdOp::I32x4AllTrue:
+    case wasm::SimdOp::I16x8Bitmask:
       break;
     default:
       return false;
