@@ -58,9 +58,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
                    gfxFontStyle& aFontStyle) override;
   char16_t GetPasswordCharacterImpl() override;
 
-  nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
-  void SetIntCacheImpl(
-      const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
+  LookAndFeelCache GetCacheImpl() override;
+  void SetCacheImpl(const LookAndFeelCache& aCache) override;
 
  private:
   /**
@@ -81,13 +80,13 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   nscolor GetColorForSysColorIndex(int index);
 
-  LookAndFeelFontInfo GetLookAndFeelFontInfoInternal(const LOGFONTW& aLogFont,
-                                                     bool aUseShellDlg);
+  LookAndFeelFont GetLookAndFeelFontInternal(const LOGFONTW& aLogFont,
+                                             bool aUseShellDlg);
 
-  LookAndFeelFontInfo GetLookAndFeelFontInfo(LookAndFeel::FontID anID);
+  LookAndFeelFont GetLookAndFeelFont(LookAndFeel::FontID anID);
 
-  bool GetSysFontInfo(LookAndFeel::FontID anID, nsString& aFontName,
-                      gfxFontStyle& aFontStyle);
+  bool GetSysFont(LookAndFeel::FontID anID, nsString& aFontName,
+                  gfxFontStyle& aFontStyle);
 
   // Content process cached values that get shipped over from the browser
   // process.
@@ -126,6 +125,10 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   mozilla::RangedArray<CachedSystemFont, size_t(FontID::MINIMUM),
                        size_t(FontID::MAXIMUM) + 1 - size_t(FontID::MINIMUM)>
       mSystemFontCache;
+
+  mozilla::RangedArray<LookAndFeelFont, size_t(FontID::MINIMUM),
+                       size_t(FontID::MAXIMUM) + 1 - size_t(FontID::MINIMUM)>
+      mFontCache;
 
   nsCOMPtr<nsIWindowsRegKey> mDwmKey;
 };

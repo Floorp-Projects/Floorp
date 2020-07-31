@@ -85,7 +85,7 @@ using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
-using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
+using struct LookAndFeelCache from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
 using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
@@ -560,7 +560,7 @@ child:
      * Tell the child that the system theme has changed, and that a repaint
      * is necessary.
      */
-    async ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
+    async ThemeChanged(LookAndFeelCache lookAndFeelCache);
 
     async UpdateSystemParameters(SystemParameterKVPair[] aUpdates);
 
@@ -666,7 +666,7 @@ child:
 
     async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
                                     StructuredCloneData initialData,
-                                    LookAndFeelInt[] lookAndFeelIntCache,
+                                    LookAndFeelCache lookAndFeelCache,
                                     /* used on MacOSX/Linux/Android only: */
                                     SystemFontListEntry[] systemFontList,
                                     SharedMemoryHandle? sharedUASheetHandle,

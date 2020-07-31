@@ -455,10 +455,10 @@ void nsXPLookAndFeel::Init() {
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
 
-    LookAndFeel::SetIntCache(cc->LookAndFeelCache());
+    LookAndFeel::SetCache(cc->BorrowLookAndFeelCache());
     // This is only ever used once during initialization, and can be cleared
     // now.
-    cc->LookAndFeelCache().Clear();
+    cc->BorrowLookAndFeelCache().Clear();
   }
 }
 
@@ -999,9 +999,7 @@ void nsXPLookAndFeel::RefreshImpl() {
   }
 }
 
-nsTArray<LookAndFeelInt> nsXPLookAndFeel::GetIntCacheImpl() {
-  return nsTArray<LookAndFeelInt>();
-}
+LookAndFeelCache nsXPLookAndFeel::GetCacheImpl() { return LookAndFeelCache{}; }
 
 static bool sRecordedLookAndFeelTelemetry = false;
 
@@ -1082,14 +1080,13 @@ void LookAndFeel::Refresh() { nsLookAndFeel::GetInstance()->RefreshImpl(); }
 void LookAndFeel::NativeInit() { nsLookAndFeel::GetInstance()->NativeInit(); }
 
 // static
-nsTArray<LookAndFeelInt> LookAndFeel::GetIntCache() {
-  return nsLookAndFeel::GetInstance()->GetIntCacheImpl();
+LookAndFeelCache LookAndFeel::GetCache() {
+  return nsLookAndFeel::GetInstance()->GetCacheImpl();
 }
 
 // static
-void LookAndFeel::SetIntCache(
-    const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
-  return nsLookAndFeel::GetInstance()->SetIntCacheImpl(aLookAndFeelIntCache);
+void LookAndFeel::SetCache(const LookAndFeelCache& aCache) {
+  nsLookAndFeel::GetInstance()->SetCacheImpl(aCache);
 }
 
 }  // namespace mozilla

@@ -31,9 +31,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   char16_t GetPasswordCharacterImpl() override;
   bool GetEchoPasswordImpl() override;
 
-  nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
-  void SetIntCacheImpl(
-      const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
+  LookAndFeelCache GetCacheImpl() override;
+  void SetCacheImpl(const LookAndFeelCache& aCache) override;
 
   bool IsCSDAvailable() const { return mCSDAvailable; }
 

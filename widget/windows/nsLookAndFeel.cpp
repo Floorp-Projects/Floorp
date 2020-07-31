@@ -630,9 +630,9 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   return res;
 }
 
-LookAndFeelFontInfo nsLookAndFeel::GetLookAndFeelFontInfoInternal(
+LookAndFeelFont nsLookAndFeel::GetLookAndFeelFontInternal(
     const LOGFONTW& aLogFont, bool aUseShellDlg) {
-  LookAndFeelFontInfo result{};
+  LookAndFeelFont result{};
 
   result.haveFont = false;
 
@@ -690,9 +690,12 @@ LookAndFeelFontInfo nsLookAndFeel::GetLookAndFeelFontInfoInternal(
   return result;
 }
 
-LookAndFeelFontInfo nsLookAndFeel::GetLookAndFeelFontInfo(
-    LookAndFeel::FontID anID) {
-  LookAndFeelFontInfo result{};
+LookAndFeelFont nsLookAndFeel::GetLookAndFeelFont(LookAndFeel::FontID anID) {
+  if (XRE_IsContentProcess()) {
+    return mFontCache[size_t(anID)];
+  }
+
+  LookAndFeelFont result{};
 
   result.haveFont = false;
 
@@ -701,7 +704,7 @@ LookAndFeelFontInfo nsLookAndFeel::GetLookAndFeelFontInfo(
     LOGFONTW logFont;
     if (::SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(logFont),
                                 (PVOID)&logFont, 0)) {
-      result = GetLookAndFeelFontInfoInternal(logFont, false);
+      result = GetLookAndFeelFontInternal(logFont, false);
     }
     return result;
   }
@@ -716,17 +719,17 @@ LookAndFeelFontInfo nsLookAndFeel::GetLookAndFeelFontInfo(
   switch (anID) {
     case LookAndFeel::FontID::Menu:
     case LookAndFeel::FontID::PullDownMenu:
-      result = GetLookAndFeelFontInfoInternal(ncm.lfMenuFont, false);
+      result = GetLookAndFeelFontInternal(ncm.lfMenuFont, false);
       break;
     case LookAndFeel::FontID::Caption:
-      result = GetLookAndFeelFontInfoInternal(ncm.lfCaptionFont, false);
+      result = GetLookAndFeelFontInternal(ncm.lfCaptionFont, false);
       break;
     case LookAndFeel::FontID::SmallCaption:
-      result = GetLookAndFeelFontInfoInternal(ncm.lfSmCaptionFont, false);
+      result = GetLookAndFeelFontInternal(ncm.lfSmCaptionFont, false);
       break;
     case LookAndFeel::FontID::StatusBar:
     case LookAndFeel::FontID::Tooltips:
-      result = GetLookAndFeelFontInfoInternal(ncm.lfStatusFont, false);
+      result = GetLookAndFeelFontInternal(ncm.lfStatusFont, false);
       break;
     case LookAndFeel::FontID::Widget:
     case LookAndFeel::FontID::Dialog:
@@ -737,35 +740,34 @@ LookAndFeelFontInfo nsLookAndFeel::GetLookAndFeelFontInfo(
       // set of LookAndFeel values to map to the dialog font; we may
       // want to add or remove cases here after reviewing the visual
       // results under various Windows versions.
-      result = GetLookAndFeelFontInfoInternal(ncm.lfMessageFont, true);
+      result = GetLookAndFeelFontInternal(ncm.lfMessageFont, true);
       break;
     default:
-      result = GetLookAndFeelFontInfoInternal(ncm.lfMessageFont, false);
+      result = GetLookAndFeelFontInternal(ncm.lfMessageFont, false);
       break;
   }
 
   return result;
 }
 
-bool nsLookAndFeel::GetSysFontInfo(LookAndFeel::FontID anID,
-                                   nsString& aFontName,
-                                   gfxFontStyle& aFontStyle) {
-  LookAndFeelFontInfo fontInfo = GetLookAndFeelFontInfo(anID);
+bool nsLookAndFeel::GetSysFont(LookAndFeel::FontID anID, nsString& aFontName,
+                               gfxFontStyle& aFontStyle) {
+  LookAndFeelFont font = GetLookAndFeelFont(anID);
 
-  if (!fontInfo.haveFont) {
+  if (!font.haveFont) {
     return false;
   }
 
-  aFontName = std::move(fontInfo.fontName);
+  aFontName = std::move(font.fontName);
 
-  aFontStyle.size = fontInfo.pixelHeight;
+  aFontStyle.size = font.pixelHeight;
 
   // FIXME: What about oblique?
   aFontStyle.style =
-      fontInfo.italic ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
+      font.italic ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
 
   // FIXME: Other weights?
-  aFontStyle.weight = fontInfo.bold ? FontWeight::Bold() : FontWeight::Normal();
+  aFontStyle.weight = font.bold ? FontWeight::Bold() : FontWeight::Normal();
 
   // FIXME: Set aFontStyle->stretch correctly!
   aFontStyle.stretch = FontStretch::Normal();
@@ -787,7 +789,7 @@ bool nsLookAndFeel::GetFontImpl(FontID anID, nsString& aFontName,
       aFontStyle = cacheSlot.mFontStyle;
     }
   } else {
-    status = GetSysFontInfo(anID, aFontName, aFontStyle);
+    status = GetSysFont(anID, aFontName, aFontStyle);
 
     cacheSlot.mCacheValid = true;
     cacheSlot.mHaveFont = status;
@@ -805,29 +807,37 @@ char16_t nsLookAndFeel::GetPasswordCharacterImpl() {
   return UNICODE_BLACK_CIRCLE_CHAR;
 }
 
-nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
-  nsTArray<LookAndFeelInt> lookAndFeelIntCache =
-      nsXPLookAndFeel::GetIntCacheImpl();
+LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
 
   LookAndFeelInt lafInt;
   lafInt.id = IntID::UseAccessibilityTheme;
   lafInt.value = GetInt(IntID::UseAccessibilityTheme);
-  lookAndFeelIntCache.AppendElement(lafInt);
+  cache.mInts.AppendElement(lafInt);
 
   lafInt.id = IntID::WindowsDefaultTheme;
   lafInt.value = GetInt(IntID::WindowsDefaultTheme);
-  lookAndFeelIntCache.AppendElement(lafInt);
+  cache.mInts.AppendElement(lafInt);
 
   lafInt.id = IntID::WindowsThemeIdentifier;
   lafInt.value = GetInt(IntID::WindowsThemeIdentifier);
-  lookAndFeelIntCache.AppendElement(lafInt);
+  cache.mInts.AppendElement(lafInt);
 
-  return lookAndFeelIntCache;
+  for (size_t i = size_t(LookAndFeel::FontID::MINIMUM);
+       i <= size_t(LookAndFeel::FontID::MAXIMUM); ++i) {
+    cache.mFonts.AppendElement(GetLookAndFeelFont(LookAndFeel::FontID(i)));
+  }
+
+  return cache;
 }
 
-void nsLookAndFeel::SetIntCacheImpl(
-    const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
-  for (auto entry : aLookAndFeelIntCache) {
+void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_RELEASE_ASSERT(aCache.mFonts.Length() == mFontCache.length());
+
+  for (auto entry : aCache.mInts) {
     switch (entry.id) {
       case IntID::UseAccessibilityTheme:
         mUseAccessibilityTheme = entry.value;
@@ -842,6 +852,12 @@ void nsLookAndFeel::SetIntCacheImpl(
         MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
         break;
     }
+  }
+
+  size_t i = mFontCache.minIndex();
+  for (const auto& font : aCache.mFonts) {
+    mFontCache[i] = font;
+    ++i;
   }
 }
 
