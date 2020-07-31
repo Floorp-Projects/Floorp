@@ -31,6 +31,7 @@
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CompilationAndEvaluation.h"  //  for Compile
 #include "js/Conversions.h"               // for ToObject
+#include "js/friend/WindowProxy.h"        // for IsWindow, IsWindowProxy, ToWindowIfWindowProxy
 #include "js/HeapAPI.h"                   // for IsInsideNursery
 #include "js/Promise.h"                   // for PromiseState
 #include "js/Proxy.h"                     // for PropertyDescriptor

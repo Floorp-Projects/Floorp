@@ -13,6 +13,7 @@
 #include "prenv.h"
 
 #include "jsfriendapi.h"
+#include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
 
 #include "nsPluginHost.h"
 #include "nsNPAPIPlugin.h"
