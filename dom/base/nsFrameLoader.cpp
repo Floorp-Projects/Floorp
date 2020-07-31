@@ -3131,11 +3131,11 @@ class WebProgressListenerToPromise final : public nsIWebProgressListener {
                            uint32_t aStateFlags, nsresult aStatus) override {
     if (aStateFlags & nsIWebProgressListener::STATE_STOP &&
         aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
-      MOZ_RELEASE_ASSERT(mPromise,
-                         "Got duplicate load notification, "
-                         "or load after an error");
-      mPromise->MaybeResolveWithUndefined();
-      mPromise = nullptr;
+      MOZ_ASSERT(mPromise);
+      if (mPromise) {
+        mPromise->MaybeResolveWithUndefined();
+        mPromise = nullptr;
+      }
     }
     return NS_OK;
   }
