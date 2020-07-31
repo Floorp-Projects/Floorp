@@ -2437,9 +2437,7 @@ IonBuilder::InliningResult IonBuilder::inlineStringReplaceString(
   MInstruction* cte = MStringReplace::New(alloc(), strArg, patArg, replArg);
   current->add(cte);
   current->push(cte);
-  if (cte->isEffectful()) {
-    MOZ_TRY(resumeAfter(cte));
-  }
+
   return InliningStatus_Inlined;
 }
 
