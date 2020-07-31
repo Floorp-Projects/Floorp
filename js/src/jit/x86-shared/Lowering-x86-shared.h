@@ -54,6 +54,11 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared {
       MAtomicExchangeTypedArrayElement* ins, bool useI386ByteRegisters);
   void lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins,
                                          bool useI386ByteRegisters);
+
+#ifdef ENABLE_WASM_SIMD
+  bool canFoldReduceSimd128AndBranch(wasm::SimdOp op);
+  bool canEmitWasmReduceSimd128AtUses(MWasmReduceSimd128* ins);
+#endif
 };
 
 }  // namespace jit
