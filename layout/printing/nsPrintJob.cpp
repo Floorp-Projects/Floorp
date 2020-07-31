@@ -631,6 +631,13 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
                                    Document* aSourceDoc) {
   nsresult rv;
 
+  // Grab the new instance with local variable to guarantee that it won't be
+  // deleted during this method.
+  // Note: Methods we call early below rely on mPrt being set.
+  mPrt = new nsPrintData(aIsPrintPreview ? nsPrintData::eIsPrintPreview
+                                         : nsPrintData::eIsPrinting);
+  RefPtr<nsPrintData> printData = mPrt;
+
   if (aIsPrintPreview) {
     // The WebProgressListener can be QI'ed to nsIPrintingPromptService
     // then that means the progress dialog is already being shown.
@@ -640,6 +647,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     mIsCreatingPrintPreview = true;
 
+    // Our new print preview nsPrintData is stored in mPtr until we move it
+    // to mPrtPreview once we've finish creating the print preview. We must
+    // clear mPtrPreview so that code will use mPtr until that happens.
+    mPrtPreview = nullptr;
+
     // ensures docShell tree navigation in frozen
     SetIsPrintPreview(true);
   } else {
@@ -647,19 +659,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     // ensures docShell tree navigation in frozen
     SetIsPrinting(true);
-  }
-
-  // Grab the new instance with local variable to guarantee that it won't be
-  // deleted during this method.
-  mPrt = new nsPrintData(mIsCreatingPrintPreview ? nsPrintData::eIsPrintPreview
-                                                 : nsPrintData::eIsPrinting);
-  RefPtr<nsPrintData> printData = mPrt;
-
-  if (mIsCreatingPrintPreview) {
-    // Our new print preview nsPrintData is stored in mPtr until we move it
-    // to mPrtPreview once we've finish creating the print preview. We must
-    // clear mPtrPreview so that code will use mPtr until that happens.
-    mPrtPreview = nullptr;
   }
 
   if (aWebProgressListener) {
@@ -1704,7 +1703,8 @@ bool nsPrintJob::ShouldResumePrint() const {
   return !pending;
 }
 
-nsresult nsPrintJob::MaybeResumePrintAfterResourcesLoaded(bool aCleanupOnError) {
+nsresult nsPrintJob::MaybeResumePrintAfterResourcesLoaded(
+    bool aCleanupOnError) {
   if (!ShouldResumePrint()) {
     mDidLoadDataForPrinting = true;
     return NS_OK;
