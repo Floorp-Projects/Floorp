@@ -4555,7 +4555,8 @@ nsDocShell::GetSuspendMediaWhenInactive(bool* aSuspendMediaWhenInactive) {
 NS_IMETHODIMP
 nsDocShell::SetIsActive(bool aIsActive) {
   // Keep track ourselves.
-  mBrowsingContext->SetIsActive(aIsActive);
+  // Changing the activeness on a discarded browsing context has no effect.
+  Unused << mBrowsingContext->SetIsActive(aIsActive);
 
   // Tell the PresShell about it.
   if (RefPtr<PresShell> presShell = GetPresShell()) {
@@ -4637,7 +4638,8 @@ nsDocShell::GetIsAppTab(bool* aIsAppTab) {
 NS_IMETHODIMP
 nsDocShell::SetDefaultLoadFlags(uint32_t aDefaultLoadFlags) {
   if (!mWillChangeProcess) {
-    mBrowsingContext->SetDefaultLoadFlags(aDefaultLoadFlags);
+    // Intentionally ignoring handling discarded browsing contexts.
+    Unused << mBrowsingContext->SetDefaultLoadFlags(aDefaultLoadFlags);
   } else {
     // Bug 1623565: DevTools tries to clean up defaultLoadFlags on
     // shutdown. Sorry DevTools, your DocShell is in another process.
