@@ -62,10 +62,19 @@ void CopyFileToErr(const std::string &Path) {
 }
 
 void WriteToFile(const Unit &U, const std::string &Path) {
+  WriteToFile(U.data(), U.size(), Path);
+}
+
+void WriteToFile(const std::string &Data, const std::string &Path) {
+  WriteToFile(reinterpret_cast<const uint8_t *>(Data.c_str()), Data.size(),
+              Path);
+}
+
+void WriteToFile(const uint8_t *Data, size_t Size, const std::string &Path) {
   // Use raw C interface because this function may be called from a sig handler.
-  FILE *Out = fopen(Path.c_str(), "w");
+  FILE *Out = fopen(Path.c_str(), "wb");
   if (!Out) return;
-  mozilla::Unused << fwrite(U.data(), sizeof(U[0]), U.size(), Out);
+  mozilla::Unused << fwrite(Data, sizeof(Data[0]), Size, Out);
   fclose(Out);
 }
 
@@ -103,7 +112,7 @@ std::string DirPlusFile(const std::string &DirPath,
 
 void DupAndCloseStderr() {
   int OutputFd = DuplicateFile(2);
-  if (OutputFd > 0) {
+  if (OutputFd >= 0) {
     FILE *NewOutputFile = OpenFile(OutputFd, "w");
     if (NewOutputFile) {
       OutputFile = NewOutputFile;
@@ -143,9 +152,9 @@ void RmDirRecursive(const std::string &Dir) {
       [](const std::string &Path) { RemoveFile(Path); });
 }
 
-std::string TempPath(const char *Extension) {
-  return DirPlusFile(TmpDir(),
-                     "libFuzzerTemp." + std::to_string(GetPid()) + Extension);
+std::string TempPath(const char *Prefix, const char *Extension) {
+  return DirPlusFile(TmpDir(), std::string("libFuzzerTemp.") + Prefix +
+                                   std::to_string(GetPid()) + Extension);
 }
 
 }  // namespace fuzzer

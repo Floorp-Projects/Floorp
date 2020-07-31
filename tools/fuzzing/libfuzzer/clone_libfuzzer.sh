@@ -1,17 +1,18 @@
 #!/bin/bash -e
 
 # Optionally get revision from cmd line
-[ $1 ] && REVISION=$1 || REVISION=c815210013f27cfac07d6b53b47e8ac53e86afa3
+[ $1 ] && REVISION=$1 || REVISION=76d07503f0c69f6632e6d8d4736e2a4cb4055a92
 
 mkdir tmp
-git clone --single-branch --no-checkout --shallow-since "2019-03-01" https://github.com/llvm/llvm-project tmp
+git clone --single-branch --no-checkout --shallow-since "2020-07-01" https://github.com/llvm/llvm-project tmp
 
 (cd tmp && git reset --hard $REVISION)
 
 # libFuzzer source files
-CPPS=($(ls -rv tmp/compiler-rt/lib/fuzzer/*.cpp))
+CPPS=($(ls tmp/compiler-rt/lib/fuzzer/*.cpp | sort -r))
 CPPS=(${CPPS[@]##*/})
 CPPS=(${CPPS[@]##FuzzerMain*}) # ignored
+CPPS=(${CPPS[@]##FuzzerInterceptors*}) # ignored
 
 # Update SOURCES entries
 sed -e "/^SOURCES/,/^]/ {/'/d}" -i moz.build
