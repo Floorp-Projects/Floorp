@@ -69,6 +69,7 @@ pub enum ProfileStyle {
     Full,
     Compact,
     Smart,
+    NoDraw,
 }
 
 /// Defines the interface for hooking up an external profiler to WR.
@@ -951,10 +952,12 @@ impl RendererProfileTimers {
     }
 }
 
+#[derive(Debug)]
 struct GraphStats {
     min_value: f32,
     mean_value: f32,
     max_value: f32,
+    sum: f32,
 }
 
 struct ProfileGraph {
@@ -994,16 +997,17 @@ impl ProfileGraph {
             min_value: f32::MAX,
             mean_value: 0.0,
             max_value: -f32::MAX,
+            sum: 0.0,
         };
 
         for value in &self.values {
             stats.min_value = stats.min_value.min(*value);
-            stats.mean_value += *value;
             stats.max_value = stats.max_value.max(*value);
+            stats.sum += *value;
         }
 
         if !self.values.is_empty() {
-            stats.mean_value /= self.values.len() as f32;
+            stats.mean_value = stats.sum / self.values.len() as f32;
         }
 
         stats
@@ -1850,7 +1854,22 @@ impl Profiler {
                     debug_renderer,
                 );
             }
+            ProfileStyle::NoDraw => {
+                // Don't draw anything. We just care about collecting samples.
+            }
         }
+    }
+
+    #[cfg(feature = "capture")]
+    pub fn dump_stats(&self, sink: &mut dyn std::io::Write) -> std::io::Result<()> {
+        writeln!(sink, "Backend (ms) {:?}", self.backend_graph.stats())?;
+        writeln!(sink, "Renderer (ms) {:?}", self.renderer_graph.stats())?;
+        writeln!(sink, "GPU (ms) {:?}", self.gpu_graph.stats())?;
+        writeln!(sink, "IPC (ms) {:?}", self.ipc_graph.stats())?;
+        writeln!(sink, "DisplayList builder (ms) {:?}", self.display_list_build_graph.stats())?;
+        writeln!(sink, "Scene build (ms) {:?}", self.scene_build_graph.stats())?;
+        writeln!(sink, "Rasterized blob (px) {:?}", self.blob_raster_graph.stats())?;
+        Ok(())
     }
 }
 
