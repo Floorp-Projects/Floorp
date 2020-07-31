@@ -495,6 +495,17 @@ bool WarpCacheIRTranspiler::emitGuardIsUndefined(ValOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardTagNotEqual(ValueTagOperandId lhsId,
+                                                 ValueTagOperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MGuardTagNotEqual::New(alloc(), lhs, rhs);
+  add(ins);
+
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
                                                   Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
