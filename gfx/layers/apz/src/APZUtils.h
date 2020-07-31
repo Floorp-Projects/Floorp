@@ -111,7 +111,8 @@ inline AsyncTransformMatrix CompleteAsyncTransform(
 struct TargetConfirmationFlags final {
   explicit TargetConfirmationFlags(bool aTargetConfirmed)
       : mTargetConfirmed(aTargetConfirmed),
-        mRequiresTargetConfirmation(false) {}
+        mRequiresTargetConfirmation(false),
+        mHitScrollThumb(false) {}
 
   explicit TargetConfirmationFlags(
       const gfx::CompositorHitTestInfo& aHitTestInfo)
@@ -119,10 +120,13 @@ struct TargetConfirmationFlags final {
             (aHitTestInfo != gfx::CompositorHitTestInvisibleToHit) &&
             (aHitTestInfo & gfx::CompositorHitTestDispatchToContent).isEmpty()),
         mRequiresTargetConfirmation(aHitTestInfo.contains(
-            gfx::CompositorHitTestFlags::eRequiresTargetConfirmation)) {}
+            gfx::CompositorHitTestFlags::eRequiresTargetConfirmation)),
+        mHitScrollThumb(aHitTestInfo.contains(
+            gfx::CompositorHitTestFlags::eScrollbarThumb)) {}
 
   bool mTargetConfirmed : 1;
   bool mRequiresTargetConfirmation : 1;
+  bool mHitScrollThumb : 1;
 };
 
 enum class AsyncTransformComponent { eLayout, eVisual };
