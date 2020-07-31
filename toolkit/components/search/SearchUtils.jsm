@@ -166,6 +166,13 @@ var SearchUtils = {
   // A tag to denote when we are using the "default_locale" of an engine.
   DEFAULT_TAG: "default",
 
+  MOZ_PARAM: {
+    DATE: "moz:date",
+    DIST_ID: "moz:distributionID",
+    LOCALE: "moz:locale",
+    OFFICIAL: "moz:official",
+  },
+
   LoadListener,
 
   /**
