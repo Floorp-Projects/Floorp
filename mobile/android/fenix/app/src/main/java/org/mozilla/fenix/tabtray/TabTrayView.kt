@@ -41,6 +41,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.MultiselectModeChange
 
 /**
  * View that contains and configures the BrowserAwesomeBar
@@ -72,7 +73,7 @@ class TabTrayView(
 
     private val bottomSheetCallback: BottomSheetBehavior.BottomSheetCallback
     private var tabsTouchHelper: TabsTouchHelper
-    private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor)
+    private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor, isPrivate)
 
     private var hasLoaded = false
 
@@ -272,7 +273,7 @@ class TabTrayView(
         val oldMode = mode
 
         if (oldMode::class != state.mode::class) {
-            updateTabsForModeChanged()
+            updateTabsForMultiselectModeChanged(state.mode is TabTrayDialogFragmentState.Mode.MultiSelect)
             if (view.context.settings().accessibilityServicesEnabled) {
                 view.announceForAccessibility(
                     if (state.mode == TabTrayDialogFragmentState.Mode.Normal) view.context.getString(
@@ -419,13 +420,17 @@ class TabTrayView(
         view.tab_layout.isVisible = !multiselect
     }
 
-    private fun updateTabsForModeChanged() {
+    private fun updateTabsForMultiselectModeChanged(inMultiselectMode: Boolean) {
         view.tabsTray.apply {
             val tabs = view.context.components.core.store.state.getNormalOrPrivateTabs(
                 isPrivateModeSelected
             )
 
-            collectionsButtonAdapter.notifyItemChanged(0)
+            collectionsButtonAdapter.notifyItemChanged(
+                0,
+                if (inMultiselectMode) MultiselectModeChange.MULTISELECT else MultiselectModeChange.NORMAL
+            )
+
             tabsAdapter.notifyItemRangeChanged(0, tabs.size, true)
         }
     }

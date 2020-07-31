@@ -20,7 +20,8 @@ import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.ViewHolder
  * multiple [RecyclerView.Adapter] in one [RecyclerView].
  */
 class SaveToCollectionsButtonAdapter(
-    private val interactor: TabTrayInteractor
+    private val interactor: TabTrayInteractor,
+    private val isPrivate: Boolean = false
 ) : ListAdapter<Item, ViewHolder>(DiffCallback) {
 
     init {
@@ -38,14 +39,19 @@ class SaveToCollectionsButtonAdapter(
             return
         }
 
-        (payloads[0] as TabTrayView.TabChange).let {
-            holder.itemView.isVisible = it == TabTrayView.TabChange.NORMAL
+        when (val change = payloads[0]) {
+            is TabTrayView.TabChange -> {
+                holder.itemView.isVisible = change == TabTrayView.TabChange.NORMAL
+            }
+            is MultiselectModeChange -> {
+                holder.itemView.isVisible = change == MultiselectModeChange.NORMAL
+            }
         }
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.itemView.isVisible =
-            interactor.onModeRequested() is TabTrayDialogFragmentState.Mode.Normal
+        holder.itemView.isVisible = !isPrivate &&
+                interactor.onModeRequested() is TabTrayDialogFragmentState.Mode.Normal
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -56,6 +62,10 @@ class SaveToCollectionsButtonAdapter(
         override fun areItemsTheSame(oldItem: Item, newItem: Item) = true
 
         override fun areContentsTheSame(oldItem: Item, newItem: Item) = true
+    }
+
+    enum class MultiselectModeChange {
+        MULTISELECT, NORMAL
     }
 
     /**
