@@ -549,7 +549,8 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
           kNameSpaceID_None, nsGkAtoms::disableglobalhistory);
       txn.SetUseGlobalHistory(useGlobalHistory);
     }
-    txn.Commit(this);
+
+    MOZ_ALWAYS_SUCCEEDS(txn.Commit(this));
   }
 
   mEmbedderElement = aEmbedder;
@@ -1276,8 +1277,8 @@ void BrowsingContext::SetUsePrivateBrowsing(bool aUsePrivateBrowsing,
 }
 
 void BrowsingContext::SetUseTrackingProtectionWebIDL(
-    bool aUseTrackingProtection) {
-  SetForceEnableTrackingProtection(aUseTrackingProtection);
+    bool aUseTrackingProtection, ErrorResult& aRv) {
+  SetForceEnableTrackingProtection(aUseTrackingProtection, aRv);
 }
 
 void BrowsingContext::GetOriginAttributes(JSContext* aCx,
@@ -1427,8 +1428,7 @@ NS_IMETHODIMP BrowsingContext::GetUseTrackingProtection(
 
 NS_IMETHODIMP BrowsingContext::SetUseTrackingProtection(
     bool aUseTrackingProtection) {
-  SetForceEnableTrackingProtection(aUseTrackingProtection);
-  return NS_OK;
+  return SetForceEnableTrackingProtection(aUseTrackingProtection);
 }
 
 NS_IMETHODIMP BrowsingContext::GetScriptableOriginAttributes(
@@ -1712,7 +1712,8 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
   MOZ_TRY(CheckSandboxFlags(aLoadState));
 
   if (XRE_IsParentProcess()) {
-    SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier())));
 
     if (ContentParent* cp = Canonical()->GetContentParent()) {
       Unused << cp->SendInternalLoad(this, aLoadState, isActive);
@@ -1725,7 +1726,8 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
       return NS_ERROR_DOM_PROP_ACCESS_DENIED;
     }
 
-    SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier())));
 
     nsCOMPtr<nsPIDOMWindowOuter> win(sourceBC->GetDOMWindow());
     if (WindowGlobalChild* wgc =
@@ -1777,7 +1779,7 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   // |window.closed| value as early as possible, so we set this before we
   // actually send the DOMWindowClose event, which happens in the process where
   // the document for this browsing context is loaded.
-  SetClosed(true);
+  MOZ_ALWAYS_SUCCEEDS(SetClosed(true));
 
   if (ContentChild* cc = ContentChild::GetSingleton()) {
     cc->SendWindowClose(this, aCallerType == CallerType::System);
@@ -2025,12 +2027,15 @@ void BrowsingContext::StartDelayedAutoplayMediaComponents() {
   mDocShell->StartDelayedAutoplayMediaComponents();
 }
 
-void BrowsingContext::ResetGVAutoplayRequestStatus() {
+nsresult BrowsingContext::ResetGVAutoplayRequestStatus() {
   MOZ_ASSERT(IsTop(),
              "Should only set GVAudibleAutoplayRequestStatus in the top-level "
              "browsing context");
-  SetGVAudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
-  SetGVInaudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
+
+  Transaction txn;
+  txn.SetGVAudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
+  txn.SetGVInaudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
+  return txn.Commit(this);
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_GVAudibleAutoplayRequestStatus>) {
@@ -2101,16 +2106,22 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
   });
 }
 
-void BrowsingContext::SetAllowContentRetargeting(
+nsresult BrowsingContext::SetAllowContentRetargeting(
     bool aAllowContentRetargeting) {
   Transaction txn;
   txn.SetAllowContentRetargeting(aAllowContentRetargeting);
   txn.SetAllowContentRetargetingOnChildren(aAllowContentRetargeting);
-  txn.Commit(this);
+
+  return txn.Commit(this);
 }
 
-void BrowsingContext::SetCustomUserAgent(const nsAString& aUserAgent) {
-  Top()->SetUserAgentOverride(aUserAgent);
+void BrowsingContext::SetCustomUserAgent(const nsAString& aUserAgent,
+                                         ErrorResult& aRv) {
+  Top()->SetUserAgentOverride(aUserAgent, aRv);
+}
+
+nsresult BrowsingContext::SetCustomUserAgent(const nsAString& aUserAgent) {
+  return Top()->SetUserAgentOverride(aUserAgent);
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
@@ -2124,8 +2135,9 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
   });
 }
 
-void BrowsingContext::SetCustomPlatform(const nsAString& aPlatform) {
-  Top()->SetPlatformOverride(aPlatform);
+void BrowsingContext::SetCustomPlatform(const nsAString& aPlatform,
+                                        ErrorResult& aRv) {
+  Top()->SetPlatformOverride(aPlatform, aRv);
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_PlatformOverride>) {
@@ -2206,7 +2218,7 @@ void BrowsingContext::SetWatchedByDevTools(bool aWatchedByDevTools,
         "watchedByDevTools can only be set on top BrowsingContext");
     return;
   }
-  SetWatchedByDevToolsInternal(aWatchedByDevTools);
+  SetWatchedByDevToolsInternal(aWatchedByDevTools, aRv);
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_DefaultLoadFlags>,
@@ -2496,7 +2508,7 @@ void BrowsingContext::InitSessionHistory() {
   MOZ_ASSERT(EverAttached());
 
   if (!GetHasSessionHistory()) {
-    SetHasSessionHistory(true);
+    MOZ_ALWAYS_SUCCEEDS(SetHasSessionHistory(true));
   }
 }
 

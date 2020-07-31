@@ -123,7 +123,7 @@ nsresult HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   if (aNamespaceID == kNameSpaceID_None &&
       aName == nsGkAtoms::allowfullscreen && mFrameLoader) {
     if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
-      bc->SetFullscreenAllowedByOwner(AllowFullscreen());
+      MOZ_ALWAYS_SUCCEEDS(bc->SetFullscreenAllowedByOwner(AllowFullscreen()));
     }
   }
 

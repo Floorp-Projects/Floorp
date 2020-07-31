@@ -293,9 +293,9 @@ void nsGenericHTMLFrameElement::AfterMaybeChangeAttr(
           mFrameLoader ? mFrameLoader->GetExtantBrowsingContext() : nullptr;
       if (bc) {
         if (aValue) {
-          bc->SetName(aValue->String());
+          MOZ_ALWAYS_SUCCEEDS(bc->SetName(aValue->String()));
         } else {
-          bc->SetName(EmptyString());
+          MOZ_ALWAYS_SUCCEEDS(bc->SetName(EmptyString()));
         }
       }
     }

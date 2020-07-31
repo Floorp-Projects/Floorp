@@ -2410,7 +2410,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   // Update the current window for our BrowsingContext.
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  bc->SetCurrentInnerWindowId(mInnerWindow->WindowID());
+  MOZ_ALWAYS_SUCCEEDS(bc->SetCurrentInnerWindowId(mInnerWindow->WindowID()));
 
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.
@@ -3032,13 +3032,6 @@ void nsPIDOMWindowOuter::MaybeNotifyMediaResumedFromBlock(
 bool nsPIDOMWindowOuter::GetAudioMuted() const {
   BrowsingContext* bc = GetBrowsingContext();
   return bc ? bc->Top()->GetMuted() : false;
-}
-
-void nsPIDOMWindowOuter::SetAudioMuted(bool aMuted) {
-  BrowsingContext* bc = GetBrowsingContext();
-  if (bc) {
-    bc->Top()->SetMuted(aMuted);
-  }
 }
 
 float nsPIDOMWindowOuter::GetAudioVolume() const { return mAudioVolume; }
@@ -6139,7 +6132,7 @@ void nsGlobalWindowOuter::FinalClose() {
   mIsClosed = true;
 
   if (!mBrowsingContext->IsDiscarded()) {
-    mBrowsingContext->SetClosed(true);
+    MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetClosed(true));
   }
 
   // If we get here from CloseOuter then it means that the parent process is
