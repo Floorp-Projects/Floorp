@@ -66,6 +66,11 @@ function do_test() {
       "repeat-x", "repeat-y", "space", "round", "fixed", "scroll", "local", "center", "top", "bottom", "left", "right",
       "border-box", "padding-box", "content-box", "text", "contain",
       "cover", "none", "-moz-element", "-moz-image-rect", "url", ...allGradients ];
+
+  if(SpecialPowers.getBoolPref("layout.css.cross-fade.enabled")) {
+    expected.push("cross-fade");
+  }
+
   ok(testValues(values, expected), "property background values.");
 
   var prop = "border";
@@ -142,6 +147,11 @@ function do_test() {
   var expected = [ "auto", "inherit", "revert", "initial", "unset", "repeat", "stretch",
                    "-moz-element", "-moz-image-rect", "url", ...allGradients,
                    "fill", "none", "round", "space" ];
+
+  if(SpecialPowers.getBoolPref("layout.css.cross-fade.enabled")) {
+    expected.push("cross-fade");
+  }
+
   ok(testValues(values, expected), "property border-image's values.");
 
   var prop = "background-size"
