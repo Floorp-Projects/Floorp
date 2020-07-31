@@ -4038,7 +4038,7 @@ bool AsyncPanZoomController::UpdateAnimation(
   // However we only want to do one animation step per composition so we need
   // to deduplicate these calls first.
   if (mLastSampleTime == aSampleTime) {
-    return (mAnimation != nullptr);
+    return !!mAnimation;
   }
 
   // We're at a new timestamp, so advance to the next sample in the deque, if
@@ -4883,7 +4883,6 @@ FrameMetrics& AsyncPanZoomController::Metrics() {
 const FrameMetrics& AsyncPanZoomController::Metrics() const {
   mRecursiveMutex.AssertCurrentThreadIn();
   return mScrollMetadata.GetMetrics();
-  ;
 }
 
 bool AsyncPanZoomController::UpdateRootFrameMetricsIfChanged(
