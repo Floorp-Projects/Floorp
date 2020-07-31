@@ -7,7 +7,7 @@ from mozperftest.test.browsertime.runner import NodeException
 
 common_options = [
     ("firefox.disableBrowsertimeExtension", "true"),
-    # The webdriver session is not created in the HomeActivity test so reduce the timeout
+    # The webdriver session is not created in the MAIN test so reduce the timeout
     # Bug 1640638
     ("timeouts.browserStart", "20000"),
     ("browserRestartTries", "1"),
