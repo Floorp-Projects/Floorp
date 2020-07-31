@@ -280,6 +280,10 @@ int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_
     int r,_status;
     int needs_pairing = 0;
 
+    if (stream->obsolete) {
+      return 0;
+    }
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): peer (%s) parsing trickle ICE candidate %s",pctx->ctx->label,pctx->label,candidate);
     r = nr_ice_peer_ctx_find_pstream(pctx, stream, &pstream);
     if (r)
