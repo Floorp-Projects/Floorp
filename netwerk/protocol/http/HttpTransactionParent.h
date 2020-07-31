@@ -66,7 +66,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       const bool& aHasStickyConn,
-      Maybe<TransactionObserverResult>&& aTransactionObserverResult);
+      Maybe<TransactionObserverResult>&& aTransactionObserverResult,
+      const TimeStamp& aLastActiveTabOptHit);
   mozilla::ipc::IPCResult RecvOnInitFailed(const nsresult& aStatus);
 
   mozilla::ipc::IPCResult RecvOnH2PushStream(const uint32_t& aPushedStreamId,
