@@ -22,6 +22,7 @@
 #endif
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/Parser.h"
+#include "js/friend/UsageStatistics.h"  // JS_TELEMETRY_*
 #include "js/SourceText.h"
 #include "vm/FunctionFlags.h"          // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind

@@ -567,16 +567,6 @@ JS_FRIEND_API JSLinearString* js::StringToLinearStringSlow(JSContext* cx,
   return str->ensureLinear(cx);
 }
 
-JS_FRIEND_API void JS_SetAccumulateTelemetryCallback(
-    JSContext* cx, JSAccumulateTelemetryDataCallback callback) {
-  cx->runtime()->setTelemetryCallback(cx->runtime(), callback);
-}
-
-JS_FRIEND_API void JS_SetSetUseCounterCallback(
-    JSContext* cx, JSSetUseCounterCallback callback) {
-  cx->runtime()->setUseCounterCallback(cx->runtime(), callback);
-}
-
 static bool CopyProxyObject(JSContext* cx, Handle<ProxyObject*> from,
                             Handle<ProxyObject*> to) {
   MOZ_ASSERT(from->getClass() == to->getClass());
