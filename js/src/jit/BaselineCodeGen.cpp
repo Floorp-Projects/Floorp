@@ -24,7 +24,6 @@
 #include "js/UniquePtr.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
-#include "vm/BuiltinObjectKind.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/Interpreter.h"
@@ -6399,25 +6398,22 @@ bool BaselineCodeGen<Handler>::emit_InitHomeObject() {
 }
 
 template <>
-bool BaselineCompilerCodeGen::emit_BuiltinObject() {
-  // Built-in objects are constants for a given global.
-  auto kind = BuiltinObjectKind(GET_UINT8(handler.pc()));
-  JSObject* builtin = BuiltinObjectOperation(cx, kind);
-  if (!builtin) {
+bool BaselineCompilerCodeGen::emit_FunctionProto() {
+  // The function prototype is a constant for a given global.
+  JSObject* funProto = FunctionProtoOperation(cx);
+  if (!funProto) {
     return false;
   }
-  frame.push(ObjectValue(*builtin));
+  frame.push(ObjectValue(*funProto));
   return true;
 }
 
 template <>
-bool BaselineInterpreterCodeGen::emit_BuiltinObject() {
+bool BaselineInterpreterCodeGen::emit_FunctionProto() {
   prepareVMCall();
 
-  pushUint8BytecodeOperandArg(R0.scratchReg());
-
-  using Fn = JSObject* (*)(JSContext*, BuiltinObjectKind);
-  if (!callVM<Fn, BuiltinObjectOperation>()) {
+  using Fn = JSObject* (*)(JSContext*);
+  if (!callVM<Fn, FunctionProtoOperation>()) {
     return false;
   }
 

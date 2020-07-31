@@ -9,7 +9,6 @@
 
 #include "frontend/NameAnalysisTypes.h"
 #include "js/TypeDecls.h"
-#include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/CheckIsObjectKind.h"   // CheckIsObjectKind
 #include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
@@ -278,11 +277,6 @@ class BytecodeLocation {
   CheckIsObjectKind getCheckIsObjectKind() const {
     MOZ_ASSERT(is(JSOp::CheckIsObj));
     return CheckIsObjectKind(GET_UINT8(rawBytecode_));
-  }
-
-  BuiltinObjectKind getBuiltinObjectKind() const {
-    MOZ_ASSERT(is(JSOp::BuiltinObject));
-    return BuiltinObjectKind(GET_UINT8(rawBytecode_));
   }
 
   uint32_t getNewArrayLength() const {

@@ -32,7 +32,6 @@
 #include "js/HeapAPI.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/ArrayObject.h"
-#include "vm/BuiltinObjectKind.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/RegExpObject.h"
@@ -1257,15 +1256,21 @@ class MBinaryInstruction : public MAryInstruction<2> {
 
     const MDefinition* left = getOperand(0);
     const MDefinition* right = getOperand(1);
+    const MDefinition* tmp;
+
     if (isCommutative() && left->id() > right->id()) {
-      std::swap(left, right);
+      tmp = right;
+      right = left;
+      left = tmp;
     }
 
     const MBinaryInstruction* bi = static_cast<const MBinaryInstruction*>(ins);
     const MDefinition* insLeft = bi->getOperand(0);
     const MDefinition* insRight = bi->getOperand(1);
-    if (bi->isCommutative() && insLeft->id() > insRight->id()) {
-      std::swap(insLeft, insRight);
+    if (isCommutative() && insLeft->id() > insRight->id()) {
+      tmp = insRight;
+      insRight = insLeft;
+      insLeft = tmp;
     }
 
     return left == insLeft && right == insRight;
@@ -3265,13 +3270,10 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
 
   ALLOW_CLONE(MCompare)
 
- private:
-  bool isTypeOfCompare();
+ protected:
   MOZ_MUST_USE bool tryFoldEqualOperands(bool* result);
-  MOZ_MUST_USE bool tryFoldConstantTypeOf(bool* result);
-  MOZ_MUST_USE MDefinition* tryFoldTypeOf(TempAllocator& alloc);
+  MOZ_MUST_USE bool tryFoldTypeOf(bool* result);
 
- public:
   bool congruentTo(const MDefinition* ins) const override {
     if (!binaryCongruentTo(ins)) {
       return false;
@@ -5918,10 +5920,8 @@ class MStringSplit : public MBinaryInstruction,
                MDefinition* string, MDefinition* sep, ObjectGroup* group)
       : MBinaryInstruction(classOpcode, string, sep), group_(group) {
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      TemporaryTypeSet* types = MakeSingletonTypeSet(alloc, constraints, group);
-      setResultTypeSet(types);
-    }
+    TemporaryTypeSet* types = MakeSingletonTypeSet(alloc, constraints, group);
+    setResultTypeSet(types);
   }
 
  public:
@@ -9464,29 +9464,6 @@ class MGuardNoDenseElements : public MUnaryInstruction,
   }
 };
 
-class MGuardTagNotEqual
-    : public MBinaryInstruction,
-      public MixPolicy<UnboxedInt32Policy<0>, UnboxedInt32Policy<1>>::Data {
-  MGuardTagNotEqual(MDefinition* left, MDefinition* right)
-      : MBinaryInstruction(classOpcode, left, right) {
-    setGuard();
-    setMovable();
-    setCommutative();
-  }
-
- public:
-  INSTRUCTION_HEADER(GuardTagNotEqual)
-  TRIVIAL_NEW_WRAPPERS
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return binaryCongruentTo(ins);
-  }
-};
-
 // Load from vp[slot] (slots that are not inline in an object).
 class MLoadDynamicSlot : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t slot_;
@@ -11561,19 +11538,14 @@ class MObjectStaticProto : public MUnaryInstruction,
   }
 };
 
-class MBuiltinObject : public MNullaryInstruction {
-  BuiltinObjectKind builtinObjectKind_;
-
-  explicit MBuiltinObject(BuiltinObjectKind kind)
-      : MNullaryInstruction(classOpcode), builtinObjectKind_(kind) {
+class MFunctionProto : public MNullaryInstruction {
+  explicit MFunctionProto() : MNullaryInstruction(classOpcode) {
     setResultType(MIRType::Object);
   }
 
  public:
-  INSTRUCTION_HEADER(BuiltinObject)
+  INSTRUCTION_HEADER(FunctionProto)
   TRIVIAL_NEW_WRAPPERS
-
-  BuiltinObjectKind builtinObjectKind() const { return builtinObjectKind_; }
 
   bool possiblyCalls() const override { return true; }
 };
@@ -11610,27 +11582,6 @@ class MInitHomeObject : public MBinaryInstruction,
 
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::ObjectFields);
-  }
-};
-
-class MLoadValueTag : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MLoadValueTag(MDefinition* value)
-      : MUnaryInstruction(classOpcode, value) {
-    setResultType(MIRType::Int32);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(LoadValueTag)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, value))
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
   }
 };
 
