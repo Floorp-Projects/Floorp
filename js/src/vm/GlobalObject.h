@@ -200,13 +200,6 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(key).toObject();
   }
 
-  JSObject* maybeGetConstructor(JSProtoKey protoKey) const {
-    MOZ_ASSERT(JSProto_Null < protoKey);
-    MOZ_ASSERT(protoKey < JSProto_LIMIT);
-    const Value& v = getConstructor(protoKey);
-    return v.isObject() ? &v.toObject() : nullptr;
-  }
-
   JSObject* maybeGetPrototype(JSProtoKey protoKey) const {
     MOZ_ASSERT(JSProto_Null < protoKey);
     MOZ_ASSERT(protoKey < JSProto_LIMIT);

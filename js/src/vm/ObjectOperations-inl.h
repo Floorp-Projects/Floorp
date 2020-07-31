@@ -53,7 +53,7 @@ inline bool GetPrototype(JSContext* cx, JS::Handle<JSObject*> obj,
     return Proxy::getPrototype(cx, obj, protop);
   }
 
-  protop.set(obj->staticPrototype());
+  protop.set(obj->taggedProto().toObjectOrNull());
   return true;
 }
 

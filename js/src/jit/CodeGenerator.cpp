@@ -55,7 +55,6 @@
 #include "vm/ArrayBufferViewObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
-#include "vm/BuiltinObjectKind.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/FunctionFlags.h"       // js::FunctionFlags
 #include "vm/MatchPairs.h"
@@ -14384,11 +14383,9 @@ void CodeGenerator::visitObjectStaticProto(LObjectStaticProto* lir) {
 #endif
 }
 
-void CodeGenerator::visitBuiltinObject(LBuiltinObject* lir) {
-  pushArg(Imm32(static_cast<int32_t>(lir->mir()->builtinObjectKind())));
-
-  using Fn = JSObject* (*)(JSContext*, BuiltinObjectKind);
-  callVM<Fn, js::BuiltinObjectOperation>(lir);
+void CodeGenerator::visitFunctionProto(LFunctionProto* lir) {
+  using Fn = JSObject* (*)(JSContext*);
+  callVM<Fn, js::FunctionProtoOperation>(lir);
 }
 
 void CodeGenerator::visitSuperFunction(LSuperFunction* lir) {
@@ -14439,23 +14436,6 @@ void CodeGenerator::visitInitHomeObject(LInitHomeObject* lir) {
 
   emitPreBarrier(addr);
   masm.storeValue(homeObject, addr);
-}
-
-void CodeGenerator::visitLoadValueTag(LLoadValueTag* lir) {
-  ValueOperand value = ToValue(lir, LLoadValueTag::Value);
-  Register output = ToRegister(lir->output());
-
-  Register tag = masm.extractTag(value, output);
-  if (tag != output) {
-    masm.mov(tag, output);
-  }
-}
-
-void CodeGenerator::visitGuardTagNotEqual(LGuardTagNotEqual* lir) {
-  Register lhs = ToRegister(lir->lhs());
-  Register rhs = ToRegister(lir->rhs());
-
-  bailoutCmp32(Assembler::Equal, lhs, rhs, lir->snapshot());
 }
 
 template <size_t NumDefs>
