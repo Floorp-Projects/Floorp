@@ -730,14 +730,13 @@ static bool intrinsic_ObjectHasPrototype(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
-  RootedObject obj(cx, &args[0].toObject());
-  RootedObject proto(cx, &args[1].toObject());
 
-  RootedObject actualProto(cx);
-  if (!GetPrototype(cx, obj, &actualProto)) {
-    return false;
-  }
+  // Self-hosted code calls this intrinsic with builtin prototypes. These are
+  // always native objects.
+  auto* obj = &args[0].toObject().as<NativeObject>();
+  auto* proto = &args[1].toObject().as<NativeObject>();
 
+  JSObject* actualProto = obj->staticPrototype();
   args.rval().setBoolean(actualProto == proto);
   return true;
 }
