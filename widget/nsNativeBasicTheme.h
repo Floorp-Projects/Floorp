@@ -7,10 +7,14 @@
 #ifndef nsNativeBasicTheme_h
 #define nsNativeBasicTheme_h
 
+#include "Units.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "mozilla/dom/HTMLProgressElement.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Types.h"
 #include "nsColorControlFrame.h"
 #include "nsDateTimeControlFrame.h"
 #include "nsDeviceContext.h"
@@ -20,65 +24,83 @@
 #include "nsProgressFrame.h"
 #include "nsRangeFrame.h"
 
-using namespace mozilla;
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace widget {
 
-static const sRGBColor sColorWhite(sRGBColor::OpaqueWhite());
-static const sRGBColor sColorWhiteAlpha50(sRGBColor::White(0.5f));
-static const sRGBColor sColorWhiteAlpha80(sRGBColor::White(0.8f));
-static const sRGBColor sColorBlack(sRGBColor::OpaqueBlack());
+static const gfx::sRGBColor sColorWhite(gfx::sRGBColor::OpaqueWhite());
+static const gfx::sRGBColor sColorWhiteAlpha50(gfx::sRGBColor::White(0.5f));
+static const gfx::sRGBColor sColorWhiteAlpha80(gfx::sRGBColor::White(0.8f));
+static const gfx::sRGBColor sColorBlack(gfx::sRGBColor::OpaqueBlack());
 
-static const sRGBColor sColorGrey10(sRGBColor::UnusualFromARGB(0xffe9e9ed));
-static const sRGBColor sColorGrey10Alpha50(
-    sRGBColor::UnusualFromARGB(0x7fe9e9ed));
-static const sRGBColor sColorGrey20(sRGBColor::UnusualFromARGB(0xffd0d0d7));
-static const sRGBColor sColorGrey30(sRGBColor::UnusualFromARGB(0xffb1b1b9));
-static const sRGBColor sColorGrey40(sRGBColor::UnusualFromARGB(0xff8f8f9d));
-static const sRGBColor sColorGrey40Alpha50(
-    sRGBColor::UnusualFromARGB(0x7f8f8f9d));
-static const sRGBColor sColorGrey50(sRGBColor::UnusualFromARGB(0xff676774));
-static const sRGBColor sColorGrey50Alpha50(
-    sRGBColor::UnusualFromARGB(0x7f676774));
-static const sRGBColor sColorGrey60(sRGBColor::UnusualFromARGB(0xff484851));
-static const sRGBColor sColorGrey60Alpha50(
-    sRGBColor::UnusualFromARGB(0x7f484851));
+static const gfx::sRGBColor sColorGrey10(
+    gfx::sRGBColor::UnusualFromARGB(0xffe9e9ed));
+static const gfx::sRGBColor sColorGrey10Alpha50(
+    gfx::sRGBColor::UnusualFromARGB(0x7fe9e9ed));
+static const gfx::sRGBColor sColorGrey20(
+    gfx::sRGBColor::UnusualFromARGB(0xffd0d0d7));
+static const gfx::sRGBColor sColorGrey30(
+    gfx::sRGBColor::UnusualFromARGB(0xffb1b1b9));
+static const gfx::sRGBColor sColorGrey40(
+    gfx::sRGBColor::UnusualFromARGB(0xff8f8f9d));
+static const gfx::sRGBColor sColorGrey40Alpha50(
+    gfx::sRGBColor::UnusualFromARGB(0x7f8f8f9d));
+static const gfx::sRGBColor sColorGrey50(
+    gfx::sRGBColor::UnusualFromARGB(0xff676774));
+static const gfx::sRGBColor sColorGrey50Alpha50(
+    gfx::sRGBColor::UnusualFromARGB(0x7f676774));
+static const gfx::sRGBColor sColorGrey60(
+    gfx::sRGBColor::UnusualFromARGB(0xff484851));
+static const gfx::sRGBColor sColorGrey60Alpha50(
+    gfx::sRGBColor::UnusualFromARGB(0x7f484851));
 
-static const sRGBColor sColorAccentLight(
-    sRGBColor::UnusualFromARGB(0x4d008deb));
-static const sRGBColor sColorAccent(sRGBColor::UnusualFromARGB(0xff0060df));
-static const sRGBColor sColorAccentDark(sRGBColor::UnusualFromARGB(0xff0250bb));
-static const sRGBColor sColorAccentDarker(
-    sRGBColor::UnusualFromARGB(0xff054096));
+static const gfx::sRGBColor sColorAccentLight(
+    gfx::sRGBColor::UnusualFromARGB(0x4d008deb));
+static const gfx::sRGBColor sColorAccent(
+    gfx::sRGBColor::UnusualFromARGB(0xff0060df));
+static const gfx::sRGBColor sColorAccentDark(
+    gfx::sRGBColor::UnusualFromARGB(0xff0250bb));
+static const gfx::sRGBColor sColorAccentDarker(
+    gfx::sRGBColor::UnusualFromARGB(0xff054096));
 
-static const sRGBColor sColorMeterGreen10(
-    sRGBColor::UnusualFromARGB(0xff00ab60));
-static const sRGBColor sColorMeterGreen20(
-    sRGBColor::UnusualFromARGB(0xff056139));
-static const sRGBColor sColorMeterYellow10(
-    sRGBColor::UnusualFromARGB(0xffffbd4f));
-static const sRGBColor sColorMeterYellow20(
-    sRGBColor::UnusualFromARGB(0xffd2811e));
-static const sRGBColor sColorMeterRed10(sRGBColor::UnusualFromARGB(0xffe22850));
-static const sRGBColor sColorMeterRed20(sRGBColor::UnusualFromARGB(0xff810220));
+static const gfx::sRGBColor sColorMeterGreen10(
+    gfx::sRGBColor::UnusualFromARGB(0xff00ab60));
+static const gfx::sRGBColor sColorMeterGreen20(
+    gfx::sRGBColor::UnusualFromARGB(0xff056139));
+static const gfx::sRGBColor sColorMeterYellow10(
+    gfx::sRGBColor::UnusualFromARGB(0xffffbd4f));
+static const gfx::sRGBColor sColorMeterYellow20(
+    gfx::sRGBColor::UnusualFromARGB(0xffd2811e));
+static const gfx::sRGBColor sColorMeterRed10(
+    gfx::sRGBColor::UnusualFromARGB(0xffe22850));
+static const gfx::sRGBColor sColorMeterRed20(
+    gfx::sRGBColor::UnusualFromARGB(0xff810220));
 
-static const sRGBColor sScrollbarColor(sRGBColor(0.94f, 0.94f, 0.94f));
-static const sRGBColor sScrollbarBorderColor(sRGBColor(1.0f, 1.0f, 1.0f));
-static const sRGBColor sScrollbarThumbColor(sRGBColor(0.8f, 0.8f, 0.8f));
-static const sRGBColor sScrollbarThumbColorActive(sRGBColor(0.375f, 0.375f,
-                                                            0.375f));
-static const sRGBColor sScrollbarThumbColorHover(sRGBColor(0.65f, 0.65f,
-                                                           0.65f));
-static const sRGBColor sScrollbarArrowColor(sRGBColor(0.375f, 0.375f, 0.375f));
-static const sRGBColor sScrollbarArrowColorActive(sRGBColor(1.0f, 1.0f, 1.0f));
-static const sRGBColor sScrollbarArrowColorHover(sRGBColor(0.0f, 0.0f, 0.0f));
-static const sRGBColor sScrollbarButtonColor(sScrollbarColor);
-static const sRGBColor sScrollbarButtonActiveColor(sRGBColor(0.375f, 0.375f,
-                                                             0.375f));
-static const sRGBColor sScrollbarButtonHoverColor(sRGBColor(0.86f, 0.86f,
-                                                            0.86f));
+static const gfx::sRGBColor sScrollbarColor(gfx::sRGBColor(0.94f, 0.94f,
+                                                           0.94f));
+static const gfx::sRGBColor sScrollbarBorderColor(gfx::sRGBColor(1.0f, 1.0f,
+                                                                 1.0f));
+static const gfx::sRGBColor sScrollbarThumbColor(gfx::sRGBColor(0.8f, 0.8f,
+                                                                0.8f));
+static const gfx::sRGBColor sScrollbarThumbColorActive(gfx::sRGBColor(0.375f,
+                                                                      0.375f,
+                                                                      0.375f));
+static const gfx::sRGBColor sScrollbarThumbColorHover(gfx::sRGBColor(0.65f,
+                                                                     0.65f,
+                                                                     0.65f));
+static const gfx::sRGBColor sScrollbarArrowColor(gfx::sRGBColor(0.375f, 0.375f,
+                                                                0.375f));
+static const gfx::sRGBColor sScrollbarArrowColorActive(gfx::sRGBColor(1.0f,
+                                                                      1.0f,
+                                                                      1.0f));
+static const gfx::sRGBColor sScrollbarArrowColorHover(gfx::sRGBColor(0.0f, 0.0f,
+                                                                     0.0f));
+static const gfx::sRGBColor sScrollbarButtonColor(sScrollbarColor);
+static const gfx::sRGBColor sScrollbarButtonActiveColor(gfx::sRGBColor(0.375f,
+                                                                       0.375f,
+                                                                       0.375f));
+static const gfx::sRGBColor sScrollbarButtonHoverColor(gfx::sRGBColor(0.86f,
+                                                                      0.86f,
+                                                                      0.86f));
 
 static const CSSIntCoord kMinimumWidgetSize = 14;
 static const CSSIntCoord kMinimumColorPickerHeight = 32;
@@ -97,6 +119,15 @@ static const CSSCoord kMeterHeight = 12.0f;
 }  // namespace mozilla
 
 class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
+  using sRGBColor = mozilla::gfx::sRGBColor;
+  using CSSCoord = mozilla::CSSCoord;
+  using CSSIntCoord = mozilla::CSSIntCoord;
+  using EventStates = mozilla::EventStates;
+  using DrawTarget = mozilla::gfx::DrawTarget;
+  using Path = mozilla::gfx::Path;
+  using Rect = mozilla::gfx::Rect;
+  using RectCornerRadii = mozilla::gfx::RectCornerRadii;
+
  public:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -152,7 +183,7 @@ class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
   static bool IsColorPickerButton(nsIFrame* aFrame);
   static std::pair<sRGBColor, sRGBColor> ComputeCheckColors(
       const EventStates& aState);
-  static gfx::Rect FixAspectRatio(const gfx::Rect& aRect);
+  static Rect FixAspectRatio(const Rect& aRect);
 
   // This pushes and pops a clip rect to the draw target.
   //
@@ -163,7 +194,7 @@ class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
   //
   // This is a bit sad, overall, but...
   struct MOZ_RAII AutoClipRect {
-    AutoClipRect(DrawTarget& aDt, const gfx::Rect& aRect) : mDt(aDt) {
+    AutoClipRect(DrawTarget& aDt, const Rect& aRect) : mDt(aDt) {
       mDt.PushClipRect(aRect);
     }
 
@@ -173,48 +204,44 @@ class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
     DrawTarget& mDt;
   };
 
-  static void GetFocusStrokeRect(DrawTarget* aDrawTarget, gfx::Rect& aFocusRect,
+  static void GetFocusStrokeRect(DrawTarget* aDrawTarget, Rect& aFocusRect,
                                  CSSCoord aOffset, const CSSCoord aRadius,
                                  CSSCoord aFocusWidth, RefPtr<Path>& aOutRect);
-  static void PaintRoundedFocusRect(DrawTarget* aDrawTarget,
-                                    const gfx::Rect& aRect, uint32_t aDpiRatio,
-                                    CSSCoord aRadius, CSSCoord aOffset);
-  static void PaintRoundedRect(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintRoundedFocusRect(DrawTarget* aDrawTarget, const Rect& aRect,
+                                    uint32_t aDpiRatio, CSSCoord aRadius,
+                                    CSSCoord aOffset);
+  static void PaintRoundedRect(DrawTarget* aDrawTarget, const Rect& aRect,
                                const sRGBColor& aBackgroundColor,
                                const sRGBColor& aBorderColor,
                                CSSCoord aBorderWidth,
                                RectCornerRadii aDpiAdjustedRadii,
                                uint32_t aDpiRatio);
   static void PaintRoundedRectWithRadius(DrawTarget* aDrawTarget,
-                                         const gfx::Rect& aRect,
+                                         const Rect& aRect,
                                          const sRGBColor& aBackgroundColor,
                                          const sRGBColor& aBorderColor,
                                          CSSCoord aBorderWidth,
                                          CSSCoord aRadius, uint32_t aDpiRatio);
-  static void PaintCheckboxControl(DrawTarget* aDrawTarget,
-                                   const gfx::Rect& aRect,
+  static void PaintCheckboxControl(DrawTarget* aDrawTarget, const Rect& aRect,
                                    const EventStates& aState,
                                    uint32_t aDpiRatio);
-  static void PaintCheckMark(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintCheckMark(DrawTarget* aDrawTarget, const Rect& aRect,
                              const EventStates& aState, uint32_t aDpiRatio);
-  static void PaintIndeterminateMark(DrawTarget* aDrawTarget,
-                                     const gfx::Rect& aRect,
+  static void PaintIndeterminateMark(DrawTarget* aDrawTarget, const Rect& aRect,
                                      const EventStates& aState,
                                      uint32_t aDpiRatio);
-  static void PaintStrokedEllipse(DrawTarget* aDrawTarget,
-                                  const gfx::Rect& aRect,
+  static void PaintStrokedEllipse(DrawTarget* aDrawTarget, const Rect& aRect,
                                   const sRGBColor& aBackgroundColor,
                                   const sRGBColor& aBorderColor,
                                   const CSSCoord aBorderWidth,
                                   uint32_t aDpiRatio);
-  static void PaintRadioControl(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
                                 const EventStates& aState, uint32_t aDpiRatio);
-  static void PaintRadioCheckMark(DrawTarget* aDrawTarget,
-                                  const gfx::Rect& aRect,
+  static void PaintRadioCheckMark(DrawTarget* aDrawTarget, const Rect& aRect,
                                   const EventStates& aState,
                                   uint32_t aDpiRatio);
   static sRGBColor ComputeBorderColor(const EventStates& aState);
-  static void PaintTextField(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintTextField(DrawTarget* aDrawTarget, const Rect& aRect,
                              const EventStates& aState, uint32_t aDpiRatio);
   static std::pair<sRGBColor, sRGBColor> ComputeButtonColors(
       const EventStates& aState, nsIFrame* aFrame = nullptr);
@@ -226,11 +253,11 @@ class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
       const EventStates& aState);
   static std::pair<sRGBColor, sRGBColor> ComputeRangeThumbColors(
       const EventStates& aState);
-  static void PaintListbox(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintListbox(DrawTarget* aDrawTarget, const Rect& aRect,
                            const EventStates& aState, uint32_t aDpiRatio);
-  static void PaintMenulist(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
                             const EventStates& aState, uint32_t aDpiRatio);
-  static void PaintArrow(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
                          const int32_t aArrowPolygonX[],
                          const int32_t aArrowPolygonY[],
                          const int32_t aArrowNumPoints,
@@ -238,49 +265,48 @@ class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
                          uint32_t aDpiRatio);
   static void PaintMenulistArrowButton(nsIFrame* aFrame,
                                        DrawTarget* aDrawTarget,
-                                       const gfx::Rect& aRect,
+                                       const Rect& aRect,
                                        const EventStates& aState,
                                        uint32_t aDpiRatio);
   static void PaintSpinnerButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                                 const gfx::Rect& aRect,
-                                 const EventStates& aState,
+                                 const Rect& aRect, const EventStates& aState,
                                  StyleAppearance aAppearance,
                                  uint32_t aDpiRatio);
   static void PaintRangeTrackBackground(nsIFrame* aFrame,
                                         DrawTarget* aDrawTarget,
-                                        const gfx::Rect& aRect,
+                                        const Rect& aRect,
                                         const EventStates& aState,
                                         uint32_t aDpiRatio, bool aHorizontal);
-  static void PaintRangeThumb(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintRangeThumb(DrawTarget* aDrawTarget, const Rect& aRect,
                               const EventStates& aState, uint32_t aDpiRatio);
-  static void PaintProgressBar(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+  static void PaintProgressBar(DrawTarget* aDrawTarget, const Rect& aRect,
                                const EventStates& aState, uint32_t aDpiRatio);
   static void PaintProgresschunk(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                                 const gfx::Rect& aRect,
-                                 const EventStates& aState, uint32_t aDpiRatio);
-  static void PaintMeter(DrawTarget* aDrawTarget, const gfx::Rect& aRect,
+                                 const Rect& aRect, const EventStates& aState,
+                                 uint32_t aDpiRatio);
+  static void PaintMeter(DrawTarget* aDrawTarget, const Rect& aRect,
                          const EventStates& aState, uint32_t aDpiRatio);
   static void PaintMeterchunk(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                              const gfx::Rect& aRect, const EventStates& aState,
+                              const Rect& aRect, const EventStates& aState,
                               uint32_t aDpiRatio);
   static void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                          const gfx::Rect& aRect, const EventStates& aState,
+                          const Rect& aRect, const EventStates& aState,
                           uint32_t aDpiRatio);
 
   virtual void PaintScrollbarthumbHorizontal(DrawTarget* aDrawTarget,
-                                             const gfx::Rect& aRect,
+                                             const Rect& aRect,
                                              const EventStates& aState);
   virtual void PaintScrollbarthumbVertical(DrawTarget* aDrawTarget,
-                                           const gfx::Rect& aRect,
+                                           const Rect& aRect,
                                            const EventStates& aState);
   virtual void PaintScrollbarHorizontal(DrawTarget* aDrawTarget,
-                                        const gfx::Rect& aRect);
+                                        const Rect& aRect);
   virtual void PaintScrollbarVerticalAndCorner(DrawTarget* aDrawTarget,
-                                               const gfx::Rect& aRect,
+                                               const Rect& aRect,
                                                uint32_t aDpiRatio);
   virtual void PaintScrollbarbutton(DrawTarget* aDrawTarget,
                                     StyleAppearance aAppearance,
-                                    const gfx::Rect& aRect,
+                                    const Rect& aRect,
                                     const EventStates& aState,
                                     uint32_t aDpiRatio);
 };
