@@ -1680,15 +1680,8 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
   define(lir, ins);
 }
 
-static bool CanEmitWasmReduceSimd128AtUses(MWasmReduceSimd128* ins) {
-  if (!ins->canEmitAtUses()) {
-    return false;
-  }
-  // Only specific ops generating int32.
-  if (ins->type() != MIRType::Int32) {
-    return false;
-  }
-  switch (ins->simdOp()) {
+bool LIRGeneratorX86Shared::canFoldReduceSimd128AndBranch(wasm::SimdOp op) {
+  switch (op) {
     case wasm::SimdOp::I8x16AnyTrue:
     case wasm::SimdOp::I16x8AnyTrue:
     case wasm::SimdOp::I32x4AnyTrue:
@@ -1696,9 +1689,23 @@ static bool CanEmitWasmReduceSimd128AtUses(MWasmReduceSimd128* ins) {
     case wasm::SimdOp::I16x8AllTrue:
     case wasm::SimdOp::I32x4AllTrue:
     case wasm::SimdOp::I16x8Bitmask:
-      break;
+      return true;
     default:
       return false;
+  }
+}
+
+bool LIRGeneratorX86Shared::canEmitWasmReduceSimd128AtUses(
+    MWasmReduceSimd128* ins) {
+  if (!ins->canEmitAtUses()) {
+    return false;
+  }
+  // Only specific ops generating int32.
+  if (ins->type() != MIRType::Int32) {
+    return false;
+  }
+  if (!canFoldReduceSimd128AndBranch(ins->simdOp())) {
+    return false;
   }
   // If never used then defer (it will be removed).
   MUseIterator iter(ins->usesBegin());
@@ -1716,7 +1723,7 @@ static bool CanEmitWasmReduceSimd128AtUses(MWasmReduceSimd128* ins) {
 }
 
 void LIRGenerator::visitWasmReduceSimd128(MWasmReduceSimd128* ins) {
-  if (CanEmitWasmReduceSimd128AtUses(ins)) {
+  if (canEmitWasmReduceSimd128AtUses(ins)) {
     emitAtUses(ins);
     return;
   }

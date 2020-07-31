@@ -863,24 +863,14 @@ void LIRGenerator::visitTest(MTest* test) {
   // generating an intermediate boolean result.
   if (opd->isWasmReduceSimd128() && opd->isEmittedAtUses()) {
     MWasmReduceSimd128* node = opd->toWasmReduceSimd128();
-    switch (node->simdOp()) {
-      case wasm::SimdOp::I8x16AnyTrue:
-      case wasm::SimdOp::I16x8AnyTrue:
-      case wasm::SimdOp::I32x4AnyTrue:
-      case wasm::SimdOp::I8x16AllTrue:
-      case wasm::SimdOp::I16x8AllTrue:
-      case wasm::SimdOp::I32x4AllTrue:
-      case wasm::SimdOp::I16x8Bitmask: {
+    if (canFoldReduceSimd128AndBranch(node->simdOp())) {
 #  ifdef DEBUG
-        js::wasm::ReportSimdAnalysis("simd128-to-scalar-and-branch -> folded");
+      js::wasm::ReportSimdAnalysis("simd128-to-scalar-and-branch -> folded");
 #  endif
-        auto* lir = new (alloc()) LWasmReduceAndBranchSimd128(
-            useRegister(node->input()), node->simdOp(), ifTrue, ifFalse);
-        add(lir, test);
-        return;
-      }
-      default:
-        break;
+      auto* lir = new (alloc()) LWasmReduceAndBranchSimd128(
+          useRegister(node->input()), node->simdOp(), ifTrue, ifFalse);
+      add(lir, test);
+      return;
     }
   }
 #endif
