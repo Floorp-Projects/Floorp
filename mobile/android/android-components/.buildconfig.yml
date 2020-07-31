@@ -4,6 +4,10 @@ projects:
     path: components/concept/awesomebar
     description: 'An abstract definition of an awesomebar component.'
     publish: true
+  concept-base:
+    path: components/concept/base
+    description: 'A component for basic interfaces needed by multiple components and that do not warrant a standalone component.'
+    publish: true
   concept-fetch:
     path: components/concept/fetch
     description: 'An abstract definition of an HTTP client for fetching resources.'
