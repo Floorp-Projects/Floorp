@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 // IO functions implementation for Windows.
 //===----------------------------------------------------------------------===//
-#include "FuzzerDefs.h"
+#include "FuzzerPlatform.h"
 #if LIBFUZZER_WINDOWS
 
 #include "FuzzerExtFunctions.h"
@@ -219,12 +219,8 @@ void RemoveFile(const std::string &Path) {
   _unlink(Path.c_str());
 }
 
-void DiscardOutput(int Fd) {
-  FILE* Temp = fopen("nul", "w");
-  if (!Temp)
-    return;
-  _dup2(_fileno(Temp), Fd);
-  fclose(Temp);
+void RenameFile(const std::string &OldPath, const std::string &NewPath) {
+  rename(OldPath.c_str(), NewPath.c_str());
 }
 
 intptr_t GetHandleFromFd(int fd) {
