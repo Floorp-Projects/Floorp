@@ -227,7 +227,9 @@ nsEventStatus InputQueue::ReceiveMouseInput(
 
     mActiveDragBlock = block;
 
-    CancelAnimationsForNewBlock(block);
+    if (aFlags.mHitScrollThumb) {
+      CancelAnimationsForNewBlock(block);
+    }
     MaybeRequestContentResponse(aTarget, block);
   }
 
