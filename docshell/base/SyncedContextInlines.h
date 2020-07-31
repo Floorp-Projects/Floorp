@@ -34,7 +34,7 @@ nsCString FormatValidationError(IndexSet aFailedFields, const char* prefix) {
 template <typename Context>
 nsresult Transaction<Context>::Commit(Context* aOwner) {
   if (NS_WARN_IF(aOwner->IsDiscarded())) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   IndexSet failedFields = Validate(aOwner, nullptr);
