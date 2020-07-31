@@ -60,9 +60,9 @@ ifdef MOZ_ARTIFACT_BUILD_SYMBOLS
 	cd $(DIST)/crashreporter-symbols && \
           zip -r5D '../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' . -i '*.sym' -i '*.txt'
 ifeq ($(MOZ_ARTIFACT_BUILD_SYMBOLS),full)
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	cd $(DIST)/crashreporter-symbols && \
-          zip -r5D '../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' .
+	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst' \
+                                     $(abspath $(DIST)/crashreporter-symbols) \
+                                     --full-archive)
 endif
 endif # MOZ_ARTIFACT_BUILD_SYMBOLS
 endif # MOZ_AUTOMATION
