@@ -97,6 +97,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   JS::Symbol* symbolStubField(uint32_t offset) {
     return reinterpret_cast<JS::Symbol*>(readStubWord(offset));
   }
+  ObjectGroup* groupStubField(uint32_t offset) {
+    return reinterpret_cast<ObjectGroup*>(readStubWord(offset));
+  }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
   }
@@ -1834,6 +1837,20 @@ bool WarpCacheIRTranspiler::emitCallStringReplaceStringResult(
   MDefinition* replacement = getOperand(replacementId);
 
   auto* replace = MStringReplace::New(alloc(), str, pattern, replacement);
+  add(replace);
+
+  pushResult(replace);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitCallStringSplitStringResult(
+    StringOperandId strId, StringOperandId separatorId, uint32_t groupOffset) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* separator = getOperand(separatorId);
+  ObjectGroup* group = groupStubField(groupOffset);
+
+  auto* replace = MStringSplit::New(alloc(), /* constraints = */ nullptr, str,
+                                    separator, group);
   add(replace);
 
   pushResult(replace);

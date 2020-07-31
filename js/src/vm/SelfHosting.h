@@ -71,8 +71,6 @@ bool CallSelfHostedFunction(JSContext* cx, HandlePropertyName name,
                             HandleValue thisv, const AnyInvokeArgs& args,
                             MutableHandleValue rval);
 
-bool intrinsic_StringSplitString(JSContext* cx, unsigned argc, JS::Value* vp);
-
 bool intrinsic_NewArrayIterator(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool intrinsic_NewStringIterator(JSContext* cx, unsigned argc, JS::Value* vp);
