@@ -3982,7 +3982,8 @@ void AsyncPanZoomController::RequestContentRepaint(
   }
   MOZ_ASSERT(controller->IsRepaintThread());
 
-  RepaintRequest request(aFrameMetrics, aUpdateType);
+  const bool isAnimationInProgress = !!mAnimation;
+  RepaintRequest request(aFrameMetrics, aUpdateType, isAnimationInProgress);
 
   // If we're trying to paint what we already think is painted, discard this
   // request since it's a pointless paint.
@@ -3998,7 +3999,9 @@ void AsyncPanZoomController::RequestContentRepaint(
       request.GetScrollGeneration() ==
           mLastPaintRequestMetrics.GetScrollGeneration() &&
       request.GetScrollUpdateType() ==
-          mLastPaintRequestMetrics.GetScrollUpdateType()) {
+          mLastPaintRequestMetrics.GetScrollUpdateType() &&
+      request.IsAnimationInProgress() ==
+          mLastPaintRequestMetrics.IsAnimationInProgress()) {
     return;
   }
 

@@ -2185,6 +2185,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mIsUsingMinimumScaleSize(false),
       mMinimumScaleSizeChanged(false),
       mProcessingScrollEvent(false),
+      mApzAnimationInProgress(false),
       mVelocityQueue(aOuter->PresContext()) {
   if (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
@@ -6185,8 +6186,7 @@ bool ScrollFrameHelper::ReflowFinished() {
     // do anything.
     nsPoint currentScrollPos = GetScrollPosition();
     ScrollToImpl(currentScrollPos, nsRect(currentScrollPos, nsSize(0, 0)));
-    if (!mAsyncScroll && !mAsyncSmoothMSDScroll &&
-        !mApzSmoothScrollDestination) {
+    if (!IsScrollAnimating()) {
       // We need to have mDestination track the current scroll position,
       // in case it falls outside the new reflow area. mDestination is used
       // by ScrollBy as its starting position.
@@ -6826,6 +6826,16 @@ nscoord ScrollFrameHelper::GetCoordAttribute(nsIFrame* aBox, nsAtom* aAtom,
   return aDefaultValue;
 }
 
+bool ScrollFrameHelper::IsScrollAnimating(
+    IncludeApzAnimation aIncludeApz) const {
+  if (aIncludeApz == IncludeApzAnimation::Yes && IsApzAnimationInProgress()) {
+    return true;
+  }
+  return mAsyncScroll || mAsyncSmoothMSDScroll ||
+         LastSmoothScrollOrigin() != ScrollOrigin::None ||
+         mRelativeOffset.isSome();
+}
+
 UniquePtr<PresState> ScrollFrameHelper::SaveState() const {
   nsIScrollbarMediator* mediator = do_QueryFrame(GetScrolledFrame());
   if (mediator) {
@@ -6835,10 +6845,8 @@ UniquePtr<PresState> ScrollFrameHelper::SaveState() const {
 
   // Don't store a scroll state if we never have been scrolled or restored
   // a previous scroll state, and we're not in the middle of a smooth scroll.
-  bool isInSmoothScroll = IsProcessingAsyncScroll() ||
-                          mLastSmoothScrollOrigin != ScrollOrigin::None ||
-                          mRelativeOffset.isSome();
-  if (!mHasBeenScrolled && !mDidHistoryRestore && !isInSmoothScroll) {
+  bool isScrollAnimating = IsScrollAnimating();
+  if (!mHasBeenScrolled && !mDidHistoryRestore && !isScrollAnimating) {
     return nullptr;
   }
 
@@ -6856,7 +6864,7 @@ UniquePtr<PresState> ScrollFrameHelper::SaveState() const {
   // effectively dropping it. Note that the mRestorePos will override the
   // smooth scroll destination if both are present.
   nsPoint pt = GetLogicalVisualViewportOffset();
-  if (isInSmoothScroll) {
+  if (isScrollAnimating) {
     pt = mDestination;
     allowScrollOriginDowngrade = false;
   }
