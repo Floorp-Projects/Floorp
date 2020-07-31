@@ -606,6 +606,13 @@ function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
   return true;
 }
 
+// Promise-returning variant of synthesizeNativeClick.
+function promiseNativeClick(aElement, aX, aY) {
+  return new Promise(resolve => {
+    synthesizeNativeClick(aElement, aX, aY, resolve);
+  });
+}
+
 function synthesizeNativeClickAndWaitForClickEvent(
   aElement,
   aX,
