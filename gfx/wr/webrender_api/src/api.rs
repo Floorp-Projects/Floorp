@@ -1425,8 +1425,6 @@ bitflags! {
         /// pictures that are too large (ie go back to old behavior that prevents those
         /// large pictures from establishing a raster root).
         const DISABLE_RASTER_ROOT_SCALING = 1 << 30;
-        /// Collect and dump profiler statistics to captures.
-        const PROFILER_CAPTURE = (1 as u32) << 31; // need "as u32" until we have cbindgen#556
     }
 }
 
