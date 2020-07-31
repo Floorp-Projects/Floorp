@@ -7,6 +7,9 @@ package mozilla.components.feature.syncedtabs.presenter
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -44,7 +47,6 @@ internal class DefaultPresenter(
     internal val accountObserver = SyncedTabsAccountObserver(view, controller)
 
     override fun start() {
-
         accountManager.registerForSyncEvents(
             observer = eventObserver,
             owner = lifecycleOwner,
@@ -95,15 +97,17 @@ internal class DefaultPresenter(
     ) : AccountObserver {
 
         override fun onLoggedOut() {
-            view.onError(ErrorType.SYNC_UNAVAILABLE)
+            CoroutineScope(Dispatchers.Main).launch { view.onError(ErrorType.SYNC_UNAVAILABLE) }
         }
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-            controller.refreshSyncedTabs()
+            CoroutineScope(Dispatchers.Main).launch { controller.refreshSyncedTabs() }
         }
 
         override fun onAuthenticationProblems() {
-            view.onError(ErrorType.SYNC_NEEDS_REAUTHENTICATION)
+            CoroutineScope(Dispatchers.Main).launch {
+                view.onError(ErrorType.SYNC_NEEDS_REAUTHENTICATION)
+            }
         }
     }
 
