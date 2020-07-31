@@ -1519,17 +1519,11 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         TargetConfirmationFlags confFlags{hitResult};
-        bool apzDragEnabled = StaticPrefs::apz_drag_enabled();
-        if (apzDragEnabled && hitScrollbar) {
-          // If scrollbar dragging is enabled and we hit a scrollbar, wait
-          // for the main-thread confirmation because it contains drag metrics
-          // that we need.
-          confFlags.mTargetConfirmed = false;
-        }
         result.mStatus = mInputQueue->ReceiveInputEvent(
             hit.mTargetApzc, confFlags, mouseInput, &result.mInputBlockId);
 
         // If we're starting an async scrollbar drag
+        bool apzDragEnabled = StaticPrefs::apz_drag_enabled();
         if (apzDragEnabled && startsDrag && hit.mScrollbarNode &&
             hit.mScrollbarNode->IsScrollThumbNode() &&
             hit.mScrollbarNode->GetScrollbarData().mThumbIsAsyncDraggable) {
@@ -2020,7 +2014,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
   }
 
   if (mInScrollbarTouchDrag) {
-    result = ProcessTouchInputForScrollbarDrag(aInput, hitScrollbarNode);
+    result = ProcessTouchInputForScrollbarDrag(aInput, hitScrollbarNode,
+                                               mTouchBlockHitResult.mHitResult);
   } else {
     // If we receive a touch-cancel, it means all touches are finished, so we
     // can stop ignoring any that we were ignoring.
@@ -2127,7 +2122,8 @@ static MouseInput::MouseType MultiTouchTypeToMouseType(
 
 APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
     MultiTouchInput& aTouchInput,
-    const HitTestingTreeNodeAutoLock& aScrollThumbNode) {
+    const HitTestingTreeNodeAutoLock& aScrollThumbNode,
+    const gfx::CompositorHitTestInfo& aHitInfo) {
   MOZ_ASSERT(mRetainedTouchIdentifier == -1);
   MOZ_ASSERT(mTouchBlockHitResult.mTargetApzc);
   MOZ_ASSERT(aTouchInput.mTouches.Length() == 1);
@@ -2144,12 +2140,7 @@ APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
                         aTouchInput.modifiers};
   mouseInput.mHandledByAPZ = true;
 
-  // The value of |targetConfirmed| passed to InputQueue::ReceiveInputEvent()
-  // only matters for the first event, which creates the drag block. For
-  // that event, the correct value is false, since the drag block will, at the
-  // earliest, be confirmed in the subsequent SetupScrollbarDrag() call.
-  TargetConfirmationFlags targetConfirmed{false};
-
+  TargetConfirmationFlags targetConfirmed{aHitInfo};
   APZEventResult result;
   result.mStatus = mInputQueue->ReceiveInputEvent(
       mTouchBlockHitResult.mTargetApzc, targetConfirmed, mouseInput,

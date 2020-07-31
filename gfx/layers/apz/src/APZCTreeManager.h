@@ -686,16 +686,14 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * @param aScrollThumbNode
    *     If this is the touch-start event, the node representing the scroll
    *     thumb we are starting to drag. Otherwise nullptr.
-   * @param aOutTargetGuid
-   *     The guid of the APZC for the scroll frame whose scroll thumb is
-   *     being dragged.
-   * @param aOutInputBlockId
-   *     The ID of the input block for the touch-drag gesture.
+   * @param aHitInfo
+   *     The hit-test flags for the touch input.
    * @return See ReceiveInputEvent() for what the return value means.
    */
   APZEventResult ProcessTouchInputForScrollbarDrag(
       MultiTouchInput& aInput,
-      const HitTestingTreeNodeAutoLock& aScrollThumbNode);
+      const HitTestingTreeNodeAutoLock& aScrollThumbNode,
+      const gfx::CompositorHitTestInfo& aHitInfo);
   void FlushRepaintsToClearScreenToGeckoTransform();
 
   void SynthesizePinchGestureFromMouseWheel(

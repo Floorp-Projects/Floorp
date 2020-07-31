@@ -221,9 +221,9 @@ nsEventStatus InputQueue::ReceiveMouseInput(
     block = new DragBlockState(aTarget, aFlags, aEvent);
 
     INPQ_LOG("started new drag block %p id %" PRIu64
-             " for %sconfirmed target %p\n",
+             " for %sconfirmed target %p and %s a scrollthumb\n",
              block, block->GetBlockId(), aFlags.mTargetConfirmed ? "" : "un",
-             aTarget.get());
+             aTarget.get(), aFlags.mHitScrollThumb ? "hits" : "doesn't hit");
 
     mActiveDragBlock = block;
 
