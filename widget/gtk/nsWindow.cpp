@@ -379,6 +379,37 @@ static void UpdateLastInputEventTime(void* aGdkEvent) {
   sLastUserInputTime = timestamp;
 }
 
+void GetWindowOrigin(GdkWindow* aWindow, int* aX, int* aY) {
+  gdk_window_get_origin(aWindow, aX, aY);
+
+  // TODO(bug 1655924): gdk_window_get_origin is can block waiting for the x
+  // server for a long time, we would like to use the implementation below
+  // instead. However, removing the synchronous x server queries causes a race
+  // condition to surface, causing issues such as bug 1652743 and bug 1653711.
+#if 0
+  *aX = 0;
+  *aY = 0;
+  if (!aWindow) {
+    return;
+  }
+
+  GdkWindow* current = aWindow;
+  while (GdkWindow* parent = gdk_window_get_parent(current)) {
+    if (parent == current) {
+      break;
+    }
+
+    int x = 0;
+    int y = 0;
+    gdk_window_get_position(current, &x, &y);
+    *aX += x;
+    *aY += y;
+
+    current = parent;
+  }
+#endif
+}
+
 nsWindow::nsWindow() {
   mIsTopLevel = false;
   mIsDestroyed = false;
@@ -470,7 +501,6 @@ nsWindow::nsWindow() {
   mWindowScaleFactor = 1;
 
   mIsAccelerated = false;
-  mWindowOrigin = Nothing();
 }
 
 nsWindow::~nsWindow() {
@@ -531,44 +561,6 @@ void nsWindow::MaybeDispatchResized() {
   if (mNeedsDispatchResized && !mIsDestroyed) {
     DispatchResized();
   }
-}
-
-nsIntPoint nsWindow::GetWindowOrigin() {
-  if (!mGdkWindow) {
-    return nsIntPoint(0, 0);
-  }
-
-  if (mWindowOrigin.isNothing()) {
-    int x = 0;
-    int y = 0;
-    gdk_window_get_origin(mGdkWindow, &x, &y);
-
-    mWindowOrigin = Some(nsIntPoint(x, y));
-  }
-
-  return mWindowOrigin.value();
-}
-
-void nsWindow::InvalidateWindowOrigin() {
-  if (!mGdkWindow) {
-    return;
-  }
-
-  mWindowOrigin = Nothing();
-
-  // The window origin is in a coordinate space relative to the root window.
-  // In addition GDK_CONFIGURE events are not issued for windows which type
-  // is GDK_WINDOW_CHILD.
-  // We have to invalidate the cached window origin of child windows when
-  // the parent moves.
-  GList* children = gdk_window_get_children(mGdkWindow);
-  for (GList* list = children; list; list = list->next) {
-    RefPtr<nsWindow> childWindow = get_window_for_gdk_window(GDK_WINDOW(list->data));
-    if (childWindow) {
-      childWindow->InvalidateWindowOrigin();
-    }
-  }
-  g_list_free(children);
 }
 
 nsIWidgetListener* nsWindow::GetListener() {
@@ -1459,8 +1451,8 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   // in mBounds we have position relative to toplevel window. We need to check
   // and update mBounds in the toplevel coordinates.
   int x_parent, y_parent;
-  gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)),
-                        &x_parent, &y_parent);
+  GetWindowOrigin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)), &x_parent,
+                  &y_parent);
 
   LayoutDeviceIntRect newBounds(aFinalSize->x, aFinalSize->y, aFinalSize->width,
                                 aFinalSize->height);
@@ -1504,7 +1496,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
     // The NotifyWindowMoved requires the coordinates relative to the toplevel.
     // We use the gdk_window_get_origin to get correct coordinates.
     gint x = 0, y = 0;
-    gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(mShell)), &x, &y);
+    GetWindowOrigin(gtk_widget_get_window(GTK_WIDGET(mShell)), &x, &y);
     NotifyWindowMoved(GdkCoordToDevicePixels(x), GdkCoordToDevicePixels(y));
   }
 }
@@ -1603,8 +1595,8 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   int x_parent = 0, y_parent = 0;
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   if (parentGtkWindow) {
-    gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)),
-                          &x_parent, &y_parent);
+    GetWindowOrigin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)),
+                    &x_parent, &y_parent);
   }
   LOG(("  x_parent    %d   y_parent    %d\n", x_parent, y_parent));
   anchorRect.MoveBy(-x_parent, -y_parent);
@@ -2502,7 +2494,8 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
 }
 
 LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
-  nsIntPoint origin = GetWindowOrigin();
+  nsIntPoint origin(0, 0);
+  GetWindowOrigin(mGdkWindow, &origin.x, &origin.y);
 
   return GdkPointToDevicePixels({origin.x, origin.y});
 }
@@ -3003,8 +2996,6 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   //
   //   Override-redirect windows are children of the root window so parent
   //   coordinates are root coordinates.
-
-  InvalidateWindowOrigin();
 
   LOG(("configure event [%p] %d %d %d %d\n", (void*)this, aEvent->x, aEvent->y,
        aEvent->width, aEvent->height));

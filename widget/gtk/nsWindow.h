@@ -442,9 +442,6 @@ class nsWindow final : public nsBaseWidget {
   void DispatchResized();
   void MaybeDispatchResized();
 
-  nsIntPoint GetWindowOrigin();
-  void InvalidateWindowOrigin();
-
   virtual void RegisterTouchWindow() override;
   virtual bool CompositorInitiallyPaused() override {
 #ifdef MOZ_WAYLAND
@@ -539,8 +536,6 @@ class nsWindow final : public nsBaseWidget {
   float mAspectRatio;
   float mAspectRatioSaved;
   nsIntPoint mClientOffset;
-  // Cached result of gdk_window_get_origin which can be expensive.
-  mozilla::Maybe<nsIntPoint> mWindowOrigin;
 
   // This field omits duplicate scroll events caused by GNOME bug 726878.
   guint32 mLastScrollEventTime;
