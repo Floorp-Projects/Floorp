@@ -314,6 +314,15 @@
     begin: Int32Id
     length: Int32Id
 
+- name: CallStringReplaceStringResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+    pattern: StringId
+    replacement: StringId
+
 - name: RegExpPrototypeOptimizableResult
   shared: true
   transpile: true
