@@ -4,27 +4,14 @@
 
 const { gBrowser, PrintUtils } = window.docShell.chromeEventHandler.ownerGlobal;
 
-document.addEventListener(
-  "DOMContentLoaded",
-  e => {
-    PrintEventHandler.init();
-  },
-  { once: true }
-);
+document.addEventListener("DOMContentLoaded", e => {
+  PrintEventHandler.init();
+});
 
-window.addEventListener(
-  "unload",
-  e => {
-    document.textContent = "";
-  },
-  { once: true }
-);
-
-var PrintEventHandler = {
+const PrintEventHandler = {
   init() {
     this.sourceBrowser = this.getSourceBrowser();
     this.settings = PrintUtils.getPrintSettings();
-    this.updatePrintPreview();
 
     document.addEventListener("print", e => this.print({ silent: true }));
     document.addEventListener("update-print-setting", e =>
@@ -50,9 +37,8 @@ var PrintEventHandler = {
     };
     this.settingFlags = {
       orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
-      printerName: Ci.nsIPrintSettings.kInitSaveAll,
       scaling: Ci.nsIPrintSettings.kInitSaveScaling,
-      shrinkToFit: Ci.nsIPrintSettings.kInitSaveShrinkToFit,
+      printerName: Ci.nsIPrintSettings.kInitSavePrinterName,
     };
 
     document.dispatchEvent(
@@ -74,7 +60,9 @@ var PrintEventHandler = {
   },
 
   cancelPrint() {
-    window.close();
+    gBrowser.removeTab(
+      gBrowser.getTabForBrowser(window.docShell.chromeEventHandler)
+    );
   },
 
   updateSetting({ setting, value }) {
@@ -95,45 +83,11 @@ var PrintEventHandler = {
         PSSVC.savePrintSettingsToPrefs(this.settings, true, flag);
       }
 
-      this.updatePrintPreview();
-
       document.dispatchEvent(
         new CustomEvent("print-settings", {
           detail: this.settings,
         })
       );
-    }
-  },
-
-  async updatePrintPreview() {
-    if (this._previewUpdatingPromise) {
-      if (!this._queuedPreviewUpdatePromise) {
-        this._queuedPreviewUpdatePromise = this._previewUpdatingPromise.then(
-          () => this._updatePrintPreview()
-        );
-      }
-      // else there's already an update queued.
-    } else {
-      this._previewUpdatingPromise = this._updatePrintPreview();
-    }
-  },
-
-  async _updatePrintPreview() {
-    let numPages = await PrintUtils.updatePrintPreview(
-      this.sourceBrowser,
-      this.settings
-    );
-    document.dispatchEvent(
-      new CustomEvent("page-count", { detail: { numPages } })
-    );
-
-    if (this._queuedPreviewUpdatePromise) {
-      // Now that we're done, the queued update (if there is one) will start.
-      this._previewUpdatingPromise = this._queuedPreviewUpdatePromise;
-      this._queuedPreviewUpdatePromise = null;
-    } else {
-      // Nothing queued so throw our promise away.
-      this._previewUpdatingPromise = null;
     }
   },
 
@@ -399,21 +353,3 @@ class TwistySummary extends PrintUIControlMixin(HTMLElement) {
   }
 }
 customElements.define("twisty-summary", TwistySummary);
-
-class PageCount extends HTMLParagraphElement {
-  constructor() {
-    super();
-    document.addEventListener("page-count", this);
-  }
-
-  handleEvent(e) {
-    let { numPages } = e.detail;
-    document.l10n.setAttributes(this, "printui-sheets-count", {
-      sheetCount: numPages,
-    });
-    if (this.hidden) {
-      document.l10n.translateElements([this]).then(() => (this.hidden = false));
-    }
-  }
-}
-customElements.define("page-count", PageCount, { extends: "p" });
