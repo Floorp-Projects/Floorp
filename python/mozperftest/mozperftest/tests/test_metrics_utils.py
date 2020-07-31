@@ -4,8 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import mozunit
 import json
+import pytest
 
-from mozperftest.metrics.utils import open_file
+from mozperftest.metrics.utils import open_file, metric_fields
 from mozperftest.tests.support import temp_file
 
 
@@ -18,6 +19,70 @@ def test_open_file():
 
     with temp_file(name="data.txt", content="yeah") as f:
         assert open_file(f) == "yeah"
+
+
+def test_metric_fields_old_format():
+    assert metric_fields("firstPaint") == {"name": "firstPaint"}
+
+
+def test_metric_fields_new_format():
+    assert metric_fields("name:foo,extraOptions:bar") == {
+        "name": "foo",
+        "extraOptions": "bar",
+    }
+
+
+@pytest.mark.parametrize(
+    "metrics, expected",
+    [
+        [
+            "name:foo,extraOptions:['1', '2', '3', 2]",
+            {"name": "foo", "extraOptions": ["1", "2", "3", 2]},
+        ],
+        [
+            """name:foo,extraOptions:['1', '2', '3', 2, "3", "hello,world"] """,
+            {"name": "foo", "extraOptions": ["1", "2", "3", 2, "3", "hello,world"]},
+        ],
+        [
+            """name:foo,extraOptions:['1', '2', '3', 2, "3", "hello,world"],"""
+            """alertThreshold:['1',2,"hello"] """,
+            {
+                "name": "foo",
+                "extraOptions": ["1", "2", "3", 2, "3", "hello,world"],
+                "alertThreshold": ["1", 2, "hello"],
+            },
+        ],
+        [
+            """name:foo,extraOptions:['1', '2', '3', 2, "3", "hello,world"],"""
+            """value:foo,alertThreshold:['1',2,"hello"],framework:99 """,
+            {
+                "name": "foo",
+                "extraOptions": ["1", "2", "3", 2, "3", "hello,world"],
+                "alertThreshold": ["1", 2, "hello"],
+                "value": "foo",
+                "framework": 99,
+            },
+        ],
+    ],
+)
+def test_metric_fields_complex(metrics, expected):
+    assert metric_fields(metrics) == expected
+
+
+@pytest.mark.parametrize(
+    "metrics",
+    [
+        """name:foo,extraOptions:['1', '2', '3', 2, "3", "hello,world"],"""
+        """value:foo,alertThreshold:['1',2,"hello"],framework:99,"""
+        """shouldAlert:[99,100,["hello", "world"],0] """,
+        """name:foo,extraOptions:['1', '2', '3', 2, "3", "hello,world"],"""
+        """value:foo,alertThreshold:['1',2,"hello"],framework:99,"""
+        """shouldAlert:[99,100,["hello:", "world:"],0] """,
+    ],
+)
+def test_metric_fields_complex_failures(metrics):
+    with pytest.raises(Exception):
+        metric_fields(metrics)
 
 
 if __name__ == "__main__":
