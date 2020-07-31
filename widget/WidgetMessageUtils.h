@@ -33,6 +33,44 @@ struct ParamTraits<LookAndFeelInt> {
 };
 
 template <>
+struct ParamTraits<LookAndFeelFont> {
+  typedef LookAndFeelFont paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.haveFont);
+    WriteParam(aMsg, aParam.fontName);
+    WriteParam(aMsg, aParam.pixelHeight);
+    WriteParam(aMsg, aParam.italic);
+    WriteParam(aMsg, aParam.bold);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->haveFont) &&
+           ReadParam(aMsg, aIter, &aResult->fontName) &&
+           ReadParam(aMsg, aIter, &aResult->pixelHeight) &&
+           ReadParam(aMsg, aIter, &aResult->italic) &&
+           ReadParam(aMsg, aIter, &aResult->bold);
+  }
+};
+
+template <>
+struct ParamTraits<LookAndFeelCache> {
+  typedef LookAndFeelCache paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mInts);
+    WriteParam(aMsg, aParam.mFonts);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mInts) &&
+           ReadParam(aMsg, aIter, &aResult->mFonts);
+  }
+};
+
+template <>
 struct ParamTraits<nsTransparencyMode>
     : public ContiguousEnumSerializerInclusive<nsTransparencyMode,
                                                eTransparencyOpaque,

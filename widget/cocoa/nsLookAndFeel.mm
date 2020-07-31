@@ -654,34 +654,34 @@ bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& a
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
-nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
-  nsTArray<LookAndFeelInt> lookAndFeelIntCache = nsXPLookAndFeel::GetIntCacheImpl();
+LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
+  LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
 
   LookAndFeelInt useOverlayScrollbars;
   useOverlayScrollbars.id = IntID::UseOverlayScrollbars;
   useOverlayScrollbars.value = GetInt(IntID::UseOverlayScrollbars);
-  lookAndFeelIntCache.AppendElement(useOverlayScrollbars);
+  cache.mInts.AppendElement(useOverlayScrollbars);
 
   LookAndFeelInt allowOverlayScrollbarsOverlap;
   allowOverlayScrollbarsOverlap.id = IntID::AllowOverlayScrollbarsOverlap;
   allowOverlayScrollbarsOverlap.value = GetInt(IntID::AllowOverlayScrollbarsOverlap);
-  lookAndFeelIntCache.AppendElement(allowOverlayScrollbarsOverlap);
+  cache.mInts.AppendElement(allowOverlayScrollbarsOverlap);
 
   LookAndFeelInt prefersReducedMotion;
   prefersReducedMotion.id = IntID::PrefersReducedMotion;
   prefersReducedMotion.value = GetInt(IntID::PrefersReducedMotion);
-  lookAndFeelIntCache.AppendElement(prefersReducedMotion);
+  cache.mInts.AppendElement(prefersReducedMotion);
 
   LookAndFeelInt systemUsesDarkTheme;
   systemUsesDarkTheme.id = IntID::SystemUsesDarkTheme;
   systemUsesDarkTheme.value = GetInt(IntID::SystemUsesDarkTheme);
-  lookAndFeelIntCache.AppendElement(systemUsesDarkTheme);
+  cache.mInts.AppendElement(systemUsesDarkTheme);
 
-  return lookAndFeelIntCache;
+  return cache;
 }
 
-void nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
-  for (auto entry : aLookAndFeelIntCache) {
+void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
+  for (auto entry : aCache.mInts) {
     switch (entry.id) {
       case IntID::UseOverlayScrollbars:
         mUseOverlayScrollbars = entry.value;

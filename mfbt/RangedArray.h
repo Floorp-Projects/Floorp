@@ -26,6 +26,9 @@ class RangedArray {
   ArrayType mArr;
 
  public:
+  static size_t length() { return Length; }
+  static size_t minIndex() { return MinIndex; }
+
   T& operator[](size_t aIndex) {
     MOZ_ASSERT(aIndex == MinIndex || aIndex > MinIndex);
     return mArr[aIndex - MinIndex];
