@@ -1204,9 +1204,17 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
     case StyleAppearance::Range:
       overflow.SizeTo(6, 6, 6, 6);
       break;
-    default:
+    case StyleAppearance::Textarea:
+    case StyleAppearance::Textfield:
+    case StyleAppearance::NumberInput:
+    case StyleAppearance::Listbox:
+    case StyleAppearance::MenulistButton:
+    case StyleAppearance::Menulist:
+    case StyleAppearance::Button:
       overflow.SizeTo(4, 4, 4, 4);
       break;
+    default:
+      return false;
   }
 
   aOverflowRect->Inflate(nsMargin(CSSPixel::ToAppUnits(overflow.top),
