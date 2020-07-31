@@ -33,6 +33,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/IonScript.h"  // IonBlockCounts
 #include "js/CharacterEncoding.h"
+#include "js/friend/DumpFunctions.h"  // js::DumpPC, js::DumpScript
 #include "js/Printf.h"
 #include "js/Symbol.h"
 #include "util/Memory.h"
