@@ -20,7 +20,6 @@
 #include "jit/MIRGenerator.h"
 #include "jit/WarpBuilder.h"
 #include "jit/WarpCacheIRTranspiler.h"
-#include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/EnvironmentObject.h"
@@ -332,11 +331,11 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         }
         break;
 
-      case JSOp::BuiltinObject: {
-        // If we already resolved this built-in we can bake it in.
-        auto kind = loc.getBuiltinObjectKind();
-        if (JSObject* proto = MaybeGetBuiltinObject(cx_->global(), kind)) {
-          if (!AddOpSnapshot<WarpBuiltinObject>(alloc_, opSnapshots, offset,
+      case JSOp::FunctionProto: {
+        // If we already resolved this proto we can bake it in.
+        if (JSObject* proto =
+                cx_->global()->maybeGetPrototype(JSProto_Function)) {
+          if (!AddOpSnapshot<WarpFunctionProto>(alloc_, opSnapshots, offset,
                                                 proto)) {
             return abort(AbortReason::Alloc);
           }

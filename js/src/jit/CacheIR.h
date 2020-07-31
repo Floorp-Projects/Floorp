@@ -1618,7 +1618,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachRegExpInstanceOptimizable(HandleFunction callee);
   AttachDecision tryAttachGetFirstDollarIndex(HandleFunction callee);
   AttachDecision tryAttachSubstringKernel(HandleFunction callee);
-  AttachDecision tryAttachObjectHasPrototype(HandleFunction callee);
   AttachDecision tryAttachString(HandleFunction callee);
   AttachDecision tryAttachStringChar(HandleFunction callee, StringChar kind);
   AttachDecision tryAttachStringCharCodeAt(HandleFunction callee);
@@ -1627,8 +1626,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachStringFromCodePoint(HandleFunction callee);
   AttachDecision tryAttachStringToLowerCase(HandleFunction callee);
   AttachDecision tryAttachStringToUpperCase(HandleFunction callee);
-  AttachDecision tryAttachStringReplaceString(HandleFunction callee);
-  AttachDecision tryAttachStringSplitString(HandleFunction callee);
   AttachDecision tryAttachMathRandom(HandleFunction callee);
   AttachDecision tryAttachMathAbs(HandleFunction callee);
   AttachDecision tryAttachMathClz32(HandleFunction callee);

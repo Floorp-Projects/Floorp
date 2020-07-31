@@ -320,7 +320,6 @@ UNIFIED_SOURCES += [
     'vm/AsyncIteration.cpp',
     'vm/BigIntType.cpp',
     'vm/BuildId.cpp',
-    'vm/BuiltinObjectKind.cpp',
     'vm/BytecodeLocation.cpp',
     'vm/BytecodeUtil.cpp',
     'vm/Caches.cpp',
