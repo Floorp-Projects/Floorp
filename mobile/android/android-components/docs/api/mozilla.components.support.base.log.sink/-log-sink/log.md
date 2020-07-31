@@ -1,5 +1,0 @@
-[android-components](../../index.md) / [mozilla.components.support.base.log.sink](../index.md) / [LogSink](index.md) / [log](./log.md)
-
-# log
-
-`abstract fun log(priority: `[`Priority`](../../mozilla.components.support.base.log/-log/-priority/index.md)` = Log.Priority.DEBUG, tag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, throwable: `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`? = null, message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/log/sink/LogSink.kt#L10)
