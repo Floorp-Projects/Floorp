@@ -28,6 +28,7 @@
 #include "irregexp/util/ZoneShim.h"
 #include "jit/Label.h"
 #include "jit/shared/Assembler-shared.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit{,Conservative}DontReport
 #include "js/Value.h"
 #include "threading/ExclusiveData.h"
 #include "vm/MutexIDs.h"

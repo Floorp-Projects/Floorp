@@ -18,6 +18,7 @@
 #include "gc/HashUtil.h"
 #include "irregexp/RegExpAPI.h"
 #include "jit/VMFunctions.h"
+#include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/StableStringChars.h"

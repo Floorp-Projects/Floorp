@@ -231,6 +231,7 @@ EXPORTS.js.friend += [
     '../public/friend/DumpFunctions.h',
     '../public/friend/ErrorMessages.h',
     '../public/friend/ErrorNumbers.msg',
+    '../public/friend/StackLimits.h',
     '../public/friend/UsageStatistics.h',
     '../public/friend/WindowProxy.h',
 ]

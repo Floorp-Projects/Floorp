@@ -25,6 +25,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "js/PropertySpec.h"
 #include "util/Poison.h"
 #include "util/StringBuffer.h"

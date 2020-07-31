@@ -177,8 +177,6 @@ JS_FRIEND_API bool IsArgumentsObject(JS::HandleObject obj);
 
 JS_FRIEND_API const char* ObjectClassName(JSContext* cx, JS::HandleObject obj);
 
-JS_FRIEND_API void ReportOverRecursed(JSContext* maybecx);
-
 JS_FRIEND_API bool AddRawValueRoot(JSContext* cx, JS::Value* vp,
                                    const char* name);
 
@@ -816,123 +814,6 @@ JS_FRIEND_API bool IsObjectInContextCompartment(JSObject* obj,
 #define JSITER_SYMBOLS 0x20     /* also include symbol property keys */
 #define JSITER_SYMBOLSONLY 0x40 /* exclude string property keys */
 #define JSITER_FORAWAITOF 0x80  /* for-await-of */
-
-JS_FRIEND_API bool RunningWithTrustedPrincipals(JSContext* cx);
-
-MOZ_ALWAYS_INLINE uintptr_t GetNativeStackLimit(JSContext* cx,
-                                                JS::StackKind kind,
-                                                int extraAllowance = 0) {
-  uintptr_t limit = JS::RootingContext::get(cx)->nativeStackLimit[kind];
-#if JS_STACK_GROWTH_DIRECTION > 0
-  limit += extraAllowance;
-#else
-  limit -= extraAllowance;
-#endif
-  return limit;
-}
-
-MOZ_ALWAYS_INLINE uintptr_t GetNativeStackLimit(JSContext* cx,
-                                                int extraAllowance = 0) {
-  JS::StackKind kind = RunningWithTrustedPrincipals(cx)
-                           ? JS::StackForTrustedScript
-                           : JS::StackForUntrustedScript;
-  return GetNativeStackLimit(cx, kind, extraAllowance);
-}
-
-/*
- * These functions return |false| if we are close to using up the C++ stack.
- * They also report an overrecursion error, except for the DontReport variants.
- * The CheckSystemRecursionLimit variant gives us a little extra space so we
- * can ensure that crucial code is able to run. CheckRecursionLimitConservative
- * allows less space than any other check, including a safety buffer (as in, it
- * uses the untrusted limit and subtracts a little more from it).
- */
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimit(JSContext* cx, uintptr_t limit) {
-  int stackDummy;
-
-  JS_STACK_OOM_POSSIBLY_FAIL_REPORT();
-
-  if (!JS_CHECK_STACK_SIZE(limit, &stackDummy)) {
-    ReportOverRecursed(cx);
-    return false;
-  }
-  return true;
-}
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimitDontReport(uintptr_t limit) {
-  int stackDummy;
-
-  JS_STACK_OOM_POSSIBLY_FAIL();
-
-  return JS_CHECK_STACK_SIZE(limit, &stackDummy);
-}
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimit(JSContext* cx) {
-  JS_STACK_OOM_POSSIBLY_FAIL_REPORT();
-
-  // GetNativeStackLimit(cx) is pretty slow because it has to do an uninlined
-  // call to RunningWithTrustedPrincipals to determine which stack limit to
-  // use. To work around this, check the untrusted limit first to avoid the
-  // overhead in most cases.
-  uintptr_t untrustedLimit =
-      GetNativeStackLimit(cx, JS::StackForUntrustedScript);
-  if (MOZ_LIKELY(CheckRecursionLimitDontReport(untrustedLimit))) {
-    return true;
-  }
-  return CheckRecursionLimit(cx, GetNativeStackLimit(cx));
-}
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimitDontReport(JSContext* cx) {
-  return CheckRecursionLimitDontReport(GetNativeStackLimit(cx));
-}
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimitWithStackPointerDontReport(
-    JSContext* cx, void* sp) {
-  JS_STACK_OOM_POSSIBLY_FAIL();
-
-  return JS_CHECK_STACK_SIZE(GetNativeStackLimit(cx), sp);
-}
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimitWithStackPointer(JSContext* cx,
-                                                           void* sp) {
-  JS_STACK_OOM_POSSIBLY_FAIL_REPORT();
-
-  if (!JS_CHECK_STACK_SIZE(GetNativeStackLimit(cx), sp)) {
-    ReportOverRecursed(cx);
-    return false;
-  }
-  return true;
-}
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimitWithExtra(JSContext* cx,
-                                                    size_t extra) {
-  char stackDummy;
-  char* sp = &stackDummy;
-#if JS_STACK_GROWTH_DIRECTION > 0
-  sp += extra;
-#else
-  sp -= extra;
-#endif
-  return CheckRecursionLimitWithStackPointer(cx, sp);
-}
-
-MOZ_ALWAYS_INLINE bool CheckSystemRecursionLimit(JSContext* cx) {
-  return CheckRecursionLimit(cx,
-                             GetNativeStackLimit(cx, JS::StackForSystemCode));
-}
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimitConservative(JSContext* cx) {
-  return CheckRecursionLimit(
-      cx, GetNativeStackLimit(cx, JS::StackForUntrustedScript,
-                              -1024 * int(sizeof(size_t))));
-}
-
-MOZ_ALWAYS_INLINE bool CheckRecursionLimitConservativeDontReport(
-    JSContext* cx) {
-  return CheckRecursionLimitDontReport(GetNativeStackLimit(
-      cx, JS::StackForUntrustedScript, -1024 * int(sizeof(size_t))));
-}
 
 JS_FRIEND_API void StartPCCountProfiling(JSContext* cx);
 

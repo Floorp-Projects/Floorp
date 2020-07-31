@@ -15,6 +15,7 @@
 #include "builtin/Object.h"
 #include "gc/Zone.h"
 #include "jit/JitFrames.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "proxy/Proxy.h"
 #include "util/DiagnosticAssertions.h"
 #include "vm/BigIntType.h"

@@ -18,6 +18,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/BigInt.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "util/StringBuffer.h"

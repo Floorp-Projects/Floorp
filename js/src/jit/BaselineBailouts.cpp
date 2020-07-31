@@ -19,6 +19,7 @@
 #include "jit/mips64/Simulator-mips64.h"
 #include "jit/Recover.h"
 #include "jit/RematerializedFrame.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimitWithStackPointerDontReport, js::ReportOverRecursed
 #include "js/Utility.h"
 #include "util/Memory.h"
 #include "vm/ArgumentsObject.h"

@@ -20,6 +20,7 @@
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
 #include "js/CharacterEncoding.h"
+#include "js/friend/StackLimits.h"  // JS_STACK_GROWTH_DIRECTION
 #include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
 #include "js/Printf.h"
 #include "js/Proxy.h"
@@ -395,7 +396,7 @@ JS_FRIEND_API bool js::IsObjectInContextCompartment(JSObject* obj,
   return obj->compartment() == cx->compartment();
 }
 
-JS_FRIEND_API bool js::RunningWithTrustedPrincipals(JSContext* cx) {
+JS_FRIEND_API bool js::detail::RunningWithTrustedPrincipals(JSContext* cx) {
   return cx->runningWithTrustedPrincipals();
 }
 
