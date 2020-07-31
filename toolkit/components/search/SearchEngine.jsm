@@ -38,11 +38,6 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
 
 const USER_DEFINED = "searchTerms";
 
-// Custom search parameters
-const MOZ_PARAM_LOCALE = "moz:locale";
-const MOZ_PARAM_DIST_ID = "moz:distributionID";
-const MOZ_PARAM_OFFICIAL = "moz:official";
-
 // Supported OpenSearch parameters
 // See http://opensearch.a9.com/spec/1.1/querysyntax/#core
 const OS_PARAM_INPUT_ENCODING = "inputEncoding";
@@ -276,18 +271,32 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
 
     // moz: parameters are only available for default search engines.
     if (name.startsWith("moz:") && engine.isAppProvided) {
-      // {moz:locale} and {moz:distributionID} are common
-      if (name == MOZ_PARAM_LOCALE) {
+      // {moz:locale} is common.
+      if (name == SearchUtils.MOZ_PARAM.LOCALE) {
         return Services.locale.requestedLocale;
       }
-      if (name == MOZ_PARAM_DIST_ID) {
+
+      // {moz:date}
+      if (name == SearchUtils.MOZ_PARAM.DATE) {
+        let date = new Date();
+        let pad = number => number.toString().padStart(2, "0");
+        return (
+          String(date.getFullYear()) +
+          pad(date.getMonth() + 1) +
+          pad(date.getDate()) +
+          pad(date.getHours())
+        );
+      }
+
+      // {moz:distributionID} and {moz:official} seem to have little use.
+      if (name == SearchUtils.MOZ_PARAM.DIST_ID) {
         return Services.prefs.getCharPref(
           SearchUtils.BROWSER_SEARCH_PREF + "distributionID",
           Services.appinfo.distributionID || ""
         );
       }
-      // {moz:official} seems to have little use.
-      if (name == MOZ_PARAM_OFFICIAL) {
+
+      if (name == SearchUtils.MOZ_PARAM.OFFICIAL) {
         if (
           Services.prefs.getBoolPref(
             SearchUtils.BROWSER_SEARCH_PREF + "official",
