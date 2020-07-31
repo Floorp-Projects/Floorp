@@ -3221,6 +3221,13 @@ void CodeGenerator::visitWasmReduceAndBranchSimd128(
       emitBranch(Assembler::Equal, ins->ifTrue(), ins->ifFalse());
       break;
     }
+    case wasm::SimdOp::I16x8Bitmask: {
+      ScratchSimd128Scope tmp(masm);
+      masm.loadConstantSimd128Int(SimdConstant::SplatX8(0x8000), tmp);
+      masm.vptest(tmp, src);
+      emitBranch(Assembler::NotEqual, ins->ifTrue(), ins->ifFalse());
+      break;
+    }
     default:
       MOZ_CRASH("Reduce-and-branch SimdOp not implemented");
   }

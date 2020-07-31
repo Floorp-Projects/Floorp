@@ -731,16 +731,18 @@ for ( let ty128 of ['f32x4','f64x2','i64x2'] ) {
     assertEq(wasmSimdAnalysis(), "simd128-to-scalar -> constant folded");
 }
 
-// Optimizing all_true and any_true that are used for control flow, also when negated.
+// Optimizing all_true, any_true, and bitmask that are used for control flow, also when negated.
 
 for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
     let all = iota(16/size).map(n => n*n);
     let some = iota(16/size).map(n => n*(n % 3));
     let none = iota(16/size).map(n => 0);
     let inputs = [all, some, none];
-    let ops = { all_true: allTrue, any_true: anyTrue };
+    let ops = { all_true: allTrue, any_true: anyTrue, bitmask };
 
-    for ( let op of ['any_true', 'all_true'] ) {
+    for ( let op of ['any_true', 'all_true', 'bitmask'] ) {
+        let folded = op != 'bitmask' || size == 2;
+
         let positive =
             wasmCompile(
                 `(module
@@ -751,7 +753,7 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
                            (i32.const 37)))
                    (func (export "run") (result i32)
                      (call $f (v128.load (i32.const 16)))))`);
-        assertEq(wasmSimdAnalysis(), "simd128-to-scalar-and-branch -> folded");
+        assertEq(wasmSimdAnalysis(), folded ? "simd128-to-scalar-and-branch -> folded" : "none");
 
         let negative =
             wasmCompile(
@@ -763,7 +765,7 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
                            (i32.const 37)))
                    (func (export "run") (result i32)
                      (call $f (v128.load (i32.const 16)))))`);
-        assertEq(wasmSimdAnalysis(), "simd128-to-scalar-and-branch -> folded");
+        assertEq(wasmSimdAnalysis(), folded ? "simd128-to-scalar-and-branch -> folded" : "none");
 
         for ( let inp of inputs ) {
             let mem = new this[`Int${8*size}Array`](positive.exports.mem.buffer);
@@ -833,4 +835,12 @@ function allTrue(xs) {
 
 function anyTrue(xs) {
     return xs.some(v => v != 0);
+}
+
+function bitmask(xs) {
+    let shift = 128/xs.length - 1;
+    let res = 0;
+    let k = 0;
+    xs.forEach(v => { res |= ((v >>> shift) & 1) << k; k++; });
+    return res;
 }
