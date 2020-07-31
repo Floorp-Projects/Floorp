@@ -2148,12 +2148,13 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
 #endif
   }
 
-  MaybeConnectToSocketProcess();
-
   // Should wait for CompleteRedirectSetup to set the listener.
   mEventQ->Suspend();
   MOZ_ASSERT(!mSuspendForWaitCompleteRedirectSetup);
   mSuspendForWaitCompleteRedirectSetup = true;
+
+  // Connect to socket process after mEventQ is suspended.
+  MaybeConnectToSocketProcess();
 
   return NS_OK;
 }
