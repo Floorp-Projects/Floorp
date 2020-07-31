@@ -95,6 +95,7 @@ module.exports = async function({
         resource.response.content = {
           mimeType: packet.response.mimeType,
         };
+        resource.response.waitingTime = packet.response.waitingTime;
         break;
       case "responseContent":
         resource.response.content = {
