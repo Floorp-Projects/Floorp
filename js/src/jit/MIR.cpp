@@ -4162,7 +4162,7 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
   return true;
 }
 
-bool MCompare::tryFoldConstantTypeOf(bool* result) {
+bool MCompare::isTypeOfCompare() {
   if (!lhs()->isTypeOf() && !rhs()->isTypeOf()) {
     return false;
   }
@@ -4170,7 +4170,6 @@ bool MCompare::tryFoldConstantTypeOf(bool* result) {
     return false;
   }
 
-  MTypeOf* typeOf = lhs()->isTypeOf() ? lhs()->toTypeOf() : rhs()->toTypeOf();
   MConstant* constant =
       lhs()->isConstant() ? lhs()->toConstant() : rhs()->toConstant();
 
@@ -4181,6 +4180,18 @@ bool MCompare::tryFoldConstantTypeOf(bool* result) {
   if (!IsEqualityOp(jsop())) {
     return false;
   }
+
+  return true;
+}
+
+bool MCompare::tryFoldConstantTypeOf(bool* result) {
+  if (!isTypeOfCompare()) {
+    return false;
+  }
+
+  MTypeOf* typeOf = lhs()->isTypeOf() ? lhs()->toTypeOf() : rhs()->toTypeOf();
+  MConstant* constant =
+      lhs()->isConstant() ? lhs()->toConstant() : rhs()->toConstant();
 
   const JSAtomState& names = GetJitContext()->runtime->names();
   if (constant->toString() == TypeName(JSTYPE_UNDEFINED, names)) {
@@ -4298,6 +4309,50 @@ bool MCompare::tryFold(bool* result) {
   }
 
   return false;
+}
+
+MDefinition* MCompare::tryFoldTypeOf(TempAllocator& alloc) {
+  if (!isTypeOfCompare()) {
+    return this;
+  }
+
+  MTypeOf* typeOf = lhs()->isTypeOf() ? lhs()->toTypeOf() : rhs()->toTypeOf();
+  MConstant* constant =
+      lhs()->isConstant() ? lhs()->toConstant() : rhs()->toConstant();
+
+  // Objects emulating undefined make it difficult to check for the |typeof|
+  // constants "undefined", "object", or "function", so we don't yet handle
+  // them here. Numbers can't be compared by tag, so "number" isn't handled
+  // either. That leaves "boolean", "string", "symbol", and "bigint".
+
+  JSValueTag valueTag;
+  const JSAtomState& names = GetJitContext()->runtime->names();
+  if (constant->toString() == TypeName(JSTYPE_BOOLEAN, names)) {
+    valueTag = JSVAL_TAG_BOOLEAN;
+  } else if (constant->toString() == TypeName(JSTYPE_STRING, names)) {
+    valueTag = JSVAL_TAG_STRING;
+  } else if (constant->toString() == TypeName(JSTYPE_SYMBOL, names)) {
+    valueTag = JSVAL_TAG_SYMBOL;
+  } else if (constant->toString() == TypeName(JSTYPE_BIGINT, names)) {
+    valueTag = JSVAL_TAG_BIGINT;
+  } else {
+    return this;
+  }
+
+  auto* valueTagOp = MLoadValueTag::New(alloc, typeOf->input());
+  block()->insertBefore(this, valueTagOp);
+
+  auto* valueTagCst = MConstant::New(alloc, Int32Value(valueTag));
+  block()->insertBefore(this, valueTagCst);
+
+  auto* compare = MCompare::New(alloc, valueTagOp, valueTagCst, jsop());
+  compare->setCompareType(Compare_Int32);
+
+  if (!operandMightEmulateUndefined()) {
+    compare->markNoOperandEmulatesUndefined();
+  }
+
+  return compare;
 }
 
 template <typename T>
@@ -4469,6 +4524,10 @@ MDefinition* MCompare::foldsTo(TempAllocator& alloc) {
 
     MOZ_ASSERT(type() == MIRType::Boolean);
     return MConstant::New(alloc, BooleanValue(result));
+  }
+
+  if (MDefinition* replacement = tryFoldTypeOf(alloc); replacement != this) {
+    return replacement;
   }
 
   return this;
