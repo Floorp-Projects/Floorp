@@ -2796,7 +2796,7 @@ devtools.accessibility:
     description: >
       Number of times accessibility simulation was activated (with mouse or keyboard)
       from the accessibility panel's toolbar. Keyed by the simulation type
-      (e.g. "DEUTERANOMALY").
+      (e.g. "DEUTERANOPIA").
     expires: never
     kind: uint
     keyed: true
