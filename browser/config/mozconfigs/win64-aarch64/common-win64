@@ -15,6 +15,10 @@ export MAKENSISU="${MOZ_FETCHES_DIR}/nsis-3.01/makensis.exe"
 if [ -d "${MAKENSISU%/*}" -a ! -x "${MAKENSISU}" ]; then
     chmod +x "${MAKENSISU}"
 fi
+export MAKECAB="${TOOLTOOL_DIR}/makecab.exe"
+if [ -f "${MAKECAB}" ]; then
+    chmod +x "${MAKECAB}"
+fi
 export UPX="${MOZ_FETCHES_DIR}/upx-3.95-win64/upx.exe"
 if [ -f "${UPX}" ]; then
     chmod +x "${UPX}"
