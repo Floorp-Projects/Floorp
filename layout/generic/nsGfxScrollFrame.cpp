@@ -912,10 +912,9 @@ void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
   // Store the new overflow area. Note that this changes where an outline
   // of the scrolled frame would be painted, but scrolled frames can't have
   // outlines (the outline would go on this scrollframe instead).
-  // Using FinishAndStoreOverflow is needed so the overflow rect
-  // gets set correctly.  It also messes with the overflow rect in the
-  // -moz-hidden-unscrollable case, but scrolled frames can't have
-  // 'overflow' either.
+  // Using FinishAndStoreOverflow is needed so the overflow rect gets set
+  // correctly.  It also messes with the overflow rect in the 'clip' case, but
+  // scrolled frames can't have 'overflow' either.
   // This needs to happen before SyncFrameViewAfterReflow so
   // HasOverflowRect() will return the correct value.
   nsOverflowAreas overflow(scrolledArea, scrolledArea);
