@@ -13,6 +13,7 @@
 
 #include "jspubtd.h"
 
+#include "vm/BuiltinObjectKind.h"
 #include "vm/CheckIsObjectKind.h"  // CheckIsObjectKind
 #include "vm/Iteration.h"
 #include "vm/Stack.h"
@@ -600,7 +601,7 @@ JSObject* SingletonObjectLiteralOperation(JSContext* cx, HandleScript script,
 
 JSObject* ImportMetaOperation(JSContext* cx, HandleScript script);
 
-JSObject* FunctionProtoOperation(JSContext* cx);
+JSObject* BuiltinObjectOperation(JSContext* cx, BuiltinObjectKind kind);
 
 bool ThrowMsgOperation(JSContext* cx, const unsigned throwMsgKind);
 

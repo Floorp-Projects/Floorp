@@ -56,6 +56,7 @@
 #include "vm/ArrayBufferViewObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
+#include "vm/BuiltinObjectKind.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/FunctionFlags.h"       // js::FunctionFlags
 #include "vm/MatchPairs.h"
@@ -14384,9 +14385,11 @@ void CodeGenerator::visitObjectStaticProto(LObjectStaticProto* lir) {
 #endif
 }
 
-void CodeGenerator::visitFunctionProto(LFunctionProto* lir) {
-  using Fn = JSObject* (*)(JSContext*);
-  callVM<Fn, js::FunctionProtoOperation>(lir);
+void CodeGenerator::visitBuiltinObject(LBuiltinObject* lir) {
+  pushArg(Imm32(static_cast<int32_t>(lir->mir()->builtinObjectKind())));
+
+  using Fn = JSObject* (*)(JSContext*, BuiltinObjectKind);
+  callVM<Fn, js::BuiltinObjectOperation>(lir);
 }
 
 void CodeGenerator::visitSuperFunction(LSuperFunction* lir) {
