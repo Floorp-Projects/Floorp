@@ -38,6 +38,7 @@ job-defaults:
                 by-test-platform:
                     (linux|windows|macos)(?!.*shippable).*: []
                     .*(?:shippable-qr).*: []
+                    windows.*(?!shippable-qr)shippable.*: []
                     default: ['mozilla-central']
             default:
                 by-test-platform:
@@ -77,6 +78,7 @@ talos-bcv-profiling:
         by-test-platform:
             .*(?:shippable-qr|-qr)/.*: []
             (linux|windows|macos)(?!.*shippable)(?!.*-qr).*: []
+            windows10-64-shippable/opt: []
             default: ['mozilla-central']
     max-run-time: 1800
     mozharness:
