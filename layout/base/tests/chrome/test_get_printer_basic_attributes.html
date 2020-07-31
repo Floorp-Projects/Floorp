@@ -17,7 +17,6 @@ function run() {
     printerList.printers.forEach(printer => {
       info(`Listing basic attributes for ${printer.name}:`);
       info(`* supportsDuplex: ${printer.supportsDuplex}`);
-      info(`* supportsColor: ${printer.supportsColor}`);
     })
 
     ok(true, "Retrieved printer basic attributes successfully.");

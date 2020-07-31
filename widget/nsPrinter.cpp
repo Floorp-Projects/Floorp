@@ -7,11 +7,10 @@
 
 nsPrinter::nsPrinter(const nsAString& aName,
                      const nsTArray<RefPtr<nsIPaper>>& aPaperList,
-                     const bool aSupportsDuplex, const bool aSupportsColor)
+                     const bool aSupportsDuplex)
     : mName(aName),
       mPaperList(aPaperList.Clone()),
-      mSupportsDuplex(aSupportsDuplex),
-      mSupportsColor(aSupportsColor) {}
+      mSupportsDuplex(aSupportsDuplex) {}
 
 NS_IMPL_ISUPPORTS(nsPrinter, nsIPrinter);
 
@@ -31,12 +30,5 @@ NS_IMETHODIMP
 nsPrinter::GetSupportsDuplex(bool* aSupportsDuplex) {
   MOZ_ASSERT(aSupportsDuplex);
   *aSupportsDuplex = mSupportsDuplex;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinter::GetSupportsColor(bool* aSupportsColor) {
-  MOZ_ASSERT(aSupportsColor);
-  *aSupportsColor = mSupportsColor;
   return NS_OK;
 }
