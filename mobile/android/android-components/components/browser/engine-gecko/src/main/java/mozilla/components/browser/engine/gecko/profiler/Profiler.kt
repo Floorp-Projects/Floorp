@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.engine.gecko.profiler
 
-import mozilla.components.concept.engine.profiler.Profiler
+import mozilla.components.concept.base.profiler.Profiler
 import org.mozilla.geckoview.GeckoRuntime
 
 /**

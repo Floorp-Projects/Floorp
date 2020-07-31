@@ -17,7 +17,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
-import mozilla.components.concept.engine.profiler.Profiler
+import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
 import java.lang.IllegalStateException
