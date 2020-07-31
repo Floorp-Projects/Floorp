@@ -211,13 +211,13 @@ symbolsarchive: prepsymbolsarchive
                                      $(abspath $(DIST)/crashreporter-symbols))
 
 ifdef MOZ_CRASHREPORTER
-# Set MOZ_DISABLE_FULL_SYMBOLS to disable generation and upload of the full
+# Set MOZ_ENABLE_FULL_SYMBOLS to enable generation and upload of the full
 # crashreporter symbols archives
-ifdef MOZ_DISABLE_FULL_SYMBOLS
-buildsymbols: symbolsarchive
-else
+ifdef MOZ_ENABLE_FULL_SYMBOLS
 buildsymbols: symbolsfullarchive symbolsarchive
-endif # MOZ_DISABLE_FULL_SYMBOLS
+else
+buildsymbols: symbolsarchive
+endif # MOZ_ENABLE_FULL_SYMBOLS
 else
 buildsymbols:
 endif
