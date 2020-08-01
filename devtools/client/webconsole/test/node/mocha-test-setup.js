@@ -64,14 +64,8 @@ global.loader = {
       }
 
       for (const name of names) {
-        if (path === "devtools/shared/async-storage") {
-          global[
-            name
-          ] = require("devtools/client/webconsole/test/node/fixtures/async-storage");
-        } else {
-          const module = require(path);
-          global[name] = destruct ? module[name] : module;
-        }
+        const module = require(path);
+        global[name] = destruct ? module[name] : module;
       }
     }
   },
@@ -166,6 +160,8 @@ requireHacker.global_hook("default", (path, module) => {
         isFissionContentToolboxEnabled: () => false,
       }
     };`,
+    "devtools/shared/async-storage": () =>
+      getModule("devtools/client/webconsole/test/node/fixtures/async-storage"),
   };
 
   if (paths.hasOwnProperty(path)) {
