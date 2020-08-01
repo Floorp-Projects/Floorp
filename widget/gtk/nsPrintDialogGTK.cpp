@@ -1022,11 +1022,35 @@ nsPrintDialogServiceGTK::ShowPageSetup(nsPIDOMWindowOuter* aParent,
                                           nsIPrintSettings::kInitSaveAll);
   }
 
+  // Frustratingly, gtk_print_run_page_setup_dialog doesn't tell us whether
+  // the user cancelled or confirmed the dialog! So to avoid needlessly
+  // refreshing the preview when Page Setup was cancelled, we compare the
+  // serializations of old and new settings; if they're the same, bail out.
   GtkPrintSettings* gtkSettings = aNSSettingsGTK->GetGtkPrintSettings();
   GtkPageSetup* oldPageSetup = aNSSettingsGTK->GetGtkPageSetup();
+  GKeyFile* oldKeyFile = g_key_file_new();
+  gtk_page_setup_to_key_file(oldPageSetup, oldKeyFile, nullptr);
+  gsize oldLength;
+  gchar* oldData = g_key_file_to_data(oldKeyFile, &oldLength, nullptr);
+  g_key_file_free(oldKeyFile);
 
   GtkPageSetup* newPageSetup =
       gtk_print_run_page_setup_dialog(gtkParent, oldPageSetup, gtkSettings);
+
+  GKeyFile* newKeyFile = g_key_file_new();
+  gtk_page_setup_to_key_file(newPageSetup, newKeyFile, nullptr);
+  gsize newLength;
+  gchar* newData = g_key_file_to_data(newKeyFile, &newLength, nullptr);
+  g_key_file_free(newKeyFile);
+
+  bool unchanged =
+      (oldLength == newLength && !memcmp(oldData, newData, oldLength));
+  g_free(oldData);
+  g_free(newData);
+  if (unchanged) {
+    g_object_unref(newPageSetup);
+    return NS_ERROR_ABORT;
+  }
 
   aNSSettingsGTK->SetGtkPageSetup(newPageSetup);
 
