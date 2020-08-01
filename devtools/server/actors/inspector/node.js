@@ -12,86 +12,25 @@ const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 loader.lazyRequireGetter(
   this,
-  "getCssPath",
-  "devtools/shared/inspector/css-logic",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getXPath",
-  "devtools/shared/inspector/css-logic",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "findCssSelector",
-  "devtools/shared/inspector/css-logic",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "findAllCssSelectors",
+  ["getCssPath", "getXPath", "findCssSelector", "findAllCssSelectors"],
   "devtools/shared/inspector/css-logic",
   true
 );
 
 loader.lazyRequireGetter(
   this,
-  "isAfterPseudoElement",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isAnonymous",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isBeforePseudoElement",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isDirectShadowHostChild",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isMarkerPseudoElement",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isNativeAnonymous",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isShadowHost",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isShadowRoot",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getShadowRootMode",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isRemoteFrame",
+  [
+    "isAfterPseudoElement",
+    "isAnonymous",
+    "isBeforePseudoElement",
+    "isDirectShadowHostChild",
+    "isMarkerPseudoElement",
+    "isNativeAnonymous",
+    "isShadowHost",
+    "isShadowRoot",
+    "getShadowRootMode",
+    "isRemoteFrame",
+  ],
   "devtools/shared/layout/utils",
   true
 );
