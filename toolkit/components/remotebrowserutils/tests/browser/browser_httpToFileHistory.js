@@ -2,7 +2,6 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
 const HISTORY = [
   { url: httpURL("dummy_page.html") },
   { url: fileURL("dummy_page.html") },

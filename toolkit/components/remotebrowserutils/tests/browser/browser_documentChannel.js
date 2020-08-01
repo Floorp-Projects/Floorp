@@ -10,14 +10,6 @@ const FILE_DUMMY = fileURL("dummy_page.html");
 const DATA_URL = "data:text/html,Hello%2C World!";
 const DATA_STRING = "Hello, World!";
 
-const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
-
-async function setPref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[DOCUMENT_CHANNEL_PREF, true]],
-  });
-}
-
 async function performLoad(browser, opts, action) {
   let loadedPromise = BrowserTestUtils.browserLoaded(
     browser,
@@ -222,9 +214,7 @@ async function testLoadAndRedirect(
 }
 
 add_task(async function test_enabled() {
-  await setPref();
-
-  // With the pref enabled, URIs should correctly switch processes & the POST
+  // URIs should correctly switch processes & the POST
   // should succeed.
   info("ENABLED -- FILE -- raw URI load");
   let resp = await postFrom(FILE_DUMMY, PRINT_POSTDATA);
@@ -289,8 +279,6 @@ async function sendMessage(ext, method, url) {
 
 // TODO: Currently no test framework for ftp://.
 add_task(async function test_protocol() {
-  await setPref();
-
   // TODO: Processes should be switched due to navigation of different origins.
   await testLoadAndRedirect("data:,foo", false, true);
 

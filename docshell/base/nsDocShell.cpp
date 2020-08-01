@@ -6238,73 +6238,9 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   // Test whether this is the top frame or a subframe
   bool isTopFrame = mBrowsingContext->IsTop();
 
-  //
-  // If the page load failed, then deal with the error condition...
-  // Errors are handled as follows:
-  //   1. Check to see if it's a file not found error or bad content
-  //      encoding error.
-  //   2. Send the URI to a keyword server (if enabled)
-  //   3. If the error was DNS failure, then add www and .com to the URI
-  //      (if appropriate).
-  //   4. If the www .com additions don't work, try those with an HTTPS scheme
-  //      (if appropriate).
-  //   5. Throw an error dialog box...
-  //
+  // If status code indicates an error it means that DocumentChannel already
+  // tried to fixup the uri and failed. Throw an error dialog box here.
   if (NS_FAILED(aStatus)) {
-    nsCOMPtr<nsIInputStream> newPostData;
-    nsCOMPtr<nsIURI> newURI =
-        AttemptURIFixup(aChannel, aStatus, Some(mOriginalUriString), mLoadType,
-                        isTopFrame, mAllowKeywordFixup, UsePrivateBrowsing(),
-                        true, getter_AddRefs(newPostData));
-    if (newURI) {
-      nsAutoCString newSpec;
-      newURI->GetSpec(newSpec);
-      NS_ConvertUTF8toUTF16 newSpecW(newSpec);
-
-      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-      MOZ_ASSERT(loadInfo, "loadInfo is required on all channels");
-      nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-          loadInfo->TriggeringPrincipal();
-
-      // If the new URI is HTTP, it may not work and we may want to fall
-      // back to HTTPS, so kick off a speculative connect to get that
-      // started.  Even if we don't adjust to HTTPS here, there could be a
-      // redirect to HTTPS coming so this could speed things up.
-      if (SchemeIsHTTP(url)) {
-        int32_t port = 0;
-        rv = url->GetPort(&port);
-
-        // only do this if the port is default.
-        if (NS_SUCCEEDED(rv) && port == -1) {
-          nsCOMPtr<nsIURI> httpsURI;
-          rv = NS_MutateURI(url)
-                   .SetScheme("https"_ns)
-                   .Finalize(getter_AddRefs(httpsURI));
-
-          if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIIOService> ios = do_GetIOService();
-            if (ios) {
-              nsCOMPtr<nsISpeculativeConnect> speculativeService =
-                  do_QueryInterface(ios);
-              if (speculativeService) {
-                speculativeService->SpeculativeConnect(
-                    httpsURI, triggeringPrincipal, nullptr);
-              }
-            }
-          }
-        }
-      }
-
-      LoadURIOptions loadURIOptions;
-      loadURIOptions.mTriggeringPrincipal = triggeringPrincipal;
-      loadURIOptions.mCsp = loadInfo->GetCspToInherit();
-      loadURIOptions.mPostData = newPostData;
-      return LoadURI(newSpecW, loadURIOptions);
-    }
-
-    // Well, fixup didn't work :-(
-    // It is time to throw an error dialog box, and be done with it...
-
     // If we got CONTENT_BLOCKED from EndPageLoad, then we need to fire
     // the error event to our embedder, since tests are relying on this.
     // The error event is usually fired by the caller of InternalLoad, but

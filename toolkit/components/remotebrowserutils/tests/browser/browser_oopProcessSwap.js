@@ -1,9 +1,3 @@
-add_task(async function setupPrefs() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.documentchannel", true]],
-  });
-});
-
 add_task(async function oopProcessSwap() {
   const FILE = fileURL("dummy_page.html");
   const WEB = httpURL("file_postmsg_parent.html");

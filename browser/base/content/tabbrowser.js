@@ -6007,11 +6007,6 @@
           }
         }
       } else if (aStateFlags & STATE_STOP && aStateFlags & STATE_IS_NETWORK) {
-        if (--this.mRequestCount > 0 && aStatus == Cr.NS_ERROR_UNKNOWN_HOST) {
-          // to prevent bug 235825: wait for the request handled
-          // by the automatic keyword resolver
-          return;
-        }
         // since we (try to) only handle STATE_STOP of the last request,
         // the count of open requests should now be 0
         this.mRequestCount = 0;

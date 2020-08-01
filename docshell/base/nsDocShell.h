@@ -436,6 +436,15 @@ class nsDocShell final : public nsDocLoader,
       nsLoadFlags aLoadFlags, uint32_t aCacheKey, nsresult& rv,
       nsIChannel** aChannel);
 
+  // This is used to deal with errors resulting from a failed page load.
+  // Errors are handled as follows:
+  //   1. Check to see if it's a file not found error or bad content
+  //      encoding error.
+  //   2. Send the URI to a keyword server (if enabled)
+  //   3. If the error was DNS failure, then add www and .com to the URI
+  //      (if appropriate).
+  //   4. If the www .com additions don't work, try those with an HTTPS scheme
+  //      (if appropriate).
   static already_AddRefed<nsIURI> AttemptURIFixup(
       nsIChannel* aChannel, nsresult aStatus,
       const mozilla::Maybe<nsCString>& aOriginalURIString, uint32_t aLoadType,

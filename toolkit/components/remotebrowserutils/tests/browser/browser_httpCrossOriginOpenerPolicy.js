@@ -5,14 +5,10 @@ const { E10SUtils } = ChromeUtils.import(
 );
 
 const COOP_PREF = "browser.tabs.remote.useCrossOriginOpenerPolicy";
-const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
 
 async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [COOP_PREF, true],
-      [DOCUMENT_CHANNEL_PREF, true],
-    ],
+    set: [[COOP_PREF, true]],
   });
 }
 
