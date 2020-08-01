@@ -2119,8 +2119,7 @@ imgLoader::LoadImageXPCOM(
 }
 
 static void MakeRequestStaticIfNeeded(
-    Document* aLoadingDocument,
-    imgRequestProxy** aProxyAboutToGetReturned) {
+    Document* aLoadingDocument, imgRequestProxy** aProxyAboutToGetReturned) {
   if (!aLoadingDocument || !aLoadingDocument->IsStaticDocument()) {
     return;
   }
@@ -2157,9 +2156,8 @@ nsresult imgLoader::LoadImage(
     return NS_ERROR_NULL_POINTER;
   }
 
-  auto makeStaticIfNeeded = mozilla::MakeScopeExit([&] {
-    MakeRequestStaticIfNeeded(aLoadingDocument, _retval);
-  });
+  auto makeStaticIfNeeded = mozilla::MakeScopeExit(
+      [&] { MakeRequestStaticIfNeeded(aLoadingDocument, _retval); });
 
 #ifdef MOZ_GECKO_PROFILER
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("imgLoader::LoadImage", NETWORK,
@@ -2519,9 +2517,8 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
   MOZ_ASSERT(NS_UsePrivateBrowsing(channel) == mRespectPrivacy);
 
-  auto makeStaticIfNeeded = mozilla::MakeScopeExit([&] {
-    MakeRequestStaticIfNeeded(aLoadingDocument, _retval);
-  });
+  auto makeStaticIfNeeded = mozilla::MakeScopeExit(
+      [&] { MakeRequestStaticIfNeeded(aLoadingDocument, _retval); });
 
   LOG_SCOPE(gImgLog, "imgLoader::LoadImageWithChannel");
   RefPtr<imgRequest> request;
