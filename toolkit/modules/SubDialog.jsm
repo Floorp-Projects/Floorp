@@ -28,6 +28,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
  * its background overlay is clicked.
  * @param {SubDialog~resizeCallback} [resizeCallback] - Function to be called on
  * dialog resize.
+ * @param {Boolean} [dialogOptions.reuseDialog] - If false, remove the SubDialog
+ * from the DOM when closed. Defaults to true.
  */
 function SubDialog({
   template,
@@ -37,12 +39,14 @@ function SubDialog({
     styleSheets = [],
     consumeOutsideClicks = true,
     resizeCallback,
+    reuseDialog = true,
   } = {},
 }) {
   this._id = id;
 
   this._injectedStyleSheets = this._injectedStyleSheets.concat(styleSheets);
   this._consumeOutsideClicks = consumeOutsideClicks;
+  this._reuseDialog = reuseDialog;
   this._resizeCallback = resizeCallback;
   this._overlay = template.cloneNode(true);
   this._box = this._overlay.querySelector(".dialogBox");
@@ -114,6 +118,11 @@ SubDialog.prototype = {
   },
 
   async open(aURL, aFeatures = null, aParams = null, aClosingCallback = null) {
+    // Create a promise so consumers can tell when we're done setting up.
+    this._dialogReady = new Promise(resolve => {
+      this._resolveDialogReady = resolve;
+    });
+
     // Wait until frame is ready to prevent browser crash in tests
     await this._frameCreated;
 
@@ -213,10 +222,15 @@ SubDialog.prototype = {
       // cancelled by the ESC <key>.
       let onBlankLoad = e => {
         if (this._frame.contentWindow.location.href == "about:blank") {
-          this._frame.removeEventListener("load", onBlankLoad);
+          this._frame.removeEventListener("load", onBlankLoad, true);
           // We're now officially done closing, so update the state to reflect that.
           this._openedURL = null;
           this._isClosing = false;
+
+          if (!this._reuseDialog) {
+            this._overlay.remove();
+          }
+
           this._resolveClosePromise();
         }
       };
@@ -232,7 +246,7 @@ SubDialog.prototype = {
         );
       }
 
-      this._frame.addEventListener("load", onBlankLoad, { capture: true });
+      this._frame.addEventListener("load", onBlankLoad, true);
       this._frame.loadURI("about:blank", {
         triggeringPrincipal,
       });
@@ -366,6 +380,7 @@ SubDialog.prototype = {
     }
 
     await this.resizeDialog();
+    this._resolveDialogReady();
   },
 
   async resizeDialog() {
@@ -615,7 +630,7 @@ SubDialog.prototype = {
 
     // Wait for the stylesheets injected during DOMContentLoaded to load before showing the dialog
     // otherwise there is a flicker of the stylesheet applying.
-    this._frame.addEventListener("load", this, { capture: true });
+    this._frame.addEventListener("load", this, true);
 
     chromeEventHandler.addEventListener("unload", this, true);
 
@@ -635,7 +650,7 @@ SubDialog.prototype = {
     this._closeButton?.removeEventListener("command", this);
 
     this._window.removeEventListener("DOMFrameContentLoaded", this, true);
-    this._frame.removeEventListener("load", this);
+    this._frame.removeEventListener("load", this, true);
     this._frame.contentWindow.removeEventListener("dialogclosing", this);
     this._window.removeEventListener("keydown", this, true);
 
@@ -660,7 +675,7 @@ SubDialog.prototype = {
   _untrapFocus() {
     this._frame.contentDocument.removeEventListener("keydown", this, true);
     this._closeButton?.removeEventListener("keydown", this);
-    this._window.removeEventListener("focus", this);
+    this._window.removeEventListener("focus", this, true);
   },
 };
 
