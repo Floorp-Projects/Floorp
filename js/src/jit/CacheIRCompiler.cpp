@@ -4069,6 +4069,23 @@ bool CacheIRCompiler::emitNewRegExpStringIteratorResult(
   return true;
 }
 
+bool CacheIRCompiler::emitObjectCreateResult(uint32_t templateObjectOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  AutoScratchRegister scratch(allocator, masm);
+
+  StubFieldOffset objectField(templateObjectOffset, StubField::Type::JSObject);
+  emitLoadStubField(objectField, scratch);
+
+  callvm.prepare();
+  masm.Push(scratch);
+
+  using Fn = PlainObject* (*)(JSContext*, HandlePlainObject);
+  callvm.call<Fn, ObjectCreateWithTemplate>();
+  return true;
+}
+
 bool CacheIRCompiler::emitMathAbsInt32Result(Int32OperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
@@ -7424,6 +7441,10 @@ struct ReturnTypeToJSValueType<StringIteratorObject*> {
 };
 template <>
 struct ReturnTypeToJSValueType<RegExpStringIteratorObject*> {
+  static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
+};
+template <>
+struct ReturnTypeToJSValueType<PlainObject*> {
   static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
 };
 

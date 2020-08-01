@@ -2018,6 +2018,22 @@ bool WarpCacheIRTranspiler::emitNewRegExpStringIteratorResult(
                                templateObjectOffset);
 }
 
+bool WarpCacheIRTranspiler::emitObjectCreateResult(
+    uint32_t templateObjectOffset) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+
+  auto* templateConst = constant(ObjectValue(*templateObj));
+
+  // TODO: support pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+  auto* obj = MNewObject::New(alloc(), /* constraints = */ nullptr,
+                              templateConst, heap, MNewObject::ObjectCreate);
+  addEffectful(obj);
+
+  pushResult(obj);
+  return resumeAfter(obj);
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
