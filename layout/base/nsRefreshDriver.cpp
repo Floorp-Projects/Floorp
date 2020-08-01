@@ -2160,6 +2160,17 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   bool dispatchRunnablesAfterTick = false;
   if (mViewManagerFlushIsPending) {
     AutoRecordPhase paintRecord(&phasePaint);
+    nsCString transactionId;
+#if MOZ_GECKO_PROFILER
+    if (profiler_can_accept_markers()) {
+      transactionId.AppendLiteral("Transaction ID: ");
+      transactionId.AppendInt((uint64_t)mNextTransactionId);
+    }
+#endif
+    AUTO_PROFILER_TEXT_MARKER_CAUSE("ViewManagerFlush", transactionId, GRAPHICS,
+                                    Nothing(),
+                                    std::move(mViewManagerFlushCause));
+
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
     nsTArray<nsDocShell*> profilingDocShells;
@@ -2496,6 +2507,9 @@ void nsRefreshDriver::ScheduleViewManagerFlush() {
   NS_ASSERTION(mPresContext->IsRoot(),
                "Should only schedule view manager flush on root prescontexts");
   mViewManagerFlushIsPending = true;
+  if (!mViewManagerFlushCause) {
+    mViewManagerFlushCause = profiler_get_backtrace();
+  }
   mHasScheduleFlush = true;
   EnsureTimerStarted(eNeverAdjustTimer);
 }
