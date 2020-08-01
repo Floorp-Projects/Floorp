@@ -483,8 +483,8 @@ nsresult nsHttpHandler::Init() {
   Preferences::RegisterPrefixCallbacks(nsHttpHandler::PrefsChanged,
                                        gCallbackPrefs, this);
   PrefsChanged(nullptr);
-  Telemetry::ScalarSet(
-      Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED, mHttp3Enabled);
+  Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED,
+                       mHttp3Enabled);
 
   mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
 
@@ -1061,13 +1061,13 @@ void nsHttpHandler::InitUserAgentComponents() {
     }
   }
 #  elif defined(XP_MACOSX)
-#    if defined(__i386__) || defined(__x86_64__)
-  mOscpu.AssignLiteral("Intel Mac OS X");
-#    endif
   SInt32 majorVersion = nsCocoaFeatures::macOSVersionMajor();
   SInt32 minorVersion = nsCocoaFeatures::macOSVersionMinor();
-  mOscpu += nsPrintfCString(" %d.%d", static_cast<int>(majorVersion),
-                            static_cast<int>(minorVersion));
+
+  // Always return an "Intel" UA string, even on ARM64 macOS like Safari does.
+  mOscpu =
+      nsPrintfCString("Intel Mac OS X %d.%d", static_cast<int>(majorVersion),
+                      static_cast<int>(minorVersion));
 #  elif defined(XP_UNIX)
   struct utsname name;
   int ret = uname(&name);
