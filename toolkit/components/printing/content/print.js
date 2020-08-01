@@ -4,9 +4,21 @@
 
 const { gBrowser, PrintUtils } = window.docShell.chromeEventHandler.ownerGlobal;
 
-document.addEventListener("DOMContentLoaded", e => {
-  PrintEventHandler.init();
-});
+document.addEventListener(
+  "DOMContentLoaded",
+  e => {
+    PrintEventHandler.init();
+  },
+  { once: true }
+);
+
+window.addEventListener(
+  "unload",
+  e => {
+    document.textContent = "";
+  },
+  { once: true }
+);
 
 const PrintEventHandler = {
   init() {
@@ -60,9 +72,7 @@ const PrintEventHandler = {
   },
 
   cancelPrint() {
-    gBrowser.removeTab(
-      gBrowser.getTabForBrowser(window.docShell.chromeEventHandler)
-    );
+    window.close();
   },
 
   updateSetting({ setting, value }) {
