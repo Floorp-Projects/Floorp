@@ -82,25 +82,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "HighlighterActor",
-  "devtools/server/actors/highlighters",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "CustomHighlighterActor",
-  "devtools/server/actors/highlighters",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isTypeRegistered",
-  "devtools/server/actors/highlighters",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "HighlighterEnvironment",
+  [
+    "HighlighterActor",
+    "CustomHighlighterActor",
+    "isTypeRegistered",
+    "HighlighterEnvironment",
+  ],
   "devtools/server/actors/highlighters",
   true
 );

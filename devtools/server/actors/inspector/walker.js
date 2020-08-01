@@ -17,67 +17,19 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "getFrameElement",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isAfterPseudoElement",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isAnonymous",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isBeforePseudoElement",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isDirectShadowHostChild",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isMarkerPseudoElement",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isNativeAnonymous",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isShadowHost",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isShadowRoot",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isTemplateElement",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "loadSheet",
+  [
+    "getFrameElement",
+    "isAfterPseudoElement",
+    "isAnonymous",
+    "isBeforePseudoElement",
+    "isDirectShadowHostChild",
+    "isMarkerPseudoElement",
+    "isNativeAnonymous",
+    "isShadowHost",
+    "isShadowRoot",
+    "isTemplateElement",
+    "loadSheet",
+  ],
   "devtools/shared/layout/utils",
   true
 );
@@ -86,31 +38,13 @@ loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
 
 loader.lazyRequireGetter(
   this,
-  "allAnonymousContentTreeWalkerFilter",
-  "devtools/server/actors/inspector/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "findGridParentContainerForNode",
-  "devtools/server/actors/inspector/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isNodeDead",
-  "devtools/server/actors/inspector/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "nodeDocument",
-  "devtools/server/actors/inspector/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "standardTreeWalkerFilter",
+  [
+    "allAnonymousContentTreeWalkerFilter",
+    "findGridParentContainerForNode",
+    "isNodeDead",
+    "nodeDocument",
+    "standardTreeWalkerFilter",
+  ],
   "devtools/server/actors/inspector/utils",
   true
 );
@@ -130,25 +64,13 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DocumentWalker",
+  ["DocumentWalker", "SKIP_TO_SIBLING"],
   "devtools/server/actors/inspector/document-walker",
   true
 );
 loader.lazyRequireGetter(
   this,
-  "SKIP_TO_SIBLING",
-  "devtools/server/actors/inspector/document-walker",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "NodeActor",
-  "devtools/server/actors/inspector/node",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "NodeListActor",
+  ["NodeActor", "NodeListActor"],
   "devtools/server/actors/inspector/node",
   true
 );
@@ -166,13 +88,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "getLayoutChangesObserver",
-  "devtools/server/actors/reflow",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "releaseLayoutChangesObserver",
+  ["getLayoutChangesObserver", "releaseLayoutChangesObserver"],
   "devtools/server/actors/reflow",
   true
 );
