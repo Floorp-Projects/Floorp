@@ -984,8 +984,8 @@ fuzzy-if(Android,0-11,0-17) fuzzy-if(webrender,0-1,0-10) == 413361-1.html 413361
 == 421069.html 421069-ref.html
 == 421069.html 421069-ref2.html
 == 421069-ref.html 421069-ref2.html
-== chrome://reftest/content/bugs/421203-1.xhtml 421203-1-ref.html
-== chrome://reftest/content/bugs/421203-2.xhtml 421203-1-ref.html
+fuzzy(0-92,0-430) == chrome://reftest/content/bugs/421203-1.xhtml 421203-1-ref.html
+fuzzy(0-92,0-430) == chrome://reftest/content/bugs/421203-2.xhtml 421203-1-ref.html
 == chrome://reftest/content/bugs/421203-3.xhtml chrome://reftest/content/bugs/321402-3-ref.xhtml
 == chrome://reftest/content/bugs/421203-4.xhtml chrome://reftest/content/bugs/321402-4-ref.xhtml
 == chrome://reftest/content/bugs/421203-5.xhtml chrome://reftest/content/bugs/321402-5-ref.xhtml
