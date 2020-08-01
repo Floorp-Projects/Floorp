@@ -1254,9 +1254,12 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   Maybe<ReflowInput> mutableReflowInput;
   // If we have non-auto block size, we're clipping our kids and we fit,
   // make sure our kids fit too.
+  const PhysicalAxes physicalBlockAxis =
+      wm.IsVertical() ? PhysicalAxes::Horizontal : PhysicalAxes::Vertical;
   if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
       aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE &&
-      ShouldApplyOverflowClipping(aReflowInput.mStyleDisplay)) {
+      (ShouldApplyOverflowClipping(aReflowInput.mStyleDisplay) &
+       physicalBlockAxis)) {
     LogicalMargin blockDirExtras = aReflowInput.ComputedLogicalBorderPadding();
     if (GetLogicalSkipSides().BStart()) {
       blockDirExtras.BStart(wm) = 0;
@@ -2042,7 +2045,7 @@ void nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   nsOverflowAreas areas(aBounds, aBounds);
-  if (!ShouldApplyOverflowClipping(aDisplay)) {
+  if (ShouldApplyOverflowClipping(aDisplay) != PhysicalAxes::Both) {
     for (const auto& line : Lines()) {
       if (aDisplay->IsContainLayout()) {
         // If we have layout containment, we should only consider our child's

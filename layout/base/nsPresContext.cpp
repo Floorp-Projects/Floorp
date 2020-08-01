@@ -1085,16 +1085,12 @@ static bool CheckOverflow(const ComputedStyle* aComputedStyle,
     return false;
   }
 
-  if (display->mOverflowX == StyleOverflow::Visible) {
-    MOZ_ASSERT(display->mOverflowY == StyleOverflow::Visible);
+  if (display->mOverflowX == StyleOverflow::Visible &&
+      display->mOverflowY == StyleOverflow::Visible) {
     return false;
   }
 
-  if (display->mOverflowX == StyleOverflow::Clip) {
-    *aStyles = ScrollStyles(StyleOverflow::Hidden, StyleOverflow::Hidden);
-  } else {
-    *aStyles = ScrollStyles(*display);
-  }
+  *aStyles = ScrollStyles(*display, ScrollStyles::MapOverflowToValidScrollStyle);
   return true;
 }
 
