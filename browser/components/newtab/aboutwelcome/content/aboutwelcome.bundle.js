@@ -507,8 +507,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
         })), this.props.content.tiles.data.map(({
           theme,
           label,
-          tooltip,
-          description
+          tooltip
         }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           key: theme + label,
           text: typeof tooltip === "object" ? tooltip : {}
@@ -527,10 +526,6 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           text: label
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "text"
-        })), description && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-          text: description
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-          className: "theme-desc"
         })))))))) : null;
     }
 

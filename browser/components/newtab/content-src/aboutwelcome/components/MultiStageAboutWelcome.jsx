@@ -254,7 +254,7 @@ export class WelcomeScreen extends React.PureComponent {
                   <legend className="sr-only" />
                 </Localized>
                 {this.props.content.tiles.data.map(
-                  ({ theme, label, tooltip, description }) => (
+                  ({ theme, label, tooltip }) => (
                     <Localized
                       key={theme + label}
                       text={typeof tooltip === "object" ? tooltip : {}}
@@ -271,11 +271,6 @@ export class WelcomeScreen extends React.PureComponent {
                         {label && (
                           <Localized text={label}>
                             <div className="text" />
-                          </Localized>
-                        )}
-                        {description && (
-                          <Localized text={description}>
-                            <div className="theme-desc" />
                           </Localized>
                         )}
                       </label>
