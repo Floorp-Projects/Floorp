@@ -94,6 +94,12 @@ impl fmt::Display for FourCC {
     }
 }
 
+impl PartialEq<&[u8; 4]> for FourCC {
+    fn eq(&self, other: &&[u8; 4]) -> bool {
+        self.value.eq(*other)
+    }
+}
+
 box_database!(
     FileTypeBox                       0x6674_7970, // "ftyp"
     MediaDataBox                      0x6d64_6174, // "mdat"
