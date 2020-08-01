@@ -79,7 +79,10 @@ class SVGElement;
  * https://bugzilla.mozilla.org/show_bug.cgi?id=571734
  */
 class DOMSVGLength final : public nsISupports, public nsWrapperCache {
-  friend class AutoChangeLengthNotifier;
+  template <class T>
+  friend class AutoChangeLengthListNotifier;
+  using AutoChangeLengthListNotifier =
+      AutoChangeLengthListNotifier<DOMSVGLength>;
 
   /**
    * Ctor for creating the object returned by
@@ -118,6 +121,11 @@ class DOMSVGLength final : public nsISupports, public nsWrapperCache {
   DOMSVGLength* Copy();
 
   bool IsInList() const { return !!mList; }
+
+  /**
+   * Returns true if our attribute is animating.
+   */
+  bool IsAnimating() const { return mList && mList->IsAnimating(); }
 
   /**
    * In future, if this class is used for non-list lengths, this will be

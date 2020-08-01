@@ -6,7 +6,6 @@
 
 #include "DOMSVGTransformList.h"
 
-#include "mozAutoDocUpdate.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformListBinding.h"
@@ -74,32 +73,6 @@ JSObject* DOMSVGTransformList::WrapObject(JSContext* cx,
                                           JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::SVGTransformList_Binding::Wrap(cx, this, aGivenProto);
 }
-
-//----------------------------------------------------------------------
-// Helper class: AutoChangeTransformListNotifier
-// Stack-based helper class to pair calls to WillChangeTransformList and
-// DidChangeTransformList.
-class MOZ_RAII AutoChangeTransformListNotifier : public mozAutoDocUpdate {
- public:
-  explicit AutoChangeTransformListNotifier(DOMSVGTransformList* aTransformList)
-      : mozAutoDocUpdate(aTransformList->Element()->GetComposedDoc(), true),
-        mTransformList(aTransformList) {
-    MOZ_ASSERT(mTransformList, "Expecting non-null transformList");
-    mEmptyOrOldValue =
-        mTransformList->Element()->WillChangeTransformList(*this);
-  }
-
-  ~AutoChangeTransformListNotifier() {
-    mTransformList->Element()->DidChangeTransformList(mEmptyOrOldValue, *this);
-    if (mTransformList->IsAnimating()) {
-      mTransformList->Element()->AnimationNeedsResample();
-    }
-  }
-
- private:
-  DOMSVGTransformList* const mTransformList;
-  nsAttrValue mEmptyOrOldValue;
-};
 
 void DOMSVGTransformList::InternalListLengthWillChange(uint32_t aNewLength) {
   uint32_t oldLength = mItems.Length();

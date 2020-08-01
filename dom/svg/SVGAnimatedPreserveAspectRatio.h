@@ -25,6 +25,8 @@ class SVGAnimationElement;
 }  // namespace dom
 
 class SVGAnimatedPreserveAspectRatio final {
+  friend class AutoChangePreserveAspectRatioNotifier;
+
  public:
   void Init() {
     mBaseVal.mAlign =
