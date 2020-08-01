@@ -70,7 +70,6 @@ async function runTestcase(aTab, aTestcase) {
 add_task(async function setupPrefs() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.tabs.documentchannel", true],
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.testing.enabled", true],
     ],

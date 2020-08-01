@@ -161,18 +161,12 @@ static bool URIUsesDocChannel(nsIURI* aURI) {
 }
 
 bool DocumentChannel::CanUseDocumentChannel(nsIURI* aURI, uint32_t aLoadFlags) {
-  if (XRE_IsParentProcess() &&
-      !StaticPrefs::browser_tabs_documentchannel_ppdc()) {
-    return false;
-  }
-
   // We want to use DocumentChannel if we're using a supported scheme. Sandboxed
   // srcdoc loads break due to failing assertions after changing processes, and
   // non-sandboxed srcdoc loads need to share the same principal object as their
   // outer document (and must load in the same process), which breaks if we
   // serialize to the parent process.
-  return StaticPrefs::browser_tabs_documentchannel() &&
-         !(aLoadFlags & nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC) &&
+  return !(aLoadFlags & nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC) &&
          URIUsesDocChannel(aURI);
 }
 
