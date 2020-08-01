@@ -217,9 +217,23 @@ pub struct Mp4parsePsshInfo {
     pub data: Mp4parseByteData,
 }
 
+#[repr(u8)]
+#[derive(Debug, PartialEq)]
+pub enum OptionalFourCC {
+    None,
+    Some([u8; 4]),
+}
+
+impl Default for OptionalFourCC {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
 #[repr(C)]
 #[derive(Default, Debug)]
 pub struct Mp4parseSinfInfo {
+    pub original_format: OptionalFourCC,
     pub scheme_type: Mp4ParseEncryptionSchemeType,
     pub is_encrypted: u8,
     pub iv_size: u8,
@@ -827,6 +841,8 @@ fn get_track_audio_info(
             .iter()
             .find(|sinf| sinf.tenc.is_some())
         {
+            sample_info.protected_data.original_format =
+                OptionalFourCC::Some(p.original_format.value);
             sample_info.protected_data.scheme_type = match p.scheme_type {
                 Some(ref scheme_type_box) => {
                     match scheme_type_box.scheme_type.value.as_ref() {
@@ -987,6 +1003,8 @@ fn mp4parse_get_track_video_info_safe(
             .iter()
             .find(|sinf| sinf.tenc.is_some())
         {
+            sample_info.protected_data.original_format =
+                OptionalFourCC::Some(p.original_format.value);
             sample_info.protected_data.scheme_type = match p.scheme_type {
                 Some(ref scheme_type_box) => {
                     match scheme_type_box.scheme_type.value.as_ref() {

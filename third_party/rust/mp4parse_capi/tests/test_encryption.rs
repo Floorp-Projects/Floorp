@@ -52,6 +52,10 @@ fn parse_cenc() {
         assert_eq!((*video.sample_info).image_height, 240);
         let protected_data = &(*video.sample_info).protected_data;
         assert_eq!(
+            protected_data.original_format,
+            OptionalFourCC::Some(*b"avc1")
+        );
+        assert_eq!(
             protected_data.scheme_type,
             Mp4ParseEncryptionSchemeType::Cenc
         );
@@ -79,6 +83,10 @@ fn parse_cenc() {
         assert_eq!((*audio.sample_info).bit_depth, 16);
         assert_eq!((*audio.sample_info).sample_rate, 44100);
         let protected_data = &(*audio.sample_info).protected_data;
+        assert_eq!(
+            protected_data.original_format,
+            OptionalFourCC::Some(*b"mp4a")
+        );
         assert_eq!(protected_data.is_encrypted, 0x01);
         assert_eq!(protected_data.iv_size, 16);
         assert_eq!(protected_data.kid.length, 16);
@@ -128,6 +136,10 @@ fn parse_cbcs() {
         assert_eq!((*video.sample_info).image_width, 400);
         assert_eq!((*video.sample_info).image_height, 300);
         let protected_data = &(*video.sample_info).protected_data;
+        assert_eq!(
+            protected_data.original_format,
+            OptionalFourCC::Some(*b"avc1")
+        );
         assert_eq!(
             protected_data.scheme_type,
             Mp4ParseEncryptionSchemeType::Cbcs
@@ -186,6 +198,7 @@ fn parse_unencrypted() {
         assert_eq!(rv, Mp4parseStatus::Ok);
         assert_eq!(audio.sample_info_count, 1);
         let protected_data = &(*audio.sample_info).protected_data;
+        assert_eq!(protected_data.original_format, OptionalFourCC::None);
         assert_eq!(
             protected_data.scheme_type,
             Mp4ParseEncryptionSchemeType::None
