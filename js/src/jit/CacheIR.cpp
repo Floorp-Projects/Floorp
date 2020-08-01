@@ -6986,6 +6986,50 @@ AttachDecision CallIRGenerator::tryAttachNewRegExpStringIterator(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachObjectCreate(HandleFunction callee) {
+  // Need a single object-or-null argument.
+  if (argc_ != 1 || !args_[0].isObjectOrNull()) {
+    return AttachDecision::NoAction;
+  }
+
+  // TODO(Warp): attach this stub just once to prevent slowdowns for
+  // polymorphic calls.
+
+  RootedObject proto(cx_, args_[0].toObjectOrNull());
+  JSObject* templateObj = ObjectCreateImpl(cx_, proto, TenuredObject);
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'create' native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard on the proto argument.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  if (proto) {
+    ObjOperandId protoId = writer.guardToObject(argId);
+    writer.guardSpecificObject(protoId, proto);
+  } else {
+    writer.guardIsNull(argId);
+  }
+
+  if (!JitOptions.warpBuilder) {
+    // Store the template object for BaselineInspector.
+    writer.metaNativeTemplateObject(callee, templateObj);
+  }
+
+  writer.objectCreateResult(templateObj);
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("ObjectCreate");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
   if (calleeFunc->native() != fun_apply) {
@@ -7307,6 +7351,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Object natives.
     case InlinableNative::Object:
       return tryAttachToObject(callee, native);
+    case InlinableNative::ObjectCreate:
+      return tryAttachObjectCreate(callee);
 
     // Set intrinsics.
     case InlinableNative::IntrinsicGuardToSetObject:
@@ -7581,15 +7627,6 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
       RootedString emptyString(cx_, cx_->runtime()->emptyString);
       res.set(StringObject::create(cx_, emptyString, /* proto = */ nullptr,
                                    TenuredObject));
-      return !!res;
-    }
-
-    case InlinableNative::ObjectCreate: {
-      if (args_.length() != 1 || !args_[0].isObjectOrNull()) {
-        return true;
-      }
-      RootedObject proto(cx_, args_[0].toObjectOrNull());
-      res.set(ObjectCreateImpl(cx_, proto, TenuredObject));
       return !!res;
     }
 
