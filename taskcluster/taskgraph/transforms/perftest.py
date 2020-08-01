@@ -243,7 +243,10 @@ def setup_perftest_metrics(config, jobs):
             "{perftest_metrics}",
             " ".join([
                 ",".join([
-                    ":".join([option, str(value).replace(" ", "")])
+                    ":".join([
+                        option,
+                        str(value).replace(" ", "").replace("'", '\\\"')
+                    ])
                     for option, value in metric_info.items()
                 ])
                 for metric_info in perftest_metrics
