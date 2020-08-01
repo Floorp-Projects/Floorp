@@ -34,7 +34,7 @@ fn dump_file(filename: &str) {
         match rv {
             Mp4parseStatus::Ok => (),
             _ => {
-                println!("-- fail to parse, '-v' for more info");
+                println!("-- fail to parse: {:?}, '-v' for more info", rv);
                 return;
             }
         }
@@ -44,8 +44,8 @@ fn dump_file(filename: &str) {
             Mp4parseStatus::Ok => {
                 println!("-- mp4parse_fragment_info {:?}", frag_info);
             }
-            _ => {
-                println!("-- mp4parse_fragment_info failed");
+            rv => {
+                println!("-- mp4parse_fragment_info failed with {:?}", rv);
                 return;
             }
         }

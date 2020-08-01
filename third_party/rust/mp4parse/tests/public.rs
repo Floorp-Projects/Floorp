@@ -28,6 +28,7 @@ static AUDIO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_audio_init.mp4";
 static VIDEO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_video_init.mp4";
 static VIDEO_AV1_MP4: &str = "tests/tiny_av1.mp4";
 static IMAGE_AVIF: &str = "av1-avif/testFiles/Microsoft/Monochrome.avif";
+static IMAGE_AVIF_CORRUPT: &str = "tests/bug-1655846.avif";
 static IMAGE_AVIF_GRID: &str = "av1-avif/testFiles/Microsoft/Summer_in_Tomsk_720p_5x4_grid.avif";
 static AVIF_TEST_DIR: &str = "av1-avif/testFiles";
 
@@ -309,9 +310,9 @@ fn public_audio_tenc() {
         assert_eq!(a.codec_type, mp4::CodecType::EncryptedAudio);
         match a.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
             Some(ref p) => {
-                assert_eq!(p.code_name, "mp4a");
+                assert_eq!(p.original_format, b"mp4a");
                 if let Some(ref schm) = p.scheme_type {
-                    assert_eq!(schm.scheme_type.value, *b"cenc");
+                    assert_eq!(schm.scheme_type, b"cenc");
                 } else {
                     panic!("Expected scheme type info");
                 }
@@ -368,9 +369,9 @@ fn public_video_cenc() {
         assert_eq!(v.codec_type, mp4::CodecType::EncryptedVideo);
         match v.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
             Some(ref p) => {
-                assert_eq!(p.code_name, "avc1");
+                assert_eq!(p.original_format, b"avc1");
                 if let Some(ref schm) = p.scheme_type {
-                    assert_eq!(schm.scheme_type.value, *b"cenc");
+                    assert_eq!(schm.scheme_type, b"cenc");
                 } else {
                     panic!("Expected scheme type info");
                 }
@@ -441,9 +442,9 @@ fn public_audio_cbcs() {
                 mp4::SampleEntry::Audio(ref a) => {
                     if let Some(p) = a.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
                         found_encrypted_sample_description = true;
-                        assert_eq!(p.code_name, "mp4a");
+                        assert_eq!(p.original_format, b"mp4a");
                         if let Some(ref schm) = p.scheme_type {
-                            assert_eq!(schm.scheme_type.value, *b"cbcs");
+                            assert_eq!(schm.scheme_type, b"cbcs");
                         } else {
                             panic!("Expected scheme type info");
                         }
@@ -526,9 +527,9 @@ fn public_video_cbcs() {
                     assert_eq!(v.height, 300);
                     if let Some(p) = v.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
                         found_encrypted_sample_description = true;
-                        assert_eq!(p.code_name, "avc1");
+                        assert_eq!(p.original_format, b"avc1");
                         if let Some(ref schm) = p.scheme_type {
-                            assert_eq!(schm.scheme_type.value, *b"cbcs");
+                            assert_eq!(schm.scheme_type, b"cbcs");
                         } else {
                             panic!("Expected scheme type info");
                         }
@@ -625,6 +626,13 @@ fn public_avif_primary_item() {
     mp4::read_avif(input, context).expect("read_avif failed");
     assert_eq!(context.primary_item.len(), 6979);
     assert_eq!(context.primary_item[0..4], [0x12, 0x00, 0x0a, 0x0a]);
+}
+
+#[test]
+fn public_avif_bug_1655846() {
+    let context = &mut mp4::AvifContext::new();
+    let input = &mut File::open(IMAGE_AVIF_CORRUPT).expect("Unknown file");
+    assert!(mp4::read_avif(input, context).is_err());
 }
 
 #[test]
