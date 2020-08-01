@@ -1845,9 +1845,8 @@ nsresult Navigator::GetPlatform(nsAString& aPlatform,
   // hardcoded and we are seeking backward compatibility here (bug 47080).
 #if defined(WIN32)
   aPlatform.AssignLiteral("Win32");
-#elif defined(XP_MACOSX) && defined(__i386__)
-  aPlatform.AssignLiteral("MacIntel");
-#elif defined(XP_MACOSX) && defined(__x86_64__)
+#elif defined(XP_MACOSX)
+  // Always return "MacIntel", even on ARM64 macOS like Safari does.
   aPlatform.AssignLiteral("MacIntel");
 #else
   // XXX Communicator uses compiled-in build-time string defines
