@@ -949,10 +949,7 @@ function getRectFromFlexItemValues(item, container) {
   domRect.x -= paddingLeft + scrollX;
   domRect.y -= paddingTop + scrollY;
 
-  if (
-    style.overflow === "visible" ||
-    style.overflow === "-moz-hidden-unscrollable"
-  ) {
+  if (style.overflow === "visible" || style.overflow === "clip") {
     domRect.x -= borderLeftWidth;
     domRect.y -= borderTopWidth;
   }
