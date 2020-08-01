@@ -114,20 +114,52 @@ var PrintUtils = {
   },
 
   /**
+   * Retrieve the template contents for the tab modal print UI.
+   */
+  _tabModalTemplate() {
+    return document.importNode(
+      document.getElementById("printTabModalTemplate").content,
+      true
+    ).firstElementChild;
+  },
+
+  /**
    * Opens the tab modal version of the print UI for the current tab.
    *
    * @param aBrowsingContext
    *        The BrowsingContext of the window to print.
    */
-  _openTabModalPrint(aBrowsingContext) {
-    let printPath = "chrome://global/content/print.html";
-    gBrowser.loadOneTab(
-      `${printPath}?browsingContextId=${aBrowsingContext.id}`,
-      {
-        inBackground: false,
-        relatedToCurrent: true,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      }
+  async _openTabModalPrint(aBrowsingContext) {
+    const { SubDialog } = ChromeUtils.import(
+      "resource://gre/modules/SubDialog.jsm"
+    );
+
+    let container = gBrowser.getBrowserContainer(
+      aBrowsingContext.embedderElement
+    );
+    if (container.querySelector(".printDialogContainer")) {
+      // Don't open another dialog if we're already printing.
+      return;
+    }
+
+    let dialog = new SubDialog({
+      id: `printModal${aBrowsingContext.id}`,
+      template: this._tabModalTemplate(),
+      parentElement: container,
+      dialogOptions: {
+        consumeOutsideClicks: false,
+        reuseDialog: false,
+      },
+    });
+
+    // Move the overlay so it overlaps the chrome and content.
+    container.prepend(dialog._overlay);
+
+    // Store the dialog on the overlay for access in the tests.
+    dialog._overlay._dialog = dialog;
+
+    await dialog.open(
+      `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`
     );
   },
 
@@ -238,7 +270,7 @@ var PrintUtils = {
    */
   printPreview(aListenerObj) {
     if (PRINT_TAB_MODAL) {
-      this._openTabModalPrint(aListenerObj.getSourceBrowser().browsingContext);
+      this._openTabModalPrint(gBrowser.selectedBrowser.browsingContext);
       return;
     }
 
