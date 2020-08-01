@@ -39,7 +39,7 @@
     <!-- Content description for close button while in multiselect mode in tab tray -->
     <string name="tab_tray_close_multiselect_content_description">退出多选模式</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
-    <string name="tab_tray_collection_button_multiselect_content_description">将选择的的标签页保存到收藏集</string>
+    <string name="tab_tray_collection_button_multiselect_content_description">将选中的的标签页保存到收藏集</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">已选择 %1$s</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
@@ -54,7 +54,7 @@
     <string name="tab_tray_multiselect_selected_content_description">已选择</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
-    <string name="about_content">%1$s —— Mozilla 荣誉出品</string>
+    <string name="about_content">%1$s 由 Mozilla 倾力打造。</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
@@ -77,11 +77,11 @@
 
     <!-- Search widget "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">添加小工具到主屏幕，让您更快开启 Firefox。</string>
+    <string name="search_widget_cfr_message">在主屏幕添加微件，一键启动 Firefox。</string>
     <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">添加小工具</string>
+    <string name="search_widget_cfr_pos_button_text">添加微件</string>
     <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">暂时不要</string>
+    <string name="search_widget_cfr_neg_button_text">现在不要</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -171,7 +171,7 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">搜索</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">依照设备语言显示 (ISO 3166 / 639)</string>
+    <string name="default_locale_text">依照设备语言显示 (ISO 3166/639)</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">搜索语言</string>
 
@@ -320,7 +320,7 @@
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">立即同步</string>
     <!-- Preference category for sync -->
-    <string name="preferences_sync_category">选择要同步的信息</string>
+    <string name="preferences_sync_category">选择要同步的项目</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">历史记录</string>
     <!-- Preference for syncing bookmarks -->
@@ -751,7 +751,7 @@
     <string name="collection_menu_button_content_description">收藏集菜单</string>
 
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">收藏对您而言重要的东西</string>
+    <string name="no_collections_header1">有用的东西收藏在这</string>
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">将相似的搜索、网站和标签页分组归并，方便以后快速访问。</string>
     <!-- Title for the "select tabs" step of the collection creator -->
