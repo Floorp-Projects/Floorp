@@ -2659,11 +2659,10 @@ Maybe<nsRect> nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
 static void ApplyOverflowClipping(
     nsDisplayListBuilder* aBuilder, const nsIFrame* aFrame,
     DisplayListClipState::AutoClipMultiple& aClipState) {
-  // Only -moz-hidden-unscrollable is handled here (and 'hidden' for table
-  // frames, and any non-visible value for blocks in a paginated context).
-  // We allow -moz-hidden-unscrollable to apply to any kind of frame. This
-  // is required by comboboxes which make their display text (an inline frame)
-  // have clipping.
+  // Only 'clip' is handled here (and 'hidden' for table frames, and any
+  // non-'visible' value for blocks in a paginated context).
+  // We allow 'clip' to apply to any kind of frame. This is required by
+  // comboboxes which make their display text (an inline frame) have clipping.
   MOZ_ASSERT(aFrame->ShouldApplyOverflowClipping(aFrame->StyleDisplay()));
 
   nsRect clipRect;
@@ -4169,7 +4168,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     clipState.SetClipChainForContainingBlockDescendants(nullptr);
   }
 
-  // Setup clipping for the parent's overflow:-moz-hidden-unscrollable,
+  // Setup clipping for the parent's overflow:clip,
   // or overflow:hidden on elements that don't support scrolling (and therefore
   // don't create nsHTML/XULScrollFrame). This clipping needs to not clip
   // anything directly rendered by the parent, only the rendering of its
@@ -9276,8 +9275,8 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // children are actually clipped to the padding-box, but since the
   // overflow area should include the entire border-box, just set it to
   // the border-box here.
-  NS_ASSERTION((disp->mOverflowY == StyleOverflow::MozHiddenUnscrollable) ==
-                   (disp->mOverflowX == StyleOverflow::MozHiddenUnscrollable),
+  NS_ASSERTION((disp->mOverflowY == StyleOverflow::Clip) ==
+                   (disp->mOverflowX == StyleOverflow::Clip),
                "If one overflow is clip, the other should be too");
   if (applyOverflowClipping) {
     // The contents are actually clipped to the padding area
@@ -9298,7 +9297,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     }
   }
 
-  // Note that StyleOverflow::MozHiddenUnscrollable doesn't clip the frame
+  // Note that StyleOverflow::Clip doesn't clip the frame
   // background, so we add theme background overflow here so it's not clipped.
   if (!::IsXULBoxWrapped(this) && IsThemed(disp)) {
     nsRect r(bounds);
@@ -11024,17 +11023,17 @@ void nsIFrame::UpdateVisibleDescendantsState() {
 bool nsIFrame::ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const {
   MOZ_ASSERT(aDisp == StyleDisplay(), "Wrong display struct");
 
-  // contain: paint, which we interpret as -moz-hidden-unscrollable
-  // Exception: for scrollframes, we don't need contain:paint to add any
-  // clipping, because the scrollable frame will already clip overflowing
-  // content, and because contain:paint should prevent all means of escaping
-  // that clipping (e.g. because it forms a fixed-pos containing block).
+  // 'contain:paint', which we handle as 'overflow:clip' here. Except for
+  // scrollframes we don't need contain:paint to add any clipping, because
+  // the scrollable frame will already clip overflowing content, and because
+  // 'contain:paint' should prevent all means of escaping that clipping
+  // (e.g. because it forms a fixed-pos containing block).
   if (aDisp->IsContainPaint() && !IsScrollFrame() &&
       IsFrameOfType(eSupportsContainLayoutAndPaint)) {
     return true;
   }
 
-  // and overflow:hidden that we should interpret as -moz-hidden-unscrollable
+  // and overflow:hidden that we should interpret as clip
   if (aDisp->mOverflowX == StyleOverflow::Hidden &&
       aDisp->mOverflowY == StyleOverflow::Hidden) {
     // REVIEW: these are the frame types that set up clipping.
@@ -11056,9 +11055,9 @@ bool nsIFrame::ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const {
     }
   }
 
-  // clip overflow:-moz-hidden-unscrollable, except for nsListControlFrame,
+  // clip overflow:clip, except for nsListControlFrame,
   // which is an nsHTMLScrollFrame.
-  if (MOZ_UNLIKELY(aDisp->mOverflowX == StyleOverflow::MozHiddenUnscrollable &&
+  if (MOZ_UNLIKELY(aDisp->mOverflowX == StyleOverflow::Clip &&
                    !IsListControlFrame())) {
     const auto* element = Element::FromNodeOrNull(GetContent());
     if (!element ||

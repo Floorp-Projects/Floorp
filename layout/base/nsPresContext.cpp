@@ -1090,7 +1090,7 @@ static bool CheckOverflow(const ComputedStyle* aComputedStyle,
     return false;
   }
 
-  if (display->mOverflowX == StyleOverflow::MozHiddenUnscrollable) {
+  if (display->mOverflowX == StyleOverflow::Clip) {
     *aStyles = ScrollStyles(StyleOverflow::Hidden, StyleOverflow::Hidden);
   } else {
     *aStyles = ScrollStyles(*display);
