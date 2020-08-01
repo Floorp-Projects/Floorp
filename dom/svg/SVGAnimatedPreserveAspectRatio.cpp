@@ -39,6 +39,45 @@ JSObject* DOMSVGAnimatedPreserveAspectRatio::WrapObject(
 
 /* Implementation */
 
+//----------------------------------------------------------------------
+// Helper class: AutoChangePreserveAspectRatioNotifier
+// Stack-based helper class to pair calls to WillChangePreserveAspectRatio and
+// DidChangePreserveAspectRatio.
+class MOZ_RAII AutoChangePreserveAspectRatioNotifier {
+ public:
+  AutoChangePreserveAspectRatioNotifier(
+      SVGAnimatedPreserveAspectRatio* aPreserveAspectRatio,
+      SVGElement* aSVGElement, bool aDoSetAttr = true)
+      : mPreserveAspectRatio(aPreserveAspectRatio),
+        mSVGElement(aSVGElement),
+        mDoSetAttr(aDoSetAttr) {
+    MOZ_ASSERT(mPreserveAspectRatio, "Expecting non-null preserveAspectRatio");
+    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
+    if (mDoSetAttr) {
+      mUpdateBatch.emplace(aSVGElement->GetComposedDoc(), true);
+      mEmptyOrOldValue =
+          mSVGElement->WillChangePreserveAspectRatio(mUpdateBatch.ref());
+    }
+  }
+
+  ~AutoChangePreserveAspectRatioNotifier() {
+    if (mDoSetAttr) {
+      mSVGElement->DidChangePreserveAspectRatio(mEmptyOrOldValue,
+                                                mUpdateBatch.ref());
+    }
+    if (mPreserveAspectRatio->mIsAnimated) {
+      mSVGElement->AnimationNeedsResample();
+    }
+  }
+
+ private:
+  SVGAnimatedPreserveAspectRatio* const mPreserveAspectRatio;
+  SVGElement* const mSVGElement;
+  Maybe<mozAutoDocUpdate> mUpdateBatch;
+  nsAttrValue mEmptyOrOldValue;
+  bool mDoSetAttr;
+};
+
 static SVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
                            DOMSVGAnimatedPreserveAspectRatio>
     sSVGAnimatedPAspectRatioTearoffTable;
@@ -89,27 +128,14 @@ nsresult SVGAnimatedPreserveAspectRatio::SetBaseValueString(
     return res;
   }
 
-  Maybe<mozAutoDocUpdate> updateBatch;
-  nsAttrValue emptyOrOldValue;
-  if (aDoSetAttr) {
-    updateBatch.emplace(aSVGElement->GetComposedDoc(), true);
-    emptyOrOldValue =
-        aSVGElement->WillChangePreserveAspectRatio(updateBatch.ref());
-  }
+  AutoChangePreserveAspectRatioNotifier notifier(this, aSVGElement, aDoSetAttr);
 
   mBaseVal = val;
   mIsBaseSet = true;
-
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-  if (aDoSetAttr) {
-    aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue,
-                                              updateBatch.ref());
-  }
-  if (mIsAnimated) {
-    aSVGElement->AnimationNeedsResample();
-  }
+
   return NS_OK;
 }
 
@@ -124,18 +150,12 @@ void SVGAnimatedPreserveAspectRatio::SetBaseValue(
     return;
   }
 
-  mozAutoDocUpdate updateBatch(aSVGElement->GetComposedDoc(), true);
-  nsAttrValue emptyOrOldValue =
-      aSVGElement->WillChangePreserveAspectRatio(updateBatch);
+  AutoChangePreserveAspectRatioNotifier notifier(this, aSVGElement);
+
   mBaseVal = aValue;
   mIsBaseSet = true;
-
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
-  }
-  aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue, updateBatch);
-  if (mIsAnimated) {
-    aSVGElement->AnimationNeedsResample();
   }
 }
 

@@ -25,6 +25,7 @@ class SVGElement;
 
 class SVGAnimatedIntegerPair {
  public:
+  friend class AutoChangeIntegerPairNotifier;
   using SVGElement = dom::SVGElement;
 
   enum PairIndex { eFirst, eSecond };

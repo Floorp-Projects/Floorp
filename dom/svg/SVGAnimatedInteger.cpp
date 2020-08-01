@@ -18,6 +18,33 @@ namespace mozilla {
 
 /* Implementation */
 
+//----------------------------------------------------------------------
+// Helper class: AutoChangeIntegerNotifier
+// Stack-based helper class ensure DidChangeInteger is called.
+class MOZ_RAII AutoChangeIntegerNotifier {
+ public:
+  AutoChangeIntegerNotifier(SVGAnimatedInteger* aInteger,
+                            SVGElement* aSVGElement, bool aDoSetAttr = true)
+      : mInteger(aInteger), mSVGElement(aSVGElement), mDoSetAttr(aDoSetAttr) {
+    MOZ_ASSERT(mInteger, "Expecting non-null integer");
+    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
+  }
+
+  ~AutoChangeIntegerNotifier() {
+    if (mDoSetAttr) {
+      mSVGElement->DidChangeInteger(mInteger->mAttrEnum);
+    }
+    if (mInteger->mIsAnimated) {
+      mSVGElement->AnimationNeedsResample();
+    }
+  }
+
+ private:
+  SVGAnimatedInteger* const mInteger;
+  SVGElement* const mSVGElement;
+  bool mDoSetAttr;
+};
+
 static SVGAttrTearoffTable<SVGAnimatedInteger,
                            SVGAnimatedInteger::DOMAnimatedInteger>
     sSVGAnimatedIntegerTearoffTable;
@@ -37,12 +64,12 @@ nsresult SVGAnimatedInteger::SetBaseValueString(const nsAString& aValueAsString,
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
+  AutoChangeIntegerNotifier notifier(this, aSVGElement, false);
+
   mIsBaseSet = true;
   mBaseVal = value;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
-  } else {
-    aSVGElement->AnimationNeedsResample();
   }
   return NS_OK;
 }
@@ -61,14 +88,13 @@ void SVGAnimatedInteger::SetBaseValue(int aValue, SVGElement* aSVGElement) {
     return;
   }
 
+  AutoChangeIntegerNotifier notifier(this, aSVGElement);
+
   mBaseVal = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
-  } else {
-    aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeInteger(mAttrEnum);
 }
 
 void SVGAnimatedInteger::SetAnimValue(int aValue, SVGElement* aSVGElement) {

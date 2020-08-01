@@ -27,6 +27,7 @@ class SVGAnimationElement;
 
 class SVGAnimatedNumber {
  public:
+  friend class AutoChangeNumberNotifier;
   using SVGElement = dom::SVGElement;
 
   void Init(uint8_t aAttrEnum = 0xff, float aValue = 0) {
