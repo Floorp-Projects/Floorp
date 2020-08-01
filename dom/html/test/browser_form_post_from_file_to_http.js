@@ -168,13 +168,6 @@ async function runTest(doNewTab) {
 }
 
 add_task(async function runWithDocumentChannel() {
-  // Set prefs to use documentchannel.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.documentchannel", true]],
-  });
-
   await runTest(false);
   await runTest(true);
-
-  await SpecialPowers.popPrefEnv();
 });

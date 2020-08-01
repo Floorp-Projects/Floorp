@@ -1085,7 +1085,6 @@ bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
   // We currently only support starting loads directly from the
   // CanonicalBrowsingContext for top-level BCs.
   if (!IsTopContent() || !GetContentParent() ||
-      !StaticPrefs::browser_tabs_documentchannel() ||
       !StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
     return false;
   }
@@ -1110,8 +1109,6 @@ bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
   // We currently only support starting loads directly from the
   // CanonicalBrowsingContext for top-level BCs.
   if (!IsTopContent() || !GetContentParent() ||
-      !StaticPrefs::browser_tabs_documentchannel() ||
-      !StaticPrefs::browser_tabs_documentchannel_parent_initiated() ||
       StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
     return false;
   }

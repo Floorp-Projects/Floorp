@@ -49,7 +49,6 @@ let setupTest = async function(
       ],
       ["browser.tabs.remote.useCrossOriginOpenerPolicy", crossOriginIsolated],
       ["browser.tabs.remote.useCrossOriginEmbedderPolicy", crossOriginIsolated],
-      ["browser.tabs.documentchannel", crossOriginIsolated],
     ],
   });
 

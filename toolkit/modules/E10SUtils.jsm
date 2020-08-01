@@ -52,12 +52,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false,
   val => val.split(",")
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "documentChannel",
-  "browser.tabs.documentchannel",
-  false
-);
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "useCrossOriginOpenerPolicy",
@@ -151,25 +146,7 @@ function canProcessSwitchWithDocumentChannel(
   aDesiredRemoteType,
   aBrowsingContext
 ) {
-  if (
-    aBrowsingContext &&
-    aBrowsingContext.top &&
-    aBrowsingContext.inRDMPane &&
-    aBrowsingContext.embedderElementType == "iframe" &&
-    aDesiredRemoteType == NOT_REMOTE
-  ) {
-    // If we're in an old-style <iframe mozbrowser> RDM pane,
-    // and we need to switch to the parent process, then we can't
-    // use DocumentChannel process switching (since it doesn't
-    // support tunneling to the outer <browser>.
-    // We can remove this once bug 1648616 removes the tests
-    // depending on it.
-    return false;
-  }
-  return (
-    (aRemoteSubframes || documentChannel) &&
-    documentChannelPermittedForURI(aURI)
-  );
+  return documentChannelPermittedForURI(aURI);
 }
 
 // Note that even if the scheme fits the criteria for a web-handled scheme
@@ -330,9 +307,6 @@ var E10SUtils = {
 
   useCrossOriginOpenerPolicy() {
     return useCrossOriginOpenerPolicy;
-  },
-  documentChannel() {
-    return documentChannel;
   },
 
   _log: null,
