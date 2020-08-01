@@ -27,6 +27,7 @@ class SVGElement;
 
 class SVGAnimatedNumberPair {
  public:
+  friend class AutoChangeNumberPairNotifier;
   using SVGElement = dom::SVGElement;
 
   enum PairIndex { eFirst, eSecond };

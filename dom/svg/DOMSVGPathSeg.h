@@ -72,7 +72,12 @@ class SVGElement;
  * DOM wrapper for is a list of floats, not an instance of an internal class.
  */
 class DOMSVGPathSeg : public nsWrapperCache {
-  friend class AutoChangePathSegNotifier;
+  template <class T>
+  friend class AutoChangePathSegListNotifier;
+
+ protected:
+  using AutoChangePathSegListNotifier =
+      AutoChangePathSegListNotifier<DOMSVGPathSeg>;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGPathSeg)
@@ -93,6 +98,12 @@ class DOMSVGPathSeg : public nsWrapperCache {
   virtual DOMSVGPathSeg* Clone() = 0;
 
   bool IsInList() const { return !!mList; }
+
+  /**
+   * Returns true if our attribute is animating (in which case our animVal is
+   * not simply a mirror of our baseVal).
+   */
+  bool AttrIsAnimating() const { return mList && mList->AttrIsAnimating(); }
 
   /**
    * In future, if this class is used for non-list segments, this will be
