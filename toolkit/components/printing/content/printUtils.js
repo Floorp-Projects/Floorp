@@ -168,30 +168,50 @@ var PrintUtils = {
     printPreviewBrowser.loadURI("about:printpreview", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-    this.updatePrintPreview(sourceBrowser);
 
     await dialog.open(
       `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`
     );
   },
 
-  updatePrintPreview(sourceBrowser) {
+  async updatePrintPreview(sourceBrowser) {
     let container = gBrowser.getBrowserContainer(sourceBrowser);
     let printPreviewBrowser = container.querySelector(".printPreviewBrowser");
 
     if (!printPreviewBrowser) {
-      return;
+      return 0;
     }
 
-    printPreviewBrowser.messageManager.sendAsyncMessage(
-      "Printing:Preview:Enter",
-      {
-        changingBrowsers: false,
-        lastUsedPrinterName: this._getLastUsedPrinterName(),
-        simplifiedMode: false,
-        windowID: sourceBrowser.outerWindowID,
-      }
+    let numPages = await this._updatePrintPreview(
+      sourceBrowser,
+      printPreviewBrowser
     );
+    return numPages;
+  },
+
+  _updatePrintPreview(sourceBrowser, printPreviewBrowser) {
+    return new Promise(resolve => {
+      printPreviewBrowser.messageManager.addMessageListener(
+        "Printing:Preview:UpdatePageCount",
+        function done(message) {
+          printPreviewBrowser.messageManager.removeMessageListener(
+            "Printing:Preview:UpdatePageCount",
+            done
+          );
+          resolve(message.data.numPages);
+        }
+      );
+
+      printPreviewBrowser.messageManager.sendAsyncMessage(
+        "Printing:Preview:Enter",
+        {
+          changingBrowsers: false,
+          lastUsedPrinterName: this._getLastUsedPrinterName(),
+          simplifiedMode: false,
+          windowID: sourceBrowser.outerWindowID,
+        }
+      );
+    });
   },
 
   /**
