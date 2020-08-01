@@ -985,6 +985,13 @@
   args:
     templateObject: ObjectField
 
+- name: ObjectCreateResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    templateObject: ObjectField
+
 - name: StringFromCharCodeResult
   shared: false
   transpile: true
