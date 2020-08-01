@@ -98,6 +98,8 @@ var PrintEventHandler = {
           detail: this.settings,
         })
       );
+
+      PrintUtils.updatePrintPreview(this.sourceBrowser);
     }
   },
 

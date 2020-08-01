@@ -157,9 +157,40 @@ var PrintUtils = {
 
     // Store the dialog on the overlay for access in the tests.
     dialog._overlay._dialog = dialog;
+    let sourceBrowser = aBrowsingContext.embedderElement;
+    let printPreviewBrowser = gBrowser.createBrowser({
+      remoteType: sourceBrowser.remoteType,
+      sameProcessAsFrameLoader: sourceBrowser.frameLoader,
+      skipLoad: false,
+    });
+    printPreviewBrowser.classList.add("printPreviewBrowser");
+    container.querySelector(".printTabModalView").prepend(printPreviewBrowser);
+    printPreviewBrowser.loadURI("about:printpreview", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    this.updatePrintPreview(sourceBrowser);
 
     await dialog.open(
       `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`
+    );
+  },
+
+  updatePrintPreview(sourceBrowser) {
+    let container = gBrowser.getBrowserContainer(sourceBrowser);
+    let printPreviewBrowser = container.querySelector(".printPreviewBrowser");
+
+    if (!printPreviewBrowser) {
+      return;
+    }
+
+    printPreviewBrowser.messageManager.sendAsyncMessage(
+      "Printing:Preview:Enter",
+      {
+        changingBrowsers: false,
+        lastUsedPrinterName: this._getLastUsedPrinterName(),
+        simplifiedMode: false,
+        windowID: sourceBrowser.outerWindowID,
+      }
     );
   },
 
