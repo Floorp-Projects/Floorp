@@ -79,8 +79,6 @@ onboarding-multistage-theme-secondary-button-label = Not now
 # Automatic theme uses operating system color settings
 onboarding-multistage-theme-label-automatic = Automatic
 
-# System refers to the operating system
-onboarding-multistage-theme-description-automatic = Use system theme
 onboarding-multistage-theme-label-light = Light
 onboarding-multistage-theme-label-dark = Dark
 # "Firefox Alpenglow" here is the name of the theme, and should be kept in English.

@@ -368,12 +368,6 @@ body {
         line-height: 22px;
         margin-inline-start: 12px;
         margin-top: 9px; }
-      .multistageContainer .tiles-theme-section .theme .theme-desc {
-        display: flex;
-        font-size: 12px;
-        line-height: 18px;
-        margin-inline-start: 12px;
-        opacity: 0.5; }
       .multistageContainer .tiles-theme-section .theme.selected {
         outline: 4px solid #0090ED;
         outline-offset: -4px; }
