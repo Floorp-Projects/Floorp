@@ -51,7 +51,7 @@
 #urlbar-input-container,
 #searchbar {
   border-radius: var(--toolbarbutton-border-radius);
-  overflow: -moz-hidden-unscrollable;
+  overflow: clip;
 }
 
 #urlbar-input,
