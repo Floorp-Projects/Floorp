@@ -38,7 +38,28 @@ class AdbRuntime {
   }
 
   get isFenix() {
-    return this._packageName().includes("org.mozilla.fenix");
+    // Firefox Release uses "org.mozilla.firefox"
+    // Firefox Beta uses "org.mozilla.firefox_beta"
+    // Firefox Nightly uses "org.mozilla.fenix"
+    const isFirefox =
+      this._packageName().includes("org.mozilla.firefox") ||
+      this._packageName().includes("org.mozilla.fenix");
+
+    if (!isFirefox) {
+      return false;
+    }
+
+    // Firefox Release (based on Fenix) is not released in all regions yet, so
+    // we should still check for Fennec using the version number.
+    // Note that Fennec's versionName followed Firefox versions (eg "68.11.0").
+    // We can find the main version number in it. Fenix on the other hand has
+    // version names such as "Nightly 200730 06:21".
+    const mainVersion = Number(this.versionName.split(".")[0]);
+    const isFennec = mainVersion === 68;
+
+    // Application is Fenix if this is a Firefox application with a version
+    // different from the Fennec version.
+    return !isFennec;
   }
 
   get deviceId() {
@@ -58,25 +79,21 @@ class AdbRuntime {
 
     switch (packageName) {
       case "org.mozilla.firefox":
+        if (!this.isFenix) {
+          // Old Fennec release
+          return "Firefox (Fennec)";
+        }
+        // Official Firefox app, based on Fenix
         return "Firefox";
       case "org.mozilla.firefox_beta":
+        // Official Firefox Beta app, based on Fenix
         return "Firefox Beta";
-      case "org.mozilla.fennec":
-      case "org.mozilla.fennec_aurora":
-        // This package name is now the one for Firefox Nightly distributed
-        // through the Google Play Store since "dawn project"
-        // cf. https://bugzilla.mozilla.org/show_bug.cgi?id=1357351#c8
-        return "Firefox Nightly";
       case "org.mozilla.fenix":
-        // The current Nightly build for Fenix is available under this package name
-        // but the official packages will use fenix, fenix.beta and fenix.nightly.
-        return "Firefox Preview";
-      case "org.mozilla.fenix.beta":
-        return "Firefox Preview Beta";
-      case "org.mozilla.fenix.nightly":
-        return "Firefox Preview Nightly";
+        // Official Firefox Nightly app, based on Fenix
+        return "Firefox Nightly";
       default:
-        return "Firefox Custom";
+        // Unknown package name
+        return `Firefox (${packageName})`;
     }
   }
 
