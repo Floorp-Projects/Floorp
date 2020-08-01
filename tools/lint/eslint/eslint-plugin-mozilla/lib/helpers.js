@@ -43,6 +43,7 @@ const callExpressionMultiDefinitions = [
   "XPCOMUtils.defineLazyGlobalGetters(this,",
   "XPCOMUtils.defineLazyModuleGetters(this,",
   "XPCOMUtils.defineLazyServiceGetters(this,",
+  "loader.lazyRequireGetter(this,",
 ];
 
 const imports = [
