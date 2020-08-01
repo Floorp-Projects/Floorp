@@ -5649,14 +5649,9 @@
 
 # One of several prefs affecting the maximum area to pre-render when animating
 # a large element on the compositor.
-# This pref enables transform (and transform like properties) animations on a
-# large element run on the compositor with rendering partial area of the
-# element on the main thread instead of rendering the whole area.  Once the
-# animation tried to composite out of the partial rendered area, the animation
-# is rendered again with the latest visible partial area.
 - name: layout.animation.prerender.partial
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # One of several prefs affecting the maximum area to pre-render when animating
