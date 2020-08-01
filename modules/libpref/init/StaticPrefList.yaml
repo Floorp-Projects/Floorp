@@ -6780,7 +6780,7 @@
 # Encrypted Media Extensions
 - name: media.eme.enabled
   type: bool
-#if defined(XP_LINUX)
+#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   # On Linux EME is visible but disabled by default. This is so that the "Play
   # DRM content" checkbox in the Firefox UI is unchecked by default. DRM
   # requires downloading and installing proprietary binaries, which users on an
