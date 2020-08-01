@@ -1845,8 +1845,6 @@ nsresult Navigator::GetPlatform(nsAString& aPlatform,
   // hardcoded and we are seeking backward compatibility here (bug 47080).
 #if defined(WIN32)
   aPlatform.AssignLiteral("Win32");
-#elif defined(XP_MACOSX) && defined(__ppc__)
-  aPlatform.AssignLiteral("MacPPC");
 #elif defined(XP_MACOSX) && defined(__i386__)
   aPlatform.AssignLiteral("MacIntel");
 #elif defined(XP_MACOSX) && defined(__x86_64__)
