@@ -469,7 +469,7 @@ dependencies {
 
     implementation Deps.mozilla_ui_colors
     implementation Deps.mozilla_ui_icons
-    implementation Deps.mozilla_ui_publicsuffixlist
+    implementation Deps.mozilla_lib_publicsuffixlist
     implementation Deps.mozilla_ui_widgets
 
     implementation Deps.mozilla_lib_crash

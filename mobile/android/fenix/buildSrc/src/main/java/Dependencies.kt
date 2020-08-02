@@ -138,7 +138,7 @@ object Deps {
     const val mozilla_lib_push_firebase = "org.mozilla.components:lib-push-firebase:${Versions.mozilla_android_components}"
     const val mozilla_lib_dataprotect = "org.mozilla.components:lib-dataprotect:${Versions.mozilla_android_components}"
 
-    const val mozilla_ui_publicsuffixlist = "org.mozilla.components:lib-publicsuffixlist:${Versions.mozilla_android_components}"
+    const val mozilla_lib_publicsuffixlist = "org.mozilla.components:lib-publicsuffixlist:${Versions.mozilla_android_components}"
 
     const val mozilla_support_base = "org.mozilla.components:support-base:${Versions.mozilla_android_components}"
     const val mozilla_support_images = "org.mozilla.components:support-images:${Versions.mozilla_android_components}"
