@@ -9,11 +9,13 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.ext.appCompatContext
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -91,6 +93,27 @@ class ConfirmDialogFragmentTest {
 
         val negativeButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
         negativeButton.performClick()
+
+        verify(mockFeature).onCancel("sessionId")
+    }
+
+    @Test
+    fun `cancelling the dialog cancels the feature`() {
+        doReturn(appCompatContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+
+        fragment.feature = mockFeature
+
+        doReturn(appCompatContext).`when`(fragment).requireContext()
+
+        Mockito.doNothing().`when`(fragment).dismiss()
+
+        Assert.assertNotNull(dialog)
+
+        dialog.show()
+
+        fragment.onCancel(dialog)
 
         verify(mockFeature).onCancel("sessionId")
     }

@@ -6,6 +6,7 @@ package mozilla.components.feature.prompts.dialog
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.LayoutInflater
@@ -28,7 +29,9 @@ private const val KEY_DIALOG_TYPE = "KEY_DIALOG_TYPE"
 internal class ChoiceDialogFragment : PromptDialogFragment() {
 
     @VisibleForTesting
-    internal val choices: Array<Choice> by lazy { safeArguments.getParcelableArray(KEY_CHOICES)!!.toArrayOfChoices() }
+    internal val choices: Array<Choice> by lazy {
+        safeArguments.getParcelableArray(KEY_CHOICES)!!.toArrayOfChoices()
+    }
 
     @VisibleForTesting
     internal val dialogType: Int by lazy { safeArguments.getInt(KEY_DIALOG_TYPE) }
@@ -49,8 +52,11 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
     }
 
     companion object {
-
-        fun newInstance(choices: Array<Choice>, sessionId: String, dialogType: Int): ChoiceDialogFragment {
+        fun newInstance(
+            choices: Array<Choice>,
+            sessionId: String,
+            dialogType: Int
+        ): ChoiceDialogFragment {
             val fragment = ChoiceDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 
@@ -85,8 +91,12 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
         dismiss()
     }
 
-    private fun createSingleChoiceDialog(): AlertDialog {
+    override fun onCancel(dialog: DialogInterface) {
+        super.onCancel(dialog)
+        feature?.onCancel(sessionId)
+    }
 
+    private fun createSingleChoiceDialog(): AlertDialog {
         val builder = AlertDialog.Builder(requireContext())
         val inflater = LayoutInflater.from(requireContext())
         val view = createDialogContentView(inflater)
