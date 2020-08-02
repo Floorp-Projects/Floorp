@@ -60,7 +60,7 @@ pub enum FilterPrimitiveKey {
     Identity(ColorSpace, FilterPrimitiveInput),
     Flood(ColorSpace, ColorU),
     Blend(ColorSpace, MixBlendMode, FilterPrimitiveInput, FilterPrimitiveInput),
-    Blur(ColorSpace, Au, Au, FilterPrimitiveInput),
+    Blur(ColorSpace, Au, FilterPrimitiveInput),
     Opacity(ColorSpace, Au, FilterPrimitiveInput),
     ColorMatrix(ColorSpace, [Au; 20], FilterPrimitiveInput),
     DropShadow(ColorSpace, (VectorKey, Au, ColorU), FilterPrimitiveInput),
@@ -79,7 +79,7 @@ pub enum PictureCompositeKey {
     Identity,
 
     // FilterOp
-    Blur(Au, Au),
+    Blur(Au),
     Brightness(Au),
     Contrast(Au),
     Grayscale(Au),
@@ -140,8 +140,7 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
             }
             Some(PictureCompositeMode::Filter(op)) => {
                 match op {
-                    Filter::Blur(width, height) =>
-                        PictureCompositeKey::Blur(Au::from_f32_px(width), Au::from_f32_px(height)),
+                    Filter::Blur(value) => PictureCompositeKey::Blur(Au::from_f32_px(value)),
                     Filter::Brightness(value) => PictureCompositeKey::Brightness(Au::from_f32_px(value)),
                     Filter::Contrast(value) => PictureCompositeKey::Contrast(Au::from_f32_px(value)),
                     Filter::Grayscale(value) => PictureCompositeKey::Grayscale(Au::from_f32_px(value)),
@@ -189,8 +188,7 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
                         FilterPrimitiveKind::Identity(identity) => FilterPrimitiveKey::Identity(primitive.color_space, identity.input),
                         FilterPrimitiveKind::Blend(blend) => FilterPrimitiveKey::Blend(primitive.color_space, blend.mode, blend.input1, blend.input2),
                         FilterPrimitiveKind::Flood(flood) => FilterPrimitiveKey::Flood(primitive.color_space, flood.color.into()),
-                        FilterPrimitiveKind::Blur(blur) =>
-                            FilterPrimitiveKey::Blur(primitive.color_space, Au::from_f32_px(blur.width), Au::from_f32_px(blur.height), blur.input),
+                        FilterPrimitiveKind::Blur(blur) => FilterPrimitiveKey::Blur(primitive.color_space, Au::from_f32_px(blur.radius), blur.input),
                         FilterPrimitiveKind::Opacity(opacity) =>
                             FilterPrimitiveKey::Opacity(primitive.color_space, Au::from_f32_px(opacity.opacity), opacity.input),
                         FilterPrimitiveKind::ColorMatrix(color_matrix) => {
