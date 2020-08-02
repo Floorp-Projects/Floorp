@@ -10,6 +10,7 @@ DIRS += [
 
 DevToolsModules(
     'console-messages.js',
+    'css-changes.js',
     'css-messages.js',
     'document-event.js',
     'error-messages.js',
