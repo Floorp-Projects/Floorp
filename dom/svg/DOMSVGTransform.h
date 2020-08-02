@@ -30,10 +30,7 @@ class SVGMatrix;
  * DOM wrapper for an SVG transform. See DOMSVGLength.h.
  */
 class DOMSVGTransform final : public nsWrapperCache {
-  template <class T>
-  friend class AutoChangeTransformListNotifier;
-  using AutoChangeTransformListNotifier =
-      AutoChangeTransformListNotifier<DOMSVGTransform>;
+  friend class AutoChangeTransformNotifier;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGTransform)
@@ -71,12 +68,6 @@ class DOMSVGTransform final : public nsWrapperCache {
   }
 
   bool IsInList() const { return !!mList; }
-
-  /**
-   * Returns true if our attribute is animating (in which case our animVal is
-   * not simply a mirror of our baseVal).
-   */
-  bool IsAnimating() const { return mList && mList->IsAnimating(); }
 
   /**
    * In future, if this class is used for non-list transforms, this will be

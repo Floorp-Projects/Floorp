@@ -25,7 +25,6 @@ class SVGAnimationElement;
 
 class SVGAnimatedInteger {
  public:
-  friend class AutoChangeIntegerNotifier;
   using SVGElement = dom::SVGElement;
 
   void Init(uint8_t aAttrEnum = 0xff, int32_t aValue = 0) {
