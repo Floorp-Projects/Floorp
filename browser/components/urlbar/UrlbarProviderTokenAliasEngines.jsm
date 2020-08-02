@@ -60,6 +60,12 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
    */
   async isActive(queryContext) {
     let instance = this.queryInstance;
+
+    // This is usually reset on canceling or completing the query, but since we
+    // query in isActive, it may not have been canceled by the previous call.
+    // It is an object with values { result: UrlbarResult, instance: Query }.
+    this._autofillData = null;
+
     // Once the user starts typing a search string after the token, we hand off
     // suggestions to UrlbarProviderSearchSuggestions.
     if (
@@ -86,8 +92,9 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
     // If there's no engine associated with the searchString, then we don't want
     // to block other kinds of results.
     if (UrlbarPrefs.get("autoFill") && queryContext.allowAutofill) {
-      this._autofillResult = this._getAutofillResult(queryContext);
-      if (this._autofillResult) {
+      let result = this._getAutofillResult(queryContext);
+      if (result) {
+        this._autofillData = { result, instance };
         return true;
       }
     }
@@ -121,8 +128,12 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
         );
         addCallback(this, result);
       }
-    } else if (this._autofillResult) {
-      addCallback(this, this._autofillResult);
+    } else if (
+      this._autofillData &&
+      this._autofillData.instance == this.queryInstance
+    ) {
+      addCallback(this, this._autofillData.result);
+      this._autofillData = null;
     }
   }
 
@@ -140,7 +151,9 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
-    delete this._autofillResult;
+    if (this._autofillData?.instance == this.queryInstance) {
+      this._autofillData = null;
+    }
   }
 
   _getAutofillResult(queryContext) {

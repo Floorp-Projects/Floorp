@@ -257,7 +257,9 @@ class ProviderAutofill extends UrlbarProvider {
 
     // This is usually reset on canceling or completing the query, but since we
     // query in isActive, it may not have been canceled by the previous call.
-    this._autofillResult = null;
+    // It is an object with values { result: UrlbarResult, instance: Query }.
+    // See the documentation for _getAutofillData for more information.
+    this._autofillData = null;
 
     // First of all, check for the autoFill pref.
     if (!UrlbarPrefs.get("autoFill")) {
@@ -312,16 +314,11 @@ class ProviderAutofill extends UrlbarProvider {
     // muxer doesn't have to wait on autofill for every query, since startQuery
     // will be guaranteed to return a result very quickly using this approach.
     // Bug 1651101 is filed to improve this behaviour.
-    let autofilled = await this._getAutofillResult(queryContext);
-    if (!autofilled || !this._autofillResult) {
+    let result = await this._getAutofillResult(queryContext);
+    if (!result || instance != this.queryInstance) {
       return false;
     }
-
-    // Check the query was not canceled while this executed.
-    if (instance != this.queryInstance) {
-      return false;
-    }
-
+    this._autofillData = { result, instance };
     return true;
   }
 
@@ -333,8 +330,9 @@ class ProviderAutofill extends UrlbarProvider {
   getPriority(queryContext) {
     // Priority search results are restricting.
     if (
-      this._autofillResult &&
-      this._autofillResult.type == UrlbarUtils.RESULT_TYPE.SEARCH
+      this._autofillData &&
+      this._autofillData.instance == this.queryInstance &&
+      this._autofillData.result.type == UrlbarUtils.RESULT_TYPE.SEARCH
     ) {
       return 1;
     }
@@ -350,15 +348,20 @@ class ProviderAutofill extends UrlbarProvider {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
-    // Sanity check since this._autofillResult is deleted in cancelQuery.
-    if (!this._autofillResult) {
-      this.logger.error("startQuery invoked without an _autofillResult");
+    // Check if the query was cancelled while the autofill result was being
+    // fetched. We don't expect this to be true since we also check the instance
+    // in isActive and clear _autofillData in cancelQuery, but we sanity check it.
+    if (
+      !this._autofillData ||
+      this._autofillData.instance != this.queryInstance
+    ) {
+      this.logger.error("startQuery invoked with an invalid _autofillData");
       return;
     }
 
-    this._autofillResult.heuristic = true;
-    addCallback(this, this._autofillResult);
-    this._autofillResult = null;
+    this._autofillData.result.heuristic = true;
+    addCallback(this, this._autofillData.result);
+    this._autofillData = null;
   }
 
   /**
@@ -366,7 +369,9 @@ class ProviderAutofill extends UrlbarProvider {
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
-    this._autofillResult = null;
+    if (this._autofillData?.instance == this.queryInstance) {
+      this._autofillData = null;
+    }
   }
 
   /**
@@ -495,15 +500,13 @@ class ProviderAutofill extends UrlbarProvider {
   }
 
   /**
-   * Processes a matched row in the Places database and sets
-   * this._autofillResult to any matches.
+   * Processes a matched row in the Places database.
    * @param {object} row
    *   The matched row.
-   * @param {function} cancel
-   *   A callback to cancel the search.
    * @param {UrlbarQueryContext} queryContext
+   * @returns {UrlbarResult} a result generated from the matches row.
    */
-  _onResultRow(row, cancel, queryContext) {
+  _processRow(row, queryContext) {
     let queryType = row.getResultByName("query_type");
     let autofilledValue, finalCompleteValue;
     switch (queryType) {
@@ -534,10 +537,6 @@ class ProviderAutofill extends UrlbarProvider {
         break;
     }
 
-    // We cancel the query right away since we're just looking for a single
-    // autofill result.
-    cancel();
-
     let [title] = UrlbarUtils.stripPrefixAndTrim(finalCompleteValue, {
       stripHttp: true,
       trimEmptyQuery: true,
@@ -560,37 +559,36 @@ class ProviderAutofill extends UrlbarProvider {
       selectionStart: queryContext.searchString.length,
       selectionEnd: autofilledValue.length,
     };
-
-    this._autofillResult = result;
+    return result;
   }
 
   async _getAutofillResult(queryContext) {
     // We may be autofilling an about: link.
-    this._matchAboutPageForAutofill(queryContext);
-    if (this._autofillResult) {
-      return true;
+    let result = this._matchAboutPageForAutofill(queryContext);
+    if (result) {
+      return result;
     }
 
     // It may also look like a URL we know from the database.
-    await this._matchKnownUrl(queryContext);
-    if (this._autofillResult) {
-      return true;
+    result = await this._matchKnownUrl(queryContext);
+    if (result) {
+      return result;
     }
 
     // Or it may look like a search engine domain.
-    await this._matchSearchEngineDomain(queryContext);
-    if (this._autofillResult) {
-      return true;
+    result = await this._matchSearchEngineDomain(queryContext);
+    if (result) {
+      return result;
     }
 
-    return false;
+    return null;
   }
 
   _matchAboutPageForAutofill(queryContext) {
     // Check that the typed query is at least one character longer than the
     // about: prefix.
     if (this._strippedPrefix != "about:" || !this._searchString) {
-      return;
+      return null;
     }
 
     for (const aboutUrl of AboutPagesUtils.visibleAboutUrls) {
@@ -617,16 +615,16 @@ class ProviderAutofill extends UrlbarProvider {
           selectionStart: queryContext.searchString.length,
           selectionEnd: autofilledValue.length,
         };
-        this._autofillResult = result;
-        return;
+        return result;
       }
     }
+    return null;
   }
 
   async _matchKnownUrl(queryContext) {
     let conn = await PlacesUtils.promiseLargeCacheDBConnection();
     if (!conn) {
-      return;
+      return null;
     }
     // If search string looks like an origin, try to autofill against origins.
     // Otherwise treat it as a possible URL.  When the string has only one slash
@@ -644,15 +642,17 @@ class ProviderAutofill extends UrlbarProvider {
 
     // _getUrlQuery doesn't always return a query.
     if (query) {
-      await conn.executeCached(query, params, (row, cancel) => {
-        this._onResultRow(row, cancel, queryContext);
-      });
+      let rows = await conn.executeCached(query, params);
+      if (rows.length) {
+        return this._processRow(rows[0], queryContext);
+      }
     }
+    return null;
   }
 
   async _matchSearchEngineDomain(queryContext) {
     if (!UrlbarPrefs.get("autoFill.searchEngines")) {
-      return;
+      return null;
     }
 
     // engineForDomainPrefix only matches against engine domains.
@@ -668,12 +668,12 @@ class ProviderAutofill extends UrlbarProvider {
     if (
       !UrlbarTokenizer.looksLikeOrigin(searchStr, { ignoreKnownDomains: true })
     ) {
-      return;
+      return null;
     }
 
     let engine = await UrlbarSearchUtils.engineForDomainPrefix(searchStr);
     if (!engine) {
-      return;
+      return null;
     }
     let url = engine.searchForm;
     let domain = engine.getResultDomain();
@@ -683,7 +683,7 @@ class ProviderAutofill extends UrlbarProvider {
       (this._strippedPrefix && !url.startsWith(this._strippedPrefix)) ||
       !(domain + "/").includes(this._searchString)
     ) {
-      return;
+      return null;
     }
 
     // The value that's autofilled in the input is the prefix the user typed, if
@@ -708,7 +708,7 @@ class ProviderAutofill extends UrlbarProvider {
       selectionStart: queryContext.searchString.length,
       selectionEnd: autofilledValue.length,
     };
-    this._autofillResult = result;
+    return result;
   }
 }
 
