@@ -1144,7 +1144,6 @@ class MOZ_RAII AutoLockScriptData {
 #endif
     }
   }
-
 };
 
 // A token used to prove you can safely access the atoms zone. This zone is

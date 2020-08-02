@@ -634,7 +634,6 @@ class MOZ_RAII AutoProfilerStats {
   ~AutoProfilerStats() { mStats.AddDurationFrom(mStart); }
 
  private:
-
   StaticBaseProfilerStats& mStats;
   TimeStamp mStart;
 };
@@ -1006,7 +1005,6 @@ class MOZ_RAII AutoProfilerLabel {
   MFBT_API static ProfilingStack* GetProfilingStack();
 
  private:
-
   // We save a ProfilingStack pointer in the ctor so we don't have to redo the
   // TLS lookup in the dtor.
   ProfilingStack* mProfilingStack;

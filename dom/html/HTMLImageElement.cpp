@@ -751,9 +751,9 @@ nsresult HTMLImageElement::CopyInnerTo(HTMLImageElement* aDest) {
     // initaiated by a user interaction.
     mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
-    nsContentUtils::AddScriptRunner(NewRunnableMethod<bool>(
-        "dom::HTMLImageElement::MaybeLoadImage", aDest,
-        &HTMLImageElement::MaybeLoadImage, false));
+    nsContentUtils::AddScriptRunner(
+        NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage", aDest,
+                                &HTMLImageElement::MaybeLoadImage, false));
   }
 
   return NS_OK;

@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsHashKeys.h"
-#include "nsIFrame.h" // For WeakFrame
+#include "nsIFrame.h"  // For WeakFrame
 #include "nsSize.h"
 #include "nsTHashtable.h"
 #include "nsWeakReference.h"

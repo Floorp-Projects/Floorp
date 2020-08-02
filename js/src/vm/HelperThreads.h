@@ -670,14 +670,12 @@ void RunPendingSourceCompressions(JSRuntime* runtime);
 class MOZ_RAII AutoLockHelperThreadState : public LockGuard<Mutex> {
   using Base = LockGuard<Mutex>;
 
-
  public:
   explicit AutoLockHelperThreadState() : Base(HelperThreadState().helperLock) {}
 };
 
 class MOZ_RAII AutoUnlockHelperThreadState : public UnlockGuard<Mutex> {
   using Base = UnlockGuard<Mutex>;
-
 
  public:
   explicit AutoUnlockHelperThreadState(AutoLockHelperThreadState& locked)

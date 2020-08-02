@@ -20,7 +20,7 @@
 
 #include "jsapi.h"
 #include "js/experimental/TypedData.h"  // JS_GetTypedArrayLength
-#include "js/friend/WindowProxy.h"  // js::IsWindowProxy
+#include "js/friend/WindowProxy.h"      // js::IsWindowProxy
 #include "js/PropertySpec.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"

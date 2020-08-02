@@ -197,8 +197,8 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".caction",    // Automator action
     ".cdr",        // Mac disk image
     //".cer", exec // Signed certificate file
-    ".cfg",        // Windows
-    ".chi",        // Windows Help
+    ".cfg",  // Windows
+    ".chi",  // Windows Help
     //".chm", exec // Windows Help
     ".class",  // Java
     //".cmd", exec // Windows executable

@@ -139,12 +139,12 @@ void BackgroundChildImpl::ProcessingError(Result aCode, const char* aReason) {
     abortMessage.AssignLiteral(#_result); \
     break
 
-    HANDLE_CASE(MsgNotKnown);
-    HANDLE_CASE(MsgNotAllowed);
-    HANDLE_CASE(MsgPayloadError);
-    HANDLE_CASE(MsgProcessingError);
-    HANDLE_CASE(MsgRouteError);
-    HANDLE_CASE(MsgValueError);
+      HANDLE_CASE(MsgNotKnown);
+      HANDLE_CASE(MsgNotAllowed);
+      HANDLE_CASE(MsgPayloadError);
+      HANDLE_CASE(MsgProcessingError);
+      HANDLE_CASE(MsgRouteError);
+      HANDLE_CASE(MsgValueError);
 
 #undef HANDLE_CASE
 

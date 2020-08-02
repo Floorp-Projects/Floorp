@@ -1216,7 +1216,6 @@ class MOZ_RAII AutoProfilerLabel {
   }
 
  private:
-
   // We save a ProfilingStack pointer in the ctor so we don't have to redo the
   // TLS lookup in the dtor.
   ProfilingStack* mProfilingStack;

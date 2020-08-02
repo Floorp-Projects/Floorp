@@ -2664,7 +2664,7 @@ static void ApplyOverflowClipping(
   // comboboxes which make their display text (an inline frame) have clipping.
   MOZ_ASSERT(aClipAxes != nsIFrame::PhysicalAxes::None);
   MOZ_ASSERT(aFrame->ShouldApplyOverflowClipping(aFrame->StyleDisplay()) ==
-	     aClipAxes);
+             aClipAxes);
 
   nsRect clipRect;
   bool haveRadii = false;
@@ -11105,10 +11105,10 @@ nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
         !PresContext()->ElementWouldPropagateScrollStyles(*element)) {
       uint8_t axes = uint8_t(PhysicalAxes::None);
       if (aDisp->mOverflowX == mozilla::StyleOverflow::Clip) {
-	axes |= uint8_t(PhysicalAxes::Horizontal);
+        axes |= uint8_t(PhysicalAxes::Horizontal);
       }
       if (aDisp->mOverflowY == mozilla::StyleOverflow::Clip) {
-	axes |= uint8_t(PhysicalAxes::Vertical);
+        axes |= uint8_t(PhysicalAxes::Vertical);
       }
       return PhysicalAxes(axes);
     }

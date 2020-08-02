@@ -9,7 +9,7 @@
 #include "xpcprivate.h"
 #include "nsWrapperCacheInlines.h"
 #include "XPCLog.h"
-#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
+#include "js/Array.h"                   // JS::GetArrayLength, JS::IsArrayObject
 #include "js/experimental/TypedData.h"  // JS_GetTypedArrayLength, JS_IsTypedArrayObject
 #include "js/MemoryFunctions.h"
 #include "js/Printf.h"

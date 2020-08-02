@@ -708,7 +708,6 @@ AutoJSContext::AutoJSContext() : mCx(nullptr) {
   MOZ_ASSERT(!mCx, "mCx should not be initialized!");
   MOZ_ASSERT(NS_IsMainThread());
 
-
   if (dom::IsJSAPIActive()) {
     mCx = dom::danger::GetJSContext();
   } else {
@@ -721,7 +720,6 @@ AutoJSContext::operator JSContext*() const { return mCx; }
 
 AutoSafeJSContext::AutoSafeJSContext() : AutoJSAPI() {
   MOZ_ASSERT(NS_IsMainThread());
-
 
   DebugOnly<bool> ok = Init(xpc::UnprivilegedJunkScope());
   MOZ_ASSERT(ok,

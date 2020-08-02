@@ -16,7 +16,7 @@
 
 #include "frontend/BytecodeCompilation.h"
 #include "jit/IonCompileTask.h"
-#include "js/ContextOptions.h"  // JS::ContextOptions
+#include "js/ContextOptions.h"      // JS::ContextOptions
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "js/SourceText.h"
 #include "js/UniquePtr.h"

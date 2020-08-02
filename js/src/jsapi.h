@@ -419,7 +419,6 @@ class MOZ_RAII JS_PUBLIC_API JSAutoRealm {
   JSAutoRealm(JSContext* cx, JSObject* target);
   JSAutoRealm(JSContext* cx, JSScript* target);
   ~JSAutoRealm();
-
 };
 
 class MOZ_RAII JS_PUBLIC_API JSAutoNullableRealm {
@@ -429,7 +428,6 @@ class MOZ_RAII JS_PUBLIC_API JSAutoNullableRealm {
  public:
   explicit JSAutoNullableRealm(JSContext* cx, JSObject* targetOrNull);
   ~JSAutoNullableRealm();
-
 };
 
 namespace JS {
