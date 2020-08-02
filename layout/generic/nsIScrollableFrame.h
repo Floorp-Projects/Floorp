@@ -381,6 +381,11 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual bool IsMaybeScrollingActive() const = 0;
   /**
+   * Returns true if the scrollframe is currently processing an async
+   * or smooth scroll.
+   */
+  virtual bool IsProcessingAsyncScroll() = 0;
+  /**
    * Call this when the layer(s) induced by active scrolling are being
    * completely redrawn.
    */
@@ -431,19 +436,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * compositor, this is set to nullptr to clear the smooth scroll.
    */
   virtual ScrollOrigin LastSmoothScrollOrigin() = 0;
-
-  /**
-   * Returns whether there's an async scroll going on.
-   *
-   * The argument allows a subtle distinction that's needed for APZ. When
-   * `IncludeApzAnimation::No` is given, ongoing APZ animations that have
-   * already been synced to the main thread are not included, which is needed so
-   * that APZ can keep syncing the scroll offset properly.
-   */
-  enum class IncludeApzAnimation : bool { No, Yes };
-  virtual bool IsScrollAnimating(
-      IncludeApzAnimation = IncludeApzAnimation::Yes) = 0;
-
   /**
    * Returns the current generation counter for the scroll. This counter
    * increments every time the scroll position is set.
@@ -457,12 +449,9 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   /**
    * Clears the "origin of last scroll" property stored in this frame, if
    * the generation counter passed in matches the current scroll generation
-   * counter, and clears the "origin of last smooth scroll" property if the
-   * generation counter matches. It also resets whether there's an ongoing apz
-   * animation.
+   * counter.
    */
-  virtual void ResetScrollInfoIfNeeded(uint32_t aGeneration,
-                                       bool aApzAnimationInProgress) = 0;
+  virtual void ResetScrollInfoIfGeneration(uint32_t aGeneration) = 0;
   /**
    * Relative scrolling offset to be requested of apz.
    */
