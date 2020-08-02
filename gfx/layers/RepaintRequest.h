@@ -57,10 +57,12 @@ struct RepaintRequest {
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
         mIsRootContent(false),
+        mIsAnimationInProgress(false),
         mIsScrollInfoLayer(false) {}
 
   RepaintRequest(const FrameMetrics& aOther,
-                 const ScrollOffsetUpdateType aScrollUpdateType)
+                 const ScrollOffsetUpdateType aScrollUpdateType,
+                 bool aIsAnimationInProgress)
       : mScrollId(aOther.GetScrollId()),
         mPresShellResolution(aOther.GetPresShellResolution()),
         mCompositionBounds(aOther.GetCompositionBounds()),
@@ -76,6 +78,7 @@ struct RepaintRequest {
         mPaintRequestTime(aOther.GetPaintRequestTime()),
         mScrollUpdateType(aScrollUpdateType),
         mIsRootContent(aOther.IsRootContent()),
+        mIsAnimationInProgress(aIsAnimationInProgress),
         mIsScrollInfoLayer(aOther.IsScrollInfoLayer()) {}
 
   // Default copy ctor and operator= are fine
@@ -97,6 +100,7 @@ struct RepaintRequest {
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
+           mIsAnimationInProgress == aOther.mIsAnimationInProgress &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
 
@@ -147,6 +151,8 @@ struct RepaintRequest {
     return mDevPixelsPerCSSPixel;
   }
 
+  bool IsAnimationInProgress() const { return mIsAnimationInProgress; }
+
   bool IsRootContent() const { return mIsRootContent; }
 
   const CSSPoint& GetScrollOffset() const { return mScrollOffset; }
@@ -180,6 +186,10 @@ struct RepaintRequest {
   bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
 
  protected:
+  void SetIsAnimationInProgress(bool aInProgress) {
+    mIsAnimationInProgress = aInProgress;
+  }
+
   void SetIsRootContent(bool aIsRootContent) {
     mIsRootContent = aIsRootContent;
   }
@@ -279,6 +289,9 @@ struct RepaintRequest {
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent : 1;
+
+  // Whether or not we are in the middle of a scroll animation.
+  bool mIsAnimationInProgress : 1;
 
   // True if this scroll frame is a scroll info layer. A scroll info layer is
   // not layerized and its content cannot be truly async-scrolled, but its
