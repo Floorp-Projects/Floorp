@@ -309,10 +309,14 @@ pub extern "C" fn neqo_http3conn_fetch(
             return NS_ERROR_INVALID_ARG;
         }
     };
-    match conn
-        .conn
-        .fetch(Instant::now(), method_tmp, scheme_tmp, host_tmp, path_tmp, &hdrs)
-    {
+    match conn.conn.fetch(
+        Instant::now(),
+        method_tmp,
+        scheme_tmp,
+        host_tmp,
+        path_tmp,
+        &hdrs,
+    ) {
         Ok(id) => {
             *stream_id = id;
             NS_OK
