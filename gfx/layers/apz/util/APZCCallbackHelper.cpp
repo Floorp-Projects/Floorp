@@ -164,8 +164,7 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
   nsIScrollableFrame* sf =
       nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
   if (sf) {
-    sf->ResetScrollInfoIfNeeded(aRequest.GetScrollGeneration(),
-                                aRequest.IsAnimationInProgress());
+    sf->ResetScrollInfoIfGeneration(aRequest.GetScrollGeneration());
     sf->SetScrollableByAPZ(!aRequest.IsScrollInfoLayer());
     if (sf->IsRootScrollFrameOfDocument()) {
       if (!APZCCallbackHelper::IsScrollInProgress(sf)) {
@@ -835,10 +834,10 @@ void APZCCallbackHelper::NotifyFlushComplete(PresShell* aPresShell) {
 
 /* static */
 bool APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame) {
-  using IncludeApzAnimation = nsIScrollableFrame::IncludeApzAnimation;
-
-  return aFrame->IsScrollAnimating(IncludeApzAnimation::No) ||
-         nsLayoutUtils::CanScrollOriginClobberApz(aFrame->LastScrollOrigin());
+  return aFrame->IsProcessingAsyncScroll() ||
+         nsLayoutUtils::CanScrollOriginClobberApz(aFrame->LastScrollOrigin()) ||
+         aFrame->LastSmoothScrollOrigin() != ScrollOrigin::None ||
+         aFrame->GetRelativeOffset().isSome();
 }
 
 /* static */
