@@ -271,7 +271,7 @@ void gfxConfigManager::ConfigureWebRender() {
   if (mXRenderEnabled) {
     // XRender and WebRender don't play well together. XRender is disabled by
     // default. If the user opts into it don't enable webrender.
-    mFeatureWr->ForceDisable(FeatureStatus::Blocked,"XRender is enabled",
+    mFeatureWr->ForceDisable(FeatureStatus::Blocked, "XRender is enabled",
                              "FEATURE_FAILURE_XRENDER"_ns);
   }
 

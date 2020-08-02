@@ -192,7 +192,6 @@ using NewObjectMetadataState =
     mozilla::Variant<ImmediateMetadata, DelayMetadata, PendingMetadata>;
 
 class MOZ_RAII AutoSetNewObjectMetadata {
-
   JSContext* cx_;
   Rooted<NewObjectMetadataState> prevState_;
 

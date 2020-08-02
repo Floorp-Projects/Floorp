@@ -23,7 +23,7 @@
 
 #include "builtin/TypedObject.h"
 #include "jit/JitOptions.h"
-#include "js/BuildId.h"  // JS::BuildIdCharVector
+#include "js/BuildId.h"                 // JS::BuildIdCharVector
 #include "js/experimental/TypedData.h"  // JS_NewUint8Array
 #include "threading/LockGuard.h"
 #include "vm/PlainObject.h"  // js::PlainObject

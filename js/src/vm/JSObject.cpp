@@ -37,7 +37,7 @@
 #include "jit/BaselineJIT.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/DumpFunctions.h"  // js::DumpObject
-#include "js/friend/WindowProxy.h"  // js::IsWindow, js::ToWindowProxyIfWindow
+#include "js/friend/WindowProxy.h"    // js::IsWindow, js::ToWindowProxyIfWindow
 #include "js/MemoryMetrics.h"
 #include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
 #include "js/PropertySpec.h"        // JSPropertySpec

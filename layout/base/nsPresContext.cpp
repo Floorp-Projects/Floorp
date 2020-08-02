@@ -1090,7 +1090,8 @@ static bool CheckOverflow(const ComputedStyle* aComputedStyle,
     return false;
   }
 
-  *aStyles = ScrollStyles(*display, ScrollStyles::MapOverflowToValidScrollStyle);
+  *aStyles =
+      ScrollStyles(*display, ScrollStyles::MapOverflowToValidScrollStyle);
   return true;
 }
 

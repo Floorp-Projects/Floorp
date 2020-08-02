@@ -270,9 +270,11 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
         mPrintViaSkPDF = true;
       } else if (destination == kPMDestinationFile) {
         AutoCFRelease<CFURLRef> destURL(nullptr);
-        status = ::PMSessionCopyDestinationLocation(mPrintSession, mPrintSettings, destURL.receive());
+        status =
+            ::PMSessionCopyDestinationLocation(mPrintSession, mPrintSettings, destURL.receive());
         if (status == noErr) {
-          AutoCFRelease<CFStringRef> destPathRef = CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
+          AutoCFRelease<CFStringRef> destPathRef =
+              CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
           NSString* destPath = (NSString*)CFStringRef(destPathRef);
           NSString* destPathExt = [destPath pathExtension];
           if ([destPathExt isEqualToString:@"pdf"]) {
@@ -367,12 +369,15 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndDocument() {
       }
       case kPMDestinationFile: {
         AutoCFRelease<CFURLRef> destURL(nullptr);
-        status = ::PMSessionCopyDestinationLocation(mPrintSession, mPrintSettings, destURL.receive());
+        status =
+            ::PMSessionCopyDestinationLocation(mPrintSession, mPrintSettings, destURL.receive());
         if (status == noErr) {
-          AutoCFRelease<CFStringRef> sourcePathRef = CFURLCopyFileSystemPath(pdfURL, kCFURLPOSIXPathStyle);
+          AutoCFRelease<CFStringRef> sourcePathRef =
+              CFURLCopyFileSystemPath(pdfURL, kCFURLPOSIXPathStyle);
           NSString* sourcePath = (NSString*)CFStringRef(sourcePathRef);
 #  ifdef DEBUG
-          AutoCFRelease<CFStringRef> destPathRef = CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
+          AutoCFRelease<CFStringRef> destPathRef =
+              CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
           NSString* destPath = (NSString*)CFStringRef(destPathRef);
           NSString* destPathExt = [destPath pathExtension];
           MOZ_ASSERT([destPathExt isEqualToString:@"pdf"],

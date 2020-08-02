@@ -32,7 +32,8 @@ LazyLogModule gDtmfLog("RTCDTMFSender");
 RTCDTMFSender::RTCDTMFSender(nsPIDOMWindowInner* aWindow,
                              TransceiverImpl* aTransceiver,
                              AudioSessionConduit* aConduit)
-    : DOMEventTargetHelper(aWindow), mTransceiver(aTransceiver),
+    : DOMEventTargetHelper(aWindow),
+      mTransceiver(aTransceiver),
       mConduit(aConduit) {}
 
 JSObject* RTCDTMFSender::WrapObject(JSContext* aCx,

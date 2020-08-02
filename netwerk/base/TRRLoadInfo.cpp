@@ -305,7 +305,6 @@ TRRLoadInfo::GetInnerWindowID(uint64_t* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
 NS_IMETHODIMP
 TRRLoadInfo::GetBrowsingContextID(uint64_t* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;

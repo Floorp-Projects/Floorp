@@ -9,8 +9,8 @@
 #include "ActorsChild.h"
 #include "js/ArrayBuffer.h"  // JS::{GetObjectAsArrayBuffer,IsArrayBufferObject}
 #include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject, JS_GetObjectAsArrayBufferView
-#include "js/RootingAPI.h"   // JS::{Handle,Rooted}
-#include "js/Value.h"        // JS::Value
+#include "js/RootingAPI.h"  // JS::{Handle,Rooted}
+#include "js/Value.h"       // JS::Value
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"

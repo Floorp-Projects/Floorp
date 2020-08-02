@@ -52,7 +52,7 @@
 #include "js/ErrorReport.h"  // JS::PrintError
 #include "js/Exception.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
-#include "js/Modules.h"  // JS::GetModulePrivate
+#include "js/Modules.h"                 // JS::GetModulePrivate
 #include "js/PropertySpec.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/SourceText.h"  // JS::SourceText

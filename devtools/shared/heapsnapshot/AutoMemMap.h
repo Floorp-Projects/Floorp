@@ -33,7 +33,6 @@ namespace devtools {
 //     }
 //     // The memory is automatically unmapped when the AutoMemMap leaves scope.
 class MOZ_RAII AutoMemMap {
-
   PRFileInfo64 fileInfo;
   PRFileDesc* fd;
   PRFileMap* fileMap;

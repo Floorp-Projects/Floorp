@@ -397,7 +397,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
     ~TemporarilyDisableDialogs();
 
    private:
-
     // Always an inner window; this is the window whose dialog state we messed
     // with.  We just want to keep it alive, because we plan to poke at its
     // members in our destructor.

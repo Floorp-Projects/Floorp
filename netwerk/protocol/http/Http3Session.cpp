@@ -181,8 +181,7 @@ void Http3Session::Shutdown() {
 Http3Session::~Http3Session() {
   LOG3(("Http3Session::~Http3Session %p", this));
 
-  Telemetry::Accumulate(Telemetry::HTTP3_REQUEST_PER_CONN,
-                        mTransactionCount);
+  Telemetry::Accumulate(Telemetry::HTTP3_REQUEST_PER_CONN, mTransactionCount);
 
   Shutdown();
 }

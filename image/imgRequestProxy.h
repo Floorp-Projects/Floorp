@@ -123,7 +123,8 @@ class imgRequestProxy : public mozilla::PreloaderBase,
                      Document* aLoadingDocument, imgRequestProxy** aClone);
   nsresult Clone(imgINotificationObserver* aObserver,
                  Document* aLoadingDocument, imgRequestProxy** aClone);
-  already_AddRefed<imgRequestProxy> GetStaticRequest(Document* aLoadingDocument);
+  already_AddRefed<imgRequestProxy> GetStaticRequest(
+      Document* aLoadingDocument);
 
   imgRequest* GetOwner() const;
 

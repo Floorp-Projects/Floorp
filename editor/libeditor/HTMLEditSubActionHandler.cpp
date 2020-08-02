@@ -101,7 +101,6 @@ static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
 }
 
 class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
-
  public:
   explicit AutoSetTemporaryAncestorLimiter(HTMLEditor& aHTMLEditor,
                                            Selection& aSelection,
