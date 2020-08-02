@@ -21,6 +21,7 @@ RETRY_SLEEP = 10
 API_ROOT = "https://firefox-ci-tc.services.mozilla.com/api/index/v1"
 MULTI_REVISION_ROOT = f"{API_ROOT}/namespaces"
 MULTI_TASK_ROOT = f"{API_ROOT}/tasks"
+ON_TRY = "MOZ_AUTOMATION" in os.environ
 
 
 @contextlib.contextmanager
