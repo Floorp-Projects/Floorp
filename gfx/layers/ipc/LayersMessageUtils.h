@@ -278,6 +278,7 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
     WriteParam(aMsg, aParam.mPaintRequestTime);
     WriteParam(aMsg, aParam.mScrollUpdateType);
     WriteParam(aMsg, aParam.mIsRootContent);
+    WriteParam(aMsg, aParam.mIsAnimationInProgress);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
   }
 
@@ -299,6 +300,8 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
             ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsRootContent) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult,
+                                &paramType::SetIsAnimationInProgress) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsScrollInfoLayer));
   }
