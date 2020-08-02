@@ -9,11 +9,10 @@ use std::collections::hash_map::HashMap;
 use std::os::raw::c_void;
 use std::ptr;
 use std::rc::Rc;
-use std::sync::{mpsc, Arc, Mutex, Condvar};
+use std::sync::{mpsc, Arc, Condvar, Mutex};
 use std::thread;
 use webrender::{
-    api::units::*, Compositor, CompositorCapabilities, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
-    ThreadListener,
+    api::units::*, Compositor, CompositorCapabilities, NativeSurfaceId, NativeSurfaceInfo, NativeTileId, ThreadListener,
 };
 
 #[no_mangle]
@@ -64,8 +63,7 @@ pub struct SwTile {
 
 impl SwTile {
     fn origin(&self, surface: &SwSurface, position: &DeviceIntPoint) -> DeviceIntPoint {
-        DeviceIntPoint::new(self.x * surface.tile_size.width, self.y * surface.tile_size.height)
-            + position.to_vector()
+        DeviceIntPoint::new(self.x * surface.tile_size.width, self.y * surface.tile_size.height) + position.to_vector()
     }
 
     /// Bounds used for determining overlap dependencies. This may either be the
@@ -112,7 +110,9 @@ impl SwTile {
         clip_rect: &DeviceIntRect,
     ) -> Option<(DeviceIntRect, DeviceIntRect)> {
         let valid = self.valid_rect.translate(self.origin(surface, position).to_vector());
-        valid.intersection(clip_rect).map(|r| (r.translate(-valid.origin.to_vector()), r))
+        valid
+            .intersection(clip_rect)
+            .map(|r| (r.translate(-valid.origin.to_vector()), r))
     }
 }
 
@@ -320,36 +320,39 @@ impl SwCompositeThread {
         });
         let result = info.clone();
         let thread_name = "SwComposite";
-        thread::Builder::new().name(thread_name.into()).spawn(move || {
-            let thread_listener = GeckoProfilerThreadListener::new();
-            thread_listener.thread_started(thread_name);
-            // Process any available jobs. This will return a non-Ok
-            // result when the job queue is dropped, causing the thread
-            // to eventually exit.
-            while let Ok(job) = job_rx.recv() {
-                job.locked_dst.composite(
-                    &job.locked_src,
-                    job.src_rect.origin.x,
-                    job.src_rect.origin.y,
-                    job.src_rect.size.width,
-                    job.src_rect.size.height,
-                    job.dst_offset.x,
-                    job.dst_offset.y,
-                    job.opaque,
-                    false,
-                );
-                // Release locked resources before modifying job count
-                drop(job);
-                // Decrement the job count. If applicable, signal that all jobs
-                // have been completed.
-                let mut count = info.job_count.lock().unwrap();
-                *count -= 1;
-                if *count <= 0 {
-                    info.done_cond.notify_all();
+        thread::Builder::new()
+            .name(thread_name.into())
+            .spawn(move || {
+                let thread_listener = GeckoProfilerThreadListener::new();
+                thread_listener.thread_started(thread_name);
+                // Process any available jobs. This will return a non-Ok
+                // result when the job queue is dropped, causing the thread
+                // to eventually exit.
+                while let Ok(job) = job_rx.recv() {
+                    job.locked_dst.composite(
+                        &job.locked_src,
+                        job.src_rect.origin.x,
+                        job.src_rect.origin.y,
+                        job.src_rect.size.width,
+                        job.src_rect.size.height,
+                        job.dst_offset.x,
+                        job.dst_offset.y,
+                        job.opaque,
+                        false,
+                    );
+                    // Release locked resources before modifying job count
+                    drop(job);
+                    // Decrement the job count. If applicable, signal that all jobs
+                    // have been completed.
+                    let mut count = info.job_count.lock().unwrap();
+                    *count -= 1;
+                    if *count <= 0 {
+                        info.done_cond.notify_all();
+                    }
                 }
-            }
-            thread_listener.thread_stopped(thread_name);
-        }).expect("Failed creating SwComposite thread");
+                thread_listener.thread_stopped(thread_name);
+            })
+            .expect("Failed creating SwComposite thread");
         result
     }
 
@@ -364,13 +367,15 @@ impl SwCompositeThread {
     ) {
         // There are still tile updates happening, so send the job to the SwComposite thread.
         *self.job_count.lock().unwrap() += 1;
-        self.job_queue.send(SwCompositeJob {
-            locked_src,
-            locked_dst,
-            src_rect,
-            dst_offset: dst_rect.origin,
-            opaque,
-        }).expect("Failing queuing SwComposite job");
+        self.job_queue
+            .send(SwCompositeJob {
+                locked_src,
+                locked_dst,
+                src_rect,
+                dst_offset: dst_rect.origin,
+                opaque,
+            })
+            .expect("Failing queuing SwComposite job");
     }
 
     /// Wait for all queued composition jobs to be processed by checking the done condition.
@@ -490,8 +495,7 @@ impl SwCompositor {
                 for tile in &surface.tiles {
                     // If there is a deferred tile that might overlap the destination rectangle,
                     // record the overlap.
-                    if tile.overlaps.get() > 0 &&
-                       tile.may_overlap(surface, position, clip_rect, overlap_rect) {
+                    if tile.overlaps.get() > 0 && tile.may_overlap(surface, position, clip_rect, overlap_rect) {
                         overlaps += 1;
                     }
                 }
@@ -556,7 +560,10 @@ impl SwCompositor {
         }
 
         // Look for the tile in the frame list and composite it if it has no dependencies.
-        let mut frame_surfaces = self.frame_surfaces.iter().skip_while(|&(ref id, _, _)| *id != tile_id.surface_id);
+        let mut frame_surfaces = self
+            .frame_surfaces
+            .iter()
+            .skip_while(|&(ref id, _, _)| *id != tile_id.surface_id);
         let overlap_rect = match frame_surfaces.next() {
             Some(&(_, ref position, ref clip_rect)) => {
                 // Remove invalid tile's update dependency.
