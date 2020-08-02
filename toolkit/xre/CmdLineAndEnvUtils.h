@@ -443,6 +443,7 @@ inline bool SetArgv0ToFullBinaryPath(wchar_t* aArgv[]) {
   return true;
 }
 
+#  if defined(MOZILLA_INTERNAL_API)
 // This class converts a command line string into an array of the arguments.
 // It's basically the opposite of MakeCommandLine.  However, the behavior is
 // different from ::CommandLineToArgvW in several ways, such as escaping a
@@ -608,6 +609,7 @@ class CommandLineParserWin final {
     }
   }
 };
+#  endif  // defined(MOZILLA_INTERNAL_API)
 
 #endif  // defined(XP_WIN)
 
