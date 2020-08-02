@@ -21,7 +21,97 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Ulana olmadi</string>
 
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Bu muammo haqida xabar berish uchun sayt egalari bilan bogʻlaning.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Tarkibi buzilgan</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Koʻrish uchun urinilayotgan sayt ochilmasligi mumkin, chunki maʼlumotlarni uzatishda xatolik aniqlandi.</p>
+      <ul>
+        <li>Bu muammo haqida xabar berish uchun sayt egalari bilan bogʻlaning.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Tarkib buzildi</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Siz koʻrmoqchi bo‘lgan sahifani koʻrsatib boʻlmaydi, chunki maʼlumotlarni uzatishda xatolik aniqlandi.</p>
+      <ul>
+        <li>Bu muammo haqida xabar berish uchun sayt egasi bilan bogʻlaning.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Xato siqish algoritmi</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Siz koʻrmoqchi boʻlgan sahifani yuklab boʻlmaydi, chunki u xato yoki mos kelmaydigan siqish usulidan foydalanadi.</p>
+      <ul>
+        <li>Bu muammo haqida xabar berish uchun veb sayt egalari bilan bogʻlaning.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Manzil topilmadi</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Brauzer kiritilgan manzil uchun hosting serverini topa olmadi.</p>
+      <ul>
+        <li>Kiritilgan manzilni tekshiring, xato yoʻqmi? Masalan,
+          <strong>ww</strong>.example.com kiritilgan boʻlishi mumkin.
+         Aslida, <strong>www</strong>.example.com.</li> kiritilishi lozim.
+        <li>Agar birorta ham sahifa yuklanmasa, mobil internetni yoki Wi-Fi ulanishini tekshiring.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Internetga ulanmagan</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Tarmoqqa ulanishni tekshiring yoki bir necha daqiqadan soʻng sahifani yangilang.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Qayta yuklash</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Xato manzil</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Kiritilgan manzil aniqlab boʻlmaydigan formatda. Manzilni xatosiz kiritilganligini tekshiring va qaytadan urinib koʻring.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Manzil xato</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Sayt manzillari odatda quyidagicha yoziladi: <strong>http://www.example.com/</strong></li>
+        <li>Yoʻnaltiruvchi qiya chiziq (slesh) toʻgʻri kiritilganligini tekshiring (masalan, <strong>/</strong>).</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Nomaʼlum protokol</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Manzil brauzerga notanish boʻlgan protokol (masalan, <q>wxyz://</q>) bilan boshlanmoqda, shuning uchun brauzer saytga ulana olmaydi.</p>
+      <ul>
+        <li>Multimedia yoki matn boʻlmagan xizmatlari mavjud saytga ulanishga urinyapsizmi? Saytning qoʻshimcha dasturiy taʼminot boʻyicha talablari bilan tanishing.</li>
+        <li>Ayrim protokollar brauzer tanishi uchun begona dastur yoki plaginlarni talab qilishi mumkin.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Fayl topilmadi</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Faylning nomi oʻzgarmadimi, koʻchirilgani yoki oʻchirilgani yoʻqmi?</li>
+        <li>Manzilni yozishda imlo yoki katta-kichik harfda yozishda xato qilmadingizmi?</li>
+        <li>Soʻralgan fayldan foydalanish uchun sizga yetarlicha huquq berilganmi?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Fayldan foydalanishga ruxsat berilmadi</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>U oʻchirilgan, koʻchirilgan yoki ruxsat olib tashlangan boʻlishi mumkin.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proksi server ulanishni rad etdi</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Brauzer proksi serverdan foydalanish uchun sozlangan, ammo brauzer ulanishni rad qildi.</p>
+      <ul>
+        <li>Brauzer proksi sozlamalari toʻgʻrimi? Tekshiring va qaytadan urinib koʻring.</li>
+        <li>Proksi xizmatida shu tarmoqdan ulanishga ruxsat berilganmi?</li>
+        <li>Hali ham muammo mavjudmi? Maslahat olish uchun internet provayderingiz xodimlari yoki tarmoq administratori bilan bogʻlaning.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proksi server topilmadi</string>
 
     </resources>
