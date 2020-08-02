@@ -179,8 +179,11 @@ class APZCCallbackHelper {
                                                       ScreenPoint aScrollDelta);
 
   /*
-   * Check if the scrollable frame is currently in the middle of an async
-   * or smooth scroll. We want to discard certain scroll input if this is
+   * Check if the scrollable frame is currently in the middle of a main thread
+   * async or smooth scroll, or has already requested some other apz scroll that
+   * hasn't been acknowledged by apz.
+   *
+   * We want to discard apz updates to the main-thread scroll offset if this is
    * true to prevent clobbering higher priority origins.
    */
   static bool IsScrollInProgress(nsIScrollableFrame* aFrame);
