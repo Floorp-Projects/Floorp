@@ -17,10 +17,10 @@ Registrar.commands_by_category = {"testing": set()}
 
 
 from mozperftest.environment import MachEnvironment  # noqa
-from mozperftest.mach_commands import Perftest, PerftestTests, ON_TRY  # noqa
-from mozperftest import mach_commands  # noqa
+from mozperftest.mach_commands import Perftest, PerftestTests  # noqa
+from mozperftest import utils  # noqa
 from mozperftest.tests.support import EXAMPLE_TESTS_DIR  # noqa
-from mozperftest.utils import temporary_env, silence  # noqa
+from mozperftest.utils import temporary_env, silence, ON_TRY  # noqa
 
 
 ITERATION_HOOKS = Path(__file__).parent / "data" / "hooks_iteration.py"
@@ -111,14 +111,14 @@ def test_doc_flavor(mocked_func):
 @mock.patch("mozperftest.mach_commands.PerftestTests._run_python_script")
 def test_test_runner(*mocked):
     # simulating on try to run the paths parser
-    old = mach_commands.ON_TRY
-    mach_commands.ON_TRY = True
+    old = utils.ON_TRY
+    utils.ON_TRY = True
     with _get_command(PerftestTests) as test, silence(test), temporary_env(
         MOZ_AUTOMATION="1"
     ):
         test.run_tests(tests=[EXAMPLE_TESTS_DIR])
 
-    mach_commands.ON_TRY = old
+    utils.ON_TRY = old
 
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)

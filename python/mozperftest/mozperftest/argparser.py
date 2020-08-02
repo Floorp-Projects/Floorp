@@ -11,7 +11,7 @@ try:
     from mozbuild.base import MozbuildObject, MachCommandConditions as conditions
 
     build_obj = MozbuildObject.from_environment(cwd=here)
-except ImportError:
+except Exception:
     build_obj = None
     conditions = None
 

@@ -28,10 +28,13 @@ import os
 import shutil
 import sys
 import logging
+from pathlib import Path
 
 
-HERE = os.path.dirname(__file__)
-SRC_ROOT = os.path.join(HERE, "..", "..", "..")
+TASKCLUSTER = "TASK_ID" in os.environ.keys()
+RUNNING_TESTS = "RUNNING_TESTS" in os.environ.keys()
+HERE = Path(__file__).parent
+SRC_ROOT = Path(HERE, "..", "..", "..").resolve()
 SEARCH_PATHS = [
     "python/mach",
     "python/mozboot",
@@ -48,6 +51,7 @@ SEARCH_PATHS = [
     "testing/mozbase/mozprofile",
     "testing/mozbase/mozproxy",
     "third_party/python/attrs/src",
+    "third_party/python/blessings",
     "third_party/python/distro",
     "third_party/python/dlmanager",
     "third_party/python/esprima",
@@ -62,23 +66,25 @@ SEARCH_PATHS = [
 ]
 
 
+if TASKCLUSTER:
+    SEARCH_PATHS.append("xpcshell")
+
+
 # XXX need to make that for all systems flavors
 if "SHELL" not in os.environ:
     os.environ["SHELL"] = "/bin/bash"
 
 
 def _setup_path():
-    """Adds all dependencies in the path.
+    """Adds all available dependencies in the path.
 
     This is done so the runner can be used with no prior
     install in all execution environments.
     """
     for path in SEARCH_PATHS:
-        path = os.path.abspath(path)
-        path = os.path.join(SRC_ROOT, path)
-        if not os.path.exists(path):
-            raise IOError("Can't find %s" % path)
-        sys.path.insert(0, path)
+        path = Path(SRC_ROOT, path).resolve()
+        if path.exists():
+            sys.path.insert(0, str(path))
 
 
 def run_tests(mach_cmd, **kwargs):
@@ -150,16 +156,41 @@ def main(argv=sys.argv[1:]):
     """
     _setup_path()
 
+    from mozbuild.mozconfig import MozconfigLoader
     from mozbuild.base import MachCommandBase, MozbuildObject
     from mozperftest import PerftestArgumentParser
     from mozboot.util import get_state_dir
     from mach.logging import LoggingManager
 
-    config = MozbuildObject.from_environment()
+    mozconfig = SRC_ROOT / "browser" / "config" / "mozconfig"
+    if mozconfig.exists():
+        os.environ["MOZCONFIG"] = str(mozconfig)
+
+    if "--xpcshell-mozinfo" in argv:
+        mozinfo = argv[argv.index("--xpcshell-mozinfo") + 1]
+        topobjdir = Path(mozinfo).parent
+    else:
+        topobjdir = None
+
+    config = MozbuildObject(
+        str(SRC_ROOT),
+        None,
+        LoggingManager(),
+        topobjdir=topobjdir,
+        mozconfig=MozconfigLoader.AUTODETECT,
+    )
     config.topdir = config.topsrcdir
     config.cwd = os.getcwd()
     config.state_dir = get_state_dir()
-    config.log_manager = LoggingManager()
+
+    # This monkey patch forces mozbuild to reuse
+    # our configuration when it tries to re-create
+    # it from the environment.
+    def _here(*args, **kw):
+        return config
+
+    MozbuildObject.from_environment = _here
+
     mach_cmd = MachCommandBase(config)
     parser = PerftestArgumentParser(description="vanilla perftest")
     args = parser.parse_args(args=argv)

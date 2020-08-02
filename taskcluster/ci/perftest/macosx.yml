@@ -6,6 +6,9 @@ job-defaults:
     worker-type: t-osx-1014
     fetches:
         build:
+            - artifact: target.mozinfo.json
+            - artifact: target.common.tests.tar.gz
+            - artifact: target.xpcshell.tests.tar.gz
             - artifact: target.perftests.tests.tar.gz
             - artifact: target.dmg
               extract: false
@@ -37,6 +40,31 @@ domcount:
             --perfherder-metrics name:totalDOMCount,unit:count name:panelMenuCount,unit:count name:lightDOMCount,unit:count name:lightDOMDetails,unit:count
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
+
+http3:
+    description: Run HTTP/3 test
+    treeherder:
+        symbol: perftest(http3)
+    attributes:
+        batch: false
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            xpcshell/tests/netwerk/test/unit/test_http3_perf.js
+            --flavor xpcshell
+            --perfherder
+            --perfherder-metrics name:speed,unit:bps
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --xpcshell-binary ${MOZ_FETCHES_DIR}/dist/bin/xpcshell
+            --xpcshell-mozinfo ${MOZ_FETCHES_DIR}/target.mozinfo.json
+            --xpcshell-nodejs ${MOZ_FETCHES_DIR}/node/bin/node
+            --xpcshell-cycles 13
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --verbose
 
 
 livesites:
