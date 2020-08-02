@@ -5,6 +5,7 @@
 package mozilla.components.feature.prompts.dialog
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 
@@ -34,6 +35,11 @@ internal class ConfirmDialogFragment : PromptDialogFragment() {
                 onPositiveClickAction()
             }
         return builder.create()
+    }
+
+    override fun onCancel(dialog: DialogInterface) {
+        super.onCancel(dialog)
+        feature?.onCancel(sessionId)
     }
 
     private fun onPositiveClickAction() {

@@ -71,6 +71,29 @@ class ChoiceDialogFragmentTest {
     }
 
     @Test
+    fun `cancelling the dialog cancels the feature`() {
+        val fragment = spy(newInstance(arrayOf(), "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
+
+        doReturn(appCompatContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+
+        fragment.feature = mockFeature
+
+        doReturn(appCompatContext).`when`(fragment).requireContext()
+
+        doNothing().`when`(fragment).dismiss()
+
+        assertNotNull(dialog)
+
+        dialog.show()
+
+        fragment.onCancel(dialog)
+
+        verify(mockFeature).onCancel("sessionId")
+    }
+
+    @Test
     fun `Build menu choice dialog`() {
 
         val fragment = spy(newInstance(arrayOf(), "sessionId", MENU_CHOICE_DIALOG_TYPE))
