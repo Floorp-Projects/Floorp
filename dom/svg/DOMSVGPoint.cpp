@@ -8,6 +8,7 @@
 
 #include "DOMSVGPointList.h"
 #include "gfx2DGlue.h"
+#include "mozAutoDocUpdate.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "SVGPoint.h"
@@ -20,6 +21,35 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
+
+//----------------------------------------------------------------------
+// Helper class: AutoChangePointNotifier
+// Stack-based helper class to pair calls to WillChangePointList and
+// DidChangePointList.
+class MOZ_RAII AutoChangePointNotifier : public mozAutoDocUpdate {
+ public:
+  explicit AutoChangePointNotifier(DOMSVGPoint* aPoint)
+      : mozAutoDocUpdate(aPoint->Element()->GetComposedDoc(), true),
+        mPoint(aPoint) {
+    MOZ_ASSERT(mPoint, "Expecting non-null point");
+    MOZ_ASSERT(mPoint->HasOwner(),
+               "Expecting list to have an owner for notification");
+    mEmptyOrOldValue = mPoint->Element()->WillChangePointList(*this);
+  }
+
+  ~AutoChangePointNotifier() {
+    mPoint->Element()->DidChangePointList(mEmptyOrOldValue, *this);
+    // Null check mPoint->mList, since DidChangePointList can run script,
+    // potentially removing mPoint from its list.
+    if (mPoint->mList && mPoint->mList->AttrIsAnimating()) {
+      mPoint->Element()->AnimationNeedsResample();
+    }
+  }
+
+ private:
+  DOMSVGPoint* const mPoint;
+  nsAttrValue mEmptyOrOldValue;
+};
 
 float DOMSVGPoint::X() {
   if (mIsAnimValItem && HasOwner()) {
@@ -38,7 +68,7 @@ void DOMSVGPoint::SetX(float aX, ErrorResult& rv) {
     if (InternalItem().mX == aX) {
       return;
     }
-    AutoChangePointListNotifier notifier(this);
+    AutoChangePointNotifier notifier(this);
     InternalItem().mX = aX;
     return;
   }
@@ -62,7 +92,7 @@ void DOMSVGPoint::SetY(float aY, ErrorResult& rv) {
     if (InternalItem().mY == aY) {
       return;
     }
-    AutoChangePointListNotifier notifier(this);
+    AutoChangePointNotifier notifier(this);
     InternalItem().mY = aY;
     return;
   }

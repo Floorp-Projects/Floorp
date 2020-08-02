@@ -17,33 +17,6 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-//----------------------------------------------------------------------
-// Helper class: AutoChangeEnumNotifier
-// Stack-based helper class to ensure DidChangeEnum is called.
-class MOZ_RAII AutoChangeEnumNotifier {
- public:
-  AutoChangeEnumNotifier(SVGAnimatedEnumeration* aEnum, SVGElement* aSVGElement,
-                         bool aDoSetAttr = true)
-      : mEnum(aEnum), mSVGElement(aSVGElement), mDoSetAttr(aDoSetAttr) {
-    MOZ_ASSERT(mEnum, "Expecting non-null enum");
-    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
-  }
-
-  ~AutoChangeEnumNotifier() {
-    if (mDoSetAttr) {
-      mSVGElement->DidChangeEnum(mEnum->mAttrEnum);
-    }
-    if (mEnum->mIsAnimated) {
-      mSVGElement->AnimationNeedsResample();
-    }
-  }
-
- private:
-  SVGAnimatedEnumeration* const mEnum;
-  SVGElement* const mSVGElement;
-  bool mDoSetAttr;
-};
-
 static SVGAttrTearoffTable<SVGAnimatedEnumeration,
                            SVGAnimatedEnumeration::DOMAnimatedEnum>
     sSVGAnimatedEnumTearoffTable;
@@ -66,15 +39,15 @@ bool SVGAnimatedEnumeration::SetBaseValueAtom(const nsAtom* aValue,
     if (aValue == mapping->mKey) {
       mIsBaseSet = true;
       if (mBaseVal != mapping->mVal) {
-        // We don't need to call DidChange* here - we're only called by
-        // SVGElement::ParseAttribute under Element::SetAttr,
-        // which takes care of notifying.
-        AutoChangeEnumNotifier notifier(this, aSVGElement, false);
-
         mBaseVal = mapping->mVal;
         if (!mIsAnimated) {
           mAnimVal = mBaseVal;
+        } else {
+          aSVGElement->AnimationNeedsResample();
         }
+        // We don't need to call DidChange* here - we're only called by
+        // SVGElement::ParseAttribute under Element::SetAttr,
+        // which takes care of notifying.
       }
       return true;
     }
@@ -106,12 +79,13 @@ void SVGAnimatedEnumeration::SetBaseValue(uint16_t aValue,
     if (mapping->mVal == aValue) {
       mIsBaseSet = true;
       if (mBaseVal != uint8_t(aValue)) {
-        AutoChangeEnumNotifier notifier(this, aSVGElement);
-
         mBaseVal = uint8_t(aValue);
         if (!mIsAnimated) {
           mAnimVal = mBaseVal;
+        } else {
+          aSVGElement->AnimationNeedsResample();
         }
+        aSVGElement->DidChangeEnum(mAttrEnum);
       }
       return;
     }

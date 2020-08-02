@@ -69,6 +69,40 @@ JSObject* DOMSVGTransform::WrapObject(JSContext* aCx,
 }
 
 //----------------------------------------------------------------------
+// Helper class: AutoChangeTransformNotifier
+// Stack-based helper class to pair calls to WillChangeTransformList
+// and DidChangeTransformList.
+class MOZ_RAII AutoChangeTransformNotifier {
+ public:
+  explicit AutoChangeTransformNotifier(DOMSVGTransform* aTransform)
+      : mTransform(aTransform) {
+    MOZ_ASSERT(mTransform, "Expecting non-null transform");
+    if (mTransform->HasOwner()) {
+      mUpdateBatch.emplace(mTransform->Element()->GetComposedDoc(), true);
+      mEmptyOrOldValue =
+          mTransform->Element()->WillChangeTransformList(mUpdateBatch.ref());
+    }
+  }
+
+  ~AutoChangeTransformNotifier() {
+    if (mTransform->HasOwner()) {
+      mTransform->Element()->DidChangeTransformList(mEmptyOrOldValue,
+                                                    mUpdateBatch.ref());
+      // Null check mTransform->mList, since DidChangeTransformList can run
+      // script, potentially removing mTransform from its list.
+      if (mTransform->mList && mTransform->mList->IsAnimating()) {
+        mTransform->Element()->AnimationNeedsResample();
+      }
+    }
+  }
+
+ private:
+  Maybe<mozAutoDocUpdate> mUpdateBatch;
+  DOMSVGTransform* const mTransform;
+  nsAttrValue mEmptyOrOldValue;
+};
+
+//----------------------------------------------------------------------
 // Ctors:
 
 DOMSVGTransform::DOMSVGTransform(DOMSVGTransformList* aList,
@@ -170,7 +204,7 @@ void DOMSVGTransform::SetTranslate(float tx, float ty, ErrorResult& rv) {
     return;
   }
 
-  AutoChangeTransformListNotifier notifier(this);
+  AutoChangeTransformNotifier notifier(this);
   Transform().SetTranslate(tx, ty);
 }
 
@@ -184,7 +218,7 @@ void DOMSVGTransform::SetScale(float sx, float sy, ErrorResult& rv) {
       Matrixgfx()._22 == sy) {
     return;
   }
-  AutoChangeTransformListNotifier notifier(this);
+  AutoChangeTransformNotifier notifier(this);
   Transform().SetScale(sx, sy);
 }
 
@@ -203,7 +237,7 @@ void DOMSVGTransform::SetRotate(float angle, float cx, float cy,
     }
   }
 
-  AutoChangeTransformListNotifier notifier(this);
+  AutoChangeTransformNotifier notifier(this);
   Transform().SetRotate(angle, cx, cy);
 }
 
@@ -223,7 +257,7 @@ void DOMSVGTransform::SetSkewX(float angle, ErrorResult& rv) {
     return;
   }
 
-  AutoChangeTransformListNotifier notifier(this);
+  AutoChangeTransformNotifier notifier(this);
   DebugOnly<nsresult> result = Transform().SetSkewX(angle);
   MOZ_ASSERT(NS_SUCCEEDED(result), "SetSkewX unexpectedly failed");
 }
@@ -244,7 +278,7 @@ void DOMSVGTransform::SetSkewY(float angle, ErrorResult& rv) {
     return;
   }
 
-  AutoChangeTransformListNotifier notifier(this);
+  AutoChangeTransformNotifier notifier(this);
   DebugOnly<nsresult> result = Transform().SetSkewY(angle);
   MOZ_ASSERT(NS_SUCCEEDED(result), "SetSkewY unexpectedly failed");
 }
@@ -303,7 +337,7 @@ void DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
     return;
   }
 
-  AutoChangeTransformListNotifier notifier(this);
+  AutoChangeTransformNotifier notifier(this);
   Transform().SetMatrix(aMatrix);
 }
 

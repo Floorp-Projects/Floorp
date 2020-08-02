@@ -27,7 +27,6 @@ class SVGElement;
 
 class SVGAnimatedBoolean {
  public:
-  friend class AutoChangeBooleanNotifier;
   using SVGElement = dom::SVGElement;
 
   void Init(uint8_t aAttrEnum = 0xff, bool aValue = false) {

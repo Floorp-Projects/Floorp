@@ -40,7 +40,6 @@ struct SVGViewBox {
 
 class SVGAnimatedViewBox {
  public:
-  friend class AutoChangeViewBoxNotifier;
   using SVGElement = dom::SVGElement;
 
   void Init();
