@@ -10,6 +10,7 @@
 #include "imgITools.h"
 #include "ImageOps.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Preferences.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
@@ -121,7 +122,13 @@ static int RunDecodeToSurfaceFuzzingWebP(nsCOMPtr<nsIInputStream> inputStream) {
   return RunDecodeToSurfaceFuzzing(inputStream, "image/webp");
 }
 
+static int RunDecodeToSurfaceFuzzingAVIF(nsCOMPtr<nsIInputStream> inputStream) {
+  return RunDecodeToSurfaceFuzzing(inputStream, "image/avif");
+}
+
 int FuzzingInitImage(int* argc, char*** argv) {
+  Preferences::SetBool("image.avif.enabled", true);
+
   nsCOMPtr<imgITools> imgTools =
       do_CreateInstance("@mozilla.org/image/tools;1");
   if (imgTools == nullptr) {
@@ -149,3 +156,6 @@ MOZ_FUZZING_INTERFACE_STREAM(FuzzingInitImage, RunDecodeToSurfaceFuzzingPNG,
 
 MOZ_FUZZING_INTERFACE_STREAM(FuzzingInitImage, RunDecodeToSurfaceFuzzingWebP,
                              ImageWebP);
+
+MOZ_FUZZING_INTERFACE_STREAM(FuzzingInitImage, RunDecodeToSurfaceFuzzingAVIF,
+                             ImageAVIF);
