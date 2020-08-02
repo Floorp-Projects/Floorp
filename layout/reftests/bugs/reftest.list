@@ -1836,7 +1836,7 @@ fails-if(webrender) == 1059498-3.html 1059498-1-ref.html # WebRender: see bug 14
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow-ref.html
 == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
-== 1078262-1.html about:blank
+skip-if(geckoview&&!webrender) == 1078262-1.html about:blank # bug 1656792
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
 fuzzy-if(webrender,63-64,407-845) == 1081185-1.html 1081185-1-ref.html
 == 1097437-1.html 1097437-1-ref.html
