@@ -6209,16 +6209,16 @@ static nscolor DarkenColor(nscolor aColor) {
 // background images and colors are being suppressed, because that means
 // light text will not be visible against the (presumed light-colored)
 // background.
-static bool ShouldDarkenColors(nsPresContext* aPresContext) {
-  return !aPresContext->GetBackgroundColorDraw() &&
-         !aPresContext->GetBackgroundImageDraw();
+static bool ShouldDarkenColors(nsIFrame* aFrame) {
+  nsPresContext* pc = aFrame->PresContext();
+  if (pc->GetBackgroundColorDraw() || pc->GetBackgroundImageDraw()) {
+    return false;
+  }
+  return aFrame->StyleVisibility()->mColorAdjust != StyleColorAdjust::Exact;
 }
 
 nscolor nsLayoutUtils::DarkenColorIfNeeded(nsIFrame* aFrame, nscolor aColor) {
-  if (ShouldDarkenColors(aFrame->PresContext())) {
-    return DarkenColor(aColor);
-  }
-  return aColor;
+  return ShouldDarkenColors(aFrame) ? DarkenColor(aColor) : aColor;
 }
 
 gfxFloat nsLayoutUtils::GetSnappedBaselineY(nsIFrame* aFrame,
