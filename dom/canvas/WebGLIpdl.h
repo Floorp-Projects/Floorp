@@ -12,7 +12,8 @@
 namespace mozilla {
 namespace webgl {
 
-// TODO: This should probably replace Shmem, or at least this should move to ipc/glue.
+// TODO: This should probably replace Shmem, or at least this should move to
+// ipc/glue.
 class RaiiShmem final {
   RefPtr<mozilla::ipc::ActorLifecycleProxy> mWeakRef;
   mozilla::ipc::Shmem mShmem = {};

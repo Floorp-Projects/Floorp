@@ -192,9 +192,7 @@ class SupportsWeakPtr {
   using WeakReference = detail::WeakReference;
 
  protected:
-  ~SupportsWeakPtr() {
-    DetachWeakPtr();
-  }
+  ~SupportsWeakPtr() { DetachWeakPtr(); }
 
  protected:
   void DetachWeakPtr() {

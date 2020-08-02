@@ -37,6 +37,7 @@ class WebGLChild final : public PWebGLChild, public SupportsWeakPtr {
   webgl::RaiiShmem mPendingCmdsShmem;
   size_t mPendingCmdsPos = 0;
   FlushedCmdInfo mFlushedCmdInfo;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLChild, override);
   using OtherSideActor = WebGLParent;

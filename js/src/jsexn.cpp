@@ -28,8 +28,8 @@
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
-#include "js/ErrorReport.h"  // JS::PrintError
-#include "js/Exception.h"    // JS::ExceptionStack
+#include "js/ErrorReport.h"             // JS::PrintError
+#include "js/Exception.h"               // JS::ExceptionStack
 #include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject
 #include "js/SavedFrameAPI.h"
 #include "js/UniquePtr.h"

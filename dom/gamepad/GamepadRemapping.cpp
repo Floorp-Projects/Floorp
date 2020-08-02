@@ -342,12 +342,14 @@ class StadiaControllerRemapper final : public GamepadRemapper {
         break;
       case 4: {
         const double value = AxisToButtonValue(aValue);
-        service->NewButtonEvent(aIndex, BUTTON_INDEX_LEFT_TRIGGER, value > BUTTON_THRESHOLD_VALUE, value);
+        service->NewButtonEvent(aIndex, BUTTON_INDEX_LEFT_TRIGGER,
+                                value > BUTTON_THRESHOLD_VALUE, value);
         break;
       }
       case 5: {
         const double value = AxisToButtonValue(aValue);
-        service->NewButtonEvent(aIndex, BUTTON_INDEX_RIGHT_TRIGGER, value > BUTTON_THRESHOLD_VALUE, value);
+        service->NewButtonEvent(aIndex, BUTTON_INDEX_RIGHT_TRIGGER,
+                                value > BUTTON_THRESHOLD_VALUE, value);
         break;
       }
       default:
@@ -420,7 +422,8 @@ class Playstation3Remapper final : public GamepadRemapper {
       default:
         NS_WARNING(
             nsPrintfCString(
-                "Axis idx '%d' doesn't support in Playstation3Remapper().", aAxis)
+                "Axis idx '%d' doesn't support in Playstation3Remapper().",
+                aAxis)
                 .get());
         break;
     }
@@ -594,13 +597,13 @@ class Dualshock4Remapper final : public GamepadRemapper {
         const double value = AxisToButtonValue(aValue);
         service->NewButtonEvent(aIndex, BUTTON_INDEX_LEFT_TRIGGER,
                                 value > BUTTON_THRESHOLD_VALUE, value);
-         break;
+        break;
       }
       case 4: {
         const double value = AxisToButtonValue(aValue);
         service->NewButtonEvent(aIndex, BUTTON_INDEX_RIGHT_TRIGGER,
                                 value > BUTTON_THRESHOLD_VALUE, value);
-         break;
+        break;
       }
       case 5:
         service->NewAxisMoveEvent(aIndex, AXIS_INDEX_RIGHT_STICK_Y, aValue);
@@ -1723,7 +1726,8 @@ already_AddRefed<GamepadRemapper> GetGamepadRemapper(const uint16_t aVendorId,
       {GamepadId::kPadixProduct2060, new IBuffaloRemapper()},
       {GamepadId::kPlayComProduct0005, new XSkillsRemapper()},
       {GamepadId::kPrototypeVendorProduct0667, new BoomN64PsxRemapper()},
-      {GamepadId::kPrototypeVendorProduct9401, new StadiaControllerOldFirmwareRemapper()},
+      {GamepadId::kPrototypeVendorProduct9401,
+       new StadiaControllerOldFirmwareRemapper()},
       {GamepadId::kRazer1532Product0900, new RazerServalRemapper()},
       {GamepadId::kSonyProduct0268, new Playstation3Remapper()},
       {GamepadId::kSonyProduct05c4, new Dualshock4Remapper()},

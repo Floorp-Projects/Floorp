@@ -120,7 +120,6 @@ class MOZ_RAII AutoEnterIonBackend {
     jcx->leaveIonBackend();
   }
 #endif
-
 };
 
 bool OffThreadCompilationAvailable(JSContext* cx);

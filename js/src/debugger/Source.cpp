@@ -14,7 +14,7 @@
 #include <string.h>  // for memcpy
 #include <utility>   // for move
 
-#include "jsapi.h"        // for JS_ReportErrorNumberASCII, JS_CopyStringCharsZ
+#include "jsapi.h"  // for JS_ReportErrorNumberASCII, JS_CopyStringCharsZ
 
 #include "debugger/Debugger.h"  // for DebuggerSourceReferent, Debugger
 #include "debugger/Script.h"    // for DebuggerScript

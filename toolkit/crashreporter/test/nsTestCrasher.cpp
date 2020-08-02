@@ -222,13 +222,13 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
       // Since we need to call the real HeapFree() we get its pointer directly.
       HMODULE kernel32 = LoadLibraryW(L"Kernel32.dll");
       if (kernel32) {
-        typedef BOOL(*HeapFreeT)(HANDLE, DWORD, LPVOID);
+        typedef BOOL (*HeapFreeT)(HANDLE, DWORD, LPVOID);
         HeapFreeT heapFree = (HeapFreeT)GetProcAddress(kernel32, "HeapFree");
         if (heapFree) {
           HANDLE heap = GetProcessHeap();
           LPVOID badPointer = (LPVOID)3;
           heapFree(heap, 0, badPointer);
-          break; // This should be unreachable
+          break;  // This should be unreachable
         }
       }
     }

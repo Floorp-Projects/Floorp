@@ -187,6 +187,7 @@ class FinalizationRegistryObject : public NativeObject {
   static bool cleanupQueuedRecords(JSContext* cx,
                                    HandleFinalizationRegistryObject registry,
                                    HandleObject callback = nullptr);
+
  private:
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;

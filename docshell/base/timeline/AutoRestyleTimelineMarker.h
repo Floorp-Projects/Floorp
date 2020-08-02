@@ -14,7 +14,6 @@ class nsIDocShell;
 namespace mozilla {
 
 class MOZ_RAII AutoRestyleTimelineMarker {
-
   RefPtr<nsIDocShell> mDocShell;
   bool mIsAnimationOnly;
 

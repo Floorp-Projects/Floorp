@@ -109,7 +109,7 @@
 #include "js/friend/DumpFunctions.h"     // JS::FormatStackDump
 #include "js/friend/StackLimits.h"       // js::CheckRecursionLimitConservative
 #include "js/friend/WindowProxy.h"  // js::IsWindowProxy, js::SetWindowProxyClass, js::ToWindowProxyIfWindow, js::ToWindowIfWindowProxy
-#include "js/GCAPI.h"                    // JS::AutoCheckCannotGC
+#include "js/GCAPI.h"               // JS::AutoCheckCannotGC
 #include "js/GCVector.h"
 #include "js/Initialization.h"
 #include "js/JSON.h"

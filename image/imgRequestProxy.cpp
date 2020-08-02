@@ -1069,7 +1069,8 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn) {
 
 already_AddRefed<imgRequestProxy> imgRequestProxy::GetStaticRequest(
     Document* aLoadingDocument) {
-  MOZ_DIAGNOSTIC_ASSERT(!aLoadingDocument || aLoadingDocument->IsStaticDocument());
+  MOZ_DIAGNOSTIC_ASSERT(!aLoadingDocument ||
+                        aLoadingDocument->IsStaticDocument());
   RefPtr<Image> image = GetImage();
 
   bool animated;

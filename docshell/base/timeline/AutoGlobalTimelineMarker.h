@@ -27,7 +27,6 @@ namespace mozilla {
 //       ...
 //     }
 class MOZ_RAII AutoGlobalTimelineMarker {
-
   // The name of the marker we are adding.
   const char* mName;
   // Whether to capture the JS stack or not.

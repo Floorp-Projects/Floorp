@@ -129,7 +129,8 @@ class SharedStyleSheetCache final : public nsIMemoryReporter {
   //
   // Note that we hold on to all sheet loads, even if in the end they happen not
   // to be cacheable.
-  nsDataHashtable<SheetLoadDataHashKey, WeakPtr<css::SheetLoadData>> mLoadingDatas;
+  nsDataHashtable<SheetLoadDataHashKey, WeakPtr<css::SheetLoadData>>
+      mLoadingDatas;
 
   // An origin-to-number-of-registered-documents count, in order to manage cache
   // eviction as described in RegisterLoader / UnregisterLoader.

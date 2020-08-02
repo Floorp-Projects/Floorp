@@ -27,7 +27,6 @@ namespace mozilla {
 //       ...
 //     }
 class MOZ_RAII AutoTimelineMarker {
-
   // The name of the marker we are adding.
   const char* mName;
 

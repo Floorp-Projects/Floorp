@@ -30,6 +30,7 @@ class MOZ_RAII AutoRestore {
  private:
   T& mLocation;
   T mValue;
+
  public:
   explicit AutoRestore(T& aValue) : mLocation(aValue), mValue(aValue) {}
   ~AutoRestore() { mLocation = mValue; }

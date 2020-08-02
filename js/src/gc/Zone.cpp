@@ -485,7 +485,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
 }
 
 void JS::Zone::beforeClearDelegateInternal(JSObject* wrapper,
-                                               JSObject* delegate) {
+                                           JSObject* delegate) {
   MOZ_ASSERT(js::gc::detail::GetDelegate(wrapper) == delegate);
   MOZ_ASSERT(needsIncrementalBarrier());
   GCMarker::fromTracer(barrierTracer())->severWeakDelegate(wrapper, delegate);

@@ -231,7 +231,6 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                                             nsISHEntry* aNewEntry);
 
  protected:
-
   bool mHasOngoingUpdate;
   bool mIsRemote;
   nsTArray<nsCOMPtr<nsISHEntry>> mEntries;  // entries are never null

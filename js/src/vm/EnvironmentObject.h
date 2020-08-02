@@ -787,7 +787,6 @@ class MOZ_RAII EnvironmentIter {
   }
 
   AbstractFramePtr maybeInitialFrame() const { return frame_; }
-
 };
 
 // The key in MissingEnvironmentMap. For live frames, maps live frames to

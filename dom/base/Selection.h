@@ -917,6 +917,7 @@ class MOZ_STACK_CLASS SelectionBatcher final {
 class MOZ_RAII AutoHideSelectionChanges final {
  private:
   RefPtr<Selection> mSelection;
+
  public:
   explicit AutoHideSelectionChanges(const nsFrameSelection* aFrame);
 

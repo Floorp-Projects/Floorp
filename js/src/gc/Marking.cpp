@@ -834,8 +834,7 @@ void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
 // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
 void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
   if (!key->zone()->needsIncrementalBarrier() ||
-      !delegate->zone()->needsIncrementalBarrier())
-  {
+      !delegate->zone()->needsIncrementalBarrier()) {
     MOZ_ASSERT(!key->zone()->gcWeakKeys(key).get(key),
                "non-collecting zone should not have populated gcWeakKeys");
     return;

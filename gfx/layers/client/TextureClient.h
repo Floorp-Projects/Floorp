@@ -784,7 +784,6 @@ class TextureClientReleaseTask : public Runnable {
 // Automatically lock and unlock a texture. Since texture locking is fallible,
 // Succeeded() must be checked on the guard object before proceeding.
 class MOZ_RAII TextureClientAutoLock {
-
  public:
   TextureClientAutoLock(TextureClient* aTexture, OpenMode aMode)
       : mTexture(aTexture), mSucceeded(false) {

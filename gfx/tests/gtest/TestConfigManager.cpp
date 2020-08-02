@@ -711,4 +711,3 @@ TEST_F(GfxConfigManager, WebRenderWhenXRenderEnabled) {
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
 }
-

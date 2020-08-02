@@ -18,7 +18,7 @@ class HostWebGLContext;
 namespace layers {
 class SharedSurfaceTextureClient;
 class SurfaceDescriptor;
-}
+}  // namespace layers
 
 namespace dom {
 
