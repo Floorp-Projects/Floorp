@@ -20,9 +20,7 @@ function ensureCleanupRegistered() {
   if (!cleanupRegistered) {
     cleanupRegistered = true;
     Services.obs.addObserver(function() {
-      for (let hiddenFrame of ChromeUtils.nondeterministicGetWeakSetKeys(
-        gAllHiddenFrames
-      )) {
+      for (let hiddenFrame of gAllHiddenFrames) {
         hiddenFrame.destroy();
       }
     }, "xpcom-shutdown");
