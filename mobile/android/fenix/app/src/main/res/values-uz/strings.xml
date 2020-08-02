@@ -23,6 +23,29 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s ta ochiq varaq. Boshqa varaqqa oʻtish uchun bosing.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">Tanlandi: %1$d</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Yangi kolleksiya qoʻshildi</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Nomi</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Kolleksiyani tanlash</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Koʻp tanlov rejimidan chiqish</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Tanlangan varaqlarni kolleksiyaga saqlang</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s tanlandi</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s tanlovi bekor qilindi</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Koʻp tanlov rejimidan chiqdi</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Koʻp tanlov rejimiga kirdi. Kolleksiyaga saqlash uchun varaqlarni tanlang</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Tanlandi</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s brauzerini Mozilla ishlab chiqqan.</string>
 
@@ -143,6 +166,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Tekshirish</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_engines_shortcut_button">Qidiruv tizimi</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Qidiruv tizimi sozlamalari</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -316,6 +341,254 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Qabul qilingan varaqlar</string>
+
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Boshqa Firefox qurilmalaridan olingan varaqlar uchun bildirishnomalar.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Olingan varaq</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Olingan varaqlar</string>
+
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s qurilmasidan varaq</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Kuzatuvdan himoya</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Kuzatuvdan himoya</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Sizni onlayn kuzatadigan kontent va skriptlarni bloklang</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Istisnolar</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Bu saytlar uchun kuzatuvdan himoya oʻchiq</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Barcha saytlar uchun yoqing</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Istisnolar tanlangan saytlar uchun kuzatuvdan himoyani oʻchirib qoʻyish imkonini beradi.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Batafsil maʼlumot</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Butun dunyo boʻyicha oʻchirilgan. Yoqish uchun Sozlamalarga kiring.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetriya</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Texnik va foydalanishga oid maʼlumotlar</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Maxfiy varaq qoʻshish</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Maxfiy</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Varaqlarni ochish</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Kolleksiyaga saqlash</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Barcha varaqlarni ulashish</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Ichki varaqlarni yopish</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Yangi varaq</string>
+
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Bosh sahifa qaytish</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Varaq rejimiga oʻtish</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Kolleksiyadan varaqni olib tashlash</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Varaqni yopish</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">%s varagʻini yopish</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Varaqlar menyusini ochish</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Barcha varaqlarni yopish</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Varaqlarni ulashish</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Varaqlarni kolleksiyaga saqlash</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Varaqlar menyusi</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Varaqni ulashish</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Oʻchirish</string>
+
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Saqlash</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Ulashish</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Joriy seans tasviri</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Kolleksiyaga saqlash</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Kolleksiyani oʻchirish</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Kolleksiya nomini oʻzgartirish</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Varaqlarni ochish</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Olib tashlash</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Maxfiy rejim)</string>
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Saqlash</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Tarixni oʻchirish</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Haqiqatan ham brauzer tarixini tozalamoqchimisiz?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Tarix oʻchirildi</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s oʻchirildi</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Tozalash</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Nusxa olish</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Ulashish</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Yangi varaqda ochish</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Yangi maxfiy varaqda ochish</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Oʻchirish</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">Tanlandi: %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">%1$d ta elementni oʻchirish</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Soʻnggi 24 soat</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Soʻnggi 7 kun</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Soʻnggi 30 kun</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Eskiroq</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Tarix yoʻq</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Kechirasiz, %1$s bu sahifani yuklay olmadi.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Pastdagi varaqni tiklash yoki yopish uchun urinib koʻrishingiz mumkin.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Nosozlik hisobotni Mozillaga yuborish</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Varaqni yopish</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Yorliqni tiklash</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Seans parametrlari</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Seansni ulashish</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Xatchoʻp menyusi</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Xatchoʻpni tahrirlash</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Jildni tanlash</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Bu jildni oʻchirishni xohlaysizmi?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s tanlangan elementlarni oʻchiradi.</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s oʻchirildi</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Jild qoʻshish</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Xatchoʻp yaratildi.</string>
+
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Xatchoʻp saqlandi</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">TAHRIRLASH</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Tahrirlash</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Tanlash</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Nusxa olish</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Ulashish</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Yangi varaqda ochish</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Yangi maxfiy varaqda ochish</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Oʻchirish</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Saqlash</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">Tanlandi: %1$d</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Xatchoʻpni tahrirlash</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Jildni tahrirlash</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Sinxronlangan xatchoʻplarni koʻrish uchun hisobingizga kiring</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">JILD</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">NOMI</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Jild qoʻshish</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Jildni tanlash</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Sarlavha boʻlishi kerak</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Xato URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Bu yerda hech qanday xatchoʻp yoʻq</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">%1$s oʻchirildi</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Oʻchirilgan xatchoʻplar</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Tanlangan jildlarni oʻchirish</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">BEKOR QILISH</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Ruxsatlar</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Sozlamalarga oʻting</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Tezkor sozlamalar paneli</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Tavsiya qilinadi</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Sayt ruxsatlarini boshqarish</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Ruxsatlarni tozalash</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Ruxsatni tozalash</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Barcha saytlardagi ruxsatlarni tozalash</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Avtomatik ravishda ishga tushirish</string>
 
     <!-- Accessibility description text for a completed migration item -->
     <string name="migration_icon_description">Koʻchirish tugadi</string>
