@@ -440,7 +440,7 @@ async function compareFiles(src1, src2, options = {}) {
     await messagePromise;
   }
 
-  await printpreview(options);
+  await printpreview(options.test || options);
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
@@ -449,7 +449,7 @@ async function compareFiles(src1, src2, options = {}) {
     iframeElement.setAttribute("src", BASE + src2);
   });
 
-  await printpreview(options);
+  await printpreview(options.ref || options);
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
@@ -515,6 +515,25 @@ async function runTest18() {
       marginBottom: 22,
       marginLeft: 22,
       marginRight: 22,
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest19));
+}
+
+async function runTest18() {
+  await compareFiles("color_adjust.html", "color_adjust_ref.html", {
+    test: {
+      settings: {
+        printBGColors: false,
+        printBGImages: false,
+      },
+    },
+    ref: {
+      settings: {
+        printBGColors: true,
+        printBGImages: true,
+      },
     },
   });
 
