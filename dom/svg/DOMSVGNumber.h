@@ -38,10 +38,7 @@ class SVGSVGElement;
  * See the comment in DOMSVGLength.h (yes, LENGTH), which applies here too.
  */
 class DOMSVGNumber final : public nsISupports, public nsWrapperCache {
-  template <class T>
-  friend class AutoChangeNumberListNotifier;
-  using AutoChangeNumberListNotifier =
-      AutoChangeNumberListNotifier<DOMSVGNumber>;
+  friend class AutoChangeNumberNotifier;
 
   ~DOMSVGNumber() {
     // Our mList's weak ref to us must be nulled out when we die. If GC has
@@ -82,11 +79,6 @@ class DOMSVGNumber final : public nsISupports, public nsWrapperCache {
   }
 
   bool IsInList() const { return !!mList; }
-
-  /**
-   * Returns true if our attribute is animating.
-   */
-  bool IsAnimating() const { return mList && mList->IsAnimating(); }
 
   /**
    * In future, if this class is used for non-list numbers, this will be

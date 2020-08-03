@@ -8,7 +8,6 @@
 #define DOM_SVG_DOMSVGNUMBERLIST_H_
 
 #include "DOMSVGAnimatedNumberList.h"
-#include "mozAutoDocUpdate.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsTArray.h"
@@ -22,34 +21,6 @@ namespace mozilla {
 namespace dom {
 class DOMSVGNumber;
 class SVGElement;
-
-//----------------------------------------------------------------------
-// Helper class: AutoChangeNumberListNotifier
-// Stack-based helper class to pair calls to WillChangeNumberList and
-// DidChangeNumberList. Used by DOMSVGNumber and DOMSVGNumberList.
-template <class T>
-class MOZ_RAII AutoChangeNumberListNotifier : public mozAutoDocUpdate {
- public:
-  explicit AutoChangeNumberListNotifier(T* aValue)
-      : mozAutoDocUpdate(aValue->Element()->GetComposedDoc(), true),
-        mValue(aValue) {
-    MOZ_ASSERT(mValue, "Expecting non-null value");
-    mEmptyOrOldValue =
-        mValue->Element()->WillChangeNumberList(mValue->AttrEnum(), *this);
-  }
-
-  ~AutoChangeNumberListNotifier() {
-    mValue->Element()->DidChangeNumberList(mValue->AttrEnum(), mEmptyOrOldValue,
-                                           *this);
-    if (mValue->IsAnimating()) {
-      mValue->Element()->AnimationNeedsResample();
-    }
-  }
-
- private:
-  T* const mValue;
-  nsAttrValue mEmptyOrOldValue;
-};
 
 /**
  * Class DOMSVGNumberList
@@ -69,11 +40,8 @@ class MOZ_RAII AutoChangeNumberListNotifier : public mozAutoDocUpdate {
  * Our DOM items are created lazily on demand as and when script requests them.
  */
 class DOMSVGNumberList final : public nsISupports, public nsWrapperCache {
-  template <class T>
   friend class AutoChangeNumberListNotifier;
   friend class DOMSVGNumber;
-  using AutoChangeNumberListNotifier =
-      AutoChangeNumberListNotifier<DOMSVGNumberList>;
 
   ~DOMSVGNumberList() {
     // Our mAList's weak ref to us must be nulled out when we die. If GC has

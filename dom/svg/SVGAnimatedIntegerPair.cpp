@@ -18,45 +18,6 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-//----------------------------------------------------------------------
-// Helper class: AutoChangeIntegerPairNotifier
-// Stack-based helper class to pair calls to WillChangeIntegerPair and
-// DidChangeIntegerPair.
-class MOZ_RAII AutoChangeIntegerPairNotifier {
- public:
-  AutoChangeIntegerPairNotifier(SVGAnimatedIntegerPair* aIntegerPair,
-                                SVGElement* aSVGElement, bool aDoSetAttr = true)
-      : mIntegerPair(aIntegerPair),
-        mSVGElement(aSVGElement),
-        mDoSetAttr(aDoSetAttr) {
-    MOZ_ASSERT(mIntegerPair, "Expecting non-null integerPair");
-    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
-
-    if (mDoSetAttr) {
-      mUpdateBatch.emplace(aSVGElement->GetComposedDoc(), true);
-      mEmptyOrOldValue = mSVGElement->WillChangeIntegerPair(
-          mIntegerPair->mAttrEnum, mUpdateBatch.ref());
-    }
-  }
-
-  ~AutoChangeIntegerPairNotifier() {
-    if (mDoSetAttr) {
-      mSVGElement->DidChangeIntegerPair(mIntegerPair->mAttrEnum,
-                                        mEmptyOrOldValue, mUpdateBatch.ref());
-    }
-    if (mIntegerPair->mIsAnimated) {
-      mSVGElement->AnimationNeedsResample();
-    }
-  }
-
- private:
-  SVGAnimatedIntegerPair* const mIntegerPair;
-  SVGElement* const mSVGElement;
-  Maybe<mozAutoDocUpdate> mUpdateBatch;
-  nsAttrValue mEmptyOrOldValue;
-  bool mDoSetAttr;
-};
-
 static SVGAttrTearoffTable<SVGAnimatedIntegerPair,
                            SVGAnimatedIntegerPair::DOMAnimatedInteger>
     sSVGFirstAnimatedIntegerTearoffTable;
@@ -99,18 +60,19 @@ nsresult SVGAnimatedIntegerPair::SetBaseValueString(
     return rv;
   }
 
-  // We don't need to call DidChange* here - we're only called by
-  // SVGElement::ParseAttribute under Element::SetAttr,
-  // which takes care of notifying.
-  AutoChangeIntegerPairNotifier notifier(this, aSVGElement, false);
-
   mBaseVal[0] = val[0];
   mBaseVal[1] = val[1];
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal[0] = mBaseVal[0];
     mAnimVal[1] = mBaseVal[1];
+  } else {
+    aSVGElement->AnimationNeedsResample();
   }
+
+  // We don't need to call DidChange* here - we're only called by
+  // SVGElement::ParseAttribute under Element::SetAttr,
+  // which takes care of notifying.
   return NS_OK;
 }
 
@@ -131,13 +93,17 @@ void SVGAnimatedIntegerPair::SetBaseValue(int32_t aValue, PairIndex aPairIndex,
     return;
   }
 
-  AutoChangeIntegerPairNotifier notifier(this, aSVGElement);
-
+  mozAutoDocUpdate updateBatch(aSVGElement->GetComposedDoc(), true);
+  nsAttrValue emptyOrOldValue =
+      aSVGElement->WillChangeIntegerPair(mAttrEnum, updateBatch);
   mBaseVal[index] = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal[index] = aValue;
+  } else {
+    aSVGElement->AnimationNeedsResample();
   }
+  aSVGElement->DidChangeIntegerPair(mAttrEnum, emptyOrOldValue, updateBatch);
 }
 
 void SVGAnimatedIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
@@ -146,15 +112,19 @@ void SVGAnimatedIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
     return;
   }
 
-  AutoChangeIntegerPairNotifier notifier(this, aSVGElement);
-
+  mozAutoDocUpdate updateBatch(aSVGElement->GetComposedDoc(), true);
+  nsAttrValue emptyOrOldValue =
+      aSVGElement->WillChangeIntegerPair(mAttrEnum, updateBatch);
   mBaseVal[0] = aValue1;
   mBaseVal[1] = aValue2;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal[0] = aValue1;
     mAnimVal[1] = aValue2;
+  } else {
+    aSVGElement->AnimationNeedsResample();
   }
+  aSVGElement->DidChangeIntegerPair(mAttrEnum, emptyOrOldValue, updateBatch);
 }
 
 void SVGAnimatedIntegerPair::SetAnimValue(const int32_t aValue[2],
