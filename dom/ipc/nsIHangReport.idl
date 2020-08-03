@@ -40,6 +40,9 @@ interface nsIHangReport : nsISupports
   // Only valid for PLUGIN_HANG reports.
   readonly attribute ACString pluginName;
 
+  // The child id of the process in which the hang happened.
+  readonly attribute unsigned long long childID;
+
   // Called by front end code when user ignores or cancels
   // the notification.
   void userCanceled();
