@@ -5,13 +5,6 @@
 // Test that the start and end buttons on the breadcrumb trail bring the right
 // crumbs into the visible area, for both LTR and RTL
 
-// There are shutdown issues for which multiple rejections are left uncaught.
-// See bug 1018184 for resolving these issues.
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
-PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
-
 const { Toolbox } = require("devtools/client/framework/toolbox");
 
 const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs_visibility.html";
@@ -93,7 +86,6 @@ async function testBreadcrumbTransitions(hostWindow, inspector) {
       info("Simulating click of start button");
       EventUtils.synthesizeMouseAtCenter(startBtn, {}, inspector.panelWin);
     }
-
     await breadcrumbsUpdated;
     const selector = 'button[title="' + node.title + '"]';
     const relevantCrumb = container.querySelector(selector);

@@ -73,7 +73,11 @@ add_task(async function() {
   );
 
   info("Selecting compatibility view.");
+  const onCompatibilityViewInitialized = inspector.once(
+    "compatibilityview-initialized"
+  );
   inspector.sidebar.select("compatibilityview");
+  await onCompatibilityViewInitialized;
 
   is(
     inspector.sidebar.getCurrentTabID(),

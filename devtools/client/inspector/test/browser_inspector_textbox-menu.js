@@ -5,13 +5,6 @@
 // Test that when right-clicking on various text boxes throughout the inspector does use
 // the toolbox's context menu (copy/cut/paste/selectAll/Undo).
 
-// There are shutdown issues for which multiple rejections are left uncaught.
-// See bug 1018184 for resolving these issues.
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
-PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
-
 add_task(async function() {
   await addTab(`data:text/html;charset=utf-8,
                 <style>h1 { color: red; }</style>
