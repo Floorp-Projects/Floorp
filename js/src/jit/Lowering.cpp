@@ -4138,6 +4138,17 @@ void LIRGenerator::visitGuardIsNotProxy(MGuardIsNotProxy* ins) {
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardIsNotArrayBufferMaybeShared(
+    MGuardIsNotArrayBufferMaybeShared* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LGuardIsNotArrayBufferMaybeShared(useRegister(ins->object()), temp());
+  assignSnapshot(lir, BailoutKind::NotArrayBufferMaybeSharedGuard);
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitNurseryObject(MNurseryObject* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
 

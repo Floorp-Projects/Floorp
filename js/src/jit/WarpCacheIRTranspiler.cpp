@@ -219,6 +219,12 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
     case GuardClassKind::Array:
       classp = &ArrayObject::class_;
       break;
+    case GuardClassKind::ArrayBuffer:
+      classp = &ArrayBufferObject::class_;
+      break;
+    case GuardClassKind::SharedArrayBuffer:
+      classp = &SharedArrayBufferObject::class_;
+      break;
     case GuardClassKind::DataView:
       classp = &DataViewObject::class_;
       break;
@@ -271,6 +277,17 @@ bool WarpCacheIRTranspiler::emitGuardIsNotProxy(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
   auto* ins = MGuardIsNotProxy::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardIsNotArrayBufferMaybeShared::New(alloc(), obj);
   add(ins);
 
   setOperand(objId, ins);
@@ -640,6 +657,11 @@ bool WarpCacheIRTranspiler::emitLoadInt32Constant(uint32_t valOffset,
 bool WarpCacheIRTranspiler::emitLoadBooleanConstant(bool val,
                                                     BooleanOperandId resultId) {
   auto* valConst = constant(BooleanValue(val));
+  return defineOperand(resultId, valConst);
+}
+
+bool WarpCacheIRTranspiler::emitLoadUndefined(ValOperandId resultId) {
+  auto* valConst = constant(UndefinedValue());
   return defineOperand(resultId, valConst);
 }
 
@@ -2028,6 +2050,70 @@ bool WarpCacheIRTranspiler::emitObjectCreateResult(
   gc::InitialHeap heap = gc::DefaultHeap;
   auto* obj = MNewObject::New(alloc(), /* constraints = */ nullptr,
                               templateConst, heap, MNewObject::ObjectCreate);
+  addEffectful(obj);
+
+  pushResult(obj);
+  return resumeAfter(obj);
+}
+
+bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
+    uint32_t templateObjectOffset, Int32OperandId lengthId) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+  MDefinition* length = getOperand(lengthId);
+
+  // TODO: support pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+
+  if (length->isConstant()) {
+    int32_t len = length->toConstant()->toInt32();
+    if (len >= 0 &&
+        uint32_t(len) == templateObj->as<TypedArrayObject>().length()) {
+      auto* templateConst = constant(ObjectValue(*templateObj));
+      auto* obj = MNewTypedArray::New(alloc(), /* constraints = */ nullptr,
+                                      templateConst, heap);
+      add(obj);
+      pushResult(obj);
+      return true;
+    }
+  }
+
+  auto* obj = MNewTypedArrayDynamicLength::New(
+      alloc(), /* constraints = */ nullptr, templateObj, heap, length);
+  add(obj);
+  pushResult(obj);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayBufferResult(
+    uint32_t templateObjectOffset, ObjOperandId bufferId,
+    ValOperandId byteOffsetId, ValOperandId lengthId) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+  MDefinition* buffer = getOperand(bufferId);
+  MDefinition* byteOffset = getOperand(byteOffsetId);
+  MDefinition* length = getOperand(lengthId);
+
+  // TODO: support pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+
+  auto* obj = MNewTypedArrayFromArrayBuffer::New(
+      alloc(), /* constraints = */ nullptr, templateObj, heap, buffer,
+      byteOffset, length);
+  addEffectful(obj);
+
+  pushResult(obj);
+  return resumeAfter(obj);
+}
+
+bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayResult(
+    uint32_t templateObjectOffset, ObjOperandId arrayId) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+  MDefinition* array = getOperand(arrayId);
+
+  // TODO: support pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+
+  auto* obj = MNewTypedArrayFromArray::New(alloc(), /* constraints = */ nullptr,
+                                           templateObj, heap, array);
   addEffectful(obj);
 
   pushResult(obj);

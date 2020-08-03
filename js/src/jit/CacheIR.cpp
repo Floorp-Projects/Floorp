@@ -4924,10 +4924,23 @@ void CallIRGenerator::emitNativeCalleeGuard(HandleFunction callee) {
   // Note: we rely on GuardSpecificFunction to also guard against the same
   // native from a different realm.
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
+
+  bool isConstructing = IsConstructPC(pc_);
+  CallFlags flags(isConstructing, IsSpreadPC(pc_));
+
   ValOperandId calleeValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
   writer.guardSpecificFunction(calleeObjId, callee);
+
+  // If we're constructing we also need to guard newTarget == callee.
+  if (isConstructing) {
+    MOZ_ASSERT(&newTarget_.toObject() == callee);
+    ValOperandId newTargetValId =
+        writer.loadArgumentFixedSlot(ArgumentKind::NewTarget, argc_, flags);
+    ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
+    writer.guardSpecificFunction(newTargetObjId, callee);
+  }
 }
 
 AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
@@ -7030,6 +7043,109 @@ AttachDecision CallIRGenerator::tryAttachObjectCreate(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachTypedArrayConstructor(
+    HandleFunction callee) {
+  MOZ_ASSERT(IsConstructPC(pc_));
+
+  if (argc_ == 0 || argc_ > 3) {
+    return AttachDecision::NoAction;
+  }
+
+  // TODO(Warp); attach this stub just once to prevent slowdowns for
+  // polymorphic calls.
+
+  // The first argument must be int32 or a non-proxy object.
+  if (!args_[0].isInt32() && !args_[0].isObject()) {
+    return AttachDecision::NoAction;
+  }
+  if (args_[0].isObject() && args_[0].toObject().is<ProxyObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+#ifdef JS_CODEGEN_X86
+  // Unfortunately NewTypedArrayFromArrayBufferResult needs more registers than
+  // we can easily support on 32-bit x86 for now.
+  if (args_[0].isObject() &&
+      args_[0].toObject().is<ArrayBufferObjectMaybeShared>()) {
+    return AttachDecision::NoAction;
+  }
+#endif
+
+  RootedObject templateObj(cx_);
+  if (!TypedArrayObject::GetTemplateObjectForNative(cx_, callee->native(),
+                                                    args_, &templateObj)) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  if (!templateObj) {
+    // This can happen for large length values.
+    MOZ_ASSERT(args_[0].isInt32());
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee and newTarget are this TypedArray constructor function.
+  emitNativeCalleeGuard(callee);
+
+  CallFlags flags(IsConstructPC(pc_), IsSpreadPC(pc_));
+  ValOperandId arg0Id =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags);
+
+  if (args_[0].isInt32()) {
+    // From length.
+    Int32OperandId lengthId = writer.guardToInt32(arg0Id);
+    writer.newTypedArrayFromLengthResult(templateObj, lengthId);
+  } else {
+    JSObject* obj = &args_[0].toObject();
+    ObjOperandId objId = writer.guardToObject(arg0Id);
+
+    if (obj->is<ArrayBufferObjectMaybeShared>()) {
+      // From ArrayBuffer.
+      if (obj->is<ArrayBufferObject>()) {
+        writer.guardClass(objId, GuardClassKind::ArrayBuffer);
+      } else {
+        MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
+        writer.guardClass(objId, GuardClassKind::SharedArrayBuffer);
+      }
+      ValOperandId byteOffsetId;
+      if (argc_ > 1) {
+        byteOffsetId =
+            writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_, flags);
+      } else {
+        byteOffsetId = writer.loadUndefined();
+      }
+      ValOperandId lengthId;
+      if (argc_ > 2) {
+        lengthId =
+            writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_, flags);
+      } else {
+        lengthId = writer.loadUndefined();
+      }
+      writer.newTypedArrayFromArrayBufferResult(templateObj, objId,
+                                                byteOffsetId, lengthId);
+    } else {
+      // From Array-like.
+      writer.guardIsNotArrayBufferMaybeShared(objId);
+      writer.guardIsNotProxy(objId);
+      writer.newTypedArrayFromArrayResult(templateObj, objId);
+    }
+  }
+
+  if (!JitOptions.warpBuilder) {
+    // Store the template object for BaselineInspector.
+    writer.metaNativeTemplateObject(callee, templateObj);
+  }
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("TypedArrayConstructor");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
   if (calleeFunc->native() != fun_apply) {
@@ -7111,7 +7227,7 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
 
   // Special case functions are only optimized for normal calls.
-  if (op_ != JSOp::Call && op_ != JSOp::CallIgnoresRv) {
+  if (op_ != JSOp::Call && op_ != JSOp::New && op_ != JSOp::CallIgnoresRv) {
     return AttachDecision::NoAction;
   }
 
@@ -7124,6 +7240,22 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
 
   // Not all natives can be inlined cross-realm.
   if (cx_->realm() != callee->realm() && !CanInlineNativeCrossRealm(native)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Check for special-cased native constructors.
+  if (op_ == JSOp::New) {
+    // newTarget must match the callee. CacheIR for this is emitted in
+    // emitNativeCalleeGuard.
+    if (callee_ != newTarget_) {
+      return AttachDecision::NoAction;
+    }
+    switch (native) {
+      case InlinableNative::TypedArrayConstructor:
+        return tryAttachTypedArrayConstructor(callee);
+      default:
+        break;
+    }
     return AttachDecision::NoAction;
   }
 
@@ -7628,11 +7760,6 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
       res.set(StringObject::create(cx_, emptyString, /* proto = */ nullptr,
                                    TenuredObject));
       return !!res;
-    }
-
-    case InlinableNative::TypedArrayConstructor: {
-      return TypedArrayObject::GetTemplateObjectForNative(
-          cx_, calleeFunc->native(), args_, res);
     }
 
     default:
