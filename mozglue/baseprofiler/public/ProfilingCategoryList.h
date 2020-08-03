@@ -56,6 +56,13 @@
   END_CATEGORY \
   BEGIN_CATEGORY(GCCC, "GC / CC", "orange") \
     SUBCATEGORY(GCCC, GCCC, "Other") \
+    SUBCATEGORY(GCCC, GCCC_MinorGC, "Minor GC") \
+    SUBCATEGORY(GCCC, GCCC_MajorGC, "Major GC (Other)") \
+    SUBCATEGORY(GCCC, GCCC_MajorGC_Mark, "Major GC (Mark)") \
+    SUBCATEGORY(GCCC, GCCC_MajorGC_Sweep, "Major GC (Sweep)") \
+    SUBCATEGORY(GCCC, GCCC_MajorGC_Compact, "Major GC (Compact)") \
+    SUBCATEGORY(GCCC, GCCC_UnmarkGray, "Unmark Gray") \
+    SUBCATEGORY(GCCC, GCCC_Barrier, "Barrier") \
   END_CATEGORY \
   BEGIN_CATEGORY(NETWORK, "Network", "lightblue") \
     SUBCATEGORY(NETWORK, NETWORK, "Other") \
