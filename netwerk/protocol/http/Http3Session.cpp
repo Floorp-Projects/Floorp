@@ -396,7 +396,6 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         mState = CONNECTED;
         SetSecInfo();
         mSocketControl->HandshakeCompleted();
-        gHttpHandler->ConnMgr()->ReportHttp3Connection(mSegmentReaderWriter);
         MaybeResumeSend();
         break;
       case Http3Event::Tag::GoawayReceived:
