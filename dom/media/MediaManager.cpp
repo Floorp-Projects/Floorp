@@ -1980,7 +1980,7 @@ MediaManager* MediaManager::Get() {
     MOZ_RELEASE_ASSERT(timesCreated == 1);
 
     RefPtr<TaskQueue> mediaThread = new TaskQueue(
-        GetMediaThreadPool(MediaThreadType::PLAYBACK), "MediaManager");
+        GetMediaThreadPool(MediaThreadType::CONTROLLER), "MediaManager");
     LOG("New Media thread for gum");
 
     sSingleton = new MediaManager(mediaThread.forget());
