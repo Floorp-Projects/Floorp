@@ -1634,6 +1634,10 @@ nsresult HttpChannelChild::SetupRedirect(nsIURI* uri,
                                          nsIChannel** outChannel) {
   LOG(("HttpChannelChild::SetupRedirect [this=%p]\n", this));
 
+  if (mCanceled) {
+    return NS_ERROR_ABORT;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIIOService> ioService;
   rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
