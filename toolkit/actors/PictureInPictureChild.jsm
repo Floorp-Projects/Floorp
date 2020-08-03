@@ -961,12 +961,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 
 class PictureInPictureChild extends JSWindowActorChild {
   static videoIsPlaying(video) {
-    return !!(
-      video.currentTime > 0 &&
-      !video.paused &&
-      !video.ended &&
-      video.readyState > 2
-    );
+    return !!(!video.paused && !video.ended && video.readyState > 2);
   }
 
   static videoIsMuted(video) {
