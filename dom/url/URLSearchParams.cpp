@@ -446,7 +446,7 @@ nsresult URLParams::Sort() {
     }
   }
 
-  mParams = std::move(params);
+  mParams.SwapElements(params);
   return NS_OK;
 }
 

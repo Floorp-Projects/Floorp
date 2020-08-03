@@ -66,7 +66,7 @@ class AsyncExecuteStatements final : public Runnable,
    * @param _stmt
    *        The handle to control the execution of the statements.
    */
-  static nsresult execute(StatementDataArray&& aStatements,
+  static nsresult execute(StatementDataArray& aStatements,
                           Connection* aConnection, sqlite3* aNativeConnection,
                           mozIStorageStatementCallback* aCallback,
                           mozIStoragePendingStatement** _stmt);
@@ -91,7 +91,7 @@ class AsyncExecuteStatements final : public Runnable,
   nsresult notifyResultsOnCallingThread(ResultSet* aResultSet);
 
  private:
-  AsyncExecuteStatements(StatementDataArray&& aStatements,
+  AsyncExecuteStatements(StatementDataArray& aStatements,
                          Connection* aConnection, sqlite3* aNativeConnection,
                          mozIStorageStatementCallback* aCallback);
   ~AsyncExecuteStatements();

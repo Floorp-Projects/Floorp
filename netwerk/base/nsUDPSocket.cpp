@@ -173,9 +173,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsUDPMessage)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsUDPMessage::nsUDPMessage(NetAddr* aAddr, nsIOutputStream* aOutputStream,
-                           FallibleTArray<uint8_t>&& aData)
-    : mOutputStream(aOutputStream), mData(std::move(aData)) {
+                           FallibleTArray<uint8_t>& aData)
+    : mOutputStream(aOutputStream) {
   memcpy(&mAddr, aAddr, sizeof(NetAddr));
+  aData.SwapElements(mData);
 }
 
 nsUDPMessage::~nsUDPMessage() { DropJSObjects(this); }
@@ -327,9 +328,10 @@ namespace {
 class UDPMessageProxy final : public nsIUDPMessage {
  public:
   UDPMessageProxy(NetAddr* aAddr, nsIOutputStream* aOutputStream,
-                  FallibleTArray<uint8_t>&& aData)
-      : mOutputStream(aOutputStream), mData(std::move(aData)) {
+                  FallibleTArray<uint8_t>& aData)
+      : mOutputStream(aOutputStream) {
     memcpy(&mAddr, aAddr, sizeof(mAddr));
+    aData.SwapElements(mData);
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -440,7 +442,7 @@ void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
   NetAddr netAddr;
   PRNetAddrToNetAddr(&prClientAddr, &netAddr);
   nsCOMPtr<nsIUDPMessage> message =
-      new UDPMessageProxy(&netAddr, pipeOut, std::move(data));
+      new UDPMessageProxy(&netAddr, pipeOut, data);
   mListener->OnPacketReceived(this, message);
 }
 
@@ -841,7 +843,7 @@ SocketListenerProxy::OnPacketReceivedRunnable::Run() {
   FallibleTArray<uint8_t>& data = mMessage->GetDataAsTArray();
 
   nsCOMPtr<nsIUDPMessage> message =
-      new nsUDPMessage(&netAddr, outputStream, std::move(data));
+      new nsUDPMessage(&netAddr, outputStream, data);
   mListener->OnPacketReceived(mSocket, message);
   return NS_OK;
 }
@@ -935,7 +937,7 @@ SocketListenerProxyBackground::OnPacketReceivedRunnable::Run() {
 
   UDPSOCKET_LOG(("%s [this=%p], len %zu", __FUNCTION__, this, data.Length()));
   nsCOMPtr<nsIUDPMessage> message =
-      new UDPMessageProxy(&netAddr, outputStream, std::move(data));
+      new UDPMessageProxy(&netAddr, outputStream, data);
   mListener->OnPacketReceived(mSocket, message);
   return NS_OK;
 }
@@ -952,8 +954,10 @@ class PendingSend : public nsIDNSListener {
   NS_DECL_NSIDNSLISTENER
 
   PendingSend(nsUDPSocket* aSocket, uint16_t aPort,
-              FallibleTArray<uint8_t>&& aData)
-      : mSocket(aSocket), mPort(aPort), mData(std::move(aData)) {}
+              FallibleTArray<uint8_t>& aData)
+      : mSocket(aSocket), mPort(aPort) {
+    mData.SwapElements(aData);
+  }
 
  private:
   virtual ~PendingSend() = default;
@@ -1077,7 +1081,7 @@ nsUDPSocket::Send(const nsACString& aHost, uint16_t aPort,
   }
 
   nsCOMPtr<nsIDNSListener> listener =
-      new PendingSend(this, aPort, std::move(fallibleArray));
+      new PendingSend(this, aPort, fallibleArray);
 
   nsresult rv = ResolveHost(aHost, mOriginAttributes, listener);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -935,8 +935,9 @@ void Predictor::CalculatePredictions(nsICacheEntry* entry, nsIURI* referrer,
   // Since the visitor gets called under a cache lock, all we do there is get
   // copies of the keys/values we care about, and then do the real work here
   entry->VisitMetaData(this);
-  nsTArray<nsCString> keysToOperateOn = std::move(mKeysToOperateOn),
-                      valuesToOperateOn = std::move(mValuesToOperateOn);
+  nsTArray<nsCString> keysToOperateOn, valuesToOperateOn;
+  keysToOperateOn.SwapElements(mKeysToOperateOn);
+  valuesToOperateOn.SwapElements(mValuesToOperateOn);
 
   MOZ_ASSERT(keysToOperateOn.Length() == valuesToOperateOn.Length());
   for (size_t i = 0; i < keysToOperateOn.Length(); ++i) {
@@ -1139,9 +1140,10 @@ bool Predictor::RunPredictions(nsIURI* referrer,
   bool predicted = false;
   uint32_t len, i;
 
-  nsTArray<nsCOMPtr<nsIURI>> prefetches = std::move(mPrefetches),
-                             preconnects = std::move(mPreconnects),
-                             preresolves = std::move(mPreresolves);
+  nsTArray<nsCOMPtr<nsIURI>> prefetches, preconnects, preresolves;
+  prefetches.SwapElements(mPrefetches);
+  preconnects.SwapElements(mPreconnects);
+  preresolves.SwapElements(mPreresolves);
 
   Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PREDICTIONS>
       totalPredictions;
@@ -1452,8 +1454,9 @@ void Predictor::LearnInternal(PredictorLearnReason reason, nsICacheEntry* entry,
         // get copies of the keys/values we care about, and then do the real
         // work here
         entry->VisitMetaData(this);
-        nsTArray<nsCString> keysToOperateOn = std::move(mKeysToOperateOn),
-                            valuesToOperateOn = std::move(mValuesToOperateOn);
+        nsTArray<nsCString> keysToOperateOn, valuesToOperateOn;
+        keysToOperateOn.SwapElements(mKeysToOperateOn);
+        valuesToOperateOn.SwapElements(mValuesToOperateOn);
 
         MOZ_ASSERT(keysToOperateOn.Length() == valuesToOperateOn.Length());
         for (size_t i = 0; i < keysToOperateOn.Length(); ++i) {
@@ -1790,7 +1793,8 @@ Predictor::Resetter::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
   }
 
   entry->VisitMetaData(this);
-  nsTArray<nsCString> keysToDelete = std::move(mKeysToDelete);
+  nsTArray<nsCString> keysToDelete;
+  keysToDelete.SwapElements(mKeysToDelete);
 
   for (size_t i = 0; i < keysToDelete.Length(); ++i) {
     const char* key = keysToDelete[i].BeginReading();
@@ -1873,12 +1877,13 @@ Predictor::Resetter::OnCacheEntryVisitCompleted() {
 
   nsresult rv;
 
-  nsTArray<nsCOMPtr<nsIURI>> urisToVisit = std::move(mURIsToVisit);
+  nsTArray<nsCOMPtr<nsIURI>> urisToVisit;
+  urisToVisit.SwapElements(mURIsToVisit);
 
   MOZ_ASSERT(mEntriesToVisit == urisToVisit.Length());
 
-  nsTArray<nsCOMPtr<nsILoadContextInfo>> infosToVisit =
-      std::move(mInfosToVisit);
+  nsTArray<nsCOMPtr<nsILoadContextInfo>> infosToVisit;
+  infosToVisit.SwapElements(mInfosToVisit);
 
   MOZ_ASSERT(mEntriesToVisit == infosToVisit.Length());
 
@@ -2359,8 +2364,9 @@ Predictor::CacheabilityAction::OnCacheEntryAvailable(
     return NS_OK;
   }
 
-  nsTArray<nsCString> keysToCheck = std::move(mKeysToCheck),
-                      valuesToCheck = std::move(mValuesToCheck);
+  nsTArray<nsCString> keysToCheck, valuesToCheck;
+  keysToCheck.SwapElements(mKeysToCheck);
+  valuesToCheck.SwapElements(mValuesToCheck);
 
   bool hasQueryString = false;
   nsAutoCString query;

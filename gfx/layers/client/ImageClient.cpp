@@ -251,7 +251,7 @@ bool ImageClientSingle::UpdateImage(ImageContainer* aContainer,
   for (auto& b : mBuffers) {
     RemoveTexture(b.mTextureClient);
   }
-  mBuffers = std::move(newBuffers);
+  mBuffers.SwapElements(newBuffers);
 
   return true;
 }

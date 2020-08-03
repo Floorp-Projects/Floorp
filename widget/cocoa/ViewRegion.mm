@@ -29,7 +29,8 @@ bool ViewRegion::UpdateRegion(const LayoutDeviceIntRegion& aRegion,
   // possible, or create new ones or remove old ones if the number of
   // rects in the region has changed.
 
-  nsTArray<NSView*> viewsToRecycle = std::move(mViews);
+  nsTArray<NSView*> viewsToRecycle;
+  mViews.SwapElements(viewsToRecycle);
   // The mViews array is now empty.
 
   size_t i = 0;

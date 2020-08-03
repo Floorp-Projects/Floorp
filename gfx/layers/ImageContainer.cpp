@@ -285,7 +285,7 @@ void ImageContainer::SetCurrentImageInternal(
     }
   }
 
-  mCurrentImages = std::move(newImages);
+  mCurrentImages.SwapElements(newImages);
 }
 
 void ImageContainer::ClearImagesFromImageBridge() {

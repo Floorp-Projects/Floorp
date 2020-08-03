@@ -1373,8 +1373,8 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::WhenReady(
 }
 
 void ServiceWorkerManager::CheckPendingReadyPromises() {
-  nsTArray<UniquePtr<PendingReadyData>> pendingReadyList =
-      std::move(mPendingReadyList);
+  nsTArray<UniquePtr<PendingReadyData>> pendingReadyList;
+  mPendingReadyList.SwapElements(pendingReadyList);
   for (uint32_t i = 0; i < pendingReadyList.Length(); ++i) {
     UniquePtr<PendingReadyData> prd(std::move(pendingReadyList[i]));
 
@@ -1391,8 +1391,8 @@ void ServiceWorkerManager::CheckPendingReadyPromises() {
 
 void ServiceWorkerManager::RemovePendingReadyPromise(
     const ClientInfo& aClientInfo) {
-  nsTArray<UniquePtr<PendingReadyData>> pendingReadyList =
-      std::move(mPendingReadyList);
+  nsTArray<UniquePtr<PendingReadyData>> pendingReadyList;
+  mPendingReadyList.SwapElements(pendingReadyList);
   for (uint32_t i = 0; i < pendingReadyList.Length(); ++i) {
     UniquePtr<PendingReadyData> prd(std::move(pendingReadyList[i]));
 

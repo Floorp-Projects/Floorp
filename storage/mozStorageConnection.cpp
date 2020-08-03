@@ -1830,8 +1830,8 @@ Connection::ExecuteAsync(
   }
 
   // Dispatch to the background
-  return AsyncExecuteStatements::execute(std::move(stmts), this, mDBConn,
-                                         aCallback, _handle);
+  return AsyncExecuteStatements::execute(stmts, this, mDBConn, aCallback,
+                                         _handle);
 }
 
 NS_IMETHODIMP

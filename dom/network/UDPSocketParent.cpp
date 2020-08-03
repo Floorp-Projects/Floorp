@@ -506,7 +506,8 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket,
     FireInternalError(__LINE__);
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsTArray<uint8_t> infallibleArray{std::move(fallibleArray)};
+  nsTArray<uint8_t> infallibleArray;
+  infallibleArray.SwapElements(fallibleArray);
 
   // compose callback
   mozilla::Unused << SendCallbackReceivedData(UDPAddressInfo(ip, port),

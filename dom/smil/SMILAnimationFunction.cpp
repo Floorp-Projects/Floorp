@@ -767,7 +767,7 @@ nsresult SMILAnimationFunction::GetValues(const SMILAttr& aSMILAttr,
     }
   }
 
-  aResult = std::move(result);
+  result.SwapElements(aResult);
 
   return NS_OK;
 }

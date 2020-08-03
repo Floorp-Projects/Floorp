@@ -37,11 +37,12 @@ class MainThreadReleaseRunnable final : public Runnable {
   nsCOMPtr<nsILoadGroup> mLoadGroupToCancel;
 
  public:
-  MainThreadReleaseRunnable(nsTArray<nsCOMPtr<nsISupports>>&& aDoomed,
-                            nsCOMPtr<nsILoadGroup>&& aLoadGroupToCancel)
-      : mozilla::Runnable("MainThreadReleaseRunnable"),
-        mDoomed(std::move(aDoomed)),
-        mLoadGroupToCancel(std::move(aLoadGroupToCancel)) {}
+  MainThreadReleaseRunnable(nsTArray<nsCOMPtr<nsISupports>>& aDoomed,
+                            nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel)
+      : mozilla::Runnable("MainThreadReleaseRunnable") {
+    mDoomed.SwapElements(aDoomed);
+    mLoadGroupToCancel.swap(aLoadGroupToCancel);
+  }
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MainThreadReleaseRunnable, Runnable)
 
@@ -362,13 +363,11 @@ bool WorkerLoadInfo::PrincipalURIMatchesScriptURL() {
 bool WorkerLoadInfo::ProxyReleaseMainThreadObjects(
     WorkerPrivate* aWorkerPrivate) {
   nsCOMPtr<nsILoadGroup> nullLoadGroup;
-  return ProxyReleaseMainThreadObjects(aWorkerPrivate,
-                                       std::move(nullLoadGroup));
+  return ProxyReleaseMainThreadObjects(aWorkerPrivate, nullLoadGroup);
 }
 
 bool WorkerLoadInfo::ProxyReleaseMainThreadObjects(
-    WorkerPrivate* aWorkerPrivate,
-    nsCOMPtr<nsILoadGroup>&& aLoadGroupToCancel) {
+    WorkerPrivate* aWorkerPrivate, nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel) {
   static const uint32_t kDoomedCount = 11;
   nsTArray<nsCOMPtr<nsISupports>> doomed(kDoomedCount);
 
@@ -387,8 +386,8 @@ bool WorkerLoadInfo::ProxyReleaseMainThreadObjects(
 
   MOZ_ASSERT(doomed.Length() == kDoomedCount);
 
-  RefPtr<MainThreadReleaseRunnable> runnable = new MainThreadReleaseRunnable(
-      std::move(doomed), std::move(aLoadGroupToCancel));
+  RefPtr<MainThreadReleaseRunnable> runnable =
+      new MainThreadReleaseRunnable(doomed, aLoadGroupToCancel);
   return NS_SUCCEEDED(aWorkerPrivate->DispatchToMainThread(runnable.forget()));
 }
 

@@ -15943,11 +15943,11 @@ class CGNativeMember(ClassMethod):
                     if (${declName}.IsNull()) {
                       aRetVal.SetNull();
                     } else {
-                      aRetVal.SetValue() = std::move(${declName}.Value());
+                      aRetVal.SetValue().SwapElements(${declName}.Value());
                     }
                     """)
             else:
-                returnCode = "aRetVal = std::move(${declName});\n"
+                returnCode = "aRetVal.SwapElements(${declName});\n"
             return "void", "", returnCode
         if type.isRecord():
             # If we want to handle record-of-record return values, we're
