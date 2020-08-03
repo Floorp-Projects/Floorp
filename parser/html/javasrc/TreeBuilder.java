@@ -2415,7 +2415,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             errFooSeenWhenFooOpen(name);
                             break starttagloop;
                         default:
-                            errBadStartTagInHead(name);
+                            errBadStartTagInNoscriptInHead(name);
                             pop();
                             mode = IN_HEAD;
                             continue;
@@ -6338,12 +6338,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 + "\u201D start tag with \u201Cselect\u201D open.");
     }
 
-    private void errBadStartTagInHead(@Local String name) throws SAXException {
+    private void errBadStartTagInNoscriptInHead(@Local String name) throws SAXException {
         if (errorHandler == null) {
             return;
         }
         errNoCheck("Bad start tag in \u201C" + name
-                + "\u201D in \u201Chead\u201D.");
+                + "\u201D in \u201Cnoscript\u201D in \u201Chead\u201D.");
     }
 
     private void errImage() throws SAXException {

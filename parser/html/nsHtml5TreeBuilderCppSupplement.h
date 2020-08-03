@@ -1573,9 +1573,9 @@ void nsHtml5TreeBuilder::errStartTagWithSelectOpen(nsAtom* aName) {
   }
 }
 
-void nsHtml5TreeBuilder::errBadStartTagInHead(nsAtom* aName) {
+void nsHtml5TreeBuilder::errBadStartTagInNoscriptInHead(nsAtom* aName) {
   if (MOZ_UNLIKELY(mViewSource)) {
-    mViewSource->AddErrorToCurrentRun("errBadStartTagInHead2", aName);
+    mViewSource->AddErrorToCurrentRun("errBadStartTagInNoscriptInHead", aName);
   }
 }
 
