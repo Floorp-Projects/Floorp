@@ -254,7 +254,7 @@ void fillChunkWithStereo(AudioChunk* c, int duration) {
     ch2[i] = GetHighValue<T>();
   }
 
-  c->mBuffer = new mozilla::SharedChannelArrayBuffer<T>(&stereo);
+  c->mBuffer = new mozilla::SharedChannelArrayBuffer<T>(std::move(stereo));
 
   c->mChannelData.SetLength(2);
   c->mChannelData[0] = ch1;

@@ -504,13 +504,12 @@ class nsRegion {
   }
 
   nsRegion(const nsRegion& aRegion) { Copy(aRegion); }
-  nsRegion(nsRegion&& aRegion) {
-    mBands.SwapElements(aRegion.mBands);
-    mBounds = aRegion.mBounds;
+  nsRegion(nsRegion&& aRegion)
+      : mBands(std::move(aRegion.mBands)), mBounds(aRegion.mBounds) {
     aRegion.SetEmpty();
   }
   nsRegion& operator=(nsRegion&& aRegion) {
-    mBands.SwapElements(aRegion.mBands);
+    mBands = std::move(aRegion.mBands);
     mBounds = aRegion.mBounds;
     aRegion.SetEmpty();
     return *this;

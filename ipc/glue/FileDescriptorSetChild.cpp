@@ -19,8 +19,7 @@ FileDescriptorSetChild::~FileDescriptorSetChild() {
 
 void FileDescriptorSetChild::ForgetFileDescriptors(
     nsTArray<FileDescriptor>& aFileDescriptors) {
-  aFileDescriptors.Clear();
-  mFileDescriptors.SwapElements(aFileDescriptors);
+  aFileDescriptors = std::move(mFileDescriptors);
 }
 
 mozilla::ipc::IPCResult FileDescriptorSetChild::RecvAddFileDescriptor(

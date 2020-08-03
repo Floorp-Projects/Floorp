@@ -930,7 +930,7 @@ AudioChunk CreateAudioChunk(uint32_t aFrames, int aChannels,
     }
   }
 
-  chunk.mBuffer = new mozilla::SharedChannelArrayBuffer(&buffer);
+  chunk.mBuffer = new mozilla::SharedChannelArrayBuffer(std::move(buffer));
   chunk.mBufferFormat = aSampleFormat;
   chunk.mChannelData.AppendElements(aChannels);
   for (int i = 0; i < aChannels; ++i) {
@@ -1095,7 +1095,7 @@ TEST(TestAudioResampler, InAudioSegment_Float)
     }
   }
 
-  chunk2.mBuffer = new mozilla::SharedChannelArrayBuffer(&buffer);
+  chunk2.mBuffer = new mozilla::SharedChannelArrayBuffer(std::move(buffer));
   chunk2.mBufferFormat = AUDIO_FORMAT_FLOAT32;
   chunk2.mChannelData.AppendElements(channels);
   for (int i = 0; i < channels; ++i) {
@@ -1150,7 +1150,7 @@ TEST(TestAudioResampler, InAudioSegment_Short)
     }
   }
 
-  chunk2.mBuffer = new mozilla::SharedChannelArrayBuffer(&buffer);
+  chunk2.mBuffer = new mozilla::SharedChannelArrayBuffer(std::move(buffer));
   chunk2.mBufferFormat = AUDIO_FORMAT_S16;
   chunk2.mChannelData.AppendElements(channels);
   for (int i = 0; i < channels; ++i) {

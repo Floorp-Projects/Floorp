@@ -23,14 +23,14 @@ namespace {
 class ReleaseRunnable final : public Runnable {
  public:
   static void MaybeReleaseOnMainThread(
-      nsTArray<RefPtr<Promise>>& aPromises,
-      nsTArray<RefPtr<GetFilesCallback>>& aCallbacks) {
+      nsTArray<RefPtr<Promise>>&& aPromises,
+      nsTArray<RefPtr<GetFilesCallback>>&& aCallbacks) {
     if (NS_IsMainThread()) {
       return;
     }
 
     RefPtr<ReleaseRunnable> runnable =
-        new ReleaseRunnable(aPromises, aCallbacks);
+        new ReleaseRunnable(std::move(aPromises), std::move(aCallbacks));
     FileSystemUtils::DispatchRunnable(nullptr, runnable.forget());
   }
 
@@ -45,12 +45,11 @@ class ReleaseRunnable final : public Runnable {
   }
 
  private:
-  ReleaseRunnable(nsTArray<RefPtr<Promise>>& aPromises,
-                  nsTArray<RefPtr<GetFilesCallback>>& aCallbacks)
-      : Runnable("dom::ReleaseRunnable") {
-    mPromises.SwapElements(aPromises);
-    mCallbacks.SwapElements(aCallbacks);
-  }
+  ReleaseRunnable(nsTArray<RefPtr<Promise>>&& aPromises,
+                  nsTArray<RefPtr<GetFilesCallback>>&& aCallbacks)
+      : Runnable("dom::ReleaseRunnable"),
+        mPromises(std::move(aPromises)),
+        mCallbacks(std::move(aCallbacks)) {}
 
   nsTArray<RefPtr<Promise>> mPromises;
   nsTArray<RefPtr<GetFilesCallback>> mCallbacks;
@@ -126,7 +125,8 @@ GetFilesHelper::GetFilesHelper(bool aRecursiveFlag)
       mCanceled(false) {}
 
 GetFilesHelper::~GetFilesHelper() {
-  ReleaseRunnable::MaybeReleaseOnMainThread(mPromises, mCallbacks);
+  ReleaseRunnable::MaybeReleaseOnMainThread(std::move(mPromises),
+                                            std::move(mCallbacks));
 }
 
 void GetFilesHelper::AddPromise(Promise* aPromise) {
@@ -215,16 +215,14 @@ void GetFilesHelper::OperationCompleted() {
   mListingCompleted = true;
 
   // Let's process the pending promises.
-  nsTArray<RefPtr<Promise>> promises;
-  promises.SwapElements(mPromises);
+  nsTArray<RefPtr<Promise>> promises = std::move(mPromises);
 
   for (uint32_t i = 0; i < promises.Length(); ++i) {
     ResolveOrRejectPromise(promises[i]);
   }
 
   // Let's process the pending callbacks.
-  nsTArray<RefPtr<GetFilesCallback>> callbacks;
-  callbacks.SwapElements(mCallbacks);
+  nsTArray<RefPtr<GetFilesCallback>> callbacks = std::move(mCallbacks);
 
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     RunCallback(callbacks[i]);

@@ -26245,7 +26245,7 @@ void IndexGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
                                        return old + entry.GetBuffer().Length();
                                      });
 
-    mResponse.SwapElements(aResponse.get_IndexGetAllKeysResponse().keys());
+    aResponse.get_IndexGetAllKeysResponse().keys() = std::move(mResponse);
 
     return;
   }

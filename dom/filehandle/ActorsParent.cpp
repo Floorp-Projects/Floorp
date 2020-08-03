@@ -1007,8 +1007,8 @@ void FileHandleThreadPool::DirectoryInfo::RemoveFileHandleQueue(
   MOZ_ASSERT(mFileHandleQueues.Length() == fileHandleCount - 1,
              "Didn't find the file handle we were looking for!");
 
-  nsTArray<DelayedEnqueueInfo> delayedEnqueueInfos;
-  delayedEnqueueInfos.SwapElements(mDelayedEnqueueInfos);
+  nsTArray<DelayedEnqueueInfo> delayedEnqueueInfos =
+      std::move(mDelayedEnqueueInfos);
 
   for (uint32_t index = 0; index < delayedEnqueueInfos.Length(); index++) {
     DelayedEnqueueInfo& delayedEnqueueInfo = delayedEnqueueInfos[index];

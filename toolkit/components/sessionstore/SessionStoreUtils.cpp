@@ -528,7 +528,7 @@ static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
   if (aValueType.EqualsLiteral("file")) {
     CollectedFileListValue val;
     val.mType = aValueType;
-    val.mFileList.SwapElements(aValue);
+    val.mFileList = std::move(aValue);
     if (!ToJSValue(aCx, val, &jsval)) {
       JS_ClearPendingException(aCx);
       return;
@@ -1305,7 +1305,7 @@ static void CollectFrameTreeData(JSContext* aCx,
 
   if (trailingNullCounter != childrenData.Length()) {
     childrenData.TruncateLength(childrenData.Length() - trailingNullCounter);
-    aRetVal.SetValue().mChildren.Construct().SwapElements(childrenData);
+    aRetVal.SetValue().mChildren.Construct() = std::move(childrenData);
   }
 }
 

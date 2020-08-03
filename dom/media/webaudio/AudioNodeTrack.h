@@ -100,7 +100,7 @@ class AudioNodeTrack : public ProcessedMediaTrack {
                          const dom::AudioTimelineEvent& aEvent);
   // This consumes the contents of aData.  aData will be emptied after this
   // returns.
-  void SetRawArrayData(nsTArray<float>& aData);
+  void SetRawArrayData(nsTArray<float>&& aData);
   void SetChannelMixingParameters(uint32_t aNumberOfChannels,
                                   ChannelCountMode aChannelCountMoe,
                                   ChannelInterpretation aChannelInterpretation);

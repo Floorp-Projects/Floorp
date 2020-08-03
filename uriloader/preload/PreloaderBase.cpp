@@ -210,8 +210,7 @@ void PreloaderBase::NotifyStop(nsIRequest* aRequest, nsresult aStatus) {
 void PreloaderBase::NotifyStop(nsresult aStatus) {
   mOnStopStatus.emplace(aStatus);
 
-  nsTArray<nsWeakPtr> nodes;
-  nodes.SwapElements(mNodes);
+  nsTArray<nsWeakPtr> nodes = std::move(mNodes);
 
   for (nsWeakPtr& weak : nodes) {
     nsCOMPtr<nsINode> node = do_QueryReferent(weak);

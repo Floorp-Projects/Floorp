@@ -100,7 +100,7 @@ void CookieServiceChild::MoveCookies() {
       RefPtr<Cookie> newCookie = cookie->Clone();
       newCookiesList.AppendElement(newCookie);
     }
-    cookiesList->SwapElements(newCookiesList);
+    *cookiesList = std::move(newCookiesList);
   }
 
   Telemetry::AccumulateTimeDelta(Telemetry::COOKIE_TIME_MOVING_MS, start);

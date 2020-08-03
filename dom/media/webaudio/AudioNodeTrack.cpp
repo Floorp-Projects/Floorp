@@ -252,20 +252,19 @@ void AudioNodeTrack::SetReverb(WebCore::Reverb* aReverb,
       MakeUnique<Message>(this, aReverb, aImpulseChannelCount));
 }
 
-void AudioNodeTrack::SetRawArrayData(nsTArray<float>& aData) {
+void AudioNodeTrack::SetRawArrayData(nsTArray<float>&& aData) {
   class Message final : public ControlMessage {
    public:
-    Message(AudioNodeTrack* aTrack, nsTArray<float>& aData)
-        : ControlMessage(aTrack) {
-      mData.SwapElements(aData);
-    }
+    Message(AudioNodeTrack* aTrack, nsTArray<float>&& aData)
+        : ControlMessage(aTrack), mData(std::move(aData)) {}
     void Run() override {
-      static_cast<AudioNodeTrack*>(mTrack)->Engine()->SetRawArrayData(mData);
+      static_cast<AudioNodeTrack*>(mTrack)->Engine()->SetRawArrayData(
+          std::move(mData));
     }
     nsTArray<float> mData;
   };
 
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aData));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, std::move(aData)));
 }
 
 void AudioNodeTrack::SetChannelMixingParameters(

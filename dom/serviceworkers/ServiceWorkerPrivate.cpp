@@ -1807,8 +1807,8 @@ void ServiceWorkerPrivate::TerminateWorker() {
     // Any pending events are never going to fire on this worker.  Cancel
     // them so that intercepted channels can be reset and other resources
     // cleaned up.
-    nsTArray<RefPtr<WorkerRunnable>> pendingEvents;
-    mPendingFunctionalEvents.SwapElements(pendingEvents);
+    nsTArray<RefPtr<WorkerRunnable>> pendingEvents =
+        std::move(mPendingFunctionalEvents);
     for (uint32_t i = 0; i < pendingEvents.Length(); ++i) {
       pendingEvents[i]->Cancel();
     }
@@ -1868,8 +1868,8 @@ void ServiceWorkerPrivate::UpdateState(ServiceWorkerState aState) {
     return;
   }
 
-  nsTArray<RefPtr<WorkerRunnable>> pendingEvents;
-  mPendingFunctionalEvents.SwapElements(pendingEvents);
+  nsTArray<RefPtr<WorkerRunnable>> pendingEvents =
+      std::move(mPendingFunctionalEvents);
 
   for (uint32_t i = 0; i < pendingEvents.Length(); ++i) {
     RefPtr<WorkerRunnable> r = std::move(pendingEvents[i]);

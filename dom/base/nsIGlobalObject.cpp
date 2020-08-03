@@ -88,10 +88,9 @@ namespace {
 
 class UnlinkHostObjectURIsRunnable final : public mozilla::Runnable {
  public:
-  explicit UnlinkHostObjectURIsRunnable(nsTArray<nsCString>& aURIs)
-      : mozilla::Runnable("UnlinkHostObjectURIsRunnable") {
-    mURIs.SwapElements(aURIs);
-  }
+  explicit UnlinkHostObjectURIsRunnable(nsTArray<nsCString>&& aURIs)
+      : mozilla::Runnable("UnlinkHostObjectURIsRunnable"),
+        mURIs(std::move(aURIs)) {}
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
@@ -106,7 +105,7 @@ class UnlinkHostObjectURIsRunnable final : public mozilla::Runnable {
  private:
   ~UnlinkHostObjectURIsRunnable() = default;
 
-  nsTArray<nsCString> mURIs;
+  const nsTArray<nsCString> mURIs;
 };
 
 }  // namespace
@@ -122,7 +121,7 @@ void nsIGlobalObject::UnlinkObjectsInGlobal() {
       mHostObjectURIs.Clear();
     } else {
       RefPtr<UnlinkHostObjectURIsRunnable> runnable =
-          new UnlinkHostObjectURIsRunnable(mHostObjectURIs);
+          new UnlinkHostObjectURIsRunnable(std::move(mHostObjectURIs));
       MOZ_ASSERT(mHostObjectURIs.IsEmpty());
 
       nsresult rv = NS_DispatchToMainThread(runnable);
