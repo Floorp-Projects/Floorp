@@ -2033,3 +2033,14 @@ include('../build/moz.configure/nss.configure')
 # default browser agent.
 # ==============================================================
 include('../build/moz.configure/update-programs.configure')
+
+# Mobile optimizations
+# ==============================================================
+option('--enable-mobile-optimize', default=target_is_android,
+       help='Enable mobile optimizations')
+
+set_define('MOZ_GFX_OPTIMIZE_MOBILE', True, when='--enable-mobile-optimize')
+# We ignore "paint will resample" on mobile for performance.
+# We may want to revisit this later.
+set_define('MOZ_IGNORE_PAINT_WILL_RESAMPLE', True,
+           when='--enable-mobile-optimize')
