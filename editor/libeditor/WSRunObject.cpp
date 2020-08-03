@@ -146,6 +146,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // - to delete invisible white-spaces before afterRightBlockChild.GetChild()
   // - to delete invisible `<br>` element at end of aLeftBlockElement
 
+  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
+
   EditorDOMPoint afterRightBlockChild = aAtRightBlockChild.NextPoint();
   MOZ_ASSERT(afterRightBlockChild.IsSetAndValid());
   nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
@@ -268,6 +270,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // - to delete invisible white-spaces at start of aAtLeftBlockChild.GetChild()
   // - to delete invisible white-spaces before aAtLeftBlockChild.GetChild()
   // - to delete invisible `<br>` element before aAtLeftBlockChild.GetChild()
+
+  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
 
   nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
       aHTMLEditor, EditorDOMPoint(&aRightBlockElement, 0));
@@ -434,6 +438,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // - to delete invisible white-spaces at end of aLeftBlockElement
   // - to delete invisible white-spaces at start of aRightBlockElement
   // - to delete invisible `<br>` element at end of aLeftBlockElement
+
+  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
 
   // Adjust white-space at block boundaries
   nsresult rv = WhiteSpaceVisibilityKeeper::
