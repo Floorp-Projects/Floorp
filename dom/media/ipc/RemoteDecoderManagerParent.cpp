@@ -72,7 +72,7 @@ bool RemoteDecoderManagerParent::StartupThreads() {
   }
 
   sRemoteDecoderManagerParentThread = new TaskQueue(
-      GetMediaThreadPool(MediaThreadType::PLAYBACK), "RemVidParent");
+      GetMediaThreadPool(MediaThreadType::CONTROLLER), "RemVidParent");
   if (XRE_IsGPUProcess()) {
     MOZ_ALWAYS_SUCCEEDS(
         sRemoteDecoderManagerParentThread->Dispatch(NS_NewRunnableFunction(

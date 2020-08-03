@@ -216,9 +216,6 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
     case MediaThreadType::PLATFORM_DECODER:
       name = "MediaPDecoder";
       break;
-    case MediaThreadType::MTG_CONTROL:
-      name = "MTGControl";
-      break;
     case MediaThreadType::WEBRTC_DECODER:
       name = "WebRTCPD";
       break;
@@ -231,8 +228,8 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
       break;
     default:
       MOZ_FALLTHROUGH_ASSERT("Unexpected MediaThreadType");
-    case MediaThreadType::PLAYBACK:
-      name = "MediaPlayback";
+    case MediaThreadType::CONTROLLER:
+      name = "MediaController";
       break;
   }
 
