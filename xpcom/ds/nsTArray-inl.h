@@ -268,6 +268,27 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacity(
 }
 
 template <class Alloc, class RelocationStrategy>
+void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacityToZero(
+    size_type aElemSize, size_t aElemAlign) {
+  MOZ_ASSERT(mHdr->mLength == 0);
+
+  if (mHdr == EmptyHdr() || UsesAutoArrayBuffer()) {
+    return;
+  }
+
+  const bool isAutoArray = IsAutoArray();
+
+  nsTArrayFallibleAllocator::Free(mHdr);
+
+  if (isAutoArray) {
+    mHdr = GetAutoArrayBufferUnsafe(aElemAlign);
+    mHdr->mLength = 0;
+  } else {
+    mHdr = EmptyHdr();
+  }
+}
+
+template <class Alloc, class RelocationStrategy>
 template <typename ActualAlloc>
 void nsTArray_base<Alloc, RelocationStrategy>::ShiftData(index_type aStart,
                                                          size_type aOldLen,
@@ -284,7 +305,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShiftData(index_type aStart,
   // Compute the resulting length of the array
   mHdr->mLength += aNewLen - aOldLen;
   if (mHdr->mLength == 0) {
-    ShrinkCapacity(aElemSize, aElemAlign);
+    ShrinkCapacityToZero(aElemSize, aElemAlign);
   } else {
     // Maybe nothing needs to be shifted
     if (num == 0) {
@@ -320,7 +341,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::SwapFromEnd(index_type aStart,
 
   if (mHdr->mLength == 0) {
     // If we have no elements remaining in the array, we can free our buffer.
-    ShrinkCapacity(aElemSize, aElemAlign);
+    ShrinkCapacityToZero(aElemSize, aElemAlign);
     return;
   }
 
