@@ -20,15 +20,6 @@
   <script type="application/javascript">
 
 async function test() {
-  SpecialPowers.getDOMWindowUtils(window).setDynamicToolbarMaxHeight(100);
-
-  is(visualViewport.scale, 1.0, "The initial scale value should be 1.0");
-
-  // Do a pinch-zoom in at the center of the visual viewport.
-  await pinchZoomInWithTouch(visualViewport.width / 2,
-                             visualViewport.height / 2);
-  await promiseApzFlushedRepaints();
-
   ok(window.visualViewport.scale > 1.0,
      "The scale value should be greater than 1.0");
 
@@ -39,6 +30,9 @@ async function test() {
   is(visualViewport.scale, 1.0,
      "The initial scale value should be restored to 1.0");
 }
+
+SpecialPowers.getDOMWindowUtils(window).setDynamicToolbarMaxHeight(100);
+SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(1.1)
 
 waitUntilApzStable()
 .then(test)
