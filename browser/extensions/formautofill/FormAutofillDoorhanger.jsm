@@ -397,6 +397,9 @@ let FormAutofillDoorhanger = {
 
         if (topic == "removed" || topic == "dismissed") {
           this._removeCheckboxListener(browser, { notificationId, options });
+          if (topic == "dismissed" && type.includes("CreditCard")) {
+            this.incrementCcUsageCount("dismissed");
+          }
           return;
         }
 
@@ -442,5 +445,21 @@ let FormAutofillDoorhanger = {
         options
       );
     });
+  },
+
+  /*
+   * This method is used to keep track of user interaction with the
+   * Credit Card Autofill function for the purpose of targeting
+   * associated surveys for a series of A/B tests we'll be running
+   * in the Firefox 81 - 82 timeframe. These are only recorded
+   * locally on the user's machine (as prefs) and are not uploaded
+   * as telemetry. See Bug 1654388 for details on the information
+   * being recorded.
+   */
+  incrementCcUsageCount(metric) {
+    const pref = "extensions.formautofill.creditCards.usage." + metric;
+    const curr = Services.prefs.getIntPref(pref, 0);
+    Services.prefs.setIntPref(pref, curr + 1);
+    log.debug("Setting", pref, "to", curr + 1);
   },
 };
