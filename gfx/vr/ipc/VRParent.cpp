@@ -89,7 +89,8 @@ mozilla::ipc::IPCResult VRParent::RecvOpenVRControllerManifestPathToVR(
 
 mozilla::ipc::IPCResult VRParent::RecvRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
-    const bool& aMinimizeMemoryUsage, const Maybe<FileDescriptor>& aDMDFile) {
+    const bool& aMinimizeMemoryUsage, const Maybe<FileDescriptor>& aDMDFile,
+    const RequestMemoryReportResolver& aResolver) {
   MOZ_ASSERT(XRE_IsVRProcess());
   nsPrintfCString processName("VR (pid %u)", (unsigned)getpid());
 
@@ -98,9 +99,7 @@ mozilla::ipc::IPCResult VRParent::RecvRequestMemoryReport(
       [&](const MemoryReport& aReport) {
         Unused << SendAddMemoryReport(aReport);
       },
-      [&](const uint32_t& aGeneration) {
-        Unused << SendFinishMemoryReport(aGeneration);
-      });
+      aResolver);
   return IPC_OK();
 }
 
