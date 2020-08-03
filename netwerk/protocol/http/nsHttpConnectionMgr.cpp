@@ -958,35 +958,6 @@ void nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection* conn,
   }
 }
 
-void nsHttpConnectionMgr::ReportHttp3Connection(HttpConnectionBase* conn) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  if (!conn->ConnectionInfo()) {
-    return;
-  }
-  nsConnectionEntry* ent = mCT.GetWeak(conn->ConnectionInfo()->HashKey());
-  if (!ent) {
-    return;
-  }
-
-  mNumSpdyHttp3ActiveConns++;
-
-  UpdateCoalescingForNewConn(conn, ent);
-  nsresult rv = ProcessPendingQ(ent->mConnInfo);
-  if (NS_FAILED(rv)) {
-    LOG(
-        ("ReportHttp3Connection conn=%p ent=%p "
-         "failed to process pending queue (%08x)\n",
-         conn, ent, static_cast<uint32_t>(rv)));
-  }
-  rv = PostEvent(&nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ);
-  if (NS_FAILED(rv)) {
-    LOG(
-        ("ReportHttp3Connection conn=%p ent=%p "
-         "failed to post event (%08x)\n",
-         conn, ent, static_cast<uint32_t>(rv)));
-  }
-}
-
 //-----------------------------------------------------------------------------
 bool nsHttpConnectionMgr::DispatchPendingQ(
     nsTArray<RefPtr<nsHttpConnectionMgr::PendingTransactionInfo>>& pendingQ,
