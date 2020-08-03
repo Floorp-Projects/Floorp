@@ -32,11 +32,6 @@
       <label for="landscape" data-l10n-id="printui-landscape" class="toggle-group-label toggle-group-label-iconic"></label>
     </template>
 
-    <template id="copy-count-template">
-      <span class="input"></span>
-      <input id="copies-count" type="number" min="1">
-    </template>
-
     <template id="twisty-summary-template">
       <span class="label"></span>
       <span class="twisty"></span>
@@ -61,7 +56,7 @@
       <p id="sheet-count" is="page-count" hidden></p>
     </header>
 
-    <form id="print" is="print-form">
+    <form id="print" is="print-form" aria-labelledby="page-header">
       <section class="body-container">
         <section id="destination" class="row">
           <label for="printer-picker" class="block-label" data-l10n-id="printui-destination-label"></label>
@@ -69,8 +64,8 @@
         </section>
         <section id="settings">
           <section id="copies" class="row">
-            <label for="copy-count-input" class="block-label" data-l10n-id="printui-copies-label"></label>
-            <span id="copy-count-input" is="copy-count-input" class="copy-count-input"></span>
+            <label for="copies-count" class="block-label" data-l10n-id="printui-copies-label"></label>
+            <input id="copies-count" is="copy-count-input" min="1" class="copy-count-input">
           </section>
 
           <section id="orientation" class="row">
