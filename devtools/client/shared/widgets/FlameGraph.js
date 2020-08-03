@@ -20,13 +20,7 @@ loader.lazyRequireGetter(
 
 loader.lazyRequireGetter(
   this,
-  "CATEGORIES",
-  "devtools/client/performance/modules/categories",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "CATEGORY_INDEX",
+  ["CATEGORIES", "CATEGORY_INDEX"],
   "devtools/client/performance/modules/categories",
   true
 );
@@ -39,19 +33,7 @@ loader.lazyRequireGetter(this, "demangle", "devtools/client/shared/demangle");
 
 loader.lazyRequireGetter(
   this,
-  "AbstractCanvasGraph",
-  "devtools/client/shared/widgets/Graphs",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "GraphArea",
-  "devtools/client/shared/widgets/Graphs",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "GraphAreaDragger",
+  ["AbstractCanvasGraph", "GraphArea", "GraphAreaDragger"],
   "devtools/client/shared/widgets/Graphs",
   true
 );

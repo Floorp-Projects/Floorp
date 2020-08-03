@@ -6,25 +6,7 @@
 loader.lazyRequireGetter(this, "Task", "devtools/shared/task", true);
 loader.lazyRequireGetter(
   this,
-  "executeSoon",
-  "devtools/shared/DevToolsUtils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isGenerator",
-  "devtools/shared/DevToolsUtils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isAsyncFunction",
-  "devtools/shared/DevToolsUtils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "reportException",
+  ["executeSoon", "isGenerator", "isAsyncFunction", "reportException"],
   "devtools/shared/DevToolsUtils",
   true
 );

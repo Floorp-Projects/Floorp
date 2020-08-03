@@ -25,14 +25,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "isDefunct",
-  "devtools/server/actors/utils/accessibility",
-  true
-);
-
-loader.lazyRequireGetter(
-  this,
-  "getAriaRoles",
+  ["isDefunct", "getAriaRoles"],
   "devtools/server/actors/utils/accessibility",
   true
 );

@@ -24,13 +24,7 @@ const WalkerEventListener = require("devtools/client/inspector/shared/walker-eve
 
 loader.lazyRequireGetter(
   this,
-  "createDOMMutationBreakpoint",
-  "devtools/client/framework/actions/index",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "deleteDOMMutationBreakpoint",
+  ["createDOMMutationBreakpoint", "deleteDOMMutationBreakpoint"],
   "devtools/client/framework/actions/index",
   true
 );

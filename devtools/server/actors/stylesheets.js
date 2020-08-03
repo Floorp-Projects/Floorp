@@ -26,13 +26,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "addPseudoClassLock",
-  "devtools/server/actors/highlighters/utils/markup",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "removePseudoClassLock",
+  ["addPseudoClassLock", "removePseudoClassLock"],
   "devtools/server/actors/highlighters/utils/markup",
   true
 );

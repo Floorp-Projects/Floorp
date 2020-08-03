@@ -17,25 +17,12 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "flashElementOn",
-  "devtools/client/inspector/markup/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "flashElementOff",
-  "devtools/client/inspector/markup/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getAutocompleteMaxWidth",
-  "devtools/client/inspector/markup/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "parseAttributeValues",
+  [
+    "flashElementOn",
+    "flashElementOff",
+    "getAutocompleteMaxWidth",
+    "parseAttributeValues",
+  ],
   "devtools/client/inspector/markup/utils",
   true
 );

@@ -33,19 +33,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "getImageDimensions",
-  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "setImageTooltip",
-  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "setBrokenImageTooltip",
+  ["getImageDimensions", "setImageTooltip", "setBrokenImageTooltip"],
   "devtools/client/shared/widgets/tooltip/ImageTooltipHelper",
   true
 );

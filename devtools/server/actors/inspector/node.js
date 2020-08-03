@@ -37,8 +37,16 @@ loader.lazyRequireGetter(
 
 loader.lazyRequireGetter(
   this,
-  "InspectorActorUtils",
-  "devtools/server/actors/inspector/utils"
+  [
+    "getBackgroundColor",
+    "getClosestBackgroundColor",
+    "getNodeDisplayName",
+    "imageToImageData",
+    "isNodeDead",
+    "scrollbarTreeWalkerFilter",
+  ],
+  "devtools/server/actors/inspector/utils",
+  true
 );
 loader.lazyRequireGetter(
   this,
@@ -68,12 +76,6 @@ loader.lazyRequireGetter(
   this,
   "DocumentWalker",
   "devtools/server/actors/inspector/document-walker",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "scrollbarTreeWalkerFilter",
-  "devtools/server/actors/inspector/utils",
   true
 );
 loader.lazyRequireGetter(
@@ -139,7 +141,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     if (this.slotchangeListener) {
-      if (!InspectorActorUtils.isNodeDead(this)) {
+      if (!isNodeDead(this)) {
         this.rawNode.removeEventListener("slotchange", this.slotchangeListener);
       }
       this.slotchangeListener = null;
@@ -169,7 +171,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
       nodeValue: this.rawNode.nodeValue,
-      displayName: InspectorActorUtils.getNodeDisplayName(this.rawNode),
+      displayName: getNodeDisplayName(this.rawNode),
       numChildren: this.numChildren,
       inlineTextChild: inlineTextChild ? inlineTextChild.form() : undefined,
       displayType: this.displayType,
@@ -312,10 +314,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   get displayType() {
     // Consider all non-element nodes as displayed.
-    if (
-      InspectorActorUtils.isNodeDead(this) ||
-      this.rawNode.nodeType !== Node.ELEMENT_NODE
-    ) {
+    if (isNodeDead(this) || this.rawNode.nodeType !== Node.ELEMENT_NODE) {
       return null;
     }
 
@@ -569,14 +568,12 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * transfered in the longstring back to the client will be that much smaller
    */
   getImageData: function(maxDim) {
-    return InspectorActorUtils.imageToImageData(this.rawNode, maxDim).then(
-      imageData => {
-        return {
-          data: LongStringActor(this.conn, imageData.data),
-          size: imageData.size,
-        };
-      }
-    );
+    return imageToImageData(this.rawNode, maxDim).then(imageData => {
+      return {
+        data: LongStringActor(this.conn, imageData.data),
+        size: imageData.size,
+      };
+    });
   },
 
   /**
@@ -651,7 +648,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *         rgba(255, 255, 255, 1) if no background color is found.
    */
   getClosestBackgroundColor: function() {
-    return InspectorActorUtils.getClosestBackgroundColor(this.rawNode);
+    return getClosestBackgroundColor(this.rawNode);
   },
 
   /**
@@ -664,7 +661,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *         Object with one or more of the following properties: value, min, max
    */
   getBackgroundColor: function() {
-    return InspectorActorUtils.getBackgroundColor(this);
+    return getBackgroundColor(this);
   },
 
   /**
