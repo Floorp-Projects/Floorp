@@ -28,6 +28,7 @@ class nsPrinterWin final : public nsIPrinter {
   nsString mName;
   nsTArray<RefPtr<nsIPaper>> mPaperList;
   Maybe<bool> mSupportsDuplex;
+  Maybe<bool> mSupportsColor;
 };
 
 #endif  // nsPrinterWin_h_
