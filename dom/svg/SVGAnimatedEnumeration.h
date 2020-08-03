@@ -34,7 +34,6 @@ struct SVGEnumMapping {
 
 class SVGAnimatedEnumeration {
  public:
-  friend class AutoChangeEnumNotifier;
   using SVGElement = dom::SVGElement;
 
   void Init(uint8_t aAttrEnum, uint16_t aValue) {

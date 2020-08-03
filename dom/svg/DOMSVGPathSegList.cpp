@@ -7,6 +7,7 @@
 #include "DOMSVGPathSegList.h"
 
 #include "DOMSVGPathSeg.h"
+#include "mozAutoDocUpdate.h"
 #include "nsError.h"
 #include "SVGAnimatedPathSegList.h"
 #include "SVGAttrTearoffTable.h"
@@ -49,6 +50,31 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPathSegList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+//----------------------------------------------------------------------
+// Helper class: AutoChangePathSegListNotifier
+// Stack-based helper class to pair calls to WillChangePathSegList and
+// DidChangePathSegList.
+class MOZ_RAII AutoChangePathSegListNotifier : public mozAutoDocUpdate {
+ public:
+  explicit AutoChangePathSegListNotifier(DOMSVGPathSegList* aPathSegList)
+      : mozAutoDocUpdate(aPathSegList->Element()->GetComposedDoc(), true),
+        mPathSegList(aPathSegList) {
+    MOZ_ASSERT(mPathSegList, "Expecting non-null pathSegList");
+    mEmptyOrOldValue = mPathSegList->Element()->WillChangePathSegList(*this);
+  }
+
+  ~AutoChangePathSegListNotifier() {
+    mPathSegList->Element()->DidChangePathSegList(mEmptyOrOldValue, *this);
+    if (mPathSegList->AttrIsAnimating()) {
+      mPathSegList->Element()->AnimationNeedsResample();
+    }
+  }
+
+ private:
+  DOMSVGPathSegList* const mPathSegList;
+  nsAttrValue mEmptyOrOldValue;
+};
 
 /* static */
 already_AddRefed<DOMSVGPathSegList> DOMSVGPathSegList::GetDOMWrapper(

@@ -8,7 +8,6 @@
 #define DOM_SVG_DOMSVGLENGTHLIST_H_
 
 #include "DOMSVGAnimatedLengthList.h"
-#include "mozAutoDocUpdate.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsTArray.h"
@@ -22,34 +21,6 @@ namespace mozilla {
 namespace dom {
 class DOMSVGLength;
 class SVGElement;
-
-//----------------------------------------------------------------------
-// Helper class: AutoChangeLengthListNotifier
-// Stack-based helper class to pair calls to WillChangeLengthList and
-// DidChangeLengthList. Used by DOMSVGLength and DOMSVGLengthList.
-template <class T>
-class MOZ_RAII AutoChangeLengthListNotifier : public mozAutoDocUpdate {
- public:
-  explicit AutoChangeLengthListNotifier(T* aValue)
-      : mozAutoDocUpdate(aValue->Element()->GetComposedDoc(), true),
-        mValue(aValue) {
-    MOZ_ASSERT(aValue, "Expecting non-null value");
-    mEmptyOrOldValue =
-        mValue->Element()->WillChangeLengthList(mValue->AttrEnum(), *this);
-  }
-
-  ~AutoChangeLengthListNotifier() {
-    mValue->Element()->DidChangeLengthList(mValue->AttrEnum(), mEmptyOrOldValue,
-                                           *this);
-    if (mValue->IsAnimating()) {
-      mValue->Element()->AnimationNeedsResample();
-    }
-  }
-
- private:
-  T* const mValue;
-  nsAttrValue mEmptyOrOldValue;
-};
 
 /**
  * Class DOMSVGLengthList
@@ -69,11 +40,8 @@ class MOZ_RAII AutoChangeLengthListNotifier : public mozAutoDocUpdate {
  * Our DOM items are created lazily on demand as and when script requests them.
  */
 class DOMSVGLengthList final : public nsISupports, public nsWrapperCache {
-  template <class T>
   friend class AutoChangeLengthListNotifier;
   friend class DOMSVGLength;
-  using AutoChangeLengthListNotifier =
-      AutoChangeLengthListNotifier<DOMSVGLengthList>;
 
   ~DOMSVGLengthList() {
     // Our mAList's weak ref to us must be nulled out when we die. If GC has
