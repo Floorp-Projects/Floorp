@@ -1222,6 +1222,25 @@ class WhiteSpaceVisibilityKeeper final {
       int32_t* aSplitOffset);
 
   /**
+   * MergeFirstLineOfRightBlockElementIntoLeftBlockElement() merges first
+   * line in aRightBlockElement into end of aLeftBlockElement and removes
+   * aRightBlockElement when it has only one line.
+   *
+   * @param aHTMLEditor         The HTML editor.
+   * @param aLeftBlockElement   The content will be merged into end of
+   *                            this element.
+   * @param aRightBlockElement  The first line in this element will be
+   *                            moved to aLeftBlockElement and maybe
+   *                            removed when this becomes empty.
+   * @param aListElementTagName Set some if aRightBlockElement is a list
+   *                            element and its type needs to be changed.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
+  MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
+      HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
+      Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName);
+
+  /**
    * InsertBRElement() inserts a <br> node at (before) aPointToInsert and delete
    * unnecessary white-spaces around there and/or replaces white-spaces with
    * non-breaking spaces.  Note that if the point is in a text node, the
