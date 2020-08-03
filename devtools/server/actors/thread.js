@@ -1746,10 +1746,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *        The object actor.
    */
   threadObjectGrip: function(actor) {
-    // Save the reference for when we need to demote the object
-    // back to its original registered pool
-    actor.originalRegisteredPool = actor.getParent();
-
     this.threadLifetimePool.manage(actor);
     this.threadLifetimePool.objectActors.set(actor.obj, actor);
   },
