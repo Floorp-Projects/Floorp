@@ -6712,7 +6712,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void errNonSpaceInTable() throws SAXException {
-        err("Misplaced non-space characters insided a table.");
+        err("Misplaced non-space characters inside a table.");
     }
 
     private void errUnclosedChildrenInRuby() throws SAXException {
