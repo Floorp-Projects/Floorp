@@ -17,13 +17,7 @@ const promise = require("promise");
 
 loader.lazyRequireGetter(
   this,
-  "getIndentationFromPrefs",
-  "devtools/shared/indentation",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getIndentationFromString",
+  ["getIndentationFromPrefs", "getIndentationFromString"],
   "devtools/shared/indentation",
   true
 );

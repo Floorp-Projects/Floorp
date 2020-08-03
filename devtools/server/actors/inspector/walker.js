@@ -42,16 +42,10 @@ loader.lazyRequireGetter(
     "allAnonymousContentTreeWalkerFilter",
     "findGridParentContainerForNode",
     "isNodeDead",
+    "noAnonymousContentTreeWalkerFilter",
     "nodeDocument",
     "standardTreeWalkerFilter",
   ],
-  "devtools/server/actors/inspector/utils",
-  true
-);
-
-loader.lazyRequireGetter(
-  this,
-  "noAnonymousContentTreeWalkerFilter",
   "devtools/server/actors/inspector/utils",
   true
 );

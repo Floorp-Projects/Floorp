@@ -8,13 +8,7 @@ loader.lazyRequireGetter(this, "Ci", "chrome", true);
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(
   this,
-  "loadSheet",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "removeSheet",
+  ["loadSheet", "removeSheet"],
   "devtools/shared/layout/utils",
   true
 );

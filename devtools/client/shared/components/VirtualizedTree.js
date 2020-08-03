@@ -17,13 +17,7 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "wrapMoveFocus",
-  "devtools/client/shared/focus",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getFocusableElements",
+  ["wrapMoveFocus", "getFocusableElements"],
   "devtools/client/shared/focus",
   true
 );

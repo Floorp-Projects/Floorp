@@ -51,13 +51,7 @@ const Resources = require("devtools/server/actors/resources/index");
 
 loader.lazyRequireGetter(
   this,
-  "ThreadActor",
-  "devtools/server/actors/thread",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "unwrapDebuggerObjectGlobal",
+  ["ThreadActor", "unwrapDebuggerObjectGlobal"],
   "devtools/server/actors/thread",
   true
 );
@@ -71,13 +65,7 @@ loader.lazyImporter(this, "ExtensionContent", EXTENSION_CONTENT_JSM);
 
 loader.lazyRequireGetter(
   this,
-  "StyleSheetActor",
-  "devtools/server/actors/stylesheets",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getSheetText",
+  ["StyleSheetActor", "getSheetText"],
   "devtools/server/actors/stylesheets",
   true
 );

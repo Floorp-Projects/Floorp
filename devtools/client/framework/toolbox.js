@@ -62,26 +62,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "registerWalkerListeners",
-  "devtools/client/framework/actions/index",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "registerTarget",
-  "devtools/client/framework/actions/index",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "unregisterTarget",
-  "devtools/client/framework/actions/index",
-  true
-);
-
-loader.lazyRequireGetter(
-  this,
-  "selectTarget",
+  [
+    "registerWalkerListeners",
+    "registerTarget",
+    "selectTarget",
+    "unregisterTarget",
+  ],
   "devtools/client/framework/actions/index",
   true
 );

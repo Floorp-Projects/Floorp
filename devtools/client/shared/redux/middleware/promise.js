@@ -11,19 +11,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "entries",
-  "devtools/shared/DevToolsUtils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "executeSoon",
-  "devtools/shared/DevToolsUtils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "toObject",
+  ["entries", "executeSoon", "toObject"],
   "devtools/shared/DevToolsUtils",
   true
 );

@@ -27,7 +27,7 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(
   this,
-  "createRootFront",
+  ["createRootFront", "Front"],
   "devtools/shared/protocol",
   true
 );
@@ -38,7 +38,6 @@ loader.lazyRequireGetter(
   "devtools/client/fronts/object",
   true
 );
-loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
 
 /**
  * Creates a client for the remote debugging protocol server. This client

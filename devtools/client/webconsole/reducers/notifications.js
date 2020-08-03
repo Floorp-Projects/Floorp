@@ -10,13 +10,7 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "appendNotification",
-  "devtools/client/shared/components/NotificationBox",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "removeNotificationWithValue",
+  ["appendNotification", "removeNotificationWithValue"],
   "devtools/client/shared/components/NotificationBox",
   true
 );

@@ -61,13 +61,7 @@ loader.lazyGetter(this, "NotificationBox", () =>
 );
 loader.lazyRequireGetter(
   this,
-  "getNotificationWithValue",
-  "devtools/client/shared/components/NotificationBox",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "PriorityLevels",
+  ["getNotificationWithValue", "PriorityLevels"],
   "devtools/client/shared/components/NotificationBox",
   true
 );

@@ -58,11 +58,6 @@ loader.lazyImporter(
 );
 loader.lazyRequireGetter(
   this,
-  "ResponsiveUIManager",
-  "devtools/client/responsive/manager"
-);
-loader.lazyRequireGetter(
-  this,
   "PICKER_TYPES",
   "devtools/shared/picker-constants"
 );

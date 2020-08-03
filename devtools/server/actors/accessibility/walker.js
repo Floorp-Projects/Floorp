@@ -20,7 +20,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "CustomHighlighterActor",
+  ["CustomHighlighterActor", "isTypeRegistered", "register"],
   "devtools/server/actors/highlighters",
   true
 );
@@ -32,29 +32,11 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,
-  "getCurrentZoom",
+  ["getCurrentZoom", "isWindowIncluded", "isRemoteFrame"],
   "devtools/shared/layout/utils",
   true
 );
 loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
-loader.lazyRequireGetter(
-  this,
-  "isDefunct",
-  "devtools/server/actors/utils/accessibility",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isTypeRegistered",
-  "devtools/server/actors/highlighters",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isWindowIncluded",
-  "devtools/shared/layout/utils",
-  true
-);
 loader.lazyRequireGetter(
   this,
   "isXUL",
@@ -63,19 +45,11 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "loadSheetForBackgroundCalculation",
-  "devtools/server/actors/utils/accessibility",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "register",
-  "devtools/server/actors/highlighters",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "removeSheetForBackgroundCalculation",
+  [
+    "isDefunct",
+    "loadSheetForBackgroundCalculation",
+    "removeSheetForBackgroundCalculation",
+  ],
   "devtools/server/actors/utils/accessibility",
   true
 );
@@ -83,12 +57,6 @@ loader.lazyRequireGetter(
   this,
   "accessibility",
   "devtools/shared/constants",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isRemoteFrame",
-  "devtools/shared/layout/utils",
   true
 );
 

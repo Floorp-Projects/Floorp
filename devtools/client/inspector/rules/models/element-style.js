@@ -18,19 +18,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "parseDeclarations",
-  "devtools/shared/css/parsing-utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "parseNamedDeclarations",
-  "devtools/shared/css/parsing-utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "parseSingleValue",
+  ["parseDeclarations", "parseNamedDeclarations", "parseSingleValue"],
   "devtools/shared/css/parsing-utils",
   true
 );

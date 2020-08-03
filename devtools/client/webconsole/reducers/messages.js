@@ -32,37 +32,14 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "createWarningGroupMessage",
-  "devtools/client/webconsole/utils/messages",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isWarningGroup",
-  "devtools/client/webconsole/utils/messages",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getWarningGroupType",
-  "devtools/client/webconsole/utils/messages",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getDescriptorValue",
-  "devtools/client/webconsole/utils/messages",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getParentWarningGroupMessageId",
-  "devtools/client/webconsole/utils/messages",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getNaturalOrder",
+  [
+    "createWarningGroupMessage",
+    "isWarningGroup",
+    "getWarningGroupType",
+    "getDescriptorValue",
+    "getParentWarningGroupMessageId",
+    "getNaturalOrder",
+  ],
   "devtools/client/webconsole/utils/messages",
   true
 );

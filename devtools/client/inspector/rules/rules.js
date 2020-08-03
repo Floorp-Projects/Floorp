@@ -24,13 +24,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(
   this,
-  "flashElementOn",
-  "devtools/client/inspector/markup/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "flashElementOff",
+  ["flashElementOn", "flashElementOff"],
   "devtools/client/inspector/markup/utils",
   true
 );

@@ -16,13 +16,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "getTextProperties",
-  "devtools/shared/accessibility",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getContrastRatioAgainstBackground",
+  ["getTextProperties", "getContrastRatioAgainstBackground"],
   "devtools/shared/accessibility",
   true
 );
