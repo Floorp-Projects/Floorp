@@ -1212,6 +1212,33 @@ class WhiteSpaceVisibilityKeeper final {
       int32_t* aSplitOffset);
 
   /**
+   * MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement() merges
+   * first line in aRightBlockElement into end of aLeftBlockElement which
+   * is an ancestor of aRightBlockElement, then, removes aRightBlockElement
+   * if it becomes empty.
+   *
+   * @param aHTMLEditor         The HTML editor.
+   * @param aLeftBlockElement   The content will be merged into end of
+   *                            this element.
+   * @param aRightBlockElement  The first line in this element will be
+   *                            moved to aLeftBlockElement and maybe
+   *                            removed when this becomes empty.
+   * @param aAtLeftBlockChild   At a child of aLeftBlockElement and inclusive
+   *                            ancestor of aRightBlockElement.
+   * @param aLeftContentInBlock The content whose inclusive ancestor is
+   *                            aLeftBlockElement.
+   * @param aListElementTagName Set some if aRightBlockElement is a list
+   *                            element and it'll be merged with another
+   *                            list element.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
+  MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
+      HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
+      Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
+      nsIContent& aLeftContentInBlock,
+      const Maybe<nsAtom*>& aListElementTagName);
+
+  /**
    * MergeFirstLineOfRightBlockElementIntoLeftBlockElement() merges first
    * line in aRightBlockElement into end of aLeftBlockElement and removes
    * aRightBlockElement when it has only one line.
