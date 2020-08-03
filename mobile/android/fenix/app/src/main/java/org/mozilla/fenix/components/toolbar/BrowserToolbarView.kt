@@ -251,10 +251,10 @@ class BrowserToolbarView(
     }
 
     private fun ToolbarMenu.Item.performHapticIfNeeded(view: View) {
-        (this as? ToolbarMenu.Item.Reload)?.also { reload ->
-            if (reload.bypassCache) {
-                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            }
+        if (this is ToolbarMenu.Item.Reload && this.bypassCache ||
+            this is ToolbarMenu.Item.Forward && this.viewHistory
+        ) {
+            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         }
     }
 }
