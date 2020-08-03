@@ -73,7 +73,7 @@ class CompatibilityView {
     return this.inspector.toolbox.resourceWatcher;
   }
 
-  _init() {
+  async _init() {
     const {
       onShowBoxModelHighlighterForNode: showBoxModelHighlighterForNode,
       setSelectedNode,
@@ -113,7 +113,7 @@ class CompatibilityView {
       this._onPanelSelected
     );
 
-    this.resourceWatcher.watchResources(
+    await this.resourceWatcher.watchResources(
       [this.resourceWatcher.TYPES.CSS_CHANGE],
       {
         onAvailable: this._onResourceAvailable,
@@ -122,6 +122,8 @@ class CompatibilityView {
         ignoreExistingResources: true,
       }
     );
+
+    this.inspector.emitForTests("compatibilityview-initialized");
   }
 
   _isAvailable() {

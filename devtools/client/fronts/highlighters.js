@@ -9,6 +9,7 @@ const {
   registerFront,
 } = require("devtools/shared/protocol");
 const flags = require("devtools/shared/flags");
+const { safeAsyncMethod } = require("devtools/shared/async-utils");
 const {
   customHighlighterSpec,
   highlighterSpec,
@@ -19,6 +20,18 @@ class HighlighterFront extends FrontClassWithSpec(highlighterSpec) {
     super(client, targetFront, parentFront);
 
     this.isNodeFrontHighlighted = false;
+
+    // un/highlight requests can be triggered while DevTools are closing.
+    this.highlight = safeAsyncMethod(this.highlight.bind(this), () =>
+      this._isDestroyed()
+    );
+    this.unhighlight = safeAsyncMethod(this.unhighlight.bind(this), () =>
+      this._isDestroyed()
+    );
+  }
+
+  _isDestroyed() {
+    return !this.actorID;
   }
 
   // Update the object given a form representation off the wire.
