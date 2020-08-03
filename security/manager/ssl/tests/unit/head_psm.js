@@ -30,6 +30,7 @@ const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2)
 // The test EV roots are only enabled in debug builds as a security measure.
 const gEVExpected = isDebugBuild;
 
+const CLIENT_AUTH_FILE_NAME = "ClientAuthRememberList.txt";
 const SSS_STATE_FILE_NAME = "SiteSecurityServiceState.txt";
 const PRELOAD_STATE_FILE_NAME = "SecurityPreloadState.txt";
 
