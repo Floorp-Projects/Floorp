@@ -1214,6 +1214,15 @@ HangMonitoredProcess::UserCanceled() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HangMonitoredProcess::GetChildID(uint64_t* aChildID) {
+  if (!mContentParent) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aChildID = mContentParent->ChildID();
+  return NS_OK;
+}
+
 static bool InterruptCallback(JSContext* cx) {
   if (HangMonitorChild* child = HangMonitorChild::Get()) {
     return child->InterruptCallback();
