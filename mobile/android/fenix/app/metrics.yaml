@@ -3315,3 +3315,61 @@ storage.stats:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2021-02-01"
+
+progressive_web_app:
+  homescreen_tap:
+    type: event
+    description: |
+      A user taps on PWA homescreen icon
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10261
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11859
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2021-03-01"
+  install_tap:
+    type: event
+    description: |
+      A user installs a PWA. Could be a shortcut or added to homescreen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10261
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11859
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2021-03-01"
+  foreground:
+    type: event
+    description: |
+      A user brings the PWA into the foreground.
+    extra_keys:
+      time_ms:
+        description: |
+          The current time in ms when the PWA was brought to the foreground.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10261
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11859
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2021-03-01"
+  background:
+    type: event
+    description: |
+      A user puts the PWA into the background.
+    extra_keys:
+      time_ms:
+        description: |
+          The current time in ms when the PWA was backgrounded.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10261
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11859
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2021-03-01"

@@ -38,7 +38,9 @@ class PwaOnboardingDialogFragment : DialogFragment() {
         add_button.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 components.useCases.webAppUseCases.addToHomescreen()
-            }.invokeOnCompletion { dismiss() }
+            }.invokeOnCompletion {
+                dismiss()
+            }
         }
     }
 }

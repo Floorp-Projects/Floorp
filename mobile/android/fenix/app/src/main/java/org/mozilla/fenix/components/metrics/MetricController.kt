@@ -20,6 +20,7 @@ import mozilla.components.feature.downloads.facts.DownloadsFacts
 import mozilla.components.feature.findinpage.facts.FindInPageFacts
 import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
+import mozilla.components.feature.pwa.ProgressiveWebAppFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -221,6 +222,12 @@ internal class ReleaseMetricController(
                 }?.accumulateSamples(longArrayOf(providerTiming.second as Long))
             }
             null
+        }
+        Component.FEATURE_PWA to ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP -> {
+            Event.ProgressiveWebAppOpenFromHomescreenTap
+        }
+        Component.FEATURE_PWA to ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT -> {
+            Event.ProgressiveWebAppInstallAsShortcut
         }
         else -> null
     }

@@ -17,6 +17,7 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.Onboarding
+import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
@@ -185,7 +186,21 @@ sealed class Event {
     object TabsTrayShareAllTabsPressed : Event()
     object TabsTrayCloseAllTabsPressed : Event()
 
+    object ProgressiveWebAppOpenFromHomescreenTap : Event()
+    object ProgressiveWebAppInstallAsShortcut : Event()
+
     // Interaction events with extras
+
+    data class ProgressiveWebAppForeground(val timeForegrounded: Long) : Event() {
+        override val extras: Map<ProgressiveWebApp.foregroundKeys, String>?
+            get() = mapOf(ProgressiveWebApp.foregroundKeys.timeMs to timeForegrounded.toString())
+    }
+
+    data class ProgressiveWebAppBackground(val timeBackgrounded: Long) : Event() {
+        override val extras: Map<ProgressiveWebApp.backgroundKeys, String>?
+            get() = mapOf(ProgressiveWebApp.backgroundKeys.timeMs to timeBackgrounded.toString())
+    }
+
     data class OnboardingToolbarPosition(val position: Position) : Event() {
         enum class Position { TOP, BOTTOM }
 

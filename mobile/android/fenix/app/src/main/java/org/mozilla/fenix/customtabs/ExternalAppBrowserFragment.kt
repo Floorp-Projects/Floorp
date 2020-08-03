@@ -6,6 +6,7 @@ package org.mozilla.fenix.customtabs
 
 import android.content.Context
 import android.content.Intent
+import android.os.SystemClock
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.navArgs
@@ -30,7 +31,9 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
 import org.mozilla.fenix.browser.FenixSnackbarDelegate
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -150,6 +153,22 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        val currTimeMs = SystemClock.elapsedRealtimeNanos() / MS_PRECISION
+        requireComponents.analytics.metrics.track(
+            Event.ProgressiveWebAppForeground(currTimeMs)
+        )
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val currTimeMs = SystemClock.elapsedRealtimeNanos() / MS_PRECISION
+        requireComponents.analytics.metrics.track(
+            Event.ProgressiveWebAppBackground(currTimeMs)
+        )
+    }
+
     override fun removeSessionIfNeeded(): Boolean {
         return customTabsIntegration.onBackPressed() || super.removeSessionIfNeeded()
     }
@@ -192,4 +211,9 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
         view,
         FenixSnackbarDelegate(view)
     )
+
+    companion object {
+        // We only care about millisecond precision for telemetry events
+        internal const val MS_PRECISION = 1_000_000L
+    }
 }
