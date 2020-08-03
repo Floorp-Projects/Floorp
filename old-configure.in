@@ -544,7 +544,6 @@ case "$target" in
         MOZ_LINKER=1
     fi
 
-    MOZ_GFX_OPTIMIZE_MOBILE=1
     if test -z "$CLANG_CC"; then
         MOZ_OPTIMIZE_FLAGS="-freorder-blocks -fno-reorder-functions -Os"
     elif test -n "$RELEASE_OR_BETA"; then
@@ -2065,25 +2064,6 @@ dnl = Runtime debugging and Optimization Options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Runtime debugging and Optimizations)
-
-dnl ========================================================
-dnl enable mobile optimizations
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(mobile-optimize,
-[  --enable-mobile-optimize
-                          Enable mobile optimizations],
-    MOZ_GFX_OPTIMIZE_MOBILE=1)
-
-AC_SUBST(MOZ_GFX_OPTIMIZE_MOBILE)
-
-if test "$MOZ_GFX_OPTIMIZE_MOBILE"; then
-    # We ignore paint will resample on mobile for performance.
-    # We may want to revisit this later.
-    MOZ_IGNORE_PAINT_WILL_RESAMPLE=1
-
-    AC_DEFINE(MOZ_GFX_OPTIMIZE_MOBILE)
-    AC_DEFINE(MOZ_IGNORE_PAINT_WILL_RESAMPLE)
-fi
 
 dnl ========================================================
 dnl = Enable code optimization. ON by default.

@@ -217,7 +217,6 @@ def old_configure_options(*options):
     '--enable-extensions',
     '--enable-libproxy',
     '--enable-logrefcnt',
-    '--enable-mobile-optimize',
     '--enable-necko-wifi',
     '--enable-negotiateauth',
     '--enable-official-branding',
