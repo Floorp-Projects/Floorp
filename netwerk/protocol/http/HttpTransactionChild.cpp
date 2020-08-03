@@ -12,6 +12,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
+#include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/InputChannelThrottleQueueChild.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/ScopeExit.h"
@@ -289,8 +290,16 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
       return NS_ERROR_FAILURE;
     }
 
+    std::function<bool(const nsCString&, uint64_t, uint32_t)> sendFunc =
+        [self = UnsafePtr<HttpTransactionChild>(this)](
+            const nsCString& aData, uint64_t aOffset, uint32_t aCount) {
+          return self->SendOnDataAvailable(aData, aOffset, aCount);
+        };
+
     LOG(("  ODA to parent process"));
-    Unused << SendOnDataAvailable(data, aOffset, aCount);
+    if (!nsHttp::SendDataInChunks(data, aOffset, aCount, sendFunc)) {
+      return NS_ERROR_FAILURE;
+    }
     return NS_OK;
   }
 
@@ -301,11 +310,15 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  bool dataSentToContentProcess =
-      mDataBridgeParent->SendOnTransportAndData(aOffset, aCount, data);
-  LOG(("  ODA to content process, dataSentToContentProcess=%d",
-       dataSentToContentProcess));
-  if (!dataSentToContentProcess) {
+  std::function<bool(const nsCString&, uint64_t, uint32_t)> sendFunc =
+      [self = UnsafePtr<HttpTransactionChild>(this)](
+          const nsCString& aData, uint64_t aOffset, uint32_t aCount) {
+        return self->mDataBridgeParent->SendOnTransportAndData(aOffset, aCount,
+                                                               aData);
+      };
+
+  LOG(("  ODA to content process"));
+  if (!nsHttp::SendDataInChunks(data, aOffset, aCount, sendFunc)) {
     MOZ_ASSERT(false, "Send ODA to content process failed");
     return NS_ERROR_FAILURE;
   }
@@ -318,7 +331,13 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
       NS_NewRunnableFunction(
           "HttpTransactionChild::OnDataAvailable",
           [self, offset(aOffset), count(aCount), data(data)]() {
-            if (!self->SendOnDataAvailable(data, offset, count)) {
+            std::function<bool(const nsCString&, uint64_t, uint32_t)> sendFunc =
+                [self](const nsCString& aData, uint64_t aOffset,
+                       uint32_t aCount) {
+                  return self->SendOnDataAvailable(aData, aOffset, aCount);
+                };
+
+            if (!nsHttp::SendDataInChunks(data, offset, count, sendFunc)) {
               self->CancelInternal(NS_ERROR_FAILURE);
             }
           }),

@@ -1717,33 +1717,23 @@ HttpChannelParent::OnDataAvailable(nsIRequest* aRequest,
     }
   }
 
-  static uint32_t const kCopyChunkSize = 128 * 1024;
-  uint32_t toRead = std::min<uint32_t>(aCount, kCopyChunkSize);
-
   nsCString data;
+  nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Either IPC channel is closed or background channel
+  // is ready to send OnTransportAndData.
+  MOZ_ASSERT(mIPCClosed || mBgParent);
+
+  if (mIPCClosed || !mBgParent ||
+      !mBgParent->OnTransportAndData(channelStatus, transportStatus, aOffset,
+                                     aCount, data)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   int32_t count = static_cast<int32_t>(aCount);
-
-  while (aCount) {
-    nsresult rv = NS_ReadInputStreamToString(aInputStream, data, toRead);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Either IPC channel is closed or background channel
-    // is ready to send OnTransportAndData.
-    MOZ_ASSERT(mIPCClosed || mBgParent);
-
-    if (mIPCClosed || !mBgParent ||
-        !mBgParent->OnTransportAndData(channelStatus, transportStatus, aOffset,
-                                       toRead, data)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    aOffset += toRead;
-    aCount -= toRead;
-    toRead = std::min<uint32_t>(aCount, kCopyChunkSize);
-  }
 
   if (NeedFlowControl()) {
     // We're going to run out of sending window size
