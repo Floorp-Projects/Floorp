@@ -214,7 +214,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvRequestMemoryReport(
         Unused << GetSingleton()->SendAddMemoryReport(aReport);
       },
       [&](const uint32_t& aGeneration) {
-        return GetSingleton()->SendFinishMemoryReport(aGeneration);
+        Unused << GetSingleton()->SendFinishMemoryReport(aGeneration);
       });
   return IPC_OK();
 }
