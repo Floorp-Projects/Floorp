@@ -507,6 +507,38 @@ nsTArray_base<Alloc, RelocationStrategy>::SwapArrayElements(
 }
 
 template <class Alloc, class RelocationStrategy>
+template <class Allocator>
+void nsTArray_base<Alloc, RelocationStrategy>::MoveConstructNonAutoArray(
+    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
+    size_t aElemAlign) {
+  // We know that we are not an (Copyable)AutoTArray and we know that we are
+  // empty, so don't use SwapArrayElements which doesn't know either of these
+  // facts and is very complex.
+
+  // aOther might be an (Copyable)AutoTArray though, and it might use its inline
+  // buffer.
+  const bool otherUsesAutoArrayBuffer = aOther.UsesAutoArrayBuffer();
+  if (otherUsesAutoArrayBuffer) {
+    // Use nsTArrayInfallibleAllocator regardless of Alloc because this is
+    // called from a move constructor, which cannot report an error to the
+    // caller.
+    aOther.template EnsureNotUsingAutoArrayBuffer<nsTArrayInfallibleAllocator>(
+        aElemSize);
+  }
+
+  const bool otherIsAuto = otherUsesAutoArrayBuffer || aOther.IsAutoArray();
+  mHdr = aOther.mHdr;
+
+  if (otherIsAuto) {
+    mHdr->mIsAutoArray = false;
+    aOther.mHdr = aOther.GetAutoArrayBufferUnsafe(aElemAlign);
+    aOther.mHdr->mLength = 0;
+  } else {
+    aOther.mHdr = aOther.EmptyHdr();
+  }
+}
+
+template <class Alloc, class RelocationStrategy>
 template <typename ActualAlloc>
 bool nsTArray_base<Alloc, RelocationStrategy>::EnsureNotUsingAutoArrayBuffer(
     size_type aElemSize) {
