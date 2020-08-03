@@ -75,6 +75,12 @@ class DMABufSurfaceWrapper final {
     return mSurface->GetAsDMABufSurfaceYUV();
   }
 
+  // Don't allow DMABufSurfaceWrapper plain copy as it leads to
+  // enexpected DMABufSurface/HW buffer releases and we don't want to
+  // deep copy them.
+  DMABufSurfaceWrapper(const DMABufSurfaceWrapper&) = delete;
+  const DMABufSurfaceWrapper& operator=(DMABufSurfaceWrapper const&) = delete;
+
  private:
   const RefPtr<DMABufSurface> mSurface;
   const FFmpegLibWrapper* mLib;

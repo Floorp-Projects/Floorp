@@ -782,7 +782,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
     surface->SetUID(++uid);
     FFMPEG_LOG("Created new DMABufSurface UID = %d", uid);
 #  endif
-    mDMABufSurfaces.AppendElement(DMABufSurfaceWrapper(surface, mLib));
+    mDMABufSurfaces.EmplaceBack(surface, mLib);
     surfaceWrapper = &(mDMABufSurfaces[mDMABufSurfaces.Length() - 1]);
   } else {
     surface = surfaceWrapper->GetDMABufSurface();
