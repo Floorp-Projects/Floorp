@@ -999,8 +999,8 @@ void WebRenderBridgeParent::SetAPZSampleTime() {
 }
 
 bool WebRenderBridgeParent::SetDisplayList(
-    const LayoutDeviceRect& aRect, const wr::LayoutSize& aContentSize,
-    ipc::ByteBuf&& aDL, const wr::BuiltDisplayListDescriptor& aDLDesc,
+    const LayoutDeviceRect& aRect, ipc::ByteBuf&& aDL,
+    const wr::BuiltDisplayListDescriptor& aDLDesc,
     const nsTArray<OpUpdateResource>& aResourceUpdates,
     const nsTArray<RefCountedShmem>& aSmallShmems,
     const nsTArray<ipc::Shmem>& aLargeShmems, const TimeStamp& aTxnStartTime,
@@ -1023,7 +1023,7 @@ bool WebRenderBridgeParent::SetDisplayList(
     gfx::DeviceColor clearColor(0.f, 0.f, 0.f, 0.f);
     aTxn.SetDisplayList(clearColor, aWrEpoch,
                         wr::ToLayoutSize(RoundedToInt(aRect).Size()),
-                        mPipelineId, aContentSize, aDLDesc, dlData);
+                        mPipelineId, aDLDesc, dlData);
 
     if (aObserveLayersUpdate) {
       aTxn.Notify(wr::Checkpoint::SceneBuilt,
@@ -1073,11 +1073,11 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
   }
 
   if (aDisplayList.mDL &&
-      !SetDisplayList(aDisplayList.mRect, aDisplayList.mContentSize,
-                      std::move(aDisplayList.mDL.ref()), aDisplayList.mDLDesc,
-                      aDisplayList.mResourceUpdates, aDisplayList.mSmallShmems,
-                      aDisplayList.mLargeShmems, aTxnStartTime, txn, aWrEpoch,
-                      aValidTransaction, aObserveLayersUpdate)) {
+      !SetDisplayList(aDisplayList.mRect, std::move(aDisplayList.mDL.ref()),
+                      aDisplayList.mDLDesc, aDisplayList.mResourceUpdates,
+                      aDisplayList.mSmallShmems, aDisplayList.mLargeShmems,
+                      aTxnStartTime, txn, aWrEpoch, aValidTransaction,
+                      aObserveLayersUpdate)) {
     return false;
   }
   return true;

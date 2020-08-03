@@ -183,10 +183,10 @@ impl Window {
         };
         let layout_size = device_size.to_f32() / euclid::Scale::new(device_pixel_ratio);
         let mut txn = Transaction::new();
-        let mut builder = DisplayListBuilder::new(self.pipeline_id, layout_size);
+        let mut builder = DisplayListBuilder::new(self.pipeline_id);
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.pipeline_id);
 
-        let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
+        let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
         builder.push_simple_stacking_context(
             bounds.origin,
             space_and_clip.spatial_id,

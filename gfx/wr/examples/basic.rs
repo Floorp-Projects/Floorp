@@ -190,7 +190,7 @@ impl Example for App {
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let content_bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
+        let content_bounds = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(800.0, 600.0));
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
         let spatial_id = root_space_and_clip.spatial_id;
 

@@ -246,7 +246,6 @@ impl Transaction {
     /// * `background`: The background color of this pipeline.
     /// * `viewport_size`: The size of the viewport for this frame.
     /// * `pipeline_id`: The ID of the pipeline that is supplying this display list.
-    /// * `content_size`: The total screen space size of this display list's display items.
     /// * `display_list`: The root Display list used in this frame.
     /// * `preserve_frame_state`: If a previous frame exists which matches this pipeline
     ///                           id, this setting determines if frame state (such as scrolling
@@ -256,7 +255,7 @@ impl Transaction {
         epoch: Epoch,
         background: Option<ColorF>,
         viewport_size: LayoutSize,
-        (pipeline_id, content_size, mut display_list): (PipelineId, LayoutSize, BuiltDisplayList),
+        (pipeline_id, mut display_list): (PipelineId, BuiltDisplayList),
         preserve_frame_state: bool,
     ) {
         display_list.set_send_time_ns(precise_time_ns());
@@ -267,7 +266,6 @@ impl Transaction {
                 pipeline_id,
                 background,
                 viewport_size,
-                content_size,
                 preserve_frame_state,
             }
         );
@@ -814,8 +812,6 @@ pub enum SceneMsg {
         background: Option<ColorF>,
         ///
         viewport_size: LayoutSize,
-        ///
-        content_size: LayoutSize,
         ///
         preserve_frame_state: bool,
     },

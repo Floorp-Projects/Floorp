@@ -322,7 +322,7 @@ pub struct YamlFrameReader {
     aux_dir: PathBuf,
     frame_count: u32,
 
-    display_lists: Vec<(PipelineId, LayoutSize, BuiltDisplayList)>,
+    display_lists: Vec<(PipelineId, BuiltDisplayList)>,
 
     include_only: Vec<String>,
 
@@ -476,8 +476,7 @@ impl YamlFrameReader {
         self.spatial_id_stack.clear();
         self.spatial_id_stack.push(SpatialId::root_scroll_node(pipeline_id));
 
-        let content_size = self.get_root_size_from_yaml(wrench, yaml);
-        let mut builder = DisplayListBuilder::new(pipeline_id, content_size);
+        let mut builder = DisplayListBuilder::new(pipeline_id);
         let mut info = CommonItemProperties {
             clip_rect: LayoutRect::zero(),
             clip_id: ClipId::invalid(),
@@ -1992,13 +1991,6 @@ impl YamlFrameReader {
             self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
             self.clip_id_stack.pop().unwrap();
         }
-    }
-
-    fn get_root_size_from_yaml(&mut self, wrench: &mut Wrench, yaml: &Yaml) -> LayoutSize {
-        yaml["bounds"]
-            .as_rect()
-            .map(|rect| rect.size)
-            .unwrap_or(wrench.window_size_f32())
     }
 
     fn push_reference_frame(
