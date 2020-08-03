@@ -434,3 +434,41 @@ class NodeCommands(MachCommandBase):
             pass_thru=True,  # Avoid eating npm output/error messages
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
         )
+
+
+def logspam_create_parser(subcommand):
+    # Create the logspam command line parser.
+    # if logspam is not installed, or not up to date, it will
+    # first be installed.
+    loader = PypiBasedTool("logspam", "mozilla-log-spam")
+    return loader.create_parser(subcommand)
+
+
+from functools import partial
+
+
+@CommandProvider
+class LogspamCommand(MachCommandBase):
+    @Command('logspam',
+             category='misc',
+             description=("Warning categorizer for treeherder test runs."))
+    def logspam(self):
+        pass
+
+    @SubCommand('logspam', 'report', parser=partial(logspam_create_parser, "report"))
+    def report(self, **options):
+        self.activate_virtualenv()
+        logspam = PypiBasedTool("logspam")
+        logspam.run(command="report", **options)
+
+    @SubCommand('logspam', 'bisect', parser=partial(logspam_create_parser, "bisect"))
+    def bisect(self, **options):
+        self.activate_virtualenv()
+        logspam = PypiBasedTool("logspam")
+        logspam.run(command="bisect", **options)
+
+    @SubCommand('logspam', 'file', parser=partial(logspam_create_parser, "file"))
+    def create(self, **options):
+        self.activate_virtualenv()
+        logspam = PypiBasedTool("logspam")
+        logspam.run(command="file", **options)
