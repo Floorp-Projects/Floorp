@@ -30,11 +30,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "XMLHttpRequest"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   CertUtils: "resource://gre/modules/CertUtils.jsm",
   ctypes: "resource://gre/modules/ctypes.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
@@ -57,6 +59,8 @@ const PREF_APP_UPDATE_ELEVATE_NEVER = "app.update.elevate.never";
 const PREF_APP_UPDATE_ELEVATE_VERSION = "app.update.elevate.version";
 const PREF_APP_UPDATE_ELEVATE_ATTEMPTS = "app.update.elevate.attempts";
 const PREF_APP_UPDATE_ELEVATE_MAXATTEMPTS = "app.update.elevate.maxAttempts";
+const PREF_APP_UPDATE_LANGPACK_ENABLED = "app.update.langpack.enabled";
+const PREF_APP_UPDATE_LANGPACK_TIMEOUT = "app.update.langpack.timeout";
 const PREF_APP_UPDATE_LOG = "app.update.log";
 const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
 const PREF_APP_UPDATE_NOTIFYDURINGDOWNLOAD = "app.update.notifyDuringDownload";
@@ -237,6 +241,10 @@ const APPID_TO_TOPIC = {
 // The interval for the update xml write deferred task.
 const XML_SAVER_INTERVAL_MS = 200;
 
+// How long after a patch has downloaded should we wait for language packs to
+// update before proceeding anyway.
+const LANGPACK_UPDATE_DEFAULT_TIMEOUT = 300000;
+
 // Object to keep track of the current phase of the update and whether there
 // has been a write failure for the phase so only one telemetry ping is made
 // for the phase.
@@ -275,6 +283,38 @@ XPCOMUtils.defineLazyGetter(
     return Services.strings.createBundle(URI_UPDATES_PROPERTIES);
   }
 );
+
+/**
+ * When a plain JS object is passed through xpconnect the other side sees a
+ * wrapped version of the object instead of the real object. Since these two
+ * objects are different they act as different keys for Map and WeakMap. However
+ * xpconnect gives us a way to get the underlying JS object from the wrapper so
+ * this function returns the JS object regardless of whether passed the JS
+ * object or its wrapper for use in places where it is unclear which one you
+ * have.
+ */
+function unwrap(obj) {
+  return obj.wrappedJSObject ?? obj;
+}
+
+/**
+ * When an update starts to download (and if the feature is enabled) the add-ons
+ * manager starts downloading updated language packs for the new application
+ * version. A promise is used to track whether those updates are complete so the
+ * front-end is only notified that an application update is ready once the
+ * language pack updates have been staged.
+ *
+ * In order to be able to access that promise from various places in the update
+ * service they are cached in this map using the nsIUpdate object as a weak
+ * owner. Note that the key should always be the result of calling the above
+ * unwrap function on the nsIUpdate to ensure a consistent object is used as the
+ * key.
+ *
+ * When the language packs finish staging the nsIUpdate entriy is removed from
+ * this map so if the entry is still there then language pack updates are in
+ * progress.
+ */
+const LangPackUpdates = new WeakMap();
 
 /**
  * Tests to make sure that we can write to a given directory.
@@ -469,6 +509,23 @@ function getElevationRequired() {
       "not required"
   );
   return false;
+}
+
+/**
+ * A promise that resolves when language packs are downloading or if no language
+ * packs are being downloaded.
+ */
+function promiseLangPacksUpdated(update) {
+  let promise = LangPackUpdates.get(unwrap(update));
+  if (promise) {
+    LOG(
+      "promiseLangPacksUpdated - waiting for language pack updates to stage."
+    );
+    return promise;
+  }
+
+  // In case callers rely on a promise just return an already resolved promise.
+  return Promise.resolve();
 }
 
 /**
@@ -3710,13 +3767,15 @@ UpdateManager.prototype = {
     this.saveUpdates();
 
     // Send an observer notification which the app update doorhanger uses to
-    // display a restart notification
-    LOG(
-      "UpdateManager:refreshUpdateStatus - Notifying observers that " +
-        "the update was staged. topic: update-staged, status: " +
-        update.state
-    );
-    Services.obs.notifyObservers(update, "update-staged", update.state);
+    // display a restart notification after any langpacks have staged.
+    promiseLangPacksUpdated(update).then(() => {
+      LOG(
+        "UpdateManager:refreshUpdateStatus - Notifying observers that " +
+          "the update was staged. topic: update-staged, status: " +
+          update.state
+      );
+      Services.obs.notifyObservers(update, "update-staged", update.state);
+    });
   },
 
   /**
@@ -4201,6 +4260,13 @@ Downloader.prototype = {
   _bitsActiveNotifications: false,
 
   /**
+   * This is a function that when called will stop the update process from
+   * waiting for language pack updates. This is for safety to ensure that a
+   * problem in the add-ons manager doesn't delay updates by much.
+   */
+  _langPackTimeout: null,
+
+  /**
    * Cancels the active download.
    *
    * For a BITS download, this will cancel and remove the download job. For
@@ -4471,6 +4537,45 @@ Downloader.prototype = {
   },
 
   /**
+   * Instruct the add-ons manager to start downloading language pack updates in
+   * preparation for the current update.
+   */
+  _startLangPackUpdates: function Downloader__startLangPackUpdates() {
+    if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_LANGPACK_ENABLED, false)) {
+      return;
+    }
+
+    // A promise that we can resolve at some point to time out the language pack
+    // update process.
+    let timeoutPromise = new Promise(resolve => {
+      this._langPackTimeout = resolve;
+    });
+
+    let update = unwrap(this._update);
+
+    // Note that we don't care about success or failure here, either way we will
+    // continue with the update process.
+    let langPackPromise = AddonManager.stageLangpacksForAppUpdate(
+      update.appVersion,
+      update.appVersion
+    )
+      .catch(error => {
+        LOG(
+          `Add-ons manager threw exception while updating language packs: ${error}`
+        );
+      })
+      .finally(() => {
+        LangPackUpdates.delete(update);
+        this._langPackTimeout = null;
+      });
+
+    LangPackUpdates.set(
+      update,
+      Promise.race([langPackPromise, timeoutPromise])
+    );
+  },
+
+  /**
    * Download and stage the given update.
    * @param   update
    *          A nsIUpdate object to download a patch for. Cannot be null.
@@ -4680,6 +4785,8 @@ Downloader.prototype = {
         .getService(Ci.nsIUpdateManager)
         .saveUpdates();
     }
+
+    this._startLangPackUpdates();
 
     this._notifyDownloadStatusObservers();
 
@@ -5270,6 +5377,10 @@ Downloader.prototype = {
         }
       }
       if (allFailed) {
+        // We don't care about language pack updates now.
+        this._langPackTimeout = null;
+        LangPackUpdates.delete(unwrap(this._update));
+
         // Prevent leaking the update object (bug 454964).
         this._update = null;
       }
@@ -5304,19 +5415,31 @@ Downloader.prototype = {
       }
     }
 
+    // If we're still waiting on language pack updates then run a timer to time
+    // out the attempt after an appropriate amount of time.
+    if (this._langPackTimeout) {
+      setTimeout(
+        this._langPackTimeout,
+        Services.prefs.getIntPref(
+          PREF_APP_UPDATE_LANGPACK_TIMEOUT,
+          LANGPACK_UPDATE_DEFAULT_TIMEOUT
+        )
+      );
+    }
+
     // Do this after *everything* else, since it will likely cause the app
     // to shut down.
     if (shouldShowPrompt) {
-      LOG(
-        "UpdateManager:refreshUpdateStatus - Notifying observers that " +
-          "an update was downloaded. topic: update-downloaded, status: " +
-          this._update.state
-      );
-      Services.obs.notifyObservers(
-        this._update,
-        "update-downloaded",
-        this._update.state
-      );
+      // Wait for language packs to stage before showing any prompt to restart.
+      let update = this._update;
+      promiseLangPacksUpdated(update).then(() => {
+        LOG(
+          "UpdateManager:refreshUpdateStatus - Notifying observers that " +
+            "an update was downloaded. topic: update-downloaded, status: " +
+            update.state
+        );
+        Services.obs.notifyObservers(update, "update-downloaded", update.state);
+      });
     }
 
     if (shouldRegisterOnlineObserver) {

@@ -422,7 +422,7 @@ appUpdater.prototype = {
           this.selectPanel("applying");
           this.updateUIWhenStagingComplete();
         } else {
-          this.selectPanel("apply");
+          this.updateUIWhenDownloadComplete();
         }
         break;
       default:
@@ -445,6 +445,18 @@ appUpdater.prototype = {
       aProgress,
       aProgressMax
     );
+  },
+
+  /**
+   * This function registers an observer that watches for the download to
+   * complete. Once it does, it updates the UI accordingly.
+   */
+  updateUIWhenDownloadComplete() {
+    let observer = (aSubject, aTopic, aData) => {
+      this.selectPanel("apply");
+      Services.obs.removeObserver(observer, "update-downloaded");
+    };
+    Services.obs.addObserver(observer, "update-downloaded");
   },
 
   /**
