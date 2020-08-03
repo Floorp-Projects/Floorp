@@ -44,6 +44,10 @@ add_task(async function test_proc_info() {
 
         for (var i = 0; i < parentProc.children.length; i++) {
           let childProc = parentProc.children[i];
+
+          // By definition, `childID != 0` for children processes.
+          Assert.ok(childProc.childID > 0);
+
           Assert.notEqual(
             childProc.type,
             "browser",
