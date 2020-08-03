@@ -126,6 +126,11 @@ class MOZ_RAII AutoGCSession : public AutoHeapSession {
   mozilla::Maybe<AutoCheckCanAccessAtomsDuringGC> maybeCheckAtomsAccess;
 };
 
+class MOZ_RAII AutoMajorGCProfilerEntry : public AutoGeckoProfilerEntry {
+ public:
+  explicit AutoMajorGCProfilerEntry(GCRuntime* gc);
+};
+
 class MOZ_RAII AutoTraceSession : public AutoLockAllAtoms,
                                   public AutoHeapSession {
  public:
