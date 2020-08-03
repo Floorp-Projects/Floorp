@@ -43,11 +43,6 @@ class ShareFragment : AppCompatDialogFragment() {
         viewModel.loadDevicesAndApps()
     }
 
-    override fun dismiss() {
-        consumePrompt { onDismiss() }
-        super.dismiss()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.ShareDialogStyle)
@@ -55,6 +50,7 @@ class ShareFragment : AppCompatDialogFragment() {
 
     override fun onPause() {
         super.onPause()
+        consumePrompt { onDismiss() }
         dismiss()
     }
 
