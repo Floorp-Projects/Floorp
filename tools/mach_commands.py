@@ -310,49 +310,74 @@ class PastebinProvider(object):
         return 1
 
 
-def mozregression_import():
-    # Lazy loading of mozregression.
-    # Note that only the mach_interface module should be used from this file.
-    try:
-        import mozregression.mach_interface
-    except ImportError:
-        return None
-    return mozregression.mach_interface
+class PypiBasedTool:
+    """
+    Helper for loading a tool that is hosted on pypi. The package is expected
+    to expose a `mach_interface` module which has `new_release_on_pypi`,
+    `parser`, and `run` functions.
+    """
+
+    def __init__(self, module_name, pypi_name=None):
+        self.name = module_name
+        self.pypi_name = pypi_name or module_name
+
+    def _import(self):
+        # Lazy loading of the tools mach interface.
+        # Note that only the mach_interface module should be used from this file.
+        import importlib
+        try:
+            return importlib.import_module('%s.mach_interface' % self.name)
+        except ImportError:
+            return None
+
+    def create_parser(self, subcommand=None):
+        # Create the command line parser.
+        # If the tool is not installed, or not up to date, it will
+        # first be installed.
+        cmd = MozbuildObject.from_environment()
+        cmd.activate_virtualenv()
+        tool = self._import()
+        if not tool:
+            # The tool is not here at all, install it
+            cmd.virtualenv_manager.install_pip_package(self.pypi_name)
+            print("%s was installed. please re-run your"
+                  " command. If you keep getting this message please "
+                  " manually run: 'pip install -U %s'." % (self.pypi_name, self.pypi_name))
+        else:
+            # Check if there is a new release available
+            release = tool.new_release_on_pypi()
+            if release:
+                print(release)
+                # there is one, so install it. Note that install_pip_package
+                # does not work here, so just run pip directly.
+                cmd.virtualenv_manager._run_pip([
+                    'install',
+                    '%s==%s' % (self.pypi_name, release)
+                ])
+                print("%s was updated to version %s. please"
+                      " re-run your command." % (self.pypi_name, release))
+            else:
+                # Tool is up to date, return the parser.
+                if subcommand:
+                    return tool.parser(subcommand)
+                else:
+                    return tool.parser()
+        # exit if we updated or installed mozregression because
+        # we may have already imported mozregression and running it
+        # as this may cause issues.
+        sys.exit(0)
+
+    def run(self, **options):
+        tool = self._import()
+        tool.run(options)
 
 
 def mozregression_create_parser():
     # Create the mozregression command line parser.
     # if mozregression is not installed, or not up to date, it will
     # first be installed.
-    cmd = MozbuildObject.from_environment()
-    cmd.activate_virtualenv()
-    mozregression = mozregression_import()
-    if not mozregression:
-        # mozregression is not here at all, install it
-        cmd.virtualenv_manager.install_pip_package('mozregression')
-        print("mozregression was installed. please re-run your"
-              " command. If you keep getting this message please "
-              " manually run: 'pip install -U mozregression'.")
-    else:
-        # check if there is a new release available
-        release = mozregression.new_release_on_pypi()
-        if release:
-            print(release)
-            # there is one, so install it. Note that install_pip_package
-            # does not work here, so just run pip directly.
-            cmd.virtualenv_manager._run_pip([
-                'install',
-                'mozregression==%s' % release
-            ])
-            print("mozregression was updated to version %s. please"
-                  " re-run your command." % release)
-        else:
-            # mozregression is up to date, return the parser.
-            return mozregression.parser()
-    # exit if we updated or installed mozregression because
-    # we may have already imported mozregression and running it
-    # as this may cause issues.
-    sys.exit(0)
+    loader = PypiBasedTool("mozregression")
+    return loader.create_parser()
 
 
 @CommandProvider
@@ -364,8 +389,8 @@ class MozregressionCommand(MachCommandBase):
              parser=mozregression_create_parser)
     def run(self, **options):
         self.activate_virtualenv()
-        mozregression = mozregression_import()
-        mozregression.run(options)
+        mozregression = PypiBasedTool("mozregression")
+        mozregression.run(**options)
 
 
 @CommandProvider
