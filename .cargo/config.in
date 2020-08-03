@@ -57,6 +57,11 @@ git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
 rev = "bce6358eb1026c13d2f1c6d365af37afe8869a86"
 
+[source."https://github.com/froydnj/getrandom"]
+git = "https://github.com/froydnj/getrandom"
+replace-with = "vendored-sources"
+rev = "d0302a506d320ac9691029eda41b04f5d72218bf"
+
 [source."https://github.com/djg/cubeb-pulse-rs"]
 git = "https://github.com/djg/cubeb-pulse-rs"
 replace-with = "vendored-sources"
