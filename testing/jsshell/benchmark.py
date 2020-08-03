@@ -28,7 +28,7 @@ with `ac_add_options --enable-js-shell` or specify it with `--binary`.
 class Benchmark(object):
     __metaclass__ = ABCMeta
     lower_is_better = True
-    should_alert = False
+    should_alert = True
 
     def __init__(self, shell, args=None, shell_name=None):
         self.shell = shell
