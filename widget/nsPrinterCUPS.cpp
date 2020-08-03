@@ -48,6 +48,14 @@ nsPrinterCUPS::GetSupportsDuplex(bool* aSupportsDuplex) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPrinterCUPS::GetSupportsColor(bool* aSupportsColor) {
+  MOZ_ASSERT(aSupportsColor);
+  // Dummy implementation waiting platform specific one.
+  *aSupportsColor = false;
+  return NS_OK;
+}
+
 bool nsPrinterCUPS::Supports(const char* option, const char* value) const {
   MOZ_ASSERT(mPrinterInfo);
   return mShim.mCupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter,

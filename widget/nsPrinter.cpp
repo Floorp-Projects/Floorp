@@ -32,3 +32,11 @@ nsPrinter::GetSupportsDuplex(bool* aSupportsDuplex) {
   *aSupportsDuplex = mSupportsDuplex;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPrinter::GetSupportsColor(bool* aSupportsColor) {
+  MOZ_ASSERT(aSupportsColor);
+  // Dummy implementation waiting platform specific one.
+  *aSupportsColor = false;
+  return NS_OK;
+}
