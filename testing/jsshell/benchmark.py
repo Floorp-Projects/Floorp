@@ -36,7 +36,7 @@ class Benchmark(object):
         self.shell_name = shell_name
 
     @abstractproperty
-    def units(self):
+    def unit(self):
         """Returns the unit of measurement of the benchmark."""
 
     @abstractproperty
@@ -88,7 +88,7 @@ class Benchmark(object):
                     'name': name,
                     'shouldAlert': self.should_alert,
                     'subtests': [],
-                    'units': self.units,
+                    'unit': self.unit,
                     'value': None
                 },
             ],
@@ -145,7 +145,7 @@ class RunOnceBenchmark(Benchmark):
 class Ares6(Benchmark):
     name = 'ares6'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'ARES-6')
-    units = 'ms'
+    unit = 'ms'
 
     @property
     def command(self):
@@ -203,7 +203,7 @@ class Ares6(Benchmark):
 class SixSpeed(RunOnceBenchmark):
     name = 'six-speed'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'six-speed')
-    units = 'ms'
+    unit = 'ms'
 
     @property
     def command(self):
@@ -231,7 +231,7 @@ class SixSpeed(RunOnceBenchmark):
 class SunSpider(RunOnceBenchmark):
     name = 'sunspider'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'SunSpider', 'sunspider-0.9.1')
-    units = 'ms'
+    unit = 'ms'
 
     @property
     def command(self):
@@ -260,7 +260,7 @@ class WebToolingBenchmark(Benchmark):
     name = 'web-tooling-benchmark'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'web-tooling-benchmark')
     main_js = 'cli.js'
-    units = 'score'
+    unit = 'score'
     lower_is_better = False
     subtests_lower_is_better = False
 
@@ -309,7 +309,7 @@ class WebToolingBenchmark(Benchmark):
 class Octane(RunOnceBenchmark):
     name = 'octane'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'octane')
-    units = 'score'
+    unit = 'score'
     lower_is_better = False
 
     @property
