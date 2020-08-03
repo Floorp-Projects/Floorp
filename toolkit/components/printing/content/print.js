@@ -301,13 +301,14 @@ class OrientationInput extends PrintUIControlMixin(HTMLElement) {
 }
 customElements.define("orientation-input", OrientationInput);
 
-class CopiesInput extends PrintUIControlMixin(HTMLElement) {
-  get templateId() {
-    return "copy-count-template";
+class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
+  connectedCallback() {
+    this.type = "number";
+    super.connectedCallback();
   }
 
   update(settings) {
-    this.querySelector("input").value = settings.numCopies;
+    this.value = settings.numCopies;
   }
 
   handleEvent(e) {
@@ -316,7 +317,9 @@ class CopiesInput extends PrintUIControlMixin(HTMLElement) {
     });
   }
 }
-customElements.define("copy-count-input", CopiesInput);
+customElements.define("copy-count-input", CopiesInput, {
+  extends: "input",
+});
 
 class PrintUIForm extends PrintUIControlMixin(HTMLElement) {
   initialize() {
