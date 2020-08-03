@@ -9,7 +9,6 @@
 #include "DOMSVGAnimatedNumberList.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGElement.h"
-#include "mozAutoDocUpdate.h"
 #include "nsError.h"
 #include "nsContentUtils.h"  // for NS_ENSURE_FINITE
 #include "mozilla/dom/SVGNumberBinding.h"
@@ -50,37 +49,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGNumber)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
-//----------------------------------------------------------------------
-// Helper class: AutoChangeNumberNotifier
-// Stack-based helper class to pair calls to WillChangeNumberList and
-// DidChangeNumberList.
-class MOZ_RAII AutoChangeNumberNotifier : public mozAutoDocUpdate {
- public:
-  explicit AutoChangeNumberNotifier(DOMSVGNumber* aNumber)
-      : mozAutoDocUpdate(aNumber->Element()->GetComposedDoc(), true),
-        mNumber(aNumber) {
-    MOZ_ASSERT(mNumber, "Expecting non-null number");
-    MOZ_ASSERT(mNumber->HasOwner(),
-               "Expecting list to have an owner for notification");
-    mEmptyOrOldValue =
-        mNumber->Element()->WillChangeNumberList(mNumber->mAttrEnum, *this);
-  }
-
-  ~AutoChangeNumberNotifier() {
-    mNumber->Element()->DidChangeNumberList(mNumber->mAttrEnum,
-                                            mEmptyOrOldValue, *this);
-    // Null check mNumber->mList, since DidChangeNumberList can run script,
-    // potentially removing mNumber from its list.
-    if (mNumber->mList && mNumber->mList->IsAnimating()) {
-      mNumber->Element()->AnimationNeedsResample();
-    }
-  }
-
- private:
-  DOMSVGNumber* const mNumber;
-  nsAttrValue mEmptyOrOldValue;
-};
 
 DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList* aList, uint8_t aAttrEnum,
                            uint32_t aListIndex, bool aIsAnimValItem)
@@ -130,7 +98,7 @@ void DOMSVGNumber::SetValue(float aValue, ErrorResult& aRv) {
     if (InternalItem() == aValue) {
       return;
     }
-    AutoChangeNumberNotifier notifier(this);
+    AutoChangeNumberListNotifier notifier(this);
     InternalItem() = aValue;
     return;
   }
