@@ -185,10 +185,6 @@ template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     const RangeBoundary& aPoint);
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     const RawRangeBoundary& aPoint);
-template Element* HTMLEditor::GetInvisibleBRElementAt(
-    const EditorDOMPoint& aPoint);
-template Element* HTMLEditor::GetInvisibleBRElementAt(
-    const EditorRawDOMPoint& aPoint);
 template nsIContent* HTMLEditor::FindNearEditableContent(
     const EditorDOMPoint& aPoint, nsIEditor::EDirection aDirection);
 template nsIContent* HTMLEditor::FindNearEditableContent(
@@ -4538,8 +4534,9 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
     }
 
     // Do br adjustment.
-    RefPtr<Element> invisibleBRElement =
-        GetInvisibleBRElementAt(EditorDOMPoint::AtEndOf(leftBlockElement));
+    RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
+        WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
+            *this, EditorDOMPoint::AtEndOf(leftBlockElement));
     EditActionResult ret(NS_OK);
     if (NS_WARN_IF(mergeListElements)) {
       // Since 2002, here was the following comment:
@@ -4580,11 +4577,11 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
       atRightBlockChild.Clear();
     }
 
-    if (!invisibleBRElement) {
+    if (!invisibleBRElementAtEndOfLeftBlockElement) {
       return ret;
     }
 
-    rv = DeleteNodeWithTransaction(*invisibleBRElement);
+    rv = DeleteNodeWithTransaction(*invisibleBRElementAtEndOfLeftBlockElement);
     if (NS_WARN_IF(Destroyed())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -4643,8 +4640,9 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
     }
 
     // Do br adjustment.
-    RefPtr<Element> invisibleBRElement =
-        GetInvisibleBRElementAt(atLeftBlockChild);
+    RefPtr<HTMLBRElement> invisibleBRElementBeforeLeftBlockElement =
+        WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
+            *this, atLeftBlockChild);
     EditActionResult ret(NS_OK);
     if (mergeListElements) {
       // XXX Why do we ignore the error from MoveChildrenWithTransaction()?
@@ -4737,11 +4735,11 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
       }
     }
 
-    if (!invisibleBRElement) {
+    if (!invisibleBRElementBeforeLeftBlockElement) {
       return ret;
     }
 
-    rv = DeleteNodeWithTransaction(*invisibleBRElement);
+    rv = DeleteNodeWithTransaction(*invisibleBRElementBeforeLeftBlockElement);
     if (NS_WARN_IF(Destroyed())) {
       return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -4770,8 +4768,9 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
     return EditActionIgnored(rv);
   }
   // Do br adjustment.
-  RefPtr<Element> invisibleBRElement =
-      GetInvisibleBRElementAt(EditorDOMPoint::AtEndOf(leftBlockElement));
+  RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
+      WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
+          *this, EditorDOMPoint::AtEndOf(leftBlockElement));
   EditActionResult ret(NS_OK);
   if (mergeListElements || leftBlockElement->NodeInfo()->NameAtom() ==
                                rightBlockElement->NodeInfo()->NameAtom()) {
@@ -4810,11 +4809,11 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
     }
   }
 
-  if (!invisibleBRElement) {
+  if (!invisibleBRElementAtEndOfLeftBlockElement) {
     return ret.MarkAsHandled();
   }
 
-  rv = DeleteNodeWithTransaction(*invisibleBRElement);
+  rv = DeleteNodeWithTransaction(*invisibleBRElementAtEndOfLeftBlockElement);
   if (NS_WARN_IF(Destroyed())) {
     return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -8262,22 +8261,6 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
     return EditActionResult(rv);
   }
   return EditActionHandled();
-}
-
-template <typename PT, typename CT>
-Element* HTMLEditor::GetInvisibleBRElementAt(
-    const EditorDOMPointBase<PT, CT>& aPoint) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(aPoint.IsSet());
-
-  if (aPoint.IsStartOfContainer()) {
-    return nullptr;
-  }
-
-  WSRunScanner wsScannerForPoint(*this, aPoint);
-  return wsScannerForPoint.StartsFromBRElement()
-             ? wsScannerForPoint.StartReasonBRElementPtr()
-             : nullptr;
 }
 
 size_t HTMLEditor::CollectChildren(

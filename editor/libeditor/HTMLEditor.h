@@ -2045,13 +2045,6 @@ class HTMLEditor final : public TextEditor,
       TreatEmptyTextNodes aTreatEmptyTextNodes);
 
   /**
-   * If aPoint follows invisible `<br>` element, returns the invisible `<br>`
-   * element.  Otherwise, nullptr.
-   */
-  template <typename PT, typename CT>
-  Element* GetInvisibleBRElementAt(const EditorDOMPointBase<PT, CT>& aPoint);
-
-  /**
    * JoinNodesWithTransaction() joins aLeftNode and aRightNode.  Content of
    * aLeftNode will be merged into aRightNode.  Actual implemenation of this
    * method is JoinNodesImpl().  So, see its explanation for the detail.

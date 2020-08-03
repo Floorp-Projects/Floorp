@@ -346,6 +346,36 @@ class MOZ_STACK_CLASS WSRunScanner final {
                                      const EditorDOMPoint& aPoint);
 
   /**
+   * GetPrecedingBRElementUnlessVisibleContentFound() scans a `<br>` element
+   * backward, but stops scanning it if the scanner finds visible character
+   * or something.  In other words, this method ignores only invisible
+   * white-spaces between `<br>` element and aPoint.
+   */
+  template <typename EditorDOMPointType>
+  MOZ_NEVER_INLINE_DEBUG static HTMLBRElement*
+  GetPrecedingBRElementUnlessVisibleContentFound(
+      const HTMLEditor& aHTMLEditor, const EditorDOMPointType& aPoint) {
+    MOZ_ASSERT(aPoint.IsSetAndValid());
+    // XXX This method behaves differently even in similar point.
+    //     If aPoint is in a text node following `<br>` element, reaches the
+    //     `<br>` element when all characters between the `<br>` and
+    //     aPoint are ASCII whitespaces.
+    //     But if aPoint is not in a text node, e.g., at start of an inline
+    //     element which is immediately after a `<br>` element, returns the
+    //     `<br>` element even if there is no invisible white-spaces.
+    if (aPoint.IsStartOfContainer()) {
+      return nullptr;
+    }
+    // TODO: Scan for end boundary is redundant in this case, we should optimize
+    //       it.
+    TextFragmentData textFragmentData(aPoint,
+                                      aHTMLEditor.GetActiveEditingHost());
+    return textFragmentData.StartsFromBRElement()
+               ? textFragmentData.StartReasonBRElementPtr()
+               : nullptr;
+  }
+
+  /**
    * GetStartReasonContent() and GetEndReasonContent() return a node which
    * was found by scanning from mScanStartPoint backward or  forward.  If there
    * was white-spaces or text from the point, returns the text node.  Otherwise,
