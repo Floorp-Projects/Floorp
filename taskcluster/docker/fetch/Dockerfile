@@ -18,6 +18,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       gnupg \
       bzip2 \
       git \
+      openssh-client \
       python3-requests \
       python3-zstandard \
       unzip

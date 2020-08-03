@@ -183,6 +183,10 @@ def make_task(config, jobs):
             },
         }
 
+        if job.get('secret', None):
+            task['scopes'] = ["secrets:get:" + job.get('secret')]
+            task['worker']['taskcluster-proxy'] = True
+
         if not taskgraph.fast:
             cache_name = task['label'].replace('{}-'.format(config.kind), '', 1)
 
@@ -295,6 +299,11 @@ def create_fetch_url_task(config, name, fetch):
     Required('revision'): text_type,
     Optional('artifact-name'): text_type,
     Optional('path-prefix'): text_type,
+    # ssh-key is a taskcluster secret path (e.g. project/civet/github-deploy-key)
+    # In the secret dictionary, the key should be specified as
+    #  "ssh_privkey": "-----BEGIN OPENSSH PRIVATE KEY-----\nkfksnb3jc..."
+    # n.b. The OpenSSH private key file format requires a newline at the end of the file.
+    Optional('ssh-key'): text_type,
 })
 def create_git_fetch_task(config, name, fetch):
     path_prefix = fetch.get('path-prefix')
@@ -318,10 +327,16 @@ def create_git_fetch_task(config, name, fetch):
         '/builds/worker/artifacts/%s' % artifact_name,
     ]
 
+    ssh_key = fetch.get('ssh-key')
+    if ssh_key:
+        args.append('--ssh-key-secret')
+        args.append(ssh_key)
+
     return {
         'command': args,
         'artifact_name': artifact_name,
         'digest_data': [fetch['revision'], path_prefix, artifact_name],
+        'secret': ssh_key
     }
 
 
