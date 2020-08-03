@@ -260,6 +260,10 @@ nsCString ConvertRequestHeadToString(nsHttpRequestHead& aRequestHead,
                                      bool aRequestBodyHasHeaders,
                                      bool aUsingConnect);
 
+bool SendDataInChunks(
+    const nsCString& aData, uint64_t aOffset, uint32_t aCount,
+    const std::function<bool(const nsCString&, uint64_t, uint32_t)>& aSendFunc);
+
 }  // namespace nsHttp
 
 //-----------------------------------------------------------------------------
