@@ -76,4 +76,11 @@ interface nsIHttpChannelAuthProvider : nsICancelable
    * weak references.
    */
   [must_use] void disconnect(in nsresult status);
+
+  /**
+   * Clear the proxy ident to not consider it invalid on re-athentication.
+   * Called when the channel finds out its transaction has been internally
+   * restarted.
+   */
+  void clearProxyIdent();
 };

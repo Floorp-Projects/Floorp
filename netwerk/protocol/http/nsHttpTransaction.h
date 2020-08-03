@@ -182,6 +182,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // connection from very start of the authentication process.
   void CheckForStickyAuthScheme();
   void CheckForStickyAuthSchemeAt(nsHttpAtom const& header);
+  bool IsStickyAuthSchemeAt(nsACString const& auth);
 
   // Called from WriteSegments.  Checks for conditions whether to throttle
   // reading the content.  When this returns true, WriteSegments returns
@@ -340,6 +341,10 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mResponseHeadTaken;
   UniquePtr<nsHttpHeaderArray> mForTakeResponseTrailers;
   bool mResponseTrailersTaken;
+
+  // Set when this transaction was restarted by call to Restart().  Used to tell
+  // the http channel to reset proxy authentication.
+  Atomic<bool> mRestarted;
 
   // The time when the transaction was submitted to the Connection Manager
   TimeStamp mPendingTime;
