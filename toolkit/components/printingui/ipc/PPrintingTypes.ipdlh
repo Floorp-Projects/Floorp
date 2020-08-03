@@ -72,8 +72,6 @@ struct PrintData {
   nsString deviceName;
   double printableWidthInInches;
   double printableHeightInInches;
-  bool isIFrameSelected;
-  bool isRangeSelection;
   uint8_t[] devModeData;
 
   /**
