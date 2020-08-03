@@ -1,1 +1,1 @@
-shortestPaths(this, [this], 5)
+shortestPaths([this], {start: this, maxNumPaths: 5})
