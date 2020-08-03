@@ -266,7 +266,7 @@ nsReturnRef<HRTFElevation> HRTFElevation::createBuiltin(int elevation,
   }
 
   return nsReturnRef<HRTFElevation>(
-      new HRTFElevation(&kernelListL, elevation, sampleRate));
+      new HRTFElevation(std::move(kernelListL), elevation, sampleRate));
 }
 
 nsReturnRef<HRTFElevation> HRTFElevation::createByInterpolatingSlices(
@@ -293,8 +293,8 @@ nsReturnRef<HRTFElevation> HRTFElevation::createByInterpolatingSlices(
   double angle = (1.0 - x) * hrtfElevation1->elevationAngle() +
                  x * hrtfElevation2->elevationAngle();
 
-  return nsReturnRef<HRTFElevation>(
-      new HRTFElevation(&kernelListL, static_cast<int>(angle), sampleRate));
+  return nsReturnRef<HRTFElevation>(new HRTFElevation(
+      std::move(kernelListL), static_cast<int>(angle), sampleRate));
 }
 
 void HRTFElevation::getKernelsFromAzimuth(

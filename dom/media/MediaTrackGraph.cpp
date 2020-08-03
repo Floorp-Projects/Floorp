@@ -1701,7 +1701,7 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
            LifecycleState_str[LifecycleStateRef()]));
     }
 
-    runnables.SwapElements(mUpdateRunnables);
+    runnables = std::move(mUpdateRunnables);
     for (uint32_t i = 0; i < mTrackUpdates.Length(); ++i) {
       TrackUpdate* update = &mTrackUpdates[i];
       if (update->mTrack) {
@@ -1729,7 +1729,7 @@ void MediaTrackGraphImpl::RunInStableState(bool aSourceIsMTG) {
     } else {
       if (LifecycleStateRef() <= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
         MessageBlock* block = mBackMessageQueue.AppendElement();
-        block->mMessages.SwapElements(mCurrentTaskMessageQueue);
+        block->mMessages = std::move(mCurrentTaskMessageQueue);
         EnsureNextIteration();
       }
 

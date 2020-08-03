@@ -40,9 +40,8 @@ namespace mozilla {
 template <typename T>
 class SharedChannelArrayBuffer : public ThreadSharedObject {
  public:
-  explicit SharedChannelArrayBuffer(nsTArray<nsTArray<T> >* aBuffers) {
-    mBuffers.SwapElements(*aBuffers);
-  }
+  explicit SharedChannelArrayBuffer(nsTArray<nsTArray<T> >&& aBuffers)
+      : mBuffers(std::move(aBuffers)) {}
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     size_t amount = 0;
@@ -349,7 +348,7 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
       }
       MOZ_ASSERT(channels > 0);
       c.mDuration = output[0].Length();
-      c.mBuffer = new mozilla::SharedChannelArrayBuffer<T>(&output);
+      c.mBuffer = new mozilla::SharedChannelArrayBuffer<T>(std::move(output));
       for (uint32_t i = 0; i < channels; i++) {
         c.mChannelData[i] = bufferPtrs[i];
       }
@@ -397,7 +396,7 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   AudioChunk* AppendAndConsumeChunk(AudioChunk* aChunk) {
     AudioChunk* chunk = AppendChunk(aChunk->mDuration);
     chunk->mBuffer = std::move(aChunk->mBuffer);
-    chunk->mChannelData.SwapElements(aChunk->mChannelData);
+    chunk->mChannelData = std::move(aChunk->mChannelData);
 
     MOZ_ASSERT(chunk->mBuffer || aChunk->mChannelData.IsEmpty(),
                "Appending invalid data ?");

@@ -179,7 +179,7 @@ class FilterInstance {
 
   const FilterDescription& ExtractDescriptionAndAdditionalImages(
       nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages) {
-    mInputImages.SwapElements(aOutAdditionalImages);
+    aOutAdditionalImages = std::move(mInputImages);
     return mFilterDescription;
   }
 

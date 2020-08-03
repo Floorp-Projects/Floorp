@@ -2758,7 +2758,7 @@ void PermissionManager::CompleteMigrations() {
   nsTArray<MigrationEntry> entries;
   {
     MonitorAutoLock lock(mMonitor);
-    entries.SwapElements(mMigrationEntries);
+    entries = std::move(mMigrationEntries);
   }
 
   for (const MigrationEntry& entry : entries) {
@@ -2786,7 +2786,7 @@ void PermissionManager::CompleteRead() {
   nsTArray<ReadEntry> entries;
   {
     MonitorAutoLock lock(mMonitor);
-    entries.SwapElements(mReadEntries);
+    entries = std::move(mReadEntries);
   }
 
   for (const ReadEntry& entry : entries) {

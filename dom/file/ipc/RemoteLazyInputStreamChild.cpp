@@ -225,7 +225,7 @@ RemoteLazyInputStreamChild::CreateStream() {
         // Move over our local state onto the new actor object.
         newActor->mWorkerRef = mWorkerRef;
         newActor->mState = eInactiveMigrating;
-        newActor->mPendingOperations.SwapElements(mPendingOperations);
+        newActor->mPendingOperations = std::move(mPendingOperations);
 
         // Create the actual stream object.
         stream = new RemoteLazyInputStream(newActor);

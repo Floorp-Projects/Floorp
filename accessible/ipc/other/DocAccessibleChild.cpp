@@ -177,7 +177,7 @@ static void AddRelation(Accessible* aAcc, RelationType aType,
   if (!targets.IsEmpty()) {
     RelationTargets* newRelation = aTargets->AppendElement(
         RelationTargets(static_cast<uint32_t>(aType), nsTArray<uint64_t>()));
-    newRelation->Targets().SwapElements(targets);
+    newRelation->Targets() = std::move(targets);
   }
 }
 

@@ -163,7 +163,7 @@ void ObservedDocShell::PopMarkers(
     }
   }
 
-  mTimelineMarkers.SwapElements(keptStartMarkers);
+  mTimelineMarkers = std::move(keptStartMarkers);
 }
 
 }  // namespace mozilla
