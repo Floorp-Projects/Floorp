@@ -228,7 +228,7 @@
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Betalingskort og adresser</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">Angiv som standard-browser</string>
+    <string name="preferences_set_as_default_browser">Angiv som standardbrowser</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Avanceret</string>
     <!-- Preference category for privacy settings -->

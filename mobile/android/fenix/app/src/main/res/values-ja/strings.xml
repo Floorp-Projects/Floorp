@@ -284,7 +284,7 @@
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">検索エンジンを表示</string>
     <!-- Preference title for switch preference to show search suggestions -->
-    <string name="preferences_show_search_suggestions">検索語句の候補を表示</string>
+    <string name="preferences_show_search_suggestions">検索語句の候補を表示する</string>
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">音声検索を表示</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
@@ -1488,5 +1488,5 @@
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with_2">今回だけ使う検索エンジン:</string>
     <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">検索ショートカットを表示</string>
+    <string name="preferences_show_search_shortcuts">検索ショートカットを表示する</string>
     </resources>

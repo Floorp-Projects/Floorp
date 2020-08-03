@@ -185,7 +185,7 @@
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">검색 엔진 설정</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">이번에 사용할 검색 엔진:</string>
+    <string name="search_engines_search_with">이번만 검색:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">클립보드로부터 링크 채우기</string>
 
@@ -1538,7 +1538,7 @@
     <string name="search_shortcuts_search_with">검색</string>
 
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">이번에 사용할 검색 엔진:</string>
+    <string name="search_shortcuts_search_with_2">이번만 검색:</string>
     <!-- Preference title for switch preference to show search shortcuts -->
     <string name="preferences_show_search_shortcuts">검색 바로 가기 표시</string>
     </resources>
