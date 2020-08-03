@@ -28,6 +28,8 @@ class nsCOMArray_base {
   nsCOMArray_base() = default;
   explicit nsCOMArray_base(int32_t aCount) : mArray(aCount) {}
   nsCOMArray_base(const nsCOMArray_base& aOther);
+  nsCOMArray_base(nsCOMArray_base&& aOther) = default;
+  nsCOMArray_base& operator=(nsCOMArray_base&& aOther) = default;
   ~nsCOMArray_base();
 
   int32_t IndexOf(nsISupports* aObject, uint32_t aStartIndex = 0) const;
@@ -214,14 +216,11 @@ class nsCOMArray : public nsCOMArray_base {
   nsCOMArray() = default;
   explicit nsCOMArray(int32_t aCount) : nsCOMArray_base(aCount) {}
   explicit nsCOMArray(const nsCOMArray<T>& aOther) : nsCOMArray_base(aOther) {}
-  nsCOMArray(nsCOMArray<T>&& aOther) { SwapElements(aOther); }
+  nsCOMArray(nsCOMArray<T>&& aOther) = default;
   ~nsCOMArray() = default;
 
   // We have a move assignment operator, but no copy assignment operator.
-  nsCOMArray<T>& operator=(nsCOMArray<T>&& aOther) {
-    SwapElements(aOther);
-    return *this;
-  }
+  nsCOMArray<T>& operator=(nsCOMArray<T>&& aOther) = default;
 
   // these do NOT refcount on the way out, for speed
   T* ObjectAt(int32_t aIndex) const {

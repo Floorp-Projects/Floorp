@@ -44,12 +44,12 @@ FilePickerParent::~FilePickerParent() = default;
 // the same runnable on the main thread.
 // 3. The main thread sends the results over IPC.
 FilePickerParent::IORunnable::IORunnable(FilePickerParent* aFPParent,
-                                         nsTArray<nsCOMPtr<nsIFile>>& aFiles,
+                                         nsTArray<nsCOMPtr<nsIFile>>&& aFiles,
                                          bool aIsDirectory)
     : mozilla::Runnable("dom::FilePickerParent::IORunnable"),
       mFilePickerParent(aFPParent),
+      mFiles(std::move(aFiles)),
       mIsDirectory(aIsDirectory) {
-  mFiles.SwapElements(aFiles);
   MOZ_ASSERT_IF(aIsDirectory, mFiles.Length() == 1);
 }
 
@@ -165,7 +165,7 @@ void FilePickerParent::SendFilesOrDirectories(
   }
 
   InputBlobs inblobs;
-  inblobs.blobs().SwapElements(ipcBlobs);
+  inblobs.blobs() = std::move(ipcBlobs);
 
   Unused << Send__delete__(this, inblobs, mResult);
 }
@@ -207,8 +207,8 @@ void FilePickerParent::Done(int16_t aResult) {
   }
 
   MOZ_ASSERT(!mRunnable);
-  mRunnable =
-      new IORunnable(this, files, mMode == nsIFilePicker::modeGetFolder);
+  mRunnable = new IORunnable(this, std::move(files),
+                             mMode == nsIFilePicker::modeGetFolder);
 
   // Dispatch to background thread to do I/O:
   if (!mRunnable->Dispatch()) {

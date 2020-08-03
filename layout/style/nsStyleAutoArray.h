@@ -36,12 +36,8 @@ class nsStyleAutoArray {
     return !(*this == aOther);
   }
 
-  nsStyleAutoArray& operator=(nsStyleAutoArray&& aOther) {
-    mFirstElement = aOther.mFirstElement;
-    mOtherElements.SwapElements(aOther.mOtherElements);
-
-    return *this;
-  }
+  nsStyleAutoArray(nsStyleAutoArray&& aOther) = default;
+  nsStyleAutoArray& operator=(nsStyleAutoArray&& aOther) = default;
 
   size_t Length() const { return mOtherElements.Length() + 1; }
   const T& operator[](size_t aIndex) const {

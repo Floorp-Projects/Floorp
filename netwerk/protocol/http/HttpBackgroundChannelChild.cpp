@@ -106,8 +106,7 @@ void HttpBackgroundChannelChild::OnStartRequestReceived(
 
   mStartReceived = true;
 
-  nsTArray<nsCOMPtr<nsIRunnable>> runnables;
-  runnables.SwapElements(mQueuedRunnables);
+  nsTArray<nsCOMPtr<nsIRunnable>> runnables = std::move(mQueuedRunnables);
 
   for (const auto& event : runnables) {
     // Note: these runnables call Recv* methods on HttpBackgroundChannelChild

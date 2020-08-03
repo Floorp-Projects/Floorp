@@ -233,8 +233,7 @@ void ReleaseObjects(nsTArray<nsISupports*>& aArray) {
 }
 
 void nsCOMArray_base::Clear() {
-  nsTArray<nsISupports*> objects;
-  objects.SwapElements(mArray);
+  nsTArray<nsISupports*> objects = std::move(mArray);
   ReleaseObjects(objects);
 }
 

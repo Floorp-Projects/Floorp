@@ -262,8 +262,7 @@ class FrameProperties {
    * Remove and destroy all property values for the frame.
    */
   void RemoveAll(const nsIFrame* aFrame) {
-    nsTArray<PropertyValue> toDelete;
-    toDelete.SwapElements(mProperties);
+    nsTArray<PropertyValue> toDelete = std::move(mProperties);
     for (auto& prop : toDelete) {
       prop.DestroyValueFor(aFrame);
     }
