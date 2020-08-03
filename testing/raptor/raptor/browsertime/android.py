@@ -58,6 +58,14 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 '--android',
             ]
         else:
+            activity = self.config["activity"]
+            if self.config["app"] == "fenix":
+                LOG.info(
+                    "Changing initial activity to "
+                    "`mozilla.telemetry.glean.debug.GleanDebugActivity`"
+                )
+                activity = "mozilla.telemetry.glean.debug.GleanDebugActivity"
+
             args_list = [
                 "--browser", "firefox",
                 "--android",
@@ -66,7 +74,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 # actually do things on an Android device.
                 "--firefox.binaryPath", self.browsertime_node,
                 "--firefox.android.package", self.config["binary"],
-                "--firefox.android.activity", self.config["activity"],
+                "--firefox.android.activity", activity,
             ]
 
         # if running on Fenix we must add the intent as we use a special non-default one there
@@ -75,6 +83,17 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             args_list.extend(
                 ["--firefox.android.intentArgument", self.config["intent"]]
             )
+
+            # Change glean ping names in all cases on Fenix
+            args_list.extend([
+                "--firefox.android.intentArgument=--es",
+                "--firefox.android.intentArgument=startNext",
+                "--firefox.android.intentArgument=" + self.config["activity"],
+                "--firefox.android.intentArgument=--esa",
+                "--firefox.android.intentArgument=sourceTags",
+                "--firefox.android.intentArgument=automation",
+            ])
+
             args_list.extend(["--firefox.android.intentArgument=-d"])
             args_list.extend(["--firefox.android.intentArgument", str("about:blank")])
 
