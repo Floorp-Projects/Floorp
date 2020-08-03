@@ -7,7 +7,6 @@
 #ifndef DOM_SVG_DOMSVGPOINTLIST_H_
 #define DOM_SVG_DOMSVGPOINTLIST_H_
 
-#include "mozAutoDocUpdate.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "SVGElement.h"
@@ -25,32 +24,6 @@ namespace dom {
 
 class DOMSVGPoint;
 class nsISVGPoint;
-
-//----------------------------------------------------------------------
-// Helper class: AutoChangePointListNotifier
-// Stack-based helper class to pair calls to WillChangePointList and
-// DidChangePointList. Used by DOMSVGPoint and DOMSVGPointList.
-template <class T>
-class MOZ_RAII AutoChangePointListNotifier : public mozAutoDocUpdate {
- public:
-  explicit AutoChangePointListNotifier(T* aValue)
-      : mozAutoDocUpdate(aValue->Element()->GetComposedDoc(), true),
-        mValue(aValue) {
-    MOZ_ASSERT(mValue, "Expecting non-null value");
-    mEmptyOrOldValue = mValue->Element()->WillChangePointList(*this);
-  }
-
-  ~AutoChangePointListNotifier() {
-    mValue->Element()->DidChangePointList(mEmptyOrOldValue, *this);
-    if (mValue->AttrIsAnimating()) {
-      mValue->Element()->AnimationNeedsResample();
-    }
-  }
-
- private:
-  T* const mValue;
-  nsAttrValue mEmptyOrOldValue;
-};
 
 /**
  * Class DOMSVGPointList
@@ -78,12 +51,9 @@ class MOZ_RAII AutoChangePointListNotifier : public mozAutoDocUpdate {
  * Our DOM items are created lazily on demand as and when script requests them.
  */
 class DOMSVGPointList final : public nsISupports, public nsWrapperCache {
-  template <class T>
   friend class AutoChangePointListNotifier;
   friend class nsISVGPoint;
   friend class DOMSVGPoint;
-  using AutoChangePointListNotifier =
-      AutoChangePointListNotifier<DOMSVGPointList>;
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
