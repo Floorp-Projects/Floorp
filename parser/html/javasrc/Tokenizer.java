@@ -37,6 +37,7 @@ package nu.validator.htmlparser.impl;
 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.Locator;
+import org.xml.sax.ext.Locator2;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -66,7 +67,7 @@ import nu.validator.htmlparser.common.XmlViolationPolicy;
  * @version $Id$
  * @author hsivonen
  */
-public class Tokenizer implements Locator {
+public class Tokenizer implements Locator, Locator2 {
 
     private static final int DATA_AND_RCDATA_MASK = ~1;
 
@@ -862,6 +863,24 @@ public class Tokenizer implements Locator {
      */
     public String getSystemId() {
         return systemId;
+    }
+
+    /**
+     * @see org.xml.sax.ext.Locator2#getXMLVersion()
+     */
+    public String getXMLVersion() {
+        return "1.0";
+    }
+
+    /**
+     * @see org.xml.sax.ext.Locator2#getXMLVersion()
+     */
+    public String getEncoding() {
+        try {
+            return encodingDeclarationHandler == null ? null : encodingDeclarationHandler.getCharacterEncoding();
+        } catch (SAXException e) {
+            return null;
+        }
     }
 
     // end Locator impl
