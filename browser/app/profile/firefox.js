@@ -169,6 +169,8 @@ pref("app.update.staging.enabled", true);
   pref("app.update.BITS.enabled", true);
 #endif
 
+pref("app.update.langpack.enabled", false);
+
 // Symmetric (can be overridden by individual extensions) update preferences.
 // e.g.
 //  extensions.{GUID}.update.enabled
