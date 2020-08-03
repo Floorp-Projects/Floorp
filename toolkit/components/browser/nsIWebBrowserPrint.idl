@@ -46,16 +46,6 @@ interface nsIWebBrowserPrint : nsISupports
   readonly attribute boolean doingPrintPreview;
 
   /**
-   * This returns whether there is an IFrame selected
-   */
-  readonly attribute boolean isIFrameSelected;
-
-  /**
-   * This returns whether there is a "range" selection
-   */
-  readonly attribute boolean isRangeSelection;
-
-  /**
    * This returns the total number of pages for the Print Preview
    */
   readonly attribute long printPreviewNumPages;
