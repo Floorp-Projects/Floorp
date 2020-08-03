@@ -21,7 +21,6 @@ struct DisplayListData {
   wr::IdNamespace mIdNamespace;
   LayoutDeviceRect mRect;
   nsTArray<WebRenderParentCommand> mCommands;
-  wr::LayoutSize mContentSize;
   Maybe<mozilla::ipc::ByteBuf> mDL;
   wr::BuiltDisplayListDescriptor mDLDesc;
   nsTArray<wr::PipelineId> mRemotePipelineIds;

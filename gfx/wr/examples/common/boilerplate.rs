@@ -201,7 +201,7 @@ pub fn main_wrapper<E: Example>(
     let epoch = Epoch(0);
     let pipeline_id = PipelineId(0, 0);
     let layout_size = device_size.to_f32() / euclid::Scale::new(device_pixel_ratio);
-    let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
+    let mut builder = DisplayListBuilder::new(pipeline_id);
     let mut txn = Transaction::new();
 
     example.render(
@@ -304,7 +304,7 @@ pub fn main_wrapper<E: Example>(
         }
 
         if custom_event {
-            let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
+            let mut builder = DisplayListBuilder::new(pipeline_id);
 
             example.render(
                 &mut api,

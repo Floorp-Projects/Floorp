@@ -414,7 +414,6 @@ impl<'a> SceneBuilder<'a> {
         self.push_root(
             root_pipeline.pipeline_id,
             &root_pipeline.viewport_size,
-            &root_pipeline.content_size,
         );
 
         let mut stack = vec![BuildContext {
@@ -700,10 +699,6 @@ impl<'a> SceneBuilder<'a> {
             &info.bounds.translate(current_offset),
             spatial_node_index,
         );
-        let content_size = self.snap_size(
-            &pipeline.content_size,
-            spatial_node_index,
-        );
 
         let spatial_node_index = self.push_reference_frame(
             SpatialId::root_reference_frame(iframe_pipeline_id),
@@ -722,7 +717,7 @@ impl<'a> SceneBuilder<'a> {
             Some(ExternalScrollId(0, iframe_pipeline_id)),
             iframe_pipeline_id,
             &iframe_rect,
-            &content_size,
+            &bounds.size,
             ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot,
             LayoutVector2D::zero(),
@@ -792,18 +787,6 @@ impl<'a> SceneBuilder<'a> {
             common,
             Some(bounds),
         )
-    }
-
-    fn snap_size(
-        &mut self,
-        size: &LayoutSize,
-        target_spatial_node: SpatialNodeIndex,
-    ) -> LayoutSize {
-        self.snap_to_device.set_target_spatial_node(
-            target_spatial_node,
-            &self.spatial_tree
-        );
-        self.snap_to_device.snap_size(size)
     }
 
     pub fn snap_rect(
@@ -1979,7 +1962,6 @@ impl<'a> SceneBuilder<'a> {
         &mut self,
         pipeline_id: PipelineId,
         viewport_size: &LayoutSize,
-        content_size: &LayoutSize,
     ) {
         if let ChasePrimitive::Id(id) = self.config.chase_primitive {
             println!("Chasing {:?} by index", id);
@@ -1996,10 +1978,6 @@ impl<'a> SceneBuilder<'a> {
             LayoutVector2D::zero(),
         );
 
-        let content_size = self.snap_size(
-            content_size,
-            spatial_node_index,
-        );
         let viewport_rect = self.snap_rect(
             &LayoutRect::new(LayoutPoint::zero(), *viewport_size),
             spatial_node_index,
@@ -2011,7 +1989,7 @@ impl<'a> SceneBuilder<'a> {
             Some(ExternalScrollId(0, pipeline_id)),
             pipeline_id,
             &viewport_rect,
-            &content_size,
+            &viewport_rect.size,
             ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot,
             LayoutVector2D::zero(),

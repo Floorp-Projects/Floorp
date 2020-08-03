@@ -399,7 +399,7 @@ fn main() {
     txn.set_root_pipeline(root_pipeline_id);
 
     if let Invalidations::Scrolling = inv_mode {
-        let mut root_builder = DisplayListBuilder::new(root_pipeline_id, layout_size);
+        let mut root_builder = DisplayListBuilder::new(root_pipeline_id);
 
         build_display_list(
             &mut root_builder,
@@ -437,7 +437,7 @@ fn main() {
 
             match inv_mode {
                 Invalidations::Small | Invalidations::Large => {
-                    let mut root_builder = DisplayListBuilder::new(root_pipeline_id, layout_size);
+                    let mut root_builder = DisplayListBuilder::new(root_pipeline_id);
 
                     build_display_list(
                         &mut root_builder,

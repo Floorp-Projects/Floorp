@@ -103,7 +103,6 @@ class TransactionBuilder final {
   void SetDisplayList(const gfx::DeviceColor& aBgColor, Epoch aEpoch,
                       const wr::LayoutSize& aViewportSize,
                       wr::WrPipelineId pipeline_id,
-                      const wr::LayoutSize& content_size,
                       wr::BuiltDisplayListDescriptor dl_descriptor,
                       wr::Vec<uint8_t>& dl_data);
 
@@ -397,9 +396,8 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
 /// WebRenderFrameBuilder instead, so the interface may change a bit.
 class DisplayListBuilder final {
  public:
-  DisplayListBuilder(wr::PipelineId aId, const wr::LayoutSize& aContentSize,
-                     size_t aCapacity = 0,
-                     layers::DisplayItemCache* aCache = nullptr);
+  explicit DisplayListBuilder(wr::PipelineId aId, size_t aCapacity = 0,
+                              layers::DisplayItemCache* aCache = nullptr);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
@@ -412,8 +410,7 @@ class DisplayListBuilder final {
              const Maybe<usize>& aEnd);
   void DumpSerializedDisplayList();
 
-  void Finalize(wr::LayoutSize& aOutContentSizes,
-                wr::BuiltDisplayList& aOutDisplayList);
+  void Finalize(wr::BuiltDisplayList& aOutDisplayList);
   void Finalize(layers::DisplayListData& aOutTransaction);
 
   Maybe<wr::WrSpatialId> PushStackingContext(

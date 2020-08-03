@@ -292,9 +292,8 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   WrBridge()->BeginTransaction();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  wr::LayoutSize contentSize{(float)size.width, (float)size.height};
 
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize,
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(),
                                  mLastDisplayListSize, &mDisplayItemCache);
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());

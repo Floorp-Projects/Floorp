@@ -1726,7 +1726,6 @@ pub extern "C" fn wr_transaction_set_display_list(
     background: ColorF,
     viewport_size: LayoutSize,
     pipeline_id: WrPipelineId,
-    content_size: LayoutSize,
     dl_descriptor: BuiltDisplayListDescriptor,
     dl_data: &mut WrVecU8,
 ) {
@@ -1744,7 +1743,7 @@ pub extern "C" fn wr_transaction_set_display_list(
         epoch,
         color,
         viewport_size,
-        (pipeline_id, content_size, dl),
+        (pipeline_id, dl),
         preserve_frame_state,
     );
 }
@@ -2031,7 +2030,7 @@ pub unsafe extern "C" fn wr_transaction_clear_display_list(
     pipeline_id: WrPipelineId,
 ) {
     let preserve_frame_state = true;
-    let frame_builder = WebRenderFrameBuilder::new(pipeline_id, LayoutSize::zero());
+    let frame_builder = WebRenderFrameBuilder::new(pipeline_id);
 
     txn.set_display_list(
         epoch,
@@ -2250,20 +2249,19 @@ pub struct WebRenderFrameBuilder {
 }
 
 impl WebRenderFrameBuilder {
-    pub fn new(root_pipeline_id: WrPipelineId, content_size: LayoutSize) -> WebRenderFrameBuilder {
+    pub fn new(root_pipeline_id: WrPipelineId) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
-            dl_builder: DisplayListBuilder::new(root_pipeline_id, content_size),
+            dl_builder: DisplayListBuilder::new(root_pipeline_id),
         }
     }
     pub fn with_capacity(
         root_pipeline_id: WrPipelineId,
-        content_size: LayoutSize,
         capacity: usize,
     ) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
-            dl_builder: DisplayListBuilder::with_capacity(root_pipeline_id, content_size, capacity),
+            dl_builder: DisplayListBuilder::with_capacity(root_pipeline_id, capacity),
         }
     }
 }
@@ -2275,12 +2273,12 @@ pub struct WrState {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId, content_size: LayoutSize, capacity: usize) -> *mut WrState {
+pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId, capacity: usize) -> *mut WrState {
     assert!(unsafe { !is_in_render_thread() });
 
     let state = Box::new(WrState {
         pipeline_id: pipeline_id,
-        frame_builder: WebRenderFrameBuilder::with_capacity(pipeline_id, content_size, capacity),
+        frame_builder: WebRenderFrameBuilder::with_capacity(pipeline_id, capacity),
         current_tag: None,
     });
 
@@ -3693,16 +3691,14 @@ pub extern "C" fn wr_dump_serialized_display_list(state: &mut WrState) {
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_finalize_builder(
     state: &mut WrState,
-    content_size: &mut LayoutSize,
     dl_descriptor: &mut BuiltDisplayListDescriptor,
     dl_data: &mut WrVecU8,
 ) {
     let frame_builder = mem::replace(
         &mut state.frame_builder,
-        WebRenderFrameBuilder::new(state.pipeline_id, LayoutSize::zero()),
+        WebRenderFrameBuilder::new(state.pipeline_id),
     );
-    let (_, size, dl) = frame_builder.dl_builder.finalize();
-    *content_size = LayoutSize::new(size.width, size.height);
+    let (_, dl) = frame_builder.dl_builder.finalize();
     let (data, descriptor) = dl.into_data();
     *dl_data = WrVecU8::from_vec(data);
     *dl_descriptor = descriptor;

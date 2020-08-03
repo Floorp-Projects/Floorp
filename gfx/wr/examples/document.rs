@@ -90,25 +90,22 @@ impl Example for App {
     fn render(
         &mut self,
         api: &mut RenderApi,
-        base_builder: &mut DisplayListBuilder,
+        _base_builder: &mut DisplayListBuilder,
         _txn: &mut Transaction,
-        device_size: DeviceIntSize,
+        _device_size: DeviceIntSize,
         _pipeline_id: PipelineId,
         _: DocumentId,
     ) {
         if self.documents.is_empty() {
-            let device_pixel_ratio = device_size.width as f32 /
-                base_builder.content_size().width;
             // this is the first run, hack around the boilerplate,
             // which assumes an example only needs one document
-            self.init(api,  device_pixel_ratio);
+            self.init(api, 1.0);
         }
 
         for doc in &self.documents {
             let space_and_clip = SpaceAndClipInfo::root_scroll(doc.pipeline_id);
             let mut builder = DisplayListBuilder::new(
                 doc.pipeline_id,
-                doc.content_rect.size,
             );
             let local_rect = LayoutRect::new(
                 LayoutPoint::zero(),
