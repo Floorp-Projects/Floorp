@@ -896,13 +896,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             warn("Comments seen before doctype. Internet Explorer will go into the quirks mode.",
                                     firstCommentLocation);
                         }
-                        if ("-//W3C//DTD HTML 4.01 Transitional//EN".equals(publicIdentifier)) {
-                            if (!"http://www.w3.org/TR/html4/loose.dtd".equals(systemIdentifier)) {
-                                warn("The doctype did not contain the system identifier prescribed by the HTML 4.01 specification. Expected \u201C<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\u201D.");
-                            }
-                        } else {
-                            err("Almost standards mode doctype. Expected e.g. \u201C<!DOCTYPE html>\u201D.");
-                        }
+                        errAlmostStandardsDoctype();
                         documentModeInternal(
                                 DocumentMode.ALMOST_STANDARDS_MODE,
                                 publicIdentifier, systemIdentifier, html4);
