@@ -4485,8 +4485,6 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
     }
   }
 
-  AutoTransactionsConserveSelection dontChangeMySelection(*this);
-
   // If the left block element is in the right block element, move the hard
   // line including the right block element to end of the left block.
   // However, if we are merging list elements, we don't join them.
