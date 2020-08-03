@@ -436,3 +436,96 @@ add_task(async function testExceptionListRemoteSettings() {
   peuService.unregisterExceptionListObserver(obs);
   await cleanup();
 });
+
+add_task(async function testWildcardExceptionListPref() {
+  info("Starting Dynamic FPI wirdcard exception list test pref");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.restrict3rdpartystorage.heuristic.recently_visited", false],
+    ],
+  });
+
+  info("Creating new tabs");
+  let tabThirdParty = BrowserTestUtils.addTab(
+    gBrowser,
+    TEST_3RD_PARTY_PARTITIONED_PAGE
+  );
+  gBrowser.selectedTab = tabThirdParty;
+
+  let browserThirdParty = gBrowser.getBrowserForTab(tabThirdParty);
+  await BrowserTestUtils.browserLoaded(browserThirdParty);
+
+  let tabFirstParty = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+  gBrowser.selectedTab = tabFirstParty;
+
+  let browserFirstParty = gBrowser.getBrowserForTab(tabFirstParty);
+  await BrowserTestUtils.browserLoaded(browserFirstParty);
+
+  info("initializing...");
+  await Promise.all([
+    checkData(browserFirstParty, { firstParty: "", thirdParty: "" }),
+    checkData(browserThirdParty, { firstParty: "" }),
+  ]);
+
+  info("fill default data");
+  await Promise.all([
+    createDataInFirstParty(browserFirstParty, "firstParty"),
+    createDataInThirdParty(browserFirstParty, "thirdParty"),
+    createDataInFirstParty(browserThirdParty, "ExceptionListFirstParty"),
+  ]);
+
+  info("check initial data");
+  await Promise.all([
+    checkData(browserFirstParty, {
+      firstParty: "firstParty",
+      thirdParty: "thirdParty",
+    }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
+  ]);
+
+  info("set wildcard (1st-party) pref");
+  Services.prefs.setStringPref(
+    EXCEPTION_LIST_PREF_NAME,
+    `*,${TEST_3RD_PARTY_DOMAIN}`
+  );
+
+  info("check wildcard (1st-party) data");
+  await Promise.all([
+    checkData(browserFirstParty, {
+      firstParty: "firstParty",
+      thirdParty: "ExceptionListFirstParty",
+    }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
+  ]);
+
+  info("set invalid exception list pref");
+  Services.prefs.setStringPref(EXCEPTION_LIST_PREF_NAME, "*,*");
+
+  info("check initial data");
+  await Promise.all([
+    checkData(browserFirstParty, {
+      firstParty: "firstParty",
+      thirdParty: "thirdParty",
+    }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
+  ]);
+
+  info("set wildcard (3rd-party) pref");
+  Services.prefs.setStringPref(EXCEPTION_LIST_PREF_NAME, `${TEST_DOMAIN},*`);
+
+  info("check wildcard (3rd-party) data");
+  await Promise.all([
+    checkData(browserFirstParty, {
+      firstParty: "firstParty",
+      thirdParty: "ExceptionListFirstParty",
+    }),
+    checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
+  ]);
+
+  info("Removing the tab");
+  BrowserTestUtils.removeTab(tabFirstParty);
+  BrowserTestUtils.removeTab(tabThirdParty);
+
+  await cleanup();
+});
