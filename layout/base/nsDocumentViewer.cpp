@@ -3432,24 +3432,6 @@ nsDocumentViewer::GetPrintPreviewNumPages(int32_t* aPrintPreviewNumPages) {
   return *aPrintPreviewNumPages > 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::GetIsIFrameSelected(bool* aIsIFrameSelected) {
-  *aIsIFrameSelected = false;
-  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-
-  *aIsIFrameSelected = mPrintJob->IsIFrameSelected();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::GetIsRangeSelection(bool* aIsRangeSelection) {
-  *aIsRangeSelection = false;
-  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-
-  *aIsRangeSelection = mPrintJob->IsRangeSelection();
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------------------
 // Printing/Print Preview Helpers
 //----------------------------------------------------------------------------------

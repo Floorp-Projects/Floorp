@@ -119,8 +119,6 @@ class nsPrintJob final : public nsIObserver,
   bool IsDoingPrint() const { return mIsDoingPrinting; }
   bool IsDoingPrintPreview() const { return mIsDoingPrintPreview; }
   bool HasEverPrinted() const { return mHasEverPrinted; }
-  bool IsIFrameSelected();
-  bool IsRangeSelection();
   /// If the returned value is not greater than zero, an error occurred.
   int32_t GetPrintPreviewNumPages();
   already_AddRefed<nsIPrintSettings> GetCurrentPrintSettings();
@@ -299,7 +297,6 @@ class nsPrintJob final : public nsIObserver,
   bool mIsDestroying = false;
   bool mDisallowSelectionPrint = false;
   bool mIsForModalWindow = false;
-  bool mHasMozPrintCallback = false;
 };
 
 #endif  // nsPrintJob_h

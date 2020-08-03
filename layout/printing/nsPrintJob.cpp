@@ -998,29 +998,6 @@ nsresult nsPrintJob::PrintPreview(
 }
 
 //----------------------------------------------------------------------------------
-bool nsPrintJob::IsIFrameSelected() {
-  // Get the docshell for this documentviewer
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-  // Get the currently focused window
-  nsCOMPtr<nsPIDOMWindowOuter> currentFocusWin = FindFocusedDOMWindow();
-  if (currentFocusWin && docShell) {
-    // Get whether the doc contains a frameset
-    // Also, check to see if the currently focus docshell
-    // is a child of this docshell
-    bool isParentFrameSet;
-    return IsThereAnIFrameSelected(docShell, currentFocusWin, isParentFrameSet);
-  }
-  return false;
-}
-
-//----------------------------------------------------------------------------------
-bool nsPrintJob::IsRangeSelection() {
-  // Get the currently focused window
-  nsCOMPtr<nsPIDOMWindowOuter> currentFocusWin = FindFocusedDOMWindow();
-  return IsThereARangeSelection(currentFocusWin);
-}
-
-//----------------------------------------------------------------------------------
 int32_t nsPrintJob::GetPrintPreviewNumPages() {
   // When calling this function, the FinishPrintPreview() function might not
   // been called as there are still some
