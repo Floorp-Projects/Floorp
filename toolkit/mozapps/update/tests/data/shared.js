@@ -49,6 +49,7 @@ const PREF_APP_UPDATE_STAGING_ENABLED = "app.update.staging.enabled";
 const PREF_APP_UPDATE_UNSUPPORTED_URL = "app.update.unsupported.url";
 const PREF_APP_UPDATE_URL_DETAILS = "app.update.url.details";
 const PREF_APP_UPDATE_URL_MANUAL = "app.update.url.manual";
+const PREF_APP_UPDATE_LANGPACK_ENABLED = "app.update.langpack.enabled";
 
 const PREFBRANCH_APP_PARTNER = "app.partner.";
 const PREF_DISTRIBUTION_ID = "distribution.id";
