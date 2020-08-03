@@ -46,12 +46,7 @@ global.loader = {
       global[name] = fn();
     } catch (_) {}
   },
-  lazyRequireGetter: (context, name, path, destruct) => {
-    if (path === "devtools/shared/async-storage") {
-      global[
-        name
-      ] = require("devtools/client/webconsole/test/node/fixtures/async-storage");
-    }
+  lazyRequireGetter: (context, names, path, destruct) => {
     const excluded = [
       "Debugger",
       "devtools/shared/event-emitter",
@@ -64,8 +59,20 @@ global.loader = {
       "devtools/client/shared/focus",
     ];
     if (!excluded.includes(path)) {
-      const module = require(path);
-      global[name] = destruct ? module[name] : module;
+      if (!Array.isArray(names)) {
+        names = [names];
+      }
+
+      for (const name of names) {
+        if (path === "devtools/shared/async-storage") {
+          global[
+            name
+          ] = require("devtools/client/webconsole/test/node/fixtures/async-storage");
+        } else {
+          const module = require(path);
+          global[name] = destruct ? module[name] : module;
+        }
+      }
     }
   },
 };

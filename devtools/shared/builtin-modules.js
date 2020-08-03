@@ -165,21 +165,38 @@ function defineLazyModuleGetter(object, name, resource) {
  * module. This enables delaying importing modules until the module is
  * actually used.
  *
- * @param Object obj
+ * Several getters can be defined at once by providing an array of
+ * properties and enabling destructuring.
+ *
+ * @param { Object } obj
  *    The object to define the property on.
- * @param String property
- *    The property name.
- * @param String module
+ * @param { String | Array<String> } properties
+ *    String: Name of the property for the getter.
+ *    Array<String>: When destructure is true, properties can be an array of
+ *    strings to create several getters at once.
+ * @param { String } module
  *    The module path.
- * @param Boolean destructure
+ * @param { Boolean } destructure
  *    Pass true if the property name is a member of the module's exports.
  */
-function lazyRequireGetter(obj, property, module, destructure) {
-  defineLazyGetter(obj, property, () => {
-    return destructure
-      ? require(module)[property]
-      : require(module || property);
-  });
+function lazyRequireGetter(obj, properties, module, destructure) {
+  if (Array.isArray(properties) && !destructure) {
+    throw new Error(
+      "Pass destructure=true to call lazyRequireGetter with an array of properties"
+    );
+  }
+
+  if (!Array.isArray(properties)) {
+    properties = [properties];
+  }
+
+  for (const property of properties) {
+    defineLazyGetter(obj, property, () => {
+      return destructure
+        ? require(module)[property]
+        : require(module || property);
+    });
+  }
 }
 
 // List of pseudo modules exposed to all devtools modules.
