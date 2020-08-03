@@ -58,19 +58,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "FrameActor",
-  "devtools/server/actors/frame",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getSavedFrameParent",
-  "devtools/server/actors/frame",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isValidSavedFrame",
+  ["FrameActor", "getSavedFrameParent", "isValidSavedFrame"],
   "devtools/server/actors/frame",
   true
 );

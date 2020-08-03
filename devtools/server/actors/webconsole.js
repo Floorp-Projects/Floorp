@@ -60,19 +60,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "addWebConsoleCommands",
-  "devtools/server/actors/webconsole/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isCommand",
-  "devtools/server/actors/webconsole/commands",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "validCommands",
+  ["isCommand", "validCommands"],
   "devtools/server/actors/webconsole/commands",
   true
 );
@@ -84,13 +72,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "CONSOLE_WORKER_IDS",
-  "devtools/server/actors/webconsole/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "WebConsoleUtils",
+  ["addWebConsoleCommands", "CONSOLE_WORKER_IDS", "WebConsoleUtils"],
   "devtools/server/actors/webconsole/utils",
   true
 );
@@ -126,13 +108,7 @@ loader.lazyRequireGetter(
 if (isWorker) {
   loader.lazyRequireGetter(
     this,
-    "ConsoleAPIListener",
-    "devtools/server/actors/webconsole/worker-listeners",
-    true
-  );
-  loader.lazyRequireGetter(
-    this,
-    "ConsoleServiceListener",
+    ["ConsoleAPIListener", "ConsoleServiceListener"],
     "devtools/server/actors/webconsole/worker-listeners",
     true
   );

@@ -5,13 +5,7 @@
 
 loader.lazyRequireGetter(
   this,
-  "getWarningGroupType",
-  "devtools/client/webconsole/utils/messages",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getParentWarningGroupMessageId",
+  ["getParentWarningGroupMessageId", "getWarningGroupType"],
   "devtools/client/webconsole/utils/messages",
   true
 );

@@ -21,7 +21,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "isNativeAnonymous",
+  ["isNativeAnonymous", "getAdjustedQuads"],
   "devtools/shared/layout/utils",
   true
 );
@@ -39,20 +39,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "loadSheetForBackgroundCalculation",
+  ["loadSheetForBackgroundCalculation", "removeSheetForBackgroundCalculation"],
   "devtools/server/actors/utils/accessibility",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "removeSheetForBackgroundCalculation",
-  "devtools/server/actors/utils/accessibility",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getAdjustedQuads",
-  "devtools/shared/layout/utils",
   true
 );
 loader.lazyRequireGetter(

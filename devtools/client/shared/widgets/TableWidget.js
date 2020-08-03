@@ -6,13 +6,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,
-  "setNamedTimeout",
-  "devtools/client/shared/widgets/view-helpers",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "clearNamedTimeout",
+  ["clearNamedTimeout", "setNamedTimeout"],
   "devtools/client/shared/widgets/view-helpers",
   true
 );

@@ -32,6 +32,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  ["CSSRuleTypeName", "findCssSelector", "prettifyCSS"],
+  "devtools/shared/inspector/css-logic",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "getDefinedGeometryProperties",
   "devtools/server/actors/highlighters/geometry-editor",
   true
@@ -56,32 +62,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "prettifyCSS",
-  "devtools/shared/inspector/css-logic",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "UPDATE_PRESERVING_RULES",
+  ["UPDATE_PRESERVING_RULES", "UPDATE_GENERAL"],
   "devtools/server/actors/stylesheets",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "UPDATE_GENERAL",
-  "devtools/server/actors/stylesheets",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "findCssSelector",
-  "devtools/shared/inspector/css-logic",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "CSSRuleTypeName",
-  "devtools/shared/inspector/css-logic",
   true
 );
 
