@@ -18,4 +18,5 @@ toolkit.jar:
    content/global/print.js                          (content/print.js)
    content/global/print.html                        (content/print.html)
    content/global/print.css                         (content/print.css)
+   content/global/toggle-group.css                  (content/toggle-group.css)
    content/global/simplifyMode.css                  (content/simplifyMode.css)
