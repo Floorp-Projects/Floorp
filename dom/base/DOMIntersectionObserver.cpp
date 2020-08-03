@@ -256,7 +256,8 @@ void DOMIntersectionObserver::Disconnect() {
 
 void DOMIntersectionObserver::TakeRecords(
     nsTArray<RefPtr<DOMIntersectionObserverEntry>>& aRetVal) {
-  aRetVal = std::move(mQueuedEntries);
+  aRetVal.SwapElements(mQueuedEntries);
+  mQueuedEntries.Clear();
 }
 
 static Maybe<nsRect> EdgeInclusiveIntersection(const nsRect& aRect,

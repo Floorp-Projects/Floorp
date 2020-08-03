@@ -127,7 +127,7 @@ void AnimationInfo::TransferMutatedFlagToLayer(Layer* aLayer) {
 
 bool AnimationInfo::ApplyPendingUpdatesForThisTransaction() {
   if (mPendingAnimations) {
-    mAnimations = std::move(*mPendingAnimations);
+    mPendingAnimations->SwapElements(mAnimations);
     mPendingAnimations = nullptr;
     return true;
   }

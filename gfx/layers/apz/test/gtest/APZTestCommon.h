@@ -199,8 +199,8 @@ class MockContentControllerDelayed : public MockContentController {
   // in the queue after this function is called. Only when the return
   // value is 0 is the queue guaranteed to be empty.
   int RunThroughDelayedTasks() {
-    nsTArray<std::pair<RefPtr<Runnable>, TimeStamp>> runQueue =
-        std::move(mTaskQueue);
+    nsTArray<std::pair<RefPtr<Runnable>, TimeStamp>> runQueue;
+    runQueue.SwapElements(mTaskQueue);
     int numTasks = runQueue.Length();
     for (int i = 0; i < numTasks; i++) {
       mTime = runQueue[i].second;

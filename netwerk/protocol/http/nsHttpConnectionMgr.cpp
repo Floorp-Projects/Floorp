@@ -2178,7 +2178,8 @@ void nsHttpConnectionMgr::DispatchSpdyPendingQ(
 
   // Put the leftovers back in the pending queue and get rid of the
   // transactions we dispatched
-  pendingQ = std::move(leftovers);
+  leftovers.SwapElements(pendingQ);
+  leftovers.Clear();
 }
 
 // This function tries to dispatch the pending h2 or h3 transactions on

@@ -111,7 +111,7 @@ class DecodePoolImpl {
       MonitorAutoLock lock(mMonitor);
       mShuttingDown = true;
       mAvailableThreads = 0;
-      threads = std::move(mThreads);
+      threads.SwapElements(mThreads);
       mMonitor.NotifyAll();
     }
 

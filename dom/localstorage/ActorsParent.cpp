@@ -1712,7 +1712,7 @@ class Datastore final
             RefPtr<Connection>&& aConnection,
             RefPtr<QuotaObject>&& aQuotaObject,
             nsDataHashtable<nsStringHashKey, LSValue>& aValues,
-            nsTArray<LSItemInfo>&& aOrderedItems);
+            nsTArray<LSItemInfo>& aOrderedItems);
 
   const nsCString& Origin() const { return mOrigin; }
 
@@ -4804,11 +4804,10 @@ Datastore::Datastore(const nsACString& aGroup, const nsACString& aOrigin,
                      RefPtr<Connection>&& aConnection,
                      RefPtr<QuotaObject>&& aQuotaObject,
                      nsDataHashtable<nsStringHashKey, LSValue>& aValues,
-                     nsTArray<LSItemInfo>&& aOrderedItems)
+                     nsTArray<LSItemInfo>& aOrderedItems)
     : mDirectoryLock(std::move(aDirectoryLock)),
       mConnection(std::move(aConnection)),
       mQuotaObject(std::move(aQuotaObject)),
-      mOrderedItems(std::move(aOrderedItems)),
       mGroup(aGroup),
       mOrigin(aOrigin),
       mPrivateBrowsingId(aPrivateBrowsingId),
@@ -4822,6 +4821,7 @@ Datastore::Datastore(const nsACString& aGroup, const nsACString& aOrigin,
   AssertIsOnBackgroundThread();
 
   mValues.SwapElements(aValues);
+  mOrderedItems.SwapElements(aOrderedItems);
 }
 
 Datastore::~Datastore() {
@@ -7915,7 +7915,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
     mDatastore = new Datastore(
         mGroup, mOrigin, mPrivateBrowsingId, mUsage, mSizeOfKeys, mSizeOfItems,
         std::move(mDirectoryLock), std::move(mConnection),
-        std::move(quotaObject), mValues, std::move(mOrderedItems));
+        std::move(quotaObject), mValues, mOrderedItems);
 
     mDatastore->NoteLivePrepareDatastoreOp(this);
 

@@ -635,7 +635,8 @@ void nsIOService::OnProcessLaunchComplete(SocketProcessHost* aHost,
   }
 
   if (!mPendingEvents.IsEmpty()) {
-    nsTArray<std::function<void()>> pendingEvents = std::move(mPendingEvents);
+    nsTArray<std::function<void()>> pendingEvents;
+    mPendingEvents.SwapElements(pendingEvents);
     for (auto& func : pendingEvents) {
       func();
     }

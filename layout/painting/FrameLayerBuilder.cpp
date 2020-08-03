@@ -1886,7 +1886,7 @@ struct MaskLayerUserData : public LayerUserData {
     mScaleY = aOther.mScaleY;
     mOffset = aOther.mOffset;
     mAppUnitsPerDevPixel = aOther.mAppUnitsPerDevPixel;
-    mRoundedClipRects = std::move(aOther.mRoundedClipRects);
+    mRoundedClipRects.SwapElements(aOther.mRoundedClipRects);
   }
 
   bool operator==(const MaskLayerUserData& aOther) const {

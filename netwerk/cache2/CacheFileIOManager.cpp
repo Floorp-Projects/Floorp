@@ -1465,7 +1465,8 @@ nsresult CacheFileIOManager::ShutdownMetadataWriteScheduling() {
 void CacheFileIOManager::ShutdownMetadataWriteSchedulingInternal() {
   MOZ_ASSERT(IsOnIOThreadOrCeased());
 
-  nsTArray<RefPtr<CacheFile> > files = std::move(mScheduledMetadataWrites);
+  nsTArray<RefPtr<CacheFile> > files;
+  files.SwapElements(mScheduledMetadataWrites);
   for (uint32_t i = 0; i < files.Length(); ++i) {
     CacheFile* file = files[i];
     file->WriteMetadataIfNeeded();
@@ -1484,7 +1485,8 @@ CacheFileIOManager::Notify(nsITimer* aTimer) {
 
   mMetadataWritesTimer = nullptr;
 
-  nsTArray<RefPtr<CacheFile> > files = std::move(mScheduledMetadataWrites);
+  nsTArray<RefPtr<CacheFile> > files;
+  files.SwapElements(mScheduledMetadataWrites);
   for (uint32_t i = 0; i < files.Length(); ++i) {
     CacheFile* file = files[i];
     file->WriteMetadataIfNeeded();

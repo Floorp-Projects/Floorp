@@ -231,7 +231,7 @@ void Http3Stream::SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders,
                                      bool aFin) {
   MOZ_ASSERT(mFlatResponseHeaders.IsEmpty(),
              "Cannot set response headers more than once");
-  mFlatResponseHeaders = std::move(aResponseHeaders);
+  mFlatResponseHeaders.SwapElements(aResponseHeaders);
   mFin = aFin;
 }
 

@@ -711,7 +711,8 @@ void VibrateWindowListener::RemoveListener() {
 void Navigator::SetVibrationPermission(bool aPermitted, bool aPersistent) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsTArray<uint32_t> pattern = std::move(mRequestedVibrationPattern);
+  nsTArray<uint32_t> pattern;
+  pattern.SwapElements(mRequestedVibrationPattern);
 
   if (!mWindow) {
     return;
@@ -786,7 +787,7 @@ bool Navigator::Vibrate(const nsTArray<uint32_t>& aPattern) {
     return true;
   }
 
-  mRequestedVibrationPattern = std::move(pattern);
+  mRequestedVibrationPattern.SwapElements(pattern);
 
   PermissionDelegateHandler* permissionHandler =
       doc->GetPermissionDelegateHandler();

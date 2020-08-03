@@ -127,8 +127,10 @@ class FilterPrimitiveDescription final {
  */
 struct FilterDescription final {
   FilterDescription() = default;
-  explicit FilterDescription(nsTArray<FilterPrimitiveDescription>&& aPrimitives)
-      : mPrimitives(std::move(aPrimitives)) {}
+  explicit FilterDescription(
+      nsTArray<FilterPrimitiveDescription>&& aPrimitives) {
+    mPrimitives.SwapElements(aPrimitives);
+  }
 
   bool operator==(const FilterDescription& aOther) const;
   bool operator!=(const FilterDescription& aOther) const {

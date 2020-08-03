@@ -266,7 +266,8 @@ void SharedWorker::Thaw() {
   }
 
   if (!mFrozenEvents.IsEmpty()) {
-    nsTArray<RefPtr<Event>> events = std::move(mFrozenEvents);
+    nsTArray<RefPtr<Event>> events;
+    mFrozenEvents.SwapElements(events);
 
     for (uint32_t index = 0; index < events.Length(); index++) {
       RefPtr<Event>& event = events[index];
