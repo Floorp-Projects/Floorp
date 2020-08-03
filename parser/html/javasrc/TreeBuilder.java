@@ -4787,7 +4787,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         }
     }
 
-    private StackNode<T> getUnusedStackNode() {
+    @SuppressWarnings("unchecked") private StackNode<T> getUnusedStackNode() {
         // Search for an unused stack node.
         while (stackNodesIdx < numStackNodes) {
             if (stackNodes[stackNodesIdx].isUnused()) {
