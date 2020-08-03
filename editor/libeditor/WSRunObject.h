@@ -1187,16 +1187,6 @@ class WhiteSpaceVisibilityKeeper final {
   DeleteInvisibleASCIIWhiteSpaces(HTMLEditor& aHTMLEditor,
                                   const EditorDOMPoint& aPoint);
 
-  /**
-   * PrepareToJoinBlocks() fixes up white-spaces at the end of aLeftBlockElement
-   * and the start of aRightBlockElement in preperation for them to be joined.
-   * For example, trailing white-spaces in aLeftBlockElement needs to be
-   * removed.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult PrepareToJoinBlocks(
-      HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
-      dom::Element& aRightBlockElement);
-
   // PrepareToDeleteRange fixes up ws before aStartPoint and after aEndPoint in
   // preperation for content in that range to be deleted.  Note that the nodes
   // and offsets are adjusted in response to any dom changes we make while

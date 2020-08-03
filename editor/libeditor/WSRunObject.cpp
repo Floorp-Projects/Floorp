@@ -63,22 +63,6 @@ template WSRunScanner::TextFragmentData::TextFragmentData(
 template WSRunScanner::TextFragmentData::TextFragmentData(
     const EditorDOMPointInText& aPoint, const Element* aEditingHost);
 
-// static
-nsresult WhiteSpaceVisibilityKeeper::PrepareToJoinBlocks(
-    HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
-    Element& aRightBlockElement) {
-  nsresult rv = WhiteSpaceVisibilityKeeper::
-      MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
-          aHTMLEditor,
-          EditorDOMRange(EditorRawDOMPoint::AtEndOf(aLeftBlockElement),
-                         EditorRawDOMPoint(&aRightBlockElement, 0)));
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "WhiteSpaceVisibilityKeeper::"
-      "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
-  return rv;
-}
-
 nsresult WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
     HTMLEditor& aHTMLEditor, EditorDOMPoint* aStartPoint,
     EditorDOMPoint* aEndPoint) {
@@ -156,11 +140,21 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   MOZ_ASSERT(
       !EditorUtils::IsDescendantOf(aRightBlockElement, aLeftBlockElement));
 
+  // NOTE: This method may extend deletion range:
+  // - to delete invisible white-spaces at end of aLeftBlockElement
+  // - to delete invisible white-spaces at start of aRightBlockElement
+  // - to delete invisible `<br>` element at end of aLeftBlockElement
+
   // Adjust white-space at block boundaries
-  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToJoinBlocks(
-      aHTMLEditor, aLeftBlockElement, aRightBlockElement);
+  nsresult rv = WhiteSpaceVisibilityKeeper::
+      MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
+          aHTMLEditor,
+          EditorDOMRange(EditorDOMPoint::AtEndOf(aLeftBlockElement),
+                         EditorDOMPoint(&aRightBlockElement, 0)));
   if (NS_FAILED(rv)) {
-    NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToJoinBlocks() failed");
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::"
+        "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
     return EditActionIgnored(rv);
   }
   // Do br adjustment.
