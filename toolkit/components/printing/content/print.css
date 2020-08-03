@@ -109,3 +109,11 @@ form#print {
 .page-range-input:not(.custom-input-selected) #custom-range {
   display: none;
 }
+
+.toggle-group #landscape + .toggle-group-label::before {
+  content: url("chrome://global/skin/icons/document.svg");
+  transform: scaleY(-1) rotate(90deg);
+}
+.toggle-group #portrait + .toggle-group-label::before {
+  content: url("chrome://global/skin/icons/document.svg");
+}

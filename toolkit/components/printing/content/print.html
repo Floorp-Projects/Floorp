@@ -12,6 +12,7 @@
 
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://global/content/print.css">
+    <link rel="stylesheet" href="chrome://global/content/toggle-group.css">
     <script defer src="chrome://global/content/print.js"></script>
   </head>
 
@@ -25,14 +26,10 @@
     </template>
 
     <template id="orientation-template">
-      <span>
-        <input type="radio" name="orientation" id="portrait" value="0" checked>
-        <label for="portrait" data-l10n-id="printui-portrait"></label>
-      </span>
-      <span>
-        <input type="radio" name="orientation" id="landscape" value="1">
-        <label for="landscape" data-l10n-id="printui-landscape"></label>
-      </span>
+      <input type="radio" name="orientation" id="portrait" value="0" checked class="toggle-group-input">
+      <label for="portrait" data-l10n-id="printui-portrait" class="toggle-group-label toggle-group-label-iconic"></label>
+      <input type="radio" name="orientation" id="landscape" value="1" class="toggle-group-input">
+      <label for="landscape" data-l10n-id="printui-landscape" class="toggle-group-label toggle-group-label-iconic"></label>
     </template>
 
     <template id="copy-count-template">
@@ -77,10 +74,8 @@
           </section>
 
           <section id="orientation" class="row">
-            <div role="radiogroup" aria-labelledby="orientation-label">
-              <label class="block-label" data-l10n-id="printui-orientation"></label>
-              <span id="orientation-input" is="orientation-input" class="orientation-input"></span>
-            </div>
+            <label class="block-label" for="orientation-input" data-l10n-id="printui-orientation"></label>
+            <div id="orientation-input" is="orientation-input" role="radiogroup" class="toggle-group"></div>
           </section>
 
           <section id="pages" class="row">
