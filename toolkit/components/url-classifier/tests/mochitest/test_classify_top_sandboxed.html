@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1647681</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+
+async function runTests() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ["privacy.trackingprotection.annotate_channels", true],
+  ]});
+
+  var chromeScript;
+  chromeScript = SpecialPowers.loadChromeScript(_ => {
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+
+    function onExamResp(subject, topic, data) {
+      let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      let classifiedChannel = subject.QueryInterface(Ci.nsIClassifiedChannel);
+      if (
+        !channel ||
+        !classifiedChannel ||
+        !channel.URI.spec.startsWith(
+          "http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"
+        )
+      ) {
+        return;
+      }
+
+      // eslint-disable-next-line no-undef
+      sendAsyncMessage("last-channel-flags", {
+        classified: Ci.nsIClassifiedChannel.CLASSIFIED_TRACKING == classifiedChannel.classificationFlags,
+      });
+    }
+
+    // eslint-disable-next-line no-undef
+    addMessageListener("done", __ => {
+      Services.obs.removeObserver(onExamResp, "http-on-examine-response");
+    });
+
+    Services.obs.addObserver(onExamResp, "http-on-examine-response");
+
+    // eslint-disable-next-line no-undef
+    sendAsyncMessage("start-test");
+  });
+
+  chromeScript.addMessageListener(
+    "start-test",
+    async _ => {
+      window.open("http://example.org/tests/toolkit/components/url-classifier/tests/mochitest/sandboxed.html")
+    },
+    { once: true }
+  );
+
+  chromeScript.addMessageListener(
+    "last-channel-flags",
+    data => {
+      ok(data.classified, "tracker script should be classified when the top-level is sandboxed");
+      chromeScript.sendAsyncMessage("done");
+      SimpleTest.finish();
+    },
+    { once: true }
+  );
+}
+
+SimpleTest.waitForExplicitFinish();
+runTests();
+
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
