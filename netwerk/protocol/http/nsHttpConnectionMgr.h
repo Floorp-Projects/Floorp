@@ -107,6 +107,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // bit different.
   void ReportSpdyConnection(nsHttpConnection*, bool usingSpdy);
 
+  void ReportHttp3Connection(HttpConnectionBase*);
+
   bool GetConnectionData(nsTArray<HttpRetParams>*);
 
   void ResetIPFamilyPreference(nsHttpConnectionInfo*);
