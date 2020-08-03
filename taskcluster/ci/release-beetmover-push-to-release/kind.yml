@@ -11,6 +11,7 @@ transforms:
 
 kind-dependencies:
     - release-generate-checksums-beetmover
+    - release-update-verify
 
 job-defaults:
     run-on-projects: []
