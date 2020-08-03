@@ -42,7 +42,7 @@ class MP4DemuxerBinding {
       : resource(new MockMediaResource(aFileName)),
         mDemuxer(new MP4Demuxer(resource)),
         mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK))),
+            new TaskQueue(GetMediaThreadPool(MediaThreadType::CONTROLLER))),
         mIndex(0) {
     EXPECT_EQ(NS_OK, resource->Open());
   }

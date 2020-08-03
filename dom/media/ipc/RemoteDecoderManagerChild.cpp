@@ -35,7 +35,7 @@ void RemoteDecoderManagerChild::InitializeThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sRemoteDecoderManagerChildThread) {
-    // We can't use a MediaThreadType::PLAYBACK as the GpuDecoderModule and
+    // We can't use a MediaThreadType::CONTROLLER as the GpuDecoderModule and
     // RemoteDecoderModule runs on it and dispatch synchronous tasks to the
     // manager thread, should more than 4 concurrent videos being instantiated
     // at the same time, we could end up in a deadlock.
