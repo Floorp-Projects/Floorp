@@ -166,8 +166,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   // data->deviceName() default-initializes
   data->printableWidthInInches() = 0;
   data->printableHeightInInches() = 0;
-  data->isIFrameSelected() = false;
-  data->isRangeSelection() = false;
   // data->GTKPrintSettings() default-initializes
   // data->printJobName() default-initializes
   data->printAllPages() = true;
