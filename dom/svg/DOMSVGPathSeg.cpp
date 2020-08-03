@@ -44,35 +44,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGPathSeg, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGPathSeg, Release)
 
-//----------------------------------------------------------------------
-// Helper class: AutoChangePathSegNotifier
-// Stack-based helper class to pair calls to WillChangePathSegList
-// and DidChangePathSegList.
-class MOZ_RAII AutoChangePathSegNotifier : public mozAutoDocUpdate {
- public:
-  explicit AutoChangePathSegNotifier(DOMSVGPathSeg* aPathSeg)
-      : mozAutoDocUpdate(aPathSeg->Element()->GetComposedDoc(), true),
-        mPathSeg(aPathSeg) {
-    MOZ_ASSERT(mPathSeg, "Expecting non-null pathSeg");
-    MOZ_ASSERT(mPathSeg->HasOwner(),
-               "Expecting list to have an owner for notification");
-    mEmptyOrOldValue = mPathSeg->Element()->WillChangePathSegList(*this);
-  }
-
-  ~AutoChangePathSegNotifier() {
-    mPathSeg->Element()->DidChangePathSegList(mEmptyOrOldValue, *this);
-    // Null check mPathSeg->mList, since DidChangePathSegList can run script,
-    // potentially removing mPathSeg from its list.
-    if (mPathSeg->mList && mPathSeg->mList->AttrIsAnimating()) {
-      mPathSeg->Element()->AnimationNeedsResample();
-    }
-  }
-
- private:
-  DOMSVGPathSeg* const mPathSeg;
-  nsAttrValue mEmptyOrOldValue;
-};
-
 DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList* aList, uint32_t aListIndex,
                              bool aIsAnimValItem)
     : mList(aList), mListIndex(aListIndex), mIsAnimValItem(aIsAnimValItem) {
@@ -151,7 +122,7 @@ bool DOMSVGPathSeg::IndexIsValid() {
       if (InternalItem()[1 + index] == float(a##propName)) {            \
         return;                                                         \
       }                                                                 \
-      AutoChangePathSegNotifier notifier(this);                         \
+      AutoChangePathSegListNotifier notifier(this);                     \
       InternalItem()[1 + index] = float(a##propName);                   \
     } else {                                                            \
       mArgs[index] = float(a##propName);                                \
