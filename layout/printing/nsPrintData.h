@@ -59,8 +59,10 @@ class nsPrintData {
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
 
-  nsCOMPtr<nsPIDOMWindowOuter> mCurrentFocusWin;  // cache a pointer to the
-                                                  // currently focused window
+  // If there is a focused iframe, mSelectionRoot is set to its nsPrintObject.
+  // Otherwise, if there is a selection, it is set to the root nsPrintObject.
+  // Otherwise, it is unset.
+  nsPrintObject* mSelectionRoot = nullptr;
 
   // Array of non-owning pointers to all the nsPrintObjects owned by this
   // nsPrintData. This includes this->mPrintObject, as well as all of its
