@@ -36,7 +36,6 @@ import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
 import org.mozilla.fenix.settings.logins.SortingStrategy
-import org.mozilla.fenix.settings.logins.fragment.SavedLoginsFragment
 import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import java.security.InvalidParameterException
 
@@ -820,36 +819,26 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     private var savedLoginsSortingStrategyString by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_saved_logins_sorting_strategy),
-        default = SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY
+        default = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort.strategyString
     )
 
     val savedLoginsMenuHighlightedItem: SavedLoginsSortingStrategyMenu.Item
-        get() {
-            return when (savedLoginsSortingStrategyString) {
-                SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY -> {
-                    SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort
-                }
-                SavedLoginsFragment.SORTING_STRATEGY_LAST_USED -> {
-                    SavedLoginsSortingStrategyMenu.Item.LastUsedSort
-                }
-                else -> SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort
-            }
-        }
+        get() = SavedLoginsSortingStrategyMenu.Item.fromString(savedLoginsSortingStrategyString)
 
     var savedLoginsSortingStrategy: SortingStrategy
         get() {
-            return when (savedLoginsSortingStrategyString) {
-                SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY -> SortingStrategy.Alphabetically(
-                    appContext.components.publicSuffixList
-                )
-                SavedLoginsFragment.SORTING_STRATEGY_LAST_USED -> SortingStrategy.LastUsed
-                else -> SortingStrategy.Alphabetically(appContext.components.publicSuffixList)
+            return when (savedLoginsMenuHighlightedItem) {
+                SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort ->
+                    SortingStrategy.Alphabetically(appContext.components.publicSuffixList)
+                SavedLoginsSortingStrategyMenu.Item.LastUsedSort -> SortingStrategy.LastUsed
             }
         }
         set(value) {
             savedLoginsSortingStrategyString = when (value) {
-                is SortingStrategy.Alphabetically -> SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY
-                is SortingStrategy.LastUsed -> SavedLoginsFragment.SORTING_STRATEGY_LAST_USED
+                is SortingStrategy.Alphabetically ->
+                    SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort.strategyString
+                is SortingStrategy.LastUsed ->
+                    SavedLoginsSortingStrategyMenu.Item.LastUsedSort.strategyString
             }
         }
 }
