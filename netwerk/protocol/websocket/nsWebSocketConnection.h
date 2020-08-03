@@ -36,7 +36,7 @@ class nsWebSocketConnection : public nsIWebSocketConnection,
   nsresult EnqueueOutputData(nsTArray<uint8_t>&& aData);
 
  private:
-  virtual ~nsWebSocketConnection() = default;
+  virtual ~nsWebSocketConnection();
 
   class OutputData {
    public:

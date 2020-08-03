@@ -20,7 +20,13 @@ nsWebSocketConnection::nsWebSocketConnection(
       mSocketIn(aInputStream),
       mSocketOut(aOutputStream),
       mWriteOffset(0),
-      mStartReadingCalled(false) {}
+      mStartReadingCalled(false) {
+  LOG(("nsWebSocketConnection ctor %p\n", this));
+}
+
+nsWebSocketConnection::~nsWebSocketConnection() {
+  LOG(("nsWebSocketConnection dtor %p\n", this));
+}
 
 NS_IMETHODIMP
 nsWebSocketConnection::Init(nsIWebSocketConnectionListener* aListener,
@@ -47,6 +53,7 @@ nsWebSocketConnection::Init(nsIWebSocketConnectionListener* aListener,
 
 NS_IMETHODIMP
 nsWebSocketConnection::Close() {
+  LOG(("nsWebSocketConnection::Close %p\n", this));
   if (mTransport) {
     mTransport->SetSecurityCallbacks(nullptr);
     mTransport->SetEventSink(nullptr, nullptr);
@@ -66,7 +73,6 @@ nsWebSocketConnection::Close() {
     mSocketOut = nullptr;
   }
 
-  mListener = nullptr;
   return NS_OK;
 }
 
@@ -157,11 +163,12 @@ NS_IMETHODIMP
 nsWebSocketConnection::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   LOG(("nsWebSocketConnection::OnInputStreamReady() %p\n", this));
   MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  MOZ_ASSERT(mListener);
 
-  if (!mSocketIn)  // did we we clean up the socket after scheduling InputReady?
+  // did we we clean up the socket after scheduling InputReady?
+  if (!mSocketIn) {
     return NS_OK;
-
-  if (!mListener) return NS_OK;
+  }
 
   // this is after the http upgrade - so we are speaking websockets
   uint8_t buffer[2048];
@@ -202,8 +209,11 @@ NS_IMETHODIMP
 nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   LOG(("nsWebSocketConnection::OnOutputStreamReady() %p\n", this));
   MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+  MOZ_ASSERT(mListener);
 
-  if (!mListener) return NS_OK;
+  if (!mSocketOut) {
+    return NS_OK;
+  }
 
   while (!mOutputQueue.empty()) {
     const OutputData& data = mOutputQueue.front();
@@ -215,6 +225,9 @@ nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
 
     uint32_t wrote = 0;
     nsresult rv = mSocketOut->Write(buffer, toWrite, &wrote);
+    LOG(("nsWebSocketConnection::OnOutputStreamReady: write %u rv %" PRIx32,
+         wrote, static_cast<uint32_t>(rv)));
+
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       mSocketOut->AsyncWait(this, 0, 0, mEventTarget);
       return NS_OK;
