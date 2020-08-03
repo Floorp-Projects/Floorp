@@ -39,6 +39,11 @@ printui-scale-fit-to-page = Fit to page
 # Label for input control where user can set the scale percentage
 printui-scale-pcent = Scale
 
+# Section title for miscellaneous print options
+printui-options = Options
+printui-headers-footers-checkbox = Print headers and footers
+printui-backgrounds-checkbox = Print backgrounds
+
 printui-system-dialog-link = Print using the system dialog…
 
 printui-primary-button = Print
