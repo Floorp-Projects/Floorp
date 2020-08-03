@@ -4493,103 +4493,15 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
   EditorDOMPoint atRightBlockChild;
   if (EditorUtils::IsDescendantOf(*leftBlockElement, *rightBlockElement,
                                   &atRightBlockChild)) {
-    MOZ_ASSERT(atRightBlockChild.GetContainer() == rightBlockElement);
-    DebugOnly<bool> advanced = atRightBlockChild.AdvanceOffset();
-    NS_WARNING_ASSERTION(
-        advanced,
-        "Failed to advance offset to after child of rightBlockElement, "
-        "leftBlockElement is a descendant of the child");
-    nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
-        *this, EditorDOMPoint::AtEndOf(leftBlockElement));
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
-          "failed at left block");
-      return EditActionIgnored(rv);
-    }
-
-    {
-      // We can't just track rightBlockElement because it's an Element.
-      AutoTrackDOMPoint tracker(RangeUpdaterRef(), &atRightBlockChild);
-      nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
-          *this, atRightBlockChild);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
-            "failed at right block child");
-        return EditActionIgnored(rv);
-      }
-
-      // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
-      //     Do we really need to do update rightBlockElement here??
-      if (atRightBlockChild.GetContainerAsElement()) {
-        rightBlockElement = atRightBlockChild.GetContainerAsElement();
-      } else if (NS_WARN_IF(!atRightBlockChild.GetContainerParentAsElement())) {
-        return EditActionIgnored(NS_ERROR_UNEXPECTED);
-      } else {
-        rightBlockElement = atRightBlockChild.GetContainerParentAsElement();
-      }
-    }
-
-    // Do br adjustment.
-    RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
-        WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
-            *this, EditorDOMPoint::AtEndOf(leftBlockElement));
-    EditActionResult ret(NS_OK);
-    if (NS_WARN_IF(newListElementTagNameOfRightListElement.isSome())) {
-      // Since 2002, here was the following comment:
-      // > The idea here is to take all children in rightListElement that are
-      // > past offset, and pull them into leftlistElement.
-      // However, this has never been performed because we are here only when
-      // neither left list nor right list is a descendant of the other but
-      // in such case, getting a list item in the right list node almost
-      // always failed since a variable for offset of
-      // rightListElement->GetChildAt() was not initialized.  So, it might be
-      // a bug, but we should keep this traditional behavior for now.  If you
-      // find when we get here, please remove this comment if we don't need to
-      // do it.  Otherwise, please move children of the right list node to the
-      // end of the left list node.
-
-      // XXX Although, we don't do nothing here, but for keeping traditional
-      //     behavior, we should mark as handled.
-      ret.MarkAsHandled();
-    } else {
-      // XXX Why do we ignore the result of MoveOneHardLineContents()?
-      NS_WARNING_ASSERTION(
-          rightBlockElement == atRightBlockChild.GetContainer(),
-          "The relation is not guaranteed but assumed");
-      MoveNodeResult moveNodeResult = MoveOneHardLineContents(
-          EditorDOMPoint(rightBlockElement, atRightBlockChild.Offset()),
-          EditorDOMPoint(leftBlockElement, 0), MoveToEndOfContainer::Yes);
-      if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
-        return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      NS_WARNING_ASSERTION(moveNodeResult.Succeeded(),
-                           "HTMLEditor::MoveOneHardLineContents("
-                           "MoveToEndOfContainer::Yes) failed, but ignored");
-      if (moveNodeResult.Succeeded()) {
-        ret |= moveNodeResult;
-      }
-      // Now, all children of rightBlockElement were moved to leftBlockElement.
-      // So, atRightBlockChild is now invalid.
-      atRightBlockChild.Clear();
-    }
-
-    if (!invisibleBRElementAtEndOfLeftBlockElement) {
-      return ret;
-    }
-
-    rv = DeleteNodeWithTransaction(*invisibleBRElementAtEndOfLeftBlockElement);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
-    if (NS_SUCCEEDED(rv)) {
-      ret.MarkAsHandled();
-    }
-    return ret;
+    EditActionResult result = WhiteSpaceVisibilityKeeper::
+        MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
+            *this, *leftBlockElement, *rightBlockElement, atRightBlockChild,
+            newListElementTagNameOfRightListElement);
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "WhiteSpaceVisibilityKeeper::"
+                         "MergeFirstLineOfRightBlockElementIntoDescendantLeftBl"
+                         "ockElement() failed");
+    return result;
   }
 
   MOZ_DIAGNOSTIC_ASSERT(!atRightBlockChild.IsSet());
