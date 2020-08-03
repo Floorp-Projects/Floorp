@@ -31,15 +31,12 @@ add_task(async function testWebNavigationGetNonExistentTab() {
       permissions: ["webNavigation"],
     },
   });
-  info("load complete");
 
   await extension.startup();
-  info("startup complete");
 
   await extension.awaitMessage("getNonExistentTab.done");
 
   await extension.unload();
-  info("extension unloaded");
 });
 
 add_task(async function testWebNavigationFrames() {
@@ -132,10 +129,8 @@ add_task(async function testWebNavigationFrames() {
       `,
     },
   });
-  info("load complete");
 
   await extension.startup();
-  info("startup complete");
 
   let {
     collectedDetails,
@@ -208,5 +203,75 @@ add_task(async function testWebNavigationFrames() {
   await extension.awaitMessage("webNavigationFrames.done");
 
   await extension.unload();
-  info("extension unloaded");
+});
+
+add_task(async function testWebNavigationGetFrameOnDiscardedTab() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs", "webNavigation"],
+    },
+    async background() {
+      let tabs = await browser.tabs.query({ currentWindow: true });
+      browser.test.assertEq(2, tabs.length, "Expect 2 tabs open");
+
+      const tabId = tabs[1].id;
+
+      await browser.tabs.discard(tabId);
+      let tab = await browser.tabs.get(tabId);
+      browser.test.assertEq(true, tab.discarded, "Expect a discarded tab");
+
+      const allFrames = await browser.webNavigation.getAllFrames({ tabId });
+      browser.test.assertEq(
+        null,
+        allFrames,
+        "Expect null from calling getAllFrames on discarded tab"
+      );
+
+      tab = await browser.tabs.get(tabId);
+      browser.test.assertEq(
+        true,
+        tab.discarded,
+        "Expect tab to stay discarded"
+      );
+
+      const topFrame = await browser.webNavigation.getFrame({
+        tabId,
+        frameId: 0,
+      });
+      browser.test.assertEq(
+        null,
+        topFrame,
+        "Expect null from calling getFrame on discarded tab"
+      );
+
+      tab = await browser.tabs.get(tabId);
+      browser.test.assertEq(
+        true,
+        tab.discarded,
+        "Expect tab to stay discarded"
+      );
+
+      browser.test.sendMessage("get-frames-done");
+    },
+  });
+
+  const initialTab = gBrowser.selectedTab;
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/?toBeDiscarded=true"
+  );
+  // Switch back to the initial tab to allow the new tab
+  // to be discarded.
+  await BrowserTestUtils.switchTab(gBrowser, initialTab);
+
+  ok(!!tab.linkedPanel, "Tab not initially discarded");
+
+  await extension.startup();
+  await extension.awaitMessage("get-frames-done");
+
+  ok(!tab.linkedPanel, "Tab should be discarded");
+
+  BrowserTestUtils.removeTab(tab);
+
+  await extension.unload();
 });
