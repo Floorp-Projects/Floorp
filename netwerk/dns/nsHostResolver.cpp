@@ -1594,6 +1594,10 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
   LOG(("NameLookup: %s effectiveTRRmode: %d flags: %X", rec->host.get(),
        rec->mEffectiveTRRMode, rec->flags));
 
+  if (rec->flags & RES_DISABLE_TRR) {
+    rec->RecordReason(nsHostRecord::TRR_DISABLED_FLAG);
+  }
+
   if (rec->mEffectiveTRRMode != nsIRequest::TRR_DISABLED_MODE &&
       !((rec->flags & RES_DISABLE_TRR))) {
     rv = TrrLookup(rec);
