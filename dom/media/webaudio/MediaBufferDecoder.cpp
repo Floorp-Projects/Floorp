@@ -656,13 +656,7 @@ void AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
                              WebAudioDecodeJob::UnknownError);
     aDecodeJob.mContext->Dispatch(event.forget());
   } else {
-    // If we did this without a temporary:
-    //   task->PControllerTaskQueue()->Dispatch(task.forget())
-    // we might evaluate the task.forget() before calling
-    //   OnPControllerTaskQueue().
-    // Enforce a non-crashy order-of-operations.
-    TaskQueue* taskQueue = task->PControllerTaskQueue();
-    nsresult rv = taskQueue->Dispatch(task.forget());
+    nsresult rv = task->PControllerTaskQueue()->Dispatch(task.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   }
