@@ -38,7 +38,6 @@ class nsPrintObject {
                             bool aForPrintPreview);
   nsresult InitAsNestedObject(nsIDocShell* aDocShell,
                               mozilla::dom::Document* aDoc,
-                              mozilla::dom::Document* aSourceOfDoc,
                               nsPrintObject* aParent);
 
   void DestroyPresentation();
@@ -48,12 +47,6 @@ class nsPrintObject {
    * from the given item down into the tree
    */
   void EnablePrinting(bool aEnable);
-
-  /**
-   * Recursively sets all the PO items to be printed if they have a selection.
-   */
-  void EnablePrintingSelectionOnly();
-
   bool PrintingIsEnabled() const { return mPrintingIsEnabled; }
 
   // Data Members
@@ -73,7 +66,6 @@ class nsPrintObject {
   bool mHasBeenPrinted;
   bool mInvisible;  // Indicates PO is set to not visible by CSS
   bool mDidCreateDocShell;
-  bool mHasSelection = false;
   float mShrinkRatio;
   float mZoomRatio;
 
