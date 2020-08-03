@@ -104,8 +104,12 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
  * nodes, we cannot reuse an array of nsRange objects across multiple static
  * clone documents. For that reason we cache a new array of ranges on each
  * static clone that we create.
+ *
+ * @param aSourceDoc the document from which we are caching selection ranges
+ * @param aStaticClone the document that will hold the cache
+ * @return true if a selection range was cached
  */
-static void CachePrintSelectionRanges(const Document& aSourceDoc,
+static bool CachePrintSelectionRanges(const Document& aSourceDoc,
                                       Document& aStaticClone) {
   MOZ_ASSERT(aStaticClone.IsStaticDocument());
   MOZ_ASSERT(!aStaticClone.GetProperty(nsGkAtoms::printselectionranges));
@@ -122,12 +126,12 @@ static void CachePrintSelectionRanges(const Document& aSourceDoc,
   }
 
   if (!origSelection && !origRanges) {
-    return;
+    return false;
   }
 
   size_t rangeCount =
       sourceDocIsStatic ? origRanges->Length() : origSelection->RangeCount();
-  auto* printRanges = new nsTArray<RefPtr<nsRange>>(rangeCount);
+  auto printRanges = MakeUnique<nsTArray<RefPtr<nsRange>>>(rangeCount);
 
   for (size_t i = 0; i < rangeCount; ++i) {
     const nsRange* range = sourceDocIsStatic ? origRanges->ElementAt(i).get()
@@ -156,8 +160,14 @@ static void CachePrintSelectionRanges(const Document& aSourceDoc,
     }
   }
 
-  aStaticClone.SetProperty(nsGkAtoms::printselectionranges, printRanges,
+  if (printRanges->IsEmpty()) {
+    return false;
+  }
+
+  aStaticClone.SetProperty(nsGkAtoms::printselectionranges,
+                           printRanges.release(),
                            nsINode::DeleteProperty<nsTArray<RefPtr<nsRange>>>);
+  return true;
 }
 
 nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
@@ -198,7 +208,7 @@ nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
 
   mDocument = aDoc->CreateStaticClone(mDocShell);
   NS_ENSURE_STATE(mDocument);
-  CachePrintSelectionRanges(*aDoc, *mDocument);
+  mHasSelection = CachePrintSelectionRanges(*aDoc, *mDocument);
 
   nsCOMPtr<nsIContentViewer> viewer;
   mDocShell->GetContentViewer(getter_AddRefs(viewer));
@@ -210,6 +220,7 @@ nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
 
 nsresult nsPrintObject::InitAsNestedObject(nsIDocShell* aDocShell,
                                            Document* aDoc,
+                                           Document* aSourceOfDoc,
                                            nsPrintObject* aParent) {
   NS_ENSURE_STATE(aDocShell);
   NS_ENSURE_STATE(aDoc);
@@ -230,6 +241,12 @@ nsresult nsPrintObject::InitAsNestedObject(nsIDocShell* aDocShell,
     // Assume something iframe-like, i.e. iframe, object, or embed
     mFrameType = eIFrame;
   }
+
+  // We need to use the document that aDoc was cloned from (aSourceOfDoc) and
+  // not aDoc->GetOriginalDocument(), because if aSourceOfDoc is a static clone
+  // aDoc->GetOriginalDocument() will be aSourceOfDoc's original document, which
+  // may now contain a different or no selection.
+  mHasSelection = CachePrintSelectionRanges(*aSourceOfDoc, *aDoc);
 
   return NS_OK;
 }
@@ -253,5 +270,13 @@ void nsPrintObject::EnablePrinting(bool aEnable) {
 
   for (const UniquePtr<nsPrintObject>& kid : mKids) {
     kid->EnablePrinting(aEnable);
+  }
+}
+
+void nsPrintObject::EnablePrintingSelectionOnly() {
+  mPrintingIsEnabled = mHasSelection;
+
+  for (const UniquePtr<nsPrintObject>& kid : mKids) {
+    kid->EnablePrintingSelectionOnly();
   }
 }
