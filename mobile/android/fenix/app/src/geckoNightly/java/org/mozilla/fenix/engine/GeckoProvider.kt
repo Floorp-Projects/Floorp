@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import android.content.Context
-import android.os.Bundle
 import mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrapper
 import mozilla.components.browser.engine.gecko.ext.toContentBlockingSetting
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
@@ -17,7 +16,6 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
 object GeckoProvider {
-    var testConfig: Bundle? = null
     private var runtime: GeckoRuntime? = null
 
     @Synchronized
@@ -39,11 +37,6 @@ object GeckoProvider {
         policy: TrackingProtectionPolicy
     ): GeckoRuntime {
         val builder = GeckoRuntimeSettings.Builder()
-
-        testConfig?.let {
-            builder.extras(it)
-                .remoteDebuggingEnabled(true)
-        }
 
         val runtimeSettings = builder
             .crashHandler(CrashHandlerService::class.java)

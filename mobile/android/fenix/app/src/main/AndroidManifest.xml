@@ -218,11 +218,6 @@
         <activity android:name=".widget.VoiceSearchActivity" />
 
         <activity
-            android:name=".browser.BrowserPerformanceTestActivity"
-            android:enabled="${isRaptorEnabled}"
-            android:exported="${isRaptorEnabled}" />
-
-        <activity
             android:name=".settings.account.AuthCustomTabActivity"
             android:autoRemoveFromRecents="false"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"

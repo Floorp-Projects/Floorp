@@ -10,7 +10,6 @@ import android.os.Bundle
 import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
-import org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 import org.mozilla.fenix.settings.account.AuthIntentReceiverActivity
 import org.mozilla.fenix.widget.VoiceSearchActivity
 
@@ -37,8 +36,7 @@ class PerformanceActivityLifecycleCallbacks(
         return isTransientActivityInMigrationVariant(activity) ||
                 (activity is IntentReceiverActivity) ||
                 (activity is VoiceSearchActivity) ||
-                (activity is AuthIntentReceiverActivity) ||
-                (activity is BrowserPerformanceTestActivity)
+                (activity is AuthIntentReceiverActivity)
     }
 
     /**
