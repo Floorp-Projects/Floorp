@@ -523,6 +523,10 @@ class nsTArray_base {
       nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
       size_t aElemAlign);
 
+  template <class Allocator>
+  void MoveInit(nsTArray_base<Allocator, RelocationStrategy>& aOther,
+                size_type aElemSize, size_t aElemAlign);
+
   // This is an RAII class used in SwapArrayElements.
   class IsAutoArrayRestorer {
    public:
@@ -1069,7 +1073,7 @@ class nsTArray_Impl
   self_type& operator=(self_type&& aOther) {
     if (this != &aOther) {
       Clear();
-      SwapElements(aOther);
+      this->MoveInit(aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     }
     return *this;
   }
@@ -1116,7 +1120,7 @@ class nsTArray_Impl
   template <typename Allocator>
   self_type& operator=(nsTArray_Impl<E, Allocator>&& aOther) {
     Clear();
-    SwapElements(aOther);
+    this->MoveInit(aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     return *this;
   }
 
@@ -1431,7 +1435,7 @@ class nsTArray_Impl
   template <class Allocator>
   void Assign(nsTArray_Impl<E, Allocator>&& aOther) {
     Clear();
-    SwapElements(aOther);
+    this->MoveInit(aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }
 
   // This method call the destructor on each element of the array, empties it,
@@ -2565,7 +2569,10 @@ auto nsTArray_Impl<E, Alloc>::AppendElementsInternal(
     MOZ_ASSERT(&aArray != this, "argument must be different aArray");
   }
   if (Length() == 0) {
-    SwapElements(aArray);
+    // XXX This might still be optimized. If aArray uses auto-storage but we
+    // won't, we might better retain our storage if it's sufficiently large.
+    this->ShrinkCapacityToZero(sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->MoveInit(aArray, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     return Elements();
   }
 
@@ -2673,6 +2680,9 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   }
   template <class Allocator>
   self_type& operator=(nsTArray_Impl<E, Allocator>&& aOther) {
+    // This is quite complex, since we don't know if we are an AutoTArray. While
+    // AutoTArray overrides this operator=, this might be called on a nsTArray&
+    // bound to an AutoTArray.
     base_type::operator=(std::move(aOther));
     return *this;
   }
@@ -2942,18 +2952,18 @@ class MOZ_NON_MEMMOVABLE AutoTArray : public nsTArray<E> {
 
   AutoTArray(self_type&& aOther) : nsTArray<E>() {
     Init();
-    this->SwapElements(aOther);
+    this->MoveInit(aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }
 
   explicit AutoTArray(base_type&& aOther) : mAlign() {
     Init();
-    this->SwapElements(aOther);
+    this->MoveInit(aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }
 
   template <typename Allocator>
   explicit AutoTArray(nsTArray_Impl<elem_type, Allocator>&& aOther) {
     Init();
-    this->SwapElements(aOther);
+    this->MoveInit(aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }
 
   MOZ_IMPLICIT AutoTArray(std::initializer_list<E> aIL) : mAlign() {
