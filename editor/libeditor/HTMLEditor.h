@@ -2681,64 +2681,6 @@ class HTMLEditor final : public TextEditor,
       nsIEditor::EStripWrappers aStripWrappers, nsIContent& aAtomicContent,
       const EditorDOMPoint& aCaretPoint, WSRunScanner& aWSRunScannerAtCaret);
 
-  class MOZ_STACK_CLASS AutoBlockElementsJoiner final {
-   public:
-    /**
-     * PrepareToDeleteCollapsedSelectionAtCurrentBlockBoundary() considers
-     * left content and right content which are joined for handling deletion
-     * at current block boundary (i.e., at start or end of the current block).
-     *
-     * @param aHTMLEditor               The HTML editor.
-     * @param aDirectionAndAmount       Direction of the deletion.
-     * @param aCurrentBlockElement      The current block element.
-     * @param aCaretPoint               The caret point (i.e., selection start
-     *                                  or end).
-     * @return                          true if can continue to handle the
-     *                                  deletion.
-     */
-    bool PrepareToDeleteCollapsedSelectionAtCurrentBlockBoundary(
-        const HTMLEditor& aHTMLEditor,
-        nsIEditor::EDirection aDirectionAndAmount,
-        Element& aCurrentBlockElement, const EditorDOMPoint& aCaretPoint);
-
-    /**
-     * Run() executes the joining.
-     *
-     * @param aHTMLEditor       The HTML editor.
-     * @param aCaretPoint       The caret point (i.e., selection start or end).
-     */
-    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-    Run(HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint) {
-      switch (mMode) {
-        case Mode::JoinCurrentBlock: {
-          EditActionResult result =
-              HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(aHTMLEditor,
-                                                                   aCaretPoint);
-          NS_WARNING_ASSERTION(
-              result.Succeeded(),
-              "AutoBlockElementsJoiner::"
-              "HandleDeleteCollapsedSelectionAtCurrentBlockBoundary() failed");
-          return result;
-        }
-        case Mode::NotInitialized:
-          return EditActionIgnored();
-      }
-    }
-
-   private:
-    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-    HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
-        HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint);
-
-    enum class Mode {
-      NotInitialized,
-      JoinCurrentBlock,
-    };
-    nsCOMPtr<nsIContent> mLeftContent;
-    nsCOMPtr<nsIContent> mRightContent;
-    Mode mMode = Mode::NotInitialized;
-  };
-
   /**
    * HandleDeleteCollapsedSelectionAtOtherBlockBoundary() handles deletion at
    * other block boundary (i.e., immediately before or after a block).
@@ -2759,6 +2701,20 @@ class HTMLEditor final : public TextEditor,
       nsIEditor::EDirection aDirectionAndAmount,
       nsIEditor::EStripWrappers aStripWrappers, Element& aOtherBlockElement,
       const EditorDOMPoint& aCaretPoint, WSRunScanner& aWSRunScannerAtCaret);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtCurrentBlockBoundary() handles deletion
+   * at current block boundary (i.e., at start or end of current block).
+   *
+   * @param aDirectionAndAmount         Direction of the deletion.
+   * @param aCurrentBlockElement        The current block element.
+   * @param aCaretPoint                 The caret point (i.e., selection start
+   *                                    or end).
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
+      nsIEditor::EDirection aDirectionAndAmount, Element& aCurrentBlockElement,
+      const EditorDOMPoint& aCaretPoint);
 
   /**
    * DeleteUnnecessaryNodesAndCollapseSelection() removes unnecessary nodes
