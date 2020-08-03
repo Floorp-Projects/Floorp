@@ -97,7 +97,8 @@ inline bool TreeIterator<ChildIterator>::Seek(nsIContent& aContent) {
 
   parentIterators.Reverse();
 
-  mParentIterators = std::move(parentIterators);
+  mParentIterators.Clear();
+  mParentIterators.SwapElements(parentIterators);
   mCurrent = &aContent;
   return true;
 }

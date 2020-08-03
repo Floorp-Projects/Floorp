@@ -32,7 +32,8 @@ void WidevineBuffer::SetSize(uint32_t aSize) { mBuffer.SetLength(aSize); }
 uint32_t WidevineBuffer::Size() const { return mBuffer.Length(); }
 
 nsTArray<uint8_t> WidevineBuffer::ExtractBuffer() {
-  nsTArray<uint8_t> out = std::move(mBuffer);
+  nsTArray<uint8_t> out;
+  out.SwapElements(mBuffer);
   return out;
 }
 

@@ -268,27 +268,6 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacity(
 }
 
 template <class Alloc, class RelocationStrategy>
-void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacityToZero(
-    size_type aElemSize, size_t aElemAlign) {
-  MOZ_ASSERT(mHdr->mLength == 0);
-
-  if (mHdr == EmptyHdr() || UsesAutoArrayBuffer()) {
-    return;
-  }
-
-  const bool isAutoArray = IsAutoArray();
-
-  nsTArrayFallibleAllocator::Free(mHdr);
-
-  if (isAutoArray) {
-    mHdr = GetAutoArrayBufferUnsafe(aElemAlign);
-    mHdr->mLength = 0;
-  } else {
-    mHdr = EmptyHdr();
-  }
-}
-
-template <class Alloc, class RelocationStrategy>
 template <typename ActualAlloc>
 void nsTArray_base<Alloc, RelocationStrategy>::ShiftData(index_type aStart,
                                                          size_type aOldLen,
@@ -305,7 +284,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShiftData(index_type aStart,
   // Compute the resulting length of the array
   mHdr->mLength += aNewLen - aOldLen;
   if (mHdr->mLength == 0) {
-    ShrinkCapacityToZero(aElemSize, aElemAlign);
+    ShrinkCapacity(aElemSize, aElemAlign);
   } else {
     // Maybe nothing needs to be shifted
     if (num == 0) {
@@ -341,7 +320,7 @@ void nsTArray_base<Alloc, RelocationStrategy>::SwapFromEnd(index_type aStart,
 
   if (mHdr->mLength == 0) {
     // If we have no elements remaining in the array, we can free our buffer.
-    ShrinkCapacityToZero(aElemSize, aElemAlign);
+    ShrinkCapacity(aElemSize, aElemAlign);
     return;
   }
 
@@ -525,100 +504,6 @@ nsTArray_base<Alloc, RelocationStrategy>::SwapArrayElements(
   }
 
   return ActualAlloc::SuccessResult();
-}
-
-template <class Alloc, class RelocationStrategy>
-template <class Allocator>
-void nsTArray_base<Alloc, RelocationStrategy>::MoveInit(
-    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
-    size_t aElemAlign) {
-  // This method is similar to SwapArrayElements, but specialized for the case
-  // where the target array is empty with no allocated heap storage. It is
-  // provided and used to simplify template instantiation and enable better code
-  // generation.
-
-  MOZ_ASSERT(Length() == 0);
-  MOZ_ASSERT(Capacity() == 0 || (IsAutoArray() && UsesAutoArrayBuffer()));
-
-  // EnsureNotUsingAutoArrayBuffer will set mHdr = sEmptyTArrayHeader even if we
-  // have an auto buffer.  We need to point mHdr back to our auto buffer before
-  // we return, otherwise we'll forget that we have an auto buffer at all!
-  // IsAutoArrayRestorer takes care of this for us.
-
-  IsAutoArrayRestorer ourAutoRestorer(*this, aElemAlign);
-  typename nsTArray_base<Allocator, RelocationStrategy>::IsAutoArrayRestorer
-      otherAutoRestorer(aOther, aElemAlign);
-
-  // If neither array uses an auto buffer which is big enough to store the
-  // other array's elements, then ensure that both arrays use malloc'ed storage
-  // and swap their mHdr pointers.
-  if ((!IsAutoArray() || Capacity() < aOther.Length()) &&
-      !aOther.UsesAutoArrayBuffer()) {
-    mHdr = aOther.mHdr;
-
-    aOther.mHdr = EmptyHdr();
-
-    return;
-  }
-
-  // Move the data by copying, since at least one has an auto
-  // buffer which is large enough to hold all of the aOther's elements.
-
-  EnsureCapacity<nsTArrayInfallibleAllocator>(aOther.Length(), aElemSize);
-
-  // The EnsureCapacity calls above shouldn't have caused *both* arrays to
-  // switch from their auto buffers to malloc'ed space.
-  MOZ_ASSERT(UsesAutoArrayBuffer() || aOther.UsesAutoArrayBuffer(),
-             "One of the arrays should be using its auto buffer.");
-
-  RelocationStrategy::RelocateNonOverlappingRegion(Hdr() + 1, aOther.Hdr() + 1,
-                                                   aOther.Length(), aElemSize);
-
-  // Swap the arrays' lengths.
-  MOZ_ASSERT((aOther.Length() == 0 || mHdr != EmptyHdr()) &&
-                 (Length() == 0 || aOther.mHdr != EmptyHdr()),
-             "Don't set sEmptyTArrayHeader's length.");
-
-  // Avoid writing to EmptyHdr, since it can trigger false
-  // positives with TSan.
-  if (mHdr != EmptyHdr()) {
-    mHdr->mLength = aOther.Length();
-  }
-  if (aOther.mHdr != EmptyHdr()) {
-    aOther.mHdr->mLength = 0;
-  }
-}
-
-template <class Alloc, class RelocationStrategy>
-template <class Allocator>
-void nsTArray_base<Alloc, RelocationStrategy>::MoveConstructNonAutoArray(
-    nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
-    size_t aElemAlign) {
-  // We know that we are not an (Copyable)AutoTArray and we know that we are
-  // empty, so don't use SwapArrayElements which doesn't know either of these
-  // facts and is very complex.
-
-  // aOther might be an (Copyable)AutoTArray though, and it might use its inline
-  // buffer.
-  const bool otherUsesAutoArrayBuffer = aOther.UsesAutoArrayBuffer();
-  if (otherUsesAutoArrayBuffer) {
-    // Use nsTArrayInfallibleAllocator regardless of Alloc because this is
-    // called from a move constructor, which cannot report an error to the
-    // caller.
-    aOther.template EnsureNotUsingAutoArrayBuffer<nsTArrayInfallibleAllocator>(
-        aElemSize);
-  }
-
-  const bool otherIsAuto = otherUsesAutoArrayBuffer || aOther.IsAutoArray();
-  mHdr = aOther.mHdr;
-
-  if (otherIsAuto) {
-    mHdr->mIsAutoArray = false;
-    aOther.mHdr = aOther.GetAutoArrayBufferUnsafe(aElemAlign);
-    aOther.mHdr->mLength = 0;
-  } else {
-    aOther.mHdr = aOther.EmptyHdr();
-  }
 }
 
 template <class Alloc, class RelocationStrategy>

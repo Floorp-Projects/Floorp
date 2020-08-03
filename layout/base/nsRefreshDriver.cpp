@@ -1279,8 +1279,8 @@ void nsRefreshDriver::DispatchVisualViewportResizeEvents() {
   // We're taking a hint from scroll events and only dispatch the current set
   // of queued resize events. If additional events are posted in response to
   // the current events being dispatched, we'll dispatch them on the next tick.
-  VisualViewportResizeEventArray events =
-      std::move(mVisualViewportResizeEvents);
+  VisualViewportResizeEventArray events;
+  events.SwapElements(mVisualViewportResizeEvents);
   for (auto& event : events) {
     event->Run();
   }
@@ -1301,7 +1301,8 @@ void nsRefreshDriver::DispatchScrollEvents() {
   // However, dispatching a scroll event can potentially cause more scroll
   // events to be posted, so we move the initial set into a temporary array
   // first. (Newly posted scroll events will be dispatched on the next tick.)
-  ScrollEventArray events = std::move(mScrollEvents);
+  ScrollEventArray events;
+  events.SwapElements(mScrollEvents);
   for (auto& event : events) {
     event->Run();
   }
@@ -1318,8 +1319,8 @@ void nsRefreshDriver::DispatchVisualViewportScrollEvents() {
   // However, dispatching a scroll event can potentially cause more scroll
   // events to be posted, so we move the initial set into a temporary array
   // first. (Newly posted scroll events will be dispatched on the next tick.)
-  VisualViewportScrollEventArray events =
-      std::move(mVisualViewportScrollEvents);
+  VisualViewportScrollEventArray events;
+  events.SwapElements(mVisualViewportScrollEvents);
   for (auto& event : events) {
     event->Run();
   }
@@ -2014,7 +2015,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages();
   }
 
-  AutoTArray<nsCOMPtr<nsIRunnable>, 16> earlyRunners = std::move(mEarlyRunners);
+  AutoTArray<nsCOMPtr<nsIRunnable>, 16> earlyRunners;
+  earlyRunners.SwapElements(mEarlyRunners);
   for (auto& runner : earlyRunners) {
     runner->Run();
   }

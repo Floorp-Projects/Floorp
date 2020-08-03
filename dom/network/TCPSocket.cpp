@@ -413,7 +413,7 @@ void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
     // If we have pending data, we should send them, or fire
     // a drain event if we are waiting for it.
     if (!mPendingDataAfterStartTLS.IsEmpty()) {
-      mPendingData = std::move(mPendingDataAfterStartTLS);
+      mPendingData.SwapElements(mPendingDataAfterStartTLS);
       EnsureCopying();
       return;
     }

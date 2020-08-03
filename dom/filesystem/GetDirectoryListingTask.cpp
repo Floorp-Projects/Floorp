@@ -252,7 +252,7 @@ FileSystemResponseValue GetDirectoryListingTaskParent::GetSuccessRequestResult(
   }
 
   FileSystemDirectoryListingResponse response;
-  response.data() = std::move(inputs);
+  response.data().SwapElements(inputs);
   return response;
 }
 

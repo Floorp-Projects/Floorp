@@ -1953,7 +1953,8 @@ void nsCellMap::RebuildConsideringRows(
   NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   // copy the old cell map into a new array
   uint32_t numOrigRows = mRows.Length();
-  nsTArray<CellDataArray> origRows = std::move(mRows);
+  nsTArray<CellDataArray> origRows;
+  mRows.SwapElements(origRows);
 
   int32_t rowNumberChange;
   if (aRowsToInsert) {
@@ -2052,7 +2053,8 @@ void nsCellMap::RebuildConsideringCells(
   NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   // copy the old cell map into a new array
   int32_t numOrigRows = mRows.Length();
-  nsTArray<CellDataArray> origRows = std::move(mRows);
+  nsTArray<CellDataArray> origRows;
+  mRows.SwapElements(origRows);
 
   int32_t numNewCells = (aCellFrames) ? aCellFrames->Length() : 0;
 

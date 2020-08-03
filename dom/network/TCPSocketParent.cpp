@@ -164,7 +164,8 @@ void TCPSocketParent::FireEvent(const nsAString& aType,
 
 void TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer,
                                                TCPReadyState aReadyState) {
-  nsTArray<uint8_t> arr = std::move(aBuffer);
+  nsTArray<uint8_t> arr;
+  arr.SwapElements(aBuffer);
 
   SendableData data(arr);
   SendEvent(u"data"_ns, data, aReadyState);

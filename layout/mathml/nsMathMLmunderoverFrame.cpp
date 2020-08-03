@@ -134,8 +134,8 @@ void nsMathMLmunderoverFrame::ReflowCallbackCanceled() {
 void nsMathMLmunderoverFrame::SetPendingPostReflowIncrementScriptLevel() {
   MOZ_ASSERT(!mPostReflowIncrementScriptLevelCommands.IsEmpty());
 
-  nsTArray<SetIncrementScriptLevelCommand> commands =
-      std::move(mPostReflowIncrementScriptLevelCommands);
+  nsTArray<SetIncrementScriptLevelCommand> commands;
+  commands.SwapElements(mPostReflowIncrementScriptLevelCommands);
 
   for (const auto& command : commands) {
     nsIFrame* child = PrincipalChildList().FrameAt(command.mChildIndex);

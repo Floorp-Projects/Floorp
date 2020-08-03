@@ -156,7 +156,8 @@ class AnimationEventDispatcher final {
 
     SortEvents();
 
-    EventArray events = std::move(mPendingEvents);
+    EventArray events;
+    mPendingEvents.SwapElements(events);
     // mIsSorted will be set to true by SortEvents above, and we leave it
     // that way since mPendingEvents is now empty
     for (AnimationEventInfo& info : events) {

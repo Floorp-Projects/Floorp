@@ -263,7 +263,8 @@ void nsOfflineCacheEvictionFunction::Apply() {
     return;
   }
 
-  appcachedetail::FileArray items = std::move(*pitems);
+  appcachedetail::FileArray items;
+  items.SwapElements(*pitems);
 
   for (int32_t i = 0; i < items.Count(); i++) {
     if (MOZ_LOG_TEST(gCacheLog, LogLevel::Debug)) {
@@ -2106,7 +2107,7 @@ nsresult nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement* statement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  values = std::move(valArray);
+  values.SwapElements(valArray);
   return NS_OK;
 }
 

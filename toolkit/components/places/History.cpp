@@ -465,10 +465,11 @@ class NotifyManyVisitsObservers : public Runnable {
         mPlace(aPlace),
         mHistory(History::GetService()) {}
 
-  explicit NotifyManyVisitsObservers(nsTArray<VisitData>&& aPlaces)
+  explicit NotifyManyVisitsObservers(nsTArray<VisitData>& aPlaces)
       : Runnable("places::NotifyManyVisitsObservers"),
-        mPlaces(std::move(aPlaces)),
-        mHistory(History::GetService()) {}
+        mHistory(History::GetService()) {
+    aPlaces.SwapElements(mPlaces);
+  }
 
   nsresult NotifyVisit(nsNavHistory* aNavHistory,
                        nsCOMPtr<nsIObserverService>& aObsService, PRTime aNow,
@@ -790,7 +791,7 @@ class InsertVisitedURIs final : public Runnable {
    *        sending them out individually.
    */
   static nsresult Start(mozIStorageConnection* aConnection,
-                        nsTArray<VisitData>&& aPlaces,
+                        nsTArray<VisitData>& aPlaces,
                         mozIVisitInfoCallback* aCallback = nullptr,
                         bool aGroupNotifications = false,
                         uint32_t aInitialUpdatedCount = 0) {
@@ -816,8 +817,8 @@ class InsertVisitedURIs final : public Runnable {
       Unused << aCallback->GetIgnoreResults(&ignoreResults);
     }
     RefPtr<InsertVisitedURIs> event = new InsertVisitedURIs(
-        aConnection, std::move(aPlaces), callback, aGroupNotifications,
-        ignoreErrors, ignoreResults, aInitialUpdatedCount);
+        aConnection, aPlaces, callback, aGroupNotifications, ignoreErrors,
+        ignoreResults, aInitialUpdatedCount);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
@@ -940,8 +941,9 @@ class InsertVisitedURIs final : public Runnable {
         notificationChunk.AppendElement(place);
         if (notificationChunk.Length() == NOTIFY_VISITS_CHUNK_SIZE ||
             numRemaining == 0) {
+          // This will SwapElements on notificationChunk with an empty nsTArray
           nsCOMPtr<nsIRunnable> event =
-              new NotifyManyVisitsObservers(std::move(notificationChunk));
+              new NotifyManyVisitsObservers(notificationChunk);
           rv = NS_DispatchToMainThread(event);
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -982,8 +984,7 @@ class InsertVisitedURIs final : public Runnable {
     // If we don't need to chunk the notifications, just notify using the
     // original mPlaces array.
     if (!shouldChunkNotifications) {
-      nsCOMPtr<nsIRunnable> event =
-          new NotifyManyVisitsObservers(std::move(mPlaces));
+      nsCOMPtr<nsIRunnable> event = new NotifyManyVisitsObservers(mPlaces);
       rv = NS_DispatchToMainThread(event);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -993,13 +994,12 @@ class InsertVisitedURIs final : public Runnable {
 
  private:
   InsertVisitedURIs(
-      mozIStorageConnection* aConnection, nsTArray<VisitData>&& aPlaces,
+      mozIStorageConnection* aConnection, nsTArray<VisitData>& aPlaces,
       const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
       bool aGroupNotifications, bool aIgnoreErrors, bool aIgnoreResults,
       uint32_t aInitialUpdatedCount)
       : Runnable("places::InsertVisitedURIs"),
         mDBConn(aConnection),
-        mPlaces(std::move(aPlaces)),
         mCallback(aCallback),
         mGroupNotifications(aGroupNotifications),
         mIgnoreErrors(aIgnoreErrors),
@@ -1007,6 +1007,8 @@ class InsertVisitedURIs final : public Runnable {
         mSuccessfulUpdatedCount(aInitialUpdatedCount),
         mHistory(History::GetService()) {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
+
+    mPlaces.SwapElements(aPlaces);
 
 #ifdef DEBUG
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
@@ -1944,7 +1946,7 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     mozIStorageConnection* dbConn = GetDBConn();
     NS_ENSURE_STATE(dbConn);
 
-    rv = InsertVisitedURIs::Start(dbConn, std::move(placeArray));
+    rv = InsertVisitedURIs::Start(dbConn, placeArray);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2137,9 +2139,8 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
   // CanAddURI, which isn't an error.  If we have no visits to add, however,
   // we should not call InsertVisitedURIs::Start.
   if (visitData.Length()) {
-    nsresult rv =
-        InsertVisitedURIs::Start(dbConn, std::move(visitData), callback,
-                                 aGroupNotifications, initialUpdatedCount);
+    nsresult rv = InsertVisitedURIs::Start(
+        dbConn, visitData, callback, aGroupNotifications, initialUpdatedCount);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (aCallback) {
     // Be sure to notify that all of our operations are complete.  This

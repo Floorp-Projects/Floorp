@@ -1365,7 +1365,8 @@ void CacheFile::Lock() { mLock.Lock(); }
 void CacheFile::Unlock() {
   // move the elements out of mObjsToRelease
   // so that they can be released after we unlock
-  nsTArray<RefPtr<nsISupports>> objs = std::move(mObjsToRelease);
+  nsTArray<RefPtr<nsISupports>> objs;
+  objs.SwapElements(mObjsToRelease);
 
   mLock.Unlock();
 }

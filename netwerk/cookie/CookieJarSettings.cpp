@@ -58,8 +58,10 @@ class PermissionComparator {
 
 class ReleaseCookiePermissions final : public Runnable {
  public:
-  explicit ReleaseCookiePermissions(nsTArray<RefPtr<nsIPermission>>&& aArray)
-      : Runnable("ReleaseCookiePermissions"), mArray(std::move(aArray)) {}
+  explicit ReleaseCookiePermissions(nsTArray<RefPtr<nsIPermission>>& aArray)
+      : Runnable("ReleaseCookiePermissions") {
+    mArray.SwapElements(aArray);
+  }
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
@@ -130,8 +132,7 @@ CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior,
 
 CookieJarSettings::~CookieJarSettings() {
   if (!NS_IsMainThread() && !mCookiePermissions.IsEmpty()) {
-    RefPtr<Runnable> r =
-        new ReleaseCookiePermissions(std::move(mCookiePermissions));
+    RefPtr<Runnable> r = new ReleaseCookiePermissions(mCookiePermissions);
     MOZ_ASSERT(mCookiePermissions.IsEmpty());
 
     SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
@@ -341,7 +342,7 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
 
   cookieJarSettings->mIsOnContentBlockingAllowList =
       aData.isOnContentBlockingAllowList();
-  cookieJarSettings->mCookiePermissions = std::move(list);
+  cookieJarSettings->mCookiePermissions.SwapElements(list);
   cookieJarSettings->mPartitionKey = aData.partitionKey();
 
   cookieJarSettings.forget(aCookieJarSettings);

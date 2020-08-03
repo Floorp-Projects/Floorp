@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS(nsXPCTestParams, nsIXPCTestParams)
 
 #define SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP)                        \
   {                                                                 \
-    _retval = std::move(b);                                         \
+    _retval.SwapElements(b);                                        \
     b = a.Clone();                                                  \
     for (uint32_t i = 0; i < b.Length(); ++i) TAKE_OWNERSHIP(b[i]); \
     return NS_OK;                                                   \

@@ -6262,7 +6262,7 @@ void Document::UpdateFrameRequestCallbackSchedulingState(
 
 void Document::TakeFrameRequestCallbacks(nsTArray<FrameRequest>& aCallbacks) {
   MOZ_ASSERT(aCallbacks.IsEmpty());
-  aCallbacks = std::move(mFrameRequestCallbacks);
+  aCallbacks.SwapElements(mFrameRequestCallbacks);
   mCanceledFrameRequestCallbacks.clear();
   // No need to manually remove ourselves from the refresh driver; it will
   // handle that part.  But we do have to update our state.
@@ -8573,8 +8573,8 @@ void Document::MaybeInitializeFinalizeFrameLoaders() {
 
   uint32_t length = mFrameLoaderFinalizers.Length();
   if (length > 0) {
-    nsTArray<nsCOMPtr<nsIRunnable>> finalizers =
-        std::move(mFrameLoaderFinalizers);
+    nsTArray<nsCOMPtr<nsIRunnable>> finalizers;
+    mFrameLoaderFinalizers.SwapElements(finalizers);
     for (uint32_t i = 0; i < length; ++i) {
       finalizers[i]->Run();
     }
@@ -11687,9 +11687,10 @@ bool Document::IsDocumentRightToLeft() {
 
 class nsDelayedEventDispatcher : public Runnable {
  public:
-  explicit nsDelayedEventDispatcher(nsTArray<nsCOMPtr<Document>>&& aDocuments)
-      : mozilla::Runnable("nsDelayedEventDispatcher"),
-        mDocuments(std::move(aDocuments)) {}
+  explicit nsDelayedEventDispatcher(nsTArray<nsCOMPtr<Document>>& aDocuments)
+      : mozilla::Runnable("nsDelayedEventDispatcher") {
+    mDocuments.SwapElements(aDocuments);
+  }
   virtual ~nsDelayedEventDispatcher() = default;
 
   NS_IMETHOD Run() override {
@@ -11721,8 +11722,7 @@ void Document::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
 
   if (aFireEvents) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIRunnable> ded =
-        new nsDelayedEventDispatcher(std::move(documents));
+    nsCOMPtr<nsIRunnable> ded = new nsDelayedEventDispatcher(documents);
     Dispatch(TaskCategory::Other, ded.forget());
   } else {
     FireOrClearDelayedEvents(documents, false);
@@ -11730,8 +11730,8 @@ void Document::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
 
   if (!EventHandlingSuppressed()) {
     MOZ_ASSERT(NS_IsMainThread());
-    nsTArray<RefPtr<net::ChannelEventQueue>> queues =
-        std::move(mSuspendedQueues);
+    nsTArray<RefPtr<net::ChannelEventQueue>> queues;
+    mSuspendedQueues.SwapElements(queues);
     for (net::ChannelEventQueue* queue : queues) {
       queue->Resume();
     }
@@ -11767,8 +11767,8 @@ bool Document::SuspendPostMessageEvent(PostMessageEvent* aEvent) {
 }
 
 void Document::FireOrClearPostMessageEvents(bool aFireEvents) {
-  nsTArray<RefPtr<PostMessageEvent>> events =
-      std::move(mSuspendedPostMessageEvents);
+  nsTArray<RefPtr<PostMessageEvent>> events;
+  events.SwapElements(mSuspendedPostMessageEvents);
 
   if (aFireEvents) {
     for (PostMessageEvent* event : events) {

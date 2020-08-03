@@ -598,7 +598,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
 
   {
     MutexAutoLock lock(mMutex);
-    mDnsSuffixList = std::move(dnsSuffixList);
+    mDnsSuffixList.SwapElements(dnsSuffixList);
     mPlatformDNSIndications = platformDNSIndications;
   }
 

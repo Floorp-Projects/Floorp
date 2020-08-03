@@ -8932,13 +8932,15 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
         sharedGridData = new SharedGridData;
         SetProperty(SharedGridData::Prop(), sharedGridData);
       }
-      sharedGridData->mCols.mSizes = std::move(gridReflowInput.mCols.mSizes);
+      sharedGridData->mCols.mSizes.Clear();
+      sharedGridData->mCols.mSizes.SwapElements(gridReflowInput.mCols.mSizes);
       sharedGridData->mCols.mContentBoxSize =
           gridReflowInput.mCols.mContentBoxSize;
       sharedGridData->mCols.mBaselineSubtreeAlign =
           gridReflowInput.mCols.mBaselineSubtreeAlign;
       sharedGridData->mCols.mIsMasonry = gridReflowInput.mCols.mIsMasonry;
-      sharedGridData->mRows.mSizes = std::move(gridReflowInput.mRows.mSizes);
+      sharedGridData->mRows.mSizes.Clear();
+      sharedGridData->mRows.mSizes.SwapElements(gridReflowInput.mRows.mSizes);
       // Save the original row grid sizes and gaps so we can restore them later
       // in GridReflowInput::Initialize for the continuations.
       auto& origRowData = sharedGridData->mOriginalRowData;
@@ -8955,8 +8957,10 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       sharedGridData->mRows.mBaselineSubtreeAlign =
           gridReflowInput.mRows.mBaselineSubtreeAlign;
       sharedGridData->mRows.mIsMasonry = gridReflowInput.mRows.mIsMasonry;
-      sharedGridData->mGridItems = std::move(gridReflowInput.mGridItems);
-      sharedGridData->mAbsPosItems = std::move(gridReflowInput.mAbsPosItems);
+      sharedGridData->mGridItems.Clear();
+      sharedGridData->mGridItems.SwapElements(gridReflowInput.mGridItems);
+      sharedGridData->mAbsPosItems.Clear();
+      sharedGridData->mAbsPosItems.SwapElements(gridReflowInput.mAbsPosItems);
 
       sharedGridData->mGenerateComputedGridInfo = ShouldGenerateComputedInfo();
     } else if (sharedGridData && !GetNextInFlow()) {

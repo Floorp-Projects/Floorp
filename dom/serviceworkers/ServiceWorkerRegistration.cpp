@@ -161,8 +161,8 @@ void ServiceWorkerRegistration::UpdateState(
   UpdateStateInternal(aDescriptor.GetInstalling(), aDescriptor.GetWaiting(),
                       aDescriptor.GetActive());
 
-  nsTArray<UniquePtr<VersionCallback>> callbackList =
-      std::move(mVersionCallbackList);
+  nsTArray<UniquePtr<VersionCallback>> callbackList;
+  mVersionCallbackList.SwapElements(callbackList);
   for (auto& cb : callbackList) {
     if (cb->mVersion > mDescriptor.Version()) {
       mVersionCallbackList.AppendElement(std::move(cb));

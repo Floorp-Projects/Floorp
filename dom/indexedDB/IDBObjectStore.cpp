@@ -95,13 +95,13 @@ struct IDBObjectStore::StructuredCloneWriteInfo {
 
   StructuredCloneWriteInfo(StructuredCloneWriteInfo&& aCloneWriteInfo) noexcept
       : mCloneBuffer(std::move(aCloneWriteInfo.mCloneBuffer)),
-        mFiles(std::move(aCloneWriteInfo.mFiles)),
         mDatabase(aCloneWriteInfo.mDatabase),
         mOffsetToKeyProp(aCloneWriteInfo.mOffsetToKeyProp) {
     MOZ_ASSERT(mDatabase);
 
     MOZ_COUNT_CTOR(StructuredCloneWriteInfo);
 
+    mFiles.SwapElements(aCloneWriteInfo.mFiles);
     aCloneWriteInfo.mOffsetToKeyProp = 0;
   }
 

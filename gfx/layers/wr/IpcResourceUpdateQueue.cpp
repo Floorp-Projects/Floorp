@@ -143,8 +143,8 @@ void ShmSegmentsWriter::Flush(nsTArray<RefCountedShmem>& aSmallAllocs,
                               nsTArray<ipc::Shmem>& aLargeAllocs) {
   MOZ_ASSERT(aSmallAllocs.IsEmpty());
   MOZ_ASSERT(aLargeAllocs.IsEmpty());
-  aSmallAllocs = std::move(mSmallAllocs);
-  aLargeAllocs = std::move(mLargeAllocs);
+  mSmallAllocs.SwapElements(aSmallAllocs);
+  mLargeAllocs.SwapElements(aLargeAllocs);
   mCursor = 0;
 }
 
@@ -457,7 +457,8 @@ void IpcResourceUpdateQueue::Flush(
     nsTArray<layers::OpUpdateResource>& aUpdates,
     nsTArray<layers::RefCountedShmem>& aSmallAllocs,
     nsTArray<ipc::Shmem>& aLargeAllocs) {
-  aUpdates = std::move(mUpdates);
+  aUpdates.Clear();
+  mUpdates.SwapElements(aUpdates);
   mWriter.Flush(aSmallAllocs, aLargeAllocs);
 }
 

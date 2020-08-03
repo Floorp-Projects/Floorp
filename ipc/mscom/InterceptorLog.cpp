@@ -430,7 +430,7 @@ void Logger::Flush() {
   nsTArray<nsCString> linesToWrite;
   {  // Scope for lock
     MutexAutoLock lock(mMutex);
-    linesToWrite = std::move(mEntries);
+    linesToWrite.SwapElements(mEntries);
   }
 
   for (uint32_t i = 0, len = linesToWrite.Length(); i < len; ++i) {

@@ -741,7 +741,8 @@ int32_t WebrtcGmpVideoDecoder::GmpInitDone(GMPVideoDecoderProxy* aGMP,
   // now release any frames that got queued waiting for InitDone
   if (!mQueuedFrames.IsEmpty()) {
     // So we're safe to call Decode_g(), which asserts it's empty
-    nsTArray<UniquePtr<GMPDecodeData>> temp = std::move(mQueuedFrames);
+    nsTArray<UniquePtr<GMPDecodeData>> temp;
+    temp.SwapElements(mQueuedFrames);
     for (auto& queued : temp) {
       Decode_g(RefPtr<WebrtcGmpVideoDecoder>(this), std::move(queued));
     }

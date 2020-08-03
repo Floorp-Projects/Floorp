@@ -1807,8 +1807,8 @@ bool WorkerPrivate::ProxyReleaseMainThreadObjects() {
     mLoadInfo.mLoadGroup.swap(loadGroupToCancel);
   }
 
-  bool result = mLoadInfo.ProxyReleaseMainThreadObjects(
-      this, std::move(loadGroupToCancel));
+  bool result =
+      mLoadInfo.ProxyReleaseMainThreadObjects(this, loadGroupToCancel);
 
   mMainThreadObjectsForgotten = true;
 

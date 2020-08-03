@@ -1333,7 +1333,8 @@ void XMLHttpRequestMainThread::ResumeEventDispatching() {
   MOZ_ASSERT(mEventDispatchingSuspended);
   mEventDispatchingSuspended = false;
 
-  nsTArray<PendingEvent> pendingEvents = std::move(mPendingEvents);
+  nsTArray<PendingEvent> pendingEvents;
+  pendingEvents.SwapElements(mPendingEvents);
 
   if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
     return;

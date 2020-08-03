@@ -401,8 +401,8 @@ void GeckoMediaPluginServiceChild::SetServiceChild(
 
   mServiceChild = std::move(aServiceChild);
 
-  nsTArray<MozPromiseHolder<GetServiceChildPromise>> holders =
-      std::move(mGetServiceChildPromises);
+  nsTArray<MozPromiseHolder<GetServiceChildPromise>> holders;
+  holders.SwapElements(mGetServiceChildPromises);
   for (MozPromiseHolder<GetServiceChildPromise>& holder : holders) {
     holder.Resolve(mServiceChild.get(), __func__);
   }

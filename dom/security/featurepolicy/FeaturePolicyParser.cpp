@@ -150,7 +150,7 @@ bool FeaturePolicyParser::ParseString(const nsAString& aPolicy,
     }
   }
 
-  aParsedFeatures = std::move(parsedFeatures);
+  aParsedFeatures.SwapElements(parsedFeatures);
   return true;
 }
 

@@ -1187,7 +1187,8 @@ void ServoStyleSet::RunPostTraversalTasks() {
     return;
   }
 
-  nsTArray<PostTraversalTask> tasks = std::move(mPostTraversalTasks);
+  nsTArray<PostTraversalTask> tasks;
+  tasks.SwapElements(mPostTraversalTasks);
 
   for (auto& task : tasks) {
     task.Run();

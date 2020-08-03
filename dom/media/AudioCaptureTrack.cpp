@@ -121,7 +121,7 @@ void AudioCaptureTrack::MixerCallback(AudioDataValue* aMixedBuffer,
   }
   AudioChunk chunk;
   chunk.mBuffer =
-      new mozilla::SharedChannelArrayBuffer<AudioDataValue>(std::move(output));
+      new mozilla::SharedChannelArrayBuffer<AudioDataValue>(&output);
   chunk.mDuration = aFrames;
   chunk.mBufferFormat = aFormat;
   chunk.mChannelData.SetLength(MONO);

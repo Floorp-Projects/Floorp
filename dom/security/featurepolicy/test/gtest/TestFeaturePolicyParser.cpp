@@ -29,7 +29,7 @@ void CheckParser(const nsAString& aInput, bool aExpectedResults,
               aExpectedResults);
   ASSERT_TRUE(parsedFeatures.Length() == aExpectedFeatures);
 
-  aParsedFeatures = std::move(parsedFeatures);
+  parsedFeatures.SwapElements(aParsedFeatures);
 }
 
 TEST(FeaturePolicyParser, Basic)

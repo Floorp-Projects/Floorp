@@ -664,7 +664,8 @@ bool FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules) {
   // re-download resources in the (common) case where at least some of the
   // same rules are still present.
 
-  nsTArray<FontFaceRecord> oldRecords = std::move(mRuleFaces);
+  nsTArray<FontFaceRecord> oldRecords;
+  mRuleFaces.SwapElements(oldRecords);
 
   // Remove faces from the font family records; we need to re-insert them
   // because we might end up with faces in a different order even if they're
@@ -1644,7 +1645,7 @@ void FontFaceSet::DispatchLoadingFinishedEvent(
   FontFaceSetLoadEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mFontfaces = std::move(aFontFaces);
+  init.mFontfaces.SwapElements(aFontFaces);
   RefPtr<FontFaceSetLoadEvent> event =
       FontFaceSetLoadEvent::Constructor(this, aType, init);
   (new AsyncEventDispatcher(this, event))->PostDOMEvent();

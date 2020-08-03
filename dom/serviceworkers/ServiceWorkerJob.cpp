@@ -50,8 +50,8 @@ void ServiceWorkerJob::StealResultCallbacksFrom(ServiceWorkerJob* aJob) {
 
   // Take the callbacks from the other job immediately to avoid the
   // any possibility of them existing on both jobs at once.
-  nsTArray<RefPtr<Callback>> callbackList =
-      std::move(aJob->mResultCallbackList);
+  nsTArray<RefPtr<Callback>> callbackList;
+  callbackList.SwapElements(aJob->mResultCallbackList);
 
   for (RefPtr<Callback>& callback : callbackList) {
     // Use AppendResultCallback() so that assertion checking is performed on
@@ -138,7 +138,8 @@ void ServiceWorkerJob::InvokeResultCallbacks(ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(!mResultCallbacksInvoked);
   mResultCallbacksInvoked = true;
 
-  nsTArray<RefPtr<Callback>> callbackList = std::move(mResultCallbackList);
+  nsTArray<RefPtr<Callback>> callbackList;
+  callbackList.SwapElements(mResultCallbackList);
 
   for (RefPtr<Callback>& callback : callbackList) {
     // The callback might consume an exception on the ErrorResult, so we need
