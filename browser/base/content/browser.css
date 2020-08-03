@@ -989,7 +989,7 @@ browser[tabmodalPromptShowing] {
   transition: opacity 120ms ease-out, visibility 120ms;
 }
 
-#statuspanel[type=overLink] > #statuspanel-inner {
+#statuspanel:is([type=overLink], [inactive][previoustype=overLink]) > #statuspanel-inner {
   direction: ltr;
 }
 
