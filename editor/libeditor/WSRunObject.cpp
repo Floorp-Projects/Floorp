@@ -131,6 +131,177 @@ nsresult WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
 
 // static
 EditActionResult WhiteSpaceVisibilityKeeper::
+    MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
+        HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
+        Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
+        nsIContent& aLeftContentInBlock,
+        const Maybe<nsAtom*>& aListElementTagName) {
+  MOZ_ASSERT(
+      EditorUtils::IsDescendantOf(aRightBlockElement, aLeftBlockElement));
+  MOZ_ASSERT(
+      &aLeftBlockElement == &aLeftContentInBlock ||
+      EditorUtils::IsDescendantOf(aLeftContentInBlock, aLeftBlockElement));
+  MOZ_ASSERT(&aLeftBlockElement == aAtLeftBlockChild.GetContainer());
+
+  // NOTE: This method may extend deletion range:
+  // - to delete invisible white-spaces at start of aRightBlockElement
+  // - to delete invisible white-spaces before aRightBlockElement
+  // - to delete invisible white-spaces at start of aAtLeftBlockChild.GetChild()
+  // - to delete invisible white-spaces before aAtLeftBlockChild.GetChild()
+  // - to delete invisible `<br>` element before aAtLeftBlockChild.GetChild()
+
+  nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
+      aHTMLEditor, EditorDOMPoint(&aRightBlockElement, 0));
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() failed "
+        "at right block");
+    return EditActionIgnored(rv);
+  }
+
+  OwningNonNull<Element> originalLeftBlockElement = aLeftBlockElement;
+  OwningNonNull<Element> leftBlockElement = aLeftBlockElement;
+  EditorDOMPoint atLeftBlockChild(aAtLeftBlockChild);
+  {
+    // We can't just track leftBlockElement because it's an Element, so track
+    // something else.
+    AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &atLeftBlockChild);
+    nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
+        aHTMLEditor, EditorDOMPoint(atLeftBlockChild.GetContainer(),
+                                    atLeftBlockChild.Offset()));
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
+          "failed at left block child");
+      return EditActionIgnored(rv);
+    }
+    // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
+    //     Do we really need to do update aRightBlockElement here??
+    // XXX And atLeftBlockChild.GetContainerAsElement() always returns
+    //     an element pointer so that probably here should not use
+    //     accessors of EditorDOMPoint, should use DOM API directly instead.
+    if (atLeftBlockChild.GetContainerAsElement()) {
+      leftBlockElement = *atLeftBlockChild.GetContainerAsElement();
+    } else if (NS_WARN_IF(!atLeftBlockChild.GetContainerParentAsElement())) {
+      return EditActionIgnored(NS_ERROR_UNEXPECTED);
+    } else {
+      leftBlockElement = *atLeftBlockChild.GetContainerParentAsElement();
+    }
+  }
+
+  // Do br adjustment.
+  RefPtr<HTMLBRElement> invisibleBRElementBeforeLeftBlockElement =
+      WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
+          aHTMLEditor, atLeftBlockChild);
+  EditActionResult ret(NS_OK);
+  if (aListElementTagName.isSome()) {
+    // XXX Why do we ignore the error from MoveChildrenWithTransaction()?
+    MOZ_ASSERT(originalLeftBlockElement == atLeftBlockChild.GetContainer(),
+               "This is not guaranteed, but assumed");
+    MoveNodeResult moveNodeResult = aHTMLEditor.MoveChildrenWithTransaction(
+        aRightBlockElement, EditorDOMPoint(atLeftBlockChild.GetContainer(),
+                                           atLeftBlockChild.Offset()));
+    if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
+      return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        moveNodeResult.Succeeded(),
+        "HTMLEditor::MoveChildrenWithTransaction() failed, but ignored");
+    if (moveNodeResult.Succeeded()) {
+      ret |= moveNodeResult;
+    }
+    // atLeftBlockChild was moved to rightListElement.  So, it's invalid now.
+    atLeftBlockChild.Clear();
+  } else {
+    // Left block is a parent of right block, and the parent of the previous
+    // visible content.  Right block is a child and contains the contents we
+    // want to move.
+
+    EditorDOMPoint atPreviousContent;
+    if (&aLeftContentInBlock == leftBlockElement) {
+      // We are working with valid HTML, aLeftContentInBlock is a block node,
+      // and is therefore allowed to contain aRightBlockElement.  This is the
+      // simple case, we will simply move the content in aRightBlockElement
+      // out of its block.
+      atPreviousContent = atLeftBlockChild;
+    } else {
+      // We try to work as well as possible with HTML that's already invalid.
+      // Although "right block" is a block, and a block must not be contained
+      // in inline elements, reality is that broken documents do exist.  The
+      // DIRECT parent of "left NODE" might be an inline element.  Previous
+      // versions of this code skipped inline parents until the first block
+      // parent was found (and used "left block" as the destination).
+      // However, in some situations this strategy moves the content to an
+      // unexpected position.  (see bug 200416) The new idea is to make the
+      // moving content a sibling, next to the previous visible content.
+      atPreviousContent.Set(&aLeftContentInBlock);
+
+      // We want to move our content just after the previous visible node.
+      atPreviousContent.AdvanceOffset();
+    }
+
+    MOZ_ASSERT(atPreviousContent.IsSet());
+
+    // Because we don't want the moving content to receive the style of the
+    // previous content, we split the previous content's style.
+
+    Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+    // XXX It's odd to continue handling this edit action if there is no
+    //     editing host.
+    if (!editingHost || &aLeftContentInBlock != editingHost) {
+      SplitNodeResult splitResult =
+          aHTMLEditor.SplitAncestorStyledInlineElementsAt(atPreviousContent,
+                                                          nullptr, nullptr);
+      if (splitResult.Failed()) {
+        NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
+        return EditActionIgnored(splitResult.Rv());
+      }
+
+      if (splitResult.Handled()) {
+        if (splitResult.GetNextNode()) {
+          atPreviousContent.Set(splitResult.GetNextNode());
+          if (!atPreviousContent.IsSet()) {
+            NS_WARNING("Next node of split point was orphaned");
+            return EditActionIgnored(NS_ERROR_NULL_POINTER);
+          }
+        } else {
+          atPreviousContent = splitResult.SplitPoint();
+          if (!atPreviousContent.IsSet()) {
+            NS_WARNING("Split node was orphaned");
+            return EditActionIgnored(NS_ERROR_NULL_POINTER);
+          }
+        }
+      }
+    }
+
+    ret |= aHTMLEditor.MoveOneHardLineContents(
+        EditorDOMPoint(&aRightBlockElement, 0), atPreviousContent);
+    if (ret.Failed()) {
+      NS_WARNING("HTMLEditor::MoveOneHardLineContents() failed");
+      return ret;
+    }
+  }
+
+  if (!invisibleBRElementBeforeLeftBlockElement) {
+    return ret;
+  }
+
+  rv = aHTMLEditor.DeleteNodeWithTransaction(
+      *invisibleBRElementBeforeLeftBlockElement);
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
+  if (NS_SUCCEEDED(rv)) {
+    ret.MarkAsHandled();
+  }
+  return ret;
+}
+
+// static
+EditActionResult WhiteSpaceVisibilityKeeper::
     MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
         Element& aRightBlockElement,
