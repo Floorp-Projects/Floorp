@@ -261,7 +261,7 @@ const startupPhases = {
       // Side-effect of bug 1412090, via sandboxing (but the real
       // problem there is main-thread CPU use; see bug 1439412)
       path: "*ld.so.conf*",
-      condition: LINUX,
+      condition: LINUX && !AppConstants.MOZ_CODE_COVERAGE,
       read: 22,
       close: 11,
     },
@@ -336,7 +336,7 @@ const startupPhases = {
     {
       // Sandbox policy construction
       path: "*ld.so.conf*",
-      condition: LINUX,
+      condition: LINUX && !AppConstants.MOZ_CODE_COVERAGE,
       read: 22,
       close: 11,
     },
