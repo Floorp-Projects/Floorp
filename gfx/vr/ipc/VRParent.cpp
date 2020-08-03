@@ -99,7 +99,7 @@ mozilla::ipc::IPCResult VRParent::RecvRequestMemoryReport(
         Unused << SendAddMemoryReport(aReport);
       },
       [&](const uint32_t& aGeneration) {
-        return SendFinishMemoryReport(aGeneration);
+        Unused << SendFinishMemoryReport(aGeneration);
       });
   return IPC_OK();
 }

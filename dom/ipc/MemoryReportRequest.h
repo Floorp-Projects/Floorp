@@ -38,7 +38,7 @@ class MemoryReportRequestHost final {
 class MemoryReportRequestClient final : public nsIRunnable {
  public:
   using ReportCallback = std::function<void(const MemoryReport&)>;
-  using FinishCallback = std::function<bool(const uint32_t&)>;
+  using FinishCallback = std::function<void(const uint32_t&)>;
 
   NS_DECL_ISUPPORTS
 

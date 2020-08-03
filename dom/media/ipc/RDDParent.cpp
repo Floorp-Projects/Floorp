@@ -173,7 +173,7 @@ mozilla::ipc::IPCResult RDDParent::RecvRequestMemoryReport(
         Unused << GetSingleton()->SendAddMemoryReport(aReport);
       },
       [&](const uint32_t& aGeneration) {
-        return GetSingleton()->SendFinishMemoryReport(aGeneration);
+        Unused << GetSingleton()->SendFinishMemoryReport(aGeneration);
       });
   return IPC_OK();
 }

@@ -136,7 +136,8 @@ class FinishReportingCallback final : public nsIFinishReportingCallback {
       : mGeneration(aGeneration), mFinishCallback(aFinishCallback) {}
 
   NS_IMETHOD Callback(nsISupports* aUnused) override {
-    return mFinishCallback(mGeneration) ? NS_OK : NS_ERROR_FAILURE;
+    mFinishCallback(mGeneration);
+    return NS_OK;
   }
 
  private:
