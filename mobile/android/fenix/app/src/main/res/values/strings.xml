@@ -1453,17 +1453,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, Got It</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- DEPRECATED: Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Shortcuts</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Search with</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">This time, search with:</string>
-    <!-- DEPRECATED: Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Show search shortcuts</string>
-    <!-- DEPRECATED: Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">Search Engine</string>
-    <!-- DEPRECATED: Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Connect with a Firefox Account.</string>
 </resources>
