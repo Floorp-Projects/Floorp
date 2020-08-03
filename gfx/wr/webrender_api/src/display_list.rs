@@ -976,9 +976,6 @@ pub struct DisplayListBuilder {
     next_clip_chain_id: u64,
     builder_start_time: u64,
 
-    /// The size of the content of this display list. This is used to allow scrolling
-    /// outside the bounds of the display list items themselves.
-    content_size: LayoutSize,
     save_state: Option<SaveState>,
 
     cache_size: usize,
@@ -986,13 +983,12 @@ pub struct DisplayListBuilder {
 }
 
 impl DisplayListBuilder {
-    pub fn new(pipeline_id: PipelineId, content_size: LayoutSize) -> Self {
-        Self::with_capacity(pipeline_id, content_size, 0)
+    pub fn new(pipeline_id: PipelineId) -> Self {
+        Self::with_capacity(pipeline_id, 0)
     }
 
     pub fn with_capacity(
         pipeline_id: PipelineId,
-        content_size: LayoutSize,
         capacity: usize,
     ) -> Self {
         let start_time = precise_time_ns();
@@ -1009,16 +1005,10 @@ impl DisplayListBuilder {
             next_spatial_index: FIRST_SPATIAL_NODE_INDEX,
             next_clip_chain_id: 0,
             builder_start_time: start_time,
-            content_size,
             save_state: None,
             cache_size: 0,
             serialized_content_buffer: None,
         }
-    }
-
-    /// Return the content size for this display list
-    pub fn content_size(&self) -> LayoutSize {
-        self.content_size
     }
 
     /// Saves the current display list state, so it may be `restore()`'d.
@@ -1960,7 +1950,7 @@ impl DisplayListBuilder {
         self.cache_size = cache_size;
     }
 
-    pub fn finalize(mut self) -> (PipelineId, LayoutSize, BuiltDisplayList) {
+    pub fn finalize(mut self) -> (PipelineId, BuiltDisplayList) {
         assert!(self.save_state.is_none(), "Finalized DisplayListBuilder with a pending save");
 
         if let Some(content) = self.serialized_content_buffer.take() {
@@ -1983,7 +1973,6 @@ impl DisplayListBuilder {
         let end_time = precise_time_ns();
         (
             self.pipeline_id,
-            self.content_size,
             BuiltDisplayList {
                 descriptor: BuiltDisplayListDescriptor {
                     builder_start_time: self.builder_start_time,

@@ -93,7 +93,7 @@ impl Example for App {
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
+        let bounds = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(500.0, 500.0));
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(

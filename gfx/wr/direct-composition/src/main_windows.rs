@@ -134,7 +134,7 @@ impl Rectangle {
 
         let pipeline_id = api::PipelineId(0, 0);
         let layout_size = self.size.to_f32() / euclid::Scale::new(device_pixel_ratio);
-        let mut builder = api::DisplayListBuilder::new(pipeline_id, layout_size);
+        let mut builder = api::DisplayListBuilder::new(pipeline_id);
 
         let rect = euclid::Rect::new(euclid::Point2D::zero(), layout_size);
 

@@ -638,7 +638,6 @@ impl SceneBuilderThread {
                     pipeline_id,
                     background,
                     viewport_size,
-                    content_size,
                     display_list,
                     preserve_frame_state,
                 } => {
@@ -662,7 +661,6 @@ impl SceneBuilderThread {
                         display_list,
                         background,
                         viewport_size,
-                        content_size,
                     );
 
                     timings = Some(TransactionTimings {

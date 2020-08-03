@@ -113,7 +113,6 @@ impl App {
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
         let mut builder = DisplayListBuilder::new(
             document.pipeline_id,
-            document.content_rect.size,
         );
 
         builder.push_simple_stacking_context(
@@ -149,14 +148,12 @@ impl Example for App {
         api: &mut RenderApi,
         builder: &mut DisplayListBuilder,
         _txn: &mut Transaction,
-        device_size: DeviceIntSize,
+        _device_size: DeviceIntSize,
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
         if self.output_document.is_none() {
-            let device_pixel_ratio = device_size.width as f32 /
-                builder.content_size().width;
-            self.init_output_document(api, DeviceIntSize::new(200, 200), device_pixel_ratio);
+            self.init_output_document(api, DeviceIntSize::new(200, 200), 1.0);
         }
 
         let bounds = (100, 100).to(200, 200);
