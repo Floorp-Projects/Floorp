@@ -49,7 +49,7 @@ var clientAuthRememberService;
 var richlist;
 
 var rememberedDecisionsRichList = {
-  buildRichList() {
+  async buildRichList() {
     let rememberedDecisions = clientAuthRememberService.getDecisions();
 
     let oldItems = richlist.querySelectorAll("richlistitem");
@@ -59,10 +59,12 @@ var rememberedDecisionsRichList = {
 
     let frag = document.createDocumentFragment();
     for (let decision of rememberedDecisions) {
-      let richlistitem = this._richBoxAddItem(decision);
+      let richlistitem = await this._richBoxAddItem(decision);
       frag.appendChild(richlistitem);
     }
     richlist.appendChild(frag);
+
+    richlist.addEventListener("select", () => this.setButtonState());
   },
 
   _createItem(item) {
@@ -81,7 +83,7 @@ var rememberedDecisionsRichList = {
     return innerHbox;
   },
 
-  _richBoxAddItem(item) {
+  async _richBoxAddItem(item) {
     let richlistitem = document.createXULElement("richlistitem");
 
     richlistitem.setAttribute("entryKey", item.entryKey);
@@ -91,20 +93,29 @@ var rememberedDecisionsRichList = {
     hbox.setAttribute("flex", "1");
     hbox.setAttribute("equalsize", "always");
 
-    let tmpCert = certdb.findCertByDBKey(item.dbKey);
-
     hbox.appendChild(this._createItem(item.asciiHost));
+    if (item.dbKey == "") {
+      let noCertSpecified = await document.l10n.formatValue(
+        "send-no-client-certificate"
+      );
 
-    hbox.appendChild(this._createItem(tmpCert.commonName));
+      hbox.appendChild(this._createItem(noCertSpecified));
 
-    hbox.appendChild(this._createItem(tmpCert.serialNumber));
+      hbox.appendChild(this._createItem(""));
+    } else {
+      let tmpCert = certdb.findCertByDBKey(item.dbKey);
+
+      hbox.appendChild(this._createItem(tmpCert.commonName));
+
+      hbox.appendChild(this._createItem(tmpCert.serialNumber));
+    }
 
     richlistitem.appendChild(hbox);
 
     return richlistitem;
   },
 
-  deleteSelectedRichListItem() {
+  async deleteSelectedRichListItem() {
     let selectedItem = richlist.selectedItem;
     let index = richlist.selectedIndex;
     if (index < 0) {
@@ -115,7 +126,8 @@ var rememberedDecisionsRichList = {
       selectedItem.attributes.entryKey.value
     );
 
-    this.buildRichList();
+    await this.buildRichList();
+    this.setButtonState();
   },
 
   viewSelectedRichListItem() {
@@ -125,12 +137,27 @@ var rememberedDecisionsRichList = {
       return;
     }
 
-    let cert = certdb.findCertByDBKey(selectedItem.attributes.dbKey.value);
-    viewCertHelper(window, cert);
+    if (selectedItem.attributes.dbKey.value != "") {
+      let cert = certdb.findCertByDBKey(selectedItem.attributes.dbKey.value);
+      viewCertHelper(window, cert);
+    }
+  },
+
+  setButtonState() {
+    let rememberedDeleteButton = document.getElementById(
+      "remembered_deleteButton"
+    );
+    let rememberedViewButton = document.getElementById("remembered_viewButton");
+
+    rememberedDeleteButton.disabled = richlist.selectedIndex < 0;
+    rememberedViewButton.disabled =
+      richlist.selectedItem == null
+        ? true
+        : richlist.selectedItem.attributes.dbKey.value == "";
   },
 };
 
-function LoadCerts() {
+async function LoadCerts() {
   certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
@@ -166,7 +193,9 @@ function LoadCerts() {
 
   richlist = document.getElementById("rememberedList");
 
-  rememberedDecisionsRichList.buildRichList();
+  await rememberedDecisionsRichList.buildRichList();
+
+  rememberedDecisionsRichList.setButtonState();
 
   enableBackupAllButton();
 }

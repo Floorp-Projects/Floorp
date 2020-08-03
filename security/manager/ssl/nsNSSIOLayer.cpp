@@ -2342,7 +2342,12 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
-    if (found && !rememberedDBKey.IsEmpty()) {
+    if (found) {
+      // An empty dbKey indicates that the user chose not to use a certificate
+      // and chose to remember this decision
+      if (rememberedDBKey.IsEmpty()) {
+        return;
+      }
       nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
       if (NS_WARN_IF(!certdb)) {
         return;

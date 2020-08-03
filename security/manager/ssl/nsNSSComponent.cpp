@@ -2488,14 +2488,7 @@ nsresult nsNSSComponent::LogoutAuthenticatedPK11() {
     icos->ClearValidityOverride("all:temporary-certificates"_ns, 0);
   }
 
-  nsCOMPtr<nsIClientAuthRememberService> svc =
-      do_GetService(NS_CLIENTAUTHREMEMBERSERVICE_CONTRACTID);
-
-  if (svc) {
-    nsresult rv = svc->ClearRememberedDecisions();
-
-    Unused << NS_WARN_IF(NS_FAILED(rv));
-  }
+  nsNSSComponent::ClearSSLExternalAndInternalSessionCacheNative();
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {

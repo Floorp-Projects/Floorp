@@ -17,7 +17,7 @@ const NON_ISSUED_KEY_HASH = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 // separated by newlines ('\n')
 
 function checkStateWritten(aSubject, aTopic, aData) {
-  if (aData == PRELOAD_STATE_FILE_NAME) {
+  if (aData == PRELOAD_STATE_FILE_NAME || aData == CLIENT_AUTH_FILE_NAME) {
     return;
   }
 
