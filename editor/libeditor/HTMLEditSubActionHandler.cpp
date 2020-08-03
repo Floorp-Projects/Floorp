@@ -2612,16 +2612,14 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
     if (NS_WARN_IF(!scanFromStartPointResult.GetContent()->IsElement())) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
-    AutoBlockElementsJoiner joiner;
-    if (!joiner.PrepareToDeleteCollapsedSelectionAtCurrentBlockBoundary(
-            *this, aDirectionAndAmount, *scanFromStartPointResult.ElementPtr(),
-            startPoint)) {
-      return EditActionCanceled();
-    }
-    EditActionResult result = joiner.Run(*this, startPoint);
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "HTMLEditor::AutoBlockElementsJoiner::Run() failed "
-                         "(current block boundary)");
+    EditActionResult result =
+        HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
+            aDirectionAndAmount,
+            MOZ_KnownLive(*scanFromStartPointResult.ElementPtr()), startPoint);
+    NS_WARNING_ASSERTION(
+        result.Succeeded(),
+        "HTMLEditor::HandleDeleteCollapsedSelectionAtCurrentBlockBoundary() "
+        "failed");
     return result;
   }
 
@@ -3159,54 +3157,52 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
   return result;
 }
 
-bool HTMLEditor::AutoBlockElementsJoiner::
-    PrepareToDeleteCollapsedSelectionAtCurrentBlockBoundary(
-        const HTMLEditor& aHTMLEditor,
-        nsIEditor::EDirection aDirectionAndAmount,
-        Element& aCurrentBlockElement, const EditorDOMPoint& aCaretPoint) {
-  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+EditActionResult
+HTMLEditor::HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
+    nsIEditor::EDirection aDirectionAndAmount, Element& aCurrentBlockElement,
+    const EditorDOMPoint& aCaretPoint) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // At edge of our block.  Look beside it and see if we can join to an
   // adjacent block
-  mMode = Mode::JoinCurrentBlock;
 
   // Make sure it's not a table element.  If so, cancel the operation
   // (translation: users cannot backspace or delete across table cells)
   if (HTMLEditUtils::IsAnyTableElement(&aCurrentBlockElement)) {
-    return false;
+    return EditActionCanceled();
   }
 
+  // First find the relevant nodes
+  nsCOMPtr<nsINode> leftNode, rightNode;
   if (aDirectionAndAmount == nsIEditor::ePrevious) {
-    mLeftContent =
-        aHTMLEditor.GetPreviousEditableHTMLNode(aCurrentBlockElement);
-    mRightContent = aCaretPoint.GetContainerAsContent();
+    leftNode = GetPreviousEditableHTMLNode(aCurrentBlockElement);
+    rightNode = aCaretPoint.GetContainer();
   } else {
-    mRightContent = aHTMLEditor.GetNextEditableHTMLNode(aCurrentBlockElement);
-    mLeftContent = aCaretPoint.GetContainerAsContent();
+    rightNode = GetNextEditableHTMLNode(aCurrentBlockElement);
+    leftNode = aCaretPoint.GetContainer();
   }
 
   // Nothing to join
-  if (!mLeftContent || !mRightContent) {
-    return false;
+  if (!leftNode || !rightNode) {
+    return EditActionCanceled();
   }
 
-  // Don't cross table boundaries.
-  return !HTMLEditor::NodesInDifferentTableElements(*mLeftContent,
-                                                    *mRightContent);
-}
-
-EditActionResult HTMLEditor::AutoBlockElementsJoiner::
-    HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
-        HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint) {
-  MOZ_ASSERT(mLeftContent);
-  MOZ_ASSERT(mRightContent);
+  // Don't cross table boundaries -- cancel it
+  if (HTMLEditor::NodesInDifferentTableElements(*leftNode, *rightNode)) {
+    return EditActionCanceled();
+  }
 
   EditActionResult result(NS_OK);
   EditorDOMPoint pointToPutCaret(aCaretPoint);
   {
-    AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
-    result |= aHTMLEditor.TryToJoinBlocksWithTransaction(
-        MOZ_KnownLive(*mLeftContent), MOZ_KnownLive(*mRightContent));
+    AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToPutCaret);
+    if (NS_WARN_IF(!leftNode->IsContent()) ||
+        NS_WARN_IF(!rightNode->IsContent())) {
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+    result |=
+        TryToJoinBlocksWithTransaction(MOZ_KnownLive(*leftNode->AsContent()),
+                                       MOZ_KnownLive(*rightNode->AsContent()));
     // This should claim that trying to join the block means that
     // this handles the action because the caller shouldn't do anything
     // anymore in this case.
@@ -3216,7 +3212,7 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
       return result;
     }
   }
-  nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
+  nsresult rv = CollapseSelectionTo(pointToPutCaret);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }
