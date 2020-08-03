@@ -164,8 +164,6 @@ class nsPrintJob final : public nsIObserver,
                        nsresult& aStatus);
   nsresult DoPrint(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
-  void SetPrintPO(nsPrintObject* aPO, bool aPrint);
-
   /**
    * Filters out certain user events while Print Preview is open to prevent
    * the user from interacting with the Print Preview document and breaking
@@ -186,17 +184,14 @@ class nsPrintJob final : public nsIObserver,
       nsIPrintProgressParams* aParams);
   void EllipseLongString(nsAString& aStr, const uint32_t aLen, bool aDoFront);
 
-  bool IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin);
-
   nsresult StartPagePrintTimer(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
   bool IsWindowsInOurSubTree(nsPIDOMWindowOuter* aDOMWindow) const;
-  bool IsThereAnIFrameSelected(nsIDocShell* aDocShell,
-                               nsPIDOMWindowOuter* aDOMWin,
-                               bool& aIsParentFrameSet);
 
-  // get the currently infocus frame for the document viewer
-  already_AddRefed<nsPIDOMWindowOuter> FindFocusedDOMWindow() const;
+  /**
+   * @return The document from the focused windows for a document viewer.
+   */
+  Document* FindFocusedDocument() const;
 
   /// Customizes the behaviour of GetDisplayTitleAndURL.
   enum class DocTitleDefault : uint32_t { eDocURLElseFallback, eFallback };
