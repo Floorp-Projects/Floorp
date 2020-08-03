@@ -122,6 +122,7 @@ nsHttpTransaction::nsHttpTransaction()
       mResponseHeadTaken(false),
       mForTakeResponseTrailers(nullptr),
       mResponseTrailersTaken(false),
+      mRestarted(false),
       mTopLevelOuterContentWindowId(0),
       mSubmittedRatePacing(false),
       mPassedRatePacing(false),
@@ -1359,6 +1360,17 @@ nsresult nsHttpTransaction::Restart() {
   LOG(("restarting transaction @%p\n", this));
   mTunnelProvider = nullptr;
 
+  if (mRequestHead) {
+    // Dispatching on a new connection better w/o an ambient connection proxy
+    // auth request header to not confuse the proxy authenticator.
+    nsAutoCString proxyAuth;
+    if (NS_SUCCEEDED(
+            mRequestHead->GetHeader(nsHttp::Proxy_Authorization, proxyAuth)) &&
+        IsStickyAuthSchemeAt(proxyAuth)) {
+      Unused << mRequestHead->ClearHeader(nsHttp::Proxy_Authorization);
+    }
+  }
+
   // rewind streams in case we already wrote out the request
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
   if (seekable) seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
@@ -1391,8 +1403,16 @@ nsresult nsHttpTransaction::Restart() {
 
   // Reset mDoNotRemoveAltSvc for the next try.
   mDoNotRemoveAltSvc = false;
+  mRestarted = true;
 
   return gHttpHandler->InitiateTransaction(this, mPriority);
+}
+
+bool nsHttpTransaction::TakeRestartedState() {
+  // This return true if the transaction has been restarted internally.  Used to
+  // let the consuming nsHttpChannel reset proxy authentication.  The flag is
+  // reset to false by this method.
+  return mRestarted.exchange(false);
 }
 
 char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
@@ -2095,6 +2115,15 @@ void nsHttpTransaction::CheckForStickyAuthSchemeAt(nsHttpAtom const& header) {
     return;
   }
 
+  if (IsStickyAuthSchemeAt(auth)) {
+    LOG(("  connection made sticky"));
+    // This is enough to make this transaction keep it's current connection,
+    // prevents the connection from being released back to the pool.
+    mCaps |= NS_HTTP_STICKY_CONNECTION;
+  }
+}
+
+bool nsHttpTransaction::IsStickyAuthSchemeAt(nsACString const& auth) {
   Tokenizer p(auth);
   nsAutoCString schema;
   while (p.ReadWord(schema)) {
@@ -2116,11 +2145,7 @@ void nsHttpTransaction::CheckForStickyAuthSchemeAt(nsHttpAtom const& header) {
       nsresult rv = authenticator->GetAuthFlags(&flags);
       if (NS_SUCCEEDED(rv) &&
           (flags & nsIHttpAuthenticator::CONNECTION_BASED)) {
-        LOG(("  connection made sticky, found %s auth shema", schema.get()));
-        // This is enough to make this transaction keep it's current connection,
-        // prevents the connection from being released back to the pool.
-        mCaps |= NS_HTTP_STICKY_CONNECTION;
-        break;
+        return true;
       }
     }
 
@@ -2128,6 +2153,8 @@ void nsHttpTransaction::CheckForStickyAuthSchemeAt(nsHttpAtom const& header) {
     p.SkipUntil(Tokenizer::Token::NewLine());
     p.SkipWhites(Tokenizer::INCLUDE_NEW_LINE);
   }
+
+  return false;
 }
 
 const TimingStruct nsHttpTransaction::Timings() {

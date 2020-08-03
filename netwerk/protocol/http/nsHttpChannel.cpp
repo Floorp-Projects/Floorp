@@ -2725,6 +2725,7 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
   rv = NS_OK;
 
   uint32_t httpStatus = mResponseHead->Status();
+  bool transactionRestarted = mTransaction->TakeRestartedState();
 
   // handle different server response categories.  Note that we handle
   // caching or not caching of error pages in
@@ -2816,6 +2817,13 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
       break;
     case 401:
     case 407:
+      if (MOZ_UNLIKELY(httpStatus == 407 && transactionRestarted)) {
+        // The transaction has been internally restarted.  We want to
+        // authenticate to the proxy again, so reuse either cached credentials
+        // or use default credentials for NTLM/Negotiate.  This prevents
+        // considering the previously used creadentials as invalid.
+        mAuthProvider->ClearProxyIdent();
+      }
       if (MOZ_UNLIKELY(mCustomAuthHeader) && httpStatus == 401) {
         // When a custom auth header fails, we don't want to try
         // any cached credentials, nor we want to ask the user.

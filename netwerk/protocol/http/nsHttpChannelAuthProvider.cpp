@@ -448,6 +448,13 @@ nsresult nsHttpChannelAuthProvider::UpdateCache(
   return rv;
 }
 
+NS_IMETHODIMP nsHttpChannelAuthProvider::ClearProxyIdent() {
+  LOG(("nsHttpChannelAuthProvider::ClearProxyIdent [this=%p]\n", this));
+
+  mProxyIdent.Clear();
+  return NS_OK;
+}
+
 nsresult nsHttpChannelAuthProvider::PrepareForAuthentication(bool proxyAuth) {
   LOG(
       ("nsHttpChannelAuthProvider::PrepareForAuthentication "
@@ -742,7 +749,7 @@ nsresult nsHttpChannelAuthProvider::GetCredentialsForChallenge(
       // - if we didn't clear the proxy identity, it would be considered
       //   as non-valid and we would ask the user again ; clearing it forces
       //   use of the cached identity and not asking the user again
-      mProxyIdent.Clear();
+      ClearProxyIdent();
     }
   }
 

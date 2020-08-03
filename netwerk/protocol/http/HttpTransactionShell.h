@@ -151,6 +151,8 @@ class HttpTransactionShell : public nsISupports {
 
   virtual nsHttpTransaction* AsHttpTransaction() = 0;
   virtual HttpTransactionParent* AsHttpTransactionParent() = 0;
+
+  virtual bool TakeRestartedState() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
@@ -204,7 +206,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual int32_t GetProxyConnectResponseCode() override;                      \
   virtual bool DataSentToChildProcess() override;                              \
   virtual nsHttpTransaction* AsHttpTransaction() override;                     \
-  virtual HttpTransactionParent* AsHttpTransactionParent() override;
+  virtual HttpTransactionParent* AsHttpTransactionParent() override;           \
+  virtual bool TakeRestartedState() override;
 }  // namespace net
 }  // namespace mozilla
 

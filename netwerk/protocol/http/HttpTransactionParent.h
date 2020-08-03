@@ -53,7 +53,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
       const int32_t& aProxyConnectResponseCode,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
-      const bool& aDataToChildProcess);
+      const bool& aDataToChildProcess, const bool& aRestarted);
   mozilla::ipc::IPCResult RecvOnTransportStatus(
       const nsresult& aStatus, const int64_t& aProgress,
       const int64_t& aProgressMax,
@@ -90,15 +90,13 @@ class HttpTransactionParent final : public PHttpTransactionParent,
 
   void GetStructFromInfo(nsHttpConnectionInfo* aInfo,
                          HttpConnectionInfoCloneArgs& aArgs);
-  void DoOnStartRequest(const nsresult& aStatus,
-                        const Maybe<nsHttpResponseHead>& aResponseHead,
-                        const nsCString& aSecurityInfoSerialization,
-                        const bool& aProxyConnectFailed,
-                        const TimingStructArgs& aTimings,
-                        const int32_t& aProxyConnectResponseCode,
-                        nsTArray<uint8_t>&& aDataForSniffer,
-                        const Maybe<nsCString>& aAltSvcUsed,
-                        const bool& aDataToChildProcess);
+  void DoOnStartRequest(
+      const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
+      const nsCString& aSecurityInfoSerialization,
+      const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
+      const int32_t& aProxyConnectResponseCode,
+      nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
+      const bool& aDataToChildProcess, const bool& aRestarted);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
                          const uint32_t& aCount);
   void DoOnStopRequest(
@@ -141,6 +139,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   uint64_t mChannelId;
   bool mDataSentToChildProcess;
   bool mIsDocumentLoad;
+  bool mRestarted;
   TimeStamp mRedirectStart;
   TimeStamp mRedirectEnd;
 

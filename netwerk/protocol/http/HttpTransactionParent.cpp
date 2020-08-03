@@ -92,7 +92,8 @@ HttpTransactionParent::HttpTransactionParent(bool aIsDocumentLoad)
       mProxyConnectResponseCode(0),
       mChannelId(0),
       mDataSentToChildProcess(false),
-      mIsDocumentLoad(aIsDocumentLoad) {
+      mIsDocumentLoad(aIsDocumentLoad),
+      mRestarted(false) {
   LOG(("Creating HttpTransactionParent @%p\n", this));
 
   this->mSelfAddr.inet = {};
@@ -368,6 +369,12 @@ nsISupports* HttpTransactionParent::SecurityInfo() { return mSecurityInfo; }
 
 bool HttpTransactionParent::ProxyConnectFailed() { return mProxyConnectFailed; }
 
+bool HttpTransactionParent::TakeRestartedState() {
+  bool result = mRestarted;
+  mRestarted = false;
+  return result;
+}
+
 void HttpTransactionParent::DontReuseConnection() {
   MOZ_ASSERT(NS_IsMainThread());
   Unused << SendDontReuseConnection();
@@ -418,17 +425,18 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
     const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
-    const bool& aDataToChildProcess) {
+    const bool& aDataToChildProcess, const bool& aRestarted) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
              aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
              aTimings, aProxyConnectResponseCode,
              aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
-             aAltSvcUsed, aDataToChildProcess]() mutable {
-        self->DoOnStartRequest(
-            aStatus, aResponseHead, aSecurityInfoSerialization,
-            aProxyConnectFailed, aTimings, aProxyConnectResponseCode,
-            std::move(aDataForSniffer), aAltSvcUsed, aDataToChildProcess);
+             aAltSvcUsed, aDataToChildProcess, aRestarted]() mutable {
+        self->DoOnStartRequest(aStatus, aResponseHead,
+                               aSecurityInfoSerialization, aProxyConnectFailed,
+                               aTimings, aProxyConnectResponseCode,
+                               std::move(aDataForSniffer), aAltSvcUsed,
+                               aDataToChildProcess, aRestarted);
       }));
   return IPC_OK();
 }
@@ -457,7 +465,7 @@ void HttpTransactionParent::DoOnStartRequest(
     const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
     const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
-    const bool& aDataToChildProcess) {
+    const bool& aDataToChildProcess, const bool& aRestarted) {
   LOG(("HttpTransactionParent::DoOnStartRequest [this=%p aStatus=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -484,6 +492,7 @@ void HttpTransactionParent::DoOnStartRequest(
 
   mProxyConnectResponseCode = aProxyConnectResponseCode;
   mDataForSniffer = std::move(aDataForSniffer);
+  mRestarted = aRestarted;
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   MOZ_ASSERT(httpChannel, "mChannel is expected to implement nsIHttpChannel");
