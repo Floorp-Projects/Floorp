@@ -49,6 +49,16 @@ add_task(async function test_proc_info() {
             "browser",
             "Child proc type should not be browser"
           );
+          if (
+            childProc.type.startsWith("web") ||
+            childProc.type.startsWith("Web")
+          ) {
+            Assert.notEqual(
+              childProc.childID,
+              0,
+              "Child proc should not have a 0 childID"
+            );
+          }
           Assert.notEqual(
             childProc.type,
             "unknown",
