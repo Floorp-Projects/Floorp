@@ -146,6 +146,88 @@ nsresult WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
 }
 
 // static
+EditActionResult WhiteSpaceVisibilityKeeper::
+    MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
+        HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
+        Element& aRightBlockElement,
+        const Maybe<nsAtom*>& aListElementTagName) {
+  MOZ_ASSERT(
+      !EditorUtils::IsDescendantOf(aLeftBlockElement, aRightBlockElement));
+  MOZ_ASSERT(
+      !EditorUtils::IsDescendantOf(aRightBlockElement, aLeftBlockElement));
+
+  // Adjust white-space at block boundaries
+  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToJoinBlocks(
+      aHTMLEditor, aLeftBlockElement, aRightBlockElement);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToJoinBlocks() failed");
+    return EditActionIgnored(rv);
+  }
+  // Do br adjustment.
+  RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
+      WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
+          aHTMLEditor, EditorDOMPoint::AtEndOf(aLeftBlockElement));
+  EditActionResult ret(NS_OK);
+  if (aListElementTagName.isSome() ||
+      aLeftBlockElement.NodeInfo()->NameAtom() ==
+          aRightBlockElement.NodeInfo()->NameAtom()) {
+    // Nodes are same type.  merge them.
+    EditorDOMPoint atFirstChildOfRightNode;
+    nsresult rv = aHTMLEditor.JoinNearestEditableNodesWithTransaction(
+        aLeftBlockElement, aRightBlockElement, &atFirstChildOfRightNode);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::JoinNearestEditableNodesWithTransaction()"
+                         " failed, but ignored");
+    if (aListElementTagName.isSome() && atFirstChildOfRightNode.IsSet()) {
+      CreateElementResult convertListTypeResult =
+          aHTMLEditor.ChangeListElementType(
+              aRightBlockElement, MOZ_KnownLive(*aListElementTagName.ref()),
+              *nsGkAtoms::li);
+      if (NS_WARN_IF(convertListTypeResult.EditorDestroyed())) {
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(
+          convertListTypeResult.Succeeded(),
+          "HTMLEditor::ChangeListElementType() failed, but ignored");
+    }
+    ret.MarkAsHandled();
+  } else {
+    // Nodes are dissimilar types.
+    ret |= aHTMLEditor.MoveOneHardLineContents(
+        EditorDOMPoint(&aRightBlockElement, 0),
+        EditorDOMPoint(&aLeftBlockElement, 0),
+        HTMLEditor::MoveToEndOfContainer::Yes);
+    if (ret.Failed()) {
+      NS_WARNING(
+          "HTMLEditor::MoveOneHardLineContents(MoveToEndOfContainer::Yes) "
+          "failed");
+      return ret;
+    }
+  }
+
+  if (!invisibleBRElementAtEndOfLeftBlockElement) {
+    return ret.MarkAsHandled();
+  }
+
+  rv = aHTMLEditor.DeleteNodeWithTransaction(
+      *invisibleBRElementAtEndOfLeftBlockElement);
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  // XXX In other top level if blocks, the result of
+  //     DeleteNodeWithTransaction() is ignored.  Why does only this result
+  //     is respected?
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+    return ret.SetResult(rv);
+  }
+  return ret.MarkAsHandled();
+}
+
+// static
 Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert) {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
