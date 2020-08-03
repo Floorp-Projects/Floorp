@@ -1,6 +1,22 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
+function checkUsageCounts(...counts) {
+  const prefs = [
+    CREDITCARDS_SAVED_COUNT_PREF,
+    CREDITCARDS_CANCEL_SAVE_COUNT_PREF,
+    CREDITCARDS_DISMISS_COUNT_PREF,
+  ];
+  for (let i = 0; i < prefs.length; i++) {
+    is(
+      SpecialPowers.getIntPref(prefs[i], 0),
+      counts[i],
+      `${prefs[i]} is ${counts[i]}`
+    );
+  }
+  prefs.forEach(pref => SpecialPowers.clearUserPref(pref));
+}
+
 add_task(async function test_submit_creditCard_cancel_saving() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
@@ -36,6 +52,55 @@ add_task(async function test_submit_creditCard_cancel_saving() {
       await clickDoorhangerButton(SECONDARY_BUTTON);
     }
   );
+  checkUsageCounts(0, 1, 0);
+
+  await sleep(1000);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 0, "No credit card saved");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
+});
+
+add_task(async function test_submit_creditCard_dismiss_saving() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      await SpecialPowers.spawn(browser, [], async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 1");
+
+        let number = form.querySelector("#cc-number");
+        number.setUserInput("5038146897157463");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      ok(
+        !SpecialPowers.Services.prefs.prefHasUserValue(SYNC_USERNAME_PREF),
+        "Sync account should not exist by default"
+      );
+      let cb = getDoorhangerCheckbox();
+      ok(cb.hidden, "Sync checkbox should be hidden");
+      await promiseShown;
+      await BrowserTestUtils.synthesizeKey("VK_ESCAPE", {}, browser);
+    }
+  );
+  checkUsageCounts(0, 0, 1);
 
   await sleep(1000);
   let creditCards = await getCreditCards();
@@ -81,6 +146,7 @@ add_task(async function test_submit_creditCard_saved() {
       await onChanged;
     }
   );
+  checkUsageCounts(1, 0, 0);
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -243,6 +309,7 @@ add_task(async function test_iframe_unload_save_card() {
       await onChanged;
     }
   );
+  checkUsageCounts(1, 0, 0);
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -299,6 +366,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
     }
   );
   await onUsed;
+  checkUsageCounts(1, 0, 0);
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
@@ -436,6 +504,7 @@ add_task(async function test_submit_creditCard_never_save() {
       await clickDoorhangerButton(MENU_BUTTON, 0);
     }
   );
+  checkUsageCounts(0, 0, 0);
 
   await sleep(1000);
   let creditCards = await getCreditCards();
@@ -546,6 +615,7 @@ add_task(async function test_submit_creditCard_with_sync_account() {
       await clickDoorhangerButton(SECONDARY_BUTTON);
     }
   );
+  checkUsageCounts(0, 1, 0);
 });
 
 add_task(async function test_submit_creditCard_with_synced_already() {
@@ -584,6 +654,7 @@ add_task(async function test_submit_creditCard_with_synced_already() {
       await clickDoorhangerButton(SECONDARY_BUTTON);
     }
   );
+  checkUsageCounts(0, 1, 0);
 });
 
 add_task(async function test_submit_manual_mergeable_creditCard_form() {
@@ -623,6 +694,7 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
     }
   );
   await onUsed;
+  checkUsageCounts(1, 0, 0);
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
@@ -686,6 +758,7 @@ add_task(async function test_update_autofill_form_name() {
     }
   );
   await onUsed;
+  checkUsageCounts(1, 0, 0);
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
@@ -755,6 +828,7 @@ add_task(async function test_update_autofill_form_exp_date() {
     }
   );
   await onUsed;
+  checkUsageCounts(1, 0, 0);
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
@@ -821,6 +895,7 @@ add_task(async function test_create_new_autofill_form() {
       await onChanged;
     }
   );
+  checkUsageCounts(1, 0, 0);
 
   creditCards = await getCreditCards();
   is(creditCards.length, 2, "2 credit cards in storage");
@@ -935,6 +1010,7 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
       await onChanged;
     }
   );
+  checkUsageCounts(1, 0, 0);
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
