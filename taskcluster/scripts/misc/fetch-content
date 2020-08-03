@@ -483,7 +483,7 @@ def fetch_urls(downloads):
 
 
 def git_checkout_archive(dest_path: pathlib.Path, repo: str, commit: str,
-                         prefix=None):
+                         prefix=None, ssh_key=None):
     """Produce an archive of the files comprising a Git checkout."""
     dest_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -501,14 +501,32 @@ def git_checkout_archive(dest_path: pathlib.Path, repo: str, commit: str,
         # to initiate a clone. Since the commit-ish may not refer to a ref, we
         # simply perform a full clone followed by a checkout.
         print('cloning %s to %s' % (repo, git_dir))
+
+        env = os.environ.copy()
+        keypath = ""
+        if ssh_key:
+            taskcluster_secret_url = api(os.environ.get('TASKCLUSTER_PROXY_URL'), "secrets", "v1", "secret/{keypath}".format(keypath=ssh_key))
+            taskcluster_secret = b''.join(stream_download(taskcluster_secret_url))
+            taskcluster_secret = json.loads(taskcluster_secret)
+            sshkey = taskcluster_secret['secret']['ssh_privkey']
+
+            keypath = temp_dir.joinpath("ssh-key")
+            keypath.write_text(sshkey)
+            keypath.chmod(0o600)
+
+            env = {"GIT_SSH_COMMAND": "ssh -o 'StrictHostKeyChecking no' -i {keypath}".format(keypath=keypath)}
+
         subprocess.run(['git', 'clone', '-n', repo, str(git_dir)],
-                       check=True)
+                       check=True, env=env)
 
         subprocess.run(['git', 'checkout', commit],
                        cwd=str(git_dir), check=True)
 
         subprocess.run(['git', 'submodule', 'update', '--init'],
                        cwd=str(git_dir), check=True)
+
+        if keypath:
+            os.remove(keypath)
 
         print('creating archive %s of commit %s' % (dest_path, commit))
         proc = subprocess.Popen([
@@ -527,7 +545,7 @@ def command_git_checkout_archive(args):
 
     try:
         git_checkout_archive(dest, args.repo, args.commit,
-                             prefix=args.path_prefix)
+                             prefix=args.path_prefix, ssh_key=args.ssh_key_secret)
     except Exception:
         try:
             dest.unlink()
@@ -640,6 +658,8 @@ def main():
                               help='Git commit to check out')
     git_checkout.add_argument('dest',
                               help='Destination path of archive')
+    git_checkout.add_argument('--ssh-key-secret',
+                              help='The scope path of the ssh key to used for checkout')
 
     url = subparsers.add_parser('static-url', help='Download a static URL')
     url.set_defaults(func=command_static_url)
