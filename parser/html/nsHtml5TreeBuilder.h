@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2015 Mozilla Foundation
+ * Copyright (c) 2007-2017 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla
  * Foundation, and Opera Software ASA.
  *
@@ -380,8 +380,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
   bool isSecondOnStackBody();
   void documentModeInternal(nsHtml5DocumentMode m,
                             nsHtml5String publicIdentifier,
-                            nsHtml5String systemIdentifier,
-                            bool html4SpecificAdditionalErrorChecks);
+                            nsHtml5String systemIdentifier);
   bool isAlmostStandards(nsHtml5String publicIdentifier,
                          nsHtml5String systemIdentifier);
   bool isQuirky(nsAtom* name, nsHtml5String publicIdentifier,
