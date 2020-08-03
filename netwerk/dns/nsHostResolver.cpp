@@ -1757,9 +1757,18 @@ static nsresult merge_rrset(AddrInfo* rrto, AddrInfo* rrfrom) {
     return NS_ERROR_NULL_POINTER;
   }
   NetAddrElement* element;
+  // Each of the arguments are all-IPv4 or all-IPv6 hence judging
+  // by the first element. This is true only for TRR resolutions.
+  bool isIPv6 = (element = rrfrom->mAddresses.getFirst()) &&
+                element->mAddress.raw.family == PR_AF_INET6;
   while ((element = rrfrom->mAddresses.getFirst())) {
-    element->remove();          // unlist from old
-    rrto->AddAddress(element);  // enlist on new
+    element->remove();  // unlist from old
+    if (isIPv6) {
+      // rrfrom has IPv6 so it should be first
+      rrto->mAddresses.insertFront(element);
+    } else {
+      rrto->mAddresses.insertBack(element);
+    }
   }
   return NS_OK;
 }
