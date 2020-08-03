@@ -496,7 +496,8 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
                                mTransaction->ProxyConnectFailed(),
                                ToTimingStructArgs(mTransaction->Timings()),
                                proxyConnectResponseCode, dataForSniffer,
-                               optionalAltSvcUsed, !!mDataBridgeParent);
+                               optionalAltSvcUsed, !!mDataBridgeParent,
+                               mTransaction->TakeRestartedState());
   return NS_OK;
 }
 
