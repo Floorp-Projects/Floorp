@@ -104,6 +104,12 @@ HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
 HttpChannelParent::~HttpChannelParent() {
   LOG(("Destroying HttpChannelParent [this=%p]\n", this));
   CleanupBackgroundChannel();
+
+  MOZ_ASSERT(!mRedirectCallback);
+  if (NS_WARN_IF(mRedirectCallback)) {
+    mRedirectCallback->OnRedirectVerifyCallback(NS_ERROR_UNEXPECTED);
+    mRedirectCallback = nullptr;
+  }
 }
 
 void HttpChannelParent::ActorDestroy(ActorDestroyReason why) {
