@@ -119,6 +119,8 @@ class nsPrintJob final : public nsIObserver,
   bool IsDoingPrint() const { return mIsDoingPrinting; }
   bool IsDoingPrintPreview() const { return mIsDoingPrintPreview; }
   bool HasEverPrinted() const { return mHasEverPrinted; }
+  bool IsIFrameSelected();
+  bool IsRangeSelection();
   /// If the returned value is not greater than zero, an error occurred.
   int32_t GetPrintPreviewNumPages();
   already_AddRefed<nsIPrintSettings> GetCurrentPrintSettings();
@@ -164,6 +166,8 @@ class nsPrintJob final : public nsIObserver,
                        nsresult& aStatus);
   nsresult DoPrint(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
+  void SetPrintPO(nsPrintObject* aPO, bool aPrint);
+
   /**
    * Filters out certain user events while Print Preview is open to prevent
    * the user from interacting with the Print Preview document and breaking
@@ -184,14 +188,17 @@ class nsPrintJob final : public nsIObserver,
       nsIPrintProgressParams* aParams);
   void EllipseLongString(nsAString& aStr, const uint32_t aLen, bool aDoFront);
 
+  bool IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin);
+
   nsresult StartPagePrintTimer(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
   bool IsWindowsInOurSubTree(nsPIDOMWindowOuter* aDOMWindow) const;
+  bool IsThereAnIFrameSelected(nsIDocShell* aDocShell,
+                               nsPIDOMWindowOuter* aDOMWin,
+                               bool& aIsParentFrameSet);
 
-  /**
-   * @return The document from the focused windows for a document viewer.
-   */
-  Document* FindFocusedDocument() const;
+  // get the currently infocus frame for the document viewer
+  already_AddRefed<nsPIDOMWindowOuter> FindFocusedDOMWindow() const;
 
   /// Customizes the behaviour of GetDisplayTitleAndURL.
   enum class DocTitleDefault : uint32_t { eDocURLElseFallback, eFallback };
@@ -292,6 +299,7 @@ class nsPrintJob final : public nsIObserver,
   bool mIsDestroying = false;
   bool mDisallowSelectionPrint = false;
   bool mIsForModalWindow = false;
+  bool mHasMozPrintCallback = false;
 };
 
 #endif  // nsPrintJob_h

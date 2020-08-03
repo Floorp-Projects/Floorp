@@ -270,6 +270,31 @@ static bool IsParentAFrameSet(nsIDocShell* aParent) {
   return isFrameSet;
 }
 
+static nsPrintObject* FindPrintObjectByDOMWin(nsPrintObject* aPO,
+                                              nsPIDOMWindowOuter* aDOMWin) {
+  NS_ASSERTION(aPO, "Pointer is null!");
+
+  // Often the CurFocused DOMWindow is passed in
+  // andit is valid for it to be null, so short circut
+  if (!aDOMWin) {
+    return nullptr;
+  }
+
+  nsCOMPtr<Document> doc = aDOMWin->GetDoc();
+  if (aPO->mDocument && aPO->mDocument->GetOriginalDocument() == doc) {
+    return aPO;
+  }
+
+  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
+    nsPrintObject* po = FindPrintObjectByDOMWin(kid.get(), aDOMWin);
+    if (po) {
+      return po;
+    }
+  }
+
+  return nullptr;
+}
+
 static std::tuple<nsPageSequenceFrame*, int32_t>
 GetSeqFrameAndCountPagesInternal(const UniquePtr<nsPrintObject>& aPO) {
   if (!aPO) {
@@ -295,23 +320,18 @@ GetSeqFrameAndCountPagesInternal(const UniquePtr<nsPrintObject>& aPO) {
 }
 
 /**
- * Build a tree of nsPrintObjects under aPO. It also appends a (depth first)
- * flat list of all the nsPrintObjects created to aPrintData->mPrintDocList. If
- * one of the nsPrintObject's document is the focused document, then the print
- * object is set as aPrintData->mSelectionRoot.
- * @param aParentPO The parent nsPrintObject to populate, must not be null.
- * @param aFocusedDoc Document from the window that had focus when print was
- *                    initiated.
- * @param aPrintData nsPrintData for the current print, must not be null.
+ * The outparam aDocList returns a (depth first) flat list of all the
+ * nsPrintObjects created.
  */
-static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
-                                    const RefPtr<Document>& aFocusedDoc,
-                                    RefPtr<nsPrintData>& aPrintData) {
-  MOZ_ASSERT(aParentPO);
-  MOZ_ASSERT(aPrintData);
+static void BuildNestedPrintObjects(Document* aDocument,
+                                    const UniquePtr<nsPrintObject>& aPO,
+                                    nsTArray<nsPrintObject*>* aDocList) {
+  MOZ_ASSERT(aDocument, "Pointer is null!");
+  MOZ_ASSERT(aDocList, "Pointer is null!");
+  MOZ_ASSERT(aPO, "Pointer is null!");
 
   nsTArray<Document::PendingFrameStaticClone> pendingClones =
-      aParentPO->mDocument->TakePendingFrameStaticClones();
+      aDocument->TakePendingFrameStaticClones();
   for (auto& clone : pendingClones) {
     if (NS_WARN_IF(!clone.mStaticCloneOf)) {
       continue;
@@ -330,39 +350,14 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
       continue;
     }
 
-    nsIDocShell* sourceDocShell =
-        clone.mStaticCloneOf->GetDocShell(IgnoreErrors());
-    if (!sourceDocShell) {
-      continue;
-    }
-
-    Document* sourceDoc = sourceDocShell->GetDocument();
-    if (!sourceDoc) {
-      continue;
-    }
-
     auto childPO = MakeUnique<nsPrintObject>();
-    rv = childPO->InitAsNestedObject(docshell, doc, sourceDoc, aParentPO.get());
+    rv = childPO->InitAsNestedObject(docshell, doc, aPO.get());
     if (NS_FAILED(rv)) {
       MOZ_ASSERT_UNREACHABLE("Init failed?");
     }
-
-    // If the childPO is for an iframe and its original document is focusedDoc
-    // then always set as the selection root.
-    if (childPO->mFrameType == eIFrame &&
-        doc->GetOriginalDocument() == aFocusedDoc) {
-      aPrintData->mSelectionRoot = childPO.get();
-    } else if (!aPrintData->mSelectionRoot && childPO->mHasSelection) {
-      // If there is no focused iframe but there is a selection in one or more
-      // frames then we want to set the root nsPrintObject as the focus root so
-      // that later EnablePrintingSelectionOnly can search for and enable all
-      // nsPrintObjects containing selections.
-      aPrintData->mSelectionRoot = aPrintData->mPrintObject.get();
-    }
-
-    aPrintData->mPrintDocList.AppendElement(childPO.get());
-    BuildNestedPrintObjects(childPO, aFocusedDoc, aPrintData);
-    aParentPO->mKids.AppendElement(std::move(childPO));
+    aPO->mKids.AppendElement(std::move(childPO));
+    aDocList->AppendElement(aPO->mKids.LastElement().get());
+    BuildNestedPrintObjects(doc, aPO->mKids.LastElement(), aDocList);
   }
 }
 
@@ -670,8 +665,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     printData->mPrintProgressListeners.AppendObject(aWebProgressListener);
   }
 
-  // Get the document from the currently focused window.
-  RefPtr<Document> focusedDoc = FindFocusedDocument();
+  // Get the currently focused window and cache it
+  // because the Print Dialog will "steal" focus and later when you try
+  // to get the currently focused windows it will be nullptr
+  printData->mCurrentFocusWin = FindFocusedDOMWindow();
 
   // Get the docshell for this documentviewer
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell, &rv));
@@ -698,7 +695,8 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     printData->mPrintObject->mFrameType =
         printData->mIsParentAFrameSet ? eFrameSet : eDoc;
 
-    BuildNestedPrintObjects(printData->mPrintObject, focusedDoc, printData);
+    BuildNestedPrintObjects(printData->mPrintObject->mDocument,
+                            printData->mPrintObject, &printData->mPrintDocList);
   }
 
   if (!aSourceDoc->IsStaticDocument()) {
@@ -756,8 +754,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   }
 
   // Now determine how to set up the Frame print UI
+  bool isSelection = IsThereARangeSelection(printData->mCurrentFocusWin);
+  bool isIFrameSelected = IsThereAnIFrameSelected(
+      docShell, printData->mCurrentFocusWin, printData->mIsParentAFrameSet);
   printData->mPrintSettings->SetPrintOptions(
-      nsIPrintSettings::kEnableSelectionRB, !!printData->mSelectionRoot);
+      nsIPrintSettings::kEnableSelectionRB, isSelection || isIFrameSelected);
 
   bool printingViaParent =
       XRE_IsContentProcess() && Preferences::GetBool("print.print_via_parent");
@@ -997,6 +998,29 @@ nsresult nsPrintJob::PrintPreview(
 }
 
 //----------------------------------------------------------------------------------
+bool nsPrintJob::IsIFrameSelected() {
+  // Get the docshell for this documentviewer
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
+  // Get the currently focused window
+  nsCOMPtr<nsPIDOMWindowOuter> currentFocusWin = FindFocusedDOMWindow();
+  if (currentFocusWin && docShell) {
+    // Get whether the doc contains a frameset
+    // Also, check to see if the currently focus docshell
+    // is a child of this docshell
+    bool isParentFrameSet;
+    return IsThereAnIFrameSelected(docShell, currentFocusWin, isParentFrameSet);
+  }
+  return false;
+}
+
+//----------------------------------------------------------------------------------
+bool nsPrintJob::IsRangeSelection() {
+  // Get the currently focused window
+  nsCOMPtr<nsPIDOMWindowOuter> currentFocusWin = FindFocusedDOMWindow();
+  return IsThereARangeSelection(currentFocusWin);
+}
+
+//----------------------------------------------------------------------------------
 int32_t nsPrintJob::GetPrintPreviewNumPages() {
   // When calling this function, the FinishPrintPreview() function might not
   // been called as there are still some
@@ -1088,6 +1112,68 @@ void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
       }
     }
   }
+}
+
+//---------------------------------------------------------------------
+bool nsPrintJob::IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin) {
+  if (mDisallowSelectionPrint || !aDOMWin) {
+    return false;
+  }
+
+  PresShell* presShell = aDOMWin->GetDocShell()->GetPresShell();
+  if (!presShell) {
+    return false;
+  }
+
+  // check here to see if there is a range selection
+  // so we know whether to turn on the "Selection" radio button
+  Selection* selection = presShell->GetCurrentSelection(SelectionType::eNormal);
+  if (!selection) {
+    return false;
+  }
+
+  int32_t rangeCount = selection->RangeCount();
+  if (!rangeCount) {
+    return false;
+  }
+
+  if (rangeCount > 1) {
+    return true;
+  }
+
+  // check to make sure it isn't an insertion selection
+  return selection->GetRangeAt(0) && !selection->IsCollapsed();
+}
+
+//---------------------------------------------------------------------
+bool nsPrintJob::IsThereAnIFrameSelected(nsIDocShell* aDocShell,
+                                         nsPIDOMWindowOuter* aDOMWin,
+                                         bool& aIsParentFrameSet) {
+  aIsParentFrameSet = IsParentAFrameSet(aDocShell);
+  bool iFrameIsSelected = false;
+  if (mPrt && mPrt->mPrintObject) {
+    nsPrintObject* po =
+        FindPrintObjectByDOMWin(mPrt->mPrintObject.get(), aDOMWin);
+    iFrameIsSelected = po && po->mFrameType == eIFrame;
+  } else {
+    // First, check to see if we are a frameset
+    if (!aIsParentFrameSet) {
+      // Check to see if there is a currenlt focused frame
+      // if so, it means the selected frame is either the main docshell
+      // or an IFRAME
+      if (aDOMWin) {
+        // Get the main docshell's DOMWin to see if it matches
+        // the frame that is selected
+        nsPIDOMWindowOuter* domWin =
+            aDocShell ? aDocShell->GetWindow() : nullptr;
+        if (domWin != aDOMWin) {
+          iFrameIsSelected = true;  // we have a selected IFRAME
+        }
+      }
+    }
+  }
+
+  return iFrameIsSelected;
 }
 
 // static
@@ -1925,10 +2011,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
   printData->mPrintSettings->GetPrintRange(&printRangeType);
   if (printRangeType == nsIPrintSettings::kRangeSelection) {
-    // If we fail to remove the nodes then we should fail to print, because if
-    // the user was trying to print a small selection from a large document,
-    // sending the whole document to a real printer would be very frustrating.
-    MOZ_TRY(DeleteNonSelectedNodes(*aPO->mDocument));
+    DeleteNonSelectedNodes(*aPO->mDocument);
   }
 
   bool doReturn = false;
@@ -2101,11 +2184,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteNonSelectedNodes(
 
   MOZ_ASSERT(!selection->RangeCount());
   nsINode* bodyNode = aDoc.GetBodyElement();
-  if (!bodyNode) {
-    // We don't currently support printing selections that are not in a body.
-    return NS_ERROR_FAILURE;
-  }
-
   nsINode* startNode = bodyNode;
   uint32_t startOffset = 0;
 
@@ -2444,7 +2522,10 @@ void nsPrintJob::SetIsPrintPreview(bool aIsPrintPreview) {
   }
 }
 
-Document* nsPrintJob::FindFocusedDocument() const {
+/** ---------------------------------------------------
+ *  Get the Focused Frame for a documentviewer
+ */
+already_AddRefed<nsPIDOMWindowOuter> nsPrintJob::FindFocusedDOMWindow() const {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, nullptr);
 
@@ -2461,7 +2542,7 @@ Document* nsPrintJob::FindFocusedDocument() const {
   NS_ENSURE_TRUE(focusedWindow, nullptr);
 
   if (IsWindowsInOurSubTree(focusedWindow)) {
-    return focusedWindow->GetDoc();
+    return focusedWindow.forget();
   }
 
   return nullptr;
@@ -2561,20 +2642,50 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
     return NS_OK;
   }
 
-  // This means we are either printing a selected iframe or
-  // we are printing the current selection.
-  MOZ_ASSERT(printRangeType == nsIPrintSettings::kRangeSelection);
-  NS_ENSURE_STATE(printData->mSelectionRoot);
+  // This means we are either printed a selected IFrame or
+  // we are printing the current selection
 
-  // If mSelectionRoot is a selected iframe without a selection, then just
-  // enable normally from that point.
-  if (printData->mSelectionRoot->mFrameType == eIFrame &&
-      !printData->mSelectionRoot->mHasSelection) {
-    printData->mSelectionRoot->EnablePrinting(true);
-  } else {
-    // Otherwise, only enable nsPrintObjects that have a selection.
-    printData->mSelectionRoot->EnablePrintingSelectionOnly();
+  MOZ_ASSERT(printRangeType == nsIPrintSettings::kRangeSelection);
+
+  // If the currentFocusDOMWin can'r be null if something is selected
+  if (!printData->mCurrentFocusWin) {
+    for (uint32_t i = 0; i < printData->mPrintDocList.Length(); i++) {
+      nsPrintObject* po = printData->mPrintDocList.ElementAt(i);
+      NS_ASSERTION(po, "nsPrintObject can't be null!");
+      nsCOMPtr<nsPIDOMWindowOuter> domWin = po->mDocShell->GetWindow();
+      if (IsThereARangeSelection(domWin)) {
+        printData->mCurrentFocusWin = std::move(domWin);
+        po->EnablePrinting(true);
+        break;
+      }
+    }
+    return NS_OK;
   }
+
+  // Find the selected IFrame
+  nsPrintObject* po = FindPrintObjectByDOMWin(printData->mPrintObject.get(),
+                                              printData->mCurrentFocusWin);
+  if (!po) {
+    return NS_OK;
+  }
+
+  // Now, only enable this POs (the selected PO) and all of its children
+  po->EnablePrinting(true);
+
+  // check to see if we have a range selection,
+  // as oppose to a insert selection
+  // this means if the user just clicked on the IFrame then
+  // there will not be a selection so we want the entire page to print
+  //
+  // XXX this is sort of a hack right here to make the page
+  // not try to reposition itself when printing selection
+  nsPIDOMWindowOuter* domWin =
+      po->mDocument->GetOriginalDocument()->GetWindow();
+  if (!IsThereARangeSelection(domWin)) {
+    printRangeType = nsIPrintSettings::kRangeAllPages;
+    printData->mPrintSettings->SetPrintRange(printRangeType);
+  }
+  PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
   return NS_OK;
 }
 
