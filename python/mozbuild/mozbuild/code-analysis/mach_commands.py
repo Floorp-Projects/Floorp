@@ -985,7 +985,7 @@ class StaticAnalysis(MachCommandBase):
         try:
             output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode('utf-8')
             version_string = 'clang-format version ' + version
-            if output.startswith(version_string):
+            if version_string in output:
                 return True
         except subprocess.CalledProcessError as e:
             self.log(logging.ERROR, 'static-analysis', {},
