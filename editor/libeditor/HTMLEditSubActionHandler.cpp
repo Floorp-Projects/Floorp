@@ -4461,12 +4461,11 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
   // Special rule here: if we are trying to join list items, and they are in
   // different lists, join the lists instead.
   Maybe<nsAtom*> newListElementTagNameOfRightListElement;
-  RefPtr<Element> leftListElement, rightListElement;
   if (HTMLEditUtils::IsListItem(leftBlockElement) &&
       HTMLEditUtils::IsListItem(rightBlockElement)) {
     // XXX leftListElement and/or rightListElement may be not list elements.
-    leftListElement = leftBlockElement->GetParentElement();
-    rightListElement = rightBlockElement->GetParentElement();
+    Element* leftListElement = leftBlockElement->GetParentElement();
+    Element* rightListElement = rightBlockElement->GetParentElement();
     EditorDOMPoint atChildInBlock;
     if (leftListElement && rightListElement &&
         leftListElement != rightListElement &&
@@ -4615,6 +4614,7 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
       return EditActionIgnored(rv);
     }
 
+    OwningNonNull<Element> originalLeftBlockElement = *leftBlockElement;
     {
       // We can't just track leftBlockElement because it's an Element, so track
       // something else.
@@ -4645,14 +4645,11 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
     EditActionResult ret(NS_OK);
     if (newListElementTagNameOfRightListElement.isSome()) {
       // XXX Why do we ignore the error from MoveChildrenWithTransaction()?
-      // XXX Why is it guaranteed that `atLeftBlockChild.GetContainer()` is
-      //     `leftListElement` here?  Looks like that above code may run
-      //     mutation event listeners.
-      NS_WARNING_ASSERTION(leftListElement == atLeftBlockChild.GetContainer(),
-                           "This is not guaranteed, but assumed");
+      MOZ_ASSERT(originalLeftBlockElement == atLeftBlockChild.GetContainer(),
+                 "This is not guaranteed, but assumed");
       MoveNodeResult moveNodeResult = MoveChildrenWithTransaction(
-          *rightListElement,
-          EditorDOMPoint(leftListElement, atLeftBlockChild.Offset()));
+          *rightBlockElement,
+          EditorDOMPoint(originalLeftBlockElement, atLeftBlockChild.Offset()));
       if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
         return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
