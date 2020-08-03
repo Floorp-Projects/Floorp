@@ -98,7 +98,9 @@ parent:
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
                             bool minimizeMemoryUsage,
-                            FileDescriptor? DMDFile);
+                            FileDescriptor? DMDFile)
+      returns (uint32_t aGeneration);
+
   async ShutdownVR();
 
   // Functions supporting PerfStats data collection.
@@ -140,7 +142,6 @@ child:
   async NotifyDeviceReset(GPUDeviceData status);
 
   async AddMemoryReport(MemoryReport aReport);
-  async FinishMemoryReport(uint32_t aGeneration);
 
   // Update the UI process after a feature's status has changed. This is used
   // outside of the normal startup flow.

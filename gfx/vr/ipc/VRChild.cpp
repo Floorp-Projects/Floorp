@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRChild.h"
+#include "VRProcessManager.h"
 #include "VRProcessParent.h"
 #include "gfxConfig.h"
 
@@ -78,15 +79,6 @@ mozilla::ipc::IPCResult VRChild::RecvAddMemoryReport(
     const MemoryReport& aReport) {
   if (mMemoryReportRequest) {
     mMemoryReportRequest->RecvReport(aReport);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult VRChild::RecvFinishMemoryReport(
-    const uint32_t& aGeneration) {
-  if (mMemoryReportRequest) {
-    mMemoryReportRequest->Finish(aGeneration);
-    mMemoryReportRequest = nullptr;
   }
   return IPC_OK();
 }
@@ -176,8 +168,27 @@ bool VRChild::SendRequestMemoryReport(const uint32_t& aGeneration,
                                       const bool& aMinimizeMemoryUsage,
                                       const Maybe<FileDescriptor>& aDMDFile) {
   mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
-  Unused << PVRChild::SendRequestMemoryReport(aGeneration, aAnonymize,
-                                              aMinimizeMemoryUsage, aDMDFile);
+
+  PVRChild::SendRequestMemoryReport(
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile,
+      [&](const uint32_t& aGeneration2) {
+        if (VRProcessManager* vpm = VRProcessManager::Get()) {
+          if (VRChild* child = vpm->GetVRChild()) {
+            if (child->mMemoryReportRequest) {
+              child->mMemoryReportRequest->Finish(aGeneration2);
+              child->mMemoryReportRequest = nullptr;
+            }
+          }
+        }
+      },
+      [&](mozilla::ipc::ResponseRejectReason) {
+        if (VRProcessManager* vpm = VRProcessManager::Get()) {
+          if (VRChild* child = vpm->GetVRChild()) {
+            child->mMemoryReportRequest = nullptr;
+          }
+        }
+      });
+
   return true;
 }
 

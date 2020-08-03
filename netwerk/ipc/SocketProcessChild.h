@@ -44,7 +44,8 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
       const bool& minimizeMemoryUsage,
-      const Maybe<mozilla::ipc::FileDescriptor>& DMDFile);
+      const Maybe<mozilla::ipc::FileDescriptor>& DMDFile,
+      const RequestMemoryReportResolver& aResolver);
   mozilla::ipc::IPCResult RecvSetOffline(const bool& aOffline);
   mozilla::ipc::IPCResult RecvSetConnectivity(const bool& aConnectivity);
   mozilla::ipc::IPCResult RecvInitLinuxSandbox(

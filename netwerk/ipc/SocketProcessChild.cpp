@@ -205,7 +205,8 @@ IPCResult SocketProcessChild::RecvPreferenceUpdate(const Pref& aPref) {
 mozilla::ipc::IPCResult SocketProcessChild::RecvRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
     const bool& aMinimizeMemoryUsage,
-    const Maybe<ipc::FileDescriptor>& aDMDFile) {
+    const Maybe<ipc::FileDescriptor>& aDMDFile,
+    const RequestMemoryReportResolver& aResolver) {
   nsPrintfCString processName("Socket (pid %u)", (unsigned)getpid());
 
   mozilla::dom::MemoryReportRequestClient::Start(
@@ -213,9 +214,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvRequestMemoryReport(
       [&](const MemoryReport& aReport) {
         Unused << GetSingleton()->SendAddMemoryReport(aReport);
       },
-      [&](const uint32_t& aGeneration) {
-        Unused << GetSingleton()->SendFinishMemoryReport(aGeneration);
-      });
+      aResolver);
   return IPC_OK();
 }
 

@@ -78,8 +78,27 @@ bool RDDChild::SendRequestMemoryReport(const uint32_t& aGeneration,
                                        const bool& aMinimizeMemoryUsage,
                                        const Maybe<FileDescriptor>& aDMDFile) {
   mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
-  Unused << PRDDChild::SendRequestMemoryReport(aGeneration, aAnonymize,
-                                               aMinimizeMemoryUsage, aDMDFile);
+
+  PRDDChild::SendRequestMemoryReport(
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile,
+      [&](const uint32_t& aGeneration2) {
+        if (RDDProcessManager* rddpm = RDDProcessManager::Get()) {
+          if (RDDChild* child = rddpm->GetRDDChild()) {
+            if (child->mMemoryReportRequest) {
+              child->mMemoryReportRequest->Finish(aGeneration2);
+              child->mMemoryReportRequest = nullptr;
+            }
+          }
+        }
+      },
+      [&](mozilla::ipc::ResponseRejectReason) {
+        if (RDDProcessManager* rddpm = RDDProcessManager::Get()) {
+          if (RDDChild* child = rddpm->GetRDDChild()) {
+            child->mMemoryReportRequest = nullptr;
+          }
+        }
+      });
+
   return true;
 }
 
@@ -96,15 +115,6 @@ mozilla::ipc::IPCResult RDDChild::RecvAddMemoryReport(
     const MemoryReport& aReport) {
   if (mMemoryReportRequest) {
     mMemoryReportRequest->RecvReport(aReport);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult RDDChild::RecvFinishMemoryReport(
-    const uint32_t& aGeneration) {
-  if (mMemoryReportRequest) {
-    mMemoryReportRequest->Finish(aGeneration);
-    mMemoryReportRequest = nullptr;
   }
   return IPC_OK();
 }

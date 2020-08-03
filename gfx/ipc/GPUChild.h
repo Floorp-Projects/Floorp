@@ -63,7 +63,6 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   mozilla::ipc::IPCResult RecvNotifyUiObservers(const nsCString& aTopic);
   mozilla::ipc::IPCResult RecvNotifyDeviceReset(const GPUDeviceData& aData);
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
-  mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
   mozilla::ipc::IPCResult RecvUpdateFeature(const Feature& aFeature,
                                             const FeatureFailure& aChange);
   mozilla::ipc::IPCResult RecvUsedFallback(const Fallback& aFallback,

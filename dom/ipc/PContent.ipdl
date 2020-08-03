@@ -513,7 +513,9 @@ child:
     async RequestMemoryReport(uint32_t generation,
                               bool anonymize,
                               bool minimizeMemoryUsage,
-                              FileDescriptor? DMDFile);
+                              FileDescriptor? DMDFile)
+        returns (uint32_t aGeneration);
+
     async RequestPerformanceMetrics(nsID aID);
 
     /**
@@ -1507,7 +1509,6 @@ parent:
                              IHandlerControlHolder aHandlerControl);
 
     async AddMemoryReport(MemoryReport aReport);
-    async FinishMemoryReport(uint32_t aGeneration);
 
     async MaybeReloadPlugins();
 

@@ -103,8 +103,35 @@ bool SocketProcessParent::SendRequestMemoryReport(
     const bool& aMinimizeMemoryUsage,
     const Maybe<ipc::FileDescriptor>& aDMDFile) {
   mMemoryReportRequest = MakeUnique<dom::MemoryReportRequestHost>(aGeneration);
-  Unused << PSocketProcessParent::SendRequestMemoryReport(
-      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile);
+
+  PSocketProcessParent::SendRequestMemoryReport(
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile,
+      [&](const uint32_t& aGeneration2) {
+        MOZ_ASSERT(gIOService);
+        if (!gIOService->SocketProcess()) {
+          return;
+        }
+        SocketProcessParent* actor = gIOService->SocketProcess()->GetActor();
+        if (!actor) {
+          return;
+        }
+        if (actor->mMemoryReportRequest) {
+          actor->mMemoryReportRequest->Finish(aGeneration2);
+          actor->mMemoryReportRequest = nullptr;
+        }
+      },
+      [&](mozilla::ipc::ResponseRejectReason) {
+        MOZ_ASSERT(gIOService);
+        if (!gIOService->SocketProcess()) {
+          return;
+        }
+        SocketProcessParent* actor = gIOService->SocketProcess()->GetActor();
+        if (!actor) {
+          return;
+        }
+        actor->mMemoryReportRequest = nullptr;
+      });
+
   return true;
 }
 
@@ -112,15 +139,6 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvAddMemoryReport(
     const MemoryReport& aReport) {
   if (mMemoryReportRequest) {
     mMemoryReportRequest->RecvReport(aReport);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult SocketProcessParent::RecvFinishMemoryReport(
-    const uint32_t& aGeneration) {
-  if (mMemoryReportRequest) {
-    mMemoryReportRequest->Finish(aGeneration);
-    mMemoryReportRequest = nullptr;
   }
   return IPC_OK();
 }
