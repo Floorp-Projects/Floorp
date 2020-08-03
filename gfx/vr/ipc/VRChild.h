@@ -50,7 +50,6 @@ class VRChild final : public PVRChild,
   mozilla::ipc::IPCResult RecvInitComplete();
 
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
-  mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
 
  private:
   VRProcessParent* mHost;
