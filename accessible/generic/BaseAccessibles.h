@@ -107,7 +107,11 @@ class EnumRoleAccessible : public AccessibleWrap {
 class DummyAccessible : public AccessibleWrap {
  public:
   explicit DummyAccessible(DocAccessible* aDocument = nullptr)
-      : AccessibleWrap(nullptr, aDocument) {}
+      : AccessibleWrap(nullptr, aDocument) {
+    // IsDefunct() asserts if mContent is null, which is always true for
+    // DummyAccessible. We can prevent this by setting eSharedNode.
+    mStateFlags |= eSharedNode;
+  }
 
   uint64_t NativeState() const final;
   uint64_t NativeInteractiveState() const final;
