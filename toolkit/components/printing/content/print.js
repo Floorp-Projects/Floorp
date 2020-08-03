@@ -27,8 +27,8 @@ var PrintEventHandler = {
     this.updatePrintPreview();
 
     document.addEventListener("print", e => this.print({ silent: true }));
-    document.addEventListener("update-print-setting", e =>
-      this.updateSetting(e.detail)
+    document.addEventListener("update-print-settings", e =>
+      this.updateSettings(e.detail)
     );
     document.addEventListener("cancel-print", () => this.cancelPrint());
     document.addEventListener("open-system-dialog", () =>
@@ -40,14 +40,40 @@ var PrintEventHandler = {
       })
     );
 
-    this.settingValues = {
-      printRange: printRange =>
-        printRange == "all"
-          ? Ci.nsIPrintSettings.kRangeAllPages
-          : Ci.nsIPrintSettings.kRangeSpecifiedPageRange,
-      // TODO: There's also kRangeSelection, which should come into play
-      // once we have a text box where the user can specify a range
-    };
+    // Some settings are only used by the UI
+    // assigning new values should update the underlying settings
+    this.viewSettings = new Proxy(this.settings, {
+      get(target, name) {
+        switch (name) {
+          case "printBackgrounds":
+            return target.printBGImages || target.printBGColors;
+          case "printAllOrCustomRange":
+            return target.printRange == Ci.nsIPrintSettings.kRangeAllPages
+              ? "all"
+              : "custom";
+        }
+        return target[name];
+      },
+      set(target, name, value) {
+        switch (name) {
+          case "printBackgrounds":
+            target.printBGImages = value;
+            target.printBGColors = value;
+            break;
+          case "printAllOrCustomRange":
+            target.printRange =
+              value == "all"
+                ? Ci.nsIPrintSettings.kRangeAllPages
+                : Ci.nsIPrintSettings.kRangeSpecifiedPageRange;
+            // TODO: There's also kRangeSelection, which should come into play
+            // once we have a text box where the user can specify a range
+            break;
+          default:
+            target[name] = value;
+        }
+      },
+    });
+
     this.settingFlags = {
       orientation: Ci.nsIPrintSettings.kInitSaveOrientation,
       printerName: Ci.nsIPrintSettings.kInitSaveAll,
@@ -57,7 +83,7 @@ var PrintEventHandler = {
 
     document.dispatchEvent(
       new CustomEvent("print-settings", {
-        detail: this.settings,
+        detail: this.viewSettings,
       })
     );
   },
@@ -77,29 +103,34 @@ var PrintEventHandler = {
     window.close();
   },
 
-  updateSetting({ setting, value }) {
-    let settingValue =
-      setting in this.settingValues
-        ? this.settingValues[setting](value)
-        : value;
+  updateSettings(changedSettings = {}) {
+    let isChanged = false;
+    let flags = 0;
+    for (let [setting, value] of Object.entries(changedSettings)) {
+      if (this.viewSettings[setting] != value) {
+        this.viewSettings[setting] = value;
 
-    if (this.settings[setting] != settingValue) {
-      this.settings[setting] = settingValue;
+        if (setting in this.settingFlags) {
+          flags |= this.settingFlags[setting];
+        }
+        isChanged = true;
+      }
+    }
 
+    if (isChanged) {
       let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
 
-      let flag = this.settingFlags[setting];
-      if (flag) {
-        PSSVC.savePrintSettingsToPrefs(this.settings, true, flag);
+      if (flags) {
+        PSSVC.savePrintSettingsToPrefs(this.settings, true, flags);
       }
 
       this.updatePrintPreview();
 
       document.dispatchEvent(
         new CustomEvent("print-settings", {
-          detail: this.settings,
+          detail: this.viewSettings,
         })
       );
     }
@@ -199,11 +230,11 @@ function PrintUIControlMixin(superClass) {
 
     update(settings) {}
 
-    updateSetting(setting, value) {
+    dispatchSettingsChange(changedSettings) {
       this.dispatchEvent(
-        new CustomEvent("update-print-setting", {
+        new CustomEvent("update-print-settings", {
           bubbles: true,
-          detail: { setting, value },
+          detail: changedSettings,
         })
       );
     }
@@ -212,9 +243,8 @@ function PrintUIControlMixin(superClass) {
   };
 }
 
-class DestinationPicker extends HTMLSelectElement {
-  constructor() {
-    super();
+class DestinationPicker extends PrintUIControlMixin(HTMLSelectElement) {
+  initialize() {
     this.addEventListener("change", this);
     document.addEventListener("available-destinations", this);
   }
@@ -238,15 +268,9 @@ class DestinationPicker extends HTMLSelectElement {
   handleEvent(e) {
     if (e.type == "change") {
       this._currentPrinter = e.target.value;
-      this.dispatchEvent(
-        new CustomEvent("update-print-setting", {
-          bubbles: true,
-          detail: {
-            setting: "printerName",
-            value: e.target.value,
-          },
-        })
-      );
+      this.dispatchSettingsChange({
+        printerName: e.target.value,
+      });
     }
 
     if (e.type == "available-destinations") {
@@ -270,7 +294,9 @@ class OrientationInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    this.updateSetting("orientation", e.target.value);
+    this.dispatchSettingsChange({
+      orientation: e.target.value,
+    });
   }
 }
 customElements.define("orientation-input", OrientationInput);
@@ -285,7 +311,9 @@ class CopiesInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    this.updateSetting("numCopies", e.target.value);
+    this.dispatchSettingsChange({
+      numCopies: e.target.value,
+    });
   }
 }
 customElements.define("copy-count-input", CopiesInput);
@@ -325,8 +353,8 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
 
   initialize() {
     super.initialize();
-    this.addEventListener("input", this);
     this._percentScale = this.querySelector("#percent-scale");
+    this._percentScale.addEventListener("input", this);
     this._shrinkToFit = this.querySelector("#fit-choice");
   }
 
@@ -342,8 +370,11 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    this.updateSetting("shrinkToFit", this._shrinkToFit.checked);
-    this.updateSetting("scaling", this._percentScale.value / 100);
+    e.stopPropagation();
+    this.dispatchSettingsChange({
+      shrinkToFit: this._shrinkToFit.checked,
+      scaling: this._percentScale.value / 100,
+    });
   }
 }
 customElements.define("scale-input", ScaleInput);
@@ -354,15 +385,37 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   update(settings) {
-    let rangePicker = document.querySelector("#range-picker");
-    rangePicker.value = settings.printRange == 0 ? "all" : "custom";
+    let rangePicker = this.querySelector("#range-picker");
+    rangePicker.value = settings.printAllOrCustomRange;
   }
 
   handleEvent(e) {
-    this.updateSetting("printRange", e.target.value);
+    this.dispatchSettingsChange({
+      printAllOrCustomRange: e.target.value,
+    });
   }
 }
 customElements.define("page-range-input", PageRangeInput);
+
+class BackgroundsInput extends PrintUIControlMixin(HTMLInputElement) {
+  connectedCallback() {
+    this.type = "checkbox";
+    super.connectedCallback();
+  }
+
+  update(settings) {
+    this.checked = settings.printBackgrounds;
+  }
+
+  handleEvent(e) {
+    this.dispatchSettingsChange({
+      printBackgrounds: this.checked,
+    });
+  }
+}
+customElements.define("backgrounds-input", BackgroundsInput, {
+  extends: "input",
+});
 
 class TwistySummary extends PrintUIControlMixin(HTMLElement) {
   get isOpen() {
