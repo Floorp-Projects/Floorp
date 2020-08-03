@@ -554,7 +554,7 @@ dictionary ChildProcInfoDictionary {
   unsigned long long cpuKernel = 0;
   sequence<ThreadInfoDictionary> threads = [];
   // Firefox info
-  unsigned long long childID = 0;
+  unsigned long long ChildID = 0;
   UTF8String origin = "";
   WebIDLProcType type = "web";
 };
