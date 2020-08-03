@@ -374,6 +374,13 @@
   args:
     obj: ObjId
 
+- name: GuardIsNotArrayBufferMaybeShared
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: GuardHasProxyHandler
   shared: false
   transpile: false
@@ -991,6 +998,32 @@
   cost_estimate: 5
   args:
     templateObject: ObjectField
+
+- name: NewTypedArrayFromLengthResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    templateObject: ObjectField
+    length: Int32Id
+
+- name: NewTypedArrayFromArrayBufferResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    templateObject: ObjectField
+    buffer: ObjId
+    byteOffset: ValId
+    length: ValId
+
+- name: NewTypedArrayFromArrayResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    templateObject: ObjectField
+    array: ObjId
 
 - name: StringFromCharCodeResult
   shared: false
@@ -1726,6 +1759,13 @@
   args:
     val: BoolImm
     result: BooleanId
+
+- name: LoadUndefined
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    result: ValId
 
 - name: LoadConstantStringResult
   shared: false

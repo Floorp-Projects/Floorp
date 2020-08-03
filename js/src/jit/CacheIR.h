@@ -430,6 +430,8 @@ inline int32_t GetIndexOfArgument(ArgumentKind kind, CallFlags flags,
 // in the IR, to keep the IR compact and the same size on all platforms.
 enum class GuardClassKind : uint8_t {
   Array,
+  ArrayBuffer,
+  SharedArrayBuffer,
   DataView,
   MappedArguments,
   UnmappedArguments,
@@ -1656,6 +1658,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachNewStringIterator(HandleFunction callee);
   AttachDecision tryAttachNewRegExpStringIterator(HandleFunction callee);
   AttachDecision tryAttachObjectCreate(HandleFunction callee);
+  AttachDecision tryAttachTypedArrayConstructor(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
