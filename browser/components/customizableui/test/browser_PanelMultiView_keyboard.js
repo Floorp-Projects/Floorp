@@ -457,10 +457,20 @@ async function testTabArrowsEmbeddedDoc(aView, aEmbedder) {
   await openPopup();
   await showSubView(aView);
   let doc = aEmbedder.contentDocument;
-  if (doc.readyState != "complete") {
+  if (doc.readyState != "complete" || doc.location.href != kEmbeddedDocUrl) {
     info(`Embedded doc readyState ${doc.readyState}, location ${doc.location}`);
     info("Waiting for load on embedder");
-    await BrowserTestUtils.waitForEvent(aEmbedder, "load");
+    if (aEmbedder.tagName == "browser") {
+      // We can't use BrowserTestUtils.browserLoaded because it assumes the
+      // browser is linked to a tab.
+      await BrowserTestUtils.waitForEvent(
+        aEmbedder,
+        "BrowserTestUtils:ContentEvent:load"
+      );
+    } else {
+      // iframe
+      await BrowserTestUtils.waitForEvent(aEmbedder, "load");
+    }
     // The original doc might have been a temporary about:blank, so fetch it
     // again.
     doc = aEmbedder.contentDocument;
