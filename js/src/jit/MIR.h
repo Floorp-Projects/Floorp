@@ -2174,8 +2174,10 @@ class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
         initialHeap_(initialHeap) {
     MOZ_ASSERT(!templateObject()->isSingleton());
     setResultType(MIRType::Object);
-    setResultTypeSet(
-        MakeSingletonTypeSet(alloc, constraints, templateObject()));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(
+          MakeSingletonTypeSet(alloc, constraints, templateObject()));
+    }
   }
 
  public:
@@ -2210,7 +2212,10 @@ class MNewTypedArrayDynamicLength : public MUnaryInstruction,
     MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Need to throw if length is negative.
     setResultType(MIRType::Object);
-    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(
+          MakeSingletonTypeSet(alloc, constraints, templateObject));
+    }
   }
 
  public:
@@ -2244,7 +2249,10 @@ class MNewTypedArrayFromArray : public MUnaryInstruction,
     MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Can throw during construction.
     setResultType(MIRType::Object);
-    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(
+          MakeSingletonTypeSet(alloc, constraints, templateObject));
+    }
   }
 
  public:
@@ -2281,7 +2289,10 @@ class MNewTypedArrayFromArrayBuffer
     MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Can throw during construction.
     setResultType(MIRType::Object);
-    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(
+          MakeSingletonTypeSet(alloc, constraints, templateObject));
+    }
   }
 
  public:
@@ -9122,6 +9133,28 @@ class MGuardIsNotProxy : public MUnaryInstruction,
 
  public:
   INSTRUCTION_HEADER(GuardIsNotProxy)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+// Guard the object is not an ArrayBufferObject or SharedArrayBufferObject.
+class MGuardIsNotArrayBufferMaybeShared : public MUnaryInstruction,
+                                          public SingleObjectPolicy::Data {
+  explicit MGuardIsNotArrayBufferMaybeShared(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(obj->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardIsNotArrayBufferMaybeShared)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 

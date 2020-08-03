@@ -1899,6 +1899,12 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::Array:
       clasp = &ArrayObject::class_;
       break;
+    case GuardClassKind::ArrayBuffer:
+      clasp = &ArrayBufferObject::class_;
+      break;
+    case GuardClassKind::SharedArrayBuffer:
+      clasp = &SharedArrayBufferObject::class_;
+      break;
     case GuardClassKind::DataView:
       clasp = &DataViewObject::class_;
       break;
@@ -2066,6 +2072,25 @@ bool CacheIRCompiler::emitGuardIsNotProxy(ObjOperandId objId) {
   }
 
   masm.branchTestObjectIsProxy(true, obj, scratch, failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardIsNotArrayBufferMaybeShared(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadObjClassUnsafe(obj, scratch);
+  masm.branchPtr(Assembler::Equal, scratch, ImmPtr(&ArrayBufferObject::class_),
+                 failure->label());
+  masm.branchPtr(Assembler::Equal, scratch,
+                 ImmPtr(&SharedArrayBufferObject::class_), failure->label());
   return true;
 }
 
@@ -4083,6 +4108,76 @@ bool CacheIRCompiler::emitObjectCreateResult(uint32_t templateObjectOffset) {
 
   using Fn = PlainObject* (*)(JSContext*, HandlePlainObject);
   callvm.call<Fn, ObjectCreateWithTemplate>();
+  return true;
+}
+
+bool CacheIRCompiler::emitNewTypedArrayFromLengthResult(
+    uint32_t templateObjectOffset, Int32OperandId lengthId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  AutoScratchRegister scratch(allocator, masm);
+  Register length = allocator.useRegister(masm, lengthId);
+
+  StubFieldOffset objectField(templateObjectOffset, StubField::Type::JSObject);
+  emitLoadStubField(objectField, scratch);
+
+  callvm.prepare();
+  masm.Push(length);
+  masm.Push(scratch);
+
+  using Fn = TypedArrayObject* (*)(JSContext*, HandleObject, int32_t length);
+  callvm.call<Fn, NewTypedArrayWithTemplateAndLength>();
+  return true;
+}
+
+bool CacheIRCompiler::emitNewTypedArrayFromArrayBufferResult(
+    uint32_t templateObjectOffset, ObjOperandId bufferId,
+    ValOperandId byteOffsetId, ValOperandId lengthId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+#ifdef JS_CODEGEN_X86
+  MOZ_CRASH("Instruction not supported on 32-bit x86, not enough registers");
+#endif
+
+  AutoCallVM callvm(masm, this, allocator);
+  AutoScratchRegister scratch(allocator, masm);
+  Register buffer = allocator.useRegister(masm, bufferId);
+  ValueOperand byteOffset = allocator.useValueRegister(masm, byteOffsetId);
+  ValueOperand length = allocator.useValueRegister(masm, lengthId);
+
+  StubFieldOffset objectField(templateObjectOffset, StubField::Type::JSObject);
+  emitLoadStubField(objectField, scratch);
+
+  callvm.prepare();
+  masm.Push(length);
+  masm.Push(byteOffset);
+  masm.Push(buffer);
+  masm.Push(scratch);
+
+  using Fn = TypedArrayObject* (*)(JSContext*, HandleObject, HandleObject,
+                                   HandleValue, HandleValue);
+  callvm.call<Fn, NewTypedArrayWithTemplateAndBuffer>();
+  return true;
+}
+
+bool CacheIRCompiler::emitNewTypedArrayFromArrayResult(
+    uint32_t templateObjectOffset, ObjOperandId arrayId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  AutoScratchRegister scratch(allocator, masm);
+  Register array = allocator.useRegister(masm, arrayId);
+
+  StubFieldOffset objectField(templateObjectOffset, StubField::Type::JSObject);
+  emitLoadStubField(objectField, scratch);
+
+  callvm.prepare();
+  masm.Push(array);
+  masm.Push(scratch);
+
+  using Fn = TypedArrayObject* (*)(JSContext*, HandleObject, HandleObject);
+  callvm.call<Fn, NewTypedArrayWithTemplateAndArray>();
   return true;
 }
 
@@ -6835,6 +6930,14 @@ bool CacheIRCompiler::emitLoadBooleanConstant(bool val,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadUndefined(ValOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  ValueOperand reg = allocator.defineValueRegister(masm, resultId);
+  masm.moveValue(UndefinedValue(), reg);
+  return true;
+}
+
 bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
                                             StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -7445,6 +7548,10 @@ struct ReturnTypeToJSValueType<RegExpStringIteratorObject*> {
 };
 template <>
 struct ReturnTypeToJSValueType<PlainObject*> {
+  static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
+};
+template <>
+struct ReturnTypeToJSValueType<TypedArrayObject*> {
   static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
 };
 
