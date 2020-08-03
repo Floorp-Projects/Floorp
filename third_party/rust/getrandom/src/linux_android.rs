@@ -27,17 +27,6 @@ thread_local!(
     static RNG_SOURCE: RefCell<Option<RngSource>> = RefCell::new(None);
 );
 
-fn syscall_getrandom(dest: &mut [u8]) -> Result<(), io::Error> {
-    let ret = unsafe {
-        libc::syscall(libc::SYS_getrandom, dest.as_mut_ptr(), dest.len(), 0)
-    };
-    if ret < 0 || (ret as usize) != dest.len() {
-        error!("Linux getrandom syscall failed with return value {}", ret);
-        return Err(io::Error::last_os_error());
-    }
-    Ok(())
-}
-
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
     RNG_SOURCE.with(|f| {
         use_init(f,
@@ -56,7 +45,11 @@ pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
             Ok(s)
         }, |f| {
             match f {
-                RngSource::GetRandom => syscall_getrandom(dest),
+                RngSource::GetRandom => {
+                    sys_fill_exact(dest, |buf| unsafe {
+                        getrandom(buf.as_mut_ptr() as *mut libc::c_void, buf.len(), 0)
+                    })
+                },
                 RngSource::Device(f) => f.read_exact(dest),
             }.map_err(From::from)
         })
@@ -70,10 +63,17 @@ fn is_getrandom_available() -> bool {
     static AVAILABLE: AtomicBool = AtomicBool::new(false);
 
     CHECKER.call_once(|| {
-        let mut buf: [u8; 0] = [];
-        let available = match syscall_getrandom(&mut buf) {
-            Ok(()) => true,
-            Err(err) => err.raw_os_error() != Some(libc::ENOSYS),
+        let available = {
+            let res = unsafe { getrandom(core::ptr::null_mut(), 0, libc::GRND_NONBLOCK) };
+            if res < 0 {
+                match io::Error::last_os_error().raw_os_error() {
+                    Some(libc::ENOSYS) => false, // No kernel support
+                    Some(libc::EPERM) => false,  // Blocked by seccomp
+                    _ => true,
+                }
+            } else {
+                true
+            }
         };
         AVAILABLE.store(available, Ordering::Relaxed);
     });
@@ -83,3 +83,37 @@ fn is_getrandom_available() -> bool {
 
 #[inline(always)]
 pub fn error_msg_inner(_: NonZeroU32) -> Option<&'static str> { None }
+
+// Fill a buffer by repeatedly invoking a system call. The `sys_fill` function:
+//   - should return -1 and set errno on failure
+//   - should return the number of bytes written on success
+//
+// From src/util_libc.rs 65660e00
+fn sys_fill_exact(
+    mut buf: &mut [u8],
+    sys_fill: impl Fn(&mut [u8]) -> libc::ssize_t,
+) -> Result<(), io::Error> {
+    while !buf.is_empty() {
+        let res = sys_fill(buf);
+        if res < 0 {
+            let err = io::Error::last_os_error();
+            // We should try again if the call was interrupted.
+            if err.raw_os_error() != Some(libc::EINTR) {
+                return Err(err.into());
+            }
+        } else {
+            // We don't check for EOF (ret = 0) as the data we are reading
+            // should be an infinite stream of random bytes.
+            buf = &mut buf[(res as usize)..];
+        }
+    }
+    Ok(())
+}
+
+unsafe fn getrandom(
+    buf: *mut libc::c_void,
+    buflen: libc::size_t,
+    flags: libc::c_uint,
+) -> libc::ssize_t {
+    libc::syscall(libc::SYS_getrandom, buf, buflen, flags) as libc::ssize_t
+}
