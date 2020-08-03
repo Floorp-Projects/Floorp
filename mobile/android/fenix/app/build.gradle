@@ -35,7 +35,6 @@ android {
         def deepLinkSchemeValue = "fenix-dev"
         buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
         manifestPlaceholders = [
-                "isRaptorEnabled": "false",
                 "deepLinkScheme": deepLinkSchemeValue
         ]
     }
@@ -56,12 +55,10 @@ android {
             shrinkResources false
             minifyEnabled false
             applicationIdSuffix ".fenix.debug"
-            manifestPlaceholders.isRaptorEnabled = "true"
             resValue "bool", "IS_DEBUG", "true"
             pseudoLocalesEnabled true
         }
         forPerformanceTest releaseTemplate >> { // the ">>" concatenates the raptor-specific options with the template
-            manifestPlaceholders.isRaptorEnabled = "true"
             applicationIdSuffix ".fenix.performancetest"
             debuggable true
             manifestPlaceholders = [
@@ -554,10 +551,6 @@ dependencies {
     testImplementation "org.mozilla.telemetry:glean-forUnitTests:${project.ext.glean_version}"
 
     lintChecks project(":mozilla-lint-rules")
-}
-
-if (project.hasProperty("raptor")) {
-    android.defaultConfig.manifestPlaceholders.isRaptorEnabled = "true"
 }
 
 if (project.hasProperty("coverage")) {
