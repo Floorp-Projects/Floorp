@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2015 Mozilla Foundation
+ * Copyright (c) 2007-2017 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla
  * Foundation, and Opera Software ASA.
  *
@@ -235,15 +235,13 @@ void nsHtml5TreeBuilder::doctype(nsAtom* name, nsHtml5String publicIdentifier,
     emptyString.Release();
     if (isQuirky(name, publicIdentifier, systemIdentifier, forceQuirks)) {
       errQuirkyDoctype();
-      documentModeInternal(QUIRKS_MODE, publicIdentifier, systemIdentifier,
-                           false);
+      documentModeInternal(QUIRKS_MODE, publicIdentifier, systemIdentifier);
     } else if (isAlmostStandards(publicIdentifier, systemIdentifier)) {
       errAlmostStandardsDoctype();
       documentModeInternal(ALMOST_STANDARDS_MODE, publicIdentifier,
-                           systemIdentifier, false);
+                           systemIdentifier);
     } else {
-      documentModeInternal(STANDARDS_MODE, publicIdentifier, systemIdentifier,
-                           false);
+      documentModeInternal(STANDARDS_MODE, publicIdentifier, systemIdentifier);
     }
     mode = BEFORE_HTML;
     return;
@@ -379,7 +377,7 @@ void nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start,
           default: {
             switch (mode) {
               case INITIAL: {
-                documentModeInternal(QUIRKS_MODE, nullptr, nullptr, false);
+                documentModeInternal(QUIRKS_MODE, nullptr, nullptr);
                 mode = BEFORE_HTML;
                 i--;
                 continue;
@@ -551,7 +549,7 @@ void nsHtml5TreeBuilder::eof() {
   for (;;) {
     switch (mode) {
       case INITIAL: {
-        documentModeInternal(QUIRKS_MODE, nullptr, nullptr, false);
+        documentModeInternal(QUIRKS_MODE, nullptr, nullptr);
         mode = BEFORE_HTML;
         continue;
       }
@@ -1853,7 +1851,7 @@ starttagloop:
       }
       case INITIAL: {
         errStartTagWithoutDoctype();
-        documentModeInternal(QUIRKS_MODE, nullptr, nullptr, false);
+        documentModeInternal(QUIRKS_MODE, nullptr, nullptr);
         mode = BEFORE_HTML;
         continue;
       }
@@ -3099,7 +3097,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
       }
       case INITIAL: {
         errEndTagSeenWithoutDoctype();
-        documentModeInternal(QUIRKS_MODE, nullptr, nullptr, false);
+        documentModeInternal(QUIRKS_MODE, nullptr, nullptr);
         mode = BEFORE_HTML;
         continue;
       }
@@ -3333,9 +3331,9 @@ bool nsHtml5TreeBuilder::isSecondOnStackBody() {
   return currentPtr >= 1 && stack[1]->getGroup() == nsHtml5TreeBuilder::BODY;
 }
 
-void nsHtml5TreeBuilder::documentModeInternal(
-    nsHtml5DocumentMode m, nsHtml5String publicIdentifier,
-    nsHtml5String systemIdentifier, bool html4SpecificAdditionalErrorChecks) {
+void nsHtml5TreeBuilder::documentModeInternal(nsHtml5DocumentMode m,
+                                              nsHtml5String publicIdentifier,
+                                              nsHtml5String systemIdentifier) {
   if (isSrcdocDocument) {
     quirks = false;
     this->documentMode(STANDARDS_MODE);

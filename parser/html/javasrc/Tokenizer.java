@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
- * Copyright (c) 2007-2015 Mozilla Foundation
+ * Copyright (c) 2007-2017 Mozilla Foundation
  * Portions of comments Copyright 2004-2010 Apple Computer, Inc., Mozilla
  * Foundation, and Opera Software ASA.
  *
@@ -448,11 +448,6 @@ public class Tokenizer implements Locator {
     private boolean wantsComments = false;
 
     /**
-     * <code>true</code> when HTML4-specific additional errors are requested.
-     */
-    protected boolean html4;
-
-    /**
      * Whether the stream is past the first 1024 bytes.
      */
     private boolean metaBoundaryPassed;
@@ -494,8 +489,6 @@ public class Tokenizer implements Locator {
     private XmlViolationPolicy xmlnsPolicy = XmlViolationPolicy.ALTER_INFOSET;
 
     private XmlViolationPolicy namePolicy = XmlViolationPolicy.ALTER_INFOSET;
-
-    private boolean html4ModeCompatibleWithXhtml1Schemata;
 
     private int mappingLangToXmlLang;
 
@@ -731,17 +724,6 @@ public class Tokenizer implements Locator {
         this.namePolicy = namePolicy;
     }
 
-    /**
-     * Sets the html4ModeCompatibleWithXhtml1Schemata.
-     *
-     * @param html4ModeCompatibleWithXhtml1Schemata
-     *            the html4ModeCompatibleWithXhtml1Schemata to set
-     */
-    public void setHtml4ModeCompatibleWithXhtml1Schemata(
-            boolean html4ModeCompatibleWithXhtml1Schemata) {
-        this.html4ModeCompatibleWithXhtml1Schemata = html4ModeCompatibleWithXhtml1Schemata;
-    }
-
     // ]NOCPP]
 
     // For the token handler to call
@@ -888,10 +870,6 @@ public class Tokenizer implements Locator {
 
     public void notifyAboutMetaBoundary() {
         metaBoundaryPassed = true;
-    }
-
-    void turnOnAdditionalHtml4Errors() {
-        html4 = true;
     }
 
     // ]NOCPP]
@@ -1292,39 +1270,20 @@ public class Tokenizer implements Locator {
         // ]NOCPP]
         if (attributeName != null) {
             // [NOCPP[
-            if (html4) {
-                if (attributeName.isBoolean()) {
-                    if (html4ModeCompatibleWithXhtml1Schemata) {
-                        attributes.addAttribute(attributeName,
-                                attributeName.getLocal(AttributeName.HTML),
-                                xmlnsPolicy);
-                    } else {
-                        attributes.addAttribute(attributeName, "", xmlnsPolicy);
-                    }
-                } else {
-                    if (AttributeName.BORDER != attributeName) {
-                        err("Attribute value omitted for a non-boolean attribute. (HTML4-only error.)");
-                        attributes.addAttribute(attributeName, "", xmlnsPolicy);
-                    }
-                }
-            } else {
-                if (AttributeName.SRC == attributeName
-                        || AttributeName.HREF == attributeName) {
-                    warn("Attribute \u201C"
-                            + attributeName.getLocal(AttributeName.HTML)
-                            + "\u201D without an explicit value seen. The attribute may be dropped by IE7.");
-                }
-                // ]NOCPP]
-                attributes.addAttribute(attributeName,
-                        Portability.newEmptyString()
-                        // [NOCPP[
-                        , xmlnsPolicy
-                // ]NOCPP]
-                // CPPONLY: , attributeLine
-                );
-                // [NOCPP[
+            if (AttributeName.SRC == attributeName
+                    || AttributeName.HREF == attributeName) {
+                warn("Attribute \u201C"
+                        + attributeName.getLocal(AttributeName.HTML)
+                        + "\u201D without an explicit value seen. The attribute may be dropped by IE7.");
             }
             // ]NOCPP]
+            attributes.addAttribute(attributeName,
+                    Portability.newEmptyString()
+                    // [NOCPP[
+                    , xmlnsPolicy
+            // ]NOCPP]
+            // CPPONLY: , attributeLine
+            );
             attributeName = null;
         } else {
             clearStrBufAfterUse();
@@ -1344,12 +1303,6 @@ public class Tokenizer implements Locator {
             // CPPONLY: if (mViewSource) {
             // CPPONLY:   mViewSource.MaybeLinkifyAttributeValue(attributeName, val);
             // CPPONLY: }
-            // [NOCPP[
-            if (!endTag && html4 && html4ModeCompatibleWithXhtml1Schemata
-                    && attributeName.isCaseFolded()) {
-                val = newAsciiLowerCaseStringFromString(val);
-            }
-            // ]NOCPP]
             attributes.addAttribute(attributeName, val
             // [NOCPP[
                     , xmlnsPolicy
@@ -1364,21 +1317,6 @@ public class Tokenizer implements Locator {
     }
 
     // [NOCPP[
-
-    private static String newAsciiLowerCaseStringFromString(String str) {
-        if (str == null) {
-            return null;
-        }
-        char[] buf = new char[str.length()];
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            if (c >= 'A' && c <= 'Z') {
-                c += 0x20;
-            }
-            buf[i] = c;
-        }
-        return new String(buf);
-    }
 
     protected void startErrorReporting() throws SAXException {
 
@@ -2134,9 +2072,6 @@ public class Tokenizer implements Locator {
                                  */
                                 // CPPONLY: MOZ_FALLTHROUGH;
                             default:
-                                // [NOCPP[
-                                errHtml4NonNameInUnquotedAttribute(c);
-                                // ]NOCPP]
                                 /*
                                  * Anything else Append the current input
                                  * character to the current attribute's value.
@@ -2293,9 +2228,6 @@ public class Tokenizer implements Locator {
                              * flag of the current tag token. Emit the current
                              * tag token.
                              */
-                            // [NOCPP[
-                            errHtml4XmlVoidSyntax();
-                            // ]NOCPP]
                             state = transition(state, emitCurrentTagToken(true, pos), reconsume, pos);
                             if (shouldSuspend) {
                                 break stateloop;
@@ -2395,9 +2327,6 @@ public class Tokenizer implements Locator {
                                  */
                                 // CPPONLY: MOZ_FALLTHROUGH;
                             default:
-                                // [NOCPP]
-                                errHtml4NonNameInUnquotedAttribute(c);
-                                // ]NOCPP]
                                 /*
                                  * Anything else Append the current input
                                  * character to the current attribute's value.
@@ -6933,7 +6862,6 @@ public class Tokenizer implements Locator {
         line = 1;
         // CPPONLY: attributeLine = 1;
         // [NOCPP[
-        html4 = false;
         metaBoundaryPassed = false;
         wantsComments = tokenHandler.wantsComments();
         if (!newAttributesEachTime) {
@@ -6985,14 +6913,7 @@ public class Tokenizer implements Locator {
     protected void errSlashNotFollowedByGt() throws SAXException {
     }
 
-    protected void errHtml4XmlVoidSyntax() throws SAXException {
-    }
-
     protected void errNoSpaceBetweenAttributes() throws SAXException {
-    }
-
-    protected void errHtml4NonNameInUnquotedAttribute(char c)
-            throws SAXException {
     }
 
     protected void errLtOrEqualsOrGraveInUnquotedAttributeOrNull(char c)
