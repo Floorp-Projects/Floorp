@@ -9,7 +9,7 @@
 var gSSService = null;
 
 function checkStateRead(aSubject, aTopic, aData) {
-  if (aData == PRELOAD_STATE_FILE_NAME) {
+  if (aData == PRELOAD_STATE_FILE_NAME || aData == CLIENT_AUTH_FILE_NAME) {
     return;
   }
 

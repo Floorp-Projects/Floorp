@@ -10,7 +10,7 @@ var gSSService = null;
 var gProfileDir = null;
 
 function do_state_written(aSubject, aTopic, aData) {
-  if (aData == PRELOAD_STATE_FILE_NAME) {
+  if (aData == PRELOAD_STATE_FILE_NAME || aData == CLIENT_AUTH_FILE_NAME) {
     return;
   }
 
@@ -45,7 +45,7 @@ function do_state_written(aSubject, aTopic, aData) {
 }
 
 function do_state_read(aSubject, aTopic, aData) {
-  if (aData == PRELOAD_STATE_FILE_NAME) {
+  if (aData == PRELOAD_STATE_FILE_NAME || aData == CLIENT_AUTH_FILE_NAME) {
     return;
   }
 
