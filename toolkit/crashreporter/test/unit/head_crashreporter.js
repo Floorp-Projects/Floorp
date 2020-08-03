@@ -205,10 +205,14 @@ async function do_content_crash(setup, callback) {
   do_get_profile();
   await makeFakeAppDir();
   await sendCommandAsync('load("' + headfile.path.replace(/\\/g, "/") + '");');
-  await sendCommandAsync(setup);
+  if (setup) {
+    await sendCommandAsync(setup);
+  }
   await sendCommandAsync('load("' + tailfile.path.replace(/\\/g, "/") + '");');
   await spinEventLoop();
-  let id = getMinidump().leafName.slice(0, -4);
+
+  let minidump = getMinidump();
+  let id = minidump.leafName.slice(0, -4);
   await Services.crashmanager.ensureCrashIsPresent(id);
   try {
     await handleMinidump(callback);
