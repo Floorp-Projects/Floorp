@@ -34,18 +34,25 @@ class TabHistoryView(
 
     private val adapter = TabHistoryAdapter(interactor)
     private val layoutManager = object : LinearLayoutManager(containerView.context) {
+
+        private var shouldScrollToSelected = true
+
         override fun onLayoutCompleted(state: RecyclerView.State?) {
             super.onLayoutCompleted(state)
             currentIndex?.let { index ->
-                // Force expansion of the dialog, otherwise scrolling to the current history item
-                // won't work when its position is near the bottom of the recyclerview.
-                expandDialog.invoke()
-                // Also, attempt to center the current history item.
-                val itemView = tabHistoryRecyclerView.findViewHolderForLayoutPosition(
-                    findFirstCompletelyVisibleItemPosition()
-                )?.itemView
-                val offset = tabHistoryRecyclerView.height / 2 - (itemView?.height ?: 0) / 2
-                scrollToPositionWithOffset(index, offset)
+                // Attempt to center the current history item after the first layout is completed,
+                // but not after subsequent layouts
+                if (shouldScrollToSelected) {
+                    // Force expansion of the dialog, otherwise scrolling to the current history item
+                    // won't work when its position is near the bottom of the recyclerview.
+                    expandDialog.invoke()
+                    val itemView = tabHistoryRecyclerView.findViewHolderForLayoutPosition(
+                        findFirstCompletelyVisibleItemPosition()
+                    )?.itemView
+                    val offset = tabHistoryRecyclerView.height / 2 - (itemView?.height ?: 0) / 2
+                    scrollToPositionWithOffset(index, offset)
+                    shouldScrollToSelected = false
+                }
             }
         }
     }.apply {
