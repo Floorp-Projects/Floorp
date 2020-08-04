@@ -6919,4 +6919,33 @@ TEST_F(JsepSessionTest, TestOneWayRtx) {
   }
 }
 
+TEST_F(JsepSessionTest, TestOfferRtxNoMsid) {
+  for (auto& codec : mSessionOff->Codecs()) {
+    if (codec->mName == "VP8") {
+      JsepVideoCodecDescription* vp8 =
+          static_cast<JsepVideoCodecDescription*>(codec.get());
+      vp8->EnableRtx("42");
+      break;
+    }
+  }
+
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(*mSessionOff, "video");
+
+  std::vector<std::string> streamIds;
+  for (const auto& [id, transceiver] : mSessionOff->GetTransceivers()) {
+    (void)id;  // Lame, but no better way to do this right now.
+    if (!IsNull(transceiver->mSendTrack)) {
+      transceiver->mSendTrack.UpdateStreamIds(streamIds);
+    }
+  }
+
+  // If no MSID is present, we should not have a FID ssrc-group
+  JsepOfferOptions options;
+  std::string offer;
+  JsepSession::Result result = mSessionOff->CreateOffer(options, &offer);
+  ASSERT_FALSE(result.mError.isSome());
+  ASSERT_EQ(std::string::npos, offer.find("FID")) << offer;
+}
+
 }  // namespace mozilla
