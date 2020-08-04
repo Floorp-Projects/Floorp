@@ -512,6 +512,11 @@ class nsTArray_base {
       nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
       size_t aElemAlign);
 
+  template <class Allocator>
+  void MoveConstructNonAutoArray(
+      nsTArray_base<Allocator, RelocationStrategy>& aOther, size_type aElemSize,
+      size_t aElemAlign);
+
   // This is an RAII class used in SwapArrayElements.
   class IsAutoArrayRestorer {
    public:
@@ -1007,8 +1012,13 @@ class nsTArray_Impl
   // Initialize this array with an r-value.
   // Allow different types of allocators, since the allocator doesn't matter.
   template <typename Allocator>
-  explicit nsTArray_Impl(nsTArray_Impl<E, Allocator>&& aOther) {
-    SwapElements(aOther);
+  explicit nsTArray_Impl(nsTArray_Impl<E, Allocator>&& aOther) noexcept {
+    // We cannot be a (Copyable)AutoTArray because that overrides this ctor.
+    MOZ_ASSERT(!this->IsAutoArray());
+
+    // This does not use SwapArrayElements because that's unnecessarily complex.
+    this->MoveConstructNonAutoArray(aOther, sizeof(elem_type),
+                                    MOZ_ALIGNOF(elem_type));
   }
 
   // The array's copy-constructor performs a 'deep' copy of the given array.
