@@ -186,6 +186,7 @@ devtools.jar:
     skin/images/aboutdebugging-information.svg (themes/images/aboutdebugging-information.svg)
     skin/images/aboutdebugging-process-icon.svg (themes/images/aboutdebugging-process-icon.svg)
     skin/images/aboutdebugging-usb-icon.svg (themes/images/aboutdebugging-usb-icon.svg)
+    skin/images/application-debug.svg (themes/images/application-debug.svg)
     skin/images/application-manifest.svg (themes/images/application-manifest.svg)
     skin/images/fox-smiling.svg (themes/images/fox-smiling.svg)
     skin/images/grid.svg (themes/images/grid.svg)
