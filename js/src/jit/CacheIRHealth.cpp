@@ -18,15 +18,20 @@ bool CacheIRHealth::spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub) {
   const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
   CacheIRReader stubReader(stubInfo);
   uint32_t totalStubHealth = 0;
+
   while (stubReader.more()) {
     CacheOp op = stubReader.readOp();
     uint32_t opHealth = CacheIROpHealth[size_t(op)];
+    uint32_t argLength = CacheIROpArgLengths[size_t(op)];
+
     if (opHealth == UINT32_MAX) {
       const char* opName = CacheIROpNames[size_t(op)];
       spew->property("unscoredOp", opName);
     } else {
       totalStubHealth += opHealth;
     }
+
+    stubReader.skip(argLength);
   }
 
   spew->property("stubHealth", totalStubHealth);
