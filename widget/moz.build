@@ -236,6 +236,7 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     ]
     UNIFIED_SOURCES += [
         'nsDeviceContextSpecProxy.cpp',
+        'nsPrinterBase.cpp',
         'nsPrintSession.cpp',
         'nsPrintSettingsService.cpp',
     ]
