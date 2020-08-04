@@ -90,9 +90,8 @@ var PrintEventHandler = {
 
   print({ printerName, silent } = {}) {
     let settings = this.settings;
-    if (silent) {
-      settings.printSilent = true;
-    }
+    settings.printSilent = silent;
+
     if (printerName) {
       settings.printerName = printerName;
     }
