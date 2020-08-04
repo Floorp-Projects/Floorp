@@ -36,24 +36,6 @@ StreamControl::~StreamControl() {
   MOZ_DIAGNOSTIC_ASSERT(mReadStreamList.IsEmpty());
 }
 
-void StreamControl::CloseReadStreams(const nsID& aId) {
-  AssertOwningThread();
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  uint32_t closedCount = 0;
-#endif
-
-  for (const auto& stream : mReadStreamList.ForwardRange()) {
-    if (stream->MatchId(aId)) {
-      stream->CloseStream();
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      closedCount += 1;
-#endif
-    }
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(closedCount > 0);
-}
-
 void StreamControl::CloseAllReadStreams() {
   AssertOwningThread();
 

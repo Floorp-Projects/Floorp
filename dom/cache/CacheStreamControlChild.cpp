@@ -144,12 +144,6 @@ void CacheStreamControlChild::ActorDestroy(ActorDestroyReason aReason) {
   RemoveWorkerRef();
 }
 
-mozilla::ipc::IPCResult CacheStreamControlChild::RecvClose(const nsID& aId) {
-  NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
-  CloseReadStreams(aId);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult CacheStreamControlChild::RecvCloseAll() {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   CloseAllReadStreams();

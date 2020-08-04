@@ -54,8 +54,6 @@ class StreamControl {
  protected:
   ~StreamControl();
 
-  void CloseReadStreams(const nsID& aId);
-
   void CloseAllReadStreams();
 
   void CloseAllReadStreamsWithoutReporting();

@@ -133,12 +133,6 @@ void CacheStreamControlParent::SetStreamList(
   mStreamList = std::move(aStreamList);
 }
 
-void CacheStreamControlParent::Close(const nsID& aId) {
-  NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-  NotifyClose(aId);
-  Unused << SendClose(aId);
-}
-
 void CacheStreamControlParent::CloseAll() {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   NotifyCloseAll();
@@ -152,11 +146,6 @@ void CacheStreamControlParent::Shutdown() {
     NS_WARNING("Cache failed to delete stream actor.");
     return;
   }
-}
-
-void CacheStreamControlParent::NotifyClose(const nsID& aId) {
-  NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-  CloseReadStreams(aId);
 }
 
 void CacheStreamControlParent::NotifyCloseAll() {
