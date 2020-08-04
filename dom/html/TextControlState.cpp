@@ -2568,6 +2568,9 @@ bool TextControlState::SetValue(const nsAString& aValue,
     aOldValue = nullptr;
   }
 
+  const bool wasHandlingSetValue =
+      mHandlingState && mHandlingState->IsHandling(TextControlAction::SetValue);
+
   ErrorResult error;
   AutoTextControlHandlingState handlingSetValue(
       *this, TextControlAction::SetValue, aValue, aOldValue, aFlags, error);
@@ -2646,25 +2649,23 @@ bool TextControlState::SetValue(const nsAString& aValue,
   }
 
   if (mTextEditor && mBoundFrame) {
-    AutoWeakFrame weakFrame(mBoundFrame);
-
     if (!SetValueWithTextEditor(handlingSetValue)) {
       return false;
-    }
-
-    if (!weakFrame.IsAlive()) {
-      return true;
     }
   } else if (!SetValueWithoutTextEditor(handlingSetValue)) {
     return false;
   }
 
-  // TODO(emilio): It seems wrong to pass ValueChangeKind::Script if
-  // BySetUserInput is in aFlags.
-  auto changeKind = (aFlags & eSetValue_Internal) ? ValueChangeKind::Internal
-                                                  : ValueChangeKind::Script;
+  // If we were handling SetValue() before, don't update the DOM state twice,
+  // just let the outer call do so.
+  if (!wasHandlingSetValue) {
+    // TODO(emilio): It seems wrong to pass ValueChangeKind::Script if
+    // BySetUserInput is in aFlags.
+    auto changeKind = (aFlags & eSetValue_Internal) ? ValueChangeKind::Internal
+                                                    : ValueChangeKind::Script;
 
-  handlingSetValue.GetTextControlElement()->OnValueChanged(changeKind);
+    handlingSetValue.GetTextControlElement()->OnValueChanged(changeKind);
+  }
   return true;
 }
 
