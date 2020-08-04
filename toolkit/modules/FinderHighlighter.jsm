@@ -1889,9 +1889,8 @@ FinderHighlighter.prototype = {
     }
   },
 
-  WillDeleteSelection(selection) {
-    let editor = this._getEditableNode(selection.getRangeAt(0).startContainer)
-      .editor;
+  WillDeleteRanges(rangesToDelete) {
+    let { editor } = this._getEditableNode(rangesToDelete[0].startContainer);
     let controller = editor.selectionController;
     let fSelection = controller.getSelection(
       Ci.nsISelectionController.SELECTION_FIND
@@ -1910,12 +1909,11 @@ FinderHighlighter.prototype = {
       shouldDelete[fIndex] = false;
       let fRange = fSelection.getRangeAt(fIndex);
 
-      for (let index = 0; index < selection.rangeCount; index++) {
+      for (let selRange of rangesToDelete) {
         if (shouldDelete[fIndex]) {
           continue;
         }
 
-        let selRange = selection.getRangeAt(index);
         let doesOverlap = this._checkOverlap(selRange, fRange);
         if (doesOverlap) {
           shouldDelete[fIndex] = true;
