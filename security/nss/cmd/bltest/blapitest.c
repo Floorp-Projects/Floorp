@@ -608,9 +608,11 @@ typedef enum {
     bltestDES_CBC,     /* .            */
     bltestDES_EDE_ECB, /* .            */
     bltestDES_EDE_CBC, /* .            */
-    bltestRC2_ECB,     /* .            */
-    bltestRC2_CBC,     /* .            */
-    bltestRC4,         /* .            */
+#ifndef NSS_DISABLE_DEPRECATED_RC2
+    bltestRC2_ECB, /* .            */
+    bltestRC2_CBC, /* .            */
+#endif
+    bltestRC4, /* .            */
 #ifdef NSS_SOFTOKEN_DOES_RC5
     bltestRC5_ECB, /* .            */
     bltestRC5_CBC, /* .            */
@@ -648,8 +650,10 @@ static char *mode_strings[] =
       "des_cbc",
       "des3_ecb",
       "des3_cbc",
+#ifndef NSS_DISABLE_DEPRECATED_RC2
       "rc2_ecb",
       "rc2_cbc",
+#endif
       "rc4",
 #ifdef NSS_SOFTOKEN_DOES_RC5
       "rc5_ecb",
@@ -879,7 +883,9 @@ cipher_requires_IV(bltestCipherMode mode)
     switch (mode) {
         case bltestDES_CBC:
         case bltestDES_EDE_CBC:
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case bltestRC2_CBC:
+#endif
 #ifdef NSS_SOFTOKEN_DOES_RC5
         case bltestRC5_CBC:
 #endif
@@ -1088,6 +1094,7 @@ des_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
                        input, inputLen);
 }
 
+#ifndef NSS_DISABLE_DEPRECATED_RC2
 SECStatus
 rc2_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
             unsigned int maxOutputLen, const unsigned char *input,
@@ -1105,6 +1112,7 @@ rc2_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
     return RC2_Decrypt((RC2Context *)cx, output, outputLen, maxOutputLen,
                        input, inputLen);
 }
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
 
 SECStatus
 rc4_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
@@ -1373,6 +1381,7 @@ bltest_des_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     return SECSuccess;
 }
 
+#ifndef NSS_DISABLE_DEPRECATED_RC2
 SECStatus
 bltest_rc2_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 {
@@ -1418,6 +1427,7 @@ bltest_rc2_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
         cipherInfo->cipher.symmkeyCipher = rc2_Decrypt;
     return SECSuccess;
 }
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
 
 SECStatus
 bltest_rc4_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
@@ -2259,12 +2269,14 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
                               cipherInfo->input.pBuf.len);
             return bltest_des_init(cipherInfo, encrypt);
             break;
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case bltestRC2_ECB:
         case bltestRC2_CBC:
             SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
                               cipherInfo->input.pBuf.len);
             return bltest_rc2_init(cipherInfo, encrypt);
             break;
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
         case bltestRC4:
             SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
                               cipherInfo->input.pBuf.len);
@@ -2613,10 +2625,12 @@ cipherFinish(bltestCipherInfo *cipherInfo)
                                                 cipherInfo->cx,
                                             PR_TRUE);
             break;
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case bltestRC2_ECB:
         case bltestRC2_CBC:
             RC2_DestroyContext((RC2Context *)cipherInfo->cx, PR_TRUE);
             break;
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
         case bltestRC4:
             RC4_DestroyContext((RC4Context *)cipherInfo->cx, PR_TRUE);
             break;
@@ -2769,8 +2783,10 @@ print_td:
         case bltestSEED_ECB:
         case bltestSEED_CBC:
 #endif
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case bltestRC2_ECB:
         case bltestRC2_CBC:
+#endif
         case bltestRC4:
             if (td)
                 fprintf(stdout, "%8s", "symmkey");
@@ -2954,7 +2970,9 @@ get_params(PLArenaPool *arena, bltestParams *params,
             load_file_data(arena, &params->ask.aad, filename, bltestBinary);
         case bltestDES_CBC:
         case bltestDES_EDE_CBC:
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case bltestRC2_CBC:
+#endif
         case bltestAES_CBC:
         case bltestAES_CTS:
         case bltestAES_CTR:
@@ -2966,7 +2984,9 @@ get_params(PLArenaPool *arena, bltestParams *params,
             load_file_data(arena, &params->sk.iv, filename, bltestBinary);
         case bltestDES_ECB:
         case bltestDES_EDE_ECB:
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case bltestRC2_ECB:
+#endif
         case bltestRC4:
         case bltestAES_ECB:
         case bltestCAMELLIA_ECB:
