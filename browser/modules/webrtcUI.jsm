@@ -867,6 +867,8 @@ var webrtcUI = {
 };
 
 function getGlobalIndicator() {
+  webrtcUI.recordEvent("show_indicator", "show_indicator");
+
   if (!webrtcUI.useLegacyGlobalIndicator) {
     const INDICATOR_CHROME_URI =
       "chrome://browser/content/webrtcIndicator.xhtml";
