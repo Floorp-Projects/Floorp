@@ -15407,5 +15407,17 @@
     "bug_numbers": [1647876],
     "description": "Seconds between a Firefox window being raised and lowered. For use in evaluating baseline engagement for Project FOG.",
     "releaseChannelCollection": "opt-out"
+  },
+  "CREDITCARD_NUM_USES": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets" : 50,
+    "description": "How many times each saved credit card has ever been autofilled. Rewritten after each autofill; always contains one entry per each count of uses. Example: If user has 3 cards, and he used 2 of them 5 times, and one of them 3 times, the value will be: `{3: 1, 5: 2}.",
+    "alert_emails": ["jmathies@mozilla.com", "chsiang@mozilla.com"],
+    "bug_numbers": [1653073, 1656355],
+    "releaseChannelCollection": "opt-out"
   }
 }
