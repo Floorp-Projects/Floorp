@@ -372,61 +372,14 @@ const WebRTCIndicator = {
 
   onClick(event) {
     switch (event.target.id) {
-      case "stop-sharing-screen": {
+      case "stop-sharing": {
         let activeStreams = webrtcUI.getActiveStreams(
           false /* camera */,
           false /* microphone */,
           true /* screen */,
-          false /* window */
-        );
-
-        if (!activeStreams.length) {
-          return;
-        }
-
-        // getActiveStreams is filtering for streams that have screen
-        // sharing, but those streams might _also_ be sharing other
-        // devices like camera or microphone. This is why we need to
-        // tell stopSharingStreams explicitly which device type we want
-        // to stop.
-        webrtcUI.stopSharingStreams(
-          [activeStreams[0]],
-          false /* camera */,
-          false /* microphone */,
-          true /* screen */,
-          false /* window */
-        );
-        break;
-      }
-      case "stop-sharing-window": {
-        let activeStreams = webrtcUI.getActiveStreams(
-          false /* camera */,
-          false /* microphone */,
-          false /* screen */,
           true /* window */
         );
 
-        if (this.sharingBrowserWindow) {
-          let browserWindowStreams = activeStreams.filter(stream => {
-            return stream.devices.some(device => device.scary);
-          });
-
-          if (!browserWindowStreams.length) {
-            return;
-          }
-
-          // See below comment on why we need to pass the boolean values
-          // for which device types we want to stop vi stopSharingStreams.
-          webrtcUI.stopSharingStreams(
-            [browserWindowStreams[0]],
-            false /* camera */,
-            false /* microphone */,
-            false /* screen */,
-            true /* window */
-          );
-          break;
-        }
-
         if (!activeStreams.length) {
           return;
         }
@@ -437,10 +390,10 @@ const WebRTCIndicator = {
         // tell stopSharingStreams explicitly which device type we want
         // to stop.
         webrtcUI.stopSharingStreams(
-          [activeStreams[0]],
+          activeStreams,
           false /* camera */,
           false /* microphone */,
-          false /* screen */,
+          true /* screen */,
           true /* window */
         );
         break;
