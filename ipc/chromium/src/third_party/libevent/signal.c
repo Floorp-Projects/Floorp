@@ -109,7 +109,7 @@ static void *evsig_base_lock = NULL;
 static struct event_base *evsig_base = NULL;
 /* A copy of evsig_base->sigev_n_signals_added. */
 static int evsig_base_n_signals_added = 0;
-static evutil_socket_t evsig_base_fd = -1;
+static _Atomic evutil_socket_t evsig_base_fd = -1;
 
 static void __cdecl evsig_handler(int sig);
 
