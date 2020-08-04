@@ -12,8 +12,8 @@ import android.util.Log.INFO
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
-import androidx.work.Configuration.Provider
 import androidx.work.Configuration.Builder
+import androidx.work.Configuration.Provider
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -93,7 +93,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         setupInMainProcessOnly()
     }
 
-    protected fun initializeGlean() {
+    protected open fun initializeGlean() {
         val telemetryEnabled = settings().isTelemetryEnabled
 
         logger.debug("Initializing Glean (uploadEnabled=$telemetryEnabled, isFennec=${Config.channel.isFennec})")
