@@ -100,6 +100,7 @@ FRAME_CLASSES = [
     Frame("nsSplitterFrame", "Box", NOT_LEAF),
     Frame("nsStackFrame", "Box", NOT_LEAF),
     Frame("nsSubDocumentFrame", "SubDocument", LEAF),
+    Frame("PrintedSheetFrame", "PrintedSheet", NOT_LEAF),
     Frame("SVGAFrame", "SVGA", NOT_LEAF),
     Frame("SVGClipPathFrame", "SVGClipPath", NOT_LEAF),
     Frame("SVGContainerFrame", "None", NOT_LEAF),
