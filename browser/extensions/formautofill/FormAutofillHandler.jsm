@@ -946,6 +946,10 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
             : "false",
       }
     );
+    Services.telemetry.scalarAdd(
+      "formautofill.creditCards.detected_sections_count",
+      1
+    );
 
     // For valid sections, check whether the section is in an
     // <iframe>; and, if so, watch for the <iframe> to pagehide.
