@@ -32,6 +32,10 @@ const INSPECTOR_L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );
 
+const OVERFLOW_DEBUGGING_ENABLED = Services.prefs.getBoolPref(
+  "devtools.overflow.debugging.enabled"
+);
+
 // Page size for pageup/pagedown
 const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
 const COLLAPSE_DATA_URL_LENGTH = 60;
@@ -312,6 +316,7 @@ ElementEditor.prototype = {
     this.updateCustomBadge();
     this.updateScrollableBadge();
     this.updateTextEditor();
+    this.updateOverflowBadge();
   },
 
   updateEventBadge: function() {
@@ -413,6 +418,31 @@ ElementEditor.prototype = {
     } else {
       this._displayBadge.classList.remove("interactive");
     }
+  },
+
+  updateOverflowBadge: function() {
+    if (!OVERFLOW_DEBUGGING_ENABLED) {
+      return;
+    }
+
+    if (this.node.causesOverflow && !this._overflowBadge) {
+      this._createOverflowBadge();
+    } else if (!this.node.causesOverflow && this._overflowBadge) {
+      this._overflowBadge.remove();
+      this._overflowBadge = null;
+    }
+  },
+
+  _createOverflowBadge: function() {
+    this._overflowBadge = this.doc.createElement("div");
+    this._overflowBadge.className = "inspector-badge overflow-badge";
+    this._overflowBadge.textContent = INSPECTOR_L10N.getStr(
+      "markupView.overflowBadge.label"
+    );
+    this._overflowBadge.title = INSPECTOR_L10N.getStr(
+      "markupView.overflowBadge.tooltip"
+    );
+    this.elt.insertBefore(this._overflowBadge, this._customBadge);
   },
 
   /**
