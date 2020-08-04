@@ -225,8 +225,7 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
 
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> jsonValue(cx);
-  bool ok = JS_ParseJSON(cx, PromiseFlatString(json).get(), json.Length(),
-                         &jsonValue);
+  bool ok = JS_ParseJSON(cx, json.BeginReading(), json.Length(), &jsonValue);
   if (!ok) {
     LogToConsoleInvalidJSON(aChannel, aURI);
     return nullptr;
