@@ -2,6 +2,8 @@
 <resources>
     <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
     <string name="mozac_support_migration_ongoing_notification_title">Anovamientu en cursu</string>
+    <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_text">Firefox va tar preparáu nun momentu…</string>
     <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
     <string name="mozac_support_migration_complete_notification_text">Firefox anovóse… ¡Y ameyoró!</string>
 </resources>
