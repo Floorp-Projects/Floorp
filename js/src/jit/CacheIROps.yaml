@@ -1216,6 +1216,13 @@
     input: NumberId
     fun: UnaryMathFunctionImm
 
+- name: ReflectGetPrototypeOfResult
+  shared: false
+  transpile: true
+  cost_estimate: 5
+  args:
+    obj: ObjId
+
 - name: StoreTypedArrayElement
   shared: true
   transpile: true
