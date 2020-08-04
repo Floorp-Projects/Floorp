@@ -510,6 +510,7 @@ bool IonCacheIRCompiler::init() {
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewObject:
+    case CacheKind::CheckPrivateField:
       MOZ_CRASH("Unsupported IC");
   }
 
@@ -592,6 +593,7 @@ void IonCacheIRCompiler::assertFloatRegisterAvailable(FloatRegister reg) {
     case CacheKind::GetIterator:
     case CacheKind::In:
     case CacheKind::HasOwn:
+    case CacheKind::CheckPrivateField:
     case CacheKind::InstanceOf:
     case CacheKind::UnaryArith:
     case CacheKind::ToPropertyKey:

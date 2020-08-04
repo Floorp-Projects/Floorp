@@ -20,8 +20,10 @@
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Unicode.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/SelfHosting.h"
+#include "vm/ThrowMsgKind.h"  // ThrowCondition
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/EnvironmentObject-inl.h"
@@ -84,6 +86,7 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
     case CacheKind::SetProp:
     case CacheKind::In:
     case CacheKind::HasOwn:
+    case CacheKind::CheckPrivateField:
     case CacheKind::InstanceOf:
     case CacheKind::BinaryArith:
       return 2;
@@ -3342,6 +3345,75 @@ AttachDecision HasPropIRGenerator::tryAttachStub() {
 }
 
 void HasPropIRGenerator::trackAttached(const char* name) {
+#ifdef JS_CACHEIR_SPEW
+  if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+    sp.valueProperty("base", val_);
+    sp.valueProperty("property", idVal_);
+  }
+#endif
+}
+
+CheckPrivateFieldIRGenerator::CheckPrivateFieldIRGenerator(
+    JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
+    CacheKind cacheKind, HandleValue idVal, HandleValue val)
+    : IRGenerator(cx, script, pc, cacheKind, mode), val_(val), idVal_(idVal) {
+  MOZ_ASSERT(idVal.isSymbol() && idVal.toSymbol()->isPrivateName());
+}
+
+AttachDecision CheckPrivateFieldIRGenerator::tryAttachStub() {
+  AutoAssertNoPendingException aanpe(cx_);
+
+  ValOperandId valId(writer.setInputOperandId(0));
+  ValOperandId keyId(writer.setInputOperandId(1));
+
+  if (!val_.isObject()) {
+    trackAttached(IRGenerator::NotAttached);
+    return AttachDecision::NoAction;
+  }
+  RootedObject obj(cx_, &val_.toObject());
+  ObjOperandId objId = writer.guardToObject(valId);
+  RootedId key(cx_, SYMBOL_TO_JSID(idVal_.toSymbol()));
+
+  ThrowCondition condition;
+  ThrowMsgKind msgKind;
+  GetCheckPrivateFieldOperands(pc_, &condition, &msgKind);
+
+  bool hasOwn = false;
+  if (!HasOwnDataPropertyPure(cx_, obj, key, &hasOwn)) {
+    // Can't determine if HasOwnProperty purely.
+    return AttachDecision::NoAction;
+  }
+
+  if (CheckPrivateFieldWillThrow(condition, hasOwn)) {
+    // Don't attach a stub if the operation will throw.
+    return AttachDecision::NoAction;
+  }
+
+  TRY_ATTACH(tryAttachNative(obj, objId, key, keyId, hasOwn));
+
+  return AttachDecision::NoAction;
+}
+
+AttachDecision CheckPrivateFieldIRGenerator::tryAttachNative(JSObject* obj,
+                                                             ObjOperandId objId,
+                                                             jsid key,
+                                                             ValOperandId keyId,
+                                                             bool hasOwn) {
+  if (!obj->isNative()) {
+    return AttachDecision::NoAction;
+  }
+
+  Maybe<ObjOperandId> tempId;
+  emitIdGuard(keyId, key);
+  EmitReadSlotGuard(writer, obj, obj, objId, &tempId);
+  writer.loadBooleanResult(hasOwn);
+  writer.returnFromIC();
+
+  trackAttached("NativeCheckPrivateField");
+  return AttachDecision::Attach;
+}
+
+void CheckPrivateFieldIRGenerator::trackAttached(const char* name) {
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("base", val_);

@@ -883,6 +883,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewObject:
+    case CacheKind::CheckPrivateField:
       MOZ_CRASH("Unsupported IC");
   }
   MOZ_CRASH();

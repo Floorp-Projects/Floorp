@@ -39,6 +39,7 @@ namespace jit {
                                       \
   _(In_Fallback)                      \
   _(HasOwn_Fallback)                  \
+  _(CheckPrivateField_Fallback)       \
                                       \
   _(GetName_Fallback)                 \
                                       \
@@ -89,6 +90,7 @@ namespace jit {
   _(SetElem)                                   \
   _(In)                                        \
   _(HasOwn)                                    \
+  _(CheckPrivateField)                         \
   _(GetName)                                   \
   _(BindName)                                  \
   _(GetIntrinsic)                              \
