@@ -41,7 +41,7 @@ class DefinitionServer {
     const definition = {
       id: "test-feature",
       // These l10n IDs are just random so we have some text to display
-      title: "pane-experimental-subtitle",
+      title: "experimental-features-media-avif",
       description: "pane-experimental-description",
       restartRequired: false,
       type: "boolean",
