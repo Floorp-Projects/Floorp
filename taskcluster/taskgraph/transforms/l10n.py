@@ -238,6 +238,7 @@ def handle_keyed_by(config, jobs):
         "docker-image",
         "secrets",
         "fetches.toolchain",
+        "fetches.fetch",
         "tooltool",
         "env",
         "ignore-locales",
