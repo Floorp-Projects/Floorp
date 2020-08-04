@@ -2665,7 +2665,7 @@ class HTMLEditor final : public TextEditor,
    * atomic elements like `<br>`, `<hr>`, `<img>`, `<input>`, etc and
    * data nodes except text node (e.g., comment node).
    * If aAtomicContent is a invisible `<br>` element, this will call
-   * `WillDeleteSelection()` recursively after deleting it.
+   * `HandleDeleteSelectionInternal()` recursively after deleting it.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
@@ -2807,8 +2807,8 @@ class HTMLEditor final : public TextEditor,
   /**
    * HandleDeleteCollapsedSelectionAtOtherBlockBoundary() handles deletion at
    * other block boundary (i.e., immediately before or after a block).
-   * If this does not join blocks, `WillDeleteSelection()` may be called
-   * recursively.
+   * If this does not join blocks, `HandleDeleteSelectionInternal()` may be
+   * called recursively.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
