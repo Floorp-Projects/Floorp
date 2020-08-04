@@ -40,20 +40,24 @@ def flat(data, parent_dir):
 
     :return dict: {subtest: value}
     """
-    ret = {}
+    result = {}
 
-    def _helper(data, parent_dir):
-        if isinstance(data, list):
-            for item in data:
-                _helper(item, parent_dir)
-        elif isinstance(data, dict):
-            for k, v in data.items():
-                current_dir = parent_dir + (k,)
-                subtest = ".".join(current_dir)
-                if isinstance(v, Iterable) and not isinstance(v, str):
-                    _helper(v, current_dir)
-                elif v or v == 0:
-                    ret.setdefault(subtest, []).append(v)
+    if not data:
+        return result
 
-    _helper(data, parent_dir)
-    return ret
+    if isinstance(data, list):
+        for item in data:
+            for k, v in flat(item, parent_dir).items():
+                result.setdefault(k, []).extend(v)
+
+    if isinstance(data, dict):
+        for k, v in data.items():
+            current_dir = parent_dir + (k,)
+            subtest = ".".join(current_dir)
+            if isinstance(v, Iterable) and not isinstance(v, str):
+                for x, y in flat(v, current_dir).items():
+                    result.setdefault(x, []).extend(y)
+            elif v or v == 0:
+                result.setdefault(subtest, []).append(v)
+
+    return result
