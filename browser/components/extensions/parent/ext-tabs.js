@@ -1292,11 +1292,6 @@ this.tabs = class extends ExtensionAPI {
           let title = strBundle.GetStringFromName(
             "saveaspdf.saveasdialog.title"
           );
-
-          if (AppConstants.platform === "macosx") {
-            return Promise.reject({ message: "Not supported on Mac OS X" });
-          }
-
           let filename;
           if (
             pageSettings.toFileName !== null &&
