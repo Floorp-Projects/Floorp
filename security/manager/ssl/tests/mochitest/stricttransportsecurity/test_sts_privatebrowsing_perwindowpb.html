@@ -31,6 +31,7 @@
   var mainWindow = window.browsingContext.topChromeWindow;
 
   SpecialPowers.Services.prefs.setIntPref("browser.startup.page", 0);
+  SpecialPowers.Services.prefs.setBoolPref("privacy.partition.network_state", false);
 
   var testframes = {
     samedom: {
