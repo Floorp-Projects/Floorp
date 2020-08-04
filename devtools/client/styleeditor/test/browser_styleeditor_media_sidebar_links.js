@@ -83,6 +83,10 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
   info("Waiting for the @media list to update");
   await onMediaChange;
 
+  // Ensure that the content has reflowed, which will ensure that all the
+  // element classes are reported correctly.
+  await promiseContentReflow(rdmUI);
+
   ok(
     ResponsiveUIManager.isActiveForTab(tab),
     "Responsive mode should be active."
@@ -138,6 +142,16 @@ function waitForResizeTo(rdmUI, type, value) {
     };
     info(`Waiting for content-resize to a ${type} of ${value}`);
     rdmUI.on("content-resize", onResize);
+  });
+}
+
+function promiseContentReflow(ui) {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+    return new Promise(resolve => {
+      content.window.requestAnimationFrame(() => {
+        content.window.requestAnimationFrame(resolve);
+      });
+    });
   });
 }
 
