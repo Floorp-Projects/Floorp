@@ -29,13 +29,25 @@
     });
   }
 
-  function checkPermission(aWindow, aExpectedState, aName) {
-    return SpecialPowers.wrap(aWindow).navigator.permissions
-      .query({ name: aName })
-      .then(
-        result => is(SpecialPowers.wrap(result).state, aExpectedState, `correct state for '${aName}'`),
-        () => ok(false, `query should not have rejected for '${aName}'`)
-      );
+  function checkPermission(aIFrame, aExpectedState, aName) {
+    return SpecialPowers.spawn(
+      aIFrame,
+      [{name: aName, expectedState: aExpectedState}],
+      async aInput => {
+        try {
+          let result = await content.navigator
+                                    .permissions
+                                    .query({ name: aInput.name });
+          is(
+            SpecialPowers.wrap(result).state,
+            aInput.expectedState,
+            `correct state for '${aInput.name}'`
+          );
+        } catch (e) {
+          ok(false, `query should not have rejected for '${aInput.name}'`)
+        }
+      }
+    );
   }
 
   function createIframe(aId, aAllow) {
@@ -46,7 +58,7 @@
       if (aAllow) {
         iframe.allow = aAllow;
       }
-      iframe.onload = () => resolve(iframe.contentWindow);
+      iframe.onload = () => resolve(iframe);
       document.body.appendChild(iframe);
     });
   }
@@ -224,7 +236,7 @@
     let test = tests.shift();
     await setPermission(test.type, test.top)
       .then(() => createIframe(test.id, test.allow))
-      .then(contentWindow => checkPermission(contentWindow, test.expected, test.name))
+      .then(iframe => checkPermission(iframe, test.expected, test.name))
       .then(() => removeIframe(test.id));
 
     SimpleTest.executeSoon(nextTest);
