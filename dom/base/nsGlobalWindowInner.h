@@ -56,7 +56,7 @@
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
-#include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
 #include "nsThreadUtils.h"
 
 class nsIArray;

@@ -9,6 +9,7 @@
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsRefreshDriver.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ServoBindings.h"

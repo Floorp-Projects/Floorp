@@ -11,11 +11,12 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "mozilla/TimeStamp.h"
-#include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
 
 class nsIContent;
 class nsIScrollbarMediator;
 class nsITimer;
+class nsRefreshDriver;
 
 namespace mozilla {
 

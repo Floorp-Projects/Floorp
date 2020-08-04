@@ -16,7 +16,9 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-#include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
+
+class nsRefreshDriver;
 
 namespace mozilla {
 struct SMILTargetIdentifier;
