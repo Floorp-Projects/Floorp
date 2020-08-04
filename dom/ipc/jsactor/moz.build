@@ -16,6 +16,10 @@ EXPORTS.mozilla.dom += [
     'JSWindowActorProtocol.h',
 ]
 
+EXPORTS += [
+    'nsQueryActor.h',
+]
+
 UNIFIED_SOURCES += [
     'JSActor.cpp',
     'JSActorManager.cpp',

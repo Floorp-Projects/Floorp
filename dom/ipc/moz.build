@@ -83,10 +83,6 @@ EXPORTS.mozilla += [
     'ProcessPriorityManager.h',
 ]
 
-EXPORTS += [
-    'nsQueryActor.h',
-]
-
 UNIFIED_SOURCES += [
     'BrowserBridgeChild.cpp',
     'BrowserBridgeHost.cpp',
