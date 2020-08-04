@@ -235,8 +235,16 @@ NS_IMETHODIMP nsPrintSettingsX::SetPaperHeight(double aPaperHeight) {
 
 NS_IMETHODIMP
 nsPrintSettingsX::GetEffectivePageSize(double* aWidth, double* aHeight) {
-  *aWidth = NS_INCHES_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
-  *aHeight = NS_INCHES_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
+  if (kPaperSizeInches == GetCocoaUnit(mPaperSizeUnit)) {
+    *aWidth = NS_INCHES_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
+    *aHeight = NS_INCHES_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
+  } else {
+    *aWidth = NS_MILLIMETERS_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
+    *aHeight = NS_MILLIMETERS_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
+  }
+  if (kLandscapeOrientation == mOrientation) {
+    std::swap(*aWidth, *aHeight);
+  }
   return NS_OK;
 }
 
