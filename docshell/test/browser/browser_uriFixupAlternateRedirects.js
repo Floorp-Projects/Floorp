@@ -49,7 +49,7 @@ add_task(async function() {
 
     const contentPrincipal = tab.linkedBrowser.contentPrincipal;
     ok(
-      contentPrincipal.URI.spec.startsWith(errorURI),
+      contentPrincipal.spec.startsWith(errorURI),
       "Principal should be for the error page"
     );
 

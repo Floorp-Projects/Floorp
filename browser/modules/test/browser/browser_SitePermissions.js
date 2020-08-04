@@ -14,7 +14,7 @@ add_task(async function testTempAllowThrows() {
   );
   let id = "notifications";
 
-  await BrowserTestUtils.withNewTab(principal.URI.spec, function(browser) {
+  await BrowserTestUtils.withNewTab(principal.spec, function(browser) {
     Assert.throws(function() {
       SitePermissions.setForPrincipal(
         principal,
@@ -35,7 +35,7 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    principal.URI.spec
+    principal.spec
   );
 
   Services.prefs.setIntPref("permissions.default.shortcuts", 2);

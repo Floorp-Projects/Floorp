@@ -51,7 +51,7 @@ function test_openUILink_checkPrincipal() {
         "sanity: correct doc.nodePrincipal"
       );
       is(
-        content.document.nodePrincipal.URI.asciiSpec,
+        content.document.nodePrincipal.asciiSpec,
         "http://example.com/",
         "sanity: correct doc.nodePrincipal URL"
       );

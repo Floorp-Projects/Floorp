@@ -92,8 +92,7 @@ function saveBrowser(aBrowser, aSkipPrompt, aBrowsingContext = null) {
   // Because of how pdf.js deals with principals, saving the document the "normal"
   // way won't work. Work around this by saving the pdf's URL directly:
   if (
-    aBrowser.contentPrincipal.URI &&
-    aBrowser.contentPrincipal.URI.spec == "resource://pdf.js/web/viewer.html" &&
+    aBrowser.contentPrincipal.spec == "resource://pdf.js/web/viewer.html" &&
     aBrowser.currentURI.schemeIs("file")
   ) {
     let correctPrincipal = Services.scriptSecurityManager.createContentPrincipal(

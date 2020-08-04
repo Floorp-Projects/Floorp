@@ -749,6 +749,17 @@ BasePrincipal::GetAsciiSpec(nsACString& aSpec) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetSpec(nsACString& aSpec) {
+  aSpec.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->GetSpec(aSpec);
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetAsciiHost(nsACString& aHost) {
   aHost.Truncate();
   nsCOMPtr<nsIURI> prinURI;

@@ -38,8 +38,8 @@ function checkResults() {
   testframe.removeEventListener("load", checkResults);
 
   var channel = SpecialPowers.wrap(testframe.contentWindow).docShell.currentDocumentChannel;
-  var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec.split("?")[0];
-    var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec.split("?")[0];
+  var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.asciiSpec.split("?")[0];
+  var loadingPrincipal = channel.loadInfo.loadingPrincipal.asciiSpec.split("?")[0];
 
   is(triggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
     "TriggeringPrincipal for targeted window.open() should be the principal of the document");

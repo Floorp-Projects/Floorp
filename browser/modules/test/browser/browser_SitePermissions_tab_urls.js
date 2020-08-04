@@ -43,9 +43,9 @@ add_task(async function testTemporaryPermissionTabURLs() {
       let loaded = BrowserTestUtils.browserLoaded(
         browser,
         false,
-        principal.URI.spec
+        principal.spec
       );
-      BrowserTestUtils.loadURI(browser, principal.URI.spec);
+      BrowserTestUtils.loadURI(browser, principal.spec);
       await loaded;
 
       SitePermissions.setForPrincipal(
@@ -71,7 +71,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
             state: SitePermissions.BLOCK,
             scope: SitePermissions.SCOPE_TEMPORARY,
           },
-          `${principal.URI.spec} should share tab permissions with ${principal2.URI.spec}`
+          `${principal.spec} should share tab permissions with ${principal2.spec}`
         );
       }
 
@@ -82,9 +82,9 @@ add_task(async function testTemporaryPermissionTabURLs() {
       let loaded = BrowserTestUtils.browserLoaded(
         browser,
         false,
-        principal.URI.spec
+        principal.spec
       );
-      BrowserTestUtils.loadURI(browser, principal.URI.spec);
+      BrowserTestUtils.loadURI(browser, principal.spec);
       await loaded;
 
       SitePermissions.setForPrincipal(
@@ -119,7 +119,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
               state: SitePermissions.UNKNOWN,
               scope: SitePermissions.SCOPE_PERSISTENT,
             },
-            `${principal.URI.spec} should not share tab permissions with ${principal2.URI.spec}`
+            `${principal.spec} should not share tab permissions with ${principal2.spec}`
           );
         }
       }
