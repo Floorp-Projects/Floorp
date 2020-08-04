@@ -967,13 +967,10 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
     return levels;
   }
 
-  nsIFrame* newFrame;
-  int32_t offset;
-  bool jumpedLine, movedOverNonSelectableText;
-  nsresult rv = currentFrame->GetFrameFromDirection(
-      direction, false, aJumpLines, true, false, &newFrame, &offset,
-      &jumpedLine, &movedOverNonSelectableText);
-  if (NS_FAILED(rv)) newFrame = nullptr;
+  nsIFrame* newFrame =
+      currentFrame
+          ->GetFrameFromDirection(direction, false, aJumpLines, true, false)
+          .mFrame;
 
   FrameBidiData currentBidi = currentFrame->GetBidiData();
   nsBidiLevel currentLevel = currentBidi.embeddingLevel;

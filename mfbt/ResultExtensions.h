@@ -30,7 +30,7 @@ class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult> {
     MOZ_ASSERT(NS_FAILED(aErrorValue));
   }
 
-  operator nsresult() { return mErrorValue; }
+  operator nsresult() const { return mErrorValue; }
 };
 
 // Allow MOZ_TRY to handle `PRStatus` values.
