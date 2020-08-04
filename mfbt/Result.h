@@ -561,8 +561,7 @@ inline GenericErrorResult<E> Err(E&& aErrorValue) {
  * MOZ_TRY_VAR(target, expr) is the C++ equivalent of Rust's `target =
  * try!(expr);`. First, it evaluates expr, which must produce a Result value. On
  * success, the result's success value is assigned to target. On error,
- * immediately returns the error result. |target| must evaluate to a reference
- * without any side effects.
+ * immediately returns the error result. |target| must be an lvalue.
  */
 #define MOZ_TRY_VAR(target, expr)                     \
   do {                                                \
