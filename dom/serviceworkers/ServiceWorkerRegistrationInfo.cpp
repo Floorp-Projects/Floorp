@@ -421,8 +421,7 @@ void ServiceWorkerRegistrationInfo::UpdateRegistrationState(
 
   TimeStamp oldest = TimeStamp::Now() - TimeDuration::FromSeconds(30);
   if (!mVersionList.IsEmpty() && mVersionList[0]->mTimeStamp < oldest) {
-    nsTArray<UniquePtr<VersionEntry>> list;
-    mVersionList.SwapElements(list);
+    nsTArray<UniquePtr<VersionEntry>> list = std::move(mVersionList);
     for (auto& entry : list) {
       if (entry->mTimeStamp >= oldest) {
         mVersionList.AppendElement(std::move(entry));

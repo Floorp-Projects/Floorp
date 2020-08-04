@@ -68,7 +68,7 @@ nsPrintSettingsServiceWin::SerializeToPrintData(nsIPrintSettings* aSettings,
       const char* devModeData = reinterpret_cast<const char*>(devMode.get());
       nsTArray<uint8_t> arrayBuf;
       arrayBuf.AppendElements(devModeData, devModeTotalSize);
-      data->devModeData().SwapElements(arrayBuf);
+      data->devModeData() = std::move(arrayBuf);
     }
   }
 

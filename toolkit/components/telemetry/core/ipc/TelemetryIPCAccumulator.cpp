@@ -254,19 +254,19 @@ static void SendAccumulatedData(TActor* ipcActor) {
   {
     StaticMutexAutoLock locker(gTelemetryIPCAccumulatorMutex);
     if (gHistogramAccumulations) {
-      histogramsToSend.SwapElements(*gHistogramAccumulations);
+      histogramsToSend = std::move(*gHistogramAccumulations);
     }
     if (gKeyedHistogramAccumulations) {
-      keyedHistogramsToSend.SwapElements(*gKeyedHistogramAccumulations);
+      keyedHistogramsToSend = std::move(*gKeyedHistogramAccumulations);
     }
     if (gChildScalarsActions) {
-      scalarsToSend.SwapElements(*gChildScalarsActions);
+      scalarsToSend = std::move(*gChildScalarsActions);
     }
     if (gChildKeyedScalarsActions) {
-      keyedScalarsToSend.SwapElements(*gChildKeyedScalarsActions);
+      keyedScalarsToSend = std::move(*gChildKeyedScalarsActions);
     }
     if (gChildEvents) {
-      eventsToSend.SwapElements(*gChildEvents);
+      eventsToSend = std::move(*gChildEvents);
     }
     discardedData = gDiscardedData;
     gDiscardedData = {0};

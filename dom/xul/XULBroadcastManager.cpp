@@ -397,8 +397,8 @@ void XULBroadcastManager::MaybeBroadcast() {
     if (length) {
       bool oldValue = mHandlingDelayedBroadcasters;
       mHandlingDelayedBroadcasters = true;
-      nsTArray<nsDelayedBroadcastUpdate> delayedBroadcasters;
-      mDelayedBroadcasters.SwapElements(delayedBroadcasters);
+      nsTArray<nsDelayedBroadcastUpdate> delayedBroadcasters =
+          std::move(mDelayedBroadcasters);
       for (uint32_t i = 0; i < length; ++i) {
         SynchronizeBroadcastListener(delayedBroadcasters[i].mBroadcaster,
                                      delayedBroadcasters[i].mListener,

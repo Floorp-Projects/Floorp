@@ -1480,8 +1480,7 @@ void nsCacheService::Lock(mozilla::Telemetry::HistogramID mainThreadLockerID) {
 void nsCacheService::Unlock() {
   gService->mLock.AssertCurrentThreadOwns();
 
-  nsTArray<nsISupports*> doomed;
-  doomed.SwapElements(gService->mDoomedObjects);
+  nsTArray<nsISupports*> doomed = std::move(gService->mDoomedObjects);
 
   gService->LockReleased();
   gService->mLock.Unlock();

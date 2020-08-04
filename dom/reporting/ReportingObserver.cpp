@@ -136,8 +136,7 @@ void ReportingObserver::MaybeNotify() {
   }
 
   // Let's take the ownership of the reports.
-  nsTArray<RefPtr<Report>> list;
-  list.SwapElements(mReports);
+  nsTArray<RefPtr<Report>> list = std::move(mReports);
 
   Sequence<OwningNonNull<Report>> reports;
   for (Report* report : list) {

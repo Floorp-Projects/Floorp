@@ -1858,6 +1858,11 @@ nsStyleImageLayers& nsStyleImageLayers::operator=(nsStyleImageLayers&& aOther) {
   mCompositeCount = aOther.mCompositeCount;
   mLayers = std::move(aOther.mLayers);
 
+  // XXX(Bug 1657087) The OOM check doesn't make sense, probably it was just
+  // copied over from the copy constructor. First, moving cannot fail due to
+  // OOM, second the condition is incorrect. Just because the implementation of
+  // nsStyleAutoArray's move constructor uses swapping, we do not seem to happen
+  // to run into the branch erroneously.
   uint32_t count = mLayers.Length();
   if (count != aOther.mLayers.Length()) {
     NS_WARNING("truncating counts due to out-of-memory");

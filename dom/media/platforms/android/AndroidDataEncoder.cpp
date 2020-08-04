@@ -210,8 +210,7 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessEncode(
   mJavaEncoder->Input(buffer, mInputBufferInfo, nullptr);
 
   if (mEncodedData.Length() > 0) {
-    EncodedData pending;
-    pending.SwapElements(mEncodedData);
+    EncodedData pending = std::move(mEncodedData);
     return EncodePromise::CreateAndResolve(std::move(pending), __func__);
   } else {
     return EncodePromise::CreateAndResolve(EncodedData(), __func__);
@@ -317,8 +316,7 @@ void AndroidDataEncoder::ProcessOutput(
     mDrainState = DrainState::DRAINED;
   }
   if (!mDrainPromise.IsEmpty()) {
-    EncodedData pending;
-    pending.SwapElements(mEncodedData);
+    EncodedData pending = std::move(mEncodedData);
     mDrainPromise.Resolve(std::move(pending), __func__);
   }
 }
@@ -389,8 +387,7 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessDrain() {
       [[fallthrough]];
     case DrainState::DRAINED:
       if (mEncodedData.Length() > 0) {
-        EncodedData pending;
-        pending.SwapElements(mEncodedData);
+        EncodedData pending = std::move(mEncodedData);
         return EncodePromise::CreateAndResolve(std::move(pending), __func__);
       } else {
         return EncodePromise::CreateAndResolve(EncodedData(), __func__);

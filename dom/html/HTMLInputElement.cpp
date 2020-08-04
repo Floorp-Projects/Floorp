@@ -7015,7 +7015,7 @@ void HTMLInputElement::UpdateEntries(
   // dropped fileEntry and directoryEntry objects.
   fs->CreateRoot(entries);
 
-  mFileData->mEntries.SwapElements(entries);
+  mFileData->mEntries = std::move(entries);
 }
 
 void HTMLInputElement::GetWebkitEntries(
