@@ -4,7 +4,6 @@
 
 package mozilla.components.support.ktx.android.view
 
-import android.content.Context
 import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
@@ -48,10 +47,8 @@ fun View.showKeyboard(flags: Int = InputMethodManager.SHOW_IMPLICIT) {
  * Hides the soft input window.
  */
 fun View.hideKeyboard() {
-    val imm = (context.getSystemService(Context.INPUT_METHOD_SERVICE) ?: return)
-        as InputMethodManager
-
-    imm.hideSoftInputFromWindow(windowToken, 0)
+    val imm = context.getSystemService<InputMethodManager>()
+    imm?.hideSoftInputFromWindow(windowToken, 0)
 }
 
 /**

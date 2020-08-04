@@ -6,8 +6,10 @@ package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import android.view.View
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
@@ -18,6 +20,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
@@ -34,6 +37,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -54,6 +58,20 @@ class ViewTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
 
         assertTrue(view.hasFocus())
+    }
+
+    @Config(sdk = [Build.VERSION_CODES.M])
+    @Test
+    fun `hideKeyboard should hide soft keyboard`() {
+        val view = mock<View>()
+        val context = mock<Context>()
+        val imm = mock<InputMethodManager>()
+        `when`(view.context).thenReturn(context)
+        `when`(context.getSystemService(InputMethodManager::class.java)).thenReturn(imm)
+
+        view.hideKeyboard()
+
+        verify(imm).hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     @Test
