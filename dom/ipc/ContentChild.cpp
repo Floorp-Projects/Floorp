@@ -4599,3 +4599,11 @@ bool IsDevelopmentBuild() {
 #endif /* !XP_WIN */
 
 }  // namespace mozilla
+
+/* static */
+nsIDOMProcessChild* nsIDOMProcessChild::GetSingleton() {
+  if (XRE_IsContentProcess()) {
+    return mozilla::dom::ContentChild::GetSingleton();
+  }
+  return mozilla::dom::InProcessChild::Singleton();
+}

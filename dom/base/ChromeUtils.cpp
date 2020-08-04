@@ -1289,10 +1289,7 @@ void ChromeUtils::GenerateMediaControlKey(const GlobalObject& aGlobal,
 
 /* static */
 nsIDOMProcessChild* ChromeUtils::GetDomProcessChild(const GlobalObject&) {
-  if (XRE_IsParentProcess()) {
-    return InProcessChild::Singleton();
-  }
-  return ContentChild::GetSingleton();
+  return nsIDOMProcessChild::GetSingleton();
 }
 
 /* static */
