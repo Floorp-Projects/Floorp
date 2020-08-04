@@ -285,7 +285,7 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
     if (!didUpdateOptionsList) {
       updatedOptionsList.AppendElement(aOptions);
     }
-    mOptions.SwapElements(updatedOptionsList);
+    mOptions = std::move(updatedOptionsList);
 
     /* 3.3.1.6.5 */
     if (maybeBuffered.WasPassed() && maybeBuffered.Value()) {
@@ -354,5 +354,5 @@ void PerformanceObserver::Disconnect() {
 void PerformanceObserver::TakeRecords(
     nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   MOZ_ASSERT(aRetval.IsEmpty());
-  aRetval.SwapElements(mQueuedEntries);
+  aRetval = std::move(mQueuedEntries);
 }

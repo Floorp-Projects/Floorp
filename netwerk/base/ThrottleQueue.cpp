@@ -330,8 +330,7 @@ ThrottleQueue::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   // A notified reader may need to push itself back on the queue.
   // Swap out the list of readers so that this works properly.
-  nsTArray<RefPtr<ThrottleInputStream>> events;
-  events.SwapElements(mAsyncEvents);
+  nsTArray<RefPtr<ThrottleInputStream>> events = std::move(mAsyncEvents);
 
   // Optimistically notify all the waiting readers, and then let them
   // requeue if there isn't enough bandwidth.

@@ -74,8 +74,8 @@ class FilePickerParent : public PFilePickerParent {
     bool mIsDirectory;
 
    public:
-    IORunnable(FilePickerParent* aFPParent, nsTArray<nsCOMPtr<nsIFile>>& aFiles,
-               bool aIsDirectory);
+    IORunnable(FilePickerParent* aFPParent,
+               nsTArray<nsCOMPtr<nsIFile>>&& aFiles, bool aIsDirectory);
 
     bool Dispatch();
     NS_IMETHOD Run() override;

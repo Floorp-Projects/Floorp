@@ -881,7 +881,7 @@ nsTArray<AnimationProperty> KeyframeEffect::BuildProperties(
              " should not be modified");
 #endif
 
-  mKeyframes.SwapElements(keyframesCopy);
+  mKeyframes = std::move(keyframesCopy);
   return result;
 }
 
