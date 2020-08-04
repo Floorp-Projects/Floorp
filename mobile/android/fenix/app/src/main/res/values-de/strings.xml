@@ -175,8 +175,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scannen</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">Suchmaschine</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Suchmaschine</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Suchmaschinen-Einstellungen</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -1490,9 +1490,7 @@
     <string name="saved_login_duplicate">Es existieren bereits Zugangsdaten mit diesem Benutzernamen</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Mit einem Firefox-Konto verbinden.</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Weiteres Gerät verbinden.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Bitte erneut authentifizieren.</string>
@@ -1513,13 +1511,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, verstanden</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Suchmaschinen</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Suchen mit</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Einmalig suchen mit:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Kürzel für die Suche anzeigen</string>
     </resources>

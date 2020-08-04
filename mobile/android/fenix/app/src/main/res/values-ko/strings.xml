@@ -180,8 +180,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">스캔</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">검색 엔진</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">검색 엔진</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">검색 엔진 설정</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -289,7 +289,7 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">데이터 수집</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">개인정보 보호정책</string>
+    <string name="preferences_privacy_link">개인정보처리방침</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">개발자 도구</string>
     <!-- Preference for developers -->
@@ -1083,7 +1083,7 @@
     
     </string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">개인정보 보호정책 읽기</string>
+    <string name="onboarding_privacy_notice_read_button">개인정보처리방침 읽기</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">닫기</string>
@@ -1237,7 +1237,7 @@
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">충돌</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">개인정보 보호정책</string>
+    <string name="about_privacy_notice">개인정보처리방침</string>
 
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">권리 읽기</string>
@@ -1507,9 +1507,7 @@
     <string name="saved_login_duplicate">해당 사용자 이름을 가진 로그인이 이미 존재합니다</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Firefox 계정으로 연결하세요.</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">다른 기기를 연결하세요.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">다시 인증하세요.</string>
@@ -1531,14 +1529,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">확인</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">바로 가기</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">검색</string>
-
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">이번만 검색:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">검색 바로 가기 표시</string>
     </resources>

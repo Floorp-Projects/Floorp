@@ -34,8 +34,18 @@
     <string name="tab_tray_add_new_collection_name">Název</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Vybrat sbírku</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Opustit režim výběru</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Uložit vybrané panely do sbírky</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">Panel %1$s byl vybrán</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Výběr panelu %1$s zrušen</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Režim výběru ukončen</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Vstoupili jste do režimu výběru panelů pro jejich uložení do sbírky</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Vybráno</string>
 
@@ -1268,6 +1278,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Tady se zobrazí přihlašovací údaje, které se nebudou ukládat.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Pro následující servery se nebudou přihlašovací údaje ukládat.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Odebrat všechny výjimky</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Hledat přihlašovací údaje</string>
     <!-- Option to sort logins list A-Z, alphabetically -->

@@ -25,6 +25,9 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s llingüetes abiertes. Toca pa cambiar a otra.</string>
 
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Nome</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ta producíu por Mozilla.</string>
 
@@ -142,12 +145,12 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Escaniar</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Atayos</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Motor de gueta</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Axustes de los motores de gueta</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Y agora gueta con:</string>
+    <string name="search_engines_search_with">Y agora gueta con:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Rellenar col enllaz del cartafueyu</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -251,8 +254,6 @@
     <string name="developer_tools_category">Ferramientes pa desendolcadores</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Depuración remota per USB</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Amosar los atayos de gueta</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Amosar les suxerencies de gueta</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -558,7 +559,7 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Desanicióse %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Desaniciáronse los marcadores</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">DESFACER</string>
@@ -734,6 +735,10 @@
     <string name="qr_scanner_dialog_negative">ÑEGAR</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">¿De xuru que quies desaniciar %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Desaniciar esta llingüeta va desaniciar tola coleición. Pues crear coleiciones nueves en cualesquier momentu.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">¿Desaniciar %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Desaniciar</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -1319,9 +1324,6 @@
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Yá esiste un aniciu de sesión con esi nome d\'usuariu</string>
 
-    <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Coneuta con una cuenta de Firefox.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Volvi autenticate, por favor.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->

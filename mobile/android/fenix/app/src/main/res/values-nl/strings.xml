@@ -27,6 +27,9 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s open tabbladen. Tik om tussen tabbladen te wisselen.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d geselecteerd</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s is gemaakt door Mozilla.</string>
 

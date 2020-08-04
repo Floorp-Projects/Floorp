@@ -173,8 +173,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skanna</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">Sökmotor</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Sökmotor</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Inställningar för sökmotor</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -1473,9 +1473,7 @@
     <string name="saved_login_duplicate">En inloggning med det användarnamnet finns redan</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Anslut med ett Firefox-konto.</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Anslut en annan enhet.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Bekräfta igen.</string>
@@ -1496,14 +1494,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, jag förstår</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Genvägar</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Sök med</string>
-
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Denna gång, sök med:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Visa sökgenvägar</string>
     </resources>

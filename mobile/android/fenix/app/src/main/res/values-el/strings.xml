@@ -1212,6 +1212,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Μιλήστε τώρα</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Υπάρχει ήδη σύνδεση με αυτό το όνομα χρήστη</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Συνδεθείτε με ένα λογαριασμό Firefox.</string>
