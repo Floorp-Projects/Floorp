@@ -65,7 +65,7 @@ def build_context(name, outputFile, args=None):
     if not os.path.isdir(image_dir):
         raise Exception('image directory does not exist: %s' % image_dir)
 
-    docker.create_context_tar(GECKO, image_dir, outputFile, args)
+    docker.create_context_tar(GECKO, image_dir, outputFile, image_name=name, args=args)
 
 
 def build_image(name, tag, args=None):
@@ -83,7 +83,7 @@ def build_image(name, tag, args=None):
     tag = tag or docker.docker_image(name, by_tag=True)
 
     buf = BytesIO()
-    docker.stream_context_tar(GECKO, image_dir, buf, '', args)
+    docker.stream_context_tar(GECKO, image_dir, buf, name, args)
     docker.post_to_docker(buf.getvalue(), '/build', nocache=1, t=tag)
 
     print('Successfully built %s and tagged with %s' % (name, tag))
