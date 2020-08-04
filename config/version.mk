@@ -15,26 +15,16 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifndef RESFILE
 RCFILE=./module.rc
 RESFILE=./module.res
-_RC_STRING = -QUIET 1 -DEPTH $(DEPTH) -TOPSRCDIR $(MOZILLA_DIR) -OBJDIR . -SRCDIR $(srcdir) -DISPNAME "$(MOZ_APP_DISPLAYNAME)" -APPVERSION $(MOZ_APP_VERSION)
-ifdef MOZILLA_OFFICIAL
-_RC_STRING += -OFFICIAL 1
-endif
-ifdef MOZ_DEBUG
-_RC_STRING += -DEBUG 1
-endif
 ifdef PROGRAM
-_RC_STRING += -BINARY $(notdir $(PROGRAM))
+_RC_BINARY = $(notdir $(PROGRAM))
 else
 ifdef _PROGRAM
-_RC_STRING += -BINARY $(notdir $(_PROGRAM))
+_RC_BINARY = $(notdir $(_PROGRAM))
 else
 ifdef SHARED_LIBRARY
-_RC_STRING += -BINARY $(notdir $(SHARED_LIBRARY))
+_RC_BINARY = $(notdir $(SHARED_LIBRARY))
 endif
 endif
-endif
-ifdef RCINCLUDE
-_RC_STRING += -RCINCLUDE $(RCINCLUDE)
 endif
 
 GARBAGE += $(RESFILE) $(RCFILE)
@@ -42,8 +32,8 @@ GARBAGE += $(RESFILE) $(RCFILE)
 #dummy target so $(RCFILE) doesn't become the default =P
 all::
 
-$(RCFILE): $(RCINCLUDE) $(MOZILLA_DIR)/config/version_win.pl
-	$(PERL) $(MOZILLA_DIR)/config/version_win.pl $(_RC_STRING)
+$(RCFILE): $(RCINCLUDE) $(MOZILLA_DIR)/config/version_win.py
+	$(PYTHON3) $(MOZILLA_DIR)/config/version_win.py "$(_RC_BINARY)" "$(RCINCLUDE)"
 
 endif  # RESFILE
 endif  # Windows
