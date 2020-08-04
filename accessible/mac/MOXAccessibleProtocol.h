@@ -321,6 +321,12 @@
 // AttributedStringForRange
 - (NSAttributedString* _Nullable)moxAttributedStringForRange:(NSValue* _Nonnull)range;
 
+// AXUIElementsForSearchPredicate
+- (NSArray* _Nullable)moxUIElementsForSearchPredicate:(NSDictionary* _Nonnull)searchPredicate;
+
+// AXUIElementCountForSearchPredicate
+- (NSUInteger)moxUIElementCountForSearchPredicate:(NSDictionary* _Nonnull)searchPredicate;
+
 // AXCellForColumnAndRow
 - (id _Nullable)moxCellForColumnAndRow:(NSArray* _Nonnull)columnAndRow;
 
