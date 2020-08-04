@@ -2726,12 +2726,13 @@ class HTMLEditor final : public TextEditor,
     /**
      * Run() executes the joining.
      *
-     * @param aHTMLEditor       The HTML editor.
-     * @param aCaretPoint       The caret point (i.e., selection start or end).
+     * @param aHTMLEditor               The HTML editor.
+     * @param aDirectionAndAmount       Direction of the deletion.
+     * @param aCaretPoint               The caret point (i.e., selection start
+     *                                  or end).
      */
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     Run(HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
-        nsIEditor::EStripWrappers aStripWrappers,
         const EditorDOMPoint& aCaretPoint) {
       switch (mMode) {
         case Mode::JoinCurrentBlock: {
@@ -2747,8 +2748,7 @@ class HTMLEditor final : public TextEditor,
         case Mode::JoinOtherBlock: {
           EditActionResult result =
               HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
-                  aHTMLEditor, aDirectionAndAmount, aStripWrappers,
-                  aCaretPoint);
+                  aHTMLEditor, aDirectionAndAmount, aCaretPoint);
           NS_WARNING_ASSERTION(
               result.Succeeded(),
               "AutoBlockElementsJoiner::"
@@ -2761,6 +2761,16 @@ class HTMLEditor final : public TextEditor,
       return EditActionResult(NS_ERROR_NOT_INITIALIZED);
     }
 
+    nsIContent* GetLeafContentInOtherBlockElement() const {
+      MOZ_ASSERT(mMode == Mode::JoinOtherBlock);
+      return mLeafContentInOtherBlock;
+    }
+
+    bool NeedsToFallbackToDeleteSelectionWithTransaction() const {
+      MOZ_ASSERT(mMode == Mode::JoinOtherBlock);
+      return mNeedsToFallbackToDeleteSelectionWithTransaction;
+    }
+
    private:
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
@@ -2768,7 +2778,6 @@ class HTMLEditor final : public TextEditor,
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
-        nsIEditor::EStripWrappers aStripWrappersconst,
         const EditorDOMPoint& aCaretPoint);
 
     enum class Mode {
@@ -2781,6 +2790,7 @@ class HTMLEditor final : public TextEditor,
     nsCOMPtr<nsIContent> mLeafContentInOtherBlock;
     RefPtr<dom::HTMLBRElement> mBRElement;
     Mode mMode = Mode::NotInitialized;
+    bool mNeedsToFallbackToDeleteSelectionWithTransaction = false;
   };
 
   /**
