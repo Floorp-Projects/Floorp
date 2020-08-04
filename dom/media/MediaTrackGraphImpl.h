@@ -761,10 +761,13 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * If `mInputDeviceUsers.Count() != 0`, this MediaTrackGraph wants audio
    * input.
    *
+   * All mInputDeviceID access is on the graph thread except for reads via
+   * InputDeviceID(), which are racy but used only for comparison.
+   *
    * In any case, the number of channels to use can be queried (on the graph
    * thread) by AudioInputChannelCount() and AudioOutputChannelCount().
    */
-  CubebUtils::AudioDeviceID mInputDeviceID;
+  std::atomic<CubebUtils::AudioDeviceID> mInputDeviceID;
   CubebUtils::AudioDeviceID mOutputDeviceID;
   // Maps AudioDeviceID to an array of their users (that are listeners). This is
   // used to deliver audio input frames and to notify the listeners that the
