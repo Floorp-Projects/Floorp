@@ -322,6 +322,29 @@ class AppLinksInterceptorTest {
     }
 
     @Test
+    fun `not supported schemes request uses fallback URL not market intent if launchInApp is set to false`() {
+        val engineSession: EngineSession = mock()
+        val supportedScheme = "supported"
+        val notSupportedScheme = "not_supported"
+        val blacklistedScheme = "blacklisted"
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            engineSupportedSchemes = setOf(supportedScheme),
+            alwaysDeniedSchemes = setOf(blacklistedScheme),
+            launchInApp = { false },
+            useCases = mockUseCases
+        )
+
+        val notSupportedUrl = "$notSupportedScheme://example.com"
+        val fallbackUrl = "https://example.com"
+        val notSupportedRedirect = AppLinkRedirect(null, fallbackUrl, Intent.parseUri(marketplaceUrl, 0))
+        whenever(mockGetRedirect.invoke(notSupportedUrl)).thenReturn(notSupportedRedirect)
+        val response = feature.onLoadRequest(engineSession, notSupportedUrl, null, true, false, false, false, false)
+        assert(response is RequestInterceptor.InterceptionResponse.Url)
+    }
+
+    @Test
     fun `intent scheme launch intent if fallback URL is unavailable and launchInApp is set to false`() {
         val engineSession: EngineSession = mock()
         val feature = AppLinksInterceptor(
