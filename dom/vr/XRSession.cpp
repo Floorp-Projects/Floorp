@@ -26,6 +26,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsRefreshDriver.h"
 #include "VRDisplayClient.h"
 #include "VRDisplayPresentation.h"
 

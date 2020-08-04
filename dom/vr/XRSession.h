@@ -9,9 +9,11 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/WebXRBinding.h"
-#include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
 
 #include "gfxVR.h"
+
+class nsRefreshDriver;
 
 namespace mozilla {
 namespace gfx {

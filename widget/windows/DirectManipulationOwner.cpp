@@ -8,6 +8,7 @@
 #include "InputData.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/VsyncDispatcher.h"
 
 #if !defined(__MINGW32__) && !defined(__MINGW64__)
 

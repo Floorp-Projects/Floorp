@@ -22,16 +22,15 @@
 #include "nsTHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
+#include "nsRefreshObservers.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/VisualViewport.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
-#include "mozilla/VsyncDispatcher.h"
 
 class nsPresContext;
 
 class imgIRequest;
-class nsINode;
 class nsIRunnable;
 
 namespace mozilla {
@@ -45,50 +44,7 @@ namespace layout {
 class VsyncChild;
 }  // namespace layout
 
-namespace dom {
-class Event;
-}  // namespace dom
-
 }  // namespace mozilla
-
-/**
- * An abstract base class to be implemented by callers wanting to be
- * notified at refresh times.  When nothing needs to be painted, callers
- * may not be notified.
- */
-class nsARefreshObserver {
- public:
-  // AddRef and Release signatures that match nsISupports.  Implementors
-  // must implement reference counting, and those that do implement
-  // nsISupports will already have methods with the correct signature.
-  //
-  // The refresh driver does NOT hold references to refresh observers
-  // except while it is notifying them.
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
-  MOZ_CAN_RUN_SCRIPT virtual void WillRefresh(mozilla::TimeStamp aTime) = 0;
-};
-
-/**
- * An abstract base class to be implemented by callers wanting to be notified
- * when the observing refresh driver updated mMostRecentRefresh due to active
- * timer changes. Callers must ensure an observer is removed before it is
- * destroyed.
- */
-class nsATimerAdjustmentObserver {
- public:
-  virtual void NotifyTimerAdjusted(mozilla::TimeStamp aTime) = 0;
-};
-
-/**
- * An abstract base class to be implemented by callers wanting to be notified
- * that a refresh has occurred. Callers must ensure an observer is removed
- * before it is destroyed.
- */
-class nsAPostRefreshObserver {
- public:
-  virtual void DidRefresh() = 0;
-};
 
 class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
                               public nsARefreshObserver {
