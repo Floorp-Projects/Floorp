@@ -28,7 +28,7 @@ header = """
 #ifndef mozilla_TelemetryHistogramEnums_h
 #define mozilla_TelemetryHistogramEnums_h
 
-#include "mozilla/TemplateLib.h"
+#include <type_traits>
 
 namespace mozilla {
 namespace Telemetry {
