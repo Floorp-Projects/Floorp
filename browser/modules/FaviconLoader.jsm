@@ -118,6 +118,20 @@ class FaviconLoad {
       Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
     );
 
+    if (this.channel instanceof Ci.nsIHttpChannel) {
+      this.channel.QueryInterface(Ci.nsIHttpChannel);
+      let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
+        Ci.nsIReferrerInfo
+      );
+      // Sometimes node is a document and sometimes it is an element. We need
+      // to set the referrer info correctly either way.
+      if (iconInfo.node.nodeType == iconInfo.node.DOCUMENT_NODE) {
+        referrerInfo.initWithDocument(iconInfo.node);
+      } else {
+        referrerInfo.initWithElement(iconInfo.node);
+      }
+      this.channel.referrerInfo = referrerInfo;
+    }
     this.channel.loadFlags |=
       Ci.nsIRequest.LOAD_BACKGROUND |
       Ci.nsIRequest.VALIDATE_NEVER |
