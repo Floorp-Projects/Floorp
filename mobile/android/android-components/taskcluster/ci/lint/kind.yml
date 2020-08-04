@@ -46,6 +46,14 @@ jobs:
         description: 'Running detekt and ktlint over all modules'
         run:
             using: gradlew
-            gradlew: [detekt, ktlint]
+            gradlew: [detekt, ktlint, githubLintDetektDetails]
         treeherder:
             symbol: detektKtlint
+        worker:
+            artifacts:
+                - name: public/reports
+                  path: /builds/worker/checkouts/src/build/reports
+                  type: directory
+                - name: public/github
+                  path: /builds/worker/github
+                  type: directory

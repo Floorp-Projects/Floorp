@@ -141,21 +141,16 @@ def add_artifacts(config, tasks):
         component = task["attributes"]["component"]
         build_artifact_definitions = task.setdefault("worker", {}).setdefault("artifacts", [])
 
-        if "tests-artifact-template" in task:
-            tests_artifact_template = task.pop("tests-artifact-template", {})
-            build_artifact_definitions.append({
-                "type": tests_artifact_template["type"],
-                "name": tests_artifact_template["name"],
-                "path": tests_artifact_template["path"].format(component_path=get_path(component)),
-            })
-
-        if "lint-artifact-template" in task:
-            lint_artifact_template = task.pop("lint-artifact-template", {})
-            build_artifact_definitions.append({
-                "type": lint_artifact_template["type"],
-                "name": lint_artifact_template["name"],
-                "path": lint_artifact_template["path"].format(component_path=get_path(component)),
-            })
+        for key in ["tests-artifact-template", "lint-artifact-template", "text-artifact-template"]:
+            if key in task:
+                optional_artifact_template = task.pop(key, {})
+                build_artifact_definitions.append({
+                    "type": optional_artifact_template["type"],
+                    "name": optional_artifact_template["name"],
+                    "path": optional_artifact_template["path"].format(
+                        component_path=get_path(component)
+                    ),
+                })
 
         if task.pop("expose-artifacts", False):
             all_extensions = get_extensions(component)

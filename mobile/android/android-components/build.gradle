@@ -370,3 +370,16 @@ tasks.register("listRepositories") {
         project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
    }
 }
+
+tasks.register("githubBuildDetails", GithubDetailsTask) {
+    text = """### Test result files
+
+- [Unit Tests]({reportsUrl}/tests/testReleaseUnitTest/index.html)
+- [Android Lint]({reportsUrl}/lint-results-release.html)"""
+}
+
+tasks.register("githubLintDetektDetails", GithubDetailsTask) {
+    text = """### Test result files
+
+- [Detekt Results]({reportsUrl}/detekt.html)"""
+}

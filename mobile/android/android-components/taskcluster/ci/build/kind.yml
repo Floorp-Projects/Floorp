@@ -40,6 +40,10 @@ job-defaults:
         type: file
         name: public/reports/lint-results-release.html
         path: '/builds/worker/checkouts/src/{component_path}/build/reports/lint-results-release.html'
+    text-artifact-template:
+        type: file
+        name: public/github/customCheckRunText.md
+        path: '/builds/worker/github/customCheckRunText.md'
     attributes:
         code-review:
             by-build-type:
@@ -83,17 +87,20 @@ job-defaults:
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lint'
+                            - 'githubBuildDetails'
                         # No testRelease on this job, gradle task isn't defined
                         tooling-detekt:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lintRelease'
+                            - 'githubBuildDetails'
                         default:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:testRelease'
                             - ':{component}:lintRelease'
+                            - 'githubBuildDetails'
         using: gradlew
         use-caches: false
     run-on-tasks-for:
