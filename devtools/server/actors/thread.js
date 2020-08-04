@@ -765,9 +765,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     } else if (!notification.phase && !this._activeEventPause) {
       const frame = this.dbg.getNewestFrame();
       if (frame) {
-        const { sourceActor } = this.sources.getFrameLocation(frame);
-        const { url } = sourceActor;
-        if (this.sources.isBlackBoxed(url)) {
+        if (this.sources.isFrameBlackBoxed(frame)) {
           return;
         }
 
@@ -778,11 +776,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _makeEventBreakpointEnterFrame(eventBreakpoint) {
     return frame => {
-      const location = this.sources.getFrameLocation(frame);
-      const { sourceActor, line, column } = location;
-      const { url } = sourceActor;
-
-      if (this.sources.isBlackBoxed(url, line, column)) {
+      if (this.sources.isFrameBlackBoxed(frame)) {
         return undefined;
       }
 
@@ -1805,9 +1799,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
-    const location = this.sources.getFrameLocation(frame);
-
-    if (this.skipBreakpoints || this.sources.isBlackBoxed(location.sourceUrl)) {
+    if (this.skipBreakpoints || this.sources.isFrameBlackBoxed(frame)) {
       return undefined;
     }
 
@@ -1852,8 +1844,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *        The stack frame that contained the debugger statement.
    */
   onDebuggerStatement: function(frame) {
-    const location = this.sources.getFrameLocation(frame);
-
     // Don't pause if
     // 1. we have not moved since the last pause
     // 2. breakpoints are disabled
@@ -1862,7 +1852,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (
       !this.hasMoved(frame, "debuggerStatement") ||
       this.skipBreakpoints ||
-      this.sources.isBlackBoxed(location.sourceUrl) ||
+      this.sources.isFrameBlackBoxed(frame) ||
       this.atBreakpointLocation(frame)
     ) {
       return undefined;
@@ -1922,16 +1912,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
-    const { sourceActor } = this.sources.getFrameLocation(youngestFrame);
-    const url = sourceActor ? sourceActor.url : null;
-
     // Don't pause on exceptions thrown while inside an evaluation being done on
     // behalf of the client.
     if (this.insideClientEvaluation) {
       return undefined;
     }
 
-    if (this.skipBreakpoints || this.sources.isBlackBoxed(url)) {
+    if (this.skipBreakpoints || this.sources.isFrameBlackBoxed(youngestFrame)) {
       return undefined;
     }
 

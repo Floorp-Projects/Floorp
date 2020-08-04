@@ -73,7 +73,28 @@ add_task(async function() {
   await waitForPaused(dbg);
   await resume(dbg);
 
+  info("Blackboxing the source prevents debugger pause");
+  await waitForSource(dbg, "dom-mutation.original.js");
+
+  const source = findSource(dbg, "dom-mutation.original.js");
+
+  await selectSource(dbg, source);
+  await clickElement(dbg, "blackbox");
+  await waitForDispatch(dbg, "BLACKBOX");
+
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    content.document.querySelector("#blackbox").click();
+  });
+
+  await waitForPaused(dbg, "click.js");
+  await resume(dbg);
+
+  await selectSource(dbg, source);
+  await clickElement(dbg, "blackbox");
+  await waitForDispatch(dbg, "BLACKBOX");
+
   info("Removing breakpoints works");
   dbg.win.document.querySelector(".dom-mutation-list .close-btn").click();
   await waitForAllElements(dbg, "domMutationItem", 1, true);
+
 });

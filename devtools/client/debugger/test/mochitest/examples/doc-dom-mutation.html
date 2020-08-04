@@ -11,14 +11,7 @@
   <body>
     <button title="Hello" id="attribute" onclick="changeAttribute()">Click me!</button>
     <button id="subtree" onclick="changeSubtree()">Click me!</button>
-    <script>
-      function changeAttribute() {
-        document.body.setAttribute("title", "Goodbye");
-      }
-
-      function changeSubtree() {
-        document.body.appendChild(document.createElement("div"));
-      }
-    </script>
+    <button id="blackbox" onclick="changeAttribute();&#xA;debugger;&#xA;//# sourceURL=click.js">Click me!</button>
+    <script src="dom-mutation.js"></script>
   </body>
 </html>
