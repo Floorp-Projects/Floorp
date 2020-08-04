@@ -8340,48 +8340,51 @@ nsresult nsIFrame::PeekOffsetForWord(nsPeekOffsetStruct* aPos, int32_t offset) {
   bool wordSelectEatSpace = ShouldWordSelectionEatSpace(*aPos);
 
   PeekWordState state;
-  bool done = false;
-  while (!done) {
+  while (true) {
     bool movingInFrameDirection =
         IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
 
-    done = current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace,
-                                   aPos->mIsKeyboardSelect, &offset, &state,
-                                   aPos->mTrimSpaces) == FOUND;
+    FrameSearchResult searchResult = current->PeekOffsetWord(
+        movingInFrameDirection, wordSelectEatSpace, aPos->mIsKeyboardSelect,
+        &offset, &state, aPos->mTrimSpaces);
+    if (searchResult == FOUND) {
+      break;
+    }
 
-    if (!done) {
-      nsIFrame* nextFrame;
-      int32_t nextFrameOffset;
-      bool jumpedLine, movedOverNonSelectableText;
-      nsresult result = current->GetFrameFromDirection(
-          *aPos, &nextFrame, &nextFrameOffset, &jumpedLine,
-          &movedOverNonSelectableText);
+    nsIFrame* nextFrame;
+    int32_t nextFrameOffset;
+    bool jumpedLine, movedOverNonSelectableText;
+    nsresult result = current->GetFrameFromDirection(
+        *aPos, &nextFrame, &nextFrameOffset, &jumpedLine,
+        &movedOverNonSelectableText);
+
+    if (NS_FAILED(result)) {
+      // If we've crossed the line boundary, check to make sure that we
+      // have not consumed a trailing newline as whitespace if it's
+      // significant.
+      if (jumpedLine && wordSelectEatSpace &&
+          current->HasSignificantTerminalNewline() &&
+          current->StyleText()->mWhiteSpace != StyleWhiteSpace::PreLine) {
+        offset -= 1;
+      }
+      break;
+    }
+
+    if (jumpedLine && !wordSelectEatSpace && state.mSawBeforeType) {
       // We can't jump lines if we're looking for whitespace following
       // non-whitespace, and we already encountered non-whitespace.
-      if (NS_FAILED(result) ||
-          (jumpedLine && !wordSelectEatSpace && state.mSawBeforeType)) {
-        done = true;
-        // If we've crossed the line boundary, check to make sure that we
-        // have not consumed a trailing newline as whitespace if it's
-        // significant. (It's not needed for `pre-line` since in that case
-        // the newline is treated as trimmed space.)
-        if (jumpedLine && wordSelectEatSpace &&
-            current->HasSignificantTerminalNewline() &&
-            current->StyleText()->mWhiteSpace != StyleWhiteSpace::PreLine) {
-          offset -= 1;
-        }
-      } else {
-        MOZ_ASSERT(nextFrame);
-        if (jumpedLine) {
-          state.mContext.Truncate();
-        }
-        current = nextFrame;
-        offset = nextFrameOffset;
-        // Jumping a line is equivalent to encountering whitespace
-        if (wordSelectEatSpace && jumpedLine) {
-          state.SetSawBeforeType();
-        }
-      }
+      break;
+    }
+
+    MOZ_ASSERT(nextFrame);
+    if (jumpedLine) {
+      state.mContext.Truncate();
+    }
+    current = nextFrame;
+    offset = nextFrameOffset;
+    // Jumping a line is equivalent to encountering whitespace
+    if (wordSelectEatSpace && jumpedLine) {
+      state.SetSawBeforeType();
     }
   }
 
