@@ -1081,8 +1081,11 @@ with only_when('--enable-compile-environment'):
         return target.kernel == 'Linux' and host.kernel == 'Linux' and \
                target.cpu in ('arm', 'x86', 'x86_64')
 
-    @depends('--enable-release')
-    def default_elfhack(release):
+    @depends('--enable-release', enable_linker)
+    def default_elfhack(release, linker):
+        # Disable elfhack when explicitly building with --enable-linker=lld
+        if linker and linker.origin != 'default' and linker[0] == 'lld':
+            return False
         return bool(release)
 
     with only_when(has_elfhack):
