@@ -1900,7 +1900,7 @@ FinderHighlighter.prototype = {
     let numberOfDeletedSelections = 0;
     let numberOfMatches = fSelection.rangeCount;
 
-    // We need to test if any ranges in the deleted selection (selection)
+    // We need to test if any ranges to be deleted
     // are in any of the ranges of the find selection
     // Usually both selections will only contain one range, however
     // either may contain more than one.
