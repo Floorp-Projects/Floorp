@@ -9,10 +9,5 @@ config = {
         "L10NBASEDIR": "../../l10n",
         'TOOLTOOL_CACHE': os.environ.get('TOOLTOOL_CACHE'),
     },
-    "upload_env": {
-        'UPLOAD_PATH': '/builds/worker/artifacts/',
-    },
-
-    "vcs_share_base": "/builds/hg-shared",
 }
 

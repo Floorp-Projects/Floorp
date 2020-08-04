@@ -14,6 +14,7 @@ transforms:
 kind-dependencies:
     - build
     - build-signing
+    - fetch
     - repackage
     - toolchain
 
@@ -34,7 +35,10 @@ job-template:
             # OSX has a special locale for japanese
             macosx64.*: [ja]
             default: [ja-JP-mac]
-    run-time: 3600
+    run-time:
+        by-build-platform:
+            default: 900
+            win.*: 1800
     secrets: false
     fetches:
         toolchain:
@@ -43,6 +47,15 @@ job-template:
                 macosx64.*:
                     - linux64-libdmg
                     - linux64-hfsplus
+                win.*:
+                    - linux64-wine
+                    - linux64-liblowercase
+        fetch:
+            by-build-platform:
+                default: []
+                win.*:
+                    - nsis-3.01-win
+                    - upx-3.95-win
     tooltool:
         by-build-platform:
             default: internal
@@ -61,10 +74,11 @@ job-template:
         by-build-platform:
             linux-shippable.*: ['release']  # Do not run on autoland - Bug 1599197
             default: ['all']
-    worker-type:
+    worker-type: b-linux
+    docker-image:
         by-build-platform:
-            default: b-linux
-            win.*: b-win2012
+            linux.*: {in-tree: debian8-amd64-build}
+            default: {in-tree: debian10-amd64-build}
     treeherder:
         symbol: L10n
         tier: 1
