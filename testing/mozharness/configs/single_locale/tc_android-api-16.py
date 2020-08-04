@@ -14,9 +14,6 @@ config = {
         "output_dir": "%(abs_work_dir)s/src",
     },
 
-    "upload_env": {
-        'UPLOAD_PATH': '/builds/worker/artifacts/',
-    },
     'secret_files': [
         {'filename': '/builds/gls-gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gls-gapi.data',
