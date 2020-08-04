@@ -2161,6 +2161,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
     case CacheKind::SetProp:
     case CacheKind::In:
     case CacheKind::HasOwn:
+    case CacheKind::CheckPrivateField:
     case CacheKind::InstanceOf:
     case CacheKind::BinaryArith:
       MOZ_ASSERT(numInputs == 2);

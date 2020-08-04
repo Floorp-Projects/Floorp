@@ -175,6 +175,7 @@ class TypedOperandId : public OperandId {
   _(BindName)             \
   _(In)                   \
   _(HasOwn)               \
+  _(CheckPrivateField)    \
   _(TypeOf)               \
   _(ToPropertyKey)        \
   _(InstanceOf)           \
@@ -1528,6 +1529,23 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
                      ICState::Mode mode, CacheKind cacheKind, HandleValue idVal,
                      HandleValue val);
 
+  AttachDecision tryAttachStub();
+};
+
+class MOZ_RAII CheckPrivateFieldIRGenerator : public IRGenerator {
+  HandleValue val_;
+  HandleValue idVal_;
+
+  AttachDecision tryAttachNative(JSObject* obj, ObjOperandId objId, jsid key,
+                                 ValOperandId keyId, bool hasOwn);
+
+  void trackAttached(const char* name);
+
+ public:
+  CheckPrivateFieldIRGenerator(JSContext* cx, HandleScript script,
+                               jsbytecode* pc, ICState::Mode mode,
+                               CacheKind cacheKind, HandleValue idVal,
+                               HandleValue val);
   AttachDecision tryAttachStub();
 };
 

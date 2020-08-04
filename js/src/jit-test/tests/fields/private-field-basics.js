@@ -224,7 +224,7 @@ for (var index in elements) {
 
 // Megamorphic Cache Testing:
 for (var i = 0; i < 100; i++) {
-  var inputs = [{a: 1}, {b: 2}, {c: 3}, {d: 4}, {e: 5}];
+  var inputs = [{a: 1}, {b: 2}, {c: 3}, {d: 4}, {e: 5}, new Proxy({}, {})];
   for (var o of inputs) {
     assertThrows(() => B.gx(o), TypeError);
     assertThrows(() => B.sx(o), TypeError);
