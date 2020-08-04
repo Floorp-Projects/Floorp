@@ -239,13 +239,18 @@ def setup_perftest_metrics(config, jobs):
                 elif not (isinstance(val, list) and len(val) == 0):
                     metric_info[opt] = val
 
+        quote_escape = '\\\"'
+        if "win" in job.get("platform", ""):
+            # Escaping is a bit different on windows platforms
+            quote_escape = '\\\\\\\"'
+
         job["run"]["command"] = job["run"]["command"].replace(
             "{perftest_metrics}",
             " ".join([
                 ",".join([
                     ":".join([
                         option,
-                        str(value).replace(" ", "").replace("'", '\\\"')
+                        str(value).replace(" ", "").replace("'", quote_escape)
                     ])
                     for option, value in metric_info.items()
                 ])
