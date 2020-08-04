@@ -438,7 +438,7 @@ ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
       mData(aData),
       mSurface(nullptr),
       mDataWrapper(new ImageUtils(mData)),
-      mPictureRect(0, 0, aData->GetSize().width, aData->GetSize().height),
+      mPictureRect(aData->GetPictureRect()),
       mAlphaType(aAlphaType),
       mAllocatedImageData(false),
       mWriteOnly(aWriteOnly) {
