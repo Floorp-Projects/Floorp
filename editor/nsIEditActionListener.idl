@@ -9,7 +9,6 @@
 webidl CharacterData;
 webidl Node;
 webidl Range;
-webidl Selection;
 
 /*
 Editor Action Listener interface to outside world
@@ -71,12 +70,6 @@ interface nsIEditActionListener : nsISupports
   void WillDeleteText(in CharacterData       aTextNode,
                       in long                aOffset,
                       in long                aLength);
-
-  /**
-   * Called before the editor deletes the selection.
-   * @param aSelection   The selection to be deleted
-   */
-  void WillDeleteSelection(in Selection aSelection);
 
   /**
    * Called before the editor deletes the ranges.

@@ -4023,24 +4023,17 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
   // Notify nsIEditActionListener::WillDelete[Selection|Text]
   if (!mActionListeners.IsEmpty()) {
     if (!deleteContent) {
-      AutoActionListenerArray listeners(mActionListeners.Clone());
-      for (auto& listener : listeners) {
-        DebugOnly<nsresult> rvIgnored =
-            listener->WillDeleteSelection(SelectionRefPtr());
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            "nsIEditActionListener::WillDeleteSelection() failed, but ignored");
-        MOZ_DIAGNOSTIC_ASSERT(!Destroyed(),
-                              "nsIEditActionListener::WillDeleteSelection() "
-                              "must not destroy the editor");
-        // FYI: Currently, there should be only one listener at most.
-        //      Therefore, retrieving the lastest ranges everytime before
-        //      calling `WillDeleteRanges()` must be fine.
-        AutoTArray<RefPtr<nsRange>, 8> ranges;
-        for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); i++) {
-          ranges.AppendElement(SelectionRefPtr()->GetRangeAt(i)->CloneRange());
-        }
-        if (!ranges.IsEmpty()) {
+      if (SelectionRefPtr()->RangeCount()) {
+        AutoActionListenerArray listeners(mActionListeners.Clone());
+        for (auto& listener : listeners) {
+          // FYI: Currently, there should be only one listener at most.
+          //      Therefore, retrieving the lastest ranges everytime before
+          //      calling `WillDeleteRanges()` must be fine.
+          AutoTArray<RefPtr<nsRange>, 8> ranges;
+          for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); i++) {
+            ranges.AppendElement(
+                SelectionRefPtr()->GetRangeAt(i)->CloneRange());
+          }
           DebugOnly<nsresult> rvIgnored = listener->WillDeleteRanges(ranges);
           NS_WARNING_ASSERTION(
               NS_SUCCEEDED(rvIgnored),
