@@ -10508,6 +10508,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(enableWasmSimd)
 #endif
+      .setWasmReftypes(enableWasmReftypes)
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
       .setSourcePragmas(enableSourcePragmas);
