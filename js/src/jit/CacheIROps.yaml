@@ -999,6 +999,14 @@
   args:
     templateObject: ObjectField
 
+- name: NewArrayFromLengthResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    templateObject: ObjectField
+    length: Int32Id
+
 - name: NewTypedArrayFromLengthResult
   shared: true
   transpile: true

@@ -21,6 +21,8 @@
 #include "jit/WarpSnapshot.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 
+#include "gc/ObjectKind-inl.h"
+
 using namespace js;
 using namespace js::jit;
 
@@ -2063,6 +2065,46 @@ bool WarpCacheIRTranspiler::emitObjectCreateResult(
                               templateConst, heap, MNewObject::ObjectCreate);
   addEffectful(obj);
 
+  pushResult(obj);
+  return resumeAfter(obj);
+}
+
+bool WarpCacheIRTranspiler::emitNewArrayFromLengthResult(
+    uint32_t templateObjectOffset, Int32OperandId lengthId) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+  MDefinition* length = getOperand(lengthId);
+
+  // TODO: support pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+
+  if (length->isConstant()) {
+    int32_t lenInt32 = length->toConstant()->toInt32();
+    if (lenInt32 >= 0 &&
+        uint32_t(lenInt32) == templateObj->as<ArrayObject>().length()) {
+      uint32_t len = uint32_t(lenInt32);
+      auto* templateConst = constant(ObjectValue(*templateObj));
+
+      size_t inlineLength =
+          gc::GetGCKindSlots(templateObj->asTenured().getAllocKind()) -
+          ObjectElements::VALUES_PER_HEADER;
+
+      MNewArray* obj;
+      if (len > inlineLength) {
+        obj = MNewArray::NewVM(alloc(), /* constraints = */ nullptr, len,
+                               templateConst, heap, loc_.toRawBytecode());
+      } else {
+        obj = MNewArray::New(alloc(), /* constraints = */ nullptr, len,
+                             templateConst, heap, loc_.toRawBytecode());
+      }
+      add(obj);
+      pushResult(obj);
+      return true;
+    }
+  }
+
+  auto* obj = MNewArrayDynamicLength::New(alloc(), /* constraints = */ nullptr,
+                                          templateObj, heap, length);
+  addEffectful(obj);
   pushResult(obj);
   return resumeAfter(obj);
 }
