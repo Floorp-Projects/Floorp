@@ -30,10 +30,14 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Přepnout</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Otevřít odkaz v externí aplikaci</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
-    <string name="mozac_selection_context_menu_search">Vyhledat pomocí %s</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
-    <string name="mozac_selection_context_menu_search_privately">Soukromé vyhledávání pomocí %s</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
+    <string name="mozac_selection_context_menu_search_2">Vyhledat</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
+    <string name="mozac_selection_context_menu_search_privately_2">Vyhledat v anonymním okně</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Sdílet</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
+    <string name="mozac_selection_context_menu_email">Poslat e-mailem</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new call from the selected text. -->
+    <string name="mozac_selection_context_menu_call">Zavolat</string>
 </resources>

@@ -30,10 +30,8 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Cambiar</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Abrir l\'enllaz nun aplicación esterna</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
-    <string name="mozac_selection_context_menu_search">Guetar con %s</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
-    <string name="mozac_selection_context_menu_search_privately">Guetar en privao con %s</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
+    <string name="mozac_selection_context_menu_search_privately_2">Gueta privada</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Compartir</string>
-</resources>
+    </resources>
