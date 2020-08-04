@@ -526,7 +526,6 @@ export type Preview = {
 export type Exception = {
   columnNumber: number,
   errorMessage: string,
-  fileName: URL,
   lineNumber: number,
   sourceActorId: SourceActorId,
   stacktrace: Array<StacktraceFrame>,

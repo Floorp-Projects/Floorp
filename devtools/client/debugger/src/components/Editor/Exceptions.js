@@ -40,6 +40,7 @@ class Exceptions extends Component<Props> {
             exception={exc}
             doc={doc}
             key={`${exc.sourceActorId}:${exc.lineNumber}`}
+            selectedSourceId={selectedSource.id}
           />
         ))}
       </>
