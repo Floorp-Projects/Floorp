@@ -244,7 +244,6 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     if toolkit != 'windows':
         UNIFIED_SOURCES += [
             'nsPaper.cpp',
-            'nsPaperCUPS.cpp',
         ]
     # These will be unified for all CUPS platforms by Bug 1654678
     if toolkit == 'cocoa':

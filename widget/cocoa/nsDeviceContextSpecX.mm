@@ -25,6 +25,7 @@
 #include "nsCUPSShim.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFileMac.h"
+#include "nsPaper.h"
 #include "nsPrinterCUPS.h"
 #include "nsPrintSettingsX.h"
 #include "nsQueryObject.h"
@@ -46,14 +47,70 @@ static LazyLogModule sDeviceContextSpecXLog("DeviceContextSpecX");
 
 static nsCUPSShim sCupsShim;
 
+/**
+ * Retrieves the list of available paper options for a given printer name.
+ */
+static nsresult FillPaperListForPrinter(PMPrinter aPrinter,
+                                        nsTArray<RefPtr<nsIPaper>>& aPaperList) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  CFArrayRef pmPaperList;
+  aPaperList.ClearAndRetainStorage();
+  OSStatus status = PMPrinterGetPaperList(aPrinter, &pmPaperList);
+  if (status != noErr || !pmPaperList) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  CFIndex paperCount = CFArrayGetCount(pmPaperList);
+  aPaperList.SetCapacity(paperCount);
+
+  for (auto i = 0; i < paperCount; ++i) {
+    PMPaper pmPaper =
+        static_cast<PMPaper>(const_cast<void*>(CFArrayGetValueAtIndex(pmPaperList, i)));
+
+    // The units for width and height are points.
+    double width = 0.0;
+    double height = 0.0;
+    AutoCFRelease<CFStringRef> pmPaperName(nullptr);
+    if (PMPaperGetWidth(pmPaper, &width) != noErr || PMPaperGetHeight(pmPaper, &height) != noErr ||
+        PMPaperCreateLocalizedName(pmPaper, aPrinter, pmPaperName.receive()) != noErr) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    nsAutoString name;
+    nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(CFStringRef(pmPaperName)), name);
+
+    PMPaperMargins unwriteableMargins;
+    if (PMPaperGetMargins(pmPaper, &unwriteableMargins) != noErr) {
+      // If we can't get unwriteable margins, just default to none.
+      unwriteableMargins.top = 0.0;
+      unwriteableMargins.bottom = 0.0;
+      unwriteableMargins.left = 0.0;
+      unwriteableMargins.right = 0.0;
+    }
+
+    aPaperList.AppendElement(new nsPaper(name, width, height, unwriteableMargins.top,
+                                         unwriteableMargins.bottom, unwriteableMargins.left,
+                                         unwriteableMargins.right));
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 static nsresult CreatePrinter(mozilla::CUPSPrinterList& aCupsPrinterList, PMPrinter aPMPrinter,
                               nsIPrinter** aPrinter) {
   NS_ENSURE_ARG_POINTER(aPrinter);
   *aPrinter = nullptr;
 
+  nsTArray<RefPtr<nsIPaper>> paperList;
+  nsresult rv = FillPaperListForPrinter(aPMPrinter, paperList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   NSString* const printerID = static_cast<NSString*>(PMPrinterGetID(aPMPrinter));
   if (cups_dest_t* const dest = aCupsPrinterList.FindPrinterByName([printerID UTF8String])) {
-    *aPrinter = new nsPrinterCUPS(sCupsShim, dest);
+    *aPrinter = new nsPrinterCUPS(sCupsShim, dest, std::move(paperList));
     NS_ADDREF(*aPrinter);
     return NS_OK;
   }
