@@ -427,6 +427,8 @@ class AutofillRecords {
 
     this._data.push(recordToSave);
 
+    this.updateUseCountTelemetry();
+
     this._store.saveSoon();
 
     Services.obs.notifyObservers(
@@ -553,6 +555,8 @@ class AutofillRecords {
     recordFound.timesUsed++;
     recordFound.timeLastUsed = Date.now();
 
+    this.updateUseCountTelemetry();
+
     this._store.saveSoon();
     Services.obs.notifyObservers(
       {
@@ -564,6 +568,17 @@ class AutofillRecords {
       "formautofill-storage-changed",
       "notifyUsed"
     );
+  }
+
+  updateUseCountTelemetry() {
+    let histogram = Services.telemetry.getHistogramById("CREDITCARD_NUM_USES");
+    histogram.clear();
+
+    let records = this._data.filter(r => !r.deleted);
+
+    for (let record of records) {
+      histogram.add(record.timesUsed);
+    }
   }
 
   /**
@@ -606,6 +621,8 @@ class AutofillRecords {
         this._data.splice(index, 1);
       }
     }
+
+    this.updateUseCountTelemetry();
 
     this._store.saveSoon();
     Services.obs.notifyObservers(
