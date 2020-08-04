@@ -27,6 +27,7 @@ import mozilla.components.concept.menu.ext.effects
 import mozilla.components.concept.menu.ext.max
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.ktx.android.view.hideKeyboard
 
 /**
  * A `three-dot` button used for expanding menus.
@@ -127,6 +128,8 @@ class MenuButton @JvmOverloads constructor(
      * Shows the menu, or dismisses it if already open.
      */
     override fun onClick(v: View) {
+        this.hideKeyboard()
+
         // If a legacy menu is open, dismiss it.
         if (menu != null) {
             menu?.dismiss()

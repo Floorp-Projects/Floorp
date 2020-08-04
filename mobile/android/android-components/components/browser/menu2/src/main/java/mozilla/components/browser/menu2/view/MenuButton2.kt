@@ -22,6 +22,7 @@ import mozilla.components.concept.menu.ext.effects
 import mozilla.components.concept.menu.ext.max
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.ktx.android.view.hideKeyboard
 
 /**
  * A `three-dot` button used for expanding menus.
@@ -81,6 +82,7 @@ class MenuButton2 @JvmOverloads constructor(
      * Shows the menu.
      */
     override fun onClick(v: View) {
+        this.hideKeyboard()
         val menuController = menuController ?: return
 
         menuController.show(anchor = this)
