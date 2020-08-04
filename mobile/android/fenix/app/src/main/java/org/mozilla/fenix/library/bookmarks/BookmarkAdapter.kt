@@ -91,7 +91,7 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     override fun getItemCount(): Int = tree.size
 
     override fun onBindViewHolder(holder: BookmarkNodeViewHolder, position: Int) {
-        holder.bind(tree[position])
+        holder.bind(tree[position], mode)
     }
 }
 

@@ -139,6 +139,7 @@ class BookmarkView(
     }
 
     fun update(state: BookmarkFragmentState) {
+        val oldMode = mode
         tree = state.tree
         if (state.mode != mode) {
             mode = state.mode
@@ -148,6 +149,10 @@ class BookmarkView(
         }
 
         bookmarkAdapter.updateData(state.tree, mode)
+        if (state.mode != oldMode) {
+            bookmarkAdapter.notifyDataSetChanged()
+        }
+
         when (mode) {
             is BookmarkFragmentState.Mode.Normal -> {
                 setUiForNormalMode(state.tree)

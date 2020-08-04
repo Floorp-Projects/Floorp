@@ -9,6 +9,7 @@ import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.SelectionHolder
+import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkItemMenu
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 
@@ -22,7 +23,10 @@ abstract class BookmarkNodeViewHolder(
 
     abstract var item: BookmarkNode?
 
-    abstract fun bind(item: BookmarkNode)
+    abstract fun bind(
+        item: BookmarkNode,
+        mode: BookmarkFragmentState.Mode
+    )
 
     protected fun setSelectionListeners(item: BookmarkNode, selectionHolder: SelectionHolder<BookmarkNode>) {
         containerView.setSelectionInteractor(item, selectionHolder, interactor)

@@ -13,6 +13,7 @@ import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.SelectionHolder
+import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 import org.mozilla.fenix.library.bookmarks.inRoots
 
@@ -27,7 +28,10 @@ class BookmarkFolderViewHolder(
 
     override var item: BookmarkNode? = null
 
-    override fun bind(item: BookmarkNode) {
+    override fun bind(
+        item: BookmarkNode,
+        mode: BookmarkFragmentState.Mode
+    ) {
         this.item = item
 
         containerView.displayAs(LibrarySiteItemView.ItemType.FOLDER)
@@ -36,10 +40,10 @@ class BookmarkFolderViewHolder(
 
         if (!item.inRoots()) {
             setupMenu(item)
-            if (selectionHolder.selectedItems.isEmpty()) {
-                containerView.overflowView.showAndEnable()
-            } else {
+            if (mode is BookmarkFragmentState.Mode.Selecting) {
                 containerView.overflowView.hideAndDisable()
+            } else {
+                containerView.overflowView.showAndEnable()
             }
         } else {
             containerView.overflowView.visibility = View.GONE
