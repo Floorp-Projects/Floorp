@@ -2702,13 +2702,37 @@ class HTMLEditor final : public TextEditor,
         Element& aCurrentBlockElement, const EditorDOMPoint& aCaretPoint);
 
     /**
+     * PrepareToDeleteCollapsedSelectionAtOtherBlockBoundary() considers
+     * left content and right content which are joined for handling deletion at
+     * other block boundary (i.e., immediately before or after a block).
+     *
+     * @param aHTMLEditor               The HTML editor.
+     * @param aDirectionAndAmount       Direction of the deletion.
+     * @param aOtherBlockElement        The block element which follows the
+     *                                  caret or is followed by caret.
+     * @param aCaretPoint               The caret point (i.e., selection start
+     *                                  or end).
+     * @param aWSRunScannerAtCaret      WSRunScanner instance which was
+     *                                  initialized with the caret point.
+     * @return                          true if can continue to handle the
+     *                                  deletion.
+     */
+    bool PrepareToDeleteCollapsedSelectionAtOtherBlockBoundary(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount, Element& aOtherBlockElement,
+        const EditorDOMPoint& aCaretPoint,
+        const WSRunScanner& aWSRunScannerAtCaret);
+
+    /**
      * Run() executes the joining.
      *
      * @param aHTMLEditor       The HTML editor.
      * @param aCaretPoint       The caret point (i.e., selection start or end).
      */
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-    Run(HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint) {
+    Run(HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        const EditorDOMPoint& aCaretPoint) {
       switch (mMode) {
         case Mode::JoinCurrentBlock: {
           EditActionResult result =
@@ -2718,6 +2742,17 @@ class HTMLEditor final : public TextEditor,
               result.Succeeded(),
               "AutoBlockElementsJoiner::"
               "HandleDeleteCollapsedSelectionAtCurrentBlockBoundary() failed");
+          return result;
+        }
+        case Mode::JoinOtherBlock: {
+          EditActionResult result =
+              HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
+                  aHTMLEditor, aDirectionAndAmount, aStripWrappers,
+                  aCaretPoint);
+          NS_WARNING_ASSERTION(
+              result.Succeeded(),
+              "AutoBlockElementsJoiner::"
+              "HandleDeleteCollapsedSelectionAtOtherBlockBoundary() failed");
           return result;
         }
         case Mode::NotInitialized:
@@ -2730,13 +2765,21 @@ class HTMLEditor final : public TextEditor,
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
         HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint);
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+    HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappersconst,
+        const EditorDOMPoint& aCaretPoint);
 
     enum class Mode {
       NotInitialized,
       JoinCurrentBlock,
+      JoinOtherBlock,
     };
     nsCOMPtr<nsIContent> mLeftContent;
     nsCOMPtr<nsIContent> mRightContent;
+    nsCOMPtr<nsIContent> mLeafContentInOtherBlock;
+    RefPtr<dom::HTMLBRElement> mBRElement;
     Mode mMode = Mode::NotInitialized;
   };
 
