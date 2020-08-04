@@ -203,6 +203,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.customElementWatcher = new CustomElementWatcher(
       targetActor.chromeEventHandler
     );
+    this.overflowCausingElementsSet = new Set();
 
     this.showAllAnonymousContent = options.showAllAnonymousContent;
 
@@ -411,6 +412,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this.clearPseudoClassLocks();
       this._activePseudoClassLocks = null;
 
+      this.overflowCausingElementsSet.clear();
+      this.overflowCausingElementsSet = null;
+
       this._hoveredNode = null;
       this.rootWin = null;
       this.rootDoc = null;
@@ -546,9 +550,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   _onReflows: function(reflows) {
     // Going through the nodes the walker knows about, see which ones have had their
-    // display or scrollable state changed and send events if any.
+    // display, scrollable or overflow state changed and send events if any.
     const displayTypeChanges = [];
     const scrollableStateChanges = [];
+
+    const currentOverflowCausingElementsSet = new Set();
 
     for (const [node, actor] of this._refMap) {
       if (Cu.isDeadWrapper(node)) {
@@ -574,7 +580,27 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         scrollableStateChanges.push(actor);
         actor.wasScrollable = isScrollable;
       }
+
+      this.updateOverflowCausingElements(
+        node,
+        actor,
+        currentOverflowCausingElementsSet
+      );
     }
+
+    // Get the NodeActor for each node in the symmetric difference of
+    // currentOverflowCausingElementsSet and this.overflowCausingElementsSet
+    const overflowStateChanges = [...currentOverflowCausingElementsSet]
+      .filter(node => !this.overflowCausingElementsSet.has(node))
+      .concat(
+        [...this.overflowCausingElementsSet].filter(
+          node => !currentOverflowCausingElementsSet.has(node)
+        )
+      )
+      .filter(node => this.hasNode(node))
+      .map(node => this.getNode(node));
+
+    this.overflowCausingElementsSet = currentOverflowCausingElementsSet;
 
     if (displayTypeChanges.length) {
       this.emit("display-change", displayTypeChanges);
@@ -582,6 +608,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     if (scrollableStateChanges.length) {
       this.emit("scrollable-change", scrollableStateChanges);
+    }
+
+    if (overflowStateChanges.length) {
+      this.emit("overflow-change", overflowStateChanges);
     }
   },
 
@@ -2841,6 +2871,32 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   cancelPick() {
     this.nodePicker.cancelPick();
+  },
+
+  /**
+   * If element has a scrollbar, find the children causing the overflow and
+   * add them to the set.
+   * @param {DOMNode} node The node whose overflow causing elements are returned.
+   * @param {NodeActor} actor The actor of the node.
+   * @param {Set} set The set to which the overflow causing elements are added.
+   */
+  updateOverflowCausingElements: function(node, actor, set) {
+    if (node.nodeType !== Node.ELEMENT_NODE || !actor.isScrollable) {
+      return;
+    }
+
+    const overflowCausingChildren = [
+      ...InspectorUtils.getOverflowingChildrenOfElement(node),
+    ];
+
+    for (let child of overflowCausingChildren) {
+      // child is a Node, but not necessarily an Element.
+      // So, get the containing Element
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        child = child.parentElement;
+      }
+      set.add(child);
+    }
   },
 });
 
