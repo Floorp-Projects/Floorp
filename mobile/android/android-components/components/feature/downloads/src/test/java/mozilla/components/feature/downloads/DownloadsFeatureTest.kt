@@ -30,9 +30,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -44,6 +42,7 @@ import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.shadows.ShadowToast
 
@@ -219,7 +218,7 @@ class DownloadsFeatureTest {
     }
 
     @Test
-    fun `When starting the feature will reattach to already existing dialog`() {
+    fun `When starting a download an existing dialog is reused`() {
         grantPermissions()
 
         val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
@@ -243,13 +242,13 @@ class DownloadsFeatureTest {
             fragmentManager = fragmentManager
         )
 
-        assertNotEquals(dialogFragment, feature.dialog)
+        val tab = store.state.findTab("test-tab")
+        feature.showDialog(tab!!, download)
 
-        feature.start()
-
-        assertEquals(dialogFragment, feature.dialog)
         verify(dialogFragment).onStartDownload = any()
         verify(dialogFragment).onCancelDownload = any()
+        verify(dialogFragment).setDownload(download)
+        verify(dialogFragment, never()).showNow(any(), any())
     }
 
     @Test
@@ -410,6 +409,27 @@ class DownloadsFeatureTest {
         val toast = ShadowToast.getTextOfLatestToast()
         assertNotNull(toast)
         assertTrue(toast.contains("can’t download this file type"))
+    }
+
+    @Test
+    fun `download dialog must be added once`() {
+        val fragmentManager = mockFragmentManager()
+        val dialog = mock<DownloadDialogFragment>()
+        val feature = spy(DownloadsFeature(
+            testContext,
+            store,
+            useCases = mock(),
+            downloadManager = mock(),
+            fragmentManager = fragmentManager
+        ))
+
+        feature.showDialog(mock(), mock(), dialog)
+
+        verify(dialog).showNow(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG)
+        doReturn(true).`when`(feature).isAlreadyADialogCreated()
+
+        feature.showDialog(mock(), mock(), dialog)
+        verify(dialog, times(1)).showNow(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG)
     }
 }
 

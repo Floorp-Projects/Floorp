@@ -48,9 +48,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * @property useCases [DownloadsUseCases] instance for consuming processed downloads.
  * @property fragmentManager a reference to a [FragmentManager]. If a fragment
  * manager is provided, a dialog will be shown before every download.
- * @property promptsStyling styling properties for the dialog
- * @property dialog a reference to a [DownloadDialogFragment]. If not provided, an
- * instance of [SimpleDownloadDialogFragment] will be used.
+ * @property promptsStyling styling properties for the dialog.
  */
 @Suppress("TooManyFunctions", "LongParameterList")
 class DownloadsFeature(
@@ -62,11 +60,7 @@ class DownloadsFeature(
     private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext, store),
     private val tabId: String? = null,
     private val fragmentManager: FragmentManager? = null,
-    private val promptsStyling: PromptsStyling? = null,
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance(
-        promptsStyling = promptsStyling
-    )
+    private val promptsStyling: PromptsStyling? = null
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     var onDownloadStopped: onDownloadStopped
@@ -85,10 +79,6 @@ class DownloadsFeature(
      */
     @Suppress("Deprecation")
     override fun start() {
-        findPreviousDialogFragment()?.let {
-            dialog = it
-        }
-
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .ifChanged { it.content.download }
@@ -113,7 +103,6 @@ class DownloadsFeature(
      */
     override fun stop() {
         scope?.cancel()
-
         downloadManager.unregisterListeners()
     }
 
@@ -178,12 +167,18 @@ class DownloadsFeature(
         ).show()
     }
 
-    private fun showDialog(tab: SessionState, download: DownloadState) {
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun showDialog(
+        tab: SessionState,
+        download: DownloadState,
+        dialog: DownloadDialogFragment = findPreviousDialogFragment() ?: SimpleDownloadDialogFragment.newInstance(
+            promptsStyling = promptsStyling
+        )
+    ) {
         dialog.setDownload(download)
 
         dialog.onStartDownload = {
             startDownload(download)
-
             useCases.consumeDownload.invoke(tab.id, download.id)
         }
 
@@ -192,11 +187,12 @@ class DownloadsFeature(
         }
 
         if (!isAlreadyADialogCreated() && fragmentManager != null) {
-            dialog.show(fragmentManager, FRAGMENT_TAG)
+            dialog.showNow(fragmentManager, FRAGMENT_TAG)
         }
     }
 
-    private fun isAlreadyADialogCreated(): Boolean {
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun isAlreadyADialogCreated(): Boolean {
         return findPreviousDialogFragment() != null
     }
 
