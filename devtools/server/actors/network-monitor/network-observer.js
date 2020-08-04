@@ -751,8 +751,8 @@ NetworkObserver.prototype = {
     if (channel.loadInfo) {
       causeType = channel.loadInfo.externalContentPolicyType;
       const { loadingPrincipal } = channel.loadInfo;
-      if (loadingPrincipal?.URI) {
-        causeUri = loadingPrincipal.URI.spec;
+      if (loadingPrincipal) {
+        causeUri = loadingPrincipal.spec;
       }
     }
 

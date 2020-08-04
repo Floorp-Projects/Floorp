@@ -47,7 +47,7 @@ add_task(
             "sanity check to ensure principal is a contentPrincipal"
           );
           is(
-            triggeringPrincipal.URI.spec,
+            triggeringPrincipal.spec,
             TEST_PAGE,
             "test page must be the triggering page"
           );
