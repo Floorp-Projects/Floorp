@@ -441,10 +441,5 @@ add_task(async function setup() {
 });
 
 add_task(async function test_searchConfig_amazon() {
-  await test.run(true);
-  // Only applies to the default locale fallback for the legacy config.
-  // Note: when we remove the legacy config, we should remove the "unknown"
-  // references in the 'details' section of the test above.
-  test._config.available.included[0].locales.matches.push("unknown");
-  await test.run(false);
+  await test.run();
 });

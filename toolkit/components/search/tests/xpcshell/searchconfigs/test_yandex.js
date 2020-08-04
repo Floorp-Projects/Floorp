@@ -113,6 +113,5 @@ add_task(async function setup() {
 });
 
 add_task(async function test_searchConfig_yandex() {
-  await test.run(false);
-  await test.run(true);
+  await test.run();
 });
