@@ -6989,6 +6989,8 @@ NS_IMETHODIMP ContentParent::GetCanSend(bool* aCanSend) {
 
 ContentParent* ContentParent::AsContentParent() { return this; }
 
+JSActorManager* ContentParent::AsJSActorManager() { return this; }
+
 }  // namespace dom
 }  // namespace mozilla
 

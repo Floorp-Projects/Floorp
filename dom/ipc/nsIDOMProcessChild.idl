@@ -10,10 +10,12 @@
 namespace mozilla {
 namespace dom {
 class ContentChild;
+class JSActorManager;
 } // namespace dom
 } // namespace mozilla
 %}
 [ptr] native ContentChildPtr(mozilla::dom::ContentChild);
+[ptr] native JSActorManagerPtr(mozilla::dom::JSActorManager);
 
 webidl JSProcessActorChild;
 
@@ -39,4 +41,7 @@ interface nsIDOMProcessChild: nsISupports {
   [infallible] readonly attribute boolean canSend;
 
   [notxpcom, nostdcall] ContentChildPtr AsContentChild();
+
+  /** Cast this nsIDOMProcessChild to a JSActorManager */
+  [notxpcom, nostdcall] JSActorManagerPtr AsJSActorManager();
 };

@@ -5,6 +5,8 @@
 #ifndef nsQueryActor_h
 #define nsQueryActor_h
 
+#include <type_traits>
+
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/RefPtr.h"
@@ -68,6 +70,18 @@ inline nsQueryJSActor do_QueryActor(const char (&aActorName)[length],
                                     mozilla::dom::Document* aDoc) {
   return nsQueryJSActor(nsLiteralCString(aActorName),
                         aDoc ? aDoc->GetWindowGlobalChild() : nullptr);
+}
+
+// Overload for directly querying from a nsIDOMProcess{Parent,Child} without
+// confusing overload selection for types inheriting from both
+// nsIDOMProcess{Parent,Child} and JSActorManager.
+template <size_t length, typename T,
+          typename = std::enable_if_t<std::is_same_v<T, nsIDOMProcessParent> ||
+                                      std::is_same_v<T, nsIDOMProcessChild>>>
+inline nsQueryJSActor do_QueryActor(const char (&aActorName)[length],
+                                    T* aManager) {
+  return nsQueryJSActor(nsLiteralCString(aActorName),
+                        aManager ? aManager->AsJSActorManager() : nullptr);
 }
 
 #endif  // defined nsQueryActor_h
