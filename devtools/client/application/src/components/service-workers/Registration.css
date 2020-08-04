@@ -46,26 +46,6 @@
 
 .registration__header {
   grid-area: header;
-
-  display: grid;
-  grid-template-areas: "icon      scope"
-                       "timestamp timestamp";
-  grid-template-columns: auto 1fr;
-  /* make the row min height the same size of the Unregister button,
-     so we avoid a shifting movement when the button is not displayed */
-  grid-template-rows: minmax(calc(var(--base-unit) * 6), auto);
-  grid-column-gap: calc(var(--base-unit) * 2);
-  align-items: center;
-}
-
-.registration__header::before {
-  display: inline-block;
-  width: calc(var(--base-unit) * 4);
-  height: calc(var(--base-unit) * 4);
-  content: "";
-  background-image: url(chrome://devtools/skin/images/debugging-workers.svg);
-  -moz-context-properties: fill;
-  fill: currentColor;
 }
 
 .registration__scope {
