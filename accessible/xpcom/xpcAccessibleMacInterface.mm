@@ -298,6 +298,16 @@ id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue, JSContex
       return JsValueToNSValue(obj, aCx, aResult);
     }
 
+    bool hasObjectType;
+    bool hasObject;
+    JS_HasOwnProperty(aCx, obj, "objectType", &hasObjectType);
+    JS_HasOwnProperty(aCx, obj, "object", &hasObject);
+    if (hasObjectType && hasObject) {
+      // A js object representing an NSDictionary looks like this:
+      // { objectType: "NSDictionary", value: {k: v, k: v, ...} }
+      return JsValueToSpecifiedNSObject(obj, aCx, aResult);
+    }
+
     // This may be another nsIAccessibleMacInterface instance.
     // If so, return the wrapped NSObject.
     nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
@@ -362,6 +372,68 @@ id xpcAccessibleMacInterface::JsValueToNSValue(JS::HandleObject aObject, JSConte
 
     *aResult = NS_OK;
     return [NSValue valueWithRange:NSMakeRange(locationValue.toInt32(), lengthValue.toInt32())];
+  }
+
+  return nil;
+}
+
+id xpcAccessibleMacInterface::JsValueToSpecifiedNSObject(JS::HandleObject aObject, JSContext* aCx,
+                                                         nsresult* aResult) {
+  *aResult = NS_ERROR_FAILURE;
+  JS::RootedValue objectTypeValue(aCx);
+  if (!JS_GetProperty(aCx, aObject, "objetType", &objectTypeValue)) {
+    NS_WARNING("Could not get objectType");
+    return nil;
+  }
+
+  JS::RootedValue objectValue(aCx);
+  if (!JS_GetProperty(aCx, aObject, "object", &objectValue)) {
+    NS_WARNING("Could not get object");
+    return nil;
+  }
+
+  nsAutoJSString objectType;
+  if (!objectTypeValue.isString() || !objectType.init(aCx, objectTypeValue)) {
+    NS_WARNING("objectType is not a string");
+    return nil;
+  }
+
+  bool isObject = objectValue.isObjectOrNull();
+  if (!isObject) {
+    NS_WARNING("object is not a JSON object");
+    return nil;
+  }
+
+  JS::Rooted<JSObject*> object(aCx, objectValue.toObjectOrNull());
+
+  if (objectType.EqualsLiteral("NSDictionary")) {
+    JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
+    if (!JS_Enumerate(aCx, object, &ids)) {
+      NS_WARNING("Unable to get keys from dictionary object");
+      return nil;
+    }
+
+    NSMutableDictionary* dict = [[NSMutableDictionary alloc] init];
+
+    for (size_t i = 0, n = ids.length(); i < n; i++) {
+      nsresult rv = NS_OK;
+      // get current key
+      JS::RootedValue currentKey(aCx);
+      JS_IdToValue(aCx, ids[i], &currentKey);
+      id unwrappedKey = JsValueToNSObject(currentKey, aCx, &rv);
+      NS_ENSURE_SUCCESS(rv, nil);
+      MOZ_ASSERT([unwrappedKey isKindOfClass:[NSString class]]);
+
+      // get associated value for current key
+      JS::RootedValue currentValue(aCx);
+      JS_GetPropertyById(aCx, object, ids[i], &currentValue);
+      id unwrappedValue = JsValueToNSObject(currentValue, aCx, &rv);
+      NS_ENSURE_SUCCESS(rv, nil);
+      dict[unwrappedKey] = unwrappedValue;
+    }
+
+    *aResult = NS_OK;
+    return dict;
   }
 
   return nil;
