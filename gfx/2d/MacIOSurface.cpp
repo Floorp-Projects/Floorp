@@ -154,15 +154,22 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12Surface(
     return nullptr;
   }
 
-  CFTypeRefPtr<CGColorSpaceRef> colorSpace;
+  // Setup the correct YCbCr conversion matrix on the IOSurface, in case we pass
+  // this directly to CoreAnimation.
   if (aColorSpace == YUVColorSpace::BT601) {
-    colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
-        CGColorSpaceCreateWithName(kCGColorSpaceSRGB));
-
+    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
+                      CFSTR("ITU_R_601_4"));
   } else {
-    colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
-        CGColorSpaceCreateWithName(kCGColorSpaceITUR_709));
+    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
+                      CFSTR("ITU_R_709_2"));
   }
+  // Override the color space to be the same as the main display, so that
+  // CoreAnimation won't try to do any color correction (from the IOSurface
+  // space, to the display). In the future we may want to try specifying this
+  // correctly, but probably only once we do the same for videos drawn through
+  // our gfx code.
+  auto colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
+      CGDisplayCopyColorSpace(CGMainDisplayID()));
   auto colorData = CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(
       CGColorSpaceCopyICCProfile(colorSpace.get()));
   IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorSpace"),
