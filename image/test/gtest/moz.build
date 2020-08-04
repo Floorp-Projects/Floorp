@@ -49,6 +49,7 @@ TEST_HARNESS_FILES.gtest += [
     'blend.gif',
     'blend.png',
     'blend.webp',
+    'bug-1655846.avif',
     'corrupt-with-bad-bmp-height.ico',
     'corrupt-with-bad-bmp-width.ico',
     'corrupt-with-bad-ico-bpp.ico',
