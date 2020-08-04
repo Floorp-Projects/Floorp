@@ -35,11 +35,8 @@ class nsPrinterCUPS final : public nsIPrinter {
 
   /**
    * @p aPrinter must not be null.
-   * @todo: Once CUPS-enumeration of paper sizes lands, we can remove the
-   * |aPaperList|.
    */
-  nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-                nsTArray<RefPtr<nsIPaper>>&& aPaperList);
+  nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter);
 
  private:
   ~nsPrinterCUPS();
@@ -47,10 +44,15 @@ class nsPrinterCUPS final : public nsIPrinter {
   // Little util for getting support flags using the direct CUPS names.
   bool Supports(const char* option, const char* value) const;
 
+  /**
+   * @brief Initializes the paper list if it is uninitialized.
+   */
+  nsresult InitPaperList();
+
   const nsCUPSShim& mShim;
   cups_dest_t* mPrinter;
   cups_dinfo_t* mPrinterInfo;
-  nsTArray<RefPtr<nsIPaper>> mPaperList;
+  UniquePtr<nsTArray<RefPtr<nsIPaper>>> mPaperList;
   Maybe<bool> mSupportsDuplex;
 };
 
