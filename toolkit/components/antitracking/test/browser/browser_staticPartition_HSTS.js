@@ -27,47 +27,61 @@ function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
   return BrowserTestUtils.browserLoaded(aTab.linkedBrowser, false, aFinalURL);
 }
 
-add_task(async function() {
-  for (let prefValue of [true, false]) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["privacy.partition.network_state", prefValue]],
-    });
-
-    let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
-
-    // Let's load the secureURL as first-party in order to activate HSTS.
-    await promiseTabLoadEvent(tab, secureURL, secureURL);
-
-    // Let's test HSTS: unsecure -> secure.
-    await promiseTabLoadEvent(tab, unsecureURL, secureURL);
-    ok(true, "unsecure -> secure, first-party works!");
-
-    // Let's load a first-party.
-    await promiseTabLoadEvent(tab, unsecureEmptyURL, unsecureEmptyURL);
-
-    let finalURL = await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [unsecureURL],
-      async url => {
-        return new content.Promise(resolve => {
-          let ifr = content.document.createElement("iframe");
-          ifr.onload = _ => {
-            resolve(ifr.contentWindow.location.href);
-          };
-
-          content.document.body.appendChild(ifr);
-          ifr.src = url;
-        });
+function waitFor(host) {
+  return new Promise(resolve => {
+    const observer = channel => {
+      if (
+        channel instanceof Ci.nsIHttpChannel &&
+        channel.URI.host === host &&
+        channel.loadInfo.internalContentPolicyType ===
+          Ci.nsIContentPolicy.TYPE_INTERNAL_IFRAME
+      ) {
+        Services.obs.removeObserver(observer, "http-on-stop-request");
+        resolve(channel.URI.spec);
       }
-    );
+    };
+    Services.obs.addObserver(observer, "http-on-stop-request");
+  });
+}
 
-    if (prefValue) {
-      is(finalURL, unsecureURL, "HSTS doesn't work for 3rd parties");
-    } else {
-      is(finalURL, secureURL, "HSTS works for 3rd parties");
+add_task(async function() {
+  for (let networkIsolation of [true, false]) {
+    for (let partitionPerSite of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["privacy.partition.network_state", networkIsolation],
+          ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+        ],
+      });
+
+      let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
+
+      // Let's load the secureURL as first-party in order to activate HSTS.
+      await promiseTabLoadEvent(tab, secureURL, secureURL);
+
+      // Let's test HSTS: unsecure -> secure.
+      await promiseTabLoadEvent(tab, unsecureURL, secureURL);
+      ok(true, "unsecure -> secure, first-party works!");
+
+      // Let's load a first-party.
+      await promiseTabLoadEvent(tab, unsecureEmptyURL, unsecureEmptyURL);
+
+      let finalURL = waitFor("example.com");
+
+      await SpecialPowers.spawn(tab.linkedBrowser, [unsecureURL], async url => {
+        let ifr = content.document.createElement("iframe");
+        content.document.body.appendChild(ifr);
+        ifr.src = url;
+      });
+
+      if (networkIsolation) {
+        is(await finalURL, unsecureURL, "HSTS doesn't work for 3rd parties");
+      } else {
+        is(await finalURL, secureURL, "HSTS works for 3rd parties");
+      }
+
+      gBrowser.removeCurrentTab();
+      cleanupHSTS();
     }
-
-    gBrowser.removeCurrentTab();
-    cleanupHSTS();
   }
 });
