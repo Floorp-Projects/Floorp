@@ -19,7 +19,10 @@ static const float kTenthMMToPoint =
 
 nsPrinterWin::nsPrinterWin(const nsAString& aName) : mName(aName) {}
 
-NS_IMPL_ISUPPORTS(nsPrinterWin, nsIPrinter);
+// static
+already_AddRefed<nsPrinterWin> nsPrinterWin::Create(const nsAString& aName) {
+  return do_AddRef(new nsPrinterWin(aName));
+}
 
 template <class T>
 static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
@@ -120,32 +123,12 @@ nsPrinterWin::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPrinterWin::GetSupportsDuplex(bool* aSupportsDuplex) {
-  MOZ_ASSERT(aSupportsDuplex);
-
-  if (mSupportsDuplex.isNothing()) {
-    // Note: this is a blocking call, which could be slow.
-    mSupportsDuplex =
-        Some(::DeviceCapabilitiesW(mName.get(), nullptr, DC_DUPLEX, nullptr,
-                                   nullptr) == 1);
-  }
-
-  *aSupportsDuplex = mSupportsDuplex.value();
-  return NS_OK;
+bool nsPrinterWin::SupportsDuplex() const {
+  return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_DUPLEX, nullptr,
+                               nullptr) == 1;
 }
 
-NS_IMETHODIMP
-nsPrinterWin::GetSupportsColor(bool* aSupportsColor) {
-  MOZ_ASSERT(aSupportsColor);
-
-  if (mSupportsColor.isNothing()) {
-    // Note: this is a blocking call, which could be slow.
-    mSupportsColor =
-        Some(::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLORDEVICE,
-                                   nullptr, nullptr) == 1);
-  }
-
-  *aSupportsColor = mSupportsColor.value();
-  return NS_OK;
+bool nsPrinterWin::SupportsColor() const {
+  return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLORDEVICE, nullptr,
+                               nullptr) == 1;
 }

@@ -6,42 +6,35 @@
 #ifndef nsPrinterCUPS_h___
 #define nsPrinterCUPS_h___
 
+#include "nsPrinterBase.h"
 #include "nsCUPSShim.h"
-#include "nsIPaper.h"
-#include "nsIPrinter.h"
-#include "nsISupportsImpl.h"
 #include "nsString.h"
-
-#include "mozilla/Assertions.h"
 
 /**
  * @brief Interface to help implementing nsIPrinter using a CUPS printer.
  */
-class nsPrinterCUPS final : public nsIPrinter {
+class nsPrinterCUPS final : public nsPrinterBase {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTER
+  NS_IMETHOD GetName(nsAString& aName) override;
+  NS_IMETHOD GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) override;
+  bool SupportsDuplex() const final;
+  bool SupportsColor() const final;
+
   nsPrinterCUPS() = delete;
-  nsPrinterCUPS(const nsPrinterCUPS&) = delete;
-  nsPrinterCUPS(nsPrinterCUPS&& aOther)
-      : mShim(aOther.mShim),
-        mPrinter(aOther.mPrinter),
-        mPrinterInfo(aOther.mPrinterInfo),
-        mPaperList(std::move(aOther.mPaperList)),
-        mSupportsDuplex(aOther.mSupportsDuplex) {
-    aOther.mPrinter = nullptr;
-    aOther.mPrinterInfo = nullptr;
-  }
 
   /**
    * @p aPrinter must not be null.
    * @todo: Once CUPS-enumeration of paper sizes lands, we can remove the
    * |aPaperList|.
    */
+  static already_AddRefed<nsPrinterCUPS> Create(
+      const nsCUPSShim& aShim, cups_dest_t* aPrinter,
+      nsTArray<RefPtr<nsIPaper>>&& aPaperList);
+
+ private:
   nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
                 nsTArray<RefPtr<nsIPaper>>&& aPaperList);
 
- private:
   ~nsPrinterCUPS();
 
   // Little util for getting support flags using the direct CUPS names.
@@ -50,8 +43,6 @@ class nsPrinterCUPS final : public nsIPrinter {
   const nsCUPSShim& mShim;
   cups_dest_t* mPrinter;
   cups_dinfo_t* mPrinterInfo;
-  nsTArray<RefPtr<nsIPaper>> mPaperList;
-  Maybe<bool> mSupportsDuplex;
 };
 
 #endif /* nsPrinterCUPS_h___ */

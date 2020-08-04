@@ -6,26 +6,25 @@
 #ifndef nsPrinter_h__
 #define nsPrinter_h__
 
-#include "nsIPaper.h"
-#include "nsIPrinter.h"
-#include "nsISupportsImpl.h"
+#include "nsPrinterBase.h"
 #include "nsString.h"
 
-class nsPrinter final : public nsIPrinter {
+class nsPrinter final : public nsPrinterBase {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTER
+  NS_IMETHOD GetName(nsAString& aName) override;
+  NS_IMETHOD GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) override;
+  bool SupportsDuplex() const final { return false; }
+  bool SupportsColor() const final { return false; }
+
   nsPrinter() = delete;
-  nsPrinter(const nsAString& aName,
-            const nsTArray<RefPtr<nsIPaper>>& aPaperList,
-            const bool aSupportsDuplex = false);
+
+  static already_AddRefed<nsPrinter> Create(const nsAString& aName);
 
  private:
-  ~nsPrinter() = default;
+  explicit nsPrinter(const nsAString& aName);
+  ~nsPrinter();
 
-  nsString mName;
-  nsTArray<RefPtr<nsIPaper>> mPaperList;
-  bool mSupportsDuplex = false;
+  const nsString mName;
 };
 
 #endif /* nsPrinter_h__ */
