@@ -77,8 +77,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
     private fun updateTrackingProtectionSetting(enabled: Boolean) {
         itemView.context.settings().shouldUseTrackingProtection = enabled
         with(itemView.context.components) {
-            val policy = core.trackingProtectionPolicyFactory
-                .createTrackingProtectionPolicy(enabled)
+            val policy = core.trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
             useCases.settingsUseCases.updateTrackingProtection.invoke(policy)
             useCases.sessionUseCases.reload.invoke()
         }

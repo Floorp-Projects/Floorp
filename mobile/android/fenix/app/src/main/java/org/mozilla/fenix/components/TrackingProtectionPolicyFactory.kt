@@ -24,7 +24,7 @@ class TrackingProtectionPolicyFactory(private val settings: Settings) {
     @Suppress("ComplexMethod")
     fun createTrackingProtectionPolicy(
         normalMode: Boolean = settings.shouldUseTrackingProtection,
-        privateMode: Boolean = true
+        privateMode: Boolean = settings.shouldUseTrackingProtection
     ): TrackingProtectionPolicy {
         val trackingProtectionPolicy =
             when {

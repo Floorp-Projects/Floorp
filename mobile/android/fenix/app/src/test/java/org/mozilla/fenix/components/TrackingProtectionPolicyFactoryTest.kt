@@ -199,6 +199,18 @@ class TrackingProtectionPolicyFactoryTest {
     }
 
     @Test
+    fun `factory should follow global ETP settings by default`() {
+        var useETPFactory = TrackingProtectionPolicyFactory(mockSettings(useTrackingProtection = true))
+        var policy = useETPFactory.createTrackingProtectionPolicy()
+        assertTrue(policy.useForPrivateSessions)
+        assertTrue(policy.useForRegularSessions)
+
+        useETPFactory = TrackingProtectionPolicyFactory(mockSettings(useTrackingProtection = false))
+        policy = useETPFactory.createTrackingProtectionPolicy()
+        assertEquals(policy, EngineSession.TrackingProtectionPolicy.none())
+    }
+
+    @Test
     fun `custom tabs should respect their privacy rules`() {
         val allSettings = listOf(
             settingsForCustom(shouldBlockCookiesInCustom = false, blockTrackingContentInCustom = "all"),
@@ -315,10 +327,12 @@ class TrackingProtectionPolicyFactoryTest {
 
 private fun mockSettings(
     useStrict: Boolean = false,
-    useCustom: Boolean = false
+    useCustom: Boolean = false,
+    useTrackingProtection: Boolean = false
 ): Settings = mockk {
     every { useStrictTrackingProtection } returns useStrict
     every { useCustomTrackingProtection } returns useCustom
+    every { shouldUseTrackingProtection } returns useTrackingProtection
 }
 
 @Suppress("LongParameterList")

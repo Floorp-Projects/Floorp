@@ -64,8 +64,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             preference.context.settings().shouldUseTrackingProtection =
                 trackingProtectionOn
             with(preference.context.components) {
-                val policy = core.trackingProtectionPolicyFactory
-                    .createTrackingProtectionPolicy(trackingProtectionOn)
+                val policy = core.trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
                 useCases.settingsUseCases.updateTrackingProtection(policy)
                 useCases.sessionUseCases.reload()
             }
