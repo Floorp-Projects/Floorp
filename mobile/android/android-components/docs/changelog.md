@@ -27,6 +27,7 @@ permalink: /changelog/
 
 * **browser-menu**
   * ⚠️ **This is a breaking change**: `BrowserMenuItemToolbar.Button.longClickListener` is now nullable and defaults to null.
+  * ⚠️ **This is a breaking change**: Removed `SimpleBrowserMenuHighlightableItem.itemType`. Use a WeakMap instead if you need to attach private data.
 
 * **concept-menu**
   * Added `SmallMenuCandidate.onLongClick` to handle long click of row menu buttons.
