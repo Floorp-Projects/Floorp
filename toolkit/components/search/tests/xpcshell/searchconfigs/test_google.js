@@ -68,8 +68,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_searchConfig_google() {
-  await test.run(false);
-  await test.run(true);
+  await test.run();
 });
 
 add_task(async function test_searchConfig_google_with_mozparam() {
@@ -96,32 +95,21 @@ add_task(async function test_searchConfig_google_with_mozparam() {
     defaultBranch.setCharPref("param." + testData.pref, testData.expected);
   }
 
-  // TODO: Bug 1598270 will add the true option here, to test for the selector,
-  // aka modern configuration.
-  for (const useSelector of [false, true]) {
-    info("Using " + (useSelector ? "Selector" : "Legacy Configuration"));
-    for (const testData of TEST_DATA) {
-      info(`Checking region ${testData.region}, locale ${testData.locale}`);
-      await test._reinit(testData.region, testData.locale);
-      const engines = await test._getEngines(
-        useSelector,
-        testData.region,
-        testData.locale
-      );
+  for (const testData of TEST_DATA) {
+    info(`Checking region ${testData.region}, locale ${testData.locale}`);
+    await test._reinit(testData.region, testData.locale);
+    const engines = await test._getEngines(testData.region, testData.locale);
 
-      Assert.ok(
-        engines[0].identifier.startsWith("google"),
-        "Should have the correct engine"
-      );
-      console.log(engines[0]);
+    Assert.ok(
+      engines[0].identifier.startsWith("google"),
+      "Should have the correct engine"
+    );
+    console.log(engines[0]);
 
-      const submission = engines[0].getSubmission("test", URLTYPE_SEARCH_HTML);
-      Assert.ok(
-        submission.uri.query
-          .split("&")
-          .includes("channel=" + testData.expected),
-        "Should be including the correct MozParam parameter for the engine"
-      );
-    }
+    const submission = engines[0].getSubmission("test", URLTYPE_SEARCH_HTML);
+    Assert.ok(
+      submission.uri.query.split("&").includes("channel=" + testData.expected),
+      "Should be including the correct MozParam parameter for the engine"
+    );
   }
 });

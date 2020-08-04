@@ -284,15 +284,5 @@ add_task(async function setup() {
 });
 
 add_task(async function test_searchConfig_ebay() {
-  await test.run(true);
-  // Only applies to the default locale fallback for the legacy config.
-  // Note: when we remove the legacy config, we should remove the "unknown"
-  // references in the 'details' section of the test above.
-  test._config.available.included[0].locales.matches.push("unknown");
-  // In the legacy configuration, eBay was turned on for most regions with en-US
-  // locale by default, but turned off by abSearch.
-  test._config.available.included[1].regions = availableRegions.filter(
-    region => !["by", "kz", "ru", "tr"].includes(region)
-  );
-  await test.run(false);
+  await test.run();
 });
