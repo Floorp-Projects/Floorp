@@ -15,8 +15,35 @@ conforms to recommendations.
 
 .. container:: blockIndicator warning
 
-   Firefox code base uses the `Google Coding style for C++
-   code <https://google.github.io/styleguide/cppguide.html>`__
+   The Firefox code base adopts parts of the `Google Coding style for C++
+   code <https://google.github.io/styleguide/cppguide.html>`__, but not all of its rules.
+   A few rules are followed across the code base, others are intended to be
+   followed in new or significantly revised code. We may extend this list in the
+   future, when we evaluate the Google Coding Style for C++ Code further and/or update
+   our coding practices. However, the plan is not to adopt all rules of the Google Coding
+   Style for C++ Code. Some rules are explicitly unlikely to be adopted at any time.
+
+   Followed across the code base:
+
+   - `Formatting <https://google.github.io/styleguide/cppguide.html#Formatting>`__,
+     except for subsections noted here otherwise
+   - `Implicit Conversions <https://google.github.io/styleguide/cppguide.html#Implicit_Conversions>`__,
+     which is enforced by a custom clang-plugin check, unless explicitly overridden using
+     ``MOZ_IMPLICIT``
+
+   Followed in new/significantly revised code:
+
+   - `Include guards <https://google.github.io/styleguide/cppguide.html#The__define_Guard>`__
+
+   Unlikely to be ever adopted:
+
+   - `Forward declarations <https://google.github.io/styleguide/cppguide.html#Forward_Declarations>`__
+   - `Formatting/Conditionals <https://google.github.io/styleguide/cppguide.html#Conditionals>`__
+     w.r.t. curly braces around inner statements, we require them in all cases where the
+     Google style allows to leave them out for single-line conditional statements
+
+   This list reflects the state of the Google Google Coding Style for C++ Code as of
+   2020-07-17. It may become invalid when the Google modifies its Coding Style.
 
 
 Formatting code
