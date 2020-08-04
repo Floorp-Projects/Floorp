@@ -198,6 +198,35 @@ void RenderCompositorNative::CreateSurface(wr::NativeSurfaceId aId,
   mSurfaces.insert({aId, Surface{aTileSize, aIsOpaque}});
 }
 
+void RenderCompositorNative::CreateExternalSurface(wr::NativeSurfaceId aId,
+                                                   bool aIsOpaque) {
+  MOZ_RELEASE_ASSERT(mSurfaces.find(aId) == mSurfaces.end());
+
+  RefPtr<layers::NativeLayer> layer =
+      mNativeLayerRoot->CreateLayerForExternalTexture(aIsOpaque);
+
+  Surface surface{DeviceIntSize{}, aIsOpaque};
+  surface.mIsExternal = true;
+  surface.mNativeLayers.insert({TileKey(0, 0), layer});
+
+  mSurfaces.insert({aId, std::move(surface)});
+}
+
+void RenderCompositorNative::AttachExternalImage(
+    wr::NativeSurfaceId aId, wr::ExternalImageId aExternalImage) {
+  RenderTextureHost* image =
+      RenderThread::Get()->GetRenderTexture(aExternalImage);
+  MOZ_RELEASE_ASSERT(image);
+
+  auto surfaceCursor = mSurfaces.find(aId);
+  MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
+
+  Surface& surface = surfaceCursor->second;
+  MOZ_RELEASE_ASSERT(surface.mNativeLayers.size() == 1);
+  MOZ_RELEASE_ASSERT(surface.mIsExternal);
+  surface.mNativeLayers.begin()->second->AttachExternalImage(image);
+}
+
 void RenderCompositorNative::DestroySurface(NativeSurfaceId aId) {
   auto surfaceCursor = mSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
@@ -215,6 +244,7 @@ void RenderCompositorNative::CreateTile(wr::NativeSurfaceId aId, int aX,
   auto surfaceCursor = mSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
   Surface& surface = surfaceCursor->second;
+  MOZ_RELEASE_ASSERT(!surface.mIsExternal);
 
   RefPtr<layers::NativeLayer> layer = mNativeLayerRoot->CreateLayer(
       surface.TileSize(), surface.mIsOpaque, mSurfacePoolHandle);
@@ -227,6 +257,7 @@ void RenderCompositorNative::DestroyTile(wr::NativeSurfaceId aId, int aX,
   auto surfaceCursor = mSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
   Surface& surface = surfaceCursor->second;
+  MOZ_RELEASE_ASSERT(!surface.mIsExternal);
 
   auto layerCursor = surface.mNativeLayers.find(TileKey(aX, aY));
   MOZ_RELEASE_ASSERT(layerCursor != surface.mNativeLayers.end());

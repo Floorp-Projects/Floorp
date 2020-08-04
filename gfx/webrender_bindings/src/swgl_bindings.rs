@@ -13,7 +13,7 @@ use std::sync::{mpsc, Arc, Condvar, Mutex};
 use std::thread;
 use webrender::{
     api::units::*, Compositor, CompositorCapabilities, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
-    ThreadListener, CompositorSurfaceTransform
+    ThreadListener, CompositorSurfaceTransform, api::ExternalImageId
 };
 
 #[no_mangle]
@@ -663,6 +663,13 @@ impl Compositor for SwCompositor {
         );
     }
 
+    fn create_external_surface(
+        &mut self,
+        _id: NativeSurfaceId,
+        _is_opaque: bool,
+    ) {
+    }
+
     fn destroy_surface(&mut self, id: NativeSurfaceId) {
         if let Some(surface) = self.surfaces.remove(&id) {
             self.deinit_surface(&surface);
@@ -763,6 +770,13 @@ impl Compositor for SwCompositor {
         if let Some(compositor) = &mut self.compositor {
             compositor.destroy_tile(id);
         }
+    }
+
+    fn attach_external_image(
+        &mut self,
+        _id: NativeSurfaceId,
+        _external_image: ExternalImageId,
+    ) {
     }
 
     fn invalidate_tile(&mut self, id: NativeTileId) {

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, YuvColorSpace, YuvFormat, ImageRendering};
+use api::{ColorF, YuvColorSpace, YuvFormat, ImageRendering, ExternalImageId};
 use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint, WorldRect};
 use api::units::{DevicePixelScale, DevicePoint, PictureRect, TexelRect, DevicePixel};
 use crate::batch::{resolve_image, get_buffer_kind};
@@ -33,6 +33,10 @@ pub enum NativeSurfaceOperationDetails {
         tile_size: DeviceIntSize,
         is_opaque: bool,
     },
+    CreateExternalSurface {
+        id: NativeSurfaceId,
+        is_opaque: bool,
+    },
     DestroySurface {
         id: NativeSurfaceId,
     },
@@ -41,6 +45,10 @@ pub enum NativeSurfaceOperationDetails {
     },
     DestroyTile {
         id: NativeTileId,
+    },
+    AttachExternalImage {
+        id: NativeSurfaceId,
+        external_image: ExternalImageId,
     }
 }
 
@@ -854,6 +862,16 @@ pub trait Compositor {
         is_opaque: bool,
     );
 
+    /// Create a new OS compositor surface that can be used with an
+    /// existing ExternalImageId, instead of being drawn to by WebRender.
+    /// Surfaces created by this can only be used with attach_external_image,
+    /// and not create_tile/destroy_tile/bind/unbind.
+    fn create_external_surface(
+        &mut self,
+        id: NativeSurfaceId,
+        is_opaque: bool,
+    );
+
     /// Destroy the surface with the specified id. WR may call this
     /// at any time the surface is no longer required (including during
     /// renderer deinit). It's the responsibility of the embedder
@@ -875,6 +893,16 @@ pub trait Compositor {
     fn destroy_tile(
         &mut self,
         id: NativeTileId,
+    );
+
+    /// Attaches an ExternalImageId to an OS compositor surface created
+    /// by create_external_surface, and uses that as the contents of
+    /// the surface. It is expected that a single surface will have
+    /// many different images attached (like one for each video frame).
+    fn attach_external_image(
+        &mut self,
+        id: NativeSurfaceId,
+        external_image: ExternalImageId
     );
 
     /// Mark a tile as invalid before any surfaces are queued for

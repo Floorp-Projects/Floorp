@@ -30,6 +30,13 @@ class RenderMacIOSurfaceTextureHostOGL final : public RenderTextureHostOGL {
   gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
   GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
+  RenderMacIOSurfaceTextureHostOGL* AsRenderMacIOSurfaceTextureHostOGL()
+      override {
+    return this;
+  }
+
+  MacIOSurface* GetSurface() { return mSurface; }
+
  private:
   virtual ~RenderMacIOSurfaceTextureHostOGL();
   void DeleteTextureHandle();

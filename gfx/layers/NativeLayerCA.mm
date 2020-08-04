@@ -19,6 +19,7 @@
 #include "GLContextProvider.h"
 #include "MozFramebuffer.h"
 #include "mozilla/layers/SurfacePoolCA.h"
+#include "mozilla/webrender/RenderMacIOSurfaceTextureHostOGL.h"
 #include "ScopedGLHelpers.h"
 
 @interface CALayer (PrivateSetContentsOpaque)
@@ -93,6 +94,11 @@ already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer(
     const IntSize& aSize, bool aIsOpaque, SurfacePoolHandle* aSurfacePoolHandle) {
   RefPtr<NativeLayer> layer =
       new NativeLayerCA(aSize, aIsOpaque, aSurfacePoolHandle->AsSurfacePoolHandleCA());
+  return layer.forget();
+}
+
+already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayerForExternalTexture(bool aIsOpaque) {
+  RefPtr<NativeLayer> layer = new NativeLayerCA(aIsOpaque);
   return layer.forget();
 }
 
@@ -377,6 +383,9 @@ NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
   MOZ_RELEASE_ASSERT(mSurfacePoolHandle, "Need a non-null surface pool handle.");
 }
 
+NativeLayerCA::NativeLayerCA(bool aIsOpaque)
+    : mMutex("NativeLayerCA"), mSurfacePoolHandle(nullptr), mIsOpaque(aIsOpaque) {}
+
 NativeLayerCA::~NativeLayerCA() {
   if (mInProgressLockedIOSurface) {
     mInProgressLockedIOSurface->Unlock(false);
@@ -392,6 +401,21 @@ NativeLayerCA::~NativeLayerCA() {
   for (const auto& surf : mSurfaces) {
     mSurfacePoolHandle->ReturnSurfaceToPool(surf.mEntry.mSurface);
   }
+}
+
+void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
+  wr::RenderMacIOSurfaceTextureHostOGL* texture =
+      aExternalImage->AsRenderMacIOSurfaceTextureHostOGL();
+  MOZ_ASSERT(texture);
+  mTextureHost = texture;
+  mSize = texture->GetSize(0);
+  mDisplayRect = IntRect(IntPoint{}, mSize);
+
+  ForAllRepresentations([&](Representation& r) {
+    r.mMutatedFrontSurface = true;
+    r.mMutatedDisplayRect = true;
+    r.mMutatedSize = true;
+  });
 }
 
 void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
@@ -686,9 +710,15 @@ void NativeLayerCA::ForAllRepresentations(F aFn) {
 
 void NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation) {
   MutexAutoLock lock(mMutex);
+  CFTypeRefPtr<IOSurfaceRef> surface;
+  if (mFrontSurface) {
+    surface = mFrontSurface->mSurface;
+  } else if (mTextureHost) {
+    surface = mTextureHost->GetSurface()->GetIOSurfaceRef();
+  }
   GetRepresentation(aRepresentation)
       .ApplyChanges(mSize, mIsOpaque, mPosition, mTransform, mDisplayRect, mClipRect, mBackingScale,
-                    mSurfaceIsFlipped, mFrontSurface ? mFrontSurface->mSurface : nullptr);
+                    mSurfaceIsFlipped, surface);
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
@@ -752,7 +782,7 @@ void NativeLayerCA::Representation::ApplyChanges(
   //  Important: Always use integral numbers for the width and height of your layer.
   // We hope that this refers to integral physical pixels, and not to integral logical coordinates.
 
-  if (mMutatedBackingScale) {
+  if (mMutatedBackingScale || mMutatedSize) {
     mContentCALayer.bounds =
         CGRectMake(0, 0, aSize.width / aBackingScale, aSize.height / aBackingScale);
     if (mOpaquenessTintLayer) {
@@ -762,7 +792,7 @@ void NativeLayerCA::Representation::ApplyChanges(
   }
 
   if (mMutatedBackingScale || mMutatedPosition || mMutatedDisplayRect || mMutatedClipRect ||
-      mMutatedTransform || mMutatedSurfaceIsFlipped) {
+      mMutatedTransform || mMutatedSurfaceIsFlipped || mMutatedSize) {
     Maybe<IntRect> clipFromDisplayRect;
     if (!aDisplayRect.IsEqualInterior(IntRect({}, aSize))) {
       // When the display rect is a subset of the layer, then we want to guarantee that no
@@ -829,6 +859,7 @@ void NativeLayerCA::Representation::ApplyChanges(
   mMutatedPosition = false;
   mMutatedTransform = false;
   mMutatedBackingScale = false;
+  mMutatedSize = false;
   mMutatedSurfaceIsFlipped = false;
   mMutatedDisplayRect = false;
   mMutatedClipRect = false;

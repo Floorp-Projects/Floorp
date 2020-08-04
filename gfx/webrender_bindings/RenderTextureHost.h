@@ -23,6 +23,7 @@ class GLContext;
 namespace wr {
 
 class RenderDXGITextureHostOGL;
+class RenderMacIOSurfaceTextureHostOGL;
 class RenderBufferTextureHost;
 class RenderTextureHostOGL;
 
@@ -58,6 +59,11 @@ class RenderTextureHost {
   virtual bool SyncObjectNeeded() { return false; }
 
   virtual RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() {
+    return nullptr;
+  }
+
+  virtual RenderMacIOSurfaceTextureHostOGL*
+  AsRenderMacIOSurfaceTextureHostOGL() {
     return nullptr;
   }
 

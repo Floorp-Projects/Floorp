@@ -20,6 +20,10 @@ namespace gl {
 class GLContext;
 }  // namespace gl
 
+namespace wr {
+class RenderTextureHost;
+}
+
 namespace layers {
 
 class NativeLayer;
@@ -40,6 +44,9 @@ class NativeLayerRoot {
   virtual already_AddRefed<NativeLayer> CreateLayer(
       const gfx::IntSize& aSize, bool aIsOpaque,
       SurfacePoolHandle* aSurfacePoolHandle) = 0;
+  virtual already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
+      bool aIsOpaque) = 0;
+
   virtual void AppendLayer(NativeLayer* aLayer) = 0;
   virtual void RemoveLayer(NativeLayer* aLayer) = 0;
   virtual void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) = 0;
@@ -207,6 +214,8 @@ class NativeLayer {
   // good to call DiscardBackbuffers in order to save memory and allow other
   // layer's to pick up the released surfaces from the pool.
   virtual void DiscardBackbuffers() = 0;
+
+  virtual void AttachExternalImage(wr::RenderTextureHost* aExternalImage) = 0;
 
  protected:
   virtual ~NativeLayer() = default;

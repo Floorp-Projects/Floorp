@@ -47,6 +47,10 @@ bitflags! {
         /// compositor surface under certain (implementation specific) conditions. This
         /// is typically used for large videos, and canvas elements.
         const PREFER_COMPOSITOR_SURFACE = 1 << 3;
+        /// If set, this primitive can be passed directly to the compositor via its
+        /// ExternalImageId, and the compositor will use the native image directly.
+        /// Used as a further extension on top of PREFER_COMPOSITOR_SURFACE.
+        const SUPPORTS_EXTERNAL_COMPOSITOR_SURFACE = 1 << 4;
     }
 }
 

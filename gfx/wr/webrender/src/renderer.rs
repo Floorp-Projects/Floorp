@@ -5894,9 +5894,17 @@ impl Renderer {
                             let _inserted = self.allocated_native_surfaces.insert(id);
                             debug_assert!(_inserted, "bug: creating existing surface");
                             compositor.create_surface(
+                                    id,
+                                    virtual_offset,
+                                    tile_size,
+                                    is_opaque,
+                            );
+                        }
+                        NativeSurfaceOperationDetails::CreateExternalSurface { id, is_opaque } => {
+                            let _inserted = self.allocated_native_surfaces.insert(id);
+                            debug_assert!(_inserted, "bug: creating existing surface");
+                            compositor.create_external_surface(
                                 id,
-                                virtual_offset,
-                                tile_size,
                                 is_opaque,
                             );
                         }
@@ -5910,6 +5918,9 @@ impl Renderer {
                         }
                         NativeSurfaceOperationDetails::DestroyTile { id } => {
                             compositor.destroy_tile(id);
+                        }
+                        NativeSurfaceOperationDetails::AttachExternalImage { id, external_image } => {
+                            compositor.attach_external_image(id, external_image);
                         }
                     }
                 }

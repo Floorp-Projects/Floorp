@@ -1222,13 +1222,14 @@ void DisplayListBuilder::PushImage(
     const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
     bool aIsBackfaceVisible, wr::ImageRendering aFilter, wr::ImageKey aImage,
     bool aPremultipliedAlpha, const wr::ColorF& aColor,
-    bool aPreferCompositorSurface) {
+    bool aPreferCompositorSurface, bool aSupportsExternalCompositing) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
   WRDL_LOG("PushImage b=%s cl=%s\n", mWrState, Stringify(aBounds).c_str(),
            Stringify(clip).c_str());
   wr_dp_push_image(mWrState, aBounds, clip, aIsBackfaceVisible,
                    &mCurrentSpaceAndClipChain, aFilter, aImage,
-                   aPremultipliedAlpha, aColor, aPreferCompositorSurface);
+                   aPremultipliedAlpha, aColor, aPreferCompositorSurface,
+                   aSupportsExternalCompositing);
 }
 
 void DisplayListBuilder::PushRepeatingImage(
@@ -1251,12 +1252,12 @@ void DisplayListBuilder::PushYCbCrPlanarImage(
     wr::ImageKey aImageChannel1, wr::ImageKey aImageChannel2,
     wr::WrColorDepth aColorDepth, wr::WrYuvColorSpace aColorSpace,
     wr::WrColorRange aColorRange, wr::ImageRendering aRendering,
-    bool aPreferCompositorSurface) {
-  wr_dp_push_yuv_planar_image(mWrState, aBounds, MergeClipLeaf(aClip),
-                              aIsBackfaceVisible, &mCurrentSpaceAndClipChain,
-                              aImageChannel0, aImageChannel1, aImageChannel2,
-                              aColorDepth, aColorSpace, aColorRange, aRendering,
-                              aPreferCompositorSurface);
+    bool aPreferCompositorSurface, bool aSupportsExternalCompositing) {
+  wr_dp_push_yuv_planar_image(
+      mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
+      &mCurrentSpaceAndClipChain, aImageChannel0, aImageChannel1,
+      aImageChannel2, aColorDepth, aColorSpace, aColorRange, aRendering,
+      aPreferCompositorSurface, aSupportsExternalCompositing);
 }
 
 void DisplayListBuilder::PushNV12Image(
@@ -1264,11 +1265,13 @@ void DisplayListBuilder::PushNV12Image(
     bool aIsBackfaceVisible, wr::ImageKey aImageChannel0,
     wr::ImageKey aImageChannel1, wr::WrColorDepth aColorDepth,
     wr::WrYuvColorSpace aColorSpace, wr::WrColorRange aColorRange,
-    wr::ImageRendering aRendering, bool aPreferCompositorSurface) {
+    wr::ImageRendering aRendering, bool aPreferCompositorSurface,
+    bool aSupportsExternalCompositing) {
   wr_dp_push_yuv_NV12_image(
       mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
       &mCurrentSpaceAndClipChain, aImageChannel0, aImageChannel1, aColorDepth,
-      aColorSpace, aColorRange, aRendering, aPreferCompositorSurface);
+      aColorSpace, aColorRange, aRendering, aPreferCompositorSurface,
+      aSupportsExternalCompositing);
 }
 
 void DisplayListBuilder::PushYCbCrInterleavedImage(
@@ -1276,11 +1279,12 @@ void DisplayListBuilder::PushYCbCrInterleavedImage(
     bool aIsBackfaceVisible, wr::ImageKey aImageChannel0,
     wr::WrColorDepth aColorDepth, wr::WrYuvColorSpace aColorSpace,
     wr::WrColorRange aColorRange, wr::ImageRendering aRendering,
-    bool aPreferCompositorSurface) {
+    bool aPreferCompositorSurface, bool aSupportsExternalCompositing) {
   wr_dp_push_yuv_interleaved_image(
       mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
       &mCurrentSpaceAndClipChain, aImageChannel0, aColorDepth, aColorSpace,
-      aColorRange, aRendering, aPreferCompositorSurface);
+      aColorRange, aRendering, aPreferCompositorSurface,
+      aSupportsExternalCompositing);
 }
 
 void DisplayListBuilder::PushIFrame(const wr::LayoutRect& aBounds,
