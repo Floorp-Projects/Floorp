@@ -148,7 +148,8 @@ InProcessParent::GetActor(const nsACString& aName, JSContext* aCx,
                           JSProcessActorParent** aActor) {
   ErrorResult error;
   RefPtr<JSProcessActorParent> actor =
-      JSActorManager::GetActor(aName, error).downcast<JSProcessActorParent>();
+      JSActorManager::GetActor(aCx, aName, error)
+          .downcast<JSProcessActorParent>();
   if (error.MaybeSetPendingException(aCx)) {
     return NS_ERROR_FAILURE;
   }
@@ -197,7 +198,8 @@ InProcessChild::GetActor(const nsACString& aName, JSContext* aCx,
                          JSProcessActorChild** aActor) {
   ErrorResult error;
   RefPtr<JSProcessActorChild> actor =
-      JSActorManager::GetActor(aName, error).downcast<JSProcessActorChild>();
+      JSActorManager::GetActor(aCx, aName, error)
+          .downcast<JSProcessActorChild>();
   if (error.MaybeSetPendingException(aCx)) {
     return NS_ERROR_FAILURE;
   }
