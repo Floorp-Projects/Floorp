@@ -35,8 +35,14 @@ add_task(async function testContentProcesses() {
         0,
         `Child ID is 0 for the parent process, which is the first element of the returned array`
       );
+      is(
+        process.remoteType,
+        null,
+        "The main process's remote type should be NOT_REMOTE"
+      );
     } else {
       ok(process.childID > 0, `Child ID looks also correct ${process.childID}`);
+      ok(process.remoteType, "Should have a remote type");
     }
 
     ok(

@@ -138,6 +138,11 @@ InProcessParent::GetOsPid(int32_t* aOsPid) {
   return NS_OK;
 }
 
+NS_IMETHODIMP InProcessParent::GetRemoteType(nsACString& aRemoteType) {
+  aRemoteType = NOT_REMOTE_TYPE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 InProcessParent::GetActor(const nsACString& aName, JSContext* aCx,
                           JSProcessActorParent** aActor) {

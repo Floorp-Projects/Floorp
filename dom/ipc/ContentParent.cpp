@@ -6928,6 +6928,11 @@ NS_IMETHODIMP ContentParent::GetOsPid(int32_t* aOut) {
   return NS_OK;
 }
 
+NS_IMETHODIMP ContentParent::GetRemoteType(nsACString& aRemoteType) {
+  aRemoteType = GetRemoteType();
+  return NS_OK;
+}
+
 IPCResult ContentParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
                                         const ClonedMessageData& aData,
                                         const ClonedMessageData& aStack) {
