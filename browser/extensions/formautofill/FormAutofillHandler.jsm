@@ -641,7 +641,10 @@ class FormAutofillSection {
             "creditcard",
             "filled_modified",
             "cc_form",
-            this.flowId
+            this.flowId,
+            {
+              field_name: targetFieldDetail.fieldName,
+            }
           );
         }
 
