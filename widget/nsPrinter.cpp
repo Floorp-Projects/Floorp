@@ -5,14 +5,14 @@
 
 #include "nsPrinter.h"
 
-nsPrinter::nsPrinter(const nsAString& aName,
-                     const nsTArray<RefPtr<nsIPaper>>& aPaperList,
-                     const bool aSupportsDuplex)
-    : mName(aName),
-      mPaperList(aPaperList.Clone()),
-      mSupportsDuplex(aSupportsDuplex) {}
+nsPrinter::~nsPrinter() = default;
 
-NS_IMPL_ISUPPORTS(nsPrinter, nsIPrinter);
+nsPrinter::nsPrinter(const nsAString& aName) : mName(aName) {}
+
+// static
+already_AddRefed<nsPrinter> nsPrinter::Create(const nsAString& aName) {
+  return do_AddRef(new nsPrinter(aName));
+}
 
 NS_IMETHODIMP
 nsPrinter::GetName(nsAString& aName) {
@@ -23,20 +23,5 @@ nsPrinter::GetName(nsAString& aName) {
 NS_IMETHODIMP
 nsPrinter::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
   aPaperList.Assign(mPaperList);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinter::GetSupportsDuplex(bool* aSupportsDuplex) {
-  MOZ_ASSERT(aSupportsDuplex);
-  *aSupportsDuplex = mSupportsDuplex;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinter::GetSupportsColor(bool* aSupportsColor) {
-  MOZ_ASSERT(aSupportsColor);
-  // Dummy implementation waiting platform specific one.
-  *aSupportsColor = false;
   return NS_OK;
 }

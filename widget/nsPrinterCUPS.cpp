@@ -7,12 +7,13 @@
 
 nsPrinterCUPS::nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
                              nsTArray<RefPtr<nsIPaper>>&& aPaperList)
-    : mShim(aShim), mPaperList(std::move(aPaperList)) {
+    : mShim(aShim) {
   MOZ_ASSERT(aPrinter);
   MOZ_ASSERT(mShim.IsInitialized());
   DebugOnly<const int> numCopied = aShim.mCupsCopyDest(aPrinter, 0, &mPrinter);
   MOZ_ASSERT(numCopied == 1);
   mPrinterInfo = aShim.mCupsCopyDestInfo(CUPS_HTTP_DEFAULT, mPrinter);
+  mPaperList = std::move(aPaperList);
 }
 
 nsPrinterCUPS::~nsPrinterCUPS() {
@@ -24,7 +25,12 @@ nsPrinterCUPS::~nsPrinterCUPS() {
   }
 }
 
-NS_IMPL_ISUPPORTS(nsPrinterCUPS, nsIPrinter);
+// static
+already_AddRefed<nsPrinterCUPS> nsPrinterCUPS::Create(
+    const nsCUPSShim& aShim, cups_dest_t* aPrinter,
+    nsTArray<RefPtr<nsIPaper>>&& aPaperList) {
+  return do_AddRef(new nsPrinterCUPS(aShim, aPrinter, std::move(aPaperList)));
+}
 
 NS_IMETHODIMP
 nsPrinterCUPS::GetName(nsAString& aName) {
@@ -38,23 +44,11 @@ nsPrinterCUPS::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPrinterCUPS::GetSupportsDuplex(bool* aSupportsDuplex) {
-  MOZ_ASSERT(aSupportsDuplex);
-  if (mSupportsDuplex.isNothing()) {
-    mSupportsDuplex = Some(Supports(CUPS_SIDES, CUPS_SIDES_TWO_SIDED_PORTRAIT));
-  }
-  *aSupportsDuplex = mSupportsDuplex.value();
-  return NS_OK;
+bool nsPrinterCUPS::SupportsDuplex() const {
+  return Supports(CUPS_SIDES, CUPS_SIDES_TWO_SIDED_PORTRAIT);
 }
 
-NS_IMETHODIMP
-nsPrinterCUPS::GetSupportsColor(bool* aSupportsColor) {
-  MOZ_ASSERT(aSupportsColor);
-  // Dummy implementation waiting platform specific one.
-  *aSupportsColor = false;
-  return NS_OK;
-}
+bool nsPrinterCUPS::SupportsColor() const { return false; }
 
 bool nsPrinterCUPS::Supports(const char* option, const char* value) const {
   MOZ_ASSERT(mPrinterInfo);

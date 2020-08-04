@@ -110,9 +110,11 @@ static nsresult CreatePrinter(mozilla::CUPSPrinterList& aCupsPrinterList, PMPrin
 
   NSString* const printerID = static_cast<NSString*>(PMPrinterGetID(aPMPrinter));
   if (cups_dest_t* const dest = aCupsPrinterList.FindPrinterByName([printerID UTF8String])) {
-    *aPrinter = new nsPrinterCUPS(sCupsShim, dest, std::move(paperList));
-    NS_ADDREF(*aPrinter);
-    return NS_OK;
+    if (RefPtr<nsPrinterCUPS> printer =
+            nsPrinterCUPS::Create(sCupsShim, dest, std::move(paperList))) {
+      printer.forget(aPrinter);
+      return NS_OK;
+    }
   }
   return NS_ERROR_FAILURE;
 }

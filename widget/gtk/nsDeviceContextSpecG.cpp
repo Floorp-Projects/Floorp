@@ -364,8 +364,9 @@ nsPrinterListGTK::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   uint32_t numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
   for (uint32_t i = 0; i < numPrinters; ++i) {
     nsString* name = GlobalPrinters::GetInstance()->GetStringAt(i);
-    nsTArray<RefPtr<nsIPaper>> paperList;
-    aPrinters.AppendElement(new nsPrinter(*name, paperList));
+    if (RefPtr<nsPrinter> printer = nsPrinter::Create(*name)) {
+      aPrinters.AppendElement(printer);
+    }
   }
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 

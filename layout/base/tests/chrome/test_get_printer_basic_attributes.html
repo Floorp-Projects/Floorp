@@ -8,21 +8,22 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function run() {
+async function run() {
   try {
     let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
       Ci.nsIPrinterList
     );
 
-    printerList.printers.forEach(printer => {
+    for await (printer of printerList.printers) {
       info(`Listing basic attributes for ${printer.name}:`);
-      info(`* supportsDuplex: ${printer.supportsDuplex}`);
-      info(`* supportsColor: ${printer.supportsColor}`);
-    })
+      let [supportsDuplex, supportsColor] = await Promise.all([printer.supportsDuplex, printer.supportsColor]);
+      info(`* supportsDuplex: ${supportsDuplex}`);
+      info(`* supportsColor: ${supportsColor}`);
+    }
 
     ok(true, "Retrieved printer basic attributes successfully.");
   } catch (e) {
-    ok(false, "Error thrown while retrieved printer basic attributes.");
+    ok(false, `Error thrown while retrieving printer basic attributes: ${e}.`);
     Cu.reportError(e);
   }
   SimpleTest.finish();

@@ -606,7 +606,9 @@ nsPrinterListWin::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
     LPWSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx);
 
     nsAutoString printerName(name);
-    aPrinters.AppendElement(new nsPrinterWin(printerName));
+    if (RefPtr<nsPrinterWin> printer = nsPrinterWin::Create(printerName)) {
+      aPrinters.AppendElement(printer.forget());
+    }
   }
 
   return NS_OK;

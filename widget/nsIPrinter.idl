@@ -20,12 +20,16 @@ interface nsIPrinter : nsISupports
   readonly attribute Array<nsIPaper> paperList;
 
   /**
-   * Whether this printer supports duplex printing.
+   * Returns a Promise that resolves to true or false to indicate whether this
+   * printer supports duplex printing.
    */
-  readonly attribute boolean supportsDuplex;
+  [implicit_jscontext]
+  readonly attribute Promise supportsDuplex;
 
   /**
-   * Whether this printer supports color printing.
+   * Returns a Promise that resolves to true or false to indicate whether this
+   * printer supports color printing.
    */
-  readonly attribute boolean supportsColor;
+  [implicit_jscontext]
+  readonly attribute Promise supportsColor;
 };
