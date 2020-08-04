@@ -14,7 +14,7 @@
 #include "gfxPattern.h"
 #include "mozilla/gfx/UserData.h"
 #include "mozilla/SVGContextPaint.h"
-#include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
 
 class nsIContentViewer;
 class gfxSVGGlyphs;
