@@ -232,8 +232,9 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder, ImageContainer* aContainer,
     const StackingContextHelper& aSc, const LayoutDeviceRect& aBounds,
     const LayoutDeviceRect& aSCBounds, const gfx::Matrix4x4& aSCTransform,
-    const gfx::MaybeIntSize& aScaleToSize, const wr::ImageRendering& aFilter,
-    const wr::MixBlendMode& aMixBlendMode, bool aIsBackfaceVisible) {
+    const gfx::MaybeIntSize& aScaleToSize, VideoInfo::Rotation aRotation,
+    const wr::ImageRendering& aFilter, const wr::MixBlendMode& aMixBlendMode,
+    bool aIsBackfaceVisible) {
   MOZ_ASSERT(aContainer->IsAsync());
 
   if (mPipelineId.isSome() && mContainer != aContainer) {
@@ -253,6 +254,14 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
   }
   MOZ_ASSERT(!mImageClient);
 
+  LayoutDeviceSize scaleFromSize;
+  AutoLockImage autoLock(aContainer);
+  if (autoLock.HasImage()) {
+    mozilla::layers::Image* image = autoLock.GetImage();
+    gfx::IntSize size = image->GetSize();
+    scaleFromSize = LayoutDeviceSize(size.width, size.height);
+  }
+
   // Push IFrame for async image pipeline.
   //
   // We don't push a stacking context for this async image pipeline here.
@@ -266,8 +275,8 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
                       /*ignoreMissingPipelines*/ false);
 
   WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(
-      mPipelineId.value(), aSCBounds, aSCTransform, aScaleToSize, aFilter,
-      aMixBlendMode, LayoutDeviceSize()));
+      mPipelineId.value(), aSCBounds, aSCTransform, aScaleToSize, aRotation,
+      aFilter, aMixBlendMode, scaleFromSize));
 }
 
 void WebRenderImageData::CreateImageClientIfNeeded() {

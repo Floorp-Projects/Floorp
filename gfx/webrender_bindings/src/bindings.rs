@@ -490,6 +490,7 @@ pub struct WrWindowId(u64);
 pub struct WrComputedTransformData {
     pub scale_from: LayoutSize,
     pub vertical_flip: bool,
+    pub rotation: WrRotation,
 }
 
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void {
@@ -2317,6 +2318,15 @@ pub enum WrReferenceFrameKind {
     Zoom,
 }
 
+#[repr(u8)]
+#[derive(PartialEq, Eq, Debug)]
+pub enum WrRotation {
+    Degree0,
+    Degree90,
+    Degree180,
+    Degree270,
+}
+
 /// IMPORTANT: If you add fields to this struct, you need to also add initializers
 /// for those fields in WebRenderAPI.h.
 #[repr(C)]
@@ -2444,11 +2454,18 @@ pub extern "C" fn wr_dp_push_stacking_context(
         result.id = wr_spatial_id.0;
         assert_ne!(wr_spatial_id.0, 0);
     } else if let Some(data) = computed_ref {
+        let rotation = match data.rotation {
+            WrRotation::Degree0 => Rotation::Degree0,
+            WrRotation::Degree90 => Rotation::Degree90,
+            WrRotation::Degree180 => Rotation::Degree180,
+            WrRotation::Degree270 => Rotation::Degree270,
+        };
         wr_spatial_id = state.frame_builder.dl_builder.push_computed_frame(
             bounds.origin,
             wr_spatial_id,
             Some(data.scale_from),
             data.vertical_flip,
+            rotation,
         );
 
         bounds.origin = LayoutPoint::zero();

@@ -181,7 +181,8 @@ void AsyncImagePipelineManager::RemoveAsyncImagePipeline(
 void AsyncImagePipelineManager::UpdateAsyncImagePipeline(
     const wr::PipelineId& aPipelineId, const LayoutDeviceRect& aScBounds,
     const gfx::Matrix4x4& aScTransform, const gfx::MaybeIntSize& aScaleToSize,
-    const wr::ImageRendering& aFilter, const wr::MixBlendMode& aMixBlendMode,
+    const VideoInfo::Rotation aRotation, const wr::ImageRendering& aFilter,
+    const wr::MixBlendMode& aMixBlendMode,
     const LayoutDeviceSize& aScaleFromSize) {
   if (mDestroyed) {
     return;
@@ -192,7 +193,7 @@ void AsyncImagePipelineManager::UpdateAsyncImagePipeline(
     return;
   }
   pipeline->mInitialised = true;
-  pipeline->Update(aScBounds, aScTransform, aScaleToSize, aFilter,
+  pipeline->Update(aScBounds, aScTransform, aScaleToSize, aRotation, aFilter,
                    aMixBlendMode, aScaleFromSize);
 }
 
@@ -333,6 +334,20 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
   }
 }
 
+wr::WrRotation ToWrRotation(VideoInfo::Rotation aRotation) {
+  switch (aRotation) {
+    case VideoInfo::Rotation::kDegree_0:
+      return wr::WrRotation::Degree0;
+    case VideoInfo::Rotation::kDegree_90:
+      return wr::WrRotation::Degree90;
+    case VideoInfo::Rotation::kDegree_180:
+      return wr::WrRotation::Degree180;
+    case VideoInfo::Rotation::kDegree_270:
+      return wr::WrRotation::Degree270;
+  }
+  return wr::WrRotation::Degree0;
+}
+
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     const wr::Epoch& aEpoch, const wr::PipelineId& aPipelineId,
     AsyncImagePipeline* aPipeline, wr::TransactionBuilder& aSceneBuilderTxn,
@@ -372,11 +387,13 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   params.mix_blend_mode = aPipeline->mMixBlendMode;
 
   wr::WrComputedTransformData computedTransform;
-  if (!aPipeline->mScaleFromSize.IsEmpty()) {
+  if (!aPipeline->mScaleFromSize.IsEmpty() ||
+      aPipeline->mRotation != VideoInfo::Rotation::kDegree_0) {
     MOZ_ASSERT(scTransform.IsIdentity());
     computedTransform.vertical_flip =
         aPipeline->mCurrentTexture && aPipeline->mCurrentTexture->NeedsYFlip();
     computedTransform.scale_from = wr::ToLayoutSize(aPipeline->mScaleFromSize);
+    computedTransform.rotation = ToWrRotation(aPipeline->mRotation);
     params.computed_transform = &computedTransform;
   } else {
     if (aPipeline->mCurrentTexture &&

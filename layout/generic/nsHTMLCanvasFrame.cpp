@@ -174,7 +174,8 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         aManager->WrBridge()->AddWebRenderParentCommand(
             OpUpdateAsyncImagePipeline(
                 data->GetPipelineId().value(), scBounds, scTransform,
-                scaleToSize, filter, mixBlendMode,
+                scaleToSize, VideoInfo::Rotation::kDegree_0, filter,
+                mixBlendMode,
                 LayoutDeviceSize(canvasSizeInPx.width, canvasSizeInPx.height)));
         break;
       }
