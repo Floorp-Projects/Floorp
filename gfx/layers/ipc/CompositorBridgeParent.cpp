@@ -1010,7 +1010,6 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
       mTestTime.valueOr(mCompositorScheduler->GetLastComposeTime());
   bool requestNextFrame =
       mCompositionManager->TransformShadowTree(time, mVsyncRate);
-  TimeStamp outputTime = mCompositorScheduler->GetLastVsyncOutputTime();
 
   if (requestNextFrame) {
     ScheduleComposition();
@@ -1031,7 +1030,7 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
     mLayerManager->Dump(/* aSorted = */ true);
   }
   mLayerManager->SetDebugOverlayWantsNextFrame(false);
-  mLayerManager->EndTransaction(outputTime);
+  mLayerManager->EndTransaction(time);
 
   if (!aTarget) {
     TimeStamp end = TimeStamp::Now();
