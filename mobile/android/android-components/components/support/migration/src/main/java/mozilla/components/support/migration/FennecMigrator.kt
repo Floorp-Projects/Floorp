@@ -23,7 +23,7 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
-import mozilla.components.feature.top.sites.TopSiteStorage
+import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
@@ -217,7 +217,7 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
  * @param bookmarksStorage An optional instance of [PlacesBookmarksStorage] used to store migrated bookmarks data.
  * @param coroutineContext An instance of [CoroutineContext] used for executing async migration tasks.
  */
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 class FennecMigrator private constructor(
     private val context: Context,
     private val crashReporter: CrashReporting,
@@ -237,7 +237,7 @@ class FennecMigrator private constructor(
     private val signonsDbName: String,
     private val key4DbName: String,
     private val coroutineContext: CoroutineContext,
-    private val topSiteStorage: TopSiteStorage?
+    private val pinnedSitesStorage: PinnedSiteStorage?
 ) {
     /**
      * Data migration builder. Allows configuring which migrations to run, their versions and relative order.
@@ -266,7 +266,7 @@ class FennecMigrator private constructor(
         private var signonsDbName = "signons.sqlite"
         private var key4DbName = "key4.db"
         private var masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD
-        private var topSiteStorage: TopSiteStorage? = null
+        private var pinnedSitesStorage: PinnedSiteStorage? = null
 
         /**
          * Enable history migration.
@@ -288,16 +288,16 @@ class FennecMigrator private constructor(
 
         /**
          * Enable bookmarks migration. Must be called after [migrateHistory].
-         * Optionally, enable top sites migration, if [topSiteStorage] is specified.
+         * Optionally, enable top sites migration, if [pinnedSitesStorage] is specified.
          * In Fennec, pinned sites are stored as special type of a bookmark, hence this coupling.
          *
          * @param storage An instance of [PlacesBookmarksStorage], used for storing data.
-         * @param topSiteStorage An instance of [TopSiteStorage], used for storing pinned sites.
+         * @param pinnedSitesStorage An instance of [PinnedSiteStorage], used for storing pinned sites.
          * @param version Version of the migration; defaults to the current version.
          */
         fun migrateBookmarks(
             storage: Lazy<PlacesBookmarksStorage>,
-            topSiteStorage: TopSiteStorage? = null,
+            pinnedSitesStorage: PinnedSiteStorage? = null,
             version: Int = Migration.Bookmarks.currentVersion
         ): Builder {
             check(migrations.find { it.migration is Migration.FxA } == null) {
@@ -312,8 +312,8 @@ class FennecMigrator private constructor(
             // Allowing enabling pinned sites migration only when bookmarks migration is enabled is a conscious
             // choice. We currently don't have a requirement to only migrate pinned sites, and not bookmarks,
             // and so this is done to keep things a bit simpler.
-            topSiteStorage?.let {
-                this.topSiteStorage = it
+            pinnedSitesStorage?.let {
+                this.pinnedSitesStorage = it
                 migrations.add(VersionedMigration(Migration.PinnedSites, version))
             }
 
@@ -448,7 +448,7 @@ class FennecMigrator private constructor(
                 signonsDbName,
                 key4DbName,
                 coroutineContext,
-                topSiteStorage
+                pinnedSitesStorage
             )
         }
 
@@ -1263,7 +1263,7 @@ class FennecMigrator private constructor(
     @Suppress("ComplexMethod", "TooGenericExceptionCaught", "ReturnCount", "NestedBlockDepth")
     private fun migratePinnedSites(): Result<Unit> {
         checkNotNull(bookmarksStorage) { "Bookmarks storage must be configured to migrate pinned sites" }
-        checkNotNull(topSiteStorage) { "TopSiteStorage must be configured to migrate pinned sites" }
+        checkNotNull(pinnedSitesStorage) { "PinnedSiteStorage must be configured to migrate pinned sites" }
 
         // There's no dbPath without a profile, but if a profile is present we expect dbPath to be also present.
         if (profile != null && browserDbPath == null) {
@@ -1305,7 +1305,7 @@ class FennecMigrator private constructor(
             // Reversed, so that first pinned site in Fennec ends up as the first one in Fenix, as well.
             pinnedSitesWithUrl.reversed().forEach { pinnedSite ->
                 try {
-                    topSiteStorage.addTopSite(pinnedSite.title ?: "", pinnedSite.url!!)
+                    pinnedSitesStorage.addTopSite(pinnedSite.title ?: "", pinnedSite.url!!)
                 } catch (e: Exception) {
                     failedToImport++
                     // Let's not spam Sentry and submit the same exception multiple times

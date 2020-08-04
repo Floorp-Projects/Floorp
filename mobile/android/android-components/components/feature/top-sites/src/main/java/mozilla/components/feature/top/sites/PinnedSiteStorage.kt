@@ -15,7 +15,7 @@ import mozilla.components.feature.top.sites.db.TopSiteEntity
 /**
  * A storage implementation for organizing top sites.
  */
-class TopSiteStorage(
+class PinnedSiteStorage(
     context: Context
 ) {
     internal var database: Lazy<TopSiteDatabase> = lazy { TopSiteDatabase.get(context) }

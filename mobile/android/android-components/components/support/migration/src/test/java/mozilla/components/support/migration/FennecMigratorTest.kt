@@ -34,7 +34,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
-import mozilla.components.feature.top.sites.TopSiteStorage
+import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
@@ -160,7 +160,7 @@ class FennecMigratorTest {
     fun `migrations versioning basics`() = runBlocking {
         val historyStore = PlacesHistoryStorage(testContext)
         val bookmarksStore = PlacesBookmarksStorage(testContext)
-        val topSiteStorage = mock<TopSiteStorage>()
+        val topSiteStorage = mock<PinnedSiteStorage>()
 
         // Clear-up storage layers between test runs.
         historyStore.deleteEverything()
@@ -257,7 +257,7 @@ class FennecMigratorTest {
     fun `pinned sites migration`() = runBlocking {
         val historyStore = PlacesHistoryStorage(testContext)
         val bookmarksStore = PlacesBookmarksStorage(testContext)
-        val topSiteStorage = mock<TopSiteStorage>()
+        val topSiteStorage = mock<PinnedSiteStorage>()
 
         val migrator = FennecMigrator.Builder(testContext, mock())
             .setCoroutineContext(this.coroutineContext)

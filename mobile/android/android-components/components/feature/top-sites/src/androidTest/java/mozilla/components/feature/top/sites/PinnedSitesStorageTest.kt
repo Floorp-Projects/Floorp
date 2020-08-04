@@ -30,9 +30,9 @@ import java.util.concurrent.Executors
 private const val MIGRATION_TEST_DB = "migration-test"
 
 @Suppress("LargeClass")
-class TopSiteStorageTest {
+class PinnedSitesStorageTest {
     private lateinit var context: Context
-    private lateinit var storage: TopSiteStorage
+    private lateinit var storage: PinnedSiteStorage
     private lateinit var executor: ExecutorService
 
     @get:Rule
@@ -52,7 +52,7 @@ class TopSiteStorageTest {
         context = ApplicationProvider.getApplicationContext()
         val database = Room.inMemoryDatabaseBuilder(context, TopSiteDatabase::class.java).build()
 
-        storage = TopSiteStorage(context)
+        storage = PinnedSiteStorage(context)
         storage.database = lazy { database }
     }
 
