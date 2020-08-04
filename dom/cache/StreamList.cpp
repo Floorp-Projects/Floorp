@@ -124,13 +124,6 @@ void StreamList::NoteClosedAll() {
   }
 }
 
-void StreamList::Close(const nsID& aId) {
-  NS_ASSERT_OWNINGTHREAD(StreamList);
-  if (mStreamControl) {
-    mStreamControl->Close(aId);
-  }
-}
-
 void StreamList::CloseAll() {
   NS_ASSERT_OWNINGTHREAD(StreamList);
   if (mStreamControl) {

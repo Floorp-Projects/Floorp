@@ -46,8 +46,6 @@ class ReadStream::Inner final : public ReadStream::Controllable {
 
   virtual void CloseStreamWithoutReporting() override;
 
-  virtual bool MatchId(const nsID& aId) const override;
-
   virtual bool HasEverBeenRead() const override;
 
   // Simulate nsIInputStream methods, but we don't actually inherit from it
@@ -245,11 +243,6 @@ void ReadStream::Inner::CloseStream() {
 void ReadStream::Inner::CloseStreamWithoutReporting() {
   MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   Forget();
-}
-
-bool ReadStream::Inner::MatchId(const nsID& aId) const {
-  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
-  return mId.Equals(aId);
 }
 
 bool ReadStream::Inner::HasEverBeenRead() const {

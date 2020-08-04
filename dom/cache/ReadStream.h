@@ -61,8 +61,6 @@ class ReadStream final : public nsIInputStream {
     // notify.
     virtual void CloseStreamWithoutReporting() = 0;
 
-    virtual bool MatchId(const nsID& aId) const = 0;
-
     virtual bool HasEverBeenRead() const = 0;
 
     MOZ_DECLARE_REFCOUNTED_TYPENAME(ReadStream::Controllable);

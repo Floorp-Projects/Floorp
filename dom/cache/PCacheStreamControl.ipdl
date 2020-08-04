@@ -23,7 +23,6 @@ parent:
   async NoteClosed(nsID aStreamId);
 
 child:
-  async Close(nsID aStreamId);
   async CloseAll();
   async __delete__();
 };
