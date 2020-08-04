@@ -142,7 +142,17 @@ add_task(async function test_submit_creditCard_new() {
 
   let expected_content = [
     ["creditcard", "detected", "cc_form"],
-    ["creditcard", "submitted", "cc_form"],
+    [
+      "creditcard",
+      "submitted",
+      "cc_form",
+      undefined,
+      {
+        fields_not_auto: "3",
+        fields_auto: "5",
+        fields_modified: "5",
+      },
+    ],
   ];
   await test_per_command(MAIN_BUTTON, undefined, 1);
   await assertTelemetry(expected_content, [
@@ -221,7 +231,17 @@ add_task(async function test_submit_creditCard_autofill() {
       ["creditcard", "detected", "cc_form"],
       ["creditcard", "popup_shown", "cc_form"],
       ["creditcard", "filled", "cc_form"],
-      ["creditcard", "submitted", "cc_form"],
+      [
+        "creditcard",
+        "submitted",
+        "cc_form",
+        undefined,
+        {
+          fields_not_auto: "3",
+          fields_auto: "5",
+          fields_modified: "0",
+        },
+      ],
     ],
     []
   );
@@ -297,7 +317,17 @@ add_task(async function test_submit_creditCard_update() {
     ["creditcard", "popup_shown", "cc_form"],
     ["creditcard", "filled", "cc_form"],
     ["creditcard", "filled_modified", "cc_form"],
-    ["creditcard", "submitted", "cc_form"],
+    [
+      "creditcard",
+      "submitted",
+      "cc_form",
+      undefined,
+      {
+        fields_not_auto: "3",
+        fields_auto: "5",
+        fields_modified: "1",
+      },
+    ],
   ];
 
   await test_per_command(MAIN_BUTTON, undefined, 1);
