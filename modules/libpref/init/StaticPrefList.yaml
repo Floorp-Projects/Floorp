@@ -5550,6 +5550,11 @@
   value: true
   mirror: once
 
+- name: layers.iosurfaceimage.recycle-limit
+  type: RelaxedAtomicUint32
+  value: 15
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "layout."
 #---------------------------------------------------------------------------

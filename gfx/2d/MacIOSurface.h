@@ -48,6 +48,9 @@ class MacIOSurface final
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::BackendType BackendType;
+  typedef mozilla::gfx::IntSize IntSize;
+  typedef mozilla::gfx::YUVColorSpace YUVColorSpace;
+  typedef mozilla::gfx::ColorRange ColorRange;
 
   // The usage count of the IOSurface is increased by 1 during the lifetime
   // of the MacIOSurface instance.
@@ -56,6 +59,9 @@ class MacIOSurface final
   static already_AddRefed<MacIOSurface> CreateIOSurface(
       int aWidth, int aHeight, double aContentsScaleFactor = 1.0,
       bool aHasAlpha = true);
+  static already_AddRefed<MacIOSurface> CreateNV12Surface(
+      const IntSize& aYSize, const IntSize& aCbCrSize,
+      YUVColorSpace aColorSpace, ColorRange aColorRange);
   static void ReleaseIOSurface(MacIOSurface* aIOSurface);
   static already_AddRefed<MacIOSurface> LookupSurface(
       IOSurfaceID aSurfaceID, double aContentsScaleFactor = 1.0,
@@ -68,6 +74,7 @@ class MacIOSurface final
                         bool aHasAlpha = true,
                         mozilla::gfx::YUVColorSpace aColorSpace =
                             mozilla::gfx::YUVColorSpace::UNKNOWN);
+
   ~MacIOSurface();
   IOSurfaceID GetIOSurfaceID() const;
   void* GetBaseAddress() const;
@@ -80,6 +87,9 @@ class MacIOSurface final
   // device pixel.  Use GetDevicePixel**() to get device pixels.
   size_t GetWidth(size_t plane = 0) const;
   size_t GetHeight(size_t plane = 0) const;
+  IntSize GetSize(size_t plane = 0) const {
+    return IntSize(GetWidth(plane), GetHeight(plane));
+  }
   double GetContentsScaleFactor() const { return mContentsScaleFactor; }
   size_t GetDevicePixelWidth(size_t plane = 0) const;
   size_t GetDevicePixelHeight(size_t plane = 0) const;
@@ -95,10 +105,10 @@ class MacIOSurface final
   // This would be better suited on MacIOSurfaceImage type, however due to the
   // current data structure, this is not possible as only the IOSurfaceRef is
   // being used across.
-  void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
+  void SetYUVColorSpace(YUVColorSpace aColorSpace) {
     mColorSpace = aColorSpace;
   }
-  mozilla::gfx::YUVColorSpace GetYUVColorSpace() const { return mColorSpace; }
+  YUVColorSpace GetYUVColorSpace() const { return mColorSpace; }
   bool IsFullRange() const {
     return GetPixelFormat() == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
   }
@@ -132,8 +142,7 @@ class MacIOSurface final
   double mContentsScaleFactor;
   bool mHasAlpha;
   bool mIsLocked = false;
-  mozilla::gfx::YUVColorSpace mColorSpace =
-      mozilla::gfx::YUVColorSpace::UNKNOWN;
+  YUVColorSpace mColorSpace = YUVColorSpace::UNKNOWN;
 };
 
 #endif
