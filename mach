@@ -29,7 +29,6 @@ py2commands="
     mochitest
     mozharness
     prettier-format
-    python-test
     raptor
     raptor-test
     reftest

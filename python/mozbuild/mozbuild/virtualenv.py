@@ -640,6 +640,13 @@ class VirtualenvManager(object):
         # Unsetting it doesn't really matter for what pipenv does.
         env.pop('LC_CTYPE', None)
 
+        # Avoid click RuntimeError under python 3 on linux: http://click.pocoo.org/python3/
+        if PY3 and sys.platform == 'linux':
+            env.update(ensure_subprocess_env({
+                'LC_ALL': 'C.UTF-8',
+                'LANG': 'C.UTF-8'
+            }))
+
         if python is not None:
             env.update(ensure_subprocess_env({
                 'PIPENV_DEFAULT_PYTHON_VERSION': str(python),
