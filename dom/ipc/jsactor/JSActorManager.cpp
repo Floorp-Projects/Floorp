@@ -169,8 +169,11 @@ void JSActorManager::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
       break;
 
     case JSActorMessageKind::Message:
+      actor->ReceiveMessage(cx, aMetadata, data, error);
+      break;
+
     case JSActorMessageKind::Query:
-      actor->ReceiveMessageOrQuery(cx, aMetadata, data, error);
+      actor->ReceiveQuery(cx, aMetadata, data, error);
       break;
 
     default:
