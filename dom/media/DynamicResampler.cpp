@@ -271,7 +271,7 @@ void AudioChunkList::CreateChunks(int aNumOfChunks, int aChannels) {
       bufferPtrs[i] = ptr;
     }
 
-    chunk.mBuffer = new mozilla::SharedChannelArrayBuffer(&buffer);
+    chunk.mBuffer = new mozilla::SharedChannelArrayBuffer(std::move(buffer));
     chunk.mChannelData.AppendElements(aChannels);
     for (int i = 0; i < aChannels; ++i) {
       chunk.mChannelData[i] = bufferPtrs[i];

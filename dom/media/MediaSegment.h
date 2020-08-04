@@ -374,8 +374,8 @@ class MediaSegmentBase : public MediaSegment {
   explicit MediaSegmentBase(Type aType) : MediaSegment(aType), mChunks() {}
 
   MediaSegmentBase(MediaSegmentBase&& aSegment)
-      : MediaSegment(std::move(aSegment)), mChunks() {
-    mChunks.SwapElements(aSegment.mChunks);
+      : MediaSegment(std::move(aSegment)),
+        mChunks(std::move(aSegment.mChunks)) {
     MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
                "Capacity must be retained in self after swap");
     MOZ_ASSERT(aSegment.mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,

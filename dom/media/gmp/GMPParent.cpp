@@ -815,8 +815,8 @@ const nsCString& GMPParent::GetVersion() const { return mVersion; }
 uint32_t GMPParent::GetPluginId() const { return mPluginId; }
 
 void GMPParent::ResolveGetContentParentPromises() {
-  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> promises;
-  promises.SwapElements(mGetContentParentPromises);
+  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> promises =
+      std::move(mGetContentParentPromises);
   MOZ_ASSERT(mGetContentParentPromises.IsEmpty());
   RefPtr<GMPContentParent::CloseBlocker> blocker(
       new GMPContentParent::CloseBlocker(mGMPContentParent));
@@ -852,8 +852,8 @@ bool GMPParent::OpenPGMPContent() {
 }
 
 void GMPParent::RejectGetContentParentPromises() {
-  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> promises;
-  promises.SwapElements(mGetContentParentPromises);
+  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> promises =
+      std::move(mGetContentParentPromises);
   MOZ_ASSERT(mGetContentParentPromises.IsEmpty());
   for (auto& holder : promises) {
     holder->Reject(NS_ERROR_FAILURE, __func__);

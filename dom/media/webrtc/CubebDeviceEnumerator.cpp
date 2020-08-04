@@ -229,11 +229,11 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
   bool manualInvalidation = true;
 
   if (aSide == Side::INPUT) {
-    devices.SwapElements(mInputDevices);
+    devices = std::move(mInputDevices);
     manualInvalidation = mManualInputInvalidation;
   } else {
     MOZ_ASSERT(aSide == Side::OUTPUT);
-    devices.SwapElements(mOutputDevices);
+    devices = std::move(mOutputDevices);
     manualInvalidation = mManualOutputInvalidation;
   }
 

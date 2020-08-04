@@ -42,12 +42,12 @@ namespace storage {
 
 /* static */
 nsresult AsyncExecuteStatements::execute(
-    StatementDataArray& aStatements, Connection* aConnection,
+    StatementDataArray&& aStatements, Connection* aConnection,
     sqlite3* aNativeConnection, mozIStorageStatementCallback* aCallback,
     mozIStoragePendingStatement** _stmt) {
   // Create our event to run in the background
   RefPtr<AsyncExecuteStatements> event = new AsyncExecuteStatements(
-      aStatements, aConnection, aNativeConnection, aCallback);
+      std::move(aStatements), aConnection, aNativeConnection, aCallback);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   // Dispatch it to the background
@@ -72,9 +72,10 @@ nsresult AsyncExecuteStatements::execute(
 }
 
 AsyncExecuteStatements::AsyncExecuteStatements(
-    StatementDataArray& aStatements, Connection* aConnection,
+    StatementDataArray&& aStatements, Connection* aConnection,
     sqlite3* aNativeConnection, mozIStorageStatementCallback* aCallback)
     : Runnable("AsyncExecuteStatements"),
+      mStatements(std::move(aStatements)),
       mConnection(aConnection),
       mNativeConnection(aNativeConnection),
       mHasTransaction(false),
@@ -88,7 +89,6 @@ AsyncExecuteStatements::AsyncExecuteStatements(
       mMutex(aConnection->sharedAsyncExecutionMutex),
       mDBMutex(aConnection->sharedDBMutex),
       mRequestStartDate(TimeStamp::Now()) {
-  (void)mStatements.SwapElements(aStatements);
   NS_ASSERTION(mStatements.Length(), "We weren't given any statements!");
 }
 

@@ -17,8 +17,7 @@ FileDescriptorSetParent::~FileDescriptorSetParent() = default;
 
 void FileDescriptorSetParent::ForgetFileDescriptors(
     nsTArray<FileDescriptor>& aFileDescriptors) {
-  aFileDescriptors.Clear();
-  mFileDescriptors.SwapElements(aFileDescriptors);
+  aFileDescriptors = std::move(mFileDescriptors);
 }
 
 void FileDescriptorSetParent::ActorDestroy(ActorDestroyReason aWhy) {

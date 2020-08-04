@@ -640,8 +640,8 @@ LoadInfo::LoadInfo(
     bool aInitialSecurityCheckDone, bool aIsThirdPartyContext,
     bool aIsThirdPartyContextToTopWindow, bool aIsFormSubmission,
     bool aSendCSPViolationEvents, const OriginAttributes& aOriginAttributes,
-    RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
-    RedirectHistoryArray& aRedirectChain,
+    RedirectHistoryArray&& aRedirectChainIncludingInternalRedirects,
+    RedirectHistoryArray&& aRedirectChain,
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
     const nsTArray<uint64_t>& aAncestorBrowsingContextIDs,
     const nsTArray<nsCString>& aCorsUnsafeHeaders, bool aForcePreflight,
@@ -694,6 +694,9 @@ LoadInfo::LoadInfo(
       mIsFormSubmission(aIsFormSubmission),
       mSendCSPViolationEvents(aSendCSPViolationEvents),
       mOriginAttributes(aOriginAttributes),
+      mRedirectChainIncludingInternalRedirects(
+          std::move(aRedirectChainIncludingInternalRedirects)),
+      mRedirectChain(std::move(aRedirectChain)),
       mAncestorPrincipals(std::move(aAncestorPrincipals)),
       mAncestorBrowsingContextIDs(aAncestorBrowsingContextIDs.Clone()),
       mCorsUnsafeHeaders(aCorsUnsafeHeaders.Clone()),
@@ -720,11 +723,6 @@ LoadInfo::LoadInfo(
   MOZ_ASSERT(mLoadingPrincipal ||
              aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
   MOZ_ASSERT(mTriggeringPrincipal);
-
-  mRedirectChainIncludingInternalRedirects.SwapElements(
-      aRedirectChainIncludingInternalRedirects);
-
-  mRedirectChain.SwapElements(aRedirectChain);
 }
 
 // static

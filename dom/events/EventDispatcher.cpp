@@ -849,7 +849,7 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
     if (!sCachedMainThreadChain) {
       sCachedMainThreadChain = new nsTArray<EventTargetChainItem>();
     }
-    chain.SwapElements(*sCachedMainThreadChain);
+    chain = std::move(*sCachedMainThreadChain);
     chain.SetCapacity(128);
   }
 
