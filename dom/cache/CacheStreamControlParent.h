@@ -31,7 +31,6 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
   CacheStreamControlParent();
 
   void SetStreamList(SafeRefPtr<StreamList> aStreamList);
-  void Close(const nsID& aId);
   void CloseAll();
   void Shutdown();
 
@@ -62,7 +61,6 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
 
   mozilla::ipc::IPCResult RecvNoteClosed(const nsID& aId);
 
-  void NotifyClose(const nsID& aId);
   void NotifyCloseAll();
 
   // Cycle with StreamList via a weak-ref to us.  Cleanup occurs when the actor
