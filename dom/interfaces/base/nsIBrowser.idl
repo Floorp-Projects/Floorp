@@ -25,12 +25,6 @@ interface nsIBrowser : nsISupports
    */
   readonly attribute FrameLoader sameProcessAsFrameLoader;
 
-  /**
-   * Gets the optional open window information provided by the window creation
-   * code and used to initialize a new browser.
-   */
-  attribute nsIOpenWindowInfo openWindowInfo;
-
   /*
    * Called by the child to inform the parent that links are dropped into
    * content area.
