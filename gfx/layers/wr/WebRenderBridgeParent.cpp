@@ -2030,8 +2030,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   wr::TransactionBuilder sceneBuilderTxn;
   wr::AutoTransactionSender sender(mApi, &sceneBuilderTxn);
 
-  TimeStamp outputTime = mCompositorScheduler->GetLastVsyncOutputTime();
-  mAsyncImageManager->SetCompositionInfo(outputTime, mCompositionOpportunityId);
+  mAsyncImageManager->SetCompositionInfo(start, mCompositionOpportunityId);
   mAsyncImageManager->ApplyAsyncImagesOfImageBridge(sceneBuilderTxn, fastTxn);
   mAsyncImageManager->SetCompositionInfo(TimeStamp(),
                                          CompositionOpportunityId{});
