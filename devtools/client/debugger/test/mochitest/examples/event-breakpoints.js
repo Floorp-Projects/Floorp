@@ -29,3 +29,11 @@ function timerHandler() {
   }, 50);
   console.log("timer set");
 }
+
+document.getElementById("eval-button").onmousedown = evalHandler;
+function evalHandler() {
+  eval(`
+    console.log("eval ran");
+    //# sourceURL=http://example.com/eval-test.js
+  `);
+}
