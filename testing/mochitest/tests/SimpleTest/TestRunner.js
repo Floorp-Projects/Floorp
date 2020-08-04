@@ -533,7 +533,7 @@ TestRunner.runNextTest = function() {
       // No |$('testframe').contentWindow|, so manually update: ...
       // ... the log,
       TestRunner.structuredLogger.error(
-        "SimpleTest/TestRunner.js | No checks actually run"
+        "TEST-UNEXPECTED-FAIL | SimpleTest/TestRunner.js | No checks actually run"
       );
       // ... the count,
       $("fail-count").innerHTML = 1;
@@ -764,7 +764,8 @@ TestRunner.testFinished = function(tests) {
                 testwin.SimpleTest._tests[testwin.SimpleTest.testsLength + i]
                   .name;
               TestRunner.structuredLogger.error(
-                TestRunner.currentTestURL +
+                "TEST-UNEXPECTED-FAIL | " +
+                  TestRunner.currentTestURL +
                   " logged result after SimpleTest.finish(): " +
                   wrongtestname
               );
