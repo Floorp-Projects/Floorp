@@ -11,6 +11,7 @@ apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 
 
 import com.android.build.OutputFile
+import groovy.json.JsonOutput
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 import org.gradle.internal.logging.text.StyledTextOutputFactory
 import org.mozilla.fenix.gradle.tasks.LintUnitTestRunner
@@ -493,7 +494,7 @@ dependencies {
 }
 
 if (project.hasProperty("coverage")) {
-    tasks.withType(Test) {
+    tasks.withType(Test).configureEach {
         jacoco.includeNoLocationClasses = true
     }
 
@@ -535,7 +536,7 @@ if (project.hasProperty("coverage")) {
 // Task for printing APK information for the requested variant
 // Usage: "./gradlew printVariants
 // -------------------------------------------------------------------------------------------------
-task printVariants {
+tasks.register('printVariants') {
     doLast {
         def variants = android.applicationVariants.collect {[
                 apks: it.variantData.outputScope.apkDatas.collect {[
@@ -554,11 +555,13 @@ task printVariants {
             build_type: 'androidTest',
             name: 'androidTest',
         ])
-        println 'variants: ' + groovy.json.JsonOutput.toJson(variants)
+        println 'variants: ' + JsonOutput.toJson(variants)
     }
 }
 
 task buildTranslationArray {
+    // This isn't running as a task, instead the array is build when the gradle file is parsed.
+    // https://github.com/mozilla-mobile/fenix/issues/14175
     def foundLocales = new StringBuilder()
     foundLocales.append("new String[]{")
 
@@ -575,12 +578,12 @@ task buildTranslationArray {
     android.defaultConfig.buildConfigField "String[]", "SUPPORTED_LOCALE_ARRAY", foundLocalesString
 }
 
-task lintUnitTestRunner(type: LintUnitTestRunner)
+tasks.register('lintUnitTestRunner', LintUnitTestRunner)
 
 afterEvaluate {
 
     // Format test output. Ported from AC #2401
-    tasks.matching {it instanceof Test}.all {
+    tasks.withType(Test).configureEach {
         systemProperty "robolectric.logging", "stdout"
         systemProperty "logging.test-mode", "true"
 
@@ -668,5 +671,5 @@ tasks.register("updateCookiesExtensionVersion", Copy) { task ->
     updateExtensionVersion(task, 'src/main/assets/extensions/cookies')
 }
 
-preBuild.dependsOn updateAdsExtensionVersion
-preBuild.dependsOn updateCookiesExtensionVersion
+preBuild.dependsOn "updateAdsExtensionVersion"
+preBuild.dependsOn "updateCookiesExtensionVersion"
