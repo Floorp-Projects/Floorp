@@ -67,6 +67,7 @@ async function assertTelemetry(expected_content, expected_parent) {
 
 add_task(async function test_popup_opened() {
   Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await saveCreditCard(TEST_CREDIT_CARD_1);
@@ -89,6 +90,19 @@ add_task(async function test_popup_opened() {
     ["creditcard", "detected", "cc_form"],
     ["creditcard", "popup_shown", "cc_form"],
   ]);
+
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("content"),
+    "formautofill.creditCards.detected_sections_count",
+    1,
+    "There should be 1 section detected."
+  );
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("content"),
+    "formautofill.creditCards.submitted_sections_count",
+    0,
+    "There should be no sections submitted."
+  );
 });
 
 add_task(async function test_submit_creditCard_new() {
@@ -142,6 +156,7 @@ add_task(async function test_submit_creditCard_new() {
   }
 
   Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   let expected_content = [
@@ -175,6 +190,19 @@ add_task(async function test_submit_creditCard_new() {
     ["creditcard", "show", "capture_doorhanger"],
     ["creditcard", "disable", "capture_doorhanger"],
   ]);
+
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("content"),
+    "formautofill.creditCards.detected_sections_count",
+    3,
+    "There should be 3 sections detected."
+  );
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("content"),
+    "formautofill.creditCards.submitted_sections_count",
+    3,
+    "There should be 1 section submitted."
+  );
 });
 
 add_task(async function test_submit_creditCard_autofill() {

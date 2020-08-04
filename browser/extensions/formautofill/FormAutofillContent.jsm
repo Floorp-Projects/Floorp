@@ -569,6 +569,12 @@ var FormAutofillContent = {
         extra
       );
     });
+    if (records.creditCard.length) {
+      Services.telemetry.scalarAdd(
+        "formautofill.creditCards.submitted_sections_count",
+        records.creditCard.length
+      );
+    }
 
     this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
   },
