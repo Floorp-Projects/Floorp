@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent, NSRange */
+/* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent, NSRange, NSDictionary */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
@@ -54,5 +54,12 @@ function NSRange(location, length) {
   return {
     valueType: "NSRange",
     value: [location, length],
+  };
+}
+
+function NSDictionary(dict) {
+  return {
+    objectType: "NSDictionary",
+    object: dict,
   };
 }
