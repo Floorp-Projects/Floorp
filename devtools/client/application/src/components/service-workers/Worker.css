@@ -5,45 +5,41 @@
  /*
  * The current layout of a service worker item is
  *
- *  +---+----------+-------------+----------------|
- *  |     "Source" | script_name debug_link       |
- *  |--------------+-------------+----------------|
- *  |     "Status" | status start_button          |
- *  +---+----------+-------------+----------------|
+ *  +------------+------------------------------+
+ *  |     Worker | script_name                  |
+ *  |     Icon   |------------------------------|
+ *  |            | status    start_button       |
+ *  +------------+------------------------------+
  */
 
 .worker {
-  line-height: 1.5;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "icon  source"
+                       "icon  misc";
+  column-gap: calc(var(--base-unit) * 2);
+  row-gap: var(--base-unit);
+
+  line-height: calc(var(--base-unit) * 4);
   font-size: var(--body-10-font-size);
 }
 
-.worker__source-url {
+.worker__icon {
+  grid-area: icon;
+}
+
+.worker__icon-image {
+  width: calc(var(--base-unit) * 4);
+  height: calc(var(--base-unit) * 4);
+}
+
+.worker__source {
+  grid-area: source;
   user-select: text;
 }
 
-.worker__meta-name {
-  color: var(--theme-text-color-alt);
-}
-
-.worker__data {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-column-gap: calc(var(--base-unit) * 2);
-  grid-row-gap: calc(var(--base-unit) * 0.5);
-}
-
-.worker__data > * {
-  margin: 0;
-}
-
-/* skip the first <dt> + <dd> pair elements */
-.worker__data > *:nth-child(n + 3) {
-  margin-block-start: calc(var(--base-unit) * 2);
-}
-
-.worker__link-start,
-.worker__link-debug {
-  margin: 0 calc(var(--base-unit) * 2);
+.worker__misc {
+  grid-area: misc;
 }
 
 .worker__status {
