@@ -332,6 +332,14 @@ bool GeckoTextMarkerRange::TextInternal(nsAString& aText, AccessibleOrProxy aCur
   // Find the first link that is at or after the start offset.
   for (int32_t i = 0; i < linkCount; i++) {
     AccessibleOrProxy link = LinkAt(aCurrent, i);
+    // If this is remote content there is potential that
+    // the content mutated while we are still in this loop,
+    // so we need to check that we actually got a link.
+    // If we didn't the subtree has changed since this was last called.
+    // We should bail early.
+    if (link.IsNull()) {
+      return false;
+    }
     MOZ_ASSERT(!link.IsNull());
     linkStartOffset = StartOffset(link);
     if (aStartIntlOffset <= linkStartOffset) {
