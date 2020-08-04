@@ -35,7 +35,6 @@ UNCOMMON_TRY_TASK_LABELS = [
     # Linux tasks
     r'linux-',  # hide all linux32 tasks by default - bug 1599197
     r'linux1804-32',  # hide linux32 tests - bug 1599197
-    r'linux.*web-platform-tests.*-fis-',  # hide wpt linux fission tests - bug 1610879
     # Test tasks
     r'web-platform-tests.*backlog',  # hide wpt jobs that are not implemented yet - bug 1572820
     r'-ccov/',
