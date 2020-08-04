@@ -5,6 +5,8 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+const CC_NUM_USES_HISTOGRAM = "CREDITCARD_NUM_USES";
+
 async function assertTelemetry(expected_content, expected_parent) {
   let snapshots;
 
@@ -65,6 +67,60 @@ async function assertTelemetry(expected_content, expected_parent) {
   }
 }
 
+function assertHistogram(histogramId, expectedNonZeroRanges) {
+  let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
+
+  // Compute the actual ranges in the format { range1: value1, range2: value2 }.
+  let actualNonZeroRanges = {};
+  for (let [range, value] of Object.entries(snapshot.values)) {
+    if (value > 0) {
+      actualNonZeroRanges[range] = value;
+    }
+  }
+
+  // These are stringified to visualize the differences between the values.
+  info("Testing histogram: " + histogramId);
+  Assert.equal(
+    JSON.stringify(actualNonZeroRanges),
+    JSON.stringify(expectedNonZeroRanges)
+  );
+}
+
+async function useCreditCard(idx) {
+  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  let onUsed = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) => data == "notifyUsed"
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      await openPopupOn(browser, "form #cc-name");
+      for (let i = 0; i < idx; i++) {
+        await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      }
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await osKeyStoreLoginShown;
+      await SpecialPowers.spawn(browser, [], async function() {
+        await ContentTaskUtils.waitForCondition(() => {
+          let form = content.document.getElementById("form");
+          let number = form.querySelector("#cc-number");
+          return !!number.value.length;
+        }, "Credit card detail never fills");
+        let form = content.document.getElementById("form");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await sleep(1000);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+    }
+  );
+  await onUsed;
+}
+
 add_task(async function test_popup_opened() {
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
@@ -106,7 +162,12 @@ add_task(async function test_popup_opened() {
 });
 
 add_task(async function test_submit_creditCard_new() {
-  async function test_per_command(command, idx, expectChanged = undefined) {
+  async function test_per_command(
+    command,
+    idx,
+    useCount = {},
+    expectChanged = undefined
+  ) {
     await SpecialPowers.pushPrefEnv({
       set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
     });
@@ -152,11 +213,15 @@ add_task(async function test_submit_creditCard_new() {
 
     SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
     SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+
+    assertHistogram(CC_NUM_USES_HISTOGRAM, useCount);
+
     await removeAllRecords();
   }
 
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
+  Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   let expected_content = [
@@ -173,7 +238,7 @@ add_task(async function test_submit_creditCard_new() {
       },
     ],
   ];
-  await test_per_command(MAIN_BUTTON, undefined, 1);
+  await test_per_command(MAIN_BUTTON, undefined, { 1: 1 }, 1);
   await assertTelemetry(expected_content, [
     ["creditcard", "show", "capture_doorhanger"],
     ["creditcard", "save", "capture_doorhanger"],
@@ -215,6 +280,7 @@ add_task(async function test_submit_creditCard_autofill() {
   }
 
   Services.telemetry.clearEvents();
+  Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
@@ -224,36 +290,11 @@ add_task(async function test_submit_creditCard_autofill() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved(
-    "formautofill-storage-changed",
-    (subject, data) => data == "notifyUsed"
-  );
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
-      await openPopupOn(browser, "form #cc-name");
-      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await osKeyStoreLoginShown;
-      await SpecialPowers.spawn(browser, [], async function() {
-        await ContentTaskUtils.waitForCondition(() => {
-          let form = content.document.getElementById("form");
-          let name = form.querySelector("#cc-name");
-          return name.value == "John Doe";
-        }, "Credit card detail never fills");
-        let form = content.document.getElementById("form");
+  await useCreditCard(1);
 
-        // Wait 1000ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 1000));
-        form.querySelector("input[type=submit]").click();
-      });
-
-      await sleep(1000);
-      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
-    }
-  );
-  await onUsed;
+  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    1: 1,
+  });
 
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
@@ -288,7 +329,12 @@ add_task(async function test_submit_creditCard_update() {
     return;
   }
 
-  async function test_per_command(command, idx, expectChanged = undefined) {
+  async function test_per_command(
+    command,
+    idx,
+    useCount = {},
+    expectChanged = undefined
+  ) {
     await SpecialPowers.pushPrefEnv({
       set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
     });
@@ -338,10 +384,13 @@ add_task(async function test_submit_creditCard_update() {
       }
     );
 
+    assertHistogram("CREDITCARD_NUM_USES", useCount);
+
     SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
     await removeAllRecords();
   }
   Services.telemetry.clearEvents();
+  Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   let expected_content = [
@@ -368,13 +417,13 @@ add_task(async function test_submit_creditCard_update() {
     ],
   ];
 
-  await test_per_command(MAIN_BUTTON, undefined, 1);
+  await test_per_command(MAIN_BUTTON, undefined, { 1: 1 }, 1);
   await assertTelemetry(expected_content, [
     ["creditcard", "show", "update_doorhanger"],
     ["creditcard", "update", "update_doorhanger"],
   ]);
 
-  await test_per_command(SECONDARY_BUTTON, undefined, 2);
+  await test_per_command(SECONDARY_BUTTON, undefined, { 0: 1, 1: 1 }, 2);
   await assertTelemetry(expected_content, [
     ["creditcard", "show", "update_doorhanger"],
     ["creditcard", "save", "update_doorhanger"],
@@ -482,4 +531,62 @@ add_task(async function test_editCreditCard() {
     ["creditcard", "show_entry", "manage"],
     ["creditcard", "edit", "manage"],
   ]);
+});
+
+add_task(async function test_histogram() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo(
+      OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      "Cannot test OS key store login on official builds."
+    );
+    return;
+  }
+
+  Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
+  Services.telemetry.setEventRecordingEnabled("creditcard", true);
+
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await saveCreditCard(TEST_CREDIT_CARD_2);
+  await saveCreditCard(TEST_CREDIT_CARD_5);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 3, "3 credit cards in storage");
+
+  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 3,
+  });
+
+  await useCreditCard(1);
+  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 2,
+    1: 1,
+  });
+
+  await useCreditCard(2);
+  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 1,
+    1: 2,
+  });
+
+  await useCreditCard(1);
+  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 1,
+    1: 1,
+    2: 1,
+  });
+
+  await useCreditCard(2);
+  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 1,
+    2: 2,
+  });
+
+  await useCreditCard(3);
+  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    1: 1,
+    2: 2,
+  });
+
+  await removeAllRecords();
+
+  assertHistogram(CC_NUM_USES_HISTOGRAM, {});
 });
