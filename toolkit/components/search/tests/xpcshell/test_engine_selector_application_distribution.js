@@ -72,12 +72,12 @@ add_task(async function setup() {
 });
 
 add_task(async function test_no_distribution_preference() {
-  let { engines } = await engineSelector.fetchEngineConfiguration(
-    "default",
-    "default",
-    "",
-    ""
-  );
+  let { engines } = await engineSelector.fetchEngineConfiguration({
+    locale: "default",
+    region: "default",
+    channel: "",
+    distroID: "",
+  });
   const engineIds = engines.map(obj => obj.webExtension.id);
   Assert.deepEqual(
     engineIds,
@@ -87,12 +87,12 @@ add_task(async function test_no_distribution_preference() {
 });
 
 add_task(async function test_distribution_included() {
-  let { engines } = await engineSelector.fetchEngineConfiguration(
-    "default",
-    "default",
-    "",
-    "cake"
-  );
+  let { engines } = await engineSelector.fetchEngineConfiguration({
+    locale: "default",
+    region: "default",
+    channel: "",
+    distroID: "cake",
+  });
   const engineIds = engines.map(obj => obj.webExtension.id);
   Assert.deepEqual(
     engineIds,
@@ -107,12 +107,12 @@ add_task(async function test_distribution_included() {
 });
 
 add_task(async function test_distribution_excluded() {
-  let { engines } = await engineSelector.fetchEngineConfiguration(
-    "default",
-    "default",
-    "",
-    "apples"
-  );
+  let { engines } = await engineSelector.fetchEngineConfiguration({
+    locale: "default",
+    region: "default",
+    channel: "",
+    distroID: "apples",
+  });
   const engineIds = engines.map(obj => obj.webExtension.id);
   Assert.deepEqual(
     engineIds,

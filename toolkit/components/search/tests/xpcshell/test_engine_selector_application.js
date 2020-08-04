@@ -93,11 +93,11 @@ add_task(async function test_engine_selector_channels() {
   sinon.stub(settings, "get").returns(TEST_CONFIG);
 
   for (let [channel, expected] of Object.entries(expectedEnginesPerChannel)) {
-    const { engines } = await engineSelector.fetchEngineConfiguration(
-      "en-US",
-      "us",
-      channel
-    );
+    const { engines } = await engineSelector.fetchEngineConfiguration({
+      locale: "en-US",
+      region: "us",
+      channel,
+    });
 
     const engineIds = engines.map(obj => obj.webExtension.id);
     Assert.deepEqual(
