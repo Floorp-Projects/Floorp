@@ -412,6 +412,7 @@ creditcard:
       cc_name: Whether the name was autofilled (autofilled / not_filled / user_filled / unavailable)
       cc_number: Whether the credit card number field was autofilled (autofilled / not_filled / user_filled / unavailable)
       cc_exp: Whether the expiration date was autofilled (autofilled / not_filled / user_filled / unavailable)
+      field_name: Name of the field being affected by the method
       fields_not_auto: >-
         Number of fields in a `submitted` event that were not autofilled.
         Note that this number counts all fields in a form, even if some of those fields might have been identified as password and/or address fields.

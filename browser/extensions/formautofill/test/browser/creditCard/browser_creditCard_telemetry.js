@@ -32,9 +32,11 @@ async function assertTelemetry(expected_content, expected_parent) {
   info(JSON.stringify(snapshots, null, 2));
 
   if (expected_content !== undefined) {
-    expected_content = expected_content.map(([category, method, object]) => {
-      return { category, method, object };
-    });
+    expected_content = expected_content.map(
+      ([category, method, object, value, extra]) => {
+        return { category, method, object, value, extra };
+      }
+    );
 
     let clear = expected_parent === undefined;
 
@@ -48,9 +50,11 @@ async function assertTelemetry(expected_content, expected_parent) {
   }
 
   if (expected_parent !== undefined) {
-    expected_parent = expected_parent.map(([category, method, object]) => {
-      return { category, method, object };
-    });
+    expected_parent = expected_parent.map(
+      ([category, method, object, value, extra]) => {
+        return { category, method, object, value, extra };
+      }
+    );
     TelemetryTestUtils.assertEvents(
       expected_parent,
       {
@@ -316,7 +320,13 @@ add_task(async function test_submit_creditCard_update() {
     ["creditcard", "detected", "cc_form"],
     ["creditcard", "popup_shown", "cc_form"],
     ["creditcard", "filled", "cc_form"],
-    ["creditcard", "filled_modified", "cc_form"],
+    [
+      "creditcard",
+      "filled_modified",
+      "cc_form",
+      undefined,
+      { field_name: "cc-exp-year" },
+    ],
     [
       "creditcard",
       "submitted",
