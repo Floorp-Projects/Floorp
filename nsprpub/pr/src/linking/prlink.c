@@ -807,7 +807,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
           const size_t systemPrefixLen1 = strlen(systemPrefix1);
           const char systemPrefix2[] = "/usr/lib/";
           const size_t systemPrefixLen2 = strlen(systemPrefix2);
-          const name_len = strlen(name);
+          const size_t name_len = strlen(name);
           if (((name_len > systemPrefixLen1) &&
                (strncmp(name, systemPrefix1, systemPrefixLen1) == 0)) ||
              ((name_len > systemPrefixLen2) &&

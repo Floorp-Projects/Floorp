@@ -15,7 +15,7 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=27
+MOD_MINOR_VERSION=28
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -821,6 +821,7 @@ if test -n "$CROSS_COMPILE"; then
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT CPU_ARCH=x86 ;;
+        cygwin*)      OS_ARCH=WINNT ;;
         darwin*)      OS_ARCH=Darwin ;;
         riscos*)      OS_ARCH=RISCOS ;;
     esac
