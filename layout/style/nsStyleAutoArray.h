@@ -20,11 +20,23 @@ class nsStyleAutoArray {
   // This constructor places a single element in mFirstElement.
   enum WithSingleInitialElement { WITH_SINGLE_INITIAL_ELEMENT };
   explicit nsStyleAutoArray(WithSingleInitialElement) {}
-  nsStyleAutoArray(const nsStyleAutoArray& aOther) { *this = aOther; }
-  nsStyleAutoArray& operator=(const nsStyleAutoArray& aOther) {
+
+  nsStyleAutoArray(const nsStyleAutoArray&) = delete;
+  nsStyleAutoArray& operator=(const nsStyleAutoArray&) = delete;
+
+  nsStyleAutoArray(nsStyleAutoArray&&) = default;
+  nsStyleAutoArray& operator=(nsStyleAutoArray&&) = default;
+
+  bool Assign(const nsStyleAutoArray& aOther, mozilla::fallible_t) {
     mFirstElement = aOther.mFirstElement;
-    mOtherElements = aOther.mOtherElements.Clone();
-    return *this;
+    return mOtherElements.Assign(aOther.mOtherElements, mozilla::fallible);
+  }
+
+  nsStyleAutoArray Clone() const {
+    nsStyleAutoArray res(WITH_SINGLE_INITIAL_ELEMENT);
+    res.mFirstElement = mFirstElement;
+    res.mOtherElements = mOtherElements.Clone();
+    return res;
   }
 
   bool operator==(const nsStyleAutoArray& aOther) const {
@@ -34,13 +46,6 @@ class nsStyleAutoArray {
   }
   bool operator!=(const nsStyleAutoArray& aOther) const {
     return !(*this == aOther);
-  }
-
-  nsStyleAutoArray& operator=(nsStyleAutoArray&& aOther) {
-    mFirstElement = aOther.mFirstElement;
-    mOtherElements.SwapElements(aOther.mOtherElements);
-
-    return *this;
   }
 
   size_t Length() const { return mOtherElements.Length() + 1; }
