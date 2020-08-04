@@ -115,13 +115,20 @@ class NativeLayer {
   virtual bool IsOpaque() = 0;
 
   // The location of the layer, in integer device pixels.
+  // This is applied to the layer, before the transform is applied.
   virtual void SetPosition(const gfx::IntPoint& aPosition) = 0;
   virtual gfx::IntPoint GetPosition() = 0;
 
+  // Sets a transformation to apply to the Layer. This gets applied to
+  // coordinates with the position applied, but before clipping is
+  // applied.
+  virtual void SetTransform(const gfx::Matrix4x4& aTransform) = 0;
+  virtual gfx::Matrix4x4 GetTransform() = 0;
+
   virtual gfx::IntRect GetRect() = 0;
 
-  // Set an optional clip rect on the layer. The clip rect is in the same
-  // coordinate space as the layer rect.
+  // Set an optional clip rect on the layer. The clip rect is in post-transform
+  // coordinate space
   virtual void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) = 0;
   virtual Maybe<gfx::IntRect> ClipRect() = 0;
 

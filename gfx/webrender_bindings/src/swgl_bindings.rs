@@ -12,7 +12,8 @@ use std::rc::Rc;
 use std::sync::{mpsc, Arc, Condvar, Mutex};
 use std::thread;
 use webrender::{
-    api::units::*, Compositor, CompositorCapabilities, NativeSurfaceId, NativeSurfaceInfo, NativeTileId, ThreadListener,
+    api::units::*, Compositor, CompositorCapabilities, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
+    ThreadListener, CompositorSurfaceTransform
 };
 
 #[no_mangle]
@@ -62,8 +63,8 @@ pub struct SwTile {
 }
 
 impl SwTile {
-    fn origin(&self, surface: &SwSurface, position: &DeviceIntPoint) -> DeviceIntPoint {
-        DeviceIntPoint::new(self.x * surface.tile_size.width, self.y * surface.tile_size.height) + position.to_vector()
+    fn origin(&self, surface: &SwSurface) -> DeviceIntPoint {
+        DeviceIntPoint::new(self.x * surface.tile_size.width, self.y * surface.tile_size.height)
     }
 
     /// Bounds used for determining overlap dependencies. This may either be the
@@ -73,10 +74,10 @@ impl SwTile {
     fn overlap_rect(
         &self,
         surface: &SwSurface,
-        position: &DeviceIntPoint,
+        transform: &CompositorSurfaceTransform,
         clip_rect: &DeviceIntRect,
     ) -> Option<DeviceIntRect> {
-        let origin = self.origin(surface, position);
+        let origin = self.origin(surface);
         // If the tile was invalidated this frame, then we don't have precise
         // bounds. Instead, just use the default surface tile size.
         let bounds = if self.invalid.get() {
@@ -84,7 +85,8 @@ impl SwTile {
         } else {
             self.valid_rect.translate(origin.to_vector())
         };
-        bounds.intersection(clip_rect)
+        let device_rect = transform.transform_rect(&bounds.to_f32().cast_unit()).unwrap().round_out().to_i32();
+        device_rect.cast_unit().intersection(clip_rect)
     }
 
     /// Determine if the tile's bounds may overlap the dependency rect if it were
@@ -92,11 +94,11 @@ impl SwTile {
     fn may_overlap(
         &self,
         surface: &SwSurface,
-        position: &DeviceIntPoint,
+        transform: &CompositorSurfaceTransform,
         clip_rect: &DeviceIntRect,
         dep_rect: &DeviceIntRect,
     ) -> bool {
-        self.overlap_rect(surface, position, clip_rect)
+        self.overlap_rect(surface, transform, clip_rect)
             .map_or(false, |r| r.intersects(dep_rect))
     }
 
@@ -106,13 +108,12 @@ impl SwTile {
     fn composite_rects(
         &self,
         surface: &SwSurface,
-        position: &DeviceIntPoint,
+        transform: &CompositorSurfaceTransform,
         clip_rect: &DeviceIntRect,
     ) -> Option<(DeviceIntRect, DeviceIntRect)> {
-        let valid = self.valid_rect.translate(self.origin(surface, position).to_vector());
-        valid
-            .intersection(clip_rect)
-            .map(|r| (r.translate(-valid.origin.to_vector()), r))
+        let valid = self.valid_rect.translate(self.origin(surface).to_vector());
+        let valid = transform.transform_rect(&valid.to_f32().cast_unit()).unwrap().round_out().to_i32();
+        valid.cast_unit().intersection(clip_rect).map(|r| (r.translate(-valid.origin.to_vector().cast_unit()), r))
     }
 }
 
@@ -392,7 +393,7 @@ pub struct SwCompositor {
     native_gl: Option<Rc<dyn gl::Gl>>,
     compositor: Option<WrCompositor>,
     surfaces: HashMap<NativeSurfaceId, SwSurface>,
-    frame_surfaces: Vec<(NativeSurfaceId, DeviceIntPoint, DeviceIntRect)>,
+    frame_surfaces: Vec<(NativeSurfaceId, CompositorSurfaceTransform, DeviceIntRect)>,
     cur_tile: NativeTileId,
     draw_tile: Option<DrawTileHelper>,
     /// The maximum tile size required for any of the allocated surfaces.
@@ -485,7 +486,7 @@ impl SwCompositor {
     /// in composition.
     fn get_overlaps(&self, overlap_rect: &DeviceIntRect) -> u32 {
         let mut overlaps = 0;
-        for &(ref id, ref position, ref clip_rect) in &self.frame_surfaces {
+        for &(ref id, ref transform, ref clip_rect) in &self.frame_surfaces {
             // If the surface's clip rect doesn't overlap the tile's rect,
             // then there is no need to check any tiles within the surface.
             if !overlap_rect.intersects(clip_rect) {
@@ -495,7 +496,8 @@ impl SwCompositor {
                 for tile in &surface.tiles {
                     // If there is a deferred tile that might overlap the destination rectangle,
                     // record the overlap.
-                    if tile.overlaps.get() > 0 && tile.may_overlap(surface, position, clip_rect, overlap_rect) {
+                    if tile.overlaps.get() > 0 &&
+                       tile.may_overlap(surface, transform, clip_rect, overlap_rect) {
                         overlaps += 1;
                     }
                 }
@@ -508,12 +510,12 @@ impl SwCompositor {
     fn queue_composite(
         &self,
         surface: &SwSurface,
-        position: &DeviceIntPoint,
+        transform: &CompositorSurfaceTransform,
         clip_rect: &DeviceIntRect,
         tile: &SwTile,
     ) {
         if let Some(ref composite_thread) = self.composite_thread {
-            if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, position, clip_rect) {
+            if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, transform, clip_rect) {
                 if let Some(texture) = self.gl.lock_texture(tile.color_id) {
                     let framebuffer = self.locked_framebuffer.clone().unwrap();
                     composite_thread.queue_composite(texture, framebuffer, src_rect, dst_rect, surface.is_opaque);
@@ -526,14 +528,14 @@ impl SwCompositor {
     /// within the surface being queued for composition this frame. If the tile is immediately
     /// ready to composite, then queue that now. Otherwise, set its draw order index for later
     /// composition.
-    fn init_composites(&mut self, id: &NativeSurfaceId, position: &DeviceIntPoint, clip_rect: &DeviceIntRect) {
+    fn init_composites(&mut self, id: &NativeSurfaceId, transform: &CompositorSurfaceTransform, clip_rect: &DeviceIntRect) {
         if self.composite_thread.is_none() {
             return;
         }
 
         if let Some(surface) = self.surfaces.get(&id) {
             for tile in &surface.tiles {
-                if let Some(overlap_rect) = tile.overlap_rect(surface, position, clip_rect) {
+                if let Some(overlap_rect) = tile.overlap_rect(surface, transform, clip_rect) {
                     let mut overlaps = self.get_overlaps(&overlap_rect);
                     // Record an extra overlap for an invalid tile to track the tile's dependency
                     // on its own future update.
@@ -542,7 +544,7 @@ impl SwCompositor {
                     }
                     if overlaps == 0 {
                         // Not dependent on any tiles, so go ahead and composite now.
-                        self.queue_composite(surface, position, clip_rect, tile);
+                        self.queue_composite(surface, transform, clip_rect, tile);
                     } else {
                         // Has a dependency on some invalid tiles, so need to defer composition.
                         tile.overlaps.set(overlaps);
@@ -565,7 +567,7 @@ impl SwCompositor {
             .iter()
             .skip_while(|&(ref id, _, _)| *id != tile_id.surface_id);
         let overlap_rect = match frame_surfaces.next() {
-            Some(&(_, ref position, ref clip_rect)) => {
+            Some(&(_, ref transform, ref clip_rect)) => {
                 // Remove invalid tile's update dependency.
                 if tile.invalid.get() {
                     tile.overlaps.set(tile.overlaps.get() - 1);
@@ -575,9 +577,9 @@ impl SwCompositor {
                     return;
                 }
                 // Otherwise, the tile's dependencies are all resolved, so composite it.
-                self.queue_composite(surface, position, clip_rect, tile);
+                self.queue_composite(surface, transform, clip_rect, tile);
                 // Finally, get the tile's overlap rect used for tracking dependencies
-                match tile.overlap_rect(surface, position, clip_rect) {
+                match tile.overlap_rect(surface, transform, clip_rect) {
                     Some(overlap_rect) => overlap_rect,
                     None => return,
                 }
@@ -591,7 +593,7 @@ impl SwCompositor {
         let mut flushed_rects = vec![overlap_rect];
 
         // Check surfaces following the update in the frame list and see if they would overlap it.
-        for &(ref id, ref position, ref clip_rect) in frame_surfaces {
+        for &(ref id, ref transform, ref clip_rect) in frame_surfaces {
             // If the clip rect doesn't overlap the conservative bounds, we can skip the whole surface.
             if !flushed_bounds.intersects(clip_rect) {
                 continue;
@@ -605,7 +607,7 @@ impl SwCompositor {
                         continue;
                     }
                     // Get this tile's overlap rect for tracking dependencies
-                    let overlap_rect = match tile.overlap_rect(surface, position, clip_rect) {
+                    let overlap_rect = match tile.overlap_rect(surface, transform, clip_rect) {
                         Some(overlap_rect) => overlap_rect,
                         None => continue,
                     };
@@ -624,7 +626,7 @@ impl SwCompositor {
                         // If the count hit zero, it is ready to composite.
                         tile.overlaps.set(overlaps);
                         if overlaps == 0 {
-                            self.queue_composite(surface, position, clip_rect, tile);
+                            self.queue_composite(surface, transform, clip_rect, tile);
                             // Record that the tile got flushed to update any downwind dependencies.
                             flushed_bounds = flushed_bounds.union(&overlap_rect);
                             flushed_rects.push(overlap_rect);
@@ -946,15 +948,15 @@ impl Compositor for SwCompositor {
         }
     }
 
-    fn add_surface(&mut self, id: NativeSurfaceId, position: DeviceIntPoint, clip_rect: DeviceIntRect) {
+    fn add_surface(&mut self, id: NativeSurfaceId, transform: CompositorSurfaceTransform, clip_rect: DeviceIntRect) {
         if let Some(compositor) = &mut self.compositor {
-            compositor.add_surface(id, position, clip_rect);
+            compositor.add_surface(id, transform, clip_rect);
         }
 
         // Compute overlap dependencies and issue any initial composite jobs for the SwComposite thread.
-        self.init_composites(&id, &position, &clip_rect);
+        self.init_composites(&id, &transform, &clip_rect);
 
-        self.frame_surfaces.push((id, position, clip_rect));
+        self.frame_surfaces.push((id, transform, clip_rect));
     }
 
     fn end_frame(&mut self) {
@@ -967,7 +969,7 @@ impl Compositor for SwCompositor {
             draw_tile.enable(&viewport);
             let mut blend = false;
             native_gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
-            for &(ref id, ref position, ref clip_rect) in &self.frame_surfaces {
+            for &(ref id, ref transform, ref clip_rect) in &self.frame_surfaces {
                 if let Some(surface) = self.surfaces.get(id) {
                     if surface.is_opaque {
                         if blend {
@@ -979,7 +981,7 @@ impl Compositor for SwCompositor {
                         blend = true;
                     }
                     for tile in &surface.tiles {
-                        if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, position, clip_rect) {
+                        if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, transform, clip_rect) {
                             draw_tile.draw(&viewport, &dst_rect, &src_rect, surface, tile);
                         }
                     }

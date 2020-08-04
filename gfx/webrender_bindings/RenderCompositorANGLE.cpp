@@ -864,10 +864,10 @@ void RenderCompositorANGLE::DestroyTile(wr::NativeSurfaceId aId, int aX,
   mDCLayerTree->DestroyTile(aId, aX, aY);
 }
 
-void RenderCompositorANGLE::AddSurface(wr::NativeSurfaceId aId,
-                                       wr::DeviceIntPoint aPosition,
-                                       wr::DeviceIntRect aClipRect) {
-  mDCLayerTree->AddSurface(aId, aPosition, aClipRect);
+void RenderCompositorANGLE::AddSurface(
+    wr::NativeSurfaceId aId, const wr::CompositorSurfaceTransform& aTransform,
+    wr::DeviceIntRect aClipRect) {
+  mDCLayerTree->AddSurface(aId, aTransform, aClipRect);
 }
 
 CompositorCapabilities RenderCompositorANGLE::GetCompositorCapabilities() {

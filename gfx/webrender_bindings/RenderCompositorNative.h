@@ -53,7 +53,8 @@ class RenderCompositorNative : public RenderCompositor {
   void DestroySurface(NativeSurfaceId aId) override;
   void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
-  void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
+  void AddSurface(wr::NativeSurfaceId aId,
+                  const wr::CompositorSurfaceTransform& aTransform,
                   wr::DeviceIntRect aClipRect) override;
   CompositorCapabilities GetCompositorCapabilities() override;
 
