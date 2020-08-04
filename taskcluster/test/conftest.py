@@ -12,7 +12,7 @@ from responses import RequestsMock
 
 from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import parameters_loader
-from taskgraph.util.backstop import PUSH_ENDPOINT
+from taskgraph.util.hg import PUSHLOG_PUSHES_TMPL
 from taskgraph.util.bugbug import BUGBUG_BASE_URL
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -56,8 +56,8 @@ def create_tgg(responses, datadir):
         )
         mock_requests[url] = "automationrelevance.json"
 
-        url = PUSH_ENDPOINT.format(
-            head_repository=tgg.parameters["head_repository"],
+        url = PUSHLOG_PUSHES_TMPL.format(
+            repository=tgg.parameters["head_repository"],
             push_id_start=int(tgg.parameters["pushlog_id"]) - 2,
             push_id_end=int(tgg.parameters["pushlog_id"]) - 1,
         )
