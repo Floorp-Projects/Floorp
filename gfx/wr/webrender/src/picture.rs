@@ -107,7 +107,7 @@ use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX,
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTileId};
 use crate::composite::{ExternalSurfaceDescriptor, ExternalSurfaceDependency};
 use crate::debug_colors;
-use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D, SideOffsets2D};
+use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Vector3D, Rect, Transform3D, SideOffsets2D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
@@ -2947,6 +2947,8 @@ impl TileCacheInstance {
         &mut self,
         prim_info: &mut PrimitiveDependencyInfo,
         prim_rect: PictureRect,
+        local_prim_rect: LayoutRect,
+        prim_spatial_node_index: SpatialNodeIndex,
         frame_context: &FrameVisibilityContext,
         image_dependencies: &[ImageDependency;3],
         api_keys: &[ImageKey; 3],
@@ -2960,6 +2962,8 @@ impl TileCacheInstance {
         self.setup_compositor_surfaces_impl(
             prim_info,
             prim_rect,
+            local_prim_rect,
+            prim_spatial_node_index,
             frame_context,
             ExternalSurfaceDependency::Yuv {
                 image_dependencies: *image_dependencies,
@@ -2978,6 +2982,8 @@ impl TileCacheInstance {
         &mut self,
         prim_info: &mut PrimitiveDependencyInfo,
         prim_rect: PictureRect,
+        local_prim_rect: LayoutRect,
+        prim_spatial_node_index: SpatialNodeIndex,
         frame_context: &FrameVisibilityContext,
         image_dependency: ImageDependency,
         api_key: ImageKey,
@@ -2991,6 +2997,8 @@ impl TileCacheInstance {
         self.setup_compositor_surfaces_impl(
             prim_info,
             prim_rect,
+            local_prim_rect,
+            prim_spatial_node_index,
             frame_context,
             ExternalSurfaceDependency::Rgb {
                 image_dependency,
@@ -3009,6 +3017,8 @@ impl TileCacheInstance {
         &mut self,
         prim_info: &mut PrimitiveDependencyInfo,
         prim_rect: PictureRect,
+        local_prim_rect: LayoutRect,
+        prim_spatial_node_index: SpatialNodeIndex,
         frame_context: &FrameVisibilityContext,
         dependency: ExternalSurfaceDependency,
         api_keys: &[ImageKey; 3],
@@ -3025,9 +3035,6 @@ impl TileCacheInstance {
             frame_context.spatial_tree,
         );
 
-        let world_rect = pic_to_world_mapper
-            .map(&prim_rect)
-            .expect("bug: unable to map the primitive to world space");
         let world_clip_rect = pic_to_world_mapper
             .map(&prim_info.prim_clip_box.to_rect())
             .expect("bug: unable to map clip to world space");
@@ -3040,7 +3047,33 @@ impl TileCacheInstance {
         // TODO(gw): Is there any case where if the primitive ends up on a fractional
         //           boundary we want to _skip_ promoting to a compositor surface and
         //           draw it as part of the content?
-        let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
+        let (device_rect, transform) = match composite_state.compositor_kind {
+            CompositorKind::Draw { .. } => {
+                let world_rect = pic_to_world_mapper
+                    .map(&prim_rect)
+                    .expect("bug: unable to map the primitive to world space");
+                let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
+
+                (device_rect, Transform3D::identity())
+            }
+            CompositorKind::Native { .. } => {
+                // If we have a Native Compositor, then we can support doing the transformation
+                // as part of compositing. Use the local prim rect for the external surface, and
+                // compute the full local to device transform to provide to the compositor.
+                let surface_to_world_mapper : SpaceMapper<PicturePixel, WorldPixel> = SpaceMapper::new_with_target(
+                    ROOT_SPATIAL_NODE_INDEX,
+                    prim_spatial_node_index,
+                    frame_context.global_screen_world_rect,
+                    frame_context.spatial_tree,
+                );
+                let prim_origin = Vector3D::new(local_prim_rect.origin.x, local_prim_rect.origin.y, 0.0);
+                let world_to_device_scale = Transform3D::from_scale(frame_context.global_device_pixel_scale);
+                let transform = surface_to_world_mapper.get_transform().pre_translate(prim_origin).post_transform(&world_to_device_scale);
+
+                (local_prim_rect.cast_unit(), transform)
+            }
+        };
+
         let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
         if device_rect.size.width >= MAX_COMPOSITOR_SURFACES_SIZE ||
@@ -3121,12 +3154,12 @@ impl TileCacheInstance {
         // Each compositor surface allocates a unique z-id
         self.external_surfaces.push(ExternalSurfaceDescriptor {
             local_rect: prim_info.prim_clip_box.to_rect(),
-            world_rect,
             local_clip_rect: prim_info.prim_clip_box.to_rect(),
             dependency,
             image_rendering,
             device_rect,
             clip_rect,
+            transform: transform.cast_unit(),
             z_id: composite_state.z_generator.next(),
             native_surface_id,
             update_params,
@@ -3338,6 +3371,8 @@ impl TileCacheInstance {
                     promote_to_surface = self.setup_compositor_surfaces_rgb(
                         &mut prim_info,
                         prim_rect,
+                        local_prim_rect,
+                        prim_spatial_node_index,
                         frame_context,
                         ImageDependency {
                             key: image_data.key,
@@ -3402,6 +3437,8 @@ impl TileCacheInstance {
                     promote_to_surface = self.setup_compositor_surfaces_yuv(
                         &mut prim_info,
                         prim_rect,
+                        local_prim_rect,
+                        prim_spatial_node_index,
                         frame_context,
                         &image_dependencies,
                         &prim_data.kind.yuv_key,

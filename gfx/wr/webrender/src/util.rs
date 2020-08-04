@@ -333,6 +333,8 @@ pub trait MatrixHelpers<Src, Dst> {
     /// Turn Z transformation into identity. This is useful when crossing "flat"
     /// transform styled stacking contexts upon traversing the coordinate systems.
     fn flatten_z_output(&mut self);
+
+    fn cast_unit<NewSrc, NewDst>(&self) -> Transform3D<f32, NewSrc, NewDst>;
 }
 
 impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
@@ -471,6 +473,13 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
         self.m23 = 0.0;
         self.m33 = 1.0;
         self.m43 = 0.0;
+    }
+
+    fn cast_unit<NewSrc, NewDst>(&self) -> Transform3D<f32, NewSrc, NewDst> {
+        Transform3D::row_major(self.m11, self.m12, self.m13, self.m14,
+                               self.m21, self.m22, self.m23, self.m24,
+                               self.m31, self.m32, self.m33, self.m34,
+                               self.m41, self.m42, self.m43, self.m44)
     }
 }
 

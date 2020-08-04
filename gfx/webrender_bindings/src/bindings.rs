@@ -38,6 +38,7 @@ use webrender::{
     CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap, NativeSurfaceId, NativeSurfaceInfo,
     NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, WrShaders, ONE_TIME_USAGE_HINT,
+    CompositorSurfaceTransform,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1211,7 +1212,7 @@ extern "C" {
     fn wr_compositor_add_surface(
         compositor: *mut c_void,
         id: NativeSurfaceId,
-        position: DeviceIntPoint,
+        transform: &CompositorSurfaceTransform,
         clip_rect: DeviceIntRect,
     );
     fn wr_compositor_end_frame(compositor: *mut c_void);
@@ -1294,9 +1295,9 @@ impl Compositor for WrCompositor {
         }
     }
 
-    fn add_surface(&mut self, id: NativeSurfaceId, position: DeviceIntPoint, clip_rect: DeviceIntRect) {
+    fn add_surface(&mut self, id: NativeSurfaceId, transform: CompositorSurfaceTransform, clip_rect: DeviceIntRect) {
         unsafe {
-            wr_compositor_add_surface(self.0, id, position, clip_rect);
+            wr_compositor_add_surface(self.0, id, &transform, clip_rect);
         }
     }
 

@@ -185,6 +185,8 @@ class NativeLayerCA : public NativeLayer {
   gfx::IntSize GetSize() override;
   void SetPosition(const gfx::IntPoint& aPosition) override;
   gfx::IntPoint GetPosition() override;
+  void SetTransform(const gfx::Matrix4x4& aTransform) override;
+  gfx::Matrix4x4 GetTransform() override;
   gfx::IntRect GetRect() override;
   RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       const gfx::IntRect& aDisplayRect, const gfx::IntRegion& aUpdateRegion,
@@ -269,6 +271,7 @@ class NativeLayerCA : public NativeLayer {
     // before the call.
     void ApplyChanges(const gfx::IntSize& aSize, bool aIsOpaque,
                       const gfx::IntPoint& aPosition,
+                      const gfx::Matrix4x4& aTransform,
                       const gfx::IntRect& aDisplayRect,
                       const Maybe<gfx::IntRect>& aClipRect, float aBackingScale,
                       bool aSurfaceIsFlipped,
@@ -284,6 +287,7 @@ class NativeLayerCA : public NativeLayer {
     CALayer* mOpaquenessTintLayer = nullptr;  // strong
 
     bool mMutatedPosition = true;
+    bool mMutatedTransform = true;
     bool mMutatedDisplayRect = true;
     bool mMutatedClipRect = true;
     bool mMutatedBackingScale = true;
@@ -352,6 +356,7 @@ class NativeLayerCA : public NativeLayer {
   Representation mOffscreenRepresentation;
 
   gfx::IntPoint mPosition;
+  gfx::Matrix4x4 mTransform;
   gfx::IntRect mDisplayRect;
   const gfx::IntSize mSize;
   Maybe<gfx::IntRect> mClipRect;

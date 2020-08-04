@@ -32,6 +32,7 @@ using gfx::IntPoint;
 using gfx::IntSize;
 using gfx::IntRect;
 using gfx::IntRegion;
+using gfx::Matrix4x4;
 using gfx::SurfaceFormat;
 using gl::GLContext;
 using gl::GLContextCGL;
@@ -427,6 +428,21 @@ IntPoint NativeLayerCA::GetPosition() {
   return mPosition;
 }
 
+void NativeLayerCA::SetTransform(const Matrix4x4& aTransform) {
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(aTransform.IsRectilinear());
+
+  if (aTransform != mTransform) {
+    mTransform = aTransform;
+    ForAllRepresentations([&](Representation& r) { r.mMutatedTransform = true; });
+  }
+}
+
+Matrix4x4 NativeLayerCA::GetTransform() {
+  MutexAutoLock lock(mMutex);
+  return mTransform;
+}
+
 IntRect NativeLayerCA::GetRect() {
   MutexAutoLock lock(mMutex);
   return IntRect(mPosition, mSize);
@@ -671,7 +687,7 @@ void NativeLayerCA::ForAllRepresentations(F aFn) {
 void NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation) {
   MutexAutoLock lock(mMutex);
   GetRepresentation(aRepresentation)
-      .ApplyChanges(mSize, mIsOpaque, mPosition, mDisplayRect, mClipRect, mBackingScale,
+      .ApplyChanges(mSize, mIsOpaque, mPosition, mTransform, mDisplayRect, mClipRect, mBackingScale,
                     mSurfaceIsFlipped, mFrontSurface ? mFrontSurface->mSurface : nullptr);
 }
 
@@ -680,12 +696,10 @@ CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
   return GetRepresentation(aRepresentation).UnderlyingCALayer();
 }
 
-void NativeLayerCA::Representation::ApplyChanges(const IntSize& aSize, bool aIsOpaque,
-                                                 const IntPoint& aPosition,
-                                                 const IntRect& aDisplayRect,
-                                                 const Maybe<IntRect>& aClipRect,
-                                                 float aBackingScale, bool aSurfaceIsFlipped,
-                                                 CFTypeRefPtr<IOSurfaceRef> aFrontSurface) {
+void NativeLayerCA::Representation::ApplyChanges(
+    const IntSize& aSize, bool aIsOpaque, const IntPoint& aPosition, const Matrix4x4& aTransform,
+    const IntRect& aDisplayRect, const Maybe<IntRect>& aClipRect, float aBackingScale,
+    bool aSurfaceIsFlipped, CFTypeRefPtr<IOSurfaceRef> aFrontSurface) {
   if (!mWrappingCALayer) {
     mWrappingCALayer = [[CALayer layer] retain];
     mWrappingCALayer.position = NSZeroPoint;
@@ -747,17 +761,26 @@ void NativeLayerCA::Representation::ApplyChanges(const IntSize& aSize, bool aIsO
     mContentCALayer.contentsScale = aBackingScale;
   }
 
-  if (mMutatedBackingScale || mMutatedPosition || mMutatedDisplayRect || mMutatedClipRect) {
-    auto clipFromDisplayRect = aDisplayRect.IsEqualInterior(IntRect({}, aSize))
-                                   ? Nothing()
-                                   : Some(aDisplayRect + aPosition);
+  if (mMutatedBackingScale || mMutatedPosition || mMutatedDisplayRect || mMutatedClipRect ||
+      mMutatedTransform || mMutatedSurfaceIsFlipped) {
+    Maybe<IntRect> clipFromDisplayRect;
+    if (!aDisplayRect.IsEqualInterior(IntRect({}, aSize))) {
+      // When the display rect is a subset of the layer, then we want to guarantee that no
+      // pixels outside that rect are sampled, since they might be uninitialized.
+      // Transforming the display rect into a post-transform clip only maintains this if
+      // it's an integer translation, which is all we support for this case currently.
+      MOZ_ASSERT(aTransform.Is2DIntegerTranslation());
+      clipFromDisplayRect =
+          Some(RoundedToInt(aTransform.TransformBounds(IntRectToRect(aDisplayRect + aPosition))));
+    }
+
     auto effectiveClip = IntersectMaybeRects(aClipRect, clipFromDisplayRect);
-    auto globalClipOrigin = effectiveClip ? effectiveClip->TopLeft() : aPosition;
-    auto globalLayerOrigin = aPosition;
-    auto clipToLayerOffset = globalLayerOrigin - globalClipOrigin;
+    auto globalClipOrigin = effectiveClip ? effectiveClip->TopLeft() : IntPoint();
+    auto clipToLayerOffset = -globalClipOrigin;
 
     mWrappingCALayer.position =
         CGPointMake(globalClipOrigin.x / aBackingScale, globalClipOrigin.y / aBackingScale);
+
     if (effectiveClip) {
       mWrappingCALayer.masksToBounds = YES;
       mWrappingCALayer.bounds = CGRectMake(0, 0, effectiveClip->Width() / aBackingScale,
@@ -767,18 +790,36 @@ void NativeLayerCA::Representation::ApplyChanges(const IntSize& aSize, bool aIsO
     }
     mContentCALayer.position =
         CGPointMake(clipToLayerOffset.x / aBackingScale, clipToLayerOffset.y / aBackingScale);
+    mContentCALayer.position = CGPointMake(0, 0);
     if (mOpaquenessTintLayer) {
       mOpaquenessTintLayer.position = mContentCALayer.position;
     }
-  }
 
-  if (mMutatedBackingScale || mMutatedSurfaceIsFlipped) {
+    Matrix4x4 transform = aTransform;
+    transform.PreTranslate(aPosition.x, aPosition.y, 0);
+    transform.PostTranslate(clipToLayerOffset.x, clipToLayerOffset.y, 0);
+
     if (aSurfaceIsFlipped) {
-      CGFloat height = aSize.height / aBackingScale;
-      mContentCALayer.affineTransform = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, height);
-    } else {
-      mContentCALayer.affineTransform = CGAffineTransformIdentity;
+      transform.PreTranslate(0, aSize.height, 0).PreScale(1, -1, 1);
     }
+
+    CATransform3D transformCA{transform._11,
+                              transform._12,
+                              transform._13,
+                              transform._14,
+                              transform._21,
+                              transform._22,
+                              transform._23,
+                              transform._24,
+                              transform._31,
+                              transform._32,
+                              transform._33,
+                              transform._34,
+                              transform._41 / aBackingScale,
+                              transform._42 / aBackingScale,
+                              transform._43,
+                              transform._44};
+    mContentCALayer.transform = transformCA;
   }
 
   if (mMutatedFrontSurface) {
@@ -786,6 +827,7 @@ void NativeLayerCA::Representation::ApplyChanges(const IntSize& aSize, bool aIsO
   }
 
   mMutatedPosition = false;
+  mMutatedTransform = false;
   mMutatedBackingScale = false;
   mMutatedSurfaceIsFlipped = false;
   mMutatedDisplayRect = false;

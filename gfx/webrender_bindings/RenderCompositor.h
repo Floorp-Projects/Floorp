@@ -108,7 +108,8 @@ class RenderCompositor {
   virtual void DestroySurface(NativeSurfaceId aId) {}
   virtual void CreateTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) {}
   virtual void DestroyTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) {}
-  virtual void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
+  virtual void AddSurface(wr::NativeSurfaceId aId,
+                          const wr::CompositorSurfaceTransform& aTransform,
                           wr::DeviceIntRect aClipRect) {}
   virtual void EnableNativeCompositor(bool aEnable) {}
   virtual void DeInit() {}

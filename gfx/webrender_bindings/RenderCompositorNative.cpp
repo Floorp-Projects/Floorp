@@ -245,26 +245,32 @@ void RenderCompositorNative::DestroyTile(wr::NativeSurfaceId aId, int aX,
   layer->DiscardBackbuffers();
 }
 
-void RenderCompositorNative::AddSurface(wr::NativeSurfaceId aId,
-                                        wr::DeviceIntPoint aPosition,
-                                        wr::DeviceIntRect aClipRect) {
+void RenderCompositorNative::AddSurface(
+    wr::NativeSurfaceId aId, const wr::CompositorSurfaceTransform& aTransform,
+    wr::DeviceIntRect aClipRect) {
   MOZ_RELEASE_ASSERT(!mCurrentlyBoundNativeLayer);
 
   auto surfaceCursor = mSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
   const Surface& surface = surfaceCursor->second;
 
+  Matrix4x4 transform(
+      aTransform.m11, aTransform.m12, aTransform.m13, aTransform.m14,
+      aTransform.m21, aTransform.m22, aTransform.m23, aTransform.m24,
+      aTransform.m31, aTransform.m32, aTransform.m33, aTransform.m34,
+      aTransform.m41, aTransform.m42, aTransform.m43, aTransform.m44);
+
   for (auto it = surface.mNativeLayers.begin();
        it != surface.mNativeLayers.end(); ++it) {
     RefPtr<layers::NativeLayer> layer = it->second;
     gfx::IntSize layerSize = layer->GetSize();
-    gfx::IntPoint layerPosition(
-        aPosition.x + surface.mTileSize.width * it->first.mX,
-        aPosition.y + surface.mTileSize.height * it->first.mY);
+    gfx::IntPoint layerPosition(surface.mTileSize.width * it->first.mX,
+                                surface.mTileSize.height * it->first.mY);
     layer->SetPosition(layerPosition);
     gfx::IntRect clipRect(aClipRect.origin.x, aClipRect.origin.y,
                           aClipRect.size.width, aClipRect.size.height);
     layer->SetClipRect(Some(clipRect));
+    layer->SetTransform(transform);
     mAddedLayers.AppendElement(layer);
 
     mAddedPixelCount += layerSize.width * layerSize.height;
