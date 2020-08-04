@@ -5,10 +5,10 @@
 package mozilla.components.feature.top.sites.adapter
 
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.feature.top.sites.db.TopSiteEntity
+import mozilla.components.feature.top.sites.db.PinnedSiteEntity
 
 internal class TopSiteAdapter(
-    internal val entity: TopSiteEntity
+    internal val entity: PinnedSiteEntity
 ) : TopSite {
     override val id: Long
         get() = entity.id!!

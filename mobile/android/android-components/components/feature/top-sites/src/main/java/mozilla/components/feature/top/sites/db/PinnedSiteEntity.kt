@@ -12,7 +12,7 @@ import androidx.room.PrimaryKey
  * Internal entity representing a top site.
  */
 @Entity(tableName = "top_sites")
-internal data class TopSiteEntity(
+internal data class PinnedSiteEntity(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     var id: Long? = null,

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import mozilla.components.feature.top.sites.adapter.TopSiteAdapter
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
-import mozilla.components.feature.top.sites.db.TopSiteEntity
+import mozilla.components.feature.top.sites.db.PinnedSiteEntity
 
 /**
  * A storage implementation for organizing top sites.
@@ -29,7 +29,7 @@ class PinnedSiteStorage(
      * used to identify top sites that are added by the application.
      */
     fun addTopSite(title: String, url: String, isDefault: Boolean = false) {
-        TopSiteEntity(
+        PinnedSiteEntity(
             title = title,
             url = url,
             isDefault = isDefault,

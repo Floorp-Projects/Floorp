@@ -13,21 +13,21 @@ import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Internal DAO for accessing [TopSiteEntity] instances.
+ * Internal DAO for accessing [PinnedSiteEntity] instances.
  */
 @Dao
 internal interface TopSiteDao {
     @Insert
-    fun insertTopSite(site: TopSiteEntity): Long
+    fun insertTopSite(site: PinnedSiteEntity): Long
 
     @Delete
-    fun deleteTopSite(site: TopSiteEntity)
+    fun deleteTopSite(site: PinnedSiteEntity)
 
     @Transaction
     @Query("SELECT * FROM top_sites")
-    fun getTopSites(): Flow<List<TopSiteEntity>>
+    fun getTopSites(): Flow<List<PinnedSiteEntity>>
 
     @Transaction
     @Query("SELECT * FROM top_sites")
-    fun getTopSitesPaged(): DataSource.Factory<Int, TopSiteEntity>
+    fun getTopSitesPaged(): DataSource.Factory<Int, PinnedSiteEntity>
 }

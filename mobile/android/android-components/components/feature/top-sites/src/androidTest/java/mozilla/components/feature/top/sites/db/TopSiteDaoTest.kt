@@ -43,7 +43,7 @@ class TopSiteDaoTest {
 
     @Test
     fun testAddingTopSite() {
-        val topSite = TopSiteEntity(
+        val topSite = PinnedSiteEntity(
             title = "Mozilla",
             url = "https://www.mozilla.org",
             isDefault = false,
@@ -65,7 +65,7 @@ class TopSiteDaoTest {
 
     @Test
     fun testRemovingTopSite() {
-        val topSite1 = TopSiteEntity(
+        val topSite1 = PinnedSiteEntity(
             title = "Mozilla",
             url = "https://www.mozilla.org",
             isDefault = false,
@@ -74,7 +74,7 @@ class TopSiteDaoTest {
             it.id = topSiteDao.insertTopSite(it)
         }
 
-        val topSite2 = TopSiteEntity(
+        val topSite2 = PinnedSiteEntity(
             title = "Firefox",
             url = "https://www.firefox.com",
             isDefault = false,
