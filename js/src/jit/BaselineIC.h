@@ -1558,6 +1558,15 @@ class ICHasOwn_Fallback : public ICFallbackStub {
       : ICFallbackStub(ICStub::HasOwn_Fallback, stubCode) {}
 };
 
+// CheckPrivateField
+//      JSOp::CheckPrivateField
+class ICCheckPrivateField_Fallback : public ICFallbackStub {
+  friend class ICStubSpace;
+
+  explicit ICCheckPrivateField_Fallback(TrampolinePtr stubCode)
+      : ICFallbackStub(ICStub::CheckPrivateField_Fallback, stubCode) {}
+};
+
 // GetName
 //      JSOp::GetName
 //      JSOp::GetGName
@@ -1863,6 +1872,12 @@ extern bool DoInFallback(JSContext* cx, BaselineFrame* frame,
 extern bool DoHasOwnFallback(JSContext* cx, BaselineFrame* frame,
                              ICHasOwn_Fallback* stub, HandleValue keyValue,
                              HandleValue objValue, MutableHandleValue res);
+
+extern bool DoCheckPrivateFieldFallback(JSContext* cx, BaselineFrame* frame,
+                                        ICCheckPrivateField_Fallback* stub,
+                                        HandleValue objValue,
+                                        HandleValue keyValue,
+                                        MutableHandleValue res);
 
 extern bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
                               ICGetName_Fallback* stub, HandleObject envChain,

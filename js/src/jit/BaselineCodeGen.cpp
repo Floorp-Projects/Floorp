@@ -3288,23 +3288,11 @@ bool BaselineCodeGen<Handler>::emit_CheckPrivateField() {
   masm.loadValue(frame.addressOfStackValue(-2), R0);
   masm.loadValue(frame.addressOfStackValue(-1), R1);
 
-  prepareVMCall();
-
-  // Key
-  pushArg(R1);
-  // val
-  pushArg(R0);
-  // pc
-  pushBytecodePCArg();
-
-  using Fn = bool (*)(JSContext*, jsbytecode*, HandleValue, HandleValue, bool*);
-  if (!callVM<Fn, CheckPrivateFieldOperation>()) {
+  if (!emitNextIC()) {
     return false;
   }
 
-  masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
   frame.push(R0);
-
   return true;
 }
 

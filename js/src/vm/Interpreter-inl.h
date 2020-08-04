@@ -602,28 +602,6 @@ static MOZ_ALWAYS_INLINE bool InitElemOperation(JSContext* cx, jsbytecode* pc,
   return DefineDataProperty(cx, obj, id, val, flags);
 }
 
-static inline void GetCheckPrivateFieldOperands(jsbytecode* pc,
-                                                ThrowCondition* throwCondition,
-                                                ThrowMsgKind* throwKind) {
-  static_assert(sizeof(ThrowCondition) == sizeof(uint8_t));
-  static_assert(sizeof(ThrowMsgKind) == sizeof(uint8_t));
-
-  MOZ_ASSERT(JSOp(*pc) == JSOp::CheckPrivateField);
-  uint8_t throwConditionByte = GET_UINT8(pc);
-  uint8_t throwKindByte = GET_UINT8(pc + 1);
-
-  *throwCondition = static_cast<ThrowCondition>(throwConditionByte);
-  *throwKind = static_cast<ThrowMsgKind>(throwKindByte);
-
-  MOZ_ASSERT(*throwCondition == ThrowCondition::ThrowHas ||
-             *throwCondition == ThrowCondition::ThrowHasNot ||
-             *throwCondition == ThrowCondition::NoThrow);
-
-  MOZ_ASSERT(*throwKind == ThrowMsgKind::PrivateDoubleInit ||
-             *throwKind == ThrowMsgKind::MissingPrivateOnGet ||
-             *throwKind == ThrowMsgKind::MissingPrivateOnSet);
-}
-
 static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
                                                          jsbytecode* pc,
                                                          HandleValue val,
@@ -643,14 +621,7 @@ static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
     return false;
   }
 
-  if (condition == ThrowCondition::NoThrow) {
-    // Result was set directly, nothing more do do, return.
-    return true;
-  }
-
-  if ((condition == ThrowCondition::ThrowHasNot && *result) ||
-      (condition == ThrowCondition::ThrowHas && !*result)) {
-    // Didn't meet the throw condition
+  if (!CheckPrivateFieldWillThrow(condition, *result)) {
     return true;
   }
 

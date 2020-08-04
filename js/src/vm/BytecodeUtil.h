@@ -26,6 +26,7 @@
 #include "vm/Opcodes.h"
 #include "vm/Printer.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex
+#include "vm/ThrowMsgKind.h"   // ThrowMsgKind, ThrowCondition
 
 /*
  * JS operation bytecodes.
@@ -613,6 +614,41 @@ inline bool BytecodeOpHasIC(JSOp op) { return CodeSpec(op).format & JOF_IC; }
 
 inline bool BytecodeOpHasTypeSet(JSOp op) {
   return CodeSpec(op).format & JOF_TYPESET;
+}
+
+inline void GetCheckPrivateFieldOperands(jsbytecode* pc,
+                                         ThrowCondition* throwCondition,
+                                         ThrowMsgKind* throwKind) {
+  static_assert(sizeof(ThrowCondition) == sizeof(uint8_t));
+  static_assert(sizeof(ThrowMsgKind) == sizeof(uint8_t));
+
+  MOZ_ASSERT(JSOp(*pc) == JSOp::CheckPrivateField);
+  uint8_t throwConditionByte = GET_UINT8(pc);
+  uint8_t throwKindByte = GET_UINT8(pc + 1);
+
+  *throwCondition = static_cast<ThrowCondition>(throwConditionByte);
+  *throwKind = static_cast<ThrowMsgKind>(throwKindByte);
+
+  MOZ_ASSERT(*throwCondition == ThrowCondition::ThrowHas ||
+             *throwCondition == ThrowCondition::ThrowHasNot ||
+             *throwCondition == ThrowCondition::NoThrow);
+
+  MOZ_ASSERT(*throwKind == ThrowMsgKind::PrivateDoubleInit ||
+             *throwKind == ThrowMsgKind::MissingPrivateOnGet ||
+             *throwKind == ThrowMsgKind::MissingPrivateOnSet);
+}
+
+// Return true iff the combination of the ThrowCondition and hasOwn result
+// will throw an exception.
+static inline bool CheckPrivateFieldWillThrow(ThrowCondition condition,
+                                              bool hasOwn) {
+  if ((condition == ThrowCondition::ThrowHasNot && !hasOwn) ||
+      (condition == ThrowCondition::ThrowHas && hasOwn)) {
+    // Met a throw condition.
+    return true;
+  }
+
+  return false;
 }
 
 /*

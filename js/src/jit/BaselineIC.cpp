@@ -397,6 +397,14 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         }
         break;
       }
+      case JSOp::CheckPrivateField: {
+        ICStub* stub = alloc.newStub<ICCheckPrivateField_Fallback>(
+            Kind::CheckPrivateField);
+        if (!addIC(loc, stub)) {
+          return false;
+        }
+        break;
+      }
       case JSOp::GetName:
       case JSOp::GetGName: {
         ICStub* stub = alloc.newStub<ICGetName_Fallback>(Kind::GetName);
@@ -2349,6 +2357,53 @@ bool FallbackICCodeCompiler::emit_HasOwn() {
   using Fn = bool (*)(JSContext*, BaselineFrame*, ICHasOwn_Fallback*,
                       HandleValue, HandleValue, MutableHandleValue);
   return tailCallVM<Fn, DoHasOwnFallback>(masm);
+}
+
+//
+// CheckPrivate_Fallback
+//
+
+bool DoCheckPrivateFieldFallback(JSContext* cx, BaselineFrame* frame,
+                                 ICCheckPrivateField_Fallback* stub,
+                                 HandleValue objValue, HandleValue keyValue,
+                                 MutableHandleValue res) {
+  stub->incrementEnteredCount();
+  RootedScript script(cx, frame->script());
+  jsbytecode* pc = stub->icEntry()->pc(script);
+
+  FallbackICSpew(cx, stub, "CheckPrivateField");
+
+  MOZ_ASSERT(keyValue.isSymbol() && keyValue.toSymbol()->isPrivateName());
+
+  TryAttachStub<CheckPrivateFieldIRGenerator>(
+      "CheckPrivate", cx, frame, stub, BaselineCacheIRStubKind::Regular,
+      CacheKind::CheckPrivateField, keyValue, objValue);
+
+  bool result;
+  if (!CheckPrivateFieldOperation(cx, pc, objValue, keyValue, &result)) {
+    return false;
+  }
+
+  res.setBoolean(result);
+  return true;
+}
+
+bool FallbackICCodeCompiler::emit_CheckPrivateField() {
+  EmitRestoreTailCallReg(masm);
+
+  // Sync for the decompiler.
+  masm.pushValue(R0);
+  masm.pushValue(R1);
+
+  // Push arguments.
+  masm.pushValue(R1);
+  masm.pushValue(R0);
+  masm.push(ICStubReg);
+  pushStubPayload(masm, R0.scratchReg());
+
+  using Fn = bool (*)(JSContext*, BaselineFrame*, ICCheckPrivateField_Fallback*,
+                      HandleValue, HandleValue, MutableHandleValue);
+  return tailCallVM<Fn, DoCheckPrivateFieldFallback>(masm);
 }
 
 //
