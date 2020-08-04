@@ -2603,10 +2603,41 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
       return EditActionCanceled();
     }
     EditActionResult result =
-        joiner.Run(*this, aDirectionAndAmount, aStripWrappers, startPoint);
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "HTMLEditor::AutoBlockElementsJoiner::Run() failed "
-                         "(other block boundary)");
+        joiner.Run(*this, aDirectionAndAmount, startPoint);
+    if (result.Failed()) {
+      NS_WARNING(
+          "HTMLEditor::AutoBlockElementsJoiner::Run() failed (other block "
+          "boundary)");
+      return result;
+    }
+    if (result.Handled() || result.Canceled()) {
+      return result;
+    }
+    if (joiner.NeedsToFallbackToDeleteSelectionWithTransaction()) {
+      // Returning `EditActionIgnored()` makes `HandleDeleteSelection()`
+      // fallback to `DeleteSelectionWithTransaction()`.
+      return EditActionIgnored();
+    }
+    // If it's ignored, it didn't modify the DOM tree.  In this case, user must
+    // want to delete nearest leaf node in the other block element.
+    // TODO: We need to consider this before calling Run() for computing the
+    //       deleting range.
+    EditorRawDOMPoint newCaretPoint =
+        aDirectionAndAmount == nsIEditor::ePrevious
+            ? EditorRawDOMPoint::AtEndOf(
+                  *joiner.GetLeafContentInOtherBlockElement())
+            : EditorRawDOMPoint(joiner.GetLeafContentInOtherBlockElement(), 0);
+    nsresult rv = CollapseSelectionTo(newCaretPoint);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+    result = HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
+    NS_WARNING_ASSERTION(
+        result.Succeeded(),
+        "Recursive HTMLEditor::HandleDeleteSelectionInternal() failed");
     return result;
   }
 
@@ -2621,7 +2652,7 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
       return EditActionCanceled();
     }
     EditActionResult result =
-        joiner.Run(*this, aDirectionAndAmount, aStripWrappers, startPoint);
+        joiner.Run(*this, aDirectionAndAmount, startPoint);
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "HTMLEditor::AutoBlockElementsJoiner::Run() failed "
                          "(current block boundary)");
@@ -3083,7 +3114,6 @@ bool HTMLEditor::AutoBlockElementsJoiner::
 EditActionResult HTMLEditor::AutoBlockElementsJoiner::
     HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
-        nsIEditor::EStripWrappers aStripWrappers,
         const EditorDOMPoint& aCaretPoint) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(aCaretPoint.IsSetAndValid());
@@ -3137,6 +3167,7 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
     // we should call `DeleteSelectionWithTransaction()` here, but we cannot
     // detect it for now.  Therefore, we should just tell the caller of that
     // we does nothing.
+    mNeedsToFallbackToDeleteSelectionWithTransaction = true;
     return EditActionIgnored();
   }
 
@@ -3158,24 +3189,7 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
   // node of the block.
   if (!result.Handled() && !result.Canceled() &&
       mLeafContentInOtherBlock != aCaretPoint.GetContainer()) {
-    int32_t offset =
-        aDirectionAndAmount == nsIEditor::ePrevious
-            ? static_cast<int32_t>(mLeafContentInOtherBlock->Length())
-            : 0;
-    nsresult rv = aHTMLEditor.CollapseSelectionTo(
-        EditorRawDOMPoint(mLeafContentInOtherBlock, offset));
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
-    EditActionResult result = aHTMLEditor.HandleDeleteSelectionInternal(
-        aDirectionAndAmount, aStripWrappers);
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "Recursive HTMLEditor::HandleDeleteSelectionInternal() failed");
-    return result;
+    return EditActionIgnored();
   }
 
   // Otherwise, we must have deleted the selection as user expected.
