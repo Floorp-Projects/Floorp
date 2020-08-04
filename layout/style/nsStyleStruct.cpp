@@ -1704,25 +1704,8 @@ nsStyleImageLayers::nsStyleImageLayers(const nsStyleImageLayers& aSource)
       mMaskModeCount(aSource.mMaskModeCount),
       mBlendModeCount(aSource.mBlendModeCount),
       mCompositeCount(aSource.mCompositeCount),
-      mLayers(aSource.mLayers)  // deep copy
-{
+      mLayers(aSource.mLayers.Clone()) {
   MOZ_COUNT_CTOR(nsStyleImageLayers);
-  // If the deep copy of mLayers failed, truncate the counts.
-  uint32_t count = mLayers.Length();
-  if (count != aSource.mLayers.Length()) {
-    NS_WARNING("truncating counts due to out-of-memory");
-    mAttachmentCount = std::max(mAttachmentCount, count);
-    mClipCount = std::max(mClipCount, count);
-    mOriginCount = std::max(mOriginCount, count);
-    mRepeatCount = std::max(mRepeatCount, count);
-    mPositionXCount = std::max(mPositionXCount, count);
-    mPositionYCount = std::max(mPositionYCount, count);
-    mImageCount = std::max(mImageCount, count);
-    mSizeCount = std::max(mSizeCount, count);
-    mMaskModeCount = std::max(mMaskModeCount, count);
-    mBlendModeCount = std::max(mBlendModeCount, count);
-    mCompositeCount = std::max(mCompositeCount, count);
-  }
 }
 
 static bool AnyLayerIsElementImage(const nsStyleImageLayers& aLayers) {
@@ -1823,61 +1806,7 @@ nsStyleImageLayers& nsStyleImageLayers::operator=(
   mMaskModeCount = aOther.mMaskModeCount;
   mBlendModeCount = aOther.mBlendModeCount;
   mCompositeCount = aOther.mCompositeCount;
-  mLayers = aOther.mLayers;
-
-  uint32_t count = mLayers.Length();
-  if (count != aOther.mLayers.Length()) {
-    NS_WARNING("truncating counts due to out-of-memory");
-    mAttachmentCount = std::max(mAttachmentCount, count);
-    mClipCount = std::max(mClipCount, count);
-    mOriginCount = std::max(mOriginCount, count);
-    mRepeatCount = std::max(mRepeatCount, count);
-    mPositionXCount = std::max(mPositionXCount, count);
-    mPositionYCount = std::max(mPositionYCount, count);
-    mImageCount = std::max(mImageCount, count);
-    mSizeCount = std::max(mSizeCount, count);
-    mMaskModeCount = std::max(mMaskModeCount, count);
-    mBlendModeCount = std::max(mBlendModeCount, count);
-    mCompositeCount = std::max(mCompositeCount, count);
-  }
-
-  return *this;
-}
-
-nsStyleImageLayers& nsStyleImageLayers::operator=(nsStyleImageLayers&& aOther) {
-  mAttachmentCount = aOther.mAttachmentCount;
-  mClipCount = aOther.mClipCount;
-  mOriginCount = aOther.mOriginCount;
-  mRepeatCount = aOther.mRepeatCount;
-  mPositionXCount = aOther.mPositionXCount;
-  mPositionYCount = aOther.mPositionYCount;
-  mImageCount = aOther.mImageCount;
-  mSizeCount = aOther.mSizeCount;
-  mMaskModeCount = aOther.mMaskModeCount;
-  mBlendModeCount = aOther.mBlendModeCount;
-  mCompositeCount = aOther.mCompositeCount;
-  mLayers = std::move(aOther.mLayers);
-
-  // XXX(Bug 1657087) The OOM check doesn't make sense, probably it was just
-  // copied over from the copy constructor. First, moving cannot fail due to
-  // OOM, second the condition is incorrect. Just because the implementation of
-  // nsStyleAutoArray's move constructor uses swapping, we do not seem to happen
-  // to run into the branch erroneously.
-  uint32_t count = mLayers.Length();
-  if (count != aOther.mLayers.Length()) {
-    NS_WARNING("truncating counts due to out-of-memory");
-    mAttachmentCount = std::max(mAttachmentCount, count);
-    mClipCount = std::max(mClipCount, count);
-    mOriginCount = std::max(mOriginCount, count);
-    mRepeatCount = std::max(mRepeatCount, count);
-    mPositionXCount = std::max(mPositionXCount, count);
-    mPositionYCount = std::max(mPositionYCount, count);
-    mImageCount = std::max(mImageCount, count);
-    mSizeCount = std::max(mSizeCount, count);
-    mMaskModeCount = std::max(mMaskModeCount, count);
-    mBlendModeCount = std::max(mBlendModeCount, count);
-    mCompositeCount = std::max(mCompositeCount, count);
-  }
+  mLayers = aOther.mLayers.Clone();
 
   return *this;
 }
@@ -2287,12 +2216,12 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
-    : mTransitions(aSource.mTransitions),
+    : mTransitions(aSource.mTransitions.Clone()),
       mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount),
       mTransitionDurationCount(aSource.mTransitionDurationCount),
       mTransitionDelayCount(aSource.mTransitionDelayCount),
       mTransitionPropertyCount(aSource.mTransitionPropertyCount),
-      mAnimations(aSource.mAnimations),
+      mAnimations(aSource.mAnimations.Clone()),
       mAnimationTimingFunctionCount(aSource.mAnimationTimingFunctionCount),
       mAnimationDurationCount(aSource.mAnimationDurationCount),
       mAnimationDelayCount(aSource.mAnimationDelayCount),

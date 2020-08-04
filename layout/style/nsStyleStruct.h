@@ -316,7 +316,7 @@ struct nsStyleImageLayers {
                               nsStyleImageLayers::LayerType aType) const;
 
   nsStyleImageLayers& operator=(const nsStyleImageLayers& aOther);
-  nsStyleImageLayers& operator=(nsStyleImageLayers&& aOther);
+  nsStyleImageLayers& operator=(nsStyleImageLayers&& aOther) = default;
   bool operator==(const nsStyleImageLayers& aOther) const;
 
   static const nsCSSPropertyID kBackgroundLayerTable[];
