@@ -17,8 +17,7 @@
 #include "nsWrapperCache.h"
 
 class nsIGlobalObject;
-class nsQueryActorChild;
-class nsQueryActorParent;
+class nsQueryJSActor;
 
 namespace mozilla {
 namespace dom {
@@ -92,8 +91,7 @@ class JSActor : public nsISupports, public nsWrapperCache {
 
  private:
   friend class JSActorManager;
-  friend class ::nsQueryActorChild;   // for QueryInterfaceActor
-  friend class ::nsQueryActorParent;  // for QueryInterfaceActor
+  friend class ::nsQueryJSActor;  // for QueryInterfaceActor
 
   nsresult QueryInterfaceActor(const nsIID& aIID, void** aPtr);
 
