@@ -2237,6 +2237,10 @@ class CompareCookiesCreationTime {
 NS_IMETHODIMP
 CookieService::GetCookiesSince(int64_t aSinceWhen,
                                nsTArray<RefPtr<nsICookie>>& aResult) {
+  if (!IsInitialized()) {
+    return NS_OK;
+  }
+
   mPersistentStorage->EnsureReadComplete();
 
   // We expose only non-private cookies.
