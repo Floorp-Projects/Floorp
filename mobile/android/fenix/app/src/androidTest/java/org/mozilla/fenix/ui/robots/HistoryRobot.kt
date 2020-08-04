@@ -15,6 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
@@ -31,12 +32,10 @@ class HistoryRobot {
     fun verifyHistoryMenuView() = assertHistoryMenuView()
 
     fun verifyEmptyHistoryView() {
-        mDevice.waitNotNull(
-            Until.findObject(
-                By.text("No history here")
-            ),
-            waitingTime
-        )
+        mDevice.findObject(
+            UiSelector().text("No history here")
+        ).waitForExists(waitingTime)
+
         assertEmptyHistoryView()
     }
 
