@@ -2913,4 +2913,10 @@ TextServicesDocument::WillDeleteSelection(Selection* aSelection) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TextServicesDocument::WillDeleteRanges(
+    const nsTArray<RefPtr<nsRange>>& aRangesToDelete) {
+  return NS_OK;
+}
+
 }  // namespace mozilla
