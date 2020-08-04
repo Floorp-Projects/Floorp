@@ -71,6 +71,12 @@ class xpcAccessibleMacInterface : public xpcAccessibleMacNSObjectWrapper,
   id JsValueToNSValue(JS::HandleObject aObject, JSContext* aCx,
                       nsresult* aResult);
 
+  // Convert a js value to a specified NSObject. This is called
+  // by JsValueToNSObject when encountering a JS object with
+  // a "object" and "objcetType" property.
+  id JsValueToSpecifiedNSObject(JS::HandleObject aObject, JSContext* aCx,
+                                nsresult* aResult);
+
  private:
   xpcAccessibleMacInterface(const xpcAccessibleMacInterface&) = delete;
   xpcAccessibleMacInterface& operator=(const xpcAccessibleMacInterface&) =
