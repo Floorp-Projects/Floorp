@@ -3742,8 +3742,8 @@ class nsIFrame : public nsQueryFrame {
   virtual nsresult PeekOffset(nsPeekOffsetStruct* aPos);
 
  private:
-  nsresult PeekOffsetForCharacter(nsPeekOffsetStruct* aPos, int32_t offset);
-  nsresult PeekOffsetForWord(nsPeekOffsetStruct* aPos, int32_t offset);
+  nsresult PeekOffsetForCharacter(nsPeekOffsetStruct* aPos, int32_t aOffset);
+  nsresult PeekOffsetForWord(nsPeekOffsetStruct* aPos, int32_t aOffset);
   nsresult PeekOffsetForLine(nsPeekOffsetStruct* aPos);
   nsresult PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos);
 
@@ -3768,40 +3768,54 @@ class nsIFrame : public nsQueryFrame {
                                                  int32_t aLineStart,
                                                  int8_t aOutSideLimit);
 
+  struct SelectablePeekReport {
+    /** the previous/next selectable leaf frame */
+    nsIFrame* mFrame = nullptr;
+    /**
+     * 0 indicates that we arrived at the beginning of the output frame; -1
+     * indicates that we arrived at its end.
+     */
+    int32_t mOffset = 0;
+    /** whether this frame and the returned frame are on different lines */
+    bool mJumpedLine = false;
+    /** whether we jumped over a non-selectable frame during the search */
+    bool mMovedOverNonSelectableText = false;
+
+    FrameSearchResult PeekOffsetNoAmount(bool aForward) {
+      return mFrame->PeekOffsetNoAmount(aForward, &mOffset);
+    }
+    FrameSearchResult PeekOffsetCharacter(bool aForward,
+                                          PeekOffsetCharacterOptions aOptions) {
+      return mFrame->PeekOffsetCharacter(aForward, &mOffset, aOptions);
+    };
+
+    /** Transfers frame and offset info for PeekOffset() result */
+    void TransferTo(nsPeekOffsetStruct& aPos) const;
+    bool Failed() { return !mFrame; }
+
+    explicit SelectablePeekReport(nsIFrame* aFrame = nullptr,
+                                  int32_t aOffset = 0)
+        : mFrame(aFrame), mOffset(aOffset) {}
+    MOZ_IMPLICIT SelectablePeekReport(
+        const mozilla::GenericErrorResult<nsresult>&& aErr);
+  };
+
   /**
    * Called to find the previous/next non-anonymous selectable leaf frame.
    *
-   * @param aDirection [in] the direction to move in (eDirPrevious or eDirNext)
-   *
-   * @param aVisual [in] whether bidi caret behavior is visual (true) or
-   * logical (false)
-   *
-   * @param aJumpLines [in] whether to allow jumping across line boundaries
-   * @param aScrollViewStop [in] whether to stop when reaching a scroll frame
+   * @param aDirection the direction to move in (eDirPrevious or eDirNext)
+   * @param aVisual whether bidi caret behavior is visual (true) or logical
+   * (false)
+   * @param aJumpLines whether to allow jumping across line boundaries
+   * @param aScrollViewStop whether to stop when reaching a scroll frame
    * boundary
-   *
-   * @param aOutFrame [out] the previous/next selectable leaf frame
-   *
-   * @param aOutOffset [out] 0 indicates that we arrived at the beginning of
-   * the output frame; -1 indicates that we arrived at its end.
-   *
-   * @param aOutJumpedLine [out] whether this frame and the returned frame are
-   * on different lines
-   *
-   * @param aOutMovedOverNonSelectableText [out] whether we jumped over a
-   * non-selectable frame during the search
    */
-  nsresult GetFrameFromDirection(nsDirection aDirection, bool aVisual,
-                                 bool aJumpLines, bool aScrollViewStop,
-                                 bool aForceEditableRegion,
-                                 nsIFrame** aOutFrame, int32_t* aOutOffset,
-                                 bool* aOutJumpedLine,
-                                 bool* aOutMovedOverNonSelectableText);
+  SelectablePeekReport GetFrameFromDirection(nsDirection aDirection,
+                                             bool aVisual, bool aJumpLines,
+                                             bool aScrollViewStop,
+                                             bool aForceEditableRegion);
 
-  nsresult GetFrameFromDirection(const nsPeekOffsetStruct& aPos,
-                                 nsIFrame** aOutFrame, int32_t* aOutOffset,
-                                 bool* aOutJumpedLine,
-                                 bool* aOutMovedOverNonSelectableText);
+  SelectablePeekReport GetFrameFromDirection(const nsPeekOffsetStruct& aPos);
 
  private:
   Result<bool, nsresult> IsVisuallyAtLineEdge(nsILineIterator* aLineIterator,
