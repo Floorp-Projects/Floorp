@@ -284,8 +284,7 @@ void JsepTrack::AddToMsection(const std::vector<JsConstraints>& constraintsList,
   }
 
   bool requireRtxSsrcs =
-      rtxEnabled && msection->GetDirectionAttribute().mValue !=
-                        SdpDirectionAttribute::Direction::kRecvonly;
+      rtxEnabled && msection->IsSending() && !mStreamIds.empty();
 
   if (mType != SdpMediaSection::kApplication && mDirection == sdp::kSend) {
     UpdateSsrcs(ssrcGenerator, constraintsList.size());
