@@ -529,9 +529,6 @@ class Simulator : public DecoderVisitor {
   static uintptr_t StackLimit() {
     return Simulator::Current()->stackLimit();
   }
-  static bool supportsAtomics() {
-    return true;
-  }
   template<typename T> T Read(uintptr_t address);
   template <typename T> void Write(uintptr_t address_, T value);
   JS::ProfilingFrameIterator::RegisterState registerState();

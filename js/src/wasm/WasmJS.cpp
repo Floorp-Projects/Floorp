@@ -384,16 +384,17 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
     return false;
   }
 
+#ifdef JS_CODEGEN_ARM
+  // Wasm threads require support for atomic operations.
+  if (!HasLDSTREXBHD()) {
+    return false;
+  }
+#endif
+
   // Wasm threads require 8-byte lock-free atomics.
   if (!jit::AtomicOperations::isLockfree8()) {
     return false;
   }
-
-#ifdef JS_SIMULATOR
-  if (!Simulator::supportsAtomics()) {
-    return false;
-  }
-#endif
 
   // Test only whether the compilers are supported on the hardware, not whether
   // they are enabled.
