@@ -88,7 +88,7 @@ add_task(async function test_popup_opened() {
 });
 
 add_task(async function test_submit_creditCard_new() {
-  async function test_per_command(command, idx, expectChanged) {
+  async function test_per_command(command, idx, expectChanged = undefined) {
     await SpecialPowers.pushPrefEnv({
       set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
     });
@@ -120,8 +120,14 @@ add_task(async function test_submit_creditCard_new() {
 
         await promiseShown;
         await clickDoorhangerButton(command, idx);
-        if (expectChanged) {
+        if (expectChanged !== undefined) {
           await onChanged;
+          TelemetryTestUtils.assertScalar(
+            TelemetryTestUtils.getProcessScalars("parent"),
+            "formautofill.creditCards.autofill_profiles_count",
+            expectChanged,
+            "There should be ${expectChanged} profile(s) stored."
+          );
         }
       }
     );
@@ -138,19 +144,19 @@ add_task(async function test_submit_creditCard_new() {
     ["creditcard", "detected", "cc_form"],
     ["creditcard", "submitted", "cc_form"],
   ];
-  await test_per_command(MAIN_BUTTON, undefined, true);
+  await test_per_command(MAIN_BUTTON, undefined, 1);
   await assertTelemetry(expected_content, [
     ["creditcard", "show", "capture_doorhanger"],
     ["creditcard", "save", "capture_doorhanger"],
   ]);
 
-  await test_per_command(SECONDARY_BUTTON, undefined, false);
+  await test_per_command(SECONDARY_BUTTON);
   await assertTelemetry(expected_content, [
     ["creditcard", "show", "capture_doorhanger"],
     ["creditcard", "cancel", "capture_doorhanger"],
   ]);
 
-  await test_per_command(MENU_BUTTON, 0, false);
+  await test_per_command(MENU_BUTTON, 0);
   await assertTelemetry(expected_content, [
     ["creditcard", "show", "capture_doorhanger"],
     ["creditcard", "disable", "capture_doorhanger"],
@@ -230,7 +236,7 @@ add_task(async function test_submit_creditCard_update() {
     return;
   }
 
-  async function test_per_command(command, idx, expectChanged) {
+  async function test_per_command(command, idx, expectChanged = undefined) {
     await SpecialPowers.pushPrefEnv({
       set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
     });
@@ -268,8 +274,14 @@ add_task(async function test_submit_creditCard_update() {
         });
         await promiseShown;
         await clickDoorhangerButton(command, idx);
-        if (expectChanged) {
+        if (expectChanged !== undefined) {
           await onChanged;
+          TelemetryTestUtils.assertScalar(
+            TelemetryTestUtils.getProcessScalars("parent"),
+            "formautofill.creditCards.autofill_profiles_count",
+            expectChanged,
+            "There should be ${expectChanged} profile(s) stored."
+          );
         }
       }
     );
@@ -288,13 +300,13 @@ add_task(async function test_submit_creditCard_update() {
     ["creditcard", "submitted", "cc_form"],
   ];
 
-  await test_per_command(MAIN_BUTTON, undefined, true);
+  await test_per_command(MAIN_BUTTON, undefined, 1);
   await assertTelemetry(expected_content, [
     ["creditcard", "show", "update_doorhanger"],
     ["creditcard", "update", "update_doorhanger"],
   ]);
 
-  await test_per_command(SECONDARY_BUTTON, undefined, true);
+  await test_per_command(SECONDARY_BUTTON, undefined, 2);
   await assertTelemetry(expected_content, [
     ["creditcard", "show", "update_doorhanger"],
     ["creditcard", "save", "update_doorhanger"],
