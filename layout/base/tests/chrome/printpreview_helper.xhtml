@@ -28,7 +28,7 @@ var file = Cc["@mozilla.org/file/directory_service;1"]
              .get("TmpD", Ci.nsIFile);
 filePath = file.path;
 
-function printpreview(options = {}) {
+function printpreview(hasMozPrintCallback) {
   gWbp = frameElts[1].docShell.initOrReusePrintPreviewViewer();
   let resolve;
   let promise = new Promise(r => { resolve = r });
@@ -65,11 +65,6 @@ function printpreview(options = {}) {
   settings.printBGColors = true;
   settings.headerStrLeft = "";
   settings.headerStrRight = "";
-  if (options.settings) {
-    for (let key in options.settings) {
-      settings[key] = options.settings[key];
-    }
-  }
   var before = 0;
   var after = 0;
   function beforeprint() { ++before; }
@@ -78,7 +73,7 @@ function printpreview(options = {}) {
   frameElts[0].contentWindow.addEventListener("afterprint", afterprint, true);
   gWbp.printPreview(settings, frameElts[0].contentWindow, listener);
   is(before, 1, "Should have called beforeprint listener!");
-  if (!options.hasMozPrintCallback) {
+  if (!hasMozPrintCallback) {
     // If there's a mozPrintCallback the after print event won't fire until
     // later.
     is(after, 1, "Should have called afterprint listener!");
@@ -393,7 +388,7 @@ async function runTest10() {
   let mozPrintCallbackDone = new Promise((resolve) => {
     iframeElement.addEventListener("message", resolve, { capture: true, once: true });
   });
-  await printpreview({ hasMozPrintCallback: true });
+  await printpreview(true);
   await mozPrintCallbackDone;
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
@@ -406,7 +401,7 @@ async function runTest10() {
   mozPrintCallbackDone = new Promise((resolve) => {
     iframeElement.addEventListener("message", resolve, { capture: true, once: true });
   });
-  await printpreview({ hasMozPrintCallback: true });
+  await printpreview(true);
   // Wait for the mozprintcallback to finish.
   await mozPrintCallbackDone;
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
@@ -440,7 +435,7 @@ async function compareFiles(src1, src2, options = {}) {
     await messagePromise;
   }
 
-  await printpreview(options);
+  await printpreview();
   ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
@@ -449,7 +444,7 @@ async function compareFiles(src1, src2, options = {}) {
     iframeElement.setAttribute("src", BASE + src2);
   });
 
-  await printpreview(options);
+  await printpreview();
   ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
 
@@ -505,19 +500,6 @@ async function runTest16() {
 async function runTest17() {
   // fuzzy: SVG image in the test pixel-snaps different than <div> in the ref.
   await compareFiles("printpreview_images_sw.html", "printpreview_images_sw_ref.html", { waitForMessage: true, maxDifferent: 118, maxDifference: 177 });
-  requestAnimationFrame(() => setTimeout(runTest18));
-}
-
-async function runTest18() {
-  await compareFiles("printpreview_quirks.html", "printpreview_quirks_ref.html", {
-    settings: {
-      marginTop: 22,
-      marginBottom: 22,
-      marginLeft: 22,
-      marginRight: 22,
-    },
-  });
-
   finish();
 }
 
