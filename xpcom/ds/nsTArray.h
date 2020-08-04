@@ -457,6 +457,12 @@ class nsTArray_base {
   // @param aElemAlign The alignment in bytes of an array element.
   void ShrinkCapacity(size_type aElemSize, size_t aElemAlign);
 
+  // Resizes the storage to 0. This may only be called when Length() is already
+  // 0.
+  // @param aElemSize  The size of an array element.
+  // @param aElemAlign The alignment in bytes of an array element.
+  void ShrinkCapacityToZero(size_type aElemSize, size_t aElemAlign);
+
   // This method may be called to resize a "gap" in the array by shifting
   // elements around.  It updates mLength appropriately.  If the resulting
   // array has zero elements, then the array's memory is free'd.
@@ -1891,7 +1897,7 @@ class nsTArray_Impl
 
   void Clear() {
     ClearAndRetainStorage();
-    Compact();
+    base_type::ShrinkCapacityToZero(sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }
 
   // This method removes elements based on the return value of the
