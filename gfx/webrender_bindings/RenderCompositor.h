@@ -105,9 +105,12 @@ class RenderCompositor {
   virtual void CreateSurface(wr::NativeSurfaceId aId,
                              wr::DeviceIntPoint aVirtualOffset,
                              wr::DeviceIntSize aTileSize, bool aIsOpaque) {}
+  virtual void CreateExternalSurface(wr::NativeSurfaceId aId, bool aIsOpaque) {}
   virtual void DestroySurface(NativeSurfaceId aId) {}
   virtual void CreateTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) {}
   virtual void DestroyTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) {}
+  virtual void AttachExternalImage(wr::NativeSurfaceId aId,
+                                   wr::ExternalImageId aExternalImage) {}
   virtual void AddSurface(wr::NativeSurfaceId aId,
                           const wr::CompositorSurfaceTransform& aTransform,
                           wr::DeviceIntRect aClipRect) {}

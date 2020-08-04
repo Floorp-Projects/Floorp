@@ -22,16 +22,22 @@ RenderTextureHostWrapper::~RenderTextureHostWrapper() {
   MOZ_COUNT_DTOR_INHERITED(RenderTextureHostWrapper, RenderTextureHost);
 }
 
-wr::WrExternalImage RenderTextureHostWrapper::Lock(
-    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+void RenderTextureHostWrapper::EnsureTextureHost() {
   if (!mTextureHost) {
     mTextureHost = RenderThread::Get()->GetRenderTexture(mExternalImageId);
     MOZ_ASSERT(mTextureHost);
     if (!mTextureHost) {
       gfxCriticalNoteOnce << "Failed to get RenderTextureHost for extId:"
                           << AsUint64(mExternalImageId);
-      return InvalidToWrExternalImage();
     }
+  }
+}
+
+wr::WrExternalImage RenderTextureHostWrapper::Lock(
+    uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
+  EnsureTextureHost();
+  if (!mTextureHost) {
+    return InvalidToWrExternalImage();
   }
 
   return mTextureHost->Lock(aChannelIndex, aGL, aRendering);
@@ -47,6 +53,15 @@ void RenderTextureHostWrapper::ClearCachedResources() {
   if (mTextureHost) {
     mTextureHost->ClearCachedResources();
   }
+}
+
+RenderMacIOSurfaceTextureHostOGL*
+RenderTextureHostWrapper::AsRenderMacIOSurfaceTextureHostOGL() {
+  EnsureTextureHost();
+  if (!mTextureHost) {
+    return nullptr;
+  }
+  return mTextureHost->AsRenderMacIOSurfaceTextureHostOGL();
 }
 
 }  // namespace wr
