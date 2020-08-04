@@ -839,13 +839,22 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
   HttpConnectionBase* existingConn =
       FindCoalescableConnection(ent, true, false);
   if (existingConn) {
-    LOG(
-        ("UpdateCoalescingForNewConn() found existing active conn that could "
-         "have served newConn "
-         "graceful close of newConn=%p to migrate to existingConn %p\n",
-         newConn, existingConn));
-    newConn->DontReuse();
-    return;
+    // Prefer http3 connection.
+    if (newConn->UsingHttp3() && existingConn->UsingSpdy()) {
+      LOG(
+          ("UpdateCoalescingForNewConn() found existing active H2 conn that "
+           "could have served newConn, but new connection is H3, therefore "
+           "close the H2 conncetion"));
+      existingConn->DontReuse();
+    } else {
+      LOG(
+          ("UpdateCoalescingForNewConn() found existing active conn that could "
+           "have served newConn "
+           "graceful close of newConn=%p to migrate to existingConn %p\n",
+           newConn, existingConn));
+      newConn->DontReuse();
+      return;
+    }
   }
 
   // This connection might go into the mCoalescingHash for new transactions to
