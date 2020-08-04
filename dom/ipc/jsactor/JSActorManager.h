@@ -27,10 +27,10 @@ class JSActorManager : public nsISupports {
   /**
    * Get or create an actor by it's name.
    *
-   * Will return an error if the actor fails to be constructed, or `nullptr` if
-   * actor creation was vetoed by a constraint.
+   * Will set an error on |aRv| if the actor fails to be constructed.
    */
-  already_AddRefed<JSActor> GetActor(const nsACString& aName, ErrorResult& aRv);
+  already_AddRefed<JSActor> GetActor(JSContext* aCx, const nsACString& aName,
+                                     ErrorResult& aRv);
 
   /**
    * Handle receiving a raw message from the other side.

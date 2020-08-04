@@ -33,8 +33,11 @@ class MOZ_STACK_CLASS nsQueryActorChild final : public nsCOMPtr_helper {
       return NS_ERROR_NO_INTERFACE;
     }
 
+    mozilla::dom::AutoJSAPI jsapi;
+    jsapi.Init();
+
     RefPtr<mozilla::dom::JSWindowActorChild> actor =
-        wgc->GetActor(mActorName, mozilla::IgnoreErrors());
+        wgc->GetActor(jsapi.cx(), mActorName, mozilla::IgnoreErrors());
     if (!actor) {
       return NS_ERROR_NO_INTERFACE;
     }
@@ -73,8 +76,11 @@ class MOZ_STACK_CLASS nsQueryActorParent final : public nsCOMPtr_helper {
       return NS_ERROR_NO_INTERFACE;
     }
 
+    mozilla::dom::AutoJSAPI jsapi;
+    jsapi.Init();
+
     RefPtr<mozilla::dom::JSWindowActorParent> actor =
-        wgp->GetActor(mActorName, mozilla::IgnoreErrors());
+        wgp->GetActor(jsapi.cx(), mActorName, mozilla::IgnoreErrors());
     if (!actor) {
       return NS_ERROR_NO_INTERFACE;
     }
