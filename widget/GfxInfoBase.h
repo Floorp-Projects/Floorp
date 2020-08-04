@@ -16,7 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/gfx/GraphicsMessages.h"
+#include "mozilla/dom/PContentParent.h"
 #include "nsCOMPtr.h"
 #include "nsIGfxInfo.h"
 #include "nsIGfxInfoDebug.h"
@@ -76,7 +76,7 @@ class GfxInfoBase : public nsIGfxInfo,
   NS_IMETHOD GetTargetFrameRate(uint32_t* aTargetFrameRate) override;
 
   // Non-XPCOM method to get IPC data:
-  nsTArray<mozilla::gfx::GfxInfoFeatureStatus> GetAllFeatures();
+  void GetAllFeatures(dom::XPCOMInitData& xpcomInit);
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.
@@ -94,7 +94,7 @@ class GfxInfoBase : public nsIGfxInfo,
   static void RemoveCollector(GfxInfoCollectorBase* collector);
 
   static nsTArray<GfxDriverInfo>* sDriverInfo;
-  static nsTArray<mozilla::gfx::GfxInfoFeatureStatus>* sFeatureStatus;
+  static nsTArray<mozilla::dom::GfxInfoFeatureStatus>* sFeatureStatus;
   static bool sDriverInfoObserverInitialized;
   static bool sShutdownOccurred;
 
@@ -111,7 +111,7 @@ class GfxInfoBase : public nsIGfxInfo,
   virtual nsresult FindMonitors(JSContext* cx, JS::HandleObject array);
 
   static void SetFeatureStatus(
-      nsTArray<mozilla::gfx::GfxInfoFeatureStatus>&& aFS);
+      const nsTArray<mozilla::dom::GfxInfoFeatureStatus>& aFS);
 
  protected:
   virtual ~GfxInfoBase();
