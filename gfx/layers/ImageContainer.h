@@ -33,6 +33,7 @@
 #include "nsDataHashtable.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/UniquePtr.h"
+#include "MediaInfo.h"
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
@@ -536,6 +537,10 @@ class ImageContainer final : public SupportsWeakPtr {
 
   const gfx::Matrix& GetTransformHint() const { return mTransformHint; }
 
+  void SetRotation(VideoInfo::Rotation aRotation) { mRotation = aRotation; }
+
+  VideoInfo::Rotation GetRotation() const { return mRotation; }
+
   void SetImageFactory(ImageFactory* aFactory) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     mImageFactory = aFactory ? aFactory : new ImageFactory();
@@ -659,6 +664,8 @@ class ImageContainer final : public SupportsWeakPtr {
   gfx::IntSize mScaleHint;
 
   gfx::Matrix mTransformHint;
+
+  VideoInfo::Rotation mRotation = VideoInfo::Rotation::kDegree_0;
 
   RefPtr<BufferRecycleBin> mRecycleBin;
 

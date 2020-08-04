@@ -11,7 +11,7 @@ use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlen
 use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDisplayItem, ImageMask};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
-use api::{ReferenceTransformBinding};
+use api::{ReferenceTransformBinding, Rotation};
 use api::image_tiling::simplify_repeated_primitive;
 use api::units::*;
 use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
@@ -482,14 +482,32 @@ impl<'a> SceneBuilder<'a> {
 
                         let transform = match info.reference_frame.transform {
                             ReferenceTransformBinding::Static { binding } => binding,
-                            ReferenceTransformBinding::Computed { scale_from, vertical_flip } => {
+                            ReferenceTransformBinding::Computed { scale_from, vertical_flip, rotation } => {
+                                let content_size = &self.iframe_size.last().unwrap();
+
                                 let mut transform = if let Some(scale_from) = scale_from {
-                                    let content_size = &self.iframe_size.last().unwrap();
-                                    LayoutTransform::create_scale(
-                                        content_size.width / scale_from.width,
-                                        content_size.height / scale_from.height,
-                                        1.0
-                                    )
+                                    // If we have a 90/270 degree rotation, then scale_from
+                                    // and content_size are in different coordinate spaces and
+                                    // we need to swap width/height for them to be correct.
+                                    match rotation {
+                                        Rotation::Degree0 |
+                                        Rotation::Degree180 => {
+                                            LayoutTransform::create_scale(
+                                                content_size.width / scale_from.width,
+                                                content_size.height / scale_from.height,
+                                                1.0
+                                            )
+                                        },
+                                        Rotation::Degree90 |
+                                        Rotation::Degree270 => {
+                                            LayoutTransform::create_scale(
+                                                content_size.height / scale_from.width,
+                                                content_size.width / scale_from.height,
+                                                1.0
+                                            )
+
+                                        }
+                                    }
                                 } else {
                                     LayoutTransform::identity()
                                 };
@@ -500,6 +518,9 @@ impl<'a> SceneBuilder<'a> {
                                         .post_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
                                         .pre_scale(1.0, -1.0, 1.0);
                                 }
+
+                                let rotate = rotation.to_matrix(**content_size);
+                                let transform = transform.post_transform(&rotate);
 
                                 PropertyBinding::Value(transform)
                             },
