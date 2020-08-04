@@ -25,11 +25,12 @@ INCLUDES += \
 	-I$(CORE_DEPTH)/cpputil \
 	$(NULL)
 
-REQUIRES = nspr gtest
+REQUIRES = nspr gtest cpputil
 
 PROGRAM = softoken_gtest
 
 EXTRA_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX) \
 	$(NULL)

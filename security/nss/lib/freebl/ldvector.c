@@ -48,10 +48,17 @@ static const struct FREEBLVectorStr vector =
       RC4_DestroyContext,
       RC4_Encrypt,
       RC4_Decrypt,
+#ifndef NSS_DISABLE_DEPRECATED_RC2
       RC2_CreateContext,
       RC2_DestroyContext,
       RC2_Encrypt,
       RC2_Decrypt,
+#else
+      (F_RC2_CreateContext)FREEBL_Deprecated,
+      (F_RC2_DestroyContext)FREEBL_Deprecated,
+      (F_RC2_Encrypt)FREEBL_Deprecated,
+      (F_RC2_Decrypt)FREEBL_Deprecated,
+#endif
       RC5_CreateContext,
       RC5_DestroyContext,
       RC5_Encrypt,
@@ -175,13 +182,21 @@ static const struct FREEBLVectorStr vector =
       AES_InitContext,
       AESKeyWrap_InitContext,
       DES_InitContext,
+#ifndef NSS_DISABLE_DEPRECATED_RC2
       RC2_InitContext,
+#else
+      (F_RC2_InitContext)FREEBL_Deprecated,
+#endif
       RC4_InitContext,
 
       AES_AllocateContext,
       AESKeyWrap_AllocateContext,
       DES_AllocateContext,
+#ifndef NSS_DISABLE_DEPRECATED_RC2
       RC2_AllocateContext,
+#else
+      (F_RC2_AllocateContext)FREEBL_Deprecated,
+#endif
       RC4_AllocateContext,
 
       MD2_Clone,
@@ -353,9 +368,12 @@ static const struct FREEBLVectorStr vector =
       ChaCha20Poly1305_Decrypt,
       AES_AEAD,
       AESKeyWrap_EncryptKWP,
-      AESKeyWrap_DecryptKWP
+      AESKeyWrap_DecryptKWP,
 
       /* End of version 3.023 */
+      KEA_PrimeCheck
+
+      /* End of version 3.024 */
     };
 
 const FREEBLVector*

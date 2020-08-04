@@ -380,6 +380,9 @@ extern SECStatus KEA_Derive(SECItem *prime,
  */
 extern PRBool KEA_Verify(SECItem *Y, SECItem *prime, SECItem *subPrime);
 
+/* verify a value is prime */
+PRBool KEA_PrimeCheck(SECItem *prime);
+
 /****************************************
  * J-PAKE key transport
  */

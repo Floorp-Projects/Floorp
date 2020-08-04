@@ -17,6 +17,7 @@
 #include "blapii.h"
 #include "secitem.h"
 #include "mpi.h"
+#include "mpprime.h"
 #include "secmpi.h"
 
 #define KEA_DERIVED_SECRET_LEN 128
@@ -78,7 +79,7 @@ DH_GenParam(int primeLen, DHParams **params)
     CHECK_MPI_OK(mp_init(&h));
     CHECK_MPI_OK(mp_init(&psub1));
     CHECK_MPI_OK(mp_init(&test));
-    /* generate prime with MPI, uses Miller-Rabin to generate strong prime. */
+    /* generate prime with MPI, uses Miller-Rabin to generate safe prime. */
     CHECK_SEC_OK(generate_prime(&p, primeLen));
     /* construct Sophie-Germain prime q = (p-1)/2. */
     CHECK_MPI_OK(mp_sub_d(&p, 1, &psub1));
@@ -257,17 +258,17 @@ DH_Derive(SECItem *publicValue,
     }
 
     /*
-     * We check to make sure that ZZ is not equal to 1 or -1 mod p.
+     * We check to make sure that ZZ is not equal to 0, 1 or -1 mod p.
      * This helps guard against small subgroup attacks, since an attacker
-     * using a subgroup of size N will produce 1 or -1 with probability 1/N.
+     * using a subgroup of size N will produce 0, 1 or -1 with probability 1/N.
      * When the protocol is executed within a properly large subgroup, the
      * probability of this result will be negligibly small.  For example,
-     * with a strong prime of the form 2p+1, the probability will be 1/p.
+     * with a safe prime of the form 2q+1, the probability will be 1/q.
      *
      * We return MP_BADARG because this is probably the result of a bad
      * public value or a bad prime having been provided.
      */
-    if (mp_cmp_d(&ZZ, 1) == 0 ||
+    if (mp_cmp_d(&ZZ, 0) == 0 || mp_cmp_d(&ZZ, 1) == 0 ||
         mp_cmp(&ZZ, &psub1) == 0) {
         err = MP_BADARG;
         goto cleanup;
@@ -411,6 +412,35 @@ cleanup:
         return SECFailure;
     }
     return SECSuccess;
+}
+
+/* Test counts based on the fact the prime and subprime
+ * were given to us */
+static int
+dh_prime_testcount(int prime_length)
+{
+    if (prime_length < 1024) {
+        return 50;
+    } else if (prime_length < 2048) {
+        return 40;
+    } else if (prime_length < 3072) {
+        return 56;
+    }
+    return 64;
+}
+
+PRBool
+KEA_PrimeCheck(SECItem *prime)
+{
+    mp_int p;
+    mp_err err = 0;
+    MP_DIGITS(&p) = 0;
+    CHECK_MPI_OK(mp_init(&p));
+    SECITEM_TO_MPINT(*prime, &p);
+    CHECK_MPI_OK(mpp_pprime(&p, dh_prime_testcount(prime->len)));
+cleanup:
+    mp_clear(&p);
+    return err ? PR_FALSE : PR_TRUE;
 }
 
 PRBool

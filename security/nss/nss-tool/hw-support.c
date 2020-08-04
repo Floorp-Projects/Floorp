@@ -22,6 +22,7 @@ int main(int argc, char const *argv[]) {
 #if defined(NSS_X86_OR_X64)
   printf("\tAES-NI \t%s supported\n", aesni_support() ? "" : "not");
   printf("\tPCLMUL \t%s supported\n", clmul_support() ? "" : "not");
+  printf("\tSHA \t%s supported\n", sha_support() ? "" : "not");
   printf("\tAVX \t%s supported\n", avx_support() ? "" : "not");
   printf("\tAVX2 \t%s supported\n", avx2_support() ? "" : "not");
   printf("\tSSSE3 \t%s supported\n", ssse3_support() ? "" : "not");

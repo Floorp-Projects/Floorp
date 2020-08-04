@@ -12,17 +12,21 @@ RELEASE = nss
 
 DIRS = coreconf lib cmd cpputil gtests
 
-lib: coreconf
-cmd: lib
-cpputil: lib
-gtests: cmd cpputil
-
 HAVE_ALL_TARGET := 1
+
+#
+# make sure all is the first (default) target
+#
+all: prepare_build
+	$(MAKE) libs
 
 prepare_build:
 	# no real way to encode these in any sensible way
 	$(MAKE) -C coreconf/nsinstall program
 	$(MAKE) export
 
-all: prepare_build
-	$(MAKE) libs
+lib: coreconf
+cmd: lib
+cpputil: lib
+gtests: cmd cpputil
+

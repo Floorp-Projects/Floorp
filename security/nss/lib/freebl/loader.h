@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0323
+#define FREEBL_VERSION 0x0324
 
 struct FREEBLVectorStr {
 
@@ -812,6 +812,9 @@ struct FREEBLVectorStr {
 
     /* Version 3.023 came to here */
 
+    PRBool (*p_KEA_PrimeCheck)(SECItem *prime);
+    /* Version 3.024 came to here */
+
     /* Add new function pointers at the end of this struct and bump
      * FREEBL_VERSION at the beginning of this file. */
 };
@@ -887,4 +890,30 @@ typedef SECStatus (*F_SEED_Encrypt)(SEEDContext *cx, unsigned char *output,
 typedef SECStatus (*F_SEED_Decrypt)(SEEDContext *cx, unsigned char *output,
                                     unsigned int *outputLen, unsigned int maxOutputLen,
                                     const unsigned char *input, unsigned int inputLen);
+#endif
+
+#ifdef NSS_DISABLE_DEPRECATED_RC2
+typedef RC2Context *(*F_RC2_CreateContext)(const unsigned char *key,
+                                           unsigned int len, const unsigned char *iv,
+                                           int mode, unsigned effectiveKeyLen);
+
+typedef void (*F_RC2_DestroyContext)(RC2Context *cx, PRBool freeit);
+
+typedef SECStatus (*F_RC2_Encrypt)(RC2Context *cx, unsigned char *output,
+                                   unsigned int *outputLen, unsigned int maxOutputLen,
+                                   const unsigned char *input, unsigned int inputLen);
+
+typedef SECStatus (*F_RC2_Decrypt)(RC2Context *cx, unsigned char *output,
+                                   unsigned int *outputLen, unsigned int maxOutputLen,
+                                   const unsigned char *input, unsigned int inputLen);
+
+typedef SECStatus (*F_RC2_InitContext)(RC2Context *cx,
+                                       const unsigned char *key,
+                                       unsigned int keylen,
+                                       const unsigned char *iv,
+                                       int mode,
+                                       unsigned int effectiveKeyLen,
+                                       unsigned int);
+
+typedef RC2Context *(*F_RC2_AllocateContext)(void);
 #endif
