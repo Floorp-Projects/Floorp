@@ -28,9 +28,6 @@ static void MakeTopLevelInfo(const nsACString& aScheme, const nsACString& aHost,
     return;
   }
 
-  // Note: If you change the serialization of the partition-key, please update
-  // StoragePrincipalHelper.cpp too.
-
   nsAutoCString site;
   site.AssignLiteral("(");
   site.Append(aScheme);
