@@ -7,6 +7,7 @@ package mozilla.components.browser.errorpages
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.errorpages.ErrorPages.createErrorPage
 import mozilla.components.browser.errorpages.ErrorPages.createUrlEncodedErrorPage
+import mozilla.components.support.ktx.kotlin.urlEncode
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -128,13 +129,11 @@ class ErrorPagesTest {
         }
 
         assertTrue(errorPage.startsWith("resource://android/assets/$htmlFilename"))
-        assertTrue(errorPage.contains("&button=${context.resources.getString(errorType.refreshButtonRes)}"))
-        assertTrue(
-            errorPage.contains(
-                "&description=${context.resources.getString(errorType.messageRes, uri)}"
-                    .replace("<ul>", "<ul role=\"presentation\">")
-            )
-        )
+        assertTrue(errorPage.contains("&button=${context.resources.getString(errorType.refreshButtonRes).urlEncode()}"))
+
+        val description = context.resources.getString(errorType.messageRes, uri).replace("<ul>", "<ul role=\"presentation\">")
+
+        assertTrue(errorPage.contains("&description=${description.urlEncode()}"))
         assertTrue(errorPage.contains("&image=$expectedImageName"))
     }
 }

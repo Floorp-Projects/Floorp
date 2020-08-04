@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.annotation.RawRes
 import androidx.annotation.StringRes
 import mozilla.components.support.ktx.android.content.appName
+import mozilla.components.support.ktx.kotlin.urlEncode
 
 object ErrorPages {
 
@@ -84,28 +85,28 @@ object ErrorPages {
             R.string.mozac_browser_errorpages_security_bad_cert_accept_temporary
         )
 
-        val showSSLAdvanced: Boolean = when (errorType) {
+        val showSSLAdvanced: String = when (errorType) {
             ErrorType.ERROR_SECURITY_SSL, ErrorType.ERROR_SECURITY_BAD_CERT -> true
             else -> false
-        }
+        }.toString()
 
         /**
          * Warning: When updating these params you WILL cause breaking changes that are undetected
          * by consumers. Update the README accordingly.
          */
         var urlEncodedErrorPage = "resource://android/assets/$htmlResource?" +
-            "&title=$title" +
-            "&button=$button" +
-            "&description=$description" +
-            "&image=$imageName" +
-            "&showSSL=$showSSLAdvanced" +
-            "&badCertAdvanced=$badCertAdvanced" +
-            "&badCertTechInfo=$badCertTechInfo" +
-            "&badCertGoBack=$badCertGoBack" +
-            "&badCertAcceptTemporary=$badCertAcceptTemporary"
+            "&title=${title.urlEncode()}" +
+            "&button=${button.urlEncode()}" +
+            "&description=${description.urlEncode()}" +
+            "&image=${imageName.urlEncode()}" +
+            "&showSSL=${showSSLAdvanced.urlEncode()}" +
+            "&badCertAdvanced=${badCertAdvanced.urlEncode()}" +
+            "&badCertTechInfo=${badCertTechInfo.urlEncode()}" +
+            "&badCertGoBack=${badCertGoBack.urlEncode()}" +
+            "&badCertAcceptTemporary=${badCertAcceptTemporary.urlEncode()}"
 
         urlEncodedErrorPage = urlEncodedErrorPage
-            .replace("<ul>", "<ul role=\"presentation\">")
+            .replace("<ul>".urlEncode(), "<ul role=\"presentation\">".urlEncode())
         return urlEncodedErrorPage
     }
 }

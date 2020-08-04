@@ -10,6 +10,7 @@ import mozilla.components.support.utils.URLStringUtils
 import java.io.File
 import java.net.MalformedURLException
 import java.net.URL
+import java.net.URLEncoder
 import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -156,4 +157,11 @@ fun String.stripMailToProtocol(): String {
     return if (this.startsWith(MAILTO)) {
         this.replaceFirst(MAILTO, "")
     } else this
+}
+
+/**
+ * Translates the string into {@code application/x-www-form-urlencoded} string.
+ */
+fun String.urlEncode(): String {
+    return URLEncoder.encode(this, Charsets.UTF_8.name())
 }
