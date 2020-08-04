@@ -32,6 +32,7 @@
 
 #ifdef XP_MACOSX
 #  include "mozilla/gfx/QuartzSupport.h"
+#  include "MacIOSurfaceImage.h"
 #endif
 
 #ifdef XP_WIN
@@ -459,6 +460,17 @@ D3D11YCbCrRecycleAllocator* ImageContainer::GetD3D11YCbCrRecycleAllocator(
   mD3D11YCbCrRecycleAllocator =
       new D3D11YCbCrRecycleAllocator(aKnowsCompositor);
   return mD3D11YCbCrRecycleAllocator;
+}
+#endif
+
+#ifdef XP_MACOSX
+MacIOSurfaceRecycleAllocator*
+ImageContainer::GetMacIOSurfaceRecycleAllocator() {
+  if (!mMacIOSurfaceRecycleAllocator) {
+    mMacIOSurfaceRecycleAllocator = new MacIOSurfaceRecycleAllocator();
+  }
+
+  return mMacIOSurfaceRecycleAllocator;
 }
 #endif
 

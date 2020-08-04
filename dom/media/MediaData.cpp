@@ -19,6 +19,8 @@
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"
 #  include "mozilla/layers/D3D11YCbCrImage.h"
+#elif XP_MACOSX
+#  include "MacIOSurfaceImage.h"
 #endif
 
 namespace mozilla {
@@ -347,6 +349,14 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
       v->mImage = d3d11Image;
       return v.forget();
     }
+  }
+#elif XP_MACOSX
+  RefPtr<layers::MacIOSurfaceImage> ioImage =
+      new layers::MacIOSurfaceImage(nullptr);
+  PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
+  if (ioImage->SetData(aContainer, data)) {
+    v->mImage = ioImage;
+    return v.forget();
   }
 #endif
   if (!v->mImage) {
