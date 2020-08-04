@@ -4111,6 +4111,26 @@ bool CacheIRCompiler::emitObjectCreateResult(uint32_t templateObjectOffset) {
   return true;
 }
 
+bool CacheIRCompiler::emitNewArrayFromLengthResult(
+    uint32_t templateObjectOffset, Int32OperandId lengthId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  AutoScratchRegister scratch(allocator, masm);
+  Register length = allocator.useRegister(masm, lengthId);
+
+  StubFieldOffset objectField(templateObjectOffset, StubField::Type::JSObject);
+  emitLoadStubField(objectField, scratch);
+
+  callvm.prepare();
+  masm.Push(length);
+  masm.Push(scratch);
+
+  using Fn = ArrayObject* (*)(JSContext*, HandleArrayObject, int32_t length);
+  callvm.call<Fn, ArrayConstructorOneArg>();
+  return true;
+}
+
 bool CacheIRCompiler::emitNewTypedArrayFromLengthResult(
     uint32_t templateObjectOffset, Int32OperandId lengthId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -7548,6 +7568,10 @@ struct ReturnTypeToJSValueType<RegExpStringIteratorObject*> {
 };
 template <>
 struct ReturnTypeToJSValueType<PlainObject*> {
+  static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
+};
+template <>
+struct ReturnTypeToJSValueType<ArrayObject*> {
   static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
 };
 template <>

@@ -3829,14 +3829,15 @@ bool js::array_construct(JSContext* cx, unsigned argc, Value* vp) {
   return ArrayConstructorImpl(cx, args, /* isConstructor = */ false);
 }
 
-ArrayObject* js::ArrayConstructorOneArg(JSContext* cx, HandleObjectGroup group,
+ArrayObject* js::ArrayConstructorOneArg(JSContext* cx,
+                                        HandleArrayObject templateObject,
                                         int32_t lengthInt) {
-  // Ion can call this with a group from a different realm when calling
-  // another realm's Array constructor.
+  // JIT code can call this with a template object from a different realm when
+  // calling another realm's Array constructor.
   Maybe<AutoRealm> ar;
-  if (cx->realm() != group->realm()) {
-    MOZ_ASSERT(cx->compartment() == group->compartment());
-    ar.emplace(cx, group);
+  if (cx->realm() != templateObject->realm()) {
+    MOZ_ASSERT(cx->compartment() == templateObject->compartment());
+    ar.emplace(cx, templateObject);
   }
 
   if (lengthInt < 0) {
@@ -3846,6 +3847,7 @@ ArrayObject* js::ArrayConstructorOneArg(JSContext* cx, HandleObjectGroup group,
   }
 
   uint32_t length = uint32_t(lengthInt);
+  RootedObjectGroup group(cx, templateObject->group());
   ArrayObject* res = NewPartlyAllocatedArrayTryUseGroup(cx, group, length);
   MOZ_ASSERT_IF(res, res->realm() == group->realm());
   return res;
