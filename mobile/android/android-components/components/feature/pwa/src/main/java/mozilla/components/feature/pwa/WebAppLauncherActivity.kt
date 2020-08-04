@@ -32,7 +32,7 @@ class WebAppLauncherActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        storage = ManifestStorage(this)
+        storage = ManifestStorage(applicationContext)
 
         val startUrl = intent.data ?: return finish()
 
