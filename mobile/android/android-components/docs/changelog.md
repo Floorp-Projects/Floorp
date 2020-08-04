@@ -31,6 +31,11 @@ permalink: /changelog/
 * **concept-menu**
   * Added `SmallMenuCandidate.onLongClick` to handle long click of row menu buttons.
 
+* **service-glean**
+  * Glean was updated to v31.6.0
+    * Limit ping request body size to 1MB. ([#1098](https://github.com/mozilla/glean/pull/1098))
+    * BUGFIX: Require activities executed via `GleanDebugView` to be exported.
+
 # 52.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v51.0.0...v52.0.0)
