@@ -364,6 +364,34 @@ inline void Scope::initData(
   setHeaderPtr(data.get().release());
 }
 
+uint32_t Scope::firstFrameSlot() const {
+  switch (kind()) {
+    case ScopeKind::Lexical:
+    case ScopeKind::SimpleCatch:
+    case ScopeKind::Catch:
+    case ScopeKind::FunctionLexical:
+    case ScopeKind::ClassBody:
+      // For intra-frame scopes, find the enclosing scope's next frame slot.
+      MOZ_ASSERT(is<LexicalScope>());
+      return LexicalScope::nextFrameSlot(AbstractScopePtr(enclosing()));
+
+    case ScopeKind::NamedLambda:
+    case ScopeKind::StrictNamedLambda:
+      // Named lambda scopes cannot have frame slots.
+      return LOCALNO_LIMIT;
+
+    case ScopeKind::FunctionBodyVar:
+      if (enclosing()->is<FunctionScope>()) {
+        return enclosing()->as<FunctionScope>().nextFrameSlot();
+      }
+      break;
+
+    default:
+      break;
+  }
+  return 0;
+}
+
 uint32_t Scope::chainLength() const {
   uint32_t length = 0;
   for (ScopeIter si(const_cast<Scope*>(this)); si; si++) {
@@ -596,26 +624,6 @@ bool Scope::dumpForDisassemble(JSContext* cx, JS::Handle<Scope*> scope,
 
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
-uint32_t LexicalScope::firstFrameSlot() const {
-  switch (kind()) {
-    case ScopeKind::Lexical:
-    case ScopeKind::SimpleCatch:
-    case ScopeKind::Catch:
-    case ScopeKind::FunctionLexical:
-    case ScopeKind::ClassBody:
-      // For intra-frame scopes, find the enclosing scope's next frame slot.
-      return nextFrameSlot(AbstractScopePtr(enclosing()));
-    case ScopeKind::NamedLambda:
-    case ScopeKind::StrictNamedLambda:
-      // Named lambda scopes cannot have frame slots.
-      return LOCALNO_LIMIT;
-    default:
-      // Otherwise start at 0.
-      break;
-  }
-  return 0;
-}
-
 /* static */
 uint32_t LexicalScope::nextFrameSlot(const AbstractScopePtr& scope) {
   for (AbstractScopePtrIter si(scope); si; si++) {
@@ -714,7 +722,7 @@ XDRResult LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
     uint32_t firstFrameSlot;
     uint32_t nextFrameSlot;
     if (mode == XDR_ENCODE) {
-      firstFrameSlot = scope->as<LexicalScope>().firstFrameSlot();
+      firstFrameSlot = scope->firstFrameSlot();
       nextFrameSlot = data->nextFrameSlot;
     }
 
@@ -1003,13 +1011,6 @@ VarScope* VarScope::createWithData(JSContext* cx, ScopeKind kind,
   return Scope::create<VarScope>(cx, kind, enclosing, envShape, data);
 }
 
-uint32_t VarScope::firstFrameSlot() const {
-  if (enclosing()->is<FunctionScope>()) {
-    return enclosing()->as<FunctionScope>().nextFrameSlot();
-  }
-  return 0;
-}
-
 template <XDRMode mode>
 /* static */
 XDRResult VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
@@ -1029,7 +1030,7 @@ XDRResult VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
     uint32_t nextFrameSlot;
     if (mode == XDR_ENCODE) {
       needsEnvironment = scope->hasEnvironment();
-      firstFrameSlot = scope->as<VarScope>().firstFrameSlot();
+      firstFrameSlot = scope->firstFrameSlot();
       nextFrameSlot = data->nextFrameSlot;
     }
     MOZ_TRY(xdr->codeUint8(&needsEnvironment));
@@ -1558,19 +1559,21 @@ bool ScopeIter::hasSyntacticEnvironment() const {
          scope()->kind() != ScopeKind::NonSyntactic;
 }
 
-BindingIter::BindingIter(Scope* scope) : Base() {
-  switch (scope->kind()) {
+BindingIter::BindingIter(ScopeKind kind, BaseScopeData* data,
+                         uint32_t firstFrameSlot)
+    : Base() {
+  switch (kind) {
     case ScopeKind::Lexical:
     case ScopeKind::SimpleCatch:
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody:
-      init(scope->as<LexicalScope>().data(),
-           scope->as<LexicalScope>().firstFrameSlot(), 0);
+      init(*static_cast<LexicalScope::Data*>(data), firstFrameSlot, 0);
       break;
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
-      init(scope->as<LexicalScope>().data(), LOCALNO_LIMIT, IsNamedLambda);
+      init(*static_cast<LexicalScope::Data*>(data), LOCALNO_LIMIT,
+           IsNamedLambda);
       break;
     case ScopeKind::With:
       // With scopes do not have bindings.
@@ -1579,36 +1582,37 @@ BindingIter::BindingIter(Scope* scope) : Base() {
       break;
     case ScopeKind::Function: {
       uint8_t flags = IgnoreDestructuredFormalParameters;
-      if (scope->as<FunctionScope>().hasParameterExprs()) {
+      if (static_cast<FunctionScope::Data*>(data)->hasParameterExprs) {
         flags |= HasFormalParameterExprs;
       }
-      init(scope->as<FunctionScope>().data(), flags);
+      init(*static_cast<FunctionScope::Data*>(data), flags);
       break;
     }
     case ScopeKind::FunctionBodyVar:
-      init(scope->as<VarScope>().data(),
-           scope->as<VarScope>().firstFrameSlot());
+      init(*static_cast<VarScope::Data*>(data), firstFrameSlot);
       break;
     case ScopeKind::Eval:
     case ScopeKind::StrictEval:
-      init(scope->as<EvalScope>().data(),
-           scope->kind() == ScopeKind::StrictEval);
+      init(*static_cast<EvalScope::Data*>(data), kind == ScopeKind::StrictEval);
       break;
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic:
-      init(scope->as<GlobalScope>().data());
+      init(*static_cast<GlobalScope::Data*>(data));
       break;
     case ScopeKind::Module:
-      init(scope->as<ModuleScope>().data());
+      init(*static_cast<ModuleScope::Data*>(data));
       break;
     case ScopeKind::WasmInstance:
-      init(scope->as<WasmInstanceScope>().data());
+      init(*static_cast<WasmInstanceScope::Data*>(data));
       break;
     case ScopeKind::WasmFunction:
-      init(scope->as<WasmFunctionScope>().data());
+      init(*static_cast<WasmFunctionScope::Data*>(data));
       break;
   }
 }
+
+BindingIter::BindingIter(Scope* scope)
+    : BindingIter(scope->kind(), scope->rawData(), scope->firstFrameSlot()) {}
 
 BindingIter::BindingIter(JSScript* script) : BindingIter(script->bodyScope()) {}
 

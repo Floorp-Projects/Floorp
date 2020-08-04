@@ -36,6 +36,7 @@ class AbstractBaseScopeData;
 template <typename NameT>
 class AbstractBindingIter;
 
+class BindingIter;
 class ModuleObject;
 class AbstractScopePtr;
 
@@ -275,6 +276,7 @@ class WrappedPtrOperations<Scope*, Wrapper> {
 class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   friend class GCMarker;
   friend class frontend::ScopeCreationData;
+  friend class js::BindingIter;
 
  protected:
   // The raw data pointer, stored in the cell header.
@@ -360,6 +362,8 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   bool hasEnvironment() const {
     return hasEnvironment(kind_, environmentShape());
   }
+
+  uint32_t firstFrameSlot() const;
 
   uint32_t chainLength() const;
   uint32_t environmentChainLength() const;
@@ -483,8 +487,6 @@ class LexicalScope : public Scope {
   static uint32_t nextFrameSlot(const AbstractScopePtr& scope);
 
  public:
-  uint32_t firstFrameSlot() const;
-
   uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
 
   // Returns an empty shape for extensible global and non-syntactic lexical
@@ -705,8 +707,6 @@ class VarScope : public Scope {
   const Data& data() const { return *static_cast<const Data*>(rawData()); }
 
  public:
-  uint32_t firstFrameSlot() const;
-
   uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
 };
 
@@ -1432,6 +1432,8 @@ class BindingIter : public AbstractBindingIter<JSAtom> {
   using Base = AbstractBindingIter<JSAtom>;
 
  public:
+  BindingIter(ScopeKind kind, BaseScopeData* data, uint32_t firstFrameSlot);
+
   explicit BindingIter(Scope* scope);
   explicit BindingIter(JSScript* script);
 
