@@ -635,8 +635,6 @@ class FunctionScope : public Scope {
   }
 
   static bool isSpecialName(JSContext* cx, JSAtom* name);
-
-  static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
 //
@@ -710,8 +708,6 @@ class VarScope : public Scope {
   uint32_t firstFrameSlot() const;
 
   uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
-
-  static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
 template <>
@@ -906,8 +902,6 @@ class EvalScope : public Scope {
     }
     return !nearestVarScopeForDirectEval(enclosing())->is<GlobalScope>();
   }
-
-  static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
 template <>
@@ -994,8 +988,6 @@ class ModuleScope : public Scope {
   uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
 
   ModuleObject* module() const { return data().module; }
-
-  static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
 class WasmInstanceScope : public Scope {
@@ -1047,8 +1039,6 @@ class WasmInstanceScope : public Scope {
   uint32_t globalsStart() const { return data().globalsStart; }
 
   uint32_t namesCount() const { return data().length; }
-
-  static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
 // Scope corresponding to the wasm function. A WasmFunctionScope is used by
@@ -1090,9 +1080,6 @@ class WasmFunctionScope : public Scope {
   Data& data() { return *static_cast<Data*>(rawData()); }
 
   const Data& data() const { return *static_cast<const Data*>(rawData()); }
-
- public:
-  static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
 template <typename F>
@@ -1460,6 +1447,12 @@ JSAtom* FrameSlotName(JSScript* script, jsbytecode* pc);
 
 Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                              uint32_t numSlots, uint32_t baseShapeFlags);
+
+template <class T>
+Shape* EmptyEnvironmentShape(JSContext* cx) {
+  return EmptyEnvironmentShape(cx, &T::class_, T::RESERVED_SLOTS,
+                               T::BASESHAPE_FLAGS);
+}
 
 //
 // A refinement BindingIter that only iterates over positional formal
