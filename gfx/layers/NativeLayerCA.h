@@ -31,6 +31,9 @@ namespace gl {
 class GLContextCGL;
 class MozFramebuffer;
 }  // namespace gl
+namespace wr {
+class RenderMacIOSurfaceTextureHostOGL;
+}  // namespace wr
 
 namespace layers {
 
@@ -106,6 +109,9 @@ class NativeLayerRootCA : public NativeLayerRoot {
 
   void SetBackingScale(float aBackingScale);
   float BackingScale();
+
+  already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
+      bool aIsOpaque) override;
 
  protected:
   explicit NativeLayerRootCA(CALayer* aLayer);
@@ -203,11 +209,14 @@ class NativeLayerCA : public NativeLayer {
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
 
+  void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
+
  protected:
   friend class NativeLayerRootCA;
 
   NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque,
                 SurfacePoolHandleCA* aSurfacePoolHandle);
+  explicit NativeLayerCA(bool aIsOpaque);
   ~NativeLayerCA() override;
 
   // Gets the next surface for drawing from our swap chain and stores it in
@@ -291,6 +300,7 @@ class NativeLayerCA : public NativeLayer {
     bool mMutatedDisplayRect = true;
     bool mMutatedClipRect = true;
     bool mMutatedBackingScale = true;
+    bool mMutatedSize = true;
     bool mMutatedSurfaceIsFlipped = true;
     bool mMutatedFrontSurface = true;
   };
@@ -351,6 +361,7 @@ class NativeLayerCA : public NativeLayer {
   RefPtr<MacIOSurface> mInProgressLockedIOSurface;
 
   RefPtr<SurfacePoolHandleCA> mSurfacePoolHandle;
+  RefPtr<wr::RenderMacIOSurfaceTextureHostOGL> mTextureHost;
 
   Representation mOnscreenRepresentation;
   Representation mOffscreenRepresentation;
@@ -358,7 +369,7 @@ class NativeLayerCA : public NativeLayer {
   gfx::IntPoint mPosition;
   gfx::Matrix4x4 mTransform;
   gfx::IntRect mDisplayRect;
-  const gfx::IntSize mSize;
+  gfx::IntSize mSize;
   Maybe<gfx::IntRect> mClipRect;
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;

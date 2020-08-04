@@ -5,7 +5,7 @@
 use api::{AddFont, BlobImageResources, ResourceUpdate};
 use api::{BlobImageRequest, RasterizedBlobImage};
 use api::{ClearCache, DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
-use api::{ExternalImageData, ExternalImageType, BlobImageResult, FontInstanceData};
+use api::{ExternalImageData, ExternalImageType, ExternalImageId, BlobImageResult, FontInstanceData};
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
 use api::{BlobImageKey, MemoryReport, VoidPtrToSizeFn};
@@ -1299,6 +1299,24 @@ impl ResourceCache {
         id
     }
 
+    pub fn create_compositor_external_surface(
+        &mut self,
+        is_opaque: bool,
+    ) -> NativeSurfaceId {
+        let id = NativeSurfaceId(NEXT_NATIVE_SURFACE_ID.fetch_add(1, Ordering::Relaxed) as u64);
+
+        self.pending_native_surface_updates.push(
+            NativeSurfaceOperation {
+                details: NativeSurfaceOperationDetails::CreateExternalSurface {
+                    id,
+                    is_opaque,
+                },
+            }
+        );
+
+        id
+    }
+
     /// Queue up destruction of an existing native OS surface. This is used when
     /// a picture cache surface is dropped or resized.
     pub fn destroy_compositor_surface(
@@ -1341,6 +1359,22 @@ impl ResourceCache {
             }
         );
     }
+
+    pub fn attach_compositor_external_image(
+        &mut self,
+        id: NativeSurfaceId,
+        external_image: ExternalImageId,
+    ) {
+        self.pending_native_surface_updates.push(
+            NativeSurfaceOperation {
+                details: NativeSurfaceOperationDetails::AttachExternalImage {
+                    id,
+                    external_image,
+                },
+            }
+        );
+    }
+
 
     pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {
         debug_assert_eq!(self.state, State::QueryResources);

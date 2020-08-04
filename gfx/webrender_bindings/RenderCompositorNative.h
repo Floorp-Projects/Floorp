@@ -50,9 +50,12 @@ class RenderCompositorNative : public RenderCompositor {
   void CompositorEndFrame() override;
   void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aVirtualOffset,
                      wr::DeviceIntSize aTileSize, bool aIsOpaque) override;
+  void CreateExternalSurface(wr::NativeSurfaceId aId, bool aIsOpaque) override;
   void DestroySurface(NativeSurfaceId aId) override;
   void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
+  void AttachExternalImage(wr::NativeSurfaceId aId,
+                           wr::ExternalImageId aExternalImage) override;
   void AddSurface(wr::NativeSurfaceId aId,
                   const wr::CompositorSurfaceTransform& aTransform,
                   wr::DeviceIntRect aClipRect) override;
@@ -95,8 +98,12 @@ class RenderCompositorNative : public RenderCompositor {
       return gfx::IntSize(mTileSize.width, mTileSize.height);
     }
 
+    // External images can change size depending on which image
+    // is attached, so mTileSize will be 0,0 when mIsExternal
+    // is true.
     wr::DeviceIntSize mTileSize;
     bool mIsOpaque;
+    bool mIsExternal = false;
     std::unordered_map<TileKey, RefPtr<layers::NativeLayer>, TileKeyHashFn>
         mNativeLayers;
   };
