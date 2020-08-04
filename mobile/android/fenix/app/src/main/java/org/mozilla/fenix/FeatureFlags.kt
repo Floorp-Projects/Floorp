@@ -47,5 +47,5 @@ object FeatureFlags {
     /**
      * Enables wait til first contentful paint
      */
-    val waitUntilPaintToDraw = Config.channel.isDebug
+    val waitUntilPaintToDraw = Config.channel.isNightlyOrDebug
 }
