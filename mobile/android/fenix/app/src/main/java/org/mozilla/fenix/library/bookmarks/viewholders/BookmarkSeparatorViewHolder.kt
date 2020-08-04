@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.bookmarks.viewholders
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
+import org.mozilla.fenix.library.bookmarks.BookmarkPayload
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 
 /**
@@ -26,5 +27,13 @@ class BookmarkSeparatorViewHolder(
         this.item = item
         containerView.displayAs(LibrarySiteItemView.ItemType.SEPARATOR)
         setupMenu(item)
+    }
+
+    override fun bind(
+        item: BookmarkNode,
+        mode: BookmarkFragmentState.Mode,
+        payload: BookmarkPayload
+    ) {
+        bind(item, mode)
     }
 }

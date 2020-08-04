@@ -11,6 +11,7 @@ import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkItemMenu
+import org.mozilla.fenix.library.bookmarks.BookmarkPayload
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 
 /**
@@ -26,6 +27,12 @@ abstract class BookmarkNodeViewHolder(
     abstract fun bind(
         item: BookmarkNode,
         mode: BookmarkFragmentState.Mode
+    )
+
+    abstract fun bind(
+        item: BookmarkNode,
+        mode: BookmarkFragmentState.Mode,
+        payload: BookmarkPayload
     )
 
     protected fun setSelectionListeners(item: BookmarkNode, selectionHolder: SelectionHolder<BookmarkNode>) {
