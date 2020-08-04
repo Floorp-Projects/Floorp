@@ -599,10 +599,12 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
   AutoRealm ar(cx, state.script());
   if (construct) {
     bool createSingleton = false;
-    jsbytecode* pc;
-    if (JSScript* script = cx->currentScript(&pc)) {
-      if (ObjectGroup::useSingletonForNewObject(cx, script, pc)) {
-        createSingleton = true;
+    if (IsTypeInferenceEnabled()) {
+      jsbytecode* pc;
+      if (JSScript* script = cx->currentScript(&pc)) {
+        if (ObjectGroup::useSingletonForNewObject(cx, script, pc)) {
+          createSingleton = true;
+        }
       }
     }
 
