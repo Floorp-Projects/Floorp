@@ -2021,6 +2021,13 @@ void nsCocoaWindow::ReportMoveEvent() {
 
   UpdateBounds();
 
+  // The zoomed state can change when we're moving, in which case we need to
+  // update our internal mSizeMode. This can happen either if we're maximized
+  // and then moved, or if we're not maximized and moved back to zoomed state.
+  if (mWindow && ((mSizeMode == nsSizeMode_Maximized) ^ [mWindow isZoomed])) {
+    DispatchSizeModeEvent();
+  }
+
   // Dispatch the move event to Gecko
   NotifyWindowMoved(mBounds.x, mBounds.y);
 
