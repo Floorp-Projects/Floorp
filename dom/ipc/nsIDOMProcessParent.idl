@@ -10,10 +10,12 @@
 namespace mozilla {
 namespace dom {
 class ContentParent;
+class JSActorManager;
 } // namespace dom
 } // namespace mozilla
 %}
 [ptr] native ContentParentPtr(mozilla::dom::ContentParent);
+[ptr] native JSActorManagerPtr(mozilla::dom::JSActorManager);
 
 webidl JSProcessActorParent;
 
@@ -44,6 +46,9 @@ interface nsIDOMProcessParent: nsISupports {
   [infallible] readonly attribute boolean canSend;
 
   [notxpcom, nostdcall] ContentParentPtr AsContentParent();
+
+  /** Cast this nsIDOMProcessParent to a JSActorManager */
+  [notxpcom, nostdcall] JSActorManagerPtr AsJSActorManager();
 
   /**
    * Remote type of the process.

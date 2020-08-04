@@ -4334,6 +4334,8 @@ NS_IMETHODIMP ContentChild::GetCanSend(bool* aCanSend) {
 
 ContentChild* ContentChild::AsContentChild() { return this; }
 
+JSActorManager* ContentChild::AsJSActorManager() { return this; }
+
 IPCResult ContentChild::RecvFlushFOGData(FlushFOGDataResolver&& aResolver) {
 #ifdef MOZ_GLEAN
   glean::FlushFOGData(std::move(aResolver));
