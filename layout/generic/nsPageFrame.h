@@ -69,9 +69,6 @@ class nsPageFrame final : public nsContainerFrame {
                        nsFontMetrics& aFontMetrics, const nsRect& aRect,
                        int32_t aJust, const nsString& aStr);
 
-  nsReflowStatus ReflowPageContent(nsPresContext*,
-                                   const ReflowInput& aPageReflowInput);
-
   void DrawHeaderFooter(gfxContext& aRenderingContext,
                         nsFontMetrics& aFontMetrics,
                         nsHeaderFooterEnum aHeaderFooter, int32_t aJust,
