@@ -1844,7 +1844,7 @@ pref("browser.crashReports.unsubmittedCheck.autoSubmit2", false);
 // any other value means autofill isn't available.
 // "detect" means it's enabled if conditions defined in the extension are met.
 pref("extensions.formautofill.available", "detect");
-pref("extensions.formautofill.creditCards.available", false);
+pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
 pref("extensions.formautofill.creditCards.enabled", true);
