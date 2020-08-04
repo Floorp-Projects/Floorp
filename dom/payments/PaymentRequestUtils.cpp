@@ -50,9 +50,7 @@ nsresult DeserializeToJSObject(const nsAString& aSerializedObject,
 nsresult DeserializeToJSValue(const nsAString& aSerializedObject,
                               JSContext* aCx, JS::MutableHandleValue aValue) {
   MOZ_ASSERT(aCx);
-  if (!JS_ParseJSON(aCx,
-                    static_cast<const char16_t*>(
-                        PromiseFlatString(aSerializedObject).get()),
+  if (!JS_ParseJSON(aCx, aSerializedObject.BeginReading(),
                     aSerializedObject.Length(), aValue)) {
     return NS_ERROR_UNEXPECTED;
   }
