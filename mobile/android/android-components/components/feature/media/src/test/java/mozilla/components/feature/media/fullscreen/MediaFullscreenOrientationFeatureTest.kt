@@ -16,12 +16,16 @@ import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -46,7 +50,13 @@ class MediaFullscreenOrientationFeatureTest {
     @Test
     fun `media exiting fullscreen should request SCREEN_ORIENTATION_USER`() {
         val store = BrowserStore(
-            BrowserState()
+            BrowserState(
+                media = MediaState(
+                    MediaState.Aggregate(
+                        activeFullscreenOrientation = MediaState.FullscreenOrientation.LANDSCAPE
+                    )
+                )
+            )
         )
 
         val fullscreenFeature = MediaFullscreenOrientationFeature(activity, store)
@@ -103,5 +113,49 @@ class MediaFullscreenOrientationFeatureTest {
         ).joinBlocking()
         testDispatcher.advanceUntilIdle()
         verify(activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+    }
+
+    @Test
+    fun `should ignore initial fullscreen orientation status`() {
+        // The orientation is either null or already set. Nothing to do.
+
+        val store = BrowserStore(
+            BrowserState()
+        )
+        val fullscreenFeature = spy(MediaFullscreenOrientationFeature(activity, store))
+
+        fullscreenFeature.start()
+
+        verify(fullscreenFeature, never()).onChanged(any())
+    }
+
+    @Test
+    fun `should ignore initial fullscreen orientation status and act upon future changes`() {
+        // The orientation is either null or already set. Nothing to do.
+        // We should act only upon subsequent media orientation changes.
+
+        val store = BrowserStore(
+            BrowserState(
+                media = MediaState(
+                    MediaState.Aggregate(
+                        activeFullscreenOrientation = MediaState.FullscreenOrientation.PORTRAIT
+                    )
+                )
+            )
+        )
+        val fullscreenFeature = spy(MediaFullscreenOrientationFeature(activity, store))
+
+        fullscreenFeature.start()
+        store.dispatch(
+            MediaAction.UpdateMediaAggregateAction(
+                MediaState.Aggregate(
+                    activeFullscreenOrientation = MediaState.FullscreenOrientation.LANDSCAPE
+                )
+            )
+        ).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(fullscreenFeature, times(1)).onChanged(any())
+        verify(fullscreenFeature, times(1)).onChanged(MediaState.FullscreenOrientation.LANDSCAPE)
     }
 }
