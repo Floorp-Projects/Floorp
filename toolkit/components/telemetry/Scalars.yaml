@@ -3690,6 +3690,22 @@ formautofill.creditCards:
       - 'fennec'
     record_in_processes:
       - 'main'
+  autofill_profiles_count:
+    bug_numbers:
+      - 990203
+    description: >
+      Count at store time how many credit card autofill profiles user has.
+    expires: never
+    kind: uint
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - jmathies@mozilla.com
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section contains scalars for Screenshots.
 screenshots:
