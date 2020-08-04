@@ -19,7 +19,6 @@ function run() {
     printerList.printers.forEach(printer => {
       isnot(printer.name, null, "Printer name should never be null.");
       isnot(printer.name, "", "Printer name should never be empty.");
-
       printer.paperList.forEach(paper => {
         isnot(paper.name, null, "Paper name should never be null.");
         isnot(paper.name, "", "Paper name should never be empty.");
@@ -29,18 +28,6 @@ function run() {
 
         isnot(paper.height, null, "Paper height should never be null.");
         ok(paper.height > 0.0, "Paper height should be greater than zero.");
-
-        isnot(paper.unwriteableMarginTop, null, "Paper unwriteableMarginTop should never be null.");
-        ok(paper.unwriteableMarginTop >= 0.0, "Paper unwriteableMarginTop should be greater than or equal to zero.");
-
-        isnot(paper.unwriteableMarginBottom, null, "Paper unwriteableMarginBottom should never be null.");
-        ok(paper.unwriteableMarginBottom >= 0.0, "Paper unwriteableMarginBottom should be greater than or equal to zero.");
-
-        isnot(paper.unwriteableMarginLeft, null, "Paper unwriteableMarginLeft should never be null.");
-        ok(paper.unwriteableMarginLeft >= 0.0, "Paper unwriteableMarginLeft should be greater than or equal to zero.");
-
-        isnot(paper.unwriteableMarginRight, null, "Paper unwriteableMarginRight should never be null.");
-        ok(paper.unwriteableMarginRight >= 0.0, "Paper unwriteableMarginRight should be greater than or equal to zero.");
       });
     })
   } catch (e) {
