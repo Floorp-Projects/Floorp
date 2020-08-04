@@ -2303,7 +2303,8 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
     return true;
   }
 
-  {
+  if (!jit::JitOptions.warpBuilder) {
+    // Set the accessed-getter flag for IonBuilder.
     jsbytecode* pc;
     JSScript* script = cx->currentScript(&pc);
     if (script && script->hasJitScript()) {

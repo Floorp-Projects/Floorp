@@ -994,10 +994,15 @@ JSObject* js::NewObjectWithGroupCommon(JSContext* cx, HandleObjectGroup group,
 }
 
 bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
-  jsbytecode* pc;
-  RootedScript script(cx, cx->currentScript(&pc));
   gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
   NewObjectKind newKind = GenericObject;
+
+  jsbytecode* pc = nullptr;
+  RootedScript script(cx);
+  if (IsTypeInferenceEnabled()) {
+    script = cx->currentScript(&pc);
+  }
+
   if (script &&
       ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Object)) {
     newKind = SingletonObject;
