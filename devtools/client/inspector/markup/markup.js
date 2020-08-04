@@ -356,7 +356,6 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._walkerEventListener = new WalkerEventListener(this.inspector, {
     "display-change": this._onWalkerNodeStatesChanged,
     "scrollable-change": this._onWalkerNodeStatesChanged,
-    "overflow-change": this._onWalkerNodeStatesChanged,
     mutations: this._onWalkerMutations,
   });
 }
@@ -923,10 +922,6 @@ MarkupView.prototype = {
       );
       nodeFront.walkerFront.on(
         "scrollable-change",
-        this._onWalkerNodeStatesChanged
-      );
-      nodeFront.walkerFront.on(
-        "overflow-change",
         this._onWalkerNodeStatesChanged
       );
       nodeFront.walkerFront.on("mutations", this._onWalkerMutations);
