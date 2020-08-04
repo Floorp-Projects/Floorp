@@ -52,8 +52,8 @@ function checkResults() {
   frameA.removeEventListener("load", checkResults);
 
   var channel = SpecialPowers.wrap(frameA.contentWindow).docShell.currentDocumentChannel;
-  var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
-  var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+  var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.asciiSpec;
+  var loadingPrincipal = channel.loadInfo.loadingPrincipal.asciiSpec;
 
   is(triggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
     "TriggeringPrincipal for targeted window.open() should be the iframe triggering the load");

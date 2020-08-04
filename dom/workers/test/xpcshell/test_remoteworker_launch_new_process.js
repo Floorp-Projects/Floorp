@@ -91,7 +91,7 @@ add_task(async function launch_remoteworkers_in_new_processes() {
 
   info(
     `web content service worker registered: ${JSON.stringify({
-      principal: swRegInfoWeb.principal.URI.spec,
+      principal: swRegInfoWeb.principal.spec,
       scope: swRegInfoWeb.scope,
     })}`
   );
@@ -106,7 +106,7 @@ add_task(async function launch_remoteworkers_in_new_processes() {
 
   info(
     `privilegedmozilla service worker registered: ${JSON.stringify({
-      principal: swRegInfoPriv.principal.URI.spec,
+      principal: swRegInfoPriv.principal.spec,
       scope: swRegInfoPriv.scope,
     })}`
   );
