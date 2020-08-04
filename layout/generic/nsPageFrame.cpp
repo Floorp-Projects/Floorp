@@ -441,22 +441,6 @@ static void BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
   aList->AppendToTop(&list);
 }
 
-static nsIFrame* GetNextPage(nsIFrame* aPageContentFrame) {
-  // XXX ugh
-  nsIFrame* pageFrame = aPageContentFrame->GetParent();
-  NS_ASSERTION(pageFrame->IsPageFrame(),
-               "pageContentFrame has unexpected parent");
-  nsIFrame* nextPageFrame = pageFrame->GetNextSibling();
-  if (!nextPageFrame) return nullptr;
-  NS_ASSERTION(nextPageFrame->IsPageFrame(),
-               "pageFrame's sibling is not a page frame...");
-  nsIFrame* f = nextPageFrame->PrincipalChildList().FirstChild();
-  NS_ASSERTION(f, "pageFrame has no page content frame!");
-  NS_ASSERTION(f->IsPageContentFrame(),
-               "pageFrame's child is not page content!");
-  return f;
-}
-
 static gfx::Matrix4x4 ComputePageTransform(nsIFrame* aFrame,
                                            float aAppUnitsPerPixel) {
   float scale = aFrame->PresContext()->GetPageScale();
@@ -600,13 +584,18 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       uint8_t oldPageNum = aBuilder->GetBuildingExtraPagesForPageNum();
       aBuilder->SetBuildingExtraPagesForPageNum(mPageNum);
 
-      nsIFrame* page = child;
-      while ((page = GetNextPage(page)) != nullptr) {
-        nsRect childVisible = visibleRect + child->GetOffsetTo(page);
+      // The static_cast here is technically unnecessary, but it helps
+      // devirtualize the GetNextContinuation() function call if pcf has a
+      // concrete type (with an inherited `final` GetNextContinuation() impl).
+      MOZ_ASSERT(child->IsPageContentFrame(), "unexpected child frame type");
+      auto* pageCF = static_cast<nsPageContentFrame*>(child);
+      while ((pageCF = static_cast<nsPageContentFrame*>(
+                  pageCF->GetNextContinuation()))) {
+        nsRect childVisible = visibleRect + child->GetOffsetTo(pageCF);
 
         nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-            aBuilder, page, childVisible, childVisible);
-        BuildDisplayListForExtraPage(aBuilder, this, page, &content);
+            aBuilder, pageCF, childVisible, childVisible);
+        BuildDisplayListForExtraPage(aBuilder, this, pageCF, &content);
       }
 
       aBuilder->SetBuildingExtraPagesForPageNum(oldPageNum);
