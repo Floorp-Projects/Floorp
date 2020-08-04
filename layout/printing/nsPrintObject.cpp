@@ -206,6 +206,20 @@ nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
     mozilla::Unused << nsDocShell::Cast(mDocShell)->GetDocument();
   }
 
+  // If we are cloning from a document in a different BrowsingContext, we need
+  // to make sure to copy over our opener policy information from that
+  // BrowsingContext.
+  BrowsingContext* targetBC = mDocShell->GetBrowsingContext();
+  BrowsingContext* sourceBC = aDoc->GetBrowsingContext();
+  NS_ENSURE_STATE(sourceBC);
+  if (targetBC != sourceBC) {
+    MOZ_ASSERT(targetBC->IsTopContent());
+    // In the case where the source is an iframe, this information needs to be
+    // copied from the toplevel source BrowsingContext, as we may be making a
+    // static clone of a single subframe.
+    targetBC->SetOpenerPolicy(sourceBC->Top()->GetOpenerPolicy());
+  }
+
   mDocument = aDoc->CreateStaticClone(mDocShell);
   NS_ENSURE_STATE(mDocument);
   mHasSelection = CachePrintSelectionRanges(*aDoc, *mDocument);
