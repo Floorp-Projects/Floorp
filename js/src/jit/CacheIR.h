@@ -1676,6 +1676,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachNewStringIterator(HandleFunction callee);
   AttachDecision tryAttachNewRegExpStringIterator(HandleFunction callee);
   AttachDecision tryAttachObjectCreate(HandleFunction callee);
+  AttachDecision tryAttachArrayConstructor(HandleFunction callee);
   AttachDecision tryAttachTypedArrayConstructor(HandleFunction callee);
   AttachDecision tryAttachReflectGetPrototypeOf(HandleFunction callee);
 
