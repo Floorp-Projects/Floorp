@@ -4471,10 +4471,9 @@ impl PrimitiveList {
             flags.insert(ClusterFlags::PREFER_COMPOSITOR_SURFACE);
         }
 
-        let culling_rect = prim_instance.local_clip_rect
+        let culling_rect = prim_instance.clip_set.local_clip_rect
             .intersection(&prim_rect)
             .unwrap_or_else(LayoutRect::zero);
-
 
         // Primitive lengths aren't evenly distributed among primitive lists:
         // We often have a large amount of single primitive lists, a
@@ -6157,7 +6156,7 @@ impl PicturePrimitive {
                             // frame building is usually problematic since scene building will cache
                             // the primitive information in the GPU already.
                             prim_data.common.prim_rect = prim_rect;
-                            prim_instance.local_clip_rect = prim_rect;
+                            prim_instance.clip_set.local_clip_rect = prim_rect;
 
                             // Update the cluster bounding rect now that we have the backdrop rect.
                             cluster.bounding_rect = cluster.bounding_rect.union(&prim_rect);
