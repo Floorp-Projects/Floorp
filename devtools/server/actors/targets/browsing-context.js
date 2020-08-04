@@ -299,6 +299,7 @@ const browsingContextTargetPrototype = {
       this
     );
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
+    this.notifyResourceDestroyed = this.notifyResourceDestroyed.bind(this);
 
     TargetActorRegistry.registerTargetActor(this);
   },
@@ -327,6 +328,17 @@ const browsingContextTargetPrototype = {
    *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
    */
   notifyResourceAvailable(resources) {
+    this._emitResourcesForm("resource-available-form", resources);
+  },
+
+  notifyResourceDestroyed(resources) {
+    this._emitResourcesForm("resource-destroyed-form", resources);
+  },
+
+  /**
+   * Wrapper around emit for resource forms to bail early after destroy.
+   */
+  _emitResourcesForm(name, resources) {
     if (!this.actorID) {
       // Don't try to emit if the actor was destroyed.
       return;

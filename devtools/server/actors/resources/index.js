@@ -78,6 +78,7 @@ function watchResources(watcherOrTargetActor, resourceTypes) {
 
     const watcher = new WatcherClass(watcherOrTargetActor, {
       onAvailable: watcherOrTargetActor.notifyResourceAvailable,
+      onDestroyed: watcherOrTargetActor.notifyResourceDestroyed,
     });
     watchers.set(watcherOrTargetActor, watcher);
   }
