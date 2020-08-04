@@ -3361,28 +3361,6 @@ nsDocumentViewer::Cancel() {
   return mPrintJob->Cancel();
 }
 
-#  ifdef NS_PRINT_PREVIEW
-// Reset ESM focus for all descendent doc shells.
-static void ResetFocusState(nsIDocShell* aDocShell) {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
-    return;
-  }
-
-  nsTArray<RefPtr<nsIDocShell>> docShells;
-  aDocShell->GetAllDocShellsInSubtree(nsIDocShellTreeItem::typeContent,
-                                      nsIDocShell::ENUMERATE_FORWARDS,
-                                      docShells);
-
-  for (const auto& currentContainer : docShells) {
-    nsCOMPtr<nsPIDOMWindowOuter> win = do_GetInterface(currentContainer);
-    if (win) {
-      fm->ClearFocus(win);
-    }
-  }
-}
-#  endif  // NS_PRINT_PREVIEW
-
 NS_IMETHODIMP
 nsDocumentViewer::ExitPrintPreview() {
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
@@ -3407,17 +3385,12 @@ nsDocumentViewer::ExitPrintPreview() {
   mPrintJob->Destroy();
   mPrintJob = nullptr;
 
-  // Nowadays we use a static clone document for printing, and print preview is
-  // in a separate tab that gets closed after print preview finishes.  Probably
-  // nothing below this line is necessary anymore.
-
-  SetIsPrintPreview(false);
-
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
-  ResetFocusState(docShell);
-
-  SetOverrideDPPX(mOverrideDPPX);
-  Show();
+  // Since the print preview implementation discards the window that was used
+  // to show the print preview, we skip certain cleanup that we would otherwise
+  // want to do.  Specifically, we do not call `SetIsPrintPreview(false)` to
+  // unblock navigation, we do not call `SetOverrideDPPX` to reset the
+  // devicePixelRatio, and we do not call `Show` to make such changes take
+  // affect.
 #  endif  // NS_PRINT_PREVIEW
 
   return NS_OK;
