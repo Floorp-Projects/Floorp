@@ -2445,6 +2445,10 @@ bool IonCacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitReflectGetPrototypeOfResult(ObjOperandId objId) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
                                             uint32_t claspOffset) {
   MOZ_CRASH("Call ICs not used in ion");

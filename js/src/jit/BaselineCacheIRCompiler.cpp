@@ -1648,6 +1648,53 @@ bool BaselineCacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitReflectGetPrototypeOfResult(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  Register obj = allocator.useRegister(masm, objId);
+
+  allocator.discardStack(masm);
+
+  MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
+
+  masm.loadObjProto(obj, scratch);
+
+  Label hasProto;
+  masm.branchPtr(Assembler::Above, scratch, ImmWord(1), &hasProto);
+
+  // Call into the VM for lazy prototypes.
+  Label slow, done;
+  masm.branchPtr(Assembler::Equal, scratch, ImmWord(1), &slow);
+
+  masm.moveValue(NullValue(), output.valueReg());
+  masm.jump(&done);
+
+  masm.bind(&hasProto);
+  masm.tagValue(JSVAL_TYPE_OBJECT, scratch, output.valueReg());
+  masm.jump(&done);
+
+  {
+    masm.bind(&slow);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(obj);
+
+    using Fn = bool (*)(JSContext*, HandleObject, MutableHandleValue);
+    callVM<Fn, jit::GetPrototypeOf>(masm);
+
+    stubFrame.leave(masm);
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
                                                  uint32_t claspOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

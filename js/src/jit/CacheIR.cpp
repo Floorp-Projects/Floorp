@@ -6657,6 +6657,36 @@ AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachReflectGetPrototypeOf(
+    HandleFunction callee) {
+  // Need one argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!args_[0].isObject()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'getPrototypeOf' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId argumentId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(argumentId);
+
+  writer.reflectGetPrototypeOfResult(objId);
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("ReflectGetPrototypeOf");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -7512,6 +7542,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachTypedArrayElementShift(callee);
     case InlinableNative::IntrinsicTypedArrayLength:
       return tryAttachTypedArrayLength(callee);
+
+    // Reflect natives.
+    case InlinableNative::ReflectGetPrototypeOf:
+      return tryAttachReflectGetPrototypeOf(callee);
 
     default:
       return AttachDecision::NoAction;

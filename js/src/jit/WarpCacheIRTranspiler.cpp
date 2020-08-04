@@ -1738,6 +1738,17 @@ bool WarpCacheIRTranspiler::emitMathFunctionNumberResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitReflectGetPrototypeOfResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGetPrototypeOf::New(alloc(), obj);
+  addEffectful(ins);
+  pushResult(ins);
+
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
                                           ValOperandId rhsId) {
   MDefinition* obj = getOperand(objId);
