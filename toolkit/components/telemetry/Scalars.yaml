@@ -3706,6 +3706,39 @@ formautofill.creditCards:
       - 'firefox'
     record_in_processes:
       - 'main'
+  detected_sections_count:
+    bug_numbers:
+      - 1656344
+    description: >
+      Count at detection time number of credit card form sections.
+      A single form can contain more than one credit card form section.
+    expires: never
+    kind: uint
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - jmathies@mozilla.com
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
+  submitted_sections_count:
+    bug_numbers:
+      - 1656344
+    description: >
+      Count at submission time number of credit card form sections submitted.
+    expires: never
+    kind: uint
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - jmathies@mozilla.com
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
 
 # The following section contains scalars for Screenshots.
 screenshots:
