@@ -9,11 +9,12 @@ import { toEditorPosition, getTokenEnd } from "../../utils/editor";
 
 import { getIndentation } from "../../utils/indentation";
 
-import type { SourceDocuments, Exception as Exc } from "../../types";
+import type { SourceDocuments, Exception as Exc, SourceId } from "../../types";
 
 type Props = {
   exception: Exc,
   doc: SourceDocuments,
+  selectedSourceId: SourceId,
 };
 
 type MarkText = {
@@ -25,12 +26,12 @@ export default class Exception extends PureComponent<Props> {
   markText: ?MarkText;
 
   componentDidMount() {
-    this.addEditionExceptionLine();
+    this.addEditorExceptionLine();
   }
 
   componentDidUpdate() {
     this.clearEditorExceptionLine();
-    this.addEditionExceptionLine();
+    this.addEditorExceptionLine();
   }
 
   componentWillUnmount() {
@@ -58,14 +59,14 @@ export default class Exception extends PureComponent<Props> {
     this.markText = markText;
   }
 
-  addEditionExceptionLine() {
-    const { exception, doc } = this.props;
-    const { columnNumber, lineNumber, fileName } = exception;
+  addEditorExceptionLine() {
+    const { exception, doc, selectedSourceId } = this.props;
+    const { columnNumber, lineNumber } = exception;
 
     const location = {
       column: columnNumber - 1,
       line: lineNumber,
-      sourceId: fileName,
+      sourceId: selectedSourceId,
     };
 
     const { line, column } = toEditorPosition(location);
