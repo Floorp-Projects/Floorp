@@ -150,6 +150,7 @@ struct FrameScriptInfo
 struct FeaturePolicyInfo
 {
   nsString[]   inheritedDeniedFeatureNames;
+  nsString[]   attributeEnabledFeatureNames;
   nsString     declaredString;
   nsIPrincipal defaultOrigin;
   nsIPrincipal selfOrigin;

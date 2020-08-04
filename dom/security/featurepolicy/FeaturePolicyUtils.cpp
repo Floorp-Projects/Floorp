@@ -265,8 +265,11 @@ void IPDLParamTraits<dom::FeaturePolicy*>::Write(IPC::Message* aMsg,
   info.selfOrigin() = aParam->GetSelfOrigin();
   info.srcOrigin() = aParam->GetSrcOrigin();
 
-  aParam->GetDeclaredString(info.declaredString());
-  aParam->GetInheritedDeniedFeatureNames(info.inheritedDeniedFeatureNames());
+  info.declaredString() = aParam->DeclaredString();
+  info.inheritedDeniedFeatureNames() =
+      aParam->InheritedDeniedFeatureNames().Clone();
+  info.attributeEnabledFeatureNames() =
+      aParam->AttributeEnabledFeatureNames().Clone();
 
   WriteIPDLParam(aMsg, aActor, info);
 }
@@ -289,20 +292,23 @@ bool IPDLParamTraits<dom::FeaturePolicy*>::Read(
     return false;
   }
 
-  // Note that we only do IPC for feature policy to inherit poicy from parent
+  // Note that we only do IPC for feature policy to inherit policy from parent
   // to child document. That does not need to bind feature policy with a node.
   RefPtr<dom::FeaturePolicy> featurePolicy = new dom::FeaturePolicy(nullptr);
   featurePolicy->SetDefaultOrigin(info.defaultOrigin());
   featurePolicy->SetInheritedDeniedFeatureNames(
       info.inheritedDeniedFeatureNames());
 
-  nsString declaredString = info.declaredString();
-  if (declaredString.IsEmpty() || !info.selfOrigin()) {
-    *aResult = std::move(featurePolicy);
-    return true;
+  const auto& declaredString = info.declaredString();
+  if (info.selfOrigin() && !declaredString.IsEmpty()) {
+    featurePolicy->SetDeclaredPolicy(nullptr, declaredString, info.selfOrigin(),
+                                     info.srcOrigin());
   }
-  featurePolicy->SetDeclaredPolicy(nullptr, declaredString, info.selfOrigin(),
-                                   info.srcOrigin());
+
+  for (auto& featureName : info.attributeEnabledFeatureNames()) {
+    featurePolicy->MaybeSetAllowedPolicy(featureName);
+  }
+
   *aResult = std::move(featurePolicy);
   return true;
 }
