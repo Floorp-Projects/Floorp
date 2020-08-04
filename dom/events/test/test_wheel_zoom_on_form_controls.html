@@ -15,6 +15,14 @@
 <input id="input" style="border: 10px solid green;"><br>
 <textarea id="textarea" style="border: 10px solid green;"></textarea><br>
 <select id="select"><option></option></select>
+<select id="list" size=4>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+  <option>XXXXXXXXXX</option>
+</select>
 <script>
 
   async function testControl(id) {
@@ -43,6 +51,7 @@
     await testControl("input");
     await testControl("textarea");
     await testControl("select");
+    await testControl("list");
     SimpleTest.finish();
   }
 

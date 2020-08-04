@@ -246,6 +246,7 @@ select {
 }
 
 select:-moz-select-list-box {
+  overflow: auto;
   background-color: -moz-Field;
   color: -moz-FieldText;
   vertical-align: text-bottom;
