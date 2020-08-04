@@ -26,6 +26,7 @@ import mozilla.components.support.ktx.android.content.longPreference
 import mozilla.components.support.ktx.android.content.stringPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
@@ -95,6 +96,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     override val preferences: SharedPreferences =
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
+
+    var useNewSearchExperience by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_use_new_search_experience),
+        default = false,
+        featureFlag = FeatureFlags.newSearchExperience
+    )
 
     var forceEnableZoom by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_accessibility_force_enable_zoom),

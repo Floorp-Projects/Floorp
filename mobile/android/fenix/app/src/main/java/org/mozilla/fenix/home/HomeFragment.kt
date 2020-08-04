@@ -673,9 +673,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToSearch() {
-        val directions = HomeFragmentDirections.actionGlobalSearch(
-            sessionId = null
-        )
+        val directions = if (requireContext().settings().useNewSearchExperience) {
+            HomeFragmentDirections.actionGlobalSearchDialog()
+        } else {
+            HomeFragmentDirections.actionGlobalSearch(
+                sessionId = null
+            )
+        }
 
         nav(R.id.homeFragment, directions, getToolbarNavOptions(requireContext()))
     }

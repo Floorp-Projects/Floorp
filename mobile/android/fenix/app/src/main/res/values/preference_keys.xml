@@ -173,7 +173,7 @@
     <string name="pref_key_migrating_from_firefox_nightly_tip" translatable="false">pref_key_migrating_from_firefox_nightly_tip</string>
     <string name="pref_key_migrating_from_fenix_tip" translatable="false">pref_key_migrating_from_fenix_tip</string>
 
-    <string name="pref_key_enable_new_tab_tray" translatable="false">pref_key_new_tab_tray</string>
+    <string name="pref_key_use_new_search_experience" translatable="false">pref_key_use_new_search_experience</string>
 
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 

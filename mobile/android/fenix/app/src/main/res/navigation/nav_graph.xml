@@ -28,6 +28,10 @@
         app:destination="@id/searchFragment" />
 
     <action
+        android:id="@+id/action_global_search_dialog"
+        app:destination="@id/searchDialogFragment" />
+
+    <action
         android:id="@+id/action_global_shareFragment"
         app:destination="@id/shareFragment" />
     <action
@@ -136,6 +140,11 @@
             app:argType="string"
             app:nullable="true" />
     </fragment>
+
+    <dialog
+        android:id="@+id/searchDialogFragment"
+        android:name="org.mozilla.fenix.searchdialog.SearchDialogFragment"
+        tools:layout="@layout/fragment_search_dialog" />
 
     <fragment
         android:id="@+id/searchFragment"
