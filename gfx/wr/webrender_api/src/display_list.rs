@@ -1545,6 +1545,7 @@ impl DisplayListBuilder {
         parent_spatial_id: di::SpatialId,
         scale_from: Option<LayoutSize>,
         vertical_flip: bool,
+        rotation: di::Rotation,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
 
@@ -1555,7 +1556,8 @@ impl DisplayListBuilder {
                 transform_style: di::TransformStyle::Flat,
                 transform: di::ReferenceTransformBinding::Computed {
                     scale_from,
-                    vertical_flip
+                    vertical_flip,
+                    rotation,
                 },
                 kind: di::ReferenceFrameKind::Transform,
                 id,

@@ -103,6 +103,7 @@ class AsyncImagePipelineManager final {
                                 const LayoutDeviceRect& aScBounds,
                                 const gfx::Matrix4x4& aScTransform,
                                 const gfx::MaybeIntSize& aScaleToSize,
+                                VideoInfo::Rotation aRotation,
                                 const wr::ImageRendering& aFilter,
                                 const wr::MixBlendMode& aMixBlendMode,
                                 const LayoutDeviceSize& aScaleFromSize);
@@ -182,16 +183,19 @@ class AsyncImagePipelineManager final {
     void Update(const LayoutDeviceRect& aScBounds,
                 const gfx::Matrix4x4& aScTransform,
                 const gfx::MaybeIntSize& aScaleToSize,
+                VideoInfo::Rotation aRotation,
                 const wr::ImageRendering& aFilter,
                 const wr::MixBlendMode& aMixBlendMode,
                 const LayoutDeviceSize& aScaleFromSize) {
-      mIsChanged |=
-          !mScBounds.IsEqualEdges(aScBounds) || mScTransform != aScTransform ||
-          mScaleToSize != aScaleToSize || mFilter != aFilter ||
-          mMixBlendMode != aMixBlendMode || mScaleFromSize != aScaleFromSize;
+      mIsChanged |= !mScBounds.IsEqualEdges(aScBounds) ||
+                    mScTransform != aScTransform ||
+                    mScaleToSize != aScaleToSize || mRotation != aRotation ||
+                    mFilter != aFilter || mMixBlendMode != aMixBlendMode ||
+                    mScaleFromSize != aScaleFromSize;
       mScBounds = aScBounds;
       mScTransform = aScTransform;
       mScaleToSize = aScaleToSize;
+      mRotation = aRotation;
       mFilter = aFilter;
       mMixBlendMode = aMixBlendMode;
       mScaleFromSize = aScaleFromSize;
@@ -204,6 +208,7 @@ class AsyncImagePipelineManager final {
     LayoutDeviceSize mScaleFromSize;
     gfx::Matrix4x4 mScTransform;
     gfx::MaybeIntSize mScaleToSize;
+    VideoInfo::Rotation mRotation;
     wr::ImageRendering mFilter;
     wr::MixBlendMode mMixBlendMode;
     RefPtr<WebRenderImageHost> mImageHost;
