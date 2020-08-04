@@ -99,11 +99,18 @@ class JSActor : public nsISupports, public nsWrapperCache {
 
   // Called by JSActorManager when they receive raw message data destined for
   // this actor.
-  void ReceiveMessageOrQuery(JSContext* aCx,
-                             const JSActorMessageMeta& aMetadata,
-                             JS::Handle<JS::Value> aData, ErrorResult& aRv);
+  void ReceiveMessage(JSContext* aCx, const JSActorMessageMeta& aMetadata,
+                      JS::Handle<JS::Value> aData, ErrorResult& aRv);
+  void ReceiveQuery(JSContext* aCx, const JSActorMessageMeta& aMetadata,
+                    JS::Handle<JS::Value> aData, ErrorResult& aRv);
   void ReceiveQueryReply(JSContext* aCx, const JSActorMessageMeta& aMetadata,
                          JS::Handle<JS::Value> aData, ErrorResult& aRv);
+
+  // Call the actual `ReceiveMessage` method, and get the return value.
+  void CallReceiveMessage(JSContext* aCx, const JSActorMessageMeta& aMetadata,
+                          JS::Handle<JS::Value> aData,
+                          JS::MutableHandle<JS::Value> aRetVal,
+                          ErrorResult& aRv);
 
   // Helper object used while processing query messages to send the final reply
   // message.
