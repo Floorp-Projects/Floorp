@@ -4228,11 +4228,16 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     RootedValue v(cx, Int32Value(maxNumPaths));
-    if (!JS_GetProperty(cx, options, "maxNumPaths", &v)) {
+    if (!JS_HasProperty(cx, options, "maxNumPaths", &exists)) {
       return false;
     }
-    if (!JS::ToInt32(cx, v, &maxNumPaths)) {
-      return false;
+    if (exists) {
+      if (!JS_GetProperty(cx, options, "maxNumPaths", &v)) {
+        return false;
+      }
+      if (!JS::ToInt32(cx, v, &maxNumPaths)) {
+        return false;
+      }
     }
     if (maxNumPaths <= 0) {
       ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, v,
@@ -4250,7 +4255,7 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
 
   {
     mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
-    mozilla::Maybe<JS::ubi::Node> maybeRoot;
+    JS::ubi::Node root;
 
     JS::ubi::RootList rootList(cx, maybeNoGC, true);
     if (start.isNull()) {
@@ -4258,10 +4263,10 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
         ReportOutOfMemory(cx);
         return false;
       }
-      maybeRoot.emplace(&rootList);
+      root = JS::ubi::Node(&rootList);
     } else {
       maybeNoGC.emplace(cx);
-      maybeRoot.emplace(start);
+      root = JS::ubi::Node(start);
     }
     JS::AutoCheckCannotGC& noGC = maybeNoGC.ref();
 
@@ -4276,7 +4281,6 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    JS::ubi::Node& root = maybeRoot.ref();
     auto maybeShortestPaths = JS::ubi::ShortestPaths::Create(
         cx, noGC, maxNumPaths, root, std::move(targets));
     if (maybeShortestPaths.isNothing()) {
