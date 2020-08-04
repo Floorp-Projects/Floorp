@@ -300,12 +300,14 @@ bool wasm::CraneliftAvailable(JSContext* cx) {
 
 bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                        JSStringBuilder* reason) {
-  // Cranelift has no debugging support, no gc support, no threads, no simd, and
-  // on x64, no multi-value support.
-  // on some platforms, no reference types or multi-value support.
+  // Cranelift has no debugging support, no gc support, no simd, and
+  // on x64, no threads support.
   bool debug = WasmDebuggerActive(cx);
   bool gc = WasmGcFlag(cx);
-  bool threads = WasmThreadsFlag(cx);
+  bool threadsOnX64 = false;
+#if defined(JS_CODEGEN_X64)
+  threadsOnX64 = WasmThreadsFlag(cx);
+#endif
   bool simd = WasmSimdFlag(cx);
   if (reason) {
     char sep = 0;
@@ -315,14 +317,14 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (gc && !Append(reason, "gc", &sep)) {
       return false;
     }
-    if (threads && !Append(reason, "threads", &sep)) {
+    if (threadsOnX64 && !Append(reason, "threads", &sep)) {
       return false;
     }
     if (simd && !Append(reason, "simd", &sep)) {
       return false;
     }
   }
-  *isDisabled = debug || gc || threads || simd;
+  *isDisabled = debug || gc || threadsOnX64 || simd;
   return true;
 }
 
@@ -359,8 +361,8 @@ bool wasm::SimdAvailable(JSContext* cx) {
 }
 
 bool wasm::ThreadsAvailable(JSContext* cx) {
-  // Cranelift does not support atomics.
-  return WasmThreadsFlag(cx) && (BaselineAvailable(cx) || IonAvailable(cx));
+  return WasmThreadsFlag(cx) &&
+         (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
 }
 
 bool wasm::HasPlatformSupport(JSContext* cx) {
