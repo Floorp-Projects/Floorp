@@ -134,6 +134,12 @@
     "minbytes": 139264,
     "maxbytes": 139264
   },
+  "c:\\windows\\system32\\directmanipulation.dll": {
+    "mincount": 0,
+    "maxcount": 6,
+    "minbytes": 0,
+    "maxbytes": 96256
+  },
   "c:\\windows\\system32\\dwrite.dll": {
     "mincount": 4,
     "maxcount": 4,
