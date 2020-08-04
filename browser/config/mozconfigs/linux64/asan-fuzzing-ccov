@@ -26,7 +26,7 @@ export CXXFLAGS="--coverage"
 export LDFLAGS="--coverage -Wl,--compress-debug-sections=zlib"
 
 # gold is required for libFuzzer to work properly
-ac_add_options --enable-gold
+ac_add_options --enable-linker=gold
 
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
