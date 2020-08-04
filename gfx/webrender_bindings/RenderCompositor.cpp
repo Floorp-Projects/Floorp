@@ -29,10 +29,10 @@ namespace mozilla {
 namespace wr {
 
 void wr_compositor_add_surface(void* aCompositor, wr::NativeSurfaceId aId,
-                               wr::DeviceIntPoint aPosition,
+                               const wr::CompositorSurfaceTransform* aTransform,
                                wr::DeviceIntRect aClipRect) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
-  compositor->AddSurface(aId, aPosition, aClipRect);
+  compositor->AddSurface(aId, *aTransform, aClipRect);
 }
 
 void wr_compositor_begin_frame(void* aCompositor) {

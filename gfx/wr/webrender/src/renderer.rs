@@ -49,7 +49,7 @@ use core::time::Duration;
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
-use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, ResolvedExternalSurface};
+use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, ResolvedExternalSurface, CompositorSurfaceTransform};
 use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeSurfaceFormat, ResolvedExternalSurfaceColorData};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
 use crate::c_str;
@@ -3374,7 +3374,7 @@ impl Renderer {
 
                 compositor.add_surface(
                     NativeSurfaceId::DEBUG_OVERLAY,
-                    DeviceIntPoint::zero(),
+                    CompositorSurfaceTransform::identity(),
                     DeviceIntRect::new(
                         DeviceIntPoint::zero(),
                         self.debug_overlay_state.current_size.unwrap(),
@@ -4726,7 +4726,6 @@ impl Renderer {
                         uv_rect.uv0.y = uv_rect.uv1.y;
                         uv_rect.uv1.y = y;
                     }
-
                     let instance = CompositeInstance::new_rgb(
                         surface_rect.to_f32(),
                         surface_rect.to_f32(),
@@ -7737,7 +7736,7 @@ impl CompositeState {
         for surface in &self.descriptor.surfaces {
             compositor.add_surface(
                 surface.surface_id.expect("bug: no native surface allocated"),
-                surface.offset.to_i32(),
+                surface.transform,
                 surface.clip_rect.to_i32(),
             );
         }
