@@ -793,6 +793,13 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     state.weakOverVideo = Cu.getWeakReference(video);
     controlsOverlay.classList.add("hovering");
 
+    if (
+      state.togglePolicy != TOGGLE_POLICIES.HIDDEN &&
+      !toggle.hasAttribute("hidden")
+    ) {
+      Services.telemetry.scalarAdd("pictureinpicture.saw_toggle", 1);
+    }
+
     // Now that we're hovering the video, we'll check to see if we're
     // hovering the toggle too.
     this.checkHoverToggle(toggle, event);
