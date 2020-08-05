@@ -286,6 +286,25 @@ export class WelcomeScreen extends React.PureComponent {
             </div>
           </div>
         ) : null;
+      case "video":
+        return this.props.content.tiles.source ? (
+          <div
+            className={`tiles-media-section ${this.props.content.tiles.media_type}`}
+          >
+            <div className="fade" />
+            <video
+              className="media"
+              autoPlay="true"
+              loop="true"
+              muted="true"
+              src={
+                AboutWelcomeUtils.hasDarkMode()
+                  ? this.props.content.tiles.source.dark
+                  : this.props.content.tiles.source.default
+              }
+            />
+          </div>
+        ) : null;
     }
     return null;
   }
