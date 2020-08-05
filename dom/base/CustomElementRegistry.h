@@ -141,7 +141,8 @@ struct CustomElementDefinition {
                           CustomElementConstructor* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
                           UniquePtr<LifecycleCallbacks>&& aCallbacks,
-                          bool aDisableInternals, bool aDisableShadow);
+                          bool aFormAssociated, bool aDisableInternals,
+                          bool aDisableShadow);
 
   // The type (name) for this custom element, for <button is="x-foo"> or <x-foo>
   // this would be x-foo.
@@ -161,6 +162,10 @@ struct CustomElementDefinition {
 
   // The lifecycle callbacks to call for this custom element.
   UniquePtr<LifecycleCallbacks> mCallbacks;
+
+  // If this is true, user agent treats elements associated to this custom
+  // element definition as form-associated custom elements.
+  bool mFormAssociated = false;
 
   // Determine whether to allow to attachInternals() for this custom element.
   bool mDisableInternals = false;

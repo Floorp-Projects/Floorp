@@ -7,7 +7,7 @@
  * https://html.spec.whatwg.org/#elementinternals
  */
 
-[Pref="dom.webcomponents.elementInternals.enabled", Exposed=Window]
+[Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Exposed=Window]
 interface ElementInternals {
 };
 
