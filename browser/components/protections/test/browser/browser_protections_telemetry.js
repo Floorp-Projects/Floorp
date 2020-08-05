@@ -820,3 +820,90 @@ add_task(async function test_save_telemetry() {
   // Use the TrackingDBService API to delete the data.
   await TrackingDBService.clearAll();
 });
+
+// Test that telemetry is sent if entrypoint param is included,
+// and test that it is recorded as default if entrypoint param is not properly included
+add_task(async function checkTelemetryLoadEventForEntrypoint() {
+  // There's an arbitrary interval of 2 seconds in which the content
+  // processes sync their event data with the parent process, we wait
+  // this out to ensure that we clear everything that is left over from
+  // previous tests and don't receive random events in the middle of our tests.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(c => setTimeout(c, 2000));
+
+  // Clear everything.
+  Services.telemetry.clearEvents();
+  await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    return !events || !events.length;
+  });
+
+  Services.telemetry.setEventRecordingEnabled("security.ui.protections", true);
+
+  info("Typo in 'entrypoint' should not be recorded");
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections?entryPoint=newPage",
+    gBrowser,
+  });
+
+  let loadEvents = await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    if (events && events.length) {
+      events = events.filter(
+        e =>
+          e[1] == "security.ui.protections" &&
+          e[2] == "show" &&
+          e[4] == "direct"
+      );
+      if (events.length == 1) {
+        return events;
+      }
+    }
+    return null;
+  }, "recorded telemetry for showing the report contains default 'direct' entrypoint");
+
+  is(
+    loadEvents.length,
+    1,
+    `recorded telemetry for showing the report contains default 'direct' entrypoint`
+  );
+
+  await BrowserTestUtils.removeTab(tab);
+
+  tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections?entrypoint=page",
+    gBrowser,
+  });
+
+  loadEvents = await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    if (events && events.length) {
+      events = events.filter(
+        e =>
+          e[1] == "security.ui.protections" && e[2] == "show" && e[4] == "page"
+      );
+      if (events.length == 1) {
+        return events;
+      }
+    }
+    return null;
+  }, "recorded telemetry for showing the report contains correct entrypoint");
+
+  is(
+    loadEvents.length,
+    1,
+    "recorded telemetry for showing the report contains correct entrypoint"
+  );
+
+  // Clean up.
+  await BrowserTestUtils.removeTab(tab);
+});
