@@ -33,6 +33,8 @@ class nsWebSocketConnection : public nsIWebSocketConnection,
                                  nsIAsyncInputStream* aInputStream,
                                  nsIAsyncOutputStream* aOutputStream);
 
+  nsresult EnqueueOutputData(nsTArray<uint8_t>&& aData);
+
  private:
   virtual ~nsWebSocketConnection() = default;
 
