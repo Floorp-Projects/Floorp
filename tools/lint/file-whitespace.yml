@@ -125,7 +125,6 @@ file-whitespace:
         - testing/mozharness/configs/raptor/linux64_config_taskcluster.py
         - testing/mozharness/configs/talos/linux64_config_taskcluster.py
         - testing/mozharness/configs/web_platform_tests/test_config_windows.py
-        - testing/mozharness/external_tools/virtualenv/virtualenv_embedded/distutils-init.py
         - testing/talos/talos/cmanager_base.py
         - testing/talos/talos/pageloader/chrome/pageloader.xhtml
         - testing/talos/talos/tests
