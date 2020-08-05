@@ -573,7 +573,7 @@ pub fn dump_render_tasks_as_svg(
 
             let saved = if task.saved_index.is_some() { " (Saved)" } else { "" };
             let label = text(tx, ty, format!("{}{}", task.kind.as_str(), saved));
-            let size = text(tx, ty + 12.0, format!("{:?}", task.location.size()));
+            let size = text(tx, ty + 12.0, format!("{}", task.location.size()));
 
             nodes[task_index] = Some(Node { rect, label, size });
 
