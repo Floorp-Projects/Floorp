@@ -2463,17 +2463,19 @@ bool js::array_pop(JSContext* cx, unsigned argc, Value* vp) {
   return SetLengthProperty(cx, obj, index);
 }
 
-void js::ArrayShiftMoveElements(NativeObject* obj) {
+void js::ArrayShiftMoveElements(ArrayObject* arr) {
   AutoUnsafeCallWithABI unsafe;
-  MOZ_ASSERT(obj->isExtensible());
-  MOZ_ASSERT_IF(obj->is<ArrayObject>(),
-                obj->as<ArrayObject>().lengthIsWritable());
+  MOZ_ASSERT(arr->isExtensible());
+  MOZ_ASSERT(arr->lengthIsWritable());
+  MOZ_ASSERT_IF(jit::JitOptions.warpBuilder, IsPackedArray(arr));
+  MOZ_ASSERT(!arr->denseElementsAreCopyOnWrite());
+  MOZ_ASSERT(!arr->denseElementsHaveMaybeInIterationFlag());
 
-  size_t initlen = obj->getDenseInitializedLength();
+  size_t initlen = arr->getDenseInitializedLength();
   MOZ_ASSERT(initlen > 0);
 
-  if (!obj->tryShiftDenseElements(1)) {
-    obj->moveDenseElementsNoPreBarrier(0, 1, initlen - 1);
+  if (!arr->tryShiftDenseElements(1)) {
+    arr->moveDenseElements(0, 1, initlen - 1);
   }
 }
 

@@ -294,20 +294,6 @@ inline void NativeObject::moveDenseElements(uint32_t dstStart,
   }
 }
 
-inline void NativeObject::moveDenseElementsNoPreBarrier(uint32_t dstStart,
-                                                        uint32_t srcStart,
-                                                        uint32_t count) {
-  MOZ_ASSERT(!zone()->needsIncrementalBarrier());
-
-  MOZ_ASSERT(dstStart + count <= getDenseCapacity());
-  MOZ_ASSERT(srcStart + count <= getDenseCapacity());
-  MOZ_ASSERT(!denseElementsAreCopyOnWrite());
-  MOZ_ASSERT(isExtensible());
-
-  memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(HeapSlot));
-  elementsRangeWriteBarrierPost(dstStart, count);
-}
-
 inline void NativeObject::reverseDenseElementsNoPreBarrier(uint32_t length) {
   MOZ_ASSERT(!zone()->needsIncrementalBarrier());
 
@@ -615,9 +601,16 @@ inline js::gc::AllocKind NativeObject::allocKindForTenure() const {
 
 inline js::GlobalObject& NativeObject::global() const { return nonCCWGlobal(); }
 
-inline bool NativeObject::denseElementsMaybeInIteration() {
+inline bool NativeObject::denseElementsHaveMaybeInIterationFlag() {
   if (!getElementsHeader()->maybeInIteration()) {
     AssertDenseElementsNotIterated(this);
+    return false;
+  }
+  return true;
+}
+
+inline bool NativeObject::denseElementsMaybeInIteration() {
+  if (!denseElementsHaveMaybeInIterationFlag()) {
     return false;
   }
   return ObjectRealm::get(this).objectMaybeInIteration(this);

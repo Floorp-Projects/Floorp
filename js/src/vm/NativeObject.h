@@ -1330,8 +1330,6 @@ class NativeObject : public JSObject {
                                 uint32_t srcStart, uint32_t count);
   inline void moveDenseElements(uint32_t dstStart, uint32_t srcStart,
                                 uint32_t count);
-  inline void moveDenseElementsNoPreBarrier(uint32_t dstStart,
-                                            uint32_t srcStart, uint32_t count);
   inline void reverseDenseElementsNoPreBarrier(uint32_t length);
 
   inline DenseElementResult setOrExtendDenseElements(
@@ -1376,6 +1374,7 @@ class NativeObject : public JSObject {
   // Note that it's fine to return false if this object is on the prototype of
   // another object: SuppressDeletedProperty only suppresses properties deleted
   // from the iterated object itself.
+  inline bool denseElementsHaveMaybeInIterationFlag();
   inline bool denseElementsMaybeInIteration();
 
   // Ensures that the object can hold at least index + extra elements. This

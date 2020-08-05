@@ -3466,8 +3466,13 @@ void LIRGenerator::visitArrayPopShift(MArrayPopShift* ins) {
     case MIRType::Value: {
       LArrayPopShiftV* lir =
           new (alloc()) LArrayPopShiftV(object, temp(), temp());
+      if (JitOptions.warpBuilder) {
+        assignSnapshot(lir, BailoutKind::ArrayPopShift);
+      }
       defineBox(lir, ins);
-      assignSafepoint(lir, ins);
+      if (!JitOptions.warpBuilder || ins->mode() == MArrayPopShift::Shift) {
+        assignSafepoint(lir, ins);
+      }
       break;
     }
     case MIRType::Undefined:

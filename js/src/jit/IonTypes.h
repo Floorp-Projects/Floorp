@@ -176,6 +176,9 @@ enum class BailoutKind : uint8_t {
   // Bailout triggered by MGuardIsNotArrayBufferMaybeShared.
   NotArrayBufferMaybeSharedGuard,
 
+  // Bailout triggered by MArrayPopShift.
+  ArrayPopShift,
+
   // Bailout triggered by MGuardValue.
   ValueGuard,
 
@@ -266,6 +269,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "BailoutKind::NotProxyGuard";
     case BailoutKind::NotArrayBufferMaybeSharedGuard:
       return "BailoutKind::NotArrayBufferMaybeSharedGuard";
+    case BailoutKind::ArrayPopShift:
+      return "BailoutKind::ArrayPopShift";
     case BailoutKind::ValueGuard:
       return "BailoutKind::ValueGuard";
     case BailoutKind::NullOrUndefinedGuard:
