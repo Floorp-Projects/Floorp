@@ -89,14 +89,14 @@ fuzzy(0-20,0-999) fails-if(OSX>=1008&&!skiaContent) != downscale-2e.html?205,53,
 
 # Skip on Android because it runs reftests via http, and moz-icon isn't
 # accessible from http/https origins anymore.
-fuzzy(0-17,0-3221) fuzzy-if(gtkWidget&&!webrender,4-4,2616-2616) fuzzy-if(gtkWidget&&!webrender&&!layersGPUAccelerated,4-4,2209-2209) fuzzy-if(gtkWidget&&webrender,0-0,0-0) fuzzy-if(gtkWidget&&webrender&&swgl,19-19,5568-5568) skip-if(Android) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059: regular is 2616, no-accel is 2209, qr passes with 0
+fuzzy(0-17,0-3221) fuzzy-if(gtkWidget&&!webrender,4-4,2616-2616) fuzzy-if(gtkWidget&&!webrender&&!layersGPUAccelerated,4-4,2209-2209) fuzzy-if(gtkWidget&&webrender,0-0,0-0) skip-if(Android) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059: regular is 2616, no-accel is 2209, qr passes with 0
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
 
 # Non-transparent and transparent ICO images
 == downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.png
-fuzzy(0-1,0-1) fuzzy-if(gtkWidget&&webrender&&swgl,3-3,33-33) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
+fuzzy(0-1,0-1) fuzzy-if(gtkWidget&&webrender&&swgl,1-1,1-1) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
 
 # Upside-down (negative height) BMP
 == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?bmp-size-16x16-24bpp.png
@@ -178,14 +178,14 @@ fuzzy(0-20,0-999) != downscale-2f.html?205,53,bottom about:blank
 # Skip on WinXP with skia content
 # Skip on Android because it runs reftests via http, and moz-icon isn't
 # accessible from http/https origins anymore.
-fuzzy(0-53,0-6391) fuzzy-if(gtkWidget&&webrender,19-19,5502-5534) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) skip-if(Android) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059
+fuzzy(0-53,0-6391) fuzzy-if(gtkWidget&&webrender,19-19,5502-5568) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) skip-if(Android) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
 
 # Non-transparent and transparent ICO images
 fuzzy(0-1,0-3) == downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.png
-fuzzy(0-3,0-32) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
+fuzzy(0-3,0-32) fuzzy-if(gtkWidget&&webrender&&swgl,3-3,33-33) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
 
 # Upside-down (negative height) BMP
 == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?bmp-size-16x16-24bpp.png
