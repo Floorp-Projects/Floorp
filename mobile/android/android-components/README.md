@@ -128,7 +128,7 @@ _Combined components to implement feature-specific use cases._
 
 * 🔵 [**Awesomebar**](components/feature/awesomebar/README.md) - A component that connects a [concept-awesomebar](components/concept/awesomebar/README.md) implementation to a [concept-toolbar](components/concept/toolbar/README.md) implementation and provides implementations of various suggestion providers.
 
-* 🔴 [**Containers**](components/feaature/containers/README.md) - A component for working with contextual identities also known as containers.
+* 🔴 [**Containers**](components/feature/containers/README.md) - A component for working with contextual identities also known as containers.
 
 * 🔵 [**Context Menu**](components/feature/contextmenu/README.md) - A component for displaying context menus when *long-pressing* web content.
 

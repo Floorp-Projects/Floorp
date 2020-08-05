@@ -1,4 +1,4 @@
-# [Android Components](../../../README.md) > Feaature > Containers
+# [Android Components](../../../README.md) > Feature > Containers
 
 Feature component for working with contextual identities also known as containers.
 
