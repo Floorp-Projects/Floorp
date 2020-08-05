@@ -308,12 +308,11 @@ bool WarpCacheIRTranspiler::emitGuardProto(ObjOperandId objId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardFunctionPrototype(ObjOperandId objId,
-                                                       ObjOperandId protoId,
-                                                       uint32_t slotOffset) {
+bool WarpCacheIRTranspiler::emitGuardDynamicSlotIsSpecificObject(
+    ObjOperandId objId, ObjOperandId expectedId, uint32_t slotOffset) {
   size_t slotIndex = int32StubField(slotOffset);
   MDefinition* obj = getOperand(objId);
-  MDefinition* proto = getOperand(protoId);
+  MDefinition* expected = getOperand(expectedId);
 
   auto* slots = MSlots::New(alloc(), obj);
   add(slots);
@@ -324,7 +323,7 @@ bool WarpCacheIRTranspiler::emitGuardFunctionPrototype(ObjOperandId objId,
   auto* unbox = MUnbox::New(alloc(), load, MIRType::Object, MUnbox::Fallible);
   add(unbox);
 
-  auto* guard = MGuardObjectIdentity::New(alloc(), unbox, proto,
+  auto* guard = MGuardObjectIdentity::New(alloc(), unbox, expected,
                                           /* bailOnEquality = */ false);
   add(guard);
   return true;
