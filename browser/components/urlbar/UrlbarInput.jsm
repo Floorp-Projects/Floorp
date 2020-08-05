@@ -1216,6 +1216,21 @@ class UrlbarInput {
     }
   }
 
+  /**
+   * Enters search mode with the default engine.
+   * If update2 is not enabled, it searches with the SEARCH restriction token
+   * instead.
+   */
+  searchModeShortcut() {
+    if (this.view.oneOffsRefresh) {
+      let defaultEngine = Services.search.defaultEngine;
+      this.setSearchMode(defaultEngine);
+      this.search("");
+    } else {
+      this.search(UrlbarTokenizer.RESTRICT.SEARCH);
+    }
+  }
+
   // Getters and Setters below.
 
   get editor() {
