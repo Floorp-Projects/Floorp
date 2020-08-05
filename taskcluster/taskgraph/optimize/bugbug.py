@@ -29,7 +29,10 @@ from taskgraph.util.hg import get_push_data
 @register_strategy("bugbug-reduced-high", args=(CT_HIGH, True, True))
 @register_strategy("bugbug-reduced-manifests", args=(CT_MEDIUM, False, True))
 @register_strategy("bugbug-reduced-manifests-fallback", args=(CT_MEDIUM, False, True, True))
-@register_strategy("bugbug-reduced-fallback-last-10-pushes", args=(0.3, False, True, True, 10))
+@register_strategy(
+    "bugbug-reduced-manifests-fallback-last-10-pushes",
+    args=(0.3, False, True, True, 10),
+)
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
 
