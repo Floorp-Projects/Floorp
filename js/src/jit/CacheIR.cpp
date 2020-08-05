@@ -6956,10 +6956,17 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayElementShift(
 }
 
 AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
-    HandleFunction callee) {
-  // Self-hosted code calls this with a single TypedArrayObject argument.
+    HandleFunction callee, bool isPossiblyWrapped) {
+  // Self-hosted code calls this with a single, possibly wrapped,
+  // TypedArrayObject argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
+
+  // Only optimize when the object isn't a wrapper.
+  if (isPossiblyWrapped && IsWrapper(&args_[0].toObject())) {
+    return AttachDecision::NoAction;
+  }
+
   MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
 
   // Initialize the input operand.
@@ -6969,6 +6976,10 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
+
+  if (isPossiblyWrapped) {
+    writer.guardIsNotProxy(objArgId);
+  }
 
   // Note: the "getter" argument is a hint for IonBuilder. Just pass |callee|,
   // the field isn't used for this intrinsic call.
@@ -7782,7 +7793,9 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     case InlinableNative::IntrinsicTypedArrayElementShift:
       return tryAttachTypedArrayElementShift(callee);
     case InlinableNative::IntrinsicTypedArrayLength:
-      return tryAttachTypedArrayLength(callee);
+      return tryAttachTypedArrayLength(callee, /* isPossiblyWrapped = */ false);
+    case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
+      return tryAttachTypedArrayLength(callee, /* isPossiblyWrapped = */ true);
 
     // Reflect natives.
     case InlinableNative::ReflectGetPrototypeOf:
