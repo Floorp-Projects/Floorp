@@ -9633,6 +9633,11 @@
   value: false
   mirror: always
 
+- name: webgl.enable-debug-renderer-info
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: webgl.enable-draft-extensions
   type: RelaxedAtomicBool
   value: false
