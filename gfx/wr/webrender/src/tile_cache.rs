@@ -143,7 +143,7 @@ impl TileCacheBuilder {
                     // slices, the intra-slice dirty rect handling typically works quite well
                     // (a common case is parallax scrolling effects).
                     let mut create_slice = true;
-                    let mut current_clip_chain_id = prim_instance.clip_chain_id;
+                    let mut current_clip_chain_id = prim_instance.clip_set.clip_chain_id;
 
                     while current_clip_chain_id != ClipChainId::NONE {
                         let clip_chain_node = &clip_store.clip_chain_nodes[current_clip_chain_id.0 as usize];
@@ -181,7 +181,7 @@ impl TileCacheBuilder {
 
             let mut shared_clips = Vec::new();
             add_clips(
-                prim_instance.clip_chain_id,
+                prim_instance.clip_set.clip_chain_id,
                 &mut shared_clips,
                 clip_store,
                 interners,
@@ -200,7 +200,7 @@ impl TileCacheBuilder {
                 },
             });
 
-            self.last_checked_clip_chain = prim_instance.clip_chain_id;
+            self.last_checked_clip_chain = prim_instance.clip_set.clip_chain_id;
             self.need_new_tile_cache = requires_own_slice;
         }
 
@@ -208,11 +208,11 @@ impl TileCacheBuilder {
 
         // Update the list of clips that apply to this primitive instance, to track which are the
         // shared clips for this tile cache that can be applied during compositing.
-        if self.last_checked_clip_chain != prim_instance.clip_chain_id {
+        if self.last_checked_clip_chain != prim_instance.clip_set.clip_chain_id {
             let prim_clips_buffer = &mut self.prim_clips_buffer;
             prim_clips_buffer.clear();
             add_clips(
-                prim_instance.clip_chain_id,
+                prim_instance.clip_set.clip_chain_id,
                 prim_clips_buffer,
                 clip_store,
                 interners,
@@ -226,7 +226,7 @@ impl TileCacheBuilder {
                 })
             });
 
-            self.last_checked_clip_chain = prim_instance.clip_chain_id;
+            self.last_checked_clip_chain = prim_instance.clip_set.clip_chain_id;
         }
 
         pending_tile_cache.prim_list.add_prim(

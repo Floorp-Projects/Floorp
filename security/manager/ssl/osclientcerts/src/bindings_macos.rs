@@ -52,4 +52,7 @@ extern "C" {
     pub fn SecTrustGetCertificateCount(trust: SecTrustRef) -> CFIndex;
     pub static kSecClassIdentity: CFStringRef;
     pub static kSecAttrKeyTypeRSA: CFStringRef;
+
+    // Available starting macOS 10.9
+    pub fn SecTrustSetNetworkFetchAllowed(trust: SecTrustRef, allowFetch: Boolean) -> OSStatus;
 }

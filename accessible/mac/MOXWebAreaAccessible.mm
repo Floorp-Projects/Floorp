@@ -7,6 +7,7 @@
 
 #include "nsCocoaUtils.h"
 #include "DocAccessibleParent.h"
+#include "Pivot.h"
 
 using namespace mozilla::a11y;
 
@@ -64,6 +65,21 @@ using namespace mozilla::a11y;
   return @1.0;
 }
 
+- (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate {
+  // Create our search object and set it up with the searchPredicate
+  // params. The init function does additional parsing. We pass a
+  // reference to the web area (mGeckoAccessible) to use as
+  // a start element if one is not specified.
+  MOXSearchInfo* search = [[MOXSearchInfo alloc] initWithParameters:searchPredicate
+                                                            andRoot:mGeckoAccessible];
+
+  return [search performSearch];
+}
+
+- (NSUInteger)moxUIElementCountForSearchPredicate:(NSDictionary*)searchPredicate {
+  return [[self moxUIElementsForSearchPredicate:searchPredicate] count];
+}
+
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
@@ -111,6 +127,43 @@ using namespace mozilla::a11y;
   mImmediateDescendantsOnly = [[params objectForKey:@"AXImmediateDescendantsOnly"] boolValue];
 
   return [super init];
+}
+
+- (NSMutableArray*)getMatchesForRule:(PivotRule&)rule {
+  int resultLimit = mResultLimit;
+  NSMutableArray* matches = [[NSMutableArray alloc] init];
+  Pivot p = Pivot(mWebArea);
+  AccessibleOrProxy match = mSearchForward ? p.Next(mStartElem, rule) : p.Prev(mStartElem, rule);
+  while (!match.IsNull() && resultLimit != 0) {
+    // we use mResultLimit != 0 to capture the case where mResultLimit is -1
+    // when it is set from the params dictionary. If that's true, we want
+    // to return all matches (ie. have no limit)
+    [matches addObject:GetNativeFromGeckoAccessible(match)];
+    resultLimit -= 1;
+    match = mSearchForward ? p.Next(match, rule) : p.Prev(match, rule);
+  }
+
+  return matches;
+}
+
+- (NSArray*)performSearch {
+  NSMutableArray* matches = [[NSMutableArray alloc] init];
+
+  for (id key in mSearchKeys) {
+    if ([key isEqualToString:@"AXAnyTypeSearchKey"]) {
+      PivotMatchAllRule rule =
+          mImmediateDescendantsOnly ? PivotMatchAllRule(mStartElem) : PivotMatchAllRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
+    if ([key isEqualToString:@"AXHeadingSearchKey"]) {
+      PivotRoleRule rule = mImmediateDescendantsOnly ? PivotRoleRule(roles::HEADING, mStartElem)
+                                                     : PivotRoleRule(roles::HEADING);
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+  }
+
+  return matches;
 }
 
 - (void)dealloc {

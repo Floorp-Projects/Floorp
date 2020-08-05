@@ -78,7 +78,10 @@ add_task(async function() {
   let {
     engines,
     privateDefault,
-  } = await engineSelector.fetchEngineConfiguration("en-US", "us", "default");
+  } = await engineSelector.fetchEngineConfiguration({
+    locale: "en-US",
+    region: "us",
+  });
   Assert.equal(
     privateDefault.engineName,
     "altavista",
@@ -92,11 +95,10 @@ add_task(async function() {
     "Subsequent matches in applies to can override default"
   );
 
-  ({ engines, privateDefault } = await engineSelector.fetchEngineConfiguration(
-    "zh-CN",
-    "kz",
-    "default"
-  ));
+  ({ engines, privateDefault } = await engineSelector.fetchEngineConfiguration({
+    locale: "zh-CN",
+    region: "kz",
+  }));
   Assert.equal(engines.length, 2, "Correct engines are returns");
   Assert.equal(privateDefault, null, "There should be no privateDefault");
   names = engines.map(obj => obj.engineName);
@@ -106,23 +108,22 @@ add_task(async function() {
     "The engines should be in the correct order"
   );
 
-  Services.prefs.setCharPref("browser.search.experiment", "acohortid");
-  ({ engines, privateDefault } = await engineSelector.fetchEngineConfiguration(
-    "en-US",
-    "us",
-    "default"
-  ));
+  ({ engines, privateDefault } = await engineSelector.fetchEngineConfiguration({
+    locale: "en-US",
+    region: "us",
+    experiment: "acohortid",
+  }));
   Assert.deepEqual(
     engines.map(obj => obj.engineName),
     ["lycos", "altavista", "aol", "excite"],
     "Engines are in the correct order and include the experiment engine"
   );
 
-  ({ engines, privateDefault } = await engineSelector.fetchEngineConfiguration(
-    "en-US",
-    "default",
-    "default"
-  ));
+  ({ engines, privateDefault } = await engineSelector.fetchEngineConfiguration({
+    locale: "en-US",
+    region: "default",
+    experiment: "acohortid",
+  }));
   Assert.deepEqual(
     engines.map(obj => obj.engineName),
     ["lycos", "altavista", "aol", "excite"],

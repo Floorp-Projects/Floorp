@@ -99,10 +99,23 @@ def generate_try_task_config(method, labels, try_config=None, routes=None):
 
 
 def task_labels_from_try_config(try_task_config):
-    return try_task_config.get("tasks", list())
+    if try_task_config['version'] == 2:
+        parameters = try_task_config.get('parameters', {})
+        if parameters.get('try_mode') == 'try_task_config':
+            return parameters['try_task_config']['tasks']
+        else:
+            return None
+    elif try_task_config['version'] == 1:
+        return try_task_config.get("tasks", list())
+    else:
+        return None
 
 
 def display_push_estimates(try_task_config):
+    task_labels = task_labels_from_try_config(try_task_config)
+    if task_labels is None:
+        return
+
     cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
 
     graph_cache = None
@@ -122,7 +135,7 @@ def display_push_estimates(try_task_config):
     make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=target_file)
 
     durations = duration_summary(
-        dep_cache, task_labels_from_try_config(try_task_config), cache_dir)
+        dep_cache, task_labels, cache_dir)
 
     print("estimates: Runs {} tasks ({} selected, {} dependencies)".format(
         durations["dependency_count"] + durations["selected_count"],
@@ -143,7 +156,7 @@ def push_to_try(method, msg, try_task_config=None,
                 push=True, closed_tree=False, files_to_change=None):
     check_working_directory(push)
 
-    if try_task_config and method not in ('auto', 'empty', 'release'):
+    if try_task_config and method not in ('auto', 'empty'):
         display_push_estimates(try_task_config)
 
     # Format the commit message

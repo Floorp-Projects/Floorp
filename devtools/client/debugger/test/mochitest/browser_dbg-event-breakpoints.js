@@ -20,6 +20,7 @@ add_task(async function() {
     "event.xhr.load",
     "timer.timeout.set",
     "timer.timeout.fire",
+    "script.source.firstStatement",
   ]);
 
   invokeInTab("clickHandler");
@@ -41,6 +42,11 @@ add_task(async function() {
   assertPauseLocation(dbg, 28);
   await resume(dbg);
 
+  invokeInTab("evalHandler");
+  await waitForPaused(dbg);
+  assertPauseLocation(dbg, 2, "http://example.com/eval-test.js");
+  await resume(dbg);
+
   // Test that we don't pause on event breakpoints when source is blackboxed.
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg, "BLACKBOX");
@@ -59,10 +65,10 @@ add_task(async function() {
   await waitForDispatch(dbg, "BLACKBOX");
 });
 
-function assertPauseLocation(dbg, line) {
+function assertPauseLocation(dbg, line, url = "event-breakpoints.js") {
   const { location } = dbg.selectors.getVisibleSelectedFrame();
 
-  const source = findSource(dbg, "event-breakpoints.js");
+  const source = findSource(dbg, url);
 
   is(location.sourceId, source.id, `correct sourceId`);
   is(location.line, line, `correct line`);

@@ -537,11 +537,6 @@ workers:
             implementation: treescript
             os: scriptworker
             worker-type: '{trust-domain}-1-tree-dev'
-        t-ap.*:
-            provisioner: proj-autophone
-            implementation: script-engine-autophone
-            os: linux
-            worker-type: 'gecko-{alias}'
         t-bitbar-gw.*:
             provisioner: proj-autophone
             implementation: generic-worker

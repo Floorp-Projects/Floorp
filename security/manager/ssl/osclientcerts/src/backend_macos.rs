@@ -884,6 +884,12 @@ fn get_issuers(identity: &SecIdentity) -> Result<Vec<SecCertificate>, ()> {
         return Err(());
     }
     let trust = unsafe { SecTrust::wrap_under_create_rule(trust) };
+    // Disable AIA fetching so that SecTrustEvaluateWithError doesn't result in network I/O.
+    let status = unsafe { SecTrustSetNetworkFetchAllowed(trust.as_concrete_TypeRef(), 0) };
+    if status != errSecSuccess {
+        error!("SecTrustSetNetworkFetchAllowed failed: {}", status);
+        return Err(());
+    }
     // We ignore the return value here because we don't care if the certificate is trusted or not -
     // we're only doing this to build its issuer chain as much as possible.
     let _ = SECURITY_FRAMEWORK.sec_trust_evaluate_with_error(&trust)?;

@@ -148,7 +148,8 @@ InProcessParent::GetActor(const nsACString& aName, JSContext* aCx,
                           JSProcessActorParent** aActor) {
   ErrorResult error;
   RefPtr<JSProcessActorParent> actor =
-      JSActorManager::GetActor(aName, error).downcast<JSProcessActorParent>();
+      JSActorManager::GetActor(aCx, aName, error)
+          .downcast<JSProcessActorParent>();
   if (error.MaybeSetPendingException(aCx)) {
     return NS_ERROR_FAILURE;
   }
@@ -182,6 +183,8 @@ InProcessParent::GetCanSend(bool* aCanSend) {
 
 ContentParent* InProcessParent::AsContentParent() { return nullptr; }
 
+JSActorManager* InProcessParent::AsJSActorManager() { return this; }
+
 ////////////////////////
 // nsIDOMProcessChild //
 ////////////////////////
@@ -197,7 +200,8 @@ InProcessChild::GetActor(const nsACString& aName, JSContext* aCx,
                          JSProcessActorChild** aActor) {
   ErrorResult error;
   RefPtr<JSProcessActorChild> actor =
-      JSActorManager::GetActor(aName, error).downcast<JSProcessActorChild>();
+      JSActorManager::GetActor(aCx, aName, error)
+          .downcast<JSProcessActorChild>();
   if (error.MaybeSetPendingException(aCx)) {
     return NS_ERROR_FAILURE;
   }
@@ -230,6 +234,8 @@ InProcessChild::GetCanSend(bool* aCanSend) {
 }
 
 ContentChild* InProcessChild::AsContentChild() { return nullptr; }
+
+JSActorManager* InProcessChild::AsJSActorManager() { return this; }
 
 ////////////////////////////////
 // In-Process Actor Utilities //

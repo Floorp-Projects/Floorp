@@ -2729,6 +2729,8 @@ imgLoader::GetMIMETypeFromContent(nsIRequest* aRequest,
 nsresult imgLoader::GetMimeTypeFromContent(const char* aContents,
                                            uint32_t aLength,
                                            nsACString& aContentType) {
+  nsAutoCString detected;
+
   /* Is it a GIF? */
   if (aLength >= 6 &&
       (!strncmp(aContents, "GIF87a", 6) || !strncmp(aContents, "GIF89a", 6))) {
@@ -2781,8 +2783,9 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents,
     aContentType.AssignLiteral(IMAGE_WEBP);
 
   } else if (MatchesMP4(reinterpret_cast<const uint8_t*>(aContents), aLength,
-                        aContentType)) {
-    MOZ_ASSERT(aContentType.Equals(IMAGE_AVIF));
+                        detected) &&
+             detected.Equals(IMAGE_AVIF)) {
+    aContentType.AssignLiteral(IMAGE_AVIF);
   } else {
     /* none of the above?  I give up */
     return NS_ERROR_NOT_AVAILABLE;

@@ -1729,7 +1729,7 @@ fn build_segments_if_needed(
 
         if write_brush_segment_description(
             prim_local_rect,
-            instance.local_clip_rect,
+            instance.clip_set.local_clip_rect,
             prim_clip_chain,
             &mut frame_state.segment_builder,
             frame_state.clip_store,

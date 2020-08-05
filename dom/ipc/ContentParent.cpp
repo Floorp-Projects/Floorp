@@ -6948,7 +6948,8 @@ NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName, JSContext* aCx,
                                       JSProcessActorParent** retval) {
   ErrorResult error;
   RefPtr<JSProcessActorParent> actor =
-      JSActorManager::GetActor(aName, error).downcast<JSProcessActorParent>();
+      JSActorManager::GetActor(aCx, aName, error)
+          .downcast<JSProcessActorParent>();
   if (error.MaybeSetPendingException(aCx)) {
     return NS_ERROR_FAILURE;
   }
@@ -6987,6 +6988,8 @@ NS_IMETHODIMP ContentParent::GetCanSend(bool* aCanSend) {
 }
 
 ContentParent* ContentParent::AsContentParent() { return this; }
+
+JSActorManager* ContentParent::AsJSActorManager() { return this; }
 
 }  // namespace dom
 }  // namespace mozilla

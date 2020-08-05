@@ -553,13 +553,28 @@ var FormAutofillContent = {
     }
 
     records.creditCard.forEach(record => {
+      let totalCount = handler.form.elements.length;
+      let autofilledCount = Object.keys(record.record).length;
+      let unmodifiedCount = record.untouchedFields.length;
+      const extra = {
+        fields_not_auto: (totalCount - autofilledCount).toString(),
+        fields_auto: autofilledCount.toString(),
+        fields_modified: (autofilledCount - unmodifiedCount).toString(),
+      };
       Services.telemetry.recordEvent(
         "creditcard",
         "submitted",
         "cc_form",
-        record.flowId
+        record.flowId,
+        extra
       );
     });
+    if (records.creditCard.length) {
+      Services.telemetry.scalarAdd(
+        "formautofill.creditCards.submitted_sections_count",
+        records.creditCard.length
+      );
+    }
 
     this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
   },

@@ -152,26 +152,6 @@ def test_path_filtering_other_cwd(run_mach, tmpdir):
     assert d['argv'] == expected
 
 
-def test_mach_invoke_recursive(run_mach):
-    data = run_mach('python',
-                    os.path.join(os.path.dirname(__file__), 'invoke_mach_command.py'),
-                    os.path.join(buildconfig.topsrcdir, 'mach'),
-                    'uuid')
-    assert len(data) == 1
-    d = data[0]
-    assert d['command'] == 'python'
-
-
-def test_registrar_dispatch(run_mach):
-    # Use --exec-file so this script can use Registrar.dispatch to dispatch a mach command
-    # from within the same interpreter as the `mach python` command.
-    data = run_mach('python', '--exec-file',
-                    os.path.join(os.path.dirname(__file__), 'registrar_dispatch.py'))
-    assert len(data) == 1
-    d = data[0]
-    assert d['command'] == 'python'
-
-
 def test_zero_microseconds(run_mach):
     data = run_mach('python', '--exec-file',
                     os.path.join(os.path.dirname(__file__), 'zero_microseconds.py'))

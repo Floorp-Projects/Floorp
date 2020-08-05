@@ -85,6 +85,7 @@ SECStatus generate_prime(mp_int *prime, int primeLen);
 /* Freebl state. */
 PRBool aesni_support();
 PRBool clmul_support();
+PRBool sha_support();
 PRBool avx_support();
 PRBool avx2_support();
 PRBool ssse3_support();

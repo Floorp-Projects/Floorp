@@ -176,13 +176,13 @@ class SearchConfigTest {
 
   async _getEngines(region, locale) {
     let engines = [];
-    let configs = await engineSelector.fetchEngineConfiguration(
+    let configs = await engineSelector.fetchEngineConfiguration({
       locale,
-      region || "default",
-      AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+      region: region || "default",
+      channel: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
         ? "esr"
-        : AppConstants.MOZ_UPDATE_CHANNEL
-    );
+        : AppConstants.MOZ_UPDATE_CHANNEL,
+    });
     for (let config of configs.engines) {
       let engine = await Services.search.wrappedJSObject.makeEngineFromConfig(
         config

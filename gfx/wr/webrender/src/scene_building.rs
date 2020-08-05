@@ -1867,7 +1867,7 @@ impl<'a> SceneBuilder<'a> {
 
                 let mut prim_list = PrimitiveList::empty();
                 prim_list.add_prim(
-                    cur_instance.clone(),
+                    cur_instance,
                     LayoutRect::zero(),
                     stacking_context.spatial_node_index,
                     stacking_context.prim_flags,
@@ -1908,7 +1908,7 @@ impl<'a> SceneBuilder<'a> {
 
         // Set the stacking context clip on the outermost picture in the chain,
         // unless we already set it on the leaf picture.
-        cur_instance.clip_chain_id = stacking_context.clip_chain_id;
+        cur_instance.clip_set.clip_chain_id = stacking_context.clip_chain_id;
 
         // The primitive instance for the remainder of flat children of this SC
         // if it's a part of 3D hierarchy but not the root of it.
@@ -3151,7 +3151,7 @@ impl<'a> SceneBuilder<'a> {
             filtered_pic_index = pic_index;
         }
 
-        filtered_instance.clip_chain_id = clip_chain_id;
+        filtered_instance.clip_set.clip_chain_id = clip_chain_id;
 
         self.sc_stack
             .iter_mut()
@@ -3271,7 +3271,7 @@ impl<'a> SceneBuilder<'a> {
 
             let mut prim_list = PrimitiveList::empty();
             prim_list.add_prim(
-                cur_instance.clone(),
+                cur_instance,
                 LayoutRect::zero(),
                 spatial_node_index,
                 flags,
@@ -3336,7 +3336,7 @@ impl<'a> SceneBuilder<'a> {
 
             let mut prim_list = PrimitiveList::empty();
             prim_list.add_prim(
-                cur_instance.clone(),
+                cur_instance,
                 LayoutRect::zero(),
                 spatial_node_index,
                 flags,

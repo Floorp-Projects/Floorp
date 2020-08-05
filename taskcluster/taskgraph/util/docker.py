@@ -168,10 +168,10 @@ class VoidWriter(object):
         pass
 
 
-def generate_context_hash(topsrcdir, image_path, args=None):
+def generate_context_hash(topsrcdir, image_path, image_name, args):
     """Generates a sha256 hash for context directory used to build an image."""
 
-    return stream_context_tar(topsrcdir, image_path, VoidWriter(), args=args)
+    return stream_context_tar(topsrcdir, image_path, VoidWriter(), image_name, args=args)
 
 
 class HashingWriter(object):
@@ -189,7 +189,7 @@ class HashingWriter(object):
         return six.ensure_text(self._hash.hexdigest())
 
 
-def create_context_tar(topsrcdir, context_dir, out_path, args=None):
+def create_context_tar(topsrcdir, context_dir, out_path, image_name, args):
     """Create a context tarball.
 
     A directory ``context_dir`` containing a Dockerfile will be assembled into
@@ -213,11 +213,11 @@ def create_context_tar(topsrcdir, context_dir, out_path, args=None):
     """
     with open(out_path, 'wb') as fh:
         return stream_context_tar(
-            topsrcdir, context_dir, fh, image_name=os.path.basename(out_path), args=args,
+            topsrcdir, context_dir, fh, image_name=image_name, args=args,
         )
 
 
-def stream_context_tar(topsrcdir, context_dir, out_file, image_name=None, args=None):
+def stream_context_tar(topsrcdir, context_dir, out_file, image_name, args):
     """Like create_context_tar, but streams the tar file to the `out_file` file
     object."""
     archive_files = {}
@@ -276,7 +276,7 @@ def stream_context_tar(topsrcdir, context_dir, out_file, image_name=None, args=N
     archive_files['Dockerfile'] = GeneratedFile(b''.join(six.ensure_binary(s) for s in content))
 
     writer = HashingWriter(out_file)
-    create_tar_gz_from_files(writer, archive_files, image_name)
+    create_tar_gz_from_files(writer, archive_files, "{}.tar".format(image_name))
     return writer.hexdigest()
 
 

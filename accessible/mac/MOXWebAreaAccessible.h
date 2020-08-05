@@ -7,6 +7,15 @@
 
 #import "mozAccessible.h"
 
+namespace mozilla {
+namespace a11y {
+
+class Pivot;
+class PivotRule;
+
+}
+}
+
 @interface MOXWebAreaAccessible : mozAccessible
 // overrides
 - (NSURL*)moxURL;
@@ -16,6 +25,12 @@
 
 // overrides
 - (NSNumber*)moxLoadingProgress;
+
+// override
+- (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate;
+
+// override
+- (NSUInteger)moxUIElementCountForSearchPredicate:(NSDictionary*)searchPredicate;
 
 // overrides
 - (void)handleAccessibleEvent:(uint32_t)eventType;
@@ -32,7 +47,7 @@
   mozilla::a11y::AccessibleOrProxy mStartElem;
 
   // The amount of matches we should return
-  unsigned mResultLimit;
+  int mResultLimit;
 
   // The array of search keys to use during this search
   NSMutableArray* mSearchKeys;
@@ -45,6 +60,10 @@
 }
 
 - (id)initWithParameters:(NSDictionary*)params andRoot:(mozilla::a11y::AccessibleOrProxy)root;
+
+- (NSMutableArray*)getMatchesForRule:(mozilla::a11y::PivotRule&)rule;
+
+- (NSArray*)performSearch;
 
 - (void)dealloc;
 
