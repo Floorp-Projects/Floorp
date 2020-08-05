@@ -12,6 +12,8 @@
 #include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
 
+class nsSharedPageData;
+
 namespace mozilla {
 
 class PrintedSheetFrame final : public nsContainerFrame {
@@ -22,6 +24,8 @@ class PrintedSheetFrame final : public nsContainerFrame {
   friend PrintedSheetFrame* ::NS_NewPrintedSheetFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
+  void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
+
   // nsIFrame overrides
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aReflowOutput,
               const ReflowInput& aReflowInput,
@@ -29,6 +33,9 @@ class PrintedSheetFrame final : public nsContainerFrame {
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
+
+  // Return our first page frame.
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
@@ -40,6 +47,10 @@ class PrintedSheetFrame final : public nsContainerFrame {
   PrintedSheetFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsContainerFrame(aStyle, aPresContext, kClassID) {}
   ~PrintedSheetFrame() = default;
+
+  // Note: this will be set before reflow, and it's strongly owned by our
+  // nsPageSequenceFrame, which outlives us.
+  nsSharedPageData* mPD = nullptr;
 };
 
 }  // namespace mozilla
