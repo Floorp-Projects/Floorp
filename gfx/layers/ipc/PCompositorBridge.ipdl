@@ -38,7 +38,6 @@ using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDeviceIntRegion from "Units.h";
 using mozilla::LayoutDeviceIntSize from "Units.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
@@ -184,9 +183,6 @@ parent:
    * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
    */
   async RemotePluginsReady();
-
-  // Child requests frame uniformity measurements
-  sync GetFrameUniformity() returns (FrameUniformityData data);
 
   // The child is about to be destroyed, so perform any necessary cleanup.
   sync WillClose();
