@@ -10,6 +10,7 @@
 #include "blapi.h"
 #include "sha_fast.h"
 #include "prerror.h"
+#include "secerr.h"
 
 #ifdef TRACING_SSL
 #include "ssl.h"
@@ -28,6 +29,28 @@ static void shaCompress(volatile SHA_HW_t *X, const PRUint32 *datain);
 
 #define SHA_MIX(n, a, b, c) XW(n) = SHA_ROTL(XW(a) ^ XW(b) ^ XW(c) ^ XW(n), 1)
 
+void SHA1_Compress_Native(SHA1Context *ctx);
+void SHA1_Update_Native(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len);
+
+static void SHA1_Compress_Generic(SHA1Context *ctx);
+static void SHA1_Update_Generic(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len);
+
+#ifndef USE_HW_SHA1
+void
+SHA1_Compress_Native(SHA1Context *ctx)
+{
+    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+    PORT_Assert(0);
+}
+
+void
+SHA1_Update_Native(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
+{
+    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+    PORT_Assert(0);
+}
+#endif
+
 /*
  *  SHA: initialize context
  */
@@ -43,6 +66,18 @@ SHA1_Begin(SHA1Context *ctx)
     ctx->H[2] = 0x98badcfeL;
     ctx->H[3] = 0x10325476L;
     ctx->H[4] = 0xc3d2e1f0L;
+
+#if defined(USE_HW_SHA1) && defined(IS_LITTLE_ENDIAN)
+    /* arm's implementation is tested on little endian only */
+    if (arm_sha1_support()) {
+        ctx->compress = SHA1_Compress_Native;
+        ctx->update = SHA1_Update_Native;
+    } else
+#endif
+    {
+        ctx->compress = SHA1_Compress_Generic;
+        ctx->update = SHA1_Update_Generic;
+    }
 }
 
 /* Explanation of H array and index values:
@@ -88,6 +123,12 @@ SHA1_Begin(SHA1Context *ctx)
  */
 void
 SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
+{
+    ctx->update(ctx, dataIn, len);
+}
+
+static void
+SHA1_Update_Generic(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
 {
     register unsigned int lenB;
     register unsigned int togo;
@@ -166,7 +207,7 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
     size <<= 3;
     ctx->W[14] = SHA_HTONL((PRUint32)(size >> 32));
     ctx->W[15] = SHA_HTONL((PRUint32)size);
-    shaCompress(&ctx->H[H2X], ctx->W);
+    ctx->compress(ctx);
 
     /*
      *  Output hash
@@ -460,6 +501,12 @@ shaCompress(volatile SHA_HW_t *X, const PRUint32 *inbuf)
     XH(4) += E;
 }
 
+static void
+SHA1_Compress_Generic(SHA1Context *ctx)
+{
+    shaCompress(&ctx->H[H2X], ctx->u.w);
+}
+
 /*************************************************************************
 ** Code below this line added to make SHA code support BLAPI interface
 */
@@ -491,7 +538,7 @@ SHA1_HashBuf(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
     unsigned int outLen;
 
     SHA1_Begin(&ctx);
-    SHA1_Update(&ctx, src, src_length);
+    ctx.update(&ctx, src, src_length);
     SHA1_End(&ctx, dest, &outLen, SHA1_LENGTH);
     memset(&ctx, 0, sizeof ctx);
     return SECSuccess;

@@ -2304,8 +2304,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvEnableDisableCommands(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIBrowserController> browserController =
-      do_QueryActor("Controllers", aContext.get_canonical());
+  nsCOMPtr<nsIBrowserController> browserController = do_QueryActor(
+      "Controllers", aContext.get_canonical()->GetCurrentWindowGlobal());
   if (browserController) {
     browserController->EnableDisableCommands(aAction, aEnabledCommands,
                                              aDisabledCommands);

@@ -525,6 +525,7 @@ impl TrapSink for Traps {
                 return;
             }
             HeapOutOfBounds | TableOutOfBounds => bindings::Trap::OutOfBounds,
+            HeapMisaligned => bindings::Trap::UnalignedAccess,
             IndirectCallToNull => bindings::Trap::IndirectCallToNull,
             BadSignature => bindings::Trap::IndirectCallBadSig,
             IntegerOverflow => bindings::Trap::IntegerOverflow,

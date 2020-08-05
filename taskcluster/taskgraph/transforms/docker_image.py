@@ -107,10 +107,12 @@ def fill_template(config, tasks):
                 context_hash = create_context_tar(
                     GECKO, context_path,
                     context_file,
+                    image_name,
                     args)
             else:
                 context_hash = generate_context_hash(
                     GECKO, context_path,
+                    image_name,
                     args)
         else:
             if config.write_artifacts:

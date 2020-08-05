@@ -90,8 +90,7 @@ void JSActor::InvokeCallback(CallbackFunction callback) {
   AutoEntryScript aes(GetParentObject(), "JSActor destroy callback");
   JSContext* cx = aes.cx();
   MozJSActorCallbacks callbacksHolder;
-  NS_ENSURE_TRUE_VOID(GetWrapper());
-  JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*GetWrapper()));
+  JS::Rooted<JS::Value> val(cx, JS::ObjectOrNullValue(GetWrapper()));
   if (NS_WARN_IF(!callbacksHolder.Init(cx, val))) {
     return;
   }
@@ -114,6 +113,10 @@ void JSActor::InvokeCallback(CallbackFunction callback) {
 
 nsresult JSActor::QueryInterfaceActor(const nsIID& aIID, void** aPtr) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+  if (!GetWrapperPreserveColor()) {
+    // If we have no preserved wrapper, we won't implement any interfaces.
+    return NS_NOINTERFACE;
+  }
 
   if (!mWrappedJS) {
     AutoEntryScript aes(GetParentObject(), "JSActor query interface");
@@ -250,10 +253,11 @@ already_AddRefed<Promise> JSActor::SendQuery(JSContext* aCx,
   return promise.forget();
 }
 
-void JSActor::ReceiveMessageOrQuery(JSContext* aCx,
-                                    const JSActorMessageMeta& aMetadata,
-                                    JS::Handle<JS::Value> aData,
-                                    ErrorResult& aRv) {
+void JSActor::CallReceiveMessage(JSContext* aCx,
+                                 const JSActorMessageMeta& aMetadata,
+                                 JS::Handle<JS::Value> aData,
+                                 JS::MutableHandle<JS::Value> aRetVal,
+                                 ErrorResult& aRv) {
   // The argument which we want to pass to IPC.
   RootedDictionary<ReceiveMessageArgument> argument(aCx);
   argument.mTarget = this;
@@ -262,45 +266,57 @@ void JSActor::ReceiveMessageOrQuery(JSContext* aCx,
   argument.mJson = aData;
   argument.mSync = false;
 
-  JS::Rooted<JSObject*> self(aCx, GetWrapper());
-  JS::Rooted<JSObject*> global(aCx, JS::GetNonCCWObjectGlobal(self));
+  if (GetWrapperPreserveColor()) {
+    // Invoke the actual callback.
+    JS::Rooted<JSObject*> global(aCx, JS::GetNonCCWObjectGlobal(GetWrapper()));
+    RefPtr<MessageListener> messageListener =
+        new MessageListener(GetWrapper(), global, nullptr, nullptr);
+    messageListener->ReceiveMessage(argument, aRetVal, aRv,
+                                    "JSActor receive message",
+                                    MessageListener::eRethrowExceptions);
+  } else {
+    aRv.ThrowTypeError<MSG_NOT_CALLABLE>("Property 'receiveMessage'");
+  }
+}
 
-  // We only need to create a promise if we're dealing with a query here. It
-  // will be resolved or rejected once the listener has been called. Our
-  // listener on this promise will then send the reply.
-  RefPtr<Promise> promise;
-  if (aMetadata.kind() == JSActorMessageKind::Query) {
-    promise = Promise::Create(xpc::NativeGlobal(global), aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+void JSActor::ReceiveMessage(JSContext* aCx,
+                             const JSActorMessageMeta& aMetadata,
+                             JS::Handle<JS::Value> aData, ErrorResult& aRv) {
+  MOZ_ASSERT(aMetadata.kind() == JSActorMessageKind::Message);
+  JS::Rooted<JS::Value> retval(aCx);
+  CallReceiveMessage(aCx, aMetadata, aData, &retval, aRv);
+}
 
-    RefPtr<QueryHandler> handler = new QueryHandler(this, aMetadata, promise);
-    promise->AppendNativeHandler(handler);
+void JSActor::ReceiveQuery(JSContext* aCx, const JSActorMessageMeta& aMetadata,
+                           JS::Handle<JS::Value> aData, ErrorResult& aRv) {
+  MOZ_ASSERT(aMetadata.kind() == JSActorMessageKind::Query);
+
+  // This promise will be resolved or rejected once the listener has been
+  // called. Our listener on this promise will then send the reply.
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
-  // Invoke the actual callback.
+  RefPtr<QueryHandler> handler = new QueryHandler(this, aMetadata, promise);
+  promise->AppendNativeHandler(handler);
+
+  ErrorResult error;
   JS::Rooted<JS::Value> retval(aCx);
-  RefPtr<MessageListener> messageListener =
-      new MessageListener(self, global, nullptr, nullptr);
-  messageListener->ReceiveMessage(argument, &retval, aRv,
-                                  "JSActor receive message",
-                                  MessageListener::eRethrowExceptions);
+  CallReceiveMessage(aCx, aMetadata, aData, &retval, error);
 
   // If we have a promise, resolve or reject it respectively.
-  if (promise) {
-    if (aRv.Failed()) {
-      if (aRv.IsUncatchableException()) {
-        aRv.SuppressException();
-        promise->MaybeRejectWithTimeoutError(
-            "Message handler threw uncatchable exception");
-      } else {
-        promise->MaybeReject(std::move(aRv));
-      }
+  if (error.Failed()) {
+    if (error.IsUncatchableException()) {
+      promise->MaybeRejectWithTimeoutError(
+          "Message handler threw uncatchable exception");
     } else {
-      promise->MaybeResolve(retval);
+      promise->MaybeReject(std::move(error));
     }
+  } else {
+    promise->MaybeResolve(retval);
   }
+  error.SuppressException();
 }
 
 void JSActor::ReceiveQueryReply(JSContext* aCx,

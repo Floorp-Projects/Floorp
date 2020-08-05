@@ -2017,6 +2017,13 @@ js_option('--enable-linker', nargs=1,
           when=is_linker_option_enabled)
 
 
+# No-op to enable depending on --enable-linker from default_elfhack in
+# toolkit/moz.configure.
+@depends('--enable-linker', when=is_linker_option_enabled)
+def enable_linker(linker):
+    return linker
+
+
 @depends('--enable-linker', c_compiler, developer_options, '--enable-gold',
          extra_toolchain_flags, target, when=is_linker_option_enabled)
 @checking('for linker', lambda x: x.KIND)

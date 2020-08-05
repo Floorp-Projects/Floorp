@@ -641,7 +641,10 @@ class FormAutofillSection {
             "creditcard",
             "filled_modified",
             "cc_form",
-            this.flowId
+            this.flowId,
+            {
+              field_name: targetFieldDetail.fieldName,
+            }
           );
         }
 
@@ -942,6 +945,10 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
             ? "true"
             : "false",
       }
+    );
+    Services.telemetry.scalarAdd(
+      "formautofill.creditCards.detected_sections_count",
+      1
     );
 
     // For valid sections, check whether the section is in an

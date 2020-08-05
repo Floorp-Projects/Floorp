@@ -1812,15 +1812,21 @@ SearchService.prototype = {
     let channel = AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
       ? "esr"
       : AppConstants.MOZ_UPDATE_CHANNEL;
+    let experiment = Services.prefs.getCharPref(
+      "browser.search.experiment",
+      null
+    );
+
     let {
       engines,
       privateDefault,
-    } = await this._engineSelector.fetchEngineConfiguration(
+    } = await this._engineSelector.fetchEngineConfiguration({
       locale,
       region,
       channel,
-      SearchUtils.distroID
-    );
+      experiment,
+      distroID: SearchUtils.distroID,
+    });
 
     for (let e of engines) {
       if (!e.webExtension) {

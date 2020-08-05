@@ -4,7 +4,6 @@
 {
   'sources': [
     'aeskeywrap.c',
-    'alg2268.c',
     'cmac.c',
     'alghmac.c',
     'arcfive.c',
@@ -165,6 +164,11 @@
     [ 'disable_deprecated_seed==0', {
       'sources': [
         'deprecated/seed.c',
+      ],
+    }],
+    [ 'disable_deprecated_rc2==0', {
+      'sources': [
+        'deprecated/alg2268.c',
       ],
     }],
     [ 'fuzz==1', {

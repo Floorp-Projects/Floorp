@@ -82,9 +82,8 @@ nsContentTreeOwner::GetWebBrowserChrome() {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> outer(docShell->GetWindow());
   if (nsCOMPtr<nsIWebBrowserChrome3> chrome =
-          do_QueryActor("WebBrowserChrome", outer)) {
+          do_QueryActor("WebBrowserChrome", docShell->GetDocument())) {
     return chrome.forget();
   }
 

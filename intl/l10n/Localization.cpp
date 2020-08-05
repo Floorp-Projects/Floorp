@@ -84,11 +84,8 @@ bool Localization::Init() {
 }
 
 void Localization::Activate(const bool aEager) {
-  nsCOMPtr<mozILocalizationJSM> jsm =
-      do_ImportModule("resource://gre/modules/Localization.jsm");
-  MOZ_RELEASE_ASSERT(jsm);
-
-  Unused << jsm->GetLocalization(getter_AddRefs(mLocalization));
+  mLocalization = do_ImportModule("resource://gre/modules/Localization.jsm",
+                                  "Localization");
   MOZ_RELEASE_ASSERT(mLocalization);
 
   AutoJSContext cx;

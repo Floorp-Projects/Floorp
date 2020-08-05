@@ -90,7 +90,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   already_AddRefed<BrowserChild> GetBrowserChild();
 
   // Get a JS actor object by name.
-  already_AddRefed<JSWindowActorChild> GetActor(const nsACString& aName,
+  already_AddRefed<JSWindowActorChild> GetActor(JSContext* aCx,
+                                                const nsACString& aName,
                                                 ErrorResult& aRv);
 
   // Create and initialize the WindowGlobalChild object.

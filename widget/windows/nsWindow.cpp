@@ -7347,6 +7347,8 @@ void nsWindow::OnDestroy() {
   mWidgetListener = nullptr;
   mAttachedWidgetListener = nullptr;
 
+  DestroyDirectManipulation();
+
   if (mWnd == mLastKillFocusWindow) {
     mLastKillFocusWindow = nullptr;
   }

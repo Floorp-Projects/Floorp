@@ -417,6 +417,16 @@ pub struct ClipChainNode {
     pub parent_clip_chain_id: ClipChainId,
 }
 
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct ClipSet {
+    /// Local space clip rect
+    pub local_clip_rect: LayoutRect,
+
+    /// ID of the clip chain that this set is clipped by.
+    pub clip_chain_id: ClipChainId,
+}
+
 // When a clip node is found to be valid for a
 // clip chain instance, it's stored in an index
 // buffer style structure. This struct contains

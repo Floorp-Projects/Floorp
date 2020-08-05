@@ -585,8 +585,9 @@ const nsACString& WindowGlobalChild::GetRemoteType() {
 }
 
 already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
-    const nsACString& aName, ErrorResult& aRv) {
-  return JSActorManager::GetActor(aName, aRv).downcast<JSWindowActorChild>();
+    JSContext* aCx, const nsACString& aName, ErrorResult& aRv) {
+  return JSActorManager::GetActor(aCx, aName, aRv)
+      .downcast<JSWindowActorChild>();
 }
 
 already_AddRefed<JSActor> WindowGlobalChild::InitJSActor(

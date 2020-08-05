@@ -749,7 +749,10 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     SFTKObject *key;
     SFTKSessionContext *context;
     SFTKAttribute *att;
+#ifndef NSS_DISABLE_DEPRECATED_RC2
     CK_RC2_CBC_PARAMS *rc2_param;
+    unsigned effectiveKeyLength;
+#endif
 #if NSS_SOFTOKEN_DOES_RC5
     CK_RC5_CBC_PARAMS *rc5_param;
     SECItem rc5Key;
@@ -760,7 +763,6 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     CK_NSS_AEAD_PARAMS *nss_aead_params_ptr = NULL;
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
-    unsigned effectiveKeyLength;
     unsigned char newdeskey[24];
     PRBool useNewKey = PR_FALSE;
     int t;
@@ -867,6 +869,7 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
             }
             context->destroy = (SFTKDestroy)sftk_Space;
             break;
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case CKM_RC2_CBC_PAD:
             context->doPad = PR_TRUE;
         /* fall thru */
@@ -901,6 +904,8 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
             context->update = (SFTKCipher)(isEncrypt ? RC2_Encrypt : RC2_Decrypt);
             context->destroy = (SFTKDestroy)RC2_DestroyContext;
             break;
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
+
 #if NSS_SOFTOKEN_DOES_RC5
         case CKM_RC5_CBC_PAD:
             context->doPad = PR_TRUE;
@@ -2229,7 +2234,9 @@ sftk_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 {
     CK_MECHANISM cbc_mechanism;
     CK_ULONG mac_bytes = SFTK_INVALID_MAC_SIZE;
+#ifndef NSS_DISABLE_DEPRECATED_RC2
     CK_RC2_CBC_PARAMS rc2_params;
+#endif
 #if NSS_SOFTOKEN_DOES_RC5
     CK_RC5_CBC_PARAMS rc5_params;
     CK_RC5_MAC_GENERAL_PARAMS *rc5_mac;
@@ -2247,6 +2254,7 @@ sftk_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     }
 
     switch (pMechanism->mechanism) {
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case CKM_RC2_MAC_GENERAL:
             if (BAD_PARAM_CAST(pMechanism, sizeof(CK_RC2_MAC_GENERAL_PARAMS))) {
                 return CKR_MECHANISM_PARAM_INVALID;
@@ -2266,6 +2274,8 @@ sftk_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
             cbc_mechanism.ulParameterLen = sizeof(rc2_params);
             blockSize = 8;
             break;
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
+
 #if NSS_SOFTOKEN_DOES_RC5
         case CKM_RC5_MAC_GENERAL:
             if (BAD_PARAM_CAST(pMechanism, sizeof(CK_RC5_MAC_GENERAL_PARAMS))) {
@@ -4178,11 +4188,13 @@ nsc_SetupBulkKeyGen(CK_MECHANISM_TYPE mechanism, CK_KEY_TYPE *key_type,
     CK_RV crv = CKR_OK;
 
     switch (mechanism) {
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case CKM_RC2_KEY_GEN:
             *key_type = CKK_RC2;
             if (*key_length == 0)
                 crv = CKR_TEMPLATE_INCOMPLETE;
             break;
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
 #if NSS_SOFTOKEN_DOES_RC5
         case CKM_RC5_KEY_GEN:
             *key_type = CKK_RC5;
@@ -4411,10 +4423,12 @@ nsc_SetupPBEKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter **pbe,
             *key_type = params->is2KeyDES ? CKK_DES2 : CKK_DES3;
             *key_length = params->keyLen;
             break;
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case SEC_OID_RC2_CBC:
             *key_type = CKK_RC2;
             *key_length = params->keyLen;
             break;
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
         case SEC_OID_RC4:
             *key_type = CKK_RC4;
             *key_length = params->keyLen;
@@ -4529,8 +4543,10 @@ NSC_GenerateKey(CK_SESSION_HANDLE hSession,
         case CKM_DES2_KEY_GEN:
         case CKM_DES3_KEY_GEN:
             checkWeak = PR_TRUE;
-        /* fall through */
+/* fall through */
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case CKM_RC2_KEY_GEN:
+#endif
         case CKM_RC4_KEY_GEN:
         case CKM_GENERIC_SECRET_KEY_GEN:
 #ifndef NSS_DISABLE_DEPRECATED_SEED
@@ -4566,15 +4582,17 @@ NSC_GenerateKey(CK_SESSION_HANDLE hSession,
             faultyPBE3DES = PR_TRUE;
         /* fall through */
         case CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC:
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_DES_CBC:
         case CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC:
+        case CKM_PBE_SHA1_RC2_128_CBC:
+        case CKM_PBE_SHA1_RC2_40_CBC:
+#endif
+        case CKM_NSS_PBE_SHA1_DES_CBC:
         case CKM_NSS_PBE_SHA1_40_BIT_RC4:
         case CKM_NSS_PBE_SHA1_128_BIT_RC4:
         case CKM_PBE_SHA1_DES3_EDE_CBC:
         case CKM_PBE_SHA1_DES2_EDE_CBC:
-        case CKM_PBE_SHA1_RC2_128_CBC:
-        case CKM_PBE_SHA1_RC2_40_CBC:
         case CKM_PBE_SHA1_RC4_128:
         case CKM_PBE_SHA1_RC4_40:
         case CKM_PBE_MD5_DES_CBC:
@@ -4741,7 +4759,7 @@ loser:
  *                        performed, for example, CKR_HOST_MEMORY.
  */
 static CK_RV
-sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
+sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession, SFTKSlot *slot,
                               SFTKObject *publicKey, SFTKObject *privateKey, CK_KEY_TYPE keyType)
 {
     /*
@@ -4756,6 +4774,12 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
      *                      others   => CKM_INVALID_MECHANISM
      *
      * None of these mechanisms has a parameter.
+     *
+     * For derive           CKK_DH   => CKM_DH_PKCS_DERIVE
+     *                      CKK_EC   => CKM_ECDH1_DERIVE
+     *                      others   => CKM_INVALID_MECHANISM
+     *
+     * The parameters for these mechanisms is the public key.
      */
     CK_MECHANISM mech = { 0, NULL, 0 };
 
@@ -5015,24 +5039,106 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
     isDerivable = sftk_isTrue(privateKey, CKA_DERIVE);
 
     if (isDerivable) {
-        /*
-         * We are not doing consistency check for Diffie-Hellman Key -
-         * otherwise it would be here
-         * This is also true for Elliptic Curve Diffie-Hellman keys
-         * NOTE: EC keys are currently subjected to pairwise
-         * consistency check for signing/verification.
-         */
-        /*
-         * FIPS 140-2 had the following pairwise consistency test for
-         * public and private keys used for key agreement:
-         *   If the keys are used to perform key agreement, then the
-         *   cryptographic module shall create a second, compatible
-         *   key pair.  The cryptographic module shall perform both
-         *   sides of the key agreement algorithm and shall compare
-         *   the resulting shared values.  If the shared values are
-         *   not equal, the test shall fail.
-         * This test was removed in Change Notice 3.
-         */
+        SFTKAttribute *pubAttribute = NULL;
+        CK_OBJECT_HANDLE newKey;
+        PRBool isFIPS = (slot->slotID == FIPS_SLOT_ID);
+        CK_RV crv2;
+        CK_OBJECT_CLASS secret = CKO_SECRET_KEY;
+        CK_KEY_TYPE generic = CKK_GENERIC_SECRET;
+        CK_ULONG keyLen = 128;
+        CK_BBOOL ckTrue = CK_TRUE;
+        CK_ATTRIBUTE template[] = {
+            { CKA_CLASS, &secret, sizeof(secret) },
+            { CKA_KEY_TYPE, &generic, sizeof(generic) },
+            { CKA_VALUE_LEN, &keyLen, sizeof(keyLen) },
+            { CKA_DERIVE, &ckTrue, sizeof(ckTrue) }
+        };
+        CK_ULONG templateCount = PR_ARRAY_SIZE(template);
+        CK_ECDH1_DERIVE_PARAMS ecParams;
+
+        crv = CKR_OK; /*paranoia, already get's set before we drop to the end */
+        /* FIPS 140-2 requires we verify that the resulting key is a valid key.
+         * The easiest way to do this is to do a derive operation, which checks
+         * the validity of the key */
+
+        switch (keyType) {
+            case CKK_DH:
+                mech.mechanism = CKM_DH_PKCS_DERIVE;
+                pubAttribute = sftk_FindAttribute(publicKey, CKA_VALUE);
+                if (pubAttribute == NULL) {
+                    return CKR_DEVICE_ERROR;
+                }
+                mech.pParameter = pubAttribute->attrib.pValue;
+                mech.ulParameterLen = pubAttribute->attrib.ulValueLen;
+                break;
+            case CKK_EC:
+                mech.mechanism = CKM_ECDH1_DERIVE;
+                pubAttribute = sftk_FindAttribute(publicKey, CKA_EC_POINT);
+                if (pubAttribute == NULL) {
+                    return CKR_DEVICE_ERROR;
+                }
+                ecParams.kdf = CKD_NULL;
+                ecParams.ulSharedDataLen = 0;
+                ecParams.pSharedData = NULL;
+                ecParams.ulPublicDataLen = pubAttribute->attrib.ulValueLen;
+                ecParams.pPublicData = pubAttribute->attrib.pValue;
+                mech.pParameter = &ecParams;
+                mech.ulParameterLen = sizeof(ecParams);
+                break;
+            default:
+                return CKR_DEVICE_ERROR;
+        }
+
+        crv = NSC_DeriveKey(hSession, &mech, privateKey->handle, template, templateCount, &newKey);
+        if (crv != CKR_OK) {
+            sftk_FreeAttribute(pubAttribute);
+            return crv;
+        }
+        /* FIPS requires full validation, but in fipx mode NSC_Derive
+         * only does partial validation with approved primes, now handle
+         * full validation */
+        if (isFIPS && keyType == CKK_DH) {
+            SECItem pubKey;
+            SECItem prime;
+            SECItem subPrime;
+            const SECItem *subPrimePtr = &subPrime;
+
+            pubKey.data = pubAttribute->attrib.pValue;
+            pubKey.len = pubAttribute->attrib.ulValueLen;
+            prime.data = subPrime.data = NULL;
+            prime.len = subPrime.len = 0;
+            crv = sftk_Attribute2SecItem(NULL, &prime, privateKey, CKA_PRIME);
+            if (crv != CKR_OK) {
+                goto done;
+            }
+            crv = sftk_Attribute2SecItem(NULL, &prime, privateKey, CKA_PRIME);
+            /* we ignore the return code an only look at the length */
+            if (subPrime.len == 0) {
+                /* subprime not supplied, In this case look it up.
+                 * This only works with approved primes, but in FIPS mode
+                 * that's the only kine of prime that will get here */
+                subPrimePtr = sftk_VerifyDH_Prime(&prime);
+                if (subPrimePtr == NULL) {
+                    crv = CKR_GENERAL_ERROR;
+                    goto done;
+                }
+            }
+            if (!KEA_Verify(&pubKey, &prime, (SECItem *)subPrimePtr)) {
+                crv = CKR_GENERAL_ERROR;
+            }
+        done:
+            PORT_Free(subPrime.data);
+            PORT_Free(prime.data);
+        }
+        /* clean up before we return */
+        sftk_FreeAttribute(pubAttribute);
+        crv2 = NSC_DestroyObject(hSession, newKey);
+        if (crv != CKR_OK) {
+            return crv;
+        }
+        if (crv2 != CKR_OK) {
+            return crv2;
+        }
     }
 
     return CKR_OK;
@@ -5576,7 +5682,7 @@ NSC_GenerateKeyPair(CK_SESSION_HANDLE hSession,
 
     if (crv == CKR_OK) {
         /* Perform FIPS 140-2 pairwise consistency check. */
-        crv = sftk_PairwiseConsistencyCheck(hSession,
+        crv = sftk_PairwiseConsistencyCheck(hSession, slot,
                                             publicKey, privateKey, key_type);
         if (crv != CKR_OK) {
             if (sftk_audit_enabled) {
@@ -8179,40 +8285,101 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
 
         case CKM_DH_PKCS_DERIVE: {
             SECItem derived, dhPublic;
-            SECItem dhPrime, dhSubPrime, dhValue;
+            SECItem dhPrime, dhValue;
+            const SECItem *subPrime;
             /* sourceKey - values for the local existing low key */
             /* get prime and value attributes */
             crv = sftk_Attribute2SecItem(NULL, &dhPrime, sourceKey, CKA_PRIME);
             if (crv != CKR_OK)
                 break;
+
+            dhPublic.data = pMechanism->pParameter;
+            dhPublic.len = pMechanism->ulParameterLen;
+
+            /* if the prime is an approved prime, we can skip all the other
+             * checks. */
+            subPrime = sftk_VerifyDH_Prime(&dhPrime);
+            if (subPrime == NULL) {
+                SECItem dhSubPrime;
+                /* If the caller set the subprime value, it means that
+                 * either the caller knows the subprime value and wants us
+                 * to validate the key against the subprime, or that the
+                 * caller wants us to verify that the prime is a safe prime
+                 * by passing in subprime = (prime-1)/2 */
+                dhSubPrime.data = NULL;
+                dhSubPrime.len = 0;
+                crv = sftk_Attribute2SecItem(NULL, &dhSubPrime,
+                                             sourceKey, CKA_SUBPRIME);
+                /* we ignore the value of crv here, We treat a valid
+                * return of len = 0 and a failure to find a subrime the same
+                * NOTE: we free the subprime in both cases depending on
+                * PORT_Free of NULL to be a noop */
+                if (dhSubPrime.len != 0) {
+                    PRBool isSafe = PR_FALSE;
+
+                    /* Callers can set dhSubPrime to q=(p-1)/2 to force
+                     * checks for safe primes. If so we only need to check
+                     * q and p for primality and skip the group test.  */
+                    rv = sftk_IsSafePrime(&dhPrime, &dhSubPrime, &isSafe);
+                    if (rv != SECSuccess) {
+                        /* either p or q was even and therefore not prime,
+                         * we can stop processing here and fail now */
+                        crv = CKR_ARGUMENTS_BAD;
+                        PORT_Free(dhPrime.data);
+                        PORT_Free(dhSubPrime.data);
+                        break;
+                    }
+
+                    /* first make sure the primes are really prime */
+                    if (!KEA_PrimeCheck(&dhPrime)) {
+                        crv = CKR_ARGUMENTS_BAD;
+                        PORT_Free(dhPrime.data);
+                        PORT_Free(dhSubPrime.data);
+                        break;
+                    }
+                    if (!KEA_PrimeCheck(&dhSubPrime)) {
+                        crv = CKR_ARGUMENTS_BAD;
+                        PORT_Free(dhPrime.data);
+                        PORT_Free(dhSubPrime.data);
+                        break;
+                    }
+                    if (isFIPS || !isSafe) {
+                        /* With safe primes, there is only one other small
+                         * subgroup. As long as y isn't 0, 1, or -1 mod p,
+                         * any other y is safe. Only do the full check for
+                         * non-safe primes, except in FIPS mode we need
+                         * to do this check on all primes in which
+                         * we receive the subprime value */
+                        if (!KEA_Verify(&dhPublic, &dhPrime, &dhSubPrime)) {
+                            crv = CKR_ARGUMENTS_BAD;
+                            PORT_Free(dhPrime.data);
+                            PORT_Free(dhSubPrime.data);
+                            break;
+                        }
+                    }
+                } else if (isFIPS) {
+                    /* In FIPS mode we only accept approved primes, or
+                     * primes with the full subprime value */
+                    crv = CKR_ARGUMENTS_BAD;
+                    PORT_Free(dhPrime.data);
+                    break;
+                }
+                /* checks are complete, no need for the subPrime any longer */
+                PORT_Free(dhSubPrime.data);
+            }
+
+            /* now that the prime is validated, get the private value */
             crv = sftk_Attribute2SecItem(NULL, &dhValue, sourceKey, CKA_VALUE);
             if (crv != CKR_OK) {
                 PORT_Free(dhPrime.data);
                 break;
             }
 
-            dhPublic.data = pMechanism->pParameter;
-            dhPublic.len = pMechanism->ulParameterLen;
-
-            /* If the caller bothered to provide Q, use Q to validate
-             * the public key. */
-            crv = sftk_Attribute2SecItem(NULL, &dhSubPrime, sourceKey, CKA_SUBPRIME);
-            if (crv == CKR_OK) {
-                rv = KEA_Verify(&dhPublic, &dhPrime, &dhSubPrime);
-                PORT_Free(dhSubPrime.data);
-                if (rv != SECSuccess) {
-                    crv = CKR_ARGUMENTS_BAD;
-                    PORT_Free(dhPrime.data);
-                    PORT_Free(dhValue.data);
-                    break;
-                }
-            }
-
             /* calculate private value - oct */
             rv = DH_Derive(&dhPublic, &dhPrime, &dhValue, &derived, keySize);
 
             PORT_Free(dhPrime.data);
-            PORT_Free(dhValue.data);
+            PORT_ZFree(dhValue.data, dhValue.len);
 
             if (rv == SECSuccess) {
                 sftk_forceAttribute(key, CKA_VALUE, derived.data, derived.len);

@@ -66,11 +66,9 @@ static mozIExtensionProcessScript& ProcessScript() {
   static nsCOMPtr<mozIExtensionProcessScript> sProcessScript;
 
   if (MOZ_UNLIKELY(!sProcessScript)) {
-    nsCOMPtr<mozIExtensionProcessScriptJSM> jsm =
-        do_ImportModule("resource://gre/modules/ExtensionProcessScript.jsm");
-    MOZ_RELEASE_ASSERT(jsm);
-
-    Unused << jsm->GetExtensionProcessScript(getter_AddRefs(sProcessScript));
+    sProcessScript =
+        do_ImportModule("resource://gre/modules/ExtensionProcessScript.jsm",
+                        "ExtensionProcessScript");
     MOZ_RELEASE_ASSERT(sProcessScript);
     ClearOnShutdown(&sProcessScript);
   }

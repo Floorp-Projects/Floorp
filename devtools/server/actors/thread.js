@@ -21,6 +21,8 @@ const { threadSpec } = require("devtools/shared/specs/thread");
 const {
   getAvailableEventBreakpoints,
   eventBreakpointForNotification,
+  eventsRequireNotifications,
+  firstStatementBreakpointId,
   makeEventBreakpointMessage,
 } = require("devtools/server/actors/utils/event-breakpoints");
 const {
@@ -215,6 +217,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._parent.on("will-navigate", this._onWillNavigate);
     this._parent.on("navigate", this._onNavigate);
 
+    this._firstStatementBreakpoint = null;
     this._debuggerNotificationObserver = new DebuggerNotificationObserver();
 
     if (Services.obs) {
@@ -617,18 +620,92 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   setActiveEventBreakpoints: function(ids) {
     this._activeEventBreakpoints = new Set(ids);
 
-    if (this._activeEventBreakpoints.size === 0) {
-      this._debuggerNotificationObserver.removeListener(
-        this._eventBreakpointListener
-      );
-    } else {
+    if (eventsRequireNotifications(ids)) {
       this._debuggerNotificationObserver.addListener(
         this._eventBreakpointListener
       );
+    } else {
+      this._debuggerNotificationObserver.removeListener(
+        this._eventBreakpointListener
+      );
+    }
+
+    if (this._activeEventBreakpoints.has(firstStatementBreakpointId())) {
+      this._ensureFirstStatementBreakpointInitialized();
+
+      this._firstStatementBreakpoint.hit = frame =>
+        this._pauseAndRespondEventBreakpoint(
+          frame,
+          firstStatementBreakpointId()
+        );
+    } else if (this._firstStatementBreakpoint) {
+      // Disabling the breakpoint disables the feature as much as we need it
+      // to. We do not bother removing breakpoints from the scripts themselves
+      // here because the breakpoints will be a no-op if `hit` is `null`, and
+      // if we wanted to remove them, we'd need a way to iterate through them
+      // all, which would require us to hold strong references to them, which
+      // just isn't needed. Plus, if the user disables and then re-enables the
+      // feature again later, the breakpoints will still be there to work.
+      this._firstStatementBreakpoint.hit = null;
     }
   },
 
+  _ensureFirstStatementBreakpointInitialized() {
+    if (this._firstStatementBreakpoint) {
+      return;
+    }
+
+    this._firstStatementBreakpoint = { hit: null };
+    for (const script of this.dbg.findScripts()) {
+      this._maybeTrackFirstStatementBreakpoint(script);
+    }
+  },
+
+  _maybeTrackFirstStatementBreakpointForNewGlobal(global) {
+    if (this._firstStatementBreakpoint) {
+      for (const script of this.dbg.findScripts({ global })) {
+        this._maybeTrackFirstStatementBreakpoint(script);
+      }
+    }
+  },
+
+  _maybeTrackFirstStatementBreakpoint(script) {
+    if (
+      // If the feature is not enabled yet, there is nothing to do.
+      !this._firstStatementBreakpoint ||
+      // WASM files don't have a first statement.
+      script.format !== "js" ||
+      // All "top-level" scripts are non-functions, whether that's because
+      // the script is a module, a global script, or an eval or what.
+      script.isFunction
+    ) {
+      return;
+    }
+
+    const bps = script.getPossibleBreakpoints();
+
+    // Scripts aren't guaranteed to have a step start if for instance the
+    // file contains only function declarations, so in that case we try to
+    // fall back to whatever we can find.
+    let meta = bps.find(bp => bp.isStepStart) || bps[0];
+    if (!meta) {
+      // We've tried to avoid using `getAllColumnOffsets()` because the set of
+      // locations included in this list is very under-defined, but for this
+      // usecase it's not the end of the world. Maybe one day we could have an
+      // "onEnterFrame" that was scoped to a specific script to avoid this.
+      meta = script.getAllColumnOffsets()[0];
+    }
+
+    if (!meta) {
+      // Not certain that this is actually possible, but including for sanity
+      // so that we don't throw unexpectedly.
+      return;
+    }
+    script.setBreakpoint(meta.offset, this._firstStatementBreakpoint);
+  },
+
   _onNewDebuggee(global) {
+    this._maybeTrackFirstStatementBreakpointForNewGlobal(global);
     try {
       this._debuggerNotificationObserver.connect(global.unsafeDereference());
     } catch (e) {}
@@ -765,9 +842,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     } else if (!notification.phase && !this._activeEventPause) {
       const frame = this.dbg.getNewestFrame();
       if (frame) {
-        const { sourceActor } = this.sources.getFrameLocation(frame);
-        const { url } = sourceActor;
-        if (this.sources.isBlackBoxed(url)) {
+        if (this.sources.isFrameBlackBoxed(frame)) {
           return;
         }
 
@@ -778,11 +853,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _makeEventBreakpointEnterFrame(eventBreakpoint) {
     return frame => {
-      const location = this.sources.getFrameLocation(frame);
-      const { sourceActor, line, column } = location;
-      const { url } = sourceActor;
-
-      if (this.sources.isBlackBoxed(url, line, column)) {
+      if (this.sources.isFrameBlackBoxed(frame)) {
         return undefined;
       }
 
@@ -1805,9 +1876,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
-    const location = this.sources.getFrameLocation(frame);
-
-    if (this.skipBreakpoints || this.sources.isBlackBoxed(location.sourceUrl)) {
+    if (this.skipBreakpoints || this.sources.isFrameBlackBoxed(frame)) {
       return undefined;
     }
 
@@ -1852,8 +1921,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *        The stack frame that contained the debugger statement.
    */
   onDebuggerStatement: function(frame) {
-    const location = this.sources.getFrameLocation(frame);
-
     // Don't pause if
     // 1. we have not moved since the last pause
     // 2. breakpoints are disabled
@@ -1862,7 +1929,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (
       !this.hasMoved(frame, "debuggerStatement") ||
       this.skipBreakpoints ||
-      this.sources.isBlackBoxed(location.sourceUrl) ||
+      this.sources.isFrameBlackBoxed(frame) ||
       this.atBreakpointLocation(frame)
     ) {
       return undefined;
@@ -1922,16 +1989,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
-    const { sourceActor } = this.sources.getFrameLocation(youngestFrame);
-    const url = sourceActor ? sourceActor.url : null;
-
     // Don't pause on exceptions thrown while inside an evaluation being done on
     // behalf of the client.
     if (this.insideClientEvaluation) {
       return undefined;
     }
 
-    if (this.skipBreakpoints || this.sources.isBlackBoxed(url)) {
+    if (this.skipBreakpoints || this.sources.isFrameBlackBoxed(youngestFrame)) {
       return undefined;
     }
 
@@ -1962,16 +2026,15 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   /**
-   * A function that the engine calls when a new script has been loaded into the
-   * scope of the specified debuggee global.
+   * A function that the engine calls when a new script has been loaded.
    *
    * @param script Debugger.Script
    *        The source script that has been loaded into a debuggee compartment.
-   * @param global Debugger.Object
-   *        A Debugger.Object instance whose referent is the global object.
    */
-  onNewScript: function(script, global) {
+  onNewScript: function(script) {
     this._addSource(script.source);
+
+    this._maybeTrackFirstStatementBreakpoint(script);
   },
 
   /**

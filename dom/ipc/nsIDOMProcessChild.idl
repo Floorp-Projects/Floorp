@@ -10,10 +10,12 @@
 namespace mozilla {
 namespace dom {
 class ContentChild;
+class JSActorManager;
 } // namespace dom
 } // namespace mozilla
 %}
 [ptr] native ContentChildPtr(mozilla::dom::ContentChild);
+[ptr] native JSActorManagerPtr(mozilla::dom::JSActorManager);
 
 webidl JSProcessActorChild;
 
@@ -25,6 +27,17 @@ webidl JSProcessActorChild;
  */
 [scriptable, builtinclass, uuid(b0c6e5f3-02f1-4f11-a0af-336fc231f3bf)]
 interface nsIDOMProcessChild: nsISupports {
+  %{C++
+  /**
+   * Get the nsIDOMProcessChild singleton for this content process. This will
+   * either be an InProcessChild in the parent process, or ContentChild in the
+   * child process.
+   *
+   * Implemented in ContentChild.cpp
+   */
+  static nsIDOMProcessChild* GetSingleton();
+  %}
+
   /**
    * Internal child process ID. `0` is reserved for the parent process.
    */
@@ -39,4 +52,7 @@ interface nsIDOMProcessChild: nsISupports {
   [infallible] readonly attribute boolean canSend;
 
   [notxpcom, nostdcall] ContentChildPtr AsContentChild();
+
+  /** Cast this nsIDOMProcessChild to a JSActorManager */
+  [notxpcom, nostdcall] JSActorManagerPtr AsJSActorManager();
 };

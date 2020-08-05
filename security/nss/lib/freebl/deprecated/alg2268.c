@@ -6,11 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef FREEBL_NO_DEPEND
-#include "stubs.h"
+#include "../stubs.h"
 #endif
 
-#include "blapi.h"
-#include "blapii.h"
+#include "../blapi.h"
+#include "../blapii.h"
 #include "secerr.h"
 #ifdef XP_UNIX_XXX
 #include <stddef.h> /* for ptrdiff_t */
