@@ -5,7 +5,7 @@
 </head>
 <body>
 <pre id="test">
-<iframe id="iframe" srcdoc="
+<iframe id="iframe" onload="iframeLoaded()" srcdoc="
   <script type='application/javascript'>
   document.gUM = (constraints, success, failure) =>
     navigator.mediaDevices.getUserMedia(constraints).then(success, failure);
@@ -13,13 +13,21 @@
 </iframe>
 <script type="application/javascript">
   "use strict";
+  let iframeLoadedPromise = {};
+  iframeLoadedPromise.promise = new Promise(r => {
+    iframeLoadedPromise.resolve = r;
+  });;
+  function iframeLoaded() {
+    iframeLoadedPromise.resolve();
+  }
 
   createHTML({
     title: "getUserMedia MediaStreamTrack 'ended' event on navigating",
     bug: "1208373",
   });
 
-  runTest(() => {
+  runTest(async () => {
+    await iframeLoadedPromise.promise;
     let iframe = document.getElementById("iframe");
     let stream;
     // We're passing callbacks into a method in the iframe here, because
