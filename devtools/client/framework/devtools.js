@@ -844,7 +844,7 @@ DevTools.prototype = {
    * the fission.autostart preference.
    */
   isFissionContentToolboxEnabled() {
-    if (typeof this._isFissionContentToolboxEnabled === "undefined") {
+    if (typeof this._cachedFissionContentToolboxEnabled === "undefined") {
       const isContentFissionEnabled = Services.prefs.getBoolPref(
         CONTENT_FISSION_ENABLED_PREF,
         false
@@ -857,10 +857,22 @@ DevTools.prototype = {
         FISSION_AUTOSTART_PREF,
         false
       );
-      this._isFissionContentToolboxEnabled =
+      this._cachedFissionContentToolboxEnabled =
         isFissionEnabled && isContentFissionEnabled;
     }
-    return this._isFissionContentToolboxEnabled;
+    return this._cachedFissionContentToolboxEnabled;
+  },
+
+  /**
+   * Clear the _cachedFissionContentToolboxEnabled reference so next call to
+   * isFissionContentToolboxEnabled will read the preferences values again instead of
+   * relying on the cached value.
+   * ⚠️ This should only be used in tests as it could lead to different
+   * isFissionContentToolboxEnabled results if the preferences are changed while
+   * toolboxes are open ⚠️.
+   */
+  clearIsFissionContentToolboxEnabledReferenceForTest() {
+    delete this._cachedFissionContentToolboxEnabled;
   },
 };
 
