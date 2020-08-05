@@ -26,8 +26,8 @@
 namespace js {
 
 namespace frontend {
-class ScopeCreationData;
-class EnvironmentShapeCreationData;
+class ScriptStencil;
+class ScopeStencil;
 };  // namespace frontend
 
 template <typename NameT>
@@ -275,7 +275,7 @@ class WrappedPtrOperations<Scope*, Wrapper> {
 //
 class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   friend class GCMarker;
-  friend class frontend::ScopeCreationData;
+  friend class frontend::ScopeStencil;
   friend class js::BindingIter;
 
  protected:
@@ -444,7 +444,7 @@ class LexicalScope : public Scope {
   friend class Scope;
   friend class BindingIter;
   friend class GCMarker;
-  friend class frontend::ScopeCreationData;
+  friend class frontend::ScopeStencil;
 
  public:
   // Data is public because it is created by the frontend. See
@@ -651,7 +651,7 @@ class VarScope : public Scope {
   friend class GCMarker;
   friend class BindingIter;
   friend class Scope;
-  friend class frontend::ScopeCreationData;
+  friend class frontend::ScopeStencil;
 
  public:
   // Data is public because it is created by the
@@ -822,7 +822,7 @@ class EvalScope : public Scope {
   friend class Scope;
   friend class BindingIter;
   friend class GCMarker;
-  friend class frontend::ScopeCreationData;
+  friend class frontend::ScopeStencil;
 
  public:
   // Data is public because it is created by the frontend. See
@@ -907,7 +907,7 @@ class ModuleScope : public Scope {
   friend class BindingIter;
   friend class Scope;
   friend class AbstractScopePtr;
-  friend class frontend::ScopeCreationData;
+  friend class frontend::ScopeStencil;
   static const ScopeKind classScopeKind_ = ScopeKind::Module;
 
  public:

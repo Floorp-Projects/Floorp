@@ -26,7 +26,7 @@ class GCMarker;
 
 namespace frontend {
 struct CompilationInfo;
-class ScopeCreationData;
+class ScopeStencil;
 }  // namespace frontend
 
 using ScopeIndex = frontend::TypedIndex<Scope>;
@@ -35,8 +35,8 @@ using HeapPtrScope = HeapPtr<Scope*>;
 // An interface class to support Scope queries in the frontend without requiring
 // a GC Allocated scope to necessarily exist.
 //
-// This abstracts Scope* (and a future ScopeCreationData type used within the
-// frontend before the Scope is allocated)
+// This abstracts Scope* and a ScopeStencil type used within the frontend before
+// the Scope is allocated.
 //
 // Because a AbstractScopePtr may hold onto a Scope, it must be rooted if a GC
 // may occur to ensure that the scope is traced.
@@ -69,7 +69,7 @@ class AbstractScopePtr {
       : scope_(Deferred{scope, compilationInfo}) {}
 
   bool isNullptr() const {
-    if (isScopeCreationData()) {
+    if (isScopeStencil()) {
       return false;
     }
     return scope_.as<HeapPtrScope>() == nullptr;
@@ -81,10 +81,10 @@ class AbstractScopePtr {
   // indicates the end of the scope chain.
   explicit operator bool() const { return !isNullptr(); }
 
-  bool isScopeCreationData() const { return scope_.is<Deferred>(); }
+  bool isScopeStencil() const { return scope_.is<Deferred>(); }
 
   // Note: this handle is rooted in the CompilationInfo.
-  MutableHandle<frontend::ScopeCreationData> scopeCreationData() const;
+  MutableHandle<frontend::ScopeStencil> scopeData() const;
   frontend::CompilationInfo& compilationInfo() const;
 
   // Concrete GC scope. If a deferred scope, the target must already have been
