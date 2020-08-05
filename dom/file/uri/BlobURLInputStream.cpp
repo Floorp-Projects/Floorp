@@ -443,16 +443,16 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
 nsresult BlobURLInputStream::StoreBlobImplStream(
     already_AddRefed<BlobImpl> aBlobImpl, const MutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
-  const RefPtr<BlobImpl> blobImppl = aBlobImpl;
+  const RefPtr<BlobImpl> blobImpl = aBlobImpl;
   nsAutoString contentType;
-  blobImppl->GetType(contentType);
+  blobImpl->GetType(contentType);
   mChannel->SetContentType(NS_ConvertUTF16toUTF8(contentType));
 
   auto cleanupOnExit = MakeScopeExit([&] { mChannel = nullptr; });
 
-  if (blobImppl->IsFile()) {
+  if (blobImpl->IsFile()) {
     nsAutoString filename;
-    blobImppl->GetName(filename);
+    blobImpl->GetName(filename);
     if (!filename.IsEmpty()) {
       mChannel->SetContentDispositionFilename(filename);
     }
@@ -460,7 +460,7 @@ nsresult BlobURLInputStream::StoreBlobImplStream(
 
   mozilla::ErrorResult errorResult;
 
-  mBlobSize = blobImppl->GetSize(errorResult);
+  mBlobSize = blobImpl->GetSize(errorResult);
 
   if (NS_WARN_IF(errorResult.Failed())) {
     return errorResult.StealNSResult();
@@ -469,7 +469,7 @@ nsresult BlobURLInputStream::StoreBlobImplStream(
   mChannel->SetContentLength(mBlobSize);
 
   nsCOMPtr<nsIInputStream> inputStream;
-  blobImppl->CreateInputStream(getter_AddRefs(inputStream), errorResult);
+  blobImpl->CreateInputStream(getter_AddRefs(inputStream), errorResult);
 
   if (NS_WARN_IF(errorResult.Failed())) {
     return errorResult.StealNSResult();

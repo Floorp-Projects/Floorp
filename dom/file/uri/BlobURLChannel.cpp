@@ -6,6 +6,8 @@
 
 #include "BlobURLChannel.h"
 #include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/BlobURL.h"
+#include "mozilla/dom/BlobURLInputStream.h"
 
 using namespace mozilla::dom;
 
@@ -30,35 +32,30 @@ void BlobURLChannel::InitFailed() {
   mInitialized = true;
 }
 
-void BlobURLChannel::Initialize(BlobImpl* aBlobImpl) {
+void BlobURLChannel::Initialize() {
   MOZ_ASSERT(!mInitialized);
 
-  nsAutoString contentType;
-  aBlobImpl->GetType(contentType);
-  SetContentType(NS_ConvertUTF16toUTF8(contentType));
-
-  if (aBlobImpl->IsFile()) {
-    nsString filename;
-    aBlobImpl->GetName(filename);
-    SetContentDispositionFilename(filename);
-  }
-
-  ErrorResult rv;
-  uint64_t size = aBlobImpl->GetSize(rv);
-  if (NS_WARN_IF(rv.Failed())) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     InitFailed();
     return;
   }
 
-  SetContentLength(size);
+  RefPtr<BlobURL> blobURL;
+  rv = uri->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(blobURL));
 
-  aBlobImpl->CreateInputStream(getter_AddRefs(mInputStream), rv);
-  if (NS_WARN_IF(rv.Failed())) {
+  if (NS_FAILED(rv) || !blobURL) {
     InitFailed();
     return;
   }
 
-  MOZ_ASSERT(mInputStream);
+  mInputStream = BlobURLInputStream::Create(this, blobURL);
+  if (NS_WARN_IF(!mInputStream)) {
+    InitFailed();
+    return;
+  }
+
   mInitialized = true;
 }
 
