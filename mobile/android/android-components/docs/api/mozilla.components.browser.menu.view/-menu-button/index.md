@@ -2,7 +2,7 @@
 
 # MenuButton
 
-`class MenuButton : `[`MenuButton`](../../mozilla.components.concept.menu/-menu-button/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.menu/-menu-button/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/view/MenuButton.kt#L36)
+`class MenuButton : `[`MenuButton`](../../mozilla.components.concept.menu/-menu-button/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.menu/-menu-button/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/view/MenuButton.kt#L37)
 
 A `three-dot` button used for expanding menus.
 

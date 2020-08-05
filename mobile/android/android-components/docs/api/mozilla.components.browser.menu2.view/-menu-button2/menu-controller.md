@@ -2,7 +2,7 @@
 
 # menuController
 
-`var menuController: `[`MenuController`](../../mozilla.components.concept.menu/-menu-controller/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/view/MenuButton2.kt#L43)
+`var menuController: `[`MenuController`](../../mozilla.components.concept.menu/-menu-controller/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/view/MenuButton2.kt#L44)
 
 Overrides [MenuButton.menuController](../../mozilla.components.concept.menu/-menu-button/menu-controller.md)
 

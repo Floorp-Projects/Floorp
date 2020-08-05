@@ -2,7 +2,7 @@
 
 # onDownloadStopped
 
-`var onDownloadStopped: `[`onDownloadStopped`](../../mozilla.components.feature.downloads.manager/on-download-stopped.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L72)
+`var onDownloadStopped: `[`onDownloadStopped`](../../mozilla.components.feature.downloads.manager/on-download-stopped.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L66)
 
 a callback invoked when a download is paused or completed.
 

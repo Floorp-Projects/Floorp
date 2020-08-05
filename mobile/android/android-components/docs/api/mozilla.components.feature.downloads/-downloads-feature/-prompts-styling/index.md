@@ -2,7 +2,7 @@
 
 # PromptsStyling
 
-`data class PromptsStyling` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L216)
+`data class PromptsStyling` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L212)
 
 Styling for the download dialog prompt
 
