@@ -2388,10 +2388,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
     }
     case NS_NATIVE_OPENGL_CONTEXT:
       return nullptr;
-#ifdef MOZ_X11
-    case NS_NATIVE_COMPOSITOR_DISPLAY:
-      return gfxPlatformGtk::GetPlatform()->GetCompositorDisplay();
-#endif  // MOZ_X11
     case NS_NATIVE_EGL_WINDOW: {
       if (mIsX11Display) {
         return mGdkWindow ? (void*)GDK_WINDOW_XID(mGdkWindow) : nullptr;
