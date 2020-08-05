@@ -125,9 +125,34 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
 }
 
 /* static */
-bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsresult aError) {
-  // This list of error codes is largely drawn from
-  // nsDocShell::DisplayLoadError()
+bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsIChannel* aChannel,
+                                             nsresult aError) {
+  // If there is no failed channel, then there is nothing to do here.
+  if (!aChannel) {
+    return false;
+  }
+
+  // If HTTPS-Only Mode is not enabled, then there is nothing to do here.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  if (!IsHttpsOnlyModeEnabled(isPrivateWin)) {
+    return false;
+  }
+
+  // If the listener is not registerd, then there is nothing to do here.
+  uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+  if (!(httpsOnlyStatus &
+        nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED)) {
+    return false;
+  }
+
+  // If the load is exempt, then there is nothing to do here.
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+    return false;
+  }
+
+  // If it's one of those errors, then most likely it's not a HTTPS-Only error
+  // (This list of errors is largely drawn from nsDocShell::DisplayLoadError())
   return !(NS_ERROR_UNKNOWN_PROTOCOL == aError ||
            NS_ERROR_FILE_NOT_FOUND == aError ||
            NS_ERROR_FILE_ACCESS_DENIED == aError ||
@@ -213,8 +238,8 @@ bool nsHTTPSOnlyUtils::LoopbackOrLocalException(nsIURI* aURI) {
   nsresult rv = aURI->GetAsciiHost(asciiHost);
   NS_ENSURE_SUCCESS(rv, false);
 
-  // Let's make a quick check if the host matches these loopback strings before
-  // we do anything else
+  // Let's make a quick check if the host matches these loopback strings
+  // before we do anything else
   if (asciiHost.EqualsLiteral("localhost") || asciiHost.EqualsLiteral("::1")) {
     return true;
   }

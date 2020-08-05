@@ -2,31 +2,26 @@
 
 #![allow(non_snake_case)]
 
-use log::trace;
-use regalloc::{Reg, RegClass, Writable};
-use smallvec::SmallVec;
-
-use crate::ir::types;
 use crate::ir::types::*;
-use crate::ir::Inst as IRInst;
 use crate::ir::{
-    condcodes::FloatCC, condcodes::IntCC, AbiParam, ArgumentPurpose, ExternalName, InstructionData,
-    LibCall, Opcode, Signature, TrapCode, Type,
+    condcodes::FloatCC, condcodes::IntCC, types, AbiParam, ArgumentPurpose, ExternalName,
+    Inst as IRInst, InstructionData, LibCall, Opcode, Signature, TrapCode, Type,
 };
-use alloc::boxed::Box;
-use alloc::vec::Vec;
-use cranelift_codegen_shared::condcodes::CondCode;
-use std::convert::TryFrom;
-
-use crate::machinst::lower::*;
-use crate::machinst::*;
-use crate::result::CodegenResult;
-use crate::settings::Flags;
-
 use crate::isa::x64::abi::*;
 use crate::isa::x64::inst::args::*;
 use crate::isa::x64::inst::*;
 use crate::isa::{x64::X64Backend, CallConv};
+use crate::machinst::lower::*;
+use crate::machinst::*;
+use crate::result::CodegenResult;
+use crate::settings::Flags;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+use cranelift_codegen_shared::condcodes::CondCode;
+use log::trace;
+use regalloc::{Reg, RegClass, Writable};
+use smallvec::SmallVec;
+use std::convert::TryFrom;
 use target_lexicon::Triple;
 
 /// Context passed to all lowering functions.
@@ -282,7 +277,7 @@ fn emit_vm_call<C: LowerCtx<I = Inst>>(
     abi.emit_stack_pre_adjust(ctx);
 
     let vm_context = if call_conv.extends_baldrdash() { 1 } else { 0 };
-    assert!(inputs.len() + vm_context == abi.num_args());
+    assert_eq!(inputs.len() + vm_context, abi.num_args());
 
     for (i, input) in inputs.iter().enumerate() {
         let arg_reg = input_to_reg(ctx, *input);
@@ -860,92 +855,137 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         Opcode::Fcmp => {
             let condcode = inst_fp_condcode(ctx.data(insn)).unwrap();
             let input_ty = ctx.input_ty(insn, 0);
-            let op = match input_ty {
-                F32 => SseOpcode::Ucomiss,
-                F64 => SseOpcode::Ucomisd,
-                _ => panic!("Bad input type to Fcmp"),
-            };
+            if !input_ty.is_vector() {
+                let op = match input_ty {
+                    F32 => SseOpcode::Ucomiss,
+                    F64 => SseOpcode::Ucomisd,
+                    _ => panic!("Bad input type to fcmp: {}", input_ty),
+                };
 
-            // Unordered is returned by setting ZF, PF, CF <- 111
-            // Greater than by ZF, PF, CF <- 000
-            // Less than by ZF, PF, CF <- 001
-            // Equal by ZF, PF, CF <- 100
-            //
-            // Checking the result of comiss is somewhat annoying because you don't have setcc
-            // instructions that explicitly check simultaneously for the condition (i.e. eq, le,
-            // gt, etc) *and* orderedness.
-            //
-            // So that might mean we need more than one setcc check and then a logical "and" or
-            // "or" to determine both, in some cases.  However knowing that if the parity bit is
-            // set, then the result was considered unordered and knowing that if the parity bit is
-            // set, then both the ZF and CF flag bits must also be set we can get away with using
-            // one setcc for most condition codes.
+                // Unordered is returned by setting ZF, PF, CF <- 111
+                // Greater than by ZF, PF, CF <- 000
+                // Less than by ZF, PF, CF <- 001
+                // Equal by ZF, PF, CF <- 100
+                //
+                // Checking the result of comiss is somewhat annoying because you don't have setcc
+                // instructions that explicitly check simultaneously for the condition (i.e. eq, le,
+                // gt, etc) *and* orderedness.
+                //
+                // So that might mean we need more than one setcc check and then a logical "and" or
+                // "or" to determine both, in some cases.  However knowing that if the parity bit is
+                // set, then the result was considered unordered and knowing that if the parity bit is
+                // set, then both the ZF and CF flag bits must also be set we can get away with using
+                // one setcc for most condition codes.
 
-            match condcode {
-                FloatCC::LessThan
-                | FloatCC::LessThanOrEqual
-                | FloatCC::UnorderedOrGreaterThan
-                | FloatCC::UnorderedOrGreaterThanOrEqual => {
-                    // setb and setbe for ordered LessThan and LessThanOrEqual check if CF = 1
-                    // which doesn't exclude unorderdness. To get around this we can reverse the
-                    // operands and the cc test to instead check if CF and ZF are 0 which would
-                    // also excludes unorderedness. Using similiar logic we also reverse
-                    // UnorderedOrGreaterThan and UnorderedOrGreaterThanOrEqual and assure that ZF
-                    // or CF is 1 to exclude orderedness.
-                    let lhs = input_to_reg_mem(ctx, inputs[0]);
-                    let rhs = input_to_reg(ctx, inputs[1]);
-                    let dst = output_to_reg(ctx, outputs[0]);
-                    ctx.emit(Inst::xmm_cmp_rm_r(op, lhs, rhs));
-                    let condcode = condcode.reverse();
-                    let cc = CC::from_floatcc(condcode);
-                    ctx.emit(Inst::setcc(cc, dst));
+                match condcode {
+                    FloatCC::LessThan
+                    | FloatCC::LessThanOrEqual
+                    | FloatCC::UnorderedOrGreaterThan
+                    | FloatCC::UnorderedOrGreaterThanOrEqual => {
+                        // setb and setbe for ordered LessThan and LessThanOrEqual check if CF = 1
+                        // which doesn't exclude unorderdness. To get around this we can reverse the
+                        // operands and the cc test to instead check if CF and ZF are 0 which would
+                        // also excludes unorderedness. Using similiar logic we also reverse
+                        // UnorderedOrGreaterThan and UnorderedOrGreaterThanOrEqual and assure that ZF
+                        // or CF is 1 to exclude orderedness.
+                        let lhs = input_to_reg_mem(ctx, inputs[0]);
+                        let rhs = input_to_reg(ctx, inputs[1]);
+                        let dst = output_to_reg(ctx, outputs[0]);
+                        ctx.emit(Inst::xmm_cmp_rm_r(op, lhs, rhs));
+                        let condcode = condcode.reverse();
+                        let cc = CC::from_floatcc(condcode);
+                        ctx.emit(Inst::setcc(cc, dst));
+                    }
+
+                    FloatCC::Equal => {
+                        // Outlier case: equal means both the operands are ordered and equal; we cannot
+                        // get around checking the parity bit to determine if the result was ordered.
+                        let lhs = input_to_reg(ctx, inputs[0]);
+                        let rhs = input_to_reg_mem(ctx, inputs[1]);
+                        let dst = output_to_reg(ctx, outputs[0]);
+                        let tmp_gpr1 = ctx.alloc_tmp(RegClass::I64, I32);
+                        ctx.emit(Inst::xmm_cmp_rm_r(op, rhs, lhs));
+                        ctx.emit(Inst::setcc(CC::NP, tmp_gpr1));
+                        ctx.emit(Inst::setcc(CC::Z, dst));
+                        ctx.emit(Inst::alu_rmi_r(
+                            false,
+                            AluRmiROpcode::And,
+                            RegMemImm::reg(tmp_gpr1.to_reg()),
+                            dst,
+                        ));
+                    }
+
+                    FloatCC::NotEqual => {
+                        // Outlier case: not equal means either the operands are unordered, or they're
+                        // not the same value.
+                        let lhs = input_to_reg(ctx, inputs[0]);
+                        let rhs = input_to_reg_mem(ctx, inputs[1]);
+                        let dst = output_to_reg(ctx, outputs[0]);
+                        let tmp_gpr1 = ctx.alloc_tmp(RegClass::I64, I32);
+                        ctx.emit(Inst::xmm_cmp_rm_r(op, rhs, lhs));
+                        ctx.emit(Inst::setcc(CC::P, tmp_gpr1));
+                        ctx.emit(Inst::setcc(CC::NZ, dst));
+                        ctx.emit(Inst::alu_rmi_r(
+                            false,
+                            AluRmiROpcode::Or,
+                            RegMemImm::reg(tmp_gpr1.to_reg()),
+                            dst,
+                        ));
+                    }
+
+                    _ => {
+                        // For all remaining condition codes we can handle things with one check.
+                        let lhs = input_to_reg(ctx, inputs[0]);
+                        let rhs = input_to_reg_mem(ctx, inputs[1]);
+                        let dst = output_to_reg(ctx, outputs[0]);
+                        let cc = CC::from_floatcc(condcode);
+                        ctx.emit(Inst::xmm_cmp_rm_r(op, rhs, lhs));
+                        ctx.emit(Inst::setcc(cc, dst));
+                    }
                 }
+            } else {
+                let op = match input_ty {
+                    types::F32X4 => SseOpcode::Cmpps,
+                    types::F64X2 => SseOpcode::Cmppd,
+                    _ => panic!("Bad input type to fcmp: {}", input_ty),
+                };
 
-                FloatCC::Equal => {
-                    // Outlier case: equal means both the operands are ordered and equal; we cannot
-                    // get around checking the parity bit to determine if the result was ordered.
-                    let lhs = input_to_reg(ctx, inputs[0]);
-                    let rhs = input_to_reg_mem(ctx, inputs[1]);
-                    let dst = output_to_reg(ctx, outputs[0]);
-                    let tmp_gpr1 = ctx.alloc_tmp(RegClass::I64, I32);
-                    ctx.emit(Inst::xmm_cmp_rm_r(op, rhs, lhs));
-                    ctx.emit(Inst::setcc(CC::NP, tmp_gpr1));
-                    ctx.emit(Inst::setcc(CC::Z, dst));
-                    ctx.emit(Inst::alu_rmi_r(
-                        false,
-                        AluRmiROpcode::And,
-                        RegMemImm::reg(tmp_gpr1.to_reg()),
-                        dst,
-                    ));
-                }
+                // Since some packed comparisons are not available, some of the condition codes
+                // must be inverted, with a corresponding `flip` of the operands.
+                let (imm, flip) = match condcode {
+                    FloatCC::GreaterThan => (FcmpImm::LessThan, true),
+                    FloatCC::GreaterThanOrEqual => (FcmpImm::LessThanOrEqual, true),
+                    FloatCC::UnorderedOrLessThan => (FcmpImm::UnorderedOrGreaterThan, true),
+                    FloatCC::UnorderedOrLessThanOrEqual => {
+                        (FcmpImm::UnorderedOrGreaterThanOrEqual, true)
+                    }
+                    FloatCC::OrderedNotEqual | FloatCC::UnorderedOrEqual => {
+                        panic!("unsupported float condition code: {}", condcode)
+                    }
+                    _ => (FcmpImm::from(condcode), false),
+                };
 
-                FloatCC::NotEqual => {
-                    // Outlier case: not equal means either the operands are unordered, or they're
-                    // not the same value.
-                    let lhs = input_to_reg(ctx, inputs[0]);
-                    let rhs = input_to_reg_mem(ctx, inputs[1]);
-                    let dst = output_to_reg(ctx, outputs[0]);
-                    let tmp_gpr1 = ctx.alloc_tmp(RegClass::I64, I32);
-                    ctx.emit(Inst::xmm_cmp_rm_r(op, rhs, lhs));
-                    ctx.emit(Inst::setcc(CC::P, tmp_gpr1));
-                    ctx.emit(Inst::setcc(CC::NZ, dst));
-                    ctx.emit(Inst::alu_rmi_r(
-                        false,
-                        AluRmiROpcode::Or,
-                        RegMemImm::reg(tmp_gpr1.to_reg()),
-                        dst,
-                    ));
-                }
+                // Determine the operands of the comparison, possibly by flipping them.
+                let (lhs, rhs) = if flip {
+                    (
+                        input_to_reg(ctx, inputs[1]),
+                        input_to_reg_mem(ctx, inputs[0]),
+                    )
+                } else {
+                    (
+                        input_to_reg(ctx, inputs[0]),
+                        input_to_reg_mem(ctx, inputs[1]),
+                    )
+                };
 
-                _ => {
-                    // For all remaining condition codes we can handle things with one check.
-                    let lhs = input_to_reg(ctx, inputs[0]);
-                    let rhs = input_to_reg_mem(ctx, inputs[1]);
-                    let dst = output_to_reg(ctx, outputs[0]);
-                    let cc = CC::from_floatcc(condcode);
-                    ctx.emit(Inst::xmm_cmp_rm_r(op, rhs, lhs));
-                    ctx.emit(Inst::setcc(cc, dst));
-                }
+                // Move the `lhs` to the same register as `dst`; this may not emit an actual move
+                // but ensures that the registers are the same to match x86's read-write operand
+                // encoding.
+                let dst = output_to_reg(ctx, outputs[0]);
+                ctx.emit(Inst::gen_move(dst, lhs, input_ty));
+
+                // Emit the comparison.
+                ctx.emit(Inst::xmm_rm_r_imm(op, rhs, dst, imm.encode()));
             }
         }
 
@@ -965,8 +1005,8 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 Opcode::Call => {
                     let (extname, dist) = ctx.call_target(insn).unwrap();
                     let sig = ctx.call_sig(insn).unwrap();
-                    assert!(inputs.len() == sig.params.len());
-                    assert!(outputs.len() == sig.returns.len());
+                    assert_eq!(inputs.len(), sig.params.len());
+                    assert_eq!(outputs.len(), sig.returns.len());
                     (
                         X64ABICall::from_func(sig, &extname, dist, loc)?,
                         &inputs[..],
@@ -976,8 +1016,8 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 Opcode::CallIndirect => {
                     let ptr = input_to_reg(ctx, inputs[0]);
                     let sig = ctx.call_sig(insn).unwrap();
-                    assert!(inputs.len() - 1 == sig.params.len());
-                    assert!(outputs.len() == sig.returns.len());
+                    assert_eq!(inputs.len() - 1, sig.params.len());
+                    assert_eq!(outputs.len(), sig.returns.len());
                     (X64ABICall::from_ptr(sig, ptr, loc, op)?, &inputs[1..])
                 }
 
@@ -985,7 +1025,7 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             };
 
             abi.emit_stack_pre_adjust(ctx);
-            assert!(inputs.len() == abi.num_args());
+            assert_eq!(inputs.len(), abi.num_args());
             for (i, input) in inputs.iter().enumerate() {
                 let arg_reg = input_to_reg(ctx, *input);
                 abi.emit_copy_reg_to_arg(ctx, i, arg_reg);
@@ -1536,7 +1576,7 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 | Opcode::Sload16
                 | Opcode::Uload32
                 | Opcode::Sload32 => {
-                    assert!(inputs.len() == 1, "only one input for load operands");
+                    assert_eq!(inputs.len(), 1, "only one input for load operands");
                     let base = input_to_reg(ctx, inputs[0]);
                     Amode::imm_reg(offset as u32, base)
                 }
@@ -1548,8 +1588,9 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 | Opcode::Sload16Complex
                 | Opcode::Uload32Complex
                 | Opcode::Sload32Complex => {
-                    assert!(
-                        inputs.len() == 2,
+                    assert_eq!(
+                        inputs.len(),
+                        2,
                         "can't handle more than two inputs in complex load"
                     );
                     let base = input_to_reg(ctx, inputs[0]);
@@ -1623,10 +1664,7 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
 
             let addr = match op {
                 Opcode::Store | Opcode::Istore8 | Opcode::Istore16 | Opcode::Istore32 => {
-                    assert!(
-                        inputs.len() == 2,
-                        "only one input for store memory operands"
-                    );
+                    assert_eq!(inputs.len(), 2, "only one input for store memory operands");
                     let base = input_to_reg(ctx, inputs[1]);
                     // TODO sign?
                     Amode::imm_reg(offset as u32, base)
@@ -1636,8 +1674,9 @@ fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
                 | Opcode::Istore8Complex
                 | Opcode::Istore16Complex
                 | Opcode::Istore32Complex => {
-                    assert!(
-                        inputs.len() == 3,
+                    assert_eq!(
+                        inputs.len(),
+                        3,
                         "can't handle more than two inputs in complex store"
                     );
                     let base = input_to_reg(ctx, inputs[1]);
@@ -2028,7 +2067,7 @@ impl LowerBackend for X64Backend {
                 _ => unimplemented!("branch opcode"),
             }
         } else {
-            assert!(branches.len() == 1);
+            assert_eq!(branches.len(), 1);
 
             // Must be an unconditional branch or trap.
             let op = ctx.data(branches[0]).opcode();

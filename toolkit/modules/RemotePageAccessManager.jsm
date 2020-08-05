@@ -130,6 +130,7 @@ let RemotePageAccessManager = {
         "OpenAboutLogins",
         "OpenSyncPreferences",
         "ClearMonitorCache",
+        "RecordEntryPoint",
       ],
       RPMSendQuery: [
         "FetchUserLoginsData",
@@ -137,6 +138,7 @@ let RemotePageAccessManager = {
         "FetchContentBlockingEvents",
         "FetchMobileDeviceConnected",
         "GetShowProxyCard",
+        "FetchEntryPoint",
       ],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],

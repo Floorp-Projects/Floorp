@@ -6825,6 +6825,71 @@ PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
   return PContentParent::SendPFileDescriptorSetConstructor(aFD);
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvBlobURLDataRequest(
+    const nsCString& aBlobURL, nsIPrincipal* pTriggeringPrincipal,
+    nsIPrincipal* pLoadingPrincipal, const OriginAttributes& aOriginAttributes,
+    BlobURLDataRequestResolver&& aResolver) {
+  RefPtr<BlobImpl> blobImpl;
+  nsresult rv = NS_GetBlobForBlobURISpec(aBlobURL, getter_AddRefs(blobImpl),
+                                         true /* AlsoIfRevoked */);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aResolver(rv);
+    return IPC_OK();
+  }
+
+  if (NS_WARN_IF(!blobImpl)) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
+
+  // Since revoked blobs are also retrieved, it is possible that the blob no
+  // longer exists (due to the 5 second timeout) when execution reaches here
+  nsIPrincipal* const dataEntryPrincipal =
+      BlobURLProtocolHandler::GetDataEntryPrincipal(aBlobURL,
+                                                    true /* AlsoIfRevoked */);
+
+  if (!dataEntryPrincipal) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
+
+  // We want to be sure that we stop the creation of the channel if the blob
+  // URL is copy-and-pasted on a different context (ex. private browsing or
+  // containers).
+  //
+  // We also allow the system principal to create the channel regardless of
+  // the OriginAttributes.  This is primarily for the benefit of mechanisms
+  // like the Download API that explicitly create a channel with the system
+  // principal and which is never mutated to have a non-zero
+  // mPrivateBrowsingId or container.
+
+  if (NS_WARN_IF(!pLoadingPrincipal ||
+                 !pLoadingPrincipal->IsSystemPrincipal()) &&
+      NS_WARN_IF(!ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+          aOriginAttributes,
+          BasePrincipal::Cast(dataEntryPrincipal)->OriginAttributesRef()))) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
+
+  if (!pTriggeringPrincipal->Subsumes(dataEntryPrincipal)) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
+
+  IPCBlob ipcBlob;
+  rv = IPCBlobUtils::Serialize(blobImpl, this, ipcBlob);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aResolver(rv);
+    return IPC_OK();
+  }
+
+  aResolver(ipcBlob);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvReportServiceWorkerShutdownProgress(
     uint32_t aShutdownStateId, ServiceWorkerShutdownState::Progress aProgress) {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();

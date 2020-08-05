@@ -7892,7 +7892,9 @@ class MArrayPopShift : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, object),
         mode_(mode),
         needsHoleCheck_(needsHoleCheck),
-        maybeUndefined_(maybeUndefined) {}
+        maybeUndefined_(maybeUndefined) {
+    setResultType(MIRType::Value);
+  }
 
  public:
   INSTRUCTION_HEADER(ArrayPopShift)
