@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
 import mozilla.components.feature.intent.processing.IntentProcessor
+import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
 import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.components.getType
 import org.mozilla.fenix.components.metrics.Event
@@ -43,7 +44,15 @@ class IntentReceiverActivity : Activity() {
 
     fun processIntent(intent: Intent) {
         // Call process for side effects, short on the first that returns true
-        val processor = getIntentProcessors().firstOrNull { it.process(intent) }
+        val private = settings().openLinksInAPrivateTab
+        intent.putExtra(PRIVATE_BROWSING_MODE, private)
+        if (private) {
+            components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
+        } else {
+            components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.NORMAL))
+        }
+
+        val processor = getIntentProcessors(private).firstOrNull { it.process(intent) }
         val intentProcessorType = components.intentProcessors.getType(processor)
 
         launch(intent, intentProcessorType)
@@ -65,17 +74,14 @@ class IntentReceiverActivity : Activity() {
         finish() // must finish() after starting the other activity
     }
 
-    private fun getIntentProcessors(): List<IntentProcessor> {
-        val modeDependentProcessors = if (settings().openLinksInAPrivateTab) {
-            components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
-            intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, true)
+    private fun getIntentProcessors(private: Boolean): List<IntentProcessor> {
+        val modeDependentProcessors = if (private) {
             listOf(
                 components.intentProcessors.privateCustomTabIntentProcessor,
                 components.intentProcessors.privateIntentProcessor
             )
         } else {
             components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.NORMAL))
-            intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, false)
             listOf(
                 components.intentProcessors.customTabIntentProcessor,
                 components.intentProcessors.intentProcessor

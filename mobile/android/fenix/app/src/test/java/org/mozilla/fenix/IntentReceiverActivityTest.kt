@@ -13,6 +13,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.feature.intent.processing.IntentProcessor
@@ -139,9 +140,14 @@ class IntentReceiverActivityTest {
         attachMocks(activity)
         activity.processIntent(intent)
 
+        val shadow = shadowOf(activity)
+        val actualIntent = shadow.peekNextStartedActivity()
+
         val normalProcessor = intentProcessors.intentProcessor
-        coVerify(exactly = 0) { normalProcessor.process(intent) }
-        coVerify { intentProcessors.privateIntentProcessor.process(intent) }
+        verify(exactly = 0) { normalProcessor.process(intent) }
+        verify { intentProcessors.privateIntentProcessor.process(intent) }
+        assertEquals(HomeActivity::class.java.name, actualIntent.component?.className)
+        assertTrue(actualIntent.getBooleanExtra(HomeActivity.PRIVATE_BROWSING_MODE, false))
     }
 
     @Test
