@@ -441,6 +441,15 @@ bool js::RunScript(JSContext* cx, RunState& state) {
 
   GeckoProfilerEntryMarker marker(cx, state.script());
 
+#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
+  bool measuringTime = !cx->isMeasuringExecutionTime();
+  int64_t startTime = 0;
+  if (measuringTime) {
+    cx->setIsMeasuringExecutionTime(true);
+    startTime = PRMJ_Now();
+  }
+#endif
+
   jit::EnterJitStatus status = jit::MaybeEnterJit(cx, state);
   switch (status) {
     case jit::EnterJitStatus::Error:
@@ -456,7 +465,18 @@ bool js::RunScript(JSContext* cx, RunState& state) {
     TypeMonitorCall(cx, invoke.args(), invoke.constructing());
   }
 
-  return Interpret(cx, state);
+  bool ok = Interpret(cx, state);
+
+#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
+  if (measuringTime) {
+    int64_t endTime = PRMJ_Now();
+    int64_t runtimeMicros = endTime - startTime;
+    cx->runtime()->addTelemetry(JS_TELEMETRY_RUN_TIME_US, runtimeMicros);
+    cx->setIsMeasuringExecutionTime(false);
+  }
+#endif
+
+  return ok;
 }
 #ifdef _MSC_VER
 #  pragma optimize("", on)
