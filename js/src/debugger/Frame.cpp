@@ -1107,7 +1107,7 @@ Result<Completion> DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
 bool DebuggerFrame::isOnStack() const { return !!getPrivate(); }
 
 bool DebuggerFrame::isOnStackMaybeForwarded() const {
-  return !!getPrivate(numFixedSlotsMaybeForwarded());
+  return !!getPrivateMaybeForwarded();
 }
 
 OnStepHandler* DebuggerFrame::onStepHandler() const {

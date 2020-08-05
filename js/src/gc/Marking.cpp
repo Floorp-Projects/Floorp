@@ -1571,12 +1571,13 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
 
   if (JSObject* descr = maybeTypeDescr()) {
     TraceManuallyBarrieredEdge(trc, &descr, "group_type_descr");
-    setTypeDescr(&descr->as<TypeDescr>());
+    MOZ_ASSERT(js::IsTypeDescrClass(MaybeForwardedObjectClass(descr)));
+    setTypeDescr(static_cast<TypeDescr*>(descr));
   }
 
   if (JSObject* fun = maybeInterpretedFunction()) {
     TraceManuallyBarrieredEdge(trc, &fun, "group_function");
-    setInterpretedFunction(&fun->as<JSFunction>());
+    setInterpretedFunction(&MaybeForwardedObjectAs<JSFunction>(fun));
   }
 }
 void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
