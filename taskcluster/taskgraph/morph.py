@@ -65,8 +65,8 @@ def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid, parameter
     )
 
     task_def = {
-        'provisionerId': 'gecko-t',
-        'workerType': 'misc',
+        'provisionerId': provisioner_id,
+        'workerType': worker_type,
         'dependencies': [task.task_id, image_taskid],
         'created': {'relative-datestamp': '0 seconds'},
         'deadline': task.task['deadline'],
