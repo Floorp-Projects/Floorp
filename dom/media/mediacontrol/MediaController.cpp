@@ -196,6 +196,10 @@ void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
 }
 
 void MediaController::UpdateDeactivationTimerIfNeeded() {
+  if (!StaticPrefs::media_mediacontrol_stopcontrol_timer()) {
+    return;
+  }
+
   bool shouldBeAlwaysActive =
       IsPlaying() || IsMediaBeingUsedInPIPModeOrFullScreen();
   if (shouldBeAlwaysActive && mDeactivationTimer) {
@@ -221,6 +225,10 @@ bool MediaController::IsMediaBeingUsedInPIPModeOrFullScreen() const {
 
 NS_IMETHODIMP MediaController::Notify(nsITimer* aTimer) {
   mDeactivationTimer = nullptr;
+  if (!StaticPrefs::media_mediacontrol_stopcontrol_timer()) {
+    return NS_OK;
+  }
+
   if (mShutdown) {
     LOG("Cancel deactivation timer because controller has been shutdown");
     return NS_OK;
