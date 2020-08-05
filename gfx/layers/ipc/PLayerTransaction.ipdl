@@ -17,6 +17,7 @@ using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using class mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
+using mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
 using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
@@ -106,6 +107,9 @@ parent:
   // Get a copy of the compositor-side APZ test data instance for this
   // layers id.
   sync GetAPZTestData() returns (APZTestData data);
+
+  // Child requests frame uniformity measurements
+  sync GetFrameUniformity() returns (FrameUniformityData data);
 
   // Query a named property from the last frame
   sync RequestProperty(nsString property) returns (float value);

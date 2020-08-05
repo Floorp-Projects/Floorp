@@ -573,16 +573,9 @@ void ClientLayerManager::StartNewRepaintRequest(
 }
 
 void ClientLayerManager::GetFrameUniformity(FrameUniformityData* aOutData) {
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Frame Uniformity only supported in parent process");
-
   if (HasShadowManager()) {
-    CompositorBridgeChild* child = GetRemoteRenderer();
-    child->SendGetFrameUniformity(aOutData);
-    return;
+    mForwarder->GetShadowManager()->SendGetFrameUniformity(aOutData);
   }
-
-  return LayerManager::GetFrameUniformity(aOutData);
 }
 
 void ClientLayerManager::MakeSnapshotIfRequired() {

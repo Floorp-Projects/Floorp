@@ -199,6 +199,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       const float& aZoom) override;
   mozilla::ipc::IPCResult RecvFlushApzRepaints() override;
   mozilla::ipc::IPCResult RecvGetAPZTestData(APZTestData* data) override;
+  mozilla::ipc::IPCResult RecvGetFrameUniformity(
+      FrameUniformityData* aOutData) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
