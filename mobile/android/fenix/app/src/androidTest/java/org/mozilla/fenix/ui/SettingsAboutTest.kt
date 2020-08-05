@@ -10,6 +10,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Rule
 import org.junit.Before
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -68,7 +69,7 @@ class SettingsAboutTest {
         }
 
     }
-
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/13219")
     @Test
     fun verifyAboutFirefoxPreview() {
         homeScreen {
