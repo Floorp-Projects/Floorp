@@ -9,7 +9,7 @@ root:
       items:
         -
           type: "stacking-context"
-          transform: rotate-x(45) translate(100, 100, 0)
+          transform: rotate-x(-45) translate(100, 100, 0)
           "transform-style": "preserve-3d"
           items:
               -
