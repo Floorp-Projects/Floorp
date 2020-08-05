@@ -46,10 +46,13 @@ async function addFrame(browser, id, parentId) {
       parent = content.document.body;
     }
 
-    let frame = content.document.createElement("iframe");
-    frame.id = id || "";
-    frame.url = "about:blank";
-    parent.appendChild(frame);
+    let frame = await new Promise(resolve => {
+      let frame = content.document.createElement("iframe");
+      frame.id = id || "";
+      frame.url = "about:blank";
+      frame.onload = () => resolve(frame);
+      parent.appendChild(frame);
+    });
 
     return frame.contentWindow.docShell.browsingContext.id;
   });
@@ -88,28 +91,23 @@ add_task(async function() {
       browser.browsingContext.id,
       "<browser> has the correct browsingContext"
     );
+    is(
+      browser.browserId,
+      topContext.browserId,
+      "browsing context should have a correct <browser> id"
+    );
 
     let id0 = await addFrame(browser, "frame0");
     let browsingContext0 = getBrowsingContextById(id0);
     isnot(browsingContext0, null);
     is(browsingContext0.parent, topContext);
 
-    let id1 = await addFrame(browser, "frame1", "frame0");
-    let browsingContext1 = getBrowsingContextById(id1);
-    isnot(browsingContext1, null);
-    is(browsingContext1.parent, browsingContext0);
+    await removeFrame(browser, "frame0");
 
-    let id2 = await addFrame(browser, "frame2", "frame1");
-    let browsingContext2 = getBrowsingContextById(id2);
-    isnot(browsingContext2, null);
-    is(browsingContext2.parent, browsingContext1);
-
-    await removeFrame(browser, "frame2");
-
-    is(browsingContext1.children.indexOf(browsingContext2), -1);
+    is(topContext.children.indexOf(browsingContext0), -1);
 
     // TODO(farre): Handle browsingContext removal [see Bug 1486719].
-    todo_isnot(browsingContext2.parent, browsingContext1);
+    todo_isnot(browsingContext0.parent, topContext);
   });
 });
 
