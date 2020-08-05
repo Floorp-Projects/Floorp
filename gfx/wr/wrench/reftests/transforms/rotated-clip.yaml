@@ -14,4 +14,4 @@ root:
             bounds: 20 20 100 100
             color: blue
       type: stacking-context
-      transform: rotate(30)
+      transform: rotate(-30)

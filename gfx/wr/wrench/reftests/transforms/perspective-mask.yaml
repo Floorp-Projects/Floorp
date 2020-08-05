@@ -14,7 +14,7 @@ root:
             -
               type: "stacking-context"
               bounds: [0, 0, 250, 100]
-              transform: rotate-y(-54)
+              transform: rotate-y(54)
               items:
                 -
                   bounds: [0, 0, 128, 128]
