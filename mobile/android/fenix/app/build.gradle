@@ -566,7 +566,9 @@ if (project.hasProperty("coverage")) {
     }
 
     android.applicationVariants.all { variant ->
-        task "jacoco${variant.name.capitalize()}TestReport"(type: JacocoReport, dependsOn: "test${variant.name.capitalize()}UnitTest") {
+        tasks.register("jacoco${variant.name.capitalize()}TestReport", JacocoReport) {
+            dependsOn "test${variant.name.capitalize()}UnitTest"
+
             reports {
                 xml.enabled = true
                 html.enabled = true
@@ -579,11 +581,12 @@ if (project.hasProperty("coverage")) {
                     excludes: fileFilter)
             def mainSrc = "$project.projectDir/src/main/java"
 
-            sourceDirectories = files([mainSrc])
-            classDirectories = files([kotlinDebugTree, javaDebugTree])
-            executionData = fileTree(dir: project.buildDir, includes: [
-                    "jacoco/test${variant.name.capitalize()}UnitTest.exec", 'outputs/code-coverage/connected/*coverage.ec'
-            ])
+            sourceDirectories.setFrom(files([mainSrc]))
+            classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
+            executionData.setFrom(fileTree(dir: project.buildDir, includes: [
+                "jacoco/test${variant.name.capitalize()}UnitTest.exec",
+                'outputs/code-coverage/connected/*coverage.ec'
+            ]))
         }
     }
 
