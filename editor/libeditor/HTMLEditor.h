@@ -2747,12 +2747,20 @@ class HTMLEditor final : public TextEditor,
         }
         case Mode::JoinOtherBlock: {
           EditActionResult result =
-              HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
-                  aHTMLEditor, aDirectionAndAmount, aCaretPoint);
+              HandleDeleteCollapsedSelectionAtOtherBlockBoundary(aHTMLEditor,
+                                                                 aCaretPoint);
           NS_WARNING_ASSERTION(
               result.Succeeded(),
               "AutoBlockElementsJoiner::"
               "HandleDeleteCollapsedSelectionAtOtherBlockBoundary() failed");
+          return result;
+        }
+        case Mode::DeleteBRElement: {
+          EditActionResult result =
+              DeleteBRElement(aHTMLEditor, aDirectionAndAmount, aCaretPoint);
+          NS_WARNING_ASSERTION(
+              result.Succeeded(),
+              "AutoBlockElementsJoiner::DeleteBRElement() failed");
           return result;
         }
         case Mode::NotInitialized:
@@ -2777,6 +2785,8 @@ class HTMLEditor final : public TextEditor,
         HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint);
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
+        HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint);
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult DeleteBRElement(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         const EditorDOMPoint& aCaretPoint);
 
@@ -2784,6 +2794,7 @@ class HTMLEditor final : public TextEditor,
       NotInitialized,
       JoinCurrentBlock,
       JoinOtherBlock,
+      DeleteBRElement,
     };
     nsCOMPtr<nsIContent> mLeftContent;
     nsCOMPtr<nsIContent> mRightContent;
