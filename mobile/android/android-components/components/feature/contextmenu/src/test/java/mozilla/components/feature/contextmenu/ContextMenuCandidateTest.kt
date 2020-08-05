@@ -56,7 +56,7 @@ class ContextMenuCandidateTest {
         val candidates = ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock())
         // Just a sanity check: When changing the list of default candidates be aware that this will affect all
         // consumers of this component using the default list.
-        assertEquals(10, candidates.size)
+        assertEquals(13, candidates.size)
     }
 
     @Test
@@ -865,6 +865,127 @@ class ContextMenuCandidateTest {
             HitResult.UNKNOWN("https://www.otherexample.com"))
 
         verify(openAppLinkRedirectMock, times(2)).invoke(any(), anyBoolean(), any())
+    }
+
+    @Test
+    fun `Candidate "Copy email address"`() {
+        val parentView = CoordinatorLayout(testContext)
+
+        val copyEmailAddress = ContextMenuCandidate.createCopyEmailAddressCandidate(
+            testContext, parentView, snackbarDelegate)
+
+        // showFor
+
+        assertTrue(copyEmailAddress.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.UNKNOWN("mailto:example@example.com")))
+
+        assertTrue(copyEmailAddress.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("mailto:example.com")))
+
+        assertFalse(copyEmailAddress.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertFalse(copyEmailAddress.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("example@example.com")))
+
+        // action
+
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
+        sessionManager.add(Session("https://www.mozilla.org", private = true))
+
+        copyEmailAddress.action.invoke(
+            store.state.tabs.first(),
+            HitResult.UNKNOWN("mailto:example@example.com"))
+
+        assertTrue(snackbarDelegate.hasShownSnackbar)
+
+        val clipboardManager = testContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        assertEquals(
+            "example@example.com",
+            clipboardManager.primaryClip!!.getItemAt(0).text
+        )
+    }
+
+    @Test
+    fun `Candidate "Share email address"`() {
+        val context = spy(testContext)
+
+        val shareEmailAddress = ContextMenuCandidate.createShareEmailAddressCandidate(context)
+
+        // showFor
+
+        assertTrue(shareEmailAddress.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.UNKNOWN("mailto:example@example.com")))
+
+        assertTrue(shareEmailAddress.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("mailto:example.com")))
+
+        assertFalse(shareEmailAddress.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertFalse(shareEmailAddress.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("example@example.com")))
+
+        // action
+
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
+        sessionManager.add(Session("https://www.mozilla.org", private = true))
+
+        shareEmailAddress.action.invoke(
+            store.state.tabs.first(),
+            HitResult.UNKNOWN("mailto:example@example.com"))
+
+        verify(context).startActivity(any())
+    }
+
+    @Test
+    fun `Candidate "Add to contacts"`() {
+        val context = spy(testContext)
+
+        val addToContacts = ContextMenuCandidate.createAddContactCandidate(context)
+
+        // showFor
+
+        assertTrue(addToContacts.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.UNKNOWN("mailto:example@example.com")))
+
+        assertTrue(addToContacts.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("mailto:example.com")))
+
+        assertFalse(addToContacts.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertFalse(addToContacts.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("example@example.com")))
+
+        // action
+
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
+        sessionManager.add(Session("https://www.mozilla.org", private = true))
+
+        addToContacts.action.invoke(
+            store.state.tabs.first(),
+            HitResult.UNKNOWN("mailto:example@example.com"))
+
+        verify(context).startActivity(any())
     }
 }
 

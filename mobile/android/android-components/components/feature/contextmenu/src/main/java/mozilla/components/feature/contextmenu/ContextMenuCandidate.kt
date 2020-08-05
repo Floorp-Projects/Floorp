@@ -15,7 +15,9 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.app.links.AppLinksUseCases
+import mozilla.components.support.ktx.android.content.addContact
 import mozilla.components.support.ktx.android.content.share
+import mozilla.components.support.ktx.kotlin.stripMailToProtocol
 
 /**
  * A candidate for an item to be displayed in the context menu.
@@ -70,7 +72,10 @@ data class ContextMenuCandidate(
             ),
             createSaveImageCandidate(context, contextMenuUseCases),
             createSaveVideoAudioCandidate(context, contextMenuUseCases),
-            createCopyImageLocationCandidate(context, snackBarParentView, snackbarDelegate)
+            createCopyImageLocationCandidate(context, snackBarParentView, snackbarDelegate),
+            createAddContactCandidate(context),
+            createShareEmailAddressCandidate(context),
+            createCopyEmailAddressCandidate(context, snackBarParentView, snackbarDelegate)
         )
 
         /**
@@ -156,6 +161,49 @@ data class ContextMenuCandidate(
                 } else if (marketPlaceIntent != null) {
                     appLinksUseCases.openAppLink(marketPlaceIntent)
                 }
+            }
+        )
+
+        /**
+         * Context Menu item: "Add to contact".
+         */
+        fun createAddContactCandidate(
+            context: Context
+        ) = ContextMenuCandidate(
+            id = "mozac.feature.contextmenu.add_to_contact",
+            label = context.getString(R.string.mozac_feature_contextmenu_add_to_contact),
+            showFor = { _, hitResult -> hitResult.isMailto() },
+            action = { _, hitResult -> context.addContact(hitResult.getLink().stripMailToProtocol()) }
+        )
+
+        /**
+         * Context Menu item: "Share email address".
+         */
+        fun createShareEmailAddressCandidate(
+            context: Context
+        ) = ContextMenuCandidate(
+            id = "mozac.feature.contextmenu.share_email",
+            label = context.getString(R.string.mozac_feature_contextmenu_share_email_address),
+            showFor = { _, hitResult -> hitResult.isMailto() },
+            action = { _, hitResult -> context.share(hitResult.getLink().stripMailToProtocol()) }
+        )
+
+        /**
+         * Context Menu item: "Copy email address".
+         */
+        fun createCopyEmailAddressCandidate(
+            context: Context,
+            snackBarParentView: View,
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
+        ) = ContextMenuCandidate(
+            id = "mozac.feature.contextmenu.copy_email_address",
+            label = context.getString(R.string.mozac_feature_contextmenu_copy_email_address),
+            showFor = { _, hitResult -> hitResult.isMailto() },
+            action = { _, hitResult ->
+                val email = hitResult.getLink().stripMailToProtocol()
+                clipPlaintText(context, email, email,
+                    R.string.mozac_feature_contextmenu_snackbar_email_address_copied, snackBarParentView,
+                    snackbarDelegate)
             }
         )
 
@@ -301,16 +349,9 @@ data class ContextMenuCandidate(
             label = context.getString(R.string.mozac_feature_contextmenu_copy_link),
             showFor = { _, hitResult -> hitResult.isLink() },
             action = { _, hitResult ->
-                val clipboardManager =
-                    context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText(hitResult.getLink(), hitResult.getLink())
-                clipboardManager.setPrimaryClip(clip)
-
-                snackbarDelegate.show(
-                    snackBarParentView = snackBarParentView,
-                    text = R.string.mozac_feature_contextmenu_snackbar_link_copied,
-                    duration = Snackbar.LENGTH_SHORT
-                )
+                clipPlaintText(context, hitResult.getLink(), hitResult.getLink(),
+                    R.string.mozac_feature_contextmenu_snackbar_link_copied, snackBarParentView,
+                    snackbarDelegate)
             }
         )
 
@@ -326,18 +367,32 @@ data class ContextMenuCandidate(
             label = context.getString(R.string.mozac_feature_contextmenu_copy_image_location),
             showFor = { _, hitResult -> hitResult.isImage() },
             action = { _, hitResult ->
-                val clipboardManager =
-                    context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText(hitResult.getLink(), hitResult.src)
-                clipboardManager.setPrimaryClip(clip)
-
-                snackbarDelegate.show(
-                    snackBarParentView = snackBarParentView,
-                    text = R.string.mozac_feature_contextmenu_snackbar_link_copied,
-                    duration = Snackbar.LENGTH_SHORT
-                )
+                clipPlaintText(context, hitResult.getLink(), hitResult.src,
+                    R.string.mozac_feature_contextmenu_snackbar_link_copied, snackBarParentView,
+                    snackbarDelegate)
             }
         )
+
+        @Suppress("LongParameterList")
+        private fun clipPlaintText(
+            context: Context,
+            label: String,
+            plainText: String,
+            displayTextId: Int,
+            snackBarParentView: View,
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
+        ) {
+            val clipboardManager =
+                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText(label, plainText)
+            clipboardManager.setPrimaryClip(clip)
+
+            snackbarDelegate.show(
+                snackBarParentView = snackBarParentView,
+                text = displayTextId,
+                duration = Snackbar.LENGTH_SHORT
+            )
+        }
     }
 
     /**
@@ -378,7 +433,11 @@ private fun HitResult.isLink(): Boolean =
 
 private fun HitResult.isIntent(): Boolean =
     (this is HitResult.UNKNOWN && src.isNotEmpty() &&
-        getLink().startsWith("intent"))
+        getLink().startsWith("intent:"))
+
+private fun HitResult.isMailto(): Boolean =
+    (this is HitResult.UNKNOWN && src.isNotEmpty()) &&
+        getLink().startsWith("mailto:")
 
 private fun HitResult.canOpenInExternalApp(appLinksUseCases: AppLinksUseCases): Boolean {
     if (isLink() || isIntent() || isVideoAudio()) {

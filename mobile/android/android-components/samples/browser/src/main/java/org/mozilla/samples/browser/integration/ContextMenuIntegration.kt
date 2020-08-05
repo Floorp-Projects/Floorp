@@ -11,10 +11,13 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
+import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.createAddContactCandidate
+import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.createCopyEmailAddressCandidate
 import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.createCopyImageLocationCandidate
 import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.createCopyLinkCandidate
 import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.createOpenImageInNewTabCandidate
 import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.createSaveImageCandidate
+import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.createShareEmailAddressCandidate
 import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.createShareLinkCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
@@ -41,7 +44,10 @@ class ContextMenuIntegration(
                 createShareLinkCandidate(context),
                 createOpenImageInNewTabCandidate(context, tabsUseCases, parentView, snackbarDelegate),
                 createSaveImageCandidate(context, contextMenuUseCases),
-                createCopyImageLocationCandidate(context, parentView, snackbarDelegate)
+                createCopyImageLocationCandidate(context, parentView, snackbarDelegate),
+                createAddContactCandidate(context),
+                createShareEmailAddressCandidate(context),
+                createCopyEmailAddressCandidate(context, parentView, snackbarDelegate)
             )
         } else {
             val appLinksCandidate = ContextMenuCandidate.createOpenInExternalAppCandidate(
