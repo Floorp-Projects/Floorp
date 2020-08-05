@@ -81,6 +81,9 @@ class DefaultBrowserToolbarController(
     private val onCloseTab: (Session) -> Unit
 ) : BrowserToolbarController {
 
+    private val useNewSearchExperience
+        get() = activity.settings().useNewSearchExperience
+
     private val currentSession
         get() = customTabSession ?: activity.components.core.sessionManager.selectedSession
 
@@ -91,10 +94,17 @@ class DefaultBrowserToolbarController(
     internal var ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun handleToolbarPaste(text: String) {
-        val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-            sessionId = currentSession?.id,
-            pastedText = text
-        )
+        val directions = if (useNewSearchExperience) {
+            BrowserFragmentDirections.actionGlobalSearchDialog(
+                sessionId = currentSession?.id,
+                pastedText = text
+            )
+        } else {
+            BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                sessionId = currentSession?.id,
+                pastedText = text
+            )
+        }
         navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
     }
 
@@ -117,9 +127,15 @@ class DefaultBrowserToolbarController(
             Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)
         )
 
-            val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                currentSession?.id
-            )
+            val directions = if (useNewSearchExperience) {
+                BrowserFragmentDirections.actionGlobalSearchDialog(
+                    currentSession?.id
+                )
+            } else {
+                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                    currentSession?.id
+                )
+            }
 
             navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
     }

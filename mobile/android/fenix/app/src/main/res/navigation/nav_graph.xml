@@ -144,7 +144,21 @@
     <dialog
         android:id="@+id/searchDialogFragment"
         android:name="org.mozilla.fenix.searchdialog.SearchDialogFragment"
-        tools:layout="@layout/fragment_search_dialog" />
+        tools:layout="@layout/fragment_search_dialog">
+        <argument
+            android:name="session_id"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="pastedText"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="search_access_point"
+            android:defaultValue="NONE"
+            app:argType="org.mozilla.fenix.components.metrics.Event$PerformedSearch$SearchAccessPoint" />
+    </dialog>
 
     <fragment
         android:id="@+id/searchFragment"

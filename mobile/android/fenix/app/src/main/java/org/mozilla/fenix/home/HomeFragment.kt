@@ -674,7 +674,9 @@ class HomeFragment : Fragment() {
 
     private fun navigateToSearch() {
         val directions = if (requireContext().settings().useNewSearchExperience) {
-            HomeFragmentDirections.actionGlobalSearchDialog()
+            HomeFragmentDirections.actionGlobalSearchDialog(
+                sessionId = null
+            )
         } else {
             HomeFragmentDirections.actionGlobalSearch(
                 sessionId = null

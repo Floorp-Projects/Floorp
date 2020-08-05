@@ -86,6 +86,7 @@ import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchFragmentDirections
+import org.mozilla.fenix.searchdialog.SearchDialogFragmentDirections
 import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
@@ -556,6 +557,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId, true)
         BrowserDirection.FromSearch ->
             SearchFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromSearchDialog ->
+            SearchDialogFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSettings ->
             SettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSyncedTabs ->
