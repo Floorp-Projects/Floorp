@@ -799,10 +799,6 @@ TEST_F(ImageDecoders, CorruptICOWithBadBppSingleChunk) {
   CheckDecoderSingleChunk(CorruptICOWithBadBppTestCase());
 }
 
-TEST_F(ImageDecoders, CorruptAVIFSingleChunk) {
-  CheckDecoderSingleChunk(CorruptAVIFTestCase());
-}
-
 TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST) {
   CheckDecoderFrameFirst(GreenFirstFrameAnimatedGIFTestCase());
 }
