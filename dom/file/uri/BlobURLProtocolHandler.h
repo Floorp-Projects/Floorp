@@ -99,6 +99,9 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
 bool IsBlobURI(nsIURI* aUri);
 bool IsMediaSourceURI(nsIURI* aUri);
 
+// Return true if inner scheme of blobURL is http or https, false otherwise.
+bool BlobURLSchemeIsHTTPOrHTTPS(const nsACString& aUri);
+
 }  // namespace dom
 }  // namespace mozilla
 
