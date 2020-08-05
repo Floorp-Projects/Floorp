@@ -346,7 +346,8 @@ JSObject* CallModuleResolveHook(JSContext* cx, HandleValue referencingPrivate,
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                    HandleValue specifier);
 
-bool FinishDynamicModuleImport(JSContext* cx, HandleValue referencingPrivate,
+bool FinishDynamicModuleImport(JSContext* cx, JS::DynamicImportStatus status,
+                               HandleValue referencingPrivate,
                                HandleString specifier, HandleObject promise);
 
 template <XDRMode mode>
