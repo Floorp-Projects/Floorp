@@ -494,6 +494,17 @@ async function promiseAlertDialog(buttonAction, uris, func) {
   return BrowserTestUtils.windowClosed(win);
 }
 
+/**
+ * Search tips helper.  Asserts that a particular search tip is shown or that no
+ * search tip is shown.
+ *
+ * @param {window} win
+ *   A browser window.
+ * @param {UrlbarProviderSearchTips.TIP_TYPE} expectedTip
+ *   The expected search tip.  Pass a falsey value (like zero) for none.
+ * @param {boolean} closeView
+ *   If true, this function closes the urlbar view before returning.
+ */
 async function checkTip(win, expectedTip, closeView = true) {
   if (!expectedTip) {
     // Wait a bit for the tip to not show up.
@@ -544,11 +555,30 @@ async function checkTip(win, expectedTip, closeView = true) {
     1
   );
 
+  Assert.ok(
+    !UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+    "One-offs should be hidden when showing a search tip"
+  );
+
   if (closeView) {
     await UrlbarTestUtils.promisePopupClose(win);
   }
 }
 
+/**
+ * Search tips helper.  Opens a foreground tab and asserts that a particular
+ * search tip is shown or that no search tip is shown.
+ *
+ * @param {window} win
+ *   A browser window.
+ * @param {string} url
+ *   The URL to load in a new foreground tab.
+ * @param {UrlbarProviderSearchTips.TIP_TYPE} expectedTip
+ *   The expected search tip.  Pass a falsey value (like zero) for none.
+ * @param {boolean} reset
+ *   If true, the search tips provider will be reset before this function
+ *   returns.  See resetSearchTipsProvider.
+ */
 async function checkTab(win, url, expectedTip, reset = true) {
   // BrowserTestUtils.withNewTab always waits for tab load, which hangs on
   // about:newtab for some reason, so don't use it.
