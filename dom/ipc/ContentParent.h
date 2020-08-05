@@ -699,6 +699,8 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvBlobURLDataRequest(
       const nsCString& aBlobURL, nsIPrincipal* pTriggeringPrincipal,
+      nsIPrincipal* pLoadingPrincipal,
+      const OriginAttributes& aOriginAttributes,
       BlobURLDataRequestResolver&& aResolver);
 
  protected:
