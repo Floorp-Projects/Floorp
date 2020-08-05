@@ -4,6 +4,12 @@
 
 loadTestSubscript("head_devtools.js");
 
+// Allow rejections related to closing the devtools toolbox too soon after the test
+// has already verified the details that were relevant for that test case.
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /can't be sent as the connection just closed/
+);
+
 function background() {
   browser.test.onMessage.addListener(msg => {
     let code;
