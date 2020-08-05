@@ -5388,12 +5388,13 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
   // updating our scrollbar.
   if (mFrameIsUpdatingScrollbar) return;
 
-  nsRect scrolledRect = GetScrolledRect();
+  nsRect scrollRange = GetVisualScrollRange();
 
-  nsPoint current = GetScrollPosition() - scrolledRect.TopLeft();
+  nsPoint current = GetScrollPosition() - scrollRange.TopLeft();
 
   if (gfxPlatform::UseDesktopZoomingScrollbars()) {
-    current = GetVisualViewportOffset() - scrolledRect.TopLeft();
+    scrollRange = GetScrollRangeForUserInputEvents();
+    current = GetVisualViewportOffset() - scrollRange.TopLeft();
   }
 
   nsPoint dest;
@@ -5402,9 +5403,9 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
                              &allowedRange.x, &allowedRange.width);
   dest.y = GetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos, current.y,
                              &allowedRange.y, &allowedRange.height);
-  current += scrolledRect.TopLeft();
-  dest += scrolledRect.TopLeft();
-  allowedRange += scrolledRect.TopLeft();
+  current += scrollRange.TopLeft();
+  dest += scrollRange.TopLeft();
+  allowedRange += scrollRange.TopLeft();
 
   // Don't try to scroll if we're already at an acceptable place.
   // Don't call Contains here since Contains returns false when the point is
