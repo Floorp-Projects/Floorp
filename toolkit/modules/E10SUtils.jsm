@@ -126,11 +126,7 @@ const kSafeSchemes = [
 ];
 
 const kDocumentChannelDeniedSchemes = ["javascript"];
-const kDocumentChannelDeniedURIs = [
-  "about:blank",
-  "about:crashcontent",
-  "about:printpreview",
-];
+const kDocumentChannelDeniedURIs = ["about:crashcontent", "about:printpreview"];
 
 // Changes here should also be made in URIUsesDocChannel in DocumentChannel.cpp.
 function documentChannelPermittedForURI(aURI) {
@@ -581,12 +577,14 @@ var E10SUtils = {
       return NOT_REMOTE;
     }
 
-    // We want to use the original URI for "about:" (except for "about:srcdoc")
-    // and "chrome://" scheme, so that we can properly determine
-    // the remote type.
+    // We want to use the original URI for "about:" (except for "about:srcdoc"
+    // and "about:blank") and "chrome://" scheme, so that we can properly
+    // determine the remote type.
     let useOriginalURI;
     if (aOriginalURI.scheme == "about") {
-      useOriginalURI = !["srcdoc"].includes(aOriginalURI.spec);
+      useOriginalURI = !["about:srcdoc", "about:blank"].includes(
+        aOriginalURI.spec
+      );
     } else {
       useOriginalURI = aOriginalURI.scheme == "chrome";
     }
@@ -602,7 +600,9 @@ var E10SUtils = {
       // using fission we add the option to force them into the default
       // web process for better test coverage.
       if (aPrincipal.isNullPrincipal) {
-        if (
+        if (aOriginalURI.spec == "about:blank") {
+          useOriginalURI = true;
+        } else if (
           (aRemoteSubframes && useSeparateDataUriProcess) ||
           aPreferredRemoteType == NOT_REMOTE
         ) {
