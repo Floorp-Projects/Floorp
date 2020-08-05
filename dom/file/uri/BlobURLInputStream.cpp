@@ -363,7 +363,7 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
     return;
   }
 
-  if (XRE_IsParentProcess()) {
+  if (XRE_IsParentProcess() || !BlobURLSchemeIsHTTPOrHTTPS(mBlobURLSpec)) {
     nsIPrincipal* const dataEntryPrincipal =
         BlobURLProtocolHandler::GetDataEntryPrincipal(mBlobURLSpec,
                                                       true /* AlsoIfRevoked */);
