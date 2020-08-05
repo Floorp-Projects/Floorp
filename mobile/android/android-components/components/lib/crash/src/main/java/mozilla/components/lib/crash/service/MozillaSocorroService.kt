@@ -174,7 +174,12 @@ class MozillaSocorroService(
                 return id
             }
         } catch (e: IOException) {
-            logger.error("failed to send report to Socorro", e)
+            try {
+                logger.error("failed to send report to Socorro with " + conn?.responseCode, e)
+            } catch (e: IOException) {
+                logger.error("failed to send report to Socorro", e)
+            }
+
             return null
         } finally {
             conn?.disconnect()
