@@ -9,6 +9,7 @@
 
 use super::UnknownUnit;
 use crate::box2d::Box2D;
+use crate::nonempty::NonEmpty;
 use crate::num::*;
 use crate::point::Point2D;
 use crate::scale::Scale;
@@ -27,22 +28,6 @@ use core::hash::{Hash, Hasher};
 use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Range, Sub};
 
 /// A 2d Rectangle optionally tagged with a unit.
-///
-/// # Representation
-///
-/// `Rect` is represented by an origin point and a size.
-///
-/// See [`Rect`] for a rectangle represented by two endpoints.
-///
-/// # Empty rectangle
-///
-/// A rectangle is considered empty (see [`is_empty`]) if any of the following is true:
-/// - it's area is empty,
-/// - it's area is negative (`size.x < 0` or `size.y < 0`),
-/// - it contains NaNs.
-///
-/// [`is_empty`]: #method.is_empty
-/// [`Box2D`]: struct.Box2D.html
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -83,6 +68,16 @@ impl<T: fmt::Debug, U> fmt::Debug for Rect<T, U> {
         fmt::Debug::fmt(&self.size, f)?;
         write!(f, " at ")?;
         fmt::Debug::fmt(&self.origin, f)?;
+        write!(f, ")")
+    }
+}
+
+impl<T: fmt::Display, U> fmt::Display for Rect<T, U> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Rect(")?;
+        fmt::Display::fmt(&self.size, f)?;
+        write!(f, " at ")?;
+        fmt::Display::fmt(&self.origin, f)?;
         write!(f, ")")
     }
 }
@@ -215,9 +210,8 @@ where
 {
     #[inline]
     pub fn intersection(&self, other: &Self) -> Option<Self> {
-        let box2d = self.to_box2d().intersection_unchecked(&other.to_box2d());
-
-        if box2d.is_empty() {
+        let box2d = self.to_box2d().intersection(&other.to_box2d());
+        if box2d.is_empty_or_negative() {
             return None;
         }
 
@@ -251,7 +245,7 @@ where
     /// nonempty but this rectangle is empty.
     #[inline]
     pub fn contains_rect(&self, rect: &Self) -> bool {
-        rect.is_empty()
+        rect.is_empty_or_negative()
             || (self.min_x() <= rect.min_x()
                 && rect.max_x() <= self.max_x()
                 && self.min_y() <= rect.min_y()
@@ -384,41 +378,48 @@ impl<T: Copy + Mul<T, Output = T>, U> Rect<T, U> {
     }
 }
 
-impl<T: Copy + Zero + PartialOrd, U> Rect<T, U> {
-    #[inline]
+impl<T: Zero + PartialEq, U> Rect<T, U> {
+    /// Returns true if the size is zero, regardless of the origin's value.
     pub fn is_empty(&self) -> bool {
-        self.size.is_empty()
+        self.size.width == Zero::zero() || self.size.height == Zero::zero()
+    }
+}
+
+impl<T: Zero + PartialOrd, U> Rect<T, U> {
+    #[inline]
+    pub fn is_empty_or_negative(&self) -> bool {
+        self.size.is_empty_or_negative()
     }
 }
 
 impl<T: Copy + Zero + PartialOrd, U> Rect<T, U> {
     #[inline]
-    pub fn to_non_empty(&self) -> Option<Self> {
-        if self.is_empty() {
+    pub fn to_non_empty(&self) -> Option<NonEmpty<Self>> {
+        if self.is_empty_or_negative() {
             return None;
         }
 
-        Some(*self)
+        Some(NonEmpty(*self))
     }
 }
 
-impl<T: Copy + Mul, U> Mul<T> for Rect<T, U> {
+impl<T: Clone + Mul, U> Mul<T> for Rect<T, U> {
     type Output = Rect<T::Output, U>;
 
     #[inline]
     fn mul(self, scale: T) -> Self::Output {
-        Rect::new(self.origin * scale, self.size * scale)
+        Rect::new(self.origin * scale.clone(), self.size * scale)
     }
 }
 
-impl<T: Copy + MulAssign, U> MulAssign<T> for Rect<T, U> {
+impl<T: Clone + MulAssign, U> MulAssign<T> for Rect<T, U> {
     #[inline]
     fn mul_assign(&mut self, scale: T) {
         *self *= Scale::new(scale);
     }
 }
 
-impl<T: Copy + Div, U> Div<T> for Rect<T, U> {
+impl<T: Clone + Div, U> Div<T> for Rect<T, U> {
     type Output = Rect<T::Output, U>;
 
     #[inline]
@@ -427,14 +428,14 @@ impl<T: Copy + Div, U> Div<T> for Rect<T, U> {
     }
 }
 
-impl<T: Copy + DivAssign, U> DivAssign<T> for Rect<T, U> {
+impl<T: Clone + DivAssign, U> DivAssign<T> for Rect<T, U> {
     #[inline]
     fn div_assign(&mut self, scale: T) {
         *self /= Scale::new(scale);
     }
 }
 
-impl<T: Copy + Mul, U1, U2> Mul<Scale<T, U1, U2>> for Rect<T, U1> {
+impl<T: Clone + Mul, U1, U2> Mul<Scale<T, U1, U2>> for Rect<T, U1> {
     type Output = Rect<T::Output, U2>;
 
     #[inline]
@@ -443,7 +444,7 @@ impl<T: Copy + Mul, U1, U2> Mul<Scale<T, U1, U2>> for Rect<T, U1> {
     }
 }
 
-impl<T: Copy + MulAssign, U> MulAssign<Scale<T, U, U>> for Rect<T, U> {
+impl<T: Clone + MulAssign, U> MulAssign<Scale<T, U, U>> for Rect<T, U> {
     #[inline]
     fn mul_assign(&mut self, scale: Scale<T, U, U>) {
         self.origin *= scale.clone();
@@ -451,7 +452,7 @@ impl<T: Copy + MulAssign, U> MulAssign<Scale<T, U, U>> for Rect<T, U> {
     }
 }
 
-impl<T: Copy + Div, U1, U2> Div<Scale<T, U1, U2>> for Rect<T, U2> {
+impl<T: Clone + Div, U1, U2> Div<Scale<T, U1, U2>> for Rect<T, U2> {
     type Output = Rect<T::Output, U1>;
 
     #[inline]
@@ -460,7 +461,7 @@ impl<T: Copy + Div, U1, U2> Div<Scale<T, U1, U2>> for Rect<T, U2> {
     }
 }
 
-impl<T: Copy + DivAssign, U> DivAssign<Scale<T, U, U>> for Rect<T, U> {
+impl<T: Clone + DivAssign, U> DivAssign<Scale<T, U, U>> for Rect<T, U> {
     #[inline]
     fn div_assign(&mut self, scale: Scale<T, U, U>) {
         self.origin /= scale.clone();
