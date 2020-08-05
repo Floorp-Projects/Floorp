@@ -17,7 +17,7 @@ root:
           items:
             -
               type: "stacking-context"
-              transform: rotate-x(10)
+              transform: rotate-x(-10)
               transform-origin: 300 300
               filters: identity
               items:

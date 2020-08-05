@@ -258,7 +258,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
             }
         };
 
-        if alloc_size.is_empty_or_negative() && self.targets.is_empty() {
+        if alloc_size.is_empty() && self.targets.is_empty() {
             // push an unused target here, only if we don't have any
             self.targets.push(T::new(self.screen_size, self.gpu_supports_fast_clears));
         }

@@ -9,7 +9,7 @@ root:
         -
           bounds: [0, 0, 1000, 1000]
           type: "stacking-context"
-          transform: rotate-x(45)
+          transform: rotate-x(-45)
           items:
             -
               bounds: [350, 400, 260, 260]
