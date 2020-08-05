@@ -777,11 +777,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
                          RESULT_DETAIL("Unable to get DMABufSurfaceYUV"));
     }
 
-#  ifdef MOZ_LOGGING
-    static int uid = 0;
-    surface->SetUID(++uid);
-    FFMPEG_LOG("Created new DMABufSurface UID = %d", uid);
-#  endif
+    FFMPEG_LOG("Created new DMABufSurface UID = %d", surface->GetUID());
     mDMABufSurfaces.EmplaceBack(surface, mLib);
     surfaceWrapper = &(mDMABufSurfaces[mDMABufSurfaces.Length() - 1]);
   } else {
