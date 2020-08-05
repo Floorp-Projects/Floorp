@@ -123,9 +123,13 @@ class GeckoEngineView @JvmOverloads constructor(
                 // This is to debug "display already acquired" crashes
                 val otherActivityClassName =
                     internalSession.geckoSession.accessibility.view?.context?.javaClass?.simpleName
+                val otherActivityClassHashcode =
+                    internalSession.geckoSession.accessibility.view?.context?.hashCode()
                 val activityClassName = context.javaClass.simpleName
-                val msg =
-                    "SET SESSION: Current activity: $activityClassName Other activity: $otherActivityClassName"
+                val activityClassHashCode = context.hashCode()
+                val msg = "SET SESSION: Current activity: $activityClassName hashcode " +
+                        "$activityClassHashCode Other activity: $otherActivityClassName " +
+                        "hashcode $otherActivityClassHashcode"
                 throw IllegalStateException(msg, e)
             }
         }
