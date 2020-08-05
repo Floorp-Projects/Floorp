@@ -510,35 +510,7 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
-            'pattern': 'testing/mozharness/**'
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'pattern': 'browser/config/**'
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'pattern':  'build/moz.configure/**'
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'pattern': 'dist/bin/**',
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'base': '_tests/modules',
-            'pattern': '**',
-            'dest': 'dist/bin/modules'
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'pattern': 'dist/plugins/**'
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'netwerk/test/http3serverDB',
-            'pattern': '**',
-            'dest': 'netwerk/test/http3serverDB',
+            'pattern':  'testing/mozharness/**'
         }
     ],
     'condprof': [
