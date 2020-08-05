@@ -15,6 +15,7 @@ include protocol PCompositorBridge;
 include protocol PTexture;
 
 using mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
+using mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
 using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
@@ -91,6 +92,7 @@ parent:
   sync SetAsyncZoom(ViewID scrollId, float zoom);
   async FlushApzRepaints();
   sync GetAPZTestData() returns (APZTestData data);
+  sync GetFrameUniformity() returns (FrameUniformityData data);
 
   async Shutdown();
   sync ShutdownSync();

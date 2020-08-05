@@ -721,5 +721,9 @@ void WebRenderLayerManager::WrReleasedImages(
   mStateManager.WrReleasedImages(aPairs);
 }
 
+void WebRenderLayerManager::GetFrameUniformity(FrameUniformityData* aOutData) {
+  WrBridge()->SendGetFrameUniformity(aOutData);
+}
+
 }  // namespace layers
 }  // namespace mozilla

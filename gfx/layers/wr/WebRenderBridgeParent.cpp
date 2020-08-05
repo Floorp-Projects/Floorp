@@ -1916,6 +1916,12 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetAPZTestData(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetFrameUniformity(
+    FrameUniformityData* aOutData) {
+  mCompositorBridge->GetFrameUniformity(GetLayersId(), aOutData);
+  return IPC_OK();
+}
+
 void WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy) { Destroy(); }
 
 void WebRenderBridgeParent::ResetPreviousSampleTime() {

@@ -1404,12 +1404,6 @@ void CompositorBridgeParent::NotifyJankedAnimations(
   }
 }
 
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvGetFrameUniformity(
-    FrameUniformityData* aOutData) {
-  mCompositionManager->GetFrameUniformity(aOutData);
-  return IPC_OK();
-}
-
 void CompositorBridgeParent::SetTestAsyncScrollOffset(
     const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
     const CSSPoint& aPoint) {
@@ -1442,6 +1436,13 @@ void CompositorBridgeParent::GetAPZTestData(const LayersId& aLayersId,
   if (mApzUpdater) {
     MOZ_ASSERT(aLayersId.IsValid());
     mApzUpdater->GetAPZTestData(aLayersId, aOutData);
+  }
+}
+
+void CompositorBridgeParent::GetFrameUniformity(const LayersId& aLayersId,
+                                                FrameUniformityData* aOutData) {
+  if (mCompositionManager) {
+    mCompositionManager->GetFrameUniformity(aOutData);
   }
 }
 
