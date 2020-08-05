@@ -753,6 +753,28 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   auto& Ranges() { return mRanges; }
   const auto& Ranges() const { return mRanges; }
 
+  template <template <typename> typename StrongPtrType>
+  AutoTArray<StrongPtrType<nsRange>, 8> CloneRanges() const {
+    AutoTArray<StrongPtrType<nsRange>, 8> ranges;
+    for (const auto& range : mRanges) {
+      ranges.AppendElement(range->CloneRange());
+    }
+    return ranges;
+  }
+
+  EditorDOMPoint GetStartPointOfFirstRange() const {
+    if (mRanges.IsEmpty() || !mRanges[0]->IsPositioned()) {
+      return EditorDOMPoint();
+    }
+    return EditorDOMPoint(mRanges[0]->StartRef());
+  }
+  EditorDOMPoint GetEndPointOfFirstRange() const {
+    if (mRanges.IsEmpty() || !mRanges[0]->IsPositioned()) {
+      return EditorDOMPoint();
+    }
+    return EditorDOMPoint(mRanges[0]->EndRef());
+  }
+
   /**
    * The following methods are same as `Selection`'s methods.
    */
