@@ -527,12 +527,16 @@ class UrlbarView {
         updateInput: false,
       });
 
-      // Hide the one-off search buttons if the search string is empty, or
-      // starts with a potential @ search alias or the search restriction
-      // character.
+      // Show the one-off search buttons unless any of the following are true:
+      //
+      // * The update 2 refresh is enabled but the first result is a search tip
+      // * The update 2 refresh is disabled and the search string is empty
+      // * The search string starts with an `@` or search restriction character
       let trimmedValue = queryContext.searchString.trim();
       this.oneOffSearchButtons.enable(
-        (this.oneOffsRefresh || trimmedValue) &&
+        ((this.oneOffsRefresh &&
+          firstResult.providerName != "UrlbarProviderSearchTips") ||
+          trimmedValue) &&
           trimmedValue[0] != "@" &&
           (trimmedValue[0] != UrlbarTokenizer.RESTRICT.SEARCH ||
             trimmedValue.length != 1)
