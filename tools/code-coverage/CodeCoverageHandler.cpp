@@ -35,9 +35,14 @@ using namespace mozilla;
 // instead.
 #if !defined(XP_WIN) && defined(__clang__)
 #  define __gcov_flush __custom_llvm_gcov_flush
+// In clang 12, __gcov_flush was split into __gcov_dump and __gcov_reset.
+#  define __gcov_dump __custom_llvm_gcov_dump
+#  define __gcov_reset __custom_llvm_gcov_reset
 #endif
 
 extern "C" void __gcov_flush();
+extern "C" void __gcov_dump();
+extern "C" void __gcov_reset();
 
 StaticAutoPtr<CodeCoverageHandler> CodeCoverageHandler::instance;
 
@@ -46,7 +51,12 @@ void CodeCoverageHandler::FlushCounters() {
 
   CrossProcessMutexAutoLock lock(*CodeCoverageHandler::Get()->GetMutex());
 
+#if defined(__clang__) && __clang_major__ >= 12
+  __gcov_dump();
+  __gcov_reset();
+#else
   __gcov_flush();
+#endif
 
   printf_stderr("[CodeCoverage] flush completed.\n");
 
