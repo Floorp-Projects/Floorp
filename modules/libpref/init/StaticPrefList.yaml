@@ -252,7 +252,7 @@
 #if defined(ANDROID)
   value: true
 #else
-  value: @NIGHTLY_BUILD@
+  value: @IS_NIGHTLY_BUILD@
 #endif
   mirror: always
 
