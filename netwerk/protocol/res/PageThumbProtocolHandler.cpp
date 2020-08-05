@@ -152,7 +152,7 @@ void PageThumbStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream) {
     return;
   }
 
-  rv = pump->AsyncRead(listener, nullptr);
+  rv = pump->AsyncRead(listener);
   if (NS_FAILED(rv)) {
     CancelRequest(listener, mChannel, rv);
   }
