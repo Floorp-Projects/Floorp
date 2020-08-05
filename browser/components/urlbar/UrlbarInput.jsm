@@ -1206,6 +1206,11 @@ class UrlbarInput {
 
     if (this.searchMode) {
       this.toggleAttribute("searchmode", true);
+      // Search mode should only be active when pageproxystate is invalid.
+      if (this.getAttribute("pageproxystate") == "valid") {
+        this.value = "";
+        this.setPageProxyState("invalid", true);
+      }
     } else {
       this.removeAttribute("searchmode");
     }
