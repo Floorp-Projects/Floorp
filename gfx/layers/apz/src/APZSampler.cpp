@@ -77,9 +77,6 @@ void APZSampler::SampleForWebRender(
 void APZSampler::SetSampleTime(const TimeStamp& aSampleTime) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MutexAutoLock lock(mSampleTimeLock);
-  // This only gets called with WR, and the time provided is going to be
-  // the time at which the current vsync interval ends. i.e. it is the timestamp
-  // for the next vsync that will occur.
   mSampleTime = aSampleTime;
 }
 
@@ -95,25 +92,7 @@ void APZSampler::SampleForWebRender(
     // WebRenderBridgeParent hasn't yet provided us with a sample time.
     // If we're that early there probably aren't any APZ animations happening
     // anyway, so using Timestamp::Now() should be fine.
-    //
-    // If mSampleTime is in the past, then this is a "delayed sampling", i.e.
-    // we have passed the vsync interval during which SetSampleTime was called.
-    // We know this because SetSampleTime is called with the timestamp for the
-    // next vsync (i.e. the time at which the then-ongoing vsync interval ends)
-    // and we expect that SampleForWebRender gets called within that same vsync
-    // interval. If it does not, then the SampleForWebRender call has been
-    // delayed. This can happen if e.g. there was a very long scene build,
-    // or WR decided to generate a frame after an idle period for whatever
-    // random reason without Gecko requesting it explicitly. In these cases
-    // we shouldn't use mSampleTime, because the current frame will be presented
-    // at the end of the *current* vsync interval rather than the vsync interval
-    // SetSampleTime was called in. Ideally we would be able to know when the
-    // *current* vsync interval ends, and use that timestamp, but pluming that
-    // here is hard, so instead we use Now() which will at least get us pretty
-    // close.
-    TimeStamp now = TimeStamp::Now();
-    sampleTime =
-        (mSampleTime.IsNull() || mSampleTime < now) ? now : mSampleTime;
+    sampleTime = mSampleTime.IsNull() ? TimeStamp::Now() : mSampleTime;
   }
   mApz->SampleForWebRender(aTxn, sampleTime, aEpochsBeingRendered);
 }
