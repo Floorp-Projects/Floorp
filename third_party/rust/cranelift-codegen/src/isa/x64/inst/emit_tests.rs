@@ -9,10 +9,9 @@
 //! (cd cranelift/codegen && \
 //! RUST_BACKTRACE=1 cargo test isa::x64::inst::test_x64_insn_encoding_and_printing -- --nocapture)
 
-use alloc::vec::Vec;
-
 use super::*;
 use crate::isa::test_utils;
+use alloc::vec::Vec;
 
 #[test]
 fn test_x64_emit() {
@@ -3189,6 +3188,19 @@ fn test_x64_emit() {
         Inst::xmm_rmi_reg(SseOpcode::Psrlq, RegMemImm::imm(1), w_xmm3),
         "660F73D301",
         "psrlq   $1, %xmm3",
+    ));
+
+    // ========================================================
+    // XmmRmRImm
+    insns.push((
+        Inst::xmm_rm_r_imm(SseOpcode::Cmppd, RegMem::reg(xmm5), w_xmm1, 2),
+        "660FC2CD02",
+        "cmppd   $2, %xmm5, %xmm1",
+    ));
+    insns.push((
+        Inst::xmm_rm_r_imm(SseOpcode::Cmpps, RegMem::reg(xmm15), w_xmm7, 0),
+        "410FC2FF00",
+        "cmpps   $0, %xmm15, %xmm7",
     ));
 
     // ========================================================
