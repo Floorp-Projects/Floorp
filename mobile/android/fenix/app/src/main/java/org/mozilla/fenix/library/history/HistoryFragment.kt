@@ -161,27 +161,17 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        val menuRes = when (historyStore.state.mode) {
-            HistoryFragmentState.Mode.Normal -> R.menu.library_menu
-            is HistoryFragmentState.Mode.Syncing -> R.menu.library_menu
-            is HistoryFragmentState.Mode.Editing -> R.menu.history_select_multi
+        if (historyStore.state.mode is HistoryFragmentState.Mode.Editing) {
+            inflater.inflate(R.menu.history_select_multi, menu)
+            menu.findItem(R.id.share_history_multi_select)?.isVisible = true
+            menu.findItem(R.id.delete_history_multi_select)?.title =
+                SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
+                    setTextColor(requireContext(), R.attr.destructive)
+                }
         }
-
-        inflater.inflate(menuRes, menu)
-
-        menu.findItem(R.id.share_history_multi_select)?.isVisible = true
-
-        menu.findItem(R.id.delete_history_multi_select)?.title =
-            SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
-                setTextColor(requireContext(), R.attr.destructive)
-            }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        R.id.close_history -> {
-            close()
-            true
-        }
         R.id.share_history_multi_select -> {
             val selectedHistory = historyStore.state.mode.selectedItems
             val shareTabs = selectedHistory.map { ShareData(url = it.url, title = it.title) }

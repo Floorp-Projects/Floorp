@@ -84,16 +84,7 @@ class HistoryRobot {
     fun verifyDeleteSnackbarText(text: String) = assertSnackBarText(text)
 
     class Transition {
-        fun closeMenu(interact: HistoryRobot.() -> Unit): Transition {
-            closeButton().click()
-
-            HistoryRobot().interact()
-            return Transition()
-        }
-
         fun goBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            closeButton().click()
-
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
@@ -113,8 +104,6 @@ fun historyMenu(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
     HistoryRobot().interact()
     return HistoryRobot.Transition()
 }
-
-private fun closeButton() = onView(withId(R.id.close_history))
 
 private fun testPageTitle() = onView(allOf(withId(R.id.title), withText("Test_Page_1")))
 
