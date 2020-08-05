@@ -201,7 +201,7 @@ let JSWINDOWACTORS = {
       },
     },
 
-    matches: ["about:protections"],
+    matches: ["about:protections", "about:protections?*"],
   },
 
   AboutReader: {

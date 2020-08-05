@@ -697,6 +697,12 @@ class ContentParent final
   PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 
+  mozilla::ipc::IPCResult RecvBlobURLDataRequest(
+      const nsCString& aBlobURL, nsIPrincipal* pTriggeringPrincipal,
+      nsIPrincipal* pLoadingPrincipal,
+      const OriginAttributes& aOriginAttributes,
+      BlobURLDataRequestResolver&& aResolver);
+
  protected:
   bool CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
                                     const char* aOperation) const;

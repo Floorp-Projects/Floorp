@@ -738,7 +738,8 @@ Toolbox.prototype = {
 
     const isBrowserToolbox = this.targetList.targetFront.isParentProcess;
     const isNonTopLevelFrameTarget =
-      !targetFront.isTopLevel && targetFront.type === TargetList.TYPES.FRAME;
+      !targetFront.isTopLevel &&
+      targetFront.targetType === TargetList.TYPES.FRAME;
 
     if (isBrowserToolbox && isNonTopLevelFrameTarget) {
       // In the BrowserToolbox, non-top-level frame targets are already
@@ -766,7 +767,7 @@ Toolbox.prototype = {
   _attachAndResumeThread: async function(target) {
     if (target.threadFront) {
       // if threadFront already exists, the thread is already attached.
-      if (target.type !== TargetList.TYPES.SERVICE_WORKER) {
+      if (target.targetType === TargetList.TYPES.SERVICE_WORKER) {
         // This can legitimately happen for service workers. See Bug 1655439.
         console.warn(
           "Attaching to an already attached thread for a service worker target"
@@ -778,7 +779,7 @@ Toolbox.prototype = {
 
       // This should not happen for non-server-worker targets, throw otherwise.
       throw new Error(
-        `Attaching to an already attached thread for a target of type "${target.type}"`
+        `Attaching to an already attached thread for a target of type "${target.targetType}"`
       );
     }
 

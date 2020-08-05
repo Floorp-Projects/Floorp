@@ -1612,6 +1612,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   void emitNativeCalleeGuard(HandleFunction callee);
 
   AttachDecision tryAttachArrayPush(HandleFunction callee);
+  AttachDecision tryAttachArrayPopShift(HandleFunction callee,
+                                        InlinableNative native);
   AttachDecision tryAttachArrayJoin(HandleFunction callee);
   AttachDecision tryAttachArrayIsArray(HandleFunction callee);
   AttachDecision tryAttachDataViewGet(HandleFunction callee, Scalar::Type type);

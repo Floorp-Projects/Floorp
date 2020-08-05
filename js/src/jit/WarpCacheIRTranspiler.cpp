@@ -1773,6 +1773,36 @@ bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitPackedArrayPopResult(ObjOperandId arrayId) {
+  MDefinition* array = getOperand(arrayId);
+
+  // TODO(Warp): these flags only make sense for the Ion implementation. Remove
+  // them when IonBuilder is gone.
+  bool needsHoleCheck = true;
+  bool maybeUndefined = true;
+  auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Pop,
+                                  needsHoleCheck, maybeUndefined);
+  addEffectful(ins);
+
+  pushResult(ins);
+  return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitPackedArrayShiftResult(ObjOperandId arrayId) {
+  MDefinition* array = getOperand(arrayId);
+
+  // TODO(Warp): these flags only make sense for the Ion implementation. Remove
+  // them when IonBuilder is gone.
+  bool needsHoleCheck = true;
+  bool maybeUndefined = true;
+  auto* ins = MArrayPopShift::New(alloc(), array, MArrayPopShift::Shift,
+                                  needsHoleCheck, maybeUndefined);
+  addEffectful(ins);
+
+  pushResult(ins);
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitHasClassResult(ObjOperandId objId,
                                                uint32_t claspOffset) {
   MDefinition* obj = getOperand(objId);

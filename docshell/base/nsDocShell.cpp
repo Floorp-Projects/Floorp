@@ -3581,14 +3581,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
 
   // If the HTTPS-Only Mode upgraded this request and the upgrade might have
   // caused this error, we replace the error-page with about:httpsonlyerror
-  if (aFailedChannel && nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aError)) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aFailedChannel->LoadInfo();
-    uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-    if ((httpsOnlyStatus &
-         nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED) &&
-        !(httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT)) {
-      errorPage.AssignLiteral("httpsonlyerror");
-    }
+  if (nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aFailedChannel, aError)) {
+    errorPage.AssignLiteral("httpsonlyerror");
   }
 
   if (nsCOMPtr<nsILoadURIDelegate> loadURIDelegate = GetLoadURIDelegate()) {
