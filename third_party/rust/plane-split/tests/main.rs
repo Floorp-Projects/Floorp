@@ -87,7 +87,7 @@ fn test_transformed(rect: Rect<f32, ()>, transform: Transform3D<f32, (), ()>) {
 fn from_transformed_rect() {
     let rect = Rect::new(point2(10.0, 10.0), Size2D::new(20.0, 30.0));
     let transform =
-        Transform3D::rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
+        Transform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
         .pre_translate(vec3(0.0, 0.0, 10.0));
     test_transformed(rect, transform);
 }
@@ -96,7 +96,7 @@ fn from_transformed_rect() {
 fn from_transformed_rect_perspective() {
     let rect = Rect::new(point2(-10.0, -5.0), Size2D::new(20.0, 30.0));
     let mut transform =
-        Transform3D::perspective(400.0)
+        Transform3D::create_perspective(400.0)
         .pre_translate(vec3(0.0, 0.0, 100.0));
     transform.m44 = 0.7; //for fun
     test_transformed(rect, transform);

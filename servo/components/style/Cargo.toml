@@ -37,7 +37,7 @@ cssparser = "0.27"
 derive_more = "0.99"
 new_debug_unreachable = "1.0"
 encoding_rs = {version = "0.8", optional = true}
-euclid = "0.22"
+euclid = "0.20"
 fallible = { path = "../fallible" }
 fxhash = "0.2"
 hashbrown = "0.7"
