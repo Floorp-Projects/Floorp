@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvColorSpace};
+use api::{AlphaType, DocumentLayer, PremultipliedColorF, YuvFormat, YuvColorSpace};
 use api::EdgeAaSegmentMask;
 use api::units::*;
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
@@ -25,6 +25,10 @@ pub const VECS_PER_TRANSFORM: usize = 8;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ZBufferId(pub i32);
 
+const MAX_DOCUMENT_LAYERS : i8 = 1 << 3;
+const MAX_DOCUMENT_LAYER_VALUE : i8 = MAX_DOCUMENT_LAYERS / 2 - 1;
+const MIN_DOCUMENT_LAYER_VALUE : i8 = -MAX_DOCUMENT_LAYERS / 2;
+
 impl ZBufferId {
     pub fn invalid() -> Self {
         ZBufferId(i32::MAX)
@@ -35,21 +39,26 @@ impl ZBufferId {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ZBufferIdGenerator {
+    base: i32,
     next: i32,
-    max_depth_ids: i32,
+    max_items_per_document_layer: i32,
 }
 
 impl ZBufferIdGenerator {
-    pub fn new(max_depth_ids: i32) -> Self {
+    pub fn new(layer: DocumentLayer, max_depth_ids: i32) -> Self {
+        debug_assert!(layer >= MIN_DOCUMENT_LAYER_VALUE);
+        debug_assert!(layer <= MAX_DOCUMENT_LAYER_VALUE);
+        let max_items_per_document_layer = max_depth_ids / MAX_DOCUMENT_LAYERS as i32;
         ZBufferIdGenerator {
+            base: layer as i32 * max_items_per_document_layer,
             next: 0,
-            max_depth_ids,
+            max_items_per_document_layer,
         }
     }
 
     pub fn next(&mut self) -> ZBufferId {
-        debug_assert!(self.next < self.max_depth_ids);
-        let id = ZBufferId(self.next);
+        debug_assert!(self.next < self.max_items_per_document_layer);
+        let id = ZBufferId(self.next + self.base);
         self.next += 1;
         id
     }
