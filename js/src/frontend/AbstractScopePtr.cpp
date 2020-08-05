@@ -16,9 +16,9 @@
 using namespace js;
 using namespace js::frontend;
 
-MutableHandle<ScopeCreationData> AbstractScopePtr::scopeCreationData() const {
+MutableHandle<ScopeStencil> AbstractScopePtr::scopeData() const {
   const Deferred& data = scope_.as<Deferred>();
-  return data.compilationInfo.scopeCreationData[data.index.index];
+  return data.compilationInfo.scopeData[data.index.index];
 }
 
 CompilationInfo& AbstractScopePtr::compilationInfo() const {
@@ -27,7 +27,7 @@ CompilationInfo& AbstractScopePtr::compilationInfo() const {
 }
 
 Scope* AbstractScopePtr::existingScope() const {
-  if (isScopeCreationData()) {
+  if (isScopeStencil()) {
     const Deferred& data = scope_.as<Deferred>();
     Scope* result = data.compilationInfo.scopes[data.index.index];
     MOZ_ASSERT(result, "Scope must already exist to use this method");
@@ -38,24 +38,24 @@ Scope* AbstractScopePtr::existingScope() const {
 
 ScopeKind AbstractScopePtr::kind() const {
   MOZ_ASSERT(!isNullptr());
-  if (isScopeCreationData()) {
-    return scopeCreationData().get().kind();
+  if (isScopeStencil()) {
+    return scopeData().get().kind();
   }
   return scope()->kind();
 }
 
 AbstractScopePtr AbstractScopePtr::enclosing() const {
   MOZ_ASSERT(!isNullptr());
-  if (isScopeCreationData()) {
-    return scopeCreationData().get().enclosing(compilationInfo());
+  if (isScopeStencil()) {
+    return scopeData().get().enclosing(compilationInfo());
   }
   return AbstractScopePtr(scope()->enclosing());
 }
 
 bool AbstractScopePtr::hasEnvironment() const {
   MOZ_ASSERT(!isNullptr());
-  if (isScopeCreationData()) {
-    return scopeCreationData().get().hasEnvironment();
+  if (isScopeStencil()) {
+    return scopeData().get().hasEnvironment();
   }
   return scope()->hasEnvironment();
 }
@@ -64,16 +64,16 @@ bool AbstractScopePtr::isArrow() const {
   // nullptr will also fail the below assert, so effectively also checking
   // !isNullptr()
   MOZ_ASSERT(is<FunctionScope>());
-  if (isScopeCreationData()) {
-    return scopeCreationData().get().isArrow();
+  if (isScopeStencil()) {
+    return scopeData().get().isArrow();
   }
   MOZ_ASSERT(scope()->as<FunctionScope>().canonicalFunction());
   return scope()->as<FunctionScope>().canonicalFunction()->isArrow();
 }
 
 uint32_t AbstractScopePtr::nextFrameSlot() const {
-  if (isScopeCreationData()) {
-    return scopeCreationData().get().nextFrameSlot();
+  if (isScopeStencil()) {
+    return scopeData().get().nextFrameSlot();
   }
 
   switch (kind()) {

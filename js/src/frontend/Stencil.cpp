@@ -45,14 +45,13 @@ bool frontend::RegExpCreationData::init(JSContext* cx, JSAtom* pattern,
   return true;
 }
 
-AbstractScopePtr ScopeCreationData::enclosing(
-    CompilationInfo& compilationInfo) {
+AbstractScopePtr ScopeStencil::enclosing(CompilationInfo& compilationInfo) {
   if (enclosing_) {
     return AbstractScopePtr(compilationInfo, *enclosing_);
   }
 
   // HACK: The self-hosting script uses the EmptyGlobalScopeType placeholder
-  // which does not correspond to a ScopeCreationData. This means that the inner
+  // which does not correspond to a ScopeStencil. This means that the inner
   // scopes may store Nothing as an enclosing ScopeIndex.
   if (compilationInfo.options.selfHostingMode) {
     MOZ_ASSERT(compilationInfo.enclosingScope == nullptr);
@@ -62,17 +61,16 @@ AbstractScopePtr ScopeCreationData::enclosing(
   return AbstractScopePtr(compilationInfo.enclosingScope);
 }
 
-Scope* ScopeCreationData::getEnclosingScope(CompilationInfo& compilationInfo) {
+Scope* ScopeStencil::getEnclosingScope(CompilationInfo& compilationInfo) {
   return enclosing(compilationInfo).existingScope();
 }
 
-JSFunction* ScopeCreationData::function(
-    frontend::CompilationInfo& compilationInfo) {
+JSFunction* ScopeStencil::function(frontend::CompilationInfo& compilationInfo) {
   return compilationInfo.functions[*functionIndex_];
 }
 
-Scope* ScopeCreationData::createScope(JSContext* cx,
-                                      CompilationInfo& compilationInfo) {
+Scope* ScopeStencil::createScope(JSContext* cx,
+                                 CompilationInfo& compilationInfo) {
   Scope* scope = nullptr;
   switch (kind()) {
     case ScopeKind::Function: {
@@ -126,7 +124,7 @@ Scope* ScopeCreationData::createScope(JSContext* cx,
   return scope;
 }
 
-void ScopeCreationData::trace(JSTracer* trc) {
+void ScopeStencil::trace(JSTracer* trc) {
   // Trace Datas
   if (data_) {
     switch (kind()) {
@@ -169,7 +167,7 @@ void ScopeCreationData::trace(JSTracer* trc) {
   }
 }
 
-uint32_t ScopeCreationData::nextFrameSlot() const {
+uint32_t ScopeStencil::nextFrameSlot() const {
   switch (kind()) {
     case ScopeKind::Function:
       return nextFrameSlot<FunctionScope>();
@@ -382,29 +380,27 @@ static bool InstantiateFunctions(JSContext* cx,
   return true;
 }
 
-// Instantiate Scope for each ScopeCreationData.
+// Instantiate Scope for each ScopeStencil.
 //
 // This should be called after InstantiateFunctions, given FunctionScope needs
 // associated JSFunction pointer, and also should be called before
 // InstantiateScriptStencils, given JSScript needs Scope pointer in gc things.
 static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo) {
-  // While allocating Scope object from ScopeCreationData, Scope object
-  // for the enclosing Scope should already be allocated.
+  // While allocating Scope object from ScopeStencil, Scope object for the
+  // enclosing Scope should already be allocated.
   //
-  // Enclosing scope of ScopeCreationData can be either ScopeCreationData or
-  // Scope* pointer, capsulated by AbstractScopePtr.
+  // Enclosing scope of ScopeStencil can be either ScopeStencil or Scope*
+  // pointer, capsulated by AbstractScopePtr.
   //
-  // If the enclosing scope is ScopeCreationData, it's guaranteed to be
-  // earlier element in compilationInfo.scopeCreationData, because
-  // AbstractScopePtr holds index into it, and newly created ScopeCreaationData
-  // is pushed back to the vector.
+  // If the enclosing scope is ScopeStencil, it's guaranteed to be earlier
+  // element in compilationInfo.scopeData, because AbstractScopePtr holds index
+  // into it, and newly created ScopeStencil is pushed back to the vector.
 
-  if (!compilationInfo.scopes.reserve(
-          compilationInfo.scopeCreationData.length())) {
+  if (!compilationInfo.scopes.reserve(compilationInfo.scopeData.length())) {
     return false;
   }
 
-  for (auto& scd : compilationInfo.scopeCreationData) {
+  for (auto& scd : compilationInfo.scopeData) {
     Scope* scope = scd.createScope(cx, compilationInfo);
     if (!scope) {
       return false;

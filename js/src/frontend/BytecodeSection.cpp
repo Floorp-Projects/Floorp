@@ -12,7 +12,6 @@
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/CompilationInfo.h"
 #include "frontend/SharedContext.h"  // FunctionBox
-#include "frontend/Stencil.h"        // ScopeCreationData
 #include "vm/BytecodeUtil.h"         // INDEX_LIMIT, StackUses, StackDefs
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"     // JSContext

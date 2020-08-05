@@ -138,7 +138,7 @@ class BigIntCreationData {
 
 using BigIntIndex = TypedIndex<BigIntCreationData>;
 
-class ScopeCreationData {
+class ScopeStencil {
   friend class js::AbstractScopePtr;
   friend class js::GCMarker;
 
@@ -165,12 +165,12 @@ class ScopeCreationData {
   UniquePtr<BaseScopeData> data_;
 
  public:
-  ScopeCreationData(
-      JSContext* cx, ScopeKind kind, mozilla::Maybe<ScopeIndex> enclosing,
-      uint32_t firstFrameSlot, mozilla::Maybe<uint32_t> numEnvironmentSlots,
-      UniquePtr<BaseScopeData> data = {},
-      mozilla::Maybe<FunctionIndex> functionIndex = mozilla::Nothing(),
-      bool isArrow = false)
+  ScopeStencil(JSContext* cx, ScopeKind kind,
+               mozilla::Maybe<ScopeIndex> enclosing, uint32_t firstFrameSlot,
+               mozilla::Maybe<uint32_t> numEnvironmentSlots,
+               UniquePtr<BaseScopeData> data = {},
+               mozilla::Maybe<FunctionIndex> functionIndex = mozilla::Nothing(),
+               bool isArrow = false)
       : enclosing_(enclosing),
         kind_(kind),
         firstFrameSlot_(firstFrameSlot),
@@ -255,8 +255,8 @@ class ScopeCreationData {
 
   template <typename SpecificScopeType>
   uint32_t nextFrameSlot() const {
-    // If a scope has been allocated for the ScopeCreationData we no longer own
-    // data, so defer to scope
+    // If a scope has been allocated for the ScopeStencil we no longer own data,
+    // so defer to scope
     return data<SpecificScopeType>().nextFrameSlot;
   }
 
@@ -269,8 +269,8 @@ class ScopeCreationData {
   Scope* createSpecificScope(JSContext* cx, CompilationInfo& compilationInfo);
 };
 
-// As an alternative to a ScopeIndex (which references a ScopeCreationData), we
-// may instead refer to an existing scope from GlobalObject::emptyGlobalScope().
+// As an alternative to a ScopeIndex (which references a ScopeStencil), we may
+// instead refer to an existing scope from GlobalObject::emptyGlobalScope().
 //
 // NOTE: This is only used for the self-hosting global.
 class EmptyGlobalScopeType {};
@@ -489,8 +489,8 @@ class ScriptStencil {
 
 namespace JS {
 template <>
-struct GCPolicy<js::frontend::ScopeCreationData*> {
-  static void trace(JSTracer* trc, js::frontend::ScopeCreationData** data,
+struct GCPolicy<js::frontend::ScopeStencil*> {
+  static void trace(JSTracer* trc, js::frontend::ScopeStencil** data,
                     const char* name) {
     (*data)->trace(trc);
   }
