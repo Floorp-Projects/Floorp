@@ -126,7 +126,7 @@ activity_stream:
 addonsManager:
   install:
     description: >
-      This events are recorded during the install and update flow for extensions and themes,
+      These events are recorded during the install and update flow for extensions and themes,
       the value of the event is an install_id shared by the events related to the same install
       or update flow.
     objects: ["extension", "theme", "locale", "dictionary", "other", "unknown"]
@@ -160,6 +160,32 @@ addonsManager:
       - "thunderbird"
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596]
+    release_channel_collection: opt-out
+  install_stats:
+    description: >
+      These events are recorded at the end of the install flow, but only when
+      the source that originally triggered the add-on installation is "amo" or
+      "disco". The value of an event is the SHA256 hash of the addon_id.
+    objects: ["extension", "theme", "locale", "dictionary", "other", "unknown"]
+    extra_keys:
+      addon_id: >
+        A string which identifies the add-on. This value might be trimmed.
+      utm_campaign: >
+        The specific product promotion or strategic campaign that drives
+        traffic to the install page.
+      utm_content: >
+        The specific item that a person clicks on to access the install page
+        (such as an A/B test, a website banner, or a specific ad).
+      utm_medium: The channel used to share the install page.
+      utm_source: >
+        The name of the product, domain of the website that drives traffic to
+        the install page.
+    notification_emails: ["addons-dev-internal@mozilla.com"]
+    expiry_version: never
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    bug_numbers: [1653020]
     release_channel_collection: opt-out
   manage:
     description: >

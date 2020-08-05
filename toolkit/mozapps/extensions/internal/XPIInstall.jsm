@@ -779,6 +779,21 @@ function getTemporaryFile() {
 }
 
 /**
+ * Returns the string representation (hex) of the SHA256 hash of `input`.
+ *
+ * @param {string} input
+ *        The value to hash.
+ * @returns {string}
+ *          The hex representation of a SHA256 hash.
+ */
+function computeSha256HashAsString(input) {
+  const data = new Uint8Array(new TextEncoder().encode(input));
+  const crypto = CryptoHash("sha256");
+  crypto.update(data, data.length);
+  return getHashStringForCrypto(crypto);
+}
+
+/**
  * Returns the signedState for a given return code and certificate by verifying
  * it against the expected ID.
  *
@@ -798,11 +813,7 @@ function getTemporaryFile() {
 function getSignedStatus(aRv, aCert, aAddonID) {
   let expectedCommonName = aAddonID;
   if (aAddonID && aAddonID.length > 64) {
-    let data = new Uint8Array(new TextEncoder().encode(aAddonID));
-
-    let crypto = CryptoHash("sha256");
-    crypto.update(data, data.length);
-    expectedCommonName = getHashStringForCrypto(crypto);
+    expectedCommonName = computeSha256HashAsString(aAddonID);
   }
 
   switch (aRv) {
@@ -1205,7 +1216,7 @@ function getHashStringForCrypto(aCrypto) {
   let toHexString = charCode => ("0" + charCode.toString(16)).slice(-2);
 
   // convert the binary hash data to a hex string.
-  let binary = aCrypto.finish(false);
+  let binary = aCrypto.finish(/* base64 */ false);
   let hash = Array.from(binary, c => toHexString(c.charCodeAt(0)));
   return hash.join("").toLowerCase();
 }
@@ -2653,6 +2664,16 @@ AddonInstallWrapper.prototype = {
 
   get downloadStartedAt() {
     return installFor(this).downloadStartedAt;
+  },
+
+  get hashedAddonId() {
+    const addon = this.addon;
+
+    if (!addon) {
+      return null;
+    }
+
+    return computeSha256HashAsString(addon.id);
   },
 
   install() {
