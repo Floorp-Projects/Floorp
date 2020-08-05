@@ -8,7 +8,8 @@ import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.support.base.log.logger.Logger
 
 /**
- * Feature to enable website-hotfixing via the Web Compatibility System-Addon.
+ * A feature that enables users to report site issues to Mozilla's Web Compatibility team for
+ * further diagnosis.
  */
 object WebCompatReporterFeature {
     private val logger = Logger("mozac-webcompat-reporter")
