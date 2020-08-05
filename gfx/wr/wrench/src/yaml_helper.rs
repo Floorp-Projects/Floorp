@@ -172,24 +172,24 @@ fn make_rotation(
     axis_y: f32,
     axis_z: f32,
 ) -> LayoutTransform {
-    let pre_transform = LayoutTransform::translation(-origin.x, -origin.y, -0.0);
-    let post_transform = LayoutTransform::translation(origin.x, origin.y, 0.0);
+    let pre_transform = LayoutTransform::create_translation(origin.x, origin.y, 0.0);
+    let post_transform = LayoutTransform::create_translation(-origin.x, -origin.y, -0.0);
 
     let theta = 2.0f32 * f32::consts::PI - degrees.to_radians();
     let transform =
         LayoutTransform::identity().pre_rotate(axis_x, axis_y, axis_z, Angle::radians(theta));
 
-    pre_transform.then(&transform).then(&post_transform)
+    pre_transform.pre_transform(&transform).pre_transform(&post_transform)
 }
 
 pub fn make_perspective(
     origin: LayoutPoint,
     perspective: f32,
 ) -> LayoutTransform {
-    let pre_transform = LayoutTransform::translation(-origin.x, -origin.y, -0.0);
-    let post_transform = LayoutTransform::translation(origin.x, origin.y, 0.0);
-    let transform = LayoutTransform::perspective(perspective);
-    pre_transform.then(&transform).then(&post_transform)
+    let pre_transform = LayoutTransform::create_translation(origin.x, origin.y, 0.0);
+    let post_transform = LayoutTransform::create_translation(-origin.x, -origin.y, -0.0);
+    let transform = LayoutTransform::create_perspective(perspective);
+    pre_transform.pre_transform(&transform).pre_transform(&post_transform)
 }
 
 // Create a skew matrix, specified in degrees.
@@ -199,7 +199,7 @@ fn make_skew(
 ) -> LayoutTransform {
     let alpha = Angle::radians(skew_x.to_radians());
     let beta = Angle::radians(skew_y.to_radians());
-    LayoutTransform::skew(alpha, beta)
+    LayoutTransform::create_skew(alpha, beta)
 }
 
 impl YamlHelper for Yaml {
@@ -327,11 +327,23 @@ impl YamlHelper for Yaml {
     fn as_matrix4d(&self) -> Option<LayoutTransform> {
         if let Some(nums) = self.as_vec_f32() {
             assert_eq!(nums.len(), 16, "expected 16 floats, got '{:?}'", self);
-            Some(LayoutTransform::new(
-                nums[0], nums[1], nums[2], nums[3],
-                nums[4], nums[5], nums[6], nums[7],
-                nums[8], nums[9], nums[10], nums[11],
-                nums[12], nums[13], nums[14], nums[15],
+            Some(LayoutTransform::row_major(
+                nums[0],
+                nums[1],
+                nums[2],
+                nums[3],
+                nums[4],
+                nums[5],
+                nums[6],
+                nums[7],
+                nums[8],
+                nums[9],
+                nums[10],
+                nums[11],
+                nums[12],
+                nums[13],
+                nums[14],
+                nums[15],
             ))
         } else {
             None
@@ -353,7 +365,7 @@ impl YamlHelper for Yaml {
                     let mx = match function {
                         "translate" if args.len() >= 2 => {
                             let z = args.get(2).and_then(|a| a.parse().ok()).unwrap_or(0.);
-                            LayoutTransform::translation(
+                            LayoutTransform::create_translation(
                                 args[0].parse().unwrap(),
                                 args[1].parse().unwrap(),
                                 z,
@@ -374,16 +386,16 @@ impl YamlHelper for Yaml {
                             let y = args.get(1).and_then(|a| a.parse().ok()).unwrap_or(x);
                             // Default to no Z scale if unspecified.
                             let z = args.get(2).and_then(|a| a.parse().ok()).unwrap_or(1.0);
-                            LayoutTransform::scale(x, y, z)
+                            LayoutTransform::create_scale(x, y, z)
                         }
                         "scale-x" if args.len() == 1 => {
-                            LayoutTransform::scale(args[0].parse().unwrap(), 1.0, 1.0)
+                            LayoutTransform::create_scale(args[0].parse().unwrap(), 1.0, 1.0)
                         }
                         "scale-y" if args.len() == 1 => {
-                            LayoutTransform::scale(1.0, args[0].parse().unwrap(), 1.0)
+                            LayoutTransform::create_scale(1.0, args[0].parse().unwrap(), 1.0)
                         }
                         "scale-z" if args.len() == 1 => {
-                            LayoutTransform::scale(1.0, 1.0, args[0].parse().unwrap())
+                            LayoutTransform::create_scale(1.0, 1.0, args[0].parse().unwrap())
                         }
                         "skew" if args.len() >= 1 => {
                             // Default to no Y skew if unspecified.
@@ -397,14 +409,14 @@ impl YamlHelper for Yaml {
                             make_skew(0.0, args[0].parse().unwrap())
                         }
                         "perspective" if args.len() == 1 => {
-                            LayoutTransform::perspective(args[0].parse().unwrap())
+                            LayoutTransform::create_perspective(args[0].parse().unwrap())
                         }
                         _ => {
                             println!("unknown function {}", function);
                             break;
                         }
                     };
-                    transform = transform.then(&mx);
+                    transform = transform.post_transform(&mx);
                 }
                 Some(transform)
             }
@@ -412,7 +424,7 @@ impl YamlHelper for Yaml {
                 let transform = array.iter().fold(
                     LayoutTransform::identity(),
                     |u, yaml| match yaml.as_transform(transform_origin) {
-                        Some(ref transform) => transform.then(&u),
+                        Some(ref transform) => u.pre_transform(transform),
                         None => u,
                     },
                 );
