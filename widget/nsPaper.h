@@ -6,36 +6,53 @@
 #ifndef nsPaper_h__
 #define nsPaper_h__
 
+#include "mozilla/dom/ToJSValue.h"
+#include "js/TypeDecls.h"
 #include "nsIPaper.h"
 #include "nsISupportsImpl.h"
+#include "js/RootingAPI.h"
 #include "nsString.h"
+
+namespace mozilla {
+
+// Simple struct that can be used off the main thread to hold all the info from
+// an nsPaper instance.
+struct PaperInfo {
+  const nsString mName;
+  const double mWidth;
+  const double mHeight;
+  const double mUnwriteableMarginTop;
+  const double mUnwriteableMarginRight;
+  const double mUnwriteableMarginBottom;
+  const double mUnwriteableMarginLeft;
+};
+
+}  // namespace mozilla
 
 class nsPaper final : public nsIPaper {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAPER
   nsPaper() = delete;
-  nsPaper(nsAString& aName, double aWidth, double aHeight,
-          double aUnwriteableMarginTop, double aUnwriteableMarginBottom,
-          double aUnwriteableMarginLeft, double aUnwriteableMarginRight)
-      : mName(aName),
-        mWidth(aWidth),
-        mHeight(aHeight),
-        mUnwriteableMarginTop(aUnwriteableMarginTop),
-        mUnwriteableMarginBottom(aUnwriteableMarginBottom),
-        mUnwriteableMarginLeft(aUnwriteableMarginLeft),
-        mUnwriteableMarginRight(aUnwriteableMarginRight) {}
+
+  explicit nsPaper(const mozilla::PaperInfo& aInfo) : mInfo(aInfo) {}
 
  private:
   ~nsPaper() = default;
-
-  nsString mName;
-  double mWidth;
-  double mHeight;
-  double mUnwriteableMarginTop;
-  double mUnwriteableMarginBottom;
-  double mUnwriteableMarginLeft;
-  double mUnwriteableMarginRight;
+  const mozilla::PaperInfo mInfo;
 };
+
+namespace mozilla {
+
+// Turns this into a JSValue by wrapping it in an nsPaper struct.
+//
+// FIXME: If using WebIDL dictionaries we'd get this for ~free...
+MOZ_MUST_USE inline bool ToJSValue(JSContext* aCx, const PaperInfo& aInfo,
+                                   JS::MutableHandleValue aValue) {
+  RefPtr<nsPaper> paper = new nsPaper(aInfo);
+  return dom::ToJSValue(aCx, paper, aValue);
+}
+
+}  // namespace mozilla
 
 #endif /* nsPaper_h__ */

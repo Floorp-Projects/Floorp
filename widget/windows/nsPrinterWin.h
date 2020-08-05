@@ -11,10 +11,10 @@
 class nsPrinterWin final : public nsPrinterBase {
  public:
   NS_IMETHOD GetName(nsAString& aName) override;
-  NS_IMETHOD GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) override;
 
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
+  nsTArray<mozilla::PaperInfo> PaperList() const final;
 
   nsPrinterWin() = delete;
   static already_AddRefed<nsPrinterWin> Create(const nsAString& aName);

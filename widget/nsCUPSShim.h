@@ -35,14 +35,19 @@ class nsCUPSShim {
    */
   decltype(cupsAddOption)* mCupsAddOption;
   decltype(cupsCheckDestSupported)* mCupsCheckDestSupported;
+  decltype(cupsConnectDest)* mCupsConnectDest;
   decltype(cupsCopyDest)* mCupsCopyDest;
   decltype(cupsCopyDestInfo)* mCupsCopyDestInfo;
   decltype(cupsFreeDestInfo)* mCupsFreeDestInfo;
   decltype(cupsFreeDests)* mCupsFreeDests;
+  decltype(cupsGetDestMediaCount)* mCupsGetDestMediaCount;
+  decltype(cupsGetDestMediaByIndex)* mCupsGetDestMediaByIndex;
   decltype(cupsGetDest)* mCupsGetDest;
   decltype(cupsGetDests)* mCupsGetDests;
+  decltype(cupsLocalizeDestMedia)* mCupsLocalizeDestMedia;
   decltype(cupsPrintFile)* mCupsPrintFile;
   decltype(cupsTempFd)* mCupsTempFd;
+  decltype(httpClose)* mHttpClose;
 
  private:
   bool mInited = false;

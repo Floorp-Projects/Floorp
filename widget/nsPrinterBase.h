@@ -12,9 +12,15 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Result.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+
+struct PaperInfo;
+
+namespace dom {
 class Promise;
 }
+
+}  // namespace mozilla
 
 class nsPrinterBase : public nsIPrinter {
  public:
@@ -22,6 +28,7 @@ class nsPrinterBase : public nsIPrinter {
 
   NS_IMETHOD GetSupportsDuplex(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsColor(JSContext*, Promise**) final;
+  NS_IMETHOD GetPaperList(JSContext*, Promise**) final;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsPrinterBase)
@@ -34,6 +41,7 @@ class nsPrinterBase : public nsIPrinter {
   enum class AsyncAttribute {
     SupportsDuplex = 0,
     SupportsColor,
+    PaperList,
     // Just a guard.
     Last,
   };
@@ -55,9 +63,7 @@ class nsPrinterBase : public nsIPrinter {
   // which thread they run on.
   virtual bool SupportsDuplex() const = 0;
   virtual bool SupportsColor() const = 0;
-
-  // FIXME: Temporary, should probably be moved to the async attribute stuff.
-  nsTArray<RefPtr<nsIPaper>> mPaperList;
+  virtual nsTArray<mozilla::PaperInfo> PaperList() const = 0;
 
  private:
   mozilla::EnumeratedArray<AsyncAttribute, AsyncAttribute::Last,
