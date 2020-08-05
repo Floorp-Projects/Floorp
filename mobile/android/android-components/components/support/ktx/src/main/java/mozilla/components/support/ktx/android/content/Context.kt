@@ -74,9 +74,14 @@ fun Context.isPermissionGranted(vararg permission: String): Boolean {
  *
  * @return true if a camera was found, otherwise false.
  */
+@Suppress("TooGenericExceptionCaught")
 fun Context.hasCamera(): Boolean {
-    val cameraManager: CameraManager? = getSystemService()
-    return cameraManager?.cameraIdList?.isNotEmpty() ?: false
+    return try {
+        val cameraManager: CameraManager? = getSystemService()
+        cameraManager?.cameraIdList?.isNotEmpty() ?: false
+    } catch (e: Exception) {
+        false
+    }
 }
 
 /**
