@@ -55,9 +55,8 @@ class CacheChild final : public PCacheChild, public ActorChild {
   // PCacheChild methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
-  PCacheOpChild* AllocPCacheOpChild(const CacheOpArgs& aOpArgs);
-
-  bool DeallocPCacheOpChild(PCacheOpChild* aActor);
+  already_AddRefed<PCacheOpChild> AllocPCacheOpChild(
+      const CacheOpArgs& aOpArgs);
 
   // utility methods
   void NoteDeletedActor();

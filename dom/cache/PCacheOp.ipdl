@@ -17,7 +17,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-protocol PCacheOp
+refcounted protocol PCacheOp
 {
   manager PCache or PCacheStorage;
 
