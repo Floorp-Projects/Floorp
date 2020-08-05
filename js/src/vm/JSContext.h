@@ -191,10 +191,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // free unused memory.
   mozilla::Atomic<bool, mozilla::ReleaseAcquire> freeUnusedMemory;
 
-  // Are we currently timing execution? This flag ensures that we do not
-  // double-count execution time in reentrant situations.
-  js::ContextData<bool> measuringExecutionTime_;
-
  public:
   // This is used by helper threads to change the runtime their context is
   // currently operating on.
@@ -212,11 +208,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   bool shouldFreeUnusedMemory() const {
     return kind_ == js::ContextKind::HelperThread && freeUnusedMemory;
-  }
-
-  bool isMeasuringExecutionTime() const { return measuringExecutionTime_; }
-  void setIsMeasuringExecutionTime(bool value) {
-    measuringExecutionTime_ = value;
   }
 
   bool isMainThreadContext() const {

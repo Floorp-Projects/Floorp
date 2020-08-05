@@ -2648,21 +2648,6 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
       Telemetry::Accumulate(Telemetry::JS_WEB_PARSER_COMPILE_LAZY_AFTER_MS,
                             sample);
       break;
-    case JS_TELEMETRY_RUN_TIME_US:
-      Telemetry::ScalarAdd(Telemetry::ScalarID::JS_RUN_TIME_US, sample);
-      break;
-    case JS_TELEMETRY_WASM_COMPILE_TIME_BASELINE_US:
-      Telemetry::ScalarAdd(Telemetry::ScalarID::WASM_COMPILE_TIME_BASELINE_US,
-                           sample);
-      break;
-    case JS_TELEMETRY_WASM_COMPILE_TIME_ION_US:
-      Telemetry::ScalarAdd(Telemetry::ScalarID::WASM_COMPILE_TIME_ION_US,
-                           sample);
-      break;
-    case JS_TELEMETRY_WASM_COMPILE_TIME_CRANELIFT_US:
-      Telemetry::ScalarAdd(Telemetry::ScalarID::WASM_COMPILE_TIME_CRANELIFT_US,
-                           sample);
-      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected JS_TELEMETRY id");
   }
