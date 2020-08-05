@@ -13,7 +13,7 @@
 using namespace mozilla::dom;
 
 BlobURLChannel::BlobURLChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo)
-    : mInitialized(false) {
+    : mContentStreamOpened(false) {
   SetURI(aURI);
   SetOriginalURI(aURI);
   SetLoadInfo(aLoadInfo);
@@ -27,26 +27,24 @@ BlobURLChannel::BlobURLChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 
 BlobURLChannel::~BlobURLChannel() = default;
 
-void BlobURLChannel::InitFailed() {
-  MOZ_ASSERT(!mInitialized);
-  MOZ_ASSERT(!mInputStream);
-  mInitialized = true;
-}
+nsresult BlobURLChannel::OpenContentStream(bool aAsync,
+                                           nsIInputStream** aResult,
+                                           nsIChannel** aChannel) {
+  if (mContentStreamOpened) {
+    return NS_ERROR_ALREADY_OPENED;
+  }
 
-void BlobURLChannel::Initialize() {
-  MOZ_ASSERT(!mInitialized);
-
-  auto cleanupOnEarlyExit = MakeScopeExit([&] { InitFailed(); });
+  mContentStreamOpened = true;
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS_VOID(rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_MALFORMED_URI);
 
   RefPtr<BlobURL> blobURL;
   rv = uri->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(blobURL));
 
   if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!blobURL)) {
-    return;
+    return NS_ERROR_MALFORMED_URI;
   }
 
   if (blobURL->Revoked()) {
@@ -56,36 +54,22 @@ void BlobURLChannel::Initialize() {
     // if the channel was not triggered by the system principal,
     // then we return here because the URL had been revoked
     if (loadInfo && !loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
-      return;
+      return NS_ERROR_MALFORMED_URI;
     }
 #else
-    return;
+    return NS_ERROR_MALFORMED_URI;
 #endif
   }
 
-  mInputStream = BlobURLInputStream::Create(this, blobURL);
-  if (NS_WARN_IF(!mInputStream)) {
-    return;
-  }
-  cleanupOnEarlyExit.release();
-  mInitialized = true;
-}
-
-nsresult BlobURLChannel::OpenContentStream(bool aAsync,
-                                           nsIInputStream** aResult,
-                                           nsIChannel** aChannel) {
-  MOZ_ASSERT(mInitialized);
-
-  if (!mInputStream) {
+  nsCOMPtr<nsIInputStream> inputStream =
+      BlobURLInputStream::Create(this, blobURL);
+  if (NS_WARN_IF(!inputStream)) {
     return NS_ERROR_MALFORMED_URI;
   }
 
   EnableSynthesizedProgressEvents(true);
 
-  nsCOMPtr<nsIInputStream> stream = mInputStream;
-  stream.forget(aResult);
+  inputStream.forget(aResult);
 
   return NS_OK;
 }
-
-void BlobURLChannel::OnChannelDone() { mInputStream = nullptr; }
