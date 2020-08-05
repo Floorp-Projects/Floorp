@@ -14,7 +14,7 @@ namespace mozilla {
 namespace net {
 
 enum SvcParamKey : uint16_t {
-  SvcParamKeyNone = 0,
+  SvcParamKeyMandatory = 0,
   SvcParamKeyAlpn = 1,
   SvcParamKeyNoDefaultAlpn = 2,
   SvcParamKeyPort = 3,
@@ -82,7 +82,7 @@ struct SVCB {
            mSvcDomainName == aOther.mSvcDomainName &&
            mSvcFieldValue == aOther.mSvcFieldValue;
   }
-  uint16_t mSvcFieldPriority = SvcParamKeyNone;
+  uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
   CopyableTArray<SvcFieldValue> mSvcFieldValue;
 };

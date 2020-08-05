@@ -1276,6 +1276,7 @@ const svcparam = exports.svcparam = {}
 
 svcparam.keyToNumber = function(keyName) {
   switch (keyName.toLowerCase()) {
+    case 'mandatory': return 0
     case 'alpn' : return 1
     case 'no-default-alpn' : return 2
     case 'port' : return 3
@@ -1293,7 +1294,7 @@ svcparam.keyToNumber = function(keyName) {
 
 svcparam.numberToKeyName = function(number) {
   switch (number) {
-    case 0 : return ''
+    case 0 : return 'mandatory'
     case 1 : return 'alpn'
     case 2 : return 'no-default-alpn'
     case 3 : return 'port'
@@ -1318,7 +1319,22 @@ svcparam.encode = function(param, buf, offset) {
   offset += 2;
   svcparam.encode.bytes = 2;
 
-  if (key == 1) { // alpn
+  if (key == 0) { // mandatory
+    let values = param.value;
+    if (!Array.isArray(values)) values = [values];
+    buf.writeUInt16BE(values.length*2, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+
+    for (let val of values) {
+      if (typeof val !== 'number') {
+        val = svcparam.keyToNumber(val);
+      }
+      buf.writeUInt16BE(val, offset);
+      offset += 2;
+      svcparam.encode.bytes += 2;
+    }
+  } else if (key == 1) { // alpn
     let len = param.value.length
     buf.writeUInt16BE(len || 0, offset);
     offset += 2;
@@ -1371,7 +1387,7 @@ svcparam.encode = function(param, buf, offset) {
     }
   } else {
     // Unknown option
-    buf.writeUInt16BE(param.value || 0, offset);
+    buf.writeUInt16BE(0, offset); // 0 length since we don't know how to encode
     offset += 2;
     svcparam.encode.bytes += 2;
   }
@@ -1404,10 +1420,11 @@ svcparam.encodingLength = function (param) {
   // 2 bytes for type, 2 bytes for length, what's left for the value
 
   switch (param.key) {
+    case 'mandatory' : return 4 + 2*(Array.isArray(param.value) ? param.value.length : 1)
     case 'alpn' : return 4 + param.value.length
     case 'no-default-alpn' : return 4
     case 'port' : return 4 + 2
-    case 'ipv4hint' : return 4+4 * (Array.isArray(param.value) ? param.value.length : 1)
+    case 'ipv4hint' : return 4 + 4 * (Array.isArray(param.value) ? param.value.length : 1)
     case 'echconfig' : return 4 + param.value.length
     case 'ipv6hint' : return 4 + 16 * (Array.isArray(param.value) ? param.value.length : 1)
     case 'key65535' : return 4

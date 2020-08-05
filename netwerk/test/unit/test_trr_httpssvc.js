@@ -505,4 +505,84 @@ add_task(async function test_aliasform() {
     !Components.isSuccessCode(inStatus2),
     `${inStatus2} should be an error code`
   );
+
+  // mandatory svcparam
+  await trrServer.registerDoHAnswers("mandatory.com", "HTTPS", [
+    {
+      name: "mandatory.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "h3pool",
+        values: [
+          { key: "mandatory", value: ["key100"] },
+          { key: "alpn", value: "h2,h3" },
+          { key: "key100" },
+        ],
+      },
+    },
+  ]);
+
+  listener = new DNSListener();
+  request = dns.asyncResolveByType(
+    "mandatory.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.ok(!Components.isSuccessCode(inStatus2), `${inStatus2} should fail`);
+
+  // mandatory svcparam
+  await trrServer.registerDoHAnswers("mandatory2.com", "HTTPS", [
+    {
+      name: "mandatory2.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "h3pool",
+        values: [
+          {
+            key: "mandatory",
+            value: [
+              "alpn",
+              "no-default-alpn",
+              "port",
+              "ipv4hint",
+              "echconfig",
+              "ipv6hint",
+            ],
+          },
+          { key: "alpn", value: "h2,h3" },
+          { key: "no-default-alpn" },
+          { key: "port", value: 8888 },
+          { key: "ipv4hint", value: "1.2.3.4" },
+          { key: "echconfig", value: "123..." },
+          { key: "ipv6hint", value: "::1" },
+        ],
+      },
+    },
+  ]);
+
+  listener = new DNSListener();
+  request = dns.asyncResolveByType(
+    "mandatory2.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.ok(Components.isSuccessCode(inStatus2), `${inStatus2} should succeed`);
 });
