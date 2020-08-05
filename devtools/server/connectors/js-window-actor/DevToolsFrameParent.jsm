@@ -10,7 +10,7 @@ const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 const { WatcherRegistry } = ChromeUtils.import(
-  "resource://devtools/server/actors/descriptors/watcher/WatcherRegistry.jsm"
+  "resource://devtools/server/actors/watcher/WatcherRegistry.jsm"
 );
 
 loader.lazyRequireGetter(

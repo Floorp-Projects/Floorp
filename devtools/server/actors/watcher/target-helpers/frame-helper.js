@@ -7,7 +7,7 @@
 const Services = require("Services");
 const {
   WatcherRegistry,
-} = require("devtools/server/actors/descriptors/watcher/WatcherRegistry.jsm");
+} = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
 
 /**
  * Force creating targets for all existing BrowsingContext, that, for a given Watcher Actor.
