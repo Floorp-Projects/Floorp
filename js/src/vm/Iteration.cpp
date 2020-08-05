@@ -908,6 +908,22 @@ bool js::EnumerateProperties(JSContext* cx, HandleObject obj,
   return Snapshot(cx, obj, 0, props);
 }
 
+#ifdef DEBUG
+static bool PrototypeMayHaveIndexedProperties(NativeObject* nobj) {
+  JSObject* proto = nobj->staticPrototype();
+  if (!proto) {
+    return false;
+  }
+
+  if (proto->is<NativeObject>() &&
+      proto->as<NativeObject>().getDenseInitializedLength() > 0) {
+    return true;
+  }
+
+  return ObjectMayHaveExtraIndexedProperties(proto);
+}
+#endif
+
 static JSObject* GetIterator(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(!obj->is<PropertyIteratorObject>());
   MOZ_ASSERT(cx->compartment() == obj->compartment(),
@@ -962,6 +978,14 @@ static JSObject* GetIterator(JSContext* cx, HandleObject obj) {
   }
 
   cx->check(iterobj);
+
+#ifdef DEBUG
+  if (obj->is<NativeObject>()) {
+    if (PrototypeMayHaveIndexedProperties(&obj->as<NativeObject>())) {
+      iterobj->getNativeIterator()->setMaybeHasIndexedPropertiesFromProto();
+    }
+  }
+#endif
 
   // Cache the iterator object.
   if (numGuards > 0) {
@@ -1529,6 +1553,9 @@ void js::AssertDenseElementsNotIterated(NativeObject* obj) {
   // Search for active iterators for |obj| and assert they don't contain any
   // property keys that are dense elements. This is used to check correctness
   // of the MAYBE_IN_ITERATION flag on ObjectElements.
+  //
+  // Ignore iterators that may contain indexed properties from objects on the
+  // prototype chain, as that can result in false positives. See bug 1656744.
 
   // Limit the number of properties we check to avoid slowing down debug builds
   // too much.
@@ -1539,7 +1566,8 @@ void js::AssertDenseElementsNotIterated(NativeObject* obj) {
   NativeIterator* ni = enumeratorList->next();
 
   while (ni != enumeratorList) {
-    if (ni->objectBeingIterated() == obj) {
+    if (ni->objectBeingIterated() == obj &&
+        !ni->maybeHasIndexedPropertiesFromProto()) {
       for (GCPtrLinearString* idp = ni->nextProperty();
            idp < ni->propertiesEnd(); ++idp) {
         uint32_t index;
