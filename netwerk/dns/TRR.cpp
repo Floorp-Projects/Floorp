@@ -1019,6 +1019,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
         }
         case TRRTYPE_HTTPSSVC: {
           struct SVCB parsed;
+          int32_t lastSvcParamKey = -1;
 
           unsigned int svcbIndex = index;
           CheckedInt<uint16_t> available = RDLENGTH;
@@ -1049,6 +1050,14 @@ nsresult TRR::DohDecode(nsCString& aHost) {
             struct SvcFieldValue value;
             uint16_t key = get16bit(mResponse, svcbIndex);
             svcbIndex += 2;
+
+            // 2.2 Clients MUST consider an RR malformed if SvcParamKeys are
+            // not in strictly increasing numeric order.
+            if (key <= lastSvcParamKey) {
+              LOG(("SvcParamKeys not in increasing order"));
+              return NS_ERROR_UNEXPECTED;
+            }
+            lastSvcParamKey = key;
 
             uint16_t len = get16bit(mResponse, svcbIndex);
             svcbIndex += 2;
