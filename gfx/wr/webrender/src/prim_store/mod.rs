@@ -10,7 +10,7 @@ use api::units::*;
 use euclid::{SideOffsets2D, Size2D};
 use malloc_size_of::MallocSizeOf;
 use crate::border::BorderSegmentCacheKey;
-use crate::clip::ClipChainId;
+use crate::clip::{ClipChainId, ClipSet};
 use crate::debug_render::DebugItem;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
@@ -961,7 +961,7 @@ impl CreateShadow for PrimitiveKeyKind {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveDebugId(pub usize);
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum PrimitiveInstanceKind {
     /// Direct reference to a Picture
@@ -1046,7 +1046,7 @@ pub enum PrimitiveInstanceKind {
     },
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PrimitiveInstance {
     /// Identifies the kind of primitive this
@@ -1054,9 +1054,6 @@ pub struct PrimitiveInstance {
     /// the relevant information for the primitive
     /// can be found.
     pub kind: PrimitiveInstanceKind,
-
-    /// Local space clip rect for this instance
-    pub local_clip_rect: LayoutRect,
 
     #[cfg(debug_assertions)]
     pub id: PrimitiveDebugId,
@@ -1070,8 +1067,8 @@ pub struct PrimitiveInstance {
     /// visibility scratch buffer. If not visible, INVALID.
     pub visibility_info: PrimitiveVisibilityIndex,
 
-    /// ID of the clip chain that this primitive is clipped by.
-    pub clip_chain_id: ClipChainId,
+    /// All information and state related to clip(s) for this primitive
+    pub clip_set: ClipSet,
 }
 
 impl PrimitiveInstance {
@@ -1081,14 +1078,16 @@ impl PrimitiveInstance {
         clip_chain_id: ClipChainId,
     ) -> Self {
         PrimitiveInstance {
-            local_clip_rect,
             kind,
             #[cfg(debug_assertions)]
             prepared_frame_id: FrameId::INVALID,
             #[cfg(debug_assertions)]
             id: PrimitiveDebugId(NEXT_PRIM_ID.fetch_add(1, Ordering::Relaxed)),
             visibility_info: PrimitiveVisibilityIndex::INVALID,
-            clip_chain_id,
+            clip_set: ClipSet {
+                local_clip_rect,
+                clip_chain_id,
+            },
         }
     }
 

@@ -31,6 +31,30 @@ add_task(
       SOURCE_URL,
       "We shouldn't pause while in the black boxed source."
     );
+
+    await unBlackBox(sourceFront);
+    await blackBox(sourceFront, {
+      start: { line: 1, column: 0 },
+      end: { line: 4, column: 0 },
+    });
+
+    await threadFront.resume();
+
+    await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
+
+    threadFront.resume();
+    const packet2 = await waitForPause(threadFront);
+    const source2 = await getSourceById(threadFront, packet2.frame.where.actor);
+
+    Assert.equal(
+      source2.url,
+      SOURCE_URL,
+      "We shouldn't pause while in the black boxed source."
+    );
+
     await threadFront.resume();
   })
 );

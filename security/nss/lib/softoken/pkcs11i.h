@@ -914,6 +914,13 @@ CK_RV sftk_CheckCBCPadding(CK_BYTE_PTR pBuf, unsigned int bufLen,
 extern CK_RV kbkdf_Dispatch(CK_MECHANISM_TYPE mech, CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, SFTKObject *base_key, SFTKObject *ret_key, CK_ULONG keySize);
 char **NSC_ModuleDBFunc(unsigned long function, char *parameters, void *args);
 
+/* dh verify functions */
+/* verify that dhPrime matches one of our known primes, and if so return
+ * it's subprime value */
+const SECItem *sftk_VerifyDH_Prime(SECItem *dhPrime);
+/* check if dhSubPrime claims dhPrime is a safe prime. */
+SECStatus sftk_IsSafePrime(SECItem *dhPrime, SECItem *dhSubPrime, PRBool *isSafe);
+
 SEC_END_PROTOS
 
 #endif /* _PKCS11I_H_ */

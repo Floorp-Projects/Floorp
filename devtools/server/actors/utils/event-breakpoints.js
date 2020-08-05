@@ -79,6 +79,13 @@ function animationEvent(operation, name, notificationType) {
   };
 }
 
+const SCRIPT_FIRST_STATEMENT_BREAKPOINT = {
+  id: "script.source.firstStatement",
+  type: "script",
+  name: "Script First Statement",
+  message: "Script First Statement",
+};
+
 const AVAILABLE_BREAKPOINTS = [
   {
     name: "Animation",
@@ -252,6 +259,10 @@ const AVAILABLE_BREAKPOINTS = [
     ],
   },
   {
+    name: "Script",
+    items: [SCRIPT_FIRST_STATEMENT_BREAKPOINT],
+  },
+  {
     name: "Timer",
     items: [
       timerEvent("timeout", "set", "setTimeout", "setTimeout"),
@@ -365,6 +376,8 @@ for (const eventBP of FLAT_EVENTS) {
       }
       byEventType[eventType] = eventBP.id;
     }
+  } else if (eventBP.type === "script") {
+    // Nothing to do.
   } else {
     throw new Error("Unknown type: " + eventBP.type);
   }
@@ -428,6 +441,25 @@ function eventBreakpointForNotification(dbg, notification) {
 exports.makeEventBreakpointMessage = makeEventBreakpointMessage;
 function makeEventBreakpointMessage(id) {
   return EVENTS_BY_ID[id].message;
+}
+
+exports.firstStatementBreakpointId = firstStatementBreakpointId;
+function firstStatementBreakpointId() {
+  return SCRIPT_FIRST_STATEMENT_BREAKPOINT.id;
+}
+
+exports.eventsRequireNotifications = eventsRequireNotifications;
+function eventsRequireNotifications(ids) {
+  for (const id of ids) {
+    const eventBreakpoint = EVENTS_BY_ID[id];
+
+    // Script events are implemented directly in the server and do not require
+    // notifications from Gecko, so there is no need to watch for them.
+    if (eventBreakpoint && eventBreakpoint.type !== "script") {
+      return true;
+    }
+  }
+  return false;
 }
 
 exports.getAvailableEventBreakpoints = getAvailableEventBreakpoints;

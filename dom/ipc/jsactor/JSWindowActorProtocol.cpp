@@ -179,13 +179,15 @@ NS_IMETHODIMP JSWindowActorProtocol::HandleEvent(Event* aEvent) {
   }
 
   // Ensure our actor is present.
-  RefPtr<JSActor> actor = wgc->GetActor(mName, IgnoreErrors());
-  if (!actor) {
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  RefPtr<JSActor> actor = wgc->GetActor(jsapi.cx(), mName, IgnoreErrors());
+  if (!actor || NS_WARN_IF(!actor->GetWrapperPreserveColor())) {
     return NS_OK;
   }
 
   // Build our event listener & call it.
-  JS::Rooted<JSObject*> global(RootingCx(),
+  JS::Rooted<JSObject*> global(jsapi.cx(),
                                JS::GetNonCCWObjectGlobal(actor->GetWrapper()));
   RefPtr<EventListener> eventListener =
       new EventListener(actor->GetWrapper(), global, nullptr, nullptr);
@@ -216,13 +218,15 @@ NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
   }
 
   // Ensure our actor is present.
-  RefPtr<JSActor> actor = wgc->GetActor(mName, IgnoreErrors());
-  if (!actor) {
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  RefPtr<JSActor> actor = wgc->GetActor(jsapi.cx(), mName, IgnoreErrors());
+  if (!actor || NS_WARN_IF(!actor->GetWrapperPreserveColor())) {
     return NS_OK;
   }
 
   // Build a observer callback.
-  JS::Rooted<JSObject*> global(RootingCx(),
+  JS::Rooted<JSObject*> global(jsapi.cx(),
                                JS::GetNonCCWObjectGlobal(actor->GetWrapper()));
   RefPtr<MozObserverCallback> observerCallback =
       new MozObserverCallback(actor->GetWrapper(), global, nullptr, nullptr);

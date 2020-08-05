@@ -889,6 +889,7 @@ nsspkcs5_FillInParam(SECOidTag algorithm, HASH_HashType hashType,
             pbe_param->encAlg = SEC_OID_DES_CBC;
             break;
 
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         /* RC2 Algorithms */
         case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC:
             pbe_param->keyLen = 16;
@@ -901,6 +902,7 @@ nsspkcs5_FillInParam(SECOidTag algorithm, HASH_HashType hashType,
         /* fall through */
         case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC:
             break;
+#endif
 
         /* RC4 algorithms */
         case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC4:
@@ -1408,6 +1410,7 @@ loser:
     return dest;
 }
 
+#ifndef NSS_DISABLE_DEPRECATED_RC2
 /* perform rc2 encryption/decryption if an error occurs, NULL is returned
  */
 static SECItem *
@@ -1485,6 +1488,7 @@ sec_pkcs5_rc2(SECItem *key, SECItem *iv, SECItem *src, PRBool dummy,
 
     return dest;
 }
+#endif /* NSS_DISABLE_DEPRECATED_RC2 */
 
 /* perform rc4 encryption and decryption */
 static SECItem *
@@ -1580,9 +1584,11 @@ nsspkcs5_CipherData(NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem,
             cryptof = sec_pkcs5_des;
             tripleDES = PR_FALSE;
             break;
+#ifndef NSS_DISABLE_DEPRECATED_RC2
         case SEC_OID_RC2_CBC:
             cryptof = sec_pkcs5_rc2;
             break;
+#endif
         case SEC_OID_RC4:
             cryptof = sec_pkcs5_rc4;
             break;

@@ -8270,123 +8270,124 @@ static void SetPeekResultFromFrame(nsPeekOffsetStruct& aPos, nsIFrame* aFrame,
   }
 }
 
-nsresult nsIFrame::PeekOffsetForCharacter(nsPeekOffsetStruct* aPos,
-                                          int32_t offset) {
-  nsIFrame* current = this;
+void nsIFrame::SelectablePeekReport::TransferTo(
+    nsPeekOffsetStruct& aPos) const {
+  return SetPeekResultFromFrame(aPos, mFrame, mOffset, OffsetIsAtLineEdge::No);
+}
 
-  bool eatingNonRenderableWS = false;
+nsIFrame::SelectablePeekReport::SelectablePeekReport(
+    const mozilla::GenericErrorResult<nsresult>&& aErr) {
+  MOZ_ASSERT(NS_FAILED(aErr.operator nsresult()));
+  // Return an empty report
+}
+
+nsresult nsIFrame::PeekOffsetForCharacter(nsPeekOffsetStruct* aPos,
+                                          int32_t aOffset) {
+  SelectablePeekReport current{this, aOffset};
+
   nsIFrame::FrameSearchResult peekSearchState = CONTINUE;
-  bool jumpedLine = false;
-  bool movedOverNonSelectableText = false;
 
   while (peekSearchState != FOUND) {
-    bool movingInFrameDirection =
-        IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
+    bool movingInFrameDirection = IsMovingInFrameDirection(
+        current.mFrame, aPos->mDirection, aPos->mVisual);
 
-    if (eatingNonRenderableWS) {
-      peekSearchState =
-          current->PeekOffsetNoAmount(movingInFrameDirection, &offset);
+    if (current.mJumpedLine) {
+      // If we jumped lines, it's as if we found a character, but we still need
+      // to eat non-renderable content on the new line.
+      peekSearchState = current.PeekOffsetNoAmount(movingInFrameDirection);
     } else {
       PeekOffsetCharacterOptions options;
       options.mRespectClusters = aPos->mAmount == eSelectCluster;
-      peekSearchState = current->PeekOffsetCharacter(movingInFrameDirection,
-                                                     &offset, options);
+      peekSearchState =
+          current.PeekOffsetCharacter(movingInFrameDirection, options);
     }
 
-    movedOverNonSelectableText |= (peekSearchState == CONTINUE_UNSELECTABLE);
+    current.mMovedOverNonSelectableText |=
+        peekSearchState == CONTINUE_UNSELECTABLE;
 
     if (peekSearchState != FOUND) {
-      bool movedOverNonSelectable = false;
-      MOZ_TRY(current->GetFrameFromDirection(
-          *aPos, &current, &offset, &jumpedLine, &movedOverNonSelectable));
-      MOZ_ASSERT(current);
-
-      // If we jumped lines, it's as if we found a character, but we still
-      // need to eat non-renderable content on the new line.
-      if (jumpedLine) {
-        eatingNonRenderableWS = true;
+      SelectablePeekReport next = current.mFrame->GetFrameFromDirection(*aPos);
+      if (next.Failed()) {
+        return NS_ERROR_FAILURE;
       }
-
-      // Remember if we moved over non-selectable text when finding another
-      // frame.
-      movedOverNonSelectableText |= movedOverNonSelectable;
+      next.mJumpedLine |= current.mJumpedLine;
+      next.mMovedOverNonSelectableText |= current.mMovedOverNonSelectableText;
+      current = next;
     }
 
     // Found frame, but because we moved over non selectable text we want
     // the offset to be at the frame edge. Note that if we are extending the
     // selection, this doesn't matter.
-    if (peekSearchState == FOUND && movedOverNonSelectableText &&
+    if (peekSearchState == FOUND && current.mMovedOverNonSelectableText &&
         !aPos->mExtend) {
       int32_t start, end;
-      current->GetOffsets(start, end);
-      offset = aPos->mDirection == eDirNext ? 0 : end - start;
+      current.mFrame->GetOffsets(start, end);
+      current.mOffset = aPos->mDirection == eDirNext ? 0 : end - start;
     }
   }
 
   // Set outputs
-  SetPeekResultFromFrame(*aPos, current, offset, OffsetIsAtLineEdge::No);
+  current.TransferTo(*aPos);
   // If we're dealing with a text frame and moving backward positions us at
   // the end of that line, decrease the offset by one to make sure that
   // we're placed before the linefeed character on the previous line.
-  if (offset < 0 && jumpedLine && aPos->mDirection == eDirPrevious &&
-      current->HasSignificantTerminalNewline()) {
+  if (current.mOffset < 0 && current.mJumpedLine &&
+      aPos->mDirection == eDirPrevious &&
+      current.mFrame->HasSignificantTerminalNewline()) {
     --aPos->mContentOffset;
   }
   return NS_OK;
 }
 
-nsresult nsIFrame::PeekOffsetForWord(nsPeekOffsetStruct* aPos, int32_t offset) {
-  nsIFrame* current = this;
+nsresult nsIFrame::PeekOffsetForWord(nsPeekOffsetStruct* aPos,
+                                     int32_t aOffset) {
+  SelectablePeekReport current{this, aOffset};
   bool wordSelectEatSpace = ShouldWordSelectionEatSpace(*aPos);
 
   PeekWordState state;
-  bool done = false;
-  while (!done) {
-    bool movingInFrameDirection =
-        IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
+  while (true) {
+    bool movingInFrameDirection = IsMovingInFrameDirection(
+        current.mFrame, aPos->mDirection, aPos->mVisual);
 
-    done = current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace,
-                                   aPos->mIsKeyboardSelect, &offset, &state,
-                                   aPos->mTrimSpaces) == FOUND;
+    FrameSearchResult searchResult = current.mFrame->PeekOffsetWord(
+        movingInFrameDirection, wordSelectEatSpace, aPos->mIsKeyboardSelect,
+        &current.mOffset, &state, aPos->mTrimSpaces);
+    if (searchResult == FOUND) {
+      break;
+    }
 
-    if (!done) {
-      nsIFrame* nextFrame;
-      int32_t nextFrameOffset;
-      bool jumpedLine, movedOverNonSelectableText;
-      nsresult result = current->GetFrameFromDirection(
-          *aPos, &nextFrame, &nextFrameOffset, &jumpedLine,
-          &movedOverNonSelectableText);
+    SelectablePeekReport next = current.mFrame->GetFrameFromDirection(*aPos);
+    if (next.Failed()) {
+      // If we've crossed the line boundary, check to make sure that we
+      // have not consumed a trailing newline as whitespace if it's
+      // significant.
+      if (next.mJumpedLine && wordSelectEatSpace &&
+          current.mFrame->HasSignificantTerminalNewline() &&
+          current.mFrame->StyleText()->mWhiteSpace !=
+              StyleWhiteSpace::PreLine) {
+        current.mOffset -= 1;
+      }
+      break;
+    }
+
+    if (next.mJumpedLine && !wordSelectEatSpace && state.mSawBeforeType) {
       // We can't jump lines if we're looking for whitespace following
       // non-whitespace, and we already encountered non-whitespace.
-      if (NS_FAILED(result) ||
-          (jumpedLine && !wordSelectEatSpace && state.mSawBeforeType)) {
-        done = true;
-        // If we've crossed the line boundary, check to make sure that we
-        // have not consumed a trailing newline as whitespace if it's
-        // significant. (It's not needed for `pre-line` since in that case
-        // the newline is treated as trimmed space.)
-        if (jumpedLine && wordSelectEatSpace &&
-            current->HasSignificantTerminalNewline() &&
-            current->StyleText()->mWhiteSpace != StyleWhiteSpace::PreLine) {
-          offset -= 1;
-        }
-      } else {
-        MOZ_ASSERT(nextFrame);
-        if (jumpedLine) {
-          state.mContext.Truncate();
-        }
-        current = nextFrame;
-        offset = nextFrameOffset;
-        // Jumping a line is equivalent to encountering whitespace
-        if (wordSelectEatSpace && jumpedLine) {
-          state.SetSawBeforeType();
-        }
-      }
+      break;
+    }
+
+    if (next.mJumpedLine) {
+      state.mContext.Truncate();
+    }
+    current = next;
+    // Jumping a line is equivalent to encountering whitespace
+    if (wordSelectEatSpace && next.mJumpedLine) {
+      state.SetSawBeforeType();
     }
   }
 
   // Set outputs
-  SetPeekResultFromFrame(*aPos, current, offset, OffsetIsAtLineEdge::No);
+  current.TransferTo(*aPos);
   return NS_OK;
 }
 
@@ -8786,16 +8787,10 @@ Result<bool, nsresult> nsIFrame::IsLogicallyAtLineEdge(
   return lastFrame == this;
 }
 
-nsresult nsIFrame::GetFrameFromDirection(
+nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
     nsDirection aDirection, bool aVisual, bool aJumpLines, bool aScrollViewStop,
-    bool aForceEditableRegion, nsIFrame** aOutFrame, int32_t* aOutOffset,
-    bool* aOutJumpedLine, bool* aOutMovedOverNonSelectableText) {
-  MOZ_ASSERT(aOutFrame && aOutOffset && aOutJumpedLine);
-
-  *aOutFrame = nullptr;
-  *aOutOffset = 0;
-  *aOutJumpedLine = false;
-  *aOutMovedOverNonSelectableText = false;
+    bool aForceEditableRegion) {
+  SelectablePeekReport result;
 
   nsPresContext* presContext = PresContext();
   bool needsVisualTraversal = aVisual && presContext->BidiEnabled();
@@ -8826,14 +8821,15 @@ nsresult nsIFrame::GetFrameFromDirection(
             ? traversedFrame->IsVisuallyAtLineEdge(it, thisLine, aDirection)
             : traversedFrame->IsLogicallyAtLineEdge(it, thisLine, aDirection));
     if (atLineEdge) {
-      *aOutJumpedLine = true;
-      if (!aJumpLines)
-        return NS_ERROR_FAILURE;  // we are done. cannot jump lines
+      result.mJumpedLine = true;
+      if (!aJumpLines) {
+        return result;  // we are done. cannot jump lines
+      }
     }
 
     traversedFrame = frameTraversal->Traverse(aDirection == eDirNext);
     if (!traversedFrame) {
-      return NS_ERROR_FAILURE;
+      return result;
     }
 
     auto IsSelectable = [aForceEditableRegion](const nsIFrame* aFrame) {
@@ -8862,29 +8858,24 @@ nsresult nsIFrame::GetFrameFromDirection(
 
     selectable = IsSelectable(traversedFrame);
     if (!selectable) {
-      *aOutMovedOverNonSelectableText = true;
+      result.mMovedOverNonSelectableText = true;
     }
   }  // while (!selectable)
 
-  *aOutOffset = (aDirection == eDirNext) ? 0 : -1;
+  result.mOffset = (aDirection == eDirNext) ? 0 : -1;
 
   if (aVisual && nsBidiPresUtils::IsReversedDirectionFrame(traversedFrame)) {
     // The new frame is reverse-direction, go to the other end
-    *aOutOffset = -1 - *aOutOffset;
+    result.mOffset = -1 - result.mOffset;
   }
-  *aOutFrame = traversedFrame;
-  return NS_OK;
+  result.mFrame = traversedFrame;
+  return result;
 }
 
-nsresult nsIFrame::GetFrameFromDirection(const nsPeekOffsetStruct& aPos,
-                                         nsIFrame** aOutFrame,
-                                         int32_t* aOutOffset,
-                                         bool* aOutJumpedLine,
-                                         bool* aOutMovedOverNonSelectableText) {
+nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
+    const nsPeekOffsetStruct& aPos) {
   return GetFrameFromDirection(aPos.mDirection, aPos.mVisual, aPos.mJumpLines,
-                               aPos.mScrollViewStop, aPos.mForceEditableRegion,
-                               aOutFrame, aOutOffset, aOutJumpedLine,
-                               aOutMovedOverNonSelectableText);
+                               aPos.mScrollViewStop, aPos.mForceEditableRegion);
 }
 
 nsView* nsIFrame::GetClosestView(nsPoint* aOffset) const {

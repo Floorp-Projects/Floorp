@@ -301,7 +301,7 @@ pub fn update_primitive_visibility(
 
                     if is_passthrough {
                         frame_state.clip_chain_stack.push_clip(
-                            prim_instance.clip_chain_id,
+                            prim_instance.clip_set.clip_chain_id,
                             frame_state.clip_store,
                         );
                     }
@@ -387,13 +387,13 @@ pub fn update_primitive_visibility(
                 let inflation_factor = surface.inflation_factor;
                 let local_rect = prim_shadowed_rect
                     .inflate(inflation_factor, inflation_factor)
-                    .intersection(&prim_instance.local_clip_rect);
+                    .intersection(&prim_instance.clip_set.local_clip_rect);
                 let local_rect = match local_rect {
                     Some(local_rect) => local_rect,
                     None => {
                         if prim_instance.is_chased() {
                             println!("\tculled for being out of the local clip rectangle: {:?}",
-                                     prim_instance.local_clip_rect);
+                                     prim_instance.clip_set.local_clip_rect);
                         }
                         continue;
                     }
@@ -401,12 +401,12 @@ pub fn update_primitive_visibility(
 
                 // Include the clip chain for this primitive in the current stack.
                 frame_state.clip_chain_stack.push_clip(
-                    prim_instance.clip_chain_id,
+                    prim_instance.clip_set.clip_chain_id,
                     frame_state.clip_store,
                 );
 
                 frame_state.clip_store.set_active_clips(
-                    prim_instance.local_clip_rect,
+                    prim_instance.clip_set.local_clip_rect,
                     cluster.spatial_node_index,
                     frame_state.clip_chain_stack.current_clips_array(),
                     &frame_context.spatial_tree,
@@ -473,7 +473,7 @@ pub fn update_primitive_visibility(
                 let combined_local_clip_rect = if apply_local_clip_rect {
                     clip_chain.local_clip_rect
                 } else {
-                    prim_instance.local_clip_rect
+                    prim_instance.clip_set.local_clip_rect
                 };
 
                 if combined_local_clip_rect.size.is_empty_or_negative() {

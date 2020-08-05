@@ -647,12 +647,11 @@ add_task(async function setup() {
 add_task(async function test_expected_distribution_engines() {
   let searchService = new SearchService();
   for (const { distribution, locale = "en-US", region = "US", test } of tests) {
-    let config = await engineSelector.fetchEngineConfiguration(
+    let config = await engineSelector.fetchEngineConfiguration({
       locale,
       region,
-      null,
-      distribution
-    );
+      distroID: distribution,
+    });
     let engines = await SearchTestUtils.searchConfigToEngines(config.engines);
     searchService._engines = engines;
     searchService._searchDefault = {
