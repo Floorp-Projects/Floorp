@@ -1449,6 +1449,10 @@ def set_test_manifests(config, tasks):
             yield task
             continue
 
+        # Set 'tests_grouped' to "1", so we can differentiate between suites that are
+        # chunked at the test runtime and those that are chunked in the taskgraph.
+        task.setdefault("tags", {})["tests_grouped"] = "1"
+
         if taskgraph.fast:
             # We want to avoid evaluating manifests when taskgraph.fast is set. But
             # manifests are required for dynamic chunking. Just set the number of
