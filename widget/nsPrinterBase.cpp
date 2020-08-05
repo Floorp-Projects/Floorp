@@ -6,7 +6,6 @@
 #include "nsPrinterBase.h"
 #include "nsPaperMargin.h"
 #include <utility>
-#include "nsPrinter.h"
 #include "nsPaper.h"
 #include "mozilla/dom/Promise.h"
 
