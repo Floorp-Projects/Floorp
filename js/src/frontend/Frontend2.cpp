@@ -139,8 +139,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         data->constStart = global.const_start;
         data->length = numBindings;
 
-        if (!ScopeStencil::create(cx, compilationInfo, ScopeKind::Global, data,
-                                  &index)) {
+        if (!ScopeStencil::createForGlobalScope(
+                cx, compilationInfo, ScopeKind::Global, data, &index)) {
           return false;
         }
         break;
@@ -159,13 +159,13 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         CopyBindingNames(cx, var.bindings, allAtoms,
                          data->trailingNames.start());
 
-        // NOTE: data->nextFrameSlot is set in ScopeStencil::create.
+        // NOTE: data->nextFrameSlot is set in ScopeStencil::createForVarScope.
 
         data->length = numBindings;
 
         uint32_t firstFrameSlot = var.first_frame_slot;
         ScopeIndex enclosingIndex(var.enclosing);
-        if (!ScopeStencil::create(
+        if (!ScopeStencil::createForVarScope(
                 cx, compilationInfo, ScopeKind::FunctionBodyVar, data,
                 firstFrameSlot, var.function_has_extensible_scope,
                 mozilla::Some(enclosingIndex), &index)) {
@@ -186,16 +186,17 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         CopyBindingNames(cx, lexical.bindings, allAtoms,
                          data->trailingNames.start());
 
-        // NOTE: data->nextFrameSlot is set in ScopeStencil::create.
+        // NOTE: data->nextFrameSlot is set in
+        // ScopeStencil::createForLexicalScope.
 
         data->constStart = lexical.const_start;
         data->length = numBindings;
 
         uint32_t firstFrameSlot = lexical.first_frame_slot;
         ScopeIndex enclosingIndex(lexical.enclosing);
-        if (!ScopeStencil::create(cx, compilationInfo, ScopeKind::Lexical, data,
-                                  firstFrameSlot, mozilla::Some(enclosingIndex),
-                                  &index)) {
+        if (!ScopeStencil::createForLexicalScope(
+                cx, compilationInfo, ScopeKind::Lexical, data, firstFrameSlot,
+                mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
         break;
@@ -213,7 +214,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         CopyBindingNames(cx, function.bindings, allAtoms,
                          data->trailingNames.start());
 
-        // NOTE: data->nextFrameSlot is set in ScopeStencil::create.
+        // NOTE: data->nextFrameSlot is set in
+        // ScopeStencil::createForFunctionScope.
 
         data->hasParameterExprs = function.has_parameter_exprs;
         data->nonPositionalFormalStart = function.non_positional_formal_start;
@@ -226,9 +228,10 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         bool isArrow = function.is_arrow;
 
         ScopeIndex enclosingIndex(function.enclosing);
-        if (!ScopeStencil::create(cx, compilationInfo, data, hasParameterExprs,
-                                  needsEnvironment, functionIndex, isArrow,
-                                  mozilla::Some(enclosingIndex), &index)) {
+        if (!ScopeStencil::createForFunctionScope(
+                cx, compilationInfo, data, hasParameterExprs, needsEnvironment,
+                functionIndex, isArrow, mozilla::Some(enclosingIndex),
+                &index)) {
           return false;
         }
         break;
