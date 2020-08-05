@@ -64,6 +64,8 @@ using namespace mozilla::layers;
 #  define VA_FOURCC_YV12 0x32315659
 #endif
 
+static int gNewSurfaceUID = 1;
+
 bool DMABufSurface::IsGlobalRefSet() const {
   if (!mGlobalRefCountFd) {
     return false;
@@ -147,7 +149,7 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
       mSyncFd(-1),
       mSync(0),
       mGlobalRefCountFd(0),
-      mUID(0) {
+      mUID(gNewSurfaceUID++) {
   for (auto& slot : mDmabufFds) {
     slot = -1;
   }
