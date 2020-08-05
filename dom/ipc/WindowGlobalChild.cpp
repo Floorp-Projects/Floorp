@@ -115,6 +115,8 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     MOZ_ASSERT(browserChild);
 
     MOZ_DIAGNOSTIC_ASSERT(!aWindow->GetBrowsingContext()->IsDiscarded());
+    MOZ_DIAGNOSTIC_ASSERT(aWindow->GetBrowsingContext()->EverAttached());
+    MOZ_DIAGNOSTIC_ASSERT(aWindow->GetBrowsingContext()->IsInProcess());
 
     ManagedEndpoint<PWindowGlobalParent> endpoint =
         browserChild->OpenPWindowGlobalEndpoint(wgc);
