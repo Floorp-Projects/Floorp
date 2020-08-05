@@ -3,13 +3,13 @@
 <head>
   <script src="mediaStreamPlayback.js"></script>
 </head>
-<iframe id="iframe" srcdoc="<script>
-window.enumerateDevices = () =>
-  navigator.mediaDevices.enumerateDevices();
-</script>"
-  width="100%" height="50%" frameborder="1">
-</iframe>
 <body>
+<iframe id="iframe" srcdoc="<script>
+  window.enumerateDevices = () =>
+    navigator.mediaDevices.enumerateDevices();
+  </script>"
+    width="100%" height="50%" frameborder="1">
+</iframe>
 <pre id="test">
 <script type="application/javascript">
 createHTML({ title: "Suspend enumerateDevices code ", bug: "1479840" });

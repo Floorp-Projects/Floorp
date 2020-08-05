@@ -15,12 +15,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1545410
 <p id="display"></p>
 <pre id="test"></pre>
 <input id="input">
-<iframe id="iframe" srcdoc='<html><body><div id="WACViewPanel_EditingElement" spellcheck="false" class="FireFox usehover WACEditing EditMode EditingSurfaceBody" style="overflow: visible; visibility: visible;" contenteditable="true"></div></body></html>'></iframe>
+<iframe id="iframe" onload="srcdocLoaded()" srcdoc='<html><body><div id="WACViewPanel_EditingElement" spellcheck="false" class="FireFox usehover WACEditing EditMode EditingSurfaceBody" style="overflow: visible; visibility: visible;"></div></body></html>'></iframe>
 <script>
 SimpleTest.waitForExplicitFinish();
-let waitForCheckKeyPressEventModelEvent = new Promise(resolve => {
-  SpecialPowers.addSystemEventListener(document.querySelector("iframe").contentDocument, "CheckKeyPressEventModel", resolve, {once: true});
-});
+let waitForCheckKeyPressEventModelEvent;
+function srcdocLoaded() {
+   waitForCheckKeyPressEventModelEvent = new Promise(resolve => {
+      dump(document.querySelector("iframe").contentDocument.location + "\n");
+      var doc = document.querySelector("iframe").contentDocument;
+      SpecialPowers.addSystemEventListener(doc, "CheckKeyPressEventModel", resolve, {once: true});
+      doc.getElementById("WACViewPanel_EditingElement").contentEditable = "true";
+   });
+}
 SimpleTest.waitForFocus(async function doTests() {
   await SpecialPowers.pushPrefEnv({
     set: [
