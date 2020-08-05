@@ -33,7 +33,7 @@ GARBAGE += $(RESFILE) $(RCFILE)
 all::
 
 $(RCFILE): $(RCINCLUDE) $(MOZILLA_DIR)/config/version_win.py
-	$(PYTHON3) $(MOZILLA_DIR)/config/version_win.py "$(_RC_BINARY)" "$(RCINCLUDE)"
+	$(PYTHON3) $(MOZILLA_DIR)/config/version_win.py '$(_RC_BINARY)' '$(RCINCLUDE)'
 
 endif  # RESFILE
 endif  # Windows
