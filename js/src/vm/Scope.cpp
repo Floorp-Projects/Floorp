@@ -2062,18 +2062,8 @@ bool ScopeCreationData::create(JSContext* cx,
 template <>
 Scope* ScopeCreationData::createSpecificScope<WithScope>(
     JSContext* cx, CompilationInfo& compilationInfo) {
-  RootedScope enclosingScope(cx, getEnclosingScope(cx));
-
-  WithScope* scope = static_cast<WithScope*>(
-      Scope::create(cx, ScopeKind::With, enclosingScope, nullptr));
-
-  if (!scope) {
-    return nullptr;
-  }
-
-  scope_ = scope;
-
-  return scope;
+  RootedScope enclosingScope(cx, getEnclosingScope());
+  return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
 }
 
 template <typename SpecificScopeType>
@@ -2114,18 +2104,11 @@ Scope* ScopeCreationData::createSpecificScope(
     return nullptr;
   }
 
-  RootedScope enclosingScope(cx, getEnclosingScope(cx));
+  RootedScope enclosingScope(cx, getEnclosingScope());
 
   // Because we already baked the data here, we needn't do it again.
-  SpecificScopeType* scope = Scope::create<SpecificScopeType>(
-      cx, kind(), enclosingScope, shape, &rootedData);
-  if (!scope) {
-    return nullptr;
-  }
-
-  scope_ = scope;
-
-  return scope;
+  return Scope::create<SpecificScopeType>(cx, kind(), enclosingScope, shape,
+                                          &rootedData);
 }
 
 template Scope* ScopeCreationData::createSpecificScope<FunctionScope>(
