@@ -157,7 +157,7 @@ class AlternateServerPlayback:
                     _PROTO.update(recording_info["http_protocol"])
         except Exception as e:
             ctx.log.error("Could not load recording file! Stopping playback process!")
-            ctx.log.info(e)
+            ctx.log.error(str(e))
             ctx.master.shutdown()
 
     def _hash(self, flow):
