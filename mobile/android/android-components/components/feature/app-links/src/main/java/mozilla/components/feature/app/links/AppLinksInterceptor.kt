@@ -111,6 +111,12 @@ class AppLinksInterceptor(
         redirect: AppLinkRedirect,
         uri: String
     ): RequestInterceptor.InterceptionResponse? {
+        if (!launchInApp()) {
+            redirect.fallbackUrl?.let {
+                return RequestInterceptor.InterceptionResponse.Url(it)
+            }
+        }
+
         if (!redirect.hasExternalApp()) {
             redirect.marketplaceIntent?.let {
                 return RequestInterceptor.InterceptionResponse.AppIntent(it, uri)
@@ -121,12 +127,6 @@ class AppLinksInterceptor(
             }
 
             return null
-        }
-
-        if (!launchInApp()) {
-            redirect.fallbackUrl?.let {
-                return RequestInterceptor.InterceptionResponse.Url(it)
-            }
         }
 
         redirect.appIntent?.let {
