@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
+import android.net.Uri
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.leanplum.Leanplum
@@ -22,6 +23,7 @@ import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.components.metrics.MozillaProductDetector.MozillaProducts
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
 import java.util.Locale
 import java.util.MissingResourceException
 import java.util.UUID.randomUUID
@@ -55,7 +57,7 @@ private val Event.name: String?
 class LeanplumMetricsService(
     private val application: Application,
     private val deviceIdGenerator: () -> String = { randomUUID().toString() }
-) : MetricsService {
+) : MetricsService, DeepLinkIntentProcessor.DeepLinkVerifier {
     val scope = CoroutineScope(Dispatchers.IO)
     var leanplumJob: Job? = null
 
@@ -165,6 +167,19 @@ class LeanplumMetricsService(
                 LeanplumInternal.setStartedInBackground(true)
             }
         }
+    }
+
+    /**
+     * Verifies a deep link and returns `true` for deep links that should be handled and `false` if
+     * a deep link should be rejected.
+     *
+     * @See DeepLinkIntentProcessor.verifier
+     */
+    override fun verifyDeepLink(deepLink: Uri): Boolean {
+        // We compare the local Leanplum device ID against the "uid" query parameter and only
+        // accept deep links where both values match.
+        val uid = deepLink.getQueryParameter("uid")
+        return uid == deviceId
     }
 
     override fun stop() {

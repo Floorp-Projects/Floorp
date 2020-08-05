@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.intent
 
 import android.content.Intent
+import android.net.Uri
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import io.mockk.Called
@@ -13,6 +14,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.verify
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -39,7 +41,11 @@ class DeepLinkIntentProcessorTest {
         activity = mockk(relaxed = true)
         navController = mockk(relaxed = true)
         out = mockk()
-        processor = DeepLinkIntentProcessor(activity)
+        processor = DeepLinkIntentProcessor(activity, object : DeepLinkIntentProcessor.DeepLinkVerifier {
+            override fun verifyDeepLink(deepLink: Uri): Boolean {
+                return true
+            }
+        })
     }
 
     @Test
@@ -198,13 +204,41 @@ class DeepLinkIntentProcessorTest {
 
         assertTrue(processor.process(testIntent("open?url=test"), navController, out))
 
+        verify { activity wasNot Called }
+        verify { navController wasNot Called }
+        verify { out wasNot Called }
+
+        assertTrue(processor.process(testIntent("open?url=https%3A%2F%2Fwww.example.org%2F"), navController, out))
+
         verify {
             activity.openToBrowserAndLoad(
-                "test",
+                "https://www.example.org/",
                 newTab = true,
-                from = BrowserDirection.FromGlobal
+                from = BrowserDirection.FromGlobal,
+                flags = EngineSession.LoadUrlFlags.external()
             )
         }
+        verify { navController wasNot Called }
+        verify { out wasNot Called }
+    }
+
+    @Test
+    fun `process invalid open deep link`() {
+        val invalidProcessor = DeepLinkIntentProcessor(activity, object : DeepLinkIntentProcessor.DeepLinkVerifier {
+            override fun verifyDeepLink(deepLink: Uri): Boolean {
+                return false
+            }
+        })
+
+        assertTrue(invalidProcessor.process(testIntent("open"), navController, out))
+
+        verify { activity wasNot Called }
+        verify { navController wasNot Called }
+        verify { out wasNot Called }
+
+        assertTrue(invalidProcessor.process(testIntent("open?url=open?url=https%3A%2F%2Fwww.example.org%2F"), navController, out))
+
+        verify { activity wasNot Called }
         verify { navController wasNot Called }
         verify { out wasNot Called }
     }
