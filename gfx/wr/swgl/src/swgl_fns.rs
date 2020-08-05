@@ -418,6 +418,7 @@ fn calculate_length(width: GLsizei, height: GLsizei, format: GLenum, pixel_type:
         UNSIGNED_SHORT => 2,
         SHORT => 2,
         FLOAT => 4,
+        UNSIGNED_INT_8_8_8_8_REV => 1,
         _ => panic!("unsupported pixel_type for read_pixels: {:?}", pixel_type),
     };
 

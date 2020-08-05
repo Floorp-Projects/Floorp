@@ -1377,7 +1377,7 @@ GLenum internal_format_for_data(GLenum format, GLenum ty) {
   if (format == GL_RED && ty == GL_UNSIGNED_BYTE) {
     return GL_R8;
   } else if ((format == GL_RGBA || format == GL_BGRA) &&
-             ty == GL_UNSIGNED_BYTE) {
+             (ty == GL_UNSIGNED_BYTE || ty == GL_UNSIGNED_INT_8_8_8_8_REV)) {
     return GL_RGBA8;
   } else if (format == GL_RGBA && ty == GL_FLOAT) {
     return GL_RGBA32F;
