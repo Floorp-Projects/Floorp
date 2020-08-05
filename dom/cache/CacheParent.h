@@ -28,9 +28,8 @@ class CacheParent final : public PCacheParent {
   // PCacheParent methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
-  PCacheOpParent* AllocPCacheOpParent(const CacheOpArgs& aOpArgs);
-
-  bool DeallocPCacheOpParent(PCacheOpParent* aActor);
+  already_AddRefed<PCacheOpParent> AllocPCacheOpParent(
+      const CacheOpArgs& aOpArgs);
 
   virtual mozilla::ipc::IPCResult RecvPCacheOpConstructor(
       PCacheOpParent* actor, const CacheOpArgs& aOpArgs) override;
