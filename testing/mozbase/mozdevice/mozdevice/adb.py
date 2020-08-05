@@ -2047,7 +2047,7 @@ class ADBDevice(ADBCommand):
         """
 
         rv = self.command_output(["remount"], timeout=timeout)
-        if not rv.startswith("remount succeeded"):
+        if "remount succeeded" not in rv:
             raise ADBError("Unable to remount device")
 
     def batch_execute(self, commands, timeout=None, enable_run_as=False):
