@@ -12,6 +12,7 @@
 #include "mozilla/net/DefaultURI.h"
 #include "mozilla/net/SubstitutingURL.h"
 #include "mozilla/NullPrincipalURI.h"
+#include "nsAboutProtocolHandler.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsID.h"
@@ -104,6 +105,10 @@ already_AddRefed<nsIURI> DeserializeURI(const URIParams& aParams) {
 
     case URIParams::TDefaultURIParams:
       mutator = new mozilla::net::DefaultURI::Mutator();
+      break;
+
+    case URIParams::TNestedAboutURIParams:
+      mutator = new net::nsNestedAboutURI::Mutator();
       break;
 
     default:
