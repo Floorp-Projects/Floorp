@@ -4630,7 +4630,7 @@ dependencies = [
  "byteorder",
  "cssparser",
  "derive_more",
- "euclid 0.20.14",
+ "euclid 0.22.0",
  "fallible",
  "fxhash",
  "hashbrown",
