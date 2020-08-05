@@ -1493,7 +1493,6 @@ ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_AUTH_EXTENSION=1
-MOZ_PREF_EXTENSIONS=1
 MOZ_SPELLCHECK=1
 MOZ_UNIVERSALCHARDET=1
 MOZ_XUL=1
@@ -1800,15 +1799,6 @@ MOZ_ARG_DISABLE_BOOL(negotiateauth,
 [  --disable-negotiateauth Disable GSS-API negotiation ],
     MOZ_AUTH_EXTENSION=,
     MOZ_AUTH_EXTENSION=1 )
-
-dnl ========================================================
-dnl Pref extensions (autoconfig)
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(pref-extensions,
-[  --disable-pref-extensions
-                          Disable pref extensions such as autoconfig],
-  MOZ_PREF_EXTENSIONS=,
-  MOZ_PREF_EXTENSIONS=1 )
 
 dnl ========================================================
 dnl Searching of system directories for extensions.
@@ -2562,7 +2552,6 @@ AC_SUBST(RCFLAGS)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(MOZ_AUTH_EXTENSION)
-AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST_LIST(WARNINGS_CFLAGS)
 AC_SUBST_SET(MOZ_EXTENSIONS)
