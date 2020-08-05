@@ -166,8 +166,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Tekshirish</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">Qidiruv tizimi</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Qidiruv tizimi</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Qidiruv tizimi sozlamalari</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -377,6 +377,11 @@
     <string name="preferences_telemetry">Telemetriya</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Texnik va foydalanishga oid maʼlumotlar</string>
+
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Samaradorlik, foydalanish statistikasi va moslash maʼlumotlarini Mozillaga ulashish orqali siz %1$s brauzerini yaxshilashda yordam berasiz</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Marketing maʼlumotlari</string>
 
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Maxfiy varaq qoʻshish</string>
@@ -809,9 +814,7 @@
     <string name="saved_login_duplicate">Shu nomdagi login oldindan bor</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Firefox hisobi bilan ulanish</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Boshqa qurilmani ulash</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Qaytadan haqiqiylikni tekshiring.</string>
@@ -832,11 +835,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, tushundim</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Yorliqlar</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Izlash:</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Bu safar quyidagi bilan izlash:</string>
     </resources>

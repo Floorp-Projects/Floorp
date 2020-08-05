@@ -800,7 +800,7 @@
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Ponovo se poveži za sinkronizaciju</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
-    <string name="sync_offline">Neumreženo</string>
+    <string name="sync_offline">Izvanmrežno</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Poveži jedan drugi uređaj</string>
     <!-- The dialog text shown when additional devices are not available -->
