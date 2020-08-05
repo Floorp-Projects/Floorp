@@ -201,6 +201,14 @@
       var editor = this.editingSession.getEditorForWindow(containingWindow);
       return editor.QueryInterface(Ci.nsIHTMLEditor);
     }
+
+    print(aOuterWindowID, aPrintSettings) {
+      if (!this.frameLoader) {
+        throw Components.Exception("No frame loader.", Cr.NS_ERROR_FAILURE);
+      }
+
+      return this.frameLoader.print(aOuterWindowID, aPrintSettings);
+    }
   }
 
   customElements.define("editor", MozEditor);
