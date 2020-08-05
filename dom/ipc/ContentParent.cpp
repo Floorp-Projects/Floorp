@@ -6825,6 +6825,44 @@ PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
   return PContentParent::SendPFileDescriptorSetConstructor(aFD);
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvBlobURLDataRequest(
+    const nsCString& aBlobURL, nsIPrincipal* pTriggeringPrincipal,
+    BlobURLDataRequestResolver&& aResolver) {
+  RefPtr<BlobImpl> blobImpl;
+  nsresult rv = NS_GetBlobForBlobURISpec(aBlobURL, getter_AddRefs(blobImpl));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aResolver(rv);
+    return IPC_OK();
+  }
+
+  if (NS_WARN_IF(!blobImpl)) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
+
+  nsIPrincipal* const dataEntryPrincipal =
+      BlobURLProtocolHandler::GetDataEntryPrincipal(aBlobURL);
+
+  MOZ_ASSERT(dataEntryPrincipal);
+
+  if (!pTriggeringPrincipal->Subsumes(dataEntryPrincipal)) {
+    aResolver(NS_ERROR_DOM_BAD_URI);
+    return IPC_OK();
+  }
+
+  IPCBlob ipcBlob;
+  rv = IPCBlobUtils::Serialize(blobImpl, this, ipcBlob);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aResolver(rv);
+    return IPC_OK();
+  }
+
+  aResolver(ipcBlob);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvReportServiceWorkerShutdownProgress(
     uint32_t aShutdownStateId, ServiceWorkerShutdownState::Progress aProgress) {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();

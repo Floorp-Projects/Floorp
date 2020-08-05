@@ -381,6 +381,12 @@ union SyncedContextInitializer
     WindowContextInitializer;
 };
 
+union BlobURLDataRequestResult
+{
+  IPCBlob;
+  nsresult;
+};
+
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -1657,6 +1663,8 @@ parent:
 
     async HistoryGo(MaybeDiscardedBrowsingContext aContext,
                     int32_t aOffset) returns(int32_t requestedIndex);
+
+    async BlobURLDataRequest(nsCString pBlobURL, nsIPrincipal pTriggeringPrincipal) returns (BlobURLDataRequestResult aResult);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
