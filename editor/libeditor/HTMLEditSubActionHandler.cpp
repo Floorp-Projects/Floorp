@@ -3078,16 +3078,6 @@ bool HTMLEditor::AutoBlockElementsJoiner::
     return false;
   }
 
-  // Next to a block.  See if we are between a block and a br.  If so, we
-  // really want to delete the br.  Else join content at selection to the
-  // block.
-  WSScanResult scanFromCaretResult =
-      aDirectionAndAmount == nsIEditor::eNext
-          ? aWSRunScannerAtCaret.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
-                aCaretPoint)
-          : aWSRunScannerAtCaret.ScanNextVisibleNodeOrBlockBoundaryFrom(
-                aCaretPoint);
-
   // First find the adjacent node in the block
   if (aDirectionAndAmount == nsIEditor::ePrevious) {
     mLeafContentInOtherBlock =
@@ -3101,63 +3091,76 @@ bool HTMLEditor::AutoBlockElementsJoiner::
     mRightContent = mLeafContentInOtherBlock;
   }
 
+  // Next to a block.  See if we are between the block and a `<br>`.
+  // If so, we really want to delete the `<br>`.  Else join content at
+  // selection to the block.
+  WSScanResult scanFromCaretResult =
+      aDirectionAndAmount == nsIEditor::eNext
+          ? aWSRunScannerAtCaret.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
+                aCaretPoint)
+          : aWSRunScannerAtCaret.ScanNextVisibleNodeOrBlockBoundaryFrom(
+                aCaretPoint);
   // If we found a `<br>` element, we need to delete it instead of joining the
   // contents.
   if (scanFromCaretResult.ReachedBRElement()) {
     mBRElement = scanFromCaretResult.BRElementPtr();
+    mMode = Mode::DeleteBRElement;
     return true;
   }
 
   return mLeftContent && mRightContent;
 }
 
-EditActionResult HTMLEditor::AutoBlockElementsJoiner::
-    HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
-        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
-        const EditorDOMPoint& aCaretPoint) {
+EditActionResult HTMLEditor::AutoBlockElementsJoiner::DeleteBRElement(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    const EditorDOMPoint& aCaretPoint) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(aCaretPoint.IsSetAndValid());
+  MOZ_ASSERT(mBRElement);
 
-  // If we found a `<br>` element, we should delete it instead of joinning the
+  // If we found a `<br>` element, we should delete it instead of joining the
   // contents.
-  if (mBRElement) {
-    nsresult rv =
-        aHTMLEditor.DeleteNodeWithTransaction(MOZ_KnownLive(*mBRElement));
-    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-      return EditActionResult(rv);
-    }
+  nsresult rv =
+      aHTMLEditor.DeleteNodeWithTransaction(MOZ_KnownLive(*mBRElement));
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+    return EditActionResult(rv);
+  }
 
-    if (mLeftContent && mRightContent &&
-        HTMLEditor::NodesInDifferentTableElements(*mLeftContent,
-                                                  *mRightContent)) {
-      return EditActionHandled();
-    }
-
-    // Put selection at edge of block and we are done.
-    if (NS_WARN_IF(!mLeafContentInOtherBlock)) {
-      // XXX This must be odd case.  The other block can be empty.
-      return EditActionHandled(NS_ERROR_FAILURE);
-    }
-    EditorDOMPoint newCaretPosition = aHTMLEditor.GetGoodCaretPointFor(
-        *mLeafContentInOtherBlock, aDirectionAndAmount);
-    if (!newCaretPosition.IsSet()) {
-      NS_WARNING("HTMLEditor::GetGoodCaretPointFor() failed");
-      return EditActionHandled(NS_ERROR_FAILURE);
-    }
-    rv = aHTMLEditor.CollapseSelectionTo(newCaretPosition);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+  if (mLeftContent && mRightContent &&
+      HTMLEditor::NodesInDifferentTableElements(*mLeftContent,
+                                                *mRightContent)) {
     return EditActionHandled();
   }
 
+  // Put selection at edge of block and we are done.
+  if (NS_WARN_IF(!mLeafContentInOtherBlock)) {
+    // XXX This must be odd case.  The other block can be empty.
+    return EditActionHandled(NS_ERROR_FAILURE);
+  }
+  EditorDOMPoint newCaretPosition = aHTMLEditor.GetGoodCaretPointFor(
+      *mLeafContentInOtherBlock, aDirectionAndAmount);
+  if (!newCaretPosition.IsSet()) {
+    NS_WARNING("HTMLEditor::GetGoodCaretPointFor() failed");
+    return EditActionHandled(NS_ERROR_FAILURE);
+  }
+  rv = aHTMLEditor.CollapseSelectionTo(newCaretPosition);
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+  return EditActionHandled();
+}
+
+EditActionResult HTMLEditor::AutoBlockElementsJoiner::
+    HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
+        HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(aCaretPoint.IsSetAndValid());
   MOZ_ASSERT(mLeftContent);
   MOZ_ASSERT(mRightContent);
 
