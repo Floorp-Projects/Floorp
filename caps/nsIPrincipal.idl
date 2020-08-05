@@ -298,28 +298,6 @@ interface nsIPrincipal : nsISerializable
     */
     readonly attribute ACString exposableSpec;
 
-    /** 
-     * Returns the same as calling .spec, only with a UTF8 encoded hostname
-     * if that hostname doesn't contain blacklisted characters, and
-     * the network.IDN_show_punycode pref is false
-    */
-    readonly attribute ACString displaySpec;
-
-    /** 
-     * Returns the same as calling .host, only with a UTF8 encoded hostname
-     * if that hostname doesn't contain blacklisted characters, and
-     * the network.IDN_show_punycode pref is false
-    */
-    readonly attribute ACString displayHost;
-
-    /** 
-     * Returns the same as calling .prepath, only with a UTF8 encoded hostname
-     * if that hostname doesn't contain blacklisted characters, and
-     * the network.IDN_show_punycode pref is false
-    */
-    readonly attribute ACString displayPrePath;
-
-
     /**
      * Return the scheme of the principals URI
      */

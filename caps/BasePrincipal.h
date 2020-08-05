@@ -134,9 +134,6 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetSpec(nsACString& aSpec) override;
   NS_IMETHOD GetExposablePrePath(nsACString& aResult) override;
   NS_IMETHOD GetExposableSpec(nsACString& aSpec) override;
-  NS_IMETHOD GetDisplaySpec(nsACString& aSpec) override;
-  NS_IMETHOD GetDisplayHost(nsACString& aSpec) override;
-  NS_IMETHOD GetDisplayPrePath(nsACString& aSpec) override;
   NS_IMETHOD GetHostPort(nsACString& aRes) override;
   NS_IMETHOD GetHost(nsACString& aRes) override;
   NS_IMETHOD GetPrepath(nsACString& aResult) override;
