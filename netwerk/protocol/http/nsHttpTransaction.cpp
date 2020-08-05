@@ -433,7 +433,7 @@ nsresult nsHttpTransaction::AsyncRead(nsIStreamListener* listener,
       nsInputStreamPump::Create(getter_AddRefs(transactionPump), mPipeIn);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = transactionPump->AsyncRead(listener, nullptr);
+  rv = transactionPump->AsyncRead(listener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   transactionPump.forget(pump);

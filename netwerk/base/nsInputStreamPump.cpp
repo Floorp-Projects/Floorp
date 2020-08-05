@@ -310,7 +310,7 @@ nsInputStreamPump::Init(nsIInputStream* stream, uint32_t segsize,
 }
 
 NS_IMETHODIMP
-nsInputStreamPump::AsyncRead(nsIStreamListener* listener, nsISupports* ctxt) {
+nsInputStreamPump::AsyncRead(nsIStreamListener* listener) {
   RecursiveMutexAutoLock lock(mMutex);
 
   NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);

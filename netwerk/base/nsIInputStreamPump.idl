@@ -62,6 +62,5 @@ interface nsIInputStreamPump : nsIRequest
      * @param aListenerContext
      *        passed to listener methods.
      */
-    void asyncRead(in nsIStreamListener aListener,
-                   in nsISupports       aListenerContext);
+    void asyncRead(in nsIStreamListener aListener);
 };

@@ -878,7 +878,7 @@ nsresult TCPSocket::CreateInputStreamPump() {
     mInputStreamPump->Suspend();
   }
 
-  rv = mInputStreamPump->AsyncRead(this, nullptr);
+  rv = mInputStreamPump->AsyncRead(this);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }

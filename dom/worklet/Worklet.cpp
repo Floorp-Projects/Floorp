@@ -196,7 +196,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
       return;
     }
 
-    rv = pump->AsyncRead(loader, nullptr);
+    rv = pump->AsyncRead(loader);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       RejectPromises(rv);
       return;

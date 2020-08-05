@@ -326,7 +326,7 @@ nsresult InterceptedHttpChannel::StartPump() {
       nsInputStreamPump::Create(getter_AddRefs(mPump), mBodyReader, 0, 0, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mPump->AsyncRead(this, nullptr);
+  rv = mPump->AsyncRead(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t suspendCount = mSuspendCount;
