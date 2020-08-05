@@ -884,10 +884,10 @@ function ipred_smooth_8bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x5
 40:
-        sub             x2,  x2,  #4
-        mov             x7,  #-4
         ld1r            {v6.2s}, [x8]             // top
         ld1r            {v7.2s}, [x10]            // weights_hor
+        sub             x2,  x2,  #4
+        mov             x7,  #-4
         dup             v5.16b,  v6.b[3]          // right
         usubl           v6.8h,   v6.8b,   v4.8b   // top-bottom
         uxtl            v7.8h,   v7.8b            // weights_hor
@@ -922,10 +922,10 @@ function ipred_smooth_8bpc_neon, export=1
         b.gt            4b
         ret
 80:
-        sub             x2,  x2,  #4
-        mov             x7,  #-4
         ld1             {v6.8b}, [x8]             // top
         ld1             {v7.8b}, [x10]            // weights_hor
+        sub             x2,  x2,  #4
+        mov             x7,  #-4
         dup             v5.16b,  v6.b[7]          // right
         usubl           v6.8h,   v6.8b,   v4.8b   // top-bottom
         uxtl            v7.8h,   v7.8b            // weights_hor
@@ -1460,12 +1460,14 @@ function ipred_filter_8bpc_neon, export=1
         subs            w3,  w3,  #16
         sqrshrun        v6.8b,   v6.8h,   #4
 
-        ins             v0.h[2], v2.h[7]
         st4             {v3.s, v4.s, v5.s, v6.s}[0], [x0], #16
-        ins             v0.b[0], v6.b[7]
         st4             {v3.s, v4.s, v5.s, v6.s}[1], [x6], #16
+        b.le            8f
+        ins             v0.h[2], v2.h[7]
+        ins             v0.b[0], v6.b[7]
         ins             v0.b[2], v6.b[3]
-        b.gt            2b
+        b               2b
+8:
         subs            w4,  w4,  #2
         b.le            9f
         sub             x8,  x6,  w9, uxtw
@@ -1815,7 +1817,7 @@ function ipred_cfl_8bpc_neon, export=1
         dup             v16.8h, w8               // width + height
         adr             x7,  L(ipred_cfl_tbl)
         rbit            w8,  w8                  // rbit(width + height)
-        sub             w9,  w9,  #22            // 22 leading bits, minus table offset 4
+        sub             w9,  w9,  #22            // 26 leading bits, minus table offset 4
         sub             w6,  w6,  #26
         clz             w8,  w8                  // ctz(width + height)
         ldrh            w9,  [x7, w9, uxtw #1]
@@ -2078,6 +2080,7 @@ L(ipred_cfl_ac_420_w8_calc_subtract_dc):
         sub             x0,  x0,  w6, uxtw #4
         urshl           v4.2s,   v0.2s,   v31.2s  // (sum + (1 << (log2sz - 1))) >>= log2sz
         dup             v4.8h,   v4.h[0]
+L(ipred_cfl_ac_420_w8_subtract_dc):
 6:      // Subtract dc from ac
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0]
         subs            w6,  w6,  #4
@@ -2223,7 +2226,6 @@ L(ipred_cfl_ac_420_w16_wpad3):
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b
-        b               L(ipred_cfl_ac_420_w16_hpad)
 
 L(ipred_cfl_ac_420_w16_hpad):
         cbz             w4,  3f
@@ -2244,7 +2246,6 @@ L(ipred_cfl_ac_420_w16_hpad):
 
         // Double the height and reuse the w8 summing/subtracting
         lsl             w6,  w6,  #1
-        lsl             w9,  w9,  #1
         b               L(ipred_cfl_ac_420_w8_calc_subtract_dc)
 
 L(ipred_cfl_ac_420_tbl):
@@ -2473,4 +2474,291 @@ L(ipred_cfl_ac_422_w16_tbl):
         .hword L(ipred_cfl_ac_422_w16_tbl) - L(ipred_cfl_ac_422_w16_wpad1)
         .hword L(ipred_cfl_ac_422_w16_tbl) - L(ipred_cfl_ac_422_w16_wpad2)
         .hword L(ipred_cfl_ac_422_w16_tbl) - L(ipred_cfl_ac_422_w16_wpad3)
+endfunc
+
+// void cfl_ac_444_8bpc_neon(int16_t *const ac, const pixel *const ypx,
+//                           const ptrdiff_t stride, const int w_pad,
+//                           const int h_pad, const int cw, const int ch);
+function ipred_cfl_ac_444_8bpc_neon, export=1
+        clz             w8,  w5
+        lsl             w4,  w4,  #2
+        adr             x7,  L(ipred_cfl_ac_444_tbl)
+        sub             w8,  w8,  #26
+        ldrh            w8,  [x7, w8, uxtw #1]
+        movi            v16.8h,  #0
+        movi            v17.8h,  #0
+        movi            v18.8h,  #0
+        movi            v19.8h,  #0
+        sub             x7,  x7,  w8, uxtw
+        sub             w8,  w6,  w4         // height - h_pad
+        rbit            w9,  w5              // rbit(width)
+        rbit            w10, w6              // rbit(height)
+        clz             w9,  w9              // ctz(width)
+        clz             w10, w10             // ctz(height)
+        add             w9,  w9,  w10        // log2sz
+        add             x10, x1,  x2
+        dup             v31.4s,  w9
+        lsl             x2,  x2,  #1
+        neg             v31.4s,  v31.4s      // -log2sz
+        br              x7
+
+L(ipred_cfl_ac_444_w4):
+1:      // Copy and expand input
+        ld1             {v0.s}[0], [x1],  x2
+        ld1             {v0.s}[1], [x10], x2
+        ld1             {v1.s}[0], [x1],  x2
+        ld1             {v1.s}[1], [x10], x2
+        ushll           v0.8h,   v0.8b,   #3
+        ushll           v1.8h,   v1.8b,   #3
+        subs            w8,  w8,  #4
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        st1             {v0.8h, v1.8h}, [x0], #32
+        b.gt            1b
+        trn2            v0.2d,   v1.2d,   v1.2d
+        trn2            v1.2d,   v1.2d,   v1.2d
+        b               L(ipred_cfl_ac_420_w4_hpad)
+
+L(ipred_cfl_ac_444_w8):
+1:      // Copy and expand input
+        ld1             {v0.8b}, [x1],  x2
+        ld1             {v1.8b}, [x10], x2
+        ld1             {v2.8b}, [x1],  x2
+        ushll           v0.8h,   v0.8b,   #3
+        ld1             {v3.8b}, [x10], x2
+        ushll           v1.8h,   v1.8b,   #3
+        ushll           v2.8h,   v2.8b,   #3
+        ushll           v3.8h,   v3.8b,   #3
+        subs            w8,  w8,  #4
+        st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
+        b.gt            1b
+        mov             v0.16b,  v3.16b
+        mov             v1.16b,  v3.16b
+        b               L(ipred_cfl_ac_420_w8_hpad)
+
+L(ipred_cfl_ac_444_w16):
+        cbnz            w3,  L(ipred_cfl_ac_444_w16_wpad)
+1:      // Copy and expand input, without padding
+        ld1             {v0.16b}, [x1],  x2
+        ld1             {v2.16b}, [x10], x2
+        ld1             {v4.16b}, [x1],  x2
+        ushll2          v1.8h,   v0.16b,  #3
+        ushll           v0.8h,   v0.8b,   #3
+        ld1             {v6.16b}, [x10], x2
+        ushll2          v3.8h,   v2.16b,  #3
+        ushll           v2.8h,   v2.8b,   #3
+        ushll2          v5.8h,   v4.16b,  #3
+        ushll           v4.8h,   v4.8b,   #3
+        ushll2          v7.8h,   v6.16b,  #3
+        ushll           v6.8h,   v6.8b,   #3
+        subs            w8,  w8,  #4
+        st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
+        st1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v4.8h
+        add             v17.8h,  v17.8h,  v5.8h
+        add             v18.8h,  v18.8h,  v6.8h
+        add             v19.8h,  v19.8h,  v7.8h
+        b.gt            1b
+        mov             v0.16b,  v6.16b
+        mov             v1.16b,  v7.16b
+        mov             v2.16b,  v6.16b
+        mov             v3.16b,  v7.16b
+        b               L(ipred_cfl_ac_420_w16_hpad)
+
+L(ipred_cfl_ac_444_w16_wpad):
+1:      // Copy and expand input, padding 8
+        ld1             {v0.8b}, [x1],  x2
+        ld1             {v2.8b}, [x10], x2
+        ld1             {v4.8b}, [x1],  x2
+        ld1             {v6.8b}, [x10], x2
+        ushll           v0.8h,   v0.8b,   #3
+        ushll           v2.8h,   v2.8b,   #3
+        ushll           v4.8h,   v4.8b,   #3
+        ushll           v6.8h,   v6.8b,   #3
+        dup             v1.8h,   v0.h[7]
+        dup             v3.8h,   v2.h[7]
+        dup             v5.8h,   v4.h[7]
+        dup             v7.8h,   v6.h[7]
+        subs            w8,  w8,  #4
+        st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
+        st1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v4.8h
+        add             v17.8h,  v17.8h,  v5.8h
+        add             v18.8h,  v18.8h,  v6.8h
+        add             v19.8h,  v19.8h,  v7.8h
+        b.gt            1b
+        mov             v0.16b,  v6.16b
+        mov             v1.16b,  v7.16b
+        mov             v2.16b,  v6.16b
+        mov             v3.16b,  v7.16b
+        b               L(ipred_cfl_ac_420_w16_hpad)
+
+L(ipred_cfl_ac_444_w32):
+        adr             x7,  L(ipred_cfl_ac_444_w32_tbl)
+        ldrh            w3,  [x7, w3, uxtw] // (w3>>1) << 1
+        sub             x7,  x7,  w3, uxtw
+        br              x7
+
+L(ipred_cfl_ac_444_w32_wpad0):
+1:      // Copy and expand input, without padding
+        ld1             {v2.16b, v3.16b}, [x1],  x2
+        ld1             {v6.16b, v7.16b}, [x10], x2
+        ushll           v0.8h,   v2.8b,   #3
+        ushll2          v1.8h,   v2.16b,  #3
+        ushll           v2.8h,   v3.8b,   #3
+        ushll2          v3.8h,   v3.16b,  #3
+        ushll           v4.8h,   v6.8b,   #3
+        ushll2          v5.8h,   v6.16b,  #3
+        ushll           v6.8h,   v7.8b,   #3
+        ushll2          v7.8h,   v7.16b,  #3
+        subs            w8,  w8,  #2
+        st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
+        st1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v4.8h
+        add             v17.8h,  v17.8h,  v5.8h
+        add             v18.8h,  v18.8h,  v6.8h
+        add             v19.8h,  v19.8h,  v7.8h
+        b.gt            1b
+        b               L(ipred_cfl_ac_444_w32_hpad)
+
+L(ipred_cfl_ac_444_w32_wpad2):
+1:      // Copy and expand input, padding 8
+        ldr             d2,  [x1,  #16]
+        ld1             {v1.16b}, [x1],  x2
+        ldr             d6,  [x10, #16]
+        ld1             {v5.16b}, [x10], x2
+        ushll           v2.8h,   v2.8b,   #3
+        ushll           v0.8h,   v1.8b,   #3
+        ushll2          v1.8h,   v1.16b,  #3
+        ushll           v6.8h,   v6.8b,   #3
+        ushll           v4.8h,   v5.8b,   #3
+        ushll2          v5.8h,   v5.16b,  #3
+        dup             v3.8h,   v2.h[7]
+        dup             v7.8h,   v6.h[7]
+        subs            w8,  w8,  #2
+        st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
+        st1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v4.8h
+        add             v17.8h,  v17.8h,  v5.8h
+        add             v18.8h,  v18.8h,  v6.8h
+        add             v19.8h,  v19.8h,  v7.8h
+        b.gt            1b
+        b               L(ipred_cfl_ac_444_w32_hpad)
+
+L(ipred_cfl_ac_444_w32_wpad4):
+1:      // Copy and expand input, padding 16
+        ld1             {v1.16b}, [x1],  x2
+        ld1             {v5.16b}, [x10], x2
+        ushll           v0.8h,   v1.8b,   #3
+        ushll2          v1.8h,   v1.16b,  #3
+        ushll           v4.8h,   v5.8b,   #3
+        ushll2          v5.8h,   v5.16b,  #3
+        dup             v2.8h,   v1.h[7]
+        dup             v3.8h,   v1.h[7]
+        dup             v6.8h,   v5.h[7]
+        dup             v7.8h,   v5.h[7]
+        subs            w8,  w8,  #2
+        st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
+        st1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v4.8h
+        add             v17.8h,  v17.8h,  v5.8h
+        add             v18.8h,  v18.8h,  v6.8h
+        add             v19.8h,  v19.8h,  v7.8h
+        b.gt            1b
+        b               L(ipred_cfl_ac_444_w32_hpad)
+
+L(ipred_cfl_ac_444_w32_wpad6):
+1:      // Copy and expand input, padding 24
+        ld1             {v0.8b}, [x1],  x2
+        ld1             {v4.8b}, [x10], x2
+        ushll           v0.8h,   v0.8b,   #3
+        ushll           v4.8h,   v4.8b,   #3
+        dup             v1.8h,   v0.h[7]
+        dup             v2.8h,   v0.h[7]
+        dup             v3.8h,   v0.h[7]
+        dup             v5.8h,   v4.h[7]
+        dup             v6.8h,   v4.h[7]
+        dup             v7.8h,   v4.h[7]
+        subs            w8,  w8,  #2
+        st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
+        st1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v4.8h
+        add             v17.8h,  v17.8h,  v5.8h
+        add             v18.8h,  v18.8h,  v6.8h
+        add             v19.8h,  v19.8h,  v7.8h
+        b.gt            1b
+
+L(ipred_cfl_ac_444_w32_hpad):
+        cbz             w4,  3f
+2:      // Vertical padding (h_pad > 0)
+        subs            w4,  w4,  #2
+        st1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v4.8h
+        add             v17.8h,  v17.8h,  v5.8h
+        add             v18.8h,  v18.8h,  v6.8h
+        add             v19.8h,  v19.8h,  v7.8h
+        st1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v4.8h
+        add             v17.8h,  v17.8h,  v5.8h
+        add             v18.8h,  v18.8h,  v6.8h
+        add             v19.8h,  v19.8h,  v7.8h
+        b.gt            2b
+3:
+
+        // Quadruple the height and reuse the w8 subtracting
+        lsl             w6,  w6,  #2
+        // Aggregate the sums, with wider intermediates earlier than in
+        // ipred_cfl_ac_420_w8_calc_subtract_dc.
+        uaddlp          v0.4s,   v16.8h
+        uaddlp          v1.4s,   v17.8h
+        uaddlp          v2.4s,   v18.8h
+        uaddlp          v3.4s,   v19.8h
+        add             v0.4s,   v0.4s,   v1.4s
+        add             v2.4s,   v2.4s,   v3.4s
+        add             v0.4s,   v0.4s,   v2.4s
+        addv            s0,  v0.4s                // sum
+        sub             x0,  x0,  w6, uxtw #4
+        urshl           v4.2s,   v0.2s,   v31.2s  // (sum + (1 << (log2sz - 1))) >>= log2sz
+        dup             v4.8h,   v4.h[0]
+        b               L(ipred_cfl_ac_420_w8_subtract_dc)
+
+L(ipred_cfl_ac_444_tbl):
+        .hword L(ipred_cfl_ac_444_tbl) - L(ipred_cfl_ac_444_w32)
+        .hword L(ipred_cfl_ac_444_tbl) - L(ipred_cfl_ac_444_w16)
+        .hword L(ipred_cfl_ac_444_tbl) - L(ipred_cfl_ac_444_w8)
+        .hword L(ipred_cfl_ac_444_tbl) - L(ipred_cfl_ac_444_w4)
+
+L(ipred_cfl_ac_444_w32_tbl):
+        .hword L(ipred_cfl_ac_444_w32_tbl) - L(ipred_cfl_ac_444_w32_wpad0)
+        .hword L(ipred_cfl_ac_444_w32_tbl) - L(ipred_cfl_ac_444_w32_wpad2)
+        .hword L(ipred_cfl_ac_444_w32_tbl) - L(ipred_cfl_ac_444_w32_wpad4)
+        .hword L(ipred_cfl_ac_444_w32_tbl) - L(ipred_cfl_ac_444_w32_wpad6)
 endfunc
