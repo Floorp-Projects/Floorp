@@ -503,6 +503,7 @@ function BuildConditionSandbox(aURL) {
     sandbox.advancedLayers =
       g.windowUtils.usingAdvancedLayers == true;
     sandbox.layerChecksEnabled = !sandbox.webrender;
+    sandbox.swgl = sandbox.webrender && prefs.getBoolPref("gfx.webrender.software", false);
 
     sandbox.retainedDisplayList =
       prefs.getBoolPref("layout.display-list.retain");
