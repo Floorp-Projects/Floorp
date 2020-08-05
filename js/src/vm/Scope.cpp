@@ -179,6 +179,7 @@ static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
 
 static bool SetEnvironmentShape(JSContext* cx, BindingIter& freshBi,
                                 BindingIter& bi, const JSClass* cls,
+                                uint32_t firstFrameSlot,
                                 uint32_t baseShapeFlags,
                                 MutableHandleShape envShape) {
   envShape.set(CreateEnvironmentShape(
@@ -186,19 +187,23 @@ static bool SetEnvironmentShape(JSContext* cx, BindingIter& freshBi,
   return envShape;
 }
 
-static bool SetEnvironmentShape(
-    JSContext* cx, BindingIter& freshBi, BindingIter& bi, const JSClass* cls,
-    uint32_t baseShapeFlags,
-    MutableHandle<frontend::EnvironmentShapeCreationData> envShape) {
-  envShape.get().set(freshBi, cls, bi.nextEnvironmentSlot(), baseShapeFlags);
+static bool SetEnvironmentShape(JSContext* cx, BindingIter& freshBi,
+                                BindingIter& bi, const JSClass* cls,
+                                uint32_t firstFrameSlot,
+                                uint32_t baseShapeFlags,
+                                mozilla::Maybe<uint32_t>* envShape) {
+  envShape->emplace(bi.nextEnvironmentSlot());
   return true;
 }
 
-template <typename ConcreteScope, typename ShapeType>
+template <typename ConcreteScope, typename EnvironmentType, typename ShapeType>
 static bool PrepareScopeData(
     JSContext* cx, BindingIter& bi,
-    Handle<UniquePtr<typename ConcreteScope::Data>> data, const JSClass* cls,
-    uint32_t baseShapeFlags, ShapeType envShape) {
+    Handle<UniquePtr<typename ConcreteScope::Data>> data,
+    uint32_t firstFrameSlot, ShapeType envShape) {
+  const JSClass* cls = &EnvironmentType::class_;
+  uint32_t baseShapeFlags = EnvironmentType::BASESHAPE_FLAGS;
+
   // Copy a fresh BindingIter for use below.
   BindingIter freshBi(bi);
 
@@ -212,7 +217,8 @@ static bool PrepareScopeData(
 
   // Make a new environment shape if any environment slots were used.
   if (bi.nextEnvironmentSlot() != JSSLOT_FREE(cls)) {
-    if (!SetEnvironmentShape(cx, freshBi, bi, cls, baseShapeFlags, envShape)) {
+    if (!SetEnvironmentShape(cx, freshBi, bi, cls, firstFrameSlot,
+                             baseShapeFlags, envShape)) {
       return false;
     }
   }
@@ -362,6 +368,29 @@ inline void Scope::initData(
                 MemoryUse::ScopeData);
 
   setHeaderPtr(data.get().release());
+}
+
+template <typename EnvironmentType>
+bool Scope::updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape envShape,
+                                     bool needsEnvironment) {
+  if (!envShape && needsEnvironment) {
+    envShape.set(EmptyEnvironmentShape<EnvironmentType>(cx));
+    if (!envShape) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template <typename EnvironmentType>
+bool Scope::updateEnvShapeIfRequired(JSContext* cx,
+                                     mozilla::Maybe<uint32_t>* envShape,
+                                     bool needsEnvironment) {
+  if (envShape->isNothing() && needsEnvironment) {
+    uint32_t numSlots = 0;
+    envShape->emplace(numSlots);
+  }
+  return true;
 }
 
 uint32_t Scope::firstFrameSlot() const {
@@ -666,9 +695,8 @@ bool LexicalScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
   MOZ_ASSERT_IF(isNamedLambda, firstFrameSlot == LOCALNO_LIMIT);
 
   BindingIter bi(*data, firstFrameSlot, isNamedLambda);
-  if (!PrepareScopeData<LexicalScope>(
-          cx, bi, data, &LexicalEnvironmentObject::class_,
-          LexicalEnvironmentObject::BASESHAPE_FLAGS, envShape)) {
+  if (!PrepareScopeData<LexicalScope, LexicalEnvironmentObject>(
+          cx, bi, data, firstFrameSlot, envShape)) {
     return false;
   }
   return true;
@@ -762,54 +790,24 @@ template <typename ShapeType>
 bool FunctionScope::prepareForScopeCreation(
     JSContext* cx, MutableHandle<UniquePtr<Data>> data, bool hasParameterExprs,
     bool needsEnvironment, HandleFunction fun, ShapeType envShape) {
+  uint32_t firstFrameSlot = 0;
   BindingIter bi(*data, hasParameterExprs);
-  if (!PrepareScopeData<FunctionScope>(cx, bi, data, &CallObject::class_,
-                                       CallObject::BASESHAPE_FLAGS, envShape)) {
+  if (!PrepareScopeData<FunctionScope, CallObject>(cx, bi, data, firstFrameSlot,
+                                                   envShape)) {
     return false;
   }
 
   data->hasParameterExprs = hasParameterExprs;
   data->canonicalFunction.init(fun);
 
-  return updateEnvShapeIfRequired(cx, envShape, needsEnvironment,
-                                  hasParameterExprs);
-}
-
-bool FunctionScope::updateEnvShapeIfRequired(JSContext* cx,
-                                             MutableHandleShape envShape,
-                                             bool needsEnvironment,
-                                             bool hasParameterExprs) {
-  // An environment may be needed regardless of existence of any closed over
-  // bindings:
-  //   - Extensible scopes (i.e., due to direct eval)
-  //   - Being a generator or async function
-  // Also see |FunctionBox::needsExtraBodyVarEnvironmentRegardlessOfBindings()|.
-  if (!envShape && needsEnvironment) {
-    envShape.set(EmptyEnvironmentShape<CallObject>(cx));
-    if (!envShape) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool FunctionScope::updateEnvShapeIfRequired(
-    JSContext* cx,
-    MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
-    bool needsEnvironment, bool hasParameterExprs) {
   // An environment may be needed regardless of existence of any closed over
   // bindings:
   //   - Extensible scopes (i.e., due to direct eval)
   //   - Needing a home object
   //   - Being a derived class constructor
-  //   - Being a generator
-  if (!envShape.get() && needsEnvironment) {
-    envShape.get().set(&CallObject::class_, CallObject::BASESHAPE_FLAGS);
-    if (!envShape.get()) {
-      return false;
-    }
-  }
-  return true;
+  //   - Being a generator or async function
+  // Also see |FunctionBox::needsExtraBodyVarEnvironmentRegardlessOfBindings()|.
+  return updateEnvShapeIfRequired<CallObject>(cx, envShape, needsEnvironment);
 }
 
 /* static */
@@ -951,47 +949,17 @@ bool VarScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                        bool needsEnvironment,
                                        ShapeType envShape) {
   BindingIter bi(*data, firstFrameSlot);
-  if (!PrepareScopeData<VarScope>(cx, bi, data, &VarEnvironmentObject::class_,
-                                  VarEnvironmentObject::BASESHAPE_FLAGS,
-                                  envShape)) {
+  if (!PrepareScopeData<VarScope, VarEnvironmentObject>(
+          cx, bi, data, firstFrameSlot, envShape)) {
     return false;
   }
 
-  return updateEnvShapeIfRequired(cx, envShape, needsEnvironment);
-}
-
-bool VarScope::updateEnvShapeIfRequired(JSContext* cx,
-                                        MutableHandleShape envShape,
-                                        bool needsEnvironment) {
   // An environment may be needed regardless of existence of any closed over
   // bindings:
   //   - Extensible scopes (i.e., due to direct eval)
   //   - Being a generator
-  if (!envShape && needsEnvironment) {
-    envShape.set(EmptyEnvironmentShape<VarEnvironmentObject>(cx));
-    if (!envShape) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool VarScope::updateEnvShapeIfRequired(
-    JSContext* cx,
-    MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
-    bool needsEnvironment) {
-  // An environment may be needed regardless of existence of any closed over
-  // bindings:
-  //   - Extensible scopes (i.e., due to direct eval)
-  //   - Being a generator
-  if (!envShape.get() && needsEnvironment) {
-    envShape.get().set(&VarEnvironmentObject::class_,
-                       VarEnvironmentObject::BASESHAPE_FLAGS);
-    if (!envShape.get()) {
-      return false;
-    }
-  }
-  return true;
+  return updateEnvShapeIfRequired<VarEnvironmentObject>(cx, envShape,
+                                                        needsEnvironment);
 }
 
 /* static */
@@ -1193,45 +1161,20 @@ bool EvalScope::prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
                                         MutableHandle<UniquePtr<Data>> data,
                                         ShapeType envShape) {
   if (scopeKind == ScopeKind::StrictEval) {
+    uint32_t firstFrameSlot = 0;
     BindingIter bi(*data, true);
-    if (!PrepareScopeData<EvalScope>(
-            cx, bi, data, &VarEnvironmentObject::class_,
-            VarEnvironmentObject::BASESHAPE_FLAGS, envShape)) {
+    if (!PrepareScopeData<EvalScope, VarEnvironmentObject>(
+            cx, bi, data, firstFrameSlot, envShape)) {
       return false;
     }
   }
 
-  return updateEnvShapeIfRequired(cx, envShape, scopeKind);
-}
-
-bool EvalScope::updateEnvShapeIfRequired(JSContext* cx,
-                                         MutableHandleShape envShape,
-                                         ScopeKind scopeKind) {
-  // Strict eval always gets its own var environment even if there are no
-  // bindings.
-  if (!envShape && scopeKind == ScopeKind::StrictEval) {
-    envShape.set(EmptyEnvironmentShape<VarEnvironmentObject>(cx));
-    if (!envShape) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool EvalScope::updateEnvShapeIfRequired(
-    JSContext* cx,
-    MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
-    ScopeKind scopeKind) {
   // Strict eval and direct eval in parameter expressions always get their own
   // var environment even if there are no bindings.
-  if (!envShape.get() && scopeKind == ScopeKind::StrictEval) {
-    envShape.get().set(&VarEnvironmentObject::class_,
-                       VarEnvironmentObject::BASESHAPE_FLAGS);
-    if (!envShape.get()) {
-      return false;
-    }
-  }
-  return true;
+  bool needsEnvironment = (scopeKind == ScopeKind::StrictEval);
+
+  return updateEnvShapeIfRequired<VarEnvironmentObject>(cx, envShape,
+                                                        needsEnvironment);
 }
 
 /* static */
@@ -1316,45 +1259,20 @@ bool ModuleScope::prepareForScopeCreation(JSContext* cx,
                                           MutableHandle<UniquePtr<Data>> data,
                                           HandleModuleObject module,
                                           ShapeType envShape) {
+  uint32_t firstFrameSlot = 0;
   BindingIter bi(*data);
-  if (!PrepareScopeData<ModuleScope>(
-          cx, bi, data, &ModuleEnvironmentObject::class_,
-          ModuleEnvironmentObject::BASESHAPE_FLAGS, envShape)) {
-    return false;
-  }
-
-  if (!updateEnvShapeIfRequired(cx, envShape)) {
+  if (!PrepareScopeData<ModuleScope, ModuleEnvironmentObject>(
+          cx, bi, data, firstFrameSlot, envShape)) {
     return false;
   }
 
   data->module.init(module);
-  return true;
-}
 
-bool ModuleScope::updateEnvShapeIfRequired(JSContext* cx,
-                                           MutableHandleShape envShape) {
   // Modules always need an environment object for now.
-  if (!envShape) {
-    envShape.set(EmptyEnvironmentShape<ModuleEnvironmentObject>(cx));
-    if (!envShape) {
-      return false;
-    }
-  }
-  return true;
-}
+  bool needsEnvironment = true;
 
-bool ModuleScope::updateEnvShapeIfRequired(
-    JSContext* cx,
-    MutableHandle<frontend::EnvironmentShapeCreationData> envShape) {
-  // Modules always need an environment object for now.
-  if (!envShape.get()) {
-    envShape.get().set(&ModuleEnvironmentObject::class_,
-                       ModuleEnvironmentObject::BASESHAPE_FLAGS);
-    if (!envShape.get()) {
-      return false;
-    }
-  }
-  return true;
+  return updateEnvShapeIfRequired<ModuleEnvironmentObject>(cx, envShape,
+                                                           needsEnvironment);
 }
 
 /* static */
@@ -1899,7 +1817,8 @@ bool ScopeCreationData::create(JSContext* cx,
   // ScopeCreationData. It gets set in ScopeCreationData::releaseData.
   RootedFunction fun(cx, nullptr);
 
-  Rooted<frontend::EnvironmentShapeCreationData> envShape(cx);
+  uint32_t firstFrameSlot = 0;
+  mozilla::Maybe<uint32_t> envShape;
   if (!FunctionScope::prepareForScopeCreation(
           cx, &data, hasParameterExprs, needsEnvironment, fun, &envShape)) {
     return false;
@@ -1907,8 +1826,8 @@ bool ScopeCreationData::create(JSContext* cx,
 
   *index = compilationInfo.scopeCreationData.length();
   return compilationInfo.scopeCreationData.emplaceBack(
-      cx, ScopeKind::Function, enclosing, envShape, std::move(data.get()),
-      mozilla::Some(functionIndex), isArrow);
+      cx, ScopeKind::Function, enclosing, firstFrameSlot, envShape,
+      std::move(data.get()), mozilla::Some(functionIndex), isArrow);
 }
 
 /* static */
@@ -1924,7 +1843,7 @@ bool ScopeCreationData::create(
     return false;
   }
 
-  Rooted<frontend::EnvironmentShapeCreationData> envShape(cx);
+  mozilla::Maybe<uint32_t> envShape;
   if (!LexicalScope::prepareForScopeCreation(cx, kind, firstFrameSlot,
                                              enclosing, &data, &envShape)) {
     return false;
@@ -1932,7 +1851,7 @@ bool ScopeCreationData::create(
 
   *index = compilationInfo.scopeCreationData.length();
   return compilationInfo.scopeCreationData.emplaceBack(
-      cx, kind, enclosing, envShape, std::move(data.get()));
+      cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
 }
 
 bool ScopeCreationData::create(JSContext* cx,
@@ -1950,7 +1869,7 @@ bool ScopeCreationData::create(JSContext* cx,
     return false;
   }
 
-  Rooted<frontend::EnvironmentShapeCreationData> envShape(cx);
+  mozilla::Maybe<uint32_t> envShape;
   if (!VarScope::prepareForScopeCreation(cx, kind, &data, firstFrameSlot,
                                          needsEnvironment, &envShape)) {
     return false;
@@ -1958,7 +1877,7 @@ bool ScopeCreationData::create(JSContext* cx,
 
   *index = compilationInfo.scopeCreationData.length();
   return compilationInfo.scopeCreationData.emplaceBack(
-      cx, kind, enclosing, envShape, std::move(data.get()));
+      cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
 }
 
 /* static */
@@ -1980,12 +1899,14 @@ bool ScopeCreationData::create(JSContext* cx,
   // global lexical scope and the global object or non-syntactic objects
   // created by embedding, all of which are not only extensible but may
   // have names on them deleted.
-  Rooted<frontend::EnvironmentShapeCreationData> environmentShape(cx);
+  uint32_t firstFrameSlot = 0;
+  mozilla::Maybe<uint32_t> envShape;
+
   Rooted<AbstractScopePtr> enclosing(cx);
 
   *index = compilationInfo.scopeCreationData.length();
   return compilationInfo.scopeCreationData.emplaceBack(
-      cx, kind, enclosing, environmentShape, std::move(data.get()));
+      cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
 }
 
 /* static */
@@ -2003,14 +1924,15 @@ bool ScopeCreationData::create(JSContext* cx,
     return false;
   }
 
-  Rooted<frontend::EnvironmentShapeCreationData> envShape(cx);
+  uint32_t firstFrameSlot = 0;
+  mozilla::Maybe<uint32_t> envShape;
   if (!EvalScope::prepareForScopeCreation(cx, kind, &data, &envShape)) {
     return false;
   }
 
   *index = compilationInfo.scopeCreationData.length();
   return compilationInfo.scopeCreationData.emplaceBack(
-      cx, kind, enclosing, envShape, std::move(data.get()));
+      cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
 }
 
 /* static */
@@ -2036,14 +1958,38 @@ bool ScopeCreationData::create(JSContext* cx,
 
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
-  Rooted<frontend::EnvironmentShapeCreationData> envShape(cx);
+  uint32_t firstFrameSlot = 0;
+  mozilla::Maybe<uint32_t> envShape;
   if (!ModuleScope::prepareForScopeCreation(cx, &data, module, &envShape)) {
     return false;
   }
 
   *index = compilationInfo.scopeCreationData.length();
   return compilationInfo.scopeCreationData.emplaceBack(
-      cx, ScopeKind::Module, enclosing, envShape, std::move(data.get()));
+      cx, ScopeKind::Module, enclosing, firstFrameSlot, envShape,
+      std::move(data.get()));
+}
+
+template <typename SpecificEnvironmentType>
+bool ScopeCreationData::createSpecificShape(JSContext* cx, ScopeKind kind,
+                                            BaseScopeData* scopeData,
+                                            MutableHandleShape shape) {
+  const JSClass* cls = &SpecificEnvironmentType::class_;
+  uint32_t baseShapeFlags = SpecificEnvironmentType::BASESHAPE_FLAGS;
+
+  if (numEnvironmentSlots_.isSome()) {
+    if (*numEnvironmentSlots_ > 0) {
+      BindingIter bi(kind, scopeData, firstFrameSlot_);
+      shape.set(CreateEnvironmentShape(cx, bi, cls, *numEnvironmentSlots_,
+                                       baseShapeFlags));
+      return shape;
+    }
+
+    shape.set(EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), baseShapeFlags));
+    return shape;
+  }
+
+  return true;
 }
 
 /* static */
@@ -2051,19 +1997,12 @@ bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
                                Handle<AbstractScopePtr> enclosing,
                                ScopeIndex* index) {
-  *index = compilationInfo.scopeCreationData.length();
-  Rooted<frontend::EnvironmentShapeCreationData> environmentShape(cx);
-  return compilationInfo.scopeCreationData.emplaceBack(
-      cx, ScopeKind::With, enclosing, environmentShape);
-}
+  uint32_t firstFrameSlot = 0;
+  mozilla::Maybe<uint32_t> envShape;
 
-// WithScopes are unique because they don't go through the
-// Scope::create<ConcreteType> path.
-template <>
-Scope* ScopeCreationData::createSpecificScope<WithScope>(
-    JSContext* cx, CompilationInfo& compilationInfo) {
-  RootedScope enclosingScope(cx, getEnclosingScope());
-  return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
+  *index = compilationInfo.scopeCreationData.length();
+  return compilationInfo.scopeCreationData.emplaceBack(
+      cx, ScopeKind::With, enclosing, firstFrameSlot, envShape);
 }
 
 template <typename SpecificScopeType>
@@ -2093,14 +2032,36 @@ UniquePtr<ModuleScope::Data> ScopeCreationData::releaseData<ModuleScope>(
       static_cast<ModuleScope::Data*>(data_.release()));
 }
 
-template <class SpecificScopeType>
+// WithScope does not use binding data.
+template <>
+Scope* ScopeCreationData::createSpecificScope<WithScope, std::nullptr_t>(
+    JSContext* cx, CompilationInfo& compilationInfo) {
+  RootedScope enclosingScope(cx, getEnclosingScope());
+  return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
+}
+
+// GlobalScope has bindings but no environment shape.
+template <>
+Scope* ScopeCreationData::createSpecificScope<GlobalScope, std::nullptr_t>(
+    JSContext* cx, CompilationInfo& compilationInfo) {
+  Rooted<UniquePtr<GlobalScope::Data>> rootedData(
+      cx, releaseData<GlobalScope>(compilationInfo));
+
+  MOZ_ASSERT(getEnclosingScope() == nullptr);
+
+  // Because we already baked the data here, we needn't do it again.
+  return Scope::create<GlobalScope>(cx, kind(), nullptr, nullptr, &rootedData);
+}
+
+template <typename SpecificScopeType, typename SpecificEnvironmentType>
 Scope* ScopeCreationData::createSpecificScope(
     JSContext* cx, CompilationInfo& compilationInfo) {
   Rooted<UniquePtr<typename SpecificScopeType::Data>> rootedData(
       cx, releaseData<SpecificScopeType>(compilationInfo));
-  RootedShape shape(cx);
 
-  if (!environmentShape_.createShape(cx, &shape)) {
+  RootedShape shape(cx);
+  if (!createSpecificShape<SpecificEnvironmentType>(
+          cx, kind(), rootedData.get().get(), &shape)) {
     return nullptr;
   }
 
@@ -2111,15 +2072,17 @@ Scope* ScopeCreationData::createSpecificScope(
                                           &rootedData);
 }
 
-template Scope* ScopeCreationData::createSpecificScope<FunctionScope>(
+template Scope* ScopeCreationData::createSpecificScope<
+    FunctionScope, CallObject>(JSContext* cx, CompilationInfo& compilationInfo);
+template Scope*
+ScopeCreationData::createSpecificScope<LexicalScope, LexicalEnvironmentObject>(
     JSContext* cx, CompilationInfo& compilationInfo);
-template Scope* ScopeCreationData::createSpecificScope<LexicalScope>(
+template Scope*
+ScopeCreationData::createSpecificScope<EvalScope, VarEnvironmentObject>(
     JSContext* cx, CompilationInfo& compilationInfo);
-template Scope* ScopeCreationData::createSpecificScope<EvalScope>(
+template Scope*
+ScopeCreationData::createSpecificScope<VarScope, VarEnvironmentObject>(
     JSContext* cx, CompilationInfo& compilationInfo);
-template Scope* ScopeCreationData::createSpecificScope<GlobalScope>(
-    JSContext* cx, CompilationInfo& compilationInfo);
-template Scope* ScopeCreationData::createSpecificScope<VarScope>(
-    JSContext* cx, CompilationInfo& compilationInfo);
-template Scope* ScopeCreationData::createSpecificScope<ModuleScope>(
+template Scope*
+ScopeCreationData::createSpecificScope<ModuleScope, ModuleEnvironmentObject>(
     JSContext* cx, CompilationInfo& compilationInfo);
