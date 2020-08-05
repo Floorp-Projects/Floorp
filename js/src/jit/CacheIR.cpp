@@ -7222,6 +7222,62 @@ AttachDecision CallIRGenerator::tryAttachNewRegExpStringIterator(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachArrayIteratorPrototypeOptimizable(
+    HandleFunction callee) {
+  // Self-hosted code calls this without any arguments
+  MOZ_ASSERT(argc_ == 0);
+
+  // TODO(Warp): attach this stub just once to prevent slowdowns for polymorphic
+  // calls.
+
+  auto* arrayIteratorProto = cx_->global()->maybeGetArrayIteratorPrototype();
+  if (!arrayIteratorProto) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure that %ArrayIteratorPrototype%'s "next" slot is unchanged.
+  Shape* shape = arrayIteratorProto->lookupPure(cx_->names().next);
+  if (!shape || !shape->isDataProperty()) {
+    return AttachDecision::NoAction;
+  }
+
+  uint32_t slot = shape->slot();
+
+  MOZ_ASSERT(arrayIteratorProto->numFixedSlots() == 0,
+             "Stub code relies on this");
+
+  const Value& nextVal = arrayIteratorProto->getSlot(slot);
+  if (!nextVal.isObject() || !nextVal.toObject().is<JSFunction>()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* nextFun = &nextVal.toObject().as<JSFunction>();
+  if (!IsSelfHostedFunctionWithName(nextFun, cx_->names().ArrayIteratorNext)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ObjOperandId protoId = writer.loadObject(arrayIteratorProto);
+  ObjOperandId nextId = writer.loadObject(nextFun);
+
+  writer.guardShape(protoId, arrayIteratorProto->lastProperty());
+
+  // Ensure that proto[slot] == nextFun.
+  writer.guardDynamicSlotIsSpecificObject(protoId, nextId, slot);
+  writer.loadBooleanResult(true);
+
+  // This stub does not need to be monitored, it always returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("ArrayIteratorPrototypeOptimizable");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachObjectCreate(HandleFunction callee) {
   // Need a single object-or-null argument.
   if (argc_ != 1 || !args_[0].isObjectOrNull()) {
@@ -7663,6 +7719,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachNewStringIterator(callee);
     case InlinableNative::IntrinsicNewRegExpStringIterator:
       return tryAttachNewRegExpStringIterator(callee);
+    case InlinableNative::IntrinsicArrayIteratorPrototypeOptimizable:
+      return tryAttachArrayIteratorPrototypeOptimizable(callee);
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:
