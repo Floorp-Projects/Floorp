@@ -16,11 +16,11 @@ nsGenericHTMLElement* NS_NewHTMLDialogElement(
     mozilla::dom::FromParser aFromParser) {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
   auto* nim = nodeInfo->NodeInfoManager();
-  if (!mozilla::dom::HTMLDialogElement::IsDialogEnabled()) {
-    return new (nim) mozilla::dom::HTMLUnknownElement(nodeInfo.forget());
+  bool isChromeDocument = nsContentUtils::IsChromeDoc(nodeInfo->GetDocument());
+  if (mozilla::StaticPrefs::dom_dialog_element_enabled() || isChromeDocument) {
+    return new (nim) mozilla::dom::HTMLDialogElement(nodeInfo.forget());
   }
-
-  return new (nim) mozilla::dom::HTMLDialogElement(nodeInfo.forget());
+  return new (nim) mozilla::dom::HTMLUnknownElement(nodeInfo.forget());
 }
 
 namespace mozilla {
@@ -30,8 +30,10 @@ HTMLDialogElement::~HTMLDialogElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLDialogElement)
 
-bool HTMLDialogElement::IsDialogEnabled() {
-  return StaticPrefs::dom_dialog_element_enabled();
+bool HTMLDialogElement::IsDialogEnabled(JSContext* aCx,
+                                        JS::Handle<JSObject*> aObj) {
+  return StaticPrefs::dom_dialog_element_enabled() ||
+         nsContentUtils::IsSystemCaller(aCx);
 }
 
 void HTMLDialogElement::Close(

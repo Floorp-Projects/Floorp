@@ -338,7 +338,7 @@ bool HTMLFormElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                      nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::method) {
-      if (StaticPrefs::dom_dialog_element_enabled()) {
+      if (StaticPrefs::dom_dialog_element_enabled() || IsInChromeDocument()) {
         return aResult.ParseEnumValue(aValue, kFormMethodTableDialogEnabled,
                                       false);
       }
