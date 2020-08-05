@@ -238,9 +238,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   }
   AbstractScopePtr innermostScope() const;
   ScopeIndex innermostScopeIndex() const;
-  AbstractScopePtr bodyScope() const {
-    return perScriptData().gcThingList().getScope(bodyScopeIndex);
-  }
 
   MOZ_ALWAYS_INLINE
   MOZ_MUST_USE bool makeAtomIndex(JSAtom* atom, GCThingIndex* indexp) {

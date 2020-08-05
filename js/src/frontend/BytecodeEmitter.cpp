@@ -862,7 +862,7 @@ AbstractScopePtr BytecodeEmitter::innermostScope() const {
 }
 
 ScopeIndex BytecodeEmitter::innermostScopeIndex() const {
-  return innermostEmitterScope()->scopeIndex(this);
+  return *innermostEmitterScope()->scopeIndex(this);
 }
 
 bool BytecodeEmitter::emitGCIndexOp(JSOp op, GCThingIndex index) {
