@@ -431,4 +431,78 @@ add_task(async function test_aliasform() {
     !Components.isSuccessCode(inStatus2),
     `${inStatus2} should be an error code`
   );
+
+  // the svcparam keys are in reverse order
+  await trrServer.registerDoHAnswers("order.com", "HTTPS", [
+    {
+      name: "order.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "h3pool",
+        values: [
+          { key: "ipv6hint", value: "::1" },
+          { key: "echconfig", value: "123..." },
+          { key: "ipv4hint", value: "1.2.3.4" },
+          { key: "port", value: 8888 },
+          { key: "no-default-alpn" },
+          { key: "alpn", value: "h2,h3" },
+        ],
+      },
+    },
+  ]);
+
+  listener = new DNSListener();
+  request = dns.asyncResolveByType(
+    "order.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.ok(
+    !Components.isSuccessCode(inStatus2),
+    `${inStatus2} should be an error code`
+  );
+
+  // duplicate svcparam keys
+  await trrServer.registerDoHAnswers("duplicate.com", "HTTPS", [
+    {
+      name: "duplicate.com",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "h3pool",
+        values: [
+          { key: "alpn", value: "h2,h3" },
+          { key: "alpn", value: "h2,h3,h4" },
+        ],
+      },
+    },
+  ]);
+
+  listener = new DNSListener();
+  request = dns.asyncResolveByType(
+    "duplicate.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.ok(
+    !Components.isSuccessCode(inStatus2),
+    `${inStatus2} should be an error code`
+  );
 });
