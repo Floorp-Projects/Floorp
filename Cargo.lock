@@ -1883,6 +1883,7 @@ dependencies = [
  "mozglue-static",
  "mozilla-central-workspace-hack",
  "stylo_tests",
+ "swgl",
 ]
 
 [[package]]
@@ -1895,6 +1896,7 @@ dependencies = [
  "mozglue-static",
  "mp4parse-gtest",
  "nsstring-gtest",
+ "swgl",
  "xpcom-gtest",
 ]
 

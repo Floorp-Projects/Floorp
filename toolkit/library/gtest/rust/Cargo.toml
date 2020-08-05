@@ -43,8 +43,10 @@ nsstring-gtest = { path = "../../../../xpcom/rust/gtest/nsstring" }
 xpcom-gtest = { path = "../../../../xpcom/rust/gtest/xpcom" }
 gkrust-shared = { path = "../../rust/shared" }
 gecko-fuzz-targets = { path = "../../../../tools/fuzzing/rust", optional = true }
-# Workaround for https://github.com/rust-lang/rust/issues/58393
+
+# Workarounds for https://github.com/rust-lang/rust/issues/58393
 mozglue-static = { path = "../../../../mozglue/static/rust" }
+swgl = { path = "../../../../gfx/wr/swgl" }
 
 [lib]
 path = "lib.rs"
