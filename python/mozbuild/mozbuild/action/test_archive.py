@@ -40,8 +40,6 @@ TEST_HARNESS_BINS = [
     'SmokeDMD',
     'certutil',
     'crashinject',
-    'fileid',
-    'geckodriver',
     'http3server',
     'minidumpwriter',
     'pk12util',
@@ -51,10 +49,8 @@ TEST_HARNESS_BINS = [
     'xpcshell',
 ]
 
-# The fileid utility depends on mozglue. See bug 1069556.
 TEST_HARNESS_DLLS = [
     'crashinjectdll',
-    'mozglue'
 ]
 
 TEST_PLUGIN_DLLS = [
@@ -283,14 +279,6 @@ ARCHIVE_FILES = {
             'base': 'build/pgo/certs',
             'pattern': '**',
             'dest': 'certs',
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'base': 'build/unix/elfhack',
-            'patterns': [
-                'elfhack%s' % buildconfig.substs['BIN_SUFFIX'],
-            ],
-            'dest': 'bin',
         },
     ],
     'cppunittest': [
