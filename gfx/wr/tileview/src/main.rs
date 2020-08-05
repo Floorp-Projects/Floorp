@@ -73,7 +73,7 @@ fn tile_node_to_svg(node: &TileNode,
 {
     match &node.kind {
         TileNodeKind::Leaf { .. } => {
-            let rect_world = transform.transform_rect(&node.rect.to_rect()).unwrap();
+            let rect_world = transform.outer_transformed_rect(&node.rect.to_rect()).unwrap();
             format!("<rect x=\"{:.2}\" y=\"{:.2}\" width=\"{:.2}\" height=\"{:.2}\" />\n",
                     rect_world.origin.x    * svg_settings.scale + svg_settings.x,
                     rect_world.origin.y    * svg_settings.scale + svg_settings.y,
@@ -296,7 +296,7 @@ fn tile_to_svg(key: TileOffset,
         origin: tile.rect.origin,
         size: PictureSize::new(1.0, 1.0)
     };
-    let rect_visual_id_world = slice.transform.transform_rect(&rect_visual_id).unwrap();
+    let rect_visual_id_world = slice.transform.outer_transformed_rect(&rect_visual_id).unwrap();
     svg += &format!("\n<text class=\"svg_tile_visual_id\" x=\"{}\" y=\"{}\">{},{} ({})</text>",
             rect_visual_id_world.origin.x           * svg_settings.scale + svg_settings.x,
             (rect_visual_id_world.origin.y + 110.0) * svg_settings.scale + svg_settings.y,
@@ -312,7 +312,7 @@ fn tile_to_svg(key: TileOffset,
             origin: PicturePoint::new(rect.min.x, rect.min.y),
             size: PictureSize::new(rect.max.x - rect.min.x, rect.max.y - rect.min.y),
         };
-        let rect_world = slice.transform.transform_rect(&rect_pixel).unwrap();
+        let rect_world = slice.transform.outer_transformed_rect(&rect_pixel).unwrap();
 
         let style =
             if let Some(prev_tile) = prev_tile {

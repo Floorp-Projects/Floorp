@@ -6,7 +6,7 @@ root:
       perspective: 20
       items:
         - type: stacking-context
-          transform: rotate-z(45) rotate-x(45)
+          transform: rotate-z(-45) rotate-x(-45)
           filters: drop-shadow([0, 0], 10000, blue)
           items:
             - type: rect
