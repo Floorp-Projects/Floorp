@@ -971,7 +971,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvWillChangeProcess(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(
-    nsDocShellLoadState* aLoadState, const ParentShowInfo& aInfo) {
+    const nsCString& aURI, nsIPrincipal* aTriggeringPrincipal,
+    const ParentShowInfo& aInfo) {
   if (!mDidLoadURLInit) {
     mDidLoadURLInit = true;
     if (!InitBrowserChildMessageManager()) {
@@ -980,19 +981,28 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(
 
     ApplyParentShowInfo(aInfo);
   }
-  nsAutoCString spec;
-  aLoadState->URI()->GetSpec(spec);
+
+  LoadURIOptions loadURIOptions;
+  loadURIOptions.mTriggeringPrincipal = aTriggeringPrincipal;
+  loadURIOptions.mLoadFlags =
+      nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+      nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+
+  nsIWebNavigation* webNav = WebNavigation();
+  nsresult rv = webNav->LoadURI(NS_ConvertUTF8toUTF16(aURI), loadURIOptions);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "WebNavigation()->LoadURI failed. Eating exception, what else can I "
+        "do?");
+  }
 
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  MOZ_ASSERT(docShell);
-  if (!docShell) {
-    NS_WARNING("WebNavigation does not have a docshell");
+  if (docShell) {
+    nsDocShell::Cast(docShell)->MaybeClearStorageAccessFlag();
   }
-  docShell->LoadURI(aLoadState, true);
 
-  nsDocShell::Cast(docShell)->MaybeClearStorageAccessFlag();
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aURI);
 
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, spec);
   return IPC_OK();
 }
 

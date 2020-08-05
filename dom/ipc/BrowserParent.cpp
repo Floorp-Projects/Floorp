@@ -205,6 +205,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mClientOffset{},
       mChromeOffset{},
       mCreatingWindow(false),
+      mDelayedURL{},
       mDelayedFrameScripts{},
       mCursor(eCursorInvalid),
       mCustomCursor{},
@@ -862,20 +863,25 @@ bool BrowserParent::SendLoadRemoteScript(const nsString& aURL,
   return PBrowserParent::SendLoadRemoteScript(aURL, aRunInGlobalScope);
 }
 
-void BrowserParent::LoadURL(nsDocShellLoadState* aLoadState) {
-  MOZ_ASSERT(aLoadState);
-  MOZ_ASSERT(aLoadState->URI());
+void BrowserParent::LoadURL(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal) {
+  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(aTriggeringPrincipal);
+
   if (mIsDestroyed) {
     return;
   }
+
   nsCString spec;
-  aLoadState->URI()->GetSpec(spec);
+  aURI->GetSpec(spec);
+
   if (mCreatingWindow) {
     // Don't send the message if the child wants to load its own URL.
+    MOZ_ASSERT(mDelayedURL.IsEmpty());
+    mDelayedURL = spec;
     return;
   }
 
-  Unused << SendLoadURL(aLoadState, GetShowInfo());
+  Unused << SendLoadURL(spec, aTriggeringPrincipal, GetShowInfo());
 }
 
 void BrowserParent::ResumeLoad(uint64_t aPendingSwitchID) {

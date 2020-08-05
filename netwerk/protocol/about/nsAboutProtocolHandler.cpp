@@ -21,8 +21,6 @@
 #include "nsIScriptError.h"
 #include "nsIEnterprisePolicies.h"
 
-#include "mozilla/ipc/URIUtils.h"
-
 namespace mozilla {
 namespace net {
 
@@ -394,43 +392,6 @@ nsNestedAboutURI::Write(nsIObjectOutputStream* aStream) {
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP_(void)
-nsNestedAboutURI::Serialize(mozilla::ipc::URIParams& aParams) {
-  using namespace mozilla::ipc;
-
-  NestedAboutURIParams params;
-  URIParams nestedParams;
-
-  nsSimpleNestedURI::Serialize(nestedParams);
-  params.nestedParams() = nestedParams;
-
-  if (mBaseURI) {
-    SerializeURI(mBaseURI, params.baseURI());
-  }
-
-  aParams = params;
-}
-
-bool nsNestedAboutURI::Deserialize(const mozilla::ipc::URIParams& aParams) {
-  using namespace mozilla::ipc;
-
-  if (aParams.type() != URIParams::TNestedAboutURIParams) {
-    NS_ERROR("Received unknown parameters from the other process!");
-    return false;
-  }
-
-  const NestedAboutURIParams& params = aParams.get_NestedAboutURIParams();
-  if (!nsSimpleNestedURI::Deserialize(params.nestedParams())) {
-    return false;
-  }
-
-  mBaseURI = nullptr;
-  if (params.baseURI()) {
-    mBaseURI = DeserializeURI(*params.baseURI());
-  }
-  return true;
 }
 
 // nsSimpleURI

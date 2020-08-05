@@ -23,7 +23,6 @@ using struct nsRect from "nsRect.h";
 using CallerType from "mozilla/dom/BindingDeclarations.h";
 using nsIntRect from "nsRect.h";
 using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h";
-using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 
 namespace mozilla {
 namespace dom {
@@ -74,7 +73,7 @@ parent:
   async __delete__();
 
   // DocShell messaging.
-  async LoadURL(nsDocShellLoadState aLoadState);
+  async LoadURL(nsCString aSpec, nsIPrincipal aTriggeringPrincipal);
   async ResumeLoad(uint64_t aPendingSwitchID);
 
   // Out of process rendering.

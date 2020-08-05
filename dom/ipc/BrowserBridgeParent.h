@@ -64,7 +64,8 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   mozilla::ipc::IPCResult RecvShow(const OwnerShowInfo&);
   mozilla::ipc::IPCResult RecvScrollbarPreferenceChanged(ScrollbarPreference);
-  mozilla::ipc::IPCResult RecvLoadURL(nsDocShellLoadState* aLoadState);
+  mozilla::ipc::IPCResult RecvLoadURL(const nsCString& aUrl,
+                                      nsIPrincipal* aTriggeringPrincipal);
   mozilla::ipc::IPCResult RecvResumeLoad(uint64_t aPendingSwitchID);
   mozilla::ipc::IPCResult RecvUpdateDimensions(const nsIntRect& aRect,
                                                const ScreenIntSize& aSize);

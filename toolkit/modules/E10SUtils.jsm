@@ -126,7 +126,11 @@ const kSafeSchemes = [
 ];
 
 const kDocumentChannelDeniedSchemes = ["javascript"];
-const kDocumentChannelDeniedURIs = ["about:crashcontent", "about:printpreview"];
+const kDocumentChannelDeniedURIs = [
+  "about:blank",
+  "about:crashcontent",
+  "about:printpreview",
+];
 
 // Changes here should also be made in URIUsesDocChannel in DocumentChannel.cpp.
 function documentChannelPermittedForURI(aURI) {
@@ -314,7 +318,7 @@ var E10SUtils = {
     if (!this._log) {
       this._log = console.createInstance({
         prefix: "ProcessSwitch",
-        maxLogLevel: "Error", // Change to "Debug" the process switching code
+        maxLogLevel: "Error", // Change to debug the process switching code
       });
 
       this._log.debug("Setup logger");
@@ -577,17 +581,10 @@ var E10SUtils = {
       return NOT_REMOTE;
     }
 
-    // We want to use the original URI for "about:" (except for "about:srcdoc"
-    // and "about:blank") and "chrome://" scheme, so that we can properly
-    // determine the remote type.
-    let useOriginalURI;
-    if (aOriginalURI.scheme == "about") {
-      useOriginalURI = !["about:srcdoc", "about:blank"].includes(
-        aOriginalURI.spec
-      );
-    } else {
-      useOriginalURI = aOriginalURI.scheme == "chrome";
-    }
+    // We want to use the original URI for "about:" and "chrome://" scheme,
+    // so that we can properly determine the remote type.
+    let useOriginalURI =
+      aOriginalURI.scheme == "about" || aOriginalURI.scheme == "chrome";
 
     if (!useOriginalURI) {
       // We can't pick a process based on a system principal or expanded
@@ -600,9 +597,7 @@ var E10SUtils = {
       // using fission we add the option to force them into the default
       // web process for better test coverage.
       if (aPrincipal.isNullPrincipal) {
-        if (aOriginalURI.spec == "about:blank") {
-          useOriginalURI = true;
-        } else if (
+        if (
           (aRemoteSubframes && useSeparateDataUriProcess) ||
           aPreferredRemoteType == NOT_REMOTE
         ) {
