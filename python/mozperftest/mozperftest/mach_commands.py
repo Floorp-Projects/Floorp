@@ -11,7 +11,7 @@ from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
 
 
 _TRY_PLATFORMS = {"g5": "perftest-android-hw-g5", "p2": "perftest-android-hw-p2"}
-HERE = os.path.dirname(__file__)
+ON_TRY = "MOZ_AUTOMATION" in os.environ
 
 
 def get_perftest_parser():
@@ -125,17 +125,8 @@ class PerftestTests(MachCommandBase):
         MachCommandBase.activate_virtualenv(self)
 
         from pathlib import Path
-        from mozperftest.utils import temporary_env
-
-        with temporary_env(
-            COVERAGE_RCFILE=str(Path(HERE, ".coveragerc")), RUNNING_TESTS="YES"
-        ):
-            self._run_tests(**kwargs)
-
-    def _run_tests(self, **kwargs):
-        from pathlib import Path
         from mozperftest.runner import _setup_path
-        from mozperftest.utils import install_package, ON_TRY
+        from mozperftest.utils import install_package, temporary_env
 
         skip_linters = kwargs.get("skip_linters", False)
         verbose = kwargs.get("verbose", False)
@@ -166,20 +157,21 @@ class PerftestTests(MachCommandBase):
             for dep in vendors:
                 install_package(self.virtualenv_manager, str(Path(pydeps, dep)))
 
+        here = Path(__file__).parent.resolve()
         if not ON_TRY and not skip_linters:
             # formatting the code with black
-            assert self._run_python_script("black", str(HERE))
+            assert self._run_python_script("black", str(here))
 
         # checking flake8 correctness
         if not (ON_TRY and sys.platform == "darwin") and not skip_linters:
-            assert self._run_python_script("flake8", str(HERE))
+            assert self._run_python_script("flake8", str(here))
 
         # running pytest with coverage
         # coverage is done in three steps:
         # 1/ coverage erase => erase any previous coverage data
         # 2/ coverage run pytest ... => run the tests and collect info
         # 3/ coverage report => generate the report
-        tests_dir = Path(HERE, "tests").resolve()
+        tests_dir = Path(here, "tests").resolve()
         tests = kwargs.get("tests", [])
         if tests == []:
             tests = str(tests_dir)
@@ -200,20 +192,21 @@ class PerftestTests(MachCommandBase):
         if kwargs.get("verbose"):
             options += "v"
 
-        if run_coverage_check:
+        with temporary_env(COVERAGE_RCFILE=str(here / ".coveragerc")):
+            if run_coverage_check:
+                assert self._run_python_script(
+                    "coverage", "erase", label="remove old coverage data"
+                )
+            args = [
+                "run",
+                pytest.__file__,
+                options,
+                tests,
+            ]
             assert self._run_python_script(
-                "coverage", "erase", label="remove old coverage data"
+                "coverage", *args, label="running tests", verbose=verbose
             )
-        args = [
-            "run",
-            pytest.__file__,
-            options,
-            tests,
-        ]
-        assert self._run_python_script(
-            "coverage", *args, label="running tests", verbose=verbose
-        )
-        if run_coverage_check and not self._run_python_script(
-            "coverage", "report", display=True
-        ):
-            raise ValueError("Coverage is too low!")
+            if run_coverage_check and not self._run_python_script(
+                "coverage", "report", display=True
+            ):
+                raise ValueError("Coverage is too low!")
