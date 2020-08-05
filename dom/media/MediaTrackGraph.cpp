@@ -850,12 +850,26 @@ void MediaTrackGraphImpl::NotifyInputData(const AudioDataValue* aBuffer,
     return;
   }
 #endif
+  mInputData = aBuffer;
+  mInputFrames = aFrames;
+  mInputChannelCount = aChannels;
+}
+
+void MediaTrackGraphImpl::ProcessInputData() {
+  if (!mInputData) {
+    return;
+  }
+
   nsTArray<RefPtr<AudioDataListener>>* listeners =
       mInputDeviceUsers.GetValue(mInputDeviceID);
   MOZ_ASSERT(listeners);
   for (auto& listener : *listeners) {
-    listener->NotifyInputData(this, aBuffer, aFrames, aRate, aChannels);
+    listener->NotifyInputData(this, mInputData, mInputFrames, GraphRate(), mInputChannelCount);
   }
+
+  mInputData = nullptr;
+  mInputFrames = 0;
+  mInputChannelCount = 0;
 }
 
 void MediaTrackGraphImpl::DeviceChangedImpl() {
@@ -1380,6 +1394,8 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
   if (SoftRealTimeLimitReached()) {
     DemoteThreadFromRealTime();
   }
+
+  ProcessInputData();
 
   // Changes to LIFECYCLE_RUNNING occur before starting or reviving the graph
   // thread, and so the monitor need not be held to check mLifecycleState.
@@ -3013,6 +3029,9 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
       mPortCount(0),
       mInputDeviceID(nullptr),
       mOutputDeviceID(aOutputDeviceID),
+      mInputData(nullptr),
+      mInputChannelCount(0),
+      mInputFrames(0),
       mMonitor("MediaTrackGraphImpl"),
       mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED),
       mPostedRunInStableStateEvent(false),
