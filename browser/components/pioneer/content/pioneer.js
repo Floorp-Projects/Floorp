@@ -62,6 +62,10 @@ async function showAvailableStudies(cachedAddons) {
       return;
     }
 
+    if (cachedAddon.isDefault) {
+      return;
+    }
+
     const studyAddonId = cachedAddon.addon_id;
 
     const study = document.createElement("div");
@@ -250,6 +254,12 @@ async function setup(cachedAddons) {
         let uuid = generateUUID();
         Services.prefs.setStringPref(PREF_PIONEER_ID, uuid);
         for (const cachedAddon of cachedAddons) {
+          if (cachedAddon.isDefault) {
+            const install = await AddonManager.getInstallForURL(
+              cachedAddon.sourceURI.spec
+            );
+            install.install();
+          }
           const study = document.getElementById(cachedAddon.addon_id);
           if (study) {
             await updateStudy(cachedAddon.addon_id);

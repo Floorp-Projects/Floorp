@@ -17,7 +17,7 @@ const PREF_TEST_ADDON_INSTALLED = "toolkit.pioneer.testAddonInstalled";
 
 const CACHED_ADDONS = [
   {
-    addon_id: "pioneer-v2-example@pioneer.mozilla.org",
+    addon_id: "pioneer-v2-example@mozilla.org",
     icons: {
       "32":
         "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
@@ -52,6 +52,43 @@ const CACHED_ADDONS = [
       "https://addons.mozilla.org/en-US/firefox/addon/pioneer-v2-example/reviews/",
     updateDate: "2020-05-27T20:47:35.000Z",
   },
+  {
+    addon_id: "pioneer-v2-default-example@mozilla.org",
+    icons: {
+      "32":
+        "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
+      "64":
+        "https://localhost/user-media/addon_icons/2644/2644632-64.png?modified=4a64e2bc",
+      "128":
+        "https://localhost/user-media/addon_icons/2644/2644632-128.png?modified=4a64e2bc",
+    },
+    _unsupportedProperties: {},
+    name: "Demo Default Study",
+    version: "1.0",
+    sourceURI: {
+      spec: "https://localhost",
+    },
+    homepageURL: "https://github.com/rhelmer/pioneer-v2-example",
+    supportURL: null,
+    description: "Study purpose: Testing Pioneer.",
+    fullDescription:
+      "Data collected: An encrypted ping containing the current date and time is sent to Mozilla's servers.",
+    weeklyDownloads: 0,
+    type: "extension",
+    creator: {
+      name: "Pioneer Developers",
+      url: "https://addons.mozilla.org/en-US/firefox/user/6510522/",
+    },
+    developers: [],
+    screenshots: [],
+    contributionURL: "",
+    averageRating: 0,
+    reviewCount: 0,
+    reviewURL:
+      "https://addons.mozilla.org/en-US/firefox/addon/pioneer-v2-example/reviews/",
+    updateDate: "2020-05-27T20:47:35.000Z",
+    isDefault: true,
+  },
 ];
 
 const waitForAnimationFrame = () =>
@@ -69,100 +106,127 @@ add_task(async function testAboutPage() {
     clear: [[PREF_PIONEER_ID, ""]],
   });
 
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    url: "about:pioneer",
-    gBrowser,
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:pioneer",
+      gBrowser,
+    },
+    async function taskFn(browser) {
+      const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      ok(beforePref === null, "before enrollment, Pioneer pref is null.");
 
-  const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
-  ok(beforePref === null, "before enrollment, Pioneer pref is null.");
+      const beforeToolbarButton = document.getElementById("pioneer-button");
+      ok(
+        beforeToolbarButton.hidden,
+        "before enrollment, Pioneer toolbar button is hidden."
+      );
 
-  const beforeToolbarButton = document.getElementById("pioneer-button");
-  ok(
-    beforeToolbarButton.hidden,
-    "before enrollment, Pioneer toolbar button is hidden."
+      const enrollmentButton = content.document.getElementById(
+        "enrollment-button"
+      );
+      enrollmentButton.click();
+
+      const dialog = content.document.getElementById("consent-dialog");
+      ok(dialog.open, "after clicking enrollment, consent dialog is open.");
+
+      const cancleDialogButton = content.document.getElementById(
+        "cancel-dialog-button"
+      );
+      cancleDialogButton.click();
+
+      ok(
+        !dialog.open,
+        "after cancelling enrollment, consent dialog is closed."
+      );
+
+      const canceledEnrollment = Services.prefs.getStringPref(
+        PREF_PIONEER_ID,
+        null
+      );
+      ok(
+        !canceledEnrollment,
+        "after cancelling enrollment, Pioneer is not enrolled."
+      );
+
+      enrollmentButton.click();
+      ok(dialog.open, "after retrying enrollment, consent dialog is open.");
+
+      const acceptDialogButton = content.document.getElementById(
+        "accept-dialog-button"
+      );
+      acceptDialogButton.click();
+
+      const pioneerEnrolled = Services.prefs.getStringPref(
+        PREF_PIONEER_ID,
+        null
+      );
+      ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
+
+      const enrolledToolbarButton = document.getElementById("pioneer-button");
+      ok(
+        !enrolledToolbarButton.hidden,
+        "after enrollment, Pioneer toolbar button is not hidden."
+      );
+
+      for (const cachedAddon of CACHED_ADDONS) {
+        const addonId = cachedAddon.addon_id;
+        const joinButton = content.document.getElementById(
+          `${addonId}-join-button`
+        );
+
+        if (cachedAddon.isDefault) {
+          ok(!joinButton, "There is no join button for default study.");
+          continue;
+        }
+
+        ok(!joinButton.hidden, "Join button is not hidden.");
+
+        Services.prefs.setBoolPref(PREF_TEST_ADDON_INSTALLED, true);
+
+        joinButton.click();
+        await waitForAnimationFrame();
+
+        ok(joinButton.hidden, "Join button is hidden.");
+      }
+
+      enrollmentButton.click();
+
+      await waitForAnimationFrame();
+
+      const pioneerUnenrolled = Services.prefs.getStringPref(
+        PREF_PIONEER_ID,
+        null
+      );
+      ok(!pioneerUnenrolled, "after unenrollment, Pioneer pref is null.");
+
+      const unenrolledToolbarButton = document.getElementById("pioneer-button");
+      ok(
+        unenrolledToolbarButton.hidden,
+        "after unenrollment, Pioneer toolbar button is hidden."
+      );
+
+      for (const cachedAddon of CACHED_ADDONS) {
+        const addonId = cachedAddon.addon_id;
+        const joinButton = content.document.getElementById(
+          `${addonId}-join-button`
+        );
+
+        Services.prefs.setBoolPref(PREF_TEST_ADDON_INSTALLED, false);
+        if (cachedAddon.isDefault) {
+          ok(!joinButton, "There is no join button for default study.");
+        } else {
+          ok(
+            joinButton.disabled,
+            "After unenrollment, join button is disabled."
+          );
+          ok(
+            !joinButton.hidden,
+            "After unenrollment, join button is not hidden."
+          );
+        }
+      }
+    }
   );
-
-  const enrollmentButton = content.document.getElementById("enrollment-button");
-  enrollmentButton.click();
-
-  const dialog = content.document.getElementById("consent-dialog");
-  ok(dialog.open, "after clicking enrollment, consent dialog is open.");
-
-  const cancleDialogButton = content.document.getElementById(
-    "cancel-dialog-button"
-  );
-  cancleDialogButton.click();
-
-  ok(!dialog.open, "after cancelling enrollment, consent dialog is closed.");
-
-  const canceledEnrollment = Services.prefs.getStringPref(
-    PREF_PIONEER_ID,
-    null
-  );
-  ok(
-    !canceledEnrollment,
-    "after cancelling enrollment, Pioneer is not enrolled."
-  );
-
-  enrollmentButton.click();
-  ok(dialog.open, "after retrying enrollment, consent dialog is open.");
-
-  const acceptDialogButton = content.document.getElementById(
-    "accept-dialog-button"
-  );
-  acceptDialogButton.click();
-
-  const pioneerEnrolled = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
-  ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
-
-  const enrolledToolbarButton = document.getElementById("pioneer-button");
-  ok(
-    !enrolledToolbarButton.hidden,
-    "after enrollment, Pioneer toolbar button is not hidden."
-  );
-
-  for (const cachedAddon of CACHED_ADDONS) {
-    const addonId = cachedAddon.addon_id;
-    const joinButton = content.document.getElementById(
-      `${addonId}-join-button`
-    );
-
-    ok(!joinButton.hidden, "Join button is not hidden.");
-
-    Services.prefs.setBoolPref(PREF_TEST_ADDON_INSTALLED, true);
-
-    joinButton.click();
-    await waitForAnimationFrame();
-
-    ok(joinButton.hidden, "Join button is hidden.");
-  }
-
-  enrollmentButton.click();
-
-  await waitForAnimationFrame();
-
-  const pioneerUnenrolled = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
-  ok(!pioneerUnenrolled, "after unenrollment, Pioneer pref is null.");
-
-  const unenrolledToolbarButton = document.getElementById("pioneer-button");
-  ok(
-    unenrolledToolbarButton.hidden,
-    "after unenrollment, Pioneer toolbar button is hidden."
-  );
-
-  for (const cachedAddon of CACHED_ADDONS) {
-    const addonId = cachedAddon.addon_id;
-    const joinButton = content.document.getElementById(
-      `${addonId}-join-button`
-    );
-
-    Services.prefs.setBoolPref(PREF_TEST_ADDON_INSTALLED, false);
-    ok(joinButton.disabled, "After unenrollment, join button is disabled.");
-    ok(!joinButton.hidden, "After unenrollment, join button is not hidden.");
-  }
-
-  await BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function testPioneerBadge() {
