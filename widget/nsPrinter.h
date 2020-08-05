@@ -16,6 +16,10 @@ class nsPrinter final : public nsPrinterBase {
   bool SupportsDuplex() const final { return false; }
   bool SupportsColor() const final { return false; }
   nsTArray<mozilla::PaperInfo> PaperList() const final { return {}; }
+  MarginDouble GetMarginsForPaper(uint64_t) const final {
+    MOZ_ASSERT_UNREACHABLE("We have no paper so this shouldn't be reached");
+    return {};
+  }
 
   nsPrinter() = delete;
 

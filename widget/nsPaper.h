@@ -7,52 +7,55 @@
 #define nsPaper_h__
 
 #include "mozilla/dom/ToJSValue.h"
-#include "js/TypeDecls.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/Maybe.h"
 #include "nsIPaper.h"
 #include "nsISupportsImpl.h"
 #include "js/RootingAPI.h"
 #include "nsString.h"
+
+struct JSContext;
 
 namespace mozilla {
 
 // Simple struct that can be used off the main thread to hold all the info from
 // an nsPaper instance.
 struct PaperInfo {
+  using MarginDouble = mozilla::gfx::MarginDouble;
+  using SizeDouble = mozilla::gfx::SizeDouble;
+
   const nsString mName;
-  const double mWidth;
-  const double mHeight;
-  const double mUnwriteableMarginTop;
-  const double mUnwriteableMarginRight;
-  const double mUnwriteableMarginBottom;
-  const double mUnwriteableMarginLeft;
+
+  SizeDouble mSize;
+
+  // The margins may not be known by some back-ends.
+  const Maybe<MarginDouble> mUnwriteableMargin;
+
+  // The paper id from the device, this is only useful on Windows, right now.
+  uint64_t mPaperId{0};
 };
 
 }  // namespace mozilla
+
+class nsPrinterBase;
 
 class nsPaper final : public nsIPaper {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPAPER
-  nsPaper() = delete;
+  using Promise = mozilla::dom::Promise;
 
-  explicit nsPaper(const mozilla::PaperInfo& aInfo) : mInfo(aInfo) {}
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsPaper)
+  NS_DECL_NSIPAPER
+
+  nsPaper() = delete;
+  nsPaper(nsPrinterBase&, const mozilla::PaperInfo&);
 
  private:
-  ~nsPaper() = default;
+  ~nsPaper();
+  RefPtr<nsPrinterBase> mPrinter;
+  RefPtr<Promise> mMarginPromise;
   const mozilla::PaperInfo mInfo;
 };
-
-namespace mozilla {
-
-// Turns this into a JSValue by wrapping it in an nsPaper struct.
-//
-// FIXME: If using WebIDL dictionaries we'd get this for ~free...
-MOZ_MUST_USE inline bool ToJSValue(JSContext* aCx, const PaperInfo& aInfo,
-                                   JS::MutableHandleValue aValue) {
-  RefPtr<nsPaper> paper = new nsPaper(aInfo);
-  return dom::ToJSValue(aCx, paper, aValue);
-}
-
-}  // namespace mozilla
 
 #endif /* nsPaper_h__ */
