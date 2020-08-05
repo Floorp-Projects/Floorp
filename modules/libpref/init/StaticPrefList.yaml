@@ -1506,7 +1506,7 @@
 
 # Block all downloads in iframes with the sandboxed attribute
 - name: dom.block_download_in_sandboxed_iframes
-  type: bool 
+  type: bool
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
@@ -7547,6 +7547,13 @@
 - name: media.hardwaremediakeys.enabled
   type: bool
   value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# If this pref is on, then `media.mediacontrol.stopcontrol.timer.ms` would take
+# effect and determine the timing to stop controlling media.
+- name: media.mediacontrol.stopcontrol.timer
+  type: bool
+  value: false
   mirror: always
 
 # If media is being paused after a certain period, then we would think that
