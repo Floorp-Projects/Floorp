@@ -21,10 +21,7 @@
 
 #include "CUPSPrinterList.h"
 #include "nsCUPSShim.h"
-#include "nsPaper.h"
-#include "nsPrinter.h"
 #include "nsPrinterCUPS.h"
-#include "PSPrinters.h"
 
 #include "nsPrintSettingsGTK.h"
 
@@ -333,21 +330,10 @@ nsPrinterListGTK::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   // Build the CUPS printer list.
   mozilla::CUPSPrinterList cupsPrinterList{sCupsShim};
   cupsPrinterList.Initialize();
-  // Add one, since there will be at least one extra PS printer to add.
-  aPrinters.SetCapacity(cupsPrinterList.NumPrinters() + 1);
+  aPrinters.SetCapacity(cupsPrinterList.NumPrinters());
   for (int i = 0; i < cupsPrinterList.NumPrinters(); i++) {
     cups_dest_t* const dest = cupsPrinterList.GetPrinter(i);
     aPrinters.AppendElement(nsPrinterCUPS::Create(sCupsShim, dest));
-  }
-  // TODO: We will be removing all this PS Printer code in bug 1657164
-  // Add the PS printer list
-  if (PSPrinters::Enabled()) {
-    nsTArray<nsCString> printerList;
-    PSPrinters::GetPrinterList(printerList);
-    for (nsCString& printer : printerList) {
-      aPrinters.AppendElement(
-          nsPrinter::Create(NS_ConvertUTF8toUTF16(printer)));
-    }
   }
   return NS_OK;
 }
@@ -367,15 +353,7 @@ nsPrinterListGTK::GetSystemDefaultPrinterName(nsAString& aName) {
         mozilla::MakeStringSpan(cupsPrinterList.GetPrinter(0)->name), aName);
     return NS_OK;
   }
-  // TODO: We will be removing all this PS Printer code in bug 1657164
-  // No CUPS printers, report PS printers instead.
-  nsTArray<nsCString> printerList;
-  PSPrinters::GetPrinterList(printerList);
-  if (!printerList.IsEmpty()) {
-    CopyUTF8toUTF16(printerList[0], aName);
-    return NS_OK;
-  }
-  // No CUPS or PS printers.
+  // No printers.
   return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
 }
 
