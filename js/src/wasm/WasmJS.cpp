@@ -775,9 +775,8 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
 
   UniqueChars error;
   UniqueCharsVector warnings;
-  JSTelemetrySender sender(cx->runtime());
-  SharedModule module = CompileBuffer(*compileArgs, *bytecode, &error,
-                                      &warnings, nullptr, sender);
+  SharedModule module =
+      CompileBuffer(*compileArgs, *bytecode, &error, &warnings);
   if (!module) {
     if (error) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -1519,9 +1518,8 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   UniqueChars error;
   UniqueCharsVector warnings;
-  JSTelemetrySender sender(cx->runtime());
-  SharedModule module = CompileBuffer(*compileArgs, *bytecode, &error,
-                                      &warnings, nullptr, sender);
+  SharedModule module =
+      CompileBuffer(*compileArgs, *bytecode, &error, &warnings);
   if (!module) {
     if (error) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -3466,14 +3464,12 @@ struct CompileBufferTask : PromiseHelperTask {
   SharedModule module;
   bool instantiate;
   PersistentRootedObject importObj;
-  JSTelemetrySender sender;
 
   CompileBufferTask(JSContext* cx, Handle<PromiseObject*> promise,
                     HandleObject importObj)
       : PromiseHelperTask(cx, promise),
         instantiate(true),
-        importObj(cx, importObj),
-        sender(cx->runtime()) {}
+        importObj(cx, importObj) {}
 
   CompileBufferTask(JSContext* cx, Handle<PromiseObject*> promise)
       : PromiseHelperTask(cx, promise), instantiate(false) {}
@@ -3487,8 +3483,7 @@ struct CompileBufferTask : PromiseHelperTask {
   }
 
   void execute() override {
-    module = CompileBuffer(*compileArgs, *bytecode, &error, &warnings, nullptr,
-                           sender);
+    module = CompileBuffer(*compileArgs, *bytecode, &error, &warnings);
   }
 
   bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
@@ -3737,8 +3732,6 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
   // Set on stream thread and read racily on helper thread to abort compilation:
   Atomic<bool> streamFailed_;
 
-  JSTelemetrySender sender_;
-
   // Called on some thread before consumeChunk(), streamEnd(), streamError()):
 
   void noteResponseURLs(const char* url, const char* sourceMapUrl) override {
@@ -3884,8 +3877,8 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
           rejectAndDestroyBeforeHelperThreadStarted(StreamOOMCode);
           return;
         }
-        module_ = CompileBuffer(*compileArgs_, *bytecode, &compileError_,
-                                &warnings_, nullptr, sender_);
+        module_ =
+            CompileBuffer(*compileArgs_, *bytecode, &compileError_, &warnings_);
         setClosedAndDestroyBeforeHelperThreadStarted();
         return;
       }
@@ -3932,10 +3925,9 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
   // Called on a helper thread:
 
   void execute() override {
-    module_ =
-        CompileStreaming(*compileArgs_, envBytes_, codeBytes_,
-                         exclusiveCodeBytesEnd_, exclusiveStreamEnd_,
-                         streamFailed_, &compileError_, &warnings_, sender_);
+    module_ = CompileStreaming(*compileArgs_, envBytes_, codeBytes_,
+                               exclusiveCodeBytesEnd_, exclusiveStreamEnd_,
+                               streamFailed_, &compileError_, &warnings_);
 
     // When execute() returns, the CompileStreamTask will be dispatched
     // back to its JS thread to call resolve() and then be destroyed. We
@@ -3983,8 +3975,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
         codeBytesEnd_(nullptr),
         exclusiveCodeBytesEnd_(mutexid::WasmCodeBytesEnd, nullptr),
         exclusiveStreamEnd_(mutexid::WasmStreamEnd),
-        streamFailed_(false),
-        sender_(cx->runtime()) {
+        streamFailed_(false) {
     MOZ_ASSERT_IF(importObj_, instantiate_);
   }
 };

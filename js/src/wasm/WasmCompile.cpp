@@ -570,8 +570,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
                                  const ShareableBytes& bytecode,
                                  UniqueChars* error,
                                  UniqueCharsVector* warnings,
-                                 JS::OptimizedEncodingListener* listener,
-                                 JSTelemetrySender telemetrySender) {
+                                 JS::OptimizedEncodingListener* listener) {
   Decoder d(bytecode.bytes, 0, error, warnings);
 
   CompilerEnvironment compilerEnv(args);
@@ -583,7 +582,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
   }
 
   ModuleGenerator mg(args, &env, nullptr, error);
-  if (!mg.init(nullptr, telemetrySender)) {
+  if (!mg.init()) {
     return nullptr;
   }
 
@@ -599,8 +598,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
 }
 
 void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
-                        const Module& module, Atomic<bool>* cancelled,
-                        JSTelemetrySender telemetrySender) {
+                        const Module& module, Atomic<bool>* cancelled) {
   UniqueChars error;
   Decoder d(bytecode, 0, &error);
 
@@ -630,7 +628,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   }
 
   ModuleGenerator mg(args, &env, cancelled, &error);
-  if (!mg.init(nullptr, telemetrySender)) {
+  if (!mg.init()) {
     return;
   }
 
@@ -730,7 +728,7 @@ SharedModule wasm::CompileStreaming(
     const ExclusiveBytesPtr& codeBytesEnd,
     const ExclusiveStreamEndData& exclusiveStreamEnd,
     const Atomic<bool>& cancelled, UniqueChars* error,
-    UniqueCharsVector* warnings, JSTelemetrySender telemetrySender) {
+    UniqueCharsVector* warnings) {
   CompilerEnvironment compilerEnv(args);
   ModuleEnvironment env(&compilerEnv, args.sharedMemoryEnabled
                                           ? Shareable::True
@@ -753,7 +751,7 @@ SharedModule wasm::CompileStreaming(
   }
 
   ModuleGenerator mg(args, &env, &cancelled, error);
-  if (!mg.init(nullptr, telemetrySender)) {
+  if (!mg.init()) {
     return nullptr;
   }
 
