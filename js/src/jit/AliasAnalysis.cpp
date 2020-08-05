@@ -163,6 +163,9 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::SetArgumentsObjectArg:
     case MDefinition::Opcode::CreateThis:
     case MDefinition::Opcode::NewArrayDynamicLength:
+    case MDefinition::Opcode::NewTypedArrayDynamicLength:
+    case MDefinition::Opcode::CheckObjCoercible:
+    case MDefinition::Opcode::ToObject:
     case MDefinition::Opcode::CompareExchangeTypedArrayElement:
     case MDefinition::Opcode::AtomicExchangeTypedArrayElement:
     case MDefinition::Opcode::AtomicTypedArrayElementBinop:

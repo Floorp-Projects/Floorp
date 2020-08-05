@@ -2229,7 +2229,10 @@ class MNewTypedArrayDynamicLength : public MUnaryInstruction,
   JSObject* templateObject() const { return templateObject_; }
   gc::InitialHeap initialHeap() const { return initialHeap_; }
 
-  virtual AliasSet getAliasSet() const override { return AliasSet::None(); }
+  AliasSet getAliasSet() const override {
+    // Throws if length is negative.
+    return AliasSet::Store(AliasSet::ExceptionState);
+  }
 
   bool appendRoots(MRootList& roots) const override {
     return roots.append(templateObject_);
@@ -4451,7 +4454,10 @@ class MToObject : public MUnaryInstruction, public BoxInputsPolicy::Data {
   INSTRUCTION_HEADER(ToObject)
   TRIVIAL_NEW_WRAPPERS
 
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  AliasSet getAliasSet() const override {
+    // Throws on null or undefined.
+    return AliasSet::Store(AliasSet::ExceptionState);
+  }
 
   ALLOW_CLONE(MToObject)
 };
@@ -11458,7 +11464,11 @@ class MCheckObjCoercible : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, checkValue))
 
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  AliasSet getAliasSet() const override {
+    // Throws on null or undefined.
+    return AliasSet::Store(AliasSet::ExceptionState);
+  }
+
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
