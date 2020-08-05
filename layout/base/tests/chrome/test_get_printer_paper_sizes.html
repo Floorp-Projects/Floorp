@@ -26,7 +26,8 @@ async function run() {
       for (let paper of paperList) {
         paper.QueryInterface(Ci.nsIPaper);
 
-        info(`${paper.name}: ${paper.width}x${paper.height} with margin: ${paper.unwriteableMarginTop} ${paper.unwriteableMarginRight} ${paper.unwriteableMarginBottom} ${paper.unwriteableMarginLeft}`);
+        info(`${paper.name}: ${paper.width}x${paper.height}`);
+
         isnot(paper.name, null, "Paper name should never be null.");
         isnot(paper.name, "", "Paper name should never be empty.");
 
@@ -36,20 +37,24 @@ async function run() {
         isnot(paper.height, null, "Paper height should never be null.");
         ok(paper.height > 0.0, "Paper height should be greater than zero.");
 
-        isnot(paper.unwriteableMarginTop, null, "Paper unwriteableMarginTop should never be null.");
-        ok(paper.unwriteableMarginTop >= 0.0, "Paper unwriteableMarginTop should be greater than or equal to zero.");
 
-        isnot(paper.unwriteableMarginBottom, null, "Paper unwriteableMarginBottom should never be null.");
-        ok(paper.unwriteableMarginBottom >= 0.0, "Paper unwriteableMarginBottom should be greater than or equal to zero.");
+        let margin = await paper.unwriteableMargin;
+        margin.QueryInterface(Ci.nsIPaperMargin);
 
-        isnot(paper.unwriteableMarginLeft, null, "Paper unwriteableMarginLeft should never be null.");
-        ok(paper.unwriteableMarginLeft >= 0.0, "Paper unwriteableMarginLeft should be greater than or equal to zero.");
+        info(`with margin: ${margin.top} ${margin.right} ${margin.bottom} ${margin.left}`);
+        is(typeof(margin.top), 'number', "Paper unwriteable margin top should be a number.");
+        is(typeof(margin.right), 'number', "Paper unwriteable margin right should be a number.");
+        is(typeof(margin.bottom), 'number', "Paper unwriteable margin bottom should be a number.");
+        is(typeof(margin.left), 'number', "Paper unwriteable margin left should be a number.");
 
-        isnot(paper.unwriteableMarginRight, null, "Paper unwriteableMarginRight should never be null.");
-        ok(paper.unwriteableMarginRight >= 0.0, "Paper unwriteableMarginRight should be greater than or equal to zero.");
+        ok(margin.top >= 0.0, "Paper unwriteable margin top should be greater than or equal to zero.");
+        ok(margin.right >= 0.0, "Paper unwriteable margin right should be greater than or equal to zero.");
+        ok(margin.bottom >= 0.0, "Paper unwriteable bottom right should be greater than or equal to zero.");
+        ok(margin.left >= 0.0, "Paper unwriteable margin left should be greater than or equal to zero.");
       }
     }
   } catch (e) {
+    ok(false, `Shouldn't throw: ${e}`);
     Cu.reportError(e);
   }
   SimpleTest.finish();
