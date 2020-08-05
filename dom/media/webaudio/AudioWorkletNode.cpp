@@ -610,10 +610,8 @@ void AudioWorkletNode::InitializeParameters(
   const AudioParamDescriptorMap* parameterDescriptors =
       context->GetParamMapForWorkletName(mNodeName);
   MOZ_ASSERT(parameterDescriptors);
-  nsPIDOMWindowInner* window = context->GetParentObject();
-  MOZ_ASSERT(window);
 
-  mParameters = new AudioParamMap(window);
+  mParameters = new AudioParamMap(this);
   size_t audioParamIndex = 0;
   aParamTimelines->SetCapacity(parameterDescriptors->Length());
 
