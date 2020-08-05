@@ -887,6 +887,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       atomsZoneFreeLists_(this),
       defaultFreeOp_(this, runtime, true),
       freeUnusedMemory(false),
+      measuringExecutionTime_(this, false),
       jitActivation(this, nullptr),
       isolate(this, nullptr),
       activation_(this, nullptr),

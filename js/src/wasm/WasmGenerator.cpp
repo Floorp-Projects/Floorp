@@ -28,6 +28,7 @@
 
 #include "util/Memory.h"
 #include "util/Text.h"
+#include "vm/Time.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
@@ -169,8 +170,11 @@ bool ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align,
   return true;
 }
 
-bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
+bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
+                           JSTelemetrySender telemetrySender) {
   // Perform fallible metadata, linkdata, assumption allocations.
+
+  telemetrySender_ = telemetrySender;
 
   MOZ_ASSERT(isAsmJS() == !!maybeAsmJSMetadata);
   if (maybeAsmJSMetadata) {
@@ -439,7 +443,8 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   }
   for (size_t i = 0; i < numTasks; i++) {
     tasks_.infallibleEmplaceBack(*env_, taskState_,
-                                 COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+                                 COMPILATION_LIFO_DEFAULT_CHUNK_SIZE,
+                                 telemetrySender);
   }
 
   if (!freeTasks_.reserve(numTasks)) {
@@ -736,6 +741,11 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
   MOZ_ASSERT(task->lifo.isEmpty());
   MOZ_ASSERT(task->output.empty());
 
+#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
+  int64_t startTime = PRMJ_Now();
+  int compileTimeTelemetryID;
+#endif
+
   switch (task->env.tier()) {
     case Tier::Optimized:
       switch (task->env.optimizedBackend()) {
@@ -744,12 +754,18 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
                                          &task->output, error)) {
             return false;
           }
+#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
+          compileTimeTelemetryID = JS_TELEMETRY_WASM_COMPILE_TIME_CRANELIFT_US;
+#endif
           break;
         case OptimizedBackend::Ion:
           if (!IonCompileFunctions(task->env, task->lifo, task->inputs,
                                    &task->output, error)) {
             return false;
           }
+#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
+          compileTimeTelemetryID = JS_TELEMETRY_WASM_COMPILE_TIME_ION_US;
+#endif
           break;
       }
       break;
@@ -758,8 +774,18 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
                                     &task->output, error)) {
         return false;
       }
+#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
+      compileTimeTelemetryID = JS_TELEMETRY_WASM_COMPILE_TIME_BASELINE_US;
+#endif
       break;
   }
+
+#ifdef ENABLE_SPIDERMONKEY_TELEMETRY
+  int64_t endTime = PRMJ_Now();
+  int64_t compileTimeMicros = endTime - startTime;
+
+  task->telemetrySender.addTelemetry(compileTimeTelemetryID, compileTimeMicros);
+#endif
 
   MOZ_ASSERT(task->lifo.isEmpty());
   MOZ_ASSERT(task->inputs.length() == task->output.codeRanges.length());
@@ -1257,7 +1283,8 @@ SharedModule ModuleGenerator::finishModule(
   }
 
   if (mode() == CompileMode::Tier1) {
-    module->startTier2(*compileArgs_, bytecode, maybeTier2Listener);
+    module->startTier2(*compileArgs_, bytecode, maybeTier2Listener,
+                       telemetrySender_);
   } else if (tier() == Tier::Serialized && maybeTier2Listener) {
     module->serialize(*linkData_, *maybeTier2Listener);
   }
