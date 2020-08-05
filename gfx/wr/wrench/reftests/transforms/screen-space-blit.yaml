@@ -9,14 +9,14 @@ root:
       items:
         - type: "stacking-context"
           transform-origin: 235 235
-          transform: rotate-x(15)
+          transform: rotate-x(-15)
           filters: identity
           items:
             - image: checkerboard(2, 16, 16)
               bounds: [100, 100, 260, 260]
     - type: "stacking-context"
       transform-origin: 635 235
-      transform: rotate-z(45)
+      transform: rotate-z(-45)
       items:
         - image: checkerboard(2, 16, 16)
           bounds: [500, 100, 260, 260]

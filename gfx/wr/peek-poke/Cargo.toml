@@ -8,7 +8,7 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [dependencies]
-euclid = { version = "0.20.0", optional = true }
+euclid = { version = "0.22.0", optional = true }
 peek-poke-derive = { version = "0.2", path = "./peek-poke-derive", optional = true }
 
 [features]
