@@ -950,3 +950,71 @@ async function runTests(tests, options = {}) {
   // Some tests destroy the original tab and leave a new one in its place.
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
+
+/**
+ * Given a browser from a tab in this window, chooses to share
+ * some combination of camera, mic or screen.
+ *
+ * @param {<xul:browser} browser - The browser to share devices with.
+ * @param {boolean} camera - True to share a camera device.
+ * @param {boolean} mic - True to share a microphone device.
+ * @param {boolean} screen - True to share a display device.
+ * @return {Promise}
+ * @resolves {undefined} - Once the sharing is complete.
+ */
+async function shareDevices(browser, camera, mic, screen) {
+  if (camera || mic) {
+    let promise = promisePopupNotificationShown(
+      "webRTC-shareDevices",
+      null,
+      window
+    );
+
+    await promiseRequestDevice(mic, camera, null, null, browser);
+    await promise;
+
+    checkDeviceSelectors(mic, camera);
+    let observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
+    let observerPromise2 = expectObserverCalled("recording-device-events");
+    promise = promiseMessage("ok", () => {
+      PopupNotifications.panel.firstElementChild.button.click();
+    });
+
+    await observerPromise1;
+    await observerPromise2;
+    await promise;
+  }
+
+  if (screen) {
+    let promise = promisePopupNotificationShown(
+      "webRTC-shareDevices",
+      null,
+      window
+    );
+
+    await promiseRequestDevice(false, true, null, "screen", browser);
+    await promise;
+
+    checkDeviceSelectors(false, false, true, window);
+
+    let document = window.document;
+
+    // Select one of the windows / screens. It doesn't really matter which.
+    let menulist = document.getElementById("webRTC-selectWindow-menulist");
+    menulist.getItemAtIndex(menulist.itemCount - 1).doCommand();
+    let notification = window.PopupNotifications.panel.firstElementChild;
+
+    let observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
+    let observerPromise2 = expectObserverCalled("recording-device-events");
+    await promiseMessage(
+      "ok",
+      () => {
+        notification.button.click();
+      },
+      1,
+      browser
+    );
+    await observerPromise1;
+    await observerPromise2;
+  }
+}
