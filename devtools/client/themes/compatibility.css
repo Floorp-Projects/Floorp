@@ -114,7 +114,6 @@
 .compatibility-issue-item__mdn-link {
   color: var(--theme-highlight-blue);
   text-decoration: none;
-  unicode-bidi: plaintext;
 }
 
 .compatibility-issue-item__aliases {
@@ -123,10 +122,6 @@
   margin: 0;
   padding-inline-start: calc(var(--compatibility-base-unit) * 2);
   padding-block-end: var(--compatibility-base-unit);
-}
-
-.compatibility-issue-item__alias {
-  unicode-bidi: plaintext;
 }
 
 .compatibility-unsupported-browser-list {
