@@ -114,15 +114,10 @@ void CacheChild::ActorDestroy(ActorDestroyReason aReason) {
   RemoveWorkerRef();
 }
 
-PCacheOpChild* CacheChild::AllocPCacheOpChild(const CacheOpArgs& aOpArgs) {
+already_AddRefed<PCacheOpChild> CacheChild::AllocPCacheOpChild(
+    const CacheOpArgs& aOpArgs) {
   MOZ_CRASH("CacheOpChild should be manually constructed.");
   return nullptr;
-}
-
-bool CacheChild::DeallocPCacheOpChild(PCacheOpChild* aActor) {
-  delete aActor;
-  NoteDeletedActor();
-  return true;
 }
 
 void CacheChild::NoteDeletedActor() {
