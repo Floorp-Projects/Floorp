@@ -406,7 +406,7 @@ struct Program {
 #define CONCAT_KEY(prefix, x, y, z, w, ...) prefix##x##y##z##w
 #define BLEND_KEY(...) CONCAT_KEY(BLEND_, __VA_ARGS__, 0, 0)
 #define FOR_EACH_BLEND_KEY(macro)                                              \
-  macro(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE)                  \
+  macro(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)  \
   macro(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, 0, 0)                                  \
   macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, 0, 0)                                 \
   macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE)                      \
@@ -2475,11 +2475,11 @@ static inline WideRGBA8 blend_pixels_RGBA8(PackedRGBA8 pdst, WideRGBA8 src) {
   switch (blend_key) {
     case BLEND_KEY_NONE:
       return src;
-    case BLEND_KEY(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE):
-      // dst + src.a*(src.rgb1 - dst.rgb0)
+    case BLEND_KEY(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+                   GL_ONE_MINUS_SRC_ALPHA):
+      // dst + src.a*(src.rgb1 - dst)
       // use addlow for signed overflow
-      return addlow(
-          dst, muldiv255(alphas(src), (src | ALPHA_OPAQUE) - (dst & RGB_MASK)));
+      return addlow(dst, muldiv255(alphas(src), (src | ALPHA_OPAQUE) - dst));
     case BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC_ALPHA):
       return src + dst - muldiv255(dst, alphas(src));
     case BLEND_KEY(GL_ZERO, GL_ONE_MINUS_SRC_COLOR):
