@@ -63,7 +63,7 @@ if is_asm_enabled
     endforeach
 
     checkasm_nasm_objs = []
-    if host_machine.cpu_family() == 'aarch64'
+    if host_machine.cpu_family() == 'aarch64' or host_machine.cpu() == 'arm64'
         checkasm_sources += files('checkasm/arm/checkasm_64.S')
     elif host_machine.cpu_family().startswith('arm')
         checkasm_sources += files('checkasm/arm/checkasm_32.S')
