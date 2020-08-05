@@ -219,6 +219,15 @@ class Mitmproxy(Playback):
     def stop(self):
         self.stop_mitmproxy_playback()
 
+    def wait(self, timeout=1):
+        """Wait until the mitmproxy process has terminated."""
+        # We wait using this method to allow Windows to respond to the Ctrl+Break
+        # signal so that we can exit cleanly from the command-line driver.
+        while True:
+            returncode = self.mitmproxy_proc.wait(timeout)
+            if returncode is not None:
+                return returncode
+
     def start_mitmproxy_playback(self, mitmdump_path, browser_path):
         """Startup mitmproxy and replay the specified flow file"""
         if self.mitmproxy_proc is not None:
@@ -235,10 +244,12 @@ class Mitmproxy(Playback):
         # add proxy host and port options
         command.extend(["--listen-host", self.host, "--listen-port", str(self.port)])
 
-        if "playback_tool_args" in self.config:
+        if self.config.get("playback_tool_args"):
             LOG.info("Staring Proxy using provided command line!")
             command.extend(self.config["playback_tool_args"])
-        elif "playback_files" in self.config:
+        elif self.config.get("playback_record"):
+            command.extend(["-w", self.config.get("playback_record")])
+        elif self.config.get("playback_files"):
             script = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 "scripts",

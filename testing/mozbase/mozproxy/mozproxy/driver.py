@@ -7,7 +7,6 @@ import argparse
 import os
 import signal
 import sys
-import time
 
 import mozinfo
 import mozlog.commandline
@@ -15,11 +14,16 @@ import mozlog.commandline
 from . import get_playback
 from .utils import LOG, TOOLTOOL_PATHS
 
+EXIT_SUCCESS = 0
+EXIT_EARLY_TERMINATE = 3
+EXIT_EXCEPTION = 4
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--local", action="store_true",
                         help="run this locally (i.e. not in production)")
+    parser.add_argument("--record", help="generate a proxy recording")
     parser.add_argument("--tool", default="mitmproxy",
                         help="the playback tool to use (default: %(default)s)")
     parser.add_argument("--host", default="localhost",
@@ -57,6 +61,7 @@ def main():
         playback = get_playback({
             "run_local": args.local,
             "playback_tool": args.tool,
+            "playback_record": args.record,
             "host": args.host,
             "binary": args.binary,
             "obj_path": args.objdir,
@@ -68,12 +73,13 @@ def main():
 
         LOG.info("Proxy running on port %d" % playback.port)
         # Wait for a keyboard interrupt from the caller so we know when to
-        # terminate. We wait using this method to allow Windows to respond to
-        # the Ctrl+Break signal so that we can exit cleanly.
-        while True:
-            time.sleep(1)
+        # terminate.
+        playback.wait()
+        return EXIT_EARLY_TERMINATE
     except KeyboardInterrupt:
         LOG.info("Terminating mozproxy")
         playback.stop()
+        return EXIT_SUCCESS
     except Exception as e:
         LOG.error(str(e), exc_info=True)
+        return EXIT_EXCEPTION

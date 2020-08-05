@@ -5,11 +5,12 @@ import json
 import os
 import re
 import signal
+import tempfile
 import threading
 
 from mozlog import get_proxy_logger
 from mozperftest.layers import Layer
-from mozperftest.utils import install_package
+from mozperftest.utils import download_file, install_package
 from mozprocess import ProcessHandler
 
 
@@ -63,9 +64,23 @@ class ProxyRunner(Layer):
     name = "proxy"
     activated = False
 
+    arguments = {
+        "record": {
+            "type": str,
+            "default": None,
+            "help": "Generate a recording of the network requests during this test.",
+        },
+        "replay": {
+            "type": str,
+            "default": None,
+            "help": "A generated recording to play back during this test.",
+        },
+    }
+
     def __init__(self, env, mach_cmd):
         super(ProxyRunner, self).__init__(env, mach_cmd)
         self.proxy = None
+        self.tmpdir = None
 
     def setup(self):
         # Install mozproxy and its vendored deps.
@@ -77,18 +92,33 @@ class ProxyRunner(Layer):
     def run(self, metadata):
         self.metadata = metadata
 
+        replay_file = self.get_arg("replay")
+        if replay_file is not None and replay_file.startswith("http"):
+            self.tmpdir = tempfile.TemporaryDirectory()
+            target = os.path.join(self.tmpdir.name, "recording.dump")
+            self.info("Downloading %s" % replay_file)
+            download_file(replay_file, target)
+            replay_file = target
+
         self.info("Setting up the proxy")
         # replace with artifacts
+        command = [
+            "mozproxy",
+            "--local",
+            "--binary=" + self.mach_cmd.get_binary_path(),
+            "--topsrcdir=" + self.mach_cmd.topsrcdir,
+            "--objdir=" + self.mach_cmd.topobjdir,
+        ]
+        if self.get_arg("record"):
+            command.extend(["--record", self.get_arg("record")])
+        elif replay_file:
+            command.append(replay_file)
+        else:
+            command.append(os.path.join(HERE, "example.dump"))
+
         self.output_handler = OutputHandler()
         self.proxy = ProcessHandler(
-            [
-                "mozproxy",
-                "--local",
-                "--binary=" + self.mach_cmd.get_binary_path(),
-                "--topsrcdir=" + self.mach_cmd.topsrcdir,
-                "--objdir=" + self.mach_cmd.topobjdir,
-                os.path.join(HERE, "example.dump"),
-            ],
+            command,
             processOutputLine=self.output_handler,
             onFinish=self.output_handler.finished,
         )
@@ -115,8 +145,21 @@ class ProxyRunner(Layer):
         return metadata
 
     def teardown(self):
+        err = None
         if self.proxy is not None:
-            kill_signal = getattr(signal, "CTRL_BREAK_EVENT", signal.SIGINT)
-            os.kill(self.proxy.pid, kill_signal)
-            self.proxy.wait()
+            returncode = self.proxy.wait(0)
+            if returncode is not None:
+                err = ValueError(
+                    "mozproxy terminated early with return code %d" % returncode
+                )
+            else:
+                kill_signal = getattr(signal, "CTRL_BREAK_EVENT", signal.SIGINT)
+                os.kill(self.proxy.pid, kill_signal)
+                self.proxy.wait()
             self.proxy = None
+        if self.tmpdir is not None:
+            self.tmpdir.cleanup()
+            self.tmpdir = None
+
+        if err:
+            raise err

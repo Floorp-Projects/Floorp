@@ -1,17 +1,18 @@
 #!/usr/bin/env python
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import json
 import os
 import re
 import signal
 import threading
+import time
 
 import mozunit
 import pytest
 from mozbuild.base import MozbuildObject
 from mozprocess import ProcessHandler
 
-here = os.path.abspath(os.path.dirname(__file__))
+here = os.path.dirname(__file__)
 
 
 # This is copied from <python/mozperftest/mozperftest/utils.py>. It's copied
@@ -48,6 +49,8 @@ class OutputHandler(object):
         if not line.strip():
             return
         line = line.decode("utf-8", errors="replace")
+        # Print the output we received so we have useful logs if a test fails.
+        print(line)
 
         try:
             data = json.loads(line)
@@ -93,7 +96,8 @@ def test_run(install_mozproxy):
          "--local",
          "--binary=firefox",
          "--topsrcdir=" + build.topsrcdir,
-         "--objdir=" + build.topobjdir],
+         "--objdir=" + build.topobjdir,
+         os.path.join(here, "example.dump")],
         processOutputLine=output_handler,
         onFinish=output_handler.finished,
     )
@@ -101,6 +105,9 @@ def test_run(install_mozproxy):
     # The first time we run mozproxy, we need to fetch mitmproxy, which can
     # take a while...
     assert output_handler.port_event.wait(120) is True
+    # Give mitmproxy a bit of time to start up so we can verify that it's
+    # actually running before we kill mozproxy.
+    time.sleep(5)
     _kill_mozproxy(p.pid)
 
     assert p.wait(10) == 0
