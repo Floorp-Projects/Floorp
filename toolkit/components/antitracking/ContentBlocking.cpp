@@ -212,24 +212,25 @@ ContentBlocking::AllowAccessFor(
                                                                  __func__);
   }
 
+  bool isParentTopLevel = aParentContext->IsTopContent();
+
   // Make sure storage access isn't disabled
-  if (!aParentContext->IsTopContent() &&
+  if (!isParentTopLevel &&
       Document::StorageAccessSandboxed(aParentContext->GetSandboxFlags())) {
     LOG(("Our document is sandboxed"));
     return StorageAccessPermissionGrantPromise::CreateAndReject(false,
                                                                 __func__);
   }
 
-  bool isParentThirdParty = parentWindowContext->GetIsThirdPartyWindow();
   uint64_t topLevelWindowId;
   nsAutoCString trackingOrigin;
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
 
   LOG(("The current resource is %s-party",
-       isParentThirdParty ? "third" : "first"));
+       isParentTopLevel ? "first" : "third"));
 
   // We are a first party resource.
-  if (!isParentThirdParty) {
+  if (isParentTopLevel) {
     nsAutoCString origin;
     nsresult rv = aPrincipal->GetAsciiOrigin(origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -258,7 +259,7 @@ ContentBlocking::AllowAccessFor(
     if ((CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
          behavior ==
              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) &&
-        !isParentThirdParty) {
+        !parentWindowContext->GetIsThirdPartyWindow()) {
       LOG(("Our window isn't a third-party window"));
       return StorageAccessPermissionGrantPromise::CreateAndReject(false,
                                                                   __func__);
@@ -790,18 +791,12 @@ void ContentBlocking::UpdateAllowAccessOnParentProcess(
   // agent-cluster.
   for (const auto& topContext : aParentContext->Group()->Toplevels()) {
     if (topContext == aParentContext->Top()) {
-      // In non-fission mode, storage permission is stored in the top-level,
-      // don't need to propagtes it to tracker frames.
+      // We don't have to update same-origin frames in the same tab unless
+      // when we are in fission mode and the storage permission granted is
+      // called by a first-party window and we are in fission mode.
       bool useRemoteSubframes;
       aParentContext->GetUseRemoteSubframes(&useRemoteSubframes);
-      if (!useRemoteSubframes) {
-        continue;
-      }
-      // If parent context is third-party, we already propagate permission
-      // in the child process, skip propagating here.
-      RefPtr<dom::WindowContext> ctx =
-          aParentContext->GetCurrentWindowContext();
-      if (ctx && ctx->GetIsThirdPartyWindow()) {
+      if (!useRemoteSubframes || !aParentContext->IsTop()) {
         continue;
       }
     } else {
