@@ -5,6 +5,7 @@
 
 #include "nsPrinterBase.h"
 #include "nsPrinter.h"
+#include "nsPaper.h"
 #include "mozilla/dom/Promise.h"
 
 using namespace mozilla;
@@ -84,7 +85,14 @@ NS_IMETHODIMP nsPrinterBase::GetSupportsColor(JSContext* aCx,
                                            &nsPrinterBase::SupportsColor);
 }
 
-NS_IMPL_CYCLE_COLLECTION(nsPrinterBase, mAsyncAttributePromises, mPaperList)
+NS_IMETHODIMP nsPrinterBase::GetPaperList(JSContext* aCx,
+                                          Promise** aResultPromise) {
+  return AsyncPromiseAttributeGetter<nsTArray<PaperInfo>>(
+      aCx, aResultPromise, AsyncAttribute::PaperList,
+      &nsPrinterBase::PaperList);
+}
+
+NS_IMPL_CYCLE_COLLECTION(nsPrinterBase, mAsyncAttributePromises)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPrinterBase)
   NS_INTERFACE_MAP_ENTRY(nsIPrinter)

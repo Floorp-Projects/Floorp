@@ -7,14 +7,15 @@
 #define nsPrinter_h__
 
 #include "nsPrinterBase.h"
+#include "nsPaper.h"
 #include "nsString.h"
 
 class nsPrinter final : public nsPrinterBase {
  public:
   NS_IMETHOD GetName(nsAString& aName) override;
-  NS_IMETHOD GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) override;
   bool SupportsDuplex() const final { return false; }
   bool SupportsColor() const final { return false; }
+  nsTArray<mozilla::PaperInfo> PaperList() const final { return {}; }
 
   nsPrinter() = delete;
 
