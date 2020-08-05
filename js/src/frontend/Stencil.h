@@ -202,16 +202,6 @@ class ScopeCreationData {
   // Data to reify an environment shape at creation time.
   EnvironmentShapeCreationData environmentShape_;
 
-  // Once we've produced a scope from a scope creation data, there may still be
-  // AbstractScopePtrs refering to this ScopeCreationData, and if reification is
-  // requested multiple times, we should return the same scope rather than
-  // creating multiple sopes.
-  //
-  // As well, any queries that require data() to answer must be redirected to
-  // the scope once the scope has been reified, as the ScopeCreationData loses
-  // ownership of the data on reification.
-  HeapPtr<Scope*> scope_ = {};
-
   // Canonical function if this is a FunctionScope.
   mozilla::Maybe<FunctionIndex> functionIndex_;
 
@@ -237,7 +227,7 @@ class ScopeCreationData {
   ScopeKind kind() const { return kind_; }
   AbstractScopePtr enclosing() { return enclosing_; }
 
-  Scope* getEnclosingScope(JSContext* cx);
+  Scope* getEnclosingScope();
 
   // FunctionScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
@@ -287,13 +277,6 @@ class ScopeCreationData {
 
   bool isArrow() const { return isArrow_; }
 
-  bool hasScope() const { return scope_ != nullptr; }
-
-  Scope* getScope() const {
-    MOZ_ASSERT(hasScope());
-    return scope_;
-  }
-
   Scope* createScope(JSContext* cx, CompilationInfo& compilationInfo);
 
   void trace(JSTracer* trc);
@@ -320,9 +303,6 @@ class ScopeCreationData {
   uint32_t nextFrameSlot() const {
     // If a scope has been allocated for the ScopeCreationData we no longer own
     // data, so defer to scope
-    if (hasScope()) {
-      return getScope()->template as<SpecificScopeType>().nextFrameSlot();
-    }
     return data<SpecificScopeType>().nextFrameSlot;
   }
 };
