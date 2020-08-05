@@ -890,6 +890,20 @@
   args:
     obj: ObjId
 
+- name: PackedArrayPopResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    array: ObjId
+
+- name: PackedArrayShiftResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    array: ObjId
+
 - name: IsArrayResult
   shared: false
   transpile: true
