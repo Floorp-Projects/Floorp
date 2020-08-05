@@ -1767,8 +1767,8 @@ pub(crate) fn emit(
 
         Inst::XmmRmRImm { op, src, dst, imm } => {
             let prefix = match op {
-                SseOpcode::Cmpps => LegacyPrefix::_66,
-                SseOpcode::Cmppd => LegacyPrefix::None,
+                SseOpcode::Cmpps => LegacyPrefix::None,
+                SseOpcode::Cmppd => LegacyPrefix::_66,
                 SseOpcode::Cmpss => LegacyPrefix::_F3,
                 SseOpcode::Cmpsd => LegacyPrefix::_F2,
                 _ => unimplemented!("Opcode {:?} not implemented", op),
@@ -1949,9 +1949,9 @@ pub(crate) fn emit(
             //
             //  done:
 
-            assert!(src != tmp_gpr1);
-            assert!(src != tmp_gpr2);
-            assert!(tmp_gpr1 != tmp_gpr2);
+            assert_ne!(src, tmp_gpr1);
+            assert_ne!(src, tmp_gpr2);
+            assert_ne!(tmp_gpr1, tmp_gpr2);
 
             let handle_negative = sink.get_label();
             let done = sink.get_label();
@@ -2251,7 +2251,7 @@ pub(crate) fn emit(
             //
             // done:
 
-            assert!(tmp_xmm != src, "tmp_xmm clobbers src!");
+            assert_ne!(tmp_xmm, src, "tmp_xmm clobbers src!");
 
             let (sub_op, cast_op, cmp_op, trunc_op) = if *src_size == OperandSize::Size64 {
                 (
