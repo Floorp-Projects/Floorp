@@ -54,7 +54,7 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 SvcParam::GetType(uint16_t* aType) {
   *aType = mValue.match(
-      [](Nothing&) { return SvcParamKeyNone; },
+      [](Nothing&) { return SvcParamKeyMandatory; },
       [](SvcParamAlpn&) { return SvcParamKeyAlpn; },
       [](SvcParamNoDefaultAlpn&) { return SvcParamKeyNoDefaultAlpn; },
       [](SvcParamPort&) { return SvcParamKeyPort; },
