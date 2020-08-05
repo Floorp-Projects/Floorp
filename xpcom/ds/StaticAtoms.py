@@ -2515,6 +2515,7 @@ STATIC_ATOMS = [
     InheritingAnonBoxAtom("AnonBox_page", ":-moz-page"),
     InheritingAnonBoxAtom("AnonBox_pageContent", ":-moz-pagecontent"),
     InheritingAnonBoxAtom("AnonBox_pageSequence", ":-moz-page-sequence"),
+    InheritingAnonBoxAtom("AnonBox_printedSheet", ":-moz-printed-sheet"),
     InheritingAnonBoxAtom("AnonBox_scrolledContent", ":-moz-scrolled-content"),
     InheritingAnonBoxAtom("AnonBox_scrolledCanvas", ":-moz-scrolled-canvas"),
     InheritingAnonBoxAtom("AnonBox_scrolledPageSequence", ":-moz-scrolled-page-sequence"),

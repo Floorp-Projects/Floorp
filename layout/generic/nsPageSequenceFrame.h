@@ -55,6 +55,9 @@ class nsSharedPageData {
 };
 
 // Page sequence frame class. Manages a series of pages, in paginated mode.
+// (Strictly speaking, this frame's direct children are PrintedSheetFrame
+// instances, and each of those will usually contain one nsPageFrame, depending
+// on the "pages-per-sheet" setting.)
 class nsPageSequenceFrame final : public nsContainerFrame {
  public:
   friend nsPageSequenceFrame* NS_NewPageSequenceFrame(
@@ -98,7 +101,7 @@ class nsPageSequenceFrame final : public nsContainerFrame {
   bool HasTransformGetter() const override { return true; }
 
   /**
-   * Return our first page frame.
+   * Return our first sheet frame.
    */
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 

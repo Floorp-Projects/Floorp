@@ -526,9 +526,6 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplayListCollection set(aBuilder);
 
   nsPresContext* pc = PresContext();
-  if (pc->IsScreen()) {
-    DisplayBorderBackgroundOutline(aBuilder, aLists);
-  }
 
   nsIFrame* child = mFrames.FirstChild();
   float scale = pc->GetPageScale();
