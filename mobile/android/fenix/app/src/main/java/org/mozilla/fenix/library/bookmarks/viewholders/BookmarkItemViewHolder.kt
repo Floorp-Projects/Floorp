@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks.viewholders
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
@@ -66,7 +67,8 @@ class BookmarkItemViewHolder(
         setSelectionListeners(item, selectionHolder)
     }
 
-    private fun setColorsAndIcons(url: String?) {
+    @VisibleForTesting
+    internal fun setColorsAndIcons(url: String?) {
         if (url != null && url.startsWith("http")) {
             containerView.loadFavicon(url)
         } else {

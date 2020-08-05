@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.bookmarks
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -49,7 +50,8 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
         diffUtil.dispatchUpdatesTo(this)
     }
 
-    private class BookmarkDiffUtil(
+    @VisibleForTesting
+    internal class BookmarkDiffUtil(
         val old: List<BookmarkNode>,
         val new: List<BookmarkNode>,
         val oldMode: BookmarkFragmentState.Mode,
