@@ -147,9 +147,6 @@ typedef void* nsNativeWidget;
 #if defined(MOZ_WIDGET_GTK)
 // set/get nsPluginNativeWindowGtk, e10s specific
 #  define NS_NATIVE_PLUGIN_OBJECT_PTR 104
-#  ifdef MOZ_X11
-#    define NS_NATIVE_COMPOSITOR_DISPLAY 105
-#  endif  // MOZ_X11
 #  define NS_NATIVE_EGL_WINDOW 106
 #endif
 #ifdef MOZ_WIDGET_ANDROID
