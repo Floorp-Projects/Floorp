@@ -14,7 +14,7 @@ const {
 } = require("devtools/server/actors/targets/target-actor-registry.jsm");
 const {
   WatcherRegistry,
-} = require("devtools/server/actors/descriptors/watcher/WatcherRegistry.jsm");
+} = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
 
 const TARGET_TYPES = {
   FRAME: "frame",
@@ -23,7 +23,7 @@ const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
   TARGET_HELPERS,
   TARGET_TYPES.FRAME,
-  "devtools/server/actors/descriptors/watcher/target-helpers/frame-helper"
+  "devtools/server/actors/watcher/target-helpers/frame-helper"
 );
 
 exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
