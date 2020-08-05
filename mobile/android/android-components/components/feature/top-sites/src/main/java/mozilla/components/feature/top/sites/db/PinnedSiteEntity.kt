@@ -9,7 +9,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Internal entity representing a top site.
+ * Internal entity representing a pinned site.
  */
 @Entity(tableName = "top_sites")
 internal data class PinnedSiteEntity(

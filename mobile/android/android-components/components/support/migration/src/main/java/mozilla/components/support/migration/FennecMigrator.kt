@@ -1305,7 +1305,7 @@ class FennecMigrator private constructor(
             // Reversed, so that first pinned site in Fennec ends up as the first one in Fenix, as well.
             pinnedSitesWithUrl.reversed().forEach { pinnedSite ->
                 try {
-                    pinnedSitesStorage.addTopSite(pinnedSite.title ?: "", pinnedSite.url!!)
+                    pinnedSitesStorage.addPinnedSite(pinnedSite.title ?: "", pinnedSite.url!!)
                 } catch (e: Exception) {
                     failedToImport++
                     // Let's not spam Sentry and submit the same exception multiple times

@@ -8,12 +8,12 @@ import android.content.Context
 import androidx.paging.DataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import mozilla.components.feature.top.sites.adapter.TopSiteAdapter
+import mozilla.components.feature.top.sites.adapter.PinnedSiteAdapter
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
 import mozilla.components.feature.top.sites.db.PinnedSiteEntity
 
 /**
- * A storage implementation for organizing top sites.
+ * A storage implementation for organizing pinned sites.
  */
 class PinnedSiteStorage(
     context: Context
@@ -21,46 +21,46 @@ class PinnedSiteStorage(
     internal var database: Lazy<TopSiteDatabase> = lazy { TopSiteDatabase.get(context) }
 
     /**
-     * Adds a new [TopSite].
+     * Adds a new [PinnedSite].
      *
      * @param title The title string.
      * @param url The URL string.
-     * @param isDefault Whether or not the top site added should be a default top site. This is
-     * used to identify top sites that are added by the application.
+     * @param isDefault Whether or not the pinned site added should be a default pinned site. This
+     * is used to identify pinned sites that are added by the application.
      */
-    fun addTopSite(title: String, url: String, isDefault: Boolean = false) {
+    fun addPinnedSite(title: String, url: String, isDefault: Boolean = false) {
         PinnedSiteEntity(
             title = title,
             url = url,
             isDefault = isDefault,
             createdAt = System.currentTimeMillis()
         ).also { entity ->
-            entity.id = database.value.topSiteDao().insertTopSite(entity)
+            entity.id = database.value.pinnedSiteDao().insertPinnedSite(entity)
         }
     }
 
     /**
-     * Returns a [Flow] list of all the [TopSite] instances.
+     * Returns a [Flow] list of all the [PinnedSite] instances.
      */
-    fun getTopSites(): Flow<List<TopSite>> {
-        return database.value.topSiteDao().getTopSites().map { list ->
-            list.map { entity -> TopSiteAdapter(entity) }
+    fun getPinnedSites(): Flow<List<PinnedSite>> {
+        return database.value.pinnedSiteDao().getPinnedSites().map { list ->
+            list.map { entity -> PinnedSiteAdapter(entity) }
         }
     }
 
     /**
-     * Returns all [TopSite]s as a [DataSource.Factory].
+     * Returns all [PinnedSite]s as a [DataSource.Factory].
      */
-    fun getTopSitesPaged(): DataSource.Factory<Int, TopSite> = database.value
-        .topSiteDao()
-        .getTopSitesPaged()
-        .map { entity -> TopSiteAdapter(entity) }
+    fun getPinnedSitesPaged(): DataSource.Factory<Int, PinnedSite> = database.value
+        .pinnedSiteDao()
+        .getPinnedSitesPaged()
+        .map { entity -> PinnedSiteAdapter(entity) }
 
     /**
-     * Removes the given [TopSite].
+     * Removes the given [PinnedSite].
      */
-    fun removeTopSite(site: TopSite) {
-        val topSiteEntity = (site as TopSiteAdapter).entity
-        database.value.topSiteDao().deleteTopSite(topSiteEntity)
+    fun removePinnedSite(site: PinnedSite) {
+        val pinnedSiteEntity = (site as PinnedSiteAdapter).entity
+        database.value.pinnedSiteDao().deletePinnedSite(pinnedSiteEntity)
     }
 }

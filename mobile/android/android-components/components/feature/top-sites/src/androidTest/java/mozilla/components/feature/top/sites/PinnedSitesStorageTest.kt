@@ -63,8 +63,8 @@ class PinnedSitesStorageTest {
 
     @Test
     fun testAddingTopSite() {
-        storage.addTopSite("Mozilla", "https://www.mozilla.org")
-        storage.addTopSite("Firefox", "https://www.firefox.com", isDefault = true)
+        storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
+        storage.addPinnedSite("Firefox", "https://www.firefox.com", isDefault = true)
 
         val topSites = getAllTopSites()
 
@@ -80,13 +80,13 @@ class PinnedSitesStorageTest {
 
     @Test
     fun testRemovingTopSites() {
-        storage.addTopSite("Mozilla", "https://www.mozilla.org")
-        storage.addTopSite("Firefox", "https://www.firefox.com")
+        storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
+        storage.addPinnedSite("Firefox", "https://www.firefox.com")
 
         getAllTopSites().let { topSites ->
             assertEquals(2, topSites.size)
 
-            storage.removeTopSite(topSites[0])
+            storage.removePinnedSite(topSites[0])
         }
 
         getAllTopSites().let { topSites ->
@@ -99,10 +99,10 @@ class PinnedSitesStorageTest {
 
     @Test
     fun testGettingTopSites() = runBlocking {
-        storage.addTopSite("Mozilla", "https://www.mozilla.org")
-        storage.addTopSite("Firefox", "https://www.firefox.com", isDefault = true)
+        storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
+        storage.addPinnedSite("Firefox", "https://www.firefox.com", isDefault = true)
 
-        val topSites = storage.getTopSites().first()
+        val topSites = storage.getPinnedSites().first()
 
         assertNotNull(topSites)
         assertEquals(2, topSites.size)
@@ -247,8 +247,8 @@ class PinnedSitesStorageTest {
         }
     }
 
-    private fun getAllTopSites(): List<TopSite> {
-        val dataSource = storage.getTopSitesPaged().create()
+    private fun getAllTopSites(): List<PinnedSite> {
+        val dataSource = storage.getPinnedSitesPaged().create()
 
         val pagedList = PagedList.Builder(dataSource, 10)
             .setNotifyExecutor(executor)

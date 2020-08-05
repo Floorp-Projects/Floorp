@@ -4,12 +4,12 @@
 
 package mozilla.components.feature.top.sites.adapter
 
-import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.feature.top.sites.PinnedSite
 import mozilla.components.feature.top.sites.db.PinnedSiteEntity
 
-internal class TopSiteAdapter(
+internal class PinnedSiteAdapter(
     internal val entity: PinnedSiteEntity
-) : TopSite {
+) : PinnedSite {
     override val id: Long
         get() = entity.id!!
 
@@ -23,7 +23,7 @@ internal class TopSiteAdapter(
         get() = entity.isDefault
 
     override fun equals(other: Any?): Boolean {
-        if (other !is TopSiteAdapter) {
+        if (other !is PinnedSiteAdapter) {
             return false
         }
 

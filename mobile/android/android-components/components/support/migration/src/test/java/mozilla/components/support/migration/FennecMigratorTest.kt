@@ -272,7 +272,7 @@ class FennecMigratorTest {
         assertTrue(historyStore.getVisited().isEmpty())
         assertTrue(bookmarksStore.searchBookmarks("mozilla").isEmpty())
 
-        verify(topSiteStorage, never()).addTopSite(any(), any(), anyBoolean())
+        verify(topSiteStorage, never()).addPinnedSite(any(), any(), anyBoolean())
 
         // Can run once.
         with(migrator.migrateAsync(mock()).await()) {
@@ -300,12 +300,12 @@ class FennecMigratorTest {
 
         assertEquals(5, historyStore.getVisited().size)
         assertEquals(2, bookmarksStore.searchBookmarks("mozilla").size)
-        verify(topSiteStorage, times(2)).addTopSite(any(), any(), anyBoolean())
-        verify(topSiteStorage).addTopSite(
+        verify(topSiteStorage, times(2)).addPinnedSite(any(), any(), anyBoolean())
+        verify(topSiteStorage).addPinnedSite(
             "Featured extensions for Android – Add-ons for Firefox Android (en-US)",
             "https://addons.mozilla.org/en-US/android/collections/4757633/mob/?page=1&collection_sort=-popularity"
         )
-        verify(topSiteStorage).addTopSite(
+        verify(topSiteStorage).addPinnedSite(
             "Internet for people, not profit — Mozilla",
             "https://www.mozilla.org/en-US/"
         )

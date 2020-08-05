@@ -16,18 +16,18 @@ import kotlinx.coroutines.flow.Flow
  * Internal DAO for accessing [PinnedSiteEntity] instances.
  */
 @Dao
-internal interface TopSiteDao {
+internal interface PinnedSiteDao {
     @Insert
-    fun insertTopSite(site: PinnedSiteEntity): Long
+    fun insertPinnedSite(site: PinnedSiteEntity): Long
 
     @Delete
-    fun deleteTopSite(site: PinnedSiteEntity)
+    fun deletePinnedSite(site: PinnedSiteEntity)
 
     @Transaction
     @Query("SELECT * FROM top_sites")
-    fun getTopSites(): Flow<List<PinnedSiteEntity>>
+    fun getPinnedSites(): Flow<List<PinnedSiteEntity>>
 
     @Transaction
     @Query("SELECT * FROM top_sites")
-    fun getTopSitesPaged(): DataSource.Factory<Int, PinnedSiteEntity>
+    fun getPinnedSitesPaged(): DataSource.Factory<Int, PinnedSiteEntity>
 }

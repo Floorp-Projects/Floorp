@@ -5,26 +5,26 @@
 package mozilla.components.feature.top.sites
 
 /**
- * A top site.
+ * A pinned site.
  */
-interface TopSite {
+interface PinnedSite {
     /**
-     * Unique ID of this top site.
+     * Unique ID of this pinned site.
      */
     val id: Long
 
     /**
-     * The title of the top site.
+     * The title of the pinned site.
      */
     val title: String
 
     /**
-     * The URL of the top site.
+     * The URL of the pinned site.
      */
     val url: String
 
     /**
-     * Whether or not the top site is a default top site (added as a default by the application).
+     * Whether or not the pinned site is a default pinned site (added as a default by the application).
      */
     val isDefault: Boolean
 }

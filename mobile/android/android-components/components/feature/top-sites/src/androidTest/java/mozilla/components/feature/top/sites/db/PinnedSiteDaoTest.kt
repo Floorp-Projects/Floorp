@@ -17,12 +17,12 @@ import org.junit.Test
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class TopSiteDaoTest {
+class PinnedSiteDaoTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
     private lateinit var database: TopSiteDatabase
-    private lateinit var topSiteDao: TopSiteDao
+    private lateinit var pinnedSiteDao: PinnedSiteDao
     private lateinit var executor: ExecutorService
 
     @get:Rule
@@ -31,7 +31,7 @@ class TopSiteDaoTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(context, TopSiteDatabase::class.java).build()
-        topSiteDao = database.topSiteDao()
+        pinnedSiteDao = database.pinnedSiteDao()
         executor = Executors.newSingleThreadExecutor()
     }
 
@@ -49,10 +49,10 @@ class TopSiteDaoTest {
             isDefault = false,
             createdAt = 200
         ).also {
-            it.id = topSiteDao.insertTopSite(it)
+            it.id = pinnedSiteDao.insertPinnedSite(it)
         }
 
-        val dataSource = topSiteDao.getTopSitesPaged().create()
+        val dataSource = pinnedSiteDao.getPinnedSitesPaged().create()
 
         val pagedList = PagedList.Builder(dataSource, 10)
             .setNotifyExecutor(executor)
@@ -71,7 +71,7 @@ class TopSiteDaoTest {
             isDefault = false,
             createdAt = 200
         ).also {
-            it.id = topSiteDao.insertTopSite(it)
+            it.id = pinnedSiteDao.insertPinnedSite(it)
         }
 
         val topSite2 = PinnedSiteEntity(
@@ -80,12 +80,12 @@ class TopSiteDaoTest {
             isDefault = false,
             createdAt = 100
         ).also {
-            it.id = topSiteDao.insertTopSite(it)
+            it.id = pinnedSiteDao.insertPinnedSite(it)
         }
 
-        topSiteDao.deleteTopSite(topSite1)
+        pinnedSiteDao.deletePinnedSite(topSite1)
 
-        val dataSource = topSiteDao.getTopSitesPaged().create()
+        val dataSource = pinnedSiteDao.getPinnedSitesPaged().create()
 
         val pagedList = PagedList.Builder(dataSource, 10)
             .setNotifyExecutor(executor)
