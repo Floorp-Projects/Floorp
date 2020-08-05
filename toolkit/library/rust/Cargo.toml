@@ -40,8 +40,10 @@ with_dbus = ["gkrust-shared/with_dbus"]
 [dependencies]
 gkrust-shared = { path = "shared" }
 mozilla-central-workspace-hack = { path = "../../../build/workspace-hack" }
-# Workaround for https://github.com/rust-lang/rust/issues/58393
+
+# Workarounds for https://github.com/rust-lang/rust/issues/58393
 mozglue-static = { path = "../../../mozglue/static/rust" }
+swgl = { path = "../../../gfx/wr/swgl" }
 
 [dev-dependencies]
 stylo_tests = { path = "../../../servo/ports/geckolib/tests/" }
