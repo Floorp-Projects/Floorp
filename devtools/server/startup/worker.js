@@ -37,8 +37,7 @@ this.rpc = function(method, ...params) {
 loadSubScript("resource://devtools/shared/worker/loader.js");
 
 var defer = worker.require("devtools/shared/defer");
-var EventEmitter = worker.require("devtools/shared/event-emitter");
-const { Pool } = worker.require("devtools/shared/protocol/Pool");
+const { Actor } = worker.require("devtools/shared/protocol/Actor");
 var { ThreadActor } = worker.require("devtools/server/actors/thread");
 var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");
 var { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
@@ -60,14 +59,8 @@ this.addEventListener("message", function(event) {
     case "connect":
       // Step 3: Create a connection to the parent.
       const connection = DevToolsServer.connectToParent(packet.id, this);
-      connections[packet.id] = {
-        connection,
-        rpcs: [],
-      };
 
       // Step 4: Create a thread actor for the connection to the parent.
-      const pool = new Pool(connection, "workerStartup");
-
       let sources = null;
 
       const makeWorkerDebugger = makeDebugger.bind(null, {
@@ -80,9 +73,21 @@ this.addEventListener("message", function(event) {
         },
       });
 
-      const parent = {
+      const targetActorMock = new Actor();
+      targetActorMock.initialize(connection);
+
+      const threadActor = new ThreadActor(targetActorMock, global);
+      targetActorMock.manage(threadActor);
+
+      Object.assign(targetActorMock, {
         actorID: packet.id,
-        conn: connection,
+        // threadActor is needed from the webconsole for grip previewing
+        threadActor,
+        window: global,
+
+        onThreadAttached() {
+          postMessage(JSON.stringify({ type: "attached" }));
+        },
 
         get dbg() {
           if (!this._dbg) {
@@ -98,31 +103,22 @@ this.addEventListener("message", function(event) {
           }
           return sources;
         },
+      });
 
-        window: global,
-
-        onThreadAttached() {
-          postMessage(JSON.stringify({ type: "attached" }));
-        },
-      };
-
-      EventEmitter.decorate(parent);
-
-      const threadActor = new ThreadActor(parent, global);
-      pool.manage(threadActor);
-
-      // parentActor.threadActor is needed from the webconsole for grip previewing
-      parent.threadActor = threadActor;
-
-      const consoleActor = new WebConsoleActor(connection, parent);
-      pool.manage(consoleActor);
+      const consoleActor = new WebConsoleActor(connection, targetActorMock);
+      targetActorMock.manage(consoleActor);
 
       // needed so the thread actor can communicate with the console
       // when evaluating logpoints.
-      parent._consoleActor = consoleActor;
+      targetActorMock._consoleActor = consoleActor;
 
       // Step 5: Send a response packet to the parent to notify
       // it that a connection has been established.
+      connections[packet.id] = {
+        connection,
+        rpcs: [],
+      };
+
       postMessage(
         JSON.stringify({
           type: "connected",
