@@ -2132,9 +2132,9 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
 
   auto* obj = MNewTypedArrayDynamicLength::New(
       alloc(), /* constraints = */ nullptr, templateObj, heap, length);
-  add(obj);
+  addEffectful(obj);
   pushResult(obj);
-  return true;
+  return resumeAfter(obj);
 }
 
 bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayBufferResult(
