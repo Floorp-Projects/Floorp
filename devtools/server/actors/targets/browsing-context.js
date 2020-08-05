@@ -300,6 +300,7 @@ const browsingContextTargetPrototype = {
     );
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
     this.notifyResourceDestroyed = this.notifyResourceDestroyed.bind(this);
+    this.notifyResourceUpdated = this.notifyResourceUpdated.bind(this);
 
     TargetActorRegistry.registerTargetActor(this);
   },
@@ -333,6 +334,10 @@ const browsingContextTargetPrototype = {
 
   notifyResourceDestroyed(resources) {
     this._emitResourcesForm("resource-destroyed-form", resources);
+  },
+
+  notifyResourceUpdated(resources) {
+    this._emitResourcesForm("resource-updated-form", resources);
   },
 
   /**

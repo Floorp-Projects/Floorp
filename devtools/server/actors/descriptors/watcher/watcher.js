@@ -37,6 +37,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
     this.notifyResourceDestroyed = this.notifyResourceDestroyed.bind(this);
+    this.notifyResourceUpdated = this.notifyResourceUpdated.bind(this);
   },
 
   /**
@@ -215,6 +216,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
   notifyResourceDestroyed(resources) {
     this.emit("resource-destroyed-form", resources);
+  },
+
+  notifyResourceUpdated(resources) {
+    this.emit("resource-updated-form", resources);
   },
 
   /**
