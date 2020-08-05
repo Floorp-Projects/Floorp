@@ -93,13 +93,19 @@ struct NativeIterator {
   static constexpr uint32_t FlagsMask = (1 << FlagsBits) - 1;
   static constexpr uint32_t PropCountLimit = 1 << (32 - FlagsBits);
 
+  // While in compartment->enumerators, these form a doubly linked list.
+  NativeIterator* next_ = nullptr;
+  NativeIterator* prev_ = nullptr;
+
   // Stores Flags bits in the lower bits and the initial property count above
   // them.
   uint32_t flagsAndCount_ = 0;
 
-  /* While in compartment->enumerators, these form a doubly linked list. */
-  NativeIterator* next_ = nullptr;
-  NativeIterator* prev_ = nullptr;
+#ifdef DEBUG
+  // If true, this iterator may contain indexed properties that came from
+  // objects on the prototype chain. This is used by certain debug assertions.
+  bool maybeHasIndexedPropertiesFromProto_ = false;
+#endif
 
   // END OF PROPERTIES
 
@@ -234,6 +240,15 @@ struct NativeIterator {
   bool isInitialized() const { return flags() & Flags::Initialized; }
 
   size_t allocationSize() const;
+
+#ifdef DEBUG
+  void setMaybeHasIndexedPropertiesFromProto() {
+    maybeHasIndexedPropertiesFromProto_ = true;
+  }
+  bool maybeHasIndexedPropertiesFromProto() const {
+    return maybeHasIndexedPropertiesFromProto_;
+  }
+#endif
 
  private:
   uint32_t flags() const { return flagsAndCount_ & FlagsMask; }
