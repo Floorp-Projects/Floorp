@@ -4,11 +4,7 @@ add_task(async function test_BrowsingContext_structured_clone() {
   let browser = Services.appShell.createWindowlessBrowser(false);
 
   let frame = browser.document.createElement("iframe");
-
-  await new Promise(r => {
-    frame.onload = () => r();
-    browser.document.body.appendChild(frame);
-  });
+  browser.document.body.appendChild(frame);
 
   let { browsingContext } = frame;
 
@@ -43,6 +39,11 @@ add_task(async function test_BrowsingContext_structured_clone() {
   // Beyond that, we don't *have* to reload or destroy the parent
   // document, but we do anyway just to be safe.
   //
+  // Then comes the tricky bit: The WindowGlobal actors (which keep
+  // references to their BrowsingContexts) require an IPC round trip to
+  // be completely destroyed, even though they're in-process, so we make
+  // a quick trip through the event loop, and then run the CC in order
+  // to allow their (now snow-white) references to be collected.
 
   frame.remove();
   frame = null;
@@ -51,11 +52,13 @@ add_task(async function test_BrowsingContext_structured_clone() {
   browser.document.location.reload();
   browser.close();
 
-  // We will schedule a precise GC and do both GC and CC a few times, to make
-  // sure we have completely destroyed the WindowGlobal actors (which keep
-  // references to their BrowsingContexts) in order
-  // to allow their (now snow-white) references to be collected.
-  await schedulePreciseGCAndForceCC(3);
+  Cu.forceGC();
+
+  // Give the IPC messages that destroy the actors a chance to be
+  // processed.
+  await new Promise(executeSoon);
+
+  Cu.forceCC();
 
   // OK. We can be fairly confident that the BrowsingContext object
   // stored in our structured clone data has been destroyed. Make sure

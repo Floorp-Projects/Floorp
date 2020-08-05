@@ -5210,7 +5210,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     }
   }
 
-  BrowserParent::AutoUseNewTab aunt(newTab);
+  BrowserParent::AutoUseNewTab aunt(newTab, &cwi.urlToLoad());
 
   nsCOMPtr<nsIRemoteTab> newRemoteTab;
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;

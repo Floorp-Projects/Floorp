@@ -165,6 +165,7 @@ struct CreatedWindowInfo
   nsresult rv;
   bool windowOpened;
   FrameScriptInfo[] frameScripts;
+  nsCString urlToLoad;
   uint32_t maxTouchPoints;
   DimensionInfo dimensions;
   bool hasSiblings;

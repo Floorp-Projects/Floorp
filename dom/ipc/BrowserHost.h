@@ -80,7 +80,7 @@ class BrowserHost : public RemoteBrowser,
     mRoot->VisitAll(aCallback);
   }
 
-  void LoadURL(nsDocShellLoadState* aLoadState) override;
+  void LoadURL(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal) override;
   void ResumeLoad(uint64_t aPendingSwitchId) override;
   void DestroyStart() override;
   void DestroyComplete() override;

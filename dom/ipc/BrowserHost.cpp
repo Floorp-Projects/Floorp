@@ -56,9 +56,11 @@ a11y::DocAccessibleParent* BrowserHost::GetTopLevelDocAccessible() const {
   return mRoot->GetTopLevelDocAccessible();
 }
 
-void BrowserHost::LoadURL(nsDocShellLoadState* aLoadState) {
-  MOZ_ASSERT(aLoadState);
-  mRoot->LoadURL(aLoadState);
+void BrowserHost::LoadURL(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal) {
+  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(aTriggeringPrincipal);
+
+  mRoot->LoadURL(aURI, aTriggeringPrincipal);
 }
 
 void BrowserHost::ResumeLoad(uint64_t aPendingSwitchId) {

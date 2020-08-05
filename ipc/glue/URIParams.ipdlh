@@ -91,7 +91,6 @@ union URIParams
   SimpleNestedURIParams;
   HostObjectURIParams;
   DefaultURIParams;
-  NestedAboutURIParams;
 };
 
 struct JSURIParams
@@ -104,12 +103,6 @@ struct SimpleNestedURIParams
 {
   SimpleURIParams simpleParams;
   URIParams innerURI;
-};
-
-struct NestedAboutURIParams
-{
-  SimpleNestedURIParams nestedParams;
-  URIParams? baseURI;
 };
 
 } // namespace ipc

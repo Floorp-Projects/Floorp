@@ -483,7 +483,7 @@ class BrowserParent final : public PBrowserParent,
       const uint64_t& aOuterWindowID,
       IsWindowSupportingWebVRResolver&& aResolve);
 
-  void LoadURL(nsDocShellLoadState* aLoadState);
+  void LoadURL(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal);
 
   void ResumeLoad(uint64_t aPendingSwitchID);
 
@@ -924,8 +924,10 @@ class BrowserParent final : public PBrowserParent,
   // receiving a LoadURL message before returning from ProvideWindow.
   //
   // The mCreatingWindow flag is set while dispatching CreateWindow. During
-  // that time, any LoadURL calls are skipped.
+  // that time, any LoadURL calls are skipped and the URL is stored in
+  // mSkippedURL.
   bool mCreatingWindow;
+  nsCString mDelayedURL;
 
   // When loading a new tab or window via window.open, we want to ensure that
   // frame scripts for that tab are loaded before any scripts start to run in
@@ -1002,17 +1004,22 @@ class BrowserParent final : public PBrowserParent,
 
 struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
  public:
-  explicit AutoUseNewTab(BrowserParent* aNewTab) : mNewTab(aNewTab) {
+  AutoUseNewTab(BrowserParent* aNewTab, nsCString* aURLToLoad)
+      : mNewTab(aNewTab), mURLToLoad(aURLToLoad) {
     MOZ_ASSERT(!aNewTab->mCreatingWindow);
+
     aNewTab->mCreatingWindow = true;
+    aNewTab->mDelayedURL.Truncate();
   }
 
   ~AutoUseNewTab() {
     mNewTab->mCreatingWindow = false;
+    *mURLToLoad = mNewTab->mDelayedURL;
   }
 
  private:
   RefPtr<BrowserParent> mNewTab;
+  nsCString* mURLToLoad;
 };
 
 }  // namespace dom

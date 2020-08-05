@@ -70,10 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
 
       gTest.window.location = "about:blank";
-      let cond = () => gTest.window.location.href == "about:blank";
-      SimpleTest.waitForCondition(cond, () => {
-        SimpleTest.waitForFocus(goBack, gTest.window, true);
-      }, "about:blank never loaded");
+      SimpleTest.waitForFocus(goBack, gTest.window);
     }
 
     function goBack() {
