@@ -1097,6 +1097,42 @@ bool BrowsingContext::CrossOriginIsolated() {
                           WITH_COOP_COEP_REMOTE_TYPE_PREFIX);
 }
 
+void BrowsingContext::SetTriggeringAndInheritPrincipals(
+    nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
+    uint64_t aLoadIdentifier) {
+  mTriggeringPrincipal = Some(
+      PrincipalWithLoadIdentifierTuple(aTriggeringPrincipal, aLoadIdentifier));
+  if (aPrincipalToInherit) {
+    mPrincipalToInherit = Some(
+        PrincipalWithLoadIdentifierTuple(aPrincipalToInherit, aLoadIdentifier));
+  }
+}
+
+Tuple<nsCOMPtr<nsIPrincipal>, nsCOMPtr<nsIPrincipal>>
+BrowsingContext::GetTriggeringAndInheritPrincipalsForCurrentLoad() {
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+      GetSavedPrincipal(mTriggeringPrincipal);
+  nsCOMPtr<nsIPrincipal> principalToInherit =
+      GetSavedPrincipal(mPrincipalToInherit);
+  return MakeTuple(triggeringPrincipal, principalToInherit);
+}
+
+nsIPrincipal* BrowsingContext::GetSavedPrincipal(
+    Maybe<PrincipalWithLoadIdentifierTuple> aPrincipalTuple) {
+  if (aPrincipalTuple) {
+    nsCOMPtr<nsIPrincipal> principal;
+    uint64_t loadIdentifier;
+    Tie(principal, loadIdentifier) = *aPrincipalTuple;
+    // We want to return a principal only if the load identifier for it
+    // matches the current one for this BC.
+    if (auto current = GetCurrentLoadIdentifier();
+        current && *current == loadIdentifier) {
+      return principal;
+    }
+  }
+  return nullptr;
+}
+
 BrowsingContext::~BrowsingContext() {
   MOZ_DIAGNOSTIC_ASSERT(!mParentWindow ||
                         !mParentWindow->mChildren.Contains(this));
@@ -1620,6 +1656,9 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
   // the triggering process to do the appropriate checks for the
   // BrowsingContext's sandbox flags.
   MOZ_TRY(CheckSandboxFlags(aLoadState));
+  SetTriggeringAndInheritPrincipals(aLoadState->TriggeringPrincipal(),
+                                    aLoadState->PrincipalToInherit(),
+                                    aLoadState->GetLoadIdentifier());
 
   const auto& sourceBC = aLoadState->SourceBrowsingContext();
   MOZ_DIAGNOSTIC_ASSERT(!sourceBC || sourceBC->Group() == Group());
@@ -1681,6 +1720,9 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
   if (IsDiscarded()) {
     return NS_OK;
   }
+  SetTriggeringAndInheritPrincipals(aLoadState->TriggeringPrincipal(),
+                                    aLoadState->PrincipalToInherit(),
+                                    aLoadState->GetLoadIdentifier());
 
   const auto& sourceBC = aLoadState->SourceBrowsingContext();
   bool isActive =

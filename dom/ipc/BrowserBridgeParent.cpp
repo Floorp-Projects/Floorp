@@ -139,9 +139,8 @@ IPCResult BrowserBridgeParent::RecvScrollbarPreferenceChanged(
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvLoadURL(const nsCString& aUrl,
-                                           nsIPrincipal* aTriggeringPrincipal) {
-  Unused << mBrowserParent->SendLoadURL(aUrl, aTriggeringPrincipal,
+IPCResult BrowserBridgeParent::RecvLoadURL(nsDocShellLoadState* aLoadState) {
+  Unused << mBrowserParent->SendLoadURL(aLoadState,
                                         mBrowserParent->GetShowInfo());
   return IPC_OK();
 }
