@@ -1825,8 +1825,9 @@ security.ui.protections:
       - 1557050
       - 1610897
       - 1643428
+      - 1650468
     description: >
-      User arrived on the protection report.
+      User arrived on the protection report. This also includes a 'value' attribute which defaults to 'direct' or will be the value that a referring website addds to the url.
     expiry_version: "86"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
