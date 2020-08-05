@@ -8,18 +8,21 @@ const BASE_URI =
   "privatebrowsing/test/browser/empty_file.html";
 
 add_task(async function test() {
-  info("Creating a normal window...");
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  let tab = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(tab, BASE_URI);
-  await BrowserTestUtils.browserLoaded(tab);
+  const loaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    BASE_URI
+  );
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, BASE_URI);
+  await loaded;
 
   let blobURL;
-
   info("Creating a blob URL...");
-  await SpecialPowers.spawn(tab, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return Promise.resolve(
-      content.window.URL.createObjectURL(new content.window.Blob([123]))
+      content.window.URL.createObjectURL(
+        new Blob([123], { type: "text/plain" })
+      )
     );
   }).then(newURL => {
     blobURL = newURL;
@@ -28,12 +31,19 @@ add_task(async function test() {
   info("Blob URL: " + blobURL);
 
   info("Creating a private window...");
+
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
   let privateTab = privateWin.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(privateTab, BASE_URI);
-  await BrowserTestUtils.browserLoaded(privateTab);
+
+  const privateTabLoaded = BrowserTestUtils.browserLoaded(
+    privateTab,
+    false,
+    BASE_URI
+  );
+  await BrowserTestUtils.loadURI(privateTab, BASE_URI);
+  await privateTabLoaded;
 
   await SpecialPowers.spawn(privateTab, [blobURL], function(url) {
     return new Promise(resolve => {
@@ -55,6 +65,5 @@ add_task(async function test() {
     );
   });
 
-  await BrowserTestUtils.closeWindow(win);
   await BrowserTestUtils.closeWindow(privateWin);
 });
