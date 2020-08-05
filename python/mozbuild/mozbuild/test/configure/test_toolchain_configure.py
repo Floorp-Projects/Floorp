@@ -289,6 +289,11 @@ VS_PLATFORM_X86_64 = {
     '_WIN64': 1,
 }
 
+# Despite the 32 in the name, this macro is defined for 32- and 64-bit.
+MINGW32 = {
+    '__MINGW32__': True,
+}
+
 # Note: In reality, the -std=gnu* options are only supported when preceded by
 # -Xclang.
 CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
@@ -962,16 +967,16 @@ class WindowsToolchainTest(BaseToolchainTest):
         '/usr/bin/cl': VS_2017u8 + VS_PLATFORM_X86,
         '/usr/bin/clang-cl-3.9': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86,
         '/usr/bin/clang-cl': CLANG_CL_8_0 + CLANG_CL_PLATFORM_X86,
-        '/usr/bin/gcc': DEFAULT_GCC + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/g++': DEFAULT_GXX + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/gcc-4.9': GCC_4_9 + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/g++-4.9': GXX_4_9 + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/gcc-5': GCC_5 + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/gcc-6': GCC_6 + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/g++-6': GXX_6 + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/gcc-7': GCC_7 + GCC_PLATFORM_X86_WIN,
-        '/usr/bin/g++-7': GXX_7 + GCC_PLATFORM_X86_WIN,
+        '/usr/bin/gcc': DEFAULT_GCC + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/g++': DEFAULT_GXX + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/gcc-4.9': GCC_4_9 + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/g++-4.9': GXX_4_9 + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/gcc-5': GCC_5 + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/gcc-6': GCC_6 + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/g++-6': GXX_6 + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/gcc-7': GCC_7 + GCC_PLATFORM_X86_WIN + MINGW32,
+        '/usr/bin/g++-7': GXX_7 + GCC_PLATFORM_X86_WIN + MINGW32,
         '/usr/bin/clang': DEFAULT_CLANG + CLANG_PLATFORM_X86_WIN,
         '/usr/bin/clang++': DEFAULT_CLANGXX + CLANG_PLATFORM_X86_WIN,
         '/usr/bin/clang-5.0': CLANG_5_0 + CLANG_PLATFORM_X86_WIN,
@@ -1036,19 +1041,30 @@ class WindowsToolchainTest(BaseToolchainTest):
         })
 
     def test_gcc(self):
-        # We'll pick GCC if msvc and clang-cl can't be found.
+        # GCC is unsupported, if you try it should find clang.
         paths = {
             k: v for k, v in six.iteritems(self.PATHS)
             if os.path.basename(k) not in ('cl', 'clang-cl')
         }
         self.do_toolchain_test(paths, {
-            'c_compiler': self.DEFAULT_GCC_RESULT,
-            'cxx_compiler': self.DEFAULT_GXX_RESULT,
+            'c_compiler': self.DEFAULT_CLANG_RESULT,
+            'cxx_compiler': self.DEFAULT_CLANGXX_RESULT,
+        })
+
+    # This test is not perfect, as the GCC version needs to be updated when we
+    # bump the minimum GCC version, but the idea is that even supported GCC
+    # on other platforms should not be supported on Windows.
+    def test_overridden_supported_elsewhere_gcc(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': 'Unknown compiler or compiler not supported.',
+        }, environ={
+            'CC': 'gcc-7',
+            'CXX': 'g++-7',
         })
 
     def test_overridden_unsupported_gcc(self):
         self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.GCC_5_RESULT,
+            'c_compiler': 'Unknown compiler or compiler not supported.',
         }, environ={
             'CC': 'gcc-5',
             'CXX': 'g++-5',
@@ -1085,16 +1101,16 @@ class Windows64ToolchainTest(WindowsToolchainTest):
         '/usr/bin/cl': VS_2017u8 + VS_PLATFORM_X86_64,
         '/usr/bin/clang-cl': CLANG_CL_8_0 + CLANG_CL_PLATFORM_X86_64,
         '/usr/bin/clang-cl-3.9': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86_64,
-        '/usr/bin/gcc': DEFAULT_GCC + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/g++': DEFAULT_GXX + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/gcc-4.9': GCC_4_9 + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/g++-4.9': GXX_4_9 + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/gcc-5': GCC_5 + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/gcc-6': GCC_6 + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/g++-6': GXX_6 + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/gcc-7': GCC_7 + GCC_PLATFORM_X86_64_WIN,
-        '/usr/bin/g++-7': GXX_7 + GCC_PLATFORM_X86_64_WIN,
+        '/usr/bin/gcc': DEFAULT_GCC + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/g++': DEFAULT_GXX + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/gcc-4.9': GCC_4_9 + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/g++-4.9': GXX_4_9 + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/gcc-5': GCC_5 + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/gcc-6': GCC_6 + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/g++-6': GXX_6 + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/gcc-7': GCC_7 + GCC_PLATFORM_X86_64_WIN + MINGW32,
+        '/usr/bin/g++-7': GXX_7 + GCC_PLATFORM_X86_64_WIN + MINGW32,
         '/usr/bin/clang': DEFAULT_CLANG + CLANG_PLATFORM_X86_64_WIN,
         '/usr/bin/clang++': DEFAULT_CLANGXX + CLANG_PLATFORM_X86_64_WIN,
         '/usr/bin/clang-5.0': CLANG_5_0 + CLANG_PLATFORM_X86_64_WIN,
