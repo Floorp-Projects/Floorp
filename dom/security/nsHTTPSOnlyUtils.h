@@ -44,10 +44,11 @@ class nsHTTPSOnlyUtils {
   /**
    * Checks if the error code is on a block-list of codes that are probably not
    * related to a HTTPS-Only Mode upgrade.
+   * @param  aChannel The failed Channel.
    * @param  aError Error Code from Request
    * @return        false if error is not related to upgrade
    */
-  static bool CouldBeHttpsOnlyError(nsresult aError);
+  static bool CouldBeHttpsOnlyError(nsIChannel* aChannel, nsresult aError);
 
   /**
    * Logs localized message to either content console or browser console
