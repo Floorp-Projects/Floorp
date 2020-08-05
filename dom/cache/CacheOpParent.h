@@ -30,6 +30,7 @@ class CacheOpParent final : public PCacheOpParent,
                 const CacheOpArgs& aOpArgs);
   CacheOpParent(mozilla::ipc::PBackgroundParent* aIpcManager,
                 Namespace aNamespace, const CacheOpArgs& aOpArgs);
+  ~CacheOpParent();
 
   void Execute(const SafeRefPtr<ManagerId>& aManagerId);
 
@@ -37,12 +38,7 @@ class CacheOpParent final : public PCacheOpParent,
 
   void WaitForVerification(PrincipalVerifier* aVerifier);
 
-  NS_DECL_OWNINGTHREAD
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheOpParent, override)
-
  private:
-  ~CacheOpParent();
-
   // PCacheOpParent methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
@@ -68,6 +64,8 @@ class CacheOpParent final : public PCacheOpParent,
   const CacheOpArgs mOpArgs;
   SafeRefPtr<cache::Manager> mManager;
   RefPtr<PrincipalVerifier> mVerifier;
+
+  NS_DECL_OWNINGTHREAD
 };
 
 }  // namespace cache
