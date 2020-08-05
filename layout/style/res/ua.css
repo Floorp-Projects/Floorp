@@ -301,9 +301,9 @@
   height: 100%;
 }
 
-*|*::-moz-page {
-  /* Individual page in print/print preview. Visual styles may only appear
-   * in print preview. */
+*|*::-moz-printed-sheet {
+  /* Individual sheet of paper in print/print preview. Visual styles may only
+   * appear in print preview. */
   display: block;
   background: white;
   box-shadow: 5px 5px 8px #202020;

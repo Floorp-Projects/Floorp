@@ -44,6 +44,7 @@ namespace mozilla {
 
 class ComputedStyle;
 class PresShell;
+class PrintedSheetFrame;
 
 namespace dom {
 
@@ -347,6 +348,10 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   void SetRootElementFrameAndConstructCanvasAnonContent(
       nsContainerFrame* aRootElementFrame, nsFrameConstructorState&,
       nsFrameList&);
+
+  mozilla::PrintedSheetFrame* ConstructPrintedSheetFrame(
+      PresShell* aPresShell, nsContainerFrame* aParentFrame,
+      nsIFrame* aPrevSheetFrame);
 
   nsContainerFrame* ConstructPageFrame(PresShell* aPresShell,
                                        nsContainerFrame* aParentFrame,

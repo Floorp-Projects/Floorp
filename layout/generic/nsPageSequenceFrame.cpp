@@ -8,6 +8,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PrintedSheetFrame.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/StaticPresData.h"
 
@@ -238,19 +239,21 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   mPageData->mReflowSize = pageSize;
   mPageData->mReflowMargin = mMargin;
 
-  // We use the CSS "margin" property on the -moz-page pseudoelement
-  // to determine the space between each page in print preview.
-  // Keep a running y-offset for each page.
+  // We use the CSS "margin" property on the -moz-printed-sheet pseudoelement
+  // to determine the space between each printed sheet in print preview.
+  // Keep a running y-offset for each printed sheet.
   nscoord y = 0;
   nscoord maxXMost = 0;
 
-  // Tile the pages vertically
+  // Tile the sheets vertically
   for (nsIFrame* kidFrame : mFrames) {
     // Set the shared data into the page frame before reflow
-    auto* pf = static_cast<nsPageFrame*>(kidFrame);
-    pf->SetSharedPageData(mPageData.get());
+    MOZ_ASSERT(kidFrame->IsPrintedSheetFrame(),
+               "we're only expecting PrintedSheetFrame as children");
+    auto* sheet = static_cast<PrintedSheetFrame*>(kidFrame);
+    sheet->SetSharedPageData(mPageData.get());
 
-    // Reflow the page
+    // Reflow the sheet
     ReflowInput kidReflowInput(
         aPresContext, aReflowInput, kidFrame,
         LogicalSize(kidFrame->GetWritingMode(), pageSize));
@@ -267,7 +270,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
 
     nscoord x = pageCSSMargin.left;
 
-    // Place and size the page.
+    // Place and size the sheet.
     ReflowChild(kidFrame, aPresContext, kidReflowOutput, kidReflowInput, x, y,
                 ReflowChildFlags::Default, status);
 
@@ -279,37 +282,46 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     maxXMost =
         std::max(maxXMost, x + kidReflowOutput.Width() + pageCSSMargin.right);
 
-    // Is the page complete?
+    // Is the sheet complete?
     nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
 
     if (status.IsFullyComplete()) {
       NS_ASSERTION(!kidNextInFlow, "bad child flow list");
     } else if (!kidNextInFlow) {
-      // The page isn't complete and it doesn't have a next-in-flow, so
-      // create a continuing page.
-      nsIFrame* continuingPage =
+      // The sheet isn't complete and it doesn't have a next-in-flow, so
+      // create a continuing sheet.
+      nsIFrame* continuingSheet =
           PresShell()->FrameConstructor()->CreateContinuingFrame(kidFrame,
                                                                  this);
 
       // Add it to our child list
-      mFrames.InsertFrame(nullptr, kidFrame, continuingPage);
+      mFrames.InsertFrame(nullptr, kidFrame, continuingSheet);
     }
   }
 
   // Get Total Page Count
+  // XXXdholbert When we support multiple pages-per-sheet in bug 1631452,
+  // we'll need to be sure to update this computation to account for the
+  // sheet-vs-page distinction.
   // XXXdholbert technically we could calculate this in the loop above,
   // instead of needing a separate walk.
   int32_t pageTot = mFrames.GetLength();
 
   // Set Page Number Info
   int32_t pageNum = 1;
-  for (nsIFrame* child : mFrames) {
-    MOZ_ASSERT(child->IsPageFrame(),
-               "only expecting nsPageFrame children. Other children will make "
-               "this static_cast bogus & probably violate other assumptions");
-    auto* pf = static_cast<nsPageFrame*>(child);
-    pf->SetPageNumInfo(pageNum, pageTot);
-    pageNum++;
+  for (nsIFrame* sheetFrame : mFrames) {
+    MOZ_ASSERT(sheetFrame->IsPrintedSheetFrame(),
+               "only expecting PrintedSheetFrame children");
+    for (nsIFrame* pageFrame : sheetFrame->PrincipalChildList()) {
+      MOZ_ASSERT(
+          pageFrame->IsPageFrame(),
+          "only expecting nsPageFrame grandchildren. Other types will make "
+          "this static_cast bogus & probably violate other assumptions");
+      static_cast<nsPageFrame*>(pageFrame)->SetPageNumInfo(pageNum, pageTot);
+      // XXXdholbert Perhaps we'll need to keep track of the page count *and*
+      // the printed sheet count?
+      pageNum++;
+    }
   }
 
   nsAutoString formattedDateString;
@@ -446,6 +458,25 @@ static void GetPrintCanvasElementsInFrame(
   }
 }
 
+// XXXdholbert The next four functions[1] exist to support functionality to let
+// us include/skip various pages (e.g. only print even pages, or page 7, or the
+// page-range "1,4,6-8"). These four functions are all named in terms of
+// "page", which is somewhat problematic now that we've got a level of
+// indirection between us and the actual page frames; but in practice, they're
+// still valid & fine as long as there's exactly one nsPageFrame per
+// PrintedSheetFrame (as there is right now).
+//
+// When we implement built-in support for N Pages Per Sheet (bug 1631452),
+// we'll need this logic to cooperate with PrintedSheetFrame, so that a given
+// PrintedSheetFrame instance can figure out which of the upcoming pages it
+// should include/skip in its N tiny pages. We may need to change our calling
+// pattern all the way up to nsPagePrintTimer, too (which currently has a
+// repeating timer that fires to prompt us to print each successive page, with
+// a variable delay between firings, depending on whether the last page was
+// skipped.
+//
+// [1] DetermineWhetherToPrintPage(), GetCurrentPageFrame(),
+// PrePrintNextPage(), and PrintNextPage()
 void nsPageSequenceFrame::DetermineWhetherToPrintPage() {
   // See whether we should print this page
   mPrintThisPage = true;
@@ -737,7 +768,11 @@ void nsPageSequenceFrame::SetDateTimeStr(const nsAString& aDateTimeStr) {
 
 void nsPageSequenceFrame::AppendDirectlyOwnedAnonBoxes(
     nsTArray<OwnedAnonBox>& aResult) {
-  if (mFrames.NotEmpty()) {
-    aResult.AppendElement(mFrames.FirstChild());
-  }
+  MOZ_ASSERT(
+      mFrames.FirstChild() && mFrames.FirstChild()->IsPrintedSheetFrame(),
+      "nsPageSequenceFrame must have a PrintedSheetFrame child");
+  // Only append the first child; all our children are expected to be
+  // continuations of each other, and our anon box handling always walks
+  // continuations.
+  aResult.AppendElement(mFrames.FirstChild());
 }
