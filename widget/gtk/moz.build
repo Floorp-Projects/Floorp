@@ -81,7 +81,7 @@ if CONFIG['NS_PRINTING']:
         'nsPrintDialogGTK.cpp',
         'nsPrintSettingsGTK.cpp',
         'nsPrintSettingsServiceGTK.cpp',
-        'nsPSPrinters.cpp',
+        'PSPrinters.cpp',
     ]
 
 if CONFIG['MOZ_X11']:

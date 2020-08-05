@@ -244,17 +244,16 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
         'nsPrintSettingsService.cpp',
     ]
 
-    # These will be unified for all CUPS platforms by Bug 1654678
-    if toolkit == 'cocoa':
+    if toolkit in ('cocoa', 'gtk'):
         UNIFIED_SOURCES += [
             'CUPSPrinterList.cpp',
             'nsCUPSShim.cpp',
             'nsPrinterCUPS.cpp',
         ]
 
+    # GTK still uses nsPrinter for PS printers.
     if toolkit == 'gtk':
         UNIFIED_SOURCES += [
-            'nsCUPSShim.cpp',
             'nsPrinter.cpp',
         ]
 
