@@ -5543,8 +5543,11 @@ AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee,
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'ToObject' or 'Object' function.
-  emitNativeCalleeGuard(callee);
+  // Guard callee is the 'Object' function.
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+  if (native == InlinableNative::Object) {
+    emitNativeCalleeGuard(callee);
+  }
 
   // Guard that the argument is an object.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -5578,8 +5581,7 @@ AttachDecision CallIRGenerator::tryAttachToInteger(HandleFunction callee) {
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'ToInteger' intrinsic native function.
-  emitNativeCalleeGuard(callee);
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   // Guard that the argument is an int32.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -5606,8 +5608,7 @@ AttachDecision CallIRGenerator::tryAttachToLength(HandleFunction callee) {
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'ToLength' intrinsic native function.
-  emitNativeCalleeGuard(callee);
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   // ToLength(int32) is equivalent to max(int32, 0).
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -5635,8 +5636,7 @@ AttachDecision CallIRGenerator::tryAttachIsObject(HandleFunction callee) {
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'IsObject' intrinsic native function.
-  emitNativeCalleeGuard(callee);
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   // Type check the argument and return result.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -5684,8 +5684,7 @@ AttachDecision CallIRGenerator::tryAttachIsCallable(HandleFunction callee) {
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'IsCallable' intrinsic native function.
-  emitNativeCalleeGuard(callee);
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   // Check if the argument is callable and return result.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -5709,8 +5708,7 @@ AttachDecision CallIRGenerator::tryAttachIsConstructor(HandleFunction callee) {
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'IsConstructor' intrinsic native function.
-  emitNativeCalleeGuard(callee);
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   // Guard that the argument is an object.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -5772,8 +5770,7 @@ AttachDecision CallIRGenerator::tryAttachGuardToClass(HandleFunction callee,
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'GuardToXXX' native function.
-  emitNativeCalleeGuard(callee);
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   // Guard that the argument is an object.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -5803,8 +5800,7 @@ AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'IsXXXObject' native function.
-  emitNativeCalleeGuard(callee);
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
 
   // Perform the Class check.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
