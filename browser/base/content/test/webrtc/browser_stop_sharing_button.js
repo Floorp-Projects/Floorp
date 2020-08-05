@@ -9,12 +9,23 @@ const TEST_ROOT = getRootDirectory(gTestPath).replace(
 );
 const TEST_PAGE = TEST_ROOT + "get_user_media.html";
 
+add_task(async function setup() {
+  let prefs = [
+    [PREF_PERMISSION_FAKE, true],
+    [PREF_AUDIO_LOOPBACK, ""],
+    [PREF_VIDEO_LOOPBACK, ""],
+    [PREF_FAKE_STREAMS, true],
+    [PREF_FOCUS_SOURCE, false],
+  ];
+  await SpecialPowers.pushPrefEnv({ set: prefs });
+});
+
 /**
  * Tests that if the user chooses to "Stop Sharing" a display while
  * also sharing their microphone or camera, that only the display
  * stream is stopped.
  */
-add_task(async function test_close_indicator() {
+add_task(async function test_stop_sharing() {
   let prefs = [
     [PREF_PERMISSION_FAKE, true],
     [PREF_AUDIO_LOOPBACK, ""],
@@ -27,100 +38,80 @@ add_task(async function test_close_indicator() {
   await BrowserTestUtils.withNewTab(TEST_PAGE, async browser => {
     let indicatorPromise = promiseIndicatorWindow();
 
-    // First, choose to share the microphone and camera devices.
-
-    let promise = promisePopupNotificationShown(
-      "webRTC-shareDevices",
-      null,
-      window
+    await shareDevices(
+      browser,
+      true /* camera */,
+      true /* microphone */,
+      true /* screen */
     );
-
-    await promiseRequestDevice(
-      true /* audio */,
-      true /* video */,
-      null /* frameID */,
-      null /* screen */,
-      browser
-    );
-    await promise;
-
-    checkDeviceSelectors(true /* microphone */, true /* camera */);
-
-    let observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
-    let observerPromise2 = expectObserverCalled("recording-device-events");
-    promise = promiseMessage("ok", () => {
-      PopupNotifications.panel.firstElementChild.button.click();
-    });
-
-    await observerPromise1;
-    await observerPromise2;
-    await promise;
-
-    promise = promisePopupNotificationShown(
-      "webRTC-shareDevices",
-      null,
-      window
-    );
-
-    // Next, choose to share a display stream.
-
-    await promiseRequestDevice(
-      false /* audio */,
-      true /* video */,
-      null /* frameID */,
-      "screen" /* video type */,
-      browser
-    );
-    await promise;
-
-    checkDeviceSelectors(
-      false /* microphone */,
-      false /* camera */,
-      true /* screen */,
-      window
-    );
-
-    let document = window.document;
-
-    // Select one of the windows / screens. It doesn't really matter which.
-    let menulist = document.getElementById("webRTC-selectWindow-menulist");
-    menulist.getItemAtIndex(menulist.itemCount - 1).doCommand();
-    let notification = window.PopupNotifications.panel.firstElementChild;
-
-    observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
-    observerPromise2 = expectObserverCalled("recording-device-events");
-    await promiseMessage(
-      "ok",
-      () => {
-        notification.button.click();
-      },
-      1,
-      browser
-    );
-    await observerPromise1;
-    await observerPromise2;
 
     let indicator = await indicatorPromise;
-    let indicatorDoc = indicator.document;
 
-    // We're choosing the last item in the display list by default, which
-    // _should_ be a screen. Just in case it isn't, we check whether or not
-    // the indicator is showing the "Stop Sharing" button for screens, and
-    // use that button for the test. Otherwise, we use the "Stop Sharing"
-    // button for other windows.
-    let isSharingScreen = indicatorDoc.documentElement.hasAttribute(
-      "sharingscreen"
-    );
-    let stopSharingID = isSharingScreen
-      ? "stop-sharing-screen"
-      : "stop-sharing-window";
-
-    let stopSharingButton = indicator.document.getElementById(stopSharingID);
+    let stopSharingButton = indicator.document.getElementById("stop-sharing");
     let stopSharingPromise = expectObserverCalled("recording-device-events");
     stopSharingButton.click();
     await stopSharingPromise;
 
     // Ensure that we're still sharing the other streams.
     await checkSharingUI({ audio: true, video: true });
+
+    // Ensure that the "display-share" section of the indicator is now hidden
+    Assert.ok(
+      BrowserTestUtils.is_hidden(
+        indicator.document.getElementById("display-share")
+      ),
+      "The display-share section of the indicator should now be hidden."
+    );
   });
+});
+
+/**
+ * Tests that if the user chooses to "Stop Sharing" a display while
+ * sharing their display on multiple sites, all of those display sharing
+ * streams are closed.
+ */
+add_task(async function test_stop_sharing_multiple() {
+  let indicatorPromise = promiseIndicatorWindow();
+
+  info("Opening first tab");
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
+  info("Sharing camera, microphone and screen");
+  await shareDevices(tab1.linkedBrowser, true, true, true);
+
+  info("Opening second tab");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
+  info("Sharing camera and screen");
+  await shareDevices(tab2.linkedBrowser, true, false, true);
+
+  let indicator = await indicatorPromise;
+
+  let stopSharingButton = indicator.document.getElementById("stop-sharing");
+  let stopSharingPromise = TestUtils.waitForCondition(() => {
+    return !webrtcUI.showScreenSharingIndicator;
+  });
+  stopSharingButton.click();
+  await stopSharingPromise;
+
+  Assert.equal(gBrowser.selectedTab, tab2, "Should have tab2 selected.");
+  await checkSharingUI({ audio: false, video: true }, window, {
+    audio: true,
+    video: true,
+  });
+  BrowserTestUtils.removeTab(tab2);
+
+  Assert.equal(gBrowser.selectedTab, tab1, "Should have tab1 selected.");
+  await checkSharingUI({ audio: true, video: true }, window, {
+    audio: true,
+    video: true,
+  });
+
+  // Ensure that the "display-share" section of the indicator is now hidden
+  Assert.ok(
+    BrowserTestUtils.is_hidden(
+      indicator.document.getElementById("display-share")
+    ),
+    "The display-share section of the indicator should now be hidden."
+  );
+
+  BrowserTestUtils.removeTab(tab1);
 });
