@@ -152,8 +152,6 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation() {
 
     void operator()(const opUpdateStyleSheet& aOperation) {}
 
-    void operator()(const opProcessMeta& aOperation) {}
-
     void operator()(const opProcessOfflineManifest& aOperation) {
       free(aOperation.mUrl);
     }
@@ -965,10 +963,6 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     nsresult operator()(const opUpdateStyleSheet& aOperation) {
       mBuilder->UpdateStyleSheet(*(aOperation.mElement));
       return NS_OK;
-    }
-
-    nsresult operator()(const opProcessMeta& aOperation) {
-      return mBuilder->ProcessMETATag(*(aOperation.mElement));
     }
 
     nsresult operator()(const opProcessOfflineManifest& aOperation) {
