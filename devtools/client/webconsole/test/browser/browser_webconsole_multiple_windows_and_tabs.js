@@ -23,9 +23,10 @@ add_task(async function() {
   info("Test tabs added in first window");
 
   info("Open a second window");
-  const windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
   const win2 = OpenBrowserWindow();
-  await windowOpenedPromise;
+  await new Promise(r => {
+    win2.addEventListener("load", r, { capture: true, once: true });
+  });
 
   info("Add test tabs in second window");
   const tab3 = await addTab(TEST_URI, { window: win2 });

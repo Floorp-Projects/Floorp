@@ -49,7 +49,6 @@ class nsIRequest;
 class nsISerialEventTarget;
 class nsIWebProgress;
 class nsWebBrowser;
-class nsDocShellLoadState;
 
 template <typename T>
 class nsTHashtable;
@@ -254,8 +253,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                                const ViewID& aViewId,
                                const Maybe<ZoomConstraints>& aConstraints);
 
-  mozilla::ipc::IPCResult RecvLoadURL(nsDocShellLoadState* aLoadState,
-                                      const ParentShowInfo& aInfo);
+  mozilla::ipc::IPCResult RecvLoadURL(const nsCString& aURI,
+                                      nsIPrincipal* aTriggeringPrincipal,
+                                      const ParentShowInfo&);
 
   mozilla::ipc::IPCResult RecvResumeLoad(const uint64_t& aPendingSwitchID,
                                          const ParentShowInfo&);
