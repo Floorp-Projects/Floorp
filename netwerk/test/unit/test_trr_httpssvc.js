@@ -154,7 +154,7 @@ add_task(async function testHTTPSSVC() {
     "got correct answer"
   );
   Assert.equal(
-    answer[0].values[4].QueryInterface(Ci.nsISVCParamEsniConfig).esniConfig,
+    answer[0].values[4].QueryInterface(Ci.nsISVCParamEchConfig).echconfig,
     "123...",
     "got correct answer"
   );
@@ -185,7 +185,7 @@ add_task(async function testHTTPSSVC() {
     "got correct answer"
   );
   Assert.equal(
-    answer[1].values[2].QueryInterface(Ci.nsISVCParamEsniConfig).esniConfig,
+    answer[1].values[2].QueryInterface(Ci.nsISVCParamEchConfig).echconfig,
     "abc...",
     "got correct answer"
   );
@@ -228,7 +228,7 @@ add_task(async function test_aliasform() {
     {
       name: "test.com",
       ttl: 55,
-      type: "HTTPSSVC",
+      type: "HTTPS",
       flush: false,
       data: {
         priority: 0,
@@ -254,7 +254,7 @@ add_task(async function test_aliasform() {
     {
       name: "x.com",
       ttl: 55,
-      type: "HTTPSSVC",
+      type: "HTTPS",
       flush: false,
       data: {
         priority: 0,
@@ -277,7 +277,7 @@ add_task(async function test_aliasform() {
     {
       name: "z.com",
       ttl: 55,
-      type: "HTTPSSVC",
+      type: "HTTPS",
       flush: false,
       data: {
         priority: 0,
@@ -303,7 +303,7 @@ add_task(async function test_aliasform() {
     {
       name: "no-ip-host.com",
       ttl: 55,
-      type: "HTTPSSVC",
+      type: "HTTPS",
       flush: false,
       data: {
         priority: 1,
@@ -313,7 +313,7 @@ add_task(async function test_aliasform() {
           { key: "no-default-alpn" },
           { key: "port", value: 8888 },
           { key: "ipv4hint", value: "1.2.3.4" },
-          { key: "esniconfig", value: "123..." },
+          { key: "echconfig", value: "123..." },
           { key: "ipv6hint", value: "::1" },
         ],
       },
@@ -345,7 +345,7 @@ add_task(async function test_aliasform() {
     {
       name: "loop2.com",
       ttl: 55,
-      type: "HTTPSSVC",
+      type: "HTTPS",
       flush: false,
       data: {
         priority: 0,
@@ -366,7 +366,7 @@ add_task(async function test_aliasform() {
     {
       name: "empty.com",
       ttl: 55,
-      type: "HTTPSSVC",
+      type: "HTTPS",
       flush: false,
       data: {
         priority: 0,
@@ -383,11 +383,11 @@ add_task(async function test_aliasform() {
   );
 
   // We should ignore ServiceForm if an AliasForm record is also present
-  await trrServer.registerDoHAnswers("multi.com", "HTTPSSVC", [
+  await trrServer.registerDoHAnswers("multi.com", "HTTPS", [
     {
       name: "multi.com",
       ttl: 55,
-      type: "HTTPSSVC",
+      type: "HTTPS",
       flush: false,
       data: {
         priority: 1,
@@ -397,7 +397,7 @@ add_task(async function test_aliasform() {
           { key: "no-default-alpn" },
           { key: "port", value: 8888 },
           { key: "ipv4hint", value: "1.2.3.4" },
-          { key: "esniconfig", value: "123..." },
+          { key: "echconfig", value: "123..." },
           { key: "ipv6hint", value: "::1" },
         ],
       },
@@ -405,7 +405,7 @@ add_task(async function test_aliasform() {
     {
       name: "multi.com",
       ttl: 55,
-      type: "HTTPSSVC",
+      type: "HTTPS",
       flush: false,
       data: {
         priority: 0,
