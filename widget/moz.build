@@ -110,6 +110,7 @@ XPIDL_SOURCES += [
     'nsIGfxInfo.idl',
     'nsIGfxInfoDebug.idl',
     'nsIPaper.idl',
+    'nsIPaperMargin.idl',
     'nsIPrinter.idl',
     'nsIPrinterList.idl',
     'nsIPrintSession.idl',
@@ -237,6 +238,7 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
         'nsDeviceContextSpecProxy.cpp',
         'nsPaper.cpp',
+        'nsPaperMargin.cpp',
         'nsPrinterBase.cpp',
         'nsPrintSession.cpp',
         'nsPrintSettingsService.cpp',

@@ -7,6 +7,8 @@
 #include "nsPaper.h"
 #include "nsPrinterBase.h"
 
+using namespace mozilla;
+
 nsPrinterCUPS::nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter)
     : mShim(aShim) {
   MOZ_ASSERT(aPrinter);
@@ -51,7 +53,7 @@ bool nsPrinterCUPS::Supports(const char* option, const char* value) const {
                                        mPrinterInfo, option, value);
 }
 
-nsTArray<mozilla::PaperInfo> nsPrinterCUPS::PaperList() const {
+nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
   if (!mPrinterInfo) {
     return {};
   }
@@ -72,7 +74,7 @@ nsTArray<mozilla::PaperInfo> nsPrinterCUPS::PaperList() const {
     return {};
   }
 
-  nsTArray<mozilla::PaperInfo> paperList;
+  nsTArray<PaperInfo> paperList;
   for (int i = 0; i < paperCount; ++i) {
     cups_size_t info;
     int getInfoSucceded = mShim.mCupsGetDestMediaByIndex(
@@ -96,14 +98,14 @@ nsTArray<mozilla::PaperInfo> nsPrinterCUPS::PaperList() const {
     NS_ConvertUTF8toUTF16 name(localizedName);
     const double kPointsPerHundredthMillimeter = 0.0283465;
 
-    paperList.AppendElement(mozilla::PaperInfo{
+    paperList.AppendElement(PaperInfo{
         std::move(name),
-        info.width * kPointsPerHundredthMillimeter,
-        info.length * kPointsPerHundredthMillimeter,
-        info.top * kPointsPerHundredthMillimeter,
-        info.right * kPointsPerHundredthMillimeter,
-        info.bottom * kPointsPerHundredthMillimeter,
-        info.left * kPointsPerHundredthMillimeter,
+        {info.width * kPointsPerHundredthMillimeter,
+         info.length * kPointsPerHundredthMillimeter},
+        Some(MarginDouble{info.top * kPointsPerHundredthMillimeter,
+                          info.right * kPointsPerHundredthMillimeter,
+                          info.bottom * kPointsPerHundredthMillimeter,
+                          info.left * kPointsPerHundredthMillimeter}),
     });
   }
 

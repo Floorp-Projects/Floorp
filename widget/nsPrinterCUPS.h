@@ -19,6 +19,12 @@ class nsPrinterCUPS final : public nsPrinterBase {
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
   nsTArray<mozilla::PaperInfo> PaperList() const final;
+  MarginDouble GetMarginsForPaper(uint64_t) const final {
+    MOZ_ASSERT_UNREACHABLE(
+        "The CUPS API requires us to always get the margin when fetching the "
+        "paper list so there should be no need to query it separately");
+    return {};
+  }
 
   nsPrinterCUPS() = delete;
 

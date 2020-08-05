@@ -6,6 +6,7 @@
 #ifndef nsPrinterBase_h__
 #define nsPrinterBase_h__
 
+#include "mozilla/gfx/Rect.h"
 #include "nsIPrinter.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
@@ -25,6 +26,7 @@ class Promise;
 class nsPrinterBase : public nsIPrinter {
  public:
   using Promise = mozilla::dom::Promise;
+  using MarginDouble = mozilla::gfx::MarginDouble;
 
   NS_IMETHOD GetSupportsDuplex(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsColor(JSContext*, Promise**) final;
@@ -37,6 +39,8 @@ class nsPrinterBase : public nsIPrinter {
   nsPrinterBase(const nsPrinterBase&) = delete;
   nsPrinterBase(nsPrinterBase&&) = delete;
 
+  void QueryMarginsForPaper(Promise&, uint64_t aPaperId);
+
  private:
   enum class AsyncAttribute {
     SupportsDuplex = 0,
@@ -46,14 +50,18 @@ class nsPrinterBase : public nsIPrinter {
     Last,
   };
 
-  template <typename T>
-  using AsyncAttributeBackgroundTask = T (nsPrinterBase::*)() const;
+  template <typename T, typename... Args>
+  using BackgroundTask = T (nsPrinterBase::*)(Args...) const;
+
+  // Resolves a promise when a background task finishes.
+  template <typename T, typename... Args>
+  void SpawnBackgroundTask(Promise&, BackgroundTask<T, Args...>, Args... aArgs);
 
   // Resolves an async attribute via a background task.
-  template <typename T>
-  nsresult AsyncPromiseAttributeGetter(JSContext* aCx, Promise** aResultPromise,
-                                       AsyncAttribute,
-                                       AsyncAttributeBackgroundTask<T>);
+  template <typename T, typename... Args>
+  nsresult AsyncPromiseAttributeGetter(JSContext*, Promise**, AsyncAttribute,
+                                       BackgroundTask<T, Args...>,
+                                       Args... aArgs);
 
  protected:
   nsPrinterBase();
@@ -64,6 +72,7 @@ class nsPrinterBase : public nsIPrinter {
   virtual bool SupportsDuplex() const = 0;
   virtual bool SupportsColor() const = 0;
   virtual nsTArray<mozilla::PaperInfo> PaperList() const = 0;
+  virtual MarginDouble GetMarginsForPaper(uint64_t aPaperId) const = 0;
 
  private:
   mozilla::EnumeratedArray<AsyncAttribute, AsyncAttribute::Last,
