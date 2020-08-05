@@ -41,8 +41,8 @@ nsHTTPSOnlyStreamListener::OnStartRequest(nsIRequest* request) {
 NS_IMETHODIMP
 nsHTTPSOnlyStreamListener::OnStopRequest(nsIRequest* request,
                                          nsresult aStatus) {
-  // DNS errors are unrelated to the HTTPS-Only mode, so they can be ignored.
-  if (nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aStatus)) {
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  if (nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(channel, aStatus)) {
     RecordUpgradeTelemetry(request, aStatus);
     LogUpgradeFailure(request, aStatus);
   }
