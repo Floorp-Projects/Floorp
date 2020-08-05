@@ -9,7 +9,7 @@
 #include <windows.h>
 
 #include "mozilla/Array.h"
-#include "nsPaperWin.h"
+#include "nsPaper.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -62,11 +62,23 @@ static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
   return caps;
 }
 
-nsresult nsPrinterWin::EnsurePaperList() {
-  if (!mPaperList.IsEmpty()) {
-    return NS_OK;
-  }
+NS_IMETHODIMP
+nsPrinterWin::GetName(nsAString& aName) {
+  aName.Assign(mName);
+  return NS_OK;
+}
 
+bool nsPrinterWin::SupportsDuplex() const {
+  return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_DUPLEX, nullptr,
+                               nullptr) == 1;
+}
+
+bool nsPrinterWin::SupportsColor() const {
+  return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLORDEVICE, nullptr,
+                               nullptr) == 1;
+}
+
+nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
   // Paper names are returned in 64 long character buffers.
   auto paperNames =
       GetDeviceCapabilityArray<Array<wchar_t, 64>>(mName.get(), DC_PAPERNAMES);
@@ -81,10 +93,12 @@ nsresult nsPrinterWin::EnsurePaperList() {
   // Check that we have papers and that the array lengths match.
   if (!paperNames.Length() || paperNames.Length() != paperIds.Length() ||
       paperNames.Length() != paperSizes.Length()) {
-    return NS_ERROR_UNEXPECTED;
+    return {};
   }
 
-  mPaperList.SetCapacity(paperNames.Length());
+  static const wchar_t kDriverName[] = L"WINSPOOL";
+  nsTArray<mozilla::PaperInfo> paperList;
+  paperList.SetCapacity(paperNames.Length());
   for (size_t i = 0; i < paperNames.Length(); ++i) {
     // Paper names are null terminated unless they are 64 characters long.
     auto firstNull =
@@ -98,37 +112,34 @@ nsresult nsPrinterWin::EnsurePaperList() {
       continue;
     }
 
-    nsAutoString paperName(paperNames[i].cbegin(), nameLength);
-    mPaperList.AppendElement(
-        new nsPaperWin(paperIds[i], paperName, mName, width, height));
+    WORD id = paperIds[i];
+
+    // Now get the margin info.
+    // We need a DEVMODE to set the paper size on the context.
+    DEVMODEW devmode = {};
+    devmode.dmSize = sizeof(DEVMODEW);
+    devmode.dmFields = DM_PAPERSIZE;
+    devmode.dmPaperSize = id;
+
+    // Create an information context, so that we can get margin information.
+    // Note: this blocking call interacts with the driver and can be slow.
+    nsAutoHDC printerDc(
+        ::CreateICW(kDriverName, mName.get(), nullptr, &devmode));
+
+    auto marginInInches =
+        WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
+
+    nsDependentSubstring name(paperNames[i].cbegin(), nameLength);
+    paperList.AppendElement(mozilla::PaperInfo{
+        nsString(name),
+        width,
+        height,
+        marginInInches.top * POINTS_PER_INCH_FLOAT,
+        marginInInches.right * POINTS_PER_INCH_FLOAT,
+        marginInInches.bottom * POINTS_PER_INCH_FLOAT,
+        marginInInches.left * POINTS_PER_INCH_FLOAT,
+    });
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinterWin::GetName(nsAString& aName) {
-  aName.Assign(mName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinterWin::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
-  nsresult rv = EnsurePaperList();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  aPaperList.Assign(mPaperList);
-  return NS_OK;
-}
-
-bool nsPrinterWin::SupportsDuplex() const {
-  return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_DUPLEX, nullptr,
-                               nullptr) == 1;
-}
-
-bool nsPrinterWin::SupportsColor() const {
-  return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLORDEVICE, nullptr,
-                               nullptr) == 1;
+  return paperList;
 }

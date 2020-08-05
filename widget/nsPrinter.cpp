@@ -19,9 +19,3 @@ nsPrinter::GetName(nsAString& aName) {
   aName = mName;
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsPrinter::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
-  aPaperList.Assign(mPaperList);
-  return NS_OK;
-}

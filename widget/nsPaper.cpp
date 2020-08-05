@@ -9,48 +9,48 @@ NS_IMPL_ISUPPORTS(nsPaper, nsIPaper);
 
 NS_IMETHODIMP
 nsPaper::GetName(nsAString& aName) {
-  aName = mName;
+  aName = mInfo.mName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPaper::GetWidth(double* aWidth) {
   NS_ENSURE_ARG_POINTER(aWidth);
-  *aWidth = mWidth;
+  *aWidth = mInfo.mWidth;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPaper::GetHeight(double* aHeight) {
   NS_ENSURE_ARG_POINTER(aHeight);
-  *aHeight = mHeight;
+  *aHeight = mInfo.mHeight;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPaper::GetUnwriteableMarginTop(double* aUnwriteableMarginTop) {
   NS_ENSURE_ARG_POINTER(aUnwriteableMarginTop);
-  *aUnwriteableMarginTop = mUnwriteableMarginTop;
+  *aUnwriteableMarginTop = mInfo.mUnwriteableMarginTop;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPaper::GetUnwriteableMarginBottom(double* aUnwriteableMarginBottom) {
   NS_ENSURE_ARG_POINTER(aUnwriteableMarginBottom);
-  *aUnwriteableMarginBottom = mUnwriteableMarginBottom;
+  *aUnwriteableMarginBottom = mInfo.mUnwriteableMarginBottom;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPaper::GetUnwriteableMarginLeft(double* aUnwriteableMarginLeft) {
   NS_ENSURE_ARG_POINTER(aUnwriteableMarginLeft);
-  *aUnwriteableMarginLeft = mUnwriteableMarginLeft;
+  *aUnwriteableMarginLeft = mInfo.mUnwriteableMarginLeft;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPaper::GetUnwriteableMarginRight(double* aUnwriteableMarginRight) {
   NS_ENSURE_ARG_POINTER(aUnwriteableMarginRight);
-  *aUnwriteableMarginRight = mUnwriteableMarginRight;
+  *aUnwriteableMarginRight = mInfo.mUnwriteableMarginRight;
   return NS_OK;
 }

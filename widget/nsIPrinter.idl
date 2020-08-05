@@ -15,9 +15,12 @@ interface nsIPrinter : nsISupports
   readonly attribute AString name;
 
   /**
-   * The list of available paper sizes.
+   * Returns a Promise that resolves to an array of
+   * nsIPaper instances with the list of available paper
+   * sizes.
    */
-  readonly attribute Array<nsIPaper> paperList;
+  [implicit_jscontext]
+  readonly attribute Promise paperList;
 
   /**
    * Returns a Promise that resolves to true or false to indicate whether this

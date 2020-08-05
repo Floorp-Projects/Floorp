@@ -49,14 +49,19 @@ bool nsCUPSShim::Init() {
 
   if (!(CUPS_SHIM_LOAD(mCupsAddOption, cupsAddOption) &&
         CUPS_SHIM_LOAD(mCupsCheckDestSupported, cupsCheckDestSupported) &&
+        CUPS_SHIM_LOAD(mCupsConnectDest, cupsConnectDest) &&
         CUPS_SHIM_LOAD(mCupsCopyDest, cupsCopyDest) &&
         CUPS_SHIM_LOAD(mCupsCopyDestInfo, cupsCopyDestInfo) &&
         CUPS_SHIM_LOAD(mCupsFreeDestInfo, cupsFreeDestInfo) &&
         CUPS_SHIM_LOAD(mCupsFreeDests, cupsFreeDests) &&
+        CUPS_SHIM_LOAD(mCupsGetDestMediaCount, cupsGetDestMediaCount) &&
+        CUPS_SHIM_LOAD(mCupsGetDestMediaByIndex, cupsGetDestMediaByIndex) &&
         CUPS_SHIM_LOAD(mCupsGetDest, cupsGetDest) &&
         CUPS_SHIM_LOAD(mCupsGetDests, cupsGetDests) &&
+        CUPS_SHIM_LOAD(mCupsLocalizeDestMedia, cupsLocalizeDestMedia) &&
         CUPS_SHIM_LOAD(mCupsPrintFile, cupsPrintFile) &&
-        CUPS_SHIM_LOAD(mCupsTempFd, cupsTempFd))) {
+        CUPS_SHIM_LOAD(mCupsTempFd, cupsTempFd) &&
+        CUPS_SHIM_LOAD(mHttpClose, httpClose))) {
 #ifndef MOZ_TSAN
     // With TSan, we cannot unload libcups once we have loaded it because
     // TSan does not support unloading libraries that are matched from its

@@ -16,24 +16,20 @@
 class nsPrinterCUPS final : public nsPrinterBase {
  public:
   NS_IMETHOD GetName(nsAString& aName) override;
-  NS_IMETHOD GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) override;
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
+  nsTArray<mozilla::PaperInfo> PaperList() const final;
 
   nsPrinterCUPS() = delete;
 
   /**
    * @p aPrinter must not be null.
-   * @todo: Once CUPS-enumeration of paper sizes lands, we can remove the
-   * |aPaperList|.
    */
-  static already_AddRefed<nsPrinterCUPS> Create(
-      const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-      nsTArray<RefPtr<nsIPaper>>&& aPaperList);
+  static already_AddRefed<nsPrinterCUPS> Create(const nsCUPSShim& aShim,
+                                                cups_dest_t* aPrinter);
 
  private:
-  nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-                nsTArray<RefPtr<nsIPaper>>&& aPaperList);
+  nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter);
 
   ~nsPrinterCUPS();
 

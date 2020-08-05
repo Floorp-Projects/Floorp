@@ -236,16 +236,12 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     ]
     UNIFIED_SOURCES += [
         'nsDeviceContextSpecProxy.cpp',
+        'nsPaper.cpp',
         'nsPrinterBase.cpp',
         'nsPrintSession.cpp',
         'nsPrintSettingsService.cpp',
     ]
 
-    # The Windows sub-directory has its own implemenation of these.
-    if toolkit != 'windows':
-        UNIFIED_SOURCES += [
-            'nsPaper.cpp',
-        ]
     # These will be unified for all CUPS platforms by Bug 1654678
     if toolkit == 'cocoa':
         UNIFIED_SOURCES += [
@@ -253,6 +249,7 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
             'nsCUPSShim.cpp',
             'nsPrinterCUPS.cpp',
         ]
+
     if toolkit == 'gtk':
         UNIFIED_SOURCES += [
             'nsCUPSShim.cpp',
