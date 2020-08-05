@@ -251,12 +251,6 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
             'nsPrinterCUPS.cpp',
         ]
 
-    # GTK still uses nsPrinter for PS printers.
-    if toolkit == 'gtk':
-        UNIFIED_SOURCES += [
-            'nsPrinter.cpp',
-        ]
-
 # nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers
 # nsBaseDragService.cpp moved out of UNIFIED to fix xgill crash (bug 1259850) after moving widget/ContentHelper -> apz/util/TouchActionHelper
 SOURCES += [
