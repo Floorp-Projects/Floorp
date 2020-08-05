@@ -16,6 +16,7 @@ add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.mediacontrol.testingevents.enabled", true],
+      ["media.mediacontrol.stopcontrol.timer", true],
       ["media.mediacontrol.stopcontrol.timer.ms", 0],
     ],
   });
