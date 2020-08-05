@@ -8818,8 +8818,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
   // Similar check will be performed by the ParentProcessDocumentChannel if in
   // use.
   if (XRE_IsE10sParentProcess() &&
-      !DocumentChannel::CanUseDocumentChannel(aLoadState->URI(),
-                                              aLoadState->LoadFlags()) &&
+      !DocumentChannel::CanUseDocumentChannel(aLoadState->URI()) &&
       !CanLoadInParentProcess(aLoadState->URI())) {
     return NS_ERROR_FAILURE;
   }
@@ -9565,9 +9564,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   if (nsCOMPtr<nsIChannel> channel =
           aLoadState->GetPendingRedirectedChannel()) {
-    MOZ_ASSERT(!aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC),
-               "pending channel for srcdoc load?");
-
     // If we have a request outparameter, shove our channel into it.
     if (aRequest) {
       nsCOMPtr<nsIRequest> outRequest = channel;
@@ -9678,7 +9674,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   // Subdocuments must have a parent
   MOZ_ASSERT_IF(contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT,
                 mBrowsingContext->GetParent());
-
+  mBrowsingContext->SetTriggeringAndInheritPrincipals(
+      aLoadState->TriggeringPrincipal(), aLoadState->PrincipalToInherit(),
+      aLoadState->GetLoadIdentifier());
   RefPtr<LoadInfo> loadInfo =
       (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT)
           ? new LoadInfo(loadingWindow, aLoadState->TriggeringPrincipal(),
@@ -9730,8 +9728,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       mBrowsingContext, Some(uriModified), Some(isXFOError));
 
   nsCOMPtr<nsIChannel> channel;
-  if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI(),
-                                             aLoadState->LoadFlags())) {
+  if (DocumentChannel::CanUseDocumentChannel(aLoadState->URI())) {
     channel = DocumentChannel::CreateForDocument(aLoadState, loadInfo,
                                                  loadFlags, this, cacheKey,
                                                  uriModified, isXFOError);

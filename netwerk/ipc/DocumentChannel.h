@@ -71,7 +71,7 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
       nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
       nsLoadFlags aLoadFlags, nsIInterfaceRequestor* aNotificationCallbacks);
 
-  static bool CanUseDocumentChannel(nsIURI* aURI, uint32_t aLoadFlags);
+  static bool CanUseDocumentChannel(nsIURI* aURI);
 
  protected:
   DocumentChannel(nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,

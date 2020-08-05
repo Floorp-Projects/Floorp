@@ -597,13 +597,42 @@ nsresult LoadInfoArgsToLoadInfo(
       triggeringPrincipalOrErr.unwrap();
 
   nsCOMPtr<nsIPrincipal> principalToInherit;
+  nsCOMPtr<nsIPrincipal> flattenedPrincipalToInherit;
   if (loadInfoArgs.principalToInheritInfo().isSome()) {
     auto principalToInheritOrErr =
         PrincipalInfoToPrincipal(loadInfoArgs.principalToInheritInfo().ref());
     if (NS_WARN_IF(principalToInheritOrErr.isErr())) {
       return principalToInheritOrErr.unwrapErr();
     }
-    principalToInherit = principalToInheritOrErr.unwrap();
+    flattenedPrincipalToInherit = principalToInheritOrErr.unwrap();
+  }
+
+  if (XRE_IsContentProcess()) {
+    auto targetBrowsingContextId = loadInfoArgs.frameBrowsingContextID()
+                                       ? loadInfoArgs.frameBrowsingContextID()
+                                       : loadInfoArgs.browsingContextID();
+    if (RefPtr<BrowsingContext> bc =
+            BrowsingContext::Get(targetBrowsingContextId)) {
+      nsCOMPtr<nsIPrincipal> originalTriggeringPrincipal;
+      nsCOMPtr<nsIPrincipal> originalPrincipalToInherit;
+      Tie(originalTriggeringPrincipal, originalPrincipalToInherit) =
+          bc->GetTriggeringAndInheritPrincipalsForCurrentLoad();
+
+      if (originalTriggeringPrincipal &&
+          originalTriggeringPrincipal->Equals(triggeringPrincipal)) {
+        triggeringPrincipal = originalTriggeringPrincipal;
+      }
+      if (originalPrincipalToInherit &&
+          (loadInfoArgs.securityFlags() &
+           nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL)) {
+        MOZ_ASSERT(
+            originalPrincipalToInherit->Equals(flattenedPrincipalToInherit));
+        principalToInherit = originalPrincipalToInherit;
+      }
+    }
+  }
+  if (!principalToInherit && loadInfoArgs.principalToInheritInfo().isSome()) {
+    principalToInherit = flattenedPrincipalToInherit;
   }
 
   nsCOMPtr<nsIPrincipal> sandboxedLoadingPrincipal;
