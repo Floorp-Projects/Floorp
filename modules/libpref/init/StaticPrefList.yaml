@@ -252,7 +252,7 @@
 #if defined(ANDROID)
   value: true
 #else
-  value: @NIGHTLY_BUILD@
+  value: @IS_NIGHTLY_BUILD@
 #endif
   mirror: always
 
@@ -3232,8 +3232,8 @@
   value: false
   mirror: always
 
-# Is support for elementInternals enabled?
-- name: dom.webcomponents.elementInternals.enabled
+# Is support for form-associated custom element enabled?
+- name: dom.webcomponents.formAssociatedCustomElement.enabled
   type: bool
   value: @IS_NIGHTLY_BUILD@
   mirror: always

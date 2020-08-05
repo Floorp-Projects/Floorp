@@ -3315,6 +3315,7 @@ IonBuilder::InliningResult IonBuilder::inlineToObject(CallInfo& callInfo) {
     current->add(ins);
     current->push(ins);
 
+    MOZ_TRY(resumeAfter(ins));
     MOZ_TRY(
         pushTypeBarrier(ins, getInlineReturnTypeSet(), BarrierKind::TypeSet));
   }

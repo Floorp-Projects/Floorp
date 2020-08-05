@@ -37,7 +37,7 @@ def ffi_target(target):
             'x86': ('x86', 'X86_WIN32'),
             'aarch64': ('aarch64', 'ARM64_WIN64'),
         }[target.cpu]
-    elif target.os == 'OSX':
+    elif target.os == 'OSX' and target.cpu in ('x86', 'x86_64'):
         target_dir = 'x86'
         target_name = 'X86_DARWIN'
     elif target.cpu == 'arm':

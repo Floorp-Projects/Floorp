@@ -4,7 +4,7 @@
  * See README.Mozilla for details on how to generate this.
  */
 const knownFailures = {
-  "value": {
+  value: {
     "A-Proposed-FS:18px_TEXT-1_SI-dM": true,
     "A-Proposed-FS:18px_TEXT-1_SI-body": true,
     "A-Proposed-FS:18px_TEXT-1_SI-div": true,
@@ -219,8 +219,6 @@ const knownFailures = {
     "D-Proposed-TR3rs:3-1_SO3-body": true,
     "D-Proposed-TR3rs:3-1_SO3-div": true,
     "D-Proposed-DIV:ce:false-1_SB-dM": true,
-    "D-Proposed-DIV:ce:false-1_SB-body": true,
-    "D-Proposed-DIV:ce:false-1_SB-div": true,
     "D-Proposed-DIV:ce:false-1_SL-dM": true,
     "D-Proposed-DIV:ce:false-1_SL-body": true,
     "D-Proposed-DIV:ce:false-1_SL-div": true,
@@ -462,9 +460,9 @@ const knownFailures = {
     "QV-Proposed-HC_SPAN.bcred-1_SI-div": true,
     "QV-Proposed-HC_MYBCRED-1-SI-dM": true,
     "QV-Proposed-HC_MYBCRED-1-SI-body": true,
-    "QV-Proposed-HC_MYBCRED-1-SI-div": true
+    "QV-Proposed-HC_MYBCRED-1-SI-div": true,
   },
-  "select": {
+  select: {
     "S-Proposed-UNSEL_TEXT-1_SI-dM": true,
     "S-Proposed-UNSEL_TEXT-1_SI-body": true,
     "S-Proposed-UNSEL_TEXT-1_SI-div": true,
@@ -863,8 +861,6 @@ const knownFailures = {
     "D-Proposed-TR3rs:3-1_SO3-body": true,
     "D-Proposed-TR3rs:3-1_SO3-div": true,
     "D-Proposed-DIV:ce:false-1_SB-dM": true,
-    "D-Proposed-DIV:ce:false-1_SB-body": true,
-    "D-Proposed-DIV:ce:false-1_SB-div": true,
     "D-Proposed-DIV:ce:false-1_SL-dM": true,
     "D-Proposed-DIV:ce:false-1_SL-body": true,
     "D-Proposed-DIV:ce:false-1_SL-div": true,
@@ -1842,6 +1838,6 @@ const knownFailures = {
     "QV-Proposed-HC_SPAN.bcred-1_SI-div": true,
     "QV-Proposed-HC_MYBCRED-1-SI-dM": true,
     "QV-Proposed-HC_MYBCRED-1-SI-body": true,
-    "QV-Proposed-HC_MYBCRED-1-SI-div": true
-  }
-}
+    "QV-Proposed-HC_MYBCRED-1-SI-div": true,
+  },
+};

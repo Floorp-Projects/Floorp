@@ -1792,13 +1792,11 @@ JS::ubi::Node::Size JS::ubi::Concrete<Scope>::size(
 }
 
 /* static */
-bool ScopeStencil::create(JSContext* cx,
-                          frontend::CompilationInfo& compilationInfo,
-                          Handle<FunctionScope::Data*> dataArg,
-                          bool hasParameterExprs, bool needsEnvironment,
-                          FunctionIndex functionIndex, bool isArrow,
-                          mozilla::Maybe<ScopeIndex> enclosing,
-                          ScopeIndex* index) {
+bool ScopeStencil::createForFunctionScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    Handle<FunctionScope::Data*> dataArg, bool hasParameterExprs,
+    bool needsEnvironment, FunctionIndex functionIndex, bool isArrow,
+    mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<FunctionScope::Data>> data(
@@ -1826,12 +1824,10 @@ bool ScopeStencil::create(JSContext* cx,
 }
 
 /* static */
-bool ScopeStencil::create(JSContext* cx,
-                          frontend::CompilationInfo& compilationInfo,
-                          ScopeKind kind, Handle<LexicalScope::Data*> dataArg,
-                          uint32_t firstFrameSlot,
-                          mozilla::Maybe<ScopeIndex> enclosing,
-                          ScopeIndex* index) {
+bool ScopeStencil::createForLexicalScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+    Handle<LexicalScope::Data*> dataArg, uint32_t firstFrameSlot,
+    mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<LexicalScope::Data>> data(
@@ -1851,12 +1847,11 @@ bool ScopeStencil::create(JSContext* cx,
       cx, kind, enclosing, firstFrameSlot, envShape, std::move(data.get()));
 }
 
-bool ScopeStencil::create(JSContext* cx,
-                          frontend::CompilationInfo& compilationInfo,
-                          ScopeKind kind, Handle<VarScope::Data*> dataArg,
-                          uint32_t firstFrameSlot, bool needsEnvironment,
-                          mozilla::Maybe<ScopeIndex> enclosing,
-                          ScopeIndex* index) {
+bool ScopeStencil::createForVarScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+    Handle<VarScope::Data*> dataArg, uint32_t firstFrameSlot,
+    bool needsEnvironment, mozilla::Maybe<ScopeIndex> enclosing,
+    ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<VarScope::Data>> data(
@@ -1878,10 +1873,9 @@ bool ScopeStencil::create(JSContext* cx,
 }
 
 /* static */
-bool ScopeStencil::create(JSContext* cx,
-                          frontend::CompilationInfo& compilationInfo,
-                          ScopeKind kind, Handle<GlobalScope::Data*> dataArg,
-                          ScopeIndex* index) {
+bool ScopeStencil::createForGlobalScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+    Handle<GlobalScope::Data*> dataArg, ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<GlobalScope::Data>> data(
@@ -1906,11 +1900,10 @@ bool ScopeStencil::create(JSContext* cx,
 }
 
 /* static */
-bool ScopeStencil::create(JSContext* cx,
-                          frontend::CompilationInfo& compilationInfo,
-                          ScopeKind kind, Handle<EvalScope::Data*> dataArg,
-                          mozilla::Maybe<ScopeIndex> enclosing,
-                          ScopeIndex* index) {
+bool ScopeStencil::createForEvalScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+    Handle<EvalScope::Data*> dataArg, mozilla::Maybe<ScopeIndex> enclosing,
+    ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<EvalScope::Data>> data(
@@ -1932,11 +1925,10 @@ bool ScopeStencil::create(JSContext* cx,
 }
 
 /* static */
-bool ScopeStencil::create(JSContext* cx,
-                          frontend::CompilationInfo& compilationInfo,
-                          Handle<ModuleScope::Data*> dataArg,
-                          mozilla::Maybe<ScopeIndex> enclosing,
-                          ScopeIndex* index) {
+bool ScopeStencil::createForModuleScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    Handle<ModuleScope::Data*> dataArg, mozilla::Maybe<ScopeIndex> enclosing,
+    ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<ModuleScope::Data>> data(
@@ -1989,10 +1981,9 @@ bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
 }
 
 /* static */
-bool ScopeStencil::create(JSContext* cx,
-                          frontend::CompilationInfo& compilationInfo,
-                          mozilla::Maybe<ScopeIndex> enclosing,
-                          ScopeIndex* index) {
+bool ScopeStencil::createForWithScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
 

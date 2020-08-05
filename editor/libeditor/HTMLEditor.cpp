@@ -5452,7 +5452,7 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
 
     // Loop through the ranges in the selection
     // XXX This is different from `SetInlinePropertyInternal()`.  It uses
-    //     AutoRangeArray to store all ranges first.  The result may be
+    //     AutoSelectionRangeArray to store all ranges first.  The result may be
     //     different if mutation event listener changes the `Selection`.
     for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); i++) {
       RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(i);

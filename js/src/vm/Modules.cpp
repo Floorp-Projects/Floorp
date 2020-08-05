@@ -73,14 +73,15 @@ JS_PUBLIC_API void JS::SetModuleDynamicImportHook(
 }
 
 JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
-    JSContext* cx, Handle<Value> referencingPrivate,
-    Handle<JSString*> specifier, Handle<JSObject*> promise) {
+    JSContext* cx, JS::DynamicImportStatus status,
+    Handle<Value> referencingPrivate, Handle<JSString*> specifier,
+    Handle<JSObject*> promise) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(referencingPrivate, promise);
 
-  return js::FinishDynamicModuleImport(cx, referencingPrivate, specifier,
-                                       promise);
+  return js::FinishDynamicModuleImport(cx, status, referencingPrivate,
+                                       specifier, promise);
 }
 
 template <typename Unit>

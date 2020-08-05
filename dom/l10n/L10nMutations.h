@@ -7,10 +7,12 @@
 #ifndef mozilla_dom_l10n_L10nMutations_h
 #define mozilla_dom_l10n_L10nMutations_h
 
-#include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashtable.h"
 #include "mozilla/dom/DOMLocalization.h"
+
+class nsRefreshDriver;
 
 namespace mozilla {
 namespace dom {
@@ -76,11 +78,7 @@ class L10nMutations final : public nsStubMutationObserver,
   void FlushPendingTranslations();
 
  private:
-  ~L10nMutations() {
-    StopRefreshObserver();
-    MOZ_ASSERT(!mDOMLocalization,
-               "DOMLocalization<-->L10nMutations cycle should be broken.");
-  }
+  ~L10nMutations();
   bool IsInRoots(nsINode* aNode);
 };
 

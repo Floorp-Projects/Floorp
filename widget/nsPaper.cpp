@@ -4,53 +4,69 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPaper.h"
+#include "nsPaperMargin.h"
+#include "nsPrinterBase.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/Promise.h"
 
-NS_IMPL_ISUPPORTS(nsPaper, nsIPaper);
+using mozilla::ErrorResult;
+
+NS_IMPL_CYCLE_COLLECTION(nsPaper, mMarginPromise, mPrinter)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPaper)
+  NS_INTERFACE_MAP_ENTRY(nsIPaper)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPaper)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPaper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPaper)
+
+nsPaper::nsPaper(nsPrinterBase& aPrinter, const mozilla::PaperInfo& aInfo)
+    : mPrinter(&aPrinter), mInfo(aInfo) {}
+
+nsPaper::~nsPaper() = default;
 
 NS_IMETHODIMP
 nsPaper::GetName(nsAString& aName) {
-  aName = mName;
+  aName = mInfo.mName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPaper::GetWidth(double* aWidth) {
   NS_ENSURE_ARG_POINTER(aWidth);
-  *aWidth = mWidth;
+  *aWidth = mInfo.mSize.Width();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPaper::GetHeight(double* aHeight) {
   NS_ENSURE_ARG_POINTER(aHeight);
-  *aHeight = mHeight;
+  *aHeight = mInfo.mSize.Height();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPaper::GetUnwriteableMarginTop(double* aUnwriteableMarginTop) {
-  NS_ENSURE_ARG_POINTER(aUnwriteableMarginTop);
-  *aUnwriteableMarginTop = mUnwriteableMarginTop;
-  return NS_OK;
-}
+nsPaper::GetUnwriteableMargin(JSContext* aCx, Promise** aPromise) {
+  if (RefPtr<Promise> existing = mMarginPromise) {
+    existing.forget(aPromise);
+    return NS_OK;
+  }
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
 
-NS_IMETHODIMP
-nsPaper::GetUnwriteableMarginBottom(double* aUnwriteableMarginBottom) {
-  NS_ENSURE_ARG_POINTER(aUnwriteableMarginBottom);
-  *aUnwriteableMarginBottom = mUnwriteableMarginBottom;
-  return NS_OK;
-}
+  mMarginPromise = promise;
 
-NS_IMETHODIMP
-nsPaper::GetUnwriteableMarginLeft(double* aUnwriteableMarginLeft) {
-  NS_ENSURE_ARG_POINTER(aUnwriteableMarginLeft);
-  *aUnwriteableMarginLeft = mUnwriteableMarginLeft;
-  return NS_OK;
-}
+  if (mInfo.mUnwriteableMargin) {
+    auto margin = mozilla::MakeRefPtr<nsPaperMargin>(*mInfo.mUnwriteableMargin);
+    mMarginPromise->MaybeResolve(margin);
+  } else {
+    mPrinter->QueryMarginsForPaper(*mMarginPromise, mInfo.mPaperId);
+  }
 
-NS_IMETHODIMP
-nsPaper::GetUnwriteableMarginRight(double* aUnwriteableMarginRight) {
-  NS_ENSURE_ARG_POINTER(aUnwriteableMarginRight);
-  *aUnwriteableMarginRight = mUnwriteableMarginRight;
+  promise.forget(aPromise);
   return NS_OK;
 }

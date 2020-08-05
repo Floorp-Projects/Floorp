@@ -164,7 +164,7 @@ extern JSObject* ArraySliceDense(JSContext* cx, HandleObject obj, int32_t begin,
 extern bool NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v);
 
 extern ArrayObject* ArrayConstructorOneArg(JSContext* cx,
-                                           HandleObjectGroup group,
+                                           HandleArrayObject templateObject,
                                            int32_t lengthInt);
 
 #ifdef DEBUG

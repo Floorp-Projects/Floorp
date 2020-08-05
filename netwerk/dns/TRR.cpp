@@ -1019,6 +1019,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
         }
         case TRRTYPE_HTTPSSVC: {
           struct SVCB parsed;
+          int32_t lastSvcParamKey = -1;
 
           unsigned int svcbIndex = index;
           CheckedInt<uint16_t> available = RDLENGTH;
@@ -1050,6 +1051,14 @@ nsresult TRR::DohDecode(nsCString& aHost) {
             uint16_t key = get16bit(mResponse, svcbIndex);
             svcbIndex += 2;
 
+            // 2.2 Clients MUST consider an RR malformed if SvcParamKeys are
+            // not in strictly increasing numeric order.
+            if (key <= lastSvcParamKey) {
+              LOG(("SvcParamKeys not in increasing order"));
+              return NS_ERROR_UNEXPECTED;
+            }
+            lastSvcParamKey = key;
+
             uint16_t len = get16bit(mResponse, svcbIndex);
             svcbIndex += 2;
 
@@ -1065,7 +1074,8 @@ nsresult TRR::DohDecode(nsCString& aHost) {
             svcbIndex += len;
 
             // If this is an unknown key, we will simply ignore it.
-            if (key == SvcParamKeyNone || key > SvcParamKeyLast) {
+            // We also don't need to record SvcParamKeyMandatory
+            if (key == SvcParamKeyMandatory || key > SvcParamKeyLast) {
               continue;
             }
             parsed.mSvcFieldValue.AppendElement(value);
@@ -1193,6 +1203,24 @@ nsresult TRR::DohDecode(nsCString& aHost) {
 nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
                             SvcFieldValue& field, uint16_t length) {
   switch (key) {
+    case SvcParamKeyMandatory: {
+      if (length % 2 != 0) {
+        // This key should encode a list of uint16_t
+        return NS_ERROR_UNEXPECTED;
+      }
+      while (length > 0) {
+        uint16_t mandatoryKey = get16bit(mResponse, svcbIndex);
+        length -= 2;
+        svcbIndex += 2;
+
+        if (mandatoryKey > SvcParamKeyLast) {
+          LOG(("The mandatory field includes a key we don't support %u",
+               mandatoryKey));
+          return NS_ERROR_UNEXPECTED;
+        }
+      }
+      break;
+    }
     case SvcParamKeyAlpn: {
       field.mValue = AsVariant(SvcParamAlpn{
           .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
@@ -1233,8 +1261,8 @@ nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
       }
       break;
     }
-    case SvcParamKeyEsniConfig: {
-      field.mValue = AsVariant(SvcParamEsniConfig{
+    case SvcParamKeyEchConfig: {
+      field.mValue = AsVariant(SvcParamEchConfig{
           .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
       break;
     }

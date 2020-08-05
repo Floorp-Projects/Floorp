@@ -11,6 +11,8 @@ from taskgraph.util.backstop import is_backstop, BACKSTOP_PUSH_INTERVAL, BACKSTO
 
 @register_strategy('backstop', args=(BACKSTOP_PUSH_INTERVAL, BACKSTOP_TIME_INTERVAL, {'all'}))
 @register_strategy("push-interval-10", args=(10, 0, {'try'}))
+@register_strategy("backstop-10-pushes-2-hours", args=(10, 120, {'try'}))
+@register_strategy("backstop-20-pushes-4-hours", args=(20, 240, {'try'}))
 @register_strategy("push-interval-20", args=(20, 0, {'try'}))
 @register_strategy("push-interval-25", args=(25, 0, {'try'}))
 class Backstop(OptimizationStrategy):

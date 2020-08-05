@@ -14,7 +14,7 @@ const {
 } = require("devtools/server/actors/targets/target-actor-registry.jsm");
 const {
   WatcherRegistry,
-} = require("devtools/server/actors/descriptors/watcher/WatcherRegistry.jsm");
+} = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
 
 const TARGET_TYPES = {
   FRAME: "frame",
@@ -23,7 +23,7 @@ const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
   TARGET_HELPERS,
   TARGET_TYPES.FRAME,
-  "devtools/server/actors/descriptors/watcher/target-helpers/frame-helper"
+  "devtools/server/actors/watcher/target-helpers/frame-helper"
 );
 
 exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
@@ -36,6 +36,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     this._browser = options && options.browser;
 
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
+    this.notifyResourceDestroyed = this.notifyResourceDestroyed.bind(this);
+    this.notifyResourceUpdated = this.notifyResourceUpdated.bind(this);
   },
 
   /**
@@ -210,6 +212,14 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    */
   notifyResourceAvailable(resources) {
     this.emit("resource-available-form", resources);
+  },
+
+  notifyResourceDestroyed(resources) {
+    this.emit("resource-destroyed-form", resources);
+  },
+
+  notifyResourceUpdated(resources) {
+    this.emit("resource-updated-form", resources);
   },
 
   /**

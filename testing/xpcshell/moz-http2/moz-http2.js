@@ -725,7 +725,7 @@ function handleRequest(req, res) {
             "hex"
           ),
         });
-      } else if (packet.questions[0].type == "HTTPSSVC") {
+      } else if (packet.questions[0].type == "HTTPS") {
         answers.push({
           name: packet.questions[0].name,
           type: packet.questions[0].type,
@@ -735,7 +735,7 @@ function handleRequest(req, res) {
           data: {
             priority: 1,
             name: "some.domain.stuff.",
-            values: [{ key: "esniconfig", value: "testytestystringstring" }],
+            values: [{ key: "echconfig", value: "testytestystringstring" }],
           },
         });
       }
@@ -843,7 +843,7 @@ function handleRequest(req, res) {
             { key: "no-default-alpn" },
             { key: "port", value: 8888 },
             { key: "ipv4hint", value: "1.2.3.4" },
-            { key: "esniconfig", value: "123..." },
+            { key: "echconfig", value: "123..." },
             { key: "ipv6hint", value: "::1" },
             { key: 30, value: "somelargestring" },
           ],
@@ -861,7 +861,7 @@ function handleRequest(req, res) {
           values: [
             { key: "alpn", value: "h2" },
             { key: "ipv4hint", value: ["1.2.3.4", "5.6.7.8"] },
-            { key: "esniconfig", value: "abc..." },
+            { key: "echconfig", value: "abc..." },
             { key: "ipv6hint", value: ["::1", "fe80::794f:6d2c:3d5e:7836"] },
           ],
         },

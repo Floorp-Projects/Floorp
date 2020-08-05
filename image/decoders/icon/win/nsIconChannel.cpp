@@ -345,7 +345,7 @@ void nsIconChannel::FinishAsyncOpen(HICON aIcon, nsresult aStatus) {
     return;
   }
 
-  rv = mPump->AsyncRead(this, nullptr);
+  rv = mPump->AsyncRead(this);
   if (NS_FAILED(rv)) {
     OnAsyncError(rv);
   }

@@ -6,36 +6,56 @@
 #ifndef nsPaper_h__
 #define nsPaper_h__
 
+#include "mozilla/dom/ToJSValue.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/Maybe.h"
 #include "nsIPaper.h"
 #include "nsISupportsImpl.h"
+#include "js/RootingAPI.h"
 #include "nsString.h"
 
+struct JSContext;
+
+namespace mozilla {
+
+// Simple struct that can be used off the main thread to hold all the info from
+// an nsPaper instance.
+struct PaperInfo {
+  using MarginDouble = mozilla::gfx::MarginDouble;
+  using SizeDouble = mozilla::gfx::SizeDouble;
+
+  const nsString mName;
+
+  SizeDouble mSize;
+
+  // The margins may not be known by some back-ends.
+  const Maybe<MarginDouble> mUnwriteableMargin;
+
+  // The paper id from the device, this is only useful on Windows, right now.
+  uint64_t mPaperId{0};
+};
+
+}  // namespace mozilla
+
+class nsPrinterBase;
+
 class nsPaper final : public nsIPaper {
+  using Promise = mozilla::dom::Promise;
+
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsPaper)
   NS_DECL_NSIPAPER
+
   nsPaper() = delete;
-  nsPaper(nsAString& aName, double aWidth, double aHeight,
-          double aUnwriteableMarginTop, double aUnwriteableMarginBottom,
-          double aUnwriteableMarginLeft, double aUnwriteableMarginRight)
-      : mName(aName),
-        mWidth(aWidth),
-        mHeight(aHeight),
-        mUnwriteableMarginTop(aUnwriteableMarginTop),
-        mUnwriteableMarginBottom(aUnwriteableMarginBottom),
-        mUnwriteableMarginLeft(aUnwriteableMarginLeft),
-        mUnwriteableMarginRight(aUnwriteableMarginRight) {}
+  nsPaper(nsPrinterBase&, const mozilla::PaperInfo&);
 
  private:
-  ~nsPaper() = default;
-
-  nsString mName;
-  double mWidth;
-  double mHeight;
-  double mUnwriteableMarginTop;
-  double mUnwriteableMarginBottom;
-  double mUnwriteableMarginLeft;
-  double mUnwriteableMarginRight;
+  ~nsPaper();
+  RefPtr<nsPrinterBase> mPrinter;
+  RefPtr<Promise> mMarginPromise;
+  const mozilla::PaperInfo mInfo;
 };
 
 #endif /* nsPaper_h__ */

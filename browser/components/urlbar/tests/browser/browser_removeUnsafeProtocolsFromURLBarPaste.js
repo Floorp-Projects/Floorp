@@ -50,7 +50,8 @@ if (supportsNullBytes) {
 }
 pairs.push([gobbledygook, "foo"]);
 
-let supportsReturnWithoutNewline = AppConstants.platform != "win";
+let supportsReturnWithoutNewline =
+  AppConstants.platform != "win" && AppConstants.platform != "linux";
 if (supportsReturnWithoutNewline) {
   pairs.push(["java\rscript:foo", "foo"]);
 }

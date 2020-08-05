@@ -2909,7 +2909,8 @@ TextServicesDocument::WillDeleteText(CharacterData* aTextNode, int32_t aOffset,
 }
 
 NS_IMETHODIMP
-TextServicesDocument::WillDeleteSelection(Selection* aSelection) {
+TextServicesDocument::WillDeleteRanges(
+    const nsTArray<RefPtr<nsRange>>& aRangesToDelete) {
   return NS_OK;
 }
 

@@ -14,7 +14,7 @@ function run_test() {
   // When we pass a null listener argument too asyncRead we expect it to throw
   // instead of crashing.
   try {
-    pump.asyncRead(null, null);
+    pump.asyncRead(null);
   } catch (e) {
     return;
   }

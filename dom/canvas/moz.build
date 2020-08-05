@@ -85,6 +85,7 @@ UNIFIED_SOURCES += [
     'ImageBitmap.cpp',
     'ImageBitmapRenderingContext.cpp',
     'ImageData.cpp',
+    'nsICanvasRenderingContextInternal.cpp',
     'OffscreenCanvas.cpp',
     'XRWebGLLayer.cpp',
 ]

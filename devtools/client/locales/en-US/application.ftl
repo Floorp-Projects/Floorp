@@ -26,6 +26,10 @@ serviceworker-worker-unregister = Unregister
 serviceworker-worker-debug = Debug
   .title = Only running service workers can be debugged
 
+# Alt text for the image icon displayed inside a debug link for a service worker.
+serviceworker-worker-inspect-icon =
+  .alt = Inspect
+
 # Text for the start link displayed for a registered but not running Service Worker.
 # Clicking on the link will attempt to start the service worker.
 serviceworker-worker-start3 = Start
@@ -33,12 +37,6 @@ serviceworker-worker-start3 = Start
 # Text displayed for the updated time of the service worker. The <time> element will
 # display the last update time of the service worker script.
 serviceworker-worker-updated = Updated <time>{ DATETIME($date, month: "long", year: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric") }</time>
-
-# Text displayed next to the URL for the source of the service worker (e-g. "Source my/path/to/worker-js")
-serviceworker-worker-source = Source
-
-# Text displayed next to the current status of the service worker.
-serviceworker-worker-status = Status
 
 ## Service Worker status strings: all serviceworker-worker-status-* strings are also
 ## defined in aboutdebugging.properties and should be synchronized with them.

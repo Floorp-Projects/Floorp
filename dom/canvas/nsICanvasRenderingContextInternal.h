@@ -12,7 +12,6 @@
 #include "nsISupports.h"
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
-#include "nsRefreshDriver.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/PresShell.h"
@@ -29,6 +28,7 @@
 
 class nsDisplayListBuilder;
 class nsIDocShell;
+class nsRefreshDriver;
 
 namespace mozilla {
 class ClientWebGLContext;
@@ -61,9 +61,9 @@ class nsICanvasRenderingContextInternal : public nsISupports,
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
-  nsICanvasRenderingContextInternal()
-      : mSharedPtrPtr(
-            std::make_shared<nsICanvasRenderingContextInternal*>(this)) {}
+  nsICanvasRenderingContextInternal();
+
+  ~nsICanvasRenderingContextInternal();
 
   void SetCanvasElement(mozilla::dom::HTMLCanvasElement* parentCanvas) {
     RemovePostRefreshObserver();
@@ -78,21 +78,9 @@ class nsICanvasRenderingContextInternal : public nsISupports,
     return nullptr;
   }
 
-  void RemovePostRefreshObserver() {
-    if (mRefreshDriver) {
-      mRefreshDriver->RemovePostRefreshObserver(this);
-      mRefreshDriver = nullptr;
-    }
-  }
+  void RemovePostRefreshObserver();
 
-  void AddPostRefreshObserverIfNecessary() {
-    if (!GetPresShell() || !GetPresShell()->GetPresContext() ||
-        !GetPresShell()->GetPresContext()->RefreshDriver()) {
-      return;
-    }
-    mRefreshDriver = GetPresShell()->GetPresContext()->RefreshDriver();
-    mRefreshDriver->AddPostRefreshObserver(this);
-  }
+  void AddPostRefreshObserverIfNecessary();
 
   mozilla::dom::HTMLCanvasElement* GetParentObject() const {
     return mCanvasElement;

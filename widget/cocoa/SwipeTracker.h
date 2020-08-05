@@ -11,11 +11,12 @@
 #include "mozilla/layers/AxisPhysicsMSDModel.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
 #include "Units.h"
 
 class nsChildView;
 class nsIWidget;
+class nsRefreshDriver;
 
 namespace mozilla {
 

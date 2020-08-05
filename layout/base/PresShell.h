@@ -40,7 +40,7 @@
 #include "nsPresArena.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
-#include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
 #include "nsStringFwd.h"
 #include "nsStubDocumentObserver.h"
 #include "nsTHashtable.h"
@@ -73,6 +73,7 @@ class nsITimer;
 class nsPIDOMWindowOuter;
 class nsPresShellEventCB;
 class nsRange;
+class nsRefreshDriver;
 class nsRegion;
 class nsView;
 class nsViewManager;
@@ -384,9 +385,7 @@ class PresShell final : public nsStubDocumentObserver,
   /**
    * Return true if the presshell expects layout flush.
    */
-  bool IsLayoutFlushObserver() {
-    return GetPresContext()->RefreshDriver()->IsLayoutFlushObserver(this);
-  }
+  bool IsLayoutFlushObserver();
 
   /**
    * Called when document load completes.
@@ -1920,13 +1919,8 @@ class PresShell final : public nsStubDocumentObserver,
    public:
     NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent, override)
 
-    void Revoke() {
-      if (mPresShell) {
-        mPresShell->GetPresContext()->RefreshDriver()->RemoveRefreshObserver(
-            this, FlushType::Display);
-        mPresShell = nullptr;
-      }
-    }
+    void Revoke();
+
     MOZ_CAN_RUN_SCRIPT
     void WillRefresh(TimeStamp aTime) override {
       if (mPresShell) {

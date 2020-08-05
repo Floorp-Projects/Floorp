@@ -420,8 +420,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
                                                   newKind);
     }
 
-    jsbytecode* pc;
-    RootedScript script(cx, cx->currentScript(&pc));
+    jsbytecode* pc = nullptr;
+    RootedScript script(cx);
+    if (IsTypeInferenceEnabled()) {
+      script = cx->currentScript(&pc);
+    }
+
     Rooted<TypedArrayObject*> obj(
         cx, newBuiltinClassInstance(cx, allocKind, GenericObject));
     if (!obj) {
@@ -483,8 +487,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     MOZ_ASSERT(allocKind >= gc::GetGCObjectKind(instanceClass()));
 
     AutoSetNewObjectMetadata metadata(cx);
-    jsbytecode* pc;
-    RootedScript script(cx, cx->currentScript(&pc));
+
+    jsbytecode* pc = nullptr;
+    RootedScript script(cx);
+    if (IsTypeInferenceEnabled()) {
+      script = cx->currentScript(&pc);
+    }
+
     Rooted<TypedArrayObject*> tarray(
         cx, newBuiltinClassInstance(cx, allocKind, TenuredObject));
     if (!tarray) {

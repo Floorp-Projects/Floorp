@@ -1834,15 +1834,19 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
 }
 
 bool js::FinishDynamicModuleImport(JSContext* cx,
+                                   JS::DynamicImportStatus status,
                                    HandleValue referencingPrivate,
                                    HandleString specifier,
                                    HandleObject promiseArg) {
+  MOZ_ASSERT_IF(cx->isExceptionPending(),
+                status == JS::DynamicImportStatus::Failed);
+
   Handle<PromiseObject*> promise = promiseArg.as<PromiseObject>();
 
   auto releasePrivate = mozilla::MakeScopeExit(
       [&] { cx->runtime()->releaseScriptPrivate(referencingPrivate); });
 
-  if (cx->isExceptionPending()) {
+  if (status == JS::DynamicImportStatus::Failed) {
     return RejectPromiseWithPendingError(cx, promise);
   }
 

@@ -169,7 +169,7 @@ function RemoteMedia(url, listener) {
     Ci.nsIInputStreamPump
   );
   this._pump.init(this._inputStream, 0, 0, true);
-  this._pump.asyncRead(this, null);
+  this._pump.asyncRead(this);
 }
 
 RemoteMedia.prototype = {

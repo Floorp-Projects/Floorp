@@ -1029,7 +1029,8 @@ bool Element::CanAttachShadowDOM() const {
   // It will always have CustomElementData when the element is a valid custom
   // element or has is value.
   CustomElementData* ceData = GetCustomElementData();
-  if (StaticPrefs::dom_webcomponents_elementInternals_enabled() && ceData) {
+  if (StaticPrefs::dom_webcomponents_formAssociatedCustomElement_enabled() &&
+      ceData) {
     CustomElementDefinition* definition = ceData->GetCustomElementDefinition();
     // If the definition is null, the element possible hasn't yet upgraded.
     // Fallback to use LookupCustomElementDefinition to find its definition.

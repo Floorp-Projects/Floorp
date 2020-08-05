@@ -139,7 +139,7 @@ bool HTMLButtonElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (aAttribute == nsGkAtoms::formmethod) {
-      if (StaticPrefs::dom_dialog_element_enabled()) {
+      if (StaticPrefs::dom_dialog_element_enabled() || IsInChromeDocument()) {
         return aResult.ParseEnumValue(aValue, kFormMethodTableDialogEnabled,
                                       false);
       }

@@ -90,6 +90,14 @@ class ResourceWatcher {
           "resource-available-form",
           this._onResourceAvailable.bind(this, { watcherFront: this.watcher })
         );
+        this.watcher.on(
+          "resource-updated-form",
+          this._onResourceUpdated.bind(this, { watcherFront: this.watcher })
+        );
+        this.watcher.on(
+          "resource-destroyed-form",
+          this._onResourceDestroyed.bind(this, { watcherFront: this.watcher })
+        );
       }
     }
 
@@ -224,6 +232,10 @@ class ResourceWatcher {
       this._onResourceAvailable.bind(this, { targetFront })
     );
     targetFront.on(
+      "resource-updated-form",
+      this._onResourceUpdated.bind(this, { targetFront })
+    );
+    targetFront.on(
       "resource-destroyed-form",
       this._onResourceDestroyed.bind(this, { targetFront })
     );
@@ -259,21 +271,11 @@ class ResourceWatcher {
     for (let resource of resources) {
       const { resourceType } = resource;
 
-      // Compute the target front if the resource comes from the Watcher Actor.
-      // (`targetFront` will be null as the watcher is in the parent process
-      // and targets are in distinct processes)
       if (watcherFront) {
-        // Resource emitted from the Watcher Actor should all have a browsingContextID attribute
-        const { browsingContextID } = resource;
-        if (!browsingContextID) {
-          console.error(
-            `Resource of ${resourceType} is missing a browsingContextID attribute`
-          );
+        targetFront = await this._getTargetForWatcherResource(resource);
+        if (!targetFront) {
           continue;
         }
-        targetFront = await this.watcher.getBrowsingContextTarget(
-          browsingContextID
-        );
       }
 
       // Put the targetFront on the resource for easy retrieval.
@@ -308,38 +310,70 @@ class ResourceWatcher {
    * - target actors RDP events
    * Called everytime a resource is updated in the remote target.
    *
-   * @param {Front} targetFront
-   *        The Target Front from which this resource comes from.
-   * @param {Array<json/Front>} resources
-   *        Depending on the resource Type, it can be an Array composed of either JSON objects or Fronts,
-   *        which describes the updated resource.
+   * See _onResourceAvailable for the argument description.
    */
-  _onResourceUpdated(targetFront, resource) {
-    const { resourceType } = resource;
-    this._updatedListeners.emit(resourceType, {
-      resourceType,
-      targetFront,
-      resource,
-    });
+  async _onResourceUpdated({ targetFront, watcherFront }, resources) {
+    for (const resource of resources) {
+      const { resourceType } = resource;
+
+      if (watcherFront) {
+        targetFront = await this._getTargetForWatcherResource(resource);
+        if (!targetFront) {
+          continue;
+        }
+      }
+
+      this._updatedListeners.emit(resourceType, {
+        resourceType,
+        targetFront,
+        resource,
+      });
+    }
   }
 
   /**
    * Called everytime a resource is destroyed in the remote target.
    * See _onResourceAvailable for the argument description.
-   *
-   * XXX: No usage of this yet. May be useful for the inspector? sources?
    */
-  _onResourceDestroyed(targetFront, resourceType, resource) {
-    const index = this._cache.indexOf(resource);
-    if (index >= 0) {
-      this._cache.splice(index, 1);
-    }
+  async _onResourceDestroyed({ targetFront, watcherFront }, resources) {
+    for (const resource of resources) {
+      const { resourceType } = resource;
 
-    this._destroyedListeners.emit(resourceType, {
-      resourceType,
-      targetFront,
-      resource,
-    });
+      if (watcherFront) {
+        targetFront = await this._getTargetForWatcherResource(resource);
+        if (!targetFront) {
+          continue;
+        }
+      }
+
+      const index = this._cache.indexOf(resource);
+      if (index >= 0) {
+        this._cache.splice(index, 1);
+      }
+
+      this._destroyedListeners.emit(resourceType, {
+        resourceType,
+        targetFront,
+        resource,
+      });
+    }
+  }
+
+  // Compute the target front if the resource comes from the Watcher Actor.
+  // (`targetFront` will be null as the watcher is in the parent process
+  // and targets are in distinct processes)
+  _getTargetForWatcherResource(resource) {
+    const { browsingContextID, resourceType } = resource;
+
+    // Resource emitted from the Watcher Actor should all have a
+    // browsingContextID attribute
+    if (!browsingContextID) {
+      console.error(
+        `Resource of ${resourceType} is missing a browsingContextID attribute`
+      );
+      return null;
+    }
+    return this.watcher.getBrowsingContextTarget(browsingContextID);
   }
 
   _onWillNavigate(targetFront) {
@@ -412,12 +446,14 @@ class ResourceWatcher {
    */
   _watchResourcesForTarget(targetFront, resourceType) {
     const onAvailable = this._onResourceAvailable.bind(this, { targetFront });
+    const onDestroyed = this._onResourceDestroyed.bind(this, { targetFront });
     const onUpdated = this._onResourceUpdated.bind(this, { targetFront });
     return LegacyListeners[resourceType]({
       targetList: this.targetList,
       targetFront,
       isFissionEnabledOnContentToolbox: gDevTools.isFissionContentToolboxEnabled(),
       onAvailable,
+      onDestroyed,
       onUpdated,
     });
   }

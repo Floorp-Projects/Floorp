@@ -9,8 +9,8 @@ const { TargetList } = require("devtools/shared/resources/target-list");
 const { TYPES } = TargetList;
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
-const CHROME_WORKER_URL = CHROME_URL_ROOT + "test_worker.js";
-const WORKER_URL = URL_ROOT_SSL + "test_worker.js";
+const WORKER_FILE = "test_worker.js";
+const CHROME_WORKER_URL = CHROME_URL_ROOT + WORKER_FILE;
 const SERVICE_WORKER_URL = URL_ROOT_SSL + "test_service_worker.js";
 
 add_task(async function() {
@@ -23,16 +23,8 @@ add_task(async function() {
 
   const client = await createLocalClient();
   const mainRoot = client.mainRoot;
+  await addTab(FISSION_TEST_URL);
 
-  const tab = await addTab(FISSION_TEST_URL);
-
-  await testBrowserWorkers(mainRoot);
-  await testTabWorkers(mainRoot, tab);
-
-  await client.close();
-});
-
-async function testBrowserWorkers(mainRoot) {
   info("Test TargetList against workers via the parent process target");
 
   // Instantiate a worker in the parent process
@@ -185,75 +177,12 @@ async function testBrowserWorkers(mainRoot) {
   ok(hasWorker2, "retrieve the target for tab via getAllTargets");
 
   targetList.stopListening();
-}
 
-async function testTabWorkers(mainRoot, tab) {
-  info("Test TargetList against workers via a tab target");
+  info("Unregister service workers so they don't appear in other tests.");
+  await unregisterAllServiceWorkers(client);
 
-  // Create a TargetList for a given test tab
-  const descriptor = await mainRoot.getTab({ tab });
-  const target = await descriptor.getTarget();
-
-  // Ensure attaching the target as BrowsingContextTargetActor.listWorkers
-  // assert that the target actor is attached.
-  // It isn't clear if this assertion is meaningful?
-  await target.attach();
-
-  const targetList = new TargetList(mainRoot, target);
-
-  // Workaround to allow listening for workers in the content toolbox
-  // without the fission preferences
-  targetList.listenForWorkers = true;
-
-  await targetList.startListening();
-
-  info(
-    "Check that getAllTargets does return the dedicated worker, but not the shared one"
-  );
-  const workers = await targetList.getAllTargets([
-    TYPES.WORKER,
-    TYPES.SHARED_WORKER,
-  ]);
-
-  // XXX: This should be modified in Bug 1607778, where we plan to add support for shared workers.
-  is(workers.length, 1, "Retrieved only one worker…");
-  is(workers[0]?.url, `${WORKER_URL}#simple-worker`, "…the dedicated worker");
-
-  info(
-    "Assert that watchTargets will call the create callback for existing dedicated workers"
-  );
-  const targets = [];
-  const onAvailable = async ({ targetFront }) => {
-    is(
-      targetFront.targetType,
-      TYPES.WORKER,
-      "We are only notified about worker targets"
-    );
-    ok(!targetFront.isTopLevel, "The workers are never top level");
-    targets.push(targetFront);
-  };
-  await targetList.watchTargets(
-    [TYPES.WORKER, TYPES.SHARED_WORKER],
-    onAvailable
-  );
-
-  // XXX: This should be modified in Bug 1607778, where we plan to add support for shared workers.
-  is(targets.length, 1, "Retrieved one worker…");
-  is(targets[0]?.url, `${WORKER_URL}#simple-worker`, "…the dedicated worker");
-
-  info("Check that watched targets return the same fronts as getAllTargets");
-  is(
-    targets[0],
-    workers[0],
-    "Got the exact same target front for the dedicated worker"
-  );
-
-  targetList.unwatchTargets([TYPES.WORKER, TYPES.SHARED_WORKER], onAvailable);
-
-  targetList.stopListening();
-
-  BrowserTestUtils.removeTab(tab);
-}
+  await client.close();
+});
 
 function sortFronts(f1, f2) {
   return f1.actorID < f2.actorID;

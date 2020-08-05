@@ -4042,7 +4042,7 @@ const BrowserSearch = {
 
   /**
    * This is a wrapper around '_updateURLBarPlaceholder' that uses the
-   * appropraite default engine to get the engine name.
+   * appropriate default engine to get the engine name.
    *
    * @param {Boolean} isPrivate      Set to true if this is a private window.
    * @param {Boolean} [delayUpdate]  Set to true, to delay update until the
@@ -4129,15 +4129,11 @@ const BrowserSearch = {
    *                      use the default placeholder.
    */
   _setURLBarPlaceholder(name) {
-    let placeholder;
-    if (name) {
-      placeholder = gBrowserBundle.formatStringFromName("urlbar.placeholder", [
-        name,
-      ]);
-    } else {
-      placeholder = gURLBar.getAttribute("defaultPlaceholder");
-    }
-    gURLBar.placeholder = placeholder;
+    document.l10n.setAttributes(
+      gURLBar.inputField,
+      name ? "urlbar-placeholder-with-name" : "urlbar-placeholder",
+      name ? { name } : undefined
+    );
   },
 
   addEngine(browser, engine, uri) {

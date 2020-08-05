@@ -2567,6 +2567,10 @@ void PresShell::EndLoad(Document* aDocument) {
   mDocumentLoading = false;
 }
 
+bool PresShell::IsLayoutFlushObserver() {
+  return GetPresContext()->RefreshDriver()->IsLayoutFlushObserver(this);
+}
+
 void PresShell::LoadComplete() {
   gfxTextPerfMetrics* tp = nullptr;
   if (mPresContext) {
@@ -6650,6 +6654,14 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
     printf("[ps=%p]got mouse exit for %p\n", this, aEvent->mWidget);
     printf("[ps=%p]clearing mouse location\n", this);
 #endif
+  }
+}
+
+void PresShell::nsSynthMouseMoveEvent::Revoke() {
+  if (mPresShell) {
+    mPresShell->GetPresContext()->RefreshDriver()->RemoveRefreshObserver(
+        this, FlushType::Display);
+    mPresShell = nullptr;
   }
 }
 

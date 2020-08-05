@@ -14,6 +14,7 @@
 #include "mozilla/dom/SimpleGestureEventBinding.h"
 #include "nsAlgorithm.h"
 #include "nsChildView.h"
+#include "nsRefreshDriver.h"
 #include "UnitTransforms.h"
 
 // These values were tweaked to make the physics feel similar to the native swipe.
