@@ -242,35 +242,32 @@ function promisePumpToSaver(
       Ci.nsIInputStreamPump
     );
     pump.init(inputStream, 0, 0, true);
-    pump.asyncRead(
-      {
-        onStartRequest: function PPTS_onStartRequest(aRequest) {
-          aSaverStreamListener.onStartRequest(aRequest);
-        },
-        onStopRequest: function PPTS_onStopRequest(aRequest, aStatusCode) {
-          aSaverStreamListener.onStopRequest(aRequest, aStatusCode);
-          if (Components.isSuccessCode(aStatusCode)) {
-            resolve();
-          } else {
-            reject(new Components.Exception(aStatusCode));
-          }
-        },
-        onDataAvailable: function PPTS_onDataAvailable(
+    pump.asyncRead({
+      onStartRequest: function PPTS_onStartRequest(aRequest) {
+        aSaverStreamListener.onStartRequest(aRequest);
+      },
+      onStopRequest: function PPTS_onStopRequest(aRequest, aStatusCode) {
+        aSaverStreamListener.onStopRequest(aRequest, aStatusCode);
+        if (Components.isSuccessCode(aStatusCode)) {
+          resolve();
+        } else {
+          reject(new Components.Exception(aStatusCode));
+        }
+      },
+      onDataAvailable: function PPTS_onDataAvailable(
+        aRequest,
+        aInputStream,
+        aOffset,
+        aCount
+      ) {
+        aSaverStreamListener.onDataAvailable(
           aRequest,
           aInputStream,
           aOffset,
           aCount
-        ) {
-          aSaverStreamListener.onDataAvailable(
-            aRequest,
-            aInputStream,
-            aOffset,
-            aCount
-          );
-        },
+        );
       },
-      null
-    );
+    });
   });
 }
 
