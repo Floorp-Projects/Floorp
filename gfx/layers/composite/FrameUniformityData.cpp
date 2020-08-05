@@ -63,6 +63,24 @@ Point LayerTransforms::GetStdDev() {
   return stdDev;
 }
 
+bool LayerTransforms::Sanitize() {
+  // Remove leading and trailing zeros to isolate the composites that actually
+  // changed the transform
+  for (size_t i = 1; i < mTransforms.Length(); i++) {
+    if (mTransforms[i] != mTransforms[i - 1]) {
+      mTransforms.RemoveElementsAt(0, i - 1);
+      break;
+    }
+  }
+  for (size_t i = mTransforms.Length() - 1; i > 0; i--) {
+    if (mTransforms[i - 1] != mTransforms[i]) {
+      mTransforms.SetLength(i + 1);
+      break;
+    }
+  }
+  return !mTransforms.IsEmpty();
+}
+
 LayerTransformRecorder::~LayerTransformRecorder() { Reset(); }
 
 void LayerTransformRecorder::RecordTransform(Layer* aLayer,
@@ -96,7 +114,7 @@ void LayerTransformRecorder::Reset() { mFrameTransforms.clear(); }
 float LayerTransformRecorder::CalculateFrameUniformity(uintptr_t aLayer) {
   LayerTransforms* layerTransform = GetLayerTransforms(aLayer);
   float yUniformity = -1;
-  if (!layerTransform->mTransforms.IsEmpty()) {
+  if (layerTransform->Sanitize()) {
     Point stdDev = layerTransform->GetStdDev();
     yUniformity = stdDev.y;
   }

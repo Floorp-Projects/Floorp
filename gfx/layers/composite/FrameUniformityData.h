@@ -30,6 +30,7 @@ struct LayerTransforms {
 
   gfx::Point GetAverage();
   gfx::Point GetStdDev();
+  bool Sanitize();
 
   // 60 fps * 5 seconds worth of data
   AutoTArray<gfx::Point, 300> mTransforms;
