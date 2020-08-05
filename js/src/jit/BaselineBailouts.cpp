@@ -2030,6 +2030,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::ProtoGuard:
     case BailoutKind::NotProxyGuard:
     case BailoutKind::NotArrayBufferMaybeSharedGuard:
+    case BailoutKind::ArrayPopShift:
       // Do nothing.
       break;
 
