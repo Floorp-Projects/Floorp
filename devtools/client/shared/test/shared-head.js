@@ -315,6 +315,9 @@ registerCleanupFunction(async function cleanup() {
       conn.close();
     }
   }
+
+  // Clear the cached value for the fission content toolbox preference.
+  gDevTools.clearIsFissionContentToolboxEnabledReferenceForTest();
 });
 
 /**
