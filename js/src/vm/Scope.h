@@ -315,6 +315,15 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   template <typename F>
   void applyScopeDataTyped(F&& f);
 
+  template <typename EnvironmentType>
+  static bool updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape shape,
+                                       bool needsEnvironment);
+
+  template <typename EnvironmentType>
+  static bool updateEnvShapeIfRequired(JSContext* cx,
+                                       mozilla::Maybe<uint32_t>* envShape,
+                                       bool needsEnvironment);
+
  public:
   template <typename ConcreteScope>
   static ConcreteScope* create(
@@ -595,15 +604,6 @@ class FunctionScope : public Scope {
                                       bool needsEnvironment, HandleFunction fun,
                                       ShapeType envShape);
 
-  static bool updateEnvShapeIfRequired(JSContext* cx, MutableHandleShape shape,
-                                       bool needsEnvironment,
-                                       bool hasParameterExprs);
-
-  static bool updateEnvShapeIfRequired(
-      JSContext* cx,
-      MutableHandle<frontend::EnvironmentShapeCreationData> shape,
-      bool needsEnvironment, bool hasParameterExprs);
-
   static FunctionScope* clone(JSContext* cx, Handle<FunctionScope*> scope,
                               HandleFunction fun, HandleScope enclosing);
 
@@ -695,13 +695,6 @@ class VarScope : public Scope {
                                       bool needsEnvironment,
                                       ShapeType envShape);
 
-  static bool updateEnvShapeIfRequired(JSContext* cx,
-                                       MutableHandleShape envShape,
-                                       bool needsEnvironment);
-  static bool updateEnvShapeIfRequired(
-      JSContext* cx,
-      MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
-      bool needsEnvironment);
   Data& data() { return *static_cast<Data*>(rawData()); }
 
   const Data& data() const { return *static_cast<const Data*>(rawData()); }
@@ -874,13 +867,6 @@ class EvalScope : public Scope {
                                       MutableHandle<UniquePtr<Data>> data,
                                       ShapeType envShape);
 
-  static bool updateEnvShapeIfRequired(JSContext* cx,
-                                       MutableHandleShape envShape,
-                                       ScopeKind scopeKind);
-  static bool updateEnvShapeIfRequired(
-      JSContext* cx,
-      MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
-      ScopeKind scopeKind);
   Data& data() { return *static_cast<Data*>(rawData()); }
 
   const Data& data() const { return *static_cast<const Data*>(rawData()); }
@@ -973,12 +959,6 @@ class ModuleScope : public Scope {
                                       MutableHandle<UniquePtr<Data>> data,
                                       HandleModuleObject module,
                                       ShapeType envShape);
-
-  static bool updateEnvShapeIfRequired(JSContext* cx,
-                                       MutableHandleShape envShape);
-  static bool updateEnvShapeIfRequired(
-      JSContext* cx,
-      MutableHandle<frontend::EnvironmentShapeCreationData> envShape);
 
   Data& data() { return *static_cast<Data*>(rawData()); }
 

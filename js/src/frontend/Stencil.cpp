@@ -45,35 +45,6 @@ bool frontend::RegExpCreationData::init(JSContext* cx, JSAtom* pattern,
   return true;
 }
 
-bool frontend::EnvironmentShapeCreationData::createShape(
-    JSContext* cx, MutableHandleShape shape) {
-  struct Matcher {
-    JSContext* cx;
-    MutableHandleShape& shape;
-
-    bool operator()(CreateEnvShapeData& data) {
-      shape.set(CreateEnvironmentShape(cx, data.freshBi, data.cls,
-                                       data.nextEnvironmentSlot,
-                                       data.baseShapeFlags));
-      return shape;
-    }
-
-    bool operator()(EmptyEnvShapeData& data) {
-      shape.set(EmptyEnvironmentShape(cx, data.cls, JSSLOT_FREE(data.cls),
-                                      data.baseShapeFlags));
-      return shape;
-    }
-
-    bool operator()(mozilla::Nothing&) {
-      shape.set(nullptr);
-      return true;
-    }
-  };
-
-  Matcher m{cx, shape};
-  return data_.match(m);
-}
-
 Scope* ScopeCreationData::getEnclosingScope() {
   return enclosing_.existingScope();
 }
@@ -88,7 +59,8 @@ Scope* ScopeCreationData::createScope(JSContext* cx,
   Scope* scope = nullptr;
   switch (kind()) {
     case ScopeKind::Function: {
-      scope = createSpecificScope<FunctionScope>(cx, compilationInfo);
+      scope =
+          createSpecificScope<FunctionScope, CallObject>(cx, compilationInfo);
       break;
     }
     case ScopeKind::Lexical:
@@ -98,29 +70,35 @@ Scope* ScopeCreationData::createScope(JSContext* cx,
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      scope = createSpecificScope<LexicalScope>(cx, compilationInfo);
+      scope = createSpecificScope<LexicalScope, LexicalEnvironmentObject>(
+          cx, compilationInfo);
       break;
     }
     case ScopeKind::FunctionBodyVar: {
-      scope = createSpecificScope<VarScope>(cx, compilationInfo);
+      scope = createSpecificScope<VarScope, VarEnvironmentObject>(
+          cx, compilationInfo);
       break;
     }
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      scope = createSpecificScope<GlobalScope>(cx, compilationInfo);
+      scope =
+          createSpecificScope<GlobalScope, std::nullptr_t>(cx, compilationInfo);
       break;
     }
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      scope = createSpecificScope<EvalScope>(cx, compilationInfo);
+      scope = createSpecificScope<EvalScope, VarEnvironmentObject>(
+          cx, compilationInfo);
       break;
     }
     case ScopeKind::Module: {
-      scope = createSpecificScope<ModuleScope>(cx, compilationInfo);
+      scope = createSpecificScope<ModuleScope, ModuleEnvironmentObject>(
+          cx, compilationInfo);
       break;
     }
     case ScopeKind::With: {
-      scope = createSpecificScope<WithScope>(cx, compilationInfo);
+      scope =
+          createSpecificScope<WithScope, std::nullptr_t>(cx, compilationInfo);
       break;
     }
     case ScopeKind::WasmFunction:
@@ -135,8 +113,6 @@ void ScopeCreationData::trace(JSTracer* trc) {
   if (enclosing_) {
     enclosing_.trace(trc);
   }
-
-  environmentShape_.trace(trc);
 
   // Trace Datas
   if (data_) {
