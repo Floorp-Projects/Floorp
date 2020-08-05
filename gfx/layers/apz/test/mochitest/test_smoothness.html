@@ -1,8 +1,10 @@
 <html>
 <head>
   <title>Test Frame Uniformity While Scrolling</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
 
   <style>
@@ -14,13 +16,12 @@
   <script type="text/javascript">
     var scrollEvents = 100;
     var i = 0;
-    var testPref = "gfx.vsync.collect-scroll-transforms";
     // Scroll points
     var x = 100;
     var y = 150;
 
     SimpleTest.waitForExplicitFinish();
-    var utils = _getDOMWindowUtils(window);
+    var utils = SpecialPowers.getDOMWindowUtils(window);
 
     function sendScrollEvent(aRafTimestamp) {
       var scrollDiv = document.getElementById("content");
@@ -36,7 +37,7 @@
         // Locally, with silk and apz + e10s, retina 15" mbp usually get ~1.0 - 1.5
         // w/o silk + e10s + apz, I get up to 7. Lower is better.
         // Windows, I get ~3. Values are not valid w/o hardware vsync
-        var uniformities = _getDOMWindowUtils().getFrameUniformityTestData();
+        var uniformities = utils.getFrameUniformityTestData();
         for (var j = 0; j < uniformities.layerUniformities.length; j++) {
           var layerResult = uniformities.layerUniformities[j];
           var layerAddr = layerResult.layerAddress;
@@ -52,19 +53,14 @@
       window.requestAnimationFrame(sendScrollEvent);
     }
 
-    window.onload = function() {
-      var apzEnabled = SpecialPowers.getBoolPref("layers.async-pan-zoom.enabled");
-      if (!apzEnabled) {
-        SimpleTest.ok(true, "APZ not enabled, skipping test");
-        SimpleTest.finish();
-      }
+    if (!isApzEnabled()) {
+      SimpleTest.ok(true, "APZ not enabled, skipping test");
+      SimpleTest.finish();
+    }
 
-      SpecialPowers.pushPrefEnv({
-        "set": [
-          [testPref, true],
-        ],
-      }, startTest);
-    };
+    waitUntilApzStable()
+    .then(() => pushPrefs([["gfx.vsync.collect-scroll-transforms", true]]))
+    .then(startTest);
     </script>
 </head>
 
