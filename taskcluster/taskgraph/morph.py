@@ -78,8 +78,8 @@ def derive_misc_task(
     deps["docker-image"] = image_taskid
 
     task_def = {
-        "provisionerId": "gecko-t",
-        "workerType": "misc",
+        "provisionerId": provisioner_id,
+        "workerType": worker_type,
         "dependencies": [d for d in deps.values()],
         "created": {"relative-datestamp": "0 seconds"},
         "deadline": target_task.task["deadline"],
