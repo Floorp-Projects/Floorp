@@ -190,8 +190,6 @@ void DMABufSurface::FenceDelete() {
   }
 
   if (mSync) {
-    // We can't call this unless we have the ext, but we will always have
-    // the ext if we have something to destroy.
     egl->fDestroySync(egl->Display(), mSync);
     mSync = nullptr;
   }
@@ -205,14 +203,12 @@ void DMABufSurface::FenceSet() {
   auto* egl = gl::GLLibraryEGL::Get();
   if (egl->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
       egl->IsExtensionSupported(GLLibraryEGL::ANDROID_native_fence_sync)) {
-    if (mSync) {
-      MOZ_ALWAYS_TRUE(egl->fDestroySync(egl->Display(), mSync));
-      mSync = nullptr;
-    }
+    FenceDelete();
 
     mSync = egl->fCreateSync(egl->Display(),
                              LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr);
     if (mSync) {
+      mSyncFd = egl->fDupNativeFenceFDANDROID(egl->Display(), mSync);
       mGL->fFlush();
       return;
     }
@@ -225,7 +221,6 @@ void DMABufSurface::FenceSet() {
 
 void DMABufSurface::FenceWait() {
   auto* egl = gl::GLLibraryEGL::Get();
-
   if (!mSync && mSyncFd > 0) {
     FenceImportFromFd();
   }
@@ -454,9 +449,7 @@ bool DMABufSurfaceRGBA::Serialize(
   }
 
   if (mSync) {
-    auto* egl = gl::GLLibraryEGL::Get();
-    fenceFDs.AppendElement(ipc::FileDescriptor(
-        egl->fDupNativeFenceFDANDROID(egl->Display(), mSync)));
+    fenceFDs.AppendElement(ipc::FileDescriptor(mSyncFd));
   }
 
   if (mGlobalRefCountFd) {
@@ -922,9 +915,7 @@ bool DMABufSurfaceYUV::Serialize(
   }
 
   if (mSync) {
-    auto* egl = gl::GLLibraryEGL::Get();
-    fenceFDs.AppendElement(ipc::FileDescriptor(
-        egl->fDupNativeFenceFDANDROID(egl->Display(), mSync)));
+    fenceFDs.AppendElement(ipc::FileDescriptor(mSyncFd));
   }
 
   if (mGlobalRefCountFd) {
