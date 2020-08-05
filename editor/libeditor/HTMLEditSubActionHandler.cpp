@@ -3476,7 +3476,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
     // except table elements.
     bool join = true;
 
-    AutoRangeArray arrayOfRanges(SelectionRefPtr());
+    AutoSelectionRangeArray arrayOfRanges(SelectionRefPtr());
     for (auto& range : arrayOfRanges.mRanges) {
       // Build a list of direct child nodes in the range
       AutoTArray<OwningNonNull<nsIContent>, 10> arrayOfTopChildren;

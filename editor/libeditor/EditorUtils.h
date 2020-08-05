@@ -712,9 +712,9 @@ class MOZ_RAII AutoTransactionBatchExternal final {
   EditorBase& mEditorBase;
 };
 
-class MOZ_STACK_CLASS AutoRangeArray final {
+class MOZ_STACK_CLASS AutoSelectionRangeArray final {
  public:
-  explicit AutoRangeArray(dom::Selection* aSelection) {
+  explicit AutoSelectionRangeArray(dom::Selection* aSelection) {
     if (!aSelection) {
       return;
     }
