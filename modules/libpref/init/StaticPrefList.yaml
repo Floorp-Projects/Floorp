@@ -7565,6 +7565,13 @@
   value: 60000
   mirror: always
 
+# If this pref is on, we would stop controlling media after it reaches to the
+# end.
+- name: media.mediacontrol.stopcontrol.aftermediaends
+  type: bool
+  value: true
+  mirror: always
+
 # We would only use media control to control media which duration is longer
 # than this value.
 - name: media.mediacontrol.eligible.media.duration.s
