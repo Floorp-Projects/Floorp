@@ -466,7 +466,7 @@ impl CompositeState {
             opaque_tiles: Vec::new(),
             alpha_tiles: Vec::new(),
             clear_tiles: Vec::new(),
-            z_generator: ZBufferIdGenerator::new(0, max_depth_ids),
+            z_generator: ZBufferIdGenerator::new(max_depth_ids),
             dirty_rects_are_valid,
             compositor_kind,
             picture_caching_is_enabled,
