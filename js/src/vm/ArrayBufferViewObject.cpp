@@ -32,9 +32,9 @@ void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg) {
 
   // Update obj's data pointer if it moved.
   if (bufSlot.isObject()) {
-    if (IsArrayBuffer(&bufSlot.toObject())) {
+    if (gc::MaybeForwardedObjectIs<ArrayBufferObject>(&bufSlot.toObject())) {
       ArrayBufferObject& buf =
-          AsArrayBuffer(MaybeForwarded(&bufSlot.toObject()));
+          gc::MaybeForwardedObjectAs<ArrayBufferObject>(&bufSlot.toObject());
       uint32_t offset = uint32_t(obj->getFixedSlot(BYTEOFFSET_SLOT).toInt32());
       MOZ_ASSERT(offset <= INT32_MAX);
 

@@ -2130,6 +2130,9 @@ bool MovingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
   return updateEdge(sharedp);
 }
 bool MovingTracer::onBigIntEdge(BigInt** bip) { return updateEdge(bip); }
+bool MovingTracer::onObjectGroupEdge(ObjectGroup** groupp) {
+  return updateEdge(groupp);
+}
 
 void Zone::prepareForCompacting() {
   JSFreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
@@ -2365,9 +2368,11 @@ void GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone) {
   zone->typeDescrObjects().sweep(nullptr);
 
   for (auto r = zone->typeDescrObjects().all(); !r.empty(); r.popFront()) {
-    NativeObject* obj = &r.front()->as<NativeObject>();
+    MOZ_ASSERT(MaybeForwardedObjectClass(r.front())->isNative());
+    NativeObject* obj = static_cast<NativeObject*>(r.front());
     UpdateCellPointers(trc, obj);
-    MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(obj->getClass()) == JS_DESCR_SLOTS);
+    MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(MaybeForwardedObjectClass(obj)) ==
+               JS_DESCR_SLOTS);
     for (size_t i = 0; i < JS_DESCR_SLOTS; i++) {
       Value value = obj->getSlot(i);
       if (value.isObject()) {
