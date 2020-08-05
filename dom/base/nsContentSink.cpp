@@ -249,17 +249,6 @@ nsresult nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
   return NS_OK;
 }
 
-nsresult nsContentSink::ProcessHeaderData(nsAtom* aHeader,
-                                          const nsAString& aValue,
-                                          nsIContent* aContent) {
-  nsresult rv = NS_OK;
-  // necko doesn't process headers coming in from the parser
-
-  mDocument->SetHeaderData(aHeader, aValue);
-
-  return rv;
-}
-
 void nsContentSink::DoProcessLinkHeader() {
   nsAutoString value;
   mDocument->GetHeaderData(nsGkAtoms::link, value);
@@ -731,47 +720,6 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
   }
 
   return NS_OK;
-}
-
-nsresult nsContentSink::ProcessMETATag(nsIContent* aContent) {
-  NS_ASSERTION(aContent, "missing meta-element");
-  MOZ_ASSERT(aContent->IsElement());
-
-  Element* element = aContent->AsElement();
-
-  nsresult rv = NS_OK;
-
-  // set any HTTP-EQUIV data into document's header data as well as url
-  nsAutoString header;
-  element->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
-  if (!header.IsEmpty()) {
-    // Ignore META REFRESH when document is sandboxed from automatic features.
-    nsContentUtils::ASCIIToLower(header);
-    if (nsGkAtoms::refresh->Equals(header) &&
-        (mDocument->GetSandboxFlags() & SANDBOXED_AUTOMATIC_FEATURES)) {
-      return NS_OK;
-    }
-
-    nsAutoString result;
-    element->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
-    if (!result.IsEmpty()) {
-      RefPtr<nsAtom> fieldAtom(NS_Atomize(header));
-      rv = ProcessHeaderData(fieldAtom, result, element);
-    }
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                           nsGkAtoms::handheldFriendly, eIgnoreCase)) {
-    nsAutoString result;
-    element->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
-    if (!result.IsEmpty()) {
-      nsContentUtils::ASCIIToLower(result);
-      mDocument->SetHeaderData(nsGkAtoms::handheldFriendly, result);
-    }
-  }
-
-  return rv;
 }
 
 void nsContentSink::PrefetchHref(const nsAString& aHref, const nsAString& aAs,

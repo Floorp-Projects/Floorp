@@ -14,7 +14,9 @@
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "nsContentUtils.h"
+#include "nsSandboxFlags.h"
 #include "nsStyleConsts.h"
+#include "nsIXMLContentSink.h"
 
 static mozilla::LazyLogModule gMetaElementLog("nsMetaElement");
 #define LOG(msg) MOZ_LOG(gMetaElementLog, mozilla::LogLevel::Debug, msg)
@@ -86,6 +88,24 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
     return rv;
   }
   Document& doc = aContext.OwnerDoc();
+
+  bool shouldProcessMeta = true;
+  // We don't want to call ProcessMETATag when we are pretty print
+  // the document
+  if (doc.IsXMLDocument()) {
+    if (nsCOMPtr<nsIXMLContentSink> xmlSink =
+            do_QueryInterface(doc.GetCurrentContentSink())) {
+      if (xmlSink->IsPrettyPrintXML() &&
+          xmlSink->IsPrettyPrintHasSpecialRoot()) {
+        shouldProcessMeta = false;
+      }
+    }
+  }
+
+  if (shouldProcessMeta) {
+    doc.ProcessMETATag(this);
+  }
+
   if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, nsGkAtoms::viewport,
                   eIgnoreCase)) {
     ProcessViewportContent(&doc);

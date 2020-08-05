@@ -73,6 +73,10 @@ class nsXMLContentSink : public nsContentSink,
   virtual nsISupports* GetTarget() override;
   virtual bool IsScriptExecuting() override;
   virtual void ContinueInterruptedParsingAsync() override;
+  bool IsPrettyPrintXML() const override { return mPrettyPrintXML; }
+  bool IsPrettyPrintHasSpecialRoot() const override {
+    return mPrettyPrintHasSpecialRoot;
+  }
 
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(

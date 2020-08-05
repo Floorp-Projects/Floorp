@@ -2161,6 +2161,7 @@ class Document : public nsINode,
     mIsContentDocument = aIsContentDocument;
   }
 
+  void ProcessMETATag(HTMLMetaElement* aMetaElement);
   /**
    * Create an element with the specified name, prefix and namespace ID.
    * Returns null if element name parsing failed.

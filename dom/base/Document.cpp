@@ -10246,6 +10246,37 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
   }
 }
 
+void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
+  // set any HTTP-EQUIV data into document's header data as well as url
+  nsAutoString header;
+  aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+  if (!header.IsEmpty()) {
+    // Ignore META REFRESH when document is sandboxed from automatic features.
+    nsContentUtils::ASCIIToLower(header);
+    if (nsGkAtoms::refresh->Equals(header) &&
+        (GetSandboxFlags() & SANDBOXED_AUTOMATIC_FEATURES)) {
+      return;
+    }
+
+    nsAutoString result;
+    aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
+    if (!result.IsEmpty()) {
+      RefPtr<nsAtom> fieldAtom(NS_Atomize(header));
+      SetHeaderData(fieldAtom, result);
+    }
+  }
+
+  if (aMetaElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                nsGkAtoms::handheldFriendly, eIgnoreCase)) {
+    nsAutoString result;
+    aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
+    if (!result.IsEmpty()) {
+      nsContentUtils::ASCIIToLower(result);
+      SetHeaderData(nsGkAtoms::handheldFriendly, result);
+    }
+  }
+}
+
 already_AddRefed<Element> Document::CreateElem(const nsAString& aName,
                                                nsAtom* aPrefix,
                                                int32_t aNamespaceID,

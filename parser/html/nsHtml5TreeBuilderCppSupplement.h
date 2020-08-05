@@ -1087,17 +1087,7 @@ void nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsAtom* aName,
     }
     return;
   }
-  // we now have only HTML
-  if (aName == nsGkAtoms::meta && !fragment && !mBuilder) {
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
-    if (MOZ_UNLIKELY(!treeOp)) {
-      MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
-    opProcessMeta operation(aElement);
-    treeOp->Init(mozilla::AsVariant(operation));
-    return;
-  }
+
   if (mSpeculativeLoadStage && aName == nsGkAtoms::picture) {
     // mSpeculativeLoadStage is non-null only in the off-the-main-thread
     // tree builder, which handles the network stream
