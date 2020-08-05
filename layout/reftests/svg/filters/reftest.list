@@ -108,7 +108,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) fuzzy-if(webrender
 
 == feFlood-color-01.svg pass.svg
 
-fuzzy-if(webrender,20-21,5624-5646) == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
+fuzzy-if(webrender,20-21,5622-5646) == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg
