@@ -100,7 +100,8 @@ if is_asm_enabled
             'arm/looprestoration_init_tmpl.c',
             'arm/mc_init_tmpl.c',
         )
-        if host_machine.cpu_family() == 'aarch64'
+        if (host_machine.cpu_family() == 'aarch64' or
+            host_machine.cpu() == 'arm64')
             libdav1d_sources += files(
                 # itx.S is used for both 8 and 16 bpc.
                 'arm/64/itx.S',
@@ -175,13 +176,14 @@ if is_asm_enabled
         if dav1d_bitdepths.contains('8')
             libdav1d_sources_asm += files(
                 'x86/cdef_avx512.asm',
+                'x86/mc_avx512.asm',
                 'x86/cdef_avx2.asm',
+                'x86/mc_avx2.asm',
                 'x86/film_grain.asm',
                 'x86/ipred.asm',
                 'x86/itx.asm',
                 'x86/loopfilter.asm',
                 'x86/looprestoration.asm',
-                'x86/mc.asm',
                 'x86/cdef_sse.asm',
                 'x86/film_grain_ssse3.asm',
                 'x86/ipred_ssse3.asm',
