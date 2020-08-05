@@ -62,7 +62,7 @@ add_task(async function test_no_values() {
   });
   await asyncElementRendered();
 
-  is(page.requestStore.getState().request.topLevelPrincipal.displayHost, displayHost,
+  is(page.requestStore.getState().request.topLevelPrincipal.URI.displayHost, displayHost,
      "State should have the displayHost set properly");
   is(page.querySelector("h2").textContent,
      `Oh noes! ${displayHost} is having an issue`,

@@ -253,7 +253,7 @@ class GeckoViewPermission {
     dispatcher
       .sendRequestForResult({
         type: "GeckoView:ContentPermission",
-        uri: aRequest.principal.displaySpec,
+        uri: aRequest.principal.URI.displaySpec,
         perm: perm.type,
       })
       .then(granted => {
