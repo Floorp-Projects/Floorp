@@ -101,7 +101,15 @@ class IssueItem extends PureComponent {
       {
         className: "compatibility-issue-item__aliases",
       },
-      aliases.map(alias => dom.li({ key: alias }, alias))
+      aliases.map(alias =>
+        dom.li(
+          {
+            key: alias,
+            className: "compatibility-issue-item__alias",
+          },
+          alias
+        )
+      )
     );
   }
 
