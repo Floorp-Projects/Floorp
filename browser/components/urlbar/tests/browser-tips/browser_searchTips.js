@@ -293,3 +293,21 @@ add_task(async function oncePerSession() {
     await checkTab(window, url, UrlbarProviderSearchTips.TIP_TYPE.NONE);
   });
 });
+
+// When update 2 is enabled, the one-off search buttons should not be shown when
+// a search tip is shown even though the search string is empty.
+add_task(async function update2() {
+  // Set the update2 prefs.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+  await checkTab(
+    window,
+    "about:newtab",
+    UrlbarProviderSearchTips.TIP_TYPE.ONBOARD
+  );
+  await SpecialPowers.popPrefEnv();
+});
