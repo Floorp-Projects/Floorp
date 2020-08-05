@@ -9,7 +9,6 @@
 #include "WebSocketLog.h"
 #include "nsIOService.h"
 #include "nsISocketTransport.h"
-#include "nsSocketTransportService2.h"
 
 NS_IMPL_ISUPPORTS(nsWebSocketConnection, nsIWebSocketConnection,
                   nsIInputStreamCallback, nsIOutputStreamCallback)
@@ -29,9 +28,6 @@ nsWebSocketConnection::Init(nsIWebSocketConnectionListener* aListener,
   NS_ENSURE_ARG_POINTER(aListener);
   NS_ENSURE_ARG_POINTER(aEventTarget);
 
-  MOZ_ASSERT_IF(nsIOService::UseSocketProcess(), XRE_IsSocketProcess());
-  MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(), XRE_IsParentProcess());
-
   mListener = aListener;
   mEventTarget = aEventTarget;
 
@@ -43,7 +39,7 @@ nsWebSocketConnection::Init(nsIWebSocketConnectionListener* aListener,
     nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(mListener);
     mTransport->SetSecurityCallbacks(callbacks);
   } else {
-    // TODO: deal with security callbacks in bug 1512479
+    // NOTE: we don't use security callbacks in socket process.
     mTransport->SetSecurityCallbacks(nullptr);
   }
   return mTransport->SetEventSink(nullptr, nullptr);
@@ -74,13 +70,25 @@ nsWebSocketConnection::Close() {
   return NS_OK;
 }
 
+nsresult nsWebSocketConnection::EnqueueOutputData(nsTArray<uint8_t>&& aData) {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+
+  mOutputQueue.emplace_back(std::move(aData));
+
+  if (mSocketOut) {
+    mSocketOut->AsyncWait(this, 0, 0, mEventTarget);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsWebSocketConnection::EnqueueOutputData(const uint8_t* aHdrBuf,
                                          uint32_t aHdrBufLength,
                                          const uint8_t* aPayloadBuf,
                                          uint32_t aPayloadBufLength) {
   LOG(("nsWebSocketConnection::EnqueueOutputData %p\n", this));
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   nsTArray<uint8_t> data;
   data.AppendElements(aHdrBuf, aHdrBufLength);
@@ -107,7 +115,7 @@ nsWebSocketConnection::StartReading() {
 
 NS_IMETHODIMP
 nsWebSocketConnection::DrainSocketData() {
-  MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (!mSocketIn || !mListener) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -148,7 +156,7 @@ nsWebSocketConnection::GetSecurityInfo(nsISupports** aSecurityInfo) {
 NS_IMETHODIMP
 nsWebSocketConnection::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   LOG(("nsWebSocketConnection::OnInputStreamReady() %p\n", this));
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (!mSocketIn)  // did we we clean up the socket after scheduling InputReady?
     return NS_OK;
@@ -193,7 +201,7 @@ nsWebSocketConnection::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 NS_IMETHODIMP
 nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   LOG(("nsWebSocketConnection::OnOutputStreamReady() %p\n", this));
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
   if (!mListener) return NS_OK;
 

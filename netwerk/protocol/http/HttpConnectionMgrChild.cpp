@@ -11,6 +11,7 @@
 #include "HttpTransactionChild.h"
 #include "AltSvcTransactionChild.h"
 #include "EventTokenBucket.h"
+#include "mozilla/net/WebSocketConnectionChild.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsHttpConnectionMgr.h"
 #include "nsHttpHandler.h"
@@ -174,6 +175,26 @@ mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvSpeculativeConnect(
   }
 
   Unused << mConnMgr->SpeculativeConnect(cinfo, overrider, aCaps, trans);
+  return IPC_OK();
+}
+
+already_AddRefed<PWebSocketConnectionChild>
+HttpConnectionMgrChild::AllocPWebSocketConnectionChild(
+    PHttpTransactionChild* aTransWithStickyConn) {
+  RefPtr<WebSocketConnectionChild> actor = new WebSocketConnectionChild();
+  return actor.forget();
+}
+
+mozilla::ipc::IPCResult
+HttpConnectionMgrChild::RecvPWebSocketConnectionConstructor(
+    PWebSocketConnectionChild* aActor,
+    PHttpTransactionChild* aTransWithStickyConn) {
+  RefPtr<WebSocketConnectionChild> child =
+      static_cast<WebSocketConnectionChild*>(aActor);
+  nsCOMPtr<nsIHttpUpgradeListener> listener =
+      static_cast<nsIHttpUpgradeListener*>(child.get());
+  Unused << mConnMgr->CompleteUpgrade(
+      ToRealHttpTransaction(aTransWithStickyConn), listener);
   return IPC_OK();
 }
 

@@ -24,6 +24,8 @@ EXPORTS.mozilla.net += [
     'WebSocketChannel.h',
     'WebSocketChannelChild.h',
     'WebSocketChannelParent.h',
+    'WebSocketConnectionChild.h',
+    'WebSocketConnectionParent.h',
     'WebSocketEventListenerChild.h',
     'WebSocketEventListenerParent.h',
     'WebSocketEventService.h',
@@ -37,6 +39,8 @@ UNIFIED_SOURCES += [
     'WebSocketChannel.cpp',
     'WebSocketChannelChild.cpp',
     'WebSocketChannelParent.cpp',
+    'WebSocketConnectionChild.cpp',
+    'WebSocketConnectionParent.cpp',
     'WebSocketEventListenerChild.cpp',
     'WebSocketEventListenerParent.cpp',
     'WebSocketEventService.cpp',
@@ -46,6 +50,7 @@ UNIFIED_SOURCES += [
 IPDL_SOURCES += [
     'PTransportProvider.ipdl',
     'PWebSocket.ipdl',
+    'PWebSocketConnection.ipdl',
     'PWebSocketEventListener.ipdl',
 ]
 
