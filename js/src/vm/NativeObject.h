@@ -200,9 +200,14 @@ class ObjectElements {
     // is created and never changed.
     SHARED_MEMORY = 0x8,
 
-    // These elements are set to integrity level "sealed". This flag should
-    // only be set on non-extensible objects.
-    SEALED = 0x10,
+    // These elements are not extensible. If this flag is set, the object's
+    // BaseShape must also have the NOT_EXTENSIBLE flag. This exists on
+    // ObjectElements in addition to BaseShape to simplify JIT code.
+    NOT_EXTENSIBLE = 0x10,
+
+    // These elements are set to integrity level "sealed". If this flag is
+    // set, the NOT_EXTENSIBLE flag must be set as well.
+    SEALED = 0x20,
 
     // These elements are set to integrity level "frozen". If this flag is
     // set, the SEALED flag must be set as well.
@@ -211,17 +216,17 @@ class ObjectElements {
     // The BaseShape flag ensures a shape guard can be used to guard against
     // frozen elements. The ObjectElements flag is convenient for JIT code and
     // ObjectElements assertions.
-    FROZEN = 0x20,
+    FROZEN = 0x40,
 
     // If this flag is not set, the elements are guaranteed to contain no hole
     // values (the JS_ELEMENTS_HOLE MagicValue) in [0, initializedLength).
-    NON_PACKED = 0x40,
+    NON_PACKED = 0x80,
 
     // If this flag is not set, there's definitely no for-in iterator that
     // covers these dense elements so elements can be deleted without calling
     // SuppressDeletedProperty. This is used by fast paths for various Array
     // builtins. See also NativeObject::denseElementsMaybeInIteration.
-    MAYBE_IN_ITERATION = 0x80,
+    MAYBE_IN_ITERATION = 0x100,
   };
 
   // The flags word stores both the flags and the number of shifted elements.
@@ -295,8 +300,8 @@ class ObjectElements {
   void addShiftedElements(uint32_t count) {
     MOZ_ASSERT(count < capacity);
     MOZ_ASSERT(count < initializedLength);
-    MOZ_ASSERT(!(flags &
-                 (NONWRITABLE_ARRAY_LENGTH | SEALED | FROZEN | COPY_ON_WRITE)));
+    MOZ_ASSERT(!(flags & (NONWRITABLE_ARRAY_LENGTH | NOT_EXTENSIBLE | SEALED |
+                          FROZEN | COPY_ON_WRITE)));
     uint32_t numShifted = numShiftedElements() + count;
     MOZ_ASSERT(numShifted <= MaxShiftedElements);
     flags = (numShifted << NumShiftedElementsShift) | (flags & FlagsMask);
@@ -305,8 +310,8 @@ class ObjectElements {
   }
   void unshiftShiftedElements(uint32_t count) {
     MOZ_ASSERT(count > 0);
-    MOZ_ASSERT(!(flags &
-                 (NONWRITABLE_ARRAY_LENGTH | SEALED | FROZEN | COPY_ON_WRITE)));
+    MOZ_ASSERT(!(flags & (NONWRITABLE_ARRAY_LENGTH | NOT_EXTENSIBLE | SEALED |
+                          FROZEN | COPY_ON_WRITE)));
     uint32_t numShifted = numShiftedElements();
     MOZ_ASSERT(count <= numShifted);
     numShifted -= count;
@@ -324,13 +329,21 @@ class ObjectElements {
   void markMaybeInIteration() { flags |= MAYBE_IN_ITERATION; }
   bool maybeInIteration() { return flags & MAYBE_IN_ITERATION; }
 
+  void setNotExtensible() {
+    MOZ_ASSERT(!isNotExtensible());
+    flags |= NOT_EXTENSIBLE;
+  }
+  bool isNotExtensible() { return flags & NOT_EXTENSIBLE; }
+
   void seal() {
+    MOZ_ASSERT(isNotExtensible());
     MOZ_ASSERT(!isSealed());
     MOZ_ASSERT(!isFrozen());
     MOZ_ASSERT(!isCopyOnWrite());
     flags |= SEALED;
   }
   void freeze() {
+    MOZ_ASSERT(isNotExtensible());
     MOZ_ASSERT(isSealed());
     MOZ_ASSERT(!isFrozen());
     MOZ_ASSERT(!isCopyOnWrite());
@@ -390,7 +403,9 @@ class ObjectElements {
   static void ConvertElementsToDoubles(JSContext* cx, uintptr_t elements);
   static bool MakeElementsCopyOnWrite(JSContext* cx, NativeObject* obj);
 
-  static MOZ_MUST_USE bool PreventExtensions(JSContext* cx, NativeObject* obj);
+  static MOZ_MUST_USE bool PrepareForPreventExtensions(JSContext* cx,
+                                                       NativeObject* obj);
+  static void PreventExtensions(NativeObject* obj);
   static MOZ_MUST_USE bool FreezeOrSeal(JSContext* cx, HandleNativeObject obj,
                                         IntegrityLevel level);
 
@@ -410,8 +425,9 @@ class ObjectElements {
 
   uint32_t numShiftedElements() const {
     uint32_t numShifted = flags >> NumShiftedElementsShift;
-    MOZ_ASSERT_IF(numShifted > 0, !(flags & (NONWRITABLE_ARRAY_LENGTH | SEALED |
-                                             FROZEN | COPY_ON_WRITE)));
+    MOZ_ASSERT_IF(numShifted > 0,
+                  !(flags & (NONWRITABLE_ARRAY_LENGTH | NOT_EXTENSIBLE |
+                             SEALED | FROZEN | COPY_ON_WRITE)));
     return numShifted;
   }
 
