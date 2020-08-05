@@ -97,10 +97,10 @@ fn clip_repeat() {
 #[test]
 fn clip_transformed() {
     let t_rot: Transform3D<f32, (), ()> =
-        Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
+        Transform3D::rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
     let t_div: Transform3D<f32, (), ()> =
-        Transform3D::create_perspective(5.0);
-    let transform = t_rot.post_transform(&t_div);
+        Transform3D::perspective(5.0);
+    let transform = t_rot.then(&t_div);
 
     let polygon = Polygon::from_rect(rect(-10.0, -10.0, 20.0, 20.0), 0);
     let bounds: Rect<f32, ()> = rect(-1.0, -1.0, 2.0, 2.0);
@@ -125,7 +125,7 @@ fn clip_badly_transformed() {
 
 #[test]
 fn clip_near_coplanar() {
-    let tx = Transform3D::<f32, (), ()>::row_major(
+    let tx = Transform3D::<f32, (), ()>::new(
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
         -960.0, -625.0, 1.0, -1.0,
