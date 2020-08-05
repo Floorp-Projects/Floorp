@@ -5,14 +5,49 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+    <mozilla.components.browser.toolbar.BrowserToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/browser_toolbar_height"
+        android:background="@drawable/toolbar_background_top"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
+        app:browserToolbarClearColor="?primaryText"
+        app:browserToolbarInsecureColor="?primaryText"
+        app:browserToolbarMenuColor="?primaryText"
+        app:browserToolbarProgressBarGravity="bottom"
+        app:browserToolbarSecureColor="?primaryText"
+        app:browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor="?toolbarDivider"
         app:layout_constraintEnd_toEndOf="parent"
-        android:text="Hello World"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:id="@+id/scrollView"
+        android:background="?attr/scrimBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        android:scrollbars="vertical">
+        <mozilla.components.browser.awesomebar.BrowserAwesomeBar
+            xmlns:mozac="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/awesomeBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fadingEdge="horizontal"
+            android:fadingEdgeLength="40dp"
+            android:nestedScrollingEnabled="false"
+            android:requiresFadingEdge="vertical"
+            android:background="?attr/foundation"
+            android:visibility="invisible"
+            mozac:awesomeBarChipBackgroundColor="@color/photonGreen50"
+            mozac:awesomeBarDescriptionTextColor="?secondaryText"
+            mozac:awesomeBarTitleTextColor="?primaryText" />
+    </androidx.core.widget.NestedScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
