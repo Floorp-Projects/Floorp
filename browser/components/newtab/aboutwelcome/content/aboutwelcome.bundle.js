@@ -527,6 +527,19 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "text"
         })))))))) : null;
+
+      case "video":
+        return this.props.content.tiles.source ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: `tiles-media-section ${this.props.content.tiles.media_type}`
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: "fade"
+        }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("video", {
+          className: "media",
+          autoPlay: "true",
+          loop: "true",
+          muted: "true",
+          src: _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].hasDarkMode() ? this.props.content.tiles.source.dark : this.props.content.tiles.source.default
+        })) : null;
     }
 
     return null;
@@ -771,6 +784,10 @@ const AboutWelcomeUtils = {
       bubbles: true,
       detail
     }));
+  },
+
+  hasDarkMode() {
+    return document.body.hasAttribute("lwt-newtab-brighttext");
   }
 
 };

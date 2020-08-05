@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   SearchOneOffs: "resource:///modules/SearchOneOffs.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarPrefsObserver: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -57,9 +56,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     super(view.panel.querySelector(".search-one-offs"));
     this.view = view;
     this.input = view.input;
-    this._prefObserver = new UrlbarPrefsObserver(pref =>
-      this._onPrefChanged(pref)
-    );
+    UrlbarPrefs.addObserver(this);
   }
 
   /**
@@ -195,6 +192,23 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
+   * Called when a pref tracked by UrlbarPrefs changes.
+   *
+   * @param {string} changedPref
+   *   The name of the pref, relative to `browser.urlbar.` if the pref is in
+   *   that branch.
+   */
+  onPrefChanged(changedPref) {
+    // Null out this._engines when the local-one-offs-related prefs change so
+    // that they rebuild themselves the next time the view opens.
+    let prefs = [...LOCAL_MODES.values()].map(({ pref }) => pref);
+    prefs.push("update2", "update2.localOneOffs", "update2.oneOffsRefresh");
+    if (prefs.includes(changedPref)) {
+      this._engines = null;
+    }
+  }
+
+  /**
    * Overrides _rebuildEngineList to add the local one-offs.
    *
    * @param {array} engines
@@ -250,22 +264,5 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     }
 
     this.handleSearchCommand(event, engineOrSource);
-  }
-
-  /**
-   * Called when a pref tracked by UrlbarPrefs changes.
-   *
-   * @param {string} changedPref
-   *   The name of the pref, relative to `browser.urlbar.` if the pref is in
-   *   that branch.
-   */
-  _onPrefChanged(changedPref) {
-    // Null out this._engines when the local-one-offs-related prefs change so
-    // that they rebuild themselves the next time the view opens.
-    let prefs = [...LOCAL_MODES.values()].map(({ pref }) => pref);
-    prefs.push("update2", "update2.localOneOffs", "update2.oneOffsRefresh");
-    if (prefs.includes(changedPref)) {
-      this._engines = null;
-    }
   }
 }

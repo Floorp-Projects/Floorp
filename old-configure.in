@@ -544,7 +544,6 @@ case "$target" in
         MOZ_LINKER=1
     fi
 
-    MOZ_GFX_OPTIMIZE_MOBILE=1
     if test -z "$CLANG_CC"; then
         MOZ_OPTIMIZE_FLAGS="-freorder-blocks -fno-reorder-functions -Os"
     elif test -n "$RELEASE_OR_BETA"; then
@@ -1494,7 +1493,6 @@ ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_AUTH_EXTENSION=1
-MOZ_PREF_EXTENSIONS=1
 MOZ_SPELLCHECK=1
 MOZ_UNIVERSALCHARDET=1
 MOZ_XUL=1
@@ -1803,15 +1801,6 @@ MOZ_ARG_DISABLE_BOOL(negotiateauth,
     MOZ_AUTH_EXTENSION=1 )
 
 dnl ========================================================
-dnl Pref extensions (autoconfig)
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(pref-extensions,
-[  --disable-pref-extensions
-                          Disable pref extensions such as autoconfig],
-  MOZ_PREF_EXTENSIONS=,
-  MOZ_PREF_EXTENSIONS=1 )
-
-dnl ========================================================
 dnl Searching of system directories for extensions.
 dnl Note: this switch is meant to be used for test builds
 dnl whose behavior should not depend on what happens to be
@@ -2067,25 +2056,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Runtime debugging and Optimizations)
 
 dnl ========================================================
-dnl enable mobile optimizations
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(mobile-optimize,
-[  --enable-mobile-optimize
-                          Enable mobile optimizations],
-    MOZ_GFX_OPTIMIZE_MOBILE=1)
-
-AC_SUBST(MOZ_GFX_OPTIMIZE_MOBILE)
-
-if test "$MOZ_GFX_OPTIMIZE_MOBILE"; then
-    # We ignore paint will resample on mobile for performance.
-    # We may want to revisit this later.
-    MOZ_IGNORE_PAINT_WILL_RESAMPLE=1
-
-    AC_DEFINE(MOZ_GFX_OPTIMIZE_MOBILE)
-    AC_DEFINE(MOZ_IGNORE_PAINT_WILL_RESAMPLE)
-fi
-
-dnl ========================================================
 dnl = Enable code optimization. ON by default.
 dnl ========================================================
 
@@ -2221,20 +2191,6 @@ dnl = Profiling and Instrumenting
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
-
-dnl ========================================================
-dnl = Offer a way to disable the startup cache
-dnl ========================================================
-
-MOZ_ARG_DISABLE_BOOL(startupcache,
-[  --disable-startupcache          Disable startup cache ],
-    MOZ_DISABLE_STARTUPCACHE=1,
-    MOZ_DISABLE_STARTUPCACHE=)
-
-if test -n "$MOZ_DISABLE_STARTUPCACHE"; then
-  AC_DEFINE(MOZ_DISABLE_STARTUPCACHE)
-fi
-AC_SUBST(MOZ_DISABLE_STARTUPCACHE)
 
 dnl ========================================================
 dnl = Support for demangling undefined symbols
@@ -2582,7 +2538,6 @@ AC_SUBST(RCFLAGS)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(MOZ_AUTH_EXTENSION)
-AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST_LIST(WARNINGS_CFLAGS)
 AC_SUBST_SET(MOZ_EXTENSIONS)

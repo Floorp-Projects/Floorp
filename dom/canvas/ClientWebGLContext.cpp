@@ -760,7 +760,7 @@ ClientWebGLContext::SetContextOptions(JSContext* cx,
   newOpts.xrCompatible = attributes.mXrCompatible;
   newOpts.powerPreference = attributes.mPowerPreference;
   newOpts.enableDebugRendererInfo =
-      Preferences::GetBool("webgl.enable-debug-renderer-info", false);
+      StaticPrefs::webgl_enable_debug_renderer_info();
   MOZ_ASSERT(mCanvasElement || mOffscreenCanvas);
   newOpts.shouldResistFingerprinting =
       mCanvasElement ?
@@ -5099,7 +5099,7 @@ static bool IsExtensionForbiddenForCaller(const WebGLExtensionID ext,
 
     case WebGLExtensionID::WEBGL_debug_renderer_info:
       return resistFingerprinting ||
-             !Preferences::GetBool("webgl.enable-debug-renderer-info", false);
+             !StaticPrefs::webgl_enable_debug_renderer_info();
 
     case WebGLExtensionID::WEBGL_debug_shaders:
       return resistFingerprinting;

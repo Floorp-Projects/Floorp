@@ -2661,29 +2661,34 @@ bool js::PreventExtensions(JSContext* cx, HandleObject obj,
     // If the following assertion fails, there's somewhere else a missing
     // call to shrinkCapacityToInitializedLength() which needs to be found
     // and fixed.
-    MOZ_ASSERT_IF(obj->isNative(),
+    MOZ_ASSERT_IF(obj->is<NativeObject>(),
                   obj->as<NativeObject>().getDenseInitializedLength() ==
                       obj->as<NativeObject>().getDenseCapacity());
 
     return result.succeed();
   }
 
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     // Force lazy properties to be resolved.
-    if (!ResolveLazyProperties(cx, obj.as<NativeObject>())) {
+    HandleNativeObject nobj = obj.as<NativeObject>();
+    if (!ResolveLazyProperties(cx, nobj)) {
       return false;
     }
 
     // Prepare the elements. We have to do this before we mark the object
     // non-extensible; that's fine because these changes are not observable.
-    if (!ObjectElements::PreventExtensions(cx, &obj->as<NativeObject>())) {
+    if (!ObjectElements::PrepareForPreventExtensions(cx, nobj)) {
       return false;
     }
   }
 
+  // Finally, set the NOT_EXTENSIBLE flag on the BaseShape and ObjectElements.
   if (!JSObject::setFlags(cx, obj, BaseShape::NOT_EXTENSIBLE,
                           JSObject::GENERATE_SHAPE)) {
     return false;
+  }
+  if (obj->is<NativeObject>()) {
+    ObjectElements::PreventExtensions(&obj->as<NativeObject>());
   }
 
   return result.succeed();
@@ -3553,10 +3558,13 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (!nobj->denseElementsArePacked()) {
       out.put(" non_packed_elements");
     }
-    if (nobj->denseElementsAreSealed()) {
+    if (nobj->getElementsHeader()->isNotExtensible()) {
+      out.put(" not_extensible");
+    }
+    if (nobj->getElementsHeader()->isSealed()) {
       out.put(" sealed_elements");
     }
-    if (nobj->denseElementsAreFrozen()) {
+    if (nobj->getElementsHeader()->isFrozen()) {
       out.put(" frozen_elements");
     }
     if (nobj->getElementsHeader()->maybeInIteration()) {

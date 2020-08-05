@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import argparse
 import array
 import re
+import six
 import socket
 import struct
 import subprocess
@@ -42,14 +43,17 @@ def _get_interface_list():
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        names = array.array('B', '\0' * bytes)
+        names = array.array('B', b'\0' * bytes)
         outbytes = struct.unpack('iL', fcntl.ioctl(
             s.fileno(),
             0x8912,  # SIOCGIFCONF
             struct.pack('iL', bytes, names.buffer_info()[0])
         ))[0]
-        namestr = names.tostring()
-        return [(namestr[i:i + 32].split('\0', 1)[0],
+        if six.PY3:
+            namestr = names.tobytes()
+        else:
+            namestr = names.tostring()
+        return [(namestr[i:i + 32].split(b'\0', 1)[0],
                  socket.inet_ntoa(namestr[i + 20:i + 24]))
                 for i in range(0, outbytes, struct_size)]
 

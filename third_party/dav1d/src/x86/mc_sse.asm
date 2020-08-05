@@ -1464,6 +1464,19 @@ cglobal prep_bilin, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
 %assign FILTER_SMOOTH  (1*15 << 16) | 4*15
 %assign FILTER_SHARP   (2*15 << 16) | 3*15
 
+%macro MC_8TAP_FN 4 ; prefix, type, type_h, type_v
+cglobal %1_8tap_%2
+    mov                 t0d, FILTER_%3
+%ifidn %3, %4
+    mov                 t1d, t0d
+%else
+    mov                 t1d, FILTER_%4
+%endif
+%ifnidn %2, regular ; skip the jump in the last filter
+    jmp mangle(private_prefix %+ _%1_8tap %+ SUFFIX)
+%endif
+%endmacro
+
 %if ARCH_X86_32
 DECLARE_REG_TMP 1, 2
 %elif WIN64
@@ -1472,24 +1485,15 @@ DECLARE_REG_TMP 4, 5
 DECLARE_REG_TMP 7, 8
 %endif
 
-%macro PUT_8TAP_FN 3 ; type, type_h, type_v
-cglobal put_8tap_%1
-    mov                 t0d, FILTER_%2
-    mov                 t1d, FILTER_%3
-%ifnidn %1, sharp_smooth ; skip the jump in the last filter
-    jmp mangle(private_prefix %+ _put_8tap %+ SUFFIX)
-%endif
-%endmacro
-
-PUT_8TAP_FN regular,        REGULAR, REGULAR
-PUT_8TAP_FN regular_sharp,  REGULAR, SHARP
-PUT_8TAP_FN regular_smooth, REGULAR, SMOOTH
-PUT_8TAP_FN smooth_regular, SMOOTH,  REGULAR
-PUT_8TAP_FN smooth,         SMOOTH,  SMOOTH
-PUT_8TAP_FN smooth_sharp,   SMOOTH,  SHARP
-PUT_8TAP_FN sharp_regular,  SHARP,   REGULAR
-PUT_8TAP_FN sharp,          SHARP,   SHARP
-PUT_8TAP_FN sharp_smooth,   SHARP,   SMOOTH
+MC_8TAP_FN put, sharp,          SHARP,   SHARP
+MC_8TAP_FN put, sharp_smooth,   SHARP,   SMOOTH
+MC_8TAP_FN put, smooth_sharp,   SMOOTH,  SHARP
+MC_8TAP_FN put, smooth,         SMOOTH,  SMOOTH
+MC_8TAP_FN put, sharp_regular,  SHARP,   REGULAR
+MC_8TAP_FN put, regular_sharp,  REGULAR, SHARP
+MC_8TAP_FN put, smooth_regular, SMOOTH,  REGULAR
+MC_8TAP_FN put, regular_smooth, REGULAR, SMOOTH
+MC_8TAP_FN put, regular,        REGULAR, REGULAR
 
 %if ARCH_X86_32
  %define base_reg r1
@@ -2739,7 +2743,7 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
  %endif
 %endmacro
 
-%macro PREP_8TAP_HV_LOAD 4 ; dst0, src_memloc, tmp[1-2]
+%macro PREP_8TAP_HV 4 ; dst, src_memloc, tmp[1-2]
  %if cpuflag(ssse3)
     movu                 %1, [%2]
     pshufb               m2, %1, shufB
@@ -2750,10 +2754,6 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     PREP_8TAP_H_LOAD4    m2, %2+4, m1, %3, %4
     PREP_8TAP_H_LOAD4    m3, %2+8, m1, %3, %4
  %endif
-%endmacro
-
-%macro PREP_8TAP_HV 4 ; dst, src_memloc, tmp[1-2]
-    PREP_8TAP_HV_LOAD %{1:4}
     mova                 m1, m2
     PMADDUBSW            m1, subpelh0, %3, %4, 1 ; subpel +0 C0
     PMADDUBSW            m3, subpelh1, %3, %4, 0 ; subpel +4 B4
@@ -2764,15 +2764,6 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     PHADDW               %1, m1, %3, 1
 %endmacro
 
-%macro PREP_8TAP_FN 3 ; type, type_h, type_v
-cglobal prep_8tap_%1
-    mov                 t0d, FILTER_%2
-    mov                 t1d, FILTER_%3
-%ifnidn %1, sharp_smooth ; skip the jump in the last filter
-    jmp mangle(private_prefix %+ _prep_8tap %+ SUFFIX)
-%endif
-%endmacro
-
 %macro PREP_8TAP 0
 %if ARCH_X86_32
  DECLARE_REG_TMP 1, 2
@@ -2781,15 +2772,16 @@ cglobal prep_8tap_%1
 %else
  DECLARE_REG_TMP 6, 7
 %endif
-PREP_8TAP_FN regular,        REGULAR, REGULAR
-PREP_8TAP_FN regular_sharp,  REGULAR, SHARP
-PREP_8TAP_FN regular_smooth, REGULAR, SMOOTH
-PREP_8TAP_FN smooth_regular, SMOOTH,  REGULAR
-PREP_8TAP_FN smooth,         SMOOTH,  SMOOTH
-PREP_8TAP_FN smooth_sharp,   SMOOTH,  SHARP
-PREP_8TAP_FN sharp_regular,  SHARP,   REGULAR
-PREP_8TAP_FN sharp,          SHARP,   SHARP
-PREP_8TAP_FN sharp_smooth,   SHARP,   SMOOTH
+
+MC_8TAP_FN prep, sharp,          SHARP,   SHARP
+MC_8TAP_FN prep, sharp_smooth,   SHARP,   SMOOTH
+MC_8TAP_FN prep, smooth_sharp,   SMOOTH,  SHARP
+MC_8TAP_FN prep, smooth,         SMOOTH,  SMOOTH
+MC_8TAP_FN prep, sharp_regular,  SHARP,   REGULAR
+MC_8TAP_FN prep, regular_sharp,  REGULAR, SHARP
+MC_8TAP_FN prep, smooth_regular, SMOOTH,  REGULAR
+MC_8TAP_FN prep, regular_smooth, REGULAR, SMOOTH
+MC_8TAP_FN prep, regular,        REGULAR, REGULAR
 
 %if ARCH_X86_32
  %define base_reg r2

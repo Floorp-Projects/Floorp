@@ -67,6 +67,7 @@ const MONITOR_RESPONSE_PROPS = [
 
 let gTestOverride = null;
 let monitorResponse = null;
+let entrypoint = "direct";
 
 class AboutProtectionsParent extends JSWindowActorParent {
   constructor() {
@@ -379,6 +380,13 @@ class AboutProtectionsParent extends JSWindowActorParent {
       case "GetShowProxyCard":
         let card = await this.shouldShowProxyCard();
         return card;
+
+      case "RecordEntryPoint":
+        entrypoint = aMessage.data.entrypoint;
+        break;
+
+      case "FetchEntryPoint":
+        return entrypoint;
     }
 
     return undefined;

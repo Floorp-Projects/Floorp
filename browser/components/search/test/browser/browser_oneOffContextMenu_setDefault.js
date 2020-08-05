@@ -323,11 +323,26 @@ async function openPopupAndGetEngineButton(
     );
   } else {
     let aliases = UrlbarSearchUtils.aliasesForEngine(oneOffButton.engine);
-    Assert.equal(
-      oneOffButton.getAttribute("tooltiptext"),
-      engineName + (aliases.length ? ` (${aliases[0]})` : ""),
-      "One-off should have the tooltip set to the engine name"
-    );
+    if (!aliases.length) {
+      Assert.equal(
+        oneOffButton.getAttribute("tooltiptext"),
+        engineName,
+        "One-off without alias should have the tooltip set to the engine name"
+      );
+    } else {
+      let l10n = {
+        id: "search-one-offs-engine-with-alias",
+        args: {
+          engineName,
+          alias: aliases[0],
+        },
+      };
+      Assert.deepEqual(
+        win.document.l10n.getAttributes(oneOffButton),
+        l10n,
+        "One-off with alias has expected tooltip l10n values"
+      );
+    }
   }
   Assert.equal(
     oneOffButton.id,

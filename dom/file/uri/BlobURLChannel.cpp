@@ -6,11 +6,14 @@
 
 #include "BlobURLChannel.h"
 #include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/BlobURL.h"
+#include "mozilla/dom/BlobURLInputStream.h"
+#include "mozilla/ScopeExit.h"
 
 using namespace mozilla::dom;
 
 BlobURLChannel::BlobURLChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo)
-    : mInitialized(false) {
+    : mContentStreamOpened(false) {
   SetURI(aURI);
   SetOriginalURI(aURI);
   SetLoadInfo(aLoadInfo);
@@ -24,59 +27,49 @@ BlobURLChannel::BlobURLChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 
 BlobURLChannel::~BlobURLChannel() = default;
 
-void BlobURLChannel::InitFailed() {
-  MOZ_ASSERT(!mInitialized);
-  MOZ_ASSERT(!mInputStream);
-  mInitialized = true;
-}
-
-void BlobURLChannel::Initialize(BlobImpl* aBlobImpl) {
-  MOZ_ASSERT(!mInitialized);
-
-  nsAutoString contentType;
-  aBlobImpl->GetType(contentType);
-  SetContentType(NS_ConvertUTF16toUTF8(contentType));
-
-  if (aBlobImpl->IsFile()) {
-    nsString filename;
-    aBlobImpl->GetName(filename);
-    SetContentDispositionFilename(filename);
-  }
-
-  ErrorResult rv;
-  uint64_t size = aBlobImpl->GetSize(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    InitFailed();
-    return;
-  }
-
-  SetContentLength(size);
-
-  aBlobImpl->CreateInputStream(getter_AddRefs(mInputStream), rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    InitFailed();
-    return;
-  }
-
-  MOZ_ASSERT(mInputStream);
-  mInitialized = true;
-}
-
 nsresult BlobURLChannel::OpenContentStream(bool aAsync,
                                            nsIInputStream** aResult,
                                            nsIChannel** aChannel) {
-  MOZ_ASSERT(mInitialized);
+  if (mContentStreamOpened) {
+    return NS_ERROR_ALREADY_OPENED;
+  }
 
-  if (!mInputStream) {
+  mContentStreamOpened = true;
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_MALFORMED_URI);
+
+  RefPtr<BlobURL> blobURL;
+  rv = uri->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(blobURL));
+
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!blobURL)) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
+  if (blobURL->Revoked()) {
+#ifdef MOZ_WIDGET_ANDROID
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    GetLoadInfo(getter_AddRefs(loadInfo));
+    // if the channel was not triggered by the system principal,
+    // then we return here because the URL had been revoked
+    if (loadInfo && !loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
+      return NS_ERROR_MALFORMED_URI;
+    }
+#else
+    return NS_ERROR_MALFORMED_URI;
+#endif
+  }
+
+  nsCOMPtr<nsIInputStream> inputStream =
+      BlobURLInputStream::Create(this, blobURL);
+  if (NS_WARN_IF(!inputStream)) {
     return NS_ERROR_MALFORMED_URI;
   }
 
   EnableSynthesizedProgressEvents(true);
 
-  nsCOMPtr<nsIInputStream> stream = mInputStream;
-  stream.forget(aResult);
+  inputStream.forget(aResult);
 
   return NS_OK;
 }
-
-void BlobURLChannel::OnChannelDone() { mInputStream = nullptr; }

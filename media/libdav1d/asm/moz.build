@@ -88,7 +88,8 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/itx.asm',
             '../../../third_party/dav1d/src/x86/loopfilter.asm',
             '../../../third_party/dav1d/src/x86/looprestoration.asm',
-            '../../../third_party/dav1d/src/x86/mc.asm',
+            '../../../third_party/dav1d/src/x86/mc_avx2.asm',
+            '../../../third_party/dav1d/src/x86/mc_avx512.asm',
         ]
 
     SOURCES += [

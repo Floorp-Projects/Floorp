@@ -3561,6 +3561,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void setIsPackedArray(Register obj, Register output, Register temp);
 
+  void packedArrayPop(Register array, ValueOperand output, Register temp1,
+                      Register temp2, Label* fail);
+  void packedArrayShift(Register array, ValueOperand output, Register temp1,
+                        Register temp2, LiveRegisterSet volatileRegs,
+                        Label* fail);
+
   void typedArrayElementShift(Register obj, Register output);
   void branchIfClassIsNotTypedArray(Register clasp, Label* notTypedArray);
 

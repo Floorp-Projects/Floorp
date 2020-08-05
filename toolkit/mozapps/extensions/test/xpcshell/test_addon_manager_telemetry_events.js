@@ -5,6 +5,9 @@
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
 );
+const { AMTelemetry } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 // We don't have an easy way to serve update manifests from a secure URL.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
@@ -553,6 +556,208 @@ add_task(async function test_no_telemetry_events_on_internal_sources() {
   await internalExtension.unload();
 
   assertNoTelemetryEvents();
+});
+
+add_task(async function test_collect_attribution_data_for_amo() {
+  assertNoTelemetryEvents();
+
+  // We pass the `source` value to `amInstallTelemetryInfo` in this test so the
+  // host could be anything in this variable below. Whether to collect
+  // attribution data for AMO is determined by the `source` value, not this
+  // host.
+  const url = "https://addons.mozilla.org/";
+  const addonId = "{28374a9a-676c-5640-bfa7-865cd4686ead}";
+  // This is the SHA256 hash of the `addonId` above.
+  const expectedHashedAddonId =
+    "cf815c9f45c249473d630705f89e64d359737a106a375bbb83be71e6d52dc234";
+
+  for (const { source, sourceURL, expectNoEvent, expectedAmoAttribution } of [
+    // Basic test.
+    {
+      source: "amo",
+      sourceURL: `${url}?utm_content=utm-content-value`,
+      expectedAmoAttribution: {
+        utm_content: "utm-content-value",
+      },
+    },
+    // No UTM parameters will produce an event without any attribution data.
+    {
+      source: "amo",
+      sourceURL: url,
+      expectedAmoAttribution: {},
+    },
+    // Invalid source URLs will produce an event without any attribution data.
+    {
+      source: "amo",
+      sourceURL: "invalid-url",
+      expectedAmoAttribution: {},
+    },
+    // No source URL.
+    {
+      source: "amo",
+      sourceURL: null,
+      expectedAmoAttribution: {},
+    },
+    {
+      source: "amo",
+      sourceURL: undefined,
+      expectedAmoAttribution: {},
+    },
+    // Ignore unsupported/bogus UTM parameters.
+    {
+      source: "amo",
+      sourceURL: [
+        `${url}?utm_content=utm-content-value`,
+        "utm_foo=invalid",
+        "utm_campaign=some-campaign",
+        "utm_term=invalid-too",
+      ].join("&"),
+      expectedAmoAttribution: {
+        utm_campaign: "some-campaign",
+        utm_content: "utm-content-value",
+      },
+    },
+    {
+      source: "amo",
+      sourceURL: `${url}?foo=bar&q=azerty`,
+      expectedAmoAttribution: {},
+    },
+    // Long values are truncated.
+    {
+      source: "amo",
+      sourceURL: `${url}?utm_medium=${"a".repeat(100)}`,
+      expectedAmoAttribution: {
+        utm_medium: "a".repeat(40),
+      },
+    },
+    // Only collect the first value if the parameter is passed more than once.
+    {
+      source: "amo",
+      sourceURL: `${url}?utm_source=first-source&utm_source=second-source`,
+      expectedAmoAttribution: {
+        utm_source: "first-source",
+      },
+    },
+    // When source is "disco", we don't collect the UTM parameters.
+    {
+      source: "disco",
+      sourceURL: `${url}?utm_content=utm-content-value`,
+      expectedAmoAttribution: {},
+    },
+    // When source is neither "amo" nor "disco", we don't collect anything.
+    {
+      source: "link",
+      sourceURL: `${url}?utm_content=utm-content-value`,
+      expectNoEvent: true,
+    },
+    {
+      source: null,
+      sourceURL: `${url}?utm_content=utm-content-value`,
+      expectNoEvent: true,
+    },
+    {
+      source: undefined,
+      sourceURL: `${url}?utm_content=utm-content-value`,
+      expectNoEvent: true,
+    },
+  ]) {
+    const extension = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        applications: { gecko: { id: addonId } },
+      },
+      amInstallTelemetryInfo: {
+        ...FAKE_INSTALL_TELEMETRY_INFO,
+        sourceURL,
+        source,
+      },
+    });
+
+    await extension.startup();
+
+    const installStatsEvents = getTelemetryEvents(["install_stats"]);
+
+    if (expectNoEvent === true) {
+      Assert.equal(
+        installStatsEvents.length,
+        0,
+        "no install_stats event should be recorded"
+      );
+    } else {
+      Assert.equal(
+        installStatsEvents.length,
+        1,
+        "only one install_stats event should be recorded"
+      );
+
+      const installStatsEvent = installStatsEvents[0];
+
+      Assert.deepEqual(installStatsEvent, {
+        method: "install_stats",
+        object: "extension",
+        value: expectedHashedAddonId,
+        extra: {
+          addon_id: addonId,
+          ...expectedAmoAttribution,
+        },
+      });
+    }
+
+    await extension.unload();
+  }
+
+  getTelemetryEvents();
+});
+
+add_task(async function test_collect_attribution_data_for_amo_with_long_id() {
+  assertNoTelemetryEvents();
+
+  // We pass the `source` value to `installTelemetryInfo` in this test so the
+  // host could be anything in this variable below. Whether to collect
+  // attribution data for AMO is determined by the `source` value, not this
+  // host.
+  const url = "https://addons.mozilla.org/";
+  const addonId = `@${"a".repeat(90)}`;
+  // This is the SHA256 hash of the `addonId` above.
+  const expectedHashedAddonId =
+    "964d902353fc1c127228b66ec8a174c340cb2e02dbb550c6000fb1cd3ca2f489";
+
+  const installTelemetryInfo = {
+    ...FAKE_INSTALL_TELEMETRY_INFO,
+    sourceURL: `${url}?utm_content=utm-content-value`,
+    source: "amo",
+  };
+
+  // We call `recordInstallStatsEvent()` directly because using an add-on ID
+  // longer than 64 chars causes signing issues in tests (because of the
+  // differences between the fake CertDB injected by
+  // `AddonTestUtils.overrideCertDB()` and the real one).
+  const fakeAddonInstall = {
+    addon: { id: addonId },
+    type: "extension",
+    installTelemetryInfo,
+    hashedAddonId: expectedHashedAddonId,
+  };
+  AMTelemetry.recordInstallStatsEvent(fakeAddonInstall);
+
+  const installStatsEvents = getTelemetryEvents(["install_stats"]);
+  Assert.equal(
+    installStatsEvents.length,
+    1,
+    "only one install_stats event should be recorded"
+  );
+
+  const installStatsEvent = installStatsEvents[0];
+
+  Assert.deepEqual(installStatsEvent, {
+    method: "install_stats",
+    object: "extension",
+    value: expectedHashedAddonId,
+    extra: {
+      addon_id: AMTelemetry.getTrimmedString(addonId),
+      utm_content: "utm-content-value",
+    },
+  });
 });
 
 add_task(async function teardown() {

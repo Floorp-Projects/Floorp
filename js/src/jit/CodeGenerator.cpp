@@ -10303,10 +10303,24 @@ void CodeGenerator::emitArrayPopShift(LInstruction* lir,
 
 void CodeGenerator::visitArrayPopShiftV(LArrayPopShiftV* lir) {
   Register obj = ToRegister(lir->object());
-  Register elements = ToRegister(lir->temp0());
-  Register length = ToRegister(lir->temp1());
+  Register temp1 = ToRegister(lir->temp0());
+  Register temp2 = ToRegister(lir->temp1());
   TypedOrValueRegister out(ToOutValue(lir));
-  emitArrayPopShift(lir, lir->mir(), obj, elements, length, out);
+
+  if (JitOptions.warpBuilder) {
+    Label bail;
+    if (lir->mir()->mode() == MArrayPopShift::Pop) {
+      masm.packedArrayPop(obj, out.valueReg(), temp1, temp2, &bail);
+    } else {
+      MOZ_ASSERT(lir->mir()->mode() == MArrayPopShift::Shift);
+      LiveRegisterSet volatileRegs = liveVolatileRegs(lir);
+      masm.packedArrayShift(obj, out.valueReg(), temp1, temp2, volatileRegs,
+                            &bail);
+    }
+    bailoutFrom(&bail, lir->snapshot());
+  } else {
+    emitArrayPopShift(lir, lir->mir(), obj, temp1, temp2, out);
+  }
 }
 
 void CodeGenerator::visitArrayPopShiftT(LArrayPopShiftT* lir) {
@@ -10314,6 +10328,8 @@ void CodeGenerator::visitArrayPopShiftT(LArrayPopShiftT* lir) {
   Register elements = ToRegister(lir->temp0());
   Register length = ToRegister(lir->temp1());
   TypedOrValueRegister out(lir->mir()->type(), ToAnyRegister(lir->output()));
+
+  MOZ_ASSERT(!JitOptions.warpBuilder);
   emitArrayPopShift(lir, lir->mir(), obj, elements, length, out);
 }
 

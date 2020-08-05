@@ -1,0 +1,24 @@
+<style>
+body {
+    transform-style: preserve-3d;
+}
+
+div {
+    height: 100px;
+    background-color: rgba(0, 255, 0, 0.1);;
+    transform: translateX(1px);
+}
+</style>
+<body>
+<script>
+    var div = document.createElement('div');
+    div.style.width = "1px";
+    for (var i = 2; i < 1000; i++) {
+        var container = document.createElement('div');
+        container.style.width = i + "px";
+        container.appendChild(div);
+        div = container;
+    }
+    document.body.appendChild(div);
+</script>
+</body>

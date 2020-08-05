@@ -56,6 +56,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsSocketTransportService2.h"
 #include "nsINSSErrorsService.h"
+#include "nsWebSocketConnection.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -75,10 +76,10 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(WebSocketChannel, nsIWebSocketChannel, nsIHttpUpgradeListener,
                   nsIRequestObserver, nsIStreamListener, nsIProtocolHandler,
-                  nsIInputStreamCallback, nsIOutputStreamCallback,
                   nsITimerCallback, nsIDNSListener, nsIProtocolProxyCallback,
                   nsIInterfaceRequestor, nsIChannelEventSink,
-                  nsIThreadRetargetableRequest, nsIObserver, nsINamed)
+                  nsIThreadRetargetableRequest, nsIObserver, nsINamed,
+                  nsIWebSocketConnectionListener)
 
 // We implement RFC 6455, which uses Sec-WebSocket-Version: 13 on the wire.
 #define SEC_WEBSOCKET_VERSION "13"
@@ -1124,8 +1125,7 @@ WebSocketChannel::WebSocketChannel()
       mBuffered(0),
       mBufferSize(kIncomingBufferInitialSize),
       mCurrentOut(nullptr),
-      mCurrentOutSent(0),
-      mHdrOutToSend(0),
+      mHdrOutSize(0),
       mHdrOut(nullptr),
       mDynamicOutputSize(0),
       mDynamicOutput(nullptr),
@@ -1898,7 +1898,7 @@ void WebSocketChannel::EnqueueOutgoingMessage(nsDeque<OutboundMessage>& aQueue,
        this, aMsg, msgNames[aMsg->GetMsgType()], aMsg->Length()));
 
   aQueue.Push(aMsg);
-  OnOutputStreamReady(mSocketOut);
+  DoEnqueueOutgoingMessage();
 }
 
 uint16_t WebSocketChannel::ResultToCloseCode(nsresult resultCode) {
@@ -1948,7 +1948,6 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
        "%p found queued msg %p [type=%s len=%d]\n",
        this, mCurrentOut, msgNames[msgType], mCurrentOut->Length()));
 
-  mCurrentOutSent = 0;
   mHdrOut = mOutHeader;
 
   uint8_t maskBit = mIsServerSide ? 0 : kMaskBit;
@@ -1979,25 +1978,25 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
       if (mScriptCloseCode) {
         NetworkEndian::writeUint16(payload, mScriptCloseCode);
         mOutHeader[1] += 2;
-        mHdrOutToSend = 4 + maskSize;
+        mHdrOutSize = 4 + maskSize;
         if (!mScriptCloseReason.IsEmpty()) {
           MOZ_ASSERT(mScriptCloseReason.Length() <= 123,
                      "Close Reason Too Long");
           mOutHeader[1] += mScriptCloseReason.Length();
-          mHdrOutToSend += mScriptCloseReason.Length();
+          mHdrOutSize += mScriptCloseReason.Length();
           memcpy(payload + 2, mScriptCloseReason.BeginReading(),
-                 mScriptCloseReason.Length());
+                 std::min<uint32_t>(mScriptCloseReason.Length(), 123));
         }
       } else {
         // No close code/reason, so payload length = 0.  We must still send mask
         // even though it's not used.  Keep payload offset so we write mask
         // below.
-        mHdrOutToSend = 2 + maskSize;
+        mHdrOutSize = 2 + maskSize;
       }
     } else {
       NetworkEndian::writeUint16(payload, ResultToCloseCode(mStopOnClose));
       mOutHeader[1] += 2;
-      mHdrOutToSend = 4 + maskSize;
+      mHdrOutSize = 4 + maskSize;
     }
 
     if (mServerClosed) {
@@ -2065,18 +2064,18 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
 
     if (mCurrentOut->Length() < 126) {
       mOutHeader[1] = mCurrentOut->Length() | maskBit;
-      mHdrOutToSend = 2 + maskSize;
+      mHdrOutSize = 2 + maskSize;
     } else if (mCurrentOut->Length() <= 0xffff) {
       mOutHeader[1] = 126 | maskBit;
       NetworkEndian::writeUint16(mOutHeader + sizeof(uint16_t),
                                  mCurrentOut->Length());
-      mHdrOutToSend = 4 + maskSize;
+      mHdrOutSize = 4 + maskSize;
     } else {
       mOutHeader[1] = 127 | maskBit;
       NetworkEndian::writeUint64(mOutHeader + 2, mCurrentOut->Length());
-      mHdrOutToSend = 10 + maskSize;
+      mHdrOutSize = 10 + maskSize;
     }
-    payload = mOutHeader + mHdrOutToSend;
+    payload = mOutHeader + mHdrOutSize;
   }
 
   MOZ_ASSERT(payload, "payload offset not found");
@@ -2118,7 +2117,7 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
       mOutHeader[0] & WebSocketChannel::kRsv3Bit,
       mOutHeader[0] & WebSocketChannel::kOpcodeBitsMask,
       mOutHeader[1] & WebSocketChannel::kMaskBit, mask, payload,
-      mHdrOutToSend - (payload - mOutHeader), mCurrentOut->BeginOrigReading(),
+      mHdrOutSize - (payload - mOutHeader), mCurrentOut->BeginOrigReading(),
       mCurrentOut->OrigLength());
 
   if (frame) {
@@ -2126,7 +2125,7 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
   }
 
   if (mask) {
-    while (payload < (mOutHeader + mHdrOutToSend)) {
+    while (payload < (mOutHeader + mHdrOutSize)) {
       *payload ^= mask >> 24;
       mask = RotateLeft(mask, 8);
       payload++;
@@ -2136,19 +2135,8 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
     ApplyMask(mask, mCurrentOut->BeginWriting(), mCurrentOut->Length());
   }
 
-  int32_t len = mCurrentOut->Length();
-
-  // for small frames, copy it all together for a contiguous write
-  if (len && len <= kCopyBreak) {
-    memcpy(mOutHeader + mHdrOutToSend, mCurrentOut->BeginWriting(), len);
-    mHdrOutToSend += len;
-    mCurrentOutSent = len;
-  }
-
-  // Transmitting begins - mHdrOutToSend bytes from mOutHeader and
-  // mCurrentOut->Length() bytes from mCurrentOut. The latter may be
-  // coaleseced into the former for small messages or as the result of the
-  // compression process.
+  // Transmitting begins - mHdrOutSize bytes from mOutHeader and
+  // mCurrentOut->Length() bytes from mCurrentOut.
 
   cleanupAfterFailure.release();
 }
@@ -2156,7 +2144,6 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
 void WebSocketChannel::DeleteCurrentOutGoingMessage() {
   delete mCurrentOut;
   mCurrentOut = nullptr;
-  mCurrentOutSent = 0;
 }
 
 void WebSocketChannel::EnsureHdrOut(uint32_t size) {
@@ -2202,23 +2189,9 @@ void WebSocketChannel::CleanupConnection() {
     mLingeringCloseTimer = nullptr;
   }
 
-  if (mSocketIn) {
-    if (mDataStarted) {
-      mSocketIn->AsyncWait(nullptr, 0, 0, nullptr);
-    }
-    mSocketIn = nullptr;
-  }
-
-  if (mSocketOut) {
-    mSocketOut->AsyncWait(nullptr, 0, 0, nullptr);
-    mSocketOut = nullptr;
-  }
-
-  if (mTransport) {
-    mTransport->SetSecurityCallbacks(nullptr);
-    mTransport->SetEventSink(nullptr, nullptr);
-    mTransport->Close(NS_BASE_STREAM_CLOSED);
-    mTransport = nullptr;
+  if (mConnection) {
+    mConnection->Close();
+    mConnection = nullptr;
   }
 
   if (mConnectionLogService && !mPrivateBrowsing) {
@@ -2286,30 +2259,15 @@ void WebSocketChannel::DoStopSession(nsresult reason) {
     mPingTimer = nullptr;
   }
 
-  if (mSocketIn && !mTCPClosed && mDataStarted) {
-    // Drain, within reason, this socket. if we leave any data
-    // unconsumed (including the tcp fin) a RST will be generated
-    // The right thing to do here is shutdown(SHUT_WR) and then wait
-    // a little while to see if any data comes in.. but there is no
-    // reason to delay things for that when the websocket handshake
-    // is supposed to guarantee a quiet connection except for that fin.
-
-    char buffer[512];
-    uint32_t count = 0;
-    uint32_t total = 0;
-    nsresult rv;
-    do {
-      total += count;
-      rv = mSocketIn->Read(buffer, 512, &count);
-      if (rv != NS_BASE_STREAM_WOULD_BLOCK && (NS_FAILED(rv) || count == 0))
-        mTCPClosed = true;
-    } while (NS_SUCCEEDED(rv) && count > 0 && total < 32000);
+  if (mConnection && !mTCPClosed && mDataStarted) {
+    // Drain, within reason, this socket.
+    mConnection->DrainSocketData();
   }
 
   int32_t sessionCount = kLingeringCloseThreshold;
   nsWSAdmissionManager::GetSessionCount(sessionCount);
 
-  if (!mTCPClosed && mTransport && sessionCount < kLingeringCloseThreshold) {
+  if (!mTCPClosed && mConnection && sessionCount < kLingeringCloseThreshold) {
     // 7.1.1 says that the client SHOULD wait for the server to close the TCP
     // connection. This is so we can reuse port numbers before 2 MSL expires,
     // which is not really as much of a concern for us as the amount of state
@@ -2376,7 +2334,7 @@ void WebSocketChannel::AbortSession(nsresult reason) {
       return;
     }
 
-    if (mTransport && reason != NS_BASE_STREAM_CLOSED && !mRequestedClose &&
+    if (mConnection && reason != NS_BASE_STREAM_CLOSED && !mRequestedClose &&
         !mClientClosed && !mServerClosed && mDataStarted) {
       mRequestedClose = true;
       mStopOnClose = reason;
@@ -2854,10 +2812,11 @@ nsresult WebSocketChannel::StartWebsocketData() {
     mDataStarted = true;
   }
 
-  rv = mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
+  rv = mConnection->StartReading();
   if (NS_FAILED(rv)) {
     LOG(
-        ("WebSocketChannel::StartWebsocketData mSocketIn->AsyncWait() failed "
+        ("WebSocketChannel::StartWebsocketData mConnection->StartReading() "
+         "failed "
          "with error 0x%08" PRIx32,
          static_cast<uint32_t>(rv)));
     return mSocketThread->Dispatch(
@@ -2866,18 +2825,24 @@ nsresult WebSocketChannel::StartWebsocketData() {
         NS_DISPATCH_NORMAL);
   }
 
-  if (mPingInterval) {
-    rv = mSocketThread->Dispatch(
-        NewRunnableMethod("net::WebSocketChannel::StartPinging", this,
-                          &WebSocketChannel::StartPinging),
-        NS_DISPATCH_NORMAL);
-    if (NS_FAILED(rv)) {
-      LOG(
-          ("WebSocketChannel::StartWebsocketData Could not start pinging, "
-           "rv=0x%08" PRIx32,
-           static_cast<uint32_t>(rv)));
-      return rv;
-    }
+  RefPtr<WebSocketChannel> self = this;
+  rv = mSocketThread->Dispatch(
+      NS_NewRunnableFunction("net::WebSocketChannel::StartPinging",
+                             [self]() {
+                               if (self->mPingInterval) {
+                                 Unused << self->StartPinging();
+                               }
+                               // Try to send the messages in the queue out
+                               // immediately.
+                               self->DoEnqueueOutgoingMessage();
+                             }),
+      NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    LOG(
+        ("WebSocketChannel::StartWebsocketData Could not start pinging, "
+         "rv=0x%08" PRIx32,
+         static_cast<uint32_t>(rv)));
+    return rv;
   }
 
   LOG(("WebSocketChannel::StartWebsocketData Notifying Listener %p",
@@ -3211,8 +3176,8 @@ WebSocketChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
   LOG(("WebSocketChannel::GetSecurityInfo() %p\n", this));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
-  if (mTransport) {
-    if (NS_FAILED(mTransport->GetSecurityInfo(aSecurityInfo)))
+  if (mConnection) {
+    if (NS_FAILED(mConnection->GetSecurityInfo(aSecurityInfo)))
       *aSecurityInfo = nullptr;
   }
   return NS_OK;
@@ -3562,14 +3527,32 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport* aTransport,
   MOZ_ASSERT(!mRecvdHttpUpgradeTransport, "OTA duplicated");
   MOZ_ASSERT(aSocketIn, "OTA with invalid socketIn");
 
-  mTransport = aTransport;
-  mSocketIn = aSocketIn;
-  mSocketOut = aSocketOut;
+  return OnWebSocketConnectionAvailable(
+      new nsWebSocketConnection(aTransport, aSocketIn, aSocketOut));
+}
 
-  nsresult rv;
-  rv = mTransport->SetEventSink(nullptr, nullptr);
-  if (NS_FAILED(rv)) return rv;
-  rv = mTransport->SetSecurityCallbacks(this);
+NS_IMETHODIMP
+WebSocketChannel::OnWebSocketConnectionAvailable(
+    nsIWebSocketConnection* aConnection) {
+  LOG(
+      ("WebSocketChannel::OnWebSocketConnectionAvailable %p [%p] "
+       "rcvdonstart=%d\n",
+       this, aConnection, mGotUpgradeOK));
+
+  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+  MOZ_ASSERT(!mRecvdHttpUpgradeTransport,
+             "OnWebSocketConnectionAvailable duplicated");
+  MOZ_ASSERT(aConnection,
+             "OnWebSocketConnectionAvailable with invalid connection");
+
+  if (mStopped) {
+    LOG(("WebSocketChannel::OnWebSocketConnectionAvailable: Already stopped"));
+    aConnection->Close();
+    return NS_OK;
+  }
+
+  mConnection = aConnection;
+  nsresult rv = mConnection->Init(this, mSocketThread);
   if (NS_FAILED(rv)) return rv;
 
   mRecvdHttpUpgradeTransport = 1;
@@ -3861,133 +3844,40 @@ WebSocketChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   return NS_OK;
 }
 
-// nsIInputStreamCallback
-
-NS_IMETHODIMP
-WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream* aStream) {
-  LOG(("WebSocketChannel::OnInputStreamReady() %p\n", this));
+void WebSocketChannel::DoEnqueueOutgoingMessage() {
+  LOG(("WebSocketChannel::DoEnqueueOutgoingMessage() %p\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  if (!mSocketIn)  // did we we clean up the socket after scheduling InputReady?
-    return NS_OK;
-
-  // this is after the http upgrade - so we are speaking websockets
-  char buffer[2048];
-  uint32_t count;
-  nsresult rv;
-
-  do {
-    rv = mSocketIn->Read((char*)buffer, 2048, &count);
-    LOG(("WebSocketChannel::OnInputStreamReady: read %u rv %" PRIx32 "\n",
-         count, static_cast<uint32_t>(rv)));
-
-    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-      mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
-      return NS_OK;
-    }
-
-    if (NS_FAILED(rv)) {
-      AbortSession(rv);
-      return rv;
-    }
-
-    if (count == 0) {
-      AbortSession(NS_BASE_STREAM_CLOSED);
-      return NS_OK;
-    }
-
-    if (mStopped) {
-      continue;
-    }
-
-    rv = ProcessInput((uint8_t*)buffer, count);
-    if (NS_FAILED(rv)) {
-      AbortSession(rv);
-      return rv;
-    }
-  } while (NS_SUCCEEDED(rv) && mSocketIn);
-
-  return NS_OK;
-}
-
-// nsIOutputStreamCallback
-
-NS_IMETHODIMP
-WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
-  LOG(("WebSocketChannel::OnOutputStreamReady() %p\n", this));
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  nsresult rv;
 
   if (!mCurrentOut) PrimeNewOutgoingMessage();
 
-  while (mCurrentOut && mSocketOut) {
-    const char* sndBuf;
-    uint32_t toSend;
-    uint32_t amtSent;
+  while (mCurrentOut && mConnection) {
+    LOG(
+        ("WebSocketChannel::DoEnqueueOutgoingMessage: "
+         "Try to send %u of hdr/copybreak and %u of data\n",
+         mHdrOutSize, mCurrentOut->Length()));
 
-    if (mHdrOut) {
-      sndBuf = (const char*)mHdrOut;
-      toSend = mHdrOutToSend;
-      LOG(
-          ("WebSocketChannel::OnOutputStreamReady: "
-           "Try to send %u of hdr/copybreak\n",
-           toSend));
-    } else {
-      sndBuf = (char*)mCurrentOut->BeginReading() + mCurrentOutSent;
-      toSend = mCurrentOut->Length() - mCurrentOutSent;
-      if (toSend > 0) {
-        LOG(
-            ("WebSocketChannel::OnOutputStreamReady: "
-             "Try to send %u of data\n",
-             toSend));
-      }
+    nsresult rv = mConnection->EnqueueOutputData(
+        mHdrOut, mHdrOutSize, (uint8_t*)mCurrentOut->BeginReading(),
+        mCurrentOut->Length());
+
+    LOG(("WebSocketChannel::DoEnqueueOutgoingMessage: rv %" PRIx32 "\n",
+         static_cast<uint32_t>(rv)));
+
+    if (NS_FAILED(rv)) {
+      AbortSession(rv);
+      return;
     }
 
-    if (toSend == 0) {
-      amtSent = 0;
-    } else {
-      rv = mSocketOut->Write(sndBuf, toSend, &amtSent);
-      LOG(("WebSocketChannel::OnOutputStreamReady: write %u rv %" PRIx32 "\n",
-           amtSent, static_cast<uint32_t>(rv)));
-
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-        mSocketOut->AsyncWait(this, 0, 0, mSocketThread);
-        return NS_OK;
-      }
-
-      if (NS_FAILED(rv)) {
-        AbortSession(rv);
-        return NS_OK;
-      }
+    if (!mStopped) {
+      mTargetThread->Dispatch(
+          new CallAcknowledge(this, mCurrentOut->OrigLength()),
+          NS_DISPATCH_NORMAL);
     }
-
-    if (mHdrOut) {
-      if (amtSent == toSend) {
-        mHdrOut = nullptr;
-        mHdrOutToSend = 0;
-      } else {
-        mHdrOut += amtSent;
-        mHdrOutToSend -= amtSent;
-        mSocketOut->AsyncWait(this, 0, 0, mSocketThread);
-      }
-    } else {
-      if (amtSent == toSend) {
-        if (!mStopped) {
-          mTargetThread->Dispatch(
-              new CallAcknowledge(this, mCurrentOut->OrigLength()),
-              NS_DISPATCH_NORMAL);
-        }
-        DeleteCurrentOutGoingMessage();
-        PrimeNewOutgoingMessage();
-      } else {
-        mCurrentOutSent += amtSent;
-        mSocketOut->AsyncWait(this, 0, 0, mSocketThread);
-      }
-    }
+    DeleteCurrentOutGoingMessage();
+    PrimeNewOutgoingMessage();
   }
 
   if (mReleaseOnTransmit) ReleaseSession();
-  return NS_OK;
 }
 
 // nsIStreamListener
@@ -4008,6 +3898,28 @@ WebSocketChannel::OnDataAvailable(nsIRequest* aRequest,
        aCount));
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+WebSocketChannel::OnError(nsresult aStatus) {
+  AbortSession(aStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebSocketChannel::OnTCPClosed() {
+  if (mLingeringCloseTimer) {
+    MOZ_ASSERT(mStopped, "Lingering without Stop");
+    LOG(("WebSocketChannel:: Cleanup connection based on TCP Close"));
+    CleanupConnection();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebSocketChannel::OnDataReceived(uint8_t* aData, uint32_t aCount) {
+  return ProcessInput(aData, aCount);
 }
 
 }  // namespace net

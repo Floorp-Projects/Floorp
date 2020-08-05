@@ -5099,6 +5099,59 @@ AttachDecision CallIRGenerator::tryAttachArrayPush(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachArrayPopShift(HandleFunction callee,
+                                                       InlinableNative native) {
+  // Expecting no arguments.
+  if (argc_ != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Only optimize if |this| is a packed array.
+  if (!thisval_.isObject() || !IsPackedArray(&thisval_.toObject())) {
+    return AttachDecision::NoAction;
+  }
+
+  // Other conditions:
+  //
+  // * The array length needs to be writable because we're changing it.
+  // * The elements must not be copy-on-write because we're deleting an element.
+  // * The array must be extensible. Non-extensible arrays require preserving
+  //   the |initializedLength == capacity| invariant on ObjectElements.
+  //   See NativeObject::shrinkCapacityToInitializedLength.
+  //   This also ensures the elements aren't sealed/frozen.
+  // * There must not be a for-in iterator for the elements because the IC stub
+  //   does not suppress deleted properties.
+  ArrayObject* arr = &thisval_.toObject().as<ArrayObject>();
+  if (!arr->lengthIsWritable() || arr->denseElementsAreCopyOnWrite() ||
+      !arr->isExtensible() || arr->denseElementsHaveMaybeInIterationFlag()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'pop' or 'shift' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardClass(objId, GuardClassKind::Array);
+
+  if (native == InlinableNative::ArrayPop) {
+    writer.packedArrayPopResult(objId);
+  } else {
+    MOZ_ASSERT(native == InlinableNative::ArrayShift);
+    writer.packedArrayShiftResult(objId);
+  }
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("ArrayPopShift");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   // Only handle argc <= 1.
   if (argc_ > 1) {
@@ -7432,6 +7485,9 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachArrayConstructor(callee);
     case InlinableNative::ArrayPush:
       return tryAttachArrayPush(callee);
+    case InlinableNative::ArrayPop:
+    case InlinableNative::ArrayShift:
+      return tryAttachArrayPopShift(callee, native);
     case InlinableNative::ArrayJoin:
       return tryAttachArrayJoin(callee);
     case InlinableNative::ArrayIsArray:
