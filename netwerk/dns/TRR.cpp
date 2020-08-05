@@ -1233,8 +1233,8 @@ nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
       }
       break;
     }
-    case SvcParamKeyEsniConfig: {
-      field.mValue = AsVariant(SvcParamEsniConfig{
+    case SvcParamKeyEchConfig: {
+      field.mValue = AsVariant(SvcParamEchConfig{
           .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
       break;
     }

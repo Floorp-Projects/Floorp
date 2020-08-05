@@ -27,7 +27,7 @@ enum TrrType {
   TRRTYPE_CNAME = 5,
   TRRTYPE_AAAA = 28,
   TRRTYPE_TXT = 16,
-  TRRTYPE_HTTPSSVC = 65345,
+  TRRTYPE_HTTPSSVC = nsIDNSService::RESOLVE_TYPE_HTTPSSVC,  // 65
 };
 
 class DOHaddr : public LinkedListElement<DOHaddr> {

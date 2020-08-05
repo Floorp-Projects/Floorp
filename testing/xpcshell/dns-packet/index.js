@@ -1280,7 +1280,7 @@ svcparam.keyToNumber = function(keyName) {
     case 'no-default-alpn' : return 2
     case 'port' : return 3
     case 'ipv4hint' : return 4
-    case 'esniconfig' : return 5
+    case 'echconfig' : return 5
     case 'ipv6hint' : return 6
     case 'key65535' : return 65535
   }
@@ -1298,7 +1298,7 @@ svcparam.numberToKeyName = function(number) {
     case 2 : return 'no-default-alpn'
     case 3 : return 'port'
     case 4 : return 'ipv4hint'
-    case 5 : return 'esniconfig'
+    case 5 : return 'echconfig'
     case 6 : return 'ipv6hint'
   }
 
@@ -1349,7 +1349,7 @@ svcparam.encode = function(param, buf, offset) {
       offset += 4;
       svcparam.encode.bytes += 4;
     }
-  } else if (key == 5) { //esniconfig
+  } else if (key == 5) { //echconfig
     // TODO: base64 presentation format
     buf.writeUInt16BE(param.value.length, offset);
     offset += 2;
@@ -1408,7 +1408,7 @@ svcparam.encodingLength = function (param) {
     case 'no-default-alpn' : return 4
     case 'port' : return 4 + 2
     case 'ipv4hint' : return 4+4 * (Array.isArray(param.value) ? param.value.length : 1)
-    case 'esniconfig' : return 4 + param.value.length
+    case 'echconfig' : return 4 + param.value.length
     case 'ipv6hint' : return 4 + 16 * (Array.isArray(param.value) ? param.value.length : 1)
     case 'key65535' : return 4
     default: return 4 // unknown option
@@ -1501,7 +1501,7 @@ const renc = exports.record = function (type) {
     case 'NSEC': return rnsec
     case 'NSEC3': return rnsec3
     case 'DS': return rds
-    case 'HTTPSSVC': return rhttpssvc
+    case 'HTTPS': return rhttpssvc
   }
   return runknown
 }

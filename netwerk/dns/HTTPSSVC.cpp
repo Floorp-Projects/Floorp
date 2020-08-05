@@ -16,7 +16,7 @@ class SvcParam : public nsISVCParam,
                  public nsISVCParamNoDefaultAlpn,
                  public nsISVCParamPort,
                  public nsISVCParamIPv4Hint,
-                 public nsISVCParamEsniConfig,
+                 public nsISVCParamEchConfig,
                  public nsISVCParamIPv6Hint {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISVCPARAM
@@ -24,7 +24,7 @@ class SvcParam : public nsISVCParam,
   NS_DECL_NSISVCPARAMNODEFAULTALPN
   NS_DECL_NSISVCPARAMPORT
   NS_DECL_NSISVCPARAMIPV4HINT
-  NS_DECL_NSISVCPARAMESNICONFIG
+  NS_DECL_NSISVCPARAMECHCONFIG
   NS_DECL_NSISVCPARAMIPV6HINT
  public:
   explicit SvcParam(const SvcParamType& value) : mValue(value){};
@@ -45,8 +45,8 @@ NS_INTERFACE_MAP_BEGIN(SvcParam)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISVCParamPort, mValue.is<SvcParamPort>())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISVCParamIPv4Hint,
                                      mValue.is<SvcParamIpv4Hint>())
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISVCParamEsniConfig,
-                                     mValue.is<SvcParamEsniConfig>())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISVCParamEchConfig,
+                                     mValue.is<SvcParamEchConfig>())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISVCParamIPv6Hint,
                                      mValue.is<SvcParamIpv6Hint>())
 NS_INTERFACE_MAP_END
@@ -59,7 +59,7 @@ SvcParam::GetType(uint16_t* aType) {
       [](SvcParamNoDefaultAlpn&) { return SvcParamKeyNoDefaultAlpn; },
       [](SvcParamPort&) { return SvcParamKeyPort; },
       [](SvcParamIpv4Hint&) { return SvcParamKeyIpv4Hint; },
-      [](SvcParamEsniConfig&) { return SvcParamKeyEsniConfig; },
+      [](SvcParamEchConfig&) { return SvcParamKeyEchConfig; },
       [](SvcParamIpv6Hint&) { return SvcParamKeyIpv6Hint; });
   return NS_OK;
 }
@@ -85,12 +85,12 @@ SvcParam::GetPort(uint16_t* aPort) {
 }
 
 NS_IMETHODIMP
-SvcParam::GetEsniConfig(nsACString& aEsniConfig) {
-  if (!mValue.is<SvcParamEsniConfig>()) {
+SvcParam::GetEchconfig(nsACString& aEchConfig) {
+  if (!mValue.is<SvcParamEchConfig>()) {
     MOZ_ASSERT(false, "Unexpected type for variant");
     return NS_ERROR_NOT_AVAILABLE;
   }
-  aEsniConfig = mValue.as<SvcParamEsniConfig>().mValue;
+  aEchConfig = mValue.as<SvcParamEchConfig>().mValue;
   return NS_OK;
 }
 

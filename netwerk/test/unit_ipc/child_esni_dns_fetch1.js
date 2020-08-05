@@ -69,6 +69,6 @@ add_task(async function testEsniHTTPSSVC() {
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
-  let esni = answer[0].values[0].QueryInterface(Ci.nsISVCParamEsniConfig);
-  Assert.equal(esni.esniConfig, "testytestystringstring", "got correct answer");
+  let esni = answer[0].values[0].QueryInterface(Ci.nsISVCParamEchConfig);
+  Assert.equal(esni.echconfig, "testytestystringstring", "got correct answer");
 });
