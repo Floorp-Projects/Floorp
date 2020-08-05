@@ -5533,6 +5533,9 @@ AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(
 
 AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee,
                                                   InlinableNative native) {
+  // Self-hosted code calls this with a single argument.
+  MOZ_ASSERT_IF(native == InlinableNative::IntrinsicToObject, argc_ == 1);
+
   // Need a single object argument.
   // TODO(Warp): Support all or more conversions to object.
   // Note: ToObject and Object differ in their behavior for undefined/null.
@@ -5570,11 +5573,14 @@ AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee,
 }
 
 AttachDecision CallIRGenerator::tryAttachToInteger(HandleFunction callee) {
+  // Self-hosted code calls this with a single argument.
+  MOZ_ASSERT(argc_ == 1);
+
   // Need a single int32 argument.
   // TODO(Warp): Support all or more conversions to integer.
   // Make sure to update this code correctly if we ever start
   // returning non-int32 integers.
-  if (argc_ != 1 || !args_[0].isInt32()) {
+  if (!args_[0].isInt32()) {
     return AttachDecision::NoAction;
   }
 
@@ -5600,8 +5606,11 @@ AttachDecision CallIRGenerator::tryAttachToInteger(HandleFunction callee) {
 }
 
 AttachDecision CallIRGenerator::tryAttachToLength(HandleFunction callee) {
+  // Self-hosted code calls this with a single argument.
+  MOZ_ASSERT(argc_ == 1);
+
   // Need a single int32 argument.
-  if (argc_ != 1 || !args_[0].isInt32()) {
+  if (!args_[0].isInt32()) {
     return AttachDecision::NoAction;
   }
 
@@ -5628,10 +5637,8 @@ AttachDecision CallIRGenerator::tryAttachToLength(HandleFunction callee) {
 }
 
 AttachDecision CallIRGenerator::tryAttachIsObject(HandleFunction callee) {
-  // Need a single argument.
-  if (argc_ != 1) {
-    return AttachDecision::NoAction;
-  }
+  // Self-hosted code calls this with a single argument.
+  MOZ_ASSERT(argc_ == 1);
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -5676,10 +5683,8 @@ AttachDecision CallIRGenerator::tryAttachIsPackedArray(HandleFunction callee) {
 }
 
 AttachDecision CallIRGenerator::tryAttachIsCallable(HandleFunction callee) {
-  // Need a single argument.
-  if (argc_ != 1) {
-    return AttachDecision::NoAction;
-  }
+  // Self-hosted code calls this with a single argument.
+  MOZ_ASSERT(argc_ == 1);
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -5700,8 +5705,11 @@ AttachDecision CallIRGenerator::tryAttachIsCallable(HandleFunction callee) {
 }
 
 AttachDecision CallIRGenerator::tryAttachIsConstructor(HandleFunction callee) {
+  // Self-hosted code calls this with a single argument.
+  MOZ_ASSERT(argc_ == 1);
+
   // Need a single object argument.
-  if (argc_ != 1 || !args_[0].isObject()) {
+  if (!args_[0].isObject()) {
     return AttachDecision::NoAction;
   }
 
@@ -5756,10 +5764,9 @@ AttachDecision CallIRGenerator::tryAttachIsCrossRealmArrayConstructor(
 
 AttachDecision CallIRGenerator::tryAttachGuardToClass(HandleFunction callee,
                                                       InlinableNative native) {
-  // Need a single object argument.
-  if (argc_ != 1 || !args_[0].isObject()) {
-    return AttachDecision::NoAction;
-  }
+  // Self-hosted code calls this with an object argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isObject());
 
   // Class must match.
   const JSClass* clasp = InlinableNativeGuardToClass(native);
@@ -5792,10 +5799,9 @@ AttachDecision CallIRGenerator::tryAttachGuardToClass(HandleFunction callee,
 
 AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
                                                   const JSClass* clasp) {
-  // Need a single object argument.
-  if (argc_ != 1 || !args_[0].isObject()) {
-    return AttachDecision::NoAction;
-  }
+  // Self-hosted code calls this with an object argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isObject());
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -5817,11 +5823,14 @@ AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
 
 AttachDecision CallIRGenerator::tryAttachRegExpMatcherSearcherTester(
     HandleFunction callee, InlinableNative native) {
-  // Self-hosted code calls this with (object, string, int32) arguments.
-  if (argc_ != 3) {
-    return AttachDecision::NoAction;
-  }
-  if (!args_[0].isObject() || !args_[1].isString() || !args_[2].isInt32()) {
+  // Self-hosted code calls this with (object, string, number) arguments.
+  MOZ_ASSERT(argc_ == 3);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isString());
+  MOZ_ASSERT(args_[2].isNumber());
+
+  // It's not guaranteed that the JITs have typed |lastIndex| as an Int32.
+  if (!args_[2].isInt32()) {
     return AttachDecision::NoAction;
   }
 
