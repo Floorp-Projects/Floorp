@@ -8,9 +8,12 @@ const {
   TYPES: { CONSOLE_MESSAGE },
 } = require("devtools/server/actors/resources/index");
 const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
-const {
-  ConsoleAPIListener,
-} = require("devtools/server/actors/webconsole/listeners/console-api");
+
+const consoleAPIListenerModule = isWorker
+  ? "devtools/server/actors/webconsole/worker-listeners"
+  : "devtools/server/actors/webconsole/listeners/console-api";
+const { ConsoleAPIListener } = require(consoleAPIListenerModule);
+
 const { isArray } = require("devtools/server/actors/object/utils");
 
 const {
