@@ -9,6 +9,7 @@
 const Config = {
   newIssueEndpoint: "https://webcompat.com/issues/new",
   newIssueEndpointPref: "newIssueEndpoint",
+  productName: "",
   screenshotFormat: {
     format: "jpeg",
     quality: 75,
@@ -40,6 +41,19 @@ async function checkEndpointPref() {
     Config.newIssueEndpoint = value;
   }
 }
+
+(() => {
+  let port = browser.runtime.connectNative("mozacWebcompatReporter");
+  port.onMessage.addListener(message => {
+    if ("productName" in message) {
+      Config.productName = message.productName;
+
+      // For now, setting the productName is the only use for this port, and that's only happening
+      // once after startup, so let's disconnect the port when we're done.
+      port.disconnect();
+    }
+  });
+})();
 
 function hasFastClickPageScript() {
   const win = window.wrappedJSObject;
@@ -117,18 +131,21 @@ function getWebCompatInfoForTab(tab) {
         delete graphicsPrefs["layers.acceleration.force-enabled"];
       }
 
-      return Object.assign({}, {
-        tabId: id,
-        blockList,
-        details: Object.assign(graphicsPrefs, {
-          buildID,
-          channel,
-          frameworks,
-          GPUs,
-          hasTouchScreen,
-        }),
-        url,
-      });
+      return Object.assign(
+        {},
+        {
+          tabId: id,
+          blockList,
+          details: Object.assign(graphicsPrefs, {
+            buildID,
+            channel,
+            frameworks,
+            GPUs,
+            hasTouchScreen,
+          }),
+          url,
+        }
+      );
     }
   );
 }
@@ -143,11 +160,11 @@ async function openWebCompatTab(compatInfo) {
   const { details } = compatInfo;
   const params = {
     url: `${compatInfo.url}`,
-    utm_source: "desktop-reporter",
+    utm_source: "android-components-reporter",
     utm_campaign: "report-site-issue-button",
-    src: "desktop-reporter",
+    src: "android-components-reporter",
     details,
-    extra_labels: [],
+    extra_labels: [`browser-${Config.productName}`],
   };
 
   for (let framework of FRAMEWORK_KEYS) {
@@ -181,7 +198,6 @@ async function openWebCompatTab(compatInfo) {
         };
         postMessage(data, "${url.origin}");
       }
-      console.log(${json});
       postMessageData(${json});
     })()`,
   });

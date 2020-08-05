@@ -48,6 +48,9 @@ permalink: /changelog/
 * **feature-downloads**
   * ⚠️ **This is a breaking change**: `DownloadsFeature` is no longer accepting a custom download dialog but supporting customizations via the `promptStyling` parameter. The `dialog` parameter was unused so far. If it's required in the future it will need to be replaced with a lambda or factory so that the feature can create instances of the dialog itself, as needed.
 
+* **feature-webcompat-reporter**
+  * Added a second parameter to the `install` method: `productName` allows to provide a unique product name per usage for automatic product-labelling on webcompat.com 
+
 # 52.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v51.0.0...v52.0.0)
