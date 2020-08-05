@@ -8,9 +8,7 @@
 #define AudioParamMap_h_
 
 #include "nsWrapperCache.h"
-#include "nsCOMPtr.h"
-
-class nsPIDOMWindowInner;
+#include "AudioWorkletNode.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,16 +18,16 @@ class AudioParamMap final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioParamMap)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioParamMap)
 
-  explicit AudioParamMap(nsPIDOMWindowInner* aParent);
+  explicit AudioParamMap(AudioWorkletNode* aParent);
 
-  nsPIDOMWindowInner* GetParentObject() const { return mParent; }
+  AudioWorkletNode* GetParentObject() const { return mParent; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
  private:
   ~AudioParamMap() = default;
-  nsCOMPtr<nsPIDOMWindowInner> mParent;
+  RefPtr<AudioWorkletNode> mParent;
 };
 
 }  // namespace dom
