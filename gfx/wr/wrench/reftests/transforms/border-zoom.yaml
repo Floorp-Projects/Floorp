@@ -3,7 +3,7 @@ root:
   items:
     - type: stacking-context
       bounds: [50, 50, 100, 100]
-      transform: rotate(-30)
+      transform: rotate(30)
       items:
         - type: border
           bounds: [ 10, 10, 100, 100 ]

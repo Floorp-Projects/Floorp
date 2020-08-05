@@ -120,7 +120,7 @@ impl<T: Copy + Div<T, Output = T> + Zero + PartialOrd, U> HomogeneousVector<T, U
     ///
     /// Returns None if the point is on or behind the W=0 hemisphere.
     #[inline]
-    pub fn to_point2d(self) -> Option<Point2D<T, U>> {
+    pub fn to_point2d(&self) -> Option<Point2D<T, U>> {
         if self.w > T::zero() {
             Some(Point2D::new(self.x / self.w, self.y / self.w))
         } else {
@@ -132,7 +132,7 @@ impl<T: Copy + Div<T, Output = T> + Zero + PartialOrd, U> HomogeneousVector<T, U
     ///
     /// Returns None if the point is on or behind the W=0 hemisphere.
     #[inline]
-    pub fn to_point3d(self) -> Option<Point3D<T, U>> {
+    pub fn to_point3d(&self) -> Option<Point3D<T, U>> {
         if self.w > T::zero() {
             Some(Point3D::new(
                 self.x / self.w,
@@ -181,6 +181,20 @@ impl<T: fmt::Debug, U> fmt::Debug for HomogeneousVector<T, U> {
             .field(&self.z)
             .field(&self.w)
             .finish()
+    }
+}
+
+impl<T: fmt::Display, U> fmt::Display for HomogeneousVector<T, U> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(")?;
+        fmt::Display::fmt(&self.x, f)?;
+        write!(f, ",")?;
+        fmt::Display::fmt(&self.y, f)?;
+        write!(f, ",")?;
+        fmt::Display::fmt(&self.z, f)?;
+        write!(f, ",")?;
+        fmt::Display::fmt(&self.w, f)?;
+        write!(f, ")")
     }
 }
 

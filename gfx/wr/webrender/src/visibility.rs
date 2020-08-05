@@ -476,7 +476,7 @@ pub fn update_primitive_visibility(
                     prim_instance.clip_set.local_clip_rect
                 };
 
-                if combined_local_clip_rect.size.is_empty() {
+                if combined_local_clip_rect.size.is_empty_or_negative() {
                     if prim_instance.is_chased() {
                         println!("\tculled for zero local clip rectangle");
                     }

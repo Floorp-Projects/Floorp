@@ -1067,12 +1067,12 @@ fn add_corner_segment(
         return;
     }
 
-    let segment_rect = match image_rect.intersection(&non_overlapping_rect) {
-        Some(rect) => rect,
-        None => {
-            return;
-        }
-    };
+    let segment_rect = image_rect.intersection(&non_overlapping_rect)
+        .unwrap_or_else(LayoutRect::zero);
+
+    if segment_rect.size.width <= 0. || segment_rect.size.height <= 0. {
+        return;
+    }
 
     let texture_rect = segment_rect
         .translate(-image_rect.origin.to_vector())

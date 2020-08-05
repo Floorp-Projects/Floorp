@@ -44,7 +44,7 @@ root:
       "backface-visible": true
       type: "stacking-context"
       "scroll-policy": scrollable
-      transform: rotate-z(-1)
+      transform: rotate-z(1)
       "transform-style": flat
       items: 
         - 
