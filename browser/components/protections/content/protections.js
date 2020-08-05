@@ -8,12 +8,49 @@ import LockwiseCard from "./lockwise-card.js";
 import MonitorCard from "./monitor-card.js";
 import ProxyCard from "./proxy-card.js";
 
-// We need to send the close telemetry before unload while we still have a connection to RPM.
-window.addEventListener("beforeunload", () => {
-  document.sendTelemetryEvent("close", "protection_report");
-});
+let cbCategory = RPMGetStringPref("browser.contentblocking.category");
+document.sendTelemetryEvent = (action, object, value = "") => {
+  // eslint-disable-next-line no-undef
+  RPMRecordTelemetryEvent("security.ui.protections", action, object, value, {
+    category: cbCategory,
+  });
+};
+
+let { protocol, pathname, searchParams } = new URL(document.location);
+
+let searchParamsChanged = false;
+if (searchParams.has("entrypoint")) {
+  RPMSendAsyncMessage("RecordEntryPoint", {
+    entrypoint: searchParams.get("entrypoint"),
+  });
+  // Remove this parameter from the URL (after recording above) to make it
+  // cleaner for bookmarking and switch-to-tab and so that bookmarked values
+  // don't skew telemetry.
+  searchParams.delete("entrypoint");
+  searchParamsChanged = true;
+}
 
 document.addEventListener("DOMContentLoaded", e => {
+  if (searchParamsChanged) {
+    let newURL = protocol + pathname;
+    let params = searchParams.toString();
+    if (params) {
+      newURL += "?" + params;
+    }
+    window.location.replace(newURL);
+    return;
+  }
+
+  RPMSendQuery("FetchEntryPoint", {}).then(entrypoint => {
+    // Send telemetry on arriving on this page
+    document.sendTelemetryEvent("show", "protection_report", entrypoint);
+  });
+
+  // We need to send the close telemetry before unload while we still have a connection to RPM.
+  window.addEventListener("beforeunload", () => {
+    document.sendTelemetryEvent("close", "protection_report");
+  });
+
   let todayInMs = Date.now();
   let weekAgoInMs = todayInMs - 6 * 24 * 60 * 60 * 1000;
 
@@ -53,21 +90,9 @@ document.addEventListener("DOMContentLoaded", e => {
   manageProtections.addEventListener("click", protectionSettingsEvtHandler);
   manageProtections.addEventListener("keypress", protectionSettingsEvtHandler);
 
-  let cbCategory = RPMGetStringPref("browser.contentblocking.category");
-
   let legend = document.getElementById("legend");
   legend.style.gridTemplateAreas =
     "'social cookie tracker fingerprinter cryptominer'";
-
-  document.sendTelemetryEvent = (action, object, value = "") => {
-    // eslint-disable-next-line no-undef
-    RPMRecordTelemetryEvent("security.ui.protections", action, object, value, {
-      category: cbCategory,
-    });
-  };
-
-  // Send telemetry on arriving and closing this page
-  document.sendTelemetryEvent("show", "protection_report");
 
   let createGraph = data => {
     let graph = document.getElementById("graph");
