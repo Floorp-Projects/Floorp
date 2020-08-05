@@ -4,21 +4,16 @@
 
 package org.mozilla.fenix.settings.logins
 
-import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.preference.Preference
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.feature.accounts.FirefoxAccountsAuthFeature
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
-import mozilla.components.support.ktx.android.content.hasCamera
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragmentDirections
 
 /**
@@ -28,9 +23,7 @@ class SyncLoginsPreferenceView(
     private val syncLoginsPreference: Preference,
     lifecycleOwner: LifecycleOwner,
     accountManager: FxaAccountManager,
-    private val navController: NavController,
-    private val accountsAuthFeature: FirefoxAccountsAuthFeature,
-    private val metrics: MetricController
+    private val navController: NavController
 ) {
 
     init {
@@ -75,15 +68,7 @@ class SyncLoginsPreferenceView(
         syncLoginsPreference.apply {
             summary = context.getString(R.string.preferences_passwords_sync_logins_sign_in)
             setOnPreferenceClickListener {
-                // App can be installed on devices with no camera modules. Like Android TV boxes.
-                // Let's skip presenting the option to sign in by scanning a qr code in this case
-                // and default to login with email and password.
-                if (context.hasCamera()) {
-                    navigateToTurnOnSyncFragment()
-                } else {
-                    navigateToPairWithEmail(context)
-                }
-
+                navigateToTurnOnSyncFragment()
                 true
             }
         }
@@ -116,10 +101,5 @@ class SyncLoginsPreferenceView(
     private fun navigateToTurnOnSyncFragment() {
         val directions = SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
         navController.navigate(directions)
-    }
-
-    private fun navigateToPairWithEmail(context: Context) {
-        accountsAuthFeature.beginAuthentication(context)
-        metrics.track(Event.SyncAuthUseEmail)
     }
 }

@@ -12,24 +12,18 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkConstructor
-import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkConstructor
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import mozilla.components.concept.sync.AccountObserver
-import mozilla.components.feature.accounts.FirefoxAccountsAuthFeature
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
-import mozilla.components.support.ktx.android.content.hasCamera
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragmentDirections
 
 class SyncLoginsPreferenceViewTest {
@@ -38,8 +32,6 @@ class SyncLoginsPreferenceViewTest {
     @MockK private lateinit var lifecycleOwner: LifecycleOwner
     @MockK private lateinit var accountManager: FxaAccountManager
     @MockK(relaxed = true) private lateinit var navController: NavController
-    @MockK(relaxed = true) private lateinit var accountsAuthFeature: FirefoxAccountsAuthFeature
-    @MockK(relaxed = true) private lateinit var metrics: MetricController
     private lateinit var accountObserver: CapturingSlot<AccountObserver>
     private lateinit var clickListener: CapturingSlot<Preference.OnPreferenceClickListener>
 
@@ -95,11 +87,9 @@ class SyncLoginsPreferenceViewTest {
     }
 
     @Test
-    fun `needs login if account does not exist and device has camera`() {
+    fun `needs login if account does not exist`() {
         every { accountManager.authenticatedAccount() } returns null
         every { accountManager.accountNeedsReauth() } returns false
-        mockkStatic("mozilla.components.support.ktx.android.content.ContextKt")
-        every { any<Context>().hasCamera() } returns true
         createView()
 
         verify { syncLoginsPreference.summary = "Sign in to Sync" }
@@ -110,26 +100,6 @@ class SyncLoginsPreferenceViewTest {
                 SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
             )
         }
-
-        unmockkStatic("mozilla.components.support.ktx.android.content.ContextKt")
-    }
-
-    @Test
-    fun `needs login if account does not exist and device does not have camera`() {
-        every { accountManager.authenticatedAccount() } returns null
-        every { accountManager.accountNeedsReauth() } returns false
-        createView()
-        mockkStatic("mozilla.components.support.ktx.android.content.ContextKt")
-        every { any<Context>().hasCamera() } returns false
-
-        verify { syncLoginsPreference.summary = "Sign in to Sync" }
-        assertTrue(clickListener.captured.onPreferenceClick(syncLoginsPreference))
-        verify {
-            accountsAuthFeature.beginAuthentication(any())
-            metrics.track(Event.SyncAuthUseEmail)
-        }
-
-        unmockkStatic("mozilla.components.support.ktx.android.content.ContextKt")
     }
 
     @Test
@@ -171,8 +141,6 @@ class SyncLoginsPreferenceViewTest {
         syncLoginsPreference,
         lifecycleOwner,
         accountManager,
-        navController,
-        accountsAuthFeature,
-        metrics
+        navController
     )
 }
