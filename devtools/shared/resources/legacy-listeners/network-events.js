@@ -116,7 +116,7 @@ module.exports = async function({
         break;
     }
 
-    onUpdated(resource);
+    onUpdated([resource]);
 
     if (resource.blockedReason) {
       // Blocked requests
