@@ -204,7 +204,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             engineView = WeakReference(engineView),
             swipeRefresh = WeakReference(swipeRefresh),
             viewLifecycleScope = WeakReference(viewLifecycleOwner.lifecycleScope),
-            arguments = requireArguments(),
             firstContentfulHappened = ::didFirstContentfulHappen
         ).apply {
             beginAnimateInIfNecessary()
@@ -586,8 +585,15 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     }
                         .ifChanged { it.content.firstContentfulPaint }
                         .collect {
-                            engineView?.asView()?.isVisible =
+                            val showEngineView =
                                 it.content.firstContentfulPaint || it.content.progress == 100
+
+                            if (showEngineView) {
+                                engineView?.asView()?.isVisible = true
+                                swipeRefresh.alpha = 1f
+                            } else {
+                                engineView?.asView()?.isVisible = false
+                            }
                         }
                 }
             }

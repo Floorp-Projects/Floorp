@@ -94,18 +94,25 @@ class DefaultBrowserToolbarController(
     internal var ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun handleToolbarPaste(text: String) {
-        val directions = if (useNewSearchExperience) {
-            BrowserFragmentDirections.actionGlobalSearchDialog(
-                sessionId = currentSession?.id,
-                pastedText = text
+        if (useNewSearchExperience) {
+            navController.nav(
+                R.id.browserFragment, BrowserFragmentDirections.actionGlobalSearchDialog(
+                    sessionId = currentSession?.id,
+                    pastedText = text
+                ), getToolbarNavOptions(activity)
             )
         } else {
-            BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                sessionId = currentSession?.id,
-                pastedText = text
-            )
+            browserAnimator.captureEngineViewAndDrawStatically {
+                navController.nav(
+                    R.id.browserFragment,
+                    BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                        sessionId = currentSession?.id,
+                        pastedText = text
+                    ),
+                    getToolbarNavOptions(activity)
+                )
+            }
         }
-        navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
     }
 
     override fun handleToolbarPasteAndGo(text: String) {
@@ -127,17 +134,23 @@ class DefaultBrowserToolbarController(
             Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)
         )
 
-            val directions = if (useNewSearchExperience) {
-                BrowserFragmentDirections.actionGlobalSearchDialog(
+        if (useNewSearchExperience) {
+            navController.nav(
+                R.id.browserFragment, BrowserFragmentDirections.actionGlobalSearchDialog(
                     currentSession?.id
-                )
-            } else {
-                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                    currentSession?.id
+                ), getToolbarNavOptions(activity)
+            )
+        } else {
+            browserAnimator.captureEngineViewAndDrawStatically {
+                navController.nav(
+                    R.id.browserFragment,
+                    BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                        currentSession?.id
+                    ),
+                    getToolbarNavOptions(activity)
                 )
             }
-
-            navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
+        }
     }
 
     override fun handleTabCounterClick() {
@@ -162,7 +175,11 @@ class DefaultBrowserToolbarController(
                     if (sessionManager.sessionsOfType(it.private).count() == 1) {
                         // The tab tray always returns to normal mode so do that here too
                         activity.browsingModeManager.mode = BrowsingMode.Normal
-                        navController.navigate(BrowserFragmentDirections.actionGlobalHome(sessionToDelete = it.id))
+                        navController.navigate(
+                            BrowserFragmentDirections.actionGlobalHome(
+                                sessionToDelete = it.id
+                            )
+                        )
                     } else {
                         onCloseTab.invoke(it)
                         activity.components.useCases.tabsUseCases.removeTab.invoke(it)
@@ -211,7 +228,7 @@ class DefaultBrowserToolbarController(
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
                 navController.nav(R.id.browserFragment, directions)
             }
-            ToolbarMenu.Item.SyncedTabs -> {
+            ToolbarMenu.Item.SyncedTabs -> browserAnimator.captureEngineViewAndDrawStatically {
                 navController.nav(
                     R.id.browserFragment,
                     BrowserFragmentDirections.actionBrowserFragmentToSyncedTabsFragment()
@@ -272,7 +289,7 @@ class DefaultBrowserToolbarController(
                 activity.components.analytics.metrics.track(Event.FindInPageOpened)
             }
 
-            ToolbarMenu.Item.AddonsManager -> {
+            ToolbarMenu.Item.AddonsManager -> browserAnimator.captureEngineViewAndDrawStatically {
                 navController.nav(
                     R.id.browserFragment,
                     BrowserFragmentDirections.actionGlobalAddonsManagementFragment()
@@ -348,13 +365,13 @@ class DefaultBrowserToolbarController(
                     bookmarkTapped(it)
                 }
             }
-            ToolbarMenu.Item.Bookmarks -> {
+            ToolbarMenu.Item.Bookmarks -> browserAnimator.captureEngineViewAndDrawStatically {
                 navController.nav(
                     R.id.browserFragment,
                     BrowserFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
                 )
             }
-            ToolbarMenu.Item.History -> {
+            ToolbarMenu.Item.History -> browserAnimator.captureEngineViewAndDrawStatically {
                 navController.nav(
                     R.id.browserFragment,
                     BrowserFragmentDirections.actionGlobalHistoryFragment()

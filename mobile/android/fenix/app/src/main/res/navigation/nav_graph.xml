@@ -124,12 +124,6 @@
         android:id="@+id/homeFragment"
         android:name="org.mozilla.fenix.home.HomeFragment"
         tools:layout="@layout/fragment_home">
-        <action
-            android:id="@+id/action_homeFragment_to_browserFragment"
-            app:destination="@id/browserFragment"
-            app:exitAnim="@anim/zoom_in_fade"
-            app:popEnterAnim="@anim/zoom_out_fade" />
-
         <argument
             android:name="focusOnAddressBar"
             android:defaultValue="false"
@@ -202,10 +196,6 @@
             android:name="activeSessionId"
             app:argType="string"
             app:nullable="true" />
-        <argument
-            android:name="shouldAnimate"
-            android:defaultValue="false"
-            app:argType="boolean" />
         <action
             android:id="@+id/action_browserFragment_to_syncedTabsFragment"
             app:destination="@id/syncedTabsFragment" />

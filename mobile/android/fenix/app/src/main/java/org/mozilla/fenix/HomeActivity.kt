@@ -554,7 +554,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         BrowserDirection.FromGlobal ->
             NavGraphDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromHome ->
-            HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId, true)
+            HomeFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSearch ->
             SearchFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSearchDialog ->

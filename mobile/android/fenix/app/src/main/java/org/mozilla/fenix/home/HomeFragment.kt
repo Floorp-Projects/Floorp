@@ -478,9 +478,7 @@ class HomeFragment : Fragment() {
                         engineSessionState = state
                     )
                     findNavController().navigate(
-                        HomeFragmentDirections.actionHomeFragmentToBrowserFragment(
-                            null
-                        )
+                        HomeFragmentDirections.actionGlobalBrowser(null)
                     )
                 },
                 operation = { },

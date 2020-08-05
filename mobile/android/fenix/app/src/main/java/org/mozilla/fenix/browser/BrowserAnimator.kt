@@ -4,19 +4,14 @@
 
 package org.mozilla.fenix.browser
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.os.Bundle
 import android.view.View
-import android.view.animation.DecelerateInterpolator
-import androidx.core.animation.doOnEnd
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavOptions
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineView
@@ -34,7 +29,6 @@ class BrowserAnimator(
     private val engineView: WeakReference<EngineView>,
     private val swipeRefresh: WeakReference<View>,
     private val viewLifecycleScope: WeakReference<LifecycleCoroutineScope>,
-    private val arguments: Bundle,
     private val firstContentfulHappened: () -> Boolean
 ) {
 
@@ -44,46 +38,19 @@ class BrowserAnimator(
     private val unwrappedSwipeRefresh: View?
         get() = swipeRefresh.get()
 
-    private val browserZoomInValueAnimator = ValueAnimator.ofFloat(0f, END_ANIMATOR_VALUE).apply {
-        addUpdateListener {
-            unwrappedSwipeRefresh?.scaleX =
-                STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
-            unwrappedSwipeRefresh?.scaleY =
-                STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
-            unwrappedSwipeRefresh?.alpha = it.animatedFraction
-        }
-
-        doOnEnd {
-            if (firstContentfulHappened()) {
-                unwrappedEngineView?.asView()?.visibility = View.VISIBLE
-            }
-            unwrappedSwipeRefresh?.background = null
-            arguments.putBoolean(SHOULD_ANIMATE_FLAG, false)
-        }
-
-        interpolator = DecelerateInterpolator()
-        duration = ANIMATION_DURATION
-    }
-
-    /**
-     * Triggers the *zoom in* browser animation to run if necessary (based on the SHOULD_ANIMATE_FLAG).
-     * Also removes the flag from the bundle so it is not played on future entries into the fragment.
-     */
     fun beginAnimateInIfNecessary() {
-        val shouldAnimate = arguments.getBoolean(SHOULD_ANIMATE_FLAG, false)
-        if (shouldAnimate) {
-            viewLifecycleScope.get()?.launch(Dispatchers.Main) {
-                delay(ANIMATION_DELAY)
-                captureEngineViewAndDrawStatically {
-                    unwrappedSwipeRefresh?.alpha = 0f
-                    browserZoomInValueAnimator.start()
+        if (unwrappedSwipeRefresh?.context?.settings()?.waitToShowPageUntilFirstPaint == true) {
+            if (firstContentfulHappened()) {
+                viewLifecycleScope.get()?.launch {
+                    delay(100)
+                    unwrappedEngineView?.asView()?.visibility = View.VISIBLE
+                    unwrappedSwipeRefresh?.background = null
+                    unwrappedSwipeRefresh?.alpha = 1f
                 }
             }
         } else {
             unwrappedSwipeRefresh?.alpha = 1f
-            if (firstContentfulHappened()) {
-                unwrappedEngineView?.asView()?.visibility = View.VISIBLE
-            }
+            unwrappedEngineView?.asView()?.visibility = View.VISIBLE
             unwrappedSwipeRefresh?.background = null
         }
     }
@@ -124,13 +91,6 @@ class BrowserAnimator(
     }
 
     companion object {
-        private const val SHOULD_ANIMATE_FLAG = "shouldAnimate"
-        private const val ANIMATION_DELAY = 50L
-        private const val ANIMATION_DURATION = 115L
-        private const val END_ANIMATOR_VALUE = 500f
-        private const val XY_SCALE_MULTIPLIER = .05f
-        private const val STARTING_XY_SCALE = .95f
-
         fun getToolbarNavOptions(context: Context): NavOptions {
             val navOptions = NavOptions.Builder()
 

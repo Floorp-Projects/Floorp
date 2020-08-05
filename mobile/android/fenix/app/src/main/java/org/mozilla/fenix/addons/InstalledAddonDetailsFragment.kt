@@ -198,8 +198,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                         components.useCases.tabsUseCases.addTab(settingUrl)
                     }
 
-                    InstalledAddonDetailsFragmentDirections
-                        .actionGlobalBrowser(null, false)
+                    InstalledAddonDetailsFragmentDirections.actionGlobalBrowser(null)
                 } else {
                     InstalledAddonDetailsFragmentDirections
                         .actionInstalledAddonFragmentToAddonInternalSettingsFragment(addon)
