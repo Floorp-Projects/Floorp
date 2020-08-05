@@ -34,8 +34,7 @@ void CacheParent::ActorDestroy(ActorDestroyReason aReason) {
   mManager = nullptr;
 }
 
-already_AddRefed<PCacheOpParent> CacheParent::AllocPCacheOpParent(
-    const CacheOpArgs& aOpArgs) {
+PCacheOpParent* CacheParent::AllocPCacheOpParent(const CacheOpArgs& aOpArgs) {
   if (aOpArgs.type() != CacheOpArgs::TCacheMatchArgs &&
       aOpArgs.type() != CacheOpArgs::TCacheMatchAllArgs &&
       aOpArgs.type() != CacheOpArgs::TCachePutAllArgs &&
@@ -44,7 +43,12 @@ already_AddRefed<PCacheOpParent> CacheParent::AllocPCacheOpParent(
     MOZ_CRASH("Invalid operation sent to Cache actor!");
   }
 
-  return MakeAndAddRef<CacheOpParent>(Manager(), mCacheId, aOpArgs);
+  return new CacheOpParent(Manager(), mCacheId, aOpArgs);
+}
+
+bool CacheParent::DeallocPCacheOpParent(PCacheOpParent* aActor) {
+  delete aActor;
+  return true;
 }
 
 mozilla::ipc::IPCResult CacheParent::RecvPCacheOpConstructor(
