@@ -30,6 +30,7 @@
 #include "nsIPrincipal.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetUtil.h"
+#include "nsReadableUtils.h"
 
 #define RELEASING_TIMER 5000
 
@@ -897,6 +898,11 @@ bool IsType(nsIURI* aUri, DataInfo::ObjectType aType) {
 }
 
 bool IsBlobURI(nsIURI* aUri) { return IsType(aUri, DataInfo::eBlobImpl); }
+
+bool BlobURLSchemeIsHTTPOrHTTPS(const nsACString& aUri) {
+  return (StringBeginsWith(aUri, "blob:http://"_ns) ||
+          StringBeginsWith(aUri, "blob:https://"_ns));
+}
 
 bool IsMediaSourceURI(nsIURI* aUri) {
   return IsType(aUri, DataInfo::eMediaSource);
