@@ -644,6 +644,8 @@ class WindowsDllDetourPatcher final
       return !!aTramp;
     }
 
+    // Write an opposite conditional jump because the destination branches
+    // are swapped.
     if (aType == JumpType::Je) {
       // JNE RIP+14
       aTramp.WriteByte(0x75);
@@ -653,8 +655,8 @@ class WindowsDllDetourPatcher final
       aTramp.WriteByte(0x74);
       aTramp.WriteByte(14);
     } else if (aType == JumpType::Jae) {
-      // JAE RIP+14
-      aTramp.WriteByte(0x73);
+      // JB RIP+14
+      aTramp.WriteByte(0x72);
       aTramp.WriteByte(14);
     }
 
@@ -1084,13 +1086,18 @@ class WindowsDllDetourPatcher final
           } else {
             COPY_CODES(nModRmSibBytes);
           }
-        } else if (*origBytes == 0x84) {
-          // je rel32
+        } else if (*origBytes >= 0x83 && *origBytes <= 0x85) {
+          // 0f 83 cd    JAE rel32
+          // 0f 84 cd    JE  rel32
+          // 0f 85 cd    JNE rel32
+          const JumpType kJumpTypes[] = {JumpType::Jae, JumpType::Je,
+                                         JumpType::Jne};
+          auto jumpType = kJumpTypes[*origBytes - 0x83];
           ++origBytes;
           --tramp;  // overwrite the 0x0f we copied above
 
           if (!GenerateJump(tramp, origBytes.ReadDisp32AsAbsolute(),
-                            JumpType::Je)) {
+                            jumpType)) {
             return;
           }
         } else {
