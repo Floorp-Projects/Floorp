@@ -514,7 +514,7 @@ export default class PaymentDialog extends HandleEventMixin(
   render(state) {
     let request = state.request;
     let paymentDetails = request.paymentDetails;
-    this._hostNameEl.textContent = request.topLevelPrincipal.displayHost;
+    this._hostNameEl.textContent = request.topLevelPrincipal.URI.displayHost;
 
     let displayItems = request.paymentDetails.displayItems || [];
     let additionalItems = this._getAdditionalDisplayItems(state);
