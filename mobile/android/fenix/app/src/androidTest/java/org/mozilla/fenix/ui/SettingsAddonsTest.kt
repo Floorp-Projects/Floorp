@@ -44,7 +44,6 @@ class SettingsAddonsTest {
     }
 
     // Walks through settings add-ons menu to ensure all items are present
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/13218")
     @Test
     fun settingsAddonsItemsTest() {
         homeScreen {

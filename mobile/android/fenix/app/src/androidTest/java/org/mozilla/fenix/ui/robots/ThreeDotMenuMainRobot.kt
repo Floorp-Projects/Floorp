@@ -31,6 +31,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
@@ -350,10 +351,9 @@ class ThreeDotMenuMainRobot {
 
         fun openAddonsManagerMenu(interact: SettingsSubMenuAddonsManagerRobot.() -> Unit): SettingsSubMenuAddonsManagerRobot.Transition {
             clickAddonsManagerButton()
-            mDevice.waitNotNull(
-                Until.findObject(By.text("Recommended")),
-                waitingTime
-            )
+            mDevice.findObject(
+                UiSelector().text("Recommended")
+            ).waitForExists(waitingTime)
 
             SettingsSubMenuAddonsManagerRobot().interact()
             return SettingsSubMenuAddonsManagerRobot.Transition()
