@@ -18,6 +18,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Document.h"
 #include "nsIScriptError.h"
+#include "nsRefreshDriver.h"
 
 namespace mozilla {
 

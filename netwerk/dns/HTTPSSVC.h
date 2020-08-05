@@ -14,12 +14,12 @@ namespace mozilla {
 namespace net {
 
 enum SvcParamKey : uint16_t {
-  SvcParamKeyNone = 0,
+  SvcParamKeyMandatory = 0,
   SvcParamKeyAlpn = 1,
   SvcParamKeyNoDefaultAlpn = 2,
   SvcParamKeyPort = 3,
   SvcParamKeyIpv4Hint = 4,
-  SvcParamKeyEsniConfig = 5,
+  SvcParamKeyEchConfig = 5,
   SvcParamKeyIpv6Hint = 6,
 
   SvcParamKeyLast = SvcParamKeyIpv6Hint
@@ -50,8 +50,8 @@ struct SvcParamIpv4Hint {
   CopyableTArray<mozilla::net::NetAddr> mValue;
 };
 
-struct SvcParamEsniConfig {
-  bool operator==(const SvcParamEsniConfig& aOther) const {
+struct SvcParamEchConfig {
+  bool operator==(const SvcParamEchConfig& aOther) const {
     return mValue == aOther.mValue;
   }
   nsCString mValue;
@@ -66,7 +66,7 @@ struct SvcParamIpv6Hint {
 
 using SvcParamType =
     mozilla::Variant<Nothing, SvcParamAlpn, SvcParamNoDefaultAlpn, SvcParamPort,
-                     SvcParamIpv4Hint, SvcParamEsniConfig, SvcParamIpv6Hint>;
+                     SvcParamIpv4Hint, SvcParamEchConfig, SvcParamIpv6Hint>;
 
 struct SvcFieldValue {
   bool operator==(const SvcFieldValue& aOther) const {
@@ -82,7 +82,7 @@ struct SVCB {
            mSvcDomainName == aOther.mSvcDomainName &&
            mSvcFieldValue == aOther.mSvcFieldValue;
   }
-  uint16_t mSvcFieldPriority = SvcParamKeyNone;
+  uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
   CopyableTArray<SvcFieldValue> mSvcFieldValue;
 };

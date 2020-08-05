@@ -2443,12 +2443,12 @@ bool WarpBuilder::build_CheckIsObj(BytecodeLocation loc) {
   return true;
 }
 
-bool WarpBuilder::build_CheckObjCoercible(BytecodeLocation) {
+bool WarpBuilder::build_CheckObjCoercible(BytecodeLocation loc) {
   MDefinition* val = current->pop();
   MCheckObjCoercible* ins = MCheckObjCoercible::New(alloc(), val);
   current->add(ins);
   current->push(ins);
-  return true;
+  return resumeAfter(ins, loc);
 }
 
 MInstruction* WarpBuilder::buildLoadSlot(MDefinition* obj,

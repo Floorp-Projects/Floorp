@@ -23,23 +23,5 @@ interface nsIPaper : nsISupports
    */
   readonly attribute double height;
 
-  /**
-   * The unwritable margin at the top of the paper in points.
-   */
-  readonly attribute double unwriteableMarginTop;
-
-  /**
-   * The unwritable margin at the bottom of the paper in points.
-   */
-  readonly attribute double unwriteableMarginBottom;
-
-  /**
-   * The unwritable margin at the left of the paper in points.
-   */
-  readonly attribute double unwriteableMarginLeft;
-
-  /**
-   * The unwritable margin at the right of the paper in points.
-   */
-  readonly attribute double unwriteableMarginRight;
+  [implicit_jscontext] readonly attribute Promise unwriteableMargin;
 };

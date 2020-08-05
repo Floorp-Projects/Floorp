@@ -2665,7 +2665,7 @@ class HTMLEditor final : public TextEditor,
    * atomic elements like `<br>`, `<hr>`, `<img>`, `<input>`, etc and
    * data nodes except text node (e.g., comment node).
    * If aAtomicContent is a invisible `<br>` element, this will call
-   * `WillDeleteSelection()` recursively after deleting it.
+   * `HandleDeleteSelectionInternal()` recursively after deleting it.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
@@ -2702,13 +2702,38 @@ class HTMLEditor final : public TextEditor,
         Element& aCurrentBlockElement, const EditorDOMPoint& aCaretPoint);
 
     /**
+     * PrepareToDeleteCollapsedSelectionAtOtherBlockBoundary() considers
+     * left content and right content which are joined for handling deletion at
+     * other block boundary (i.e., immediately before or after a block).
+     *
+     * @param aHTMLEditor               The HTML editor.
+     * @param aDirectionAndAmount       Direction of the deletion.
+     * @param aOtherBlockElement        The block element which follows the
+     *                                  caret or is followed by caret.
+     * @param aCaretPoint               The caret point (i.e., selection start
+     *                                  or end).
+     * @param aWSRunScannerAtCaret      WSRunScanner instance which was
+     *                                  initialized with the caret point.
+     * @return                          true if can continue to handle the
+     *                                  deletion.
+     */
+    bool PrepareToDeleteCollapsedSelectionAtOtherBlockBoundary(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount, Element& aOtherBlockElement,
+        const EditorDOMPoint& aCaretPoint,
+        const WSRunScanner& aWSRunScannerAtCaret);
+
+    /**
      * Run() executes the joining.
      *
-     * @param aHTMLEditor       The HTML editor.
-     * @param aCaretPoint       The caret point (i.e., selection start or end).
+     * @param aHTMLEditor               The HTML editor.
+     * @param aDirectionAndAmount       Direction of the deletion.
+     * @param aCaretPoint               The caret point (i.e., selection start
+     *                                  or end).
      */
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-    Run(HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint) {
+    Run(HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        const EditorDOMPoint& aCaretPoint) {
       switch (mMode) {
         case Mode::JoinCurrentBlock: {
           EditActionResult result =
@@ -2720,31 +2745,70 @@ class HTMLEditor final : public TextEditor,
               "HandleDeleteCollapsedSelectionAtCurrentBlockBoundary() failed");
           return result;
         }
+        case Mode::JoinOtherBlock: {
+          EditActionResult result =
+              HandleDeleteCollapsedSelectionAtOtherBlockBoundary(aHTMLEditor,
+                                                                 aCaretPoint);
+          NS_WARNING_ASSERTION(
+              result.Succeeded(),
+              "AutoBlockElementsJoiner::"
+              "HandleDeleteCollapsedSelectionAtOtherBlockBoundary() failed");
+          return result;
+        }
+        case Mode::DeleteBRElement: {
+          EditActionResult result =
+              DeleteBRElement(aHTMLEditor, aDirectionAndAmount, aCaretPoint);
+          NS_WARNING_ASSERTION(
+              result.Succeeded(),
+              "AutoBlockElementsJoiner::DeleteBRElement() failed");
+          return result;
+        }
         case Mode::NotInitialized:
           return EditActionIgnored();
       }
       return EditActionResult(NS_ERROR_NOT_INITIALIZED);
     }
 
+    nsIContent* GetLeafContentInOtherBlockElement() const {
+      MOZ_ASSERT(mMode == Mode::JoinOtherBlock);
+      return mLeafContentInOtherBlock;
+    }
+
+    bool NeedsToFallbackToDeleteSelectionWithTransaction() const {
+      MOZ_ASSERT(mMode == Mode::JoinOtherBlock);
+      return mNeedsToFallbackToDeleteSelectionWithTransaction;
+    }
+
    private:
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
         HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint);
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+    HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
+        HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint);
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult DeleteBRElement(
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        const EditorDOMPoint& aCaretPoint);
 
     enum class Mode {
       NotInitialized,
       JoinCurrentBlock,
+      JoinOtherBlock,
+      DeleteBRElement,
     };
     nsCOMPtr<nsIContent> mLeftContent;
     nsCOMPtr<nsIContent> mRightContent;
+    nsCOMPtr<nsIContent> mLeafContentInOtherBlock;
+    RefPtr<dom::HTMLBRElement> mBRElement;
     Mode mMode = Mode::NotInitialized;
+    bool mNeedsToFallbackToDeleteSelectionWithTransaction = false;
   };
 
   /**
    * HandleDeleteCollapsedSelectionAtOtherBlockBoundary() handles deletion at
    * other block boundary (i.e., immediately before or after a block).
-   * If this does not join blocks, `WillDeleteSelection()` may be called
-   * recursively.
+   * If this does not join blocks, `HandleDeleteSelectionInternal()` may be
+   * called recursively.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.

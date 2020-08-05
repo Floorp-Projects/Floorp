@@ -14,9 +14,8 @@
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
 #  include "Units.h"
-extern mozilla::LazyLogModule gWaylandDmabufLog;
-#  define LOGDMABUF(args) \
-    MOZ_LOG(gWaylandDmabufLog, mozilla::LogLevel::Debug, args)
+extern mozilla::LazyLogModule gDmabufLog;
+#  define LOGDMABUF(args) MOZ_LOG(gDmabufLog, mozilla::LogLevel::Debug, args)
 #else
 #  define LOGDMABUF(args)
 #endif /* MOZ_LOGGING */

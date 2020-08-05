@@ -5,6 +5,14 @@
   <title>Test fission iframe document</title>
   <!-- Any copyright is dedicated to the Public Domain.
      - http://creativecommons.org/publicdomain/zero/1.0/ -->
+  <script>
+    "use strict";
+    const hashSuffix = new URLSearchParams(document.location.search).get("hashSuffix") || "in-iframe";
+    // eslint-disable-next-line no-unused-vars
+    const worker = new Worker("test_worker.js#simple-worker-" + hashSuffix);
+    // eslint-disable-next-line no-unused-vars
+    const sharedWorker = new SharedWorker("test_worker.js#shared-worker-" + hashSuffix);
+  </script>
 </head>
 <body>
 <p>remote iframe</p>

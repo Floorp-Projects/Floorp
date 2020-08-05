@@ -3344,12 +3344,13 @@ void EditorBase::DoAfterRedoTransaction() {
 
 already_AddRefed<EditAggregateTransaction>
 EditorBase::CreateTransactionForDeleteSelection(
-    HowToHandleCollapsedRange aHowToHandleCollapsedRange) {
+    HowToHandleCollapsedRange aHowToHandleCollapsedRange,
+    const AutoRangeArray& aRangesToDelete) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(SelectionRefPtr()->RangeCount());
+  MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
 
   // Check whether the selection is collapsed and we should do nothing:
-  if (NS_WARN_IF(SelectionRefPtr()->IsCollapsed() &&
+  if (NS_WARN_IF(aRangesToDelete.IsCollapsed() &&
                  aHowToHandleCollapsedRange ==
                      HowToHandleCollapsedRange::Ignore)) {
     return nullptr;
@@ -3358,18 +3359,12 @@ EditorBase::CreateTransactionForDeleteSelection(
   // allocate the out-param transaction
   RefPtr<EditAggregateTransaction> aggregateTransaction =
       EditAggregateTransaction::Create();
-  for (uint32_t rangeIdx = 0; rangeIdx < SelectionRefPtr()->RangeCount();
-       ++rangeIdx) {
-    const nsRange* range = SelectionRefPtr()->GetRangeAt(rangeIdx);
-    if (NS_WARN_IF(!range)) {
-      return nullptr;
-    }
-
+  for (const OwningNonNull<nsRange>& range : aRangesToDelete.Ranges()) {
     // Same with range as with selection; if it is collapsed and action
     // is eNone, do nothing.
     if (!range->Collapsed()) {
       RefPtr<DeleteRangeTransaction> deleteRangeTransaction =
-          DeleteRangeTransaction::Create(*this, *range);
+          DeleteRangeTransaction::Create(*this, range);
       // XXX Oh, not checking if deleteRangeTransaction can modify the range...
       DebugOnly<nsresult> rvIgnored =
           aggregateTransaction->AppendChild(deleteRangeTransaction);
@@ -3385,7 +3380,7 @@ EditorBase::CreateTransactionForDeleteSelection(
 
     // Let's extend the collapsed range to delete content around it.
     RefPtr<EditTransactionBase> deleteNodeOrTextTransaction =
-        CreateTransactionForCollapsedRange(*range, aHowToHandleCollapsedRange);
+        CreateTransactionForCollapsedRange(range, aHowToHandleCollapsedRange);
     // XXX When there are two or more ranges and at least one of them is
     //     not editable, deleteNodeOrTextTransaction may be nullptr.
     //     In such case, should we stop removing other ranges too?
@@ -3948,15 +3943,38 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
     nsIEditor::EStripWrappers aStripWrappers) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
-
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
+  AutoRangeArray rangesToDelete(*SelectionRefPtr());
+  if (NS_WARN_IF(rangesToDelete.Ranges().IsEmpty())) {
+    NS_ASSERTION(
+        false,
+        "For avoiding to throw incompatible exception for `execCommand`, fix "
+        "the caller");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = DeleteRangesWithTransaction(aDirectionAndAmount, aStripWrappers,
+                                            rangesToDelete);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::DeleteRangesWithTransaction() failed");
+  return rv;
+}
+
+nsresult EditorBase::DeleteRangesWithTransaction(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers,
+    const AutoRangeArray& aRangesToDelete) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!Destroyed());
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+  MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
+
   HowToHandleCollapsedRange howToHandleCollapsedRange =
       EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount);
-  if (NS_WARN_IF(!SelectionRefPtr()->RangeCount()) ||
-      NS_WARN_IF(SelectionRefPtr()->IsCollapsed() &&
+  if (NS_WARN_IF(aRangesToDelete.IsCollapsed() &&
                  howToHandleCollapsedRange ==
                      HowToHandleCollapsedRange::Ignore)) {
     NS_ASSERTION(
@@ -3967,7 +3985,8 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
   }
 
   RefPtr<EditAggregateTransaction> deleteSelectionTransaction =
-      CreateTransactionForDeleteSelection(howToHandleCollapsedRange);
+      CreateTransactionForDeleteSelection(howToHandleCollapsedRange,
+                                          aRangesToDelete);
   if (!deleteSelectionTransaction) {
     NS_WARNING("EditorBase::CreateTransactionForDeleteSelection() failed");
     return NS_ERROR_FAILURE;
@@ -4013,8 +4032,8 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
       //     this must have a bug since we only add the first range into
       //     the changed range.
       TopLevelEditSubActionDataRef().WillDeleteRange(
-          *this, EditorBase::GetStartPoint(*SelectionRefPtr()),
-          EditorBase::GetEndPoint(*SelectionRefPtr()));
+          *this, aRangesToDelete.GetStartPointOfFirstRange(),
+          aRangesToDelete.GetEndPointOfFirstRange());
     } else if (!deleteCharData) {
       TopLevelEditSubActionDataRef().WillDeleteContent(*this, *deleteContent);
     }
@@ -4023,15 +4042,18 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
   // Notify nsIEditActionListener::WillDelete[Selection|Text]
   if (!mActionListeners.IsEmpty()) {
     if (!deleteContent) {
+      MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
+      AutoTArray<RefPtr<nsRange>, 8> rangesToDelete(
+          aRangesToDelete.CloneRanges<RefPtr>());
       AutoActionListenerArray listeners(mActionListeners.Clone());
       for (auto& listener : listeners) {
         DebugOnly<nsresult> rvIgnored =
-            listener->WillDeleteSelection(SelectionRefPtr());
+            listener->WillDeleteRanges(rangesToDelete);
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rvIgnored),
-            "nsIEditActionListener::WillDeleteSelection() failed, but ignored");
+            "nsIEditActionListener::WillDeleteRanges() failed, but ignored");
         MOZ_DIAGNOSTIC_ASSERT(!Destroyed(),
-                              "nsIEditActionListener::WillDeleteSelection() "
+                              "nsIEditActionListener::WillDeleteRanges() "
                               "must not destroy the editor");
       }
     } else if (deleteCharData) {

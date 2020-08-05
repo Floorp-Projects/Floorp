@@ -184,42 +184,46 @@ class ScopeStencil {
 
   Scope* getEnclosingScope(frontend::CompilationInfo& compilationInfo);
 
-  // FunctionScope
-  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     Handle<FunctionScope::Data*> dataArg,
-                     bool hasParameterExprs, bool needsEnvironment,
-                     FunctionIndex functionIndex, bool isArrow,
-                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+  static bool createForFunctionScope(
+      JSContext* cx, frontend::CompilationInfo& compilationInfo,
+      Handle<FunctionScope::Data*> dataArg, bool hasParameterExprs,
+      bool needsEnvironment, FunctionIndex functionIndex, bool isArrow,
+      mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
-  // LexicalScope
-  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     ScopeKind kind, Handle<LexicalScope::Data*> dataArg,
-                     uint32_t firstFrameSlot,
-                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
-  // VarScope
-  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     ScopeKind kind, Handle<VarScope::Data*> dataArg,
-                     uint32_t firstFrameSlot, bool needsEnvironment,
-                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+  static bool createForLexicalScope(
+      JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+      Handle<LexicalScope::Data*> dataArg, uint32_t firstFrameSlot,
+      mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+  static bool createForVarScope(JSContext* cx,
+                                frontend::CompilationInfo& compilationInfo,
+                                ScopeKind kind, Handle<VarScope::Data*> dataArg,
+                                uint32_t firstFrameSlot, bool needsEnvironment,
+                                mozilla::Maybe<ScopeIndex> enclosing,
+                                ScopeIndex* index);
 
-  // GlobalScope
-  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     ScopeKind kind, Handle<GlobalScope::Data*> dataArg,
-                     ScopeIndex* index);
+  static bool createForGlobalScope(JSContext* cx,
+                                   frontend::CompilationInfo& compilationInfo,
+                                   ScopeKind kind,
+                                   Handle<GlobalScope::Data*> dataArg,
+                                   ScopeIndex* index);
 
-  // EvalScope
-  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     ScopeKind kind, Handle<EvalScope::Data*> dataArg,
-                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+  static bool createForEvalScope(JSContext* cx,
+                                 frontend::CompilationInfo& compilationInfo,
+                                 ScopeKind kind,
+                                 Handle<EvalScope::Data*> dataArg,
+                                 mozilla::Maybe<ScopeIndex> enclosing,
+                                 ScopeIndex* index);
 
-  // ModuleScope
-  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     Handle<ModuleScope::Data*> dataArg,
-                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+  static bool createForModuleScope(JSContext* cx,
+                                   frontend::CompilationInfo& compilationInfo,
+                                   Handle<ModuleScope::Data*> dataArg,
+                                   mozilla::Maybe<ScopeIndex> enclosing,
+                                   ScopeIndex* index);
 
-  // WithScope
-  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+  static bool createForWithScope(JSContext* cx,
+                                 frontend::CompilationInfo& compilationInfo,
+                                 mozilla::Maybe<ScopeIndex> enclosing,
+                                 ScopeIndex* index);
 
   bool hasEnvironmentShape() const { return numEnvironmentSlots_.isSome(); }
 

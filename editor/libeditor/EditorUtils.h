@@ -19,6 +19,7 @@
 #include "nsContentUtils.h"
 #include "nscore.h"
 #include "nsDebug.h"
+#include "nsDirection.h"
 #include "nsRange.h"
 #include "nsString.h"
 
@@ -712,9 +713,13 @@ class MOZ_RAII AutoTransactionBatchExternal final {
   EditorBase& mEditorBase;
 };
 
-class MOZ_STACK_CLASS AutoRangeArray final {
+/******************************************************************************
+ * AutoSelectionRangeArray stores all ranges in `aSelection`.
+ * Note that modifying the ranges means modifing the selection ranges.
+ *****************************************************************************/
+class MOZ_STACK_CLASS AutoSelectionRangeArray final {
  public:
-  explicit AutoRangeArray(dom::Selection* aSelection) {
+  explicit AutoSelectionRangeArray(dom::Selection* aSelection) {
     if (!aSelection) {
       return;
     }
@@ -725,6 +730,109 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   }
 
   AutoTArray<mozilla::OwningNonNull<nsRange>, 8> mRanges;
+};
+
+/******************************************************************************
+ * AutoRangeArray stores ranges which do no belong any `Selection`.
+ * So, different from `AutoSelectionRangeArray`, this can be used for
+ * ranges which may need to be modified before touching the DOM tree,
+ * but does not want to modify `Selection` for the performance.
+ *****************************************************************************/
+class MOZ_STACK_CLASS AutoRangeArray final {
+ public:
+  explicit AutoRangeArray(const dom::Selection& aSelection)
+      : mDirection(aSelection.GetDirection()) {
+    for (uint32_t i = 0; i < aSelection.RangeCount(); i++) {
+      mRanges.AppendElement(aSelection.GetRangeAt(i)->CloneRange());
+      if (aSelection.GetRangeAt(i) == aSelection.GetAnchorFocusRange()) {
+        mAnchorFocusRange = mRanges.LastElement();
+      }
+    }
+  }
+
+  auto& Ranges() { return mRanges; }
+  const auto& Ranges() const { return mRanges; }
+
+  template <template <typename> typename StrongPtrType>
+  AutoTArray<StrongPtrType<nsRange>, 8> CloneRanges() const {
+    AutoTArray<StrongPtrType<nsRange>, 8> ranges;
+    for (const auto& range : mRanges) {
+      ranges.AppendElement(range->CloneRange());
+    }
+    return ranges;
+  }
+
+  EditorDOMPoint GetStartPointOfFirstRange() const {
+    if (mRanges.IsEmpty() || !mRanges[0]->IsPositioned()) {
+      return EditorDOMPoint();
+    }
+    return EditorDOMPoint(mRanges[0]->StartRef());
+  }
+  EditorDOMPoint GetEndPointOfFirstRange() const {
+    if (mRanges.IsEmpty() || !mRanges[0]->IsPositioned()) {
+      return EditorDOMPoint();
+    }
+    return EditorDOMPoint(mRanges[0]->EndRef());
+  }
+
+  /**
+   * The following methods are same as `Selection`'s methods.
+   */
+  bool IsCollapsed() const {
+    return mRanges.IsEmpty() ||
+           (mRanges.Length() == 1 && mRanges[0]->Collapsed());
+  }
+  const nsRange* GetAnchorFocusRange() const { return mAnchorFocusRange; }
+  nsDirection GetDirection() const { return mDirection; }
+
+  const RangeBoundary& AnchorRef() const {
+    if (!mAnchorFocusRange) {
+      static RangeBoundary sEmptyRangeBoundary;
+      return sEmptyRangeBoundary;
+    }
+    return mDirection == nsDirection::eDirNext ? mAnchorFocusRange->StartRef()
+                                               : mAnchorFocusRange->EndRef();
+  }
+  nsINode* GetAnchorNode() const {
+    return AnchorRef().IsSet() ? AnchorRef().Container() : nullptr;
+  }
+  uint32_t GetAnchorOffset() const {
+    return AnchorRef().IsSet()
+               ? AnchorRef()
+                     .Offset(RangeBoundary::OffsetFilter::kValidOffsets)
+                     .valueOr(0)
+               : 0;
+  }
+  nsIContent* GetChildAtAnchorOffset() const {
+    return AnchorRef().IsSet() ? AnchorRef().GetChildAtOffset() : nullptr;
+  }
+
+  const RangeBoundary& FocusRef() const {
+    if (!mAnchorFocusRange) {
+      static RangeBoundary sEmptyRangeBoundary;
+      return sEmptyRangeBoundary;
+    }
+    return mDirection == nsDirection::eDirNext ? mAnchorFocusRange->EndRef()
+                                               : mAnchorFocusRange->StartRef();
+  }
+  nsINode* GetFocusNode() const {
+    return FocusRef().IsSet() ? FocusRef().Container() : nullptr;
+  }
+  uint32_t FocusOffset() const {
+    return FocusRef().IsSet()
+               ? FocusRef()
+                     .Offset(RangeBoundary::OffsetFilter::kValidOffsets)
+                     .valueOr(0)
+               : 0;
+  }
+  nsIContent* GetChildAtFocusOffset() const {
+    return FocusRef().IsSet() ? FocusRef().GetChildAtOffset() : nullptr;
+  }
+
+ private:
+  AutoTArray<mozilla::OwningNonNull<nsRange>, 8> mRanges;
+  RefPtr<nsRange> mAnchorFocusRange;
+  nsDirection mDirection;
 };
 
 /******************************************************************************

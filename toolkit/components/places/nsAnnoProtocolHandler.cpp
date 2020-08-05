@@ -141,7 +141,7 @@ class faviconAsyncLoader : public AsyncStatementCallback {
                                        target);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv)) {
-          return pump->AsyncRead(mListener, nullptr);
+          return pump->AsyncRead(mListener);
         }
       }
     }

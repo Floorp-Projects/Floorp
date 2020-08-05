@@ -7,6 +7,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/VisualViewport.h"
 #include "nsCOMPtr.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIDOMEventListener.h"

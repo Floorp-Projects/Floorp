@@ -81,8 +81,20 @@ GetModuleDynamicImportHook(JSRuntime* rt);
 extern JS_PUBLIC_API void SetModuleDynamicImportHook(
     JSRuntime* rt, ModuleDynamicImportHook func);
 
+/**
+ * Passed to FinishDynamicModuleImport to indicate the result of the dynamic
+ * import operation.
+ */
+enum class DynamicImportStatus { Failed = 0, Ok };
+
+/**
+ * This must be called after a dynamic import operation is complete.
+ *
+ * If |status| is Failed, any pending exception on the context will be used to
+ * complete the user's promise.
+ */
 extern JS_PUBLIC_API bool FinishDynamicModuleImport(
-    JSContext* cx, Handle<Value> referencingPrivate,
+    JSContext* cx, DynamicImportStatus status, Handle<Value> referencingPrivate,
     Handle<JSString*> specifier, Handle<JSObject*> promise);
 
 /**

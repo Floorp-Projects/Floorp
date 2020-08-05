@@ -95,7 +95,6 @@ class DMABufSurface {
   // Set and get a global surface UID. The UID is shared across process
   // and it's used to track surface lifetime in various parts of rendering
   // engine.
-  void SetUID(uint32_t aUID) { mUID = aUID; };
   uint32_t GetUID() const { return mUID; };
 
   // Creates a global reference counter objects attached to the surface.

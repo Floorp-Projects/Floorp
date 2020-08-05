@@ -15,9 +15,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const {
-  dd,
-  dl,
-  dt,
+  a,
+  img,
+  p,
   section,
   span,
 } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -124,29 +124,39 @@ class Worker extends PureComponent {
     return getUnicodeUrlPath(parts[parts.length - 1]);
   }
 
-  renderDebugButton() {
-    // avoid rendering the debug button if service worker debugging is disabled
-    if (!this.props.isDebugEnabled) {
-      return null;
-    }
+  renderDebugLink(url) {
+    // avoid rendering the debug link if service worker debugging is disabled
+    // or if the worker is stopped
+    const isDisabled = !this.props.isDebugEnabled || !this.isRunning();
 
-    const isDisabled = !this.isRunning();
-
-    return Localized(
-      {
-        id: "serviceworker-worker-debug",
-        // The localized title is only displayed if the debug link is disabled.
-        attrs: {
-          title: isDisabled,
-        },
-      },
-      UIButton({
-        onClick: this.debug,
-        className: `js-debug-button`,
-        disabled: isDisabled,
-        size: "micro",
-      })
+    const sourceUrl = span(
+      { className: "js-source-url" },
+      this.formatSource(url)
     );
+
+    return isDisabled
+      ? sourceUrl
+      : a(
+          {
+            onClick: this.debug,
+            title: url,
+            href: "#",
+            className: "js-debug-link",
+          },
+          sourceUrl,
+          "\u00A0", // &nbsp;
+          Localized(
+            {
+              id: "serviceworker-worker-inspect-icon",
+              attrs: {
+                alt: true,
+              },
+            },
+            img({
+              src: "chrome://devtools/skin/images/application-debug.svg",
+            })
+          )
+        );
   }
 
   renderStartButton() {
@@ -173,37 +183,22 @@ class Worker extends PureComponent {
 
     return section(
       { className: "worker js-sw-worker" },
-      dl(
-        { className: "worker__data" },
-        Localized(
-          { id: "serviceworker-worker-source" },
-          dt({ className: "worker__meta-name" })
+      p(
+        { className: "worker__icon" },
+        img({
+          className: "worker__icon-image",
+          src: "chrome://devtools/skin/images/debugging-workers.svg",
+        })
+      ),
+      p({ className: "worker__source" }, this.renderDebugLink(worker.url)),
+      p(
+        { className: "worker__misc" },
+        span(
+          { className: `js-worker-status worker__status ${statusClassName}` },
+          statusText
         ),
-        dd(
-          {},
-          span(
-            {
-              title: worker.url,
-              className: "worker__source-url js-source-url",
-            },
-            this.formatSource(worker.url)
-          ),
-          " ",
-          this.renderDebugButton()
-        ),
-        Localized(
-          { id: "serviceworker-worker-status" },
-          dt({ className: "worker__meta-name" })
-        ),
-        dd(
-          {},
-          span(
-            { className: `js-worker-status worker__status ${statusClassName}` },
-            statusText
-          ),
-          " ",
-          this.renderStartButton()
-        )
+        " ",
+        this.renderStartButton()
       )
     );
   }

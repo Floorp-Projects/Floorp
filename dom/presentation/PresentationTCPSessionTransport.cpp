@@ -244,7 +244,7 @@ nsresult PresentationTCPSessionTransport::CreateInputStreamPump() {
     return rv;
   }
 
-  rv = mInputStreamPump->AsyncRead(this, nullptr);
+  rv = mInputStreamPump->AsyncRead(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

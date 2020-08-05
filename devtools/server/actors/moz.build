@@ -16,6 +16,7 @@ DIRS += [
     'resources',
     'targets',
     'utils',
+    'watcher',
     'webconsole',
     'worker',
 ]
@@ -56,6 +57,7 @@ DevToolsModules(
     'styles.js',
     'stylesheets.js',
     'thread.js',
+    'watcher.js',
     'webbrowser.js',
     'webconsole.js',
 )

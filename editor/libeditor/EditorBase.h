@@ -59,6 +59,7 @@ class nsRange;
 
 namespace mozilla {
 class AlignStateAtSelection;
+class AutoRangeArray;
 class AutoSelectionRestorer;
 class AutoTopLevelEditSubActionNotifier;
 class AutoTransactionBatch;
@@ -2227,20 +2228,41 @@ class EditorBase : public nsIEditor,
                                  nsIEditor::EStripWrappers aStripWrappers);
 
   /**
-   * Create an aggregate transaction for delete selection.  The result may
-   * include DeleteNodeTransactions and/or DeleteTextTransactions as its
-   * children.
+   * DeleteRangesWithTransaction() removes content in aRangesToDelete or content
+   * around collapsed ranges in aRangesToDelete with transactions and remove
+   * empty inclusive ancestor inline elements of collapsed ranges after
+   * removing the contents.
+   *
+   * @param aDirectionAndAmount How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   *                            Note that this must be `nsIEditor::eNoStrip`
+   *                            if this is a TextEditor because anyway it'll
+   *                            be ignored.
+   * @param aRangesToDelete     The ranges to delete content.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteRangesWithTransaction(nsIEditor::EDirection aDirectionAndAmount,
+                              nsIEditor::EStripWrappers aStripWrappers,
+                              const AutoRangeArray& aRangesToDelete);
+
+  /**
+   * Create an aggregate transaction for delete the content in aRangesToDelete.
+   * The result may include DeleteNodeTransactions and/or DeleteTextTransactions
+   * as its children.
    *
    * @param aHowToHandleCollapsedRange
    *                            How to handle collapsed ranges.
-   * @return                    If it can remove the selection, returns an
-   *                            aggregate transaction which has some
+   * @param aRangesToDelete     The ranges to delete content.
+   * @return                    If it can remove the content in ranges, returns
+   *                            an aggregate transaction which has some
    *                            DeleteNodeTransactions and/or
    *                            DeleteTextTransactions as its children.
    */
   already_AddRefed<EditAggregateTransaction>
   CreateTransactionForDeleteSelection(
-      HowToHandleCollapsedRange aHowToHandleCollapsedRange);
+      HowToHandleCollapsedRange aHowToHandleCollapsedRange,
+      const AutoRangeArray& aRangesToDelete);
 
   /**
    * Create a transaction for removing the nodes and/or text around

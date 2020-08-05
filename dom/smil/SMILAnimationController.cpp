@@ -18,6 +18,7 @@
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
+#include "nsRefreshDriver.h"
 #include "mozilla/dom/Document.h"
 #include "SMILCompositor.h"
 #include "SMILCSSProperty.h"
