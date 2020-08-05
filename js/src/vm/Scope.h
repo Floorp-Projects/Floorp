@@ -486,7 +486,6 @@ class LexicalScope : public Scope {
   template <typename ShapeType>
   static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                       uint32_t firstFrameSlot,
-                                      Handle<AbstractScopePtr> enclosing,
                                       MutableHandle<UniquePtr<Data>> data,
                                       ShapeType envShape);
 

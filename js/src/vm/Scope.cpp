@@ -684,14 +684,11 @@ uint32_t LexicalScope::nextFrameSlot(const AbstractScopePtr& scope) {
 template <typename ShapeType>
 bool LexicalScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                            uint32_t firstFrameSlot,
-                                           Handle<AbstractScopePtr> enclosing,
                                            MutableHandle<UniquePtr<Data>> data,
                                            ShapeType envShape) {
   bool isNamedLambda =
       kind == ScopeKind::NamedLambda || kind == ScopeKind::StrictNamedLambda;
 
-  MOZ_ASSERT_IF(!isNamedLambda && firstFrameSlot != 0,
-                firstFrameSlot == nextFrameSlot(enclosing));
   MOZ_ASSERT_IF(isNamedLambda, firstFrameSlot == LOCALNO_LIMIT);
 
   BindingIter bi(*data, firstFrameSlot, isNamedLambda);
@@ -708,10 +705,8 @@ LexicalScope* LexicalScope::createWithData(JSContext* cx, ScopeKind kind,
                                            uint32_t firstFrameSlot,
                                            HandleScope enclosing) {
   RootedShape envShape(cx);
-  Rooted<AbstractScopePtr> abstractScopePtr(cx, enclosing);
 
-  if (!prepareForScopeCreation(cx, kind, firstFrameSlot, abstractScopePtr, data,
-                               &envShape)) {
+  if (!prepareForScopeCreation(cx, kind, firstFrameSlot, data, &envShape)) {
     return nullptr;
   }
 
@@ -1802,7 +1797,7 @@ bool ScopeCreationData::create(JSContext* cx,
                                Handle<FunctionScope::Data*> dataArg,
                                bool hasParameterExprs, bool needsEnvironment,
                                FunctionIndex functionIndex, bool isArrow,
-                               Handle<AbstractScopePtr> enclosing,
+                               mozilla::Maybe<ScopeIndex> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -1834,7 +1829,7 @@ bool ScopeCreationData::create(JSContext* cx,
 bool ScopeCreationData::create(
     JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
     Handle<LexicalScope::Data*> dataArg, uint32_t firstFrameSlot,
-    Handle<AbstractScopePtr> enclosing, ScopeIndex* index) {
+    mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<LexicalScope::Data>> data(
@@ -1844,8 +1839,8 @@ bool ScopeCreationData::create(
   }
 
   mozilla::Maybe<uint32_t> envShape;
-  if (!LexicalScope::prepareForScopeCreation(cx, kind, firstFrameSlot,
-                                             enclosing, &data, &envShape)) {
+  if (!LexicalScope::prepareForScopeCreation(cx, kind, firstFrameSlot, &data,
+                                             &envShape)) {
     return false;
   }
 
@@ -1858,7 +1853,7 @@ bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
                                ScopeKind kind, Handle<VarScope::Data*> dataArg,
                                uint32_t firstFrameSlot, bool needsEnvironment,
-                               Handle<AbstractScopePtr> enclosing,
+                               mozilla::Maybe<ScopeIndex> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -1902,7 +1897,7 @@ bool ScopeCreationData::create(JSContext* cx,
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
 
-  Rooted<AbstractScopePtr> enclosing(cx);
+  mozilla::Maybe<ScopeIndex> enclosing;
 
   *index = compilationInfo.scopeCreationData.length();
   return compilationInfo.scopeCreationData.emplaceBack(
@@ -1913,7 +1908,7 @@ bool ScopeCreationData::create(JSContext* cx,
 bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
                                ScopeKind kind, Handle<EvalScope::Data*> dataArg,
-                               Handle<AbstractScopePtr> enclosing,
+                               mozilla::Maybe<ScopeIndex> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -1939,7 +1934,7 @@ bool ScopeCreationData::create(JSContext* cx,
 bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
                                Handle<ModuleScope::Data*> dataArg,
-                               Handle<AbstractScopePtr> enclosing,
+                               mozilla::Maybe<ScopeIndex> enclosing,
                                ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
@@ -1950,7 +1945,7 @@ bool ScopeCreationData::create(JSContext* cx,
     return false;
   }
 
-  MOZ_ASSERT(enclosing.get().is<GlobalScope>());
+  MOZ_ASSERT(enclosing.isNothing());
 
   // We do not initialize the canonical module while the data is owned by the
   // ScopeCreationData. It gets set in ScopeCreationData::releaseData.
@@ -1995,7 +1990,7 @@ bool ScopeCreationData::createSpecificShape(JSContext* cx, ScopeKind kind,
 /* static */
 bool ScopeCreationData::create(JSContext* cx,
                                frontend::CompilationInfo& compilationInfo,
-                               Handle<AbstractScopePtr> enclosing,
+                               mozilla::Maybe<ScopeIndex> enclosing,
                                ScopeIndex* index) {
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
@@ -2036,7 +2031,7 @@ UniquePtr<ModuleScope::Data> ScopeCreationData::releaseData<ModuleScope>(
 template <>
 Scope* ScopeCreationData::createSpecificScope<WithScope, std::nullptr_t>(
     JSContext* cx, CompilationInfo& compilationInfo) {
-  RootedScope enclosingScope(cx, getEnclosingScope());
+  RootedScope enclosingScope(cx, getEnclosingScope(compilationInfo));
   return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
 }
 
@@ -2047,7 +2042,7 @@ Scope* ScopeCreationData::createSpecificScope<GlobalScope, std::nullptr_t>(
   Rooted<UniquePtr<GlobalScope::Data>> rootedData(
       cx, releaseData<GlobalScope>(compilationInfo));
 
-  MOZ_ASSERT(getEnclosingScope() == nullptr);
+  MOZ_ASSERT(getEnclosingScope(compilationInfo) == nullptr);
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<GlobalScope>(cx, kind(), nullptr, nullptr, &rootedData);
@@ -2065,7 +2060,7 @@ Scope* ScopeCreationData::createSpecificScope(
     return nullptr;
   }
 
-  RootedScope enclosingScope(cx, getEnclosingScope());
+  RootedScope enclosingScope(cx, getEnclosingScope(compilationInfo));
 
   // Because we already baked the data here, we needn't do it again.
   return Scope::create<SpecificScopeType>(cx, kind(), enclosingScope, shape,

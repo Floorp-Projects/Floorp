@@ -47,7 +47,7 @@ ScopeKind AbstractScopePtr::kind() const {
 AbstractScopePtr AbstractScopePtr::enclosing() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeCreationData()) {
-    return scopeCreationData().get().enclosing();
+    return scopeCreationData().get().enclosing(compilationInfo());
   }
   return AbstractScopePtr(scope()->enclosing());
 }
