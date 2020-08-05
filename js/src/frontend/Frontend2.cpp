@@ -165,12 +165,10 @@ bool ConvertScopeCreationData(JSContext* cx, const SmooshResult& result,
 
         uint32_t firstFrameSlot = var.first_frame_slot;
         ScopeIndex enclosingIndex(var.enclosing);
-        Rooted<AbstractScopePtr> enclosing(
-            cx, AbstractScopePtr(compilationInfo, enclosingIndex));
         if (!ScopeCreationData::create(
                 cx, compilationInfo, ScopeKind::FunctionBodyVar, data,
-                firstFrameSlot, var.function_has_extensible_scope, enclosing,
-                &index)) {
+                firstFrameSlot, var.function_has_extensible_scope,
+                mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
         break;
@@ -195,11 +193,9 @@ bool ConvertScopeCreationData(JSContext* cx, const SmooshResult& result,
 
         uint32_t firstFrameSlot = lexical.first_frame_slot;
         ScopeIndex enclosingIndex(lexical.enclosing);
-        Rooted<AbstractScopePtr> enclosing(
-            cx, AbstractScopePtr(compilationInfo, enclosingIndex));
         if (!ScopeCreationData::create(cx, compilationInfo, ScopeKind::Lexical,
-                                       data, firstFrameSlot, enclosing,
-                                       &index)) {
+                                       data, firstFrameSlot,
+                                       mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
         break;
@@ -230,11 +226,10 @@ bool ConvertScopeCreationData(JSContext* cx, const SmooshResult& result,
         bool isArrow = function.is_arrow;
 
         ScopeIndex enclosingIndex(function.enclosing);
-        Rooted<AbstractScopePtr> enclosing(
-            cx, AbstractScopePtr(compilationInfo, enclosingIndex));
-        if (!ScopeCreationData::create(
-                cx, compilationInfo, data, hasParameterExprs, needsEnvironment,
-                functionIndex, isArrow, enclosing, &index)) {
+        if (!ScopeCreationData::create(cx, compilationInfo, data,
+                                       hasParameterExprs, needsEnvironment,
+                                       functionIndex, isArrow,
+                                       mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
         break;

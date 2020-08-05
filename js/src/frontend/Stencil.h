@@ -142,8 +142,9 @@ class ScopeCreationData {
   friend class js::AbstractScopePtr;
   friend class js::GCMarker;
 
-  // The enclosing scope if it exists
-  AbstractScopePtr enclosing_;
+  // The enclosing scope. If Nothing, then the enclosing scope of the
+  // compilation applies.
+  mozilla::Maybe<ScopeIndex> enclosing_;
 
   // The kind determines data_.
   ScopeKind kind_;
@@ -165,7 +166,7 @@ class ScopeCreationData {
 
  public:
   ScopeCreationData(
-      JSContext* cx, ScopeKind kind, Handle<AbstractScopePtr> enclosing,
+      JSContext* cx, ScopeKind kind, mozilla::Maybe<ScopeIndex> enclosing,
       uint32_t firstFrameSlot, mozilla::Maybe<uint32_t> numEnvironmentSlots,
       UniquePtr<BaseScopeData> data = {},
       mozilla::Maybe<FunctionIndex> functionIndex = mozilla::Nothing(),
@@ -179,27 +180,27 @@ class ScopeCreationData {
         data_(std::move(data)) {}
 
   ScopeKind kind() const { return kind_; }
-  AbstractScopePtr enclosing() { return enclosing_; }
+  AbstractScopePtr enclosing(CompilationInfo& compilationInfo);
 
-  Scope* getEnclosingScope();
+  Scope* getEnclosingScope(frontend::CompilationInfo& compilationInfo);
 
   // FunctionScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      Handle<FunctionScope::Data*> dataArg,
                      bool hasParameterExprs, bool needsEnvironment,
                      FunctionIndex functionIndex, bool isArrow,
-                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
+                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   // LexicalScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<LexicalScope::Data*> dataArg,
                      uint32_t firstFrameSlot,
-                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
+                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
   // VarScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<VarScope::Data*> dataArg,
                      uint32_t firstFrameSlot, bool needsEnvironment,
-                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
+                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   // GlobalScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
@@ -209,16 +210,16 @@ class ScopeCreationData {
   // EvalScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<EvalScope::Data*> dataArg,
-                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
+                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   // ModuleScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      Handle<ModuleScope::Data*> dataArg,
-                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
+                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   // WithScope
   static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
-                     Handle<AbstractScopePtr> enclosing, ScopeIndex* index);
+                     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   bool hasEnvironmentShape() const { return numEnvironmentSlots_.isSome(); }
 
@@ -268,6 +269,10 @@ class ScopeCreationData {
   Scope* createSpecificScope(JSContext* cx, CompilationInfo& compilationInfo);
 };
 
+// As an alternative to a ScopeIndex (which references a ScopeCreationData), we
+// may instead refer to an existing scope from GlobalObject::emptyGlobalScope().
+//
+// NOTE: This is only used for the self-hosting global.
 class EmptyGlobalScopeType {};
 
 // See JSOp::Lambda for interepretation of this index.

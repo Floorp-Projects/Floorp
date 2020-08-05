@@ -31,13 +31,18 @@ bool GCThingList::append(FunctionBox* funbox, GCThingIndex* index) {
 AbstractScopePtr GCThingList::getScope(size_t index) const {
   const ScriptThingVariant& elem = vector[index];
   if (elem.is<EmptyGlobalScopeType>()) {
+    MOZ_ASSERT(compilationInfo.enclosingScope == nullptr);
     return AbstractScopePtr(&compilationInfo.cx->global()->emptyGlobalScope());
   }
   return AbstractScopePtr(compilationInfo, elem.as<ScopeIndex>());
 }
 
-ScopeIndex GCThingList::getScopeIndex(size_t index) const {
-  return vector[index].as<ScopeIndex>();
+mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
+  const ScriptThingVariant& elem = vector[index];
+  if (elem.is<EmptyGlobalScopeType>()) {
+    return mozilla::Nothing();
+  }
+  return mozilla::Some(vector[index].as<ScopeIndex>());
 }
 
 bool js::frontend::EmitScriptThingsVector(JSContext* cx,
