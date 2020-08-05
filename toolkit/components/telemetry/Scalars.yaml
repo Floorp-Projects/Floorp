@@ -1765,6 +1765,22 @@ pictureinpicture:
       - 'firefox'
     record_in_processes:
       - main
+  saw_toggle:
+    bug_numbers:
+      - 1657155
+    description: >
+      The number of times a Picture-in-Picture toggle was presented to the user when
+      they hovered the video with the mouse pointer.
+    expires: "87"
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+      - astevenson@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - content
 
 preferences:
   created_new_user_prefs_file:
