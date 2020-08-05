@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -B
+#!/usr/bin/env -S python3 -B
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -91,9 +91,9 @@ version = '{}-{}.{}.{}'.format(mozjs_name,
                                minor_version,
                                patch_version or alpha or '0')
 target_dir = staging_dir / version
-package_name = '{}.tar.bz2'.format(version)
+package_name = '{}.tar.xz'.format(version)
 package_file = dist_dir / package_name
-tar_opts = ['-jcf']
+tar_opts = ['-Jcf']
 
 # Given there might be some external program that reads the following output,
 # use raw `print`, instead of logging.
@@ -120,6 +120,16 @@ rsync_filter_list = """
 + /moz.build
 + /moz.configure
 + /test.mozbuild
++ /.babel-eslint.rc.js
++ .eslintignore
++ .eslintrc.js
++ .flake8
++ .gitignore
++ .hgignore
++ .lldbinit
++ .prettierignore
++ .prettierrc
++ .ycm_extra_conf.py
 
 # Additional libraries (optionally) used by SpiderMonkey
 
@@ -131,6 +141,7 @@ rsync_filter_list = """
 - /intl/icu/source/tools
 + /intl/icu/**
 
++ /memory/replace/dmd/dmd.py
 + /memory/build/**
 + /memory/moz.build
 + /memory/mozalloc/**
@@ -144,6 +155,7 @@ rsync_filter_list = """
 + /mozglue/moz.build
 + /mozglue/static/**
 
++ /tools/rb/fix_stacks.py
 + /tools/fuzzing/moz.build
 + /tools/fuzzing/interface/**
 + /tools/fuzzing/registry/**
