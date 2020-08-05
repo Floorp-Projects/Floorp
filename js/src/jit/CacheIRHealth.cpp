@@ -19,20 +19,26 @@ bool CacheIRHealth::spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub) {
   CacheIRReader stubReader(stubInfo);
   uint32_t totalStubHealth = 0;
 
+  spew->beginListProperty("cacheIROps");
   while (stubReader.more()) {
     CacheOp op = stubReader.readOp();
     uint32_t opHealth = CacheIROpHealth[size_t(op)];
     uint32_t argLength = CacheIROpArgLengths[size_t(op)];
+    const char* opName = CacheIROpNames[size_t(op)];
 
+    spew->beginObject();
     if (opHealth == UINT32_MAX) {
-      const char* opName = CacheIROpNames[size_t(op)];
       spew->property("unscoredOp", opName);
     } else {
+      spew->property("cacheIROp", opName);
+      spew->property("opHealth", opHealth);
       totalStubHealth += opHealth;
     }
+    spew->endObject();
 
     stubReader.skip(argLength);
   }
+  spew->endList();  // cacheIROps
 
   spew->property("stubHealth", totalStubHealth);
   return true;
