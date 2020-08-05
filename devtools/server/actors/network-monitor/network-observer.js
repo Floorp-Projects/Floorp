@@ -476,9 +476,9 @@ NetworkObserver.prototype = {
       const fromServiceWorker = this.interceptedChannels.has(channel);
       this.interceptedChannels.delete(channel);
 
-      // If this is a cached response, there never was a request event
-      // so we need to construct one here so the frontend gets all the
-      // expected events.
+      // If this is a cached response (which are also emitted by service worker requests),
+      // there never was a request event so we need to construct one here
+      // so the frontend gets all the expected events.
       let httpActivity = this.createOrGetActivityObject(channel);
       if (!httpActivity.owner) {
         httpActivity = this._createNetworkEvent(channel, {
@@ -486,6 +486,12 @@ NetworkObserver.prototype = {
           fromServiceWorker: fromServiceWorker,
         });
       }
+
+      // We need to send the request body to the frontend for
+      // the faked (cached/service worker request) event.
+      this._onRequestBodySent(httpActivity);
+      this._sendRequestBody(httpActivity);
+
       httpActivity.owner.addResponseStart(
         {
           httpVersion: response.httpVersion,
@@ -569,20 +575,7 @@ NetworkObserver.prototype = {
     switch (activitySubtype) {
       case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
         this._onRequestBodySent(httpActivity);
-        if (httpActivity.sentBody !== null) {
-          const limit = Services.prefs.getIntPref(
-            "devtools.netmonitor.requestBodyLimit"
-          );
-          const size = httpActivity.sentBody.length;
-          if (size > limit && limit > 0) {
-            httpActivity.sentBody = httpActivity.sentBody.substr(0, limit);
-          }
-          httpActivity.owner.addRequestPostData({
-            text: httpActivity.sentBody,
-            size: size,
-          });
-          httpActivity.sentBody = null;
-        }
+        this._sendRequestBody(httpActivity);
         break;
       case gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
         this._onResponseHeader(httpActivity, extraStringData);
@@ -1515,6 +1508,23 @@ NetworkObserver.prototype = {
       total: totalTime,
       offsets: offsets,
     };
+  },
+
+  _sendRequestBody: function(httpActivity) {
+    if (httpActivity.sentBody !== null) {
+      const limit = Services.prefs.getIntPref(
+        "devtools.netmonitor.requestBodyLimit"
+      );
+      const size = httpActivity.sentBody.length;
+      if (size > limit && limit > 0) {
+        httpActivity.sentBody = httpActivity.sentBody.substr(0, limit);
+      }
+      httpActivity.owner.addRequestPostData({
+        text: httpActivity.sentBody,
+        size: size,
+      });
+      httpActivity.sentBody = null;
+    }
   },
 
   /**
