@@ -51,6 +51,10 @@ permalink: /changelog/
 * **feature-webcompat-reporter**
   * Added a second parameter to the `install` method: `productName` allows to provide a unique product name per usage for automatic product-labelling on webcompat.com 
 
+* **feature-contextmenu**
+  * Do not show the "Download link" option for html URLs.
+  * Uses a speculative check, may not work in all cases.
+
 # 52.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v51.0.0...v52.0.0)

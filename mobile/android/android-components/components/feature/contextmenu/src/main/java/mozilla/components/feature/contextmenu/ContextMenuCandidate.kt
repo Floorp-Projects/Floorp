@@ -290,7 +290,7 @@ data class ContextMenuCandidate(
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.download_link",
             label = context.getString(R.string.mozac_feature_contextmenu_download_link),
-            showFor = { _, hitResult -> hitResult.isLink() },
+            showFor = { _, hitResult -> hitResult.isLinkForOtherThanWebpage() },
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
                     tab.id,
@@ -430,6 +430,12 @@ private fun HitResult.isVideoAudio(): Boolean =
 private fun HitResult.isLink(): Boolean =
     ((this is HitResult.UNKNOWN && src.isNotEmpty()) || this is HitResult.IMAGE_SRC) &&
         getLink().startsWith("http")
+
+private fun HitResult.isLinkForOtherThanWebpage(): Boolean {
+    val link = getLink()
+    val isHtml = link.endsWith("html") || link.endsWith("htm")
+    return isLink() && !isHtml
+}
 
 private fun HitResult.isIntent(): Boolean =
     (this is HitResult.UNKNOWN && src.isNotEmpty() &&
