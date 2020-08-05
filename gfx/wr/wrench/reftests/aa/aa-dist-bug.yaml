@@ -6,7 +6,7 @@
 root:
   items:
     - type: stacking-context
-      transform: rotate-z(-45) rotate-x(-60)
+      transform: rotate-z(45) rotate-x(60)
       transform-origin: 300 300
       items:
         - type: box-shadow

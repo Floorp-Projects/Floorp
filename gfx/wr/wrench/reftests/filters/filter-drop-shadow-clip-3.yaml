@@ -13,7 +13,7 @@ root:
       items:
       - type: stacking-context
         bounds: [50, -10, 200, 100]
-        transform: rotate-z(-90)
+        transform: rotate-z(90)
         items:
         -
           bounds: [0, 0, 500, 150]
@@ -26,7 +26,7 @@ root:
     - type: stacking-context
       bounds: [150, 35, 200, 100]
       filters: drop-shadow([200, 10], 5, red)
-      transform: rotate-z(-90)
+      transform: rotate-z(90)
       items:
       -
         bounds: [0, 0, 500, 150]

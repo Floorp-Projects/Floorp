@@ -8,7 +8,7 @@ use euclid::{Angle, Transform3D, Rect, rect, vec3};
 use plane_split::{BspSplitter, Polygon, Splitter, make_grid};
 
 
-fn grid_impl(count: usize, splitter: &mut dyn Splitter<f32, (), usize>) {
+fn grid_impl(count: usize, splitter: &mut Splitter<f32, (), usize>) {
     let polys = make_grid(count);
     let result = splitter.solve(&polys, vec3(0.0, 0.0, 1.0));
     assert_eq!(result.len(), count + count*count + count*count*count);
@@ -20,13 +20,13 @@ fn grid_bsp() {
 }
 
 
-fn sort_rotation(splitter: &mut dyn Splitter<f32, (), usize>) {
+fn sort_rotation(splitter: &mut Splitter<f32, (), usize>) {
     let transform0: Transform3D<f32, (), ()> =
-        Transform3D::rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
+        Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
     let transform1: Transform3D<f32, (), ()> =
-        Transform3D::rotation(0.0, 1.0, 0.0, Angle::radians(0.0));
+        Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(0.0));
     let transform2: Transform3D<f32, (), ()> =
-        Transform3D::rotation(0.0, 1.0, 0.0, Angle::radians(FRAC_PI_4));
+        Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(FRAC_PI_4));
 
     let rect: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let p1 = Polygon::from_transformed_rect(rect, transform0, 0);
@@ -46,11 +46,11 @@ fn rotation_bsp() {
 }
 
 
-fn sort_trivial(splitter: &mut dyn Splitter<f32, (), usize>) {
+fn sort_trivial(splitter: &mut Splitter<f32, (), usize>) {
     let anchors: Vec<_> = (0usize .. 10).collect();
     let rect: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let polys: Vec<_> = anchors.iter().map(|&anchor| {
-        let transform: Transform3D<f32, (), ()> = Transform3D::translation(0.0, 0.0, anchor as f32);
+        let transform: Transform3D<f32, (), ()> = Transform3D::create_translation(0.0, 0.0, anchor as f32);
         let poly = Polygon::from_transformed_rect(rect, transform, anchor);
         assert!(poly.is_some(), "Cannot construct transformed polygons");
         poly.unwrap()
@@ -64,13 +64,13 @@ fn sort_trivial(splitter: &mut dyn Splitter<f32, (), usize>) {
     assert_eq!(anchors1, anchors2);
 }
 
-fn sort_external(splitter: &mut dyn Splitter<f32, (), usize>) {
+fn sort_external(splitter: &mut Splitter<f32, (), usize>) {
     let rect0: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let poly0 = Polygon::from_rect(rect0, 0);
     let poly1 = {
-        let transform0: Transform3D<f32, (), ()> = Transform3D::rotation(1.0, 0.0, 0.0, Angle::radians(2.0 * FRAC_PI_4));
-        let transform1: Transform3D<f32, (), ()> = Transform3D::translation(0.0, 100.0, 0.0);
-        Polygon::from_transformed_rect(rect0, transform0.then(&transform1), 1).unwrap()
+        let transform0: Transform3D<f32, (), ()> = Transform3D::create_rotation(1.0, 0.0, 0.0, Angle::radians(2.0 * FRAC_PI_4));
+        let transform1: Transform3D<f32, (), ()> = Transform3D::create_translation(0.0, 100.0, 0.0);
+        Polygon::from_transformed_rect(rect0, transform1.pre_transform(&transform0), 1).unwrap()
     };
 
     let result = splitter.solve(&[poly0, poly1], vec3(1.0, 1.0, 0.0).normalize());

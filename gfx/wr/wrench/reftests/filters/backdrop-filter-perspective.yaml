@@ -14,7 +14,7 @@ root:
         bounds: 0 0 256 256
       - type: stacking-context
         bounds: 50 50 0 0
-        transform: ["rotate-y(-50)", "rotate-z(-45)"]
+        transform: ["rotate-y(50)", "rotate-z(45)"]
         items:
         - type: clip
           id: 2
