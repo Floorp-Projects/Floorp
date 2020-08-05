@@ -8,6 +8,7 @@
 include protocol PAltSvcTransaction;
 include protocol PSocketProcess;
 include protocol PHttpTransaction;
+include protocol PWebSocketConnection;
 
 include NeckoChannelParams;
 
@@ -17,6 +18,7 @@ namespace net {
 async refcounted protocol PHttpConnectionMgr
 {
   manager PSocketProcess;
+  manages PWebSocketConnection;
 
 child:
   async __delete__();
@@ -33,6 +35,7 @@ child:
   async SpeculativeConnect(HttpConnectionInfoCloneArgs aConnInfo,
                            SpeculativeConnectionOverriderArgs? aOverriderArgs,
                            uint32_t aCaps, PAltSvcTransaction? aTrans);
+  async PWebSocketConnection(PHttpTransaction aTransWithStickyConn);
 };
 
 } // namespace net

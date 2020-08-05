@@ -3527,7 +3527,31 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport* aTransport,
   MOZ_ASSERT(!mRecvdHttpUpgradeTransport, "OTA duplicated");
   MOZ_ASSERT(aSocketIn, "OTA with invalid socketIn");
 
-  mConnection = new nsWebSocketConnection(aTransport, aSocketIn, aSocketOut);
+  return OnWebSocketConnectionAvailable(
+      new nsWebSocketConnection(aTransport, aSocketIn, aSocketOut));
+}
+
+NS_IMETHODIMP
+WebSocketChannel::OnWebSocketConnectionAvailable(
+    nsIWebSocketConnection* aConnection) {
+  LOG(
+      ("WebSocketChannel::OnWebSocketConnectionAvailable %p [%p] "
+       "rcvdonstart=%d\n",
+       this, aConnection, mGotUpgradeOK));
+
+  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+  MOZ_ASSERT(!mRecvdHttpUpgradeTransport,
+             "OnWebSocketConnectionAvailable duplicated");
+  MOZ_ASSERT(aConnection,
+             "OnWebSocketConnectionAvailable with invalid connection");
+
+  if (mStopped) {
+    LOG(("WebSocketChannel::OnWebSocketConnectionAvailable: Already stopped"));
+    aConnection->Close();
+    return NS_OK;
+  }
+
+  mConnection = aConnection;
   nsresult rv = mConnection->Init(this, mSocketThread);
   if (NS_FAILED(rv)) return rv;
 
