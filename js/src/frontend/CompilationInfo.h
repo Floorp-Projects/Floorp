@@ -201,6 +201,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   //
   // References to scopes are controlled via AbstractScopePtr, which holds onto
   // an index (and CompilationInfo reference).
+  JS::RootedVector<js::Scope*> scopes;
   JS::RootedVector<ScopeCreationData> scopeCreationData;
 
   // Module metadata if this is a module compile.
@@ -247,6 +248,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         funcData(cx),
         enclosingScope(cx),
         topLevel(cx),
+        scopes(cx),
         scopeCreationData(cx),
         moduleMetadata(cx),
         asmJS(cx),

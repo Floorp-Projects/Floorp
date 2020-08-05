@@ -26,6 +26,16 @@ CompilationInfo& AbstractScopePtr::compilationInfo() const {
   return data.compilationInfo;
 }
 
+Scope* AbstractScopePtr::existingScope() const {
+  if (isScopeCreationData()) {
+    const Deferred& data = scope_.as<Deferred>();
+    Scope* result = data.compilationInfo.scopes[data.index.index];
+    MOZ_ASSERT(result, "Scope must already exist to use this method");
+    return result;
+  }
+  return scope();
+}
+
 ScopeKind AbstractScopePtr::kind() const {
   MOZ_ASSERT(!isNullptr());
   if (isScopeCreationData()) {
