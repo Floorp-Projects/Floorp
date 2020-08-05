@@ -413,6 +413,10 @@ void nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition) {
     Shutdown();
   }
 
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  obs->NotifyObservers(wrapped, "geolocation-position-events",
+                       u"location-updated");
+
   nsAutoMicroTask mt;
   if (mCallback.HasWebIDLCallback()) {
     RefPtr<PositionCallback> callback = mCallback.GetWebIDLCallback();
