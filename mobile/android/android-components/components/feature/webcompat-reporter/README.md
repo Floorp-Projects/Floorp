@@ -22,6 +22,16 @@ WebCompatReporterFeature.install(engine)
 
 Please make sure to only run this once, as the feature itself does not check if the extension is already installed.
 
+### Providing the browser-XXX label for reports
+
+The `install` function has an optional second parameter, `productName`. This allows reports to be labelled using the correct broswer-XXX label on webcompat.com. For example,
+
+```
+WebCompatReporterFeature.install(engine, "fenix")
+```
+
+would add the `browser-fenix` label to the report. Note that simply inventing new values here does not work, as each product name has to be whitelisted by the WebCompat team on webcompat.com, so [please get in touch](https://wiki.mozilla.org/Compatibility#Core_Team) when you need to add a new product name.
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
