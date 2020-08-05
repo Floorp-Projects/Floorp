@@ -261,3 +261,27 @@ add_task(async function click_close() {
     gURLBar.setSearchMode(null);
   }
 });
+
+// Tests that entering search mode invalidates pageproxystate and exits search
+// mode.
+add_task(async function invalidate_pageproxystate() {
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+    });
+    Assert.equal(gURLBar.getAttribute("pageproxystate"), "valid");
+    await enterSearchMode(window);
+    Assert.equal(
+      gURLBar.getAttribute("pageproxystate"),
+      "invalid",
+      "Entering search mode should clear pageproxystate."
+    );
+    Assert.equal(gURLBar.value, "", "Urlbar value should be cleared.");
+    await exitSearchMode(window, { clickClose: true });
+    Assert.equal(
+      gURLBar.getAttribute("pageproxystate"),
+      "invalid",
+      "Pageproxystate should still be invalid after exiting search mode."
+    );
+  });
+});
