@@ -636,8 +636,14 @@ max-width: ${width}px; max-height: ${height}px`;
       this.updateBrowserRemotenessByURL(win.gBrowser, url);
 
       navigateOpts.url = url;
-      navigateOpts.loadEventExpected = false;
-      await this.driver.listener.navigateTo(navigateOpts);
+      // Whenever we open a new window we start loading about:blank in it,
+      // so don't trigger explicit navigation to about:blank if the window is
+      // newly opened (this.lastURL == null) and if the desired url is
+      // about:blank, as not to trigger a second about:blank load.
+      if (this.lastURL || url != "about:blank") {
+        navigateOpts.loadEventExpected = false;
+        await this.driver.listener.navigateTo(navigateOpts);
+      }
       this.lastURL = url;
     }
 
