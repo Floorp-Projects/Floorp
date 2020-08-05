@@ -1670,6 +1670,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachTypedArrayByteOffset(HandleFunction callee);
   AttachDecision tryAttachTypedArrayElementShift(HandleFunction callee);
   AttachDecision tryAttachTypedArrayLength(HandleFunction callee);
+  AttachDecision tryAttachArrayBufferByteLength(HandleFunction callee,
+                                                bool isPossiblyWrapped);
   AttachDecision tryAttachIsConstructing(HandleFunction callee);
   AttachDecision tryAttachGetNextMapSetEntryForIterator(HandleFunction callee,
                                                         bool isMap);
