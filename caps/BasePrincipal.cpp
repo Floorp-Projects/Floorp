@@ -802,6 +802,38 @@ BasePrincipal::GetExposableSpec(nsACString& aSpec) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetDisplaySpec(nsACString& aSpec) {
+  aSpec.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->GetDisplaySpec(aSpec);
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetDisplayHost(nsACString& aHost) {
+  aHost.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->GetDisplayHost(aHost);
+}
+NS_IMETHODIMP
+BasePrincipal::GetDisplayPrePath(nsACString& aPrepath) {
+  aPrepath.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->GetDisplayPrePath(aPrepath);
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetPrepath(nsACString& aPath) {
   aPath.Truncate();
   nsCOMPtr<nsIURI> prinURI;

@@ -27,16 +27,16 @@ const LoadURIDelegate = {
       return false;
     }
 
-    const triggerUri =
-      aTriggeringPrincipal &&
-      (aTriggeringPrincipal.isNullPrincipal ? null : aTriggeringPrincipal.URI);
+    const triggerUri = aTriggeringPrincipal.isNullPrincipal
+      ? null
+      : aTriggeringPrincipal.displaySpec;
 
     const message = {
       type: "GeckoView:OnLoadRequest",
       uri: aUri ? aUri.displaySpec : "",
       where: aWhere,
       flags: aFlags,
-      triggerUri: triggerUri && triggerUri.displaySpec,
+      triggerUri,
       hasUserGesture: aWindow.document.hasValidTransientUserGestureActivation,
     };
 

@@ -460,7 +460,7 @@ LoginManager.prototype = {
         perm.type == PERMISSION_SAVE_LOGINS &&
         perm.capability == Services.perms.DENY_ACTION
       ) {
-        disabledHosts.push(perm.principal.URI.displayPrePath);
+        disabledHosts.push(perm.principal.displayPrePath);
       }
     }
 

@@ -51,7 +51,7 @@ export default class CompletionErrorPage extends HandleEventMixin(
     }
 
     let { request } = this.requestStore.getState();
-    let { displayHost } = request.topLevelPrincipal.URI;
+    let { displayHost } = request.topLevelPrincipal;
     for (let key of [
       "pageTitle",
       "suggestion-heading",
