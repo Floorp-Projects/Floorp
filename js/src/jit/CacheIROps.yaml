@@ -570,14 +570,14 @@
   args:
     obj: ObjId
 
-# Guard obj[slot] == proto.
-- name: GuardFunctionPrototype
+# Guard obj[slot] == expected.
+- name: GuardDynamicSlotIsSpecificObject
   shared: true
   transpile: true
   cost_estimate: 1
   args:
     obj: ObjId
-    proto: ObjId
+    expected: ObjId
     slot: RawWordField
 
 - name: GuardNoAllocationMetadataBuilder
