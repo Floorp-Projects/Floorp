@@ -392,7 +392,7 @@ GLContextEGL::~GLContextEGL() {
   MarkDestroyed();
 
   // Wrapped context should not destroy eglContext/Surface
-  if (!mOwnsContext) {
+  if (!mOwnsContext || !mEgl->IsAlive()) {
     return;
   }
 
