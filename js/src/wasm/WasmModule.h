@@ -192,8 +192,7 @@ class Module : public JS::WasmModule {
   // be installed and made visible.
 
   void startTier2(const CompileArgs& args, const ShareableBytes& bytecode,
-                  JS::OptimizedEncodingListener* listener,
-                  JSTelemetrySender telemetrySender);
+                  JS::OptimizedEncodingListener* listener);
   bool finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const;
 
   void testingBlockOnTier2Complete() const;
