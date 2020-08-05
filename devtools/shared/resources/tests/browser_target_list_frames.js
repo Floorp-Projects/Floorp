@@ -119,7 +119,13 @@ async function testTabFrames(mainRoot) {
 
   // Check that calling getAllTargets([frame]) return the same target instances
   const frames = await targetList.getAllTargets([TargetList.TYPES.FRAME]);
-  is(frames.length, 1, "retrieved only the top level document");
+  // When fission is enabled, we also get the remote example.org iframe.
+  const expectedFramesCount = isFissionEnabled() ? 2 : 1;
+  is(
+    frames.length,
+    expectedFramesCount,
+    "retrieved only the top level document"
+  );
 
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = [];

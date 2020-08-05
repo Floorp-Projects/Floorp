@@ -8,7 +8,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function run() {
+async function run() {
   try {
     let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
       Ci.nsIPrinterList
@@ -16,10 +16,18 @@ function run() {
     if (printerList.printers.length == 0) {
       ok(true, "There were no printers to iterate through.");
     }
-    printerList.printers.forEach(printer => {
+
+    for (let printer of printerList.printers) {
       isnot(printer.name, null, "Printer name should never be null.");
       isnot(printer.name, "", "Printer name should never be empty.");
-      printer.paperList.forEach(paper => {
+      info(printer.name);
+
+      let paperList = await printer.paperList;
+      for (let paper of paperList) {
+        paper.QueryInterface(Ci.nsIPaper);
+
+        info(`${paper.name}: ${paper.width}x${paper.height}`);
+
         isnot(paper.name, null, "Paper name should never be null.");
         isnot(paper.name, "", "Paper name should never be empty.");
 
@@ -28,9 +36,25 @@ function run() {
 
         isnot(paper.height, null, "Paper height should never be null.");
         ok(paper.height > 0.0, "Paper height should be greater than zero.");
-      });
-    })
+
+
+        let margin = await paper.unwriteableMargin;
+        margin.QueryInterface(Ci.nsIPaperMargin);
+
+        info(`with margin: ${margin.top} ${margin.right} ${margin.bottom} ${margin.left}`);
+        is(typeof(margin.top), 'number', "Paper unwriteable margin top should be a number.");
+        is(typeof(margin.right), 'number', "Paper unwriteable margin right should be a number.");
+        is(typeof(margin.bottom), 'number', "Paper unwriteable margin bottom should be a number.");
+        is(typeof(margin.left), 'number', "Paper unwriteable margin left should be a number.");
+
+        ok(margin.top >= 0.0, "Paper unwriteable margin top should be greater than or equal to zero.");
+        ok(margin.right >= 0.0, "Paper unwriteable margin right should be greater than or equal to zero.");
+        ok(margin.bottom >= 0.0, "Paper unwriteable bottom right should be greater than or equal to zero.");
+        ok(margin.left >= 0.0, "Paper unwriteable margin left should be greater than or equal to zero.");
+      }
+    }
   } catch (e) {
+    ok(false, `Shouldn't throw: ${e}`);
     Cu.reportError(e);
   }
   SimpleTest.finish();

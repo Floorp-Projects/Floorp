@@ -73,6 +73,11 @@ Nullable<TimeDuration> DocumentTimeline::GetCurrentTimeAsDuration() const {
   return ToTimelineTime(GetCurrentTimeStamp());
 }
 
+bool DocumentTimeline::TracksWallclockTime() const {
+  nsRefreshDriver* refreshDriver = GetRefreshDriver();
+  return !refreshDriver || !refreshDriver->IsTestControllingRefreshesEnabled();
+}
+
 TimeStamp DocumentTimeline::GetCurrentTimeStamp() const {
   nsRefreshDriver* refreshDriver = GetRefreshDriver();
   TimeStamp refreshTime =

@@ -706,15 +706,16 @@ bool TestShortDetour() {
 #endif
 }
 
-template <typename InterceptorType>
-bool TestAssemblyFunctions() {
-  constexpr uintptr_t NoStubAddressCheck = 0;
-  struct TestCase {
-    const char* functionName;
-    uintptr_t expectedStub;
-    explicit TestCase(const char* aFunctionName, uintptr_t aExpectedStub)
-        : functionName(aFunctionName), expectedStub(aExpectedStub) {}
-  } testCases[] = {
+constexpr uintptr_t NoStubAddressCheck = 0;
+struct TestCase {
+  const char* mFunctionName;
+  uintptr_t mExpectedStub;
+  bool mPatchedOnce;
+  explicit TestCase(const char* aFunctionName, uintptr_t aExpectedStub)
+      : mFunctionName(aFunctionName),
+        mExpectedStub(aExpectedStub),
+        mPatchedOnce(false) {}
+} g_AssemblyTestCases[] = {
 #if defined(__clang__)
 // We disable these testcases because the code coverage instrumentation injects
 // code in a way that WindowsDllInterceptor doesn't understand.
@@ -725,6 +726,10 @@ bool TestAssemblyFunctions() {
     TestCase("MovPushRet", JumpDestination),
     TestCase("MovRaxJump", JumpDestination),
     TestCase("DoubleJump", JumpDestination),
+
+    // Passing NoStubAddressCheck as the following testcases return
+    // a trampoline address instead of the original destination.
+    TestCase("NearJump", NoStubAddressCheck),
 #    elif defined(_M_IX86)
     // Skip the stub address check as we always generate a trampoline for x86.
     TestCase("PushRet", NoStubAddressCheck),
@@ -736,49 +741,60 @@ bool TestAssemblyFunctions() {
 #    endif
 #  endif  // MOZ_CODE_COVERAGE
 #endif    // defined(__clang__)
-  };
+};
 
+template <typename InterceptorType>
+bool TestAssemblyFunctions() {
   static const auto patchedFunction = []() { patched_func_called = true; };
 
   InterceptorType interceptor;
   interceptor.Init("TestDllInterceptor.exe");
 
-  for (const auto& testCase : testCases) {
+  for (auto& testCase : g_AssemblyTestCases) {
+    if (testCase.mExpectedStub == NoStubAddressCheck && testCase.mPatchedOnce) {
+      // For the testcases with NoStubAddressCheck, we revert a hook by
+      // jumping into the original stub, which is not detourable again.
+      continue;
+    }
+
     typename InterceptorType::template FuncHookType<void (*)()> hook;
-    bool result = hook.Set(interceptor, testCase.functionName, patchedFunction);
+    bool result =
+        hook.Set(interceptor, testCase.mFunctionName, patchedFunction);
     if (!result) {
       printf(
           "TEST-FAILED | WindowsDllInterceptor | "
           "Failed to detour %s.\n",
-          testCase.functionName);
+          testCase.mFunctionName);
       return false;
     }
 
+    testCase.mPatchedOnce = true;
+
     const auto actualStub = reinterpret_cast<uintptr_t>(hook.GetStub());
-    if (testCase.expectedStub != NoStubAddressCheck &&
-        actualStub != testCase.expectedStub) {
+    if (testCase.mExpectedStub != NoStubAddressCheck &&
+        actualStub != testCase.mExpectedStub) {
       printf(
           "TEST-FAILED | WindowsDllInterceptor | "
           "Wrong stub was backed up for %s: %zx\n",
-          testCase.functionName, actualStub);
+          testCase.mFunctionName, actualStub);
       return false;
     }
 
     patched_func_called = false;
 
     auto originalFunction = reinterpret_cast<void (*)()>(
-        GetProcAddress(GetModuleHandle(nullptr), testCase.functionName));
+        GetProcAddress(GetModuleHandle(nullptr), testCase.mFunctionName));
     originalFunction();
 
     if (!patched_func_called) {
       printf(
           "TEST-FAILED | WindowsDllInterceptor | "
           "Hook from %s was not called\n",
-          testCase.functionName);
+          testCase.mFunctionName);
       return false;
     }
 
-    printf("TEST-PASS | WindowsDllInterceptor | %s\n", testCase.functionName);
+    printf("TEST-PASS | WindowsDllInterceptor | %s\n", testCase.mFunctionName);
   }
 
   return true;

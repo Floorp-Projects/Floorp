@@ -1061,7 +1061,13 @@ void ScriptLoader::FinishDynamicImport(JSContext* aCx,
   // Complete the dynamic import, report failures indicated by aResult or as a
   // pending exception on the context.
 
-  if (NS_FAILED(aResult)) {
+  JS::DynamicImportStatus status =
+      (NS_FAILED(aResult) || JS_IsExceptionPending(aCx))
+          ? JS::DynamicImportStatus::Failed
+          : JS::DynamicImportStatus::Ok;
+
+  if (NS_FAILED(aResult) &&
+      aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
     MOZ_ASSERT(!JS_IsExceptionPending(aCx));
     JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
                            JSMSG_DYNAMIC_IMPORT_FAILED);
@@ -1072,7 +1078,8 @@ void ScriptLoader::FinishDynamicImport(JSContext* aCx,
   JS::Rooted<JSString*> specifier(aCx, aRequest->mDynamicSpecifier);
   JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
 
-  JS::FinishDynamicModuleImport(aCx, referencingScript, specifier, promise);
+  JS::FinishDynamicModuleImport(aCx, status, referencingScript, specifier,
+                                promise);
 
   // FinishDynamicModuleImport clears any pending exception.
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));

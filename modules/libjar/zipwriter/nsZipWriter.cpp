@@ -932,7 +932,7 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
                                  true);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = pump->AsyncRead(stream, nullptr);
+      rv = pump->AsyncRead(stream);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       rv = NS_MaybeOpenChannelUsingAsyncOpen(aItem->mChannel, stream);
@@ -988,7 +988,7 @@ inline nsresult nsZipWriter::BeginProcessingRemoval(int32_t aPos) {
   mHeaders.RemoveObjectAt(aPos);
   mCDSDirty = true;
 
-  rv = pump->AsyncRead(listener, nullptr);
+  rv = pump->AsyncRead(listener);
   if (NS_FAILED(rv)) {
     inputStream->Close();
     Cleanup();

@@ -315,6 +315,9 @@ registerCleanupFunction(async function cleanup() {
       conn.close();
     }
   }
+
+  // Clear the cached value for the fission content toolbox preference.
+  gDevTools.clearIsFissionContentToolboxEnabledReferenceForTest();
 });
 
 /**
@@ -1103,4 +1106,28 @@ function waitForResourceOnce(resourceWatcher, resourceType) {
       onAvailable,
     });
   });
+}
+
+/**
+ * Unregister all registered service workers.
+ *
+ * @param {DevToolsClient} client
+ */
+async function unregisterAllServiceWorkers(client) {
+  info("Wait until all workers have a valid registrationFront");
+  let workers;
+  await asyncWaitUntil(async function() {
+    workers = await client.mainRoot.listAllWorkers();
+    const allWorkersRegistered = workers.service.every(
+      worker => !!worker.registrationFront
+    );
+    return allWorkersRegistered;
+  });
+
+  info("Unregister all service workers");
+  const promises = [];
+  for (const worker of workers.service) {
+    promises.push(worker.registrationFront.unregister());
+  }
+  await Promise.all(promises);
 }

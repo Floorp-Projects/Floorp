@@ -28,7 +28,7 @@ const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 loader.lazyRequireGetter(
   this,
   "WatcherActor",
-  "devtools/server/actors/descriptors/watcher/watcher",
+  "devtools/server/actors/watcher",
   true
 );
 

@@ -452,7 +452,7 @@ nsresult nsAboutCacheEntry::Channel::WriteCacheEntryDescription(
     return NS_OK;  // just ignore
   }
 
-  rv = pump->AsyncRead(this, nullptr);
+  rv = pump->AsyncRead(this);
   if (NS_FAILED(rv)) {
     return NS_OK;  // just ignore
   }

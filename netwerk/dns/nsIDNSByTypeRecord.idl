@@ -73,8 +73,8 @@ interface nsISVCParamIPv4Hint : nsISupports {
 };
 
 [scriptable, uuid(1f31e41d-b6d8-4796-b12a-82ef8d2b0e43)]
-interface nsISVCParamEsniConfig : nsISupports {
-  readonly attribute ACString esniConfig;
+interface nsISVCParamEchConfig : nsISupports {
+  readonly attribute ACString echconfig;
 };
 
 [scriptable, uuid(5100bce4-9d3b-42e1-a3c9-0f386bbc9dad)]

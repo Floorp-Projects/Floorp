@@ -550,6 +550,10 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
 
+  // This check is unreliable due to potential in-flight device updates.
+  // Multiple input devices are reliably excluded in OpenAudioInputImpl(),
+  // but the check here provides some error reporting most of the
+  // time.
   CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
   if (mTrack->GraphImpl()->InputDeviceID() &&
       mTrack->GraphImpl()->InputDeviceID() != deviceID) {

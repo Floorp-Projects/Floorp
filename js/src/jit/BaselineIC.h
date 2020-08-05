@@ -1606,6 +1606,8 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub {
       : ICMonitoredFallbackStub(ICStub::GetProp_Fallback, stubCode) {}
 
  public:
+  // Whether this bytecode op called a getter. This is used by IonBuilder.
+  // To improve performance, the flag is not set if WarpBuilder is enabled.
   static const size_t ACCESSED_GETTER_BIT = 1;
 
   void noteAccessedGetter() { extra_ |= (1u << ACCESSED_GETTER_BIT); }

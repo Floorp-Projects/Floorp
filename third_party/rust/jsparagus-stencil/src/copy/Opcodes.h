@@ -1188,7 +1188,7 @@
      *   Operands: ThrowCondition throwCondition, ThrowMsgKind msgKind
      *   Stack: obj, key => obj, key, (obj.hasOwnProperty(id))
      */ \
-    MACRO(CheckPrivateField, check_private_field, NULL, 3, 2, 3, JOF_TWO_UINT8|JOF_CHECKSTRICT) \
+    MACRO(CheckPrivateField, check_private_field, NULL, 3, 2, 3, JOF_TWO_UINT8|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Push the SuperBase of the method `callee`. The SuperBase is
      * `callee.[[HomeObject]].[[GetPrototypeOf]]()`, the object where `super`

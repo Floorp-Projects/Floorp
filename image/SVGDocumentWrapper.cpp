@@ -28,6 +28,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMimeTypes.h"
+#include "nsRefreshDriver.h"
 
 namespace mozilla {
 

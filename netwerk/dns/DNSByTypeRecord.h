@@ -165,8 +165,8 @@ struct IPDLParamTraits<mozilla::net::SvcParamIpv4Hint> {
 };
 
 template <>
-struct IPDLParamTraits<mozilla::net::SvcParamEsniConfig> {
-  typedef mozilla::net::SvcParamEsniConfig paramType;
+struct IPDLParamTraits<mozilla::net::SvcParamEchConfig> {
+  typedef mozilla::net::SvcParamEchConfig paramType;
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     const paramType& aParam) {
     WriteIPDLParam(aMsg, aActor, aParam.mValue);

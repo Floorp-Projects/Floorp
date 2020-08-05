@@ -59,6 +59,7 @@ EXPORTS += [
     'nsPresContextInlines.h',
     'nsQuoteList.h',
     'nsRefreshDriver.h',
+    'nsRefreshObservers.h',
     'nsStyleChangeList.h',
     'nsStyleSheetService.h',
     'StackArena.h',

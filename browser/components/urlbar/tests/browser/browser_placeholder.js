@@ -14,11 +14,19 @@ const TEST_PRIVATE_ENGINE_BASENAME = "searchSuggestionEngine2.xml";
 var originalEngine, extraEngine, extraPrivateEngine, expectedString;
 var tabs = [];
 
+var noEngineString;
+
 add_task(async function setup() {
   originalEngine = await Services.search.getDefault();
-  expectedString = gBrowserBundle.formatStringFromName("urlbar.placeholder", [
-    originalEngine.name,
-  ]);
+  [noEngineString, expectedString] = (
+    await document.l10n.formatMessages([
+      { id: "urlbar-placeholder" },
+      {
+        id: "urlbar-placeholder-with-name",
+        args: { name: originalEngine.name },
+      },
+    ])
+  ).map(msg => msg.attributes[0].value);
 
   let rootDir = getRootDirectory(gTestPath);
   extraEngine = await SearchTestUtils.promiseNewSearchEngine(
@@ -57,10 +65,10 @@ add_task(async function test_change_default_engine_updates_placeholder() {
   await Services.search.setDefault(extraEngine);
 
   await TestUtils.waitForCondition(
-    () => gURLBar.placeholder == gURLBar.getAttribute("defaultPlaceholder"),
+    () => gURLBar.placeholder == noEngineString,
     "The placeholder should match the default placeholder for non-built-in engines."
   );
-  Assert.equal(gURLBar.placeholder, gURLBar.getAttribute("defaultPlaceholder"));
+  Assert.equal(gURLBar.placeholder, noEngineString);
 
   await Services.search.setDefault(originalEngine);
 
@@ -104,7 +112,7 @@ add_task(async function test_delayed_update_placeholder() {
   await BrowserTestUtils.switchTab(gBrowser, urlTab);
 
   await TestUtils.waitForCondition(
-    () => gURLBar.placeholder == gURLBar.getAttribute("defaultPlaceholder"),
+    () => gURLBar.placeholder == noEngineString,
     "The placeholder should have updated in the background."
   );
 
@@ -116,8 +124,13 @@ add_task(async function test_delayed_update_placeholder() {
 
   Assert.equal(
     gURLBar.placeholder,
-    gURLBar.getAttribute("defaultPlaceholder"),
+    noEngineString,
     "Placeholder should be unchanged."
+  );
+  Assert.deepEqual(
+    document.l10n.getAttributes(gURLBar.inputField),
+    { id: "urlbar-placeholder", args: null },
+    "Placeholder data should be unchanged."
   );
 
   await BrowserTestUtils.switchTab(gBrowser, urlTab);
@@ -130,9 +143,13 @@ add_task(async function test_delayed_update_placeholder() {
   // Now check when we have a URL displayed, the placeholder is updated straight away.
   BrowserSearch._updateURLBarPlaceholder(extraEngine.name, false);
 
+  await TestUtils.waitForCondition(
+    () => gURLBar.placeholder == noEngineString,
+    "The placeholder should go back to the default"
+  );
   Assert.equal(
     gURLBar.placeholder,
-    gURLBar.getAttribute("defaultPlaceholder"),
+    noEngineString,
     "Placeholder should be the default."
   );
 
@@ -145,14 +162,10 @@ add_task(async function test_private_window_no_separate_engine() {
   await Services.search.setDefault(extraEngine);
 
   await TestUtils.waitForCondition(
-    () =>
-      win.gURLBar.placeholder == win.gURLBar.getAttribute("defaultPlaceholder"),
+    () => win.gURLBar.placeholder == noEngineString,
     "The placeholder should match the default placeholder for non-built-in engines."
   );
-  Assert.equal(
-    win.gURLBar.placeholder,
-    win.gURLBar.getAttribute("defaultPlaceholder")
-  );
+  Assert.equal(win.gURLBar.placeholder, noEngineString);
 
   await Services.search.setDefault(originalEngine);
 
@@ -182,14 +195,10 @@ add_task(async function test_private_window_separate_engine() {
   await Services.search.setDefaultPrivate(extraPrivateEngine);
 
   await TestUtils.waitForCondition(
-    () =>
-      win.gURLBar.placeholder == win.gURLBar.getAttribute("defaultPlaceholder"),
+    () => win.gURLBar.placeholder == noEngineString,
     "The placeholder should match the default placeholder for non-built-in engines."
   );
-  Assert.equal(
-    win.gURLBar.placeholder,
-    win.gURLBar.getAttribute("defaultPlaceholder")
-  );
+  Assert.equal(win.gURLBar.placeholder, noEngineString);
 
   await Services.search.setDefault(extraEngine);
   await Services.search.setDefaultPrivate(originalEngine);

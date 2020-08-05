@@ -3902,7 +3902,7 @@ void HttpChannelChild::OverrideWithSynthesizedResponse(
 
   mSynthesizedCacheInfo = aCacheInfoChannel;
 
-  rv = mSynthesizedResponsePump->AsyncRead(aStreamListener, nullptr);
+  rv = mSynthesizedResponsePump->AsyncRead(aStreamListener);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   // The pump is started, so take ownership of the body callback.  We
