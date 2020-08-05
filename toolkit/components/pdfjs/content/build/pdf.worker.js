@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.136';
-const pdfjsBuild = 'd69fb446b';
+const pdfjsVersion = '2.6.207';
+const pdfjsBuild = '63e33a589';
 
 /***/ }),
 /* 1 */
@@ -229,7 +229,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.136';
+    const workerVersion = '2.6.207';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -429,11 +429,11 @@ class WorkerMessageHandler {
 
       function pdfManagerReady() {
         ensureNotTerminated();
-        loadDocument(false).then(onSuccess, function loadFailure(ex) {
+        loadDocument(false).then(onSuccess, function (reason) {
           ensureNotTerminated();
 
-          if (!(ex instanceof _core_utils.XRefParseException)) {
-            onFailure(ex);
+          if (!(reason instanceof _core_utils.XRefParseException)) {
+            onFailure(reason);
             return;
           }
 
@@ -442,7 +442,7 @@ class WorkerMessageHandler {
             ensureNotTerminated();
             loadDocument(true).then(onSuccess, onFailure);
           });
-        }, onFailure);
+        });
       }
 
       ensureNotTerminated();
@@ -516,6 +516,9 @@ class WorkerMessageHandler {
     handler.on("GetOutline", function wphSetupGetOutline(data) {
       return pdfManager.ensureCatalog("documentOutline");
     });
+    handler.on("GetOptionalContentConfig", function (data) {
+      return pdfManager.ensureCatalog("optionalContentConfig");
+    });
     handler.on("GetPermissions", function (data) {
       return pdfManager.ensureCatalog("permissions");
     });
@@ -550,7 +553,8 @@ class WorkerMessageHandler {
           sink,
           task,
           intent: data.intent,
-          renderInteractiveForms: data.renderInteractiveForms
+          renderInteractiveForms: data.renderInteractiveForms,
+          annotationStorage: data.annotationStorage
         }).then(function (operatorListInfo) {
           finishWorkerTask(task);
 
@@ -984,7 +988,8 @@ const UNSUPPORTED_FEATURES = {
   errorOperatorList: "errorOperatorList",
   errorFontToUnicode: "errorFontToUnicode",
   errorFontLoadNative: "errorFontLoadNative",
-  errorFontGetPath: "errorFontGetPath"
+  errorFontGetPath: "errorFontGetPath",
+  errorMarkedContent: "errorMarkedContent"
 };
 exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 const PasswordResponses = {
@@ -2471,19 +2476,23 @@ class ChunkedStreamManager {
       requestIds.push(requestId);
     }
 
-    if (!chunksToRequest.length) {
-      return capability.promise;
+    if (chunksToRequest.length > 0) {
+      const groupedChunksToRequest = this.groupChunks(chunksToRequest);
+
+      for (const groupedChunk of groupedChunksToRequest) {
+        const begin = groupedChunk.beginChunk * this.chunkSize;
+        const end = Math.min(groupedChunk.endChunk * this.chunkSize, this.length);
+        this.sendRequest(begin, end);
+      }
     }
 
-    const groupedChunksToRequest = this.groupChunks(chunksToRequest);
+    return capability.promise.catch(reason => {
+      if (this.aborted) {
+        return;
+      }
 
-    for (const groupedChunk of groupedChunksToRequest) {
-      const begin = groupedChunk.beginChunk * this.chunkSize;
-      const end = Math.min(groupedChunk.endChunk * this.chunkSize, this.length);
-      this.sendRequest(begin, end);
-    }
-
-    return capability.promise;
+      throw reason;
+    });
   }
 
   getStream() {
@@ -3010,7 +3019,8 @@ class Page {
     sink,
     task,
     intent,
-    renderInteractiveForms
+    renderInteractiveForms,
+    annotationStorage
   }) {
     const contentStreamPromise = this.pdfManager.ensure(this, "getContentStream");
     const resourcesPromise = this.loadResources(["ExtGState", "ColorSpace", "Pattern", "Shading", "XObject", "Font"]);
@@ -3053,7 +3063,7 @@ class Page {
 
       for (const annotation of annotations) {
         if (isAnnotationRenderable(annotation, intent)) {
-          opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderInteractiveForms).catch(function (reason) {
+          opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderInteractiveForms, annotationStorage).catch(function (reason) {
             (0, _util.warn)("getOperatorList - ignoring annotation data during " + `"${task.name}" task: "${reason}".`);
             return null;
           }));
@@ -3795,6 +3805,86 @@ class Catalog {
     }
 
     return permissions;
+  }
+
+  get optionalContentConfig() {
+    let config = null;
+
+    try {
+      const properties = this.catDict.get("OCProperties");
+
+      if (!properties) {
+        return (0, _util.shadow)(this, "optionalContentConfig", null);
+      }
+
+      const defaultConfig = properties.get("D");
+
+      if (!defaultConfig) {
+        return (0, _util.shadow)(this, "optionalContentConfig", null);
+      }
+
+      const groupsData = properties.get("OCGs");
+
+      if (!Array.isArray(groupsData)) {
+        return (0, _util.shadow)(this, "optionalContentConfig", null);
+      }
+
+      const groups = [];
+      const groupRefs = [];
+
+      for (const groupRef of groupsData) {
+        if (!(0, _primitives.isRef)(groupRef)) {
+          continue;
+        }
+
+        groupRefs.push(groupRef);
+        const group = this.xref.fetchIfRef(groupRef);
+        groups.push({
+          id: groupRef.toString(),
+          name: (0, _util.isString)(group.get("Name")) ? (0, _util.stringToPDFString)(group.get("Name")) : null,
+          intent: (0, _util.isString)(group.get("Intent")) ? (0, _util.stringToPDFString)(group.get("Intent")) : null
+        });
+      }
+
+      config = this._readOptionalContentConfig(defaultConfig, groupRefs);
+      config.groups = groups;
+    } catch (ex) {
+      if (ex instanceof _core_utils.MissingDataException) {
+        throw ex;
+      }
+
+      (0, _util.warn)(`Unable to read optional content config: ${ex}`);
+    }
+
+    return (0, _util.shadow)(this, "optionalContentConfig", config);
+  }
+
+  _readOptionalContentConfig(config, contentGroupRefs) {
+    function parseOnOff(refs) {
+      const onParsed = [];
+
+      if (Array.isArray(refs)) {
+        for (const value of refs) {
+          if (!(0, _primitives.isRef)(value)) {
+            continue;
+          }
+
+          if (contentGroupRefs.includes(value)) {
+            onParsed.push(value.toString());
+          }
+        }
+      }
+
+      return onParsed;
+    }
+
+    return {
+      name: (0, _util.isString)(config.get("Name")) ? (0, _util.stringToPDFString)(config.get("Name")) : null,
+      creator: (0, _util.isString)(config.get("Creator")) ? (0, _util.stringToPDFString)(config.get("Creator")) : null,
+      baseState: (0, _primitives.isName)(config.get("BaseState")) ? config.get("BaseState").name : null,
+      on: parseOnOff(config.get("ON")),
+      off: parseOnOff(config.get("OFF"))
+    };
   }
 
   get numPages() {
@@ -18592,10 +18682,12 @@ var _stream = __w_pdfjs_require__(12);
 
 class AnnotationFactory {
   static create(xref, ref, pdfManager, idFactory) {
-    return pdfManager.ensure(this, "_create", [xref, ref, pdfManager, idFactory]);
+    return pdfManager.ensureDoc("acroForm").then(acroForm => {
+      return pdfManager.ensure(this, "_create", [xref, ref, pdfManager, idFactory, acroForm]);
+    });
   }
 
-  static _create(xref, ref, pdfManager, idFactory) {
+  static _create(xref, ref, pdfManager, idFactory, acroForm) {
     const dict = xref.fetchIfRef(ref);
 
     if (!(0, _primitives.isDict)(dict)) {
@@ -18610,7 +18702,8 @@ class AnnotationFactory {
       dict,
       subtype,
       id,
-      pdfManager
+      pdfManager,
+      acroForm: acroForm instanceof _primitives.Dict ? acroForm : _primitives.Dict.empty
     };
 
     switch (subtype) {
@@ -18933,13 +19026,14 @@ class Annotation {
     });
   }
 
-  getOperatorList(evaluator, task, renderForms) {
+  getOperatorList(evaluator, task, renderForms, annotationStorage) {
     if (!this.appearance) {
       return Promise.resolve(new _operator_list.OperatorList());
     }
 
+    const appearance = this.appearance;
     const data = this.data;
-    const appearanceDict = this.appearance.dict;
+    const appearanceDict = appearance.dict;
     const resourcesPromise = this.loadResources(["ExtGState", "ColorSpace", "Pattern", "Shading", "XObject", "Font"]);
     const bbox = appearanceDict.getArray("BBox") || [0, 0, 1, 1];
     const matrix = appearanceDict.getArray("Matrix") || [1, 0, 0, 1, 0, 0];
@@ -18948,13 +19042,13 @@ class Annotation {
       const opList = new _operator_list.OperatorList();
       opList.addOp(_util.OPS.beginAnnotation, [data.rect, transform, matrix]);
       return evaluator.getOperatorList({
-        stream: this.appearance,
+        stream: appearance,
         task,
         resources,
         operatorList: opList
       }).then(() => {
         opList.addOp(_util.OPS.endAnnotation, []);
-        this.appearance.reset();
+        appearance.reset();
         return opList;
       });
     });
@@ -19143,7 +19237,7 @@ class WidgetAnnotation extends Annotation {
     data.defaultAppearance = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "DA"
-    }) || "";
+    }) || params.acroForm.get("DA") || "";
     const fieldType = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "FT"
@@ -19152,7 +19246,7 @@ class WidgetAnnotation extends Annotation {
     this.fieldResources = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "DR"
-    }) || _primitives.Dict.empty;
+    }) || params.acroForm.get("DR") || _primitives.Dict.empty;
     data.fieldFlags = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "Ff"
@@ -19207,12 +19301,12 @@ class WidgetAnnotation extends Annotation {
     return !!(this.data.fieldFlags & flag);
   }
 
-  getOperatorList(evaluator, task, renderForms) {
+  getOperatorList(evaluator, task, renderForms, annotationStorage) {
     if (renderForms) {
       return Promise.resolve(new _operator_list.OperatorList());
     }
 
-    return super.getOperatorList(evaluator, task, renderForms);
+    return super.getOperatorList(evaluator, task, renderForms, annotationStorage);
   }
 
 }
@@ -19246,9 +19340,9 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     this.data.comb = this.hasFieldFlag(_util.AnnotationFieldFlag.COMB) && !this.hasFieldFlag(_util.AnnotationFieldFlag.MULTILINE) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD) && !this.hasFieldFlag(_util.AnnotationFieldFlag.FILESELECT) && this.data.maxLen !== null;
   }
 
-  getOperatorList(evaluator, task, renderForms) {
+  getOperatorList(evaluator, task, renderForms, annotationStorage) {
     if (renderForms || this.appearance) {
-      return super.getOperatorList(evaluator, task, renderForms);
+      return super.getOperatorList(evaluator, task, renderForms, annotationStorage);
     }
 
     const operatorList = new _operator_list.OperatorList();
@@ -19273,6 +19367,8 @@ class TextWidgetAnnotation extends WidgetAnnotation {
 class ButtonWidgetAnnotation extends WidgetAnnotation {
   constructor(params) {
     super(params);
+    this.checkedAppearance = null;
+    this.uncheckedAppearance = null;
     this.data.checkBox = !this.hasFieldFlag(_util.AnnotationFieldFlag.RADIO) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PUSHBUTTON);
     this.data.radioButton = this.hasFieldFlag(_util.AnnotationFieldFlag.RADIO) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PUSHBUTTON);
     this.data.pushButton = this.hasFieldFlag(_util.AnnotationFieldFlag.PUSHBUTTON);
@@ -19286,6 +19382,31 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     } else {
       (0, _util.warn)("Invalid field flags for button widget annotation");
     }
+  }
+
+  getOperatorList(evaluator, task, renderForms, annotationStorage) {
+    if (annotationStorage) {
+      const value = annotationStorage[this.data.id] || false;
+      let appearance;
+
+      if (value) {
+        appearance = this.checkedAppearance;
+      } else {
+        appearance = this.uncheckedAppearance;
+      }
+
+      if (appearance) {
+        const savedAppearance = this.appearance;
+        this.appearance = appearance;
+        const operatorList = super.getOperatorList(evaluator, task, renderForms, annotationStorage);
+        this.appearance = savedAppearance;
+        return operatorList;
+      }
+
+      return Promise.resolve(new _operator_list.OperatorList());
+    }
+
+    return super.getOperatorList(evaluator, task, renderForms, annotationStorage);
   }
 
   _processCheckBox(params) {
@@ -19313,6 +19434,14 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
 
     this.data.exportValue = exportValues[0] === "Off" ? exportValues[1] : exportValues[0];
+    const normalAppearance = customAppearance.get("N");
+
+    if (!(0, _primitives.isDict)(normalAppearance)) {
+      return;
+    }
+
+    this.checkedAppearance = normalAppearance.get(this.data.exportValue);
+    this.uncheckedAppearance = normalAppearance.get("Off") || null;
   }
 
   _processRadioButton(params) {
@@ -19333,18 +19462,21 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       return;
     }
 
-    const normalAppearanceState = appearanceStates.get("N");
+    const normalAppearance = appearanceStates.get("N");
 
-    if (!(0, _primitives.isDict)(normalAppearanceState)) {
+    if (!(0, _primitives.isDict)(normalAppearance)) {
       return;
     }
 
-    for (const key of normalAppearanceState.getKeys()) {
+    for (const key of normalAppearance.getKeys()) {
       if (key !== "Off") {
         this.data.buttonValue = key;
         break;
       }
     }
+
+    this.checkedAppearance = normalAppearance.get(this.data.buttonValue);
+    this.uncheckedAppearance = normalAppearance.get("Off") || null;
   }
 
   _processPushButton(params) {
@@ -20689,6 +20821,13 @@ class PartialEvaluator {
       bbox = null;
     }
 
+    let optionalContent = null;
+
+    if (dict.has("OC")) {
+      optionalContent = await this.parseMarkedContentProps(dict.get("OC"), resources);
+      operatorList.addOp(_util.OPS.beginMarkedContentProps, ["OC", optionalContent]);
+    }
+
     var group = dict.get("Group");
 
     if (group) {
@@ -20744,17 +20883,17 @@ class PartialEvaluator {
       if (group) {
         operatorList.addOp(_util.OPS.endGroup, [groupOptions]);
       }
+
+      if (optionalContent) {
+        operatorList.addOp(_util.OPS.endMarkedContent, []);
+      }
     });
   }
 
   _sendImgData(objId, imgData, cacheGlobally = false) {
     const transfers = imgData ? [imgData.data.buffer] : null;
 
-    if (this.parsingType3Font) {
-      return this.handler.sendWithPromise("commonobj", [objId, "FontType3Res", imgData], transfers);
-    }
-
-    if (cacheGlobally) {
+    if (this.parsingType3Font || cacheGlobally) {
       return this.handler.send("commonobj", [objId, "Image", imgData], transfers);
     }
 
@@ -20851,7 +20990,7 @@ class PartialEvaluator {
     operatorList.addDependency(objId);
     args = [objId, w, h];
 
-    const imgPromise = _image.PDFImage.buildImage({
+    _image.PDFImage.buildImage({
       xref: this.xref,
       res: resources,
       image,
@@ -20865,10 +21004,6 @@ class PartialEvaluator {
       (0, _util.warn)(`Unable to decode image "${objId}": "${reason}".`);
       return this._sendImgData(objId, null, cacheGlobally);
     });
-
-    if (this.parsingType3Font) {
-      await imgPromise;
-    }
 
     operatorList.addOp(_util.OPS.paintImageXObject, args);
 
@@ -20970,7 +21105,8 @@ class PartialEvaluator {
         return translated;
       }
 
-      return translated.loadType3Data(this, resources, operatorList, task).then(function () {
+      return translated.loadType3Data(this, resources, task).then(function () {
+        operatorList.addDependencies(translated.type3Dependencies);
         return translated;
       }).catch(reason => {
         this.handler.send("UnsupportedFeature", {
@@ -21352,6 +21488,62 @@ class PartialEvaluator {
     }
 
     throw new _util.FormatError(`Unknown PatternName: ${patternName}`);
+  }
+
+  async parseMarkedContentProps(contentProperties, resources) {
+    let optionalContent;
+
+    if ((0, _primitives.isName)(contentProperties)) {
+      const properties = resources.get("Properties");
+      optionalContent = properties.get(contentProperties.name);
+    } else if ((0, _primitives.isDict)(contentProperties)) {
+      optionalContent = contentProperties;
+    } else {
+      throw new _util.FormatError("Optional content properties malformed.");
+    }
+
+    const optionalContentType = optionalContent.get("Type").name;
+
+    if (optionalContentType === "OCG") {
+      return {
+        type: optionalContentType,
+        id: optionalContent.objId
+      };
+    } else if (optionalContentType === "OCMD") {
+      const optionalContentGroups = optionalContent.get("OCGs");
+
+      if (Array.isArray(optionalContentGroups) || (0, _primitives.isDict)(optionalContentGroups)) {
+        const groupIds = [];
+
+        if (Array.isArray(optionalContentGroups)) {
+          optionalContent.get("OCGs").forEach(ocg => {
+            groupIds.push(ocg.toString());
+          });
+        } else {
+          groupIds.push(optionalContentGroups.objId);
+        }
+
+        let expression = null;
+
+        if (optionalContent.get("VE")) {
+          expression = true;
+        }
+
+        return {
+          type: optionalContentType,
+          ids: groupIds,
+          policy: (0, _primitives.isName)(optionalContent.get("P")) ? optionalContent.get("P").name : null,
+          expression
+        };
+      } else if ((0, _primitives.isRef)(optionalContentGroups)) {
+        return {
+          type: optionalContentType,
+          id: optionalContentGroups.toString()
+        };
+      }
+    }
+
+    return null;
   }
 
   getOperatorList({
@@ -21818,13 +22010,42 @@ class PartialEvaluator {
 
           case _util.OPS.markPoint:
           case _util.OPS.markPointProps:
-          case _util.OPS.beginMarkedContent:
-          case _util.OPS.beginMarkedContentProps:
-          case _util.OPS.endMarkedContent:
           case _util.OPS.beginCompat:
           case _util.OPS.endCompat:
             continue;
 
+          case _util.OPS.beginMarkedContentProps:
+            if (!(0, _primitives.isName)(args[0])) {
+              (0, _util.warn)(`Expected name for beginMarkedContentProps arg0=${args[0]}`);
+              continue;
+            }
+
+            if (args[0].name === "OC") {
+              next(self.parseMarkedContentProps(args[1], resources).then(data => {
+                operatorList.addOp(_util.OPS.beginMarkedContentProps, ["OC", data]);
+              }).catch(reason => {
+                if (reason instanceof _util.AbortException) {
+                  return;
+                }
+
+                if (self.options.ignoreErrors) {
+                  self.handler.send("UnsupportedFeature", {
+                    featureId: _util.UNSUPPORTED_FEATURES.errorMarkedContent
+                  });
+                  (0, _util.warn)(`getOperatorList - ignoring beginMarkedContentProps: "${reason}".`);
+                  return;
+                }
+
+                throw reason;
+              }));
+              return;
+            }
+
+            args = [args[0].name];
+            break;
+
+          case _util.OPS.beginMarkedContent:
+          case _util.OPS.endMarkedContent:
           default:
             if (args !== null) {
               for (i = 0, ii = args.length; i < ii; i++) {
@@ -23297,6 +23518,7 @@ class TranslatedFont {
     this.dict = dict;
     this._extraProperties = extraProperties;
     this.type3Loaded = null;
+    this.type3Dependencies = font.isType3Font ? new Set() : null;
     this.sent = false;
   }
 
@@ -23319,28 +23541,27 @@ class TranslatedFont {
     PartialEvaluator.buildFontPaths(this.font, glyphs, handler);
   }
 
-  loadType3Data(evaluator, resources, parentOperatorList, task) {
-    if (!this.font.isType3Font) {
-      throw new Error("Must be a Type3 font.");
-    }
-
+  loadType3Data(evaluator, resources, task) {
     if (this.type3Loaded) {
       return this.type3Loaded;
+    }
+
+    if (!this.font.isType3Font) {
+      throw new Error("Must be a Type3 font.");
     }
 
     var type3Options = Object.create(evaluator.options);
     type3Options.ignoreErrors = false;
     var type3Evaluator = evaluator.clone(type3Options);
     type3Evaluator.parsingType3Font = true;
-    var translatedFont = this.font;
+    const translatedFont = this.font,
+          type3Dependencies = this.type3Dependencies;
     var loadCharProcsPromise = Promise.resolve();
     var charProcs = this.dict.get("CharProcs");
     var fontResources = this.dict.get("Resources") || resources;
-    var charProcKeys = charProcs.getKeys();
     var charProcOperatorList = Object.create(null);
 
-    for (var i = 0, n = charProcKeys.length; i < n; ++i) {
-      const key = charProcKeys[i];
+    for (const key of charProcs.getKeys()) {
       loadCharProcsPromise = loadCharProcsPromise.then(function () {
         var glyphStream = charProcs.get(key);
         var operatorList = new _operator_list.OperatorList();
@@ -23351,7 +23572,10 @@ class TranslatedFont {
           operatorList
         }).then(function () {
           charProcOperatorList[key] = operatorList.getIR();
-          parentOperatorList.addDependencies(operatorList.dependencies);
+
+          for (const dependency of operatorList.dependencies) {
+            type3Dependencies.add(dependency);
+          }
         }).catch(function (reason) {
           (0, _util.warn)(`Type3 font resource "${key}" is not available.`);
           const dummyOperatorList = new _operator_list.OperatorList();

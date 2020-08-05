@@ -4451,25 +4451,14 @@ class PDFSidebar {
     });
 
     this.eventBus._on("attachmentsloaded", evt => {
-      if (evt.attachmentsCount) {
-        this.attachmentsButton.disabled = false;
+      const attachmentsCount = evt.attachmentsCount;
+      this.attachmentsButton.disabled = !attachmentsCount;
 
+      if (attachmentsCount) {
         this._showUINotification(SidebarView.ATTACHMENTS);
-
-        return;
+      } else if (this.active === SidebarView.ATTACHMENTS) {
+        this.switchView(SidebarView.THUMBS);
       }
-
-      Promise.resolve().then(() => {
-        if (this.attachmentsView.hasChildNodes()) {
-          return;
-        }
-
-        this.attachmentsButton.disabled = true;
-
-        if (this.active === SidebarView.ATTACHMENTS) {
-          this.switchView(SidebarView.THUMBS);
-        }
-      });
     });
 
     this.eventBus._on("presentationmodechanged", evt => {
@@ -4708,10 +4697,32 @@ class PDFAttachmentViewer {
     if (!keepRenderedCapability) {
       this._renderedCapability = (0, _pdfjsLib.createPromiseCapability)();
     }
+
+    if (this._pendingDispatchEvent) {
+      clearTimeout(this._pendingDispatchEvent);
+    }
+
+    this._pendingDispatchEvent = null;
   }
 
   _dispatchEvent(attachmentsCount) {
     this._renderedCapability.resolve();
+
+    if (this._pendingDispatchEvent) {
+      clearTimeout(this._pendingDispatchEvent);
+      this._pendingDispatchEvent = null;
+    }
+
+    if (attachmentsCount === 0) {
+      this._pendingDispatchEvent = setTimeout(() => {
+        this.eventBus.dispatch("attachmentsloaded", {
+          source: this,
+          attachmentsCount: 0
+        });
+        this._pendingDispatchEvent = null;
+      });
+      return;
+    }
 
     this.eventBus.dispatch("attachmentsloaded", {
       source: this,
@@ -4756,8 +4767,6 @@ class PDFAttachmentViewer {
     attachments,
     keepRenderedCapability = false
   }) {
-    let attachmentsCount = 0;
-
     if (this.attachments) {
       this.reset(keepRenderedCapability === true);
     }
@@ -4765,7 +4774,7 @@ class PDFAttachmentViewer {
     this.attachments = attachments || null;
 
     if (!attachments) {
-      this._dispatchEvent(attachmentsCount);
+      this._dispatchEvent(0);
 
       return;
     }
@@ -4773,7 +4782,8 @@ class PDFAttachmentViewer {
     const names = Object.keys(attachments).sort(function (a, b) {
       return a.toLowerCase().localeCompare(b.toLowerCase());
     });
-    attachmentsCount = names.length;
+    const attachmentsCount = names.length;
+    const fragment = document.createDocumentFragment();
 
     for (let i = 0; i < attachmentsCount; i++) {
       const item = attachments[names[i]];
@@ -4790,8 +4800,10 @@ class PDFAttachmentViewer {
       }
 
       div.appendChild(button);
-      this.container.appendChild(div);
+      fragment.appendChild(div);
     }
+
+    this.container.appendChild(fragment);
 
     this._dispatchEvent(attachmentsCount);
   }
@@ -4801,7 +4813,12 @@ class PDFAttachmentViewer {
     filename,
     content
   }) {
-    this._renderedCapability.promise.then(() => {
+    const renderedPromise = this._renderedCapability.promise;
+    renderedPromise.then(() => {
+      if (renderedPromise !== this._renderedCapability.promise) {
+        return;
+      }
+
       let attachments = this.attachments;
 
       if (!attachments) {
@@ -9610,6 +9627,7 @@ class BaseViewer {
       renderInteractiveForms,
       linkService: this.linkService,
       downloadManager: this.downloadManager,
+      annotationStorage: this.pdfDocument.annotationStorage,
       l10n
     });
   }
@@ -9788,6 +9806,7 @@ class AnnotationLayerBuilder {
     pdfPage,
     linkService,
     downloadManager,
+    annotationStorage = null,
     imageResourcesPath = "",
     renderInteractiveForms = false,
     l10n = _ui_utils.NullL10n
@@ -9799,6 +9818,7 @@ class AnnotationLayerBuilder {
     this.imageResourcesPath = imageResourcesPath;
     this.renderInteractiveForms = renderInteractiveForms;
     this.l10n = l10n;
+    this.annotationStorage = annotationStorage;
     this.div = null;
     this._cancelled = false;
   }
@@ -9808,6 +9828,10 @@ class AnnotationLayerBuilder {
       intent
     }).then(annotations => {
       if (this._cancelled) {
+        return;
+      }
+
+      if (annotations.length === 0) {
         return;
       }
 
@@ -9821,16 +9845,13 @@ class AnnotationLayerBuilder {
         imageResourcesPath: this.imageResourcesPath,
         renderInteractiveForms: this.renderInteractiveForms,
         linkService: this.linkService,
-        downloadManager: this.downloadManager
+        downloadManager: this.downloadManager,
+        annotationStorage: this.annotationStorage
       };
 
       if (this.div) {
         _pdfjsLib.AnnotationLayer.update(parameters);
       } else {
-        if (annotations.length === 0) {
-          return;
-        }
-
         this.div = document.createElement("div");
         this.div.className = "annotationLayer";
         this.pageDiv.appendChild(this.div);
@@ -9860,14 +9881,15 @@ class AnnotationLayerBuilder {
 exports.AnnotationLayerBuilder = AnnotationLayerBuilder;
 
 class DefaultAnnotationLayerFactory {
-  createAnnotationLayerBuilder(pageDiv, pdfPage, imageResourcesPath = "", renderInteractiveForms = false, l10n = _ui_utils.NullL10n) {
+  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderInteractiveForms = false, l10n = _ui_utils.NullL10n) {
     return new AnnotationLayerBuilder({
       pageDiv,
       pdfPage,
       imageResourcesPath,
       renderInteractiveForms,
       linkService: new _pdf_link_service.SimpleLinkService(),
-      l10n
+      l10n,
+      annotationStorage
     });
   }
 
@@ -12289,7 +12311,8 @@ function composePage(pdfDocument, pageNumber, size, printContainer) {
           scale: 1,
           rotation: size.rotation
         }),
-        intent: "print"
+        intent: "print",
+        annotationStorage: pdfDocument.annotationStorage.getAll()
       };
       return pdfPage.render(renderContext).promise;
     }).then(function () {
