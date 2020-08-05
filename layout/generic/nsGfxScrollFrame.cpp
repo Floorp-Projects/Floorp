@@ -6968,12 +6968,16 @@ nsRect ScrollFrameHelper::GetScrollRangeForUserInputEvents() const {
 
   ScrollStyles ss = GetScrollStylesFromFrame();
 
+  nsPoint scrollPos = GetScrollPosition();
+
   nsRect scrolledRect = GetScrolledRect();
   if (StyleOverflow::Hidden == ss.mHorizontal) {
     scrolledRect.width = mScrollPort.width;
+    scrolledRect.x = scrollPos.x;
   }
   if (StyleOverflow::Hidden == ss.mVertical) {
     scrolledRect.height = mScrollPort.height;
+    scrolledRect.y = scrollPos.y;
   }
 
   nsSize scrollPort = GetVisualViewportSize();
