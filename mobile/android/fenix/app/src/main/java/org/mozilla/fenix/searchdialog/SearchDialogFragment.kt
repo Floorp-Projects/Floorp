@@ -9,8 +9,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
+import androidx.constraintlayout.widget.ConstraintProperties.PARENT_ID
+import androidx.constraintlayout.widget.ConstraintProperties.TOP
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,6 +24,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -96,6 +102,22 @@ class SearchDialogFragment : AppCompatDialogFragment() {
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        if (view.context.settings().toolbarPosition == ToolbarPosition.BOTTOM) {
+            ConstraintSet().apply {
+                clone(search_wrapper)
+
+                clear(toolbar.id, TOP)
+                connect(toolbar.id, BOTTOM, PARENT_ID, BOTTOM)
+
+                clear(scrollView.id, TOP)
+                clear(scrollView.id, BOTTOM)
+                connect(scrollView.id, TOP, PARENT_ID, TOP)
+                connect(scrollView.id, BOTTOM, toolbar.id, TOP)
+
+                applyTo(search_wrapper)
+            }
+        }
 
         consumeFrom(store) {
             awesomeBar?.visibility = if (it.query.isEmpty()) View.INVISIBLE else View.VISIBLE
