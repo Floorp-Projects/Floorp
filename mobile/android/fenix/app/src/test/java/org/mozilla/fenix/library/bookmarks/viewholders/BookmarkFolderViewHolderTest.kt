@@ -18,7 +18,6 @@ import org.junit.Test
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentInteractor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkPayload
@@ -29,8 +28,6 @@ class BookmarkFolderViewHolderTest {
     private lateinit var interactor: BookmarkFragmentInteractor
     @MockK(relaxed = true)
     private lateinit var siteItemView: LibrarySiteItemView
-    @MockK(relaxed = true)
-    private lateinit var selectionHolder: SelectionHolder<BookmarkNode>
     private lateinit var holder: BookmarkFolderViewHolder
 
     private val folder = BookmarkNode(
@@ -50,7 +47,7 @@ class BookmarkFolderViewHolderTest {
         mockkStatic(AppCompatResources::class)
         every { AppCompatResources.getDrawable(any(), any()) } returns mockk(relaxed = true)
 
-        holder = BookmarkFolderViewHolder(siteItemView, interactor, selectionHolder)
+        holder = BookmarkFolderViewHolder(siteItemView, interactor)
     }
 
     @Test
@@ -63,7 +60,6 @@ class BookmarkFolderViewHolderTest {
             siteItemView.changeSelected(false)
         }
 
-        every { selectionHolder.selectedItems } returns setOf(folder)
         holder.bind(folder, BookmarkFragmentState.Mode.Selecting(setOf(folder)))
 
         verify {

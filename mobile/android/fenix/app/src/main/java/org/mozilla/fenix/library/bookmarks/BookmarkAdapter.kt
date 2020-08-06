@@ -16,18 +16,16 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkFolderViewHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkItemViewHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkNodeViewHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkSeparatorViewHolder
 
-class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteractor) :
-    RecyclerView.Adapter<BookmarkNodeViewHolder>(), SelectionHolder<BookmarkNode> {
+class BookmarkAdapter(private val emptyView: View, private val interactor: BookmarkViewInteractor) :
+    RecyclerView.Adapter<BookmarkNodeViewHolder>() {
 
     private var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
-    override val selectedItems: Set<BookmarkNode> get() = mode.selectedItems
     private var isFirstRun = true
 
     fun updateData(tree: BookmarkNode?, mode: BookmarkFragmentState.Mode) {
@@ -85,8 +83,8 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
             .inflate(R.layout.bookmark_list_item, parent, false) as LibrarySiteItemView
 
         return when (viewType) {
-            LibrarySiteItemView.ItemType.SITE.ordinal -> BookmarkItemViewHolder(view, interactor, this)
-            LibrarySiteItemView.ItemType.FOLDER.ordinal -> BookmarkFolderViewHolder(view, interactor, this)
+            LibrarySiteItemView.ItemType.SITE.ordinal -> BookmarkItemViewHolder(view, interactor)
+            LibrarySiteItemView.ItemType.FOLDER.ordinal -> BookmarkFolderViewHolder(view, interactor)
             LibrarySiteItemView.ItemType.SEPARATOR.ordinal -> BookmarkSeparatorViewHolder(view, interactor)
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
         }

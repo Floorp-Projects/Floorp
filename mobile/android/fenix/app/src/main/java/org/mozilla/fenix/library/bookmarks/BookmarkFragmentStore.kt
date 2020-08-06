@@ -9,6 +9,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.library.SelectionHolder
 
 class BookmarkFragmentStore(
     initialState: BookmarkFragmentState
@@ -32,8 +33,8 @@ data class BookmarkFragmentState(
     val isLoading: Boolean = true,
     val isSwipeToRefreshEnabled: Boolean = true
 ) : State {
-    sealed class Mode {
-        open val selectedItems = emptySet<BookmarkNode>()
+    sealed class Mode : SelectionHolder<BookmarkNode> {
+        override val selectedItems = emptySet<BookmarkNode>()
 
         data class Normal(val showMenu: Boolean = true) : Mode()
         data class Selecting(override val selectedItems: Set<BookmarkNode>) : Mode()

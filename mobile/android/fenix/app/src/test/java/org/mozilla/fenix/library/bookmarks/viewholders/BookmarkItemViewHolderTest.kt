@@ -5,7 +5,6 @@
 package org.mozilla.fenix.library.bookmarks.viewholders
 
 import io.mockk.MockKAnnotations
-import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.verify
 import mozilla.components.concept.storage.BookmarkNode
@@ -15,7 +14,6 @@ import org.junit.Test
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentInteractor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkPayload
@@ -28,8 +26,6 @@ class BookmarkItemViewHolderTest {
     @MockK(relaxed = true)
     private lateinit var siteItemView: LibrarySiteItemView
 
-    @MockK(relaxed = true)
-    private lateinit var selectionHolder: SelectionHolder<BookmarkNode>
     private lateinit var holder: BookmarkItemViewHolder
 
     private val item = BookmarkNode(
@@ -45,15 +41,16 @@ class BookmarkItemViewHolderTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        holder = BookmarkItemViewHolder(siteItemView, interactor, selectionHolder)
+        holder = BookmarkItemViewHolder(siteItemView, interactor)
     }
 
     @Test
     fun `binds views for unselected item`() {
-        holder.bind(item, BookmarkFragmentState.Mode.Normal())
+        val mode = BookmarkFragmentState.Mode.Normal()
+        holder.bind(item, mode)
 
         verify {
-            siteItemView.setSelectionInteractor(item, selectionHolder, interactor)
+            siteItemView.setSelectionInteractor(item, mode, interactor)
             siteItemView.titleView.text = item.title
             siteItemView.urlView.text = item.url
             siteItemView.overflowView.showAndEnable()
@@ -64,11 +61,11 @@ class BookmarkItemViewHolderTest {
 
     @Test
     fun `binds views for selected item`() {
-        every { selectionHolder.selectedItems } returns setOf(item)
-        holder.bind(item, BookmarkFragmentState.Mode.Selecting(setOf(item)))
+        val mode = BookmarkFragmentState.Mode.Selecting(setOf(item))
+        holder.bind(item, mode)
 
         verify {
-            siteItemView.setSelectionInteractor(item, selectionHolder, interactor)
+            siteItemView.setSelectionInteractor(item, mode, interactor)
             siteItemView.titleView.text = item.title
             siteItemView.urlView.text = item.url
             siteItemView.overflowView.hideAndDisable()

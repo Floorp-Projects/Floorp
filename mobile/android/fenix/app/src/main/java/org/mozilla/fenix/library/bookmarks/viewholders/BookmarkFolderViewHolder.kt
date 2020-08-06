@@ -12,7 +12,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkPayload
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
@@ -23,8 +22,7 @@ import org.mozilla.fenix.library.bookmarks.inRoots
  */
 class BookmarkFolderViewHolder(
     view: LibrarySiteItemView,
-    interactor: BookmarkViewInteractor,
-    private val selectionHolder: SelectionHolder<BookmarkNode>
+    interactor: BookmarkViewInteractor
 ) : BookmarkNodeViewHolder(view, interactor) {
 
     override var item: BookmarkNode? = null
@@ -43,7 +41,7 @@ class BookmarkFolderViewHolder(
     override fun bind(item: BookmarkNode, mode: BookmarkFragmentState.Mode, payload: BookmarkPayload) {
         this.item = item
 
-        setSelectionListeners(item, selectionHolder)
+        setSelectionListeners(item, mode)
 
         if (!item.inRoots()) {
             setupMenu(item)
@@ -59,7 +57,7 @@ class BookmarkFolderViewHolder(
         }
 
         if (payload.selectedChanged) {
-            containerView.changeSelected(item in selectionHolder.selectedItems)
+            containerView.changeSelected(item in mode.selectedItems)
         }
 
         containerView.iconView.setImageDrawable(

@@ -9,7 +9,6 @@ import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkPayload
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
@@ -19,8 +18,7 @@ import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
  */
 class BookmarkItemViewHolder(
     view: LibrarySiteItemView,
-    interactor: BookmarkViewInteractor,
-    private val selectionHolder: SelectionHolder<BookmarkNode>
+    interactor: BookmarkViewInteractor
 ) : BookmarkNodeViewHolder(view, interactor) {
 
     override var item: BookmarkNode? = null
@@ -50,7 +48,7 @@ class BookmarkItemViewHolder(
         }
 
         if (payload.selectedChanged) {
-            containerView.changeSelected(item in selectionHolder.selectedItems)
+            containerView.changeSelected(item in mode.selectedItems)
         }
 
         if (payload.titleChanged) {
@@ -64,7 +62,7 @@ class BookmarkItemViewHolder(
             setColorsAndIcons(item.url)
         }
 
-        setSelectionListeners(item, selectionHolder)
+        setSelectionListeners(item, mode)
     }
 
     @VisibleForTesting
