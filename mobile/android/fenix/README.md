@@ -89,14 +89,18 @@ Pre-requisites:
 
 3. Make sure to select the correct build variant in Android Studio. See the next section.
 
-### Guide to Build Variants
-We have a lot of build variants. Each variant is composed of two flavors. One flavor is the version of Gecko to use and the other describes
-which app id and settings to use. Here is a description of what each means:
+### Build Variants
+For general development, we recommend the **debug** build variant. Here's an explanation of each variant:
 
-- **debug** uses debug symbols and debug signing, adds tools like LeakCanary for troubleshooting, and does not strip unused or wasteful code
-- **nightly** uses the Nightly variant of the Gecko rendering engine, which is the version which will arrive after beta and is less stable
-- **beta** (recommended) uses the Beta variant of the Gecko rendering engine, which corresponds to the next version of Gecko which will go to production
-- **release** is a release build with release signing which uses the org.mozilla.firefox app id for production releases to Google Play
+- **debug**: the default for developers, similar to most other Android apps. It is debuggable, uses a Nightly GeckoView with debug symbols, adds tools like LeakCanary for troublingshooting, and does not strip unused code.
+- **nightly**: what we ship to the Firefox Nightly channel, using GeckoView Nightly.
+- **beta**: what we ship to the Firefox Beta channel, using GeckoView Beta. It is more stable than nightly.
+- **release**: what we ship as Firefox for Android, using GeckoView Release. It is the most stable.
+
+nightly, beta, and release are unsigned and `debuggable=false` by default. If
+you want these variants to be:
+- automatically signed, see [Automatically signing release builds](#automatically-sign-release-builds)
+- `debuggable=true`, see [Building debuggable release variants](#building-debuggable-release-variants)
 
 #### Performance Build Variants
 For accurate performance measurements, read this section!
