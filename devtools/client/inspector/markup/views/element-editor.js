@@ -89,6 +89,10 @@ function ElementEditor(container, node) {
   this.highlighters = this.markup.highlighters;
   this._cssProperties = this.inspector.cssProperties;
 
+  this.isOverflowDebuggingEnabled = Services.prefs.getBoolPref(
+    "devtools.overflow.debugging.enabled"
+  );
+
   this.attrElements = new Map();
   this.animationTimers = {};
 
@@ -312,6 +316,7 @@ ElementEditor.prototype = {
     this.updateCustomBadge();
     this.updateScrollableBadge();
     this.updateTextEditor();
+    this.updateOverflowBadge();
   },
 
   updateEventBadge: function() {
@@ -413,6 +418,31 @@ ElementEditor.prototype = {
     } else {
       this._displayBadge.classList.remove("interactive");
     }
+  },
+
+  updateOverflowBadge: function() {
+    if (!this.isOverflowDebuggingEnabled) {
+      return;
+    }
+
+    if (this.node.causesOverflow && !this._overflowBadge) {
+      this._createOverflowBadge();
+    } else if (!this.node.causesOverflow && this._overflowBadge) {
+      this._overflowBadge.remove();
+      this._overflowBadge = null;
+    }
+  },
+
+  _createOverflowBadge: function() {
+    this._overflowBadge = this.doc.createElement("div");
+    this._overflowBadge.className = "inspector-badge overflow-badge";
+    this._overflowBadge.textContent = INSPECTOR_L10N.getStr(
+      "markupView.overflowBadge.label"
+    );
+    this._overflowBadge.title = INSPECTOR_L10N.getStr(
+      "markupView.overflowBadge.tooltip"
+    );
+    this.elt.insertBefore(this._overflowBadge, this._customBadge);
   },
 
   /**
