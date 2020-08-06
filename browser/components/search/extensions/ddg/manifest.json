@@ -2,7 +2,7 @@
   "name": "DuckDuckGo",
   "description": "Search DuckDuckGo",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
   "applications": {
     "gecko": {
       "id": "ddg@search.mozilla.org"
@@ -17,6 +17,7 @@
   ],
   "chrome_settings_overrides": {
     "search_provider": {
+      "keyword": ["@duckduckgo", "@ddg"],
       "name": "DuckDuckGo",
       "search_url": "https://duckduckgo.com/",
       "search_form": "https://duckduckgo.com/?q={searchTerms}",

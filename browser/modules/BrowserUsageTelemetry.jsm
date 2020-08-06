@@ -557,10 +557,11 @@ let BrowserUsageTelemetry = {
       }
       if (
         details.alias &&
-        engine.wrappedJSObject._internalAliases.includes(details.alias)
+        engine.isAppProvided &&
+        engine.aliases.includes(details.alias)
       ) {
-        // This search uses an internal @search keyword.  Record the source as
-        // "alias", not "urlbar".
+        // This is a keyword search using an AppProvided engine.
+        // Record the source as "alias", not "urlbar".
         histogram.add(countIdPrefix + "alias");
       } else {
         histogram.add(countIdSource);

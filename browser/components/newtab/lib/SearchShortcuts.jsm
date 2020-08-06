@@ -65,7 +65,7 @@ this.getSearchFormURL = getSearchFormURL;
 // https://searchfox.org/mozilla-central/rev/ca869724246f4230b272ed1c8b9944596e80d920/toolkit/components/search/nsSearchService.js#939
 async function checkHasSearchEngine(keyword) {
   return (await Services.search.getDefaultEngines()).find(e =>
-    e.wrappedJSObject._internalAliases.includes(keyword)
+    e.aliases.includes(keyword)
   );
 }
 this.checkHasSearchEngine = checkHasSearchEngine;

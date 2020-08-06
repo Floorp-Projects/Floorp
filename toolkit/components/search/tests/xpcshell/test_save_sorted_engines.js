@@ -59,6 +59,6 @@ add_task(async function test_save_sorted_engines() {
   info("Commit complete after addEngineWithDetails");
 
   metadata = await promiseEngineMetadata();
-  Assert.equal(engine.alias, "foo");
+  Assert.ok(engine.aliases.includes("foo"));
   Assert.ok(metadata.foo.order > 0);
 });

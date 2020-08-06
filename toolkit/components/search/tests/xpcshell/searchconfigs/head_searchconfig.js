@@ -456,7 +456,7 @@ class SearchConfigTest {
 
     if (this._config.aliases) {
       this.assertDeepEqual(
-        engine._internalAliases,
+        engine.aliases,
         this._config.aliases,
         "Should have the correct aliases for the engine"
       );
@@ -474,7 +474,7 @@ class SearchConfigTest {
       }
       if (rule.aliases) {
         this.assertDeepEqual(
-          engine._internalAliases,
+          engine.aliases,
           rule.aliases,
           "Should have the correct aliases for the engine"
         );

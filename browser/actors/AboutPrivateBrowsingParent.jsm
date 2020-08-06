@@ -54,9 +54,7 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
       }
       case "SearchHandoff": {
         let searchAlias = "";
-        let searchAliases =
-          Services.search.defaultPrivateEngine.wrappedJSObject
-            .__internalAliases;
+        let searchAliases = Services.search.defaultPrivateEngine.aliases;
         if (searchAliases && searchAliases.length) {
           searchAlias = `${searchAliases[0]} `;
         }

@@ -606,7 +606,7 @@ describe("PlacesFeed", () => {
       });
     });
     it("should properly handle no defined search alias", () => {
-      global.Services.search.defaultEngine.wrappedJSObject.__internalAliases = [];
+      global.Services.search.defaultEngine.aliases = [];
       feed.handoffSearchToAwesomebar({
         _target: { browser: { ownerGlobal: { gURLBar: fakeUrlBar } } },
         data: { text: "foo" },

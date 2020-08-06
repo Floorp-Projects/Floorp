@@ -19,7 +19,7 @@ add_task(async function test_engine_set_alias() {
       },
     },
   ]);
-  Assert.equal(engine1.alias, "b");
+  Assert.ok(engine1.aliases.includes("b"));
   engine1.alias = "a";
   Assert.equal(engine1.alias, "a");
   await Services.search.removeEngine(engine1);
@@ -38,7 +38,7 @@ add_task(async function test_engine_set_alias_with_left_space() {
       },
     },
   ]);
-  Assert.equal(engine2.alias, "a");
+  Assert.ok(engine2.aliases.includes("a"));
   engine2.alias = "    c";
   Assert.equal(engine2.alias, "c");
   await Services.search.removeEngine(engine2);
@@ -57,7 +57,7 @@ add_task(async function test_engine_set_alias_with_right_space() {
       },
     },
   ]);
-  Assert.equal(engine3.alias, "c");
+  Assert.ok(engine3.aliases.includes("c"));
   engine3.alias = "o    ";
   Assert.equal(engine3.alias, "o");
   await Services.search.removeEngine(engine3);
@@ -76,7 +76,7 @@ add_task(async function test_engine_set_alias_with_right_left_space() {
       },
     },
   ]);
-  Assert.equal(engine4.alias, "o");
+  Assert.ok(engine4.aliases.includes("o"));
   engine4.alias = "  n ";
   Assert.equal(engine4.alias, "n");
   await Services.search.removeEngine(engine4);

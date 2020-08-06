@@ -374,7 +374,7 @@ class PlacesFeed {
     const searchAliases =
       Services.search[
         isPrivateWindow ? "defaultPrivateEngine" : "defaultEngine"
-      ].wrappedJSObject.__internalAliases;
+      ].aliases;
     if (searchAliases && searchAliases.length) {
       return `${searchAliases[0]} `;
     }

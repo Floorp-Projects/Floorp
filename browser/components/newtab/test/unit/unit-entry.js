@@ -328,16 +328,12 @@ const TEST_GLOBAL = {
         identifier: "google",
         searchForm:
           "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b",
-        wrappedJSObject: {
-          __internalAliases: ["@google"],
-        },
+        aliases: ["@google"],
       },
       defaultPrivateEngine: {
         identifier: "bing",
         searchForm: "https://www.bing.com",
-        wrappedJSObject: {
-          __internalAliases: ["@bing"],
-        },
+        aliases: ["@bing"],
       },
       getEngineByAlias: () => null,
     },
