@@ -670,8 +670,6 @@ add_task(async function testDoublyNestedUserInteractionHeuristic() {
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
-
-  UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
 add_task(async function() {
@@ -684,4 +682,148 @@ add_task(async function() {
       resolve()
     );
   });
+});
+
+add_task(async function testFirstPartyWindowOpenHeuristic() {
+  info("Starting first-party window.open() heuristic test...");
+
+  // Interact with the tracker first before testing window.open heuristic
+  await AntiTracking.interactWithTracker();
+
+  info("Creating a new tab");
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+  gBrowser.selectedTab = tab;
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  info("Loading tracking scripts");
+  await SpecialPowers.spawn(
+    browser,
+    [
+      {
+        page: TEST_3RD_PARTY_PAGE,
+      },
+    ],
+    async obj => {
+      info("Tracker shouldn't have storage access initially");
+      let msg = {};
+      msg.blockingCallback = (async _ => {
+        await noStorageAccessInitially();
+      }).toString();
+
+      await new content.Promise(resolve => {
+        let ifr = content.document.createElement("iframe");
+        ifr.onload = function() {
+          info("Sending code to the 3rd party content");
+          ifr.contentWindow.postMessage(msg.blockingCallback, "*");
+        };
+
+        content.addEventListener("message", function msg(event) {
+          if (event.data.type == "finish") {
+            content.removeEventListener("message", msg);
+            resolve();
+            return;
+          }
+
+          if (event.data.type == "ok") {
+            ok(event.data.what, event.data.msg);
+            return;
+          }
+
+          if (event.data.type == "info") {
+            info(event.data.msg);
+            return;
+          }
+
+          ok(false, "Unknown message");
+        });
+
+        content.document.body.appendChild(ifr);
+        ifr.id = "ifr";
+        ifr.src = obj.page;
+      });
+    }
+  );
+
+  info("Calling window.open in a first-party iframe");
+  await SpecialPowers.spawn(
+    browser,
+    [
+      {
+        page: TEST_IFRAME_PAGE,
+        popup: TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyOpen.html",
+      },
+    ],
+    async obj => {
+      let ifr = content.document.createElement("iframe");
+      let loading = new content.Promise(resolve => {
+        ifr.onload = resolve;
+      });
+      content.document.body.appendChild(ifr);
+      ifr.src = obj.page;
+      await loading;
+
+      info("Opening a window from the iframe.");
+      await SpecialPowers.spawn(ifr, [obj.popup], async popup => {
+        await new content.Promise(resolve => {
+          content.open(popup);
+          content.addEventListener("message", function msg(event) {
+            if (event.data == "hello!") {
+              resolve();
+            }
+          });
+        });
+      });
+    }
+  );
+
+  await SpecialPowers.spawn(browser, [], async obj => {
+    info("Tracker should have storage access now");
+    let msg = {};
+    msg.nonBlockingCallback = (async _ => {
+      /* import-globals-from storageAccessAPIHelpers.js */
+      await hasStorageAccessInitially();
+    }).toString();
+
+    await new content.Promise(resolve => {
+      let ifr = content.document.getElementById("ifr");
+      info("Sending code to the 3rd party content");
+      ifr.contentWindow.postMessage(msg.nonBlockingCallback, "*");
+
+      content.addEventListener("message", function msg(event) {
+        if (event.data.type == "finish") {
+          content.removeEventListener("message", msg);
+          resolve();
+          return;
+        }
+
+        if (event.data.type == "ok") {
+          ok(event.data.what, event.data.msg);
+          return;
+        }
+
+        if (event.data.type == "info") {
+          info(event.data.msg);
+          return;
+        }
+
+        ok(false, "Unknown message");
+      });
+    });
+  });
+
+  info("Removing the tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function() {
+  info("Cleaning up.");
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
 });
