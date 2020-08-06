@@ -8342,6 +8342,9 @@ nsresult nsIFrame::PeekOffsetForCharacter(nsPeekOffsetStruct* aPos,
 nsresult nsIFrame::PeekOffsetForWord(nsPeekOffsetStruct* aPos,
                                      int32_t aOffset) {
   SelectablePeekReport current{this, aOffset};
+  bool shouldStopAtHardBreak =
+      aPos->mWordMovementType == eDefaultBehavior &&
+      StaticPrefs::layout_word_select_eat_space_to_next_word();
   bool wordSelectEatSpace = ShouldWordSelectionEatSpace(*aPos);
 
   PeekWordState state;
@@ -8374,6 +8377,28 @@ nsresult nsIFrame::PeekOffsetForWord(nsPeekOffsetStruct* aPos,
       // We can't jump lines if we're looking for whitespace following
       // non-whitespace, and we already encountered non-whitespace.
       break;
+    }
+
+    if (shouldStopAtHardBreak && next.mJumpedHardBreak) {
+      /**
+       * Prev, always: Jump and stop right there
+       * Next, saw inline: just stop
+       * Next, no inline: Jump and consume whitespaces
+       */
+      if (aPos->mDirection == eDirPrevious) {
+        // Try moving to the previous line if exists
+        current.TransferTo(*aPos);
+        current.mFrame->PeekOffsetForCharacter(aPos, current.mOffset);
+        return NS_OK;
+      }
+      if (state.mSawInlineCharacter || current.mJumpedHardBreak) {
+        if (current.mFrame->HasSignificantTerminalNewline()) {
+          current.mOffset -= 1;
+        }
+        current.TransferTo(*aPos);
+        return NS_OK;
+      }
+      // continue
     }
 
     if (next.mJumpedLine) {
@@ -8824,6 +8849,12 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       if (!aJumpLines) {
         return result;  // we are done. cannot jump lines
       }
+      int32_t lineToCheckWrap =
+          aDirection == eDirPrevious ? thisLine - 1 : thisLine;
+      if (lineToCheckWrap < 0 ||
+          !it->GetLine(lineToCheckWrap).unwrap().mIsWrapped) {
+        result.mJumpedHardBreak = true;
+      }
     }
 
     traversedFrame = frameTraversal->Traverse(aDirection == eDirNext);
@@ -8837,23 +8868,6 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       }
       return !aForceEditableRegion || aFrame->GetContent()->IsEditable();
     };
-
-    // Skip brFrames, but only we can select something before hitting the end of
-    // the line or a non-selectable region.
-    if (atLineEdge && aDirection == eDirPrevious &&
-        traversedFrame->IsBrFrame()) {
-      bool canSkipBr = false;
-      for (nsIFrame* current = traversedFrame->GetPrevSibling(); current;
-           current = current->GetPrevSibling()) {
-        if (!current->IsBlockOutside() && IsSelectable(current)) {
-          canSkipBr = true;
-          break;
-        }
-      }
-      if (canSkipBr) {
-        continue;
-      }
-    }
 
     selectable = IsSelectable(traversedFrame);
     if (!selectable) {
