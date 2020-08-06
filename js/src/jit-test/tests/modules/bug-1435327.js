@@ -1,12 +1,8 @@
 // |jit-test| skip-if: !('oomTest' in this)
 
 lfLogBuffer = `
-  let moduleRepo = {};
-  setModuleResolveHook(function(x, specifier) {
-        return moduleRepo[specifier];
-  });
-  let c = moduleRepo['c'] = parseModule("");
-  let d = moduleRepo['d'] = parseModule("import { a } from 'c'; a;");
+  let c = registerModule('c', parseModule(""));
+  let d = registerModule('d', parseModule("import { a } from 'c'; a;"));
   d.declarationInstantiation();
 `;
 lfLogBuffer = lfLogBuffer.split('\n');

@@ -1,5 +1,3 @@
-load(libdir + "dummyModuleResolveHook.js");
-
 function assertArrayEq(value, expected)
 {
     assertEq(value instanceof Array, true);
@@ -8,7 +6,7 @@ function assertArrayEq(value, expected)
         assertEq(value[i], expected[i]);
 }
 
-moduleRepo['a'] = parseModule(`
+registerModule('a', parseModule(`
     export const [] = [];
     export const [a=0] = [];
     export const [b] = [1];
@@ -19,7 +17,7 @@ moduleRepo['a'] = parseModule(`
     export const [...k] = [14, 15, 16];
     export const [l, ...m] = [17, 18, 19];
     export const [,, ...n] = [20, 21, 22];
-`);
+`));
 
 m = parseModule(`
     import * as a from 'a';
@@ -43,7 +41,7 @@ m = parseModule(`
 m.declarationInstantiation();
 m.evaluation();
 
-moduleRepo['o'] = parseModule(`
+registerModule('o', parseModule(`
     export const {} = {};
     export const {x: a=0} = {};
     export const {x: b=0} = {x: 1};
@@ -51,7 +49,7 @@ moduleRepo['o'] = parseModule(`
     export const {x: f} = {x: 5};
     export const {g} = {};
     export const {h=6} = {};
-`);
+`));
 
 m = parseModule(`
     import * as o from 'o';
@@ -69,7 +67,7 @@ m = parseModule(`
 m.declarationInstantiation();
 m.evaluation();
 
-moduleRepo['ao'] = parseModule(`
+registerModule('ao', parseModule(`
     export const [{x: a}, {x: b}] = [{x: 1}, {x: 2}];
     export const [{c}, {d}] = [{c: 3}, {d: 4}];
     export const [,, {e}, ...f] = [5, 6, {e: 7}, 8, 9];
@@ -79,7 +77,7 @@ moduleRepo['ao'] = parseModule(`
     export const [[], [...j], [, k, l]] = [[], [13, 14], [15, 16, 17]];
 
     export const {x: {m, n, o=20}, y: {z: p}} = {x: {m: 18, n: 19}, y: {z: 21}};
-`);
+`));
 
 m = parseModule(`
     import * as ao from 'ao';

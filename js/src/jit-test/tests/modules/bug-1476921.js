@@ -1,17 +1,16 @@
 "use strict";
 
 load(libdir + "asserts.js");
-load(libdir + "dummyModuleResolveHook.js");
 
 class UniqueError extends Error {}
 
-let a = moduleRepo['a'] = parseModule(`
+let a = registerModule('a', parseModule(`
     throw new UniqueError();
-`);
+`));
 
-let b = moduleRepo['b'] = parseModule(`
+let b = registerModule('b', parseModule(`
     import * as ns0 from "a";
-`);
+`));
 
 a.declarationInstantiation();
 assertThrowsInstanceOf(() => a.evaluation(), UniqueError);
