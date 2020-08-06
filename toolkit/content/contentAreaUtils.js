@@ -1144,8 +1144,8 @@ function getNormalizedLeafName(aFile, aDefaultExtension) {
 
   // Include the default extension in the file name to which we're saving.
   var i = aFile.lastIndexOf(".");
-  let previousExtension = aFile.substr(i + 1);
-  if (previousExtension != aDefaultExtension) {
+  let previousExtension = aFile.substr(i + 1).toLowerCase();
+  if (previousExtension != aDefaultExtension.toLowerCase()) {
     // Suffixing the extension is the safe bet - it preserves the previous
     // extension in case that's meaningful (e.g. various text files served
     // with text/plain will end up as `foo.cpp.txt`, in the worst case).
