@@ -10,7 +10,9 @@
 #include "js/RootingAPI.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
+#include "vm/JSONPrinter.h"  // js::JSONPrinter
 #include "vm/ObjectGroup.h"
+#include "vm/Printer.h"  // js::Fprinter
 
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSAtom-inl.h"
@@ -121,5 +123,137 @@ JSObject* InterpretObjLiteral(JSContext* cx, const ObjLiteralAtomVector& atoms,
              ? InterpretObjLiteralArray(cx, atoms, literalInsns, flags)
              : InterpretObjLiteralObj(cx, atoms, literalInsns, flags);
 }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+
+static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
+                                     ObjLiteralFlags flags) {
+  if (flags.contains(ObjLiteralFlag::Array)) {
+    json.value("Array");
+    flags -= ObjLiteralFlag::Array;
+  }
+  if (flags.contains(ObjLiteralFlag::SpecificGroup)) {
+    json.value("SpecificGroup");
+    flags -= ObjLiteralFlag::SpecificGroup;
+  }
+  if (flags.contains(ObjLiteralFlag::Singleton)) {
+    json.value("Singleton");
+    flags -= ObjLiteralFlag::Singleton;
+  }
+  if (flags.contains(ObjLiteralFlag::ArrayCOW)) {
+    json.value("ArrayCOW");
+    flags -= ObjLiteralFlag::ArrayCOW;
+  }
+  if (flags.contains(ObjLiteralFlag::NoValues)) {
+    json.value("NoValues");
+    flags -= ObjLiteralFlag::NoValues;
+  }
+  if (flags.contains(ObjLiteralFlag::IsInnerSingleton)) {
+    json.value("IsInnerSingleton");
+    flags -= ObjLiteralFlag::IsInnerSingleton;
+  }
+
+  if (!flags.isEmpty()) {
+    json.value("Unknown(%x)", flags.serialize());
+  }
+}
+
+void ObjLiteralWriter::dump() {
+  js::Fprinter out(stderr);
+  js::JSONPrinter json(out);
+  dump(json);
+}
+
+void ObjLiteralWriter::dump(js::JSONPrinter& json) {
+  json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
+
+void ObjLiteralWriter::dumpFields(js::JSONPrinter& json) {
+  json.beginListProperty("flags");
+  DumpObjLiteralFlagsItems(json, flags_);
+  json.endList();
+
+  json.beginListProperty("code");
+  ObjLiteralReader reader(getCode());
+  ObjLiteralInsn insn;
+  while (reader.readInsn(&insn)) {
+    json.beginObject();
+
+    if (insn.getKey().isNone()) {
+      json.nullProperty("key");
+    } else if (insn.getKey().isAtomIndex()) {
+      uint32_t index = insn.getKey().getAtomIndex();
+      json.formatProperty("key", "ConstAtom(%u)", index);
+    } else if (insn.getKey().isArrayIndex()) {
+      uint32_t index = insn.getKey().getArrayIndex();
+      json.formatProperty("key", "ArrayIndex(%u)", index);
+    }
+
+    switch (insn.getOp()) {
+      case ObjLiteralOpcode::ConstValue: {
+        const Value& v = insn.getConstValue();
+        json.formatProperty("op", "ConstValue(%f)", v.toNumber());
+        break;
+      }
+      case ObjLiteralOpcode::ConstAtom: {
+        uint32_t index = insn.getAtomIndex();
+        json.formatProperty("op", "ConstAtom(%u)", index);
+        break;
+      }
+      case ObjLiteralOpcode::Null:
+        json.property("op", "Null");
+        break;
+      case ObjLiteralOpcode::Undefined:
+        json.property("op", "Undefined");
+        break;
+      case ObjLiteralOpcode::True:
+        json.property("op", "True");
+        break;
+      case ObjLiteralOpcode::False:
+        json.property("op", "False");
+        break;
+      default:
+        json.formatProperty("op", "Invalid(%x)", uint8_t(insn.getOp()));
+        break;
+    }
+
+    json.endObject();
+  }
+  json.endList();
+}
+
+void ObjLiteralCreationData::dump() {
+  js::Fprinter out(stderr);
+  js::JSONPrinter json(out);
+  dump(json);
+}
+
+void ObjLiteralCreationData::dump(js::JSONPrinter& json) {
+  json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
+
+void ObjLiteralCreationData::dumpFields(js::JSONPrinter& json) {
+  json.beginObjectProperty("writer");
+  writer_.dumpFields(json);
+  json.endObject();
+
+  json.beginListProperty("atoms");
+  for (auto& atom : atoms_) {
+    if (atom) {
+      GenericPrinter& out = json.beginString();
+      atom->dumpCharsNoQuote(out);
+      json.endString();
+    } else {
+      json.nullValue();
+    }
+  }
+  json.endList();
+}
+
+#endif  // defined(DEBUG) || defined(JS_JITSPEW)
 
 }  // namespace js

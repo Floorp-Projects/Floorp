@@ -35,6 +35,10 @@ class Smoosh {
   static JSScript* compileGlobalScript(
       CompilationInfo& compilationInfo,
       JS::SourceText<mozilla::Utf8Unit>& srcBuf, bool* unimplemented);
+
+  static bool compileGlobalScriptToStencil(
+      CompilationInfo& compilationInfo,
+      JS::SourceText<mozilla::Utf8Unit>& srcBuf, bool* unimplemented);
 };
 
 // Initialize SmooshMonkey globals, such as the logging system.
