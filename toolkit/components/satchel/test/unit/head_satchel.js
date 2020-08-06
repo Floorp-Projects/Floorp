@@ -9,16 +9,19 @@
   }],
 */
 
-const CURRENT_SCHEMA = 4;
+const CURRENT_SCHEMA = 5;
 const PR_HOURS = 60 * 60 * 1000000;
 
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var { FormHistory } = ChromeUtils.import(
-  "resource://gre/modules/FormHistory.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FormHistory: "resource://gre/modules/FormHistory.jsm",
+  FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  Sqlite: "resource://gre/modules/Sqlite.jsm",
+});
 
 do_get_profile();
 
@@ -35,6 +38,15 @@ function getDBVersion(dbfile) {
   dbConnection.close();
 
   return version;
+}
+
+async function getDBSchemaVersion(path) {
+  let db = await Sqlite.openConnection({ path });
+  try {
+    return await db.getSchemaVersion();
+  } finally {
+    await db.close();
+  }
 }
 
 function getFormHistoryDBVersion() {
@@ -176,4 +188,39 @@ function promiseUpdate(change) {
  */
 function do_log_info(aMessage) {
   print("TEST-INFO | " + _TEST_FILE + " | " + aMessage);
+}
+
+/**
+ * Copies a test file into the profile folder.
+ *
+ * @param {string} aFilename
+ *        The name of the file to copy.
+ * @param {string} aDestFilename
+ *        The name of the file to copy.
+ * @param {Object} [options.overwriteExisting]
+ *        Whether to overwrite an existing file.
+ * @returns {string} path to the copied file.
+ */
+async function copyToProfile(
+  aFilename,
+  aDestFilename,
+  { overwriteExisting = false } = {}
+) {
+  let curDir = await OS.File.getCurrentDirectory();
+  let srcPath = OS.Path.join(curDir, aFilename);
+  Assert.ok(await OS.File.exists(srcPath), "Database file found");
+
+  // Ensure that our file doesn't exist already.
+  let destPath = OS.Path.join(OS.Constants.Path.profileDir, aDestFilename);
+  let exists = await OS.File.exists(destPath);
+  if (exists) {
+    if (overwriteExisting) {
+      await OS.file.remove(destPath);
+    } else {
+      throw new Error("The file should not exist");
+    }
+  }
+  await OS.File.copy(srcPath, destPath);
+  info(`Copied ${aFilename} to ${destPath}`);
+  return destPath;
 }
