@@ -26,6 +26,8 @@ const ONE_GIGA = 1024 * 1024 * 1024;
 const ONE_MEGA = 1024 * 1024;
 const ONE_KILO = 1024;
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 /**
  * Returns a Promise that's resolved after the next turn of the event loop.
  *
@@ -148,6 +150,7 @@ var State = {
   _getProcessDelta(cur, prev) {
     let result = {
       pid: cur.pid,
+      childID: cur.childID,
       filename: cur.filename,
       totalVirtualMemorySize: cur.virtualMemorySize,
       deltaVirtualMemorySize: null,
@@ -249,12 +252,15 @@ var View = {
    * Append a row showing a single process (without its threads).
    *
    * @param {ProcessDelta} data The data to display.
-   * @param {bool} isOpen `true` if we're also displaying the threads of this process, `false` otherwise.
    * @return {DOMElement} The row displaying the process.
    */
-  appendProcessRow(data, isOpen) {
+  appendProcessRow(data) {
     let row = document.createElement("tr");
     row.classList.add("process");
+
+    if (data.isHung) {
+      row.classList.add("hung");
+    }
 
     // Column: pid / twisty image
     {
@@ -266,14 +272,14 @@ var View = {
       if (data.threads.length) {
         let img = document.createElement("span");
         img.classList.add("twisty", "process");
-        if (isOpen) {
+        if (data.isOpen) {
           img.classList.add("open");
         }
         elt.insertBefore(img, elt.firstChild);
       }
     }
 
-    // Column: type
+    // Column: name/type
     {
       let content = data.origin ? `${data.origin} (${data.type})` : data.type;
       this._addCell(row, {
@@ -527,6 +533,10 @@ var View = {
 
 var Control = {
   _openItems: new Set(),
+  // The set of all processes reported as "hung" by the process hang monitor.
+  //
+  // type: Set<ChildID>
+  _hungItems: new Set(),
   _sortColumn: null,
   _sortAscendent: true,
   _removeSubtree(row) {
@@ -535,6 +545,8 @@ var Control = {
     }
   },
   init() {
+    this._initHangReports();
+
     let tbody = document.getElementById("process-tbody");
     tbody.addEventListener("click", event => {
       this._updateLastMouseEvent();
@@ -615,6 +627,29 @@ var Control = {
   _updateLastMouseEvent() {
     this._lastMouseEvent = Date.now();
   },
+  _initHangReports() {
+    const PROCESS_HANG_REPORT_NOTIFICATION = "process-hang-report";
+
+    // Receiving report of a hung child.
+    // Let's store if for our next update.
+    let hangReporter = report => {
+      report.QueryInterface(Ci.nsIHangReport);
+      this._hungItems.add(report.childID);
+    };
+    Services.obs.addObserver(hangReporter, PROCESS_HANG_REPORT_NOTIFICATION);
+
+    // Don't forget to unregister the reporter.
+    window.addEventListener(
+      "unload",
+      () => {
+        Services.obs.removeObserver(
+          hangReporter,
+          PROCESS_HANG_REPORT_NOTIFICATION
+        );
+      },
+      { once: true }
+    );
+  },
   async update() {
     await State.update();
 
@@ -644,13 +679,26 @@ var Control = {
     let openItems = this._openItems;
     this._openItems = new Set();
 
+    // Similarly, we reset `_hungItems`, based on the assumption that the process hang
+    // monitor will inform us again before the next update. Since the process hang monitor
+    // pings its clients about once per second and we update about once per 2 seconds
+    // (or more if the mouse moves), we should be ok.
+    let hungItems = this._hungItems;
+    this._hungItems = new Set();
+
     counters = this._sortProcesses(counters);
     let previousRow = null;
     let previousProcess = null;
     for (let process of counters) {
       let isOpen = openItems.has(process.pid);
+      process.isOpen = isOpen;
+
+      let isHung = process.childID && hungItems.has(process.childID);
+      process.isHung = isHung;
+
       let processRow = View.appendProcessRow(process, isOpen);
       processRow.process = process;
+
       let latestRow = processRow;
       if (isOpen) {
         this._openItems.add(process.pid);
