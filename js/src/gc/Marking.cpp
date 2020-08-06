@@ -1669,7 +1669,7 @@ static void VisitTraceList(const Functor& f, const uint32_t* traceList,
     traceList++;
   }
   for (size_t i = 0; i < objectCount; i++) {
-    JSObject** objp = reinterpret_cast<JSObject**>(memory + *traceList);
+    auto** objp = reinterpret_cast<JSObject**>(memory + *traceList);
     if (*objp) {
       f(objp);
     }
@@ -2615,7 +2615,7 @@ void MarkStackIter::saveValueArray(
   MOZ_ASSERT(position() >= ValueArrayWords);
 
   MarkStack::TaggedPtr* ptr = &stack_.stack()[pos_ - ValueArrayWords];
-  auto dest = reinterpret_cast<MarkStack::SavedValueArray*>(ptr);
+  auto* dest = reinterpret_cast<MarkStack::SavedValueArray*>(ptr);
   *dest = savedArray;
   MOZ_ASSERT(peekTag() == MarkStack::SavedValueArrayTag);
 }
@@ -3050,7 +3050,7 @@ void TenuringTracer::traverse(JSObject** objp) {
   // We only ever visit the internals of objects after moving them to tenured.
   MOZ_ASSERT(!nursery().isInside(objp));
 
-  Cell** cellp = reinterpret_cast<Cell**>(objp);
+  auto** cellp = reinterpret_cast<Cell**>(objp);
   if (!IsInsideNursery(*cellp) || nursery().getForwardedPointer(cellp)) {
     return;
   }
@@ -3071,7 +3071,7 @@ void TenuringTracer::traverse(JSString** strp) {
   // We only ever visit the internals of strings after moving them to tenured.
   MOZ_ASSERT(!nursery().isInside(strp));
 
-  Cell** cellp = reinterpret_cast<Cell**>(strp);
+  auto** cellp = reinterpret_cast<Cell**>(strp);
   if (IsInsideNursery(*cellp) && !nursery().getForwardedPointer(cellp)) {
     *strp = moveToTenured(*strp);
   }
@@ -3082,7 +3082,7 @@ void TenuringTracer::traverse(JS::BigInt** bip) {
   // We only ever visit the internals of BigInts after moving them to tenured.
   MOZ_ASSERT(!nursery().isInside(bip));
 
-  Cell** cellp = reinterpret_cast<Cell**>(bip);
+  auto** cellp = reinterpret_cast<Cell**>(bip);
   if (IsInsideNursery(*cellp) && !nursery().getForwardedPointer(cellp)) {
     *bip = moveToTenured(*bip);
   }
@@ -3359,8 +3359,8 @@ void js::TenuringTracer::traceObject(JSObject* obj) {
   // during parsing and cannot contain nursery pointers.
   if (!nobj->hasEmptyElements() && !nobj->denseElementsAreCopyOnWrite() &&
       ObjectDenseElementsMayBeMarkable(nobj)) {
-    Value* elems = static_cast<HeapSlot*>(nobj->getDenseElements())
-                       ->unsafeUnbarrieredForTracing();
+    HeapSlotArray elements = nobj->getDenseElements();
+    Value* elems = elements.begin()->unsafeUnbarrieredForTracing();
     traceSlots(elems, elems + nobj->getDenseInitializedLength());
   }
 
@@ -3780,7 +3780,7 @@ JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
 void js::Nursery::collectToFixedPoint(TenuringTracer& mover,
                                       TenureCountCache& tenureCounts) {
   for (RelocationOverlay* p = mover.objHead; p; p = p->next()) {
-    JSObject* obj = static_cast<JSObject*>(p->forwardingAddress());
+    auto* obj = static_cast<JSObject*>(p->forwardingAddress());
     mover.traceObject(obj);
 
     TenureCount& entry = tenureCounts.findEntry(obj->groupRaw());
@@ -3793,7 +3793,7 @@ void js::Nursery::collectToFixedPoint(TenuringTracer& mover,
   }
 
   for (StringRelocationOverlay* p = mover.stringHead; p; p = p->next()) {
-    JSString* tenuredStr = static_cast<JSString*>(p->forwardingAddress());
+    auto* tenuredStr = static_cast<JSString*>(p->forwardingAddress());
     // To ensure the NON_DEDUP_BIT was reset properly.
     MOZ_ASSERT(tenuredStr->isDeduplicatable());
 
@@ -3982,7 +3982,7 @@ bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
 
   if (MightBeNurseryAllocated<T>::value && IsInsideNursery(*thingp)) {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    Cell** cellp = reinterpret_cast<Cell**>(thingp);
+    auto** cellp = reinterpret_cast<Cell**>(thingp);
     return Nursery::getForwardedPointer(cellp);
   }
 

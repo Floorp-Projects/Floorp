@@ -101,7 +101,8 @@ namespace js {
 template <typename T>
 static inline T* AllocateObjectBuffer(JSContext* cx, uint32_t count) {
   size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
-  T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), nbytes));
+  auto* buffer =
+      static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), nbytes));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
@@ -115,7 +116,7 @@ static inline T* AllocateObjectBuffer(JSContext* cx, JSObject* obj,
     return cx->pod_malloc<T>(count);
   }
   size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
-  T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(obj, nbytes));
+  auto* buffer = static_cast<T*>(cx->nursery().allocateBuffer(obj, nbytes));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
@@ -130,7 +131,7 @@ static inline T* ReallocateObjectBuffer(JSContext* cx, JSObject* obj,
   if (cx->isHelperThreadContext()) {
     return obj->zone()->pod_realloc<T>(oldBuffer, oldCount, newCount);
   }
-  T* buffer = static_cast<T*>(cx->nursery().reallocateBuffer(
+  auto* buffer = static_cast<T*>(cx->nursery().reallocateBuffer(
       obj->zone(), obj, oldBuffer, oldCount * sizeof(T), newCount * sizeof(T)));
   if (!buffer) {
     ReportOutOfMemory(cx);

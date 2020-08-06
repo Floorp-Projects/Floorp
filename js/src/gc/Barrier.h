@@ -925,15 +925,17 @@ class HeapSlotArray {
   {
   }
 
+  HeapSlot* begin() const {
+    MOZ_ASSERT(allowWrite());
+    return array;
+  }
+
   operator const Value*() const {
     static_assert(sizeof(GCPtr<Value>) == sizeof(Value));
     static_assert(sizeof(HeapSlot) == sizeof(Value));
     return reinterpret_cast<const Value*>(array);
   }
-  operator HeapSlot*() const {
-    MOZ_ASSERT(allowWrite());
-    return array;
-  }
+  operator HeapSlot*() const { return begin(); }
 
   HeapSlotArray operator+(int offset) const {
     return HeapSlotArray(array + offset, allowWrite());

@@ -383,7 +383,7 @@ class JS_FRIEND_API GCCellPtr {
 
  private:
   static uintptr_t checkedCast(void* p, JS::TraceKind traceKind) {
-    js::gc::Cell* cell = static_cast<js::gc::Cell*>(p);
+    auto* cell = static_cast<js::gc::Cell*>(p);
     MOZ_ASSERT((uintptr_t(p) & OutOfLineTraceKindMask) == 0);
     AssertGCThingHasType(cell, traceKind);
     // Note: the OutOfLineTraceKindMask bits are set on all out-of-line kinds
