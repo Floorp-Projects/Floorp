@@ -3293,7 +3293,20 @@ class FrameWithTls : public Frame {
   constexpr static uint32_t sizeWithoutFrame() {
     return sizeof(wasm::FrameWithTls) - sizeof(wasm::Frame);
   }
+
+  constexpr static uint32_t calleeTLSABIOffset() {
+    return offsetof(FrameWithTls, calleeTls_) - sizeof(wasm::Frame);
+  }
+
+  constexpr static uint32_t callerTLSABIOffset() {
+    return offsetof(FrameWithTls, callerTls_) - sizeof(wasm::Frame);
+  }
 };
+
+static_assert(FrameWithTls::calleeTLSABIOffset() == 0u,
+              "Callee tls stored right above the return address.");
+static_assert(FrameWithTls::callerTLSABIOffset() == sizeof(void*),
+              "Caller tls stored right above the callee tls.");
 
 static_assert(FrameWithTls::sizeWithoutFrame() == 2 * sizeof(void*),
               "There are only two additional slots");
