@@ -237,9 +237,7 @@ void ObjLiteralCreationData::dump(js::JSONPrinter& json) {
 }
 
 void ObjLiteralCreationData::dumpFields(js::JSONPrinter& json) {
-  json.beginObjectProperty("writer");
   writer_.dumpFields(json);
-  json.endObject();
 
   json.beginListProperty("atoms");
   for (auto& atom : atoms_) {

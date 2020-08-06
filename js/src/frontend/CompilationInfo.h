@@ -180,6 +180,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   // during parse to ensure correct destruction.
   Vector<RegExpCreationData> regExpData;
   Vector<BigIntCreationData> bigIntData;
+  Vector<ObjLiteralCreationData> objLiteralData;
 
   // A Rooted vector to handle tracing of JSFunction*
   // and Atoms within.
@@ -247,6 +248,7 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         allocScope(alloc),
         regExpData(cx),
         bigIntData(cx),
+        objLiteralData(cx),
         functions(cx),
         funcData(cx),
         enclosingScope(cx),
