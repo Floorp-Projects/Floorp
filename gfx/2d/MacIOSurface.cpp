@@ -182,71 +182,6 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12Surface(
 }
 
 /* static */
-already_AddRefed<MacIOSurface> MacIOSurface::CreateYUV422Surface(
-    const IntSize& aSize, YUVColorSpace aColorSpace, ColorRange aColorRange) {
-  MOZ_ASSERT(aColorSpace == YUVColorSpace::BT601 ||
-             aColorSpace == YUVColorSpace::BT709);
-  MOZ_ASSERT(aColorRange == ColorRange::LIMITED ||
-             aColorRange == ColorRange::FULL);
-
-  auto props = CFTypeRefPtr<CFMutableDictionaryRef>::WrapUnderCreateRule(
-      ::CFDictionaryCreateMutable(kCFAllocatorDefault, 4,
-                                  &kCFTypeDictionaryKeyCallBacks,
-                                  &kCFTypeDictionaryValueCallBacks));
-  if (!props) return nullptr;
-
-  MOZ_ASSERT((size_t)aYSize.width <= GetMaxWidth());
-  MOZ_ASSERT((size_t)aYSize.height <= GetMaxHeight());
-
-  AddDictionaryInt(props, kIOSurfaceWidth, aSize.width);
-  AddDictionaryInt(props, kIOSurfaceHeight, aSize.height);
-  ::CFDictionaryAddValue(props.get(), kIOSurfaceIsGlobal, kCFBooleanTrue);
-  AddDictionaryInt(props, kIOSurfaceBytesPerElement, 2);
-
-  if (aColorRange == ColorRange::LIMITED) {
-    AddDictionaryInt(props, kIOSurfacePixelFormat,
-                     (uint32_t)kCVPixelFormatType_422YpCbCr8_yuvs);
-  } else {
-    AddDictionaryInt(props, kIOSurfacePixelFormat,
-                     (uint32_t)kCVPixelFormatType_422YpCbCr8FullRange);
-  }
-
-  CFTypeRefPtr<IOSurfaceRef> surfaceRef =
-      CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(
-          ::IOSurfaceCreate(props.get()));
-
-  if (!surfaceRef) {
-    return nullptr;
-  }
-
-  // Setup the correct YCbCr conversion matrix on the IOSurface, in case we pass
-  // this directly to CoreAnimation.
-  if (aColorSpace == YUVColorSpace::BT601) {
-    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
-                      CFSTR("ITU_R_601_4"));
-  } else {
-    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
-                      CFSTR("ITU_R_709_2"));
-  }
-  // Override the color space to be the same as the main display, so that
-  // CoreAnimation won't try to do any color correction (from the IOSurface
-  // space, to the display). In the future we may want to try specifying this
-  // correctly, but probably only once we do the same for videos drawn through
-  // our gfx code.
-  auto colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
-      CGDisplayCopyColorSpace(CGMainDisplayID()));
-  auto colorData = CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(
-      CGColorSpaceCopyICCProfile(colorSpace.get()));
-  IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorSpace"),
-                    colorData.get());
-
-  RefPtr<MacIOSurface> ioSurface =
-      new MacIOSurface(std::move(surfaceRef), 1.0, false, aColorSpace);
-
-  return ioSurface.forget();
-}
-
-/* static */
 already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(
     IOSurfaceID aIOSurfaceID, double aContentsScaleFactor, bool aHasAlpha,
     gfx::YUVColorSpace aColorSpace) {
@@ -394,8 +329,6 @@ SurfaceFormat MacIOSurface::GetFormat() const {
     case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
       return SurfaceFormat::NV12;
     case kCVPixelFormatType_422YpCbCr8:
-    case kCVPixelFormatType_422YpCbCr8_yuvs:
-    case kCVPixelFormatType_422YpCbCr8FullRange:
       return SurfaceFormat::YUV422;
     case kCVPixelFormatType_32BGRA:
       return HasAlpha() ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
@@ -450,9 +383,7 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(
     if (aOutReadFormat) {
       *aOutReadFormat = mozilla::gfx::SurfaceFormat::NV12;
     }
-  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8 ||
-             pixelFormat == kCVPixelFormatType_422YpCbCr8_yuvs ||
-             pixelFormat == kCVPixelFormatType_422YpCbCr8FullRange) {
+  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
     MOZ_ASSERT(plane == 0);
     // The YCBCR_422_APPLE ext is only available in compatibility profile. So,
     // we should use RGB_422_APPLE for core profile. The difference between
@@ -475,11 +406,7 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(
       }
     }
     internalFormat = LOCAL_GL_RGB;
-    if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
-      type = LOCAL_GL_UNSIGNED_SHORT_8_8_APPLE;
-    } else {
-      type = LOCAL_GL_UNSIGNED_SHORT_8_8_REV_APPLE;
-    }
+    type = LOCAL_GL_UNSIGNED_SHORT_8_8_APPLE;
   } else {
     MOZ_ASSERT(plane == 0);
 
