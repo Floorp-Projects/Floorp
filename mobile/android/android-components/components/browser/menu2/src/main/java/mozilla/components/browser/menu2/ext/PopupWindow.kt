@@ -22,9 +22,7 @@ internal fun PopupWindow.displayPopup(
     val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
     containerView.measure(spec, spec)
 
-    val topAndBottomPair = getMaxAvailableHeightToTopAndBottom(anchor)
-    val availableHeightToTop = topAndBottomPair.first
-    val availableHeightToBottom = topAndBottomPair.second
+    val (availableHeightToTop, availableHeightToBottom) = getMaxAvailableHeightToTopAndBottom(anchor)
     val containerHeight = containerView.measuredHeight
 
     val fitsUp = availableHeightToTop >= containerHeight
@@ -36,22 +34,32 @@ internal fun PopupWindow.displayPopup(
             showPopupWithDownOrientation(anchor)
         preferredOrientation == Orientation.UP && fitsUp ->
             showPopupWithUpOrientation(anchor, availableHeightToBottom, containerHeight)
-        else ->
-            showPopupWhereBestFits(anchor, fitsUp, fitsDown, availableHeightToBottom, containerHeight)
+        else -> {
+            showPopupWhereBestFits(
+                anchor,
+                fitsUp,
+                fitsDown,
+                availableHeightToTop,
+                availableHeightToBottom,
+                containerHeight
+            )
+        }
     }
 }
 
+@Suppress("LongParameterList")
 private fun PopupWindow.showPopupWhereBestFits(
     anchor: View,
     fitsUp: Boolean,
     fitsDown: Boolean,
+    availableHeightToTop: Int,
     availableHeightToBottom: Int,
     containerHeight: Int
 ) {
     // We don't have enough space to show the menu UP neither DOWN.
     // Let's just show the popup at the location of the anchor.
     if (!fitsUp && !fitsDown) {
-        showAtAnchorLocation(anchor)
+        showAtAnchorLocation(anchor, availableHeightToTop < availableHeightToBottom)
     } else {
         if (fitsDown) {
             showPopupWithDownOrientation(anchor)
@@ -82,11 +90,18 @@ private fun PopupWindow.showPopupWithDownOrientation(anchor: View) {
     showAsDropDown(anchor, xOffset, -anchor.height)
 }
 
-private fun PopupWindow.showAtAnchorLocation(anchor: View) {
+private fun PopupWindow.showAtAnchorLocation(anchor: View, isCloserToTop: Boolean) {
     val anchorPosition = IntArray(2)
+
+    // Apply the best fit animation style based on positioning
+    animationStyle = if (isCloserToTop) {
+        R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop
+    } else {
+        R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom
+    }
+
     anchor.getLocationOnScreen(anchorPosition)
-    val x = anchorPosition[0]
-    val y = anchorPosition[1]
+    val (x, y) = anchorPosition
     PopupWindowCompat.setOverlapAnchor(this, true)
     showAtLocation(anchor, Gravity.START or Gravity.TOP, x, y)
 }
