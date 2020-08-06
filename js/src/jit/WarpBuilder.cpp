@@ -2400,6 +2400,12 @@ bool WarpBuilder::build_HasOwn(BytecodeLocation loc) {
   return buildIC(loc, CacheKind::HasOwn, {id, obj});
 }
 
+bool WarpBuilder::build_CheckPrivateField(BytecodeLocation loc) {
+  MDefinition* id = current->peek(-1);
+  MDefinition* obj = current->peek(-2);
+  return buildIC(loc, CacheKind::CheckPrivateField, {obj, id});
+}
+
 bool WarpBuilder::build_Instanceof(BytecodeLocation loc) {
   MDefinition* rhs = current->pop();
   MDefinition* obj = current->pop();
@@ -2983,6 +2989,14 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
       current->push(ins);
       return resumeAfter(ins, loc);
     }
+    case CacheKind::CheckPrivateField: {
+      MOZ_ASSERT(numInputs == 2);
+      auto* ins =
+          MCheckPrivateFieldCache::New(alloc(), getInput(0), getInput(1));
+      current->add(ins);
+      current->push(ins);
+      return resumeAfter(ins, loc);
+    }
     case CacheKind::InstanceOf: {
       MOZ_ASSERT(numInputs == 2);
       auto* ins = MInstanceOfCache::New(alloc(), getInput(0), getInput(1));
@@ -3085,7 +3099,6 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     case CacheKind::TypeOf:
     case CacheKind::Call:
     case CacheKind::NewObject:
-    case CacheKind::CheckPrivateField:
       // We're currently not using an IC or transpiling CacheIR for these kinds.
       MOZ_CRASH("Unexpected kind");
   }
