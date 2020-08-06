@@ -702,6 +702,7 @@ class basic_compositor_video(PageloaderTest):
     preferences = {'full-screen-api.allow-trusted-requests-only': False,
                    'layers.acceleration.force-enabled': False,
                    'layers.acceleration.disabled': True,
+                   'gfx.webrender.software': True,
                    'layout.frame_rate': 0,
                    'docshell.event_starvation_delay_hint': 1,
                    'full-screen-api.warning.timeout': 500,
