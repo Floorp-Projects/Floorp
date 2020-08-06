@@ -90,7 +90,9 @@ void LayerTransformRecorder::RecordTransform(Layer* aLayer,
 }
 
 void LayerTransformRecorder::EndTest(FrameUniformityData* aOutData) {
-  for (const auto& [layer, _] : mFrameTransforms) {
+  for (const auto& [layer, transforms] : mFrameTransforms) {
+    (void)transforms;  // suppress unused variable warning
+
     float uniformity = CalculateFrameUniformity(layer);
 
     std::pair<uintptr_t, float> result(layer, uniformity);
