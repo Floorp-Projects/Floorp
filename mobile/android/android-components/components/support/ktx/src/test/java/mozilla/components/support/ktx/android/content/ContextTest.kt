@@ -15,7 +15,9 @@ import android.hardware.camera2.CameraManager
 import androidx.core.content.getSystemService
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -29,6 +31,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowApplication
 import org.robolectric.shadows.ShadowCameraCharacteristics
 import org.robolectric.shadows.ShadowProcess
+import java.lang.IllegalStateException
 
 @RunWith(AndroidJUnit4::class)
 class ContextTest {
@@ -147,5 +150,14 @@ class ContextTest {
         val cameraManager: CameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         shadowOf(cameraManager).addCamera("camera0", ShadowCameraCharacteristics.newCameraCharacteristics())
         assertTrue(context.hasCamera())
+    }
+
+    @Test
+    fun `hasCamera returns false if exception is thrown`() {
+        val context = spy(testContext)
+        val cameraManager: CameraManager = mock()
+        whenever(context.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
+        whenever(cameraManager.cameraIdList).thenThrow(IllegalStateException("Test"))
+        assertFalse(context.hasCamera())
     }
 }
