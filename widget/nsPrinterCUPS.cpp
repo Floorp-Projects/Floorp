@@ -9,32 +9,30 @@
 
 using namespace mozilla;
 
-nsPrinterCUPS::nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-                             const nsAString& aDisplayName)
-    : mDisplayName(aDisplayName), mShim(aShim) {
+nsPrinterCUPS::nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter)
+    : mShim(aShim) {
   MOZ_ASSERT(aPrinter);
   MOZ_ASSERT(mShim.IsInitialized());
-  DebugOnly<const int> numCopied = aShim.cupsCopyDest(aPrinter, 0, &mPrinter);
+  DebugOnly<const int> numCopied = aShim.mCupsCopyDest(aPrinter, 0, &mPrinter);
   MOZ_ASSERT(numCopied == 1);
-  mPrinterInfo = aShim.cupsCopyDestInfo(CUPS_HTTP_DEFAULT, mPrinter);
+  mPrinterInfo = aShim.mCupsCopyDestInfo(CUPS_HTTP_DEFAULT, mPrinter);
 }
 
 nsPrinterCUPS::~nsPrinterCUPS() {
   if (mPrinterInfo) {
-    mShim.cupsFreeDestInfo(mPrinterInfo);
+    mShim.mCupsFreeDestInfo(mPrinterInfo);
     mPrinterInfo = nullptr;
   }
   if (mPrinter) {
-    mShim.cupsFreeDests(1, mPrinter);
+    mShim.mCupsFreeDests(1, mPrinter);
     mPrinter = nullptr;
   }
 }
 
 // static
-already_AddRefed<nsPrinterCUPS> nsPrinterCUPS::Create(
-    const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-    const nsAString& aDisplayName) {
-  return do_AddRef(new nsPrinterCUPS(aShim, aPrinter, aDisplayName));
+already_AddRefed<nsPrinterCUPS> nsPrinterCUPS::Create(const nsCUPSShim& aShim,
+                                                      cups_dest_t* aPrinter) {
+  return do_AddRef(new nsPrinterCUPS(aShim, aPrinter));
 }
 
 NS_IMETHODIMP
@@ -55,8 +53,8 @@ bool nsPrinterCUPS::SupportsColor() const { return false; }
 
 bool nsPrinterCUPS::Supports(const char* option, const char* value) const {
   MOZ_ASSERT(mPrinterInfo);
-  return mShim.cupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo,
-                                      option, value);
+  return mShim.mCupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter,
+                                       mPrinterInfo, option, value);
 }
 
 nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
@@ -64,17 +62,17 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
     return {};
   }
 
-  const int paperCount = mShim.cupsGetDestMediaCount(
+  const int paperCount = mShim.mCupsGetDestMediaCount(
       CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo, CUPS_MEDIA_FLAGS_DEFAULT);
 
   // blocking call
-  http_t* connection = mShim.cupsConnectDest(mPrinter, CUPS_DEST_FLAGS_NONE,
-                                             /* timeout(ms) */ 5000,
-                                             /* cancel */ nullptr,
-                                             /* resource */ nullptr,
-                                             /* resourcesize */ 0,
-                                             /* callback */ nullptr,
-                                             /* user_data */ nullptr);
+  http_t* connection = mShim.mCupsConnectDest(mPrinter, CUPS_DEST_FLAGS_NONE,
+                                              /* timeout(ms) */ 5000,
+                                              /* cancel */ nullptr,
+                                              /* resource */ nullptr,
+                                              /* resourcesize */ 0,
+                                              /* callback */ nullptr,
+                                              /* user_data */ nullptr);
 
   if (!connection) {
     return {};
@@ -83,9 +81,9 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
   nsTArray<PaperInfo> paperList;
   for (int i = 0; i < paperCount; ++i) {
     cups_size_t info;
-    int getInfoSucceded =
-        mShim.cupsGetDestMediaByIndex(CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo,
-                                      i, CUPS_MEDIA_FLAGS_DEFAULT, &info);
+    int getInfoSucceded = mShim.mCupsGetDestMediaByIndex(
+        CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo, i, CUPS_MEDIA_FLAGS_DEFAULT,
+        &info);
 
     if (!getInfoSucceded) {
       continue;
@@ -93,7 +91,7 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
 
     // localizedName is owned by mPrinterInfo.
     // https://www.cups.org/doc/cupspm.html#cupsLocalizeDestMedia
-    const char* localizedName = mShim.cupsLocalizeDestMedia(
+    const char* localizedName = mShim.mCupsLocalizeDestMedia(
         connection, mPrinter, mPrinterInfo, CUPS_MEDIA_FLAGS_DEFAULT, &info);
 
     if (!localizedName) {
@@ -115,6 +113,6 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
     });
   }
 
-  mShim.httpClose(connection);
+  mShim.mHttpClose(connection);
   return paperList;
 }
