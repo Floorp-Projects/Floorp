@@ -14,19 +14,45 @@ body {
   overflow: hidden;
 }
 
-.row {
-  padding-inline-start: 18px;
-  margin-block: 18px;
+.section-block {
+  padding-inline: 16px;
+  margin-block: 16px;
 }
 
-.row .block-label {
+.section-block .block-label {
   display: block;
   margin-bottom: 4px;
 }
-.row .block-label + input,
-.row .block-label + select,
-.row .block-label + .page-range-input select {
-  margin-inline-start: 0;
+
+.row {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 1.8em;
+}
+
+.row > input,
+.row > select,
+.col > input {
+  margin-inline: 0 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: inline-block;
+}
+
+.row.cols-2 {
+  flex-direction: row;
+  align-items: center;
+}
+
+.cols-2 > .col:nth-child(1) {
+  flex: 0 0 2em;
+  text-align: center;
+}
+
+.cols-2 > .col:nth-child(2) {
+  flex: 1 1 auto;
 }
 
 .header-container {
@@ -65,15 +91,18 @@ form#print {
   overflow: auto;
 }
 
+#copies-count {
+  width: 6em;
+}
+
 #more-settings {
   border-top: 1px solid var(--in-content-border-color);
 }
 
-#more-settings.twisty > summary {
+.twisty > summary {
   list-style: none;
   display: flex;
   cursor: pointer;
-  padding-inline-end: 8px;
 }
 
 #more-settings > summary > .twisty {
@@ -102,8 +131,15 @@ form#print {
   flex: 0 1 auto;
 }
 
-#button-container > button:first-child {
-  margin-inline-start: 0;
+#button-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+#button-container > button {
+  flex: 1 1 auto;
+  margin: 0;
 }
 
 .page-range-input:not(.custom-input-selected) #custom-range {
