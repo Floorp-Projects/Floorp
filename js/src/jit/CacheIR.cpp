@@ -4832,7 +4832,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   // Load prototypeObject into the cache -- consumed twice in the IC
   ObjOperandId protoId = writer.loadObject(prototypeObject);
   // Ensure that rhs[slot] == prototypeObject.
-  writer.guardFunctionPrototype(rhsId, protoId, slot);
+  writer.guardDynamicSlotIsSpecificObject(rhsId, protoId, slot);
 
   // Needn't guard LHS is object, because the actual stub can handle that
   // and correctly return false.
@@ -7968,6 +7968,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
         JSFunction* newTarget = &newTarget_.toObject().as<JSFunction>();
         Shape* shape = newTarget->lookupPure(cx_->names().prototype);
         MOZ_ASSERT(shape);
+        MOZ_ASSERT(newTarget->numFixedSlots() == 0, "Stub code relies on this");
         uint32_t slot = shape->slot();
         JSObject* prototypeObject = &newTarget->getSlot(slot).toObject();
 
@@ -7976,7 +7977,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
         ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
         writer.guardShape(newTargetObjId, newTarget->lastProperty());
         ObjOperandId protoId = writer.loadObject(prototypeObject);
-        writer.guardFunctionPrototype(newTargetObjId, protoId, slot);
+        writer.guardDynamicSlotIsSpecificObject(newTargetObjId, protoId, slot);
       }
       writer.metaScriptedTemplateObject(calleeFunc, templateObj);
     }
