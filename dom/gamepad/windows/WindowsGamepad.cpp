@@ -53,6 +53,13 @@ const uint32_t kWindowsGamepadPollInterval = 50;
 
 const UINT kRawInputError = (UINT)-1;
 
+// In XInputGetState, we can't get the state of Xbox Guide button.
+// We need to go through the undocumented XInputGetStateEx method
+// to get that button's state.
+const LPCSTR kXInputGetStateExOrdinal = (LPCSTR)100;
+// Bitmask for the Guide button in XInputGamepadEx.wButtons.
+const int XINPUT_GAMEPAD_Guide = 0x0400;
+
 #ifndef XUSER_MAX_COUNT
 #  define XUSER_MAX_COUNT 4
 #endif
@@ -79,6 +86,7 @@ const struct {
                     {XINPUT_GAMEPAD_RIGHT_THUMB, 11},
                     {XINPUT_GAMEPAD_LEFT_SHOULDER, 4},
                     {XINPUT_GAMEPAD_RIGHT_SHOULDER, 5},
+                    {XINPUT_GAMEPAD_Guide, 16},
                     {XINPUT_GAMEPAD_A, 0},
                     {XINPUT_GAMEPAD_B, 1},
                     {XINPUT_GAMEPAD_X, 2},
@@ -162,8 +170,17 @@ class XInputLoader {
       if (module) {
         mXInputEnable = reinterpret_cast<XInputEnable_func>(
             GetProcAddress(module, "XInputEnable"));
+        // Checking if `XInputGetStateEx` is available. If not,
+        // we will fallback to use `XInputGetState`.
         mXInputGetState = reinterpret_cast<decltype(XInputGetState)*>(
-            GetProcAddress(module, "XInputGetState"));
+            GetProcAddress(module, kXInputGetStateExOrdinal));
+        if (!mXInputGetState) {
+          mXInputGetState = reinterpret_cast<decltype(XInputGetState)*>(
+              GetProcAddress(module, "XInputGetState"));
+        }
+        MOZ_ASSERT(mXInputGetState &&
+                   "XInputGetState must be linked successfully.");
+
         if (mXInputEnable) {
           mXInputEnable(TRUE);
         }
@@ -173,7 +190,7 @@ class XInputLoader {
   }
 
   ~XInputLoader() {
-    // mXInputEnable = nullptr;
+    mXInputEnable = nullptr;
     mXInputGetState = nullptr;
 
     if (module) {
@@ -420,9 +437,12 @@ bool WindowsGamepadService::ScanForXInputDevices() {
 
   for (unsigned int i = 0; i < XUSER_MAX_COUNT; i++) {
     XINPUT_STATE state = {};
-    if (mXInput.mXInputGetState(i, &state) != ERROR_SUCCESS) {
+
+    if (!mXInput.mXInputGetState ||
+        mXInput.mXInputGetState(i, &state) != ERROR_SUCCESS) {
       continue;
     }
+
     found = true;
     // See if this device is already present in our list.
     if (HaveXInputGamepad(i)) {
@@ -486,9 +506,13 @@ void WindowsGamepadService::PollXInput() {
     }
 
     XINPUT_STATE state = {};
-    DWORD res = mXInput.mXInputGetState(mGamepads[i].userIndex, &state);
-    if (res == ERROR_SUCCESS &&
-        state.dwPacketNumber != mGamepads[i].state.dwPacketNumber) {
+
+    if (!mXInput.mXInputGetState ||
+        mXInput.mXInputGetState(i, &state) != ERROR_SUCCESS) {
+      continue;
+    }
+
+    if (state.dwPacketNumber != mGamepads[i].state.dwPacketNumber) {
       CheckXInputChanges(mGamepads[i], state);
     }
   }
