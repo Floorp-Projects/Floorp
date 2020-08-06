@@ -284,7 +284,7 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
     nscoord logicalCoordInMainAxis =
         IsMainAxisReversed() ? aContainerMainSize - aMainCoord : aMainCoord;
     nscoord logicalCoordInCrossAxis =
-        mIsCrossAxisReversed ? aContainerCrossSize - aCrossCoord : aCrossCoord;
+        IsCrossAxisReversed() ? aContainerCrossSize - aCrossCoord : aCrossCoord;
 
     return IsRowOriented() ? LogicalPoint(mWM, logicalCoordInMainAxis,
                                           logicalCoordInCrossAxis)
@@ -3856,7 +3856,7 @@ LogicalSide FlexboxAxisTracker::MainAxisStartSide() const {
 
 LogicalSide FlexboxAxisTracker::CrossAxisStartSide() const {
   return MakeLogicalSide(
-      CrossAxis(), mIsCrossAxisReversed ? eLogicalEdgeEnd : eLogicalEdgeStart);
+      CrossAxis(), IsCrossAxisReversed() ? eLogicalEdgeEnd : eLogicalEdgeStart);
 }
 
 bool nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
