@@ -32,12 +32,20 @@ class CUPSPrinterList {
   cups_dest_t* FindPrinterByName(const char* name);
 
   int NumPrinters() const { return mNumPrinters; }
+
   /**
    * @brief Gets a printer by index.
    *
    * This does NOT copy the printer's data.
    */
   cups_dest_t* GetPrinter(int i);
+
+  /**
+   * @brief Gets the system default printer.
+   *
+   * This does NOT copy the printer's data.
+   */
+  cups_dest_t* GetDefaultPrinter();
 
  private:
   const nsCUPSShim& mShim;
