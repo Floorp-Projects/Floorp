@@ -63,29 +63,6 @@ template WSRunScanner::TextFragmentData::TextFragmentData(
 template WSRunScanner::TextFragmentData::TextFragmentData(
     const EditorDOMPointInText& aPoint, const Element* aEditingHost);
 
-nsresult WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-    HTMLEditor& aHTMLEditor, EditorDOMPoint* aStartPoint,
-    EditorDOMPoint* aEndPoint) {
-  MOZ_ASSERT(aStartPoint);
-  MOZ_ASSERT(aEndPoint);
-
-  if (NS_WARN_IF(!aStartPoint->IsSet()) || NS_WARN_IF(!aEndPoint->IsSet())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  AutoTrackDOMPoint trackerStart(aHTMLEditor.RangeUpdaterRef(), aStartPoint);
-  AutoTrackDOMPoint trackerEnd(aHTMLEditor.RangeUpdaterRef(), aEndPoint);
-
-  nsresult rv = WhiteSpaceVisibilityKeeper::
-      MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
-          aHTMLEditor, EditorDOMRange(*aStartPoint, *aEndPoint));
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "WhiteSpaceVisibilityKeeper::"
-      "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
-  return rv;
-}
-
 nsresult WhiteSpaceVisibilityKeeper::PrepareToDeleteNode(
     HTMLEditor& aHTMLEditor, nsIContent* aContent) {
   if (NS_WARN_IF(!aContent)) {
@@ -980,10 +957,13 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     EditorDOMPoint endToDelete =
         textFragmentDataAtDeletion.GetEndOfCollapsibleASCIIWhiteSpaces(
             atPreviousCharOfStart);
-    nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-        aHTMLEditor, &startToDelete, &endToDelete);
+    nsresult rv =
+        WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
+            aHTMLEditor, &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
+          "failed");
       return rv;
     }
 
@@ -1000,10 +980,13 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
   if (atPreviousCharOfStart.IsCharNBSP()) {
     EditorDOMPoint startToDelete(atPreviousCharOfStart);
     EditorDOMPoint endToDelete(startToDelete.NextPoint());
-    nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-        aHTMLEditor, &startToDelete, &endToDelete);
+    nsresult rv =
+        WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
+            aHTMLEditor, &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
+          "failed");
       return rv;
     }
 
@@ -1056,10 +1039,13 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     EditorDOMPoint endToDelete =
         textFragmentDataAtDeletion.GetEndOfCollapsibleASCIIWhiteSpaces(
             atNextCharOfStart);
-    nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-        aHTMLEditor, &startToDelete, &endToDelete);
+    nsresult rv =
+        WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
+            aHTMLEditor, &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
+          "failed");
       return rv;
     }
 
@@ -1076,10 +1062,13 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
   if (atNextCharOfStart.IsCharNBSP()) {
     EditorDOMPoint startToDelete(atNextCharOfStart);
     EditorDOMPoint endToDelete(startToDelete.NextPoint());
-    nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-        aHTMLEditor, &startToDelete, &endToDelete);
+    nsresult rv =
+        WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
+            aHTMLEditor, &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
-      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
+          "failed");
       return rv;
     }
 

@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Text.h"
 #include "nsAtom.h"
@@ -1018,8 +1019,8 @@ template <typename EditorDOMPointType>
 class EditorDOMRangeBase final {
  public:
   EditorDOMRangeBase() = default;
-  template <typename PointType>
-  explicit EditorDOMRangeBase(const PointType& aStart)
+  template <typename PT, typename CT>
+  explicit EditorDOMRangeBase(const EditorDOMPointBase<PT, CT>& aStart)
       : mStart(aStart), mEnd(aStart) {
     MOZ_ASSERT(!mStart.IsSet() || mStart.IsSetAndValid());
   }
@@ -1027,6 +1028,13 @@ class EditorDOMRangeBase final {
   explicit EditorDOMRangeBase(const StartPointType& aStart,
                               const EndPointType& aEnd)
       : mStart(aStart), mEnd(aEnd) {
+    MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
+    MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
+    MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),
+                  mStart.EqualsOrIsBefore(mEnd));
+  }
+  explicit EditorDOMRangeBase(const dom::AbstractRange& aRange)
+      : mStart(aRange.StartRef()), mEnd(aRange.EndRef()) {
     MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
     MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
     MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),
