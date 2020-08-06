@@ -1018,6 +1018,7 @@ class LoginManagerPrompter {
     let baseDomainLogins = await Services.logins.searchLoginsAsync({
       origin: login.origin,
       schemeUpgrades: LoginHelper.schemeUpgrades,
+      acceptDifferentSubdomains: true,
     });
 
     let saved = baseDomainLogins.map(login => {

@@ -45,6 +45,35 @@ const TEST_CASES = [
       { text: "authUsername", style: "login" },
     ],
   },
+  {
+    description: "saved logins from subdomains should be displayed",
+    savedLogins: [
+      {
+        username: "savedUsername",
+        password: "savedPassword",
+        origin: "https://subdomain.example.com",
+      },
+    ],
+    possibleUsernames: [],
+    expectedSuggestions: [{ text: "savedUsername", style: "login" }],
+  },
+  {
+    description: "usernames from different subdomains should be deduped",
+    savedLogins: [
+      {
+        username: "savedUsername",
+        password: "savedPassword",
+        origin: "https://subdomain.example.com",
+      },
+      {
+        username: "savedUsername",
+        password: "savedPassword",
+        origin: "https://example.com",
+      },
+    ],
+    possibleUsernames: [],
+    expectedSuggestions: [{ text: "savedUsername", style: "login" }],
+  },
 ];
 
 const LOGIN = TestData.formLogin({
@@ -67,14 +96,14 @@ function _saveLogins(logins) {
       let login;
       if (loginData.isAuth) {
         login = TestData.authLogin({
-          origin: "https://example.com",
+          origin: loginData.origin ?? "https://example.com",
           httpRealm: "example-realm",
           username: loginData.username,
           password: loginData.password,
         });
       } else {
         login = TestData.formLogin({
-          origin: "https://example.com",
+          origin: loginData.origin ?? "https://example.com",
           formActionOrigin: "https://example.com",
           username: loginData.username,
           password: loginData.password,
