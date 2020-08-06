@@ -751,7 +751,7 @@ void AndroidHardwareBufferTextureHost::DestroyEGLImage() {
   if (mEGLImage && gl()) {
     const auto& gle = gl::GLContextEGL::Cast(gl());
     const auto& egl = gle->mEgl;
-    egl->fDestroyImage(mEGLImage);
+    egl->fDestroyImage(egl->Display(), mEGLImage);
     mEGLImage = EGL_NO_IMAGE;
   }
 }
@@ -790,10 +790,11 @@ void AndroidHardwareBufferTextureHost::PrepareTextureSource(
         LOCAL_EGL_NONE,
     };
 
-    EGLClientBuffer clientBuffer = egl->mLib->fGetNativeClientBufferANDROID(
+    EGLClientBuffer clientBuffer = egl->fGetNativeClientBufferANDROID(
         mAndroidHardwareBuffer->GetNativeBuffer());
-    mEGLImage = egl->fCreateImage(
-        EGL_NO_CONTEXT, LOCAL_EGL_NATIVE_BUFFER_ANDROID, clientBuffer, attrs);
+    mEGLImage =
+        egl->fCreateImage(egl->Display(), EGL_NO_CONTEXT,
+                          LOCAL_EGL_NATIVE_BUFFER_ANDROID, clientBuffer, attrs);
   }
 
   GLenum textureTarget = LOCAL_GL_TEXTURE_EXTERNAL;
@@ -994,8 +995,7 @@ void EGLImageTextureSource::BindTexture(GLenum aTextureUnit,
     const auto& gle = GLContextEGL::Cast(gl);
     const auto& egl = gle->mEgl;
 
-    return egl->HasKHRImageBase() &&
-           egl->IsExtensionSupported(EGLExtension::KHR_gl_texture_2D_image) &&
+    return egl->HasKHRImageBase() && egl->HasKHRImageTexture2D() &&
            gl->IsExtensionSupported(GLContext::OES_EGL_image);
   }();
   MOZ_ASSERT(supportsEglImage, "EGLImage not supported or disabled in runtime");
@@ -1058,14 +1058,13 @@ bool EGLImageTextureHost::Lock() {
   if (!gl || !gl->MakeCurrent()) {
     return false;
   }
-  const auto& gle = GLContextEGL::Cast(gl);
-  const auto& egl = gle->mEgl;
 
+  auto* egl = gl::GLLibraryEGL::Get();
   EGLint status = LOCAL_EGL_CONDITION_SATISFIED;
 
   if (mSync) {
-    MOZ_ASSERT(egl->IsExtensionSupported(EGLExtension::KHR_fence_sync));
-    status = egl->fClientWaitSync(mSync, 0, LOCAL_EGL_FOREVER);
+    MOZ_ASSERT(egl->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
+    status = egl->fClientWaitSync(egl->Display(), mSync, 0, LOCAL_EGL_FOREVER);
   }
 
   if (status != LOCAL_EGL_CONDITION_SATISFIED) {
