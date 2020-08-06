@@ -157,6 +157,9 @@ class MachCommands(MachCommandBase):
 
         import multiprocessing
         import json
+        from mozbuild.code_analysis.utils import ClangTidyConfig
+
+        clang_tidy_cfg = ClangTidyConfig(self.topsrcdir)
 
         clangd_json = json.loads(
             """
@@ -176,11 +179,19 @@ class MachCommands(MachCommandBase):
                 "--log",
                 "error",
                 "--pch-storage",
-                "memory"
+                "memory",
+                "--clang-tidy",
+                "--clang-tidy-checks",
+                "%s"
             ]
         }
         """
-            % (clangd_path, clangd_cc_path, multiprocessing.cpu_count(),)
+            % (
+                clangd_path,
+                clangd_cc_path,
+                multiprocessing.cpu_count(),
+                clang_tidy_cfg.checks,
+            )
         )
 
         # Create an empty settings dictionary

@@ -49,7 +49,7 @@ MACH_MODULES = [
     'python/mozbuild/mozbuild/artifact_commands.py',
     'python/mozbuild/mozbuild/backend/mach_commands.py',
     'python/mozbuild/mozbuild/build_commands.py',
-    'python/mozbuild/mozbuild/code-analysis/mach_commands.py',
+    'python/mozbuild/mozbuild/code_analysis/mach_commands.py',
     'python/mozbuild/mozbuild/compilation/codecomplete.py',
     'python/mozbuild/mozbuild/frontend/mach_commands.py',
     'python/mozbuild/mozbuild/vendor/mach_commands.py',
