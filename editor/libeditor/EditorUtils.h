@@ -752,6 +752,8 @@ class MOZ_STACK_CLASS AutoRangeArray final {
 
   auto& Ranges() { return mRanges; }
   const auto& Ranges() const { return mRanges; }
+  auto& FirstRangeRef() { return mRanges[0]; }
+  const auto& FirstRangeRef() const { return mRanges[0]; }
 
   template <template <typename> typename StrongPtrType>
   AutoTArray<StrongPtrType<nsRange>, 8> CloneRanges() const {
