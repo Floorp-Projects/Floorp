@@ -49,6 +49,16 @@ add_task(async function test_proc_info() {
             "browser",
             "Child proc type should not be browser"
           );
+
+          // We set the `childID` for child processes that have a `ContentParent`/`ContentChild`
+          // actor hierarchy.
+          if (childProc.type.startsWith("web")) {
+            Assert.notEqual(
+              childProc.childID,
+              0,
+              "Child proc should have been set"
+            );
+          }
           Assert.notEqual(
             childProc.type,
             "unknown",
