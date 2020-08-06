@@ -48,14 +48,17 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask {
   SharedBytes bytecode_;
   SharedModule module_;
   Atomic<bool> cancelled_;
+  JSTelemetrySender telemetrySender_;
 
  public:
   Tier2GeneratorTaskImpl(const CompileArgs& compileArgs,
-                         const ShareableBytes& bytecode, Module& module)
+                         const ShareableBytes& bytecode, Module& module,
+                         JSTelemetrySender telemetrySender)
       : compileArgs_(&compileArgs),
         bytecode_(&bytecode),
         module_(&module),
-        cancelled_(false) {}
+        cancelled_(false),
+        telemetrySender_(telemetrySender) {}
 
   ~Tier2GeneratorTaskImpl() override {
     module_->tier2Listener_ = nullptr;
@@ -80,7 +83,8 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask {
   }
 
   void runTask() {
-    CompileTier2(*compileArgs_, bytecode_->bytes, *module_, &cancelled_);
+    CompileTier2(*compileArgs_, bytecode_->bytes, *module_, &cancelled_,
+                 telemetrySender_);
   }
   ThreadType threadType() override {
     return ThreadType::THREAD_TYPE_WASM_TIER2;
@@ -94,10 +98,12 @@ Module::~Module() {
 }
 
 void Module::startTier2(const CompileArgs& args, const ShareableBytes& bytecode,
-                        JS::OptimizedEncodingListener* listener) {
+                        JS::OptimizedEncodingListener* listener,
+                        JSTelemetrySender telemetrySender) {
   MOZ_ASSERT(!testingTier2Active_);
 
-  auto task = MakeUnique<Tier2GeneratorTaskImpl>(args, bytecode, *this);
+  auto task = MakeUnique<Tier2GeneratorTaskImpl>(args, bytecode, *this,
+                                                 telemetrySender);
   if (!task) {
     return;
   }
