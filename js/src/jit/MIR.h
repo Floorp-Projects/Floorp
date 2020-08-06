@@ -11435,17 +11435,21 @@ class MDebugger : public MNullaryInstruction {
 class MCheckIsObj : public MUnaryInstruction, public BoxInputsPolicy::Data {
   uint8_t checkKind_;
 
-  MCheckIsObj(MDefinition* toCheck, uint8_t checkKind)
-      : MUnaryInstruction(classOpcode, toCheck), checkKind_(checkKind) {
-    setResultType(MIRType::Value);
-    setResultTypeSet(toCheck->resultTypeSet());
+  MCheckIsObj(TempAllocator& alloc, MDefinition* value, uint8_t checkKind)
+      : MUnaryInstruction(classOpcode, value), checkKind_(checkKind) {
+    TemporaryTypeSet* resultSet = value->resultTypeSet();
+    if (resultSet) {
+      resultSet = resultSet->cloneObjectsOnly(alloc.lifoAlloc());
+    }
+
+    setResultType(MIRType::Object);
+    setResultTypeSet(resultSet);
     setGuard();
   }
 
  public:
   INSTRUCTION_HEADER(CheckIsObj)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, checkValue))
+  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
   uint8_t checkKind() const { return checkKind_; }
 
