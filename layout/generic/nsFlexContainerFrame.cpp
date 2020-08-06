@@ -198,8 +198,12 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
                      const WritingMode& aWM);
 
   // Accessors:
-  LogicalAxis MainAxis() const { return mMainAxis; }
-  LogicalAxis CrossAxis() const { return GetOrthogonalAxis(mMainAxis); }
+  LogicalAxis MainAxis() const {
+    return IsRowOriented() ? eLogicalAxisInline : eLogicalAxisBlock;
+  }
+  LogicalAxis CrossAxis() const {
+    return IsRowOriented() ? eLogicalAxisBlock : eLogicalAxisInline;
+  }
 
   LogicalSide MainAxisStartSide() const;
   LogicalSide MainAxisEndSide() const {
@@ -326,8 +330,6 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   // the flex container is a "legacy box" (as determined by IsLegacyBox).
   void InitAxesFromLegacyProps(const nsFlexContainerFrame* aFlexContainer);
   void InitAxesFromModernProps(const nsFlexContainerFrame* aFlexContainer);
-
-  LogicalAxis mMainAxis = eLogicalAxisInline;
 
   const WritingMode mWM;  // The flex container's writing mode.
 
@@ -3803,7 +3805,6 @@ void FlexboxAxisTracker::InitAxesFromLegacyProps(
   // direction).  Otherwise, we're column-oriented (i.e. the flexbox's main
   // axis is perpendicular to the writing-mode's inline direction).
   mIsRowOriented = (boxOrientIsVertical == wmIsVertical);
-  mMainAxis = mIsRowOriented ? eLogicalAxisInline : eLogicalAxisBlock;
 
   // Legacy flexbox can use "-webkit-box-direction: reverse" to reverse the
   // main axis (so it runs in the reverse direction of the inline axis):
@@ -3822,22 +3823,18 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
   // Determine main axis:
   switch (flexDirection) {
     case StyleFlexDirection::Row:
-      mMainAxis = eLogicalAxisInline;
       mIsRowOriented = true;
       mIsMainAxisReversed = false;
       break;
     case StyleFlexDirection::RowReverse:
-      mMainAxis = eLogicalAxisInline;
       mIsRowOriented = true;
       mIsMainAxisReversed = true;
       break;
     case StyleFlexDirection::Column:
-      mMainAxis = eLogicalAxisBlock;
       mIsRowOriented = false;
       mIsMainAxisReversed = false;
       break;
     case StyleFlexDirection::ColumnReverse:
-      mMainAxis = eLogicalAxisBlock;
       mIsRowOriented = false;
       mIsMainAxisReversed = true;
       break;
