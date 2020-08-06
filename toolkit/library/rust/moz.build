@@ -19,7 +19,7 @@ RUST_TESTS = [
 if not CONFIG['MOZ_CODE_COVERAGE']:
     # glean tests are disabled for ccov builds because some of them test panics
     # and those builds are compiled with '-Cpanic=abort -Zpanic_abort_tests'
-    RUST_TESTS += ['glean']
+    RUST_TESTS += ['fog']
 
 for feature in gkrust_features:
     # We don't want to enable refcount logging during rusttests, since the

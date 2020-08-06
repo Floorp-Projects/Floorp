@@ -7,7 +7,7 @@ use common::*;
 
 use once_cell::sync::Lazy;
 
-use glean::private::Ping;
+use fog::private::Ping;
 
 // Smoke test for what should be the generated code.
 static PROTOTYPE_PING: Lazy<Ping> = Lazy::new(|| Ping::new("prototype", false, true, vec![]));
