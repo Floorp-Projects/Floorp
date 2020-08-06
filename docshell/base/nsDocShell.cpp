@@ -3795,6 +3795,7 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
     mLSHE->AbandonBFCacheEntry();
   }
 
+  RefPtr<WindowContext> context = mBrowsingContext->GetCurrentWindowContext();
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aErrorURI);
   loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
   if (mBrowsingContext) {
@@ -3804,8 +3805,7 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
   loadState->SetFirstParty(true);
   loadState->SetSourceBrowsingContext(mBrowsingContext);
   loadState->SetHasValidUserGestureActivation(
-      mBrowsingContext &&
-      mBrowsingContext->HasValidTransientUserGestureActivation());
+      context && context->HasValidTransientUserGestureActivation());
   return InternalLoad(loadState);
 }
 
@@ -3939,6 +3939,7 @@ nsresult nsDocShell::ReloadDocument(nsDocShell* aDocShell, Document* aDocument,
   Maybe<nsCOMPtr<nsIURI>> emplacedResultPrincipalURI;
   emplacedResultPrincipalURI.emplace(std::move(resultPrincipalURI));
 
+  RefPtr<WindowContext> context = aBrowsingContext->GetCurrentWindowContext();
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(currentURI);
   loadState->SetReferrerInfo(aReferrerInfo);
   loadState->SetOriginalURI(originalURI);
@@ -3956,8 +3957,7 @@ nsresult nsDocShell::ReloadDocument(nsDocShell* aDocShell, Document* aDocument,
   loadState->SetSourceBrowsingContext(aBrowsingContext);
   loadState->SetBaseURI(baseURI);
   loadState->SetHasValidUserGestureActivation(
-      aBrowsingContext &&
-      aBrowsingContext->HasValidTransientUserGestureActivation());
+      context && context->HasValidTransientUserGestureActivation());
   return aDocShell->InternalLoad(loadState);
 }
 
@@ -9688,11 +9688,12 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                          Maybe<mozilla::dom::ClientInfo>(),
                          Maybe<mozilla::dom::ServiceWorkerDescriptor>(),
                          sandboxFlags);
+  RefPtr<WindowContext> context = mBrowsingContext->GetCurrentWindowContext();
 
   // in case this docshell load was triggered by a valid transient user gesture,
   // or also the load originates from external, then we pass that information on
   // to the loadinfo, which allows e.g. setting Sec-Fetch-User request headers.
-  if (mBrowsingContext->HasValidTransientUserGestureActivation() ||
+  if ((context && context->HasValidTransientUserGestureActivation()) ||
       aLoadState->HasValidUserGestureActivation() ||
       aLoadState->HasLoadFlags(LOAD_FLAGS_FROM_EXTERNAL)) {
     loadInfo->SetHasValidUserGestureActivation(true);
@@ -12098,6 +12099,7 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       isElementAnchorOrArea ? new ReferrerInfo(*aContent->AsElement())
                             : new ReferrerInfo(*referrerDoc);
+  RefPtr<WindowContext> context = mBrowsingContext->GetCurrentWindowContext();
 
   aLoadState->SetTriggeringSandboxFlags(triggeringSandboxFlags);
   aLoadState->SetReferrerInfo(referrerInfo);
@@ -12106,8 +12108,7 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   aLoadState->SetLoadType(loadType);
   aLoadState->SetSourceBrowsingContext(mBrowsingContext);
   aLoadState->SetHasValidUserGestureActivation(
-      mBrowsingContext &&
-      mBrowsingContext->HasValidTransientUserGestureActivation());
+      context && context->HasValidTransientUserGestureActivation());
 
   nsresult rv = InternalLoad(aLoadState);
 
