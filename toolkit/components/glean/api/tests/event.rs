@@ -7,7 +7,7 @@ use common::*;
 
 use std::collections::HashMap;
 
-use glean::private::{CommonMetricData, EventMetric, ExtraKeys, Lifetime, NoExtraKeys};
+use fog::private::{CommonMetricData, EventMetric, ExtraKeys, Lifetime, NoExtraKeys};
 
 #[test]
 fn smoke_test_event() {
