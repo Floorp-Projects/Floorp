@@ -16,14 +16,21 @@ Visual Studio Code
 
 For general information on using VS Code, see their
 `home page <https://code.visualstudio.com/>`__,
-`repo <https://github.com/Microsoft/vscode/>`__ and
-`guide to working with C++ <https://code.visualstudio.com/docs/languages/cpp>`__.
+`repo <https://github.com/Microsoft/vscode/>`__.
 
-For IntelliSense to work properly, a
-:ref:`compilation database <CompileDB back-end / compileflags>` as described
-below is required. When it is present when you open the mozilla source code
-folder, it will be automatically detected and Visual Studio Code will ask you
-if it should use it, which you should confirm.
+For C++ support we offer an out of the box configuration based on
+`clangd <https://clangd.llvm.org>`__. This covers code completion, compile errors,
+go-to-definition and more.
+
+In order to build the configuration for `VS Code` simply run from
+the terminal:
+
+`./mach ide vscode`
+
+If `VS Code` is already open with a previous configuration generated, please make sure to
+restart `VS Code` otherwise the new configuration will not be used, and the `compile_commands.json`
+needed by `clangd` server will not be refreshed. This is a known `bug <https://github.com/clangd/vscode-clangd/issues/42>`__
+in `clangd-vscode` extension
 
 VS Code provides number of extensions for JavaScript, Rust, etc.
 
