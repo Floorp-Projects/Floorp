@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -153,5 +154,14 @@ class AppLinksFeatureTest {
 
         verify(mockDialog).show(eq(mockFragmentManager), anyString())
         verify(mockOpenRedirect, never()).invoke(any(), anyBoolean(), any())
+    }
+
+    @Test
+    fun `reused redirect dialog if exists`() {
+        feature.start()
+        userTapsOnSession(intentUrl, true)
+
+        val dialog = feature.getOrCreateDialog()
+        assertEquals(dialog, feature.getOrCreateDialog())
     }
 }

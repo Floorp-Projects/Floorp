@@ -46,7 +46,7 @@ class SimpleRedirectDialogFragment : RedirectDialogFragment() {
                     onConfirmRedirect()
                 }
                 .setNegativeButton(negativeButtonText) { _, _ ->
-                    dismiss()
+                    onCancelRedirect()
                 }
                 .setCancelable(cancelable)
                 .create()
@@ -80,6 +80,7 @@ class SimpleRedirectDialogFragment : RedirectDialogFragment() {
             }
 
             fragment.arguments = arguments
+            fragment.isCancelable = false
 
             return fragment
         }

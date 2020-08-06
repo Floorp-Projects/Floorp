@@ -18,6 +18,9 @@ permalink: /changelog/
 * **browser-menu2**
   * ⚠️ **This is a breaking change**: `BrowserMenuController.show` no longer supports the width parameter.
 
+* **feature-app-links**
+  * Added `loadUrlUseCase` as a parameter for `AppLinksFeature`.  This is used to load the URL if the user decides to not launch the link in the external app.
+  
 * **concept-awesomebar**
   * Added `AwesomeBar.setOnEditSuggestionListener()` to register a callback when a search term is selected to be edited further.
 

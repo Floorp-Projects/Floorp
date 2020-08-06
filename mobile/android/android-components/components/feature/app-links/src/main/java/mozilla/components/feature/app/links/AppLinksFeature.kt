@@ -11,7 +11,9 @@ import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.app.links.RedirectDialogFragment.Companion.FRAGMENT_TAG
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -23,14 +25,17 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  *
  * @param context Context the feature is associated with.
  * @param sessionManager Provides access to a centralized registry of all active sessions.
- * @param sessionId the session ID to observe.
+ * @param sessionId The session ID to observe.
  * @param fragmentManager FragmentManager for interacting with fragments.
  * @param dialog The dialog for redirect.
  * @param launchInApp If {true} then launch app links in third party app(s). Default to false because
  * of security concerns.
  * @param useCases These use cases allow for the detection of, and opening of links that other apps
  * have registered to open.
+ * @param failedToLaunchAction Action to perform when failing to launch in third party app.
+ * @param loadUrlUseCase Used to load URL if user decides not to launch in third party app.
  **/
+@Suppress("LongParameterList")
 class AppLinksFeature(
     private val context: Context,
     private val sessionManager: SessionManager,
@@ -39,7 +44,8 @@ class AppLinksFeature(
     private var dialog: RedirectDialogFragment? = null,
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
-    private val failedToLaunchAction: () -> Unit = {}
+    private val failedToLaunchAction: () -> Unit = {},
+    private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null
 ) : LifecycleAwareFeature {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -57,6 +63,10 @@ class AppLinksFeature(
                 useCases.openAppLink(appIntent, failedToLaunchAction = failedToLaunchAction)
             }
 
+            val doNotOpenApp = {
+                loadUrlUseCase?.invoke(url, session, EngineSession.LoadUrlFlags.none())
+            }
+
             if (!session.private || fragmentManager == null) {
                 doOpenApp()
                 return
@@ -65,6 +75,7 @@ class AppLinksFeature(
             val dialog = getOrCreateDialog()
             dialog.setAppLinkRedirectUrl(url)
             dialog.onConfirmRedirect = doOpenApp
+            dialog.onCancelRedirect = doNotOpenApp
 
             if (!isAlreadyADialogCreated()) {
                 dialog.show(fragmentManager, FRAGMENT_TAG)
@@ -88,7 +99,8 @@ class AppLinksFeature(
         observer.stop()
     }
 
-    private fun getOrCreateDialog(): RedirectDialogFragment {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getOrCreateDialog(): RedirectDialogFragment {
         val existingDialog = dialog
         if (existingDialog != null) {
             return existingDialog
