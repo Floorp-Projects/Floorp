@@ -13,6 +13,7 @@ pioneer-summary = { -pioneer-brand-short-name } is an experimental program that 
 pioneer-voluntary-notice = Participation in { -pioneer-brand-short-name } is strictly voluntary.
 pioneer-details = When you enroll in the { -pioneer-brand-short-name } program, you will receive periodic offers to join studies led by top research teams in collaborations with Mozilla. Your participation in each study is voluntary. You can leave an individual study or leave the { -pioneer-brand-short-name } program entirely at any time.
 pioneer-join-study = Join Study
+pioneer-leave-study = Leave Study
 pioneer-enrollment-button = Enroll
 pioneer-unenrollment-button = Leave
 pioneer-available-studies = Available Studies
