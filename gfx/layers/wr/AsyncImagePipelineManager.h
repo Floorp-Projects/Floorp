@@ -101,12 +101,9 @@ class AsyncImagePipelineManager final {
 
   void UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
                                 const LayoutDeviceRect& aScBounds,
-                                const gfx::Matrix4x4& aScTransform,
-                                const gfx::MaybeIntSize& aScaleToSize,
                                 VideoInfo::Rotation aRotation,
                                 const wr::ImageRendering& aFilter,
-                                const wr::MixBlendMode& aMixBlendMode,
-                                const LayoutDeviceSize& aScaleFromSize);
+                                const wr::MixBlendMode& aMixBlendMode);
   void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aSceneBuilderTxn,
                                      wr::TransactionBuilder& aFastTxn);
   void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId,
@@ -181,33 +178,22 @@ class AsyncImagePipelineManager final {
   struct AsyncImagePipeline {
     AsyncImagePipeline();
     void Update(const LayoutDeviceRect& aScBounds,
-                const gfx::Matrix4x4& aScTransform,
-                const gfx::MaybeIntSize& aScaleToSize,
                 VideoInfo::Rotation aRotation,
                 const wr::ImageRendering& aFilter,
-                const wr::MixBlendMode& aMixBlendMode,
-                const LayoutDeviceSize& aScaleFromSize) {
+                const wr::MixBlendMode& aMixBlendMode) {
       mIsChanged |= !mScBounds.IsEqualEdges(aScBounds) ||
-                    mScTransform != aScTransform ||
-                    mScaleToSize != aScaleToSize || mRotation != aRotation ||
-                    mFilter != aFilter || mMixBlendMode != aMixBlendMode ||
-                    mScaleFromSize != aScaleFromSize;
+                    mRotation != aRotation || mFilter != aFilter ||
+                    mMixBlendMode != aMixBlendMode;
       mScBounds = aScBounds;
-      mScTransform = aScTransform;
-      mScaleToSize = aScaleToSize;
       mRotation = aRotation;
       mFilter = aFilter;
       mMixBlendMode = aMixBlendMode;
-      mScaleFromSize = aScaleFromSize;
     }
 
     bool mInitialised;
     bool mIsChanged;
     bool mUseExternalImage;
     LayoutDeviceRect mScBounds;
-    LayoutDeviceSize mScaleFromSize;
-    gfx::Matrix4x4 mScTransform;
-    gfx::MaybeIntSize mScaleToSize;
     VideoInfo::Rotation mRotation;
     wr::ImageRendering mFilter;
     wr::MixBlendMode mMixBlendMode;

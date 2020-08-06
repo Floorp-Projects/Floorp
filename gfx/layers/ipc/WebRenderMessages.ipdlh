@@ -79,12 +79,9 @@ struct OpReleaseTextureOfImage {
 struct OpUpdateAsyncImagePipeline {
   PipelineId pipelineId;
   LayoutDeviceRect scBounds;
-  Matrix4x4 scTransform;
-  MaybeIntSize scaleToSize;
   Rotation rotation;
   ImageRendering filter;
   MixBlendMode mixBlendMode;
-  LayoutDeviceSize scaleFromSize;
 };
 
 struct OpUpdatedAsyncImagePipeline {

@@ -1856,14 +1856,12 @@ Maybe<wr::ImageKey> WebRenderCommandBuilder::CreateImageKey(
 
     LayoutDeviceRect rect = aAsyncImageBounds.value();
     LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), rect.Size());
-    gfx::Matrix4x4 transform;
     // TODO!
     // We appear to be using the image bridge for a lot (most/all?) of
     // layers-free image handling and that breaks frame consistency.
     imageData->CreateAsyncImageWebRenderCommands(
-        aBuilder, aContainer, aSc, rect, scBounds, transform,
-        gfx::MaybeIntSize(), aContainer->GetRotation(), aRendering,
-        wr::MixBlendMode::Normal, !aItem->BackfaceIsHidden());
+        aBuilder, aContainer, aSc, rect, scBounds, aContainer->GetRotation(),
+        aRendering, wr::MixBlendMode::Normal, !aItem->BackfaceIsHidden());
     return Nothing();
   }
 
