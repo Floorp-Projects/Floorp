@@ -34,7 +34,6 @@
 #include "vm/ArrayBufferViewObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/TraceLogging.h"
-#include "vm/TypedArrayObject.h"
 
 #include "gc/Nursery-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
@@ -1833,39 +1832,6 @@ void MacroAssembler::setIsCrossRealmArrayConstructor(Register obj,
 
   bind(&isFalse);
   move32(Imm32(0), output);
-
-  bind(&done);
-}
-
-void MacroAssembler::setIsDefinitelyTypedArrayConstructor(Register obj,
-                                                          Register output) {
-  Label isFalse, isTrue, done;
-
-  // The object must be a function. (Wrappers are not supported.)
-  branchTestObjClass(Assembler::NotEqual, obj, &JSFunction::class_, output, obj,
-                     &isFalse);
-
-  // Load the native into |output|.
-  loadPtr(Address(obj, JSFunction::offsetOfNativeOrEnv()), output);
-
-  auto branchIsTypedArrayCtor = [&](Scalar::Type type) {
-    // The function must be a TypedArrayConstructor native (from any realm).
-    JSNative constructor = TypedArrayConstructorNative(type);
-    branchPtr(Assembler::Equal, output, ImmPtr(constructor), &isTrue);
-  };
-
-#define TYPED_ARRAY_CONSTRUCTOR_NATIVE(T, N) branchIsTypedArrayCtor(Scalar::N);
-  JS_FOR_EACH_TYPED_ARRAY(TYPED_ARRAY_CONSTRUCTOR_NATIVE)
-#undef TYPED_ARRAY_CONSTRUCTOR_NATIVE
-
-  // Falls through to the false case.
-
-  bind(&isFalse);
-  move32(Imm32(0), output);
-  jump(&done);
-
-  bind(&isTrue);
-  move32(Imm32(1), output);
 
   bind(&done);
 }

@@ -2000,11 +2000,12 @@ bool CacheIRCompiler::emitGuardSpecificNativeFunction(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
-    ObjOperandId objId, ObjOperandId expectedId, uint32_t slotOffset) {
+bool CacheIRCompiler::emitGuardFunctionPrototype(ObjOperandId objId,
+                                                 ObjOperandId protoId,
+                                                 uint32_t slotOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
-  Register expectedObject = allocator.useRegister(masm, expectedId);
+  Register prototypeObject = allocator.useRegister(masm, protoId);
 
   // Allocate registers before the failure path to make sure they're registered
   // by addFailurePath.
@@ -2016,14 +2017,14 @@ bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
     return false;
   }
 
-  // Guard on the expected object.
+  // Guard on the .prototype object.
   StubFieldOffset slot(slotOffset, StubField::Type::RawWord);
   masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
   emitLoadStubField(slot, scratch2);
-  BaseObjectSlotIndex expectedSlot(scratch1, scratch2);
-  masm.branchTestObject(Assembler::NotEqual, expectedSlot, failure->label());
-  masm.unboxObject(expectedSlot, scratch1);
-  masm.branchPtr(Assembler::NotEqual, expectedObject, scratch1,
+  BaseObjectSlotIndex prototypeSlot(scratch1, scratch2);
+  masm.branchTestObject(Assembler::NotEqual, prototypeSlot, failure->label());
+  masm.unboxObject(prototypeSlot, scratch1);
+  masm.branchPtr(Assembler::NotEqual, prototypeObject, scratch1,
                  failure->label());
 
   return true;
@@ -4035,18 +4036,6 @@ bool CacheIRCompiler::emitTypedArrayElementShiftResult(ObjOperandId objId) {
 
   masm.typedArrayElementShift(obj, scratch);
   masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
-  return true;
-}
-
-bool CacheIRCompiler::emitIsTypedArrayConstructorResult(ObjOperandId objId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoOutputRegister output(*this);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-  Register obj = allocator.useRegister(masm, objId);
-
-  masm.setIsDefinitelyTypedArrayConstructor(obj, scratch);
-  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
   return true;
 }
 

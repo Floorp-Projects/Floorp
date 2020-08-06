@@ -2254,18 +2254,33 @@ bool js::IsTypedArrayConstructor(const JSObject* obj) {
   return false;
 }
 
-bool js::IsTypedArrayConstructor(HandleValue v, Scalar::Type type) {
-  return IsNativeFunction(v, TypedArrayConstructorNative(type));
-}
-
-JSNative js::TypedArrayConstructorNative(Scalar::Type type) {
-#define TYPED_ARRAY_CONSTRUCTOR_NATIVE(T, N) \
-  if (type == Scalar::N) {                   \
-    return N##Array::class_constructor;      \
+bool js::IsTypedArrayConstructor(HandleValue v, uint32_t type) {
+  switch (type) {
+    case Scalar::Int8:
+      return IsNativeFunction(v, Int8Array::class_constructor);
+    case Scalar::Uint8:
+      return IsNativeFunction(v, Uint8Array::class_constructor);
+    case Scalar::Int16:
+      return IsNativeFunction(v, Int16Array::class_constructor);
+    case Scalar::Uint16:
+      return IsNativeFunction(v, Uint16Array::class_constructor);
+    case Scalar::Int32:
+      return IsNativeFunction(v, Int32Array::class_constructor);
+    case Scalar::Uint32:
+      return IsNativeFunction(v, Uint32Array::class_constructor);
+    case Scalar::BigInt64:
+      return IsNativeFunction(v, BigInt64Array::class_constructor);
+    case Scalar::BigUint64:
+      return IsNativeFunction(v, BigUint64Array::class_constructor);
+    case Scalar::Float32:
+      return IsNativeFunction(v, Float32Array::class_constructor);
+    case Scalar::Float64:
+      return IsNativeFunction(v, Float64Array::class_constructor);
+    case Scalar::Uint8Clamped:
+      return IsNativeFunction(v, Uint8ClampedArray::class_constructor);
+    case Scalar::MaxTypedArrayViewType:
+      break;
   }
-  JS_FOR_EACH_TYPED_ARRAY(TYPED_ARRAY_CONSTRUCTOR_NATIVE)
-#undef TYPED_ARRAY_CONSTRUCTOR_NATIVE
-
   MOZ_CRASH("unexpected typed array type");
 }
 
