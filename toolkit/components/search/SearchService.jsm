@@ -2392,10 +2392,7 @@ SearchService.prototype = {
   getEngineByAlias(alias) {
     this._ensureInitialized();
     for (var engine of this._engines.values()) {
-      if (
-        engine &&
-        (engine.alias == alias || engine._internalAliases.includes(alias))
-      ) {
+      if (engine && engine.aliases.includes(alias)) {
         return engine;
       }
     }

@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   SearchOneOffs: "resource:///modules/SearchOneOffs.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -176,7 +175,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    *   The one-off button.
    */
   setTooltipForEngineButton(button) {
-    let aliases = UrlbarSearchUtils.aliasesForEngine(button.engine);
+    let aliases = button.engine.aliases;
     if (!aliases.length) {
       super.setTooltipForEngineButton(button);
       return;

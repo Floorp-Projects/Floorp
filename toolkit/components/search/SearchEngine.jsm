@@ -642,10 +642,9 @@ class SearchEngine {
   // notification sent. This allows to skip sending notifications during
   // initialization.
   _engineAddedToStore = false;
-  // The alias coming from the engine definition (via webextension
-  // keyword field for example) may be overridden in the metaData
-  // with a user defined alias.
-  _definedAlias = null;
+  // The aliases coming from the engine definition (via webextension
+  // keyword field for example).
+  _definedAliases = [];
   // The urls associated with this engine.
   _urls = [];
   // Internal aliases for default engines only.
@@ -1007,7 +1006,14 @@ class SearchEngine {
     if (shortName) {
       this._shortName = shortName;
     }
-    this._definedAlias = searchProvider.keyword?.trim() || null;
+
+    this._definedAliases = [];
+    if (Array.isArray(searchProvider.keyword)) {
+      this._definedAliases = searchProvider.keyword.map(k => k.trim());
+    } else if (searchProvider.keyword?.trim()) {
+      this._definedAliases = [searchProvider.keyword?.trim()];
+    }
+
     this._description = manifest.description;
     if (iconURL) {
       this._setIcon(iconURL, true);
@@ -1174,9 +1180,12 @@ class SearchEngine {
     this._metaData = json._metaData || {};
     this._orderHint = json._orderHint || null;
     this._telemetryId = json._telemetryId || null;
-    this._definedAlias = json._definedAlias || null;
+    this._definedAliases = json._definedAliases || [];
     // These changed keys in Firefox 80, maintain the old keys
     // for backwards compatibility.
+    if (json._definedAlias) {
+      this._definedAliases.push(json._definedAlias);
+    }
     this._filePath = json.filePath || json._filePath || null;
     this._extensionID = json.extensionID || json._extensionID || null;
     this._locale = json.extensionLocale || json._locale || null;
@@ -1229,7 +1238,7 @@ class SearchEngine {
       "_filePath",
       "_extensionID",
       "_locale",
-      "_definedAlias",
+      "_definedAliases",
     ];
 
     let json = {};
@@ -1263,12 +1272,19 @@ class SearchEngine {
 
   // nsISearchEngine
   get alias() {
-    return this.getAttr("alias") || this._definedAlias;
+    return this.getAttr("alias") || this._definedAliases[0];
   }
   set alias(val) {
     var value = val ? val.trim() : null;
     this.setAttr("alias", value);
     SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+  }
+  get aliases() {
+    return [
+      ...(this.getAttr("alias") ? [this.getAttr("alias")] : []),
+      ...this._definedAliases,
+      ...this._internalAliases,
+    ];
   }
 
   /**

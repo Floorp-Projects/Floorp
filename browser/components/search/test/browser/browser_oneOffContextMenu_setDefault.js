@@ -322,7 +322,7 @@ async function openPopupAndGetEngineButton(
       "One-off should have the tooltip set to the engine name"
     );
   } else {
-    let aliases = UrlbarSearchUtils.aliasesForEngine(oneOffButton.engine);
+    let aliases = oneOffButton.engine.aliases;
     if (!aliases.length) {
       Assert.equal(
         oneOffButton.getAttribute("tooltiptext"),
