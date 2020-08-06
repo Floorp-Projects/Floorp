@@ -78,8 +78,9 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return true;
   }
 
-  RefPtr<BrowsingContext> topLevelBC = aWindow->GetBrowsingContext()->Top();
-  if (topLevelBC->HasBeenUserGestureActivated()) {
+  WindowContext* topContext =
+      aWindow->GetBrowsingContext()->GetTopWindowContext();
+  if (topContext && topContext->HasBeenUserGestureActivated()) {
     AUTOPLAY_LOG(
         "Allow autoplay as top-level context has been activated by user "
         "gesture.");
