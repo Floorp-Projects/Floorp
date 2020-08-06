@@ -31,6 +31,7 @@ extern crate firefox_accounts_bridge;
 #[cfg(feature = "glean")]
 extern crate fog;
 extern crate gkrust_utils;
+extern crate http_sfv;
 extern crate jsrust_shared;
 extern crate kvstore;
 extern crate mapped_hyph;
