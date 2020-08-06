@@ -305,3 +305,15 @@ function waitUntilControllerMetadataChanged() {
 function waitUntilMediaControllerAmountChanged() {
   return BrowserUtils.promiseObserved("media-controller-amount-changed");
 }
+
+/**
+ * check if the media controll from given tab is active. If not, return a
+ * promise and resolve it when controller become active.
+ */
+async function checkOrWaitUntilControllerBecomeActive(tab) {
+  const controller = tab.linkedBrowser.browsingContext.mediaController;
+  if (controller.isActive) {
+    return;
+  }
+  await new Promise(r => (controller.onactivated = r));
+}
