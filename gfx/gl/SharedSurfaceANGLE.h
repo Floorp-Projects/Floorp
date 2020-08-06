@@ -7,6 +7,7 @@
 #define SHARED_SURFACE_ANGLE_H_
 
 #include <windows.h>
+#include <memory>
 #include "SharedSurface.h"
 
 struct IDXGIKeyedMutex;
@@ -16,11 +17,11 @@ namespace mozilla {
 namespace gl {
 
 class GLContext;
-class GLLibraryEGL;
+class EglDisplay;
 
 class SharedSurface_ANGLEShareHandle final : public SharedSurface {
  public:
-  GLLibraryEGL* const mEGL;
+  const std::weak_ptr<EglDisplay> mEGL;
   const EGLSurface mPBuffer;
   const HANDLE mShareHandle;
   const RefPtr<IDXGIKeyedMutex> mKeyedMutex;
@@ -29,11 +30,10 @@ class SharedSurface_ANGLEShareHandle final : public SharedSurface {
       const SharedSurfaceDesc&);
 
  private:
-  SharedSurface_ANGLEShareHandle(const SharedSurfaceDesc&, GLLibraryEGL* egl,
+  SharedSurface_ANGLEShareHandle(const SharedSurfaceDesc&,
+                                 const std::weak_ptr<EglDisplay>& egl,
                                  EGLSurface pbuffer, HANDLE shareHandle,
                                  const RefPtr<IDXGIKeyedMutex>& keyedMutex);
-
-  EGLDisplay Display() const;
 
  public:
   virtual ~SharedSurface_ANGLEShareHandle();
@@ -47,9 +47,6 @@ class SharedSurface_ANGLEShareHandle final : public SharedSurface {
   virtual void ProducerReadReleaseImpl() override;
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
-
-  virtual bool ReadbackBySharedHandle(
-      gfx::DataSourceSurface* out_surface) override;
 };
 
 class SurfaceFactory_ANGLEShareHandle final : public SurfaceFactory {

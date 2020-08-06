@@ -26,7 +26,7 @@ namespace gl {
 static bool HasEglImageExtensions(const GLContextEGL& gl) {
   const auto& egl = *(gl.mEgl);
   return egl.HasKHRImageBase() &&
-         egl.IsExtensionSupported(GLLibraryEGL::KHR_gl_texture_2D_image) &&
+         egl.IsExtensionSupported(EGLExtension::KHR_gl_texture_2D_image) &&
          (gl.IsExtensionSupported(GLContext::OES_EGL_image_external) ||
           gl.IsExtensionSupported(GLContext::OES_EGL_image));
 }
@@ -57,8 +57,8 @@ UniquePtr<SharedSurface_EGLImage> SharedSurface_EGLImage::Create(
   if (!fb) return nullptr;
 
   const auto buffer = reinterpret_cast<EGLClientBuffer>(fb->ColorTex());
-  const auto image = egl.fCreateImage(egl.Display(), context,
-                                      LOCAL_EGL_GL_TEXTURE_2D, buffer, nullptr);
+  const auto image =
+      egl.fCreateImage(context, LOCAL_EGL_GL_TEXTURE_2D, buffer, nullptr);
   if (!image) return nullptr;
 
   return AsUnique(new SharedSurface_EGLImage(desc, std::move(fb), image));
@@ -74,12 +74,12 @@ SharedSurface_EGLImage::SharedSurface_EGLImage(const SharedSurfaceDesc& desc,
 SharedSurface_EGLImage::~SharedSurface_EGLImage() {
   const auto& gle = GLContextEGL::Cast(mDesc.gl);
   const auto& egl = gle->mEgl;
-  egl->fDestroyImage(egl->Display(), mImage);
+  egl->fDestroyImage(mImage);
 
   if (mSync) {
     // We can't call this unless we have the ext, but we will always have
     // the ext if we have something to destroy.
-    egl->fDestroySync(egl->Display(), mSync);
+    egl->fDestroySync(mSync);
     mSync = 0;
   }
 }
@@ -91,15 +91,15 @@ void SharedSurface_EGLImage::ProducerReleaseImpl() {
   MutexAutoLock lock(mMutex);
   gl->MakeCurrent();
 
-  if (egl->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
+  if (egl->IsExtensionSupported(EGLExtension::KHR_fence_sync) &&
       gl->IsExtensionSupported(GLContext::OES_EGL_sync)) {
     if (mSync) {
       MOZ_RELEASE_ASSERT(false, "GFX: Non-recycleable should not Fence twice.");
-      MOZ_ALWAYS_TRUE(egl->fDestroySync(egl->Display(), mSync));
+      MOZ_ALWAYS_TRUE(egl->fDestroySync(mSync));
       mSync = 0;
     }
 
-    mSync = egl->fCreateSync(egl->Display(), LOCAL_EGL_SYNC_FENCE, nullptr);
+    mSync = egl->fCreateSync(LOCAL_EGL_SYNC_FENCE, nullptr);
     if (mSync) {
       gl->fFlush();
       return;
@@ -116,22 +116,13 @@ void SharedSurface_EGLImage::ProducerReadAcquireImpl() {
   // Wait on the fence, because presumably we're going to want to read this
   // surface
   if (mSync) {
-    egl->fClientWaitSync(egl->Display(), mSync, 0, LOCAL_EGL_FOREVER);
+    egl->fClientWaitSync(mSync, 0, LOCAL_EGL_FOREVER);
   }
 }
 
 Maybe<layers::SurfaceDescriptor> SharedSurface_EGLImage::ToSurfaceDescriptor() {
   return Some(layers::EGLImageDescriptor((uintptr_t)mImage, (uintptr_t)mSync,
                                          mDesc.size, true));
-}
-
-bool SharedSurface_EGLImage::ReadbackBySharedHandle(
-    gfx::DataSourceSurface* out_surface) {
-  const auto& gle = GLContextEGL::Cast(mDesc.gl);
-  const auto& egl = gle->mEgl;
-  MOZ_ASSERT(out_surface);
-  MOZ_ASSERT(NS_IsMainThread());
-  return egl->ReadbackEGLImage(mImage, out_surface);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -180,7 +171,9 @@ SharedSurface_SurfaceTexture::~SharedSurface_SurfaceTexture() {
     // to the surface.
     UnlockProd();
   }
-  GLContextProviderEGL::DestroyEGLSurface(mEglSurface);
+  const auto& gle = GLContextEGL::Cast(mDesc.gl);
+  const auto& egl = gle->mEgl;
+  egl->fDestroySurface(mEglSurface);
   java::SurfaceAllocator::DisposeSurface(mSurface);
 }
 

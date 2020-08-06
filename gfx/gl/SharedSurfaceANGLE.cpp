@@ -15,17 +15,14 @@ namespace mozilla {
 namespace gl {
 
 // Returns `EGL_NO_SURFACE` (`0`) on error.
-static EGLSurface CreatePBufferSurface(GLLibraryEGL* egl, EGLDisplay display,
-                                       EGLConfig config,
+static EGLSurface CreatePBufferSurface(EglDisplay* egl, EGLConfig config,
                                        const gfx::IntSize& size) {
   const EGLint attribs[] = {LOCAL_EGL_WIDTH, size.width, LOCAL_EGL_HEIGHT,
                             size.height, LOCAL_EGL_NONE};
 
-  DebugOnly<EGLint> preCallErr = egl->fGetError();
-  MOZ_ASSERT(preCallErr == LOCAL_EGL_SUCCESS);
-  EGLSurface surface = egl->fCreatePbufferSurface(display, config, attribs);
-  EGLint err = egl->fGetError();
-  if (err != LOCAL_EGL_SUCCESS) {
+  EGLSurface surface = egl->fCreatePbufferSurface(config, attribs);
+  if (!surface) {
+    EGLint err = egl->mLib->fGetError();
     gfxCriticalError() << "Failed to create Pbuffer surface error: "
                        << gfx::hexa(err) << " Size : " << size;
     return 0;
@@ -41,27 +38,25 @@ SharedSurface_ANGLEShareHandle::Create(const SharedSurfaceDesc& desc) {
   const auto& egl = gle->mEgl;
   MOZ_ASSERT(egl);
   MOZ_ASSERT(egl->IsExtensionSupported(
-      GLLibraryEGL::ANGLE_surface_d3d_texture_2d_share_handle));
+      EGLExtension::ANGLE_surface_d3d_texture_2d_share_handle));
 
   const auto& config = gle->mConfig;
   MOZ_ASSERT(config);
 
-  EGLDisplay display = egl->Display();
-  EGLSurface pbuffer = CreatePBufferSurface(egl, display, config, desc.size);
+  EGLSurface pbuffer = CreatePBufferSurface(egl.get(), config, desc.size);
   if (!pbuffer) return nullptr;
 
   // Declare everything before 'goto's.
   HANDLE shareHandle = nullptr;
   bool ok = egl->fQuerySurfacePointerANGLE(
-      display, pbuffer, LOCAL_EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE,
-      &shareHandle);
+      pbuffer, LOCAL_EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE, &shareHandle);
   if (!ok) {
-    egl->fDestroySurface(egl->Display(), pbuffer);
+    egl->fDestroySurface(pbuffer);
     return nullptr;
   }
   void* opaqueKeyedMutex = nullptr;
-  egl->fQuerySurfacePointerANGLE(
-      display, pbuffer, LOCAL_EGL_DXGI_KEYED_MUTEX_ANGLE, &opaqueKeyedMutex);
+  egl->fQuerySurfacePointerANGLE(pbuffer, LOCAL_EGL_DXGI_KEYED_MUTEX_ANGLE,
+                                 &opaqueKeyedMutex);
   RefPtr<IDXGIKeyedMutex> keyedMutex =
       static_cast<IDXGIKeyedMutex*>(opaqueKeyedMutex);
 #ifdef DEBUG
@@ -81,13 +76,10 @@ SharedSurface_ANGLEShareHandle::Create(const SharedSurfaceDesc& desc) {
                                                      shareHandle, keyedMutex));
 }
 
-EGLDisplay SharedSurface_ANGLEShareHandle::Display() const {
-  return mEGL->Display();
-}
-
 SharedSurface_ANGLEShareHandle::SharedSurface_ANGLEShareHandle(
-    const SharedSurfaceDesc& desc, GLLibraryEGL* egl, EGLSurface pbuffer,
-    HANDLE shareHandle, const RefPtr<IDXGIKeyedMutex>& keyedMutex)
+    const SharedSurfaceDesc& desc, const std::weak_ptr<EglDisplay>& egl,
+    EGLSurface pbuffer, HANDLE shareHandle,
+    const RefPtr<IDXGIKeyedMutex>& keyedMutex)
     : SharedSurface(desc, nullptr),
       mEGL(egl),
       mPBuffer(pbuffer),
@@ -100,7 +92,10 @@ SharedSurface_ANGLEShareHandle::~SharedSurface_ANGLEShareHandle() {
   if (gl && GLContextEGL::Cast(gl)->GetEGLSurfaceOverride() == mPBuffer) {
     GLContextEGL::Cast(gl)->SetEGLSurfaceOverride(EGL_NO_SURFACE);
   }
-  mEGL->fDestroySurface(Display(), mPBuffer);
+  const auto egl = mEGL.lock();
+  if (egl) {
+    egl->fDestroySurface(mPBuffer);
+  }
 }
 
 void SharedSurface_ANGLEShareHandle::LockProdImpl() {
@@ -228,72 +223,6 @@ class ScopedLockTexture final {
   D3D11_MAPPED_SUBRESOURCE mSubresource;
 };
 
-bool SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(
-    gfx::DataSourceSurface* out_surface) {
-  MOZ_ASSERT(out_surface);
-
-  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetContentDevice();
-  if (!device) {
-    return false;
-  }
-
-  RefPtr<ID3D11Texture2D> tex;
-  HRESULT hr = device->OpenSharedResource(
-      mShareHandle, __uuidof(ID3D11Texture2D),
-      (void**)(ID3D11Texture2D**)getter_AddRefs(tex));
-
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  bool succeeded = false;
-  ScopedLockTexture scopedLock(tex, &succeeded);
-  if (!succeeded) {
-    return false;
-  }
-
-  const uint8_t* data =
-      reinterpret_cast<uint8_t*>(scopedLock.mSubresource.pData);
-  uint32_t srcStride = scopedLock.mSubresource.RowPitch;
-
-  gfx::DataSourceSurface::ScopedMap map(out_surface,
-                                        gfx::DataSourceSurface::WRITE);
-  if (!map.IsMapped()) {
-    return false;
-  }
-
-  if (map.GetStride() == srcStride) {
-    memcpy(map.GetData(), data,
-           out_surface->GetSize().height * map.GetStride());
-  } else {
-    const uint8_t bytesPerPixel = BytesPerPixel(out_surface->GetFormat());
-    for (int32_t i = 0; i < out_surface->GetSize().height; i++) {
-      memcpy(map.GetData() + i * map.GetStride(), data + i * srcStride,
-             bytesPerPixel * out_surface->GetSize().width);
-    }
-  }
-
-  DXGI_FORMAT srcFormat = scopedLock.mDesc.Format;
-  MOZ_ASSERT(srcFormat == DXGI_FORMAT_B8G8R8A8_UNORM ||
-             srcFormat == DXGI_FORMAT_B8G8R8X8_UNORM ||
-             srcFormat == DXGI_FORMAT_R8G8B8A8_UNORM);
-  bool isSrcRGB = srcFormat == DXGI_FORMAT_R8G8B8A8_UNORM;
-
-  gfx::SurfaceFormat destFormat = out_surface->GetFormat();
-  MOZ_ASSERT(destFormat == gfx::SurfaceFormat::R8G8B8X8 ||
-             destFormat == gfx::SurfaceFormat::R8G8B8A8 ||
-             destFormat == gfx::SurfaceFormat::B8G8R8X8 ||
-             destFormat == gfx::SurfaceFormat::B8G8R8A8);
-  bool isDestRGB = destFormat == gfx::SurfaceFormat::R8G8B8X8 ||
-                   destFormat == gfx::SurfaceFormat::R8G8B8A8;
-
-  if (isSrcRGB != isDestRGB) {
-    SwapRAndBComponents(out_surface);
-  }
-
-  return true;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Factory
 
@@ -305,8 +234,10 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext& gl) {
   const auto& gle = *GLContextEGL::Cast(&gl);
   const auto& egl = gle.mEgl;
 
-  auto ext = GLLibraryEGL::ANGLE_surface_d3d_texture_2d_share_handle;
-  if (!egl->IsExtensionSupported(ext)) return nullptr;
+  if (!egl->IsExtensionSupported(
+          EGLExtension::ANGLE_surface_d3d_texture_2d_share_handle)) {
+    return nullptr;
+  }
 
   if (XRE_IsContentProcess()) {
     gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
