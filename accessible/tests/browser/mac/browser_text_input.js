@@ -57,7 +57,7 @@ function testValueChangedEventData(
     textMarker
   );
   let str = macIface.getParameterizedAttributeValue(
-    "AXStringForTextMarkerRange",
+    "AXStringForTextMarkerRange_",
     range,
     "correct word before caret"
   );
