@@ -2011,6 +2011,17 @@ bool WarpCacheIRTranspiler::emitTypedArrayElementShiftResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitIsTypedArrayConstructorResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MIsTypedArrayConstructor::New(alloc(), obj);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGetNextMapSetEntryForIteratorResult(
     ObjOperandId iterId, ObjOperandId resultArrId, bool isMap) {
   MDefinition* iter = getOperand(iterId);

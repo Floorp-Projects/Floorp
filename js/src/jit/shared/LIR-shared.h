@@ -7735,6 +7735,18 @@ class LInitHomeObject : public LInstructionHelper<0, 1 + BOX_PIECES, 0> {
   const LAllocation* function() { return getOperand(0); }
 };
 
+class LIsTypedArrayConstructor : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(IsTypedArrayConstructor)
+
+  explicit LIsTypedArrayConstructor(const LAllocation& object)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, object);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
