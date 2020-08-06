@@ -10,7 +10,7 @@ permalink: /changelog/
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/113?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
 * **concept-menu**
   * Added `orientation` parameter to `MenuController.show`. Passing null (the default) tells the menu to determine the best orientation itself.
@@ -20,13 +20,13 @@ permalink: /changelog/
 
 * **feature-app-links**
   * Added `loadUrlUseCase` as a parameter for `AppLinksFeature`.  This is used to load the URL if the user decides to not launch the link in the external app.
-  
+
 * **concept-awesomebar**
   * Added `AwesomeBar.setOnEditSuggestionListener()` to register a callback when a search term is selected to be edited further.
 
 * **browser-toolbar**
   * `BrowserToolbar.setSearchTerms()` can now be called during `State.EDIT`
-  
+
 * **browser-awesomebar**
   * The view of `DefaultSuggestionViewHolder` now contains a button to select a search term for further editing. Clicking it will invoke the callback registered in `BrowserAwesomeBar.setOnEditSuggestionListener()`
 
@@ -69,7 +69,7 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `DownloadsFeature` is no longer accepting a custom download dialog but supporting customizations via the `promptStyling` parameter. The `dialog` parameter was unused so far. If it's required in the future it will need to be replaced with a lambda or factory so that the feature can create instances of the dialog itself, as needed.
 
 * **feature-webcompat-reporter**
-  * Added a second parameter to the `install` method: `productName` allows to provide a unique product name per usage for automatic product-labelling on webcompat.com 
+  * Added a second parameter to the `install` method: `productName` allows to provide a unique product name per usage for automatic product-labelling on webcompat.com
 
 * **feature-contextmenu**
   * Do not show the "Download link" option for html URLs.
