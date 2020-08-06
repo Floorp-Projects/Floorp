@@ -46,6 +46,8 @@ class JSONPrinter {
   void value(const char* format, ...) MOZ_FORMAT_PRINTF(2, 3);
   void value(int value);
 
+  void boolProperty(const char* name, bool value);
+
   void property(const char* name, const char* value);
   void property(const char* name, int32_t value);
   void property(const char* name, uint32_t value);
@@ -70,8 +72,14 @@ class JSONPrinter {
 
   void floatProperty(const char* name, double value, size_t precision);
 
-  void beginStringProperty(const char* name);
+  GenericPrinter& beginStringProperty(const char* name);
   void endStringProperty();
+
+  GenericPrinter& beginString();
+  void endString();
+
+  void nullProperty(const char* name);
+  void nullValue();
 
   void endObject();
   void endList();

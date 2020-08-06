@@ -139,6 +139,8 @@
 
 namespace js {
 
+class JSONPrinter;
+
 // Object-literal instruction opcodes. An object literal is constructed by a
 // straight-line sequence of these ops, each adding one property to the
 // object.
@@ -361,6 +363,12 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     return i >= 0 && static_cast<uint32_t>(i) <= ATOM_INDEX_MASK;
   }
 
+#ifdef DEBUG
+  void dump();
+  void dump(JSONPrinter& json);
+  void dumpFields(JSONPrinter& json);
+#endif
+
  private:
   ObjLiteralFlags flags_;
   ObjLiteralKey nextKey_;
@@ -564,6 +572,12 @@ class ObjLiteralCreationData {
   }
 
   JSObject* create(JSContext* cx) const;
+
+#ifdef DEBUG
+  void dump();
+  void dump(JSONPrinter& json);
+  void dumpFields(JSONPrinter& json);
+#endif
 };
 
 }  // namespace js
