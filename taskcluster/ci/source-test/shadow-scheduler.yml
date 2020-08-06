@@ -10,8 +10,8 @@ job-defaults:
         max-run-time: 3600
         artifacts:
             - type: file
-              name: public/shadow-scheduler/optimized_tasks.list
-              path: /builds/worker/optimized_tasks.list
+              name: public/shadow-scheduler/optimized-tasks.json
+              path: /builds/worker/optimized-tasks.json
         env:
             DECISION_TASK_ID: {task-reference: <decision>}
     treeherder:
@@ -20,7 +20,7 @@ job-defaults:
     run-on-projects: ['autoland']
     run:
         using: mach
-        mach: taskgraph optimized -v -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized_tasks.list
+        mach: taskgraph optimized -v --json -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized-tasks.json
         sparse-profile: taskgraph
 
 relevant_tests:
