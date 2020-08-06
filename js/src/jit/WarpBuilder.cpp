@@ -2435,8 +2435,14 @@ bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
 
 bool WarpBuilder::build_CheckIsObj(BytecodeLocation loc) {
   CheckIsObjectKind kind = loc.getCheckIsObjectKind();
-  MDefinition* val = current->pop();
 
+  MDefinition* toCheck = current->peek(-1);
+  if (toCheck->type() == MIRType::Object) {
+    toCheck->setImplicitlyUsedUnchecked();
+    return true;
+  }
+
+  MDefinition* val = current->pop();
   MCheckIsObj* ins = MCheckIsObj::New(alloc(), val, uint8_t(kind));
   current->add(ins);
   current->push(ins);
