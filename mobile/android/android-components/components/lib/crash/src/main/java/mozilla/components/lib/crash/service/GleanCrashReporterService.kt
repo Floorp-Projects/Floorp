@@ -11,6 +11,7 @@ import mozilla.components.lib.crash.GleanMetrics.CrashMetrics
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isMainProcess
 import java.io.File
+import java.io.IOException
 
 /**
  * A [CrashReporterService] implementation for recording metrics with Glean.  The purpose of this
@@ -113,7 +114,13 @@ class GleanCrashReporterService(
     @Suppress("ComplexMethod")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun parseCrashFile() {
-        val lines = file.readLines()
+        val lines = try {
+            file.readLines()
+        } catch (e: IOException) {
+            logger.error("Error reading crash file", e)
+            return
+        }
+
         var uncaughtExceptionCount = 0
         var caughtExceptionCount = 0
         var fatalNativeCodeCrashCount = 0
@@ -146,12 +153,13 @@ class GleanCrashReporterService(
     }
 
     /**
-     * This function handles the actual recording of the crash to the persisted crash file.  Since
-     * we are only guaranteed runtime for the lifetime of the [report] function, anything that we do
-     * in this function **MUST** be synchronous and blocking.  We cannot spawn work to background
-     * processes or threads here if we want to guarantee that the work is completed. Also, since the
-     * [report] functions are called synchronously, and from lib-crash's own process, it is unlikely
-     * that this would be called from more than one place at the same time.
+     * This function handles the actual recording of the crash to the persisted crash file. We are
+     * only guaranteed runtime for the lifetime of the [CrashReporterService.report] function,
+     * anything that we do in this function **MUST** be synchronous and blocking.  We cannot spawn
+     * work to background processes or threads here if we want to guarantee that the work is
+     * completed. Also, since the [CrashReporterService.report] functions are called synchronously,
+     * and from lib-crash's own process, it is unlikely that this would be called from more than one
+     * place at the same time.
      *
      * @param crash Pass in the correct crash label to write to the file
      * [UNCAUGHT_EXCEPTION_KEY], [CAUGHT_EXCEPTION_KEY], [FATAL_NATIVE_CODE_CRASH_KEY]
@@ -164,12 +172,20 @@ class GleanCrashReporterService(
         // as Glean is initialized in.
         // Create the file if it doesn't exist
         if (!file.exists()) {
-            file.createNewFile()
+            try {
+                file.createNewFile()
+            } catch (e: IOException) {
+                logger.error("Failed to create crash file", e)
+            }
         }
 
         // Add a line representing the crash that was received
         if (file.canWrite()) {
-            file.appendText(crash + "\n")
+            try {
+                file.appendText(crash + "\n")
+            } catch (e: IOException) {
+                logger.error("Failed to write to crash file", e)
+            }
         }
     }
 
