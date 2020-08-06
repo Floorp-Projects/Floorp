@@ -315,3 +315,19 @@ add_task(async function invalidate_pageproxystate() {
     );
   });
 });
+
+// Tests that the user doesn't get trapped in search mode if the update2 pref
+// is disabled after entering search mode.
+add_task(async function pref_flip_while_enabled() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_QUERY,
+  });
+  await enterSearchMode(window);
+  await verifySearchModeResultsAdded(window);
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
+  UrlbarTestUtils.assertSearchMode(window, null);
+  await SpecialPowers.popPrefEnv();
+});
