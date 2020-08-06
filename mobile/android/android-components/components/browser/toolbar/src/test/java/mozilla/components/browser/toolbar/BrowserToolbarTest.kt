@@ -446,6 +446,8 @@ class BrowserToolbarTest {
         verify(toolbar.edit).updateUrl("mozilla android", false)
 
         toolbar.setSearchTerms("")
+        verify(toolbar.edit).updateUrl("", false)
+
         toolbar.url = "https://www.mozilla.org"
         toolbar.editMode()
         verify(toolbar.display).url = "https://www.mozilla.org"
@@ -496,6 +498,19 @@ class BrowserToolbarTest {
 
         verify(toolbar.edit, never()).updateUrl("https://www.mozilla.org")
         verify(toolbar.edit).updateUrl("Mozilla Firefox")
+    }
+
+    @Test
+    fun `search terms are forwarded to edit toolbar when it is active`() {
+        val toolbar = BrowserToolbar(testContext)
+
+        toolbar.edit = spy(toolbar.edit)
+
+        toolbar.editMode()
+
+        toolbar.setSearchTerms("Mozilla Firefox")
+
+        verify(toolbar.edit).editSuggestion("Mozilla Firefox")
     }
 
     @Test

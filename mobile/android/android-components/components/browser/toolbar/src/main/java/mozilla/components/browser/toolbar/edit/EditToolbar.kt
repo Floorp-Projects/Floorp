@@ -49,7 +49,7 @@ private const val AUTOCOMPLETE_QUERY_THREADS = 3
  * - actions: Optional action icons injected by other components (e.g. barcode scanner)
  * - exit: Button that switches back to display mode or invoke an app-defined callback.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class EditToolbar internal constructor(
     context: Context,
     private val toolbar: BrowserToolbar,
@@ -197,7 +197,10 @@ class EditToolbar internal constructor(
      * Focuses the url input field and shows the virtual keyboard if needed.
      */
     fun focus() {
-        views.url.showKeyboard(flags = InputMethodManager.SHOW_FORCED)
+        views.url.run {
+            showKeyboard(flags = InputMethodManager.SHOW_FORCED)
+            requestFocus()
+        }
     }
 
     internal fun stopEditing() {
@@ -242,6 +245,17 @@ class EditToolbar internal constructor(
      */
     internal fun selectAll() {
         views.url.selectAll()
+    }
+
+    /**
+     * Applies the given search terms for further editing, requesting new suggestions along the way.
+     */
+    internal fun editSuggestion(searchTerms: String) {
+        updateUrl(searchTerms)
+        views.url.setSelection(views.url.text.length)
+        focus()
+
+        editListener?.onTextChanged(searchTerms)
     }
 
     /**

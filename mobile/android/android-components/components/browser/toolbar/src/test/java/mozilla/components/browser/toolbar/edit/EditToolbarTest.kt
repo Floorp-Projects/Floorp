@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.AutocompleteDelegate
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
@@ -192,5 +193,29 @@ class EditToolbarTest {
         assertNotNull(clearView)
         clearView.performClick()
         assertTrue(editToolbar.views.url.text.isBlank())
+    }
+
+    @Test
+    fun `editSuggestion sets text in urlView`() {
+        val (_, editToolbar) = createEditToolbar()
+        val url = editToolbar.views.url
+
+        url.setText("https://www.mozilla.org")
+        assertEquals("https://www.mozilla.org", url.text.toString())
+
+        var callbackCalled = false
+
+        editToolbar.editListener = object : Toolbar.OnEditListener {
+            override fun onTextChanged(text: String) {
+                callbackCalled = true
+            }
+        }
+
+        editToolbar.editSuggestion("firefox")
+
+        assertEquals("firefox", url.text.toString())
+        assertTrue(callbackCalled)
+        assertEquals("firefox".length, url.selectionStart)
+        assertTrue(url.hasFocus())
     }
 }

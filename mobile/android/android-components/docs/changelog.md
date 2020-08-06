@@ -55,6 +55,13 @@ permalink: /changelog/
   * Do not show the "Download link" option for html URLs.
   * Uses a speculative check, may not work in all cases.
 
+* **concept-awesomebar**
+  * Added `AwesomeBar.setOnEditSuggestionListener()` to register a callback when a search term is selected to be edited further.  
+* **browser-toolbar**
+  * `BrowserToolbar.setSearchTerms()` can now be called during `State.EDIT`
+* **browser-awesomebar**
+  * The view of `DefaultSuggestionViewHolder` now contains a button to select a search term for further editing. Clicking it will invoke the callback registered in `BrowserAwesomeBar.setOnEditSuggestionListener()`
+
 # 52.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v51.0.0...v52.0.0)

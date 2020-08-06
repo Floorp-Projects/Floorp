@@ -68,6 +68,11 @@ interface AwesomeBar {
     fun setOnStopListener(listener: () -> Unit)
 
     /**
+     * Adds a lambda to be invoked when the user selected a suggestion to be edited further.
+     */
+    fun setOnEditSuggestionListener(listener: (String) -> Unit)
+
+    /**
      * A [Suggestion] to be displayed by an [AwesomeBar] implementation.
      *
      * @property provider The provider this suggestion came from.
