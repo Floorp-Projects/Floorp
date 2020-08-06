@@ -2,8 +2,9 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
@@ -35,11 +36,11 @@ class SettingsSubMenuAddonsManagerAddonDetailedMenuRobot {
     }
 
     private fun assertAddonMenuItems() {
-        enableSwitchButton().check(matches(isCompletelyDisplayed()))
-        settingsButton().check(matches(isCompletelyDisplayed()))
-        detailsButton().check(matches(isCompletelyDisplayed()))
-        permissionsButton().check(matches(isCompletelyDisplayed()))
-        removeAddonButton().check(matches(isCompletelyDisplayed()))
+        enableSwitchButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        settingsButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        detailsButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        permissionsButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        removeAddonButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     }
 }
 
