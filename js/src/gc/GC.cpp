@@ -2130,6 +2130,9 @@ bool MovingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
   return updateEdge(sharedp);
 }
 bool MovingTracer::onBigIntEdge(BigInt** bip) { return updateEdge(bip); }
+bool MovingTracer::onObjectGroupEdge(ObjectGroup** groupp) {
+  return updateEdge(groupp);
+}
 
 void Zone::prepareForCompacting() {
   JSFreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
@@ -2365,9 +2368,11 @@ void GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone) {
   zone->typeDescrObjects().sweep(nullptr);
 
   for (auto r = zone->typeDescrObjects().all(); !r.empty(); r.popFront()) {
-    NativeObject* obj = &r.front()->as<NativeObject>();
+    MOZ_ASSERT(MaybeForwardedObjectClass(r.front())->isNative());
+    NativeObject* obj = static_cast<NativeObject*>(r.front());
     UpdateCellPointers(trc, obj);
-    MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(obj->getClass()) == JS_DESCR_SLOTS);
+    MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(MaybeForwardedObjectClass(obj)) ==
+               JS_DESCR_SLOTS);
     for (size_t i = 0; i < JS_DESCR_SLOTS; i++) {
       Value value = obj->getSlot(i);
       if (value.isObject()) {
@@ -2419,22 +2424,22 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds) {
 //  3) all other objects
 //
 // Also, there can be data races calling IsForwarded() on the new location of a
-// cell that is being updated in parallel on another thread. This can be avoided
-// by updating some kinds of cells in different phases. This is done for
-// BaseScripts and Scopes.
+// cell whose first word is being updated in parallel on another thread. This
+// easiest way to avoid this is to not store a GC pointer in the first word of a
+// cell. Otherwise this can be avoided by updating different kinds of cell in
+// different phases.
 //
 // Since we want to minimize the number of phases, arrange kinds into three
 // arbitrary phases.
 
 static constexpr AllocKinds UpdatePhaseOne{
-    AllocKind::SCRIPT,         AllocKind::BASE_SHAPE,   AllocKind::SHAPE,
-    AllocKind::ACCESSOR_SHAPE, AllocKind::OBJECT_GROUP, AllocKind::STRING,
-    AllocKind::JITCODE,        AllocKind::REGEXP_SHARED};
+    AllocKind::SCRIPT,         AllocKind::BASE_SHAPE,    AllocKind::SHAPE,
+    AllocKind::ACCESSOR_SHAPE, AllocKind::OBJECT_GROUP,  AllocKind::STRING,
+    AllocKind::JITCODE,        AllocKind::REGEXP_SHARED, AllocKind::SCOPE};
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
-static constexpr AllocKinds UpdatePhaseThree{AllocKind::SCOPE,
-                                             AllocKind::FUNCTION,
+static constexpr AllocKinds UpdatePhaseThree{AllocKind::FUNCTION,
                                              AllocKind::FUNCTION_EXTENDED,
                                              AllocKind::OBJECT0,
                                              AllocKind::OBJECT0_BACKGROUND,

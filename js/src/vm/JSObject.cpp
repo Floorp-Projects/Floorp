@@ -1870,6 +1870,10 @@ NativeObject* js::InitClass(JSContext* cx, HandleObject obj,
 }
 
 void JSObject::fixupAfterMovingGC() {
+  if (IsForwarded(groupRaw())) {
+    setGroupRaw(Forwarded(groupRaw()));
+  }
+
   // For copy-on-write objects that don't own their elements, fix up the
   // elements pointer if it points to inline elements in the owning object.
   if (is<NativeObject>()) {

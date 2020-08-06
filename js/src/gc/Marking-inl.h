@@ -68,7 +68,8 @@ struct MightBeForwarded {
       std::is_base_of_v<BaseShape, T> || std::is_base_of_v<JSString, T> ||
       std::is_base_of_v<JS::BigInt, T> ||
       std::is_base_of_v<js::BaseScript, T> || std::is_base_of_v<js::Scope, T> ||
-      std::is_base_of_v<js::RegExpShared, T>;
+      std::is_base_of_v<js::RegExpShared, T> ||
+      std::is_base_of_v<js::ObjectGroup, T>;
 };
 
 template <typename T>
@@ -104,6 +105,22 @@ inline T MaybeForwarded(T t) {
     t = Forwarded(t);
   }
   return t;
+}
+
+inline const JSClass* MaybeForwardedObjectClass(const JSObject* obj) {
+  return MaybeForwarded(obj->groupRaw())->clasp();
+}
+
+template <typename T>
+inline bool MaybeForwardedObjectIs(JSObject* obj) {
+  MOZ_ASSERT(!obj->isForwarded());
+  return MaybeForwardedObjectClass(obj) == &T::class_;
+}
+
+template <typename T>
+inline T& MaybeForwardedObjectAs(JSObject* obj) {
+  MOZ_ASSERT(MaybeForwardedObjectIs<T>(obj));
+  return *static_cast<T*>(obj);
 }
 
 inline RelocationOverlay::RelocationOverlay(Cell* dst) {
