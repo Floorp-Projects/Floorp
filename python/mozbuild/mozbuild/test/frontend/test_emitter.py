@@ -188,6 +188,7 @@ class TestEmitterBasic(unittest.TestCase):
         wanted = {
             'NO_DIST_INSTALL': True,
             'RCFILE': 'foo.rc',
+            'RESFILE': 'bar.res',
             'RCINCLUDE': 'bar.rc',
             'WIN32_EXE_LDFLAGS': ['-subsystem:console'],
         }

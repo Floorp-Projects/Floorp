@@ -457,6 +457,30 @@ def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host):
     return result
 
 
+# allow_missing=True for mingw builds, until bug 1617793
+mt = check_prog('MT', ('mt.exe',), allow_missing=True, paths=sdk_bin_path)
+
+
+# Check that MT is not something unexpected like "magnetic tape manipulation
+# utility".
+@depends(mt, wine)
+@checking('whether MT is really Microsoft Manifest Tool', lambda x: bool(x))
+def valid_mt(path, wine):
+    if not path:
+        return None
+    if wine and path.lower().endswith('.exe'):
+        out = check_cmd_output(wine, path, onerror=lambda: '').splitlines()
+    else:
+        out = check_cmd_output(path, onerror=lambda: '').splitlines()
+    out = '\n'.join(l for l in out
+                    if 'Microsoft (R) Manifest Tool' in l)
+    if out:
+        return path
+    raise FatalCheckError('%s is not Microsoft Manifest Tool')
+
+
+set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
+
 js_option(env='LINKER', nargs=1, when=target_is_windows, help='Path to the linker')
 
 link = check_prog('LINKER', ('lld-link',), input='LINKER',
