@@ -272,7 +272,8 @@ class Core(private val context: Context) {
     private val passwordsEncryptionKey by lazy {
         getSecureAbove22Preferences().getString(PASSWORDS_KEY)
             ?: generateEncryptionKey(KEY_STRENGTH).also {
-                if (context.settings().passwordsEncryptionKeyGenerated) {
+                if (context.settings().passwordsEncryptionKeyGenerated &&
+                    isSentryEnabled()) {
                     // We already had previously generated an encryption key, but we have lost it
                     Sentry.capture("Passwords encryption key for passwords storage was lost and we generated a new one")
                 }
