@@ -77,10 +77,9 @@ struct MOZ_STACK_CLASS GCThingList {
     *index = GCThingIndex(vector.length());
     return vector.append(mozilla::AsVariant(literal->index()));
   }
-  MOZ_MUST_USE bool append(ObjLiteralCreationData&& objlit,
-                           GCThingIndex* index) {
+  MOZ_MUST_USE bool append(ObjLiteralIndex objlit, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    return vector.append(mozilla::AsVariant(std::move(objlit)));
+    return vector.append(mozilla::AsVariant(objlit));
   }
   MOZ_MUST_USE bool append(FunctionBox* funbox, GCThingIndex* index);
 

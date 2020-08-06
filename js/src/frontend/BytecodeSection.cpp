@@ -88,7 +88,8 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
       return true;
     }
 
-    bool operator()(const ObjLiteralCreationData& data) {
+    bool operator()(const ObjLiteralIndex& index) {
+      ObjLiteralCreationData& data = compilationInfo.objLiteralData[index];
       JSObject* obj = data.create(cx);
       if (!obj) {
         return false;

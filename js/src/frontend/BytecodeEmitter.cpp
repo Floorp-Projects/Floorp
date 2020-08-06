@@ -1628,7 +1628,12 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
   // with |NewObject|.
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
-  ObjLiteralCreationData data(cx);
+  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
+  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+    return false;
+  }
+  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+
   data.writer().beginObject(flags);
 
   for (auto name : {&JSAtomState::value, &JSAtomState::done}) {
@@ -1645,7 +1650,7 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
     }
   }
 
-  return perScriptData().gcThingList().append(std::move(data), shape);
+  return perScriptData().gcThingList().append(objIndex, shape);
 }
 
 bool BytecodeEmitter::emitPrepareIteratorResult() {
@@ -4585,7 +4590,12 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
     MOZ_ASSERT(cookedOrRaw->isKind(ParseNodeKind::ArrayExpr));
   }
 
-  ObjLiteralCreationData data(cx);
+  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
+  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+    return false;
+  }
+  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   data.writer().beginObject(flags);
   data.writer().beginDenseArrayElements();
@@ -4601,7 +4611,7 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
   }
   MOZ_ASSERT(idx == count);
 
-  return perScriptData().gcThingList().append(std::move(data), arrayIndex);
+  return perScriptData().gcThingList().append(objIndex, arrayIndex);
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
@@ -8760,7 +8770,12 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                                                  ObjLiteralFlags flags) {
-  ObjLiteralCreationData data(cx);
+  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
+  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+    return false;
+  }
+  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+
   data.writer().beginObject(flags);
   bool noValues = flags.contains(ObjLiteralFlag::NoValues);
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
@@ -8799,7 +8814,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
   }
 
   GCThingIndex index;
-  if (!perScriptData().gcThingList().append(std::move(data), &index)) {
+  if (!perScriptData().gcThingList().append(objIndex, &index)) {
     return false;
   }
 
@@ -8823,7 +8838,12 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   // with |NewObject|.
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
-  ObjLiteralCreationData data(cx);
+  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
+  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+    return false;
+  }
+  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+
   data.writer().beginObject(flags);
 
   for (ParseNode* member : pattern->contents()) {
@@ -8852,7 +8872,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   }
 
   GCThingIndex index;
-  if (!perScriptData().gcThingList().append(std::move(data), &index)) {
+  if (!perScriptData().gcThingList().append(objIndex, &index)) {
     return false;
   }
 
@@ -8870,7 +8890,12 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
 }
 
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
-  ObjLiteralCreationData data(cx);
+  ObjLiteralIndex objIndex(compilationInfo.objLiteralData.length());
+  if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
+    return false;
+  }
+  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   if (isCow) {
     flags += ObjLiteralFlag::ArrayCOW;
@@ -8885,7 +8910,7 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
   }
 
   GCThingIndex index;
-  if (!perScriptData().gcThingList().append(std::move(data), &index)) {
+  if (!perScriptData().gcThingList().append(objIndex, &index)) {
     return false;
   }
 

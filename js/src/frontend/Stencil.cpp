@@ -1168,13 +1168,8 @@ static void DumpScriptThing(js::JSONPrinter& json, ScriptThingVariant& thing) {
       json.value("RegExpIndex(%zu)", size_t(index));
     }
 
-    void operator()(ObjLiteralCreationData& data) {
-      json.beginObject();
-      json.property("type", "ObjLiteralCreationData");
-      json.beginObjectProperty("value");
-      data.dumpFields(json);
-      json.endObject();
-      json.endObject();
+    void operator()(ObjLiteralIndex& index) {
+      json.value("ObjLiteralIndex(%zu)", size_t(index));
     }
 
     void operator()(ScopeIndex& index) {
@@ -1299,6 +1294,12 @@ void CompilationInfo::dumpStencil(js::JSONPrinter& json) {
 
   json.beginListProperty("bigIntData");
   for (auto& data : bigIntData) {
+    data.dump(json);
+  }
+  json.endList();
+
+  json.beginListProperty("objLiteralData");
+  for (auto& data : objLiteralData) {
     data.dump(json);
   }
   json.endList();
