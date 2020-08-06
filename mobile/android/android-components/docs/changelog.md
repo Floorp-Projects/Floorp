@@ -12,6 +12,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **concept-menu**
+  * Added `orientation` parameter to `MenuController.show`. Passing null (the default) tells the menu to determine the best orientation itself.
+
+* **browser-menu2**
+  * ⚠️ **This is a breaking change**: `BrowserMenuController.show` no longer supports the width parameter.
+
 # 53.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v52.0.0...v53.0.0)

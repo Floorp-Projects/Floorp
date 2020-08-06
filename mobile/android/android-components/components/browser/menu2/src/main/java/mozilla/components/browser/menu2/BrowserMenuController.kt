@@ -7,7 +7,6 @@ package mozilla.components.browser.menu2
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.PopupWindow
-import androidx.annotation.Px
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.browser.menu2.ext.displayPopup
 import mozilla.components.browser.menu2.view.MenuView
@@ -36,17 +35,13 @@ class BrowserMenuController(
         notifyObservers { onDismiss() }
     }
 
-    override fun show(anchor: View): PopupWindow = show(anchor, orientation = null)
-
     /**
      * @param anchor The view on which to pin the popup window.
      * @param orientation The preferred orientation to show the popup window.
-     * @param width The width of the popup menu. The height is always set to wrap content.
      */
-    fun show(
+    override fun show(
         anchor: View,
-        orientation: Orientation? = null,
-        @Px width: Int = anchor.resources.getDimensionPixelSize(R.dimen.mozac_browser_menu2_width)
+        orientation: Orientation?
     ): PopupWindow {
         val desiredOrientation = orientation ?: determineMenuOrientation(anchor.parent as? View?)
         val view = MenuView(anchor.context).apply {
@@ -55,7 +50,7 @@ class BrowserMenuController(
             setVisibleSide(visibleSide)
         }
 
-        return MenuPopupWindow(view, width).apply {
+        return MenuPopupWindow(view).apply {
             view.onDismiss = ::dismiss
             view.onReopenMenu = ::reopenMenu
             setOnDismissListener(menuDismissListener)
@@ -129,9 +124,8 @@ class BrowserMenuController(
     }
 
     private class MenuPopupWindow(
-        val view: MenuView,
-        @Px width: Int
-    ) : PopupWindow(view, width, WRAP_CONTENT, true)
+        val view: MenuView
+    ) : PopupWindow(view, WRAP_CONTENT, WRAP_CONTENT, true)
 
     private data class PopupMenuInfo(
         val window: MenuPopupWindow,

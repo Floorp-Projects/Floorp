@@ -16,8 +16,9 @@ interface MenuController : Observable<MenuController.Observer> {
 
     /**
      * @param anchor The view on which to pin the popup window.
+     * @param orientation The preferred orientation to show the popup window.
      */
-    fun show(anchor: View): PopupWindow
+    fun show(anchor: View, orientation: Orientation? = null): PopupWindow
 
     /**
      * Dismiss the menu popup if the menu is visible.
