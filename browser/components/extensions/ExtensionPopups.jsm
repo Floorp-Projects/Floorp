@@ -283,6 +283,13 @@ class BasePopup {
     browser.setAttribute("autocompletepopup", "PopupAutoComplete");
     browser.setAttribute("selectmenulist", "ContentSelectDropdown");
     browser.setAttribute("selectmenuconstrained", "false");
+
+    // Ensure the browser will initially load in the same group as other
+    // browsers from the same extension.
+    browser.setAttribute(
+      "initialBrowsingContextGroupId",
+      this.extension.policy.browsingContextGroupId
+    );
     browser.sameProcessAsFrameLoader = this.extension.groupFrameLoader;
 
     if (this.extension.remote) {
