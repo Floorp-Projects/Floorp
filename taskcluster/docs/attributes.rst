@@ -367,6 +367,12 @@ review bot, the task will ran for every new Phabricator diff.
 Any supported and detected issue will be automatically reported on the
 Phabricator revision.
 
+resource-monitor
+================
+If a task set this boolean attribute to `true`, it will collect CPU, memory, and
+- if available - Disk and Network IO by running the resource-monitor utility,
+provided through fetches.
+
 retrigger
 =========
 Whether the task can be retriggered, or if it needs to be re-run.

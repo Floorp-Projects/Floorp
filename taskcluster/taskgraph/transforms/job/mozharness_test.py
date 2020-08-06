@@ -109,11 +109,12 @@ def mozharness_test_on_docker(config, job, taskdesc):
     mozharness_url = get_artifact_url('<build>',
                                       get_artifact_path(taskdesc, 'mozharness.zip'))
 
-    worker['artifacts'] = [{
+    worker.setdefault('artifacts', [])
+    worker['artifacts'].extend([{
         'name': prefix,
         'path': os.path.join('{workdir}/workspace'.format(**run), path),
         'type': 'directory',
-    } for (prefix, path) in artifacts]
+    } for (prefix, path) in artifacts])
 
     env = worker.setdefault('env', {})
     env.update({
@@ -283,7 +284,8 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
 
     worker['max-run-time'] = test['max-run-time']
     worker['retry-exit-status'] = test['retry-exit-status']
-    worker['artifacts'] = artifacts
+    worker.setdefault('artifacts', [])
+    worker['artifacts'].extend(artifacts)
 
     env = worker.setdefault('env', {})
     env['GECKO_HEAD_REPOSITORY'] = config.params['head_repository']

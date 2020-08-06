@@ -1,0 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+resource-monitor:
+    description: Resource monitoring tools
+    fetch:
+        type: git
+        repo: https://github.com/mozilla-releng/resource-monitor
+        revision: 17371502a3b04579375d707844e6bf08dee95d22

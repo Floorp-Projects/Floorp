@@ -39,6 +39,7 @@ jobs-from:
     - misc.yml
     - nasm.yml
     - node.yml
+    - resourcemonitor.yml
     - rust.yml
     - rust-size.yml
     - sccache.yml

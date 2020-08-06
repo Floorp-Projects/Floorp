@@ -114,6 +114,14 @@ gmp-6.1.0:
         strip-components: 1
         add-prefix: gmp-source/
 
+go-1.14.4:
+    description: Golang 1.14.4 build tools
+    fetch:
+        type: static-url
+        url: https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
+        sha256: aed845e4185a0b2a3c3d5e1d0a35491702c55889192bb9c30e67a3de6849c067
+        size: 123711003
+
 iris-2.0:
     description: Iris_Firefox source code
     fetch:
