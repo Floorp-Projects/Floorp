@@ -11654,6 +11654,24 @@ class MInitHomeObject : public MBinaryInstruction,
   }
 };
 
+// Return true if the object is definitely a TypedArray constructor, but not
+// necessarily from the currently active realm. Return false if the object is
+// not a TypedArray constructor or if it's a wrapper.
+class MIsTypedArrayConstructor : public MUnaryInstruction,
+                                 public SingleObjectPolicy::Data {
+  explicit MIsTypedArrayConstructor(MDefinition* object)
+      : MUnaryInstruction(classOpcode, object) {
+    setResultType(MIRType::Boolean);
+  }
+
+ public:
+  INSTRUCTION_HEADER(IsTypedArrayConstructor)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.

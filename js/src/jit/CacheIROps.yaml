@@ -962,6 +962,13 @@
     obj: ObjId
     isPossiblyWrapped: BoolImm
 
+- name: IsTypedArrayConstructorResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: TypedArrayByteOffsetResult
   shared: true
   transpile: true
