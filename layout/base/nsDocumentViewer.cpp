@@ -3266,7 +3266,7 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   }
 
   // Figure where we are currently scrolled to
-  nsPoint pt = sf->GetScrollPosition();
+  nsPoint currentScrollPosition = sf->GetScrollPosition();
 
   int32_t pageNum = 1;
   nsIFrame* fndPageFrame = nullptr;
@@ -3282,7 +3282,7 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   // and the page of the page number
   for (nsIFrame* pageFrame : seqFrame->PrincipalChildList()) {
     nsRect pageRect = pageFrame->GetRect();
-    if (pageRect.Contains(pageRect.x, pt.y)) {
+    if (pageRect.Contains(pageRect.x, currentScrollPosition.y)) {
       currentPage = pageFrame;
     }
     if (pageNum == aPageNum) {
@@ -3319,7 +3319,8 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   if (fndPageFrame) {
     nscoord newYPosn = nscoord(seqFrame->GetPrintPreviewScale() *
                                fndPageFrame->GetPosition().y);
-    sf->ScrollTo(nsPoint(pt.x, newYPosn), ScrollMode::Instant);
+    sf->ScrollTo(nsPoint(currentScrollPosition.x, newYPosn),
+                 ScrollMode::Instant);
   }
   return NS_OK;
 }
