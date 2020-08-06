@@ -83,6 +83,8 @@ class FenixTabsAdapter(
                     }
                     true
                 }
+            } else {
+                holder.itemView.setOnLongClickListener(null)
             }
 
             holder.itemView.setOnClickListener {
