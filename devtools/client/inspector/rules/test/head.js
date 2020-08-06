@@ -19,6 +19,10 @@ var {
   getInplaceEditorForSpan: inplaceEditor,
 } = require("devtools/client/shared/inplace-editor");
 
+const {
+  COMPATIBILITY_TOOLTIP_MESSAGE,
+} = require("devtools/client/inspector/rules/constants");
+
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(
@@ -673,6 +677,7 @@ async function openEyedropper(view, swatch) {
  *                  propertyValue: "red",
  *                  warning: "This won't work",
  *                  used: true,
+ *                  isCompatible: Promise<boolean>,
  *                }
  *            },
  *            ...
@@ -685,6 +690,8 @@ function getPropertiesForRuleIndex(view, ruleIndex) {
   for (const currProp of ruleEditor.rule.textProps) {
     const icon = currProp.editor.unusedState;
     const unused = currProp.editor.element.classList.contains("unused");
+    const compatibilityData = currProp.isCompatible();
+    const compatibilityIcon = currProp.editor.compatibilityState;
 
     declaration.set(`${currProp.name}:${currProp.value}`, {
       propertyName: currProp.name,
@@ -693,6 +700,9 @@ function getPropertiesForRuleIndex(view, ruleIndex) {
       data: currProp.isUsed(),
       warning: unused,
       used: !unused,
+      isCompatible: compatibilityData.then(data => data.isCompatible),
+      compatibilityData,
+      compatibilityIcon,
     });
   }
 
@@ -793,6 +803,51 @@ function getTextProperty(view, ruleIndex, declaration) {
 }
 
 /**
+ * Check whether the given CSS declaration is compatible or not
+ *
+ * @param {ruleView} view
+ *        The rule-view instance.
+ * @param {Number} ruleIndex
+ *        The index we expect the rule to have in the rule-view.
+ * @param {Object} declaration
+ *        An object representing the declaration e.g. { color: "red" }.
+ * @param {string | undefined} expected
+ *        Expected message ID for the given incompatible property.
+ * If the expected message is not specified (undefined), the given declaration
+ * is inferred as cross-browser compatible and is tested for same.
+ */
+async function checkDeclarationCompatibility(
+  view,
+  ruleIndex,
+  declaration,
+  expected
+) {
+  const declarations = getPropertiesForRuleIndex(view, ruleIndex);
+  const [[name, value]] = Object.entries(declaration);
+  const dec = `${name}:${value}`;
+  const { isCompatible, compatibilityData } = declarations.get(dec);
+  const compatibilityStatus = await isCompatible;
+
+  is(
+    !expected,
+    compatibilityStatus,
+    `"${dec}" has the correct compatibility status in the payload`
+  );
+
+  if (expected) {
+    const messageId = (await compatibilityData).msgId;
+    is(messageId, expected, `"${dec}" has expected message ID`);
+
+    await checkInteractiveTooltip(
+      view,
+      "compatibility-tooltip",
+      ruleIndex,
+      declaration
+    );
+  }
+}
+
+/**
  * Check that a declaration is marked inactive and that it has the expected
  * warning.
  *
@@ -812,7 +867,12 @@ async function checkDeclarationIsInactive(view, ruleIndex, declaration) {
   ok(!used, `"${dec}" is inactive`);
   ok(warning, `"${dec}" has a warning`);
 
-  await checkInteractiveTooltip(view, ruleIndex, declaration);
+  await checkInteractiveTooltip(
+    view,
+    "inactive-css-tooltip",
+    ruleIndex,
+    declaration
+  );
 }
 
 /**
@@ -840,24 +900,43 @@ function checkDeclarationIsActive(view, ruleIndex, declaration) {
  *
  * @param {ruleView} view
  *        The rule-view instance.
+ *  @param {string} type
+ *        The interactive tooltip type being tested.
  * @param {Number} ruleIndex
  *        The index we expect the rule to have in the rule-view.
  * @param {Object} declaration
  *        An object representing the declaration e.g. { color: "red" }.
  */
-async function checkInteractiveTooltip(view, ruleIndex, declaration) {
+async function checkInteractiveTooltip(view, type, ruleIndex, declaration) {
   // Get the declaration
   const declarations = getPropertiesForRuleIndex(view, ruleIndex);
   const [[name, value]] = Object.entries(declaration);
   const dec = `${name}:${value}`;
-  const { icon, data } = declarations.get(dec);
+
+  // Get the relevant icon and tooltip payload data
+  let icon;
+  let data;
+  if (type === "inactive-css-tooltip") {
+    ({ icon, data } = declarations.get(dec));
+  } else {
+    const { compatibilityIcon, compatibilityData } = declarations.get(dec);
+    icon = compatibilityIcon;
+    data = await compatibilityData;
+  }
 
   // Get the tooltip.
   const tooltip = view.tooltips.getTooltip("interactiveTooltip");
 
+  // Get the necessary tooltip helper to fetch the Fluent template.
+  let tooltipHelper;
+  if (type === "inactive-css-tooltip") {
+    tooltipHelper = view.tooltips.inactiveCssTooltipHelper;
+  } else {
+    tooltipHelper = view.tooltips.compatibilityTooltipHelper;
+  }
+
   // Get the HTML template.
-  const inactiveCssTooltipHelper = view.tooltips.inactiveCssTooltipHelper;
-  const template = inactiveCssTooltipHelper.getTemplate(data, tooltip);
+  const template = tooltipHelper.getTemplate(data, tooltip);
 
   // Translate the template using Fluent.
   const { doc } = tooltip;
@@ -882,6 +961,60 @@ async function checkInteractiveTooltip(view, ruleIndex, declaration) {
 
   // Finally, check the values.
   is(actual, expected, "Tooltip contains the correct value.");
+}
+
+/**
+ * CSS compatibility test runner.
+ *
+ * @param {ruleView} view
+ *        The rule-view instance.
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox.
+ * @param {Array} tests
+ *        An array of test object for this method to consume e.g.
+ *          [
+ *            {
+ *              selector: "#flex-item",
+ *              rules: [
+ *                // Rule Index: 0
+ *                {
+ *                  // If the object doesn't include the "expected"
+ *                  // key, we consider the declaration as
+ *                  // cross-browser compatible and test for same
+ *                  color: { value: "green" },
+ *                },
+ *                // Rule Index: 1
+ *                {
+ *                  cursor:
+ *                  {
+ *                    value: "grab",
+ *                    expected: INCOMPATIBILITY_TOOLTIP_MESSAGE.default,
+ *                  },
+ *                },
+ *              ],
+ *            },
+ *            ...
+ *          ]
+ */
+async function runCSSCompatibilityTests(view, inspector, tests) {
+  for (const test of tests) {
+    if (test.selector) {
+      await selectNode(test.selector, inspector);
+    }
+
+    for (const [ruleIndex, rules] of test.rules.entries()) {
+      for (const rule in rules) {
+        await checkDeclarationCompatibility(
+          view,
+          ruleIndex,
+          {
+            [rule]: rules[rule].value,
+          },
+          rules[rule].expected
+        );
+      }
+    }
+  }
 }
 
 /**
