@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "properties": {
+    "addon_id": {
+      "type": "string"
+    },
+    "icons": {
+      "type": "object",
+      "properties": {
+        "32": {
+          "type": "string"
+        },
+        "64": {
+          "type": "string"
+        },
+        "128": {
+          "type": "string"
+        }
+      }
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 75
+    },
+    "version": {
+      "type": "string"
+    },
+    "sourceURI": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "string"
+        }
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "privacyPolicy": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "string"
+        }
+      }
+    },
+    "studyType": {
+      "type": "string"
+    },
+    "moreInfo": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "string"
+        }
+      }
+    },
+    "dataCollectionDetails": {
+      "type": "array",
+      "properties": {
+        "collectionDetail": {
+          "type": "string"
+        }
+      }
+    },
+    "authors": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 75
+        },
+        "moreInfo": {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "addon_id",
+    "icons",
+    "version",
+    "sourceURI",
+    "description",
+    "privacyPolicy",
+    "studyType",
+    "moreInfo",
+    "dataCollectionDetails",
+    "authors"
+  ]
+}

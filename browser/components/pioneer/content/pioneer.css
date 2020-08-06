@@ -58,7 +58,7 @@ details > summary {
   line-height: 1;
 }
 
-.card-creator {
+.card-author {
   margin: 0;
   font-size: 14px;
   font-weight: 400;
@@ -67,6 +67,7 @@ details > summary {
 .card-actions {
   align-self: center;
   flex-shrink: 0;
+  min-width: 120px;
 }
 
 .join-button {
@@ -76,6 +77,12 @@ details > summary {
 }
 
 .card-description {
+  font-size: 14px;
+  font-weight: normal;
+  width: 100%;
+}
+
+.card-data-collected {
   font-size: 14px;
   font-weight: normal;
 }
