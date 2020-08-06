@@ -106,13 +106,24 @@ class ToolbarViewTest {
         view.update(defaultState)
         view.update(defaultState)
 
-        verify(exactly = 1) { toolbar.url = any() }
         verify(exactly = 1) { toolbar.setSearchTerms(any()) }
-        verify(exactly = 1) { interactor.onTextChanged(any()) }
-        // editMode gets called when the view is initialized. So it is called twice in this test
-        verify(exactly = 2) { toolbar.editMode() }
 
         assertTrue(view.isInitialized)
+    }
+
+    @Test
+    fun `search term updates the url`() {
+        val view = buildToolbarView(false)
+
+        view.update(defaultState)
+        view.update(defaultState)
+        view.update(defaultState)
+
+        // editMode gets called when the view is initialized.
+        verify(exactly = 2) { toolbar.editMode() }
+        // search term changes update the url and invoke the interactor.
+        verify(exactly = 2) { toolbar.url = any() }
+        verify(exactly = 2) { interactor.onTextChanged(any()) }
     }
 
     @Test

@@ -126,7 +126,14 @@ class ToolbarView(
             /* Only set the search terms if pasted text is null so that the search term doesn't
             overwrite pastedText when view enters `editMode` */
             if (searchState.pastedText.isNullOrEmpty()) {
-                view.setSearchTerms(searchState.searchTerms)
+                // If we're in edit mode, setting the search term will update the toolbar,
+                // so we make sure we have the correct term/query to show.
+                val termOrQuery = if (searchState.searchTerms.isNotEmpty()) {
+                    searchState.searchTerms
+                } else {
+                    searchState.query
+                }
+                view.setSearchTerms(termOrQuery)
             }
 
             // We must trigger an onTextChanged so when search terms are set when transitioning to `editMode`
