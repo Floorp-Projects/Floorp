@@ -14511,6 +14511,14 @@ void CodeGenerator::visitInitHomeObject(LInitHomeObject* lir) {
   masm.storeValue(homeObject, addr);
 }
 
+void CodeGenerator::visitIsTypedArrayConstructor(
+    LIsTypedArrayConstructor* lir) {
+  Register object = ToRegister(lir->object());
+  Register output = ToRegister(lir->output());
+
+  masm.setIsDefinitelyTypedArrayConstructor(object, output);
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;
