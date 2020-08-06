@@ -14,7 +14,7 @@ const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   decodeUnicodeBase64,
   fetchNetworkUpdatePacket,
-  isJSON,
+  parseJSON,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const {
   Filters,
@@ -136,26 +136,12 @@ class ResponsePanel extends Component {
       return result;
     }
 
-    let { json, error } = isJSON(response);
+    const { json, error, jsonpCallback } = parseJSON(response);
 
     if (/\bjson/.test(mimeType) || json) {
-      // Extract the actual json substring in case this might be a "JSONP".
-      // This regex basically parses a function call and captures the
-      // function name and arguments in two separate groups.
-      const jsonpRegex = /^\s*([\w$]+)\s*\(\s*([^]*)\s*\)\s*;?\s*$/;
-      const [, jsonpCallback, jsonp] = response.match(jsonpRegex) || [];
       const result = {};
-
       // Make sure this is a valid JSON object first. If so, nicely display
       // the parsing results in a tree view.
-      if (jsonpCallback && jsonp) {
-        error = null;
-        try {
-          json = JSON.parse(jsonp);
-        } catch (err) {
-          error = err;
-        }
-      }
 
       // Valid JSON
       if (json) {
