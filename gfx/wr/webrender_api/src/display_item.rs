@@ -974,8 +974,7 @@ impl FloodPrimitive {
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct BlurPrimitive {
     pub input: FilterPrimitiveInput,
-    pub width: f32,
-    pub height: f32,
+    pub radius: f32,
 }
 
 #[repr(C)]
@@ -1102,7 +1101,7 @@ pub enum FilterOp {
     /// Filter that does no transformation of the colors, needed for
     /// debug purposes only.
     Identity,
-    Blur(f32, f32),
+    Blur(f32),
     Brightness(f32),
     Contrast(f32),
     Grayscale(f32),

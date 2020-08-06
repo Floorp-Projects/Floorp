@@ -230,9 +230,13 @@ bool FilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       const GaussianBlurAttributes& blur = attr.as<GaussianBlurAttributes>();
 
       const Size& stdDev = blur.mStdDeviation;
-      if (stdDev.width != 0.0 || stdDev.height != 0.0) {
-        aWrFilters.filters.AppendElement(
-            wr::FilterOp::Blur(stdDev.width, stdDev.height));
+      if (stdDev.width != stdDev.height) {
+        return false;
+      }
+
+      float radius = stdDev.width;
+      if (radius != 0.0) {
+        aWrFilters.filters.AppendElement(wr::FilterOp::Blur(radius));
       } else {
         filterIsNoop = true;
       }
