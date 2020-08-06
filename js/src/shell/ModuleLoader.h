@@ -7,6 +7,7 @@
 #ifndef shell_ModuleLoader_h
 #define shell_ModuleLoader_h
 
+#include "builtin/ModuleObject.h"
 #include "gc/Rooting.h"
 #include "js/RootingAPI.h"
 
@@ -17,6 +18,10 @@ class ModuleLoader {
  public:
   bool init(JSContext* cx, HandleString loadPath);
   bool loadRootModule(JSContext* cx, HandleString path);
+
+  // Testing hook to register a module that wasn't loaded by the module loader.
+  bool registerTestModule(JSContext* cx, HandleString specifier,
+                          HandleModuleObject module);
 
  private:
   static JSObject* ResolveImportedModule(JSContext* cx,

@@ -14,23 +14,18 @@ function assertThrowsMyError(f)
     assertEq(caught, true);
 }
 
-let moduleRepo = {};
-setModuleResolveHook(function(module, specifier) {
-    return moduleRepo[specifier];
-});
-
-moduleRepo["a"] = parseModule(`
+registerModule("a", parseModule(`
     throw new MyError();
-`);
+`));
 
-let c = moduleRepo["c"] = parseModule(`
+let c = registerModule("c", parseModule(`
     import "a";
-`);
+`));
 c.declarationInstantiation();
 assertThrowsMyError(() => c.evaluation());
 
-let b = moduleRepo['b'] = parseModule(`
+let b = registerModule('b', parseModule(`
     import * as ns0 from 'a'
-`);
+`));
 b.declarationInstantiation();
 assertThrowsMyError(() => b.evaluation(b));

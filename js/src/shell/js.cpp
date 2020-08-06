@@ -5074,53 +5074,33 @@ static bool DecodeModule(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static JSObject* ShellModuleResolveHook(JSContext* cx,
-                                        HandleValue referencingPrivate,
-                                        HandleString specifier) {
-  Handle<GlobalObject*> global = cx->global();
-  RootedValue hookValue(
-      cx, global->getReservedSlot(GlobalAppSlotModuleResolveHook));
-  if (hookValue.isUndefined()) {
-    JS_ReportErrorASCII(cx, "Module resolve hook not set");
-    return nullptr;
-  }
-  MOZ_ASSERT(hookValue.toObject().is<JSFunction>());
-
-  JS::RootedValueArray<2> args(cx);
-  args[0].set(referencingPrivate);
-  args[1].setString(specifier);
-
-  RootedValue result(cx);
-  if (!JS_CallFunctionValue(cx, nullptr, hookValue, args, &result)) {
-    return nullptr;
-  }
-
-  if (!result.isObject() || !result.toObject().is<ModuleObject>()) {
-    JS_ReportErrorASCII(cx, "Module resolve hook did not return Module object");
-    return nullptr;
-  }
-
-  return &result.toObject();
-}
-
-static bool SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp) {
+static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "setModuleResolveHook", 1)) {
+  if (!args.requireAtLeast(cx, "registerModule", 2)) {
     return false;
   }
 
-  if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+  if (!args[0].isString()) {
     const char* typeName = InformalValueTypeName(args[0]);
-    JS_ReportErrorASCII(cx, "expected hook function, got %s", typeName);
+    JS_ReportErrorASCII(cx, "expected string, got %s", typeName);
     return false;
   }
 
-  Handle<GlobalObject*> global = cx->global();
-  global->setReservedSlot(GlobalAppSlotModuleResolveHook, args[0]);
+  if (!args[1].isObject() || !args[1].toObject().is<ModuleObject>()) {
+    const char* typeName = InformalValueTypeName(args[0]);
+    JS_ReportErrorASCII(cx, "expected module, got %s", typeName);
+    return false;
+  }
 
-  JS::SetModuleResolveHook(cx->runtime(), ShellModuleResolveHook);
+  ShellContext* sc = GetShellContext(cx);
+  RootedString specifier(cx, args[0].toString());
+  RootedModuleObject module(cx, &args[1].toObject().as<ModuleObject>());
 
-  args.rval().setUndefined();
+  if (!sc->moduleLoader->registerTestModule(cx, specifier, module)) {
+    return false;
+  }
+
+  args.rval().setObject(*module);
   return true;
 }
 
@@ -8699,17 +8679,18 @@ JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
 
     JS_FN_HELP("codeModule", CodeModule, 1, 0,
 "codeModule(module)",
-"   Takes an uninstantiated ModuleObject and returns a XDR bytecode representation of that ModuleObject."),
+"   Takes an uninstantiated ModuleObject and returns a XDR bytecode\n"
+"   representation of that ModuleObject."),
 
     JS_FN_HELP("decodeModule", DecodeModule, 1, 0,
 "decodeModule(code)",
-"   Takes a XDR bytecode representation of an uninstantiated ModuleObject and returns a ModuleObject."),
+"   Takes a XDR bytecode representation of an uninstantiated ModuleObject and\n"
+"   returns a ModuleObject."),
 
-    JS_FN_HELP("setModuleResolveHook", SetModuleResolveHook, 1, 0,
-"setModuleResolveHook(function(referrer, specifier))",
-"  Set the HostResolveImportedModule hook to |function|, overriding the shell\n"
-"  module loader for testing purposes. This hook is used to look up a\n"
-"  previously loaded module object."),
+    JS_FN_HELP("registerModule", RegisterModule, 2, 0,
+"registerModule(specifier, module)",
+"  Register a module with the module loader, so that subsequent import from\n"
+"  |specifier| will resolve to |module|.  Returns |module|."),
 
     JS_FN_HELP("dumpStencil", DumpStencil, 1, 0,
 "dumpStencil(code)",

@@ -1,6 +1,5 @@
 
 load(libdir + "asserts.js");
-load(libdir + "dummyModuleResolveHook.js");
 
 function parseAndEvaluate(source) {
     let og = parseModule(source);
@@ -40,7 +39,7 @@ og = parseModule(`var x = 1;
                         export default 2;
                         export function f(x) { return x + 1; }`);
 bc = codeModule(og);
-a = moduleRepo['a'] = decodeModule(bc);
+a = registerModule('a', decodeModule(bc));
 
 // Check we can evaluate top level definitions.
 parseAndEvaluate("var foo = 1;");

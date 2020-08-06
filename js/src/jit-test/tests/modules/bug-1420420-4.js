@@ -1,10 +1,9 @@
 load(libdir + "asserts.js");
-load(libdir + "dummyModuleResolveHook.js");
 
-moduleRepo["a"] = parseModule(`throw undefined`);
+registerModule("a", parseModule(`throw undefined`));
 
-let b = moduleRepo["b"] = parseModule(`import "a";`);
-let c = moduleRepo["c"] = parseModule(`import "a";`);
+let b = registerModule("b", parseModule(`import "a";`));
+let c = registerModule("c", parseModule(`import "a";`));
 
 b.declarationInstantiation();
 c.declarationInstantiation();
