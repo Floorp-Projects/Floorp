@@ -1138,17 +1138,22 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       newBC->UseRemoteSubframes() ==
       !!(chromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW));
 
+  nsCOMPtr<nsPIDOMWindowInner> pInnerWin =
+      parentWindow ? parentWindow->GetCurrentInnerWindow() : nullptr;
+  ;
   RefPtr<nsDocShellLoadState> loadState = aLoadState;
   if (uriToLoad && loadState) {
     // If a URI was passed to this function, open that, not what was passed in
     // the original LoadState. See Bug 1515433.
     loadState->SetURI(uriToLoad);
   } else if (uriToLoad && aNavigate && !loadState) {
+    RefPtr<WindowContext> context =
+        pInnerWin ? pInnerWin->GetWindowContext() : nullptr;
     loadState = new nsDocShellLoadState(uriToLoad);
 
     loadState->SetSourceBrowsingContext(parentBC);
     loadState->SetHasValidUserGestureActivation(
-        parentBC && parentBC->HasValidTransientUserGestureActivation());
+        context && context->HasValidTransientUserGestureActivation());
     if (parentBC) {
       loadState->SetTriggeringSandboxFlags(parentBC->GetSandboxFlags());
     }
@@ -1249,8 +1254,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
     if (parentStorageManager && newStorageManager) {
       RefPtr<Storage> storage;
-      nsCOMPtr<nsPIDOMWindowInner> pInnerWin =
-          parentWindow->GetCurrentInnerWindow();
       parentStorageManager->GetStorage(
           pInnerWin, subjectPrincipal, subjectPrincipal,
           newBC->UsePrivateBrowsing(), getter_AddRefs(storage));
