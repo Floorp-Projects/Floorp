@@ -46,6 +46,7 @@ import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
+import mozilla.components.support.base.crash.CrashReporting
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
@@ -63,7 +64,7 @@ import java.util.concurrent.TimeUnit
  * Component group for all core browser functionality.
  */
 @Mockable
-class Core(private val context: Context) {
+class Core(private val context: Context, private val crashReporter: CrashReporting) {
     /**
      * The browser engine component initialized based on the build
      * configuration (see build variants).
@@ -228,7 +229,7 @@ class Core(private val context: Context) {
     // Use these for startup-path code, where we don't want to do any work that's not strictly necessary.
     // For example, this is how the GeckoEngine delegates (history, logins) are configured.
     // We can fully initialize GeckoEngine without initialized our storage.
-    val lazyHistoryStorage = lazy { PlacesHistoryStorage(context) }
+    val lazyHistoryStorage = lazy { PlacesHistoryStorage(context, crashReporter) }
     val lazyBookmarksStorage = lazy { PlacesBookmarksStorage(context) }
     val lazyPasswordsStorage = lazy { SyncableLoginsStorage(context, passwordsEncryptionKey) }
 

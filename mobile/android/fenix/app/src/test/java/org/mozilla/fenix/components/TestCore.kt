@@ -14,8 +14,9 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppShortcutManager
+import mozilla.components.support.base.crash.CrashReporting
 
-class TestCore(context: Context) : Core(context) {
+class TestCore(context: Context, crashReporter: CrashReporting) : Core(context, crashReporter) {
 
     override val engine = mockk<Engine>(relaxed = true) {
         every { this@mockk getProperty "settings" } returns mockk<Settings>(relaxed = true)
