@@ -178,11 +178,11 @@ TEST(MediaController, ControllerShouldRemainPlayingIfAnyPlayingMediaExists)
 TEST(MediaController, PictureInPictureMode)
 {
   RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
-  ASSERT_TRUE(!controller->IsInPictureInPictureMode());
+  ASSERT_TRUE(!controller->IsBeingUsedInPIPModeOrFullscreen());
 
   controller->SetIsInPictureInPictureMode(FAKE_CONTEXT_ID, true);
-  ASSERT_TRUE(controller->IsInPictureInPictureMode());
+  ASSERT_TRUE(controller->IsBeingUsedInPIPModeOrFullscreen());
 
   controller->SetIsInPictureInPictureMode(FAKE_CONTEXT_ID, false);
-  ASSERT_TRUE(!controller->IsInPictureInPictureMode());
+  ASSERT_TRUE(!controller->IsBeingUsedInPIPModeOrFullscreen());
 }

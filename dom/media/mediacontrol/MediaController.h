@@ -120,10 +120,6 @@ class MediaController final : public DOMEventTargetHelper,
   void NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
                                   bool aIsInFullScreen) override;
 
-  // Reture true if any of controlled media is being used in Picture-In-Picture
-  // mode.
-  bool IsInPictureInPictureMode() const;
-
   // Calling this method explicitly would mark this controller as deprecated,
   // then calling any its method won't take any effect.
   void Shutdown();

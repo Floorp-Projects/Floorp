@@ -370,10 +370,6 @@ void MediaController::HandleActualPlaybackStateChanged() {
   }
 }
 
-bool MediaController::IsInPictureInPictureMode() const {
-  return mIsInPictureInPictureMode;
-}
-
 void MediaController::UpdateActivatedStateIfNeeded() {
   if (ShouldActivateController()) {
     Activate();
