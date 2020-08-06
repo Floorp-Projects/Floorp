@@ -4581,6 +4581,24 @@ startup:
     record_in_processes:
       - 'main'
 
+  seconds_since_last_os_restart:
+    bug_numbers:
+      - 1654063
+    description: >
+      The time in seconds between the first browser window loading, and the
+      time the OS started. This can give us an indication of whether starting
+      the browser may have been the first thing the user did after starting
+      their computer.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dothayer@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 script.preloader:
   mainthread_recompile:
     bug_numbers:
