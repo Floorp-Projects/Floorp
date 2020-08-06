@@ -168,7 +168,7 @@ void MediaControlService::NotifyControllerPlaybackStateChanged(
   }
 }
 
-void MediaControlService::NotifyControllerBeingUsedInPictureInPictureMode(
+void MediaControlService::RequestUpdateMainController(
     MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
   MOZ_DIAGNOSTIC_ASSERT(
