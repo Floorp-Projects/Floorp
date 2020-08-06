@@ -39,6 +39,7 @@ const known_scripts = {
     "resource:///actors/AboutReaderChild.jsm",
     "resource:///actors/BrowserTabChild.jsm",
     "resource:///actors/LinkHandlerChild.jsm",
+    "resource:///actors/PageStyleChild.jsm",
     "resource:///actors/SearchTelemetryChild.jsm",
     "resource://gre/actors/AutoCompleteChild.jsm",
     "resource://gre/modules/ActorManagerChild.jsm",
@@ -112,6 +113,11 @@ add_task(async function() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
+    url:
+      getRootDirectory(gTestPath).replace(
+        "chrome://mochitests/content",
+        "http://example.com"
+      ) + "file_empty.html",
     forceNewProcess: true,
   });
 
