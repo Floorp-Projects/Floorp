@@ -133,30 +133,25 @@ impl ConnectionEvents {
         self.events.borrow_mut().pop_front()
     }
 
-    #[allow(clippy::block_in_if_condition_stmt)]
     fn insert(&self, event: ConnectionEvent) {
         let mut q = self.events.borrow_mut();
 
         // Special-case two enums that are not strictly PartialEq equal but that
         // we wish to avoid inserting duplicates.
-        if match &event {
+        let already_present = match &event {
             ConnectionEvent::SendStreamStopSending { stream_id, .. } => q.iter().any(|evt| {
-                matches!(
-		    evt, ConnectionEvent::SendStreamStopSending { stream_id: x, .. }
-		    if *x == *stream_id)
+                matches!(evt, ConnectionEvent::SendStreamStopSending { stream_id: x, .. }
+		                    if *x == *stream_id)
             }),
             ConnectionEvent::RecvStreamReset { stream_id, .. } => q.iter().any(|evt| {
-                matches!(
-		    evt, ConnectionEvent::RecvStreamReset { stream_id: x, .. }
-		    if *x == *stream_id)
+                matches!(evt, ConnectionEvent::RecvStreamReset { stream_id: x, .. }
+		                    if *x == *stream_id)
             }),
             _ => q.contains(&event),
-        } {
-            // Already in event list.
-            return;
+        };
+        if !already_present {
+            q.push_back(event);
         }
-
-        q.push_back(event);
     }
 
     fn remove<F>(&self, f: F)

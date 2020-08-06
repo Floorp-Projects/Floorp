@@ -294,6 +294,13 @@ impl RecvMessage {
         }
         self.state = RecvMessageState::Closed;
     }
+
+    fn closing(&self) -> bool {
+        matches!(
+            self.state,
+            RecvMessageState::ClosePending | RecvMessageState::Closed
+        )
+    }
 }
 
 impl RecvStream for RecvMessage {
@@ -323,8 +330,17 @@ impl RecvStream for RecvMessage {
         matches!(self.state, RecvMessageState::Closed)
     }
 
-    fn stream_reset(&self, app_error: AppError) {
+    fn stream_reset_recv(&self, app_error: AppError, decoder: &mut QPackDecoder) {
+        if !self.closing() || !self.blocked_push_promise.is_empty() {
+            decoder.cancel_stream(self.stream_id);
+        }
         self.conn_events.reset(self.stream_id, app_error);
+    }
+
+    fn stream_reset(&self, decoder: &mut QPackDecoder) {
+        if !self.closing() || !self.blocked_push_promise.is_empty() {
+            decoder.cancel_stream(self.stream_id);
+        }
     }
 
     fn read_data(

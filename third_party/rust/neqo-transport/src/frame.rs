@@ -15,6 +15,7 @@ use crate::{AppError, ConnectionError, Error, Res, TransportError, ERROR_APPLICA
 
 use std::cmp::{min, Ordering};
 use std::convert::TryFrom;
+use std::ops::RangeInclusive;
 
 #[allow(clippy::module_name_repetitions)]
 pub type FrameType = u64;
@@ -478,13 +479,13 @@ impl Frame {
         largest_acked: u64,
         first_ack_range: u64,
         ack_ranges: &[AckRange],
-    ) -> Res<Vec<(u64, u64)>> {
-        let mut acked_ranges = Vec::new();
+    ) -> Res<Vec<RangeInclusive<u64>>> {
+        let mut acked_ranges = Vec::with_capacity(ack_ranges.len() + 1);
 
         if largest_acked < first_ack_range {
             return Err(Error::FrameEncodingError);
         }
-        acked_ranges.push((largest_acked, largest_acked - first_ack_range));
+        acked_ranges.push((largest_acked - first_ack_range)..=largest_acked);
         if !ack_ranges.is_empty() && largest_acked < first_ack_range + 1 {
             return Err(Error::FrameEncodingError);
         }
@@ -502,7 +503,7 @@ impl Frame {
             if cur < r.range {
                 return Err(Error::FrameEncodingError);
             }
-            acked_ranges.push((cur, cur - r.range));
+            acked_ranges.push((cur - r.range)..=cur);
 
             if cur > r.range + 1 {
                 cur -= r.range + 1;
@@ -1055,7 +1056,7 @@ mod tests {
     fn test_decode_ack_frame() {
         let res = Frame::decode_ack_frame(7, 2, &[AckRange { gap: 0, range: 3 }]);
         assert!(res.is_ok());
-        assert_eq!(res.unwrap(), vec![(7, 5), (3, 0)]);
+        assert_eq!(res.unwrap(), vec![5..=7, 0..=3]);
     }
 
     #[test]

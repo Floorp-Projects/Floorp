@@ -36,6 +36,7 @@ pub use self::events::{ConnectionEvent, ConnectionEvents};
 pub use self::frame::CloseError;
 pub use self::frame::StreamType;
 pub use self::packet::QuicVersion;
+pub use self::stats::Stats;
 pub use self::stream_id::StreamId;
 
 const LOCAL_IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30); // 30 second

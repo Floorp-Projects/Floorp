@@ -235,6 +235,12 @@ impl Crypto {
         self.streams.lost(token);
     }
 
+    /// Mark any outstanding frames in the indicated space as "lost" so
+    /// that they can be sent again.
+    pub fn resend_unacked(&mut self, space: PNSpace) {
+        self.streams.resend_unacked(space);
+    }
+
     /// Discard state for a packet number space and return true
     /// if something was discarded.
     pub fn discard(&mut self, space: PNSpace) -> bool {
@@ -274,6 +280,8 @@ pub struct CryptoDxState {
 }
 
 impl CryptoDxState {
+    #[allow(clippy::unknown_clippy_lints)] // Until we require rust 1.45.
+    #[allow(clippy::reversed_empty_ranges)] // To initialize an empty range.
     pub fn new(
         direction: CryptoDxDirection,
         epoch: Epoch,
@@ -996,13 +1004,23 @@ impl CryptoStreams {
         self.get_mut(token.space)
             .unwrap()
             .tx
-            .mark_as_acked(token.offset, token.length)
+            .mark_as_acked(token.offset, token.length);
     }
 
     pub fn lost(&mut self, token: &CryptoRecoveryToken) {
         // See BZ 1624800, ignore lost packets in spaces we've dropped keys
         if let Some(cs) = self.get_mut(token.space) {
-            cs.tx.mark_as_lost(token.offset, token.length)
+            cs.tx.mark_as_lost(token.offset, token.length);
+        }
+    }
+
+    /// Resend any Initial or Handshake CRYPTO frames that might be outstanding.
+    /// This can help speed up handshake times.
+    pub fn resend_unacked(&mut self, space: PNSpace) {
+        if space != PNSpace::ApplicationData {
+            if let Some(cs) = self.get_mut(space) {
+                cs.tx.unmark_sent();
+            }
         }
     }
 

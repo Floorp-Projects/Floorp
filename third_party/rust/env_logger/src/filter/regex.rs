@@ -11,7 +11,7 @@ pub struct Filter {
 
 impl Filter {
     pub fn new(spec: &str) -> Result<Filter, String> {
-        match Regex::new(spec){
+        match Regex::new(spec) {
             Ok(r) => Ok(Filter { inner: r }),
             Err(e) => Err(e.to_string()),
         }

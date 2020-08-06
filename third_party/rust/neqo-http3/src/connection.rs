@@ -353,7 +353,7 @@ impl Http3Connection {
         );
 
         if let Some(s) = self.recv_streams.remove(&stream_id) {
-            s.stream_reset(app_error);
+            s.stream_reset_recv(app_error, &mut self.qpack_decoder);
             Ok(())
         } else if self.is_critical_stream(stream_id) {
             Err(Error::HttpClosedCriticalStream)
@@ -527,9 +527,11 @@ impl Http3Connection {
     ) -> Res<()> {
         qinfo!([self], "Reset stream {} error={}.", stream_id, error);
 
-        // We want to execute both statements, therefore we use | instead of ||.
-        let found = self.send_streams.remove(&stream_id).is_some()
-            | self.recv_streams.remove(&stream_id).is_some();
+        let mut found = self.send_streams.remove(&stream_id).is_some();
+        if let Some(s) = self.recv_streams.remove(&stream_id) {
+            s.stream_reset(&mut self.qpack_decoder);
+            found = true;
+        }
 
         // Stream maybe already be closed and we may get an error here, but we do not care.
         let _ = conn.stream_reset_send(stream_id, error);
@@ -588,7 +590,7 @@ impl Http3Connection {
                 HSettingType::BlockedStreams => {
                     self.qpack_encoder.set_max_blocked_streams(s.value)?
                 }
-                _ => {}
+                HSettingType::MaxHeaderListSize => (),
             }
         }
         Ok(())
