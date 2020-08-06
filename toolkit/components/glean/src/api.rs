@@ -20,7 +20,7 @@
 // FIXME: Remove when code gets actually used eventually (by initializing Glean).
 #![allow(dead_code)]
 
-use glean::ping_upload::{self, UploadResult};
+use fog::ping_upload::{self, UploadResult};
 use glean_core::{global_glean, setup_glean, Configuration, Glean, Result};
 use once_cell::sync::OnceCell;
 use url::Url;
