@@ -74,6 +74,13 @@ function assertNoTelemetryEvents() {
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
+  // Thunderbird doesn't have one or more of the probes used in this test.
+  // Ensure the data is collected anyway.
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
   // Telemetry test setup needed to ensure that the builtin events are defined
   // and they can be collected and verified.
   await TelemetryController.testSetup();
