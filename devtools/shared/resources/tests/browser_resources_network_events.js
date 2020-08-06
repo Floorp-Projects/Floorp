@@ -191,6 +191,7 @@ async function testNetworkEventResources(options) {
       "Received a network event resource"
     );
     actualResourcesOnAvailable[resource.request.url] = {
+      resourceId: resource.resourceId,
       resourceType: resource.resourceType,
       request: resource.request,
       updates: [...resource.updates],
@@ -205,6 +206,7 @@ async function testNetworkEventResources(options) {
       "Received a network update event resource"
     );
     actualResourcesOnUpdated[resource.request.url] = {
+      resourceId: resource.resourceId,
       resourceType: resource.resourceType,
       request: resource.request,
       updates: [...resource.updates],
@@ -231,6 +233,13 @@ async function testNetworkEventResources(options) {
     Object.keys(actualResourcesOnAvailable).length,
     Object.keys(options.expectedResourcesOnAvailable).length,
     "Got the expected number of network events fired onAvailable"
+  );
+
+  // assert that the resourceId for the the available and updated events match
+  is(
+    actualResourcesOnAvailable[`${EXAMPLE_DOMAIN}live_get.html`].resourceId,
+    actualResourcesOnUpdated[`${EXAMPLE_DOMAIN}live_get.html`].resourceId,
+    "The resource id's are the same"
   );
 
   // assert the resources emitted when the network event is created

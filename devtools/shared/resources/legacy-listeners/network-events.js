@@ -37,6 +37,7 @@ module.exports = async function({
   function onNetworkEvent(packet) {
     const actor = packet.eventActor;
     const resource = {
+      resourceId: actor.channelId,
       resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
       _type: "NetworkEvent",
       timeStamp: actor.timeStamp,
