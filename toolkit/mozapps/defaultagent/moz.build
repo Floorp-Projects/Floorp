@@ -69,8 +69,6 @@ DEFINES['_UNICODE'] = True
 for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-RCINCLUDE = "DefaultBrowserAgent.rc"
-
 # We need STL headers that aren't allowed when wrapping is on (at least
 # <filesystem>, and possibly others).
 DisableStlWrapping()

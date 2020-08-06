@@ -28,8 +28,6 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
 
 # DELAYLOAD_DLLS in this block ensure that the DLL blocklist initializes
 if CONFIG['OS_ARCH'] == 'WINNT':
-    RCINCLUDE = 'xpcshell.rc'
-
     if CONFIG['MOZ_SANDBOX']:
         # For sandbox includes and the include dependencies those have
         LOCAL_INCLUDES += [
