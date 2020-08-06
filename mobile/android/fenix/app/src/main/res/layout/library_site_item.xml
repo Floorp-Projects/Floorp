@@ -53,7 +53,8 @@
             app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/url"
-            app:layout_constraintVertical_chainStyle="packed"/>
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_goneMarginEnd="@dimen/library_item_icon_margin_horizontal" />
 
     <TextView
             android:id="@+id/url"
@@ -69,7 +70,8 @@
             app:layout_constraintEnd_toStartOf="@id/overflow_menu"
             app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintTop_toBottomOf="@+id/title"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_goneMarginEnd="@dimen/library_item_icon_margin_horizontal" />
 
     <ImageButton
             android:id="@+id/overflow_menu"
