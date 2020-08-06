@@ -163,7 +163,7 @@ add_task(async function nonHeuristicAliases() {
     if (engine.alias) {
       aliases.push(engine.alias);
     }
-    aliases.push(...engine.wrappedJSObject._internalAliases);
+    aliases.push(...engine.aliases);
     let tokenAliases = aliases.filter(a => a.startsWith("@"));
     if (tokenAliases.length) {
       tokenEngines.push({ engine, tokenAliases });

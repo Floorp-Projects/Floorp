@@ -42,7 +42,7 @@ add_task(async function test_addEngineWithDetails() {
   );
   Assert.equal(engine.description, kDescription);
   Assert.equal(engine.iconURI.spec, kIconURL);
-  Assert.equal(engine.alias, kAlias);
+  Assert.ok(engine.aliases.includes(kAlias));
 
   // Set the engine as default; this should set a loadPath verification hash,
   // which should ensure we don't show the search reset prompt.

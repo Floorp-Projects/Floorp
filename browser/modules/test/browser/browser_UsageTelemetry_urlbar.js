@@ -98,9 +98,6 @@ add_task(async function setup() {
   let originalEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
 
-  // Give it some mock internal aliases.
-  engine.wrappedJSObject.__internalAliases = ["@mozaliasfoo", "@mozaliasbar"];
-
   // And the first one-off engine.
   await Services.search.moveEngine(engine, 0);
 
@@ -254,9 +251,6 @@ add_task(async function test_searchAlias() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -281,19 +275,6 @@ add_task(async function test_searchAlias() {
     Object.keys(scalars[SCALAR_URLBAR]).length,
     1,
     "This search must only increment one entry in the scalar."
-  );
-
-  // SEARCH_COUNTS should be incremented, but only the urlbar source since an
-  // internal @search keyword was not used.
-  TelemetryTestUtils.assertKeyedHistogramSum(
-    search_hist,
-    "other-MozSearch.urlbar",
-    1
-  );
-  TelemetryTestUtils.assertKeyedHistogramSum(
-    search_hist,
-    "other-MozSearch.alias",
-    undefined
   );
 
   // Also check events.
@@ -330,55 +311,6 @@ add_task(async function test_searchAlias() {
     resultMethodHist,
     UrlbarTestUtils.SELECTED_RESULT_METHODS.enter,
     1
-  );
-
-  BrowserTestUtils.removeTab(tab);
-});
-
-add_task(async function test_internalSearchAlias() {
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:blank"
-  );
-
-  info("Search using an internal search alias.");
-  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await searchInAwesomebar("@mozaliasfoo query");
-  EventUtils.synthesizeKey("KEY_Enter");
-  await p;
-
-  // SEARCH_COUNTS should be incremented, but only the alias source since an
-  // internal @search keyword was used.
-  TelemetryTestUtils.assertKeyedHistogramSum(
-    search_hist,
-    "other-MozSearch.urlbar",
-    undefined
-  );
-  TelemetryTestUtils.assertKeyedHistogramSum(
-    search_hist,
-    "other-MozSearch.alias",
-    1
-  );
-
-  info("Search using the other internal search alias.");
-  p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await searchInAwesomebar("@mozaliasbar query");
-  EventUtils.synthesizeKey("KEY_Enter");
-  await p;
-
-  TelemetryTestUtils.assertKeyedHistogramSum(
-    search_hist,
-    "other-MozSearch.urlbar",
-    undefined
-  );
-  TelemetryTestUtils.assertKeyedHistogramSum(
-    search_hist,
-    "other-MozSearch.alias",
-    2
   );
 
   BrowserTestUtils.removeTab(tab);

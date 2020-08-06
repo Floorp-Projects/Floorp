@@ -2,7 +2,7 @@
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
   "applications": {
     "gecko": {
       "id": "yandex@search.mozilla.org"
@@ -19,6 +19,7 @@
   ],
   "chrome_settings_overrides": {
     "search_provider": {
+      "keyword": ["@\u044F\u043D\u0434\u0435\u043A\u0441", "@yandex"],
       "name": "__MSG_extensionName__",
       "search_url": "__MSG_searchUrl__",
       "search_form": "__MSG_searchForm__",

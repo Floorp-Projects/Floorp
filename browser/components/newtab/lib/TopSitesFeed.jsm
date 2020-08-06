@@ -592,7 +592,7 @@ this.TopSitesFeed = class TopSitesFeed {
     const searchShortcuts = (await Services.search.getDefaultEngines()).reduce(
       (result, engine) => {
         const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s =>
-          engine.wrappedJSObject._internalAliases.includes(s.keyword)
+          engine.aliases.includes(s.keyword)
         );
         if (shortcut) {
           let clone = { ...shortcut };
