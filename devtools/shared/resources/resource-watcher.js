@@ -314,12 +314,23 @@ class ResourceWatcher {
    */
   async _onResourceUpdated({ targetFront, watcherFront }, resources) {
     for (const resource of resources) {
-      const { resourceType } = resource;
+      const { resourceType, resourceId } = resource;
 
       if (watcherFront) {
         targetFront = await this._getTargetForWatcherResource(resource);
         if (!targetFront) {
           continue;
+        }
+      }
+
+      if (resourceId) {
+        const index = this._cache.findIndex(
+          cachedResource =>
+            cachedResource.resourceType == resourceType &&
+            cachedResource.resourceId == resourceId
+        );
+        if (index != -1) {
+          this._cache.splice(index, 1, resource);
         }
       }
 
@@ -337,7 +348,7 @@ class ResourceWatcher {
    */
   async _onResourceDestroyed({ targetFront, watcherFront }, resources) {
     for (const resource of resources) {
-      const { resourceType } = resource;
+      const { resourceType, resourceId } = resource;
 
       if (watcherFront) {
         targetFront = await this._getTargetForWatcherResource(resource);
@@ -346,9 +357,22 @@ class ResourceWatcher {
         }
       }
 
-      const index = this._cache.indexOf(resource);
+      let index = -1;
+      if (resourceId) {
+        index = this._cache.findIndex(
+          cachedResource =>
+            cachedResource.resourceType == resourceType &&
+            cachedResource.resourceId == resourceId
+        );
+      } else {
+        index = this._cache.indexOf(resource);
+      }
       if (index >= 0) {
         this._cache.splice(index, 1);
+      } else {
+        console.warn(
+          `Resource ${resourceId || ""} of ${resourceType} was not found.`
+        );
       }
 
       this._destroyedListeners.emit(resourceType, {
