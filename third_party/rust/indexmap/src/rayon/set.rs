@@ -6,13 +6,13 @@
 //! Requires crate feature `"rayon"`.
 
 use super::collect;
+use super::rayon::iter::plumbing::{Consumer, ProducerCallback, UnindexedConsumer};
 use super::rayon::prelude::*;
-use super::rayon::iter::plumbing::{Consumer, UnindexedConsumer, ProducerCallback};
 
 use std::cmp::Ordering;
 use std::fmt;
-use std::hash::Hash;
 use std::hash::BuildHasher;
+use std::hash::Hash;
 
 use Entries;
 use IndexSet;
@@ -21,8 +21,9 @@ type Bucket<T> = ::Bucket<T, ()>;
 
 /// Requires crate feature `"rayon"`.
 impl<T, S> IntoParallelIterator for IndexSet<T, S>
-    where T: Hash + Eq + Send,
-          S: BuildHasher,
+where
+    T: Hash + Eq + Send,
+    S: BuildHasher,
 {
     type Item = T;
     type Iter = IntoParIter<T>;
@@ -62,11 +63,11 @@ impl<T: Send> IndexedParallelIterator for IntoParIter<T> {
     indexed_parallel_iterator_methods!(Bucket::key);
 }
 
-
 /// Requires crate feature `"rayon"`.
 impl<'a, T, S> IntoParallelIterator for &'a IndexSet<T, S>
-    where T: Hash + Eq + Sync,
-          S: BuildHasher,
+where
+    T: Hash + Eq + Sync,
+    S: BuildHasher,
 {
     type Item = &'a T;
     type Iter = ParIter<'a, T>;
@@ -112,19 +113,26 @@ impl<'a, T: Sync> IndexedParallelIterator for ParIter<'a, T> {
     indexed_parallel_iterator_methods!(Bucket::key_ref);
 }
 
-
-/// Requires crate feature `"rayon"`.
+/// Parallel iterator methods and other parallel methods.
+///
+/// The following methods **require crate feature `"rayon"`**.
+///
+/// See also the `IntoParallelIterator` implementations.
 impl<T, S> IndexSet<T, S>
-    where T: Hash + Eq + Sync,
-          S: BuildHasher + Sync,
+where
+    T: Hash + Eq + Sync,
+    S: BuildHasher + Sync,
 {
     /// Return a parallel iterator over the values that are in `self` but not `other`.
     ///
     /// While parallel iterators can process items in any order, their relative order
     /// in the `self` set is still preserved for operations like `reduce` and `collect`.
-    pub fn par_difference<'a, S2>(&'a self, other: &'a IndexSet<T, S2>)
-        -> ParDifference<'a, T, S, S2>
-        where S2: BuildHasher + Sync
+    pub fn par_difference<'a, S2>(
+        &'a self,
+        other: &'a IndexSet<T, S2>,
+    ) -> ParDifference<'a, T, S, S2>
+    where
+        S2: BuildHasher + Sync,
     {
         ParDifference {
             set1: self,
@@ -139,9 +147,12 @@ impl<T, S> IndexSet<T, S>
     /// in the sets is still preserved for operations like `reduce` and `collect`.
     /// Values from `self` are produced in their original order, followed by
     /// values from `other` in their original order.
-    pub fn par_symmetric_difference<'a, S2>(&'a self, other: &'a IndexSet<T, S2>)
-        -> ParSymmetricDifference<'a, T, S, S2>
-        where S2: BuildHasher + Sync
+    pub fn par_symmetric_difference<'a, S2>(
+        &'a self,
+        other: &'a IndexSet<T, S2>,
+    ) -> ParSymmetricDifference<'a, T, S, S2>
+    where
+        S2: BuildHasher + Sync,
     {
         ParSymmetricDifference {
             set1: self,
@@ -153,9 +164,12 @@ impl<T, S> IndexSet<T, S>
     ///
     /// While parallel iterators can process items in any order, their relative order
     /// in the `self` set is still preserved for operations like `reduce` and `collect`.
-    pub fn par_intersection<'a, S2>(&'a self, other: &'a IndexSet<T, S2>)
-        -> ParIntersection<'a, T, S, S2>
-        where S2: BuildHasher + Sync
+    pub fn par_intersection<'a, S2>(
+        &'a self,
+        other: &'a IndexSet<T, S2>,
+    ) -> ParIntersection<'a, T, S, S2>
+    where
+        S2: BuildHasher + Sync,
     {
         ParIntersection {
             set1: self,
@@ -169,9 +183,9 @@ impl<T, S> IndexSet<T, S>
     /// in the sets is still preserved for operations like `reduce` and `collect`.
     /// Values from `self` are produced in their original order, followed by
     /// values that are unique to `other` in their original order.
-    pub fn par_union<'a, S2>(&'a self, other: &'a IndexSet<T, S2>)
-        -> ParUnion<'a, T, S, S2>
-        where S2: BuildHasher + Sync
+    pub fn par_union<'a, S2>(&'a self, other: &'a IndexSet<T, S2>) -> ParUnion<'a, T, S, S2>
+    where
+        S2: BuildHasher + Sync,
     {
         ParUnion {
             set1: self,
@@ -182,7 +196,8 @@ impl<T, S> IndexSet<T, S>
     /// Returns `true` if `self` contains all of the same values as `other`,
     /// regardless of each set's indexed order, determined in parallel.
     pub fn par_eq<S2>(&self, other: &IndexSet<T, S2>) -> bool
-        where S2: BuildHasher + Sync
+    where
+        S2: BuildHasher + Sync,
     {
         self.len() == other.len() && self.par_is_subset(other)
     }
@@ -190,7 +205,8 @@ impl<T, S> IndexSet<T, S>
     /// Returns `true` if `self` has no elements in common with `other`,
     /// determined in parallel.
     pub fn par_is_disjoint<S2>(&self, other: &IndexSet<T, S2>) -> bool
-        where S2: BuildHasher + Sync
+    where
+        S2: BuildHasher + Sync,
     {
         if self.len() <= other.len() {
             self.par_iter().all(move |value| !other.contains(value))
@@ -202,7 +218,8 @@ impl<T, S> IndexSet<T, S>
     /// Returns `true` if all elements of `other` are contained in `self`,
     /// determined in parallel.
     pub fn par_is_superset<S2>(&self, other: &IndexSet<T, S2>) -> bool
-        where S2: BuildHasher + Sync
+    where
+        S2: BuildHasher + Sync,
     {
         other.par_is_subset(self)
     }
@@ -210,7 +227,8 @@ impl<T, S> IndexSet<T, S>
     /// Returns `true` if all elements of `self` are contained in `other`,
     /// determined in parallel.
     pub fn par_is_subset<S2>(&self, other: &IndexSet<T, S2>) -> bool
-        where S2: BuildHasher + Sync
+    where
+        S2: BuildHasher + Sync,
     {
         self.len() <= other.len() && self.par_iter().all(move |value| other.contains(value))
     }
@@ -235,24 +253,29 @@ impl<'a, T, S1, S2> Clone for ParDifference<'a, T, S1, S2> {
 }
 
 impl<'a, T, S1, S2> fmt::Debug for ParDifference<'a, T, S1, S2>
-    where T: fmt::Debug + Eq + Hash,
-          S1: BuildHasher,
-          S2: BuildHasher,
+where
+    T: fmt::Debug + Eq + Hash,
+    S1: BuildHasher,
+    S2: BuildHasher,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_list().entries(self.set1.difference(&self.set2)).finish()
+        f.debug_list()
+            .entries(self.set1.difference(&self.set2))
+            .finish()
     }
 }
 
 impl<'a, T, S1, S2> ParallelIterator for ParDifference<'a, T, S1, S2>
-    where T: Hash + Eq + Sync,
-          S1: BuildHasher + Sync,
-          S2: BuildHasher + Sync,
+where
+    T: Hash + Eq + Sync,
+    S1: BuildHasher + Sync,
+    S2: BuildHasher + Sync,
 {
     type Item = &'a T;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         let Self { set1, set2 } = self;
 
@@ -281,24 +304,29 @@ impl<'a, T, S1, S2> Clone for ParIntersection<'a, T, S1, S2> {
 }
 
 impl<'a, T, S1, S2> fmt::Debug for ParIntersection<'a, T, S1, S2>
-    where T: fmt::Debug + Eq + Hash,
-          S1: BuildHasher,
-          S2: BuildHasher,
+where
+    T: fmt::Debug + Eq + Hash,
+    S1: BuildHasher,
+    S2: BuildHasher,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_list().entries(self.set1.intersection(&self.set2)).finish()
+        f.debug_list()
+            .entries(self.set1.intersection(&self.set2))
+            .finish()
     }
 }
 
 impl<'a, T, S1, S2> ParallelIterator for ParIntersection<'a, T, S1, S2>
-    where T: Hash + Eq + Sync,
-          S1: BuildHasher + Sync,
-          S2: BuildHasher + Sync,
+where
+    T: Hash + Eq + Sync,
+    S1: BuildHasher + Sync,
+    S2: BuildHasher + Sync,
 {
     type Item = &'a T;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         let Self { set1, set2 } = self;
 
@@ -327,24 +355,29 @@ impl<'a, T, S1, S2> Clone for ParSymmetricDifference<'a, T, S1, S2> {
 }
 
 impl<'a, T, S1, S2> fmt::Debug for ParSymmetricDifference<'a, T, S1, S2>
-    where T: fmt::Debug + Eq + Hash,
-          S1: BuildHasher,
-          S2: BuildHasher,
+where
+    T: fmt::Debug + Eq + Hash,
+    S1: BuildHasher,
+    S2: BuildHasher,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_list().entries(self.set1.symmetric_difference(&self.set2)).finish()
+        f.debug_list()
+            .entries(self.set1.symmetric_difference(&self.set2))
+            .finish()
     }
 }
 
 impl<'a, T, S1, S2> ParallelIterator for ParSymmetricDifference<'a, T, S1, S2>
-    where T: Hash + Eq + Sync,
-          S1: BuildHasher + Sync,
-          S2: BuildHasher + Sync,
+where
+    T: Hash + Eq + Sync,
+    S1: BuildHasher + Sync,
+    S2: BuildHasher + Sync,
 {
     type Item = &'a T;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         let Self { set1, set2 } = self;
 
@@ -373,9 +406,10 @@ impl<'a, T, S1, S2> Clone for ParUnion<'a, T, S1, S2> {
 }
 
 impl<'a, T, S1, S2> fmt::Debug for ParUnion<'a, T, S1, S2>
-    where T: fmt::Debug + Eq + Hash,
-          S1: BuildHasher,
-          S2: BuildHasher,
+where
+    T: fmt::Debug + Eq + Hash,
+    S1: BuildHasher,
+    S2: BuildHasher,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_list().entries(self.set1.union(&self.set2)).finish()
@@ -383,14 +417,16 @@ impl<'a, T, S1, S2> fmt::Debug for ParUnion<'a, T, S1, S2>
 }
 
 impl<'a, T, S1, S2> ParallelIterator for ParUnion<'a, T, S1, S2>
-    where T: Hash + Eq + Sync,
-          S1: BuildHasher + Sync,
-          S2: BuildHasher + Sync,
+where
+    T: Hash + Eq + Sync,
+    S1: BuildHasher + Sync,
+    S2: BuildHasher + Sync,
 {
     type Item = &'a T;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         let Self { set1, set2 } = self;
 
@@ -400,15 +436,18 @@ impl<'a, T, S1, S2> ParallelIterator for ParUnion<'a, T, S1, S2>
     }
 }
 
-
-/// Requires crate feature `"rayon"`.
+/// Parallel sorting methods.
+///
+/// The following methods **require crate feature `"rayon"`**.
 impl<T, S> IndexSet<T, S>
-    where T: Hash + Eq + Send,
-          S: BuildHasher + Send,
+where
+    T: Hash + Eq + Send,
+    S: BuildHasher + Send,
 {
     /// Sort the set’s values in parallel by their default ordering.
     pub fn par_sort(&mut self)
-        where T: Ord,
+    where
+        T: Ord,
     {
         self.with_entries(|entries| {
             entries.par_sort_by(|a, b| T::cmp(&a.key, &b.key));
@@ -417,7 +456,8 @@ impl<T, S> IndexSet<T, S>
 
     /// Sort the set’s values in place and in parallel, using the comparison function `compare`.
     pub fn par_sort_by<F>(&mut self, cmp: F)
-        where F: Fn(&T, &T) -> Ordering + Sync,
+    where
+        F: Fn(&T, &T) -> Ordering + Sync,
     {
         self.with_entries(|entries| {
             entries.par_sort_by(move |a, b| cmp(&a.key, &b.key));
@@ -427,7 +467,8 @@ impl<T, S> IndexSet<T, S>
     /// Sort the values of the set in parallel and return a by value parallel iterator of
     /// the values with the result.
     pub fn par_sorted_by<F>(self, cmp: F) -> IntoParIter<T>
-        where F: Fn(&T, &T) -> Ordering + Sync
+    where
+        F: Fn(&T, &T) -> Ordering + Sync,
     {
         let mut entries = self.into_entries();
         entries.par_sort_by(move |a, b| cmp(&a.key, &b.key));
@@ -435,14 +476,15 @@ impl<T, S> IndexSet<T, S>
     }
 }
 
-
 /// Requires crate feature `"rayon"`.
 impl<T, S> FromParallelIterator<T> for IndexSet<T, S>
-    where T: Eq + Hash + Send,
-          S: BuildHasher + Default + Send,
+where
+    T: Eq + Hash + Send,
+    S: BuildHasher + Default + Send,
 {
     fn from_par_iter<I>(iter: I) -> Self
-        where I: IntoParallelIterator<Item = T>
+    where
+        I: IntoParallelIterator<Item = T>,
     {
         let list = collect(iter);
         let len = list.iter().map(Vec::len).sum();
@@ -455,12 +497,14 @@ impl<T, S> FromParallelIterator<T> for IndexSet<T, S>
 }
 
 /// Requires crate feature `"rayon"`.
-impl<T, S> ParallelExtend<(T)> for IndexSet<T, S>
-    where T: Eq + Hash + Send,
-          S: BuildHasher + Send,
+impl<T, S> ParallelExtend<T> for IndexSet<T, S>
+where
+    T: Eq + Hash + Send,
+    S: BuildHasher + Send,
 {
     fn par_extend<I>(&mut self, iter: I)
-        where I: IntoParallelIterator<Item = T>
+    where
+        I: IntoParallelIterator<Item = T>,
     {
         for vec in collect(iter) {
             self.extend(vec);
@@ -470,18 +514,19 @@ impl<T, S> ParallelExtend<(T)> for IndexSet<T, S>
 
 /// Requires crate feature `"rayon"`.
 impl<'a, T: 'a, S> ParallelExtend<&'a T> for IndexSet<T, S>
-    where T: Copy + Eq + Hash + Send + Sync,
-          S: BuildHasher + Send,
+where
+    T: Copy + Eq + Hash + Send + Sync,
+    S: BuildHasher + Send,
 {
     fn par_extend<I>(&mut self, iter: I)
-        where I: IntoParallelIterator<Item = &'a T>
+    where
+        I: IntoParallelIterator<Item = &'a T>,
     {
         for vec in collect(iter) {
             self.extend(vec);
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -501,9 +546,12 @@ mod tests {
         insert.par_iter().zip(&set).for_each(|(a, b)| {
             assert_eq!(a, b);
         });
-        (0..insert.len()).into_par_iter().zip(&set).for_each(|(i, v)| {
-            assert_eq!(set.get_index(i).unwrap(), v);
-        });
+        (0..insert.len())
+            .into_par_iter()
+            .zip(&set)
+            .for_each(|(i, v)| {
+                assert_eq!(set.get_index(i).unwrap(), v);
+            });
     }
 
     #[test]
@@ -513,7 +561,7 @@ mod tests {
         set_a.insert(2);
         let mut set_b = set_a.clone();
         assert!(set_a.par_eq(&set_b));
-        set_b.remove(&1);
+        set_b.swap_remove(&1);
         assert!(!set_a.par_eq(&set_b));
         set_b.insert(3);
         assert!(!set_a.par_eq(&set_b));
@@ -528,7 +576,10 @@ mod tests {
         let mut set = IndexSet::new();
         set.par_extend(vec![&1, &2, &3, &4]);
         set.par_extend(vec![5, 6]);
-        assert_eq!(set.into_par_iter().collect::<Vec<_>>(), vec![1, 2, 3, 4, 5, 6]);
+        assert_eq!(
+            set.into_par_iter().collect::<Vec<_>>(),
+            vec![1, 2, 3, 4, 5, 6]
+        );
     }
 
     #[test]
@@ -608,8 +659,14 @@ mod tests {
 
         check(set_c.par_difference(&set_d), 0..3);
         check(set_d.par_difference(&set_c), (6..9).rev());
-        check(set_c.par_symmetric_difference(&set_d), (0..3).chain((6..9).rev()));
-        check(set_d.par_symmetric_difference(&set_c), (6..9).rev().chain(0..3));
+        check(
+            set_c.par_symmetric_difference(&set_d),
+            (0..3).chain((6..9).rev()),
+        );
+        check(
+            set_d.par_symmetric_difference(&set_c),
+            (6..9).rev().chain(0..3),
+        );
         check(set_c.par_intersection(&set_d), 3..6);
         check(set_d.par_intersection(&set_c), (3..6).rev());
         check(set_c.par_union(&set_d), (0..6).chain((6..9).rev()));
