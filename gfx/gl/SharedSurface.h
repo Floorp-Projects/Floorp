@@ -137,10 +137,6 @@ class SharedSurface {
   virtual bool NeedsIndirectReads() const { return false; }
 
   virtual Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() = 0;
-
-  virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) {
-    return false;
-  }
 };
 
 // -

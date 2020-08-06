@@ -39,9 +39,6 @@ class SharedSurface_IOSurface final : public SharedSurface {
   virtual bool NeedsIndirectReads() const override { return true; }
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
-
-  virtual bool ReadbackBySharedHandle(
-      gfx::DataSourceSurface* out_surface) override;
 };
 
 class SurfaceFactory_IOSurface : public SurfaceFactory {
