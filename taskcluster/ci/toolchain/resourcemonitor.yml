@@ -1,0 +1,44 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    fetches:
+        fetch:
+            - go-1.14.4
+            - resource-monitor
+    run:
+        script: build-resourcemonitor.sh
+        sparse-profile: null
+        toolchain-artifact: public/build/resource-monitor.tar.xz
+
+linux64-resource-monitor:
+    description: "linux64 resourcemonitor toolchain build"
+    treeherder:
+        symbol: TL(rs-monitor)
+    run:
+        arguments: ['linux64']
+
+macosx64-resource-monitor:
+    description: "macos64 resourcemonitor toolchain build"
+    treeherder:
+        symbol: TM(rs-monitor)
+    run:
+        arguments: ['macos64']
+
+windows32-resource-monitor:
+    description: "windows32 resourcemonitor toolchain build"
+    treeherder:
+        symbol: TW32(rs-monitor)
+    run:
+        arguments: ['windows32']
+
+windows64-resource-monitor:
+    description: "windows64 resourcemonitor toolchain build"
+    treeherder:
+        symbol: TW64(rs-monitor)
+    run:
+        arguments: ['windows64']

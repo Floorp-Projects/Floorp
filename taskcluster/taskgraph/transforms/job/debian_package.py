@@ -81,7 +81,7 @@ def docker_worker_debian_package(config, job, taskdesc):
     arch = run.get('arch', 'amd64')
 
     worker = taskdesc['worker']
-    worker['artifacts'] = []
+    worker.setdefault('artifacts', [])
     version = {
         'wheezy': 7,
         'jessie': 8,

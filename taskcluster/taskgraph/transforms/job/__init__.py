@@ -163,6 +163,42 @@ def set_label(config, jobs):
         yield job
 
 
+@transforms.add
+def add_resource_monitor(config, jobs):
+    for job in jobs:
+        if job.get('attributes', {}).get('resource-monitor'):
+            worker_implementation, worker_os = worker_type_implementation(
+                config.graph_config, job["worker-type"]
+            )
+            # Normalise worker os so that linux-bitbar and similar use linux tools.
+            worker_os = worker_os.split('-')[0]
+            if 'win7' in job["worker-type"]:
+                arch = '32'
+            else:
+                arch = '64'
+            job.setdefault("fetches", {})
+            job["fetches"].setdefault("toolchain", [])
+            job["fetches"]["toolchain"].append("{}{}-resource-monitor".format(worker_os, arch))
+
+            if worker_implementation == 'docker-worker':
+                artifact_source = "/builds/worker/monitoring/resource-monitor.json"
+            else:
+                artifact_source = "monitoring/resource-monitor.json"
+            job["worker"].setdefault("artifacts", [])
+            job["worker"]["artifacts"].append(
+                {
+                    "name": "public/monitoring/resource-monitor.json",
+                    "type": "file",
+                    "path": artifact_source,
+                }
+            )
+            # Set env for output file
+            job["worker"].setdefault("env", {})
+            job["worker"]["env"]["RESOURCE_MONITOR_OUTPUT"] = artifact_source
+
+        yield job
+
+
 def get_attribute(dict, key, attributes, attribute_name):
     '''Get `attribute_name` from the given `attributes` dict, and if there
     is a corresponding value, set `key` in `dict` to that value.'''

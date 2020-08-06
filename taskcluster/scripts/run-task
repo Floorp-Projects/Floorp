@@ -31,12 +31,15 @@ import platform
 import random
 import re
 import shutil
+import signal
 import socket
 import stat
 import subprocess
 
 import urllib.error
 import urllib.request
+
+from threading import Thread
 
 FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
 FALLBACK_FINGERPRINT = {
@@ -677,6 +680,57 @@ def vcs_checkout_from_args(args, project):
         sparse_profile=options['sparse-profile'])
 
 
+def maybe_run_resource_monitoring():
+    """Run the resource monitor if available.
+
+    Discussion in https://github.com/taskcluster/taskcluster-rfcs/pull/160
+    and https://bugzil.la/1648051
+    """
+    if 'MOZ_FETCHES' not in os.environ:
+        return
+    if 'RESOURCE_MONITOR_OUTPUT' not in os.environ:
+        return
+
+    prefix = b'resource_monitor'
+
+    executable = '{}/resource-monitor/resource-monitor{}'.format(
+        os.environ.get('MOZ_FETCHES_DIR'), '.exe' if IS_WINDOWS else '')
+
+    if not os.path.exists(executable) or not os.access(executable, os.X_OK):
+        print_line(prefix, b"%s not executable\n" % executable.encode('utf-8'))
+        return
+    args = [
+        executable,
+        '-process',
+        str(os.getpid()),
+        '-output',
+        os.environ["RESOURCE_MONITOR_OUTPUT"],
+    ]
+    print_line(prefix, b"Resource monitor starting: %s\n" % str(args).encode('utf-8'))
+    # Avoid environment variables the payload doesn't need.
+    del os.environ['RESOURCE_MONITOR_OUTPUT']
+
+    # Without CREATE_NEW_PROCESS_GROUP Windows signals will attempt to kill run-task, too.
+    process = subprocess.Popen(args,
+                               bufsize=0,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT,
+                               creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if IS_WINDOWS else 0,
+                               cwd=os.getcwd())
+
+    def capture_output():
+        fh = io.TextIOWrapper(process.stdout, encoding='latin1')
+        while True:
+            data = fh.readline().encode('latin1')
+            if data == b'':
+                break
+            print_line(prefix, data)
+
+    monitor_process = Thread(target=capture_output)
+    monitor_process.start()
+    return process
+
+
 def main(args):
     print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
@@ -883,6 +937,8 @@ def main(args):
     vcs_checkout_from_args(args, 'gecko')
     vcs_checkout_from_args(args, 'comm')
 
+    resource_process = None
+
     try:
         for k in ('GECKO_PATH', 'MOZ_FETCHES_DIR', 'UPLOAD_DIR'):
             if k in os.environ:
@@ -896,8 +952,21 @@ def main(args):
         if 'MOZ_FETCHES' in os.environ:
             fetch_artifacts()
 
+        resource_process = maybe_run_resource_monitoring()
+
         return run_and_prefix_output(b'task', task_args, cwd=args.task_cwd)
     finally:
+        if resource_process:
+            print_line(b'resource_monitor', b'terminating\n')
+            if IS_WINDOWS:
+                # .terminate() on Windows is not a graceful shutdown, due to
+                # differences in signals. CTRL_BREAK_EVENT will work provided
+                # the subprocess is in a different process group, so this script
+                # isn't also killed.
+                os.kill(resource_process.pid, signal.CTRL_BREAK_EVENT)
+            else:
+                resource_process.terminate()
+            resource_process.wait()
         fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
         if fetches_dir and os.path.isdir(fetches_dir):
             print_line(b'fetches', b'removing %s\n' % fetches_dir.encode('utf-8'))
