@@ -5798,10 +5798,16 @@ AttachDecision CallIRGenerator::tryAttachGuardToClass(HandleFunction callee,
 }
 
 AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
-                                                  const JSClass* clasp) {
+                                                  const JSClass* clasp,
+                                                  bool isPossiblyWrapped) {
   // Self-hosted code calls this with an object argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
+
+  // Only optimize when the object isn't a proxy.
+  if (isPossiblyWrapped && IsProxy(&args_[0].toObject())) {
+    return AttachDecision::NoAction;
+  }
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -5811,6 +5817,11 @@ AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
   // Perform the Class check.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objId = writer.guardToObject(argId);
+
+  if (isPossiblyWrapped) {
+    writer.guardIsNotProxy(objId);
+  }
+
   writer.hasClassResult(objId, clasp);
 
   // Return without type monitoring, because this always returns a boolean.
@@ -7655,7 +7666,11 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:
-      return tryAttachHasClass(callee, &RegExpObject::class_);
+      return tryAttachHasClass(callee, &RegExpObject::class_,
+                               /* isPossiblyWrapped = */ false);
+    case InlinableNative::IsPossiblyWrappedRegExpObject:
+      return tryAttachHasClass(callee, &RegExpObject::class_,
+                               /* isPossiblyWrapped = */ true);
     case InlinableNative::RegExpMatcher:
     case InlinableNative::RegExpSearcher:
     case InlinableNative::RegExpTester:

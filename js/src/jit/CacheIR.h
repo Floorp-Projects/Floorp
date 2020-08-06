@@ -1633,7 +1633,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachIsCrossRealmArrayConstructor(HandleFunction callee);
   AttachDecision tryAttachGuardToClass(HandleFunction callee,
                                        InlinableNative native);
-  AttachDecision tryAttachHasClass(HandleFunction callee, const JSClass* clasp);
+  AttachDecision tryAttachHasClass(HandleFunction callee, const JSClass* clasp,
+                                   bool isPossiblyWrapped);
   AttachDecision tryAttachRegExpMatcherSearcherTester(HandleFunction callee,
                                                       InlinableNative native);
   AttachDecision tryAttachRegExpPrototypeOptimizable(HandleFunction callee);
