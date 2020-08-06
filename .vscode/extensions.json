@@ -8,8 +8,8 @@
     "dbaeumer.vscode-eslint",
     // Prettier support.
     "esbenp.prettier-vscode",
-    // C/C++ language support.
-    "ms-vscode.cpptools",
+    // C/C++ language support with clangd
+    "llvm-vs-code-extensions.vscode-clangd",
     // Rust language support.
     "rust-lang.rust",
     // Provides support for rust-analyzer: novel LSP server for the Rust programming language.
