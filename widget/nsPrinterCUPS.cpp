@@ -51,7 +51,9 @@ bool nsPrinterCUPS::SupportsDuplex() const {
   return Supports(CUPS_SIDES, CUPS_SIDES_TWO_SIDED_PORTRAIT);
 }
 
-bool nsPrinterCUPS::SupportsColor() const { return false; }
+bool nsPrinterCUPS::SupportsColor() const {
+  return Supports(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_COLOR);
+}
 
 bool nsPrinterCUPS::Supports(const char* option, const char* value) const {
   MOZ_ASSERT(mPrinterInfo);
