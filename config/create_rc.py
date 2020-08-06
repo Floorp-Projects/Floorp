@@ -170,7 +170,7 @@ def generate_module_rc(binary='', rcinclude=None):
         productname=overrides.get('WIN32_MODULE_PRODUCTNAME', display_name),
         buildid=buildid,
     )
-    with io.open('module.rc', 'w', encoding='latin1') as fh:
+    with io.open('{}.rc'.format(binary or 'module'), 'w', encoding='latin1') as fh:
         fh.write(data)
 
 
