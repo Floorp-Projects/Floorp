@@ -1672,6 +1672,10 @@ BrowserGlue.prototype = {
       let isColdStartup =
         nowSeconds - secondsSinceLastOSRestart > lastCheckSeconds;
       Services.telemetry.scalarSet("startup.is_cold", isColdStartup);
+      Services.telemetry.scalarSet(
+        "startup.seconds_since_last_os_restart",
+        secondsSinceLastOSRestart
+      );
     } catch (ex) {
       Cu.reportError(ex);
     }
