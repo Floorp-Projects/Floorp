@@ -19,7 +19,7 @@
 
 // No one is currently using the Glean SDK, so let's export it, so we know it gets
 // compiled.
-pub extern crate glean;
+pub extern crate fog;
 
 #[macro_use]
 extern crate cstr;
@@ -176,7 +176,7 @@ static mut PENDING_BUF: Vec<u8> = Vec::new();
 /// fog_give_ipc_buf on).
 #[no_mangle]
 pub unsafe extern "C" fn fog_serialize_ipc_buf() -> usize {
-    if let Some(buf) = glean::ipc::take_buf() {
+    if let Some(buf) = fog::ipc::take_buf() {
         PENDING_BUF = buf;
         PENDING_BUF.len()
     } else {
@@ -205,7 +205,7 @@ pub unsafe extern "C" fn fog_give_ipc_buf(buf: *mut u8, buf_len: usize) -> usize
 /// buf before and after this call.
 pub unsafe extern "C" fn fog_use_ipc_buf(buf: *const u8, buf_len: usize) {
     let slice = std::slice::from_raw_parts(buf, buf_len);
-    let _res = glean::ipc::replay_from_buf(slice);
+    let _res = fog::ipc::replay_from_buf(slice);
     /*if res.is_err() {
         // TODO: Record the error.
     }*/
