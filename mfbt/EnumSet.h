@@ -50,7 +50,15 @@ class EnumSet {
     }
   }
 
+#ifdef DEBUG
   constexpr EnumSet(const EnumSet& aEnumSet) : mBitField(aEnumSet.mBitField) {}
+
+  constexpr EnumSet& operator=(const EnumSet& aEnumSet) {
+    mBitField = aEnumSet.mBitField;
+    incVersion();
+    return *this;
+  }
+#endif
 
   /**
    * Add an element
