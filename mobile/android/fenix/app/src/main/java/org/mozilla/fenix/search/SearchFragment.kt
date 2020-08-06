@@ -173,6 +173,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             )
         )
 
+        awesomeBarView.view.setOnEditSuggestionListener(toolbarView.view::setSearchTerms)
+
         val urlView = toolbarView.view
             .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
         urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
