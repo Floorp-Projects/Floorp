@@ -318,6 +318,7 @@
       let tabArgument = gBrowserInit.getTabToAdopt();
 
       // We only need sameProcessAsFrameLoader in the case where we're passed a tab
+      let initialBrowsingContextGroupId;
       let sameProcessAsFrameLoader;
       // If we have a tab argument with browser, we use its remoteType. Otherwise,
       // if e10s is disabled or there's a parent process opener (e.g. parent
@@ -327,6 +328,8 @@
       let remoteType;
       if (tabArgument && tabArgument.linkedBrowser) {
         remoteType = tabArgument.linkedBrowser.remoteType;
+        initialBrowsingContextGroupId =
+          tabArgument.linkedBrowser.browsingContext?.group.id;
         sameProcessAsFrameLoader = tabArgument.linkedBrowser.frameLoader;
       } else if (openWindowInfo) {
         userContextId = openWindowInfo.originAttributes.userContextId;
@@ -364,6 +367,7 @@
         uriIsAboutBlank: false,
         userContextId,
         sameProcessAsFrameLoader,
+        initialBrowsingContextGroupId,
         remoteType,
         openWindowInfo,
       };
@@ -1549,6 +1553,7 @@
       var aPreferredRemoteType;
       var aUserContextId;
       var aSameProcessAsFrameLoader;
+      var aInitialBrowsingContextGroupId;
       var aOriginPrincipal;
       var aOriginStoragePrincipal;
       var aOpenWindowInfo;
@@ -1579,6 +1584,7 @@
         aPreferredRemoteType = params.preferredRemoteType;
         aUserContextId = params.userContextId;
         aSameProcessAsFrameLoader = params.sameProcessAsFrameLoader;
+        aInitialBrowsingContextGroupId = params.initialBrowsingContextGroupId;
         aOriginPrincipal = params.originPrincipal;
         aOriginStoragePrincipal = params.originStoragePrincipal;
         aOpenWindowInfo = params.openWindowInfo;
@@ -1622,6 +1628,7 @@
         originPrincipal: aOriginPrincipal,
         originStoragePrincipal: aOriginStoragePrincipal,
         sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
+        initialBrowsingContextGroupId: aInitialBrowsingContextGroupId,
         openWindowInfo: aOpenWindowInfo,
         openerBrowser: aOpenerBrowser,
         focusUrlBar: aFocusUrlBar,
@@ -1965,6 +1972,7 @@
       openWindowInfo,
       remoteType,
       sameProcessAsFrameLoader,
+      initialBrowsingContextGroupId,
       uriIsAboutBlank,
       userContextId,
       skipLoad,
@@ -2027,6 +2035,18 @@
 
       if (sameProcessAsFrameLoader) {
         b.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
+      }
+
+      // Ensure that the browser will be created in a specific initial
+      // BrowsingContextGroup. This may change the process selection behaviour
+      // of the newly created browser, and is often used in combination with
+      // "remoteType" to ensure that the initial about:blank load occurs
+      // within the same process as another window.
+      if (initialBrowsingContextGroupId) {
+        b.setAttribute(
+          "initialBrowsingContextGroupId",
+          initialBrowsingContextGroupId
+        );
       }
 
       // Propagate information about the opening content window to the browser.
@@ -2439,6 +2459,7 @@
         referrerInfo,
         relatedToCurrent,
         sameProcessAsFrameLoader,
+        initialBrowsingContextGroupId,
         skipAnimation,
         skipBackgroundNotify,
         triggeringPrincipal,
@@ -2633,6 +2654,7 @@
             uriIsAboutBlank,
             userContextId,
             sameProcessAsFrameLoader,
+            initialBrowsingContextGroupId,
             openWindowInfo,
             name,
             skipLoad,
@@ -4418,6 +4440,7 @@
         eventDetail: { adoptedTab: aTab },
         preferredRemoteType: linkedBrowser.remoteType,
         sameProcessAsFrameLoader: linkedBrowser.frameLoader,
+        initialBrowsingContextGroupId: linkedBrowser.browsingContext?.group.id,
         skipAnimation: true,
         index: aIndex,
         createLazyBrowser,

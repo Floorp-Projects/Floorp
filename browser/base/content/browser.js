@@ -3197,8 +3197,10 @@ async function BrowserViewSourceOfDocument(args) {
 
   let tabBrowser = gBrowser;
   let preferredRemoteType;
+  let initialBrowsingContextGroupId;
   if (args.browser) {
     preferredRemoteType = args.browser.remoteType;
+    initialBrowsingContextGroupId = args.browser.browsingContext.group.id;
   } else {
     if (!tabBrowser) {
       throw new Error(
@@ -3238,6 +3240,7 @@ async function BrowserViewSourceOfDocument(args) {
     inBackground: inNewWindow,
     skipAnimation: inNewWindow,
     preferredRemoteType,
+    initialBrowsingContextGroupId,
     sameProcessAsFrameLoader: args.browser ? args.browser.frameLoader : null,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
@@ -3622,9 +3625,11 @@ var PrintPreviewListener = {
   _createPPBrowser() {
     let browser = this.getSourceBrowser();
     let preferredRemoteType = browser.remoteType;
+    let initialBrowsingContextGroupId = browser.browsingContext.group.id;
     return gBrowser.loadOneTab("about:printpreview", {
       inBackground: true,
       preferredRemoteType,
+      initialBrowsingContextGroupId,
       sameProcessAsFrameLoader: browser.frameLoader,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
@@ -3649,8 +3654,12 @@ var PrintPreviewListener = {
   },
   createSimplifiedBrowser() {
     let browser = this.getSourceBrowser();
+    let preferredRemoteType = browser.remoteType;
+    let initialBrowsingContextGroupId = browser.browsingContext.group.id;
     this._simplifyPageTab = gBrowser.loadOneTab("about:printpreview", {
       inBackground: true,
+      preferredRemoteType,
+      initialBrowsingContextGroupId,
       sameProcessAsFrameLoader: browser.frameLoader,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });

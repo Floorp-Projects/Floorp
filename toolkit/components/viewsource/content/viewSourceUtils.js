@@ -118,6 +118,13 @@ var gViewSourceUtils = {
     }
 
     if (browser) {
+      // XXX(nika): I am pretty sure this does absolutely nothing. I don't think
+      // that this will correctly ensure that the browser is loaded in the same
+      // process as the URL it's viewing the source of.
+      //
+      // The callers of this function should probably be updated to make sure to
+      // create the browser with the correct settings so it's already in the
+      // correct process.
       viewSourceBrowser.sameProcessAsFrameLoader = browser.frameLoader;
 
       // If we're dealing with a remote browser, then the browser

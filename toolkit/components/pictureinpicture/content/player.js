@@ -110,6 +110,18 @@ let Player = {
     browser.remove();
 
     browser.setAttribute("nodefaultsrc", "true");
+
+    // Set the specific remoteType and browsingContextGroupID to use for the
+    // initial about:blank load. The combination of these two properties will
+    // ensure that the browser loads in the same process as our originating
+    // browser.
+    // FIXME: Make sure to use the correct remoteType & browsingContextGroupId
+    // in the case of remote subframes.
+    browser.setAttribute("remoteType", originatingBrowser.remoteType);
+    browser.setAttribute(
+      "initialBrowsingContextGroupId",
+      originatingBrowser.browsingContext.group.id
+    );
     browser.sameProcessAsFrameLoader = originatingBrowser.frameLoader;
     holder.appendChild(browser);
 
