@@ -4,7 +4,23 @@
 
 /*
  * This module sends the Telemetry Ecosystem pings periodically:
- * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/ecosystem-ping.html
+ * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/ecosystem-telemetry.html
+ *
+ * Note that ecosystem pings are only sent when the preference
+ * `toolkit.telemetry.ecosystemtelemetry.enabled` is set to `true` - eventually
+ * that will be the default, but you should check!
+ *
+ * Note also that these pings are currently only sent for users signed in to
+ * Firefox with a Firefox account.
+ *
+ * If you are using the non-production FxA stack, pings are not sent by default.
+ * To force them, you should set:
+ * - toolkit.telemetry.ecosystemtelemetry.allowForNonProductionFxA: true
+ *
+ * If you are trying to debug this, you might also find the following
+ * preferences useful:
+ * - toolkit.telemetry.log.level: "Trace"
+ * - toolkit.telemetry.log.dump: true
  */
 
 "use strict";
@@ -14,14 +30,18 @@ var EXPORTED_SYMBOLS = ["EcosystemTelemetry"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Weave: "resource://services-sync/main.js",
   ONLOGIN_NOTIFICATION: "resource://gre/modules/FxAccountsCommon.js",
   ONLOGOUT_NOTIFICATION: "resource://gre/modules/FxAccountsCommon.js",
+  ONVERIFIED_NOTIFICATION: "resource://gre/modules/FxAccountsCommon.js",
+  ON_PRELOGOUT_NOTIFICATION: "resource://gre/modules/FxAccountsCommon.js",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   Log: "resource://gre/modules/Log.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  ClientID: "resource://gre/modules/ClientID.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -31,45 +51,61 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "EcosystemTelemetry::";
 
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  return Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+});
+
 var Policy = {
   sendPing: (type, payload, options) =>
     TelemetryController.submitExternalPing(type, payload, options),
   monotonicNow: () => TelemetryUtils.monotonicNow(),
-  fxaUid: () => {
+  // Returns a promise that resolves with the Ecosystem anonymized id.
+  // Never rejects - will log an error and resolve with null on error.
+  async getEcosystemAnonId() {
     try {
-      return Weave.Service.identity.hashedUID();
+      let userData = await fxAccounts.getSignedInUser();
+      if (!userData || !userData.verified) {
+        log.debug("No ecosystem anonymized ID - no user or unverified user");
+        return null;
+      }
+      return await fxAccounts.telemetry.ensureEcosystemAnonId();
     } catch (ex) {
+      log.error("Failed to fetch the ecosystem anonymized ID", ex);
       return null;
     }
   },
-  isClientConfigured: () =>
-    Weave.Status.checkSetup() !== Weave.CLIENT_NOT_CONFIGURED,
+  // Returns a promise that resolves with the current ecosystem client id.
+  getEcosystemClientId() {
+    return ClientID.getEcosystemClientID();
+  },
 };
 
 var EcosystemTelemetry = {
   Reason: Object.freeze({
     PERIODIC: "periodic", // Send the ping in regular intervals
     SHUTDOWN: "shutdown", // Send the ping on shutdown
-    LOGIN: "login", // Send after FxA login
     LOGOUT: "logout", // Send after FxA logout
   }),
-  PingType: Object.freeze({
-    PRE: "pre-account",
-    // TODO(bug 1530654): Implement post-account ping
-    POST: "post-account",
-  }),
-  METRICS_STORE: "pre-account",
-  _logger: null,
+  PING_TYPE: "account-ecosystem",
+  METRICS_STORE: "account-ecosystem",
   _lastSendTime: 0,
-  // The current ping type to send, one of PingType
-  _pingType: null,
-  // Indicates if we saw a login event and the UID is pending
-  _uidPending: false,
-  // Indicates that the Ecosystem ping is configured and ready to send pings
+  // Indicates that the Ecosystem ping is configured and ready to send pings.
   _initialized: false,
+  // The promise returned by Policy.getEcosystemAnonId()
+  _promiseEcosystemAnonId: null,
+  // Sets up _promiseEcosystemAnonId in the hope that it will be resolved by the
+  // time we need it, and also already resolved when the user logs out.
+  prepareEcosystemAnonId() {
+    this._promiseEcosystemAnonId = Policy.getEcosystemAnonId();
+  },
 
   enabled() {
     // Never enabled when not Unified Telemetry (e.g. not enabled on Fennec)
+    // If not enabled, then it doesn't become enabled until the preferences
+    // are adjusted and the browser is restarted.
+    // Not enabled is different to "should I send pings?" - if enabled, then
+    // observers will still be setup so we are ready to transition from not
+    // sending pings into sending them.
     if (
       !Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false)
     ) {
@@ -85,23 +121,52 @@ var EcosystemTelemetry = {
       return false;
     }
 
+    if (
+      !FxAccounts.config.isProductionConfig() &&
+      !Services.prefs.getBoolPref(
+        TelemetryUtils.Preferences.EcosystemTelemetryAllowForNonProductionFxA,
+        false
+      )
+    ) {
+      log.info("Ecosystem telemetry disabled due to FxA non-production user");
+      return false;
+    }
+    // We are enabled (although may or may not want to send pings.)
     return true;
+  },
+
+  /**
+   * In what is an unfortunate level of coupling, FxA has hacks to call this
+   * function before it sends any account related notifications. This allows us
+   * to work correctly when logging out by ensuring we have the anonymized
+   * ecosystem ID by then (as *at* logout time it's too late)
+   */
+  async prepareForFxANotification() {
+    // Telemetry might not have initialized yet, so make sure we have.
+    this.startup();
+    // We need to ensure the promise fetching the anon ecosystem id has
+    // resolved (but if we are pref'd off it will remain null.)
+    if (this._promiseEcosystemAnonId) {
+      await this._promiseEcosystemAnonId;
+    }
   },
 
   /**
    * On startup, register all observers.
    */
   startup() {
-    if (!this.enabled()) {
+    if (!this.enabled() || this._initialized) {
       return;
     }
-    this._log.trace("Starting up.");
+    log.trace("Starting up.");
+
+    // We "prime" the ecosystem id here - if it's not currently available, it
+    // will be done in the background, so should be ready by the time we
+    // actually need it.
+    this.prepareEcosystemAnonId();
+
     this._addObservers();
 
-    // Always start with a pre-account ping.
-    // We switch to post-account if we detect a sync/login
-    // On short sessions, when we don't see a login/sync, we always send a pre-account ping.
-    this._pingType = this.PingType.PRE;
     this._initialized = true;
   },
 
@@ -111,85 +176,85 @@ var EcosystemTelemetry = {
    * This will send a final ping with the SHUTDOWN reason.
    */
   shutdown() {
-    if (!this.enabled()) {
+    if (!this._initialized) {
       return;
     }
-    this._log.trace("Shutting down.");
-    this._submitPing(this._pingType, this.Reason.SHUTDOWN);
+    log.trace("Shutting down.");
+    this._submitPing(this.Reason.SHUTDOWN);
 
     this._removeObservers();
+    this._initialized = false;
   },
 
   _addObservers() {
-    // FxA login
+    // FxA login, verification and logout.
     Services.obs.addObserver(this, ONLOGIN_NOTIFICATION);
-    // FxA logout
+    Services.obs.addObserver(this, ONVERIFIED_NOTIFICATION);
     Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION);
-    // FxA/Sync - initialized and knows if client configured
-    Services.obs.addObserver(this, "weave:service:ready");
-    // FxA/Sync - done, uid might be available
-    Services.obs.addObserver(this, "weave:service:login:change");
+    Services.obs.addObserver(this, ON_PRELOGOUT_NOTIFICATION);
   },
 
   _removeObservers() {
     try {
       // removeObserver may throw, which could interrupt shutdown.
       Services.obs.removeObserver(this, ONLOGIN_NOTIFICATION);
+      Services.obs.removeObserver(this, ONVERIFIED_NOTIFICATION);
       Services.obs.removeObserver(this, ONLOGOUT_NOTIFICATION);
-      Services.obs.removeObserver(this, "weave:service:ready");
-      Services.obs.removeObserver(this, "weave:service:login:change");
+      Services.obs.removeObserver(this, ON_PRELOGOUT_NOTIFICATION);
     } catch (ex) {}
   },
 
   observe(subject, topic, data) {
-    this._log.trace(`observe, topic: ${topic}`);
+    log.trace(`observe, topic: ${topic}`);
 
     switch (topic) {
+      // This is a bit messy - an already verified user will get
+      // ONLOGIN_NOTIFICATION but *not* ONVERIFIED_NOTIFICATION. However, an
+      // unverified user can't do the ecosystem dance with the profile server.
+      // The only way to determine if the user is verified or not is via an
+      // async method, and this isn't async, so...
+      // Sadly, we just end up kicking off prepareEcosystemAnonId() twice in
+      // that scenario, which will typically be rare and is handled by FxA. Note
+      // also that we are just "priming" the ecosystem id here - if it's not
+      // currently available, it will be done in the background, so should be
+      // ready by the time we actually need it.
       case ONLOGIN_NOTIFICATION:
-        // On new login, we will switch pings once UID is available
-        this._uidPending = true;
+      case ONVERIFIED_NOTIFICATION:
+        // If we sent these pings for non-account users and this is a login
+        // notification, we'd want to submit now, so we have a fresh set of data
+        // for the user.
+        // But for now, all we need to do is start the promise to fetch the anon
+        // ID.
+        this.prepareEcosystemAnonId();
         break;
 
       case ONLOGOUT_NOTIFICATION:
-        // On logout we switch to pre-account again
-        this._uidPending = false;
-        this._pingType = this.PingType.PRE;
-        this._submitPing(this._pingType, this.Reason.LOGOUT);
-        break;
+        // On logout we submit what we have, then switch to the "no anon id"
+        // state.
+        // Returns the promise for tests.
+        return this._submitPing(this.Reason.LOGOUT)
+          .then(() => {
+            // Ensure _promiseEcosystemAnonId() is now going to resolve as null.
+            this.prepareEcosystemAnonId();
+          })
+          .catch(e => {
+            log.error("ONLOGOUT promise chain failed", e);
+          });
 
-      case "weave:service:login:change":
-        let uid = Policy.fxaUid();
-        if (this._uidPending && uid) {
-          // When we saw a login before and have a UID we switch to post-account
-          this._submitPing(this._pingType, this.Reason.LOGIN);
-          this._pingType = this.PingType.POST;
-          this._uidPending = false;
-        } else if (!this._uidPending && uid) {
-          // We didn't see a login before, but have a UID.
-          // This can only be true after a process restart and when the first sync happened
-          // Next interval will be a post-account ping.
-          this._pingType = this.PingType.POST;
-        } else if (!uid) {
-          // No uid means we keep sending in pre-account pings
-          this._pingType = this.PingType.PRE;
-        }
-        break;
-
-      case "weave:service:ready":
-        // If client is configured, we send post-account pings
-        if (Policy.isClientConfigured()) {
-          this._pingType = this.PingType.POST;
-        } else {
-          // Otherwise we keep sending pre-account pings
-          this._pingType = this.PingType.PRE;
-        }
+      case ON_PRELOGOUT_NOTIFICATION:
+        // We don't need to do anything here - everything was done in startup.
+        // However, we keep this here so someone doesn't erroneously think the
+        // notification serves no purposes - it's the `observerPreloads` in
+        // FxAccounts that matters!
         break;
     }
+    return null;
   },
 
+  // Called by TelemetryScheduler.jsm when periodic pings should be sent.
   periodicPing() {
-    this._log.trace("periodic ping triggered");
-    this._submitPing(this._pingType, this.Reason.PERIODIC);
+    log.trace("periodic ping triggered");
+    return this._submitPing(this.Reason.PERIODIC);
   },
 
   /**
@@ -200,31 +265,22 @@ var EcosystemTelemetry = {
    *
    * It will automatically assemble the right payload and clear out Telemetry stores.
    *
-   * @param {String} pingType The ping type to send. One of TelemetryEcosystemPing.PingType.
    * @param {String} reason The reason we're sending the ping. One of TelemetryEcosystemPing.Reason.
    */
-  _submitPing(pingType, reason) {
+  async _submitPing(reason) {
     if (!this.enabled()) {
-      this._log.trace(`_submitPing was called, but ping is not enabled. Bug?`);
+      // It's possible we will end up here if FxA was using the production
+      // stack at startup but no longer is.
+      log.trace(`_submitPing was called, but ping is not enabled.`);
       return;
     }
 
-    if (!this._initialized || !pingType) {
-      this._log.trace(
-        `Not initialized or ping type undefined when sending. Bug?`
-      );
+    if (!this._initialized) {
+      log.trace(`Not initialized when sending. Bug?`);
       return;
     }
 
-    if (pingType == this.PingType.POST) {
-      // TODO(bug 1530654): Implement post-account ping
-      this._log.trace(
-        `Post-account ping not implemented yet. Sending pre-account instead.`
-      );
-      pingType = this.PingType.PRE;
-    }
-
-    this._log.trace(`_submitPing, ping type: ${pingType}, reason: ${reason}`);
+    log.trace(`_submitPing, reason: ${reason}`);
 
     let now = Policy.monotonicNow();
 
@@ -232,7 +288,11 @@ var EcosystemTelemetry = {
     let duration = Math.round((now - this._lastSendTime) / 1000);
     this._lastSendTime = now;
 
-    let payload = this._payload(reason, duration);
+    let payload = await this._payload(reason, duration);
+    if (!payload) {
+      // The reason for returning null will already have been logged.
+      return;
+    }
 
     // Never include the client ID.
     // We provide our own environment.
@@ -243,7 +303,8 @@ var EcosystemTelemetry = {
       usePingSender: reason === this.Reason.SHUTDOWN,
     };
 
-    Policy.sendPing(pingType, payload, options);
+    let id = await Policy.sendPing(this.PING_TYPE, payload, options);
+    log.info(`submitted ping ${id}`);
   },
 
   /**
@@ -252,10 +313,19 @@ var EcosystemTelemetry = {
    * @param {String} reason The reason we're sending the ping. One of TelemetryEcosystemPing.Reason.
    * @param {Number} duration The duration since ping was last send in seconds.
    */
-  _payload(reason, duration) {
+  async _payload(reason, duration) {
+    let ecosystemAnonId = await this._promiseEcosystemAnonId;
+    if (!ecosystemAnonId) {
+      // This typically just means no user is logged in, so don't make too
+      // much noise.
+      log.info("Unable to determine the ecosystem anon id; skipping this ping");
+      return null;
+    }
+
     let payload = {
       reason,
-      ecosystemClientId: this._ecosystemClientId(),
+      ecosystemAnonId,
+      ecosystemClientId: await Policy.getEcosystemClientId(),
       duration,
 
       scalars: Telemetry.getSnapshotForScalars(
@@ -280,25 +350,7 @@ var EcosystemTelemetry = {
       ),
     };
 
-    // UID is only allowed on post-account or login pings
-    if (this._pingType == this.PingType.POST || reason == this.Reason.LOGIN) {
-      let uid = Policy.fxaUid();
-      if (uid) {
-        // after additional data-review, we include the real uid.
-        payload.uid = "00000000000000000000000000000000";
-      }
-    }
-
     return payload;
-  },
-
-  /**
-   * Get the current ecosystem client ID
-   *
-   * TODO(bug 1530655): Replace by actual persisted ecosystem client ID as per spec
-   */
-  _ecosystemClientId() {
-    return "unknown";
   },
 
   /**
@@ -339,16 +391,5 @@ var EcosystemTelemetry = {
     this._initialized = false;
     this._lastSendTime = 0;
     this.startup();
-  },
-
-  get _log() {
-    if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(
-        LOGGER_NAME,
-        LOGGER_PREFIX
-      );
-    }
-
-    return this._logger;
   },
 };

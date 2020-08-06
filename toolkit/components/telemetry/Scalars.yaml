@@ -212,7 +212,7 @@ browser.engagement:
       - 'main'
     record_into_store:
       - 'main'
-      - 'pre-account'
+      - 'account-ecosystem'
 
   unfiltered_uri_count:
     bug_numbers:
@@ -294,7 +294,7 @@ browser.engagement:
       - 'main'
     record_into_store:
       - 'main'
-      - 'pre-account'
+      - 'account-ecosystem'
 
 # The following section contains the browser engagement scalars.
 browser.engagement.navigation:
