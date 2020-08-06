@@ -946,8 +946,7 @@ impl RenderTask {
                     ))
                 }
                 FilterPrimitiveKind::Blur(ref blur) => {
-                    let width_std_deviation = blur.width * device_pixel_scale.0;
-                    let height_std_deviation = blur.height * device_pixel_scale.0;
+                    let blur_std_deviation = blur.radius * device_pixel_scale.0;
                     let input_task_id = get_task_input(
                         &blur.input,
                         filter_primitives,
@@ -959,7 +958,7 @@ impl RenderTask {
                     );
 
                     RenderTask::new_blur(
-                        DeviceSize::new(width_std_deviation, height_std_deviation),
+                        DeviceSize::new(blur_std_deviation, blur_std_deviation),
                         // TODO: This is a hack to ensure that a blur task's input is always
                         // in the blur's previous pass.
                         render_tasks.add().init(RenderTask::new_svg_filter_primitive(
