@@ -5213,6 +5213,15 @@ void LIRGenerator::visitInitHomeObject(MInitHomeObject* ins) {
   add(lir, ins);
 }
 
+void LIRGenerator::visitIsTypedArrayConstructor(MIsTypedArrayConstructor* ins) {
+  MDefinition* object = ins->object();
+  MOZ_ASSERT(object->type() == MIRType::Object);
+
+  auto* lir =
+      new (alloc()) LIsTypedArrayConstructor(useRegister(ins->object()));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);

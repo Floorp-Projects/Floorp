@@ -4038,6 +4038,18 @@ bool CacheIRCompiler::emitTypedArrayElementShiftResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitIsTypedArrayConstructorResult(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Register obj = allocator.useRegister(masm, objId);
+
+  masm.setIsDefinitelyTypedArrayConstructor(obj, scratch);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitGetNextMapSetEntryForIteratorResult(
     ObjOperandId iterId, ObjOperandId resultArrId, bool isMap) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
