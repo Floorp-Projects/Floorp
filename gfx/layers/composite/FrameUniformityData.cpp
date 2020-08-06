@@ -72,9 +72,7 @@ void LayerTransformRecorder::RecordTransform(Layer* aLayer,
 }
 
 void LayerTransformRecorder::EndTest(FrameUniformityData* aOutData) {
-  for (auto iter = mFrameTransforms.begin(); iter != mFrameTransforms.end();
-       ++iter) {
-    uintptr_t layer = iter->first;
+  for (const auto& [layer, _] : mFrameTransforms) {
     float uniformity = CalculateFrameUniformity(layer);
 
     std::pair<uintptr_t, float> result(layer, uniformity);
@@ -111,10 +109,7 @@ bool FrameUniformityData::ToJS(JS::MutableHandleValue aOutValue,
   dom::Sequence<dom::FrameUniformity>& layers =
       results.mLayerUniformities.Construct();
 
-  for (auto iter = mUniformities.begin(); iter != mUniformities.end(); ++iter) {
-    uintptr_t layerAddr = iter->first;
-    float uniformity = iter->second;
-
+  for (const auto& [layerAddr, uniformity] : mUniformities) {
     // FIXME: Make this infallible after bug 968520 is done.
     MOZ_ALWAYS_TRUE(layers.AppendElement(fallible));
     dom::FrameUniformity& entry = layers.LastElement();
