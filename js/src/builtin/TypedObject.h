@@ -1036,14 +1036,12 @@ inline bool JSObject::is<js::TypedObject>() const {
 
 template <>
 inline bool JSObject::is<js::OutlineTypedObject>() const {
-  return getClass() == &js::OutlineTransparentTypedObject::class_ ||
-         getClass() == &js::OutlineOpaqueTypedObject::class_;
+  return js::IsOutlineTypedObjectClass(getClass());
 }
 
 template <>
 inline bool JSObject::is<js::InlineTypedObject>() const {
-  return getClass() == &js::InlineTransparentTypedObject::class_ ||
-         getClass() == &js::InlineOpaqueTypedObject::class_;
+  return js::IsInlineTypedObjectClass(getClass());
 }
 
 #endif /* builtin_TypedObject_h */
