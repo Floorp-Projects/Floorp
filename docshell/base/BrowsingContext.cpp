@@ -584,6 +584,13 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
 
   // Add ourselves either to our parent or BrowsingContextGroup's child list.
   if (mParentWindow) {
+    if (!aFromIPC) {
+      MOZ_DIAGNOSTIC_ASSERT(!mParentWindow->IsDiscarded(),
+                            "local attach in discarded window");
+      MOZ_DIAGNOSTIC_ASSERT(!GetParent()->IsDiscarded(),
+                            "local attach call in discarded bc");
+    }
+
     mParentWindow->AppendChildBrowsingContext(this);
   } else {
     mGroup->Toplevels().AppendElement(this);

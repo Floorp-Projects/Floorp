@@ -2092,6 +2092,13 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (doc->GetWindowContext()->IsDiscarded() ||
+      parentDocShell->GetBrowsingContext()->IsDiscarded()) {
+    // Don't allow subframe loads in discarded contexts.
+    // (see bug 1652085, bug 1656854)
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (!EnsureBrowsingContextAttached()) {
     return NS_ERROR_FAILURE;
   }
