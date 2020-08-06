@@ -31,13 +31,6 @@ The rough steps are:
   to media/libdav1d/vcs_version.h
 - Copy version.h from local build/include/dav1d/version.h to
   media/libdav1d/version.h
-- Update dav1d.rc:
-  - update the API_VERSION_NUMBER, API_VERSION_NUMBER_STR, defines to
-    match the 'dav1d_soname_version' field in
-    third_party/dav1d/meson.build.
-  - update the PROJECT_VERSION_NUMBER, PROJECT_VERSION_NUMBER_STR
-    defines to match the new project versions from the git tag (or from
-    the project version found in third_party/dav1d/meson.build).
 - Add new options, if any, in moz.build or config.h
 
 Tips:
