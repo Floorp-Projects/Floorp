@@ -351,12 +351,15 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     }
   }
 #elif XP_MACOSX
-  RefPtr<layers::MacIOSurfaceImage> ioImage =
-      new layers::MacIOSurfaceImage(nullptr);
-  PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
-  if (ioImage->SetData(aContainer, data)) {
-    v->mImage = ioImage;
-    return v.forget();
+  if (aAllocator && aAllocator->GetCompositorBackendType() ==
+                        layers::LayersBackend::LAYERS_WR) {
+    RefPtr<layers::MacIOSurfaceImage> ioImage =
+        new layers::MacIOSurfaceImage(nullptr);
+    PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
+    if (ioImage->SetData(aContainer, data)) {
+      v->mImage = ioImage;
+      return v.forget();
+    }
   }
 #endif
   if (!v->mImage) {

@@ -40,9 +40,9 @@ nsresult AppleDecoderModule::Startup() {
 
 already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  RefPtr<MediaDataDecoder> decoder =
-      new AppleVTDecoder(aParams.VideoConfig(), aParams.mTaskQueue,
-                         aParams.mImageContainer, aParams.mOptions);
+  RefPtr<MediaDataDecoder> decoder = new AppleVTDecoder(
+      aParams.VideoConfig(), aParams.mTaskQueue, aParams.mImageContainer,
+      aParams.mOptions, aParams.mKnowsCompositor);
   return decoder.forget();
 }
 

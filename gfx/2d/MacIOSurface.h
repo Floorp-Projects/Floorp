@@ -62,6 +62,8 @@ class MacIOSurface final
   static already_AddRefed<MacIOSurface> CreateNV12Surface(
       const IntSize& aYSize, const IntSize& aCbCrSize,
       YUVColorSpace aColorSpace, ColorRange aColorRange);
+  static already_AddRefed<MacIOSurface> CreateYUV422Surface(
+      const IntSize& aSize, YUVColorSpace aColorSpace, ColorRange aColorRange);
   static void ReleaseIOSurface(MacIOSurface* aIOSurface);
   static already_AddRefed<MacIOSurface> LookupSurface(
       IOSurfaceID aSurfaceID, double aContentsScaleFactor = 1.0,
