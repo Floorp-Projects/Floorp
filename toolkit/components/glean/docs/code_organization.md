@@ -17,7 +17,7 @@ This module is the glue between Firefox and Glean.
 
 * The code lives in `toolkit/components/glean/src`.
 * It is written in Rust.
-* The crate is named `fog_control`.
+* The crate is named `fog`.
 * It is not published to crates.io.
 * It is not consumed by other Rust crates inside mozilla-central.
 
@@ -28,7 +28,6 @@ This module is responsible for
 * watching the Firefox Telemetry data upload preference (`datareporting.healthreport.uploadEnabled`)
 * scheduling builtin pings
 * controling ping upload workers
-* passing IPC buffers
 
 It calls into `glean_core` to:
 
@@ -36,18 +35,13 @@ It calls into `glean_core` to:
 * toggle `upload_enabled`
 * get upload tasks
 
-It calls into `fog` to:
-
-* pass IPC buffers
-* record to its own metrics
-
 ## FOG API
 
 This module provides the user-facing API for Glean inside mozilla-central.
 
 * The code lives in `toolkit/components/glean/api`.
 * It is written in Rust.
-* The crate is named `fog`.
+* The crate is named `glean`.
 * It is not published to crates.io.
 * It can be consumed by other Rust crates inside mozilla-central for their Glean usage.
 * It will provide a build task for `glean_parser` integration.

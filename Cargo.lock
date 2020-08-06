@@ -1525,23 +1525,8 @@ checksum = "2fad85553e09a6f881f739c29f0b00b0f01357c743266d478b68951ce23285f3"
 name = "fog"
 version = "0.1.0"
 dependencies = [
- "bincode",
- "chrono",
- "glean-core",
- "log",
- "once_cell",
- "serde",
- "tempfile",
- "uuid",
- "xpcom",
-]
-
-[[package]]
-name = "fog_control"
-version = "0.1.0"
-dependencies = [
  "cstr",
- "fog",
+ "glean",
  "glean-core",
  "log",
  "nserror",
@@ -1968,7 +1953,7 @@ dependencies = [
  "fluent-ffi",
  "fluent-langneg",
  "fluent-langneg-ffi",
- "fog_control",
+ "fog",
  "gecko_logger",
  "geckoservo",
  "gkrust_utils",
@@ -2030,6 +2015,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fdef5b9df6d3a261b80a5ac55e13bf93945725df2463c1b0a2e5a527dce0d37"
 dependencies = [
  "gl_generator",
+]
+
+[[package]]
+name = "glean"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "chrono",
+ "glean-core",
+ "log",
+ "once_cell",
+ "serde",
+ "tempfile",
+ "uuid",
+ "xpcom",
 ]
 
 [[package]]
