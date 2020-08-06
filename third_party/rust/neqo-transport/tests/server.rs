@@ -571,10 +571,10 @@ fn mitm_retry() {
     // Now to start the epic process of decrypting the packet,
     // rewriting the header to remove the token, and then re-encrypting.
     let client_initial2 = client_initial2.unwrap();
-    let (protected_header, dcid, scid, payload) = decode_initial_header(&client_initial2);
+    let (protected_header, d_cid, s_cid, payload) = decode_initial_header(&client_initial2);
 
     // Now we have enough information to make keys.
-    let (aead, hp) = client_initial_aead_and_hp(&dcid);
+    let (aead, hp) = client_initial_aead_and_hp(&d_cid);
     let (header, pn) = remove_header_protection(&hp, protected_header, payload);
     let pn_len = header.len() - protected_header.len();
 
@@ -588,8 +588,8 @@ fn mitm_retry() {
     // Now re-encode without the token.
     let mut enc = Encoder::with_capacity(header.len());
     enc.encode(&header[..5])
-        .encode_vec(1, dcid)
-        .encode_vec(1, scid)
+        .encode_vec(1, d_cid)
+        .encode_vec(1, s_cid)
         .encode_vvec(&[])
         .encode_varint(u64::try_from(payload.len()).unwrap());
     let pn_offset = enc.len();
@@ -645,8 +645,8 @@ fn bad_client_initial() {
     let mut server = default_server();
 
     let dgram = client.process(None, now()).dgram().expect("a datagram");
-    let (header, dcid, scid, payload) = decode_initial_header(&dgram);
-    let (aead, hp) = client_initial_aead_and_hp(dcid);
+    let (header, d_cid, s_cid, payload) = decode_initial_header(&dgram);
+    let (aead, hp) = client_initial_aead_and_hp(d_cid);
     let (fixed_header, pn) = remove_header_protection(&hp, header, payload);
     let payload = &payload[(fixed_header.len() - header.len())..];
 
@@ -663,8 +663,8 @@ fn bad_client_initial() {
     header_enc
         .encode_byte(0xc0) // Initial with 1 byte packet number.
         .encode_uint(4, QuicVersion::default().as_u32())
-        .encode_vec(1, dcid)
-        .encode_vec(1, scid)
+        .encode_vec(1, d_cid)
+        .encode_vec(1, s_cid)
         .encode_vvec(&[])
         .encode_varint(u64::try_from(payload_enc.len() + aead.expansion() + 1).unwrap())
         .encode_byte(u8::try_from(pn).unwrap());
@@ -732,16 +732,16 @@ fn version_negotiation() {
     let vn = server.process(Some(damaged), now()).dgram();
 
     let mut dec = Decoder::from(&input[5..]); // Skip past version.
-    let dcid = dec.decode_vec(1).expect("client DCID").to_vec();
-    let scid = dec.decode_vec(1).expect("client SCID").to_vec();
+    let d_cid = dec.decode_vec(1).expect("client DCID").to_vec();
+    let s_cid = dec.decode_vec(1).expect("client SCID").to_vec();
 
     // We should have received a VN packet.
     let vn = vn.expect("a vn packet");
     let mut dec = Decoder::from(&vn[1..]); // Skip first byte.
 
     assert_eq!(dec.decode_uint(4).expect("VN"), 0);
-    assert_eq!(dec.decode_vec(1).expect("VN DCID"), &scid[..]);
-    assert_eq!(dec.decode_vec(1).expect("VN SCID"), &dcid[..]);
+    assert_eq!(dec.decode_vec(1).expect("VN DCID"), &s_cid[..]);
+    assert_eq!(dec.decode_vec(1).expect("VN SCID"), &d_cid[..]);
     let mut found = false;
     while dec.remaining() > 0 {
         let v = dec.decode_uint(4).expect("supported version");

@@ -1,8 +1,9 @@
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate env_logger;
 
-use std::process;
 use std::env;
+use std::process;
 use std::str;
 
 fn main() {
@@ -25,7 +26,9 @@ fn run_child(rust_log: String) -> bool {
         .env("RUST_LOG", rust_log)
         .output()
         .unwrap_or_else(|e| panic!("Unable to start child process: {}", e));
-    str::from_utf8(out.stderr.as_ref()).unwrap().contains("XYZ Message")
+    str::from_utf8(out.stderr.as_ref())
+        .unwrap()
+        .contains("XYZ Message")
 }
 
 fn assert_message_printed(rust_log: &str) {
@@ -36,7 +39,10 @@ fn assert_message_printed(rust_log: &str) {
 
 fn assert_message_not_printed(rust_log: &str) {
     if run_child(rust_log.to_string()) {
-        panic!("RUST_LOG={} should not allow the test log message", rust_log)
+        panic!(
+            "RUST_LOG={} should not allow the test log message",
+            rust_log
+        )
     }
 }
 

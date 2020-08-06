@@ -13,7 +13,6 @@ use neqo_common::{qdebug, qinfo, qtrace, Encoder};
 use neqo_qpack::encoder::QPackEncoder;
 use neqo_transport::{AppError, Connection};
 use std::cmp::min;
-use std::convert::TryFrom;
 use std::fmt::Debug;
 
 const MAX_DATA_HEADER_SIZE_2: usize = (1 << 6) - 1; // Maximal amount of data with DATA frame header size 2
@@ -140,11 +139,9 @@ impl SendMessage {
             | SendMessageState::Initialized { .. }
             | SendMessageState::SendingInitialMessage { .. } => Ok(0),
             SendMessageState::SendingData => {
-                let available = usize::try_from(
-                    conn.stream_avail_send_space(self.stream_id)
-                        .map_err(|e| Error::map_stream_send_errors(&e))?,
-                )
-                .unwrap_or(usize::max_value());
+                let available = conn
+                    .stream_avail_send_space(self.stream_id)
+                    .map_err(|e| Error::map_stream_send_errors(&e))?;
                 if available <= 2 {
                     return Ok(0);
                 }

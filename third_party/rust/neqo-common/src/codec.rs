@@ -108,7 +108,7 @@ impl<'a> Decoder<'a> {
     pub fn decode_varint(&mut self) -> Option<u64> {
         let b1 = match self.decode_byte() {
             Some(b) => b,
-            _ => return None,
+            None => return None,
         };
         match b1 >> 6 {
             0 => Some(u64::from(b1 & 0x3f)),
@@ -129,7 +129,7 @@ impl<'a> Decoder<'a> {
     fn decode_checked(&mut self, n: Option<u64>) -> Option<&'a [u8]> {
         let len = match n {
             Some(l) => l,
-            _ => return None,
+            None => return None,
         };
         if let Ok(l) = usize::try_from(len) {
             self.decode(l)
@@ -173,6 +173,16 @@ impl<'a> From<&'a [u8]> for Decoder<'a> {
     #[must_use]
     fn from(buf: &'a [u8]) -> Decoder<'a> {
         Decoder::new(buf)
+    }
+}
+
+impl<'a, T> From<&'a T> for Decoder<'a>
+where
+    T: AsRef<[u8]>,
+{
+    #[must_use]
+    fn from(buf: &'a T) -> Decoder<'a> {
+        Decoder::new(buf.as_ref())
     }
 }
 
@@ -225,7 +235,8 @@ impl Encoder {
 
     /// Don't use this except in testing.
     #[must_use]
-    pub fn from_hex(s: &str) -> Self {
+    pub fn from_hex(s: impl AsRef<str>) -> Self {
+        let s = s.as_ref();
         if s.len() % 2 != 0 {
             panic!("Needs to be even length");
         }
@@ -425,7 +436,7 @@ mod tests {
         assert_eq!(dec.decode_remainder(), &[0x01, 0x23, 0x45]);
         assert!(dec.decode(2).is_none());
 
-        let mut dec = Decoder::from(&enc[0..0]);
+        let mut dec = Decoder::from(&[]);
         assert_eq!(dec.decode_remainder().len(), 0);
     }
 

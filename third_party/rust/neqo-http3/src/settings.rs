@@ -166,7 +166,7 @@ impl ZeroRttChecker for HttpZeroRttChecker {
                 u64::from(self.settings.max_blocked_streams) >= setting.value
             }
             HSettingType::MaxTableCapacity => self.settings.max_table_size_decoder >= setting.value,
-            _ => true,
+            HSettingType::MaxHeaderListSize => true,
         }) {
             ZeroRttCheckResult::Accept
         } else {
