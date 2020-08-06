@@ -570,16 +570,7 @@ class AutofillRecords {
     );
   }
 
-  updateUseCountTelemetry() {
-    let histogram = Services.telemetry.getHistogramById("CREDITCARD_NUM_USES");
-    histogram.clear();
-
-    let records = this._data.filter(r => !r.deleted);
-
-    for (let record of records) {
-      histogram.add(record.timesUsed);
-    }
-  }
+  updateUseCountTelemetry() {}
 
   /**
    * Removes the specified record. No error occurs if the record isn't found.
@@ -2109,6 +2100,17 @@ class CreditCards extends AutofillRecords {
 
     await this.update(guid, creditCardToMerge, true);
     return true;
+  }
+
+  updateUseCountTelemetry() {
+    let histogram = Services.telemetry.getHistogramById("CREDITCARD_NUM_USES");
+    histogram.clear();
+
+    let records = this._data.filter(r => !r.deleted);
+
+    for (let record of records) {
+      histogram.add(record.timesUsed);
+    }
   }
 }
 
