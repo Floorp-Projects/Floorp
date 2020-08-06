@@ -6,8 +6,6 @@
 #include <windows.h>
 #include "nsNativeAppSupportWin.h"
 
-1 24 "firefox.exe.manifest"
-
 IDI_APPICON ICON FIREFOX_ICO
 IDI_DOCUMENT ICON DOCUMENT_ICO
 IDI_APPLICATION ICON FIREFOX_ICO
