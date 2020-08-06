@@ -31,13 +31,19 @@ class nsPrinterCUPS final : public nsPrinterBase {
   /**
    * @p aPrinter must not be null.
    */
-  static already_AddRefed<nsPrinterCUPS> Create(
-      const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-      const nsAString& aDisplayname = EmptyString());
+  static already_AddRefed<nsPrinterCUPS> Create(const nsCUPSShim& aShim,
+                                                cups_dest_t* aPrinter);
+
+  /**
+   * @brief Set the display name for the printer.
+   *
+   * If a display name is not set, the PWG Standardized name will be used
+   * https://ftp.pwg.org/pub/pwg/candidates/cs-pwgmsn20-20130328-5101.1.pdf
+   */
+  void SetDisplayName(const nsAString& aName) { mDisplayName = aName; }
 
  private:
-  nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-                const nsAString& aDisplayName = EmptyString());
+  nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter);
 
   ~nsPrinterCUPS();
 
