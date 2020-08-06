@@ -226,6 +226,9 @@ check_and_add_gcc_warning('-Wno-noexcept-type', cxx_compiler,
                           when=depends(build_project)
                           (lambda build_project: build_project == 'js'))
 
+# New in clang 11. We can't really do anything about this warning.
+check_and_add_gcc_warning('-Wno-psabi')
+
 
 # Please keep these last in this file
 add_old_configure_assignment('_WARNINGS_CFLAGS', warnings_flags.cflags)
