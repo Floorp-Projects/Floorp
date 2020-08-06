@@ -781,6 +781,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
     mDMABufSurfaces.EmplaceBack(surface, mLib);
     surfaceWrapper = &(mDMABufSurfaces[mDMABufSurfaces.Length() - 1]);
   } else {
+    // Release VAAPI surface data before we reuse it.
+    if (mVAAPIDeviceContext) {
+      surfaceWrapper->ReleaseVAAPIData();
+    }
+
     surface = surfaceWrapper->GetDMABufSurface();
     bool ret;
 

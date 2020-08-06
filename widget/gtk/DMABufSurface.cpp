@@ -744,7 +744,8 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
     return false;
   }
   if (mDmabufFds[0] >= 0) {
-    ReleaseSurface();
+    NS_WARNING("DMABufSurfaceYUV is already created!");
+    return false;
   }
   if (aDesc.fourcc == VA_FOURCC_NV12) {
     mSurfaceType = SURFACE_NV12;
