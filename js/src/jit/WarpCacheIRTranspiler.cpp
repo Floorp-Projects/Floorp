@@ -308,11 +308,12 @@ bool WarpCacheIRTranspiler::emitGuardProto(ObjOperandId objId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardDynamicSlotIsSpecificObject(
-    ObjOperandId objId, ObjOperandId expectedId, uint32_t slotOffset) {
+bool WarpCacheIRTranspiler::emitGuardFunctionPrototype(ObjOperandId objId,
+                                                       ObjOperandId protoId,
+                                                       uint32_t slotOffset) {
   size_t slotIndex = int32StubField(slotOffset);
   MDefinition* obj = getOperand(objId);
-  MDefinition* expected = getOperand(expectedId);
+  MDefinition* proto = getOperand(protoId);
 
   auto* slots = MSlots::New(alloc(), obj);
   add(slots);
@@ -323,7 +324,7 @@ bool WarpCacheIRTranspiler::emitGuardDynamicSlotIsSpecificObject(
   auto* unbox = MUnbox::New(alloc(), load, MIRType::Object, MUnbox::Fallible);
   add(unbox);
 
-  auto* guard = MGuardObjectIdentity::New(alloc(), unbox, expected,
+  auto* guard = MGuardObjectIdentity::New(alloc(), unbox, proto,
                                           /* bailOnEquality = */ false);
   add(guard);
   return true;
@@ -2005,17 +2006,6 @@ bool WarpCacheIRTranspiler::emitTypedArrayElementShiftResult(
   MDefinition* obj = getOperand(objId);
 
   auto* ins = MTypedArrayElementShift::New(alloc(), obj);
-  add(ins);
-
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitIsTypedArrayConstructorResult(
-    ObjOperandId objId) {
-  MDefinition* obj = getOperand(objId);
-
-  auto* ins = MIsTypedArrayConstructor::New(alloc(), obj);
   add(ins);
 
   pushResult(ins);
