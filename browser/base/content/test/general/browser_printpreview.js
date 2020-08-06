@@ -1,7 +1,8 @@
 let ourTab;
 
-function test() {
+async function test() {
   waitForExplicitFinish();
+  await pushPrefs(["print.tab_modal.enabled", false]);
 
   BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home", true).then(
     function(tab) {

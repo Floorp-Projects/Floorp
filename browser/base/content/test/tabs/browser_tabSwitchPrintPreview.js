@@ -7,6 +7,9 @@ const kURL2 = "data:text/html,I shouldn't be here!";
  * Also check that we switch back to the original tab on exiting Print Preview.
  */
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", false]],
+  });
   await BrowserTestUtils.withNewTab(kURL1, async function(browser) {
     let originalTab = gBrowser.selectedTab;
     let tab = BrowserTestUtils.addTab(gBrowser, kURL2);

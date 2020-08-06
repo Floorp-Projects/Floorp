@@ -3,6 +3,9 @@
 "use strict";
 
 add_task(async function testPrintPreview() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", false]],
+  });
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
 
   let extension = ExtensionTestUtils.loadExtension({

@@ -12,6 +12,7 @@ add_task(async function set_simplify_and_reader_pref() {
   // Ensure we have the simplify page preference set
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["print.tab_modal.enabled", false],
       ["print.use_simplify_page", true],
       ["reader.parse-on-load.enabled", true],
     ],

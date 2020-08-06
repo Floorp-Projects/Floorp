@@ -12,6 +12,10 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
  * we still show (and will therefore print) the original contents.
  */
 add_task(async function pp_after_orientation_change() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", false]],
+  });
+
   const URI = TEST_PATH + "file_page_change_print_original_1.html";
   // Can only do something if we have a print preview UI:
   if (AppConstants.platform != "win" && AppConstants.platform != "linux") {

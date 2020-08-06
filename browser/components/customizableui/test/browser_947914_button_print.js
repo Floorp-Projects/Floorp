@@ -7,6 +7,9 @@
 const isOSX = Services.appinfo.OS === "Darwin";
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", false]],
+  });
   CustomizableUI.addWidgetToArea(
     "print-button",
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
