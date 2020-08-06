@@ -322,6 +322,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'RCFILE': [
                 'RCFILE := $(srcdir)/foo.rc',
             ],
+            'RESFILE': [
+                'RESFILE := bar.res',
+            ],
             'RCINCLUDE': [
                 'RCINCLUDE := $(srcdir)/bar.rc',
             ],

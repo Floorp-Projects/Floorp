@@ -1706,6 +1706,12 @@ VARIABLES = {
         This variable can only be used on Windows.
         """),
 
+    'RESFILE': (six.text_type, six.text_type,
+                """The program .res file.
+
+        This variable can only be used on Windows.
+        """),
+
     'RCINCLUDE': (Path, six.text_type,
                   """The resource script file to be included in the default .res file.
 
