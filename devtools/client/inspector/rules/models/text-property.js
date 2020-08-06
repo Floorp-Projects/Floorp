@@ -5,6 +5,9 @@
 "use strict";
 
 const { generateUUID } = require("devtools/shared/generate-uuid");
+const {
+  COMPATIBILITY_TOOLTIP_MESSAGE,
+} = require("devtools/client/inspector/rules/constants");
 
 loader.lazyRequireGetter(
   this,
@@ -275,6 +278,87 @@ class TextProperty {
     }
 
     return declarations[selfIndex].isUsed;
+  }
+
+  /**
+   * Get compatibility issue linked with the textProp.
+   *
+   * @returns  A JSON objects with compatibility information in following form:
+   *    {
+   *      // A boolean to denote the compatibility status
+   *      isCompatible: <boolean>,
+   *      // The CSS declaration that has compatibility issues
+   *      property: <string>,
+   *      // The un-aliased root CSS declaration for the given property
+   *      rootProperty: <string>,
+   *      // The l10n message id for the tooltip message
+   *      msgId: <string>,
+   *      // Link to MDN documentation for the rootProperty
+   *      url: <string>,
+   *      // An array of all the browsers that don't support the given CSS rule
+   *      unsupportedBrowsers: <Array>,
+   *    }
+   */
+  async isCompatible() {
+    // This is a workaround for Bug 1648339
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1648339
+    // that makes the tooltip icon inconsistent with the
+    // position of the rule it is associated with. Once solved,
+    // the compatibility data can be directly accessed from the
+    // declaration and this logic can be used to set isCompatible
+    // property directly to domRule in StyleRuleActor's form() method.
+    if (!this.enabled) {
+      return { isCompatible: true };
+    }
+
+    if (!this.rule.domRule.compatibilityIssues.length) {
+      return { isCompatible: true };
+    }
+
+    const property = this.name;
+    const indexOfProperty = this.rule.domRule.compatibilityIssues.findIndex(
+      issue => issue.property === property || issue.aliases?.includes(property)
+    );
+
+    if (indexOfProperty < 0) {
+      return { isCompatible: true };
+    }
+
+    const {
+      property: rootProperty,
+      deprecated,
+      experimental,
+      url,
+      unsupportedBrowsers,
+    } = this.rule.domRule.compatibilityIssues[indexOfProperty];
+
+    let msgId = COMPATIBILITY_TOOLTIP_MESSAGE.default;
+    if (deprecated && experimental && !unsupportedBrowsers.length) {
+      msgId =
+        COMPATIBILITY_TOOLTIP_MESSAGE["deprecated-experimental-supported"];
+    } else if (deprecated && experimental) {
+      msgId = COMPATIBILITY_TOOLTIP_MESSAGE["deprecated-experimental"];
+    } else if (deprecated && !unsupportedBrowsers.length) {
+      msgId = COMPATIBILITY_TOOLTIP_MESSAGE["deprecated-supported"];
+    } else if (deprecated) {
+      msgId = COMPATIBILITY_TOOLTIP_MESSAGE.deprecated;
+    } else if (experimental && !unsupportedBrowsers.length) {
+      msgId =
+        COMPATIBILITY_TOOLTIP_MESSAGE[
+          "css-compatibility-experimental-supported-message"
+        ];
+    } else if (experimental) {
+      msgId = COMPATIBILITY_TOOLTIP_MESSAGE.experimental;
+    }
+
+    return {
+      isCompatible: false,
+      property,
+      rootProperty,
+      msgId,
+      url,
+      unsupportedBrowsers,
+    };
   }
 
   /**
