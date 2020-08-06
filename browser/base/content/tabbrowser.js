@@ -1551,7 +1551,6 @@
       var aForceNotRemote;
       var aPreferredRemoteType;
       var aUserContextId;
-      var aSameProcessAsFrameLoader;
       var aInitialBrowsingContextGroupId;
       var aOriginPrincipal;
       var aOriginStoragePrincipal;
