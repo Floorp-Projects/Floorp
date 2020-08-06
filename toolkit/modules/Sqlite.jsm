@@ -1383,13 +1383,8 @@ OpenedConnection.prototype = Object.freeze({
    * @return Promise<int>
    */
   getSchemaVersion(schemaName = "main") {
-    return this.execute(`PRAGMA ${schemaName}.user_version`).then(
-      function onSuccess(result) {
-        if (result == null) {
-          return 0;
-        }
-        return result[0].getInt32(0);
-      }
+    return this.execute(`PRAGMA ${schemaName}.user_version`).then(result =>
+      result[0].getInt32(0)
     );
   },
 
