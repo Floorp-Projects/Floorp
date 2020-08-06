@@ -12,7 +12,6 @@ UNIFIED_SOURCES = [
 ]
 
 RCFILE  = 'TestDllBlocklist_NoOpEntryPoint.rc'
-RESFILE = 'TestDllBlocklist_NoOpEntryPoint.res'
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.gtest += ['!TestDllBlocklist_NoOpEntryPoint.dll']

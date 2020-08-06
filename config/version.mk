@@ -13,7 +13,6 @@ INCLUDED_VERSION_MK=1
 # BINARY   : Binary name.  Not used currently.
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifndef RESFILE
-RCFILE=./module.rc
 RESFILE=./module.res
 ifdef PROGRAM
 _RC_BINARY = $(notdir $(PROGRAM))
@@ -27,13 +26,19 @@ endif
 endif
 endif
 
-GARBAGE += $(RESFILE) $(RCFILE)
+GARBAGE += $(RESFILE)
 
 #dummy target so $(RCFILE) doesn't become the default =P
 all::
 
+ifndef RCFILE
+RCFILE=./module.rc
+
 $(RCFILE): $(RCINCLUDE) $(MOZILLA_DIR)/config/create_rc.py
 	$(PYTHON3) $(MOZILLA_DIR)/config/create_rc.py '$(_RC_BINARY)' '$(RCINCLUDE)'
+
+GARBAGE += $(RCFILE)
+endif  # RCFILE
 
 endif  # RESFILE
 endif  # Windows

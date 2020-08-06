@@ -1089,7 +1089,6 @@ class TreeMetadataEmitter(LoggingMixin):
         varlist = [
             'EXTRA_DSO_LDOPTS',
             'RCFILE',
-            'RESFILE',
             'RCINCLUDE',
             'WIN32_EXE_LDFLAGS',
             'USE_EXTENSION_MANIFEST',
