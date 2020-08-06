@@ -3379,6 +3379,7 @@ impl Renderer {
                         DeviceIntPoint::zero(),
                         self.debug_overlay_state.current_size.unwrap(),
                     ),
+                    ImageRendering::Auto,
                 );
             }
         }
@@ -7749,6 +7750,7 @@ impl CompositeState {
                 surface.surface_id.expect("bug: no native surface allocated"),
                 surface.transform,
                 surface.clip_rect.to_i32(),
+                surface.image_rendering,
             );
         }
     }
