@@ -283,6 +283,7 @@ bool TrialInliner::tryInlining() {
     switch (op) {
       case JSOp::Call:
       case JSOp::CallIgnoresRv:
+      case JSOp::CallIter:
         if (!maybeInlineCall(icScript_->icEntry(icIndex), loc)) {
           return false;
         }
