@@ -3700,8 +3700,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void setIsCrossRealmArrayConstructor(Register obj, Register output);
 
-  void setIsDefinitelyTypedArrayConstructor(Register obj, Register output);
-
  private:
   void isCallableOrConstructor(bool isCallable, Register obj, Register output,
                                Label* isProxy);

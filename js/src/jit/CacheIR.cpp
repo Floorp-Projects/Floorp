@@ -4832,7 +4832,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   // Load prototypeObject into the cache -- consumed twice in the IC
   ObjOperandId protoId = writer.loadObject(prototypeObject);
   // Ensure that rhs[slot] == prototypeObject.
-  writer.guardDynamicSlotIsSpecificObject(rhsId, protoId, slot);
+  writer.guardFunctionPrototype(rhsId, protoId, slot);
 
   // Needn't guard LHS is object, because the actual stub can handle that
   // and correctly return false.
@@ -6923,29 +6923,6 @@ AttachDecision CallIRGenerator::tryAttachIsTypedArray(HandleFunction callee,
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachIsTypedArrayConstructor(
-    HandleFunction callee) {
-  // Self-hosted code calls this with a single object argument.
-  MOZ_ASSERT(argc_ == 1);
-  MOZ_ASSERT(args_[0].isObject());
-
-  // Initialize the input operand.
-  Int32OperandId argcId(writer.setInputOperandId(0));
-
-  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
-
-  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  ObjOperandId objArgId = writer.guardToObject(argId);
-  writer.isTypedArrayConstructorResult(objArgId);
-
-  // This stub does not need to be monitored because it always returns a bool.
-  writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
-
-  trackAttached("IsTypedArrayConstructor");
-  return AttachDecision::Attach;
-}
-
 AttachDecision CallIRGenerator::tryAttachTypedArrayByteOffset(
     HandleFunction callee) {
   // Self-hosted code calls this with a single TypedArrayObject argument.
@@ -7242,62 +7219,6 @@ AttachDecision CallIRGenerator::tryAttachNewRegExpStringIterator(
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
   trackAttached("NewRegExpStringIterator");
-  return AttachDecision::Attach;
-}
-
-AttachDecision CallIRGenerator::tryAttachArrayIteratorPrototypeOptimizable(
-    HandleFunction callee) {
-  // Self-hosted code calls this without any arguments
-  MOZ_ASSERT(argc_ == 0);
-
-  // TODO(Warp): attach this stub just once to prevent slowdowns for polymorphic
-  // calls.
-
-  auto* arrayIteratorProto = cx_->global()->maybeGetArrayIteratorPrototype();
-  if (!arrayIteratorProto) {
-    return AttachDecision::NoAction;
-  }
-
-  // Ensure that %ArrayIteratorPrototype%'s "next" slot is unchanged.
-  Shape* shape = arrayIteratorProto->lookupPure(cx_->names().next);
-  if (!shape || !shape->isDataProperty()) {
-    return AttachDecision::NoAction;
-  }
-
-  uint32_t slot = shape->slot();
-
-  MOZ_ASSERT(arrayIteratorProto->numFixedSlots() == 0,
-             "Stub code relies on this");
-
-  const Value& nextVal = arrayIteratorProto->getSlot(slot);
-  if (!nextVal.isObject() || !nextVal.toObject().is<JSFunction>()) {
-    return AttachDecision::NoAction;
-  }
-
-  auto* nextFun = &nextVal.toObject().as<JSFunction>();
-  if (!IsSelfHostedFunctionWithName(nextFun, cx_->names().ArrayIteratorNext)) {
-    return AttachDecision::NoAction;
-  }
-
-  // Initialize the input operand.
-  Int32OperandId argcId(writer.setInputOperandId(0));
-
-  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
-
-  ObjOperandId protoId = writer.loadObject(arrayIteratorProto);
-  ObjOperandId nextId = writer.loadObject(nextFun);
-
-  writer.guardShape(protoId, arrayIteratorProto->lastProperty());
-
-  // Ensure that proto[slot] == nextFun.
-  writer.guardDynamicSlotIsSpecificObject(protoId, nextId, slot);
-  writer.loadBooleanResult(true);
-
-  // This stub does not need to be monitored, it always returns a boolean.
-  writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
-
-  trackAttached("ArrayIteratorPrototypeOptimizable");
   return AttachDecision::Attach;
 }
 
@@ -7742,8 +7663,6 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachNewStringIterator(callee);
     case InlinableNative::IntrinsicNewRegExpStringIterator:
       return tryAttachNewRegExpStringIterator(callee);
-    case InlinableNative::IntrinsicArrayIteratorPrototypeOptimizable:
-      return tryAttachArrayIteratorPrototypeOptimizable(callee);
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:
@@ -7889,8 +7808,6 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachIsTypedArray(callee, /* isPossiblyWrapped = */ false);
     case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
       return tryAttachIsTypedArray(callee, /* isPossiblyWrapped = */ true);
-    case InlinableNative::IntrinsicIsTypedArrayConstructor:
-      return tryAttachIsTypedArrayConstructor(callee);
     case InlinableNative::IntrinsicTypedArrayByteOffset:
       return tryAttachTypedArrayByteOffset(callee);
     case InlinableNative::IntrinsicTypedArrayElementShift:
@@ -8051,7 +7968,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
         JSFunction* newTarget = &newTarget_.toObject().as<JSFunction>();
         Shape* shape = newTarget->lookupPure(cx_->names().prototype);
         MOZ_ASSERT(shape);
-        MOZ_ASSERT(newTarget->numFixedSlots() == 0, "Stub code relies on this");
         uint32_t slot = shape->slot();
         JSObject* prototypeObject = &newTarget->getSlot(slot).toObject();
 
@@ -8060,7 +7976,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
         ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
         writer.guardShape(newTargetObjId, newTarget->lastProperty());
         ObjOperandId protoId = writer.loadObject(prototypeObject);
-        writer.guardDynamicSlotIsSpecificObject(newTargetObjId, protoId, slot);
+        writer.guardFunctionPrototype(newTargetObjId, protoId, slot);
       }
       writer.metaScriptedTemplateObject(calleeFunc, templateObj);
     }

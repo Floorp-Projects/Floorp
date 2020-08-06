@@ -1668,7 +1668,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachMathMinMax(HandleFunction callee, bool isMax);
   AttachDecision tryAttachIsTypedArray(HandleFunction callee,
                                        bool isPossiblyWrapped);
-  AttachDecision tryAttachIsTypedArrayConstructor(HandleFunction callee);
   AttachDecision tryAttachTypedArrayByteOffset(HandleFunction callee);
   AttachDecision tryAttachTypedArrayElementShift(HandleFunction callee);
   AttachDecision tryAttachTypedArrayLength(HandleFunction callee,
@@ -1682,8 +1681,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachNewArrayIterator(HandleFunction callee);
   AttachDecision tryAttachNewStringIterator(HandleFunction callee);
   AttachDecision tryAttachNewRegExpStringIterator(HandleFunction callee);
-  AttachDecision tryAttachArrayIteratorPrototypeOptimizable(
-      HandleFunction callee);
   AttachDecision tryAttachObjectCreate(HandleFunction callee);
   AttachDecision tryAttachArrayConstructor(HandleFunction callee);
   AttachDecision tryAttachTypedArrayConstructor(HandleFunction callee);

@@ -222,9 +222,7 @@ inline Scalar::Type GetTypedArrayClassType(const JSClass* clasp) {
 
 bool IsTypedArrayConstructor(const JSObject* obj);
 
-bool IsTypedArrayConstructor(HandleValue v, Scalar::Type type);
-
-JSNative TypedArrayConstructorNative(Scalar::Type type);
+bool IsTypedArrayConstructor(HandleValue v, uint32_t type);
 
 // In WebIDL terminology, a BufferSource is either an ArrayBuffer or a typed
 // array view. In either case, extract the dataPointer/byteLength.
