@@ -8036,7 +8036,9 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   MOZ_ASSERT(!lir->safepoint()->isWasmTrap());
 
   if (reloadRegs) {
-    masm.loadWasmTlsRegFromFrame();
+    masm.loadPtr(Address(masm.getStackPointer(),
+                         wasm::FrameWithTls::callerTLSABIOffset()),
+                 WasmTlsReg);
     masm.loadWasmPinnedRegsFromTls();
     if (switchRealm) {
       masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
