@@ -26,7 +26,6 @@
 #include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
 
-#include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "gc/StoreBuffer-inl.h"
 #include "vm/JSAtom-inl.h"
@@ -1731,9 +1730,8 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
 
   // Update the data pointer if the owner moved and the owner's data is
   // inline with it.
-  if (owner != oldOwner &&
-      (IsInlineTypedObjectClass(gc::MaybeForwardedObjectClass(owner)) ||
-       gc::MaybeForwardedObjectAs<ArrayBufferObject>(owner).hasInlineData())) {
+  if (owner != oldOwner && (owner->is<InlineTypedObject>() ||
+                            owner->as<ArrayBufferObject>().hasInlineData())) {
     newData += reinterpret_cast<uint8_t*>(owner) -
                reinterpret_cast<uint8_t*>(oldOwner);
     typedObj.setData(newData);
