@@ -215,8 +215,6 @@ OptimizationSchema = voluptuous.Any(
     {'index-search': [text_type]},
     {'push-interval-10': None},
     {'push-interval-25': None},
-    # consult SETA and skip this task if it is low-value
-    {'seta': None},
     # skip this task if none of the given file patterns match
     {'skip-unless-changed': [text_type]},
     # skip this task if unless the change files' SCHEDULES contains any of these components
