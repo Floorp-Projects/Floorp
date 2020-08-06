@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
-  FormHistory: "resource://gre/modules/FormHistory.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
@@ -460,6 +459,8 @@ class UrlbarInput {
         searchString
       );
       this._recordSearch(selectedOneOff.engine, event);
+
+      UrlbarUtils.addToFormHistory(this, searchString).catch(Cu.reportError);
     } else {
       // Use the current value if we don't have a UrlbarResult e.g. because the
       // view is closed.
@@ -752,24 +753,11 @@ class UrlbarInput {
         const engine = Services.search.getEngineByName(result.payload.engine);
         this._recordSearch(engine, event, actionDetails);
 
-        // Add the search to form history.  This also updates any existing form
-        // history for the search.
-        // If the user types a search engine alias without a search string,
-        // we have an empty search string and we can't bump it.
-        let value = result.payload.suggestion || result.payload.query;
-        if (!this.isPrivate && !result.payload.inPrivateWindow && value) {
-          FormHistory.update(
-            {
-              op: "bump",
-              fieldname: this.formHistoryName,
-              value,
-            },
-            {
-              handleError(error) {
-                Cu.reportError(`Error saving form history: ${error}`);
-              },
-            }
-          );
+        if (!result.payload.inPrivateWindow) {
+          UrlbarUtils.addToFormHistory(
+            this,
+            result.payload.suggestion || result.payload.query
+          ).catch(Cu.reportError);
         }
         break;
       }

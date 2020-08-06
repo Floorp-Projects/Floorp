@@ -123,6 +123,8 @@ add_task(async function test_returnAfterSuggestion() {
       "The heuristic action should not be visible"
     );
 
+    await UrlbarTestUtils.formHistory.clear();
+    let formHistoryPromise = UrlbarTestUtils.formHistory.promiseChanged("add");
     let resultsPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
       false,
@@ -130,6 +132,13 @@ add_task(async function test_returnAfterSuggestion() {
     );
     EventUtils.synthesizeKey("KEY_Enter");
     await resultsPromise;
+    await formHistoryPromise;
+    let entries = (
+      await UrlbarTestUtils.formHistory.search({
+        value: "foobar",
+      })
+    ).map(entry => entry.value);
+    Assert.ok(entries.includes("foobar"));
   });
 });
 
