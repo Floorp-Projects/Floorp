@@ -185,6 +185,7 @@
 .ruleview-overridden-rule-filter[hidden],
 .ruleview-warning[hidden],
 .ruleview-unused-warning[hidden],
+.ruleview-compatibility-warning[hidden],
 .ruleview-used[hidden],
 .ruleview-overridden .ruleview-grid {
   display: none;
@@ -416,7 +417,8 @@
 }
 
 .ruleview-warning,
-.ruleview-unused-warning {
+.ruleview-unused-warning,
+.ruleview-compatibility-warning {
   display: inline-block;
   width: 12px;
   height: 12px;
@@ -436,7 +438,14 @@
   fill: var(--theme-icon-dimmed-color);
 }
 
-.ruleview-unused-warning:hover {
+.ruleview-compatibility-warning {
+  background-image: url(chrome://devtools/skin/images/report.svg);
+  background-color: var(--theme-sidebar-background);
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.ruleview-unused-warning:hover,
+.ruleview-compatibility-warning:hover {
   fill: var(--theme-icon-color);
   stroke: var(--theme-icon-color);
 }

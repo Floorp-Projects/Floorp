@@ -314,6 +314,22 @@ function getCSSVariables(propertyValue = "") {
 }
 
 /**
+ * Get the CSS compatibility issue information for a given node.
+ *
+ * @param {DOMNode} node
+ *        The node which we want compatibility information about
+ * @param {ElementStyle} elementStyle
+ *        The ElementStyle to which this rule belongs
+ */
+async function getNodeCompatibilityInfo(node, elementStyle) {
+  const rule = getRuleFromNode(node, elementStyle);
+  const declaration = getDeclarationFromNode(node, rule);
+  const issue = await declaration.isCompatible();
+
+  return issue;
+}
+
+/**
  * Returns true if the given CSS property value contains the given variable name.
  *
  * @param {String} propertyValue
@@ -331,4 +347,5 @@ module.exports = {
   getNodeInfo,
   getRuleFromNode,
   hasCSSVariable,
+  getNodeCompatibilityInfo,
 };

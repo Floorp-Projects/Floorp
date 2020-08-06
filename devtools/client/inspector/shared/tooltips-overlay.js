@@ -51,6 +51,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "CssCompatibilityTooltipHelper",
+  "devtools/client/shared/widgets/tooltip/css-compatibility-tooltip-helper",
+  false
+);
+loader.lazyRequireGetter(
+  this,
   "Telemetry",
   "devtools/client/shared/telemetry",
   false
@@ -110,6 +116,7 @@ TooltipsOverlay.prototype = {
     this._isStarted = true;
 
     this.inactiveCssTooltipHelper = new InactiveCssTooltipHelper();
+    this.compatibilityTooltipHelper = new CssCompatibilityTooltipHelper();
 
     // Instantiate the interactiveTooltip and preview tooltip when the
     // rule/computed view is hovered over in order to call
@@ -207,6 +214,7 @@ TooltipsOverlay.prototype = {
     }
 
     this.inactiveCssTooltipHelper.destroy();
+    this.compatibilityTooltipHelper.destroy();
 
     this._isStarted = false;
   },
@@ -338,6 +346,18 @@ TooltipsOverlay.prototype = {
    *         true if shown, false otherwise.
    */
   async onInteractiveTooltipTargetHover(target) {
+    if (target.classList.contains("ruleview-compatibility-warning")) {
+      const nodeCompatibilityInfo = await this.view.getNodeCompatibilityInfo(
+        target
+      );
+
+      await this.compatibilityTooltipHelper.setContent(
+        nodeCompatibilityInfo,
+        this.getTooltip("interactiveTooltip")
+      );
+      return true;
+    }
+
     const nodeInfo = this.view.getNodeInfo(target);
     if (!nodeInfo) {
       // The hovered node isn't something we care about.
