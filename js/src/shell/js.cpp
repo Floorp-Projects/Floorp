@@ -70,6 +70,7 @@
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
 #include "debugger/DebugAPI.h"
+#include "frontend/BytecodeEmitter.h"
 #include "frontend/CompilationInfo.h"
 #ifdef JS_ENABLE_SMOOSH
 #  include "frontend/Frontend2.h"
@@ -5123,23 +5124,75 @@ static bool SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+enum class DumpType {
+  ParseNode,
+  Stencil,
+};
+
 template <typename Unit>
-static bool FullParseTest(JSContext* cx,
-                          const JS::ReadOnlyCompileOptions& options,
-                          const Unit* units, size_t length,
-                          js::frontend::CompilationInfo& compilationInfo,
-                          js::frontend::ParseGoal goal) {
+static bool FrontendTest(JSContext* cx,
+                         const JS::ReadOnlyCompileOptions& options,
+                         const Unit* units, size_t length,
+                         js::frontend::CompilationInfo& compilationInfo,
+                         js::frontend::ParseGoal goal, DumpType dumpType) {
   using namespace js::frontend;
-  Parser<FullParseHandler, Unit> parser(cx, options, units, length,
-                                        /* foldConstants = */ false,
-                                        compilationInfo, nullptr, nullptr);
+
+  bool foldConstants = dumpType == DumpType::Stencil;
+
+  Parser<SyntaxParseHandler, Unit> syntaxParser(cx, options, units, length,
+                                                foldConstants, compilationInfo,
+                                                nullptr, nullptr);
+  if (!syntaxParser.checkOptions()) {
+    return false;
+  }
+
+  Parser<FullParseHandler, Unit> parser(
+      cx, options, units, length, foldConstants, compilationInfo,
+      dumpType == DumpType::Stencil ? &syntaxParser : nullptr, nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
 
-  js::frontend::ParseNode* pn;  // Deallocated once `parser` goes out of scope.
   if (goal == frontend::ParseGoal::Script) {
-    pn = parser.parse();
+    js::frontend::ParseNode* pn;
+    switch (dumpType) {
+      case DumpType::ParseNode: {
+        pn = parser.parse();
+        if (!pn) {
+          return false;
+        }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+        js::Fprinter out(stderr);
+        DumpParseTree(pn, out);
+#endif
+        break;
+      }
+      case DumpType::Stencil: {
+        SourceExtent extent = SourceExtent::makeGlobalExtent(length, options);
+        Directives directives(options.forceStrictMode());
+        GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
+                                     directives, extent);
+        pn = parser.globalBody(&globalsc);
+        if (!pn) {
+          return false;
+        }
+
+        BytecodeEmitter bce(/* parent = */ nullptr, &parser, &globalsc,
+                            compilationInfo);
+        if (!bce.init()) {
+          return false;
+        }
+        if (!bce.emitScript(pn)) {
+          return false;
+        }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+        compilationInfo.dumpStencil();
+#endif
+        break;
+      }
+    }
   } else {
     if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
       return false;
@@ -5149,24 +5202,56 @@ static bool FullParseTest(JSContext* cx,
 
     SourceExtent extent = SourceExtent::makeGlobalExtent(length);
     ModuleSharedContext modulesc(cx, compilationInfo, builder, extent);
-    pn = parser.moduleBody(&modulesc);
-  }
-  if (!pn) {
-    return false;
-  }
-#ifdef DEBUG
-  js::Fprinter out(stderr);
-  DumpParseTree(pn, out);
+    js::frontend::ParseNode* pn = parser.moduleBody(&modulesc);
+    if (!pn) {
+      return false;
+    }
+
+    switch (dumpType) {
+      case DumpType::ParseNode: {
+        pn = parser.parse();
+        if (!pn) {
+          return false;
+        }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+        js::Fprinter out(stderr);
+        DumpParseTree(pn, out);
 #endif
+        break;
+      }
+      case DumpType::Stencil: {
+        BytecodeEmitter bce(/* parent = */ nullptr, &parser, &modulesc,
+                            compilationInfo);
+        if (!bce.init()) {
+          return false;
+        }
+        if (!bce.emitScript(pn->as<ModuleNode>().body())) {
+          return false;
+        }
+
+        StencilModuleMetadata& moduleMetadata =
+            compilationInfo.moduleMetadata.get();
+        builder.finishFunctionDecls(moduleMetadata);
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+        compilationInfo.dumpStencil();
+#endif
+        break;
+      }
+    }
+  }
+
   return true;
 }
 
-static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
+static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
+                         const char* funcName, DumpType dumpType) {
   using namespace js::frontend;
 
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!args.requireAtLeast(cx, "parse", 1)) {
+  if (!args.requireAtLeast(cx, funcName, 1)) {
     return false;
   }
   if (!args[0].isString()) {
@@ -5259,29 +5344,36 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
 
   size_t length = scriptContents->length();
 #ifdef JS_ENABLE_SMOOSH
-  if (smoosh) {
-    if (isAscii) {
-      const Latin1Char* chars = stableChars.latin1Range().begin().get();
-      if (goal == frontend::ParseGoal::Script) {
-        if (!SmooshParseScript(cx, chars, length)) {
-          return false;
+  if (dumpType == DumpType::ParseNode) {
+    if (smoosh) {
+      if (isAscii) {
+        const Latin1Char* chars = stableChars.latin1Range().begin().get();
+
+        if (goal == frontend::ParseGoal::Script) {
+          if (!SmooshParseScript(cx, chars, length)) {
+            return false;
+          }
+        } else {
+          if (!SmooshParseModule(cx, chars, length)) {
+            return false;
+          }
         }
-      } else {
-        if (!SmooshParseModule(cx, chars, length)) {
-          return false;
-        }
+        args.rval().setUndefined();
+        return true;
       }
-      args.rval().setUndefined();
-      return true;
+      JS_ReportErrorASCII(cx,
+                          "SmooshMonkey does not support non-ASCII chars yet");
+      return false;
     }
-    JS_ReportErrorASCII(cx,
-                        "SmooshMonkey does not support non-ASCII chars yet");
-    return false;
   }
 #endif  // JS_ENABLE_SMOOSH
 
   CompileOptions options(cx);
-  options.setIntroductionType("js shell parse").setFileAndLine("<string>", 1);
+  options.setIntroductionType("js shell parse")
+      .setFileAndLine("<string>", 1)
+      .setIsRunOnce(true)
+      .setNoScriptRval(true);
+
   if (goal == frontend::ParseGoal::Module) {
     // See frontend::CompileModule.
     options.setForceStrictMode();
@@ -5294,23 +5386,66 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef JS_ENABLE_SMOOSH
+  if (dumpType == DumpType::Stencil) {
+    if (smoosh) {
+      if (isAscii) {
+        if (goal == frontend::ParseGoal::Script) {
+          const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
+          auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
+          JS::SourceText<Utf8Unit> srcBuf;
+          if (!srcBuf.init(cx, utf8, length, JS::SourceOwnership::Borrowed)) {
+            return false;
+          }
+
+          bool unimplemented;
+          if (!Smoosh::compileGlobalScriptToStencil(compilationInfo, srcBuf,
+                                                    &unimplemented)) {
+            return false;
+          }
+
+#  ifdef DEBUG
+          compilationInfo.dumpStencil();
+#  endif
+        } else {
+          JS_ReportErrorASCII(cx,
+                              "SmooshMonkey does not support module stencil");
+        }
+        args.rval().setUndefined();
+        return true;
+      }
+      JS_ReportErrorASCII(cx,
+                          "SmooshMonkey does not support non-ASCII chars yet");
+      return false;
+    }
+  }
+#endif  // JS_ENABLE_SMOOSH
+
   if (isAscii) {
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
     auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
-    if (!FullParseTest<mozilla::Utf8Unit>(cx, options, utf8, length,
-                                          compilationInfo, goal)) {
+    if (!FrontendTest<mozilla::Utf8Unit>(cx, options, utf8, length,
+                                         compilationInfo, goal, dumpType)) {
       return false;
     }
   } else {
     MOZ_ASSERT(stableChars.isTwoByte());
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    if (!FullParseTest<char16_t>(cx, options, chars, length, compilationInfo,
-                                 goal)) {
+    if (!FrontendTest<char16_t>(cx, options, chars, length, compilationInfo,
+                                goal, dumpType)) {
       return false;
     }
   }
   args.rval().setUndefined();
   return true;
+}
+
+static bool DumpStencil(JSContext* cx, unsigned argc, Value* vp) {
+  return FrontendTest(cx, argc, vp, "dumpStencil", DumpType::Stencil);
+}
+
+static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
+  return FrontendTest(cx, argc, vp, "parse", DumpType::ParseNode);
 }
 
 static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
@@ -8575,6 +8710,10 @@ JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
 "  Set the HostResolveImportedModule hook to |function|, overriding the shell\n"
 "  module loader for testing purposes. This hook is used to look up a\n"
 "  previously loaded module object."),
+
+    JS_FN_HELP("dumpStencil", DumpStencil, 1, 0,
+"dumpStencil(code)",
+"  Parses a string and returns string that represents stencil."),
 
     JS_FN_HELP("parse", Parse, 1, 0,
 "parse(code)",
