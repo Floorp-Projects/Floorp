@@ -54,6 +54,18 @@ InlineScriptTree* InlineScriptTree::addCallee(TempAllocator* allocator,
   return calleeTree;
 }
 
+void InlineScriptTree::removeCallee(InlineScriptTree* callee) {
+  InlineScriptTree** prevPtr = &children_;
+  for (InlineScriptTree* child = children_; child; child = child->nextCallee_) {
+    if (child == callee) {
+      *prevPtr = child->nextCallee_;
+      return;
+    }
+    prevPtr = &child->nextCallee_;
+  }
+  MOZ_CRASH("Callee not found");
+}
+
 static inline const char* AnalysisModeString(AnalysisMode mode) {
   switch (mode) {
     case Analysis_None:

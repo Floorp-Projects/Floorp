@@ -81,6 +81,7 @@ class InlineScriptTree {
 
   InlineScriptTree* addCallee(TempAllocator* allocator, jsbytecode* callerPc,
                               JSScript* calleeScript);
+  void removeCallee(InlineScriptTree* callee);
 
   InlineScriptTree* caller() const { return caller_; }
 

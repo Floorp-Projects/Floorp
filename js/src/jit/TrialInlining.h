@@ -49,6 +49,7 @@ class InliningRoot {
   void trace(JSTracer* trc);
 
   bool addInlinedScript(js::UniquePtr<ICScript> icScript);
+  void removeInlinedScript(ICScript* icScript);
 
   uint32_t numInlinedScripts() const { return inlinedScripts_.length(); }
 

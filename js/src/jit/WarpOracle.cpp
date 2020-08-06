@@ -940,16 +940,43 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     // inlining recursively).
     WarpScriptOracle scriptOracle(cx_, oracle_, targetScript, info, icScript);
 
-    WarpScriptSnapshot* scriptSnapshot;
-    MOZ_TRY_VAR(scriptSnapshot, scriptOracle.createScriptSnapshot());
-    oracle_->addScriptSnapshot(scriptSnapshot);
+    AbortReasonOr<WarpScriptSnapshot*> maybeScriptSnapshot =
+        scriptOracle.createScriptSnapshot();
 
-    if (!AddOpSnapshot<WarpInlinedCall>(
-            alloc_, snapshots, offset, cacheIRSnapshot, scriptSnapshot, info)) {
-      return abort(AbortReason::Alloc);
+    if (maybeScriptSnapshot.isOk()) {
+      WarpScriptSnapshot* scriptSnapshot = maybeScriptSnapshot.unwrap();
+      oracle_->addScriptSnapshot(scriptSnapshot);
+
+      if (!AddOpSnapshot<WarpInlinedCall>(alloc_, snapshots, offset,
+                                          cacheIRSnapshot, scriptSnapshot,
+                                          info)) {
+        return abort(AbortReason::Alloc);
+      }
+      fallbackStub->setUsedByTranspiler();
+      return Ok();
     }
-    fallbackStub->setUsedByTranspiler();
-    return Ok();
+
+    // We failed to create a script snapshot.
+    JitSpew(JitSpew_WarpTranspiler, "Can't create snapshot for JSOp::%s",
+            CodeName(loc.getOp()));
+
+    switch (maybeScriptSnapshot.unwrapErr()) {
+      case AbortReason::Disable:
+        // If the target script can't be warp-compiled, mark it as
+        // uninlineable, clean up, and fall through to the non-inlined path.
+        MOZ_ASSERT(stub == entry.firstStub());
+        fallbackStub->unlinkStubDontInvalidateWarp(cx_->zone(),
+                                                   /*prev=*/nullptr, stub);
+        targetScript->setUninlineable();
+        info_->inlineScriptTree()->removeCallee(inlineScriptTree);
+        icScript_->removeInlinedChild(loc.bytecodeToOffset(script_));
+        break;
+      case AbortReason::Error:
+      case AbortReason::Alloc:
+        return Err(maybeScriptSnapshot.unwrapErr());
+      default:
+        MOZ_CRASH("Unexpected abort reason");
+    }
   }
 
   if (!AddOpSnapshot<WarpCacheIR>(alloc_, snapshots, offset, jitCode, stubInfo,
