@@ -39,15 +39,11 @@ async function reloadTab(tab) {
 }
 
 // Used to replace AboutProtectionsHandler.getLoginData in front-end tests.
-const mockGetLoginDataWithSyncedDevices = (
-  mobileDeviceConnected = false,
-  potentiallyBreachedLogins = 0
-) => {
+const mockGetLoginDataWithSyncedDevices = (mobileDeviceConnected = false) => {
   return {
     getLoginData: () => {
       return {
         numLogins: Services.logins.countLogins("", "", ""),
-        potentiallyBreachedLogins,
         mobileDeviceConnected,
       };
     },
@@ -66,6 +62,7 @@ const mockGetMonitorData = data => {
         monitoredEmails: 1,
         numBreaches: data.numBreaches,
         passwords: 8,
+        potentiallyBreachedLogins: data.potentiallyBreachedLogins,
         numBreachesResolved: data.numBreachesResolved,
         passwordsResolved: 1,
         error: false,
