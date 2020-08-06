@@ -2,6 +2,9 @@
 <resources>
 
     <!-- Content description (not visible, for screen readers etc.): Description of an image view. -->
-    <string name="mozac_feature_qr_scanner">QR-სკანერი</string>
+    <string name="mozac_feature_qr_scanner">QR-წამკითხველი</string>
+
+    <!-- Text shown if no camera is available on the device and the QR scanner cannot be displayed. -->
+    <string name="mozac_feature_qr_scanner_no_camera">მოწყობილობაზე კამერა არაა</string>
 
 </resources>
