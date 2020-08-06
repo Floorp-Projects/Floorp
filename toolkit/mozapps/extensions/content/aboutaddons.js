@@ -2298,6 +2298,10 @@ class InlineOptionsBrowser extends HTMLElement {
     if (addon.isWebExtension) {
       let policy = ExtensionParent.WebExtensionPolicy.getByID(addon.id);
       browser.sameProcessAsFrameLoader = policy.extension.groupFrameLoader;
+      browser.setAttribute(
+        "initialBrowsingContextGroupId",
+        policy.browsingContextGroupId
+      );
     }
 
     let readyPromise;

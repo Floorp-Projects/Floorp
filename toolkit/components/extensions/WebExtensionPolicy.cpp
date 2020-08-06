@@ -506,6 +506,16 @@ uint64_t WebExtensionPolicy::GetBrowsingContextGroupId() const {
   return mBrowsingContextGroupId;
 }
 
+uint64_t WebExtensionPolicy::GetBrowsingContextGroupId(ErrorResult& aRv) {
+  if (XRE_IsParentProcess() && mActive) {
+    return GetBrowsingContextGroupId();
+  }
+  aRv.ThrowInvalidAccessError(
+      "browsingContextGroupId only available for active policies in the "
+      "parent process");
+  return 0;
+}
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(WebExtensionPolicy, mParent,
                                                mLocalizeCallback,
                                                mHostPermissions,

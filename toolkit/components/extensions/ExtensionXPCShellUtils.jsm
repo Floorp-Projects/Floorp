@@ -261,6 +261,15 @@ class ContentPage {
       browser.sameProcessAsFrameLoader = this.extension.groupFrameLoader;
     }
 
+    // Ensure that the extension is loaded into the correct
+    // BrowsingContextGroupID by default.
+    if (this.extension) {
+      browser.setAttribute(
+        "initialBrowsingContextGroupId",
+        this.extension.browsingContextGroupId
+      );
+    }
+
     let awaitFrameLoader = Promise.resolve();
     if (this.remote) {
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
