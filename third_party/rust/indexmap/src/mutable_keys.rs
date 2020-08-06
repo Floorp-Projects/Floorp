@@ -1,10 +1,9 @@
-
-use std::hash::Hash;
 use std::hash::BuildHasher;
+use std::hash::Hash;
 
-use super::{IndexMap, Equivalent};
+use super::{Equivalent, IndexMap};
 
-pub struct PrivateMarker { }
+pub struct PrivateMarker {}
 
 /// Opt-in mutable access to keys.
 ///
@@ -21,11 +20,14 @@ pub struct PrivateMarker { }
 pub trait MutableKeys {
     type Key;
     type Value;
-    
+
     /// Return item index, mutable reference to key and value
-    fn get_full_mut2<Q: ?Sized>(&mut self, key: &Q)
-        -> Option<(usize, &mut Self::Key, &mut Self::Value)>
-        where Q: Hash + Equivalent<Self::Key>;
+    fn get_full_mut2<Q: ?Sized>(
+        &mut self,
+        key: &Q,
+    ) -> Option<(usize, &mut Self::Key, &mut Self::Value)>
+    where
+        Q: Hash + Equivalent<Self::Key>;
 
     /// Scan through each key-value pair in the map and keep those where the
     /// closure `keep` returns `true`.
@@ -35,7 +37,8 @@ pub trait MutableKeys {
     ///
     /// Computes in **O(n)** time (average).
     fn retain2<F>(&mut self, keep: F)
-        where F: FnMut(&mut Self::Key, &mut Self::Value) -> bool;
+    where
+        F: FnMut(&mut Self::Key, &mut Self::Value) -> bool;
 
     /// This method is not useful in itself – it is there to “seal” the trait
     /// for external implementation, so that we can add methods without
@@ -47,25 +50,27 @@ pub trait MutableKeys {
 ///
 /// See [`MutableKeys`](trait.MutableKeys.html) for more information.
 impl<K, V, S> MutableKeys for IndexMap<K, V, S>
-    where K: Eq + Hash,
-          S: BuildHasher,
+where
+    K: Eq + Hash,
+    S: BuildHasher,
 {
     type Key = K;
     type Value = V;
-    fn get_full_mut2<Q: ?Sized>(&mut self, key: &Q)
-        -> Option<(usize, &mut K, &mut V)>
-        where Q: Hash + Equivalent<K>,
+    fn get_full_mut2<Q: ?Sized>(&mut self, key: &Q) -> Option<(usize, &mut K, &mut V)>
+    where
+        Q: Hash + Equivalent<K>,
     {
         self.get_full_mut2_impl(key)
     }
 
     fn retain2<F>(&mut self, keep: F)
-        where F: FnMut(&mut K, &mut V) -> bool,
+    where
+        F: FnMut(&mut K, &mut V) -> bool,
     {
         self.retain_mut(keep)
     }
 
     fn __private_marker(&self) -> PrivateMarker {
-        PrivateMarker { }
+        PrivateMarker {}
     }
 }

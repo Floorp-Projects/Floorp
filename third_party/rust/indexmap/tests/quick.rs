@@ -1,4 +1,3 @@
-
 extern crate indexmap;
 extern crate itertools;
 #[macro_use]
@@ -20,29 +19,29 @@ use std::hash::{BuildHasher, BuildHasherDefault};
 type FnvBuilder = BuildHasherDefault<FnvHasher>;
 type OrderMapFnv<K, V> = IndexMap<K, V, FnvBuilder>;
 
-use std::collections::HashSet;
-use std::collections::HashMap;
-use std::iter::FromIterator;
-use std::hash::Hash;
-use std::fmt::Debug;
-use std::ops::Deref;
 use std::cmp::min;
-
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::fmt::Debug;
+use std::hash::Hash;
+use std::iter::FromIterator;
+use std::ops::Deref;
 
 use indexmap::map::Entry as OEntry;
 use std::collections::hash_map::Entry as HEntry;
 
-
 fn set<'a, T: 'a, I>(iter: I) -> HashSet<T>
-    where I: IntoIterator<Item=&'a T>,
-    T: Copy + Hash + Eq
+where
+    I: IntoIterator<Item = &'a T>,
+    T: Copy + Hash + Eq,
 {
     iter.into_iter().cloned().collect()
 }
 
 fn indexmap<'a, T: 'a, I>(iter: I) -> IndexMap<T, ()>
-    where I: IntoIterator<Item=&'a T>,
-          T: Copy + Hash + Eq,
+where
+    I: IntoIterator<Item = &'a T>,
+    T: Copy + Hash + Eq,
 {
     IndexMap::from_iter(iter.into_iter().cloned().map(|k| (k, ())))
 }
@@ -116,10 +115,33 @@ quickcheck! {
         let mut clone = map.clone();
         let drained = clone.drain(..);
         for (key, _) in drained {
-            map.remove(&key);
+            map.swap_remove(&key);
         }
         map.is_empty()
     }
+
+    fn shift_remove(insert: Vec<u8>, remove: Vec<u8>) -> bool {
+        let mut map = IndexMap::new();
+        for &key in &insert {
+            map.insert(key, ());
+        }
+        for &key in &remove {
+            map.shift_remove(&key);
+        }
+        let elements = &set(&insert) - &set(&remove);
+
+        // Check that order is preserved after removals
+        let mut iter = map.keys();
+        for &key in insert.iter().unique() {
+            if elements.contains(&key) {
+                assert_eq!(Some(key), iter.next().cloned());
+            }
+        }
+
+        map.len() == elements.len() && map.iter().count() == elements.len() &&
+            elements.iter().all(|k| map.get(k).is_some())
+    }
+
 }
 
 use Op::*;
@@ -132,8 +154,9 @@ enum Op<K, V> {
 }
 
 impl<K, V> Arbitrary for Op<K, V>
-    where K: Arbitrary,
-          V: Arbitrary,
+where
+    K: Arbitrary,
+    V: Arbitrary,
 {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         match g.gen::<u32>() % 4 {
@@ -146,9 +169,10 @@ impl<K, V> Arbitrary for Op<K, V>
 }
 
 fn do_ops<K, V, S>(ops: &[Op<K, V>], a: &mut IndexMap<K, V, S>, b: &mut HashMap<K, V>)
-    where K: Hash + Eq + Clone,
-          V: Clone,
-          S: BuildHasher,
+where
+    K: Hash + Eq + Clone,
+    V: Clone,
+    S: BuildHasher,
 {
     for op in ops {
         match *op {
@@ -157,21 +181,19 @@ fn do_ops<K, V, S>(ops: &[Op<K, V>], a: &mut IndexMap<K, V, S>, b: &mut HashMap<
                 b.insert(k.clone(), v.clone());
             }
             AddEntry(ref k, ref v) => {
-                a.entry(k.clone()).or_insert(v.clone());
-                b.entry(k.clone()).or_insert(v.clone());
+                a.entry(k.clone()).or_insert_with(|| v.clone());
+                b.entry(k.clone()).or_insert_with(|| v.clone());
             }
             Remove(ref k) => {
                 a.swap_remove(k);
                 b.remove(k);
             }
             RemoveEntry(ref k) => {
-                match a.entry(k.clone()) {
-                    OEntry::Occupied(ent) => { ent.remove_entry(); },
-                    _ => { }
+                if let OEntry::Occupied(ent) = a.entry(k.clone()) {
+                    ent.swap_remove_entry();
                 }
-                match b.entry(k.clone()) {
-                    HEntry::Occupied(ent) => { ent.remove_entry(); },
-                    _ => { }
+                if let HEntry::Occupied(ent) = b.entry(k.clone()) {
+                    ent.remove_entry();
                 }
             }
         }
@@ -180,8 +202,9 @@ fn do_ops<K, V, S>(ops: &[Op<K, V>], a: &mut IndexMap<K, V, S>, b: &mut HashMap<
 }
 
 fn assert_maps_equivalent<K, V>(a: &IndexMap<K, V>, b: &HashMap<K, V>) -> bool
-    where K: Hash + Eq + Debug,
-          V: Eq + Debug,
+where
+    K: Hash + Eq + Debug,
+    V: Eq + Debug,
 {
     assert_eq!(a.len(), b.len());
     assert_eq!(a.iter().next().is_some(), b.iter().next().is_some());
@@ -310,10 +333,11 @@ quickcheck! {
 }
 
 fn assert_sorted_by_key<I, Key, X>(iterable: I, key: Key)
-    where I: IntoIterator,
-          I::Item: Ord + Clone + Debug,
-          Key: Fn(&I::Item) -> X,
-          X: Ord,
+where
+    I: IntoIterator,
+    I::Item: Ord + Clone + Debug,
+    Key: Fn(&I::Item) -> X,
+    X: Ord,
 {
     let input = Vec::from_iter(iterable);
     let mut sorted = input.clone();
@@ -326,21 +350,25 @@ struct Alpha(String);
 
 impl Deref for Alpha {
     type Target = String;
-    fn deref(&self) -> &String { &self.0 }
+    fn deref(&self) -> &String {
+        &self.0
+    }
 }
 
-const ALPHABET: &'static [u8] = b"abcdefghijklmnopqrstuvwxyz";
+const ALPHABET: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
 
 impl Arbitrary for Alpha {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         let len = g.next_u32() % g.size() as u32;
         let len = min(len, 16);
-        Alpha((0..len).map(|_| {
-            ALPHABET[g.next_u32() as usize % ALPHABET.len()] as char
-        }).collect())
+        Alpha(
+            (0..len)
+                .map(|_| ALPHABET[g.next_u32() as usize % ALPHABET.len()] as char)
+                .collect(),
+        )
     }
 
-    fn shrink(&self) -> Box<Iterator<Item=Self>> {
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new((**self).shrink().map(Alpha))
     }
 }
@@ -351,18 +379,21 @@ struct Large<T>(T);
 
 impl<T> Deref for Large<T> {
     type Target = T;
-    fn deref(&self) -> &T { &self.0 }
+    fn deref(&self) -> &T {
+        &self.0
+    }
 }
 
 impl<T> Arbitrary for Large<Vec<T>>
-    where T: Arbitrary
+where
+    T: Arbitrary,
 {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         let len = g.next_u32() % (g.size() * 10) as u32;
         Large((0..len).map(|_| T::arbitrary(g)).collect())
     }
 
-    fn shrink(&self) -> Box<Iterator<Item=Self>> {
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new((**self).shrink().map(Large))
     }
 }
