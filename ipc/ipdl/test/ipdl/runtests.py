@@ -85,7 +85,11 @@ if __name__ == '__main__':
     oktests, errortests = False, False
     for arg in sys.argv[3:]:
         if errortests:
-            errorsuite.addTest(ErrorTestCase(ipdlargv + ['-I', errordir],
+            # The extra subdirectory is used for non-failing files we want
+            # to include from failing files.
+            errorIncludes = ['-I', os.path.join(errordir, 'extra'),
+                             '-I', errordir]
+            errorsuite.addTest(ErrorTestCase(ipdlargv + errorIncludes,
                                              arg))
         elif oktests:
             if 'ERRORTESTS' == arg:
