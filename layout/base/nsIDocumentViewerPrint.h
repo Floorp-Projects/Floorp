@@ -34,10 +34,10 @@ class nsIDocumentViewerPrint : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_PRINT_IID)
 
   virtual void SetIsPrinting(bool aIsPrinting) = 0;
-  virtual bool GetIsPrinting() = 0;
+  virtual bool GetIsPrinting() const = 0;
 
   virtual void SetIsPrintPreview(bool aIsPrintPreview) = 0;
-  virtual bool GetIsPrintPreview() = 0;
+  virtual bool GetIsPrintPreview() const = 0;
 
   /**
    * This is used by nsPagePrintTimer to make nsDocumentViewer::Destroy()
@@ -73,9 +73,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOCUMENTVIEWERPRINT                          \
   void SetIsPrinting(bool aIsPrinting) override;                \
-  bool GetIsPrinting() override;                                \
+  bool GetIsPrinting() const override;                          \
   void SetIsPrintPreview(bool aIsPrintPreview) override;        \
-  bool GetIsPrintPreview() override;                            \
+  bool GetIsPrintPreview() const override;                      \
   void IncrementDestroyBlockedCount() override;                 \
   void DecrementDestroyBlockedCount() override;                 \
   void OnDonePrinting() override;                               \
