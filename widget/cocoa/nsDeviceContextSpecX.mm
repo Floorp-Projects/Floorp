@@ -47,21 +47,6 @@ static LazyLogModule sDeviceContextSpecXLog("DeviceContextSpecX");
 
 static nsCUPSShim sCupsShim;
 
-static nsresult CreatePrinter(mozilla::CUPSPrinterList& aCupsPrinterList, PMPrinter aPMPrinter,
-                              nsIPrinter** aPrinter) {
-  NS_ENSURE_ARG_POINTER(aPrinter);
-  *aPrinter = nullptr;
-
-  NSString* const printerID = static_cast<NSString*>(PMPrinterGetID(aPMPrinter));
-  if (cups_dest_t* const dest = aCupsPrinterList.FindPrinterByName([printerID UTF8String])) {
-    if (RefPtr<nsPrinterCUPS> printer = nsPrinterCUPS::Create(sCupsShim, dest)) {
-      printer.forget(aPrinter);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
 //----------------------------------------------------------------------
 // nsPrinterListX
 
@@ -88,26 +73,36 @@ NS_IMETHODIMP
 nsPrinterListX::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  aPrinters.Clear();
   if (!sCupsShim.IsInitialized()) {
     if (!sCupsShim.Init()) {
-      return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
+      return NS_ERROR_FAILURE;
     }
   }
-  AutoCFRelease<CFArrayRef> pmPrinterList(nullptr);
-  OSStatus status = PMServerCreatePrinterList(kPMServerLocal, pmPrinterList.receive());
-  NS_ENSURE_TRUE(status == noErr && pmPrinterList, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE);
 
-  const CFIndex printerCount = CFArrayGetCount(pmPrinterList);
   mozilla::CUPSPrinterList cupsPrinterList{sCupsShim};
   cupsPrinterList.Initialize();
-  for (auto i = 0; i < printerCount; ++i) {
-    PMPrinter pmPrinter =
-        static_cast<PMPrinter>(const_cast<void*>(CFArrayGetValueAtIndex(pmPrinterList, i)));
-    RefPtr<nsIPrinter> printer;
-    nsresult rv = CreatePrinter(cupsPrinterList, pmPrinter, getter_AddRefs(printer));
-    NS_ENSURE_SUCCESS(rv, rv);
-    aPrinters.AppendElement(std::move(printer));
+  aPrinters.SetCapacity(cupsPrinterList.NumPrinters());
+
+  for (int i = 0; i < cupsPrinterList.NumPrinters(); i++) {
+    cups_dest_t* const dest = cupsPrinterList.GetPrinter(i);
+    RefPtr<nsPrinterCUPS> cupsPrinter = nsPrinterCUPS::Create(sCupsShim, dest);
+
+    // CUPS does not appear to have a native call to retrieve a display name for
+    // a printer, so we need to use cocoa to find a display name for the printer.
+    PMPrinter corePrinter = PMPrinterCreateFromPrinterID(
+        static_cast<CFStringRef>([NSString stringWithUTF8String:dest->name]));
+
+    if (!corePrinter) {
+      continue;
+    }
+
+    CFStringRef printerName = PMPrinterGetName(corePrinter);
+    nsAutoString displayName;
+    nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(printerName), displayName);
+    cupsPrinter->SetDisplayName(displayName);
+
+    aPrinters.AppendElement(cupsPrinter);
+    PMRelease(corePrinter);
   }
 
   return NS_OK;
