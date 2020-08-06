@@ -85,13 +85,12 @@ void LayerTransformRecorder::EndTest(FrameUniformityData* aOutData) {
 }
 
 LayerTransforms* LayerTransformRecorder::GetLayerTransforms(uintptr_t aLayer) {
-  if (!mFrameTransforms.count(aLayer)) {
-    UniquePtr<LayerTransforms> newTransform = MakeUnique<LayerTransforms>();
-    FrameTransformMap::value_type newLayer(aLayer, std::move(newTransform));
-    mFrameTransforms.insert(std::move(newLayer));
+  auto [iter, inserted] =
+      mFrameTransforms.insert(FrameTransformMap::value_type{aLayer, nullptr});
+  if (inserted) {
+    iter->second = MakeUnique<LayerTransforms>();
   }
-
-  return mFrameTransforms.find(aLayer)->second.get();
+  return iter->second.get();
 }
 
 void LayerTransformRecorder::Reset() { mFrameTransforms.clear(); }
