@@ -6,8 +6,7 @@ root:
       transform: scale-x(0.1) rotate-z(45)
       filter-primitives:
       - type: blur
-        width: 10
-        height: 10
+        radius: 10
         in: previous
         color-space: srgb
       items:
