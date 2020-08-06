@@ -89,6 +89,10 @@ experimental-features-abouthome-startup-cache =
     .label = about:home startup cache
 experimental-features-abouthome-startup-cache-description = A cache for the initial about:home document that is loaded by default at startup. The purpose of the cache is to improve startup performance.
 
+experimental-features-print-preview-tab-modal =
+    .label = Print Preview Redesign
+experimental-features-print-preview-tab-modal-description = Introduces the redesigned print preview and makes print preview available on macOS. This potentially introduces breakage and does not include all print-related settings. To access all print-related settings, select “Print using the system dialog…” from within the Print panel.
+
 # The title of the experiment should be kept in English as it may be referenced
 # by various online articles and is technical in nature.
 experimental-features-cookie-samesite-schemeful =

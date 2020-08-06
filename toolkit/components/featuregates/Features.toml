@@ -148,6 +148,16 @@ bug-numbers = [1614351]
 is-public = true
 default-value = false
 
+[print-preview-tab-modal]
+title = "experimental-features-print-preview-tab-modal"
+description = "experimental-features-print-preview-tab-modal-description"
+restart-required = false
+preference = "print.tab_modal.enabled"
+type = "boolean"
+bug-numbers = [1657161]
+is-public = true
+default-value = {default = false, nightly = true}
+
 [cookie-samesite-schemeful]
 title = "experimental-features-cookie-samesite-schemeful"
 description = "experimental-features-cookie-samesite-schemeful-description"
