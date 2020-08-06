@@ -21,6 +21,7 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.segmentAwareDomainMatch
 import org.json.JSONObject
@@ -31,15 +32,16 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
 @SuppressWarnings("TooManyFunctions")
-open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), HistoryStorage, SyncableStore {
+open class PlacesHistoryStorage(
+    context: Context,
+    crashReporter: CrashReporting? = null
+) : PlacesStorage(context, crashReporter), HistoryStorage, SyncableStore {
 
     override val logger = Logger("PlacesHistoryStorage")
 
     override suspend fun recordVisit(uri: String, visit: PageVisit) {
         withContext(scope.coroutineContext) {
-            // Ignore exceptions related to uris. This means we may drop some of the data on the floor
-            // if the underlying storage layer refuses it.
-            ignoreUrlExceptions("recordVisit") {
+            handlePlacesExceptions("recordVisit") {
                 places.writer().noteObservation(VisitObservation(uri,
                     visitType = visit.visitType.into(),
                     isRedirectSource = when (visit.redirectSource) {
@@ -60,7 +62,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
         withContext(scope.coroutineContext) {
             // Ignore exceptions related to uris. This means we may drop some of the data on the floor
             // if the underlying storage layer refuses it.
-            ignoreUrlExceptions("recordObservation") {
+            handlePlacesExceptions("recordObservation") {
                 places.writer().noteObservation(
                         VisitObservation(
                                 url = uri,

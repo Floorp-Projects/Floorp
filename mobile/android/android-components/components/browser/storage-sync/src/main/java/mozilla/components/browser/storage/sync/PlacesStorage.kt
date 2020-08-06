@@ -14,17 +14,20 @@ import mozilla.appservices.places.InternalPanic
 import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
-import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
 
 /**
  * A base class for concrete implementations of PlacesStorages
  */
-abstract class PlacesStorage(context: Context) : Storage, SyncableStore {
+abstract class PlacesStorage(
+    context: Context,
+    val crashReporter: CrashReporting? = null
+) : Storage, SyncableStore {
 
     internal val scope by lazy { CoroutineScope(Dispatchers.IO) }
     private val storageDir by lazy { context.filesDir }
@@ -65,13 +68,16 @@ abstract class PlacesStorage(context: Context) : Storage, SyncableStore {
     }
 
     /**
-     * Runs [block] described by [operation], ignoring and logging any thrown [UrlParseFailed] exceptions.
+     * Runs [block] described by [operation], ignoring non-fatal exceptions.
      */
-    protected inline fun ignoreUrlExceptions(operation: String, block: () -> Unit) {
+    protected inline fun handlePlacesExceptions(operation: String, block: () -> Unit) {
         try {
             block()
-        } catch (e: UrlParseFailed) {
-            logger.warn("Ignoring url exception while running $operation", e)
+        } catch (e: InternalPanic) {
+            throw e
+        } catch (e: PlacesException) {
+            crashReporter?.submitCaughtException(e)
+            logger.warn("Ignoring PlacesException while running $operation", e)
         }
     }
 
