@@ -122,7 +122,6 @@ let Player = {
       "initialBrowsingContextGroupId",
       originatingBrowser.browsingContext.group.id
     );
-    browser.sameProcessAsFrameLoader = originatingBrowser.frameLoader;
     holder.appendChild(browser);
 
     this.actor = browser.browsingContext.currentWindowGlobal.getActor(

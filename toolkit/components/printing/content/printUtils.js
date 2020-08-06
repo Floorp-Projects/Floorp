@@ -160,7 +160,6 @@ var PrintUtils = {
     let sourceBrowser = aBrowsingContext.embedderElement;
     let printPreviewBrowser = gBrowser.createBrowser({
       remoteType: sourceBrowser.remoteType,
-      sameProcessAsFrameLoader: sourceBrowser.frameLoader,
       initialBrowsingContextGroupId: aBrowsingContext.group.id,
       skipLoad: false,
     });
