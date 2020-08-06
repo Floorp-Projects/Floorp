@@ -416,7 +416,6 @@ register_strategy('build', args=('skip-unless-schedules',))(Alias)
 register_strategy('build-fuzzing', args=('push-interval-10',))(Alias)
 register_strategy('test', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
-register_strategy('build-optimized', args=('test',))(Alias)
 
 
 # Strategy overrides used to tweak the default strategies. These are referenced
@@ -459,6 +458,14 @@ class project(object):
             Any(
                 'skip-unless-schedules',
                 Any('bugbug-reduced-manifests-fallback', 'platform-disperse'),
+                split_args=split_bugbug_arg,
+            ),
+        ),
+        'build': All(
+            'backstop-10-pushes-2-hours',
+            Any(
+                'skip-unless-schedules',
+                'bugbug-reduced-fallback',
                 split_args=split_bugbug_arg,
             ),
         ),
