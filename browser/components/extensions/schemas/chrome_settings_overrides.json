@@ -26,9 +26,21 @@
                     "preprocess": "localize"
                   },
                   "keyword": {
-                    "type": "string",
                     "optional": true,
-                    "preprocess": "localize"
+                    "choices": [
+                      {
+                        "type": "string",
+                        "preprocess": "localize"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "preprocess": "localize"
+                        },
+                        "minItems": 1
+                      }
+                    ]
                   },
                   "search_url": {
                     "type": "string",
