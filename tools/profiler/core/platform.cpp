@@ -5002,9 +5002,10 @@ void profiler_unregister_thread() {
   // doing that for a JS thread that is in the process of disappearing.
 
   RegisteredThread* registeredThread = FindCurrentThreadRegisteredThread(lock);
-  MOZ_RELEASE_ASSERT(registeredThread ==
-                     TLSRegisteredThread::RegisteredThread(lock));
   if (registeredThread) {
+    MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(lock));
+    MOZ_RELEASE_ASSERT(registeredThread ==
+                       TLSRegisteredThread::RegisteredThread(lock));
     RefPtr<ThreadInfo> info = registeredThread->Info();
 
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
@@ -5018,10 +5019,12 @@ void profiler_unregister_thread() {
     // thread is unregistering itself and won't need the ProfilingStack anymore.
     TLSRegisteredThread::ResetRegisteredThread(lock);
     TLSRegisteredThread::ResetAutoProfilerLabelProfilingStack(lock);
+    MOZ_RELEASE_ASSERT(!TLSRegisteredThread::RegisteredThread(lock));
 
     // Remove the thread from the list of registered threads. This deletes the
     // registeredThread object.
     CorePS::RemoveRegisteredThread(lock, registeredThread);
+    MOZ_RELEASE_ASSERT(!FindCurrentThreadRegisteredThread(lock));
   } else {
     LOG("profiler_unregister_thread() - thread %d already unregistered",
         profiler_current_thread_id());
