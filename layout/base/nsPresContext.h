@@ -1030,8 +1030,11 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   bool HadNonBlankPaint() const { return mHadNonBlankPaint; }
   bool HadContentfulPaint() const { return mHadContentfulPaint; }
   void NotifyNonBlankPaint();
-  void NotifyContentfulPaint();
+  void NotifyContentfulPaint(const mozilla::TimeStamp& aTimeStamp);
   void NotifyDOMContentFlushed();
+
+  bool HasEverBuiltInvisibleText() const { return mHasEverBuiltInvisibleText; }
+  void SetBuiltInvisibleText() { mHasEverBuiltInvisibleText = true; }
 
   bool UsesExChUnits() const { return mUsesExChUnits; }
 
@@ -1265,6 +1268,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
  protected:
   unsigned mInteractionTimeEnabled : 1;
   unsigned mHasPendingInterrupt : 1;
+  unsigned mHasEverBuiltInvisibleText : 1;
   unsigned mPendingInterruptFromTest : 1;
   unsigned mInterruptsEnabled : 1;
   unsigned mSendAfterPaintToContent : 1;

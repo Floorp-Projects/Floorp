@@ -4881,6 +4881,9 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       TextDecorations textDecs;
       GetTextDecorations(PresContext(), eResolvedColors, textDecs);
       if (!textDecs.HasDecorationLines()) {
+        if (auto* currentPresContext = aBuilder->CurrentPresContext()) {
+          currentPresContext->SetBuiltInvisibleText();
+        }
         return;
       }
     }
