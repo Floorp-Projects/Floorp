@@ -125,10 +125,10 @@ class nsPrintJob final : public nsIObserver,
 
   // The setters here also update the DocViewer
   void SetIsPrinting(bool aIsPrinting);
-  bool GetIsPrinting() { return mIsDoingPrinting; }
+  bool GetIsPrinting() const { return mIsDoingPrinting; }
   void SetIsPrintPreview(bool aIsPrintPreview);
-  bool GetIsPrintPreview() { return mIsDoingPrintPreview; }
-  bool GetIsCreatingPrintPreview() { return mIsCreatingPrintPreview; }
+  bool GetIsPrintPreview() const { return mIsDoingPrintPreview; }
+  bool GetIsCreatingPrintPreview() const { return mIsCreatingPrintPreview; }
 
   std::tuple<nsPageSequenceFrame*, int32_t> GetSeqFrameAndCountPages();
 

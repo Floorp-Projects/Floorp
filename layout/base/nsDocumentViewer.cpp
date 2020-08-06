@@ -3493,7 +3493,7 @@ bool nsDocumentViewer::ShouldAttachToTopLevel() {
 
 //------------------------------------------------------------
 // XXX this always returns false for subdocuments
-bool nsDocumentViewer::GetIsPrinting() {
+bool nsDocumentViewer::GetIsPrinting() const {
 #ifdef NS_PRINTING
   if (mPrintJob) {
     return mPrintJob->GetIsPrinting();
@@ -3521,7 +3521,7 @@ void nsDocumentViewer::SetIsPrinting(bool aIsPrinting) {
 // The PrintJob holds the current value
 // this called from inside the DocViewer.
 // XXX it always returns false for subdocuments
-bool nsDocumentViewer::GetIsPrintPreview() {
+bool nsDocumentViewer::GetIsPrintPreview() const {
 #ifdef NS_PRINTING
   if (mPrintJob) {
     return mPrintJob->GetIsPrintPreview();
