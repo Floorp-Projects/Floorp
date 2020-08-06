@@ -53,6 +53,7 @@
  *       timeGroupingSize
  *       prefixWeight
  *       boundaryWeight
+ *       source
  *     callback - callback that is called with the array of results. Each result in the array
  *                is an object with four arguments:
  *                  text, textLowerCase, frecency, totalScore
@@ -107,7 +108,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Sqlite.jsm"
 );
 
-const DB_SCHEMA_VERSION = 4;
+const DB_SCHEMA_VERSION = 5;
 const DAY_IN_MS = 86400000; // 1 day in milliseconds
 const MAX_SEARCH_TOKENS = 10;
 const NOOP = function noop() {};
@@ -195,6 +196,19 @@ const dbSchema = {
       timeDeleted: "INTEGER",
       guid: "TEXT",
     },
+    moz_sources: {
+      id: "INTEGER PRIMARY KEY",
+      source: "TEXT NOT NULL",
+    },
+    moz_history_to_sources: {
+      history_id: "INTEGER",
+      source_id: "INTEGER",
+      SQL: `
+        PRIMARY KEY (history_id, source_id),
+        FOREIGN KEY (history_id) REFERENCES moz_formhistory(id) ON DELETE CASCADE,
+        FOREIGN KEY (source_id) REFERENCES moz_sources(id) ON DELETE CASCADE
+      `,
+    },
   },
   indices: {
     moz_formhistory_index: {
@@ -218,11 +232,12 @@ const dbSchema = {
 
 const validFields = [
   "fieldname",
-  "value",
-  "timesUsed",
   "firstUsed",
-  "lastUsed",
   "guid",
+  "lastUsed",
+  "source",
+  "timesUsed",
+  "value",
 ];
 
 const searchFilters = [
@@ -230,6 +245,7 @@ const searchFilters = [
   "firstUsedEnd",
   "lastUsedStart",
   "lastUsedEnd",
+  "source",
 ];
 
 function validateOpData(aData, aDataType) {
@@ -266,8 +282,11 @@ function validateSearchData(aData, aDataType) {
 }
 
 function makeQueryPredicates(aQueryData, delimiter = " AND ") {
-  return Object.keys(aQueryData)
+  let params = {};
+  let queryTerms = Object.keys(aQueryData)
+    .filter(field => aQueryData[field] !== undefined)
     .map(field => {
+      params[field] = aQueryData[field];
       switch (field) {
         case "firstUsedStart": {
           return "firstUsed >= :" + field;
@@ -281,11 +300,19 @@ function makeQueryPredicates(aQueryData, delimiter = " AND ") {
         case "lastUsedEnd": {
           return "lastUsed <= :" + field;
         }
+        case "source": {
+          return `EXISTS(
+            SELECT 1 FROM moz_history_to_sources
+            JOIN moz_sources s ON s.id = source_id
+            WHERE source = :${field}
+              AND history_id = moz_formhistory.id
+          )`;
+        }
       }
-
       return field + " = :" + field;
     })
     .join(delimiter);
+  return { queryTerms, params };
 }
 
 function generateGUID() {
@@ -306,19 +333,21 @@ function generateGUID() {
 }
 
 var Migrators = {
-  /*
-   * Updates the DB schema to v3 (bug 506402).
-   * Adds deleted form history table.
-   */
+  // Bug 506402 - Adds deleted form history table.
   async dbAsyncMigrateToVersion4(conn) {
-    const TABLE_NAME = "moz_deleted_formhistory";
-    let tableExists = await conn.tableExists(TABLE_NAME);
+    const tableName = "moz_deleted_formhistory";
+    let tableExists = await conn.tableExists(tableName);
     if (!tableExists) {
-      let table = dbSchema.tables[TABLE_NAME];
-      let tSQL = Object.keys(table)
-        .map(col => [col, table[col]].join(" "))
-        .join(", ");
-      await conn.execute(`CREATE TABLE ${TABLE_NAME} (${tSQL})`);
+      await createTable(conn, tableName);
+    }
+  },
+
+  // Bug 1654862 - Adds sources and moz_history_to_sources tables.
+  async dbAsyncMigrateToVersion5(conn) {
+    if (!(await conn.tableExists("moz_sources"))) {
+      for (let tableName of ["moz_history_to_sources", "moz_sources"]) {
+        await createTable(conn, tableName);
+      }
     }
   },
 };
@@ -343,18 +372,38 @@ var Migrators = {
  *          The query information needed to pass along to the database.
  */
 function prepareInsertQuery(change, now) {
-  let updatedChange = Object.assign({}, change);
-  let query =
-    "INSERT INTO moz_formhistory " +
-    "(fieldname, value, timesUsed, firstUsed, lastUsed, guid) " +
-    "VALUES (:fieldname, :value, :timesUsed, :firstUsed, :lastUsed, :guid)";
-  updatedChange.timesUsed = updatedChange.timesUsed || 1;
-  updatedChange.firstUsed = updatedChange.firstUsed || now;
-  updatedChange.lastUsed = updatedChange.lastUsed || now;
+  let params = {};
+  for (let key of new Set([
+    ...Object.keys(change),
+    // These must always be NOT NULL.
+    "firstUsed",
+    "lastUsed",
+    "timesUsed",
+  ])) {
+    switch (key) {
+      case "fieldname":
+      case "guid":
+      case "value":
+        params[key] = change[key];
+        break;
+      case "firstUsed":
+      case "lastUsed":
+        params[key] = change[key] || now;
+        break;
+      case "timesUsed":
+        params[key] = change[key] || 1;
+        break;
+      default:
+      // Skip unnecessary properties.
+    }
+  }
 
   return {
-    updatedChange,
-    query,
+    query: `
+      INSERT INTO moz_formhistory
+        (fieldname, value, timesUsed, firstUsed, lastUsed, guid)
+      VALUES (:fieldname, :value, :timesUsed, :firstUsed, :lastUsed, :guid)`,
+    params,
   };
 }
 
@@ -395,6 +444,25 @@ var InProgressInserts = {
   },
 };
 
+function getAddSourceToGuidQueries(source, guid) {
+  return [
+    {
+      query: `INSERT OR IGNORE INTO moz_sources (source) VALUES (:source)`,
+      params: { source },
+    },
+    {
+      query: `
+        INSERT OR IGNORE INTO moz_history_to_sources (history_id, source_id)
+        VALUES(
+          (SELECT id FROM moz_formhistory WHERE guid = :guid),
+          (SELECT id FROM moz_sources WHERE source = :source)
+        )
+      `,
+      params: { guid, source },
+    },
+  ];
+}
+
 /**
  * Constructs and executes database statements from a pre-processed list of
  * inputted changes.
@@ -420,7 +488,25 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
     switch (operation) {
       case "remove": {
         log("Remove from form history  " + change);
-        let queryTerms = makeQueryPredicates(change);
+        let { queryTerms, params } = makeQueryPredicates(change);
+
+        // If source is defined, we only remove the source relation, if the
+        // consumer intends to remove the value from everywhere, then they
+        // should not pass source. This gives full control to the caller.
+        if (change.source) {
+          await conn.executeCached(
+            `DELETE FROM moz_history_to_sources
+              WHERE source_id = (
+                SELECT id FROM moz_sources WHERE source = :source
+              )
+              AND history_id = (
+                SELECT id FROM moz_formhistory WHERE ${queryTerms}
+              )
+            `,
+            params
+          );
+          break;
+        }
 
         // Fetch the GUIDs we are going to delete.
         try {
@@ -429,7 +515,7 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
             query += " WHERE " + queryTerms;
           }
 
-          await conn.executeCached(query, change, row => {
+          await conn.executeCached(query, params, row => {
             notifications.push([
               "formhistory-remove",
               row.getResultByName("guid"),
@@ -450,12 +536,10 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
               ? " VALUES (:guid, :timeDeleted)"
               : " SELECT guid, :timeDeleted FROM moz_formhistory WHERE " +
                 queryTerms;
-            change.timeDeleted = now;
-            queries.push({ query, params: Object.assign({}, change) });
-          }
-
-          if ("timeDeleted" in change) {
-            delete change.timeDeleted;
+            queries.push({
+              query,
+              params: Object.assign({ timeDeleted: now }, params),
+            });
           }
         }
 
@@ -469,7 +553,14 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
           // won't need to modify the query in this case.
         }
 
-        queries.push({ query, params: change });
+        queries.push({ query, params });
+        // Expire orphan sources.
+        queries.push({
+          query: `
+            DELETE FROM moz_sources WHERE id NOT IN (
+              SELECT DISTINCT source_id FROM moz_history_to_sources
+            )`,
+        });
         break;
       }
       case "update": {
@@ -484,7 +575,7 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
         }
 
         let query = "UPDATE moz_formhistory SET ";
-        let queryTerms = makeQueryPredicates(change, ", ");
+        let { queryTerms, params } = makeQueryPredicates(change, ", ");
         if (!queryTerms) {
           throw Components.Exception(
             "Update query must define fields to modify.",
@@ -492,9 +583,16 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
           );
         }
         query += queryTerms + " WHERE guid = :existing_guid";
-        change.existing_guid = guid;
-        queries.push({ query, params: change });
+        queries.push({
+          query,
+          params: Object.assign({ existing_guid: guid }, params),
+        });
+
         notifications.push(["formhistory-update", guid]);
+
+        // Source is ignored for "update" operations, since it's not really
+        // common to change the source of a value, and anyway currently this is
+        // mostly used to update guids.
         break;
       }
       case "bump": {
@@ -518,9 +616,15 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
           }
           adds.push([change.fieldname, change.value]);
           change.guid = generateGUID();
-          let { query, updatedChange } = prepareInsertQuery(change, now);
-          queries.push({ query, params: updatedChange });
-          notifications.push(["formhistory-add", updatedChange.guid]);
+          let { query, params } = prepareInsertQuery(change, now);
+          queries.push({ query, params });
+          notifications.push(["formhistory-add", params.guid]);
+        }
+
+        if (change.source) {
+          queries = queries.concat(
+            getAddSourceToGuidQueries(change.source, change.guid)
+          );
         }
         break;
       }
@@ -537,9 +641,16 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
           change.guid = generateGUID();
         }
 
-        let { query, updatedChange } = prepareInsertQuery(change, now);
-        queries.push({ query, params: updatedChange });
-        notifications.push(["formhistory-add", updatedChange.guid]);
+        let { query, params } = prepareInsertQuery(change, now);
+        queries.push({ query, params });
+
+        notifications.push(["formhistory-add", params.guid]);
+
+        if (change.source) {
+          queries = queries.concat(
+            getAddSourceToGuidQueries(change.source, change.guid)
+          );
+        }
         break;
       }
       default: {
@@ -650,6 +761,22 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
   );
 }
 
+async function createTable(conn, tableName) {
+  let table = dbSchema.tables[tableName];
+  let columns = Object.keys(table)
+    .filter(col => col != "SQL")
+    .map(col => [col, table[col]].join(" "))
+    .join(", ");
+  let no_rowid = Object.keys(table).includes("id") ? "" : "WITHOUT ROWID";
+  log("Creating table " + tableName + " with " + columns);
+  await conn.execute(
+    `CREATE TABLE ${tableName} (
+      ${columns}
+      ${table.SQL ? "," + table.SQL : ""}
+    ) ${no_rowid}`
+  );
+}
+
 /**
  * Database creation and access. Used by FormHistory and some of the
  * utility functions, but is not exposed to the outside world.
@@ -742,6 +869,9 @@ var DB = {
     }
 
     try {
+      // Enable foreign keys support.
+      await conn.execute("PRAGMA foreign_keys = ON");
+
       let dbVersion = parseInt(await conn.getSchemaVersion(), 10);
 
       // Case 1: Database is up to date and we're ready to go.
@@ -790,12 +920,7 @@ var DB = {
         await conn.executeTransaction(async () => {
           log("Creating DB -- tables");
           for (let name in dbSchema.tables) {
-            let table = dbSchema.tables[name];
-            let tSQL = Object.keys(table)
-              .map(col => [col, table[col]].join(" "))
-              .join(", ");
-            log("Creating table " + name + " with " + tSQL);
-            await conn.execute(`CREATE TABLE ${name} (${tSQL})`);
+            await createTable(conn, name);
           }
 
           log("Creating DB -- indices");
@@ -883,7 +1008,8 @@ var DB = {
   async _expectedColumnsPresent(conn) {
     for (let name in dbSchema.tables) {
       let table = dbSchema.tables[name];
-      let query = "SELECT " + Object.keys(table).join(", ") + " FROM " + name;
+      let columns = Object.keys(table).filter(col => col != "SQL");
+      let query = "SELECT " + columns.join(", ") + " FROM " + name;
       try {
         await conn.execute(query, null, (row, cancel) => {
           // One row is enough to let us know this worked.
@@ -935,12 +1061,14 @@ this.FormHistory = {
   search(aSelectTerms, aSearchData, aRowFuncOrHandlers) {
     // if no terms selected, select everything
     if (!aSelectTerms) {
-      aSelectTerms = validFields;
+      // Source is not a valid column in moz_formhistory.
+      aSelectTerms = validFields.filter(f => f != "source");
     }
+
     validateSearchData(aSearchData, "Search");
 
     let query = "SELECT " + aSelectTerms.join(", ") + " FROM moz_formhistory";
-    let queryTerms = makeQueryPredicates(aSearchData);
+    let { queryTerms, params } = makeQueryPredicates(aSearchData);
     if (queryTerms) {
       query += " WHERE " + queryTerms;
     }
@@ -959,7 +1087,7 @@ this.FormHistory = {
     return new Promise((resolve, reject) => {
       this.db.then(async conn => {
         try {
-          await conn.executeCached(query, aSearchData, row => {
+          await conn.executeCached(query, params, row => {
             let result = {};
             for (let field of aSelectTerms) {
               result[field] = row.getResultByName(field);
@@ -990,7 +1118,7 @@ this.FormHistory = {
     validateSearchData(aSearchData, "Count");
 
     let query = "SELECT COUNT(*) AS numEntries FROM moz_formhistory";
-    let queryTerms = makeQueryPredicates(aSearchData);
+    let { queryTerms, params } = makeQueryPredicates(aSearchData);
     if (queryTerms) {
       query += " WHERE " + queryTerms;
     }
@@ -1000,7 +1128,7 @@ this.FormHistory = {
     return new Promise((resolve, reject) => {
       this.db.then(async conn => {
         try {
-          let rows = await conn.executeCached(query, aSearchData);
+          let rows = await conn.executeCached(query, params);
           let count = rows[0].getResultByName("numEntries");
           handlers.handleResult(count);
           handlers.handleCompletion(0);
@@ -1198,6 +1326,15 @@ this.FormHistory = {
     }
 
     params.now = Date.now() * 1000; // convert from ms to microseconds
+
+    if (params.source) {
+      where += `AND EXISTS(
+        SELECT 1 FROM moz_history_to_sources
+        JOIN moz_sources s ON s.id = source_id
+        WHERE source = :source
+          AND history_id = moz_formhistory.id
+      )`;
+    }
 
     let handlers = this._prepareHandlers(aHandlers);
 
