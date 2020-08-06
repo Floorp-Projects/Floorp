@@ -85,8 +85,9 @@ class LintSandbox(ConfigureSandbox):
         # co_lnotab is a string where each pair of consecutive character is
         # (chr(byte_increment), chr(line_increment)), mapping bytes in co_code
         # to line numbers relative to co_firstlineno.
-        # If the offset we need to encode is larger than 255, we need to split it.
-        co_lnotab = bytes([0, 255] * (offset // 255) + [0, offset % 255])
+        # If the offset we need to encode is larger than what fits in a 8-bit
+        # signed integer, we need to split it.
+        co_lnotab = bytes([0, 127] * (offset // 127) + [0, offset % 127])
         code = thrower.__code__
         code = types.CodeType(
             code.co_argcount,
