@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* global XPCNativeWrapper evalWithDebugger */
+/* global XPCNativeWrapper */
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 
@@ -244,18 +244,16 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   traits: null,
 
   /**
-   * The window or sandbox we work with.
-   * Note that even if it is named `window` it refers to the current
-   * global we are debugging, which can be a Sandbox for addons
-   * or browser content toolbox.
+   * The global we work with (this can be a Window, a Worker global or even a Sandbox
+   * for processes and addons).
    *
-   * @type nsIDOMWindow or Sandbox
+   * @type nsIDOMWindow, WorkerGlobalScope or Sandbox
    */
-  get window() {
+  get global() {
     if (this.parentActor.isRootActor) {
       return this._getWindowForBrowserConsole();
     }
-    return this.parentActor.window;
+    return this.parentActor.window || this.parentActor.workerGlobal;
   },
 
   /**
@@ -325,14 +323,14 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   _lastChromeWindow: null,
 
-  // The evalWindow is used at the scope for JS evaluation.
-  _evalWindow: null,
-  get evalWindow() {
-    return this._evalWindow || this.window;
+  // The evalGlobal is used at the scope for JS evaluation.
+  _evalGlobal: null,
+  get evalGlobal() {
+    return this._evalGlobal || this.global;
   },
 
-  set evalWindow(window) {
-    this._evalWindow = window;
+  set evalGlobal(global) {
+    this._evalGlobal = global;
 
     if (!this._progressListenerActive) {
       EventEmitter.on(this.parentActor, "will-navigate", this._onWillNavigate);
@@ -343,7 +341,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   /**
    * Flag used to track if we are listening for events from the progress
    * listener of the target actor. We use the progress listener to clear
-   * this.evalWindow on page navigation.
+   * this.evalGlobal on page navigation.
    *
    * @private
    * @type boolean
@@ -431,7 +429,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
-    this._evalWindow = null;
+    this._evalGlobal = null;
     this.dbg = null;
     this.conn = null;
   },
@@ -480,7 +478,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *        The value you want to get a debuggee value for.
    * @param boolean useObjectGlobal
    *        If |true| the object global is determined and added as a debuggee,
-   *        otherwise |this.window| is used when makeDebuggeeValue() is invoked.
+   *        otherwise |this.global| is used when makeDebuggeeValue() is invoked.
    * @return object
    *         Debuggee value for |value|.
    */
@@ -495,7 +493,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         // or 'Object in compartment marked as invisible to Debugger'
       }
     }
-    const dbgGlobal = this.dbg.makeGlobalObjectReference(this.window);
+    const dbgGlobal = this.dbg.makeGlobalObjectReference(this.global);
     return dbgGlobal.makeDebuggeeValue(value);
   },
 
@@ -621,7 +619,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   // eslint-disable-next-line complexity
   startListeners: async function(listeners) {
     const startedListeners = [];
-    const window = !this.parentActor.isRootActor ? this.window : null;
+    const global = !this.parentActor.isRootActor ? this.global : null;
 
     for (const event of listeners) {
       switch (event) {
@@ -632,7 +630,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           }
           if (!this.consoleServiceListener) {
             this.consoleServiceListener = new ConsoleServiceListener(
-              window,
+              global,
               this.onConsoleServiceMessage
             );
             this.consoleServiceListener.init();
@@ -644,7 +642,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             // Create the consoleAPIListener
             // (and apply the filtering options defined in the parent actor).
             this.consoleAPIListener = new ConsoleAPIListener(
-              window,
+              global,
               this.onConsoleAPICall,
               this.parentActor.consoleAPIListenerOptions
             );
@@ -703,7 +701,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             // service workers requests)
             new NetworkMonitorActor(
               this.conn,
-              { window },
+              { window: global },
               this.actorID,
               mmMockParent
             );
@@ -718,7 +716,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             // requests, as well with the NetworkMonitorActor running in the parent
             // process. It will communicate via message manager for this one.
             this.stackTraceCollector = new StackTraceCollector(
-              { window },
+              { window: global },
               this.netmonitors
             );
             this.stackTraceCollector.init();
@@ -730,10 +728,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           if (isWorker) {
             break;
           }
-          if (this.window instanceof Ci.nsIDOMWindow) {
+          if (this.global instanceof Ci.nsIDOMWindow) {
             if (!this.consoleFileActivityListener) {
               this.consoleFileActivityListener = new ConsoleFileActivityListener(
-                this.window,
+                this.global,
                 this
               );
             }
@@ -748,7 +746,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           }
           if (!this.consoleReflowListener) {
             this.consoleReflowListener = new ConsoleReflowListener(
-              this.window,
+              this.global,
               this
             );
           }
@@ -788,7 +786,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
     return {
       startedListeners: startedListeners,
-      nativeConsoleAPI: this.hasNativeConsoleAPI(this.window),
+      nativeConsoleAPI: this.hasNativeConsoleAPI(this.global),
       traits: this.traits,
     };
   },
@@ -919,11 +917,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             break;
           }
 
-          // See `window` definition. It isn't always a DOM Window.
-          const winStartTime =
-            this.window && this.window.performance
-              ? this.window.performance.timing.navigationStart
-              : 0;
+          // this.global might not be a window (can be a worker global or a Sandbox),
+          // and in such case performance isn't defined
+          const winStartTime = this.global?.performance?.timing
+            ?.navigationStart;
 
           const cache = this.consoleAPIListener.getCachedMessages(
             !this.parentActor.isRootActor
@@ -1031,7 +1028,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         });
         return;
       } catch (e) {
-        const message = `Encountered error while waiting for Helper Result: ${e}`;
+        const message = `Encountered error while waiting for Helper Result: ${e}\n${e.stack}`;
         DevToolsUtils.reportException("evaluateJSAsync", Error(message));
       }
     });
@@ -1355,7 +1352,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           );
         }
       } else {
-        dbgObject = this.dbg.addDebuggee(this.evalWindow);
+        dbgObject = this.dbg.addDebuggee(this.evalGlobal);
       }
 
       const result = JSPropertyProvider({
@@ -1444,7 +1441,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   clearMessagesCache: function() {
     const windowId = !this.parentActor.isRootActor
-      ? WebConsoleUtils.getInnerWindowId(this.window)
+      ? WebConsoleUtils.getInnerWindowId(this.global)
       : null;
     const ConsoleAPIStorage = Cc[
       "@mozilla.org/consoleAPI-storage;1"
@@ -1531,8 +1528,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   _getWebConsoleCommands: function(debuggerGlobal) {
     const helpers = {
-      window: this.evalWindow,
-      chromeWindow: this.chromeWindow.bind(this),
+      window: this.evalGlobal,
       makeDebuggeeValue: debuggerGlobal.makeDebuggeeValue.bind(debuggerGlobal),
       createValueGrip: this.createValueGrip.bind(this),
       preprocessDebuggerObject: this.preprocessDebuggerObject.bind(this),
@@ -1542,7 +1538,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     };
     addWebConsoleCommands(helpers);
 
-    const evalWindow = this.evalWindow;
+    const evalGlobal = this.evalGlobal;
     function maybeExport(obj, name) {
       if (typeof obj[name] != "function") {
         return;
@@ -1554,7 +1550,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       // helpers like cd(), where we users sometimes want to pass a cross-origin
       // window. To circumvent this restriction, we use exportFunction along
       // with a special option designed for this purpose. See bug 1051224.
-      obj[name] = Cu.exportFunction(obj[name], evalWindow, {
+      obj[name] = Cu.exportFunction(obj[name], evalGlobal, {
         allowCrossOriginArguments: true,
       });
     }
@@ -1780,7 +1776,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     const { url, method, headers, body, cause } = request;
     // Set the loadingNode and loadGroup to the target document - otherwise the
     // request won't show up in the opened netmonitor.
-    const doc = this.window.document;
+    const doc = this.global.document;
 
     const channel = NetUtil.newChannel({
       uri: NetUtil.newURI(url),
@@ -1988,7 +1984,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *        The original message received from console-api-log-event.
    * @param boolean aUseObjectGlobal
    *        If |true| the object global is determined and added as a debuggee,
-   *        otherwise |this.window| is used when makeDebuggeeValue() is invoked.
+   *        otherwise |this.global| is used when makeDebuggeeValue() is invoked.
    * @return object
    *         The object that can be sent to the remote client.
    */
@@ -2110,24 +2106,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   },
 
   /**
-   * Find the XUL window that owns the content window.
-   *
-   * @return Window
-   *         The XUL window that owns the content window.
-   */
-  chromeWindow: function() {
-    let window = null;
-    try {
-      window = this.window.docShell.chromeEventHandler.ownerGlobal;
-    } catch (ex) {
-      // The above can fail because chromeEventHandler is not available for all
-      // kinds of |this.window|.
-    }
-
-    return window;
-  },
-
-  /**
    * Notification observer for the "last-pb-context-exited" topic.
    *
    * @private
@@ -2149,7 +2127,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   _onWillNavigate: function({ window, isTopLevel }) {
     if (isTopLevel) {
-      this._evalWindow = null;
+      this._evalGlobal = null;
       EventEmitter.off(this.parentActor, "will-navigate", this._onWillNavigate);
       this._progressListenerActive = false;
     }
@@ -2167,8 +2145,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     // (pass a copy of the array as it will shift from it)
     this.stopListeners(listeners.slice());
 
-    // This method is called after this.window is changed,
-    // so we register new listener on this new window
+    // This method is called after this.global is changed,
+    // so we register new listener on this new global
     this.startListeners(listeners);
 
     // Also reset the cached top level chrome window being targeted

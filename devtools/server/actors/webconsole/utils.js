@@ -552,7 +552,7 @@ WebConsoleCommands._registerOriginal("cd", function(owner, window) {
   Services.console.logMessage(scriptError);
 
   if (!window) {
-    owner.consoleActor.evalWindow = null;
+    owner.consoleActor.evalGlobal = null;
     owner.helperResult = { type: "cd" };
     return;
   }
@@ -571,7 +571,7 @@ WebConsoleCommands._registerOriginal("cd", function(owner, window) {
     return;
   }
 
-  owner.consoleActor.evalWindow = window;
+  owner.consoleActor.evalGlobal = window;
   owner.helperResult = { type: "cd" };
 });
 

@@ -112,8 +112,7 @@ function isObject(value) {
  *         An object that holds the following properties:
  *         - dbg: the debugger where the string was evaluated.
  *         - frame: (optional) the frame where the string was evaluated.
- *         - window: the Debugger.Object for the global where the string was
- *         evaluated.
+ *         - global: the Debugger.Object for the global where the string was evaluated in.
  *         - result: the result of the evaluation.
  *         - helperResult: any result coming from a Web Console commands
  *         function.
@@ -128,11 +127,11 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
   const evalString = getEvalInput(string);
   const { frame, dbg } = getFrameDbg(options, webConsole);
 
-  const { dbgWindow, bindSelf } = getDbgWindow(options, dbg, webConsole);
-  const helpers = getHelpers(dbgWindow, options, webConsole);
+  const { dbgGlobal, bindSelf } = getDbgGlobal(options, dbg, webConsole);
+  const helpers = getHelpers(dbgGlobal, options, webConsole);
   let { bindings, helperCache } = bindCommands(
     isCommand(string),
-    dbgWindow,
+    dbgGlobal,
     bindSelf,
     frame,
     helpers
@@ -156,7 +155,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     evalOptions.lineNumber = options.lineNumber;
   }
 
-  updateConsoleInputEvaluation(dbg, dbgWindow, webConsole);
+  updateConsoleInputEvaluation(dbg, webConsole);
 
   let noSideEffectDebugger = null;
   if (options.eager) {
@@ -171,7 +170,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
       evalOptions,
       bindings,
       frame,
-      dbgWindow,
+      dbgGlobal,
       noSideEffectDebugger
     );
   } finally {
@@ -187,7 +186,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
   // since they may now be stuck in an "initializing" state due to the
   // error. Already-initialized bindings will be ignored.
   if (!frame && result && "throw" in result) {
-    parseErrorOutput(dbgWindow, string);
+    parseErrorOutput(dbgGlobal, string);
   }
 
   const { helperResult } = helpers;
@@ -203,7 +202,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     helperResult,
     dbg,
     frame,
-    window: dbgWindow,
+    dbgGlobal,
   };
 };
 
@@ -213,14 +212,14 @@ function getEvalResult(
   evalOptions,
   bindings,
   frame,
-  dbgWindow,
+  dbgGlobal,
   noSideEffectDebugger
 ) {
   if (noSideEffectDebugger) {
-    // Bug 1637883 demonstrated an issue where dbgWindow was somehow in the
+    // Bug 1637883 demonstrated an issue where dbgGlobal was somehow in the
     // same compartment as the Debugger, meaning it could not be debugged
     // and thus cannot handle eager evaluation. In that case we skip execution.
-    if (!noSideEffectDebugger.hasDebuggee(dbgWindow.unsafeDereference())) {
+    if (!noSideEffectDebugger.hasDebuggee(dbgGlobal.unsafeDereference())) {
       return null;
     }
 
@@ -228,7 +227,7 @@ function getEvalResult(
     // in the context of that debugger in order for the side-effect tracking
     // to apply.
     frame = frame ? noSideEffectDebugger.adoptFrame(frame) : null;
-    dbgWindow = noSideEffectDebugger.adoptDebuggeeValue(dbgWindow);
+    dbgGlobal = noSideEffectDebugger.adoptDebuggeeValue(dbgGlobal);
     if (bindings) {
       bindings = Object.keys(bindings).reduce((acc, key) => {
         acc[key] = noSideEffectDebugger.adoptDebuggeeValue(bindings[key]);
@@ -241,7 +240,7 @@ function getEvalResult(
   if (frame) {
     result = frame.evalWithBindings(string, bindings, evalOptions);
   } else {
-    result = dbgWindow.executeInGlobalWithBindings(
+    result = dbgGlobal.executeInGlobalWithBindings(
       string,
       bindings,
       evalOptions
@@ -258,7 +257,7 @@ function getEvalResult(
   return result;
 }
 
-function parseErrorOutput(dbgWindow, string) {
+function parseErrorOutput(dbgGlobal, string) {
   // Reflect is not usable in workers, so return early to avoid logging an error
   // to the console when loading it.
   if (isWorker) {
@@ -320,7 +319,7 @@ function parseErrorOutput(dbgWindow, string) {
     }
 
     for (const name of identifiers) {
-      dbgWindow.forceLexicalInitializationByName(name);
+      dbgGlobal.forceLexicalInitializationByName(name);
     }
   }
 }
@@ -454,7 +453,7 @@ function nativeHasNoSideEffects(fn) {
   return natives && natives.some(n => fn.isSameNative(n));
 }
 
-function updateConsoleInputEvaluation(dbg, dbgWindow, webConsole) {
+function updateConsoleInputEvaluation(dbg, webConsole) {
   // Adopt webConsole._lastConsoleInputEvaluation value in the new debugger,
   // to prevent "Debugger.Object belongs to a different Debugger" exceptions
   // related to the $_ bindings if the debugger object is changed from the
@@ -513,8 +512,8 @@ function getFrameDbg(options, webConsole) {
   );
 }
 
-function getDbgWindow(options, dbg, webConsole) {
-  let evalWindow = webConsole.evalWindow;
+function getDbgGlobal(options, dbg, webConsole) {
+  let evalGlobal = webConsole.evalGlobal;
 
   if (options.innerWindowID) {
     const window = Services.wm.getCurrentInnerWindowWithId(
@@ -522,16 +521,16 @@ function getDbgWindow(options, dbg, webConsole) {
     );
 
     if (window) {
-      evalWindow = window;
+      evalGlobal = window;
     }
   }
 
-  const dbgWindow = dbg.makeGlobalObjectReference(evalWindow);
+  const dbgGlobal = dbg.makeGlobalObjectReference(evalGlobal);
 
   // If we have an object to bind to |_self|, create a Debugger.Object
   // referring to that object, belonging to dbg.
   if (!options.selectedObjectActor) {
-    return { bindSelf: null, dbgWindow };
+    return { bindSelf: null, dbgGlobal };
   }
 
   // For objects related to console messages, they will be registered under the Target Actor
@@ -542,25 +541,25 @@ function getDbgWindow(options, dbg, webConsole) {
     webConsole.parentActor.getActorByID(options.selectedObjectActor);
 
   if (!actor) {
-    return { bindSelf: null, dbgWindow };
+    return { bindSelf: null, dbgGlobal };
   }
 
   const jsVal = actor instanceof LongStringActor ? actor.str : actor.rawValue();
   if (!isObject(jsVal)) {
-    return { bindSelf: jsVal, dbgWindow };
+    return { bindSelf: jsVal, dbgGlobal };
   }
 
   // If we use the makeDebuggeeValue method of jsVal's own global, then
   // we'll get a D.O that sees jsVal as viewed from its own compartment -
   // that is, without wrappers. The evalWithBindings call will then wrap
   // jsVal appropriately for the evaluation compartment.
-  const bindSelf = dbgWindow.makeDebuggeeValue(jsVal);
-  return { bindSelf, dbgWindow };
+  const bindSelf = dbgGlobal.makeDebuggeeValue(jsVal);
+  return { bindSelf, dbgGlobal };
 }
 
-function getHelpers(dbgWindow, options, webConsole) {
-  // Get the Web Console commands for the given debugger window.
-  const helpers = webConsole._getWebConsoleCommands(dbgWindow);
+function getHelpers(dbgGlobal, options, webConsole) {
+  // Get the Web Console commands for the given debugger global.
+  const helpers = webConsole._getWebConsoleCommands(dbgGlobal);
   if (options.selectedNodeActor) {
     const actor = webConsole.conn.getActor(options.selectedNodeActor);
     if (actor) {
@@ -582,7 +581,7 @@ function cleanupBindings(bindings, helperCache) {
   }
 }
 
-function bindCommands(isCmd, dbgWindow, bindSelf, frame, helpers) {
+function bindCommands(isCmd, dbgGlobal, bindSelf, frame, helpers) {
   const bindings = helpers.sandbox;
   if (bindSelf) {
     bindings._self = bindSelf;
@@ -605,7 +604,7 @@ function bindCommands(isCmd, dbgWindow, bindSelf, frame, helpers) {
       }
     } else {
       helpersToDisable = availableHelpers.filter(
-        name => !!dbgWindow.getOwnPropertyDescriptor(name)
+        name => !!dbgGlobal.getOwnPropertyDescriptor(name)
       );
     }
     // if we do not have the command key as a prefix, screenshot is disabled by default
