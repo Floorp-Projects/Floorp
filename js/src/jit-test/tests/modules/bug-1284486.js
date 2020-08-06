@@ -7,10 +7,8 @@
 // This test exercises the path where the previously instantiated module is
 // encountered as an import.
 
-load(libdir + "dummyModuleResolveHook.js");
-
-let b = moduleRepo['b'] = parseModule("export var b = 3; export var c = 4;");
-let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
+let b = registerModule('b', parseModule("export var b = 3; export var c = 4;"));
+let c = registerModule('c', parseModule("export * from 'a'; export * from 'b';"));
 
 let e1;
 let threw = false;
@@ -23,8 +21,8 @@ try {
 assertEq(threw, true);
 assertEq(typeof e1 === "undefined", false);
 
-let a = moduleRepo['a'] = parseModule("export var a = 1; export var b = 2;");
-let d = moduleRepo['d'] = parseModule("import { a } from 'c'; a;");
+let a = registerModule('a', parseModule("export var a = 1; export var b = 2;"));
+let d = registerModule('d', parseModule("import { a } from 'c'; a;"));
 
 threw = false;
 try {

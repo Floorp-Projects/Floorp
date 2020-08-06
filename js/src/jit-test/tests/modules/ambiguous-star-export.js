@@ -3,7 +3,6 @@
 "use strict";
 
 load(libdir + "asserts.js");
-load(libdir + "dummyModuleResolveHook.js");
 
 function checkModuleEval(source) {
     let m = parseModule(source);
@@ -17,9 +16,9 @@ function checkModuleSyntaxError(source) {
     assertThrowsInstanceOf(() => m.declarationInstantiation(), SyntaxError);
 }
 
-let a = moduleRepo['a'] = parseModule("export var a = 1; export var b = 2;");
-let b = moduleRepo['b'] = parseModule("export var b = 3; export var c = 4;");
-let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
+let a = registerModule('a', parseModule("export var a = 1; export var b = 2;"));
+let b = registerModule('b', parseModule("export var b = 3; export var c = 4;"));
+let c = registerModule('c', parseModule("export * from 'a'; export * from 'b';"));
 c.declarationInstantiation();
 c.evaluation();
 

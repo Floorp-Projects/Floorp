@@ -4,13 +4,6 @@
 
 setJitCompilerOption("baseline.warmup.trigger", 0);
 
-let moduleRepo = {};
-setModuleResolveHook(function(module, specifier) {
-    if (specifier in moduleRepo)
-        return moduleRepo[specifier];
-    throw "Module '" + specifier + "' not found";
-});
-
 let mainSrc = `
 import A from "A";
 
@@ -29,7 +22,7 @@ let ASrc = `
 export default 1;
 `;
 
-moduleRepo['A'] = parseModule(ASrc);
+registerModule('A', parseModule(ASrc));
 
 let m = parseModule(mainSrc);
 m.declarationInstantiation()

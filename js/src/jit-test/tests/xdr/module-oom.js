@@ -2,8 +2,6 @@
 
 // OOM tests for xdr module parsing.
 
-load(libdir + "dummyModuleResolveHook.js");
-
 const sa =
 `export default 20;
  export let a = 22;
@@ -20,9 +18,9 @@ const sb =
 oomTest(() => {
     let og = parseModule(sa);
     let bc = codeModule(og);
-    let a = moduleRepo['a'] = decodeModule(bc);
+    let a = registerModule('a', decodeModule(bc));
 
     og = parseModule(sb);
     bc = codeModule(og);
-    let b = moduleRepo['b'] = decodeModule(bc);
+    let b = registerModule('b', decodeModule(bc));
 });

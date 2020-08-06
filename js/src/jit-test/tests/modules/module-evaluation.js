@@ -1,7 +1,6 @@
 // Exercise ModuleEvaluation() concrete method.
 
 load(libdir + "asserts.js");
-load(libdir + "dummyModuleResolveHook.js");
 
 function parseAndEvaluate(source) {
     let m = parseModule(source);
@@ -32,11 +31,11 @@ m.evaluation();
 assertEq(getModuleEnvironmentValue(m, "x"), 6);
 
 // Set up a module to import from.
-let a = moduleRepo['a'] =
-parseModule(`var x = 1;
-             export { x };
-             export default 2;
-             export function f(x) { return x + 1; }`);
+let a = registerModule('a',
+    parseModule(`var x = 1;
+                 export { x };
+                 export default 2;
+                 export function f(x) { return x + 1; }`));
 
 // Check we can evaluate top level definitions.
 parseAndEvaluate("var foo = 1;");
@@ -79,13 +78,13 @@ m.evaluation();
 assertEq(getModuleEnvironmentValue(m, "x"), 4);
 
 // Test importing an indirect export
-moduleRepo['b'] = parseModule("export { x as z } from 'a';");
+registerModule('b', parseModule("export { x as z } from 'a';"));
 m = parseAndEvaluate("import { z } from 'b'; export { z }");
 assertEq(getModuleEnvironmentValue(m, "z"), 1);
 
 // Test cyclic dependencies
-moduleRepo['c1'] = parseModule("export var x = 1; export {y} from 'c2'");
-moduleRepo['c2'] = parseModule("export var y = 2; export {x} from 'c1'");
+registerModule('c1', parseModule("export var x = 1; export {y} from 'c2'"));
+registerModule('c2', parseModule("export var y = 2; export {x} from 'c1'"));
 m = parseAndEvaluate(`import { x as x1, y as y1 } from 'c1';
                       import { x as x2, y as y2 } from 'c2';
                       export let z = [x1, y1, x2, y2]`),

@@ -57,21 +57,14 @@ dbg.onDebuggerStatement = function (frame) {
 
 f = g2.eval(
 `
-    let moduleRepo = {};
-    setModuleResolveHook(function(module, specifier) {
-        if (specifier in moduleRepo)
-            return moduleRepo[specifier];
-        throw "Module '" + specifier + "' not found";
-    });
-
     // Set up a module to import from.
-    a = moduleRepo['a'] = parseModule(
+    a = registerModule('a', parseModule(
     \`
         export var a = 1;
         export let b = 2;
         export const c = 3;
         export function f(x) { return x + 1; }
-    \`);
+    \`));
     a.declarationInstantiation();
     a.evaluation();
 

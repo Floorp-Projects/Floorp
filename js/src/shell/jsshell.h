@@ -36,7 +36,6 @@ namespace shell {
 // Define use of application-specific slots on the shell's global object.
 enum GlobalAppSlot {
   GlobalAppSlotModuleRegistry,
-  GlobalAppSlotModuleResolveHook,  // HostResolveImportedModule
   GlobalAppSlotCount
 };
 static_assert(GlobalAppSlotCount <= JSCLASS_GLOBAL_APPLICATION_SLOTS,

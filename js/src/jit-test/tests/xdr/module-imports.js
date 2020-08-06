@@ -1,10 +1,8 @@
-load(libdir + "dummyModuleResolveHook.js");
-
 const count = 10;
 
 let og = parseModule("export let a = 1;");
 let bc = codeModule(og);
-let a = moduleRepo['a'] = decodeModule(bc);
+let a = registerModule('a', decodeModule(bc));
 
 let s = "";
 for (let i = 0; i < count; i++) {
@@ -14,7 +12,7 @@ for (let i = 0; i < count; i++) {
 
 og = parseModule(s);
 bc = codeModule(og);
-let b = moduleRepo['b'] = decodeModule(bc);
+let b = registerModule('b', decodeModule(bc));
 
 b.declarationInstantiation();
 b.evaluation();

@@ -92,6 +92,21 @@ bool ModuleLoader::loadRootModule(JSContext* cx, HandleString path) {
   return loadAndExecute(cx, path);
 }
 
+bool ModuleLoader::registerTestModule(JSContext* cx, HandleString specifier,
+                                      HandleModuleObject module) {
+  RootedLinearString path(cx, resolve(cx, specifier, UndefinedHandleValue));
+  if (!path) {
+    return false;
+  }
+
+  path = normalizePath(cx, path);
+  if (!path) {
+    return false;
+  }
+
+  return addModuleToRegistry(cx, path, module);
+}
+
 bool ModuleLoader::loadAndExecute(JSContext* cx, HandleString path) {
   RootedObject module(cx, loadAndParse(cx, path));
   if (!module) {
