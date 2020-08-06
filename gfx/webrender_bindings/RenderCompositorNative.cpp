@@ -276,9 +276,16 @@ void RenderCompositorNative::DestroyTile(wr::NativeSurfaceId aId, int aX,
   layer->DiscardBackbuffers();
 }
 
+gfx::SamplingFilter ToSamplingFilter(wr::ImageRendering aImageRendering) {
+  if (aImageRendering == wr::ImageRendering::Auto) {
+    return gfx::SamplingFilter::LINEAR;
+  }
+  return gfx::SamplingFilter::POINT;
+}
+
 void RenderCompositorNative::AddSurface(
     wr::NativeSurfaceId aId, const wr::CompositorSurfaceTransform& aTransform,
-    wr::DeviceIntRect aClipRect) {
+    wr::DeviceIntRect aClipRect, wr::ImageRendering aImageRendering) {
   MOZ_RELEASE_ASSERT(!mCurrentlyBoundNativeLayer);
 
   auto surfaceCursor = mSurfaces.find(aId);
@@ -302,6 +309,7 @@ void RenderCompositorNative::AddSurface(
                           aClipRect.size.width, aClipRect.size.height);
     layer->SetClipRect(Some(clipRect));
     layer->SetTransform(transform);
+    layer->SetSamplingFilter(ToSamplingFilter(aImageRendering));
     mAddedLayers.AppendElement(layer);
 
     mAddedPixelCount += layerSize.width * layerSize.height;

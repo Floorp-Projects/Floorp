@@ -113,7 +113,8 @@ class RenderCompositor {
                                    wr::ExternalImageId aExternalImage) {}
   virtual void AddSurface(wr::NativeSurfaceId aId,
                           const wr::CompositorSurfaceTransform& aTransform,
-                          wr::DeviceIntRect aClipRect) {}
+                          wr::DeviceIntRect aClipRect,
+                          wr::ImageRendering aImageRendering) {}
   virtual void EnableNativeCompositor(bool aEnable) {}
   virtual void DeInit() {}
   virtual CompositorCapabilities GetCompositorCapabilities() = 0;

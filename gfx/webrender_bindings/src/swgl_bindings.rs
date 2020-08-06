@@ -13,7 +13,7 @@ use std::sync::{mpsc, Arc, Condvar, Mutex};
 use std::thread;
 use webrender::{
     api::units::*, Compositor, CompositorCapabilities, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
-    ThreadListener, CompositorSurfaceTransform, api::ExternalImageId
+    ThreadListener, CompositorSurfaceTransform, api::ExternalImageId, api::ImageRendering
 };
 
 #[no_mangle]
@@ -962,9 +962,15 @@ impl Compositor for SwCompositor {
         }
     }
 
-    fn add_surface(&mut self, id: NativeSurfaceId, transform: CompositorSurfaceTransform, clip_rect: DeviceIntRect) {
+    fn add_surface(
+        &mut self,
+        id: NativeSurfaceId,
+        transform: CompositorSurfaceTransform,
+        clip_rect: DeviceIntRect,
+        image_rendering: ImageRendering
+    ) {
         if let Some(compositor) = &mut self.compositor {
-            compositor.add_surface(id, transform, clip_rect);
+            compositor.add_surface(id, transform, clip_rect, image_rendering);
         }
 
         // Compute overlap dependencies and issue any initial composite jobs for the SwComposite thread.

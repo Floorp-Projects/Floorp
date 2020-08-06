@@ -58,7 +58,8 @@ class RenderCompositorNative : public RenderCompositor {
                            wr::ExternalImageId aExternalImage) override;
   void AddSurface(wr::NativeSurfaceId aId,
                   const wr::CompositorSurfaceTransform& aTransform,
-                  wr::DeviceIntRect aClipRect) override;
+                  wr::DeviceIntRect aClipRect,
+                  wr::ImageRendering aImageRendering) override;
   CompositorCapabilities GetCompositorCapabilities() override;
 
   struct TileKey {

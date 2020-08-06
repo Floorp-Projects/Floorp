@@ -462,6 +462,15 @@ void NativeLayerCA::SetTransform(const Matrix4x4& aTransform) {
   }
 }
 
+void NativeLayerCA::SetSamplingFilter(gfx::SamplingFilter aSamplingFilter) {
+  MutexAutoLock lock(mMutex);
+
+  if (aSamplingFilter != mSamplingFilter) {
+    mSamplingFilter = aSamplingFilter;
+    ForAllRepresentations([&](Representation& r) { r.mMutatedSamplingFilter = true; });
+  }
+}
+
 Matrix4x4 NativeLayerCA::GetTransform() {
   MutexAutoLock lock(mMutex);
   return mTransform;
@@ -718,7 +727,7 @@ void NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation) {
   }
   GetRepresentation(aRepresentation)
       .ApplyChanges(mSize, mIsOpaque, mPosition, mTransform, mDisplayRect, mClipRect, mBackingScale,
-                    mSurfaceIsFlipped, surface);
+                    mSurfaceIsFlipped, mSamplingFilter, surface);
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
@@ -729,7 +738,8 @@ CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
 void NativeLayerCA::Representation::ApplyChanges(
     const IntSize& aSize, bool aIsOpaque, const IntPoint& aPosition, const Matrix4x4& aTransform,
     const IntRect& aDisplayRect, const Maybe<IntRect>& aClipRect, float aBackingScale,
-    bool aSurfaceIsFlipped, CFTypeRefPtr<IOSurfaceRef> aFrontSurface) {
+    bool aSurfaceIsFlipped, gfx::SamplingFilter aSamplingFilter,
+    CFTypeRefPtr<IOSurfaceRef> aFrontSurface) {
   if (!mWrappingCALayer) {
     mWrappingCALayer = [[CALayer layer] retain];
     mWrappingCALayer.position = NSZeroPoint;
@@ -856,6 +866,16 @@ void NativeLayerCA::Representation::ApplyChanges(
     mContentCALayer.contents = (id)aFrontSurface.get();
   }
 
+  if (mMutatedSamplingFilter) {
+    if (aSamplingFilter == gfx::SamplingFilter::POINT) {
+      mContentCALayer.minificationFilter = kCAFilterNearest;
+      mContentCALayer.magnificationFilter = kCAFilterNearest;
+    } else {
+      mContentCALayer.minificationFilter = kCAFilterLinear;
+      mContentCALayer.magnificationFilter = kCAFilterLinear;
+    }
+  }
+
   mMutatedPosition = false;
   mMutatedTransform = false;
   mMutatedBackingScale = false;
@@ -864,6 +884,7 @@ void NativeLayerCA::Representation::ApplyChanges(
   mMutatedDisplayRect = false;
   mMutatedClipRect = false;
   mMutatedFrontSurface = false;
+  mMutatedSamplingFilter = false;
 }
 
 // Called when mMutex is already being held by the current thread.

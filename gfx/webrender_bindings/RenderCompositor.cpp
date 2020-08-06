@@ -30,9 +30,10 @@ namespace wr {
 
 void wr_compositor_add_surface(void* aCompositor, wr::NativeSurfaceId aId,
                                const wr::CompositorSurfaceTransform* aTransform,
-                               wr::DeviceIntRect aClipRect) {
+                               wr::DeviceIntRect aClipRect,
+                               wr::ImageRendering aImageRendering) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
-  compositor->AddSurface(aId, *aTransform, aClipRect);
+  compositor->AddSurface(aId, *aTransform, aClipRect, aImageRendering);
 }
 
 void wr_compositor_begin_frame(void* aCompositor) {

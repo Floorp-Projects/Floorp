@@ -335,6 +335,7 @@ pub struct CompositeSurfaceDescriptor {
     // thing that has changed is the generation of an compositor surface
     // image dependency.
     pub image_dependencies: [ImageDependency; 3],
+    pub image_rendering: ImageRendering,
     // List of the surface information for each tile added to this virtual surface
     pub tile_descriptors: Vec<CompositeTileDescriptor>,
 }
@@ -576,6 +577,7 @@ impl CompositeState {
                                                                               tile_cache.device_position.y,
                                                                               0.0),
                     image_dependencies: [ImageDependency::INVALID; 3],
+                    image_rendering: ImageRendering::CrispEdges,
                     tile_descriptors: opaque_tile_descriptors,
                 }
             );
@@ -732,6 +734,7 @@ impl CompositeState {
                     clip_rect,
                     transform: external_surface.transform,
                     image_dependencies: image_dependencies,
+                    image_rendering: external_surface.image_rendering,
                     tile_descriptors: Vec::new(),
                 }
             );
@@ -750,6 +753,7 @@ impl CompositeState {
                                                                               tile_cache.device_position.y,
                                                                               0.0),
                     image_dependencies: [ImageDependency::INVALID; 3],
+                    image_rendering: ImageRendering::CrispEdges,
                     tile_descriptors: alpha_tile_descriptors,
                 }
             );
@@ -955,6 +959,7 @@ pub trait Compositor {
         id: NativeSurfaceId,
         transform: CompositorSurfaceTransform,
         clip_rect: DeviceIntRect,
+        image_rendering: ImageRendering,
     );
 
     /// Commit any changes in the compositor tree for this frame. WR calls

@@ -83,7 +83,8 @@ class RenderCompositorANGLE : public RenderCompositor {
   void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void AddSurface(wr::NativeSurfaceId aId,
                   const wr::CompositorSurfaceTransform& aTransform,
-                  wr::DeviceIntRect aClipRect) override;
+                  wr::DeviceIntRect aClipRect,
+                  wr::ImageRendering aImageRendering) override;
   void EnableNativeCompositor(bool aEnable) override;
   CompositorCapabilities GetCompositorCapabilities() override;
 

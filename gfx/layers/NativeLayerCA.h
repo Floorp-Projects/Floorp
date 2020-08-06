@@ -194,6 +194,7 @@ class NativeLayerCA : public NativeLayer {
   void SetTransform(const gfx::Matrix4x4& aTransform) override;
   gfx::Matrix4x4 GetTransform() override;
   gfx::IntRect GetRect() override;
+  void SetSamplingFilter(gfx::SamplingFilter aSamplingFilter) override;
   RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       const gfx::IntRect& aDisplayRect, const gfx::IntRegion& aUpdateRegion,
       gfx::BackendType aBackendType) override;
@@ -284,6 +285,7 @@ class NativeLayerCA : public NativeLayer {
                       const gfx::IntRect& aDisplayRect,
                       const Maybe<gfx::IntRect>& aClipRect, float aBackingScale,
                       bool aSurfaceIsFlipped,
+                      gfx::SamplingFilter aSamplingFilter,
                       CFTypeRefPtr<IOSurfaceRef> aFrontSurface);
 
     // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
@@ -303,6 +305,7 @@ class NativeLayerCA : public NativeLayer {
     bool mMutatedSize = true;
     bool mMutatedSurfaceIsFlipped = true;
     bool mMutatedFrontSurface = true;
+    bool mMutatedSamplingFilter = true;
   };
 
   Representation& GetRepresentation(WhichRepresentation aRepresentation);
@@ -371,6 +374,7 @@ class NativeLayerCA : public NativeLayer {
   gfx::IntRect mDisplayRect;
   gfx::IntSize mSize;
   Maybe<gfx::IntRect> mClipRect;
+  gfx::SamplingFilter mSamplingFilter = gfx::SamplingFilter::POINT;
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
   const bool mIsOpaque = false;

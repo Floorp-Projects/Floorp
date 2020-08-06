@@ -1224,6 +1224,7 @@ extern "C" {
         id: NativeSurfaceId,
         transform: &CompositorSurfaceTransform,
         clip_rect: DeviceIntRect,
+        image_rendering: ImageRendering,
     );
     fn wr_compositor_end_frame(compositor: *mut c_void);
     fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
@@ -1326,9 +1327,15 @@ impl Compositor for WrCompositor {
         }
     }
 
-    fn add_surface(&mut self, id: NativeSurfaceId, transform: CompositorSurfaceTransform, clip_rect: DeviceIntRect) {
+    fn add_surface(
+        &mut self,
+        id: NativeSurfaceId,
+        transform: CompositorSurfaceTransform,
+        clip_rect: DeviceIntRect,
+        image_rendering: ImageRendering
+    ) {
         unsafe {
-            wr_compositor_add_surface(self.0, id, &transform, clip_rect);
+            wr_compositor_add_surface(self.0, id, &transform, clip_rect, image_rendering);
         }
     }
 
