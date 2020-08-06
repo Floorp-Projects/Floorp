@@ -1600,7 +1600,7 @@ bool BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape,
     return false;
   }
 
-  if (!reader.matchOp(CacheOp::GuardFunctionPrototype, rhsId)) {
+  if (!reader.matchOp(CacheOp::GuardDynamicSlotIsSpecificObject, rhsId)) {
     return false;
   }
 
