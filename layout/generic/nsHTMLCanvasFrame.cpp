@@ -165,18 +165,14 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         aBuilder.PushIFrame(r, !BackfaceIsHidden(), data->GetPipelineId().ref(),
                             /*ignoreMissingPipelines*/ false);
 
-        gfx::Matrix4x4 scTransform;
-        MaybeIntSize scaleToSize;
         LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), bounds.Size());
         wr::ImageRendering filter = wr::ToImageRendering(
             nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
         wr::MixBlendMode mixBlendMode = wr::MixBlendMode::Normal;
         aManager->WrBridge()->AddWebRenderParentCommand(
-            OpUpdateAsyncImagePipeline(
-                data->GetPipelineId().value(), scBounds, scTransform,
-                scaleToSize, VideoInfo::Rotation::kDegree_0, filter,
-                mixBlendMode,
-                LayoutDeviceSize(canvasSizeInPx.width, canvasSizeInPx.height)));
+            OpUpdateAsyncImagePipeline(data->GetPipelineId().value(), scBounds,
+                                       VideoInfo::Rotation::kDegree_0, filter,
+                                       mixBlendMode));
         break;
       }
       case CanvasContextType::WebGPU: {
