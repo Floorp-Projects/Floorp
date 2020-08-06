@@ -27,7 +27,7 @@ class FuzzRunner {
   void Run() {
     mBenchmark->Init();
     media::Await(
-        GetMediaThreadPool(MediaThreadType::PLAYBACK), mBenchmark->Run(),
+        GetMediaThreadPool(MediaThreadType::CONTROLLER), mBenchmark->Run(),
         [&](uint32_t aDecodeFps) {}, [&](const MediaResult& aError) {});
     return;
   }
@@ -39,7 +39,7 @@ class FuzzRunner {
 static int FuzzingInitMedia(int* argc, char*** argv) {
   // Grab a strong reference to the media thread pool to avoid thread
   // leaks. For more information, see bug 1567170.
-  sFuzzThreadPool = GetMediaThreadPool(MediaThreadType::PLAYBACK);
+  sFuzzThreadPool = GetMediaThreadPool(MediaThreadType::CONTROLLER);
   return 0;
 }
 
