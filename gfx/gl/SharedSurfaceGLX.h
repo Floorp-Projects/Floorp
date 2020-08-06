@@ -34,9 +34,6 @@ class SharedSurface_GLXDrawable final : public SharedSurface {
   virtual void UnlockProdImpl() override;
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
-
-  virtual bool ReadbackBySharedHandle(
-      gfx::DataSourceSurface* out_surface) override;
 };
 
 class SurfaceFactory_GLXDrawable final : public SurfaceFactory {
