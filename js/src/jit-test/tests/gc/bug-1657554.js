@@ -1,1 +1,0 @@
-oomTest(() => eval("new WeakRef({});"));
