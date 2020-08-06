@@ -256,7 +256,8 @@ void gfxConfigManager::ConfigureWebRender() {
   }
 
   // HW_COMPOSITING being disabled implies interfacing with the GPU might break
-  if (!mFeatureHwCompositing->IsEnabled()) {
+  if (!mFeatureHwCompositing->IsEnabled() &&
+      !Preferences::GetBool("gfx.webrender.software", false)) {
     mFeatureWr->ForceDisable(FeatureStatus::UnavailableNoHwCompositing,
                              "Hardware compositing is disabled",
                              "FEATURE_FAILURE_WEBRENDER_NEED_HWCOMP"_ns);
