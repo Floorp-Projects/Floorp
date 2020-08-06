@@ -22,7 +22,7 @@ static const char gCUPSLibraryName[] = "libcups.so.2";
 #endif
 
 template <typename FuncT>
-static bool LoadCupsFunc(PRLibrary* const lib, FuncT*& dest,
+static bool LoadCupsFunc(PRLibrary*& lib, FuncT*& dest,
                          const char* const name) {
   dest = (FuncT*)PR_FindSymbol(lib, name);
   if (MOZ_UNLIKELY(!dest)) {
@@ -31,14 +31,17 @@ static bool LoadCupsFunc(PRLibrary* const lib, FuncT*& dest,
     msg.AppendLiteral(" not found in CUPS library");
     NS_WARNING(msg.get());
 #endif
+#ifndef MOZ_TSAN
+    // With TSan, we cannot unload libcups once we have loaded it because
+    // TSan does not support unloading libraries that are matched from its
+    // suppression list. Hence we just keep the library loaded in TSan builds.
+    PR_UnloadLibrary(lib);
+#endif
+    lib = nullptr;
     return false;
   }
   return true;
 }
-
-// This is a macro so that it could also load from libcups if we are configured
-// to use it as a compile-time dependency.
-#define CUPS_SHIM_LOAD(MEMBER, NAME) LoadCupsFunc(mCupsLib, MEMBER, #NAME)
 
 bool nsCUPSShim::Init() {
   MOZ_ASSERT(!mInited);
@@ -47,30 +50,12 @@ bool nsCUPSShim::Init() {
     return false;
   }
 
-  if (!(CUPS_SHIM_LOAD(mCupsAddOption, cupsAddOption) &&
-        CUPS_SHIM_LOAD(mCupsCheckDestSupported, cupsCheckDestSupported) &&
-        CUPS_SHIM_LOAD(mCupsConnectDest, cupsConnectDest) &&
-        CUPS_SHIM_LOAD(mCupsCopyDest, cupsCopyDest) &&
-        CUPS_SHIM_LOAD(mCupsCopyDestInfo, cupsCopyDestInfo) &&
-        CUPS_SHIM_LOAD(mCupsFreeDestInfo, cupsFreeDestInfo) &&
-        CUPS_SHIM_LOAD(mCupsFreeDests, cupsFreeDests) &&
-        CUPS_SHIM_LOAD(mCupsGetDestMediaCount, cupsGetDestMediaCount) &&
-        CUPS_SHIM_LOAD(mCupsGetDestMediaByIndex, cupsGetDestMediaByIndex) &&
-        CUPS_SHIM_LOAD(mCupsGetDest, cupsGetDest) &&
-        CUPS_SHIM_LOAD(mCupsGetDests, cupsGetDests) &&
-        CUPS_SHIM_LOAD(mCupsLocalizeDestMedia, cupsLocalizeDestMedia) &&
-        CUPS_SHIM_LOAD(mCupsPrintFile, cupsPrintFile) &&
-        CUPS_SHIM_LOAD(mCupsTempFd, cupsTempFd) &&
-        CUPS_SHIM_LOAD(mHttpClose, httpClose))) {
-#ifndef MOZ_TSAN
-    // With TSan, we cannot unload libcups once we have loaded it because
-    // TSan does not support unloading libraries that are matched from its
-    // suppression list. Hence we just keep the library loaded in TSan builds.
-    PR_UnloadLibrary(mCupsLib);
-#endif
-    mCupsLib = nullptr;
-    return false;
-  }
+// This is a macro so that it could also load from libcups if we are configured
+// to use it as a compile-time dependency.
+#define CUPS_SHIM_LOAD(NAME) \
+  if (!LoadCupsFunc(mCupsLib, NAME, #NAME)) return false;
+  CUPS_SHIM_ALL_FUNCS(CUPS_SHIM_LOAD)
+#undef CUPS_SHIM_LOAD
   mInited = true;
   return true;
 }
