@@ -820,20 +820,12 @@ static bool IsTrimmableSpace(const nsTextFragment* aFrag, uint32_t aPos,
   }
 }
 
-static bool IsSelectionInlineWhitespace(const nsTextFragment* aFrag,
-                                        uint32_t aPos) {
-  NS_ASSERTION(aPos < aFrag->GetLength(),
-               "No text for IsSelectionInlineWhitespace!");
+static bool IsSelectionSpace(const nsTextFragment* aFrag, uint32_t aPos) {
+  NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
   char16_t ch = aFrag->CharAt(aPos);
   if (ch == ' ' || ch == CH_NBSP)
     return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
-  return ch == '\t' || ch == '\f';
-}
-
-static bool IsSelectionNewline(const nsTextFragment* aFrag, uint32_t aPos) {
-  NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSelectionNewline!");
-  char16_t ch = aFrag->CharAt(aPos);
-  return ch == '\n' || ch == '\r';
+  return ch == '\t' || ch == '\n' || ch == '\f' || ch == '\r';
 }
 
 // Count the amount of trimmable whitespace (as per CSS
@@ -7713,8 +7705,7 @@ class MOZ_STACK_CLASS ClusterIterator {
                   bool aTrimSpaces = true);
 
   bool NextCluster();
-  bool IsInlineWhitespace() const;
-  bool IsNewline() const;
+  bool IsWhitespace() const;
   bool IsPunctuation() const;
   bool HaveWordBreakBefore() const { return mHaveWordBreak; }
 
@@ -7859,14 +7850,9 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetCharacter(
   return CONTINUE;
 }
 
-bool ClusterIterator::IsInlineWhitespace() const {
+bool ClusterIterator::IsWhitespace() const {
   NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
-  return IsSelectionInlineWhitespace(mFrag, mCharIndex);
-}
-
-bool ClusterIterator::IsNewline() const {
-  NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
-  return IsSelectionNewline(mFrag, mCharIndex);
+  return IsSelectionSpace(mFrag, mCharIndex);
 }
 
 bool ClusterIterator::IsPunctuation() const {
@@ -8049,12 +8035,8 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetWord(
 
   do {
     bool isPunctuation = cIter.IsPunctuation();
-    bool isInlineWhitespace = cIter.IsInlineWhitespace();
-    bool isWhitespace = isInlineWhitespace || cIter.IsNewline();
+    bool isWhitespace = cIter.IsWhitespace();
     bool isWordBreakBefore = cIter.HaveWordBreakBefore();
-    if (!isWhitespace || isInlineWhitespace) {
-      aState->SetSawInlineCharacter();
-    }
     if (aWordSelectEatSpace == isWhitespace && !aState->mSawBeforeType) {
       aState->SetSawBeforeType();
       aState->Update(isPunctuation, isWhitespace);
