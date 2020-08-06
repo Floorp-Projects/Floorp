@@ -32,8 +32,8 @@ GARBAGE += $(RESFILE) $(RCFILE)
 #dummy target so $(RCFILE) doesn't become the default =P
 all::
 
-$(RCFILE): $(RCINCLUDE) $(MOZILLA_DIR)/config/version_win.py
-	$(PYTHON3) $(MOZILLA_DIR)/config/version_win.py '$(_RC_BINARY)' '$(RCINCLUDE)'
+$(RCFILE): $(RCINCLUDE) $(MOZILLA_DIR)/config/create_rc.py
+	$(PYTHON3) $(MOZILLA_DIR)/config/create_rc.py '$(_RC_BINARY)' '$(RCINCLUDE)'
 
 endif  # RESFILE
 endif  # Windows
