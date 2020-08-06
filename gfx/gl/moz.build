@@ -24,6 +24,7 @@ if CONFIG['MOZ_GL_PROVIDER']:
     gl_provider = CONFIG['MOZ_GL_PROVIDER']
 
 EXPORTS += [
+    'AndroidSurfaceTexture.h',
     'DecomposeIntoNoRepeatTriangles.h',
     'ForceDiscreteGPUHelperCGL.h',
     'GfxTexturesReporter.h',
@@ -70,10 +71,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS += [
         'AndroidNativeWindow.h',
-        'AndroidSurfaceTexture.h',
-    ]
-    UNIFIED_SOURCES += [
-        'AndroidSurfaceTexture.cpp',
     ]
 
 if gl_provider == 'CGL':
@@ -126,6 +123,7 @@ if CONFIG['MOZ_WAYLAND']:
     ]
 
 UNIFIED_SOURCES += [
+    'AndroidSurfaceTexture.cpp',
     'DecomposeIntoNoRepeatTriangles.cpp',
     'GfxTexturesReporter.cpp',
     'GLBlitHelper.cpp',

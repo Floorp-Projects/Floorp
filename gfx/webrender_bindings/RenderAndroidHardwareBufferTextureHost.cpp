@@ -79,11 +79,10 @@ bool RenderAndroidHardwareBufferTextureHost::EnsureLockable(
         LOCAL_EGL_NONE,
     };
 
-    EGLClientBuffer clientBuffer = egl->fGetNativeClientBufferANDROID(
+    EGLClientBuffer clientBuffer = egl->mLib->fGetNativeClientBufferANDROID(
         mAndroidHardwareBuffer->GetNativeBuffer());
-    mEGLImage =
-        egl->fCreateImage(egl->Display(), EGL_NO_CONTEXT,
-                          LOCAL_EGL_NATIVE_BUFFER_ANDROID, clientBuffer, attrs);
+    mEGLImage = egl->fCreateImage(
+        EGL_NO_CONTEXT, LOCAL_EGL_NATIVE_BUFFER_ANDROID, clientBuffer, attrs);
   }
   MOZ_ASSERT(mEGLImage);
 
@@ -148,7 +147,7 @@ void RenderAndroidHardwareBufferTextureHost::DestroyEGLImage() {
   MOZ_ASSERT(mGL);
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
-  egl->fDestroyImage(egl->Display(), mEGLImage);
+  egl->fDestroyImage(mEGLImage);
   mEGLImage = EGL_NO_IMAGE;
 }
 
