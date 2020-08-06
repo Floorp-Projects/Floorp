@@ -455,11 +455,7 @@ class project(object):
         'test': All(
             'full-backstop',
             'optimized-backstop',
-            Any(
-                'skip-unless-schedules',
-                Any('bugbug-reduced-manifests-fallback', 'platform-disperse'),
-                split_args=split_bugbug_arg,
-            ),
+            Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=split_bugbug_arg),
         ),
         'build': All(
             'backstop-10-pushes-2-hours',
