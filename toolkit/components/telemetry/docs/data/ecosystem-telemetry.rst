@@ -2,22 +2,28 @@ Ecosystem Telemetry
 ===================
 
 This module transmits Ecosystem Telemetry from Firefox Desktop.
-It consists of two ping types: "pre-account" and "post-account".
+It is only sent for Firefox Account users, using a single ping type
+"account-ecosystem"
 
 .. note::
 
-   The "pre-account" ping is not yet fully implemented and lacks some data to be included. Don't rely on any submitted data yet!
-   The "post-account" ping is not yet implemented.
-   See `bug 1522664 <https://bugzilla.mozilla.org/show_bug.cgi?id=1522664>`_ for pending work.
+  You might like to read the `background information on Ecosystem
+  Telemetry <https://mozilla.github.io/ecosystem-platform/docs/features/firefox-accounts/ecosystem-telemetry/>`_
 
-The client id is **not** submitted with either ping.
-A reduced Telemetry environment is submitted in these pings.
+The existing telemetry client id is **not** submitted with the ping, but an
+"ecosystem client id" is - this has the same semantics as the existing
+client id, although is a different value, and is not sent in any other ping.
+
+An anonymized user ID is submitted with each ping - `read more about these
+IDs and how they're designed to safeguard user privacy <https://mozilla.github.io/ecosystem-platform/docs/features/firefox-accounts/ecosystem-telemetry/>`_
+
+A reduced Telemetry environment is submitted in the ping, as described below.
 
 Environment
 -----------
 
-This is a subset of the :doc:`environment`, due to privacy concerns.
-Similar dimensions will be available on other products.
+In an effort to reduce the possibility of fingerprinting, we only provide the
+following environment subset:
 
 .. code-block:: js
 
@@ -30,12 +36,6 @@ Similar dimensions will be available on other products.
         os: {
             name: <string>, // e.g. "Windows_NT", null on failure
             version: <string>, // e.g. "6.1", null on failure
-            kernelVersion: <string>, // android only or null on failure
-            servicePackMajor: <number>, // windows only or null on failure
-            servicePackMinor: <number>, // windows only or null on failure
-            windowsBuildNumber: <number>, // windows only or null on failure
-            windowsUBR: <number>, // windows 10 only or null on failure
-            installYear: <number>, // windows only or null on failure
             locale: <string>, // "en" or null on failure
         },
         cpu: {
@@ -48,19 +48,19 @@ Similar dimensions will be available on other products.
       }
     }
 
-Pre-account ping
-----------------
+account-ecosystem ping
+----------------------
 
 .. code-block:: js
 
     {
-      "type": "pre-account",
+      "type": "account-ecosystem",
       ... common ping data
       "environment": { ... }, // as above
       "payload": {
         "reason": <string>, // Why the ping was submitted
-        "ecosystemClientId": <string>, // Specific ecosystem client ID, not associated with regular client ID
-        "uid": <string>, // Hashed account ID, for pings with reason "login" only
+        "ecosystemAnonId": <string>, // The anonymized ID, as described above.
+        "ecosystemClientId": <guid>, // The ecosystem client ID as described above.
         "duration": <number>, // duration since ping was last sent or since the beginning of the Firefox session in seconds
         "histograms": {...},
         "keyedHistograms": {...},
@@ -69,30 +69,24 @@ Pre-account ping
       }
     }
 
-.. note::
-
-   This ping does not yet submit a valid ``uid`` or ``ecosystemClientId``.
-   See `bug 1530655 <https://bugzilla.mozilla.org/show_bug.cgi?id=1530655>`_.
-
 reason
 ~~~~~~
-The ``reason`` field contains the information about why the "pre-account" ping was submitted:
+The ``reason`` field contains the information about why the "account-ecosystem" ping was submitted:
 
 * ``periodic`` - Sent roughly every 24 hours
 * ``shutdown`` - Sent on shutdown
-* ``login`` - Sent when a user logs in
 * ``logout`` - Sent when the user logs out
 
 histograms and keyedHistograms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This section contains the :doc:`../collection/histograms` that are valid for the pre-account ping, per process.
-The recorded histograms are described in `Histograms.json <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Histograms.json>`_, marked with the `pre-account` store.
+This section contains the :doc:`../collection/histograms` that are valid for the account-ecosystem ping, per process.
+The recorded histograms are described in `Histograms.json <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Histograms.json>`_, marked with the `account-ecosystem` store.
 
 scalars and keyedScalars
 ~~~~~~~~~~~~~~~~~~~~~~~~
-This section contains the :doc:`../collection/scalars` that are valid for the pre-account ping, per process.
+This section contains the :doc:`../collection/scalars` that are valid for the account-ecosystem ping, per process.
 Scalars are only submitted if data was added to them.
-The recorded scalars are described in `Scalars.yaml <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_, marked with the `pre-account` store.
+The recorded scalars are described in `Scalars.yaml <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_, marked with the `account-ecosystem` store.
 
 Send behavior
 -------------
@@ -100,20 +94,16 @@ Send behavior
 Without an account
 ~~~~~~~~~~~~~~~~~~
 
-A *pre-account* ping is submitted.
-This ping is submitted roughly every 24 hours with reason *periodic*.
-On shutdown this ping is submitted with reason *shutdown*.
+Never.
 
-When a user logs into Firefox Accounts, this ping is submitted with reason *login*.
-If the user logs out and disconnects the account, this ping is submitted with reason *logout*.
+When a user logs into Firefox Accounts, this ping is submitted as described in
+"With an account" below. No ping is immediately sent.
 
 With an account
 ~~~~~~~~~~~~~~~
 
-.. note::
+The ping is submitted; roughly every 24 hours with reason *periodic*. On
+shutdown this ping is submitted with reason *shutdown*.
 
-   Not yet implemented. See `Bug 1530654 <https://bugzilla.mozilla.org/show_bug.cgi?id=1530654>`_.
-
-A *post-account* ping is submitted.
-This ping is submitted roughly every 24 hours with reason *periodic*.
-On shutdown this ping is submitted with reason *shutdown*.
+If the user logs out and disconnects the account, this ping is submitted with
+reason *logout*. While logged out, no pings will be submitted.

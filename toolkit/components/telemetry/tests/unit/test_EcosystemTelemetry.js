@@ -11,6 +11,7 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 XPCOMUtils.defineLazyModuleGetters(this, {
   ONLOGIN_NOTIFICATION: "resource://gre/modules/FxAccountsCommon.js",
   ONLOGOUT_NOTIFICATION: "resource://gre/modules/FxAccountsCommon.js",
+  ONVERIFIED_NOTIFICATION: "resource://gre/modules/FxAccountsCommon.js",
 });
 ChromeUtils.defineModuleGetter(
   this,
@@ -18,8 +19,9 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/EcosystemTelemetry.jsm"
 );
 
-const WEAVE_EVENT = "weave:service:login:change";
 const TEST_PING_TYPE = "test-ping-type";
+
+const RE_VALID_GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 function fakeIdleNotification(topic) {
   let scheduler = ChromeUtils.import(
@@ -29,8 +31,20 @@ function fakeIdleNotification(topic) {
   return scheduler.TelemetryScheduler.observe(null, topic, null);
 }
 
-function checkPingStructure(ping, type, reason) {
-  Assert.equal(ping.type, type, "Should be an ecosystem ping.");
+async function promiseNoPing() {
+  // We check there's not one of our pings pending by sending a test ping, then
+  // immediately fetching a pending ping and checking it's that test one.
+  TelemetryController.submitExternalPing(TEST_PING_TYPE, {}, {});
+  let ping = await PingServer.promiseNextPing();
+  Assert.equal(ping.type, TEST_PING_TYPE, "Should be a test ping.");
+}
+
+function checkPingStructure(ping, reason) {
+  Assert.equal(
+    ping.type,
+    EcosystemTelemetry.PING_TYPE,
+    "Should be an ecosystem ping."
+  );
 
   Assert.ok(!("clientId" in ping), "Ping must not contain a client ID.");
   Assert.ok("environment" in ping, "Ping must contain an environment.");
@@ -68,9 +82,10 @@ function checkPingStructure(ping, type, reason) {
     payload.duration >= 0,
     "Payload must have a duration greater or equal to 0"
   );
+  Assert.ok("ecosystemAnonId" in payload, "payload must have ecosystemAnonId");
   Assert.ok(
-    "ecosystemClientId" in payload,
-    "Payload must contain the ecosystem client ID"
+    RE_VALID_GUID.test(payload.ecosystemClientId),
+    "ecosystemClientId must be a valid GUID"
   );
 
   Assert.ok("scalars" in payload, "Payload must contain scalars");
@@ -82,17 +97,13 @@ function checkPingStructure(ping, type, reason) {
   );
 }
 
-function sendPing() {
-  return TelemetryController.submitExternalPing(TEST_PING_TYPE, {}, {});
-}
-
-function fakeFxaUid(fn) {
+function fakeAnonId(fn) {
   const m = ChromeUtils.import(
     "resource://gre/modules/EcosystemTelemetry.jsm",
     null
   );
-  let oldFn = m.Policy.fxaUid;
-  m.Policy.fxaUid = fn;
+  let oldFn = m.Policy.getEcosystemAnonId;
+  m.Policy.getEcosystemAnonId = fn;
   return oldFn;
 }
 
@@ -130,11 +141,31 @@ add_task(
     // This is invoked in regular intervals by the timer.
     // Would trigger ping sending.
     EcosystemTelemetry.periodicPing();
-    // Let's send a test ping to ensure we receive _something_.
-    sendPing();
+    await promiseNoPing();
+  }
+);
 
-    let ping = await PingServer.promiseNextPing();
-    Assert.equal(ping.type, TEST_PING_TYPE, "Should be a test ping.");
+add_task(
+  {
+    skip_if: () => gIsAndroid,
+  },
+  async function test_disabled_non_fxa_production() {
+    Preferences.set(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, true);
+    Assert.ok(EcosystemTelemetry.enabled(), "enabled by default");
+    Preferences.set("identity.fxaccounts.autoconfig.uri", "http://");
+    Assert.ok(!EcosystemTelemetry.enabled(), "disabled if non-prod");
+    Preferences.set(
+      TelemetryUtils.Preferences.EcosystemTelemetryAllowForNonProductionFxA,
+      true
+    );
+    Assert.ok(
+      EcosystemTelemetry.enabled(),
+      "enabled for non-prod but preference override"
+    );
+    Preferences.reset("identity.fxaccounts.autoconfig.uri");
+    Preferences.reset(
+      TelemetryUtils.Preferences.EcosystemTelemetryAllowForNonProductionFxA
+    );
   }
 );
 
@@ -152,11 +183,7 @@ add_task(
     // This is invoked in regular intervals by the timer.
     // Would trigger ping sending.
     EcosystemTelemetry.periodicPing();
-    // Let's send a test ping to ensure we receive _something_.
-    sendPing();
-
-    let ping = await PingServer.promiseNextPing();
-    Assert.equal(ping.type, TEST_PING_TYPE, "Should be a test ping.");
+    await promiseNoPing();
   }
 );
 
@@ -164,15 +191,15 @@ add_task(
   {
     skip_if: () => gIsAndroid,
   },
-  async function test_simple_send() {
+  async function test_no_default_send() {
+    // No user's logged in, nothing is mocked, so nothing is sent.
     Preferences.set(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, true);
     EcosystemTelemetry.testReset();
 
     // This is invoked in regular intervals by the timer.
     EcosystemTelemetry.periodicPing();
 
-    let ping = await PingServer.promiseNextPing();
-    checkPingStructure(ping, "pre-account", "periodic");
+    await promiseNoPing();
   }
 );
 
@@ -186,56 +213,126 @@ add_task(
     Preferences.set(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, true);
     EcosystemTelemetry.testReset();
 
-    let originalFxaUid = fakeFxaUid(() => null);
+    let originalAnonId = fakeAnonId(() => null);
     let ping;
 
     // 1. No user, timer invoked
     EcosystemTelemetry.periodicPing();
-    ping = await PingServer.promiseNextPing();
-    checkPingStructure(ping, "pre-account", "periodic");
-    Assert.ok(!("uid" in ping.payload), "Ping should not contain a UID");
+    await promiseNoPing();
 
-    // 2. User logs in, no uid available.
+    // 2. User logs in, but we fail to obtain a valid uid.
     //    No ping will be generated.
+    fakeAnonId(() => null);
     EcosystemTelemetry.observe(null, ONLOGIN_NOTIFICATION, null);
-    sendPing();
-    ping = await PingServer.promiseNextPing();
-    Assert.equal(ping.type, TEST_PING_TYPE, "Should be a test ping.");
 
-    // 3. uid becomes available, weave syncs.
-    fakeFxaUid(() => "hashed-id");
-    EcosystemTelemetry.observe(null, WEAVE_EVENT, null);
-    ping = await PingServer.promiseNextPing();
-    checkPingStructure(ping, "pre-account", "login");
-    Assert.ok("uid" in ping.payload, "Ping should contain hashed ID");
+    EcosystemTelemetry.periodicPing();
+    await promiseNoPing();
 
-    // 4. User is logged in, timer invokes different ping
+    // Once we've failed to get the ID, we don't try again until next startup
+    // or another login-related event - so...
+    // 3. uid becomes available after verification.
+    fakeAnonId(() => "test_login_workflow:my.anon.id");
+    EcosystemTelemetry.observe(null, ONVERIFIED_NOTIFICATION, null);
+    print("triggering ping now that we have an anon-id");
     EcosystemTelemetry.periodicPing();
     ping = await PingServer.promiseNextPing();
-    checkPingStructure(ping, "pre-account", "periodic");
-    Assert.ok("uid" in ping.payload, "Ping should contain hashed ID");
+    checkPingStructure(ping, "periodic");
+    Assert.equal(
+      ping.payload.ecosystemAnonId,
+      "test_login_workflow:my.anon.id"
+    );
 
-    // 5. User disconnects account, no uid available
-    fakeFxaUid(() => null);
-    EcosystemTelemetry.observe(null, ONLOGOUT_NOTIFICATION, null);
+    // 4. User disconnects account, should get an immediate ping.
+    print("user disconnects");
+    // We need to arrange for the new empty anonid before the notification.
+    fakeAnonId(() => null);
+    await EcosystemTelemetry.observe(null, ONLOGOUT_NOTIFICATION, null);
     ping = await PingServer.promiseNextPing();
-    checkPingStructure(ping, "pre-account", "logout");
-    Assert.ok(!("uid" in ping.payload), "Ping should not contain a UID");
+    checkPingStructure(ping, "logout");
+    Assert.equal(
+      ping.payload.ecosystemAnonId,
+      "test_login_workflow:my.anon.id",
+      "should have been submitted with the old anonid"
+    );
+    Assert.equal(
+      await EcosystemTelemetry.promiseEcosystemAnonId,
+      null,
+      "should resolve to null immediately after logout"
+    );
 
-    // 6. No user, timer invoked
+    // 5. No user, timer invoked
+    print("timer fires after disconnection");
+    EcosystemTelemetry.periodicPing();
+    await promiseNoPing();
+
+    // 6. Transition back to logged in, pings should again be sent.
+    fakeAnonId(() => "test_login_workflow:my.anon.id.2");
+    EcosystemTelemetry.observe(null, ONVERIFIED_NOTIFICATION, null);
+    print("triggering ping now the user has logged back in");
     EcosystemTelemetry.periodicPing();
     ping = await PingServer.promiseNextPing();
-    checkPingStructure(ping, "pre-account", "periodic");
-    Assert.ok(!("uid" in ping.payload), "Ping should not contain a UID");
-
-    // 7. Shutdown
-    EcosystemTelemetry.shutdown();
-    ping = await PingServer.promiseNextPing();
-    checkPingStructure(ping, "pre-account", "shutdown");
-    Assert.ok(!("uid" in ping.payload), "Ping should not contain a UID");
+    checkPingStructure(ping, "periodic");
+    Assert.equal(
+      ping.payload.ecosystemAnonId,
+      "test_login_workflow:my.anon.id.2"
+    );
 
     // Reset policy.
-    fakeFxaUid(originalFxaUid);
+    fakeAnonId(originalAnonId);
+  }
+);
+
+add_task(
+  {
+    skip_if: () => gIsAndroid,
+  },
+  async function test_shutdown_logged_in() {
+    // Check shutdown when a user's logged in does the right thing.
+    Preferences.set(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, true);
+    EcosystemTelemetry.testReset();
+
+    let originalAnonId = fakeAnonId(() =>
+      Promise.resolve("test_shutdown_logged_in:my.anon.id")
+    );
+
+    EcosystemTelemetry.observe(null, ONLOGIN_NOTIFICATION, null);
+
+    // No ping expected yet.
+    await promiseNoPing();
+
+    // Shutdown
+    EcosystemTelemetry.shutdown();
+    let ping = await PingServer.promiseNextPing();
+    checkPingStructure(ping, "shutdown");
+    Assert.equal(
+      ping.payload.ecosystemAnonId,
+      "test_shutdown_logged_in:my.anon.id",
+      "our anon ID is in the ping"
+    );
+    fakeAnonId(originalAnonId);
+  }
+);
+
+add_task(
+  {
+    skip_if: () => gIsAndroid,
+  },
+  async function test_shutdown_not_logged_in() {
+    // Check shutdown when no user is logged in does the right thing.
+    Preferences.set(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, true);
+    EcosystemTelemetry.testReset();
+
+    let originalAnonId = fakeAnonId(() => Promise.resolve(null));
+
+    // No ping expected yet.
+    await promiseNoPing();
+
+    // Shutdown
+    EcosystemTelemetry.shutdown();
+
+    // Still no ping.
+    await promiseNoPing();
+    fakeAnonId(originalAnonId);
   }
 );
 
@@ -250,14 +347,12 @@ add_task(
     await TelemetryStorage.testClearPendingPings();
     PingServer.clearRequests();
 
-    const pingType = "pre-account";
-
     let receivedPing = null;
     // Register a ping handler that will assert when receiving multiple ecosystem pings.
     // We can ignore other pings, such as the periodic ping.
     PingServer.registerPingHandler(req => {
       const ping = decodeRequestPayload(req);
-      if (ping.type == pingType) {
+      if (ping.type == EcosystemTelemetry.PING_TYPE) {
         Assert.ok(
           !receivedPing,
           "Telemetry must only send one periodic ecosystem ping."
@@ -281,6 +376,17 @@ add_task(
     Preferences.set(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, true);
     EcosystemTelemetry.testReset();
 
+    // Have to arrange for an anon-id to be configured.
+    let originalAnonId = fakeAnonId(() => "test_periodic_ping:my.anon.id");
+    EcosystemTelemetry.observe(null, ONLOGIN_NOTIFICATION, null);
+
+    // As a sanity check we trigger a keyedHistogram and scalar declared as
+    // being in our ping, just to help ensure that the payload was assembled
+    // in the correct shape.
+    let h = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+    h.add("test-key");
+    Telemetry.scalarSet("browser.engagement.total_uri_count", 2);
+
     // Trigger the periodic ecosystem ping.
     let firstPeriodicDue = new Date(2040, 1, 2, 0, 0, 0);
     fakeNow(firstPeriodicDue);
@@ -300,6 +406,14 @@ add_task(
 
     // Decode the ping contained in the request and check that's a periodic ping.
     Assert.ok(receivedPing, "Telemetry must send one ecosystem periodic ping.");
-    checkPingStructure(receivedPing, pingType, "periodic");
+    checkPingStructure(receivedPing, "periodic");
+    // And check the content we expect is there.
+    Assert.ok(receivedPing.payload.keyedHistograms.parent.SEARCH_COUNTS);
+    Assert.equal(
+      receivedPing.payload.scalars.parent["browser.engagement.total_uri_count"],
+      2
+    );
+
+    fakeAnonId(originalAnonId);
   }
 );

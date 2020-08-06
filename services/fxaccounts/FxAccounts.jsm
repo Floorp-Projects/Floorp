@@ -41,6 +41,7 @@ const {
   ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
   ONLOGIN_NOTIFICATION,
   ONLOGOUT_NOTIFICATION,
+  ON_PRELOGOUT_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
   POLL_SESSION,
@@ -834,6 +835,14 @@ FxAccountsInternal.prototype = {
           ChromeUtils.import("resource://services-sync/main.js", scope);
           return scope.Weave.Service.promiseInitialized;
         },
+        // Telemetry, so ecosystem telemetry doesn't miss logouts.
+        async () => {
+          const { EcosystemTelemetry } = ChromeUtils.import(
+            "resource://gre/modules/EcosystemTelemetry.jsm",
+            {}
+          );
+          await EcosystemTelemetry.prepareForFxANotification();
+        },
       ];
     }
 
@@ -1201,6 +1210,7 @@ FxAccountsInternal.prototype = {
       sessionToken = data.sessionToken;
       tokensToRevoke = data.oauthTokens;
     }
+    await this.notifyObservers(ON_PRELOGOUT_NOTIFICATION);
     await this._signOutLocal();
     if (!localOnly) {
       // Do this in the background so *any* slow request won't
