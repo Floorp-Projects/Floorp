@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Default shortcut label used if website has no title -->
+    <string name="mozac_feature_pwa_default_shortcut_label">Spletno mesto</string>
+
     <!-- Refresh button in site controls notification. -->
     <string name="mozac_feature_pwa_site_controls_refresh">Osveži</string>
-    </resources>
+    <!-- Toast displayed when the website URL is copied. -->
+    <string name="mozac_feature_pwa_copy_success">Spletni naslov kopiran.</string>
+</resources>

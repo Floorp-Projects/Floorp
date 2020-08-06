@@ -67,9 +67,9 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">გამორთ.</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_allow_in_private_browsing">დაშვებულია პირად რეჟიმში</string>
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">დაშვება პირად რეჟიმში</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">გაშვებულია პირად რეჟიმში</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">გაშვება პირად რეჟიმში</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">ჩართულია</string>
     <!-- Indicates the add-on is disabled. -->
@@ -181,9 +181,9 @@
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">მდგომარეობა:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
-    <string name="mozac_feature_addons_installed_dialog_title">%1$s დაემატას %2$s-ს</string>
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s დაემატა %2$s-ს</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_installed_dialog_description">მენიუში გახსნა</string>
+    <string name="mozac_feature_addons_installed_dialog_description">გახსენით მენიუდან</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">კარგი, გასაგებია</string>
 </resources>
