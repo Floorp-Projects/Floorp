@@ -9017,7 +9017,7 @@
     "alert_emails": ["adw@mozilla.com", "loines@mozilla.com"],
     "bug_numbers": [1089670, 1475571, 1482158, 1499193, 1545172, 1572500],
     "description": "Records search counts for search access points and in-content searches. For search access points in general, the format is: <engine-name>.<search-access-point> For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.alias For in-content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main", "account-ecosystem"]
   },
   "SEARCH_SERVICE_INIT_MS": {
     "record_in_processes": ["main"],
@@ -12450,7 +12450,7 @@
     "alert_emails": ["loines@mozilla.com"],
     "bug_numbers": [1454733, 1545172],
     "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_FORM_AUTOFILL_RESULT": {
     "record_in_processes": ["content"],
@@ -12462,7 +12462,7 @@
     "kind": "enumerated",
     "n_values" : 20,
     "description": "The result of auto-filling a login form. See http://mzl.la/1Mbs6jL for bucket descriptions.",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_LOGIN_LAST_USED_DAYS": {
     "record_in_processes": ["main"],
@@ -12475,7 +12475,7 @@
     "alert_emails": ["loines@mozilla.com"],
     "bug_numbers": [1454733, 1545172],
     "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_LOGIN_PAGE_SAFETY": {
     "record_in_processes": ["content"],
@@ -12487,7 +12487,7 @@
     "kind": "enumerated",
     "n_values": 8,
     "description": "The safety of a page where we see a password field. (0: safe page & safe submit; 1: safe page & unsafe submit; 2: safe page & unknown submit; 3: unsafe page & safe submit; 4: unsafe page & unsafe submit; 5: unsafe page & unknown submit)",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_NUM_PASSWORDS_PER_HOSTNAME": {
     "record_in_processes": ["main"],
@@ -12500,7 +12500,7 @@
     "alert_emails": ["loines@mozilla.com"],
     "bug_numbers": [1454733, 1545172],
     "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_NUM_SAVED_PASSWORDS": {
     "record_in_processes": ["main"],
@@ -12513,7 +12513,7 @@
     "alert_emails": ["loines@mozilla.com"],
     "bug_numbers": [1454733, 1545172],
     "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_NUM_HTTPAUTH_PASSWORDS": {
     "record_in_processes": ["main"],
@@ -12541,7 +12541,7 @@
     "alert_emails": ["loines@mozilla.com"],
     "bug_numbers": [1454733, 1545172],
     "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_PROMPT_UPDATE_ACTION" : {
     "record_in_processes": ["main"],
@@ -12553,7 +12553,7 @@
     "alert_emails": ["loines@mozilla.com"],
     "bug_numbers": [1454733, 1545172, 1226236],
     "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_SAVING_ENABLED": {
     "record_in_processes": ["main"],
@@ -12564,7 +12564,7 @@
     "alert_emails": ["loines@mozilla.com"],
     "bug_numbers": [1454733, 1545172],
     "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
+    "record_into_store": ["main"]
   },
   "PWMGR_USERNAME_PRESENT": {
     "record_in_processes": ["main"],
