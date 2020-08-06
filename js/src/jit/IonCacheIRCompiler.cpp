@@ -436,6 +436,21 @@ bool IonCacheIRCompiler::init() {
       allocator.initInputLocation(1, ic->value());
       break;
     }
+    case CacheKind::CheckPrivateField: {
+      IonCheckPrivateFieldIC* ic = ic_->asCheckPrivateFieldIC();
+      Register output = ic->output();
+
+      available.add(output);
+
+      liveRegs_.emplace(ic->liveRegs());
+      outputUnchecked_.emplace(
+          TypedOrValueRegister(MIRType::Boolean, AnyRegister(output)));
+
+      MOZ_ASSERT(numInputs == 2);
+      allocator.initInputLocation(0, ic->value());
+      allocator.initInputLocation(1, ic->id());
+      break;
+    }
     case CacheKind::InstanceOf: {
       IonInstanceOfIC* ic = ic_->asInstanceOfIC();
       Register output = ic->output();
@@ -510,7 +525,6 @@ bool IonCacheIRCompiler::init() {
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewObject:
-    case CacheKind::CheckPrivateField:
       MOZ_CRASH("Unsupported IC");
   }
 

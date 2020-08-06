@@ -10424,6 +10424,21 @@ class MInArray : public MQuaternaryInstruction, public ObjectPolicy<3>::Data {
   }
 };
 
+class MCheckPrivateFieldCache
+    : public MBinaryInstruction,
+      public MixPolicy<BoxExceptPolicy<0, MIRType::Object>,
+                       CacheIdPolicy<1>>::Data {
+  MCheckPrivateFieldCache(MDefinition* obj, MDefinition* id)
+      : MBinaryInstruction(classOpcode, obj, id) {
+    setResultType(MIRType::Boolean);
+  }
+
+ public:
+  INSTRUCTION_HEADER(CheckPrivateFieldCache)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, value), (1, idval))
+};
+
 class MHasOwnCache : public MBinaryInstruction,
                      public MixPolicy<BoxExceptPolicy<0, MIRType::Object>,
                                       CacheIdPolicy<1>>::Data {

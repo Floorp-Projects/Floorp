@@ -774,6 +774,28 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       masm.jump(ool->rejoin());
       return;
     }
+    case CacheKind::CheckPrivateField: {
+      IonCheckPrivateFieldIC* checkPrivateFieldIC = ic->asCheckPrivateFieldIC();
+
+      saveLive(lir);
+
+      pushArg(checkPrivateFieldIC->id());
+      pushArg(checkPrivateFieldIC->value());
+
+      icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
+
+      using Fn = bool (*)(JSContext*, HandleScript, IonCheckPrivateFieldIC*,
+                          HandleValue, HandleValue, bool*);
+      callVM<Fn, IonCheckPrivateFieldIC::update>(lir);
+
+      StoreRegisterTo(checkPrivateFieldIC->output()).generate(this);
+      restoreLiveIgnore(
+          lir, StoreRegisterTo(checkPrivateFieldIC->output()).clobbered());
+
+      masm.jump(ool->rejoin());
+      return;
+    }
     case CacheKind::InstanceOf: {
       IonInstanceOfIC* hasInstanceOfIC = ic->asInstanceOfIC();
 
@@ -883,7 +905,6 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewObject:
-    case CacheKind::CheckPrivateField:
       MOZ_CRASH("Unsupported IC");
   }
   MOZ_CRASH();
@@ -11726,6 +11747,22 @@ void CodeGenerator::visitHasOwnCache(LHasOwnCache* ins) {
   Register output = ToRegister(ins->output());
 
   IonHasOwnIC cache(liveRegs, value, id, output);
+  addIC(ins, allocateIC(cache));
+}
+
+void CodeGenerator::visitCheckPrivateFieldCache(LCheckPrivateFieldCache* ins) {
+  LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
+  TypedOrValueRegister value =
+      toConstantOrRegister(ins, LCheckPrivateFieldCache::Value,
+                           ins->mir()->value()->type())
+          .reg();
+  TypedOrValueRegister id =
+      toConstantOrRegister(ins, LCheckPrivateFieldCache::Id,
+                           ins->mir()->idval()->type())
+          .reg();
+  Register output = ToRegister(ins->output());
+
+  IonCheckPrivateFieldIC cache(liveRegs, value, id, output);
   addIC(ins, allocateIC(cache));
 }
 

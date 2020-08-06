@@ -61,6 +61,7 @@ class IonGetNameIC;
 class IonBindNameIC;
 class IonGetIteratorIC;
 class IonHasOwnIC;
+class IonCheckPrivateFieldIC;
 class IonInIC;
 class IonInstanceOfIC;
 class IonCompareIC;
@@ -175,6 +176,10 @@ class IonIC {
   IonHasOwnIC* asHasOwnIC() {
     MOZ_ASSERT(kind_ == CacheKind::HasOwn);
     return (IonHasOwnIC*)this;
+  }
+  IonCheckPrivateFieldIC* asCheckPrivateFieldIC() {
+    MOZ_ASSERT(kind_ == CacheKind::CheckPrivateField);
+    return (IonCheckPrivateFieldIC*)this;
   }
   IonInIC* asInIC() {
     MOZ_ASSERT(kind_ == CacheKind::In);
@@ -433,6 +438,32 @@ class IonHasOwnIC : public IonIC {
   static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript,
                                   IonHasOwnIC* ic, HandleValue val,
                                   HandleValue idVal, int32_t* res);
+};
+
+class IonCheckPrivateFieldIC : public IonIC {
+  LiveRegisterSet liveRegs_;
+
+  TypedOrValueRegister value_;
+  TypedOrValueRegister id_;
+  Register output_;
+
+ public:
+  IonCheckPrivateFieldIC(LiveRegisterSet liveRegs, TypedOrValueRegister value,
+                         TypedOrValueRegister id, Register output)
+      : IonIC(CacheKind::CheckPrivateField),
+        liveRegs_(liveRegs),
+        value_(value),
+        id_(id),
+        output_(output) {}
+
+  TypedOrValueRegister value() const { return value_; }
+  TypedOrValueRegister id() const { return id_; }
+  Register output() const { return output_; }
+  LiveRegisterSet liveRegs() const { return liveRegs_; }
+
+  static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript,
+                                  IonCheckPrivateFieldIC* ic, HandleValue val,
+                                  HandleValue idVal, bool* res);
 };
 
 class IonInIC : public IonIC {
