@@ -33,7 +33,6 @@ QUEUE_PREFIX = f"{ROOT_URL}/api/queue/"
 ALLOWED_URL_PREFIXES = (
     "http://download.cdn.mozilla.net/pub/mozilla.org/firefox/nightly/",
     "http://download.cdn.mozilla.net/pub/firefox/nightly/",
-    "https://mozilla-nightly-updates.s3.amazonaws.com",
     "http://ftp.mozilla.org/",
     "http://download.mozilla.org/",
     "https://archive.mozilla.org/",
