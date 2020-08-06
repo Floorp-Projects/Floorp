@@ -230,7 +230,6 @@ struct MovingTracer final : public JS::CallbackTracer {
   bool onScopeEdge(Scope** scopep) override;
   bool onRegExpSharedEdge(RegExpShared** sharedp) override;
   bool onBigIntEdge(BigInt** bip) override;
-  bool onObjectGroupEdge(ObjectGroup** groupp) override;
   bool onChild(const JS::GCCellPtr& thing) override {
     MOZ_ASSERT(!thing.asCell()->isForwarded());
     return true;
