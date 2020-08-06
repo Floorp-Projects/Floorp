@@ -117,8 +117,8 @@ class LintSandbox(ConfigureSandbox):
                                                                self._never):
             return
         func, glob = self.unwrap(obj._func)
-        func_args = inspect.getargspec(func)
-        if func_args.keywords:
+        func_args = inspect.getfullargspec(func)
+        if func_args.varkw:
             e = ConfigureError(
                     'Keyword arguments are not allowed in @depends functions')
             self._raise_from(e, func)

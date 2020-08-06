@@ -430,7 +430,8 @@ class ConfigureSandbox(dict):
         self._paths.append(path)
         self._all_paths.add(path)
 
-        source = open(path, 'rb').read()
+        with open(path, 'rb') as fh:
+            source = fh.read()
 
         code = compile(source, path, 'exec')
 

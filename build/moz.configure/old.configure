@@ -18,12 +18,12 @@ def autoconf(mozconfig, autoconf):
         make_extra = mozconfig['make_extra']
         if make_extra:
             for assignment in make_extra:
-                m = re.match('(?:export\s+)?AUTOCONF\s*:?=\s*(.+)$',
+                m = re.match(r'(?:export\s+)?AUTOCONF\s*:?=\s*(.+)$',
                              assignment)
                 if m:
                     mozconfig_autoconf = m.group(1)
                 # Check whether we've exported any known-broken variables.
-                m = re.match('(?:export\s+)?(?:CC|CXX)\s*:?=\s*(?:.+)$',
+                m = re.match(r'(?:export\s+)?(?:CC|CXX)\s*:?=\s*(?:.+)$',
                              assignment)
                 if m:
                     die('Setting the value of CC or CXX with "mk_add_options" '
