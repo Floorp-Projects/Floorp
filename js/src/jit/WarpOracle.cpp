@@ -909,7 +909,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     RootedScript targetScript(cx_, targetFunction->nonLazyScript());
     ICScript* icScript = callData->icScript;
     MOZ_ASSERT(targetScript->jitScript() == icScript->jitScript());
-    MOZ_ASSERT(TrialInliner::canInline(targetFunction));
+    MOZ_ASSERT(TrialInliner::canInline(targetFunction, script_));
 
     // Add the inlined script to the inline script tree.
     LifoAlloc* lifoAlloc = alloc_.lifoAlloc();
