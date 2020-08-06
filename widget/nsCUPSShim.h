@@ -30,24 +30,30 @@ class nsCUPSShim {
    */
   bool IsInitialized() const { return mInited; }
 
-  /* Function pointers for supported functions. These are only
+  /**
+   * Function pointers for supported functions. These are only
    * valid after successful initialization.
    */
-  decltype(cupsAddOption)* mCupsAddOption;
-  decltype(cupsCheckDestSupported)* mCupsCheckDestSupported;
-  decltype(cupsConnectDest)* mCupsConnectDest;
-  decltype(cupsCopyDest)* mCupsCopyDest;
-  decltype(cupsCopyDestInfo)* mCupsCopyDestInfo;
-  decltype(cupsFreeDestInfo)* mCupsFreeDestInfo;
-  decltype(cupsFreeDests)* mCupsFreeDests;
-  decltype(cupsGetDestMediaCount)* mCupsGetDestMediaCount;
-  decltype(cupsGetDestMediaByIndex)* mCupsGetDestMediaByIndex;
-  decltype(cupsGetDest)* mCupsGetDest;
-  decltype(cupsGetDests)* mCupsGetDests;
-  decltype(cupsLocalizeDestMedia)* mCupsLocalizeDestMedia;
-  decltype(cupsPrintFile)* mCupsPrintFile;
-  decltype(cupsTempFd)* mCupsTempFd;
-  decltype(httpClose)* mHttpClose;
+#define CUPS_SHIM_ALL_FUNCS(X) \
+  X(cupsAddOption)             \
+  X(cupsCheckDestSupported)    \
+  X(cupsConnectDest)           \
+  X(cupsCopyDest)              \
+  X(cupsCopyDestInfo)          \
+  X(cupsFreeDestInfo)          \
+  X(cupsFreeDests)             \
+  X(cupsGetDestMediaCount)     \
+  X(cupsGetDestMediaByIndex)   \
+  X(cupsGetDest)               \
+  X(cupsGetDests)              \
+  X(cupsLocalizeDestMedia)     \
+  X(cupsPrintFile)             \
+  X(cupsTempFd)                \
+  X(httpClose)
+
+#define CUPS_SHIM_FUNC_DECL(X) decltype(::X)* X;
+  CUPS_SHIM_ALL_FUNCS(CUPS_SHIM_FUNC_DECL)
+#undef CUPS_SHIM_FUNC_DECL
 
  private:
   bool mInited = false;
