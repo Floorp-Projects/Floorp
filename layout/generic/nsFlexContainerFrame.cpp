@@ -3838,8 +3838,6 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
       mIsRowOriented = false;
       mIsMainAxisReversed = true;
       break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected flex-direction value");
   }
 
   // "flex-wrap: wrap-reverse" reverses our cross axis.
