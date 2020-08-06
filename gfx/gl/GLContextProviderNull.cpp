@@ -16,6 +16,11 @@ already_AddRefed<GLContext> GLContextProviderNull::CreateForCompositorWidget(
   return nullptr;
 }
 
+already_AddRefed<GLContext> GLContextProviderNull::CreateWrappingExisting(
+    void*, void*) {
+  return nullptr;
+}
+
 already_AddRefed<GLContext> GLContextProviderNull::CreateHeadless(
     const GLContextCreateDesc&, nsACString* const out_failureId) {
   *out_failureId = "FEATURE_FAILURE_NULL"_ns;
