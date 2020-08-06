@@ -11,20 +11,9 @@ interface nsIWebProgress;
 interface nsIReferrerInfo;
 interface nsIOpenWindowInfo;
 
-webidl FrameLoader;
-
 [scriptable, uuid(14e5a0cb-e223-4202-95e8-fe53275193ea)]
 interface nsIBrowser : nsISupports
 {
-  /**
-   * Gets an optional frame loader that is "related" to this browser.
-   * If this exists, then we should attempt to use the same content parent as
-   * this frame loader for any new remote tabs.  For example, view source
-   * browsers set this to the frame loader for the original content to ensure
-   * they are loaded in the same process as the content.
-   */
-  readonly attribute FrameLoader sameProcessAsFrameLoader;
-
   /*
    * Called by the child to inform the parent that links are dropped into
    * content area.

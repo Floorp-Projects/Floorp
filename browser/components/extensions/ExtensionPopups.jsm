@@ -290,7 +290,6 @@ class BasePopup {
       "initialBrowsingContextGroupId",
       this.extension.policy.browsingContextGroupId
     );
-    browser.sameProcessAsFrameLoader = this.extension.groupFrameLoader;
 
     if (this.extension.remote) {
       browser.setAttribute("remote", "true");
