@@ -2139,6 +2139,9 @@ class StaticAnalysis(MachCommandBase):
 
                 # We want syntax-only
                 command.append("-fsyntax-only")
+                command = [
+                    re.sub(r'\'-D(.*)="(.*)"\'', r'-D\1="\2"', arg) for arg in command
+                ]
                 commands.append(command)
 
         max_workers = multiprocessing.cpu_count()
