@@ -341,11 +341,7 @@ void MediaController::SetIsInPictureInPictureMode(
   LOG("Set IsInPictureInPictureMode to %s",
       aIsInPictureInPictureMode ? "true" : "false");
   mIsInPictureInPictureMode = aIsInPictureInPictureMode;
-  UpdateActivatedStateIfNeeded();
-  if (RefPtr<MediaControlService> service = MediaControlService::GetService();
-      service && mIsInPictureInPictureMode) {
-    service->RequestUpdateMainController(this);
-  }
+  ForceToBecomeMainControllerIfNeeded();
   UpdateDeactivationTimerIfNeeded();
   mPictureInPictureModeChangedEvent.Notify(mIsInPictureInPictureMode);
 }
@@ -357,12 +353,41 @@ void MediaController::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
   }
   LOG("%s fullscreen", aIsInFullScreen ? "Entered" : "Left");
   mIsInFullScreenMode = aIsInFullScreen;
-  UpdateActivatedStateIfNeeded();
-  if (RefPtr<MediaControlService> service = MediaControlService::GetService();
-      service && mIsInFullScreenMode) {
+  ForceToBecomeMainControllerIfNeeded();
+  mFullScreenChangedEvent.Notify(mIsInFullScreenMode);
+}
+
+bool MediaController::IsMainController() const {
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  return service ? service->GetMainController() == this : false;
+}
+
+bool MediaController::ShouldRequestForMainController() const {
+  // This controller is already the main controller.
+  if (IsMainController()) {
+    return false;
+  }
+  // We would only force controller to become main controller if it's in the
+  // PIP mode or fullscreen, otherwise it should follow the general rule.
+  // In addition, do nothing if the controller has been shutdowned.
+  return IsBeingUsedInPIPModeOrFullscreen() && !mShutdown;
+}
+
+void MediaController::ForceToBecomeMainControllerIfNeeded() {
+  if (!ShouldRequestForMainController()) {
+    return;
+  }
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  MOZ_ASSERT(service, "service was shutdown before shutting down controller?");
+  // If the controller hasn't been activated and it's ready to be activated,
+  // then activating it should also make it become a main controller. If it's
+  // already activated but isn't a main controller yet, then explicitly request
+  // it.
+  if (!IsActive() && ShouldActivateController()) {
+    Activate();
+  } else if (IsActive()) {
     service->RequestUpdateMainController(this);
   }
-  mFullScreenChangedEvent.Notify(mIsInFullScreenMode);
 }
 
 void MediaController::HandleActualPlaybackStateChanged() {

@@ -168,6 +168,10 @@ class MediaController final : public DOMEventTargetHelper,
   void DispatchAsyncEvent(const nsAString& aName);
   void DispatchAsyncEvent(Event* aEvent);
 
+  bool IsMainController() const;
+  void ForceToBecomeMainControllerIfNeeded();
+  bool ShouldRequestForMainController() const;
+
   bool mIsActive = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
