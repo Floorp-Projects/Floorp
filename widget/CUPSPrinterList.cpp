@@ -12,17 +12,17 @@ namespace mozilla {
 CUPSPrinterList::~CUPSPrinterList() {
   MOZ_ASSERT(mShim.IsInitialized());
   // cupsFreeDests is safe to call on a zero-length or null array.
-  mShim.mCupsFreeDests(mNumPrinters, mPrinters);
+  mShim.cupsFreeDests(mNumPrinters, mPrinters);
 }
 
 void CUPSPrinterList::Initialize() {
   MOZ_ASSERT(mShim.IsInitialized());
-  mNumPrinters = mShim.mCupsGetDests(&mPrinters);
+  mNumPrinters = mShim.cupsGetDests(&mPrinters);
 }
 
 cups_dest_t* CUPSPrinterList::FindPrinterByName(const char* aName) {
   MOZ_ASSERT(aName);
-  return mShim.mCupsGetDest(aName, NULL, mNumPrinters, mPrinters);
+  return mShim.cupsGetDest(aName, NULL, mNumPrinters, mPrinters);
 }
 
 cups_dest_t* CUPSPrinterList::GetPrinter(int i) {
