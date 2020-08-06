@@ -58,8 +58,15 @@ class Parser:
     def parse(self, input, filename, includedirs):
         assert os.path.isabs(filename)
 
-        if filename in Parser.parsed:
-            return Parser.parsed[filename].tu
+        if self.tu.name in Parser.parsed:
+            priorTU = Parser.parsed[self.tu.name].tu
+            if priorTU.filename != filename:
+                _error(Loc(filename),
+                       "Trying to load `%s' from a file when we'd already seen it in file `%s'" % (
+                           self.tu.name,
+                           priorTU.filename))
+
+            return priorTU
 
         self.lexer = lex.lex(debug=self.debug)
         self.parser = yacc.yacc(debug=self.debug, write_tables=False)
@@ -67,7 +74,7 @@ class Parser:
         self.includedirs = includedirs
         self.tu.filename = filename
 
-        Parser.parsed[filename] = self
+        Parser.parsed[self.tu.name] = self
         Parser.parseStack.append(Parser.current)
         Parser.current = self
 
