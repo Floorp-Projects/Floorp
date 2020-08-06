@@ -84,7 +84,7 @@ class MOZ_RAII TrialInliner {
   MOZ_MUST_USE bool tryInlining();
   MOZ_MUST_USE bool maybeInlineCall(const ICEntry& entry, BytecodeLocation loc);
 
-  static bool canInline(JSFunction* target);
+  static bool canInline(JSFunction* target, HandleScript caller);
 
  private:
   ICStub* maybeSingleStub(const ICEntry& entry);
