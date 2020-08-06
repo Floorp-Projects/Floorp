@@ -106,6 +106,8 @@ class UrlbarInput {
     this._suppressPrimaryAdjustment = false;
     this._untrimmedValue = "";
 
+    UrlbarPrefs.addObserver(this);
+
     // This exists only for tests.
     this._enableAutofillPlaceholder = true;
 
@@ -863,6 +865,19 @@ class UrlbarInput {
   }
 
   /**
+   * Called when a pref tracked by UrlbarPrefs changes.
+   *
+   * @param {string} changedPref
+   *   The name of the pref, relative to `browser.urlbar.` if the pref is in
+   *   that branch.
+   */
+  onPrefChanged(changedPref) {
+    if (changedPref == "update2" && !UrlbarPrefs.get("update2")) {
+      this.setSearchMode(null);
+    }
+  }
+
+  /**
    * Called by the view when moving through results with the keyboard, and when
    * picking a result.
    *
@@ -1154,7 +1169,8 @@ class UrlbarInput {
    */
   setSearchMode(engineOrSource) {
     if (!UrlbarPrefs.get("update2")) {
-      return;
+      // Exit search mode.
+      engineOrSource = null;
     }
 
     this._searchModeIndicatorTitle.textContent = "";
