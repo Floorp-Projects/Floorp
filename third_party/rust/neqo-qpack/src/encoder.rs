@@ -223,6 +223,7 @@ impl QPackEncoder {
             }
             DecoderInstruction::HeaderAck { stream_id } => self.header_ack(stream_id),
             DecoderInstruction::StreamCancellation { stream_id } => {
+                self.stats.stream_cancelled_recv += 1;
                 self.stream_cancellation(stream_id)
             }
             _ => Ok(()),

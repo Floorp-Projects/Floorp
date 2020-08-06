@@ -95,6 +95,12 @@ impl NeqoQlog {
     }
 }
 
+impl Default for NeqoQlog {
+    fn default() -> Self {
+        Self::disabled()
+    }
+}
+
 impl fmt::Debug for NeqoQlogShared {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "NeqoQlog writing to {}", self.qlog_path.display())

@@ -365,7 +365,7 @@ impl PushController {
                 self.push_streams.close(push_id);
                 Ok(())
             }
-            _ => Err(Error::InvalidStreamId),
+            Some(_) => Err(Error::InvalidStreamId),
         }
     }
 
@@ -434,7 +434,7 @@ impl PushController {
             Some(PushState::Active { .. }) => {
                 self.conn_events.insert(event);
             }
-            _ => {
+            Some(_) => {
                 debug_assert!(false, "No record of a stream!");
             }
         }

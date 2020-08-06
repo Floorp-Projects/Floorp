@@ -139,9 +139,18 @@ impl RecvStream for PushStream {
         matches!(self.state, PushStreamState::Closed)
     }
 
-    fn stream_reset(&self, _app_error: AppError) {
+    fn stream_reset_recv(&self, _app_error: AppError, decoder: &mut QPackDecoder) {
+        if !self.done() {
+            decoder.cancel_stream(self.stream_id);
+        }
         if let Some(push_id) = self.state.push_id() {
             self.push_handler.borrow_mut().push_stream_reset(push_id);
+        }
+    }
+
+    fn stream_reset(&self, decoder: &mut QPackDecoder) {
+        if !self.done() {
+            decoder.cancel_stream(self.stream_id);
         }
     }
 

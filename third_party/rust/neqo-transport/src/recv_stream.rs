@@ -79,7 +79,7 @@ impl RxStreamOrderer {
                     // (In-order frames will take this path, with no overlap)
                     let overlap = prev_end.saturating_sub(new_start);
                     if overlap != 0 {
-                        let truncate_to = new_data.len() - overlap as usize;
+                        let truncate_to = prev_vec.len() - overlap as usize;
                         prev_vec.truncate(truncate_to)
                     }
                     qtrace!(
@@ -556,6 +556,132 @@ impl RecvStream {
 mod tests {
     use super::*;
     use crate::frame::Frame;
+    use std::ops::Range;
+
+    fn recv_ranges(ranges: &[Range<u64>], available: usize) {
+        const ZEROES: &[u8] = &[0; 100];
+
+        let mut s = RxStreamOrderer::default();
+        for r in ranges {
+            let data = ZEROES[..usize::try_from(r.end - r.start).unwrap()].to_vec();
+            s.inbound_frame(r.start, data).unwrap();
+        }
+
+        let mut buf = vec![0xff; 100];
+        let mut total_recvd = 0;
+        loop {
+            let recvd = s.read(&mut buf);
+            total_recvd += recvd;
+            if recvd == 0 {
+                assert_eq!(total_recvd, available);
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn recv_noncontiguous() {
+        // Non-contiguous with the start, no data available.
+        recv_ranges(&[10..20], 0);
+    }
+
+    /// Overlaps with the start of a 10..20 range of bytes.
+    #[test]
+    fn recv_overlap_start() {
+        // Overlap the start, with a larger new value.
+        // More overlap than not.
+        recv_ranges(&[10..20, 4..18, 0..4], 20);
+        // Overlap the start, with a larger new value.
+        // Less overlap than not.
+        recv_ranges(&[10..20, 2..15, 0..2], 20);
+        // Overlap the start, with a smaller new value.
+        // More overlap than not.
+        recv_ranges(&[10..20, 8..14, 0..8], 20);
+        // Overlap the start, with a smaller new value.
+        // Less overlap than not.
+        recv_ranges(&[10..20, 6..13, 0..6], 20);
+
+        // Again with some of the first range split in two.
+        recv_ranges(&[10..11, 11..20, 4..18, 0..4], 20);
+        recv_ranges(&[10..11, 11..20, 2..15, 0..2], 20);
+        recv_ranges(&[10..11, 11..20, 8..14, 0..8], 20);
+        recv_ranges(&[10..11, 11..20, 6..13, 0..6], 20);
+
+        // Again with a gap in the first range.
+        recv_ranges(&[10..11, 12..20, 4..18, 0..4], 20);
+        recv_ranges(&[10..11, 12..20, 2..15, 0..2], 20);
+        recv_ranges(&[10..11, 12..20, 8..14, 0..8], 20);
+        recv_ranges(&[10..11, 12..20, 6..13, 0..6], 20);
+    }
+
+    /// Overlaps with the end of a 10..20 range of bytes.
+    #[test]
+    fn recv_overlap_end() {
+        // Overlap the end, with a larger new value.
+        // More overlap than not.
+        recv_ranges(&[10..20, 12..25, 0..10], 25);
+        // Overlap the end, with a larger new value.
+        // Less overlap than not.
+        recv_ranges(&[10..20, 17..33, 0..10], 33);
+        // Overlap the end, with a smaller new value.
+        // More overlap than not.
+        recv_ranges(&[10..20, 15..21, 0..10], 21);
+        // Overlap the end, with a smaller new value.
+        // Less overlap than not.
+        recv_ranges(&[10..20, 17..25, 0..10], 25);
+
+        // Again with some of the first range split in two.
+        recv_ranges(&[10..19, 19..20, 12..25, 0..10], 25);
+        recv_ranges(&[10..19, 19..20, 17..33, 0..10], 33);
+        recv_ranges(&[10..19, 19..20, 15..21, 0..10], 21);
+        recv_ranges(&[10..19, 19..20, 17..25, 0..10], 25);
+
+        // Again with a gap in the first range.
+        recv_ranges(&[10..18, 19..20, 12..25, 0..10], 25);
+        recv_ranges(&[10..18, 19..20, 17..33, 0..10], 33);
+        recv_ranges(&[10..18, 19..20, 15..21, 0..10], 21);
+        recv_ranges(&[10..18, 19..20, 17..25, 0..10], 25);
+    }
+
+    /// Complete overlaps with the start of a 10..20 range of bytes.
+    #[test]
+    fn recv_overlap_complete() {
+        // Complete overlap, more at the end.
+        recv_ranges(&[10..20, 9..23, 0..9], 23);
+        // Complete overlap, more at the start.
+        recv_ranges(&[10..20, 3..23, 0..3], 23);
+        // Complete overlap, to end.
+        recv_ranges(&[10..20, 5..20, 0..5], 20);
+        // Complete overlap, from start.
+        recv_ranges(&[10..20, 10..27, 0..10], 27);
+        // Complete overlap, from 0 and more.
+        recv_ranges(&[10..20, 0..23], 23);
+
+        // Again with the first range split in two.
+        recv_ranges(&[10..14, 14..20, 9..23, 0..9], 23);
+        recv_ranges(&[10..14, 14..20, 3..23, 0..3], 23);
+        recv_ranges(&[10..14, 14..20, 5..20, 0..5], 20);
+        recv_ranges(&[10..14, 14..20, 10..27, 0..10], 27);
+        recv_ranges(&[10..14, 14..20, 0..23], 23);
+
+        // Again with the a gap in the first range.
+        recv_ranges(&[10..13, 14..20, 9..23, 0..9], 23);
+        recv_ranges(&[10..13, 14..20, 3..23, 0..3], 23);
+        recv_ranges(&[10..13, 14..20, 5..20, 0..5], 20);
+        recv_ranges(&[10..13, 14..20, 10..27, 0..10], 27);
+        recv_ranges(&[10..13, 14..20, 0..23], 23);
+    }
+
+    /// An overlap with no new bytes.
+    #[test]
+    fn recv_overlap_duplicate() {
+        recv_ranges(&[10..20, 11..12, 0..10], 20);
+        recv_ranges(&[10..20, 10..15, 0..10], 20);
+        recv_ranges(&[10..20, 14..20, 0..10], 20);
+        // Now with the first range split.
+        recv_ranges(&[10..14, 14..20, 10..15, 0..10], 20);
+        recv_ranges(&[10..15, 16..20, 21..25, 10..25, 0..10], 25);
+    }
 
     #[test]
     fn test_stream_rx() {
@@ -701,7 +827,7 @@ mod tests {
 
     #[test]
     fn test_stream_flowc_update() {
-        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        let flow_mgr = Rc::default();
         let conn_events = ConnectionEvents::default();
 
         let frame1 = vec![0; RX_STREAM_DATA_WINDOW as usize];

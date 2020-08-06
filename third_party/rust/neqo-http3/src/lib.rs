@@ -244,7 +244,8 @@ impl ::std::fmt::Display for Error {
 }
 
 pub trait RecvStream: Debug {
-    fn stream_reset(&self, app_error: AppError);
+    fn stream_reset_recv(&self, app_error: AppError, decoder: &mut QPackDecoder);
+    fn stream_reset(&self, decoder: &mut QPackDecoder);
     /// # Errors
     /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
     fn receive(&mut self, conn: &mut Connection, decoder: &mut QPackDecoder) -> Res<()>;

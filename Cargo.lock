@@ -22,6 +22,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ansi_term"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
+dependencies = [
+ "winapi 0.3.7",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -215,7 +224,7 @@ dependencies = [
  "bindgen",
  "cranelift-codegen",
  "cranelift-wasm",
- "env_logger",
+ "env_logger 0.6.2",
  "log",
  "smallvec",
 ]
@@ -275,14 +284,18 @@ dependencies = [
  "cexpr",
  "cfg-if",
  "clang-sys",
+ "clap",
+ "env_logger 0.7.1",
  "lazy_static",
  "lazycell",
+ "log",
  "peeking_take_while",
  "proc-macro2",
  "quote",
  "regex",
  "rustc-hash",
  "shlex",
+ "which",
 ]
 
 [[package]]
@@ -589,11 +602,14 @@ version = "2.31.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0f16b89cbb9ee36d87483dc939fe9f1e13c05898d56d7b230a0d4dff033a536"
 dependencies = [
+ "ansi_term",
+ "atty",
  "bitflags",
  "strsim",
  "term_size",
  "textwrap",
  "unicode-width",
+ "vec_map",
 ]
 
 [[package]]
@@ -1281,6 +1297,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_logger"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44533bbbb3bb3c1fa17d9f2e4e38bbbaf8396ba82193c4cb1b6445d711445d36"
+dependencies = [
+ "atty",
+ "humantime",
+ "log",
+ "regex",
+ "termcolor",
+]
+
+[[package]]
 name = "error-chain"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1680,7 +1709,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger",
+ "env_logger 0.6.2",
  "lazy_static",
  "log",
 ]
@@ -2381,7 +2410,7 @@ version = "0.1.4"
 dependencies = [
  "bindgen",
  "cmake",
- "env_logger",
+ "env_logger 0.6.2",
  "glob",
  "lazy_static",
  "libc",
@@ -3129,11 +3158,11 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.4.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.8#a5abafdacb88e331913376943ad1768720caed9e"
+version = "0.4.9"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.9#422197c2bc2010647cd9c156deea18fb543079c6"
 dependencies = [
  "chrono",
- "env_logger",
+ "env_logger 0.6.2",
  "lazy_static",
  "log",
  "num-traits",
@@ -3142,8 +3171,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.4.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.8#a5abafdacb88e331913376943ad1768720caed9e"
+version = "0.4.9"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.9#422197c2bc2010647cd9c156deea18fb543079c6"
 dependencies = [
  "bindgen",
  "log",
@@ -3155,8 +3184,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.4.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.8#a5abafdacb88e331913376943ad1768720caed9e"
+version = "0.4.9"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.9#422197c2bc2010647cd9c156deea18fb543079c6"
 dependencies = [
  "log",
  "neqo-common",
@@ -3170,8 +3199,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.4.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.8#a5abafdacb88e331913376943ad1768720caed9e"
+version = "0.4.9"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.9#422197c2bc2010647cd9c156deea18fb543079c6"
 dependencies = [
  "lazy_static",
  "log",
@@ -3185,9 +3214,10 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.4.8"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.8#a5abafdacb88e331913376943ad1768720caed9e"
+version = "0.4.9"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.9#422197c2bc2010647cd9c156deea18fb543079c6"
 dependencies = [
+ "indexmap",
  "lazy_static",
  "log",
  "neqo-common",
@@ -3446,7 +3476,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger",
+ "env_logger 0.6.2",
  "lazy_static",
  "libloading 0.5.2",
  "log",
@@ -4502,7 +4532,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger",
+ "env_logger 0.6.2",
  "jsparagus",
  "log",
 ]
@@ -4702,7 +4732,7 @@ dependencies = [
  "atomic_refcell",
  "cssparser",
  "cstr",
- "env_logger",
+ "env_logger 0.6.2",
  "geckoservo",
  "libc",
  "log",
@@ -5679,6 +5709,15 @@ dependencies = [
  "parking_lot",
  "wgpu-core",
  "wgpu-types",
+]
+
+[[package]]
+name = "which"
+version = "3.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d011071ae14a2f6671d0b74080ae0cd8ebf3a6f8c9589a2cd45f23126fe29724"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
