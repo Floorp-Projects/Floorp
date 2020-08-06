@@ -14,6 +14,9 @@ const DOMAIN = "example.com";
  * and they both set their document.domain to be "example.com".
  */
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", false]],
+  });
   // 1. Open a new tab and wait for it to load the top level doc
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   let browser = newTab.linkedBrowser;
