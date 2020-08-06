@@ -24,6 +24,29 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s გახსნილი ჩანართი. შეეხეთ ჩანართების გადასართველად.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d მონიშნულია</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">ახალი კრებულის დამატება</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">სახელი</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">კრებულის შერჩევა</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">ერთიანად შერჩევის გაუქმება</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">შერჩეული ჩანართების კრებულში შენახვა</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">მონიშნულია %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">მოუნიშნავია %1$s</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">ერთიანად შერჩევა გაუქმდა</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">ერთიანად შერჩევა, რამდენიმე ჩანართის კრებულში შესანახად</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">მონიშნულია</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s შექმნა Mozilla-მ.</string>
 
@@ -145,8 +168,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">წაკითხვა</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">საძიებო სისტემა</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">საძიებო სისტემა</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">საძიებო სისტემის პარამეტრები</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -507,6 +530,9 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (პირადი რეჟიმი)</string>
 
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">შენახვა</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ისტორიის წაშლა</string>
@@ -574,7 +600,7 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">ნამდვილად გსურთ ამ საქაღალდის წაშლა?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
-    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s წაშლის მონისნულებს.</string>
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s წაშლის მონიშნულებს.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">წაიშალა %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -728,7 +754,7 @@
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">ჩანართები შენახულია!</string>
     <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
-    <string name="create_collection_tabs_saved_new_collection">კრებულის შენახულია!</string>
+    <string name="create_collection_tabs_saved_new_collection">კრებული შენახულია!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">ჩანართი შენახულია!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -996,9 +1022,9 @@
     <string name="onboarding_private_browsing_header">პირადული ინტერნეტი</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">გახსენით პირადი ჩანართი ერთჯერადად: შეეხეთ %s ხატულას.</string>
+    <string name="onboarding_private_browsing_description1">პირადი ჩანართის გახსნა ერთჯერადად: შეეხეთ %s ხატულას.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">გახსენით პირადი ჩანართი ყოველ ჯერზე: მიუთითეთ პარამეტრებიდან.</string>
+    <string name="onboarding_private_browsing_always_description">პირადი ჩანართის გახსნა ყოველ ჯერზე: მიუთითეთ პარამეტრებიდან.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">პარამეტრების გახსნა</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -1433,9 +1459,7 @@
     <string name="saved_login_duplicate">ანგარიში ამ სახელით უკვე არსებობს</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">დაკავშირება Firefox-ანგარიშით</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">სხვა მოწყობილობის დაკავშირება</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">გთხოვთ, ხელახლა შეხვიდეთ.</string>
@@ -1457,14 +1481,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">კარგი, გასაგებია</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">მალსახმობები</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">ძიება</string>
-
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">ძიებისთვის გამოიყენეთ:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">ძიების მალსახმობები</string>
     </resources>
