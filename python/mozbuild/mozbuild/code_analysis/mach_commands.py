@@ -37,6 +37,8 @@ from mozbuild.nodeutil import find_node_executable
 
 import mozpack.path as mozpath
 
+from mozbuild.util import memoized_property
+
 from mozversioncontrol import get_repository_object
 
 from mozbuild.controller.clobber import Clobberer
@@ -89,7 +91,7 @@ class StaticAnalysisSubCommand(SubCommand):
 
 
 class StaticAnalysisMonitor(object):
-    def __init__(self, srcdir, objdir, clang_tidy_config, total):
+    def __init__(self, srcdir, objdir, checks, total):
         self._total = total
         self._processed = 0
         self._current = None
@@ -97,10 +99,10 @@ class StaticAnalysisMonitor(object):
 
         import copy
 
-        self._clang_tidy_config = copy.deepcopy(clang_tidy_config["clang_checkers"])
+        self._checks = copy.deepcopy(checks)
 
         # Transform the configuration to support Regex
-        for item in self._clang_tidy_config:
+        for item in self._checks:
             if item["name"] == "-*":
                 continue
             item["name"] = item["name"].replace("*", ".*")
@@ -158,8 +160,8 @@ class StaticAnalysisMonitor(object):
         if warning is not None:
 
             def get_check_config(checker_name):
-                # get the matcher from self._clang_tidy_config that is the 'name' field
-                for item in self._clang_tidy_config:
+                # get the matcher from self._checks that is the 'name' field
+                for item in self._checks:
                     if item["name"] == checker_name:
                         return item
 
@@ -193,7 +195,6 @@ class StaticAnalysis(MachCommandBase):
     # List of file extension to consider (should start with dot)
     _check_syntax_include_extensions = (".cpp", ".c", ".cc", ".cxx")
 
-    _clang_tidy_config = None
     _cov_config = None
 
     @Command(
@@ -365,11 +366,12 @@ class StaticAnalysis(MachCommandBase):
 
         cwd = self.topobjdir
         self._compilation_commands_path = self.topobjdir
-        if self._clang_tidy_config is None:
-            self._clang_tidy_config = self._get_clang_tidy_config()
 
         monitor = StaticAnalysisMonitor(
-            self.topsrcdir, self.topobjdir, self._clang_tidy_config, total
+            self.topsrcdir,
+            self.topobjdir,
+            self.get_clang_tidy_config.checks_with_data,
+            total,
         )
 
         footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
@@ -1192,22 +1194,11 @@ class StaticAnalysis(MachCommandBase):
                     excludes.append(line.strip("\n"))
         return checkers, excludes
 
-    def _get_clang_tidy_config(self):
-        try:
-            file_handler = open(
-                mozpath.join(self.topsrcdir, "tools", "clang-tidy", "config.yaml")
-            )
-            config = yaml.safe_load(file_handler)
-        except Exception:
-            self.log(
-                logging.ERROR,
-                "static-analysis",
-                {},
-                "ERROR: Looks like config.yaml is not valid, we are going to use default"
-                " values for the rest of the analysis for clang-tidy.",
-            )
-            return None
-        return config
+    @memoized_property
+    def get_clang_tidy_config(self):
+        from mozbuild.code_analysis.utils import ClangTidyConfig
+
+        return ClangTidyConfig(self.topsrcdir)
 
     def _get_cov_config(self):
         try:
@@ -1227,14 +1218,9 @@ class StaticAnalysis(MachCommandBase):
         return config
 
     def _is_version_eligible(self):
-        # make sure that we've cached self._clang_tidy_config
-        if self._clang_tidy_config is None:
-            self._clang_tidy_config = self._get_clang_tidy_config()
+        version = self.get_clang_tidy_config.version
 
-        version = None
-        if "package_version" in self._clang_tidy_config:
-            version = self._clang_tidy_config["package_version"]
-        else:
+        if version is None:
             self.log(
                 logging.ERROR,
                 "static-analysis",
@@ -1268,7 +1254,7 @@ class StaticAnalysis(MachCommandBase):
     def _get_clang_tidy_command(self, checks, header_filter, sources, jobs, fix):
 
         if checks == "-*":
-            checks = self._get_checks()
+            checks = ",".join(self.get_clang_tidy_config.checks)
 
         common_args = [
             "-clang-tidy-binary",
@@ -1292,7 +1278,7 @@ class StaticAnalysis(MachCommandBase):
         # From our configuration file, config.yaml, we build the configuration list, for
         # the checkers that are used. These configuration options are used to better fit
         # the checkers to our code.
-        cfg = self._get_checks_config()
+        cfg = self.get_clang_tidy_config.checks_config
         if cfg:
             common_args += ["-config=%s" % yaml.dump(cfg)]
 
@@ -1478,10 +1464,9 @@ class StaticAnalysis(MachCommandBase):
         self._clang_tidy_base_path = mozpath.join(self.topsrcdir, "tools", "clang-tidy")
 
         # For each checker run it
-        self._clang_tidy_config = self._get_clang_tidy_config()
         platform, _ = self.platform
 
-        if platform not in self._clang_tidy_config["platforms"]:
+        if platform not in self.get_clang_tidy_config.platforms:
             self.log(
                 logging.ERROR,
                 "static-analysis",
@@ -1512,14 +1497,12 @@ class StaticAnalysis(MachCommandBase):
         self._clang_tidy_checks = [c.strip() for c in available_checks if c]
 
         # Build the dummy compile_commands.json
-        self._compilation_commands_path = self._create_temp_compilation_db(
-            self._clang_tidy_config
-        )
+        self._compilation_commands_path = self._create_temp_compilation_db()
         checkers_test_batch = []
         checkers_results = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
-            for item in self._clang_tidy_config["clang_checkers"]:
+            for item in self.get_clang_tidy_config.checks_with_data:
                 # Skip if any of the following statements is true:
                 # 1. Checker attribute 'publish' is False.
                 not_published = not bool(item.get("publish", True))
@@ -1720,17 +1703,17 @@ class StaticAnalysis(MachCommandBase):
 
         return self.TOOLS_SUCCESS
 
-    def _create_temp_compilation_db(self, config):
+    def _create_temp_compilation_db(self):
         directory = tempfile.mkdtemp(prefix="cc")
         with open(
             mozpath.join(directory, "compile_commands.json"), "w"
         ) as file_handler:
             compile_commands = []
             director = mozpath.join(self.topsrcdir, "tools", "clang-tidy", "test")
-            for item in config["clang_checkers"]:
-                if item["name"] in ["-*", "mozilla-*"]:
+            for item in self.get_clang_tidy_config.checks:
+                if item in ["-*", "mozilla-*"]:
                     continue
-                file = item["name"] + ".cpp"
+                file = item + ".cpp"
                 element = {}
                 element["directory"] = director
                 element["command"] = "cpp " + file
@@ -2005,13 +1988,10 @@ class StaticAnalysis(MachCommandBase):
         if rc != 0:
             return rc
 
-        if self._clang_tidy_config is None:
-            self._clang_tidy_config = self._get_clang_tidy_config()
-
         args = [
             self._clang_tidy_path,
             "-list-checks",
-            "-checks=%s" % self._get_checks(),
+            "-checks=%s" % self.get_clang_tidy_config.checks,
         ]
 
         rc = self.run_process(args=args, pass_thru=True)
@@ -2428,49 +2408,6 @@ class StaticAnalysis(MachCommandBase):
             element = [header_group[3], header_group[4], header_group[5]]
             issues.append(element)
         return issues
-
-    def _get_checks(self):
-        checks = "-*"
-        try:
-            config = self._clang_tidy_config
-            for item in config["clang_checkers"]:
-                if item.get("publish", True):
-                    checks += "," + item["name"]
-        except Exception:
-            print(
-                "Looks like config.yaml is not valid, so we are unable to "
-                "determine default checkers, using '-checks=-*,mozilla-*'"
-            )
-            checks += ",mozilla-*"
-        finally:
-            return checks
-
-    def _get_checks_config(self):
-        config_list = []
-        checker_config = {}
-        try:
-            config = self._clang_tidy_config
-            for checker in config["clang_checkers"]:
-                if checker.get("publish", True) and "config" in checker:
-                    for checker_option in checker["config"]:
-                        # Verify if the format of the Option is correct,
-                        # possibilities are:
-                        # 1. CheckerName.Option
-                        # 2. Option -> that will become CheckerName.Option
-                        if not checker_option["key"].startswith(checker["name"]):
-                            checker_option["key"] = "{}.{}".format(
-                                checker["name"], checker_option["key"]
-                            )
-                    config_list += checker["config"]
-            checker_config["CheckOptions"] = config_list
-        except Exception:
-            print(
-                "Looks like config.yaml is not valid, so we are unable to "
-                "determine configuration for checkers, so using default"
-            )
-            checker_config = None
-        finally:
-            return checker_config
 
     def _get_config_environment(self):
         ran_configure = False
