@@ -10,4 +10,6 @@ export CI_BUILD_URL="https://tools.taskcluster.net/tasks/$TASK_ID"
 
 # Execute codecov script for uploading report
 # bash <(curl -s https://codecov.io/bash)
-bash <(curl -s https://codecov.io/bash) -t @.cc_token
+# Copied the codecov bash script locally for:
+# https://github.com/mozilla-mobile/android-components/issues/7500
+bash automation/taskcluster/.codecov -t @.cc_token

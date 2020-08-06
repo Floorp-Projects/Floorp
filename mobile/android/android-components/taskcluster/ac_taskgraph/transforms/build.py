@@ -45,8 +45,7 @@ def handle_coverage(config, tasks):
     for task in tasks:
         if task.pop('include-coverage', False):
             task['run']['gradlew'].insert(0, '-Pcoverage')
-            # Disabling codecov until the bug is resolved: https://github.com/mozilla-mobile/android-components/issues/7500
-            #task['run']['post-gradlew'] = [['automation/taskcluster/action/upload_coverage_report.sh']]
+            task['run']['post-gradlew'] = [['automation/taskcluster/action/upload_coverage_report.sh']]
             task['run']['secrets'] = [{
                 'name': 'project/mobile/android-components/public-tokens',
                 'key': 'codecov',
