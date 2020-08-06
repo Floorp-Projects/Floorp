@@ -50,21 +50,53 @@ static nsCUPSShim sCupsShim;
 //----------------------------------------------------------------------
 // nsPrinterListX
 
+/**
+ * Retrieves the display name of a printer.
+ */
+static nsresult GetDisplayNameForPrinter(cups_dest_t& aDest, nsAString& aName) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // CUPS does not appear to have a native call to retrieve a display name for
+  // a printer, so we need to use cocoa to find a display name for the printer.
+  PMPrinter corePrinter = PMPrinterCreateFromPrinterID(
+      static_cast<CFStringRef>([NSString stringWithUTF8String:aDest.name]));
+
+  if (!corePrinter) {
+    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
+  }
+
+  CFStringRef printerName = PMPrinterGetName(corePrinter);
+  nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(printerName), aName);
+  PMRelease(corePrinter);
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 NS_IMPL_ISUPPORTS(nsPrinterListX, nsIPrinterList);
 
 NS_IMETHODIMP
 nsPrinterListX::GetSystemDefaultPrinterName(nsAString& aName) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  aName.Truncate();
-  NSArray<NSString*>* printerNames = [NSPrinter printerNames];
-  if ([printerNames count] > 0) {
-    NSString* name = [printerNames objectAtIndex:0];
-    nsCocoaUtils::GetStringForNSString(name, aName);
-    return NS_OK;
+  if (!sCupsShim.IsInitialized()) {
+    if (!sCupsShim.Init()) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
+  mozilla::CUPSPrinterList cupsPrinterList(sCupsShim);
+  cupsPrinterList.Initialize();
+
+  cups_dest_t* const dest = cupsPrinterList.GetDefaultPrinter();
+  if (!dest) {
+    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
+  }
+
+  GetDisplayNameForPrinter(*dest, aName);
+
+  return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -79,30 +111,18 @@ nsPrinterListX::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
     }
   }
 
-  mozilla::CUPSPrinterList cupsPrinterList{sCupsShim};
+  mozilla::CUPSPrinterList cupsPrinterList(sCupsShim);
   cupsPrinterList.Initialize();
   aPrinters.SetCapacity(cupsPrinterList.NumPrinters());
 
   for (int i = 0; i < cupsPrinterList.NumPrinters(); i++) {
     cups_dest_t* const dest = cupsPrinterList.GetPrinter(i);
-    RefPtr<nsPrinterCUPS> cupsPrinter = nsPrinterCUPS::Create(sCupsShim, dest);
 
-    // CUPS does not appear to have a native call to retrieve a display name for
-    // a printer, so we need to use cocoa to find a display name for the printer.
-    PMPrinter corePrinter = PMPrinterCreateFromPrinterID(
-        static_cast<CFStringRef>([NSString stringWithUTF8String:dest->name]));
-
-    if (!corePrinter) {
-      continue;
-    }
-
-    CFStringRef printerName = PMPrinterGetName(corePrinter);
-    nsAutoString displayName;
-    nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(printerName), displayName);
-    cupsPrinter->SetDisplayName(displayName);
+    nsString displayName;
+    GetDisplayNameForPrinter(*dest, displayName);
+    RefPtr<nsPrinterCUPS> cupsPrinter = nsPrinterCUPS::Create(sCupsShim, dest, displayName);
 
     aPrinters.AppendElement(cupsPrinter);
-    PMRelease(corePrinter);
   }
 
   return NS_OK;
