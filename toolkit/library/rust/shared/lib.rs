@@ -29,7 +29,7 @@ extern crate encoding_glue;
 #[cfg(feature = "rust_fxa_client")]
 extern crate firefox_accounts_bridge;
 #[cfg(feature = "glean")]
-extern crate fog;
+extern crate fog_control;
 extern crate gkrust_utils;
 extern crate jsrust_shared;
 extern crate kvstore;

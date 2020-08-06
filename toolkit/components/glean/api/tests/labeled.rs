@@ -7,7 +7,7 @@ use common::*;
 
 use once_cell::sync::Lazy;
 
-use glean::private::{
+use fog::private::{
     BooleanMetric, CommonMetricData, CounterMetric, ErrorType, LabeledMetric, Lifetime,
     StringMetric,
 };

@@ -5,7 +5,7 @@
 mod common;
 use common::*;
 
-use glean::private::{CommonMetricData, DatetimeMetric, Lifetime, TimeUnit};
+use fog::private::{CommonMetricData, DatetimeMetric, Lifetime, TimeUnit};
 
 use chrono::{FixedOffset, TimeZone};
 

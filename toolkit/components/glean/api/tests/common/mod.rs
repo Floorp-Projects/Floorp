@@ -4,7 +4,7 @@
 
 use std::sync::{Mutex, MutexGuard};
 
-use glean::once_cell::sync::Lazy;
+use fog::once_cell::sync::Lazy;
 
 const GLOBAL_APPLICATION_ID: &str = "org.mozilla.firefox.test";
 
