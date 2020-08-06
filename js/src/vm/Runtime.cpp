@@ -318,6 +318,10 @@ void JSRuntime::addTelemetry(int id, uint32_t sample, const char* key) {
   }
 }
 
+JSTelemetrySender JSRuntime::getTelemetrySender() const {
+  return JSTelemetrySender(telemetryCallback);
+}
+
 void JSRuntime::setTelemetryCallback(
     JSRuntime* rt, JSAccumulateTelemetryDataCallback callback) {
   rt->telemetryCallback = callback;

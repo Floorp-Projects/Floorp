@@ -130,10 +130,14 @@ struct CompileTask : public RunnableTask {
   LifoAlloc lifo;
   FuncCompileInputVector inputs;
   CompiledCode output;
+  JSTelemetrySender telemetrySender;
 
   CompileTask(const ModuleEnvironment& env, ExclusiveCompileTaskState& state,
-              size_t defaultChunkSize)
-      : env(env), state(state), lifo(defaultChunkSize) {}
+              size_t defaultChunkSize, JSTelemetrySender telemetrySender)
+      : env(env),
+        state(state),
+        lifo(defaultChunkSize),
+        telemetrySender(telemetrySender) {}
 
   virtual ~CompileTask() = default;
 
@@ -164,6 +168,7 @@ class MOZ_STACK_CLASS ModuleGenerator {
   UniqueChars* const error_;
   const Atomic<bool>* const cancelled_;
   ModuleEnvironment* const env_;
+  JSTelemetrySender telemetrySender_;
 
   // Data that is moved into the result of finish()
   UniqueLinkData linkData_;
@@ -221,7 +226,9 @@ class MOZ_STACK_CLASS ModuleGenerator {
   ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env,
                   const Atomic<bool>* cancelled, UniqueChars* error);
   ~ModuleGenerator();
-  MOZ_MUST_USE bool init(Metadata* maybeAsmJSMetadata = nullptr);
+  MOZ_MUST_USE bool init(
+      Metadata* maybeAsmJSMetadata = nullptr,
+      JSTelemetrySender telemetrySender = JSTelemetrySender());
 
   // Before finishFuncDefs() is called, compileFuncDef() must be called once
   // for each funcIndex in the range [0, env->numFuncDefs()).
