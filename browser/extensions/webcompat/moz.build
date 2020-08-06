@@ -103,6 +103,7 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['lib'] += [
   'lib/custom_functions.js',
   'lib/injections.js',
   'lib/intervention_helpers.js',
+  'lib/messaging_helper.js',
   'lib/module_shim.js',
   'lib/picture_in_picture_overrides.js',
   'lib/shim_messaging_helper.js',

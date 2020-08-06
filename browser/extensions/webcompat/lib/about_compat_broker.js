@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* global browser, module */
+/* global browser, module, onMessageFromTab */
 
 class AboutCompatBroker {
   constructor(bindings) {
@@ -60,7 +60,7 @@ class AboutCompatBroker {
   }
 
   bootup() {
-    browser.runtime.onMessage.addListener(msg => {
+    onMessageFromTab(msg => {
       switch (msg.command || msg) {
         case "toggle": {
           const id = msg.id;

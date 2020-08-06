@@ -3,7 +3,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "13.1.0",
+  "version": "13.2.0",
 
   "applications": {
     "gecko": {
@@ -108,6 +108,7 @@
   "background": {
     "scripts": [
       "lib/module_shim.js",
+      "lib/messaging_helper.js",
       "lib/intervention_helpers.js",
       "data/injections.js",
       "data/picture_in_picture_overrides.js",
