@@ -59,11 +59,13 @@ exports[`IssueItem component renders a prefixNeeded issue of CSS property 1`] = 
     className="compatibility-issue-item__aliases"
   >
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-1"
     >
       test-alias-1
     </li>
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-2"
     >
       test-alias-2
@@ -131,11 +133,13 @@ exports[`IssueItem component renders an issue which has deprecated and experimen
     className="compatibility-issue-item__aliases"
   >
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-1"
     >
       test-alias-1
     </li>
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-2"
     >
       test-alias-2
@@ -174,11 +178,13 @@ exports[`IssueItem component renders an issue which has deprecated and prefixNee
     className="compatibility-issue-item__aliases"
   >
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-1"
     >
       test-alias-1
     </li>
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-2"
     >
       test-alias-2
@@ -217,11 +223,13 @@ exports[`IssueItem component renders an issue which has deprecated, experimental
     className="compatibility-issue-item__aliases"
   >
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-1"
     >
       test-alias-1
     </li>
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-2"
     >
       test-alias-2
@@ -260,11 +268,13 @@ exports[`IssueItem component renders an issue which has experimental and prefixN
     className="compatibility-issue-item__aliases"
   >
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-1"
     >
       test-alias-1
     </li>
     <li
+      className="compatibility-issue-item__alias"
       key="test-alias-2"
     >
       test-alias-2
