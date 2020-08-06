@@ -76,9 +76,19 @@ nsresult URLPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
+// static
+already_AddRefed<URLPreloader> URLPreloader::Create() {
+  RefPtr<URLPreloader> preloader = new URLPreloader();
+  if (preloader->InitInternal().isOk()) {
+    RegisterWeakMemoryReporter(preloader);
+  }
+  return preloader.forget();
+}
+
 URLPreloader& URLPreloader::GetSingleton() {
   if (!sSingleton) {
-    sSingleton = new URLPreloader();
+    sSingleton = Create();
+    sInitialized = !!sSingleton;
     ClearOnShutdown(&sSingleton);
   }
 
@@ -88,13 +98,6 @@ URLPreloader& URLPreloader::GetSingleton() {
 bool URLPreloader::sInitialized = false;
 
 StaticRefPtr<URLPreloader> URLPreloader::sSingleton;
-
-URLPreloader::URLPreloader() {
-  if (InitInternal().isOk()) {
-    sInitialized = true;
-    RegisterWeakMemoryReporter(this);
-  }
-}
 
 URLPreloader::~URLPreloader() {
   if (sInitialized) {
@@ -142,8 +145,9 @@ Result<Ok, nsresult> URLPreloader::InitInternal() {
 }
 
 URLPreloader& URLPreloader::ReInitialize() {
-  sSingleton = new URLPreloader();
-
+  MOZ_ASSERT(sSingleton);
+  sSingleton = Create();
+  sInitialized = !!sSingleton;
   return *sSingleton;
 }
 
