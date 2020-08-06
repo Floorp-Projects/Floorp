@@ -18,6 +18,7 @@ const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   fetchNetworkUpdatePacket,
   parseFormData,
+  parseJSON,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const {
   sortObjectKeys,
@@ -136,15 +137,6 @@ class RequestPanel extends Component {
     }, {});
   }
 
-  parseJSON(postData) {
-    try {
-      return JSON.parse(postData);
-    } catch (err) {
-      // Continue regardless of parsing error
-    }
-    return null;
-  }
-
   render() {
     const { request, targetSearchResult } = this.props;
     const { filterText } = this.state;
@@ -187,7 +179,7 @@ class RequestPanel extends Component {
 
     if (formDataSections && formDataSections.length === 0 && postData) {
       if (!error) {
-        const json = this.parseJSON(postData);
+        const json = parseJSON(postData).json;
         if (json) {
           items.push({
             component: PropertiesView,

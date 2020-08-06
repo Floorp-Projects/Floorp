@@ -21,7 +21,7 @@ const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
 const {
   getMessagePayload,
   getResponseHeader,
-  isJSON,
+  parseJSON,
 } = require("devtools/client/netmonitor/src/utils/request-utils.js");
 const {
   getFormattedSize,
@@ -174,7 +174,7 @@ class MessagePayload extends Component {
     }
 
     // json payload
-    const { json } = isJSON(payload);
+    const { json } = parseJSON(payload);
     if (json) {
       const actionCablePayload = this.parseActionCable(json);
       if (actionCablePayload) {
@@ -248,7 +248,7 @@ class MessagePayload extends Component {
 
     // MVP Signalr
     if (payload.endsWith("\u001e")) {
-      const { json } = isJSON(payload.slice(0, -1));
+      const { json } = parseJSON(payload.slice(0, -1));
       if (json) {
         return json;
       }
@@ -258,8 +258,8 @@ class MessagePayload extends Component {
   }
 
   parseActionCable(payload) {
-    const identifier = payload.identifier && isJSON(payload.identifier).json;
-    const data = payload.data && isJSON(payload.data).json;
+    const identifier = payload.identifier && parseJSON(payload.identifier).json;
+    const data = payload.data && parseJSON(payload.data).json;
     if (!data && !identifier) {
       return null;
     }

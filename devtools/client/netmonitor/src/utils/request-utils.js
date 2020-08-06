@@ -632,10 +632,47 @@ function isBase64(payload) {
 
 /**
  * Checks if the payload is of JSON type.
+ * This function also handles JSON with XSSI-escaping characters by skipping them.
+ * This function also handles Base64 encoded JSON.
  */
-function isJSON(payload) {
+function parseJSON(payloadUnclean) {
   let json, error;
-
+  const jsonpRegex = /^\s*([\w$]+)\s*\(\s*([^]*)\s*\)\s*;?\s*$/;
+  const [, jsonpCallback, jsonp] = payloadUnclean.match(jsonpRegex) || [];
+  if (jsonpCallback && jsonp) {
+    try {
+      json = parseJSON(jsonp).json;
+    } catch (err) {
+      error = err;
+    }
+    return { json, error, jsonpCallback };
+  }
+  // Start at the first likely JSON character,
+  // so that magic XSSI characters can be avoided
+  const firstSquare = payloadUnclean.indexOf("[");
+  const firstCurly = payloadUnclean.indexOf("{");
+  // This logic finds the first starting square or curly bracket.
+  // However, since Math.min will return -1 even if
+  // the other type of bracket was found and has an index,
+  // if one of the indexes is -1, the max value is returned
+  // (this value may also be -1, but that is checked for later on.)
+  const minFirst = Math.min(firstSquare, firstCurly);
+  let first;
+  if (minFirst === -1) {
+    first = Math.max(firstCurly, firstSquare);
+  } else {
+    first = minFirst;
+  }
+  let payload = "";
+  if (first !== -1) {
+    try {
+      payload = payloadUnclean.substring(first);
+    } catch (err) {
+      error = err;
+    }
+  } else {
+    payload = payloadUnclean;
+  }
   try {
     json = JSON.parse(payload);
   } catch (err) {
@@ -643,7 +680,7 @@ function isJSON(payload) {
       try {
         json = JSON.parse(atob(payload));
       } catch (err64) {
-        error = err;
+        error = err64;
       }
     } else {
       error = err;
@@ -657,7 +694,6 @@ function isJSON(payload) {
       return {};
     }
   }
-
   return {
     json,
     error,
@@ -693,5 +729,5 @@ module.exports = {
   processNetworkUpdates,
   propertiesEqual,
   ipToLong,
-  isJSON,
+  parseJSON,
 };
