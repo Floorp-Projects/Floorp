@@ -670,7 +670,7 @@ abstract class AbstractFetchDownloadService : Service() {
         val downloadWithUniqueFileName = makeUniqueFileNameIfNecessary(download, append)
         updateDownloadState(downloadWithUniqueFileName)
 
-        if (SDK_INT >= Build.VERSION_CODES.Q) {
+        if (SDK_INT >= Build.VERSION_CODES.Q && !Environment.isExternalStorageLegacy()) {
             useFileStreamScopedStorage(downloadWithUniqueFileName, block)
         } else {
             useFileStreamLegacy(downloadWithUniqueFileName, append, block)
