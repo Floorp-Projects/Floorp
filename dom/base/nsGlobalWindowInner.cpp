@@ -1612,9 +1612,6 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
   if (!mWindowGlobalChild) {
     mWindowGlobalChild = WindowGlobalChild::Create(this);
   }
-  MOZ_ASSERT(!GetWindowContext()->HasBeenUserGestureActivated(),
-             "WindowContext should always not have user gesture activation at "
-             "this point.");
 
   UpdateAutoplayPermission();
   UpdateShortcutsPermission();
@@ -1624,6 +1621,10 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
 
   if (permDelegateHandler) {
     permDelegateHandler->PopulateAllDelegatedPermissions();
+  }
+
+  if (mWindowGlobalChild && GetBrowsingContext()) {
+    GetBrowsingContext()->NotifyResetUserGestureActivation();
   }
 
 #if defined(MOZ_WIDGET_ANDROID)

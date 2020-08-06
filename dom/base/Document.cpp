@@ -15268,13 +15268,8 @@ BrowsingContext* Document::GetBrowsingContext() const {
 
 void Document::NotifyUserGestureActivation() {
   if (RefPtr<BrowsingContext> bc = GetBrowsingContext()) {
-    bc->PreOrderWalk([&](BrowsingContext* aBC) {
-      WindowContext* windowContext = aBC->GetCurrentWindowContext();
-      if (!windowContext) {
-        return;
-      }
-
-      nsIDocShell* docShell = aBC->GetDocShell();
+    bc->PreOrderWalk([&](BrowsingContext* aContext) {
+      nsIDocShell* docShell = aContext->GetDocShell();
       if (!docShell) {
         return;
       }
@@ -15287,42 +15282,38 @@ void Document::NotifyUserGestureActivation() {
       // XXXedgar we probably could just check `IsInProcess()` after fission
       // enable.
       if (NodePrincipal()->Equals(document->NodePrincipal())) {
-        windowContext->NotifyUserGestureActivation();
+        aContext->NotifyUserGestureActivation();
       }
     });
 
     for (bc = bc->GetParent(); bc; bc = bc->GetParent()) {
-      if (WindowContext* windowContext = bc->GetCurrentWindowContext()) {
-        windowContext->NotifyUserGestureActivation();
-      }
+      bc->NotifyUserGestureActivation();
     }
   }
 }
 
 bool Document::HasBeenUserGestureActivated() {
-  RefPtr<WindowContext> wc = GetWindowContext();
-  return wc && wc->HasBeenUserGestureActivated();
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  return bc && bc->HasBeenUserGestureActivated();
 }
 
 void Document::ClearUserGestureActivation() {
   if (RefPtr<BrowsingContext> bc = GetBrowsingContext()) {
     bc = bc->Top();
-    bc->PreOrderWalk([&](BrowsingContext* aBC) {
-      if (WindowContext* windowContext = aBC->GetCurrentWindowContext()) {
-        windowContext->NotifyResetUserGestureActivation();
-      }
+    bc->PreOrderWalk([&](BrowsingContext* aContext) {
+      aContext->NotifyResetUserGestureActivation();
     });
   }
 }
 
 bool Document::HasValidTransientUserGestureActivation() {
-  RefPtr<WindowContext> wc = GetWindowContext();
-  return wc && wc->HasValidTransientUserGestureActivation();
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  return bc && bc->HasValidTransientUserGestureActivation();
 }
 
 bool Document::ConsumeTransientUserGestureActivation() {
-  RefPtr<WindowContext> wc = GetWindowContext();
-  return wc && wc->ConsumeTransientUserGestureActivation();
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  return bc && bc->ConsumeTransientUserGestureActivation();
 }
 
 void Document::SetDocTreeHadAudibleMedia() {

@@ -159,10 +159,8 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   nsresult rv = NS_OK;
   Maybe<dom::ClientInfo> initialClientInfo = mInitialClientInfo;
 
-  RefPtr<WindowContext> context =
-      GetDocShell()->GetBrowsingContext()->GetCurrentWindowContext();
   const bool hasValidTransientUserGestureActivation =
-      context && context->HasValidTransientUserGestureActivation();
+      docShell->GetBrowsingContext()->HasValidTransientUserGestureActivation();
 
   RefPtr<DocumentLoadListener::OpenPromise> promise;
   if (isDocumentLoad) {

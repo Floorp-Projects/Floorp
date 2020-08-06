@@ -16,7 +16,6 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/WindowContext.h"
 
 namespace mozilla {
 namespace dom {
@@ -134,10 +133,10 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   nsCOMPtr<nsPIDOMWindowInner> sourceWindow =
       nsContentUtils::CallerInnerWindow();
   if (sourceWindow) {
-    WindowContext* context = sourceWindow->GetWindowContext();
-    loadState->SetSourceBrowsingContext(sourceWindow->GetBrowsingContext());
+    RefPtr<BrowsingContext> sourceBC = sourceWindow->GetBrowsingContext();
+    loadState->SetSourceBrowsingContext(sourceBC);
     loadState->SetHasValidUserGestureActivation(
-        context && context->HasValidTransientUserGestureActivation());
+        sourceBC && sourceBC->HasValidTransientUserGestureActivation());
   }
 
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
