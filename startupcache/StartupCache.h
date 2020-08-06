@@ -438,6 +438,7 @@ class StartupCache : public nsIMemoryReporter {
 
   Atomic<bool> mDirty;
   Atomic<bool> mWrittenOnce;
+  Atomic<bool> mStartupFinished;
   bool mCurTableReferenced;
   bool mLoaded;
   bool mFullyInitialized;
@@ -447,7 +448,6 @@ class StartupCache : public nsIMemoryReporter {
   size_t mCacheEntriesBaseOffset;
 
   static StaticRefPtr<StartupCache> gStartupCache;
-  static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   static bool gFoundDiskCacheOnInit;
 
