@@ -103,8 +103,6 @@ ifdef LIB_IS_C_ONLY
 MKSHLIB			= $(MKCSHLIB)
 endif
 
-EMBED_MANIFEST_AT=2
-
 endif # MKSHLIB
 endif # FORCE_SHARED_LIB
 
@@ -610,15 +608,13 @@ endif
 
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
-ifdef EMBED_MANIFEST_AT
 	@if test -f $@.manifest; then \
 		echo "Manifest in objdir is not supported"; \
 		exit 1; \
 	elif test -f '$(srcdir)/$@.manifest'; then \
 		echo 'Embedding manifest from $(srcdir_rel)/$@.manifest'; \
-		$(call WINEWRAP,$(MT)) -NOLOGO -MANIFEST '$(srcdir_rel)/$@.manifest' -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
+		$(call WINEWRAP,$(MT)) -NOLOGO -MANIFEST '$(srcdir_rel)/$@.manifest' -OUTPUTRESOURCE:$@\;2; \
 	fi
-endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
 endif	# WINNT && !GCC
 	chmod +x $@
