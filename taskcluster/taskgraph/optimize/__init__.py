@@ -568,12 +568,6 @@ class experimental(object):
     }
     """Runs task containing tests in the same directories as modified files."""
 
-    seta = {
-        'test': Any('skip-unless-schedules', 'seta'),
-    }
-    """Provides a stable history of SETA's performance in the event we make it
-    non-default in the future. Only useful as a benchmark."""
-
 
 class ExperimentalOverride(object):
     """Overrides dictionaries that are stored in a container with new values.
