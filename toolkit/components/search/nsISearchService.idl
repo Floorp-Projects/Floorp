@@ -100,6 +100,12 @@ interface nsISearchEngine : nsISupports
   attribute AString alias;
 
   /**
+   * An array of aliases including the user defined alias and
+   * ones specified by the webextensions keywords field.
+   */
+  readonly attribute Array<AString> aliases;
+
+  /**
    * A text description describing the engine.
    */
   readonly attribute AString description;
