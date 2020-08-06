@@ -20,6 +20,10 @@ ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
 
+ifndef INCLUDED_VERSION_MK
+include $(MOZILLA_DIR)/config/version.mk
+endif
+
 USE_AUTOTARGETS_MK = 1
 include $(MOZILLA_DIR)/config/makefiles/makeutils.mk
 
@@ -98,6 +102,8 @@ ifdef MKSHLIB
 ifdef LIB_IS_C_ONLY
 MKSHLIB			= $(MKCSHLIB)
 endif
+
+EMBED_MANIFEST_AT=2
 
 endif # MKSHLIB
 endif # FORCE_SHARED_LIB
@@ -399,17 +405,6 @@ everything::
 # Dependencies which, if modified, should cause everything to rebuild
 GLOBAL_DEPS += Makefile $(addprefix $(DEPTH)/config/,$(INCLUDED_AUTOCONF_MK)) $(MOZILLA_DIR)/config/config.mk
 
-ifeq ($(OS_ARCH),WINNT)
-# We always build .res files for programs and shared libraries
-resfile = $(notdir $1).res
-# We also build .res files for simple programs if a corresponding manifest
-# exists. We'll generate a .rc file that includes the manifest.
-resfile_for_manifest = $(if $(wildcard $(srcdir)/$(notdir $1).manifest),$(call resfile,$1))
-else
-resfile =
-resfile_for_manifest =
-endif
-
 ##############################################
 ifdef COMPILE_ENVIRONMENT
 compile:: host target
@@ -459,12 +454,22 @@ endef
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
 #
-$(PROGRAM): $(PROGOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(call resfile,$(PROGRAM)) $(GLOBAL_DEPS) $(call mkdir_deps,$(FINAL_TARGET))
+$(PROGRAM): $(PROGOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(RESFILE) $(GLOBAL_DEPS) $(call mkdir_deps,$(FINAL_TARGET))
 	$(REPORT_BUILD)
+	@$(RM) $@.manifest
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LINKER) -OUT:$@ -PDB:$(LINK_PDBFILE) -IMPLIB:$(basename $(@F)).lib $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $($(notdir $@)_OBJS) $(filter %.res,$^) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
+	$(LINKER) -OUT:$@ -PDB:$(LINK_PDBFILE) -IMPLIB:$(basename $(@F)).lib $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $($(notdir $@)_OBJS) $(RESFILE) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
+ifdef MSMANIFEST_TOOL
+	@if test -f $@.manifest; then \
+		echo "Manifest in objdir is not supported"; \
+		exit 1; \
+	elif test -f '$(srcdir)/$(notdir $@).manifest'; then \
+		echo 'Embedding manifest from $(srcdir_rel)/$(notdir $@).manifest'; \
+		$(call WINEWRAP,$(MT)) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
+	fi
+endif	# MSVC with manifest tool
 else # !WINNT || GNU_CC
-	$(call EXPAND_CC_OR_CXX,$@) -o $@ $(COMPUTED_CXX_LDFLAGS) $(PGO_CFLAGS) $($(notdir $@)_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
+	$(call EXPAND_CC_OR_CXX,$@) -o $@ $(COMPUTED_CXX_LDFLAGS) $(PGO_CFLAGS) $($(notdir $@)_OBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
 	$(call py_action,check_binary,--target $@)
 endif # WINNT && !GNU_CC
 
@@ -479,6 +484,15 @@ $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
 	$(HOST_LINKER) -OUT:$@ -PDB:$(HOST_PDBFILE) $($(notdir $@)_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LINKER_LIBPATHS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+ifdef MSMANIFEST_TOOL
+	@if test -f $@.manifest; then \
+		echo "Manifest in objdir is not supported"; \
+		exit 1; \
+	elif test -f '$(srcdir)/$(notdir $@).manifest'; then \
+		echo 'Embedding manifest from $(srcdir_rel)/$(notdir $@).manifest'; \
+		$(call WINEWRAP,$(MT)) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
+	fi
+endif	# MSVC with manifest tool
 else
 ifeq ($(HOST_CPP_PROG_LINK),1)
 	$(HOST_CXX) -o $@ $(HOST_CXX_LDFLAGS) $(HOST_LDFLAGS) $($(notdir $@)_OBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
@@ -498,17 +512,20 @@ endif
 # SIMPLE_PROGRAMS = Foo Bar
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
-define simple_program_deps
-$1: $(1:$(BIN_SUFFIX)=.$(OBJ_SUFFIX)) $(STATIC_LIBS) $(EXTRA_DEPS) $(call resfile_for_manifest,$1) $(GLOBAL_DEPS)
-endef
-$(foreach p,$(SIMPLE_PROGRAMS),$(eval $(call simple_program_deps,$(p))))
-
-$(SIMPLE_PROGRAMS):
+$(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LINKER) -out:$@ -pdb:$(LINK_PDBFILE) $($@_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
+	$(LINKER) -out:$@ -pdb:$(LINK_PDBFILE) $($@_OBJS) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
+ifdef MSMANIFEST_TOOL
+	@if test -f $@.manifest; then \
+		echo "Manifest in objdir is not supported"; \
+		exit 1; \
+	elif test -f '$(srcdir)/$(notdir $@).manifest'; then \
+		$(call WINEWRAP,$(MT)) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
+	fi
+endif	# MSVC with manifest tool
 else
-	$(call EXPAND_CC_OR_CXX,$@) $(COMPUTED_CXX_LDFLAGS) $(PGO_CFLAGS) -o $@ $($@_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
+	$(call EXPAND_CC_OR_CXX,$@) $(COMPUTED_CXX_LDFLAGS) $(PGO_CFLAGS) -o $@ $($@_OBJS) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
 	$(call py_action,check_binary,--target $@)
 endif # WINNT && !GNU_CC
 
@@ -583,15 +600,26 @@ endif
 # symlinks back to the originals. The symlinks are a no-op for stabs debugging,
 # so no need to conditionalize on OS version or debugging format.
 
-$(SHARED_LIBRARY): $(OBJS) $(call resfile,$(SHARED_LIBRARY)) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
+$(SHARED_LIBRARY): $(OBJS) $(RESFILE) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 ifndef INCREMENTAL_LINKER
 	$(RM) $@
 endif
-	$(MKSHLIB) $($@_OBJS) $(filter %.res,$^) $(LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(OS_LIBS)
+	$(MKSHLIB) $($@_OBJS) $(RESFILE) $(LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(OS_LIBS)
 	$(call py_action,check_binary,--target $@)
 
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+ifdef MSMANIFEST_TOOL
+ifdef EMBED_MANIFEST_AT
+	@if test -f $@.manifest; then \
+		echo "Manifest in objdir is not supported"; \
+		exit 1; \
+	elif test -f '$(srcdir)/$@.manifest'; then \
+		echo 'Embedding manifest from $(srcdir_rel)/$@.manifest'; \
+		$(call WINEWRAP,$(MT)) -NOLOGO -MANIFEST '$(srcdir_rel)/$@.manifest' -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
+	fi
+endif   # EMBED_MANIFEST_AT
+endif	# MSVC with manifest tool
 endif	# WINNT && !GCC
 	chmod +x $@
 ifdef ENABLE_STRIP
@@ -835,8 +863,7 @@ endif
 
 endif
 
-# EXTRA_DEPS contains manifests (manually added in Makefile.in ; bug 1498414)
-%.res: $(or $(RCFILE),%.rc) $(EXTRA_DEPS)
+$(RESFILE): %.res: $(RCFILE)
 	$(REPORT_BUILD)
 	@echo Creating Resource file: $@
 ifdef GNU_CC
@@ -844,9 +871,6 @@ ifdef GNU_CC
 else
 	$(call WINEWRAP,$(RC)) $(RCFLAGS) -r $(DEFINES) $(INCLUDES:-I%=-I$(call relativize,%)) $(OUTOPTION)$@ $(call relativize,$<)
 endif
-
-$(notdir $(addsuffix .rc,$(PROGRAM) $(SHARED_LIBRARY) $(SIMPLE_PROGRAMS) module)): %.rc: $(RCINCLUDE) $(MOZILLA_DIR)/config/create_rc.py
-	$(PYTHON3) $(MOZILLA_DIR)/config/create_rc.py '$(if $(filter module,$*),,$*)' '$(RCINCLUDE)'
 
 # Cancel GNU make built-in implicit rules
 MAKEFLAGS += -r
