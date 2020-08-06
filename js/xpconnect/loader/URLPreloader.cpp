@@ -76,24 +76,9 @@ nsresult URLPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
-// static
-already_AddRefed<URLPreloader> URLPreloader::Create() {
-  // The static APIs like URLPreloader::Read work in the child process because
-  // they fall back to a synchronous read. The actual preloader must be
-  // explicitly initialized, and this should only be done in the parent.
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
-
-  RefPtr<URLPreloader> preloader = new URLPreloader();
-  if (preloader->InitInternal().isOk()) {
-    RegisterWeakMemoryReporter(preloader);
-  }
-  return preloader.forget();
-}
-
 URLPreloader& URLPreloader::GetSingleton() {
   if (!sSingleton) {
-    sSingleton = Create();
-    sInitialized = !!sSingleton;
+    sSingleton = new URLPreloader();
     ClearOnShutdown(&sSingleton);
   }
 
@@ -104,10 +89,16 @@ bool URLPreloader::sInitialized = false;
 
 StaticRefPtr<URLPreloader> URLPreloader::sSingleton;
 
+URLPreloader::URLPreloader() {
+  if (InitInternal().isOk()) {
+    sInitialized = true;
+    RegisterWeakMemoryReporter(this);
+  }
+}
+
 URLPreloader::~URLPreloader() {
   if (sInitialized) {
     UnregisterWeakMemoryReporter(this);
-    sInitialized = false;
   }
 }
 
@@ -136,19 +127,23 @@ Result<Ok, nsresult> URLPreloader::InitInternal() {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
 
-  MOZ_TRY(obs->AddObserver(this, DELAYED_STARTUP_TOPIC, false));
+    obs->AddObserver(this, DELAYED_STARTUP_TOPIC, false);
 
-  MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
+    MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
+  } else {
+    mStartupFinished = true;
+    mReaderInitialized = true;
+  }
 
   return Ok();
 }
 
 URLPreloader& URLPreloader::ReInitialize() {
-  MOZ_ASSERT(sSingleton);
-  sSingleton = Create();
-  sInitialized = !!sSingleton;
+  sSingleton = new URLPreloader();
+
   return *sSingleton;
 }
 
