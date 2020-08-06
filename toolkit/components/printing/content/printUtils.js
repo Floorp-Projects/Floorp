@@ -161,6 +161,7 @@ var PrintUtils = {
     let printPreviewBrowser = gBrowser.createBrowser({
       remoteType: sourceBrowser.remoteType,
       sameProcessAsFrameLoader: sourceBrowser.frameLoader,
+      initialBrowsingContextGroupId: aBrowsingContext.group.id,
       skipLoad: false,
     });
     printPreviewBrowser.classList.add("printPreviewBrowser");
