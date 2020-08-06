@@ -28,13 +28,13 @@ set(wasiclang_SOURCE_DIR $ENV{wasiclang_SOURCE_DIR})
 set(LUCET_WASI_DIR $ENV{LUCET_WASI_DIR})
 set(LUCET_DIR $ENV{LUCET_DIR})
 
-set(CMAKE_C_COMPILER ${wasiclang_SOURCE_DIR}/opt/wasi-sdk/bin/clang)
-set(CMAKE_CXX_COMPILER ${wasiclang_SOURCE_DIR}/opt/wasi-sdk/bin/clang++)
+set(CMAKE_C_COMPILER ${wasiclang_SOURCE_DIR}/bin/clang)
+set(CMAKE_CXX_COMPILER ${wasiclang_SOURCE_DIR}/bin/clang++)
 set(CMAKE_BUILD_TYPE Release)
 
 # Apply settings suitable for wasm module compilation
 set(CMAKE_C_FLAGS
-    "--sysroot ${wasiclang_SOURCE_DIR}/opt/wasi-sdk/share/wasi-sysroot/")
+    "--sysroot ${wasiclang_SOURCE_DIR}/share/wasi-sysroot/")
 # Link flags are set by default on Mac - clearing this
 set(CMAKE_C_LINK_FLAGS "")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all")

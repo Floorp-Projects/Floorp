@@ -102,13 +102,13 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   FetchContent_Declare(
     wasiclang
     URL
-      https://github.com/CraneStation/wasi-sdk/releases/download/wasi-sdk-6/wasi-sdk-6.0-macos.tar.gz
+      https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-11/wasi-sdk-11.0-macos.tar.gz
     )
 else()
   FetchContent_Declare(
     wasiclang
     URL
-      https://github.com/CraneStation/wasi-sdk/releases/download/wasi-sdk-6/wasi-sdk-6.0-linux.tar.gz
+      https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-11/wasi-sdk-11.0-linux.tar.gz
     )
 endif()
 FetchContent_GetProperties(wasiclang)
