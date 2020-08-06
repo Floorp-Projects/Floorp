@@ -2306,6 +2306,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::HasOwn:
       return jsop_hasown();
 
+    case JSOp::CheckPrivateField:
+      return jsop_checkprivatefield();
+
     case JSOp::SetRval:
       MOZ_ASSERT(!script()->noScriptRval());
       current->setSlot(info().returnValueSlot(), current->pop());
@@ -2451,10 +2454,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       // === !! WARNING WARNING WARNING !! ===
       // Do you really want to sacrifice performance by not implementing this
       // operation in the optimizing compiler?
-      break;
-
-    // Private Fields
-    case JSOp::CheckPrivateField:
       break;
 
     case JSOp::ForceInterpreter:
@@ -12385,6 +12384,18 @@ AbortReasonOr<Ok> IonBuilder::jsop_hasown() {
   }
 
   MHasOwnCache* ins = MHasOwnCache::New(alloc(), obj, id);
+  current->add(ins);
+  current->push(ins);
+
+  MOZ_TRY(resumeAfter(ins));
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_checkprivatefield() {
+  MDefinition* id = current->peek(-1);
+  MDefinition* obj = current->peek(-2);
+
+  MCheckPrivateFieldCache* ins = MCheckPrivateFieldCache::New(alloc(), obj, id);
   current->add(ins);
   current->push(ins);
 

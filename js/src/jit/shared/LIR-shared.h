@@ -6254,6 +6254,25 @@ class LHasOwnCache : public LInstructionHelper<1, 2 * BOX_PIECES, 0> {
   const MHasOwnCache* mir() const { return mir_->toHasOwnCache(); }
 };
 
+class LCheckPrivateFieldCache
+    : public LInstructionHelper<1, 2 * BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(CheckPrivateFieldCache)
+
+  static const size_t Value = 0;
+  static const size_t Id = BOX_PIECES;
+
+  LCheckPrivateFieldCache(const LBoxAllocation& value, const LBoxAllocation& id)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Value, value);
+    setBoxOperand(Id, id);
+  }
+
+  const MCheckPrivateFieldCache* mir() const {
+    return mir_->toCheckPrivateFieldCache();
+  }
+};
+
 class LInstanceOfO : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(InstanceOfO)
