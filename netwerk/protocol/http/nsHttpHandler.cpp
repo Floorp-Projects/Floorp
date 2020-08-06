@@ -2743,7 +2743,11 @@ void nsHttpHandler::ShutdownConnectionManager() {
 
 nsresult nsHttpHandler::NewChannelId(uint64_t& channelId) {
   channelId =
-      ((static_cast<uint64_t>(mProcessId) << 32) & 0xFFFFFFFF00000000LL) |
+      // channelId is sometimes passed to JavaScript code (e.g. devtools),
+      // and since on Linux PID_MAX_LIMIT is 2^22 we cannot
+      // shift PID more than 31 bits left. Otherwise resulting values
+      // will be exceed safe JavaScript integer range.
+      ((static_cast<uint64_t>(mProcessId) << 31) & 0xFFFFFFFF80000000LL) |
       mNextChannelId++;
   return NS_OK;
 }
