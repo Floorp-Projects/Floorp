@@ -12,11 +12,11 @@ from tryselect.selectors.auto import AutoParser
 
 def test_strategy_validation():
     parser = AutoParser()
-    args = parser.parse_args(["--strategy", "seta"])
-    assert args.strategy == "taskgraph.optimize:tryselect.seta"
+    args = parser.parse_args(["--strategy", "relevant_tests"])
+    assert args.strategy == "taskgraph.optimize:tryselect.relevant_tests"
 
-    args = parser.parse_args(["--strategy", "taskgraph.optimize:experimental.seta"])
-    assert args.strategy == "taskgraph.optimize:experimental.seta"
+    args = parser.parse_args(["--strategy", "taskgraph.optimize:experimental.relevant_tests"])
+    assert args.strategy == "taskgraph.optimize:experimental.relevant_tests"
 
     with pytest.raises(SystemExit):
         parser.parse_args(["--strategy", "taskgraph.optimize:tryselect"])
