@@ -154,7 +154,7 @@ Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
 }
 
 /*static*/
-bool TrialInliner::canInline(JSFunction* target) {
+bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
   if (!target->hasJitScript()) {
     return false;
   }
@@ -163,11 +163,15 @@ bool TrialInliner::canInline(JSFunction* target) {
       script->needsArgsObj()) {
     return false;
   }
+  // Don't inline cross-realm calls.
+  if (target->realm() != caller->realm()) {
+    return false;
+  }
   return true;
 }
 
 bool TrialInliner::shouldInline(JSFunction* target, BytecodeLocation loc) {
-  if (!canInline(target)) {
+  if (!canInline(target, script_)) {
     return false;
   }
   JitSpew(JitSpew_WarpTrialInlining,
