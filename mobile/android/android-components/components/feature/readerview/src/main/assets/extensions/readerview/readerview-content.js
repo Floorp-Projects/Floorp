@@ -58,7 +58,20 @@ function connectNativePort() {
      }
   });
 
-  window.addEventListener("unload", (event) => { port.disconnect() }, false);
+  return port;
 }
 
-connectNativePort();
+let port = connectNativePort();
+
+// When navigating to a cached page, this content script won't run again, but we
+// do want to connect a new native port to trigger a new readerable check and
+// apply the same logic (as on page load) in our feature class (e.g. updating the
+// toolbar etc.)
+window.addEventListener("pageshow", (event) => {
+  port = (port != null)? port : connectNativePort();
+});
+
+window.addEventListener("pagehide", (event) => {
+  port.disconnect();
+  port = null;
+});

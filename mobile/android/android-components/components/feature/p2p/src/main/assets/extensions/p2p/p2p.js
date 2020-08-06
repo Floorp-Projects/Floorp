@@ -110,6 +110,3 @@ port.onDisconnect.addListener((p) => {
         console.log("Wah! Disconnected due to an error: ${p.error.message}");
     }
 });
-
-window.addEventListener("unload", (event) => { port.disconnect() }, false);
-

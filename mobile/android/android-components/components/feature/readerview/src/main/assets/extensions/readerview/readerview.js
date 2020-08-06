@@ -376,6 +376,4 @@ function connectNativePort() {
         console.error(`Received invalid action ${message.action}`);
     }
   });
-
-   window.addEventListener("unload", (event) => { port.disconnect() }, false);
 }
