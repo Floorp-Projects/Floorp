@@ -2,7 +2,7 @@
 
 # ContextMenuCandidate
 
-`data class ContextMenuCandidate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L30)
+`data class ContextMenuCandidate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L32)
 
 A candidate for an item to be displayed in the context menu.
 
@@ -31,6 +31,8 @@ A candidate for an item to be displayed in the context menu.
 
 | Name | Summary |
 |---|---|
+| [createAddContactCandidate](create-add-contact-candidate.md) | `fun createAddContactCandidate(context: <ERROR CLASS>): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Add to contact". |
+| [createCopyEmailAddressCandidate](create-copy-email-address-candidate.md) | `fun createCopyEmailAddressCandidate(context: <ERROR CLASS>, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Copy email address". |
 | [createCopyImageLocationCandidate](create-copy-image-location-candidate.md) | `fun createCopyImageLocationCandidate(context: <ERROR CLASS>, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Copy Image Location". |
 | [createCopyLinkCandidate](create-copy-link-candidate.md) | `fun createCopyLinkCandidate(context: <ERROR CLASS>, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Copy Link". |
 | [createDownloadLinkCandidate](create-download-link-candidate.md) | `fun createDownloadLinkCandidate(context: <ERROR CLASS>, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Save link". |
@@ -40,6 +42,7 @@ A candidate for an item to be displayed in the context menu.
 | [createOpenInPrivateTabCandidate](create-open-in-private-tab-candidate.md) | `fun createOpenInPrivateTabCandidate(context: <ERROR CLASS>, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Open Link in Private Tab". |
 | [createSaveImageCandidate](create-save-image-candidate.md) | `fun createSaveImageCandidate(context: <ERROR CLASS>, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Save image". |
 | [createSaveVideoAudioCandidate](create-save-video-audio-candidate.md) | `fun createSaveVideoAudioCandidate(context: <ERROR CLASS>, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Save video". |
+| [createShareEmailAddressCandidate](create-share-email-address-candidate.md) | `fun createShareEmailAddressCandidate(context: <ERROR CLASS>): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Share email address". |
 | [createShareImageCandidate](create-share-image-candidate.md) | `fun createShareImageCandidate(context: <ERROR CLASS>, action: (`[`SessionState`](../../mozilla.components.browser.state.state/-session-state/index.md)`, `[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { _, hitResult -> context.share(hitResult.src) }): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Share image" |
 | [createShareLinkCandidate](create-share-link-candidate.md) | `fun createShareLinkCandidate(context: <ERROR CLASS>): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Share Link". |
 | [defaultCandidates](default-candidates.md) | `fun defaultCandidates(context: <ERROR CLASS>, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ContextMenuCandidate`](./index.md)`>`<br>Returns the default list of context menu candidates. |

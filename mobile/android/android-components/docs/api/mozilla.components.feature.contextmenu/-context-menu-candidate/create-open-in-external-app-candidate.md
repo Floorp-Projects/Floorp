@@ -2,7 +2,7 @@
 
 # createOpenInExternalAppCandidate
 
-`fun createOpenInExternalAppCandidate(context: <ERROR CLASS>, appLinksUseCases: `[`AppLinksUseCases`](../../mozilla.components.feature.app.links/-app-links-use-cases/index.md)`): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L142)
+`fun createOpenInExternalAppCandidate(context: <ERROR CLASS>, appLinksUseCases: `[`AppLinksUseCases`](../../mozilla.components.feature.app.links/-app-links-use-cases/index.md)`): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L147)
 
 Context Menu item: "Open Link in external App".
 

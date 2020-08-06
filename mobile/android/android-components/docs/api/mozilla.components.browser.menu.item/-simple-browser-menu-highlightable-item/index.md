@@ -2,7 +2,7 @@
 
 # SimpleBrowserMenuHighlightableItem
 
-`class SimpleBrowserMenuHighlightableItem : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/SimpleBrowserMenuHighlightableItem.kt#L35)
+`class SimpleBrowserMenuHighlightableItem : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/SimpleBrowserMenuHighlightableItem.kt#L34)
 
 A menu item for displaying text with a highlight state which sets the
 background of the menu item.
@@ -17,9 +17,6 @@ background of the menu item.
 
 `backgroundTint` - Tint for the menu item background color
 
-`itemType` - The type of the item. Used in the client side to know for
-which item to update the highlightable state
-
 `isHighlighted` - Whether or not to display the highlight
 
 `listener` - Callback to be invoked when this menu item is clicked.
@@ -28,7 +25,7 @@ which item to update the highlightable state
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SimpleBrowserMenuHighlightableItem(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, textColorResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = NO_ID, textSize: `[`Float`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html)` = NO_ID.toFloat(), backgroundTint: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, itemType: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`? = null, isHighlighted: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {})`<br>A menu item for displaying text with a highlight state which sets the background of the menu item. |
+| [&lt;init&gt;](-init-.md) | `SimpleBrowserMenuHighlightableItem(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, textColorResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = NO_ID, textSize: `[`Float`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html)` = NO_ID.toFloat(), backgroundTint: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, isHighlighted: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {})`<br>A menu item for displaying text with a highlight state which sets the background of the menu item. |
 
 ### Properties
 
@@ -36,7 +33,6 @@ which item to update the highlightable state
 |---|---|
 | [backgroundTint](background-tint.md) | `val backgroundTint: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Tint for the menu item background color |
 | [isHighlighted](is-highlighted.md) | `var isHighlighted: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Whether or not to display the highlight |
-| [itemType](item-type.md) | `val itemType: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`?`<br>The type of the item. Used in the client side to know for which item to update the highlightable state |
 | [visible](visible.md) | `var visible: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Lambda expression that returns true if this item should be shown in the menu. Returns false if this item should be hidden. |
 
 ### Inherited Properties
