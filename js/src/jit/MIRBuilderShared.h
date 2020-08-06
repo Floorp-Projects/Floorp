@@ -105,9 +105,9 @@ using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
 // Helper class to manage call state.
 class MOZ_STACK_CLASS CallInfo {
-  MDefinition* callee_;
-  MDefinition* thisArg_;
-  MDefinition* newTargetArg_;
+  MDefinition* callee_ = nullptr;
+  MDefinition* thisArg_ = nullptr;
+  MDefinition* newTargetArg_ = nullptr;
   MDefinitionVector args_;
   // If non-empty, this corresponds to the stack prior any implicit inlining
   // such as before JSOp::FunApply.
@@ -118,20 +118,17 @@ class MOZ_STACK_CLASS CallInfo {
   // True if the caller does not use the return value.
   bool ignoresReturnValue_;
 
-  bool setter_;
+  bool inlined_ = false;
+  bool setter_ = false;
   bool apply_;
 
  public:
   CallInfo(TempAllocator& alloc, jsbytecode* pc, bool constructing,
            bool ignoresReturnValue)
-      : callee_(nullptr),
-        thisArg_(nullptr),
-        newTargetArg_(nullptr),
-        args_(alloc),
+      : args_(alloc),
         priorArgs_(alloc),
         constructing_(constructing),
         ignoresReturnValue_(ignoresReturnValue),
-        setter_(false),
         apply_(JSOp(*pc) == JSOp::FunApply) {}
 
   MOZ_MUST_USE bool init(CallInfo& callInfo) {
@@ -281,6 +278,9 @@ class MOZ_STACK_CLASS CallInfo {
 
   bool isSetter() const { return setter_; }
   void markAsSetter() { setter_ = true; }
+
+  bool isInlined() const { return inlined_; }
+  void markAsInlined() { inlined_ = true; }
 
   MDefinition* callee() const {
     MOZ_ASSERT(callee_);

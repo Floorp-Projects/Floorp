@@ -139,6 +139,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
                                     js::UniquePtr<ICScript> child,
                                     uint32_t pcOffset);
   ICScript* findInlinedChild(uint32_t pcOffset);
+  void removeInlinedChild(uint32_t pcOffset);
 
   FallbackICStubSpace* fallbackStubSpace();
   void purgeOptimizedStubs(Zone* zone);

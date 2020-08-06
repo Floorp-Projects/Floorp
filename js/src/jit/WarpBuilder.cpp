@@ -3160,8 +3160,9 @@ bool WarpBuilder::buildInlinedCall(BytecodeLocation loc,
                                    const WarpInlinedCall* inlineSnapshot,
                                    CallInfo& callInfo) {
   // We transpile the CacheIR to generate the correct guards before inlining.
-  // CacheOp::CallInlinedFunction generates no code. The body of the inlined
-  // function is generated below.
+  // In this case, CacheOp::CallInlinedFunction generates no code. The body of
+  // the inlined function is generated below.
+  callInfo.markAsInlined();
   if (!TranspileCacheIRToMIR(this, loc, inlineSnapshot->cacheIRSnapshot(),
                              callInfo)) {
     return false;
