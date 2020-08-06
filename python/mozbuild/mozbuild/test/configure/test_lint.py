@@ -372,6 +372,16 @@ class TestLint(unittest.TestCase):
                           '`help` should contain "{Enable|Disable}" because of '
                           'non-constant default')
 
+    def test_large_offset(self):
+        with self.assertRaisesFromLine(ConfigureError, 376):
+            with self.moz_configure('''
+                option(env='FOO', help='foo')
+            ''' + '\n' * 371 + '''
+                option('--enable-bar', default=depends('FOO')(lambda x: bool(x)),
+                       help='Enable bar')
+            '''):
+                self.lint_test()
+
     def test_undefined_global(self):
         with self.assertRaisesFromLine(NameError, 6) as e:
             with self.moz_configure('''
