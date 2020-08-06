@@ -72,19 +72,19 @@ add_task(async function test_aliased_search_engine_match() {
   let matchedEngine = await UrlbarSearchUtils.engineForAlias("pork");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "bacon");
-  Assert.equal(matchedEngine.alias, "pork");
+  Assert.ok(matchedEngine.aliases.includes("pork"));
   Assert.equal(matchedEngine.iconURI, null);
   // Upper case
   matchedEngine = await UrlbarSearchUtils.engineForAlias("PORK");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "bacon");
-  Assert.equal(matchedEngine.alias, "pork");
+  Assert.ok(matchedEngine.aliases.includes("pork"));
   Assert.equal(matchedEngine.iconURI, null);
   // Cap case
   matchedEngine = await UrlbarSearchUtils.engineForAlias("Pork");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "bacon");
-  Assert.equal(matchedEngine.alias, "pork");
+  Assert.ok(matchedEngine.aliases.includes("pork"));
   Assert.equal(matchedEngine.iconURI, null);
 });
 
@@ -104,19 +104,19 @@ add_task(async function test_aliased_search_engine_match_upper_case_alias() {
   let matchedEngine = await UrlbarSearchUtils.engineForAlias("pr");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "patch");
-  Assert.equal(matchedEngine.alias, "PR");
+  Assert.ok(matchedEngine.aliases.includes("PR"));
   Assert.equal(matchedEngine.iconURI, null);
   // Upper case
   matchedEngine = await UrlbarSearchUtils.engineForAlias("PR");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "patch");
-  Assert.equal(matchedEngine.alias, "PR");
+  Assert.ok(matchedEngine.aliases.includes("PR"));
   Assert.equal(matchedEngine.iconURI, null);
   // Cap case
   matchedEngine = await UrlbarSearchUtils.engineForAlias("Pr");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "patch");
-  Assert.equal(matchedEngine.alias, "PR");
+  Assert.ok(matchedEngine.aliases.includes("PR"));
   Assert.equal(matchedEngine.iconURI, null);
 });
 

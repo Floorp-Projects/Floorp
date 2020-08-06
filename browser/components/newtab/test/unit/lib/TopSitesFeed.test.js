@@ -1479,8 +1479,8 @@ describe("Top Sites Feed", () => {
         "google,amazon";
       feed.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "";
       const searchEngines = [
-        { wrappedJSObject: { _internalAliases: ["@google"] } },
-        { wrappedJSObject: { _internalAliases: ["@amazon"] } },
+        { aliases: ["@google"] },
+        { aliases: ["@amazon"] },
       ];
       global.Services.search.getDefaultEngines = async () => searchEngines;
       fakeNewTabUtils.pinnedLinks.pin = sinon
@@ -1735,7 +1735,7 @@ describe("Top Sites Feed", () => {
       it("should not pin a shortcut if the corresponding search engine is not available", async () => {
         // Make Amazon search engine unavailable
         global.Services.search.getDefaultEngines = async () => [
-          { wrappedJSObject: { _internalAliases: ["@google"] } },
+          { aliases: ["@google"] },
         ];
         fakeNewTabUtils.pinnedLinks.links.fill(null);
         await feed._maybeInsertSearchShortcuts(
