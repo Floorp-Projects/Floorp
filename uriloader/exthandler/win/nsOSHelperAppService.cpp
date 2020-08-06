@@ -243,7 +243,7 @@ bool nsOSHelperAppService::typeFromExtEquals(const char16_t* aExt,
 
   nsAutoString type;
   rv = regKey->ReadStringValue(u"Content Type"_ns, type);
-  if (NS_SUCCEEDED(rv)) eq = type.EqualsASCII(aType);
+  if (NS_SUCCEEDED(rv)) eq = type.LowerCaseEqualsASCII(aType);
 
   return eq;
 }
@@ -373,7 +373,10 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(
   fileExtToUse.Append(aFileExt);
 
   // don't append the '.' for our APIs.
-  mimeInfo->AppendExtension(NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1)));
+  nsAutoCString lowerFileExt =
+      NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1));
+  ToLowerCase(lowerFileExt);
+  mimeInfo->AppendExtension(lowerFileExt);
   mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
   nsAutoString appInfo;
@@ -453,9 +456,6 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     // Without an extension from the mimetype or the file, we can't
     // do anything here.
     mi = new nsMIMEInfoWin(flatType.get());
-    if (!aFileExt.IsEmpty()) {
-      mi->AppendExtension(aFileExt);
-    }
     mi.forget(aMIMEInfo);
     return NS_OK;
   }
@@ -518,9 +518,11 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   *aFound = false;
   mi = new nsMIMEInfoWin(flatType.get());
   // If we didn't resort to the mime type's extension, we must have had a
-  // valid extension, so stick it on the mime info.
+  // valid extension, so stick its lowercase version on the mime info.
   if (!usedMimeTypeExtensionForLookup) {
-    mi->AppendExtension(aFileExt);
+    nsAutoCString lowerFileExt;
+    ToLowerCase(aFileExt, lowerFileExt);
+    mi->AppendExtension(lowerFileExt);
   }
   mi.forget(aMIMEInfo);
   return NS_OK;

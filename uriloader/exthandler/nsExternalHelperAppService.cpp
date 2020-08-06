@@ -2650,7 +2650,11 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     (*_retval)->ExtensionExists(aFileExt, &matches);
     LOG(("Extension '%s' matches mime info: %i\n",
          PromiseFlatCString(aFileExt).get(), matches));
-    if (matches) (*_retval)->SetPrimaryExtension(aFileExt);
+    if (matches) {
+      nsAutoCString fileExt;
+      ToLowerCase(aFileExt, fileExt);
+      (*_retval)->SetPrimaryExtension(fileExt);
+    }
   }
 
   if (LOG_ENABLED()) {
