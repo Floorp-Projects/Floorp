@@ -141,7 +141,7 @@ class ProviderTopSites extends UrlbarProvider {
       // don't have titles but `hostname` instead.
       title: link.label || link.title || link.hostname || "",
       favicon: link.smallFavicon || link.favicon || null,
-      overriddenSearchTopSite: link.overriddenSearchTopSite,
+      sendTopSiteAttributionRequest: link.sendTopSiteAttributionRequest,
     }));
 
     for (let site of sites) {
@@ -155,7 +155,7 @@ class ProviderTopSites extends UrlbarProvider {
               url: site.url,
               icon: site.favicon,
               isPinned: site.isPinned,
-              overriddenSearchTopSite: site.overriddenSearchTopSite,
+              sendTopSiteAttributionRequest: site.sendTopSiteAttributionRequest,
             })
           );
 
