@@ -3280,13 +3280,13 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
 
   // Now, locate the current page we are on and
   // and the page of the page number
-  for (nsIFrame* pageFrame : seqFrame->PrincipalChildList()) {
-    nsRect pageRect = pageFrame->GetRect();
-    if (pageRect.Contains(pageRect.x, currentScrollPosition.y)) {
-      currentPage = pageFrame;
+  for (nsIFrame* sheetFrame : seqFrame->PrincipalChildList()) {
+    nsRect sheetRect = sheetFrame->GetRect();
+    if (sheetRect.Contains(sheetRect.x, currentScrollPosition.y)) {
+      currentPage = sheetFrame;
     }
     if (pageNum == aPageNum) {
-      fndPageFrame = pageFrame;
+      fndPageFrame = sheetFrame;
       break;
     }
     pageNum++;
