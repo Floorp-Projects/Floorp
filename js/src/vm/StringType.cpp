@@ -262,20 +262,6 @@ void JSString::dumpChars(const CharT* s, size_t n, js::GenericPrinter& out) {
   }
 
   out.put("\"");
-  dumpCharsNoQuote(s, n, out);
-  out.putChar('"');
-}
-
-template void JSString::dumpChars(const Latin1Char* s, size_t n,
-                                  js::GenericPrinter& out);
-
-template void JSString::dumpChars(const char16_t* s, size_t n,
-                                  js::GenericPrinter& out);
-
-template <typename CharT>
-/*static */
-void JSString::dumpCharsNoQuote(const CharT* s, size_t n,
-                                js::GenericPrinter& out) {
   for (size_t i = 0; i < n; i++) {
     char16_t c = s[i];
     if (c == '\n') {
@@ -290,13 +276,14 @@ void JSString::dumpCharsNoQuote(const CharT* s, size_t n,
       out.printf("\\u%04x", unsigned(c));
     }
   }
+  out.putChar('"');
 }
 
-template void JSString::dumpCharsNoQuote(const Latin1Char* s, size_t n,
-                                         js::GenericPrinter& out);
+template void JSString::dumpChars(const Latin1Char* s, size_t n,
+                                  js::GenericPrinter& out);
 
-template void JSString::dumpCharsNoQuote(const char16_t* s, size_t n,
-                                         js::GenericPrinter& out);
+template void JSString::dumpChars(const char16_t* s, size_t n,
+                                  js::GenericPrinter& out);
 
 void JSString::dumpCharsNoNewline(js::GenericPrinter& out) {
   if (JSLinearString* linear = ensureLinear(nullptr)) {
@@ -307,19 +294,6 @@ void JSString::dumpCharsNoNewline(js::GenericPrinter& out) {
     } else {
       out.put("[2 byte]");
       dumpChars(linear->twoByteChars(nogc), length(), out);
-    }
-  } else {
-    out.put("(oom in JSString::dumpCharsNoNewline)");
-  }
-}
-
-void JSString::dumpCharsNoQuote(js::GenericPrinter& out) {
-  if (JSLinearString* linear = ensureLinear(nullptr)) {
-    AutoCheckCannotGC nogc;
-    if (hasLatin1Chars()) {
-      dumpCharsNoQuote(linear->latin1Chars(nogc), length(), out);
-    } else {
-      dumpCharsNoQuote(linear->twoByteChars(nogc), length(), out);
     }
   } else {
     out.put("(oom in JSString::dumpCharsNoNewline)");

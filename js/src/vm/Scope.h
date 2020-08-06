@@ -114,7 +114,6 @@ class AbstractBindingName {
 
  private:
   friend class AbstractBindingIter<NameT>;
-  friend class frontend::ScopeStencil;
 
   // This method should be called only for binding names in `vars` range in
   // BindingIter.
