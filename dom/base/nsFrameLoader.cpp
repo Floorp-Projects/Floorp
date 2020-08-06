@@ -104,6 +104,7 @@
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserBridgeHost.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
@@ -267,7 +268,8 @@ static bool IsTopContent(BrowsingContext* aParent, Element* aOwner) {
 static already_AddRefed<BrowsingContext> CreateBrowsingContext(
     Element* aOwner, nsIOpenWindowInfo* aOpenWindowInfo,
     BrowsingContextGroup* aSpecificGroup) {
-  MOZ_ASSERT(!aOpenWindowInfo || !aSpecificGroup);
+  MOZ_ASSERT(!aOpenWindowInfo || !aSpecificGroup,
+             "Only one of SpecificGroup and OpenWindowInfo may be provided!");
 
   // If we've got a pending BrowserParent from the content process, use the
   // BrowsingContext which was created for it.
@@ -392,6 +394,27 @@ static void GetInitialRemoteTypeAndProcess(Element* aOwner,
   *aChildID = contentParent->ChildID();
 }
 
+static already_AddRefed<BrowsingContextGroup> InitialBrowsingContextGroup(
+    Element* aOwner) {
+  nsAutoString attrString;
+  if (aOwner->GetNameSpaceID() != kNameSpaceID_XUL ||
+      !aOwner->GetAttr(nsGkAtoms::initialBrowsingContextGroupId, attrString)) {
+    return nullptr;
+  }
+
+  // It's OK to read the attribute using a signed 64-bit integer parse, as an ID
+  // generated using `nsContentUtils::GenerateProcessSpecificId` (like BCG IDs)
+  // will only ever use 53 bits of precision, so it can be round-tripped through
+  // a JS number.
+  nsresult rv = NS_OK;
+  int64_t signedGroupId{attrString.ToInteger(&rv, 10)};
+  if (NS_FAILED(rv) || signedGroupId <= 0) {
+    return nullptr;
+  }
+
+  return BrowsingContextGroup::GetOrCreate(uint64_t(signedGroupId));
+}
+
 already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
     Element* aOwner, bool aNetworkCreated, nsIOpenWindowInfo* aOpenWindowInfo) {
   NS_ENSURE_TRUE(aOwner, nullptr);
@@ -422,8 +445,9 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
                       doc->IsStaticDocument()),
                  nullptr);
 
-  RefPtr<BrowsingContext> context = CreateBrowsingContext(
-      aOwner, aOpenWindowInfo, /* specificGroup */ nullptr);
+  RefPtr<BrowsingContextGroup> group = InitialBrowsingContextGroup(aOwner);
+  RefPtr<BrowsingContext> context =
+      CreateBrowsingContext(aOwner, aOpenWindowInfo, group);
   NS_ENSURE_TRUE(context, nullptr);
 
   bool isRemoteFrame = InitialLoadIsRemote(aOwner);
