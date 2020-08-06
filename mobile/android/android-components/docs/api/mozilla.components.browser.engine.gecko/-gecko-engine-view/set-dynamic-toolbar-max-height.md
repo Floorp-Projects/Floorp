@@ -2,7 +2,7 @@
 
 # setDynamicToolbarMaxHeight
 
-`fun setDynamicToolbarMaxHeight(height: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L188)
+`fun setDynamicToolbarMaxHeight(height: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L193)
 
 Overrides [EngineView.setDynamicToolbarMaxHeight](../../mozilla.components.concept.engine/-engine-view/set-dynamic-toolbar-max-height.md)
 

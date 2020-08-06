@@ -2,15 +2,16 @@
 
 # WebCompatReporterFeature
 
-`object WebCompatReporterFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/webcompat-reporter/src/main/java/mozilla/components/feature/webcompat/reporter/WebCompatReporterFeature.kt#L13)
+`object WebCompatReporterFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/webcompat-reporter/src/main/java/mozilla/components/feature/webcompat/reporter/WebCompatReporterFeature.kt#L17)
 
-Feature to enable website-hotfixing via the Web Compatibility System-Addon.
+A feature that enables users to report site issues to Mozilla's Web Compatibility team for
+further diagnosis.
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [install](install.md) | `fun install(runtime: `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Installs the web extension in the runtime through the WebExtensionRuntime install method |
+| [install](install.md) | `fun install(runtime: `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)`, productName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "android-components"): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Installs the web extension in the runtime through the WebExtensionRuntime install method |
 
 ### Extension Functions
 

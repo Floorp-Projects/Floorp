@@ -2,7 +2,7 @@
 
 # getRectWithViewLocation
 
-`fun <ERROR CLASS>.getRectWithViewLocation(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/view/View.kt#L62)
+`fun <ERROR CLASS>.getRectWithViewLocation(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/view/View.kt#L59)
 
 Fills the given [Rect](#) with data about location view in the window.
 

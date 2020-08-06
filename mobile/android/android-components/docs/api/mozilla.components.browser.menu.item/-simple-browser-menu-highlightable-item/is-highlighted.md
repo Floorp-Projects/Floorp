@@ -2,7 +2,7 @@
 
 # isHighlighted
 
-`var isHighlighted: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/SimpleBrowserMenuHighlightableItem.kt#L41)
+`var isHighlighted: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/SimpleBrowserMenuHighlightableItem.kt#L39)
 
 Whether or not to display the highlight
 

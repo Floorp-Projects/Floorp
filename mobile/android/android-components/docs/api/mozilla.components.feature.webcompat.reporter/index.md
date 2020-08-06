@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [WebCompatReporterFeature](-web-compat-reporter-feature/index.md) | `object WebCompatReporterFeature`<br>Feature to enable website-hotfixing via the Web Compatibility System-Addon. |
+| [WebCompatReporterFeature](-web-compat-reporter-feature/index.md) | `object WebCompatReporterFeature`<br>A feature that enables users to report site issues to Mozilla's Web Compatibility team for further diagnosis. |

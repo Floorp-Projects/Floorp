@@ -65,6 +65,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$pkcs7unpad(kotlin.ByteArra
 $dokka.location:mozilla.components.support.ktx.kotlin$sanitizeFileName(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sanitize-file-name.md
 $dokka.location:mozilla.components.support.ktx.kotlin$sanitizeURL(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sanitize-u-r-l.md
 $dokka.location:mozilla.components.support.ktx.kotlin$sha1(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sha1.md
+$dokka.location:mozilla.components.support.ktx.kotlin$stripMailToProtocol(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/strip-mail-to-protocol.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, kotlin.Int, kotlin.Int, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.Array((kotlin.String)))mozilla.components.support.ktx.kotlin/kotlin.-string/to-date.md

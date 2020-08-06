@@ -2,7 +2,7 @@
 
 # DefaultSnackbarDelegate
 
-`class DefaultSnackbarDelegate : `[`SnackbarDelegate`](../-context-menu-candidate/-snackbar-delegate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L406)
+`class DefaultSnackbarDelegate : `[`SnackbarDelegate`](../-context-menu-candidate/-snackbar-delegate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L465)
 
 Default implementation for [ContextMenuCandidate.SnackbarDelegate](../-context-menu-candidate/-snackbar-delegate/index.md). Will display a standard default Snackbar.
 

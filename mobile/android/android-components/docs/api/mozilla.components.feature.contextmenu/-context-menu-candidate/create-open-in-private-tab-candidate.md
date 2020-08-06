@@ -2,7 +2,7 @@
 
 # createOpenInPrivateTabCandidate
 
-`fun createOpenInPrivateTabCandidate(context: <ERROR CLASS>, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L111)
+`fun createOpenInPrivateTabCandidate(context: <ERROR CLASS>, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L116)
 
 Context Menu item: "Open Link in Private Tab".
 
