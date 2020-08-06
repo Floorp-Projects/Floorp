@@ -579,8 +579,11 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       // On nightly enable all Adreno 5xx GPUs
       isUnblocked |= gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0;
 #endif
-      // Enable Webrender on all pixel 2 models (Subset of Adreno 5xx)
-      isUnblocked |= model.Find("Pixel 2", /*ignoreCase*/ true) >= 0;
+      // Enable Webrender on all Adreno 5xx GPUs, excluding 505 and 506.
+      isUnblocked |=
+          gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0 &&
+          gpu.Find("Adreno (TM) 505", /*ignoreCase*/ true) == kNotFound &&
+          gpu.Find("Adreno (TM) 506", /*ignoreCase*/ true) == kNotFound;
 
       // Enable Webrender on all Adreno 6xx devices
       isUnblocked |= gpu.Find("Adreno (TM) 6", /*ignoreCase*/ true) >= 0;
