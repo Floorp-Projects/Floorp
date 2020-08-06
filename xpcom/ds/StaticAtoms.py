@@ -2218,6 +2218,7 @@ STATIC_ATOMS = [
     Atom("DisplayPortBase", "_displayportbase"),
     Atom("forcemessagemanager", "forcemessagemanager"),
     Atom("preloadedState", "preloadedState"),
+    Atom("initialBrowsingContextGroupId", "initialBrowsingContextGroupId"),
 
     # windows media query names
     Atom("windows_win7", "windows-win7"),
