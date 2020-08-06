@@ -25,7 +25,8 @@ class AppleVTDecoder : public MediaDataDecoder,
  public:
   AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
                  layers::ImageContainer* aImageContainer,
-                 CreateDecoderParams::OptionSet aOptions);
+                 CreateDecoderParams::OptionSet aOptions,
+                 layers::KnowsCompositor* aKnowsCompositor);
 
   class AppleFrameRef {
    public:
@@ -100,6 +101,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   const RefPtr<TaskQueue> mTaskQueue;
   const uint32_t mMaxRefFrames;
   const RefPtr<layers::ImageContainer> mImageContainer;
+  const RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   const bool mUseSoftwareImages;
 
   // Set on reader/decode thread calling Flush() to indicate that output is

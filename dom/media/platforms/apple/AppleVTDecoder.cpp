@@ -31,7 +31,8 @@ using namespace layers;
 
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
                                layers::ImageContainer* aImageContainer,
-                               CreateDecoderParams::OptionSet aOptions)
+                               CreateDecoderParams::OptionSet aOptions,
+                               layers::KnowsCompositor* aKnowsCompositor)
     : mExtraData(aConfig.mExtraData),
       mPictureWidth(aConfig.mImage.width),
       mPictureHeight(aConfig.mImage.height),
@@ -45,7 +46,8 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
       mMaxRefFrames(aOptions.contains(CreateDecoderParams::Option::LowLatency)
                         ? 0
                         : H264::ComputeMaxRefFrames(aConfig.mExtraData)),
-      mImageContainer(aImageContainer)
+      mImageContainer(aImageContainer),
+      mKnowsCompositor(aKnowsCompositor)
 #ifdef MOZ_WIDGET_UIKIT
       ,
       mUseSoftwareImages(true)
@@ -409,7 +411,8 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     data = VideoData::CreateAndCopyData(
         info, mImageContainer, aFrameRef.byte_offset,
         aFrameRef.composition_timestamp, aFrameRef.duration, buffer,
-        aFrameRef.is_sync_point, aFrameRef.decode_timestamp, visible);
+        aFrameRef.is_sync_point, aFrameRef.decode_timestamp, visible,
+        mKnowsCompositor);
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {
