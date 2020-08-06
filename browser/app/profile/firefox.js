@@ -1849,6 +1849,8 @@ pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
 pref("extensions.formautofill.creditCards.enabled", true);
+// Enable the checkbox in sync options for credit card data sync service
+pref("services.sync.engine.creditcards.available", true);
 // Pref for shield/heartbeat to recognize users who have used Credit Card
 // Autofill. The valid values can be:
 // 0: none
