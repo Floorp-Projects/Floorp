@@ -347,7 +347,8 @@ static inline D2D1_MATRIX_3X2_F D2DMatrix(const gfx::Matrix& aTransform) {
 
 void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
                              const wr::CompositorSurfaceTransform& aTransform,
-                             wr::DeviceIntRect aClipRect) {
+                             wr::DeviceIntRect aClipRect,
+                             wr::ImageRendering aImageRendering) {
   auto it = mDCSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(it != mDCSurfaces.end());
   const auto surface = it->second.get();
@@ -381,6 +382,14 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
   // not be available?).
   // Should we assert here, or restrict at the WR API level.
   visual->SetTransform(D2DMatrix(transform));
+
+  if (aImageRendering == wr::ImageRendering::Auto) {
+    visual->SetBitmapInterpolationMode(
+        DCOMPOSITION_BITMAP_INTERPOLATION_MODE_LINEAR);
+  } else {
+    visual->SetBitmapInterpolationMode(
+        DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
+  }
 
   mCurrentLayers.push_back(aId);
 }
