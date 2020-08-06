@@ -18,7 +18,6 @@
 class JSLinearString;
 class JSRope;
 class JSTracer;
-struct JSClass;
 
 namespace js {
 class BaseShape;
@@ -146,17 +145,6 @@ inline Value Forwarded(const JS::Value& value);
 
 template <typename T>
 inline T MaybeForwarded(T t);
-
-// Helper functions for use in situations where the object's group might be
-// forwarded, for example while marking.
-
-inline const JSClass* MaybeForwardedObjectClass(const JSObject* obj);
-
-template <typename T>
-inline bool MaybeForwardedObjectIs(JSObject* obj);
-
-template <typename T>
-inline T& MaybeForwardedObjectAs(JSObject* obj);
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
