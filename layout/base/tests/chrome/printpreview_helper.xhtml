@@ -537,6 +537,28 @@ async function runTest19() {
     },
   });
 
+  requestAnimationFrame(() => setTimeout(runTest20));
+}
+
+async function runTest20() {
+  frameElts[0].contentDocument.body.innerHTML =
+    '<style>div { page-break-after: always; }</style>' +
+    '<div>1</div>' +
+    '<div>2</div>' +
+    '<div>3</div>';
+  await printpreview();
+
+  is(gWbp.printPreviewCurrentPageNumber, 1,
+     "The initial current page number should be 1");
+
+  // Scroll to the last page.
+  gWbp.printPreviewScrollToPage(Ci.nsIWebBrowserPrint.PRINTPREVIEW_END, 0);
+
+  is(gWbp.printPreviewCurrentPageNumber, 3,
+     "The current page number should be 3");
+
+  exitprintpreview();
+
   finish();
 }
 

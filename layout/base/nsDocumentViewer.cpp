@@ -3325,6 +3325,46 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocumentViewer::GetPrintPreviewCurrentPageNumber(int32_t* aNumber) {
+  NS_ENSURE_ARG_POINTER(aNumber);
+  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
+  if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIScrollableFrame* sf =
+      mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
+  if (!sf) {
+    // No scrollable contents, returns 1 even if there are multiple pages.
+    *aNumber = 1;
+    return NS_OK;
+  }
+
+  // in PP mPrtPreview->mPrintObject->mSeqFrame is null
+  auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
+  if (!seqFrame) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsPoint currentScrollPosition = sf->GetScrollPosition();
+  *aNumber = 0;
+  float previewScale = seqFrame->GetPrintPreviewScale();
+  for (const nsIFrame* sheetFrame : seqFrame->PrincipalChildList()) {
+    (*aNumber)++;
+    nsRect pageRect = sheetFrame->GetRect();
+    if (pageRect.YMost() * previewScale > currentScrollPosition.y) {
+      // This is the first visible page even if the visible rect is just 1px
+      // height.
+      // TODO: We should have a reasonable threshold.
+      break;
+    }
+  }
+
+  MOZ_ASSERT(*aNumber <= pageCount);
+  return NS_OK;
+}
+
 // XXX This always returns false for subdocuments
 NS_IMETHODIMP
 nsDocumentViewer::GetDoingPrint(bool* aDoingPrint) {

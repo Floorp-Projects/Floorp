@@ -51,6 +51,11 @@ interface nsIWebBrowserPrint : nsISupports
   readonly attribute long printPreviewNumPages;
 
   /**
+   * This returns the number of the page which is currently in the Print Preview viewport
+   */
+  readonly attribute long printPreviewCurrentPageNumber;
+
+  /**
    * Print the specified DOM window
    *
    * @param aThePrintSettings - Printer Settings for the print job, if aThePrintSettings is null
