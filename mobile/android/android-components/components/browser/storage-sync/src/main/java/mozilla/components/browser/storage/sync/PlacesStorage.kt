@@ -7,6 +7,7 @@ package mozilla.components.browser.storage.sync
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
@@ -29,9 +30,10 @@ abstract class PlacesStorage(
     context: Context,
     val crashReporter: CrashReporting? = null
 ) : Storage, SyncableStore {
-    internal val scope by lazy {
+    internal val writeScope by lazy {
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
     }
+    internal val readScope by lazy { CoroutineScope(Dispatchers.IO) }
     private val storageDir by lazy { context.filesDir }
 
     abstract val logger: Logger
@@ -56,7 +58,7 @@ abstract class PlacesStorage(
      * Internal database maintenance tasks. Ideally this should be called once a day.
      */
     override suspend fun runMaintenance() {
-        withContext(scope.coroutineContext) {
+        withContext(writeScope.coroutineContext) {
             places.writer().runMaintenance()
         }
     }
@@ -65,7 +67,8 @@ abstract class PlacesStorage(
      * Cleans up background work and database connections
      */
     override fun cleanup() {
-        scope.coroutineContext.cancelChildren()
+        writeScope.coroutineContext.cancelChildren()
+        readScope.coroutineContext.cancelChildren()
         places.close()
     }
 
