@@ -9,8 +9,9 @@
 
 using namespace mozilla;
 
-nsPrinterCUPS::nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter)
-    : mShim(aShim) {
+nsPrinterCUPS::nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
+                             const nsAString& aDisplayName)
+    : mDisplayName(aDisplayName), mShim(aShim) {
   MOZ_ASSERT(aPrinter);
   MOZ_ASSERT(mShim.IsInitialized());
   DebugOnly<const int> numCopied = aShim.cupsCopyDest(aPrinter, 0, &mPrinter);
@@ -30,9 +31,10 @@ nsPrinterCUPS::~nsPrinterCUPS() {
 }
 
 // static
-already_AddRefed<nsPrinterCUPS> nsPrinterCUPS::Create(const nsCUPSShim& aShim,
-                                                      cups_dest_t* aPrinter) {
-  return do_AddRef(new nsPrinterCUPS(aShim, aPrinter));
+already_AddRefed<nsPrinterCUPS> nsPrinterCUPS::Create(
+    const nsCUPSShim& aShim, cups_dest_t* aPrinter,
+    const nsAString& aDisplayName) {
+  return do_AddRef(new nsPrinterCUPS(aShim, aPrinter, aDisplayName));
 }
 
 NS_IMETHODIMP
