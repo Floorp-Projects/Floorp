@@ -42,6 +42,15 @@ class CompileDBBackend(CommonBackend):
         self._local_flags = defaultdict(dict)
         self._per_source_flags = defaultdict(list)
 
+    def _build_cmd(self, cmd, filename, unified):
+        cmd = list(cmd)
+        if unified is None:
+            cmd.append(filename)
+        else:
+            cmd.append(unified)
+
+        return cmd
+
     def consume_object(self, obj):
         # Those are difficult directories, that will be handled later.
         if obj.relsrcdir in (
@@ -86,11 +95,7 @@ class CompileDBBackend(CommonBackend):
 
         for (directory, filename, unified), cmd in self._db.items():
             env = self._envs[directory]
-            cmd = list(cmd)
-            if unified is None:
-                cmd.append(filename)
-            else:
-                cmd.append(unified)
+            cmd = self._build_cmd(cmd, filename, unified)
             variables = {
                 'DIST': mozpath.join(env.topobjdir, 'dist'),
                 'DEPTH': env.topobjdir,
@@ -136,10 +141,13 @@ class CompileDBBackend(CommonBackend):
             })
 
         import json
-        # Output the database (a JSON file) to objdir/compile_commands.json
-        outputfile = os.path.join(self.environment.topobjdir, 'compile_commands.json')
+        outputfile = self._outputfile_path()
         with self._write_file(outputfile) as jsonout:
             json.dump(db, jsonout, indent=0)
+
+    def _outputfile_path(self):
+        # Output the database (a JSON file) to objdir/compile_commands.json
+        return os.path.join(self.environment.topobjdir, 'compile_commands.json')
 
     def _process_unified_sources(self, obj):
         if not obj.have_unified_mapping:
