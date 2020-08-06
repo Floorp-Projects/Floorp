@@ -103,11 +103,8 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     args.timing() = Some(mTiming);
   }
 
-  RefPtr<WindowContext> loadingWindowContext =
-      loadingContext->GetCurrentWindowContext();
   args.hasValidTransientUserAction() =
-      loadingWindowContext &&
-      loadingWindowContext->HasValidTransientUserGestureActivation();
+      loadingContext->HasValidTransientUserGestureActivation();
 
   switch (mLoadInfo->GetExternalContentPolicyType()) {
     case nsIContentPolicy::TYPE_DOCUMENT:
