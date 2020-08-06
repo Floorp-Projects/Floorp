@@ -630,9 +630,14 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   void dumpRepresentation(js::GenericPrinter& out, int indent) const;
   void dumpRepresentationHeader(js::GenericPrinter& out,
                                 const char* subclass) const;
+  void dumpCharsNoQuote(js::GenericPrinter& out);
 
   template <typename CharT>
   static void dumpChars(const CharT* s, size_t len, js::GenericPrinter& out);
+
+  template <typename CharT>
+  static void dumpCharsNoQuote(const CharT* s, size_t len,
+                               js::GenericPrinter& out);
 
   bool equals(const char* s);
 #endif

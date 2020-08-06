@@ -30,6 +30,9 @@
 #include "vm/Realm.h"
 
 namespace js {
+
+class JSONPrinter;
+
 namespace frontend {
 
 // ScopeContext hold information derivied from the scope and environment chains
@@ -294,6 +297,11 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   ScriptStencilIterable functionScriptStencils() {
     return ScriptStencilIterable(this);
   }
+
+#ifdef DEBUG
+  void dumpStencil();
+  void dumpStencil(js::JSONPrinter& json);
+#endif
 };
 
 inline void ScriptStencilIterable::Iterator::next() {
