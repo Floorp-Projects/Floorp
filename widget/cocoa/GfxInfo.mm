@@ -430,7 +430,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
       }
       return NS_OK;
     }
-#ifndef NIGHTLY_BUILD
+#ifndef EARLY_BETA_OR_EARLIER
     else if (aFeature == nsIGfxInfo::FEATURE_WEBRENDER) {
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
       aFailureId = "FEATURE_UNQUALIFIED_WEBRENDER_MAC";
