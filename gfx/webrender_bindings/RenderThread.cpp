@@ -27,6 +27,9 @@
 #ifdef XP_WIN
 #  include "GLLibraryEGL.h"
 #  include "mozilla/widget/WinCompositorWindowThread.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+//#  include "nsWindowsHelpers.h"
+//#  include <d3d11.h>
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -991,26 +994,40 @@ WebRenderProgramCache::~WebRenderProgramCache() {
 
 #ifdef XP_WIN
 static already_AddRefed<gl::GLContext> CreateGLContextANGLE() {
-  nsCString discardFailureId;
-  if (!gl::GLLibraryEGL::EnsureInitialized(/* forceAccel */ true,
-                                           &discardFailureId)) {
-    gfxCriticalNote << "Failed to load EGL library: " << discardFailureId.get();
+  const RefPtr<ID3D11Device> d3d11Device =
+      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+  if (!d3d11Device) {
+    gfxCriticalNote << "Failed to get compositor device for EGLDisplay";
     return nullptr;
   }
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  nsCString failureId;
+  const auto lib = gl::DefaultEglLibrary(&failureId);
+  if (!lib) {
+    gfxCriticalNote << "Failed to load EGL library: " << failureId.get();
+    return nullptr;
+  }
+
+  const auto egl = lib->CreateDisplay(d3d11Device.get());
+  if (!egl) {
+    gfxCriticalNote << "Failed to create EGL display: " << failureId.get();
+    return nullptr;
+  }
+
   gl::CreateContextFlags flags = gl::CreateContextFlags::PREFER_ES3 |
                                  gl::CreateContextFlags::PREFER_ROBUSTNESS;
 
   if (egl->IsExtensionSupported(
-          gl::GLLibraryEGL::MOZ_create_context_provoking_vertex_dont_care)) {
+          gl::EGLExtension::MOZ_create_context_provoking_vertex_dont_care)) {
     flags |= gl::CreateContextFlags::PROVOKING_VERTEX_DONT_CARE;
   }
 
   // Create GLContext with dummy EGLSurface, the EGLSurface is not used.
   // Instread we override it with EGLSurface of SwapChain's back buffer.
-  RefPtr<gl::GLContext> gl =
-      gl::GLContextProviderEGL::CreateHeadless({flags}, &discardFailureId);
+
+  const auto dummySize = mozilla::gfx::IntSize(16, 16);
+  auto gl = gl::GLContextEGL::CreateEGLPBufferOffscreenContext(
+      egl, {flags}, dummySize, &failureId);
   if (!gl || !gl->IsANGLE()) {
     gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: "
                     << gfx::hexa(gl.get());
@@ -1029,12 +1046,6 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE() {
 
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WAYLAND)
 static already_AddRefed<gl::GLContext> CreateGLContextEGL() {
-  nsCString discardFailureId;
-  if (!gl::GLLibraryEGL::EnsureInitialized(/* forceAccel */ true,
-                                           &discardFailureId)) {
-    gfxCriticalNote << "Failed to load EGL library: " << discardFailureId.get();
-    return nullptr;
-  }
   // Create GLContext with dummy EGLSurface.
   RefPtr<gl::GLContext> gl =
       gl::GLContextProviderEGL::CreateForCompositorWidget(

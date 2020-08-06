@@ -14,7 +14,6 @@
 #include "mozilla/UniquePtr.h"
 #include "YCbCrUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 

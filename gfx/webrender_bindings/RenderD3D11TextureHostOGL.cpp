@@ -64,12 +64,11 @@ bool RenderDXGITextureHostOGL::EnsureD3D11Texture2D() {
 
   // Fetch the D3D11 device.
   EGLDeviceEXT eglDevice = nullptr;
-  egl->fQueryDisplayAttribEXT(egl->Display(), LOCAL_EGL_DEVICE_EXT,
-                              (EGLAttrib*)&eglDevice);
+  egl->fQueryDisplayAttribEXT(LOCAL_EGL_DEVICE_EXT, (EGLAttrib*)&eglDevice);
   MOZ_ASSERT(eglDevice);
   ID3D11Device* device = nullptr;
-  egl->fQueryDeviceAttribEXT(eglDevice, LOCAL_EGL_D3D11_DEVICE_ANGLE,
-                             (EGLAttrib*)&device);
+  egl->mLib->fQueryDeviceAttribEXT(eglDevice, LOCAL_EGL_D3D11_DEVICE_ANGLE,
+                                   (EGLAttrib*)&device);
   // There's a chance this might fail if we end up on d3d9 angle for some
   // reason.
   if (!device) {
@@ -122,9 +121,9 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
   // NV_stream_consumer_gltexture_yuv and ANGLE_stream_producer_d3d_texture
   // could support nv12 and rgb d3d texture format.
   if (!egl->IsExtensionSupported(
-          gl::GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
+          gl::EGLExtension::NV_stream_consumer_gltexture_yuv) ||
       !egl->IsExtensionSupported(
-          gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture)) {
+          gl::EGLExtension::ANGLE_stream_producer_d3d_texture)) {
     gfxCriticalNote
         << "RenderDXGITextureHostOGL egl extensions are not suppored";
     return false;
@@ -137,7 +136,7 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
   mTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mKeyedMutex));
 
   // Create the EGLStream.
-  mStream = egl->fCreateStreamKHR(egl->Display(), nullptr);
+  mStream = egl->fCreateStreamKHR(nullptr);
   MOZ_ASSERT(mStream);
 
   bool ok = true;
@@ -152,10 +151,9 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
                                  mTextureHandle[0], aRendering);
     // Cache new rendering filter.
     mCachedRendering = aRendering;
-    ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
-        egl->Display(), mStream, nullptr));
-    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(),
-                                                         mStream, nullptr));
+    ok &=
+        bool(egl->fStreamConsumerGLTextureExternalAttribsNV(mStream, nullptr));
+    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(mStream, nullptr));
   } else {
     // The nv12/p016 format.
 
@@ -181,14 +179,13 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
     // Cache new rendering filter.
     mCachedRendering = aRendering;
     ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
-        egl->Display(), mStream, consumerAttributes));
-    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(),
-                                                         mStream, nullptr));
+        mStream, consumerAttributes));
+    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(mStream, nullptr));
   }
 
   // Insert the d3d texture.
-  ok &= bool(egl->fStreamPostD3DTextureANGLE(egl->Display(), mStream,
-                                             (void*)mTexture.get(), nullptr));
+  ok &= bool(
+      egl->fStreamPostD3DTextureANGLE(mStream, (void*)mTexture.get(), nullptr));
 
   if (!ok) {
     gfxCriticalNote << "RenderDXGITextureHostOGL init stream failed";
@@ -197,8 +194,7 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
   }
 
   // Now, we could get the gl handle from the stream.
-  egl->fStreamConsumerAcquireKHR(egl->Display(), mStream);
-  MOZ_ASSERT(egl->fGetError() == LOCAL_EGL_SUCCESS);
+  MOZ_ALWAYS_TRUE(egl->fStreamConsumerAcquireKHR(mStream));
 
   return true;
 }
@@ -267,13 +263,14 @@ void RenderDXGITextureHostOGL::DeleteTextureHandle() {
 
   if (mGL->MakeCurrent()) {
     mGL->fDeleteTextures(2, mTextureHandle);
+
     const auto& gle = gl::GLContextEGL::Cast(mGL);
     const auto& egl = gle->mEgl;
     if (mSurface) {
-      egl->fDestroySurface(egl->Display(), mSurface);
+      egl->fDestroySurface(mSurface);
     }
     if (mStream) {
-      egl->fDestroyStreamKHR(egl->Display(), mStream);
+      egl->fDestroyStreamKHR(mStream);
     }
   }
 
@@ -357,9 +354,9 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
   // use EGLStream to get the converted gl handle from d3d R8 texture.
 
   if (!egl->IsExtensionSupported(
-          gl::GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
+          gl::EGLExtension::NV_stream_consumer_gltexture_yuv) ||
       !egl->IsExtensionSupported(
-          gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture)) {
+          gl::EGLExtension::ANGLE_stream_producer_d3d_texture)) {
     gfxCriticalNote
         << "RenderDXGIYCbCrTextureHostOGL egl extensions are not suppored";
     return false;
@@ -367,12 +364,11 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
 
   // Fetch the D3D11 device.
   EGLDeviceEXT eglDevice = nullptr;
-  egl->fQueryDisplayAttribEXT(egl->Display(), LOCAL_EGL_DEVICE_EXT,
-                              (EGLAttrib*)&eglDevice);
+  egl->fQueryDisplayAttribEXT(LOCAL_EGL_DEVICE_EXT, (EGLAttrib*)&eglDevice);
   MOZ_ASSERT(eglDevice);
   ID3D11Device* device = nullptr;
-  egl->fQueryDeviceAttribEXT(eglDevice, LOCAL_EGL_D3D11_DEVICE_ANGLE,
-                             (EGLAttrib*)&device);
+  egl->mLib->fQueryDeviceAttribEXT(eglDevice, LOCAL_EGL_D3D11_DEVICE_ANGLE,
+                                   (EGLAttrib*)&device);
   // There's a chance this might fail if we end up on d3d9 angle for some
   // reason.
   if (!device) {
@@ -412,21 +408,19 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
     mCachedRendering = aRendering;
 
     // Create the EGLStream.
-    mStreams[i] = egl->fCreateStreamKHR(egl->Display(), nullptr);
+    mStreams[i] = egl->fCreateStreamKHR(nullptr);
     MOZ_ASSERT(mStreams[i]);
 
-    ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
-        egl->Display(), mStreams[i], nullptr));
-    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(),
-                                                         mStreams[i], nullptr));
+    ok &= bool(
+        egl->fStreamConsumerGLTextureExternalAttribsNV(mStreams[i], nullptr));
+    ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(mStreams[i], nullptr));
 
     // Insert the R8 texture.
     ok &= bool(egl->fStreamPostD3DTextureANGLE(
-        egl->Display(), mStreams[i], (void*)mTextures[i].get(), nullptr));
+        mStreams[i], (void*)mTextures[i].get(), nullptr));
 
     // Now, we could get the R8 gl handle from the stream.
-    egl->fStreamConsumerAcquireKHR(egl->Display(), mStreams[i]);
-    MOZ_ASSERT(egl->fGetError() == LOCAL_EGL_SUCCESS);
+    MOZ_ALWAYS_TRUE(egl->fStreamConsumerAcquireKHR(mStreams[i]));
   }
 
   if (!ok) {
@@ -523,21 +517,22 @@ void RenderDXGIYCbCrTextureHostOGL::DeleteTextureHandle() {
 
   if (mGL->MakeCurrent()) {
     mGL->fDeleteTextures(3, mTextureHandles);
-  }
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-  for (int i = 0; i < 3; ++i) {
-    mTextureHandles[i] = 0;
-    mTextures[i] = nullptr;
-    mKeyedMutexs[i] = nullptr;
 
-    if (mSurfaces[i]) {
-      egl->fDestroySurface(egl->Display(), mSurfaces[i]);
-      mSurfaces[i] = 0;
-    }
-    if (mStreams[i]) {
-      egl->fDestroyStreamKHR(egl->Display(), mStreams[i]);
-      mStreams[i] = 0;
+    const auto& gle = gl::GLContextEGL::Cast(mGL);
+    const auto& egl = gle->mEgl;
+    for (int i = 0; i < 3; ++i) {
+      mTextureHandles[i] = 0;
+      mTextures[i] = nullptr;
+      mKeyedMutexs[i] = nullptr;
+
+      if (mSurfaces[i]) {
+        egl->fDestroySurface(mSurfaces[i]);
+        mSurfaces[i] = 0;
+      }
+      if (mStreams[i]) {
+        egl->fDestroyStreamKHR(mStreams[i]);
+        mStreams[i] = 0;
+      }
     }
   }
 }

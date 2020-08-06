@@ -301,7 +301,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
 
   virtual GLContextType GetContextType() const = 0;
 
-  virtual bool IsAliveImpl() const = 0;
   virtual bool IsCurrentImpl() const = 0;
   virtual bool MakeCurrentImpl() const = 0;
 
