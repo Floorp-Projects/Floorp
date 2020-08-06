@@ -608,7 +608,7 @@ class UrlbarInput {
     }
 
     this.controller.recordSelectedResult(event, result);
-    if (result.payload.overriddenSearchTopSite) {
+    if (result.payload.sendTopSiteAttributionRequest) {
       TopSiteAttribution.makeRequest({
         targetURL: result.payload.url,
         source: "urlbar",

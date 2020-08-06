@@ -33,7 +33,9 @@ var TopSiteAttribution = {
     record("click");
 
     const attributionUrl = Services.prefs.getStringPref(
-      `browser.newtabpage.searchTileOverride.${searchProvider}.attributionURL`,
+      Services.prefs.getBoolPref("browser.topsites.useRemoteSetting")
+        ? "browser.topsites.attributionURL"
+        : `browser.newtabpage.searchTileOverride.${searchProvider}.attributionURL`,
       ""
     );
     if (!attributionUrl) {

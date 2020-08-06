@@ -1294,6 +1294,7 @@ pref("prompts.tab_modal.enabled", true);
 pref("prompts.defaultModalType", 3);
 
 pref("browser.topsites.useRemoteSetting", false);
+pref("browser.topsites.attributionURL", "");
 
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
