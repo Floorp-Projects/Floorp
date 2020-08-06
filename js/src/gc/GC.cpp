@@ -1860,8 +1860,8 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
   src->zone()->transferUniqueId(dst, src);
 
   if (IsObjectAllocKind(thingKind)) {
-    JSObject* srcObj = static_cast<JSObject*>(static_cast<Cell*>(src));
-    JSObject* dstObj = static_cast<JSObject*>(static_cast<Cell*>(dst));
+    auto* srcObj = static_cast<JSObject*>(static_cast<Cell*>(src));
+    auto* dstObj = static_cast<JSObject*>(static_cast<Cell*>(dst));
 
     if (srcObj->isNative()) {
       NativeObject* srcNative = &srcObj->as<NativeObject>();

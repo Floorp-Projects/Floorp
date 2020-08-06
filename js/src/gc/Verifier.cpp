@@ -703,7 +703,7 @@ void js::gc::MarkingValidator::validate() {
       uintptr_t thing = arena->thingsStart();
       uintptr_t end = arena->thingsEnd();
       while (thing < end) {
-        auto cell = reinterpret_cast<TenuredCell*>(thing);
+        auto* cell = reinterpret_cast<TenuredCell*>(thing);
 
         /*
          * If a non-incremental GC wouldn't have collected a cell, then

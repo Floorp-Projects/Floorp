@@ -312,7 +312,7 @@ JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
       }
 
       case JS::TraceKind::Script: {
-        js::BaseScript* script = static_cast<js::BaseScript*>(thing);
+        auto* script = static_cast<js::BaseScript*>(thing);
         snprintf(buf, bufsize, " %s:%u", script->filename(), script->lineno());
         break;
       }
@@ -341,7 +341,7 @@ JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
       }
 
       case JS::TraceKind::Symbol: {
-        JS::Symbol* sym = static_cast<JS::Symbol*>(thing);
+        auto* sym = static_cast<JS::Symbol*>(thing);
         if (JSAtom* desc = sym->description()) {
           *buf++ = ' ';
           bufsize--;
@@ -353,7 +353,7 @@ JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
       }
 
       case JS::TraceKind::Scope: {
-        js::Scope* scope = static_cast<js::Scope*>(thing);
+        auto* scope = static_cast<js::Scope*>(thing);
         snprintf(buf, bufsize, " %s", js::ScopeKindString(scope->kind()));
         break;
       }

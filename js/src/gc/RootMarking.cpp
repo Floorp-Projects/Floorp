@@ -76,7 +76,7 @@ template <typename T>
 static inline void TraceExactStackRootList(JSTracer* trc,
                                            JS::Rooted<void*>* listHead,
                                            const char* name) {
-  auto typedList = reinterpret_cast<JS::Rooted<T>*>(listHead);
+  auto* typedList = reinterpret_cast<JS::Rooted<T>*>(listHead);
   for (JS::Rooted<T>* root = typedList; root; root = root->previous()) {
     root->trace(trc, name);
   }

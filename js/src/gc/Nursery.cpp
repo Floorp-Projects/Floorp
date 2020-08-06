@@ -93,7 +93,7 @@ inline void js::NurseryChunk::poisonRange(size_t from, size_t size,
   MOZ_ASSERT(from <= js::Nursery::NurseryChunkUsableSize);
   MOZ_ASSERT(from + size <= ChunkSize);
 
-  uint8_t* start = reinterpret_cast<uint8_t*>(this) + from;
+  auto* start = reinterpret_cast<uint8_t*>(this) + from;
 
   // We can poison the same chunk more than once, so first make sure memory
   // sanitizers will let us poison it.
@@ -123,7 +123,7 @@ inline js::NurseryChunk* js::NurseryChunk::fromChunk(Chunk* chunk) {
 }
 
 inline Chunk* js::NurseryChunk::toChunk(GCRuntime* gc) {
-  auto chunk = reinterpret_cast<Chunk*>(this);
+  auto* chunk = reinterpret_cast<Chunk*>(this);
   chunk->init(gc);
   return chunk;
 }
@@ -435,7 +435,7 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   MOZ_ASSERT_IF(clasp->hasFinalize(),
                 CanNurseryAllocateFinalizedClass(clasp) || clasp->isProxy());
 
-  auto obj = reinterpret_cast<JSObject*>(
+  auto* obj = reinterpret_cast<JSObject*>(
       allocateCell(cx->zone(), size, JS::TraceKind::Object));
   if (!obj) {
     return nullptr;
@@ -710,7 +710,7 @@ void Nursery::setIndirectForwardingPointer(void* oldData, void* newData) {
 
 #ifdef DEBUG
 static bool IsWriteableAddress(void* ptr) {
-  volatile uint64_t* vPtr = reinterpret_cast<volatile uint64_t*>(ptr);
+  auto* vPtr = reinterpret_cast<volatile uint64_t*>(ptr);
   *vPtr = *vPtr;
   return true;
 }
@@ -724,7 +724,7 @@ void js::Nursery::forwardBufferPointer(uintptr_t* pSlotsElems) {
   //
   // Note: The buffer has already be relocated. We are just patching stale
   //       pointers now.
-  void* buffer = reinterpret_cast<void*>(*pSlotsElems);
+  auto* buffer = reinterpret_cast<void*>(*pSlotsElems);
 
   if (!isInside(buffer)) {
     return;
@@ -1343,7 +1343,7 @@ void js::Nursery::sweep(JSTracer* trc) {
   // Sweep unique IDs first before we sweep any tables that may be keyed based
   // on them.
   for (Cell* cell : cellsWithUid_) {
-    JSObject* obj = static_cast<JSObject*>(cell);
+    auto* obj = static_cast<JSObject*>(cell);
     if (!IsForwarded(obj)) {
       obj->nurseryZone()->removeUniqueId(obj);
     } else {
