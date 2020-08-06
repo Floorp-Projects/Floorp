@@ -573,6 +573,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::Ursh:
       case JSOp::In:
       case JSOp::HasOwn:
+      case JSOp::CheckPrivateField:
       case JSOp::Instanceof:
       case JSOp::GetPropSuper:
       case JSOp::InitProp:
