@@ -1177,6 +1177,9 @@ class HiddenXULWindow {
     const browser = chromeDoc.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
+
+    // NOTE: This can be removed once all callers pass
+    // `initialBrowsingContextGroupId`.
     browser.sameProcessAsFrameLoader = groupFrameLoader;
 
     for (const [name, value] of Object.entries(xulAttributes)) {
@@ -1301,6 +1304,7 @@ class HiddenExtensionPage {
           "webextension-view-type": this.viewType,
           remote: this.extension.remote ? "true" : null,
           remoteType: this.extension.remoteType,
+          initialBrowsingContextGroupId: this.extension.browsingContextGroupId,
         },
         this.extension.groupFrameLoader
       );
@@ -1400,6 +1404,7 @@ const DebugUtils = {
           "webextension-addon-debug-target": extensionId,
           remote: extension.remote ? "true" : null,
           remoteType: extension.remoteType,
+          initialBrowsingContextGroupId: extension.browsingContextGroupId,
         },
         extension.groupFrameLoader
       );

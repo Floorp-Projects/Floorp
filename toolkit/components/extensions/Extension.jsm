@@ -27,8 +27,8 @@ var EXPORTED_SYMBOLS = [
  * (set as the current default value of the "dom.ipc.processCount.extension"
  * preference), if we switch to use more than one extension process, we have to
  * be sure that all the browser's frameLoader are associated to the same process,
- * e.g. by using the `sameProcessAsFrameLoader` property.
- * (http://searchfox.org/mozilla-central/source/dom/interfaces/base/nsIBrowser.idl)
+ * e.g. by enabling the `maychangeremoteness` attribute, and/or setting
+ * `initialBrowsingContextGroupId` attribute to the correct value.
  *
  * At that point we are going to keep track of the existing browsers associated to
  * a webextension to ensure that they are all running in the same process (and we
@@ -1954,6 +1954,10 @@ class Extension extends ExtensionData {
 
   static getBootstrapScope() {
     return new BootstrapScope();
+  }
+
+  get browsingContextGroupId() {
+    return this.policy.browsingContextGroupId;
   }
 
   get groupFrameLoader() {

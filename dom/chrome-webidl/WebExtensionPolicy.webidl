@@ -243,6 +243,16 @@ interface WebExtensionPolicy {
    * service worker url declared in the extension manifest.json file.
    */
   boolean isManifestBackgroundWorker(DOMString workerURL);
+
+  /**
+   * Get the unique BrowsingContextGroup ID which will be used for toplevel
+   * page loads from this extension.
+   *
+   * This method will raise an exception if called from outside of the parent
+   * process, or if the extension is inactive.
+   */
+  [Throws]
+  readonly attribute unsigned long long browsingContextGroupId;
 };
 
 dictionary WebExtensionInit {
