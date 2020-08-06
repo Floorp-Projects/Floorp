@@ -208,7 +208,10 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(osrPcMismatchesBeforeRecompile, 6000);
 
   // The bytecode length limit for small function.
-  SET_DEFAULT(smallFunctionMaxBytecodeLength_, 130);
+  SET_DEFAULT(smallFunctionMaxBytecodeLength, 130);
+
+  // The minimum entry count for an IC stub before it can be trial-inlined.
+  SET_DEFAULT(inliningEntryThreshold, 100);
 
   // An artificial testing limit for the maximum supported offset of
   // pc-relative jump and call instructions.
@@ -310,7 +313,7 @@ DefaultJitOptions::DefaultJitOptions() {
 }
 
 bool DefaultJitOptions::isSmallFunction(JSScript* script) const {
-  return script->length() <= smallFunctionMaxBytecodeLength_;
+  return script->length() <= smallFunctionMaxBytecodeLength;
 }
 
 void DefaultJitOptions::enableGvn(bool enable) { disableGvn = !enable; }
