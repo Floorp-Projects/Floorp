@@ -128,7 +128,7 @@ bool CreateStackMapForFunctionEntryTrap(const wasm::ArgTypeVector& argTypes,
     return false;
   }
 
-  for (ABIArgIter i(argTypes); !i.done(); i++) {
+  for (WasmABIArgIter i(argTypes); !i.done(); i++) {
     ABIArg argLoc = *i;
     if (argLoc.kind() == ABIArg::Stack &&
         argTypes[i.index()] == MIRType::RefOrNull) {
@@ -183,7 +183,7 @@ bool GenerateStackmapEntriesForTrapExit(const ArgTypeVector& args,
     return false;
   }
 
-  for (ABIArgIter i(args); !i.done(); i++) {
+  for (WasmABIArgIter i(args); !i.done(); i++) {
     if (!i->argInRegister() || i.mirType() != MIRType::RefOrNull) {
       continue;
     }
