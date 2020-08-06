@@ -160,7 +160,7 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
   }
   JSScript* script = target->nonLazyScript();
   if (!script->jitScript()->hasBaselineScript() || script->uninlineable() ||
-      script->needsArgsObj()) {
+      script->needsArgsObj() || script->isDebuggee()) {
     return false;
   }
   // Don't inline cross-realm calls.
@@ -170,7 +170,8 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
   return true;
 }
 
-bool TrialInliner::shouldInline(JSFunction* target, BytecodeLocation loc) {
+bool TrialInliner::shouldInline(JSFunction* target, ICStub* stub,
+                                BytecodeLocation loc) {
   if (!canInline(target, script_)) {
     return false;
   }
@@ -179,7 +180,20 @@ bool TrialInliner::shouldInline(JSFunction* target, BytecodeLocation loc) {
           CodeName(loc.getOp()), target->nonLazyScript()->filename(),
           target->nonLazyScript()->lineno(), target->nonLazyScript()->column());
 
-  // TODO: Actual heuristics
+  uint32_t entryCount = stub->getEnteredCount();
+  if (entryCount < JitOptions.inliningEntryThreshold) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: Entry count is %u (minimum %u)",
+            unsigned(entryCount), unsigned(JitOptions.inliningEntryThreshold));
+    return false;
+  }
+
+  if (!JitOptions.isSmallFunction(target->nonLazyScript())) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: Length is %u (maximum %u)",
+            unsigned(target->nonLazyScript()->length()),
+            unsigned(JitOptions.smallFunctionMaxBytecodeLength));
+    return false;
+  }
+
   return true;
 }
 
@@ -254,7 +268,7 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
   }
 
   // Decide whether to inline the target.
-  if (!shouldInline(data->target, loc)) {
+  if (!shouldInline(data->target, stub, loc)) {
     return true;
   }
 
