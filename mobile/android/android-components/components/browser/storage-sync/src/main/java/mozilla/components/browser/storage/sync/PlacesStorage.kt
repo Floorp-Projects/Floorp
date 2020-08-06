@@ -7,7 +7,7 @@ package mozilla.components.browser.storage.sync
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.InternalPanic
@@ -20,6 +20,7 @@ import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
+import java.util.concurrent.Executors
 
 /**
  * A base class for concrete implementations of PlacesStorages
@@ -28,8 +29,9 @@ abstract class PlacesStorage(
     context: Context,
     val crashReporter: CrashReporting? = null
 ) : Storage, SyncableStore {
-
-    internal val scope by lazy { CoroutineScope(Dispatchers.IO) }
+    internal val scope by lazy {
+        CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
+    }
     private val storageDir by lazy { context.filesDir }
 
     abstract val logger: Logger
