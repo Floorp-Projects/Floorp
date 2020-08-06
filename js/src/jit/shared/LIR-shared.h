@@ -7550,15 +7550,15 @@ class LCheckReturn : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0> {
   static const size_t ThisValue = BOX_PIECES;
 };
 
-class LCheckIsObj : public LInstructionHelper<0, BOX_PIECES, 0> {
+class LCheckIsObj : public LInstructionHelper<1, BOX_PIECES, 0> {
  public:
   LIR_HEADER(CheckIsObj)
 
-  static const size_t CheckValue = 0;
+  static const size_t ValueIndex = 0;
 
   explicit LCheckIsObj(const LBoxAllocation& value)
       : LInstructionHelper(classOpcode) {
-    setBoxOperand(CheckValue, value);
+    setBoxOperand(ValueIndex, value);
   }
 
   MCheckIsObj* mir() const { return mir_->toCheckIsObj(); }

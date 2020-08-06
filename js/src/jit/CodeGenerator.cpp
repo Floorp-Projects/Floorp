@@ -14079,12 +14079,14 @@ void CodeGenerator::visitCheckReturn(LCheckReturn* ins) {
 }
 
 void CodeGenerator::visitCheckIsObj(LCheckIsObj* ins) {
-  ValueOperand checkValue = ToValue(ins, LCheckIsObj::CheckValue);
+  ValueOperand value = ToValue(ins, LCheckIsObj::ValueIndex);
+  Register output = ToRegister(ins->output());
 
   using Fn = bool (*)(JSContext*, CheckIsObjectKind);
   OutOfLineCode* ool = oolCallVM<Fn, ThrowCheckIsObject>(
       ins, ArgList(Imm32(ins->mir()->checkKind())), StoreNothing());
-  masm.branchTestObject(Assembler::NotEqual, checkValue, ool->entry());
+
+  masm.fallibleUnboxObject(value, output, ool->entry());
   masm.bind(ool->rejoin());
 }
 
