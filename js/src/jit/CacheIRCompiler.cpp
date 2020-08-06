@@ -2000,12 +2000,11 @@ bool CacheIRCompiler::emitGuardSpecificNativeFunction(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardFunctionPrototype(ObjOperandId objId,
-                                                 ObjOperandId protoId,
-                                                 uint32_t slotOffset) {
+bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
+    ObjOperandId objId, ObjOperandId expectedId, uint32_t slotOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
-  Register prototypeObject = allocator.useRegister(masm, protoId);
+  Register expectedObject = allocator.useRegister(masm, expectedId);
 
   // Allocate registers before the failure path to make sure they're registered
   // by addFailurePath.
@@ -2017,14 +2016,14 @@ bool CacheIRCompiler::emitGuardFunctionPrototype(ObjOperandId objId,
     return false;
   }
 
-  // Guard on the .prototype object.
+  // Guard on the expected object.
   StubFieldOffset slot(slotOffset, StubField::Type::RawWord);
   masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
   emitLoadStubField(slot, scratch2);
-  BaseObjectSlotIndex prototypeSlot(scratch1, scratch2);
-  masm.branchTestObject(Assembler::NotEqual, prototypeSlot, failure->label());
-  masm.unboxObject(prototypeSlot, scratch1);
-  masm.branchPtr(Assembler::NotEqual, prototypeObject, scratch1,
+  BaseObjectSlotIndex expectedSlot(scratch1, scratch2);
+  masm.branchTestObject(Assembler::NotEqual, expectedSlot, failure->label());
+  masm.unboxObject(expectedSlot, scratch1);
+  masm.branchPtr(Assembler::NotEqual, expectedObject, scratch1,
                  failure->label());
 
   return true;
