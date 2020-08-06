@@ -59,7 +59,11 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
 
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...
-  if (mFrames.NotEmpty()) {
+  [&] {
+    if (mFrames.IsEmpty()) {
+      return;
+    }
+
     nsIFrame* frame = mFrames.FirstChild();
     // When the reflow size is NS_UNCONSTRAINEDSIZE it means we are reflowing
     // a single page to print selection. So this means we want to use
@@ -82,7 +86,6 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
     // XXX Shouldn't we do something more friendly when invalid margins
     //     are set?
     if (maxSize.width < onePixelInTwips || maxSize.height < onePixelInTwips) {
-      aDesiredSize.ClearSize();
       NS_WARNING("Reflow aborted; no space for content");
       return;
     }
@@ -115,8 +118,7 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
 
     // Check the width and height, if they're too small we reset the margins
     // back to the default.
-    if (maxWidth < onePixelInTwips ||
-        (maxHeight != NS_UNCONSTRAINEDSIZE && maxHeight < onePixelInTwips)) {
+    if (maxWidth < onePixelInTwips || maxHeight < onePixelInTwips) {
       for (const auto side : mozilla::AllPhysicalSides()) {
         mPageContentMargin.Side(side) = mPD->mReflowMargin.Side(side);
       }
@@ -124,6 +126,12 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
       if (maxHeight != NS_UNCONSTRAINEDSIZE) {
         maxHeight = maxSize.height - mPageContentMargin.TopBottom() / scale;
       }
+    }
+
+    // And if they're still too small we bail out.
+    if (maxWidth < onePixelInTwips || maxHeight < onePixelInTwips) {
+      NS_WARNING("Reflow aborted; no space for content");
+      return;
     }
 
     kidReflowInput.SetComputedWidth(maxWidth);
@@ -143,7 +151,8 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
 
     NS_ASSERTION(!aStatus.IsFullyComplete() || !frame->GetNextInFlow(),
                  "bad child flow list");
-  }
+  }();
+
   PR_PL(("PageFrame::Reflow %p ", this));
   PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.Width(), aDesiredSize.Height(),
          aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
