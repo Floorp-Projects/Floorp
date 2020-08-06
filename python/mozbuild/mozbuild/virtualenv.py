@@ -647,10 +647,12 @@ class VirtualenvManager(object):
         def get_venv():
             """Return path to virtual environment or None"""
             try:
+                sub_env = env.copy()
+                sub_env.pop('PYCHARM_HOSTED', None)
                 return subprocess.check_output(
                         [pipenv, '--venv'],
                         stderr=subprocess.STDOUT,
-                        env=env, universal_newlines=True).rstrip()
+                        env=sub_env, universal_newlines=True).rstrip()
 
             except subprocess.CalledProcessError:
                 # virtual environment does not exist
