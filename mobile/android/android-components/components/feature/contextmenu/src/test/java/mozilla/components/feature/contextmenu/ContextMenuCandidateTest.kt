@@ -540,6 +540,14 @@ class ContextMenuCandidateTest {
             createTab("https://www.mozilla.org"),
             HitResult.GEO("https://www.mozilla.org")))
 
+        assertFalse(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.UNKNOWN("https://www.mozilla.org/firefox/products.html")))
+
+        assertFalse(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.UNKNOWN("https://www.mozilla.org/firefox/products.htm")))
+
         // action
 
         assertNull(store.state.tabs.first().content.download)
