@@ -10,11 +10,12 @@ from time import mktime
 import pytest
 from mozunit import main
 
-from taskgraph.optimize import seta
+from taskgraph.optimize import registry
 from taskgraph.optimize.backstop import Backstop
 from taskgraph.optimize.bugbug import (
     BugBugPushSchedules,
     DisperseGroups,
+    FALLBACK,
     SkipUnlessDebug,
 )
 from taskgraph.task import Task
@@ -290,12 +291,17 @@ def test_bugbug_fallback(monkeypatch, responses, params):
         status=202,
     )
 
+    opt = BugBugPushSchedules(0.5, fallback=FALLBACK)
+
     # Make sure the test runs fast.
     monkeypatch.setattr(time, 'sleep', lambda i: None)
 
-    monkeypatch.setattr(seta, 'is_low_value_task', lambda l, p: l == default_tasks[0].label)
+    def fake_should_remove_task(task, params, _):
+        return task.label == default_tasks[0].label
 
-    opt = BugBugPushSchedules(0.5, fallback=True)
+    monkeypatch.setattr(registry[FALLBACK], "should_remove_task",
+                        fake_should_remove_task)
+
     assert opt.should_remove_task(default_tasks[0], params, None)
 
     # Make sure we don't hit bugbug more than once.
