@@ -155,8 +155,7 @@ nsMapRuleToAttributesFunc HTMLIFrameElement::GetAttributeMappingFunction()
 }
 
 bool HTMLIFrameElement::HasAllowFullscreenAttribute() const {
-  return GetBoolAttr(nsGkAtoms::allowfullscreen) ||
-         GetBoolAttr(nsGkAtoms::mozallowfullscreen);
+  return GetBoolAttr(nsGkAtoms::allowfullscreen);
 }
 
 bool HTMLIFrameElement::AllowFullscreen() const {
@@ -183,8 +182,7 @@ nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         // alreay been updated.
         mFrameLoader->ApplySandboxFlags(GetSandboxFlags());
       }
-    } else if (aName == nsGkAtoms::allowfullscreen ||
-               aName == nsGkAtoms::mozallowfullscreen) {
+    } else if (aName == nsGkAtoms::allowfullscreen) {
       if (mFrameLoader) {
         if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
           MOZ_ALWAYS_SUCCEEDS(
@@ -198,7 +196,6 @@ nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           aName == nsGkAtoms::srcdoc || aName == nsGkAtoms::sandbox) {
         RefreshFeaturePolicy(true /* parse the feature policy attribute */);
       } else if (aName == nsGkAtoms::allowfullscreen ||
-                 aName == nsGkAtoms::mozallowfullscreen ||
                  aName == nsGkAtoms::allowpaymentrequest) {
         RefreshFeaturePolicy(false /* parse the feature policy attribute */);
       }
