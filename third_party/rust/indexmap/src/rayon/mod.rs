@@ -1,3 +1,4 @@
+
 extern crate rayon;
 
 use self::rayon::prelude::*;
@@ -53,8 +54,10 @@ macro_rules! indexed_parallel_iterator_methods {
     }
 }
 
+
 pub mod map;
 pub mod set;
+
 
 // This form of intermediate collection is also how Rayon collects `HashMap`.
 // Note that the order will also be preserved!
