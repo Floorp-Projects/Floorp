@@ -51,10 +51,9 @@ class MediaControlService final : public nsIObserver {
   // This method would be called when the controller changes its playback state.
   void NotifyControllerPlaybackStateChanged(MediaController* aController);
 
-  // This method would be called when the controller starts to being used in the
-  // picture-in-picture mode.
-  void NotifyControllerBeingUsedInPictureInPictureMode(
-      MediaController* aController);
+  // This method is used to help a media controller become a main controller, if
+  // it fits the requirement.
+  void RequestUpdateMainController(MediaController* aController);
 
   // The main controller is the controller which can receive the media control
   // key events and would show its metadata to virtual controller interface.
