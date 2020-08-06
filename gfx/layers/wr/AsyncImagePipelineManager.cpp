@@ -180,10 +180,8 @@ void AsyncImagePipelineManager::RemoveAsyncImagePipeline(
 
 void AsyncImagePipelineManager::UpdateAsyncImagePipeline(
     const wr::PipelineId& aPipelineId, const LayoutDeviceRect& aScBounds,
-    const gfx::Matrix4x4& aScTransform, const gfx::MaybeIntSize& aScaleToSize,
     const VideoInfo::Rotation aRotation, const wr::ImageRendering& aFilter,
-    const wr::MixBlendMode& aMixBlendMode,
-    const LayoutDeviceSize& aScaleFromSize) {
+    const wr::MixBlendMode& aMixBlendMode) {
   if (mDestroyed) {
     return;
   }
@@ -193,8 +191,7 @@ void AsyncImagePipelineManager::UpdateAsyncImagePipeline(
     return;
   }
   pipeline->mInitialised = true;
-  pipeline->Update(aScBounds, aScTransform, aScaleToSize, aRotation, aFilter,
-                   aMixBlendMode, aScaleFromSize);
+  pipeline->Update(aScBounds, aRotation, aFilter, aMixBlendMode);
 }
 
 Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
@@ -377,8 +374,6 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
 
   aPipeline->mIsChanged = false;
 
-  gfx::Matrix4x4 scTransform = aPipeline->mScTransform;
-
   wr::DisplayListBuilder builder(aPipelineId);
 
   float opacity = 1.0f;
@@ -387,23 +382,13 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   params.mix_blend_mode = aPipeline->mMixBlendMode;
 
   wr::WrComputedTransformData computedTransform;
-  if (!aPipeline->mScaleFromSize.IsEmpty() ||
-      aPipeline->mRotation != VideoInfo::Rotation::kDegree_0) {
-    MOZ_ASSERT(scTransform.IsIdentity());
-    computedTransform.vertical_flip =
-        aPipeline->mCurrentTexture && aPipeline->mCurrentTexture->NeedsYFlip();
-    computedTransform.scale_from = wr::ToLayoutSize(aPipeline->mScaleFromSize);
-    computedTransform.rotation = ToWrRotation(aPipeline->mRotation);
-    params.computed_transform = &computedTransform;
-  } else {
-    if (aPipeline->mCurrentTexture &&
-        aPipeline->mCurrentTexture->NeedsYFlip()) {
-      scTransform
-          .PreTranslate(0, aPipeline->mCurrentTexture->GetSize().height, 0)
-          .PreScale(1, -1, 1);
-    }
-    params.mTransformPtr = scTransform.IsIdentity() ? nullptr : &scTransform;
-  }
+  computedTransform.vertical_flip =
+      aPipeline->mCurrentTexture && aPipeline->mCurrentTexture->NeedsYFlip();
+  computedTransform.scale_from = {
+      float(aPipeline->mCurrentTexture->GetSize().width),
+      float(aPipeline->mCurrentTexture->GetSize().height)};
+  computedTransform.rotation = ToWrRotation(aPipeline->mRotation);
+  params.computed_transform = &computedTransform;
 
   Maybe<wr::WrSpatialId> referenceFrameId = builder.PushStackingContext(
       params, wr::ToLayoutRect(aPipeline->mScBounds),
@@ -418,10 +403,6 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   if (aPipeline->mCurrentTexture && !keys.IsEmpty()) {
     LayoutDeviceRect rect(0, 0, aPipeline->mCurrentTexture->GetSize().width,
                           aPipeline->mCurrentTexture->GetSize().height);
-    if (aPipeline->mScaleToSize.isSome()) {
-      rect = LayoutDeviceRect(0, 0, aPipeline->mScaleToSize.value().width,
-                              aPipeline->mScaleToSize.value().height);
-    }
 
     if (aPipeline->mUseExternalImage) {
       MOZ_ASSERT(aPipeline->mCurrentTexture->AsWebRenderTextureHost());
