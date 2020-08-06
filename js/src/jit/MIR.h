@@ -11020,6 +11020,7 @@ class MIsObject : public MUnaryInstruction, public BoxInputsPolicy::Data {
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
@@ -11453,6 +11454,7 @@ class MCheckIsObj : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
   uint8_t checkKind() const { return checkKind_; }
 
+  MDefinition* foldsTo(TempAllocator& alloc) override;
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
