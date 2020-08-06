@@ -1,11 +1,13 @@
-
 use std::iter::Enumerate;
 use std::mem::size_of;
 
-pub fn third<A, B, C>(t: (A, B, C)) -> C { t.2 }
+pub fn third<A, B, C>(t: (A, B, C)) -> C {
+    t.2
+}
 
 pub fn enumerate<I>(iterable: I) -> Enumerate<I::IntoIter>
-    where I: IntoIterator
+where
+    I: IntoIterator,
 {
     iterable.into_iter().enumerate()
 }

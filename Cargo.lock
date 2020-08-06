@@ -2333,9 +2333,12 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.1.0"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4d6d89e0948bf10c08b9ecc8ac5b83f07f857ebe2c0cbe38de15b4e4f510356"
+checksum = "c398b2b113b55809ceb9ee3e753fcbac793f1956663f3c36549c1346015c2afe"
+dependencies = [
+ "autocfg 1.0.0",
+]
 
 [[package]]
 name = "inflate"
