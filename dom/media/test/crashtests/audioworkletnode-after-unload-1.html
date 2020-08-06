@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<title>Test for bug 1634200 and bug 1655544</title>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const frame = document.createElement('iframe');
+  document.body.appendChild(frame);
+  frame.srcdoc = '<html></html>';
+  await new Promise(resolve => frame.onload = resolve);
+
+  const subwin = frame.contentWindow;
+  const ctx = new subwin.AudioContext();
+  const url = URL.createObjectURL(
+    new Blob([`registerProcessor("noop",
+                                 class extends AudioWorkletProcessor {})`]),
+    {type: "application/javascript"});
+  await ctx.audioWorklet.addModule(url);
+
+  frame.remove();
+  new subwin.AudioWorkletNode(ctx, 'noop')
+
+  document.documentElement.removeAttribute('class');
+});
+</script>
+</head>
+</html>
