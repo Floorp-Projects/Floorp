@@ -10529,6 +10529,16 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.warpTrialInlining = true;
   }
 
+  int32_t inliningEntryThreshold = op.getIntOption("inlining-entry-threshold");
+  if (inliningEntryThreshold > 0) {
+    jit::JitOptions.inliningEntryThreshold = inliningEntryThreshold;
+  }
+
+  int32_t smallFunctionLength = op.getIntOption("small-function-length");
+  if (smallFunctionLength > 0) {
+    jit::JitOptions.smallFunctionMaxBytecodeLength = smallFunctionLength;
+  }
+
   if (const char* str = op.getStringOption("ion-regalloc")) {
     jit::JitOptions.forcedRegisterAllocator = jit::LookupRegisterAllocator(str);
     if (!jit::JitOptions.forcedRegisterAllocator.isSome()) {
@@ -11051,6 +11061,14 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "warp-trial-inlining",
                         "Enable trial inlining "
                         "for Warp") ||
+      !op.addIntOption('\0', "inlining-entry-threshold", "COUNT",
+                       "The minimum stub entry count before trial-inlining a"
+                       " call",
+                       -1) ||
+      !op.addIntOption('\0', "small-function-length", "COUNT",
+                       "The maximum bytecode length of a 'small function' for "
+                       "the purpose of inlining.",
+                       -1) ||
       !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation") ||
       !op.addStringOption(
           '\0', "wasm-compiler", "[option]",

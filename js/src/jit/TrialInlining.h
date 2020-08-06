@@ -94,7 +94,7 @@ class MOZ_RAII TrialInliner {
   void replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
                      CacheKind kind);
 
-  bool shouldInline(JSFunction* target, BytecodeLocation loc);
+  bool shouldInline(JSFunction* target, ICStub* stub, BytecodeLocation loc);
 
   JSContext* cx_;
   HandleScript script_;

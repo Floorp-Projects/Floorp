@@ -94,7 +94,8 @@ struct DefaultJitOptions {
   uint32_t frequentBailoutThreshold;
   uint32_t maxStackArgs;
   uint32_t osrPcMismatchesBeforeRecompile;
-  uint32_t smallFunctionMaxBytecodeLength_;
+  uint32_t smallFunctionMaxBytecodeLength;
+  uint32_t inliningEntryThreshold;
   uint32_t jumpThreshold;
   uint32_t branchPruningHitCountFactor;
   uint32_t branchPruningInstFactor;
