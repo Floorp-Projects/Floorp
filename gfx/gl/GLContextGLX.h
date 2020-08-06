@@ -43,6 +43,8 @@ class GLContextGLX : public GLContext {
 
   bool Init() override;
 
+  bool IsAliveImpl() const override;
+
   bool MakeCurrentImpl() const override;
 
   bool IsCurrentImpl() const override;

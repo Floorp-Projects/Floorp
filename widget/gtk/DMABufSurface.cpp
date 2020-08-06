@@ -184,9 +184,7 @@ already_AddRefed<DMABufSurface> DMABufSurface::CreateDMABufSurface(
 }
 
 void DMABufSurface::FenceDelete() {
-  if (!mGL) return;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
+  auto* egl = gl::GLLibraryEGL::Get();
 
   if (mSyncFd > 0) {
     close(mSyncFd);
@@ -194,7 +192,7 @@ void DMABufSurface::FenceDelete() {
   }
 
   if (mSync) {
-    egl->fDestroySync(mSync);
+    egl->fDestroySync(egl->Display(), mSync);
     mSync = nullptr;
   }
 }
@@ -203,14 +201,14 @@ void DMABufSurface::FenceSet() {
   if (!mGL || !mGL->MakeCurrent()) {
     return;
   }
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
 
-  if (egl->IsExtensionSupported(EGLExtension::KHR_fence_sync) &&
-      egl->IsExtensionSupported(EGLExtension::ANDROID_native_fence_sync)) {
+  auto* egl = gl::GLLibraryEGL::Get();
+  if (egl->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
+      egl->IsExtensionSupported(GLLibraryEGL::ANDROID_native_fence_sync)) {
     FenceDelete();
 
-    mSync = egl->fCreateSync(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr);
+    mSync = egl->fCreateSync(egl->Display(),
+                             LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr);
     if (mSync) {
       mSyncFd = egl->fDupNativeFenceFDANDROID(egl->Display(), mSync);
       mGL->fFlush();
@@ -224,10 +222,7 @@ void DMABufSurface::FenceSet() {
 }
 
 void DMABufSurface::FenceWait() {
-  if (!mGL) return;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-
+  auto* egl = gl::GLLibraryEGL::Get();
   if (!mSync && mSyncFd > 0) {
     FenceImportFromFd();
   }
@@ -235,18 +230,16 @@ void DMABufSurface::FenceWait() {
   // Wait on the fence, because presumably we're going to want to read this
   // surface
   if (mSync) {
-    egl->fClientWaitSync(mSync, 0, LOCAL_EGL_FOREVER);
+    egl->fClientWaitSync(egl->Display(), mSync, 0, LOCAL_EGL_FOREVER);
   }
 }
 
 bool DMABufSurface::FenceImportFromFd() {
-  if (!mGL) return false;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-
+  auto* egl = gl::GLLibraryEGL::Get();
   const EGLint attribs[] = {LOCAL_EGL_SYNC_NATIVE_FENCE_FD_ANDROID, mSyncFd,
                             LOCAL_EGL_NONE};
-  mSync = egl->fCreateSync(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, attribs);
+  mSync = egl->fCreateSync(egl->Display(), LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID,
+                           attribs);
   close(mSyncFd);
   mSyncFd = -1;
 
@@ -438,10 +431,6 @@ bool DMABufSurfaceRGBA::Create(const SurfaceDescriptor& aDesc) {
 
 bool DMABufSurfaceRGBA::Serialize(
     mozilla::layers::SurfaceDescriptor& aOutDescriptor) {
-  if (!mGL) return false;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> width;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> height;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> format;
@@ -547,12 +536,10 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
 #undef ADD_PLANE_ATTRIBS
   attribs.AppendElement(LOCAL_EGL_NONE);
 
-  if (!mGL) return false;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-  mEGLImage =
-      egl->fCreateImage(LOCAL_EGL_NO_CONTEXT, LOCAL_EGL_LINUX_DMA_BUF_EXT,
-                        nullptr, attribs.Elements());
+  auto* egl = gl::GLLibraryEGL::Get();
+  mEGLImage = egl->fCreateImage(egl->Display(), LOCAL_EGL_NO_CONTEXT,
+                                LOCAL_EGL_LINUX_DMA_BUF_EXT, nullptr,
+                                attribs.Elements());
   if (mEGLImage == LOCAL_EGL_NO_IMAGE) {
     NS_WARNING("EGLImageKHR creation failed");
     return false;
@@ -577,10 +564,6 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
 void DMABufSurfaceRGBA::ReleaseTextures() {
   FenceDelete();
 
-  if (!mGL) return;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-
   if (mTexture && mGL->MakeCurrent()) {
     mGL->fDeleteTextures(1, &mTexture);
     mTexture = 0;
@@ -588,7 +571,8 @@ void DMABufSurfaceRGBA::ReleaseTextures() {
   }
 
   if (mEGLImage) {
-    egl->fDestroyImage(mEGLImage);
+    auto* egl = gl::GLLibraryEGL::Get();
+    egl->fDestroyImage(egl->Display(), mEGLImage);
     mEGLImage = nullptr;
   }
 }
@@ -915,10 +899,6 @@ void DMABufSurfaceYUV::ImportSurfaceDescriptor(
 
 bool DMABufSurfaceYUV::Serialize(
     mozilla::layers::SurfaceDescriptor& aOutDescriptor) {
-  if (!mGL) return false;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> width;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> height;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> format;
@@ -951,13 +931,28 @@ bool DMABufSurfaceYUV::Serialize(
   return true;
 }
 
+#if 0
+already_AddRefed<gl::GLContext> MyCreateGLContextEGL() {
+  nsCString discardFailureId;
+  if (!gl::GLLibraryEGL::EnsureInitialized(true, &discardFailureId)) {
+    gfxCriticalNote << "Failed to load EGL library: " << discardFailureId.get();
+    return nullptr;
+  }
+  // Create GLContext with dummy EGLSurface.
+  RefPtr<gl::GLContext> gl =
+      gl::GLContextProviderEGL::CreateForCompositorWidget(nullptr, true, true);
+  if (!gl || !gl->MakeCurrent()) {
+    gfxCriticalNote << "Failed GL context creation for WebRender: "
+                    << gfx::hexa(gl.get());
+    return nullptr;
+  }
+  return gl.forget();
+}
+#endif
+
 bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   MOZ_ASSERT(!mEGLImage[aPlane] && !mTexture[aPlane],
              "EGLImage/Texture is already created!");
-
-  if (!mGL) return false;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
 
   nsTArray<EGLint> attribs;
   attribs.AppendElement(LOCAL_EGL_WIDTH);
@@ -977,9 +972,10 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
 #undef ADD_PLANE_ATTRIBS_NV12
   attribs.AppendElement(LOCAL_EGL_NONE);
 
-  mEGLImage[aPlane] =
-      egl->fCreateImage(LOCAL_EGL_NO_CONTEXT, LOCAL_EGL_LINUX_DMA_BUF_EXT,
-                        nullptr, attribs.Elements());
+  auto* egl = gl::GLLibraryEGL::Get();
+  mEGLImage[aPlane] = egl->fCreateImage(egl->Display(), LOCAL_EGL_NO_CONTEXT,
+                                        LOCAL_EGL_LINUX_DMA_BUF_EXT, nullptr,
+                                        attribs.Elements());
   if (mEGLImage[aPlane] == LOCAL_EGL_NO_IMAGE) {
     NS_WARNING("EGLImageKHR creation failed");
     return false;
@@ -1012,10 +1008,6 @@ void DMABufSurfaceYUV::ReleaseTextures() {
     }
   }
 
-  if (!mGL) return;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
-
   if (textureActive && mGL->MakeCurrent()) {
     mGL->fDeleteTextures(DMABUF_BUFFER_PLANES, mTexture);
     for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
@@ -1026,7 +1018,8 @@ void DMABufSurfaceYUV::ReleaseTextures() {
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
     if (mEGLImage[i]) {
-      egl->fDestroyImage(mEGLImage[i]);
+      auto* egl = gl::GLLibraryEGL::Get();
+      egl->fDestroyImage(egl->Display(), mEGLImage[i]);
       mEGLImage[i] = nullptr;
     }
   }
