@@ -660,6 +660,8 @@ class EngineSessionTest {
         assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.EXTERNAL).value))
         assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.ALLOW_POPUPS).value))
         assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.BYPASS_CLASSIFIER).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_FORCE_ALLOW_DATA_URI).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY).value))
 
         val flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)
         assertTrue(flags.contains(LoadUrlFlags.EXTERNAL))
@@ -667,6 +669,8 @@ class EngineSessionTest {
         assertFalse(flags.contains(LoadUrlFlags.BYPASS_CACHE))
         assertFalse(flags.contains(LoadUrlFlags.BYPASS_CLASSIFIER))
         assertFalse(flags.contains(LoadUrlFlags.BYPASS_PROXY))
+        assertFalse(flags.contains(LoadUrlFlags.LOAD_FLAGS_FORCE_ALLOW_DATA_URI))
+        assertFalse(flags.contains(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY))
     }
 
     @Test

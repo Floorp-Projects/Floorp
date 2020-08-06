@@ -53,8 +53,10 @@ import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -1755,6 +1757,36 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `toggleDesktopMode should reload a non-mobile url when set to desktop mode`() {
+        val mobileUrl = "https://m.example.com"
+        val nonMobileUrl = "https://example.com"
+        val engineSession = spy(GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider))
+        engineSession.currentUrl = mobileUrl
+
+        engineSession.toggleDesktopMode(true, reload = true)
+        verify(engineSession, atLeastOnce()).loadUrl(nonMobileUrl, null, LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY), null)
+
+        engineSession.toggleDesktopMode(false, reload = true)
+        verify(engineSession, atLeastOnce()).reload()
+    }
+
+    @Test
+    fun checkForMobileSite() {
+        val mUrl = "https://m.example.com"
+        val mobileUrl = "https://mobile.example.com"
+        val nonAuthorityUrl = "mobile.example.com"
+        val unrecognizedMobilePrefixUrl = "https://phone.example.com"
+        val nonMobileUrl = "https://example.com"
+
+        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+
+        assertNull(engineSession.checkForMobileSite(nonAuthorityUrl))
+        assertNull(engineSession.checkForMobileSite(unrecognizedMobilePrefixUrl))
+        assertEquals(nonMobileUrl, engineSession.checkForMobileSite(mUrl))
+        assertEquals(nonMobileUrl, engineSession.checkForMobileSite(mobileUrl))
+    }
+
+    @Test
     fun findAll() {
         val finderResult = mock<GeckoSession.FinderResult>()
         val sessionFinder = mock<SessionFinder>()
@@ -2632,6 +2664,8 @@ class GeckoEngineSessionTest {
         assertEquals(LoadUrlFlags.EXTERNAL, GeckoSession.LOAD_FLAGS_EXTERNAL)
         assertEquals(LoadUrlFlags.ALLOW_POPUPS, GeckoSession.LOAD_FLAGS_ALLOW_POPUPS)
         assertEquals(LoadUrlFlags.BYPASS_CLASSIFIER, GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
+        assertEquals(LoadUrlFlags.LOAD_FLAGS_FORCE_ALLOW_DATA_URI, GeckoSession.LOAD_FLAGS_FORCE_ALLOW_DATA_URI)
+        assertEquals(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY, GeckoSession.LOAD_FLAGS_REPLACE_HISTORY)
     }
 
     @Test

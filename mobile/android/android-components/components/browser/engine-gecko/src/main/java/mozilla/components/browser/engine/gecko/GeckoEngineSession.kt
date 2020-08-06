@@ -5,8 +5,10 @@
 package mozilla.components.browser.engine.gecko
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.os.Build
 import android.view.WindowManager
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -46,6 +48,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
+import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -235,6 +238,7 @@ class GeckoEngineSession(
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
         val currentMode = geckoSession.settings.userAgentMode
         val currentViewPortMode = geckoSession.settings.viewportMode
+        var overrideUrl: String? = null
 
         val newMode = if (enable) {
             GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
@@ -243,6 +247,7 @@ class GeckoEngineSession(
         }
 
         val newViewportMode = if (enable) {
+            overrideUrl = currentUrl?.let { checkForMobileSite(it) }
             GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
         } else {
             GeckoSessionSettings.VIEWPORT_MODE_MOBILE
@@ -255,8 +260,38 @@ class GeckoEngineSession(
         }
 
         if (reload) {
-            this.reload()
+            if (overrideUrl == null) {
+                this.reload()
+            } else {
+                loadUrl(overrideUrl, flags = LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY))
+            }
         }
+    }
+
+    /**
+     * Checks and returns a non-mobile version of the url.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun checkForMobileSite(url: String): String? {
+        var overrideUrl: String? = null
+        val mPrefix = "m."
+        val mobilePrefix = "mobile."
+
+        val uri = Uri.parse(url)
+        val authority = uri.authority?.toLowerCase(Locale.ROOT) ?: return null
+
+        val foundPrefix = when {
+            authority.startsWith(mPrefix) -> mPrefix
+            authority.startsWith(mobilePrefix) -> mobilePrefix
+            else -> null
+        }
+
+        foundPrefix?.let {
+            val mobileUri = Uri.parse(url).buildUpon().authority(authority.substring(it.length))
+            overrideUrl = mobileUri.toString()
+        }
+
+        return overrideUrl
     }
 
     /**
