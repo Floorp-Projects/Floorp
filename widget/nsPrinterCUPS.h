@@ -34,6 +34,14 @@ class nsPrinterCUPS final : public nsPrinterBase {
   static already_AddRefed<nsPrinterCUPS> Create(const nsCUPSShim& aShim,
                                                 cups_dest_t* aPrinter);
 
+  /**
+   * @brief Set the display name for the printer.
+   *
+   * If a display name is not set, the PWG Standardized name will be used
+   * https://ftp.pwg.org/pub/pwg/candidates/cs-pwgmsn20-20130328-5101.1.pdf
+   */
+  void SetDisplayName(const nsAString& aName) { mDisplayName = aName; }
+
  private:
   nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter);
 
@@ -42,6 +50,7 @@ class nsPrinterCUPS final : public nsPrinterBase {
   // Little util for getting support flags using the direct CUPS names.
   bool Supports(const char* option, const char* value) const;
 
+  nsString mDisplayName;
   const nsCUPSShim& mShim;
   cups_dest_t* mPrinter;
   cups_dinfo_t* mPrinterInfo;

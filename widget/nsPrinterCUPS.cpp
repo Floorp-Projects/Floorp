@@ -37,7 +37,11 @@ already_AddRefed<nsPrinterCUPS> nsPrinterCUPS::Create(const nsCUPSShim& aShim,
 
 NS_IMETHODIMP
 nsPrinterCUPS::GetName(nsAString& aName) {
-  aName = NS_ConvertUTF8toUTF16(mPrinter->name);
+  if (mDisplayName.IsEmpty()) {
+    aName = NS_ConvertUTF8toUTF16(mPrinter->name);
+  } else {
+    aName = mDisplayName;
+  }
   return NS_OK;
 }
 
