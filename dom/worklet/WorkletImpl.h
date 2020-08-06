@@ -100,6 +100,7 @@ class WorkletImpl {
 
   // Execution thread only.
   RefPtr<dom::WorkletGlobalScope> mGlobalScope;
+  bool mFinishedOnExecutionThread;
 
   Maybe<nsID> mAgentClusterId;
 
