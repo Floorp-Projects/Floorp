@@ -2794,13 +2794,15 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtVisibleChar(
     startToDelete = range->StartRef();
     endToDelete = range->EndRef();
   }
-  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
       *this, &startToDelete, &endToDelete);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
+        "failed");
     return EditActionResult(rv);
   }
   if (MaybeHasMutationEventListeners(
@@ -3323,30 +3325,23 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   // surrounding white-space in preparation to delete selection.
   if (!IsPlaintextEditor()) {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
-    EditorDOMPoint firstRangeStart(rangesToDelete.FirstRangeRef()->StartRef());
-    EditorDOMPoint firstRangeEnd(rangesToDelete.FirstRangeRef()->EndRef());
+    AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
+                                        &rangesToDelete.FirstRangeRef());
     nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-        *this, &firstRangeStart, &firstRangeEnd);
+        *this, EditorDOMRange(rangesToDelete.FirstRangeRef()));
     if (NS_FAILED(rv)) {
-      NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() "
+          "failed");
       return EditActionResult(rv);
     }
-    if (MaybeHasMutationEventListeners(
-            NS_EVENT_BITS_MUTATION_NODEREMOVED |
-            NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
-            NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
-            NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) &&
-        (NS_WARN_IF(!firstRangeStart.IsSetAndValid()) ||
-         NS_WARN_IF(!firstRangeEnd.IsSetAndValid()))) {
-      NS_WARNING("Mutation event listener changed the DOM tree");
+    if (NS_WARN_IF(
+            !rangesToDelete.FirstRangeRef()->StartRef().IsSetAndValid()) ||
+        NS_WARN_IF(!rangesToDelete.FirstRangeRef()->EndRef().IsSetAndValid())) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() made the firstr "
+          "range invalid");
       return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-    }
-    rv = rangesToDelete.FirstRangeRef()->SetStartAndEnd(
-        firstRangeStart.ToRawRangeBoundary(),
-        firstRangeEnd.ToRawRangeBoundary());
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to modify first range to delete");
-      return EditActionResult(NS_ERROR_FAILURE);
     }
   }
 

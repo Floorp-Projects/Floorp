@@ -1192,9 +1192,37 @@ class WhiteSpaceVisibilityKeeper final {
   // and offsets are adjusted in response to any dom changes we make while
   // adjusting ws.
   // example of fixup: trailingws before aStartPoint needs to be removed.
-  MOZ_CAN_RUN_SCRIPT static nsresult PrepareToDeleteRange(
-      HTMLEditor& aHTMLEditor, EditorDOMPoint* aStartPoint,
-      EditorDOMPoint* aEndPoint);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  PrepareToDeleteRangeAndTrackPoints(HTMLEditor& aHTMLEditor,
+                                     EditorDOMPoint* aStartPoint,
+                                     EditorDOMPoint* aEndPoint) {
+    MOZ_ASSERT(aStartPoint->IsSetAndValid());
+    MOZ_ASSERT(aEndPoint->IsSetAndValid());
+    AutoTrackDOMPoint trackerStart(aHTMLEditor.RangeUpdaterRef(), aStartPoint);
+    AutoTrackDOMPoint trackerEnd(aHTMLEditor.RangeUpdaterRef(), aEndPoint);
+    return WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+        aHTMLEditor, EditorDOMRange(*aStartPoint, *aEndPoint));
+  }
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult PrepareToDeleteRange(
+      HTMLEditor& aHTMLEditor, const EditorDOMPoint& aStartPoint,
+      const EditorDOMPoint& aEndPoint) {
+    MOZ_ASSERT(aStartPoint.IsSetAndValid());
+    MOZ_ASSERT(aEndPoint.IsSetAndValid());
+    return WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+        aHTMLEditor, EditorDOMRange(aStartPoint, aEndPoint));
+  }
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult PrepareToDeleteRange(
+      HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange) {
+    MOZ_ASSERT(aRange.IsPositionedAndValid());
+    nsresult rv = WhiteSpaceVisibilityKeeper::
+        MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(aHTMLEditor,
+                                                                   aRange);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "WhiteSpaceVisibilityKeeper::"
+        "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
+    return rv;
+  }
 
   // PrepareToDeleteNode fixes up ws before and after aContent in preparation
   // for aContent to be deleted.  Example of fixup: trailingws before
