@@ -10,15 +10,12 @@
 #endif
 
 #include "GLLibraryLoader.h"
-#include "mozilla/EnumTypeTraits.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "GeckoProfiler.h"
 
 #include <bitset>
-#include <memory>
-#include <unordered_map>
 #include <vector>
 
 #if defined(MOZ_X11)
@@ -26,8 +23,6 @@
 #else
 #  define EGL_DEFAULT_DISPLAY ((EGLNativeDisplayType)0)
 #endif
-
-struct ID3D11Device;
 
 extern "C" {
 struct AHardwareBuffer;
@@ -56,101 +51,68 @@ PRLibrary* LoadApitraceLibrary();
 void BeforeEGLCall(const char* funcName);
 void AfterEGLCall(const char* funcName);
 
-class EglDisplay;
-/**
- * Known GL extensions that can be queried by
- * IsExtensionSupported.  The results of this are cached, and as
- * such it's safe to use this even in performance critical code.
- * If you add to this array, remember to add to the string names
- * in GLLibraryEGL.cpp.
- */
-enum class EGLLibExtension {
-  ANDROID_get_native_client_buffer,
-  ANGLE_device_creation,
-  ANGLE_device_creation_d3d11,
-  ANGLE_platform_angle,
-  ANGLE_platform_angle_d3d,
-  Max
-};
-
-/**
- * Known GL extensions that can be queried by
- * IsExtensionSupported.  The results of this are cached, and as
- * such it's safe to use this even in performance critical code.
- * If you add to this array, remember to add to the string names
- * in GLLibraryEGL.cpp.
- */
-enum class EGLExtension {
-  KHR_image_base,
-  KHR_image_pixmap,
-  KHR_gl_texture_2D_image,
-  ANGLE_surface_d3d_texture_2d_share_handle,
-  EXT_create_context_robustness,
-  KHR_image,
-  KHR_fence_sync,
-  ANDROID_native_fence_sync,
-  EGL_ANDROID_image_crop,
-  ANGLE_d3d_share_handle_client_buffer,
-  KHR_create_context,
-  KHR_stream,
-  KHR_stream_consumer_gltexture,
-  EXT_device_query,
-  NV_stream_consumer_gltexture_yuv,
-  ANGLE_stream_producer_d3d_texture,
-  KHR_surfaceless_context,
-  KHR_create_context_no_error,
-  MOZ_create_context_provoking_vertex_dont_care,
-  EXT_swap_buffers_with_damage,
-  KHR_swap_buffers_with_damage,
-  EXT_buffer_age,
-  Max
-};
-
-// -
-
 class GLLibraryEGL final {
-  friend class EglDisplay;
+ protected:
+  ~GLLibraryEGL() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLLibraryEGL)
 
- private:
-  PRLibrary* mEGLLibrary = nullptr;
-  PRLibrary* mGLLibrary = nullptr;
-  bool mIsANGLE = false;
-  std::bitset<UnderlyingValue(EGLLibExtension::Max)> mAvailableExtensions;
-  std::weak_ptr<EglDisplay> mDefaultDisplay;
-  std::unordered_map<EGLDisplay, std::weak_ptr<EglDisplay>> mActiveDisplays;
+  void InitClientExtensions();
+  void InitDisplayExtensions();
 
- public:
-  static RefPtr<GLLibraryEGL> Create(nsACString* const out_failureId);
+  /**
+   * Known GL extensions that can be queried by
+   * IsExtensionSupported.  The results of this are cached, and as
+   * such it's safe to use this even in performance critical code.
+   * If you add to this array, remember to add to the string names
+   * in GLLibraryEGL.cpp.
+   */
+  enum EGLExtensions {
+    KHR_image_base,
+    KHR_image_pixmap,
+    KHR_gl_texture_2D_image,
+    KHR_lock_surface,
+    ANGLE_surface_d3d_texture_2d_share_handle,
+    EXT_create_context_robustness,
+    KHR_image,
+    KHR_fence_sync,
+    ANDROID_native_fence_sync,
+    EGL_ANDROID_image_crop,
+    ANDROID_get_native_client_buffer,
+    ANGLE_platform_angle,
+    ANGLE_platform_angle_d3d,
+    ANGLE_d3d_share_handle_client_buffer,
+    KHR_create_context,
+    KHR_stream,
+    KHR_stream_consumer_gltexture,
+    EXT_device_query,
+    NV_stream_consumer_gltexture_yuv,
+    ANGLE_stream_producer_d3d_texture,
+    ANGLE_device_creation,
+    ANGLE_device_creation_d3d11,
+    KHR_surfaceless_context,
+    KHR_create_context_no_error,
+    MOZ_create_context_provoking_vertex_dont_care,
+    EXT_swap_buffers_with_damage,
+    KHR_swap_buffers_with_damage,
+    EXT_buffer_age,
+    Extensions_Max
+  };
 
- private:
-  ~GLLibraryEGL() = default;
-
-  bool Init(nsACString* const out_failureId);
-  void InitLibExtensions();
-
- public:
-  Maybe<SymbolLoader> GetSymbolLoader() const;
-
-  std::shared_ptr<EglDisplay> CreateDisplay(bool forceAccel,
-                                            nsACString* const out_failureId);
-  std::shared_ptr<EglDisplay> CreateDisplay(ID3D11Device*);
-  std::shared_ptr<EglDisplay> DefaultDisplay(nsACString* const out_failureId);
-
-  bool IsExtensionSupported(EGLLibExtension aKnownExtension) const {
-    return mAvailableExtensions[UnderlyingValue(aKnownExtension)];
+  bool IsExtensionSupported(EGLExtensions aKnownExtension) const {
+    return mAvailableExtensions[aKnownExtension];
   }
 
-  void MarkExtensionUnsupported(EGLLibExtension aKnownExtension) {
-    mAvailableExtensions[UnderlyingValue(aKnownExtension)] = false;
+  void MarkExtensionUnsupported(EGLExtensions aKnownExtension) {
+    mAvailableExtensions[aKnownExtension] = false;
   }
 
-  bool IsANGLE() const { return mIsANGLE; }
+ protected:
+  std::bitset<Extensions_Max> mAvailableExtensions;
 
-  // -
-  // PFN wrappers
+ public:
+  ////
 
 #ifdef MOZ_WIDGET_ANDROID
 #  define PROFILE_CALL AUTO_PROFILER_LABEL(__func__, GRAPHICS);
@@ -178,276 +140,293 @@ class GLLibraryEGL final {
 #  define AFTER_CALL
 #endif
 
-#define WRAP(X)                \
-  PROFILE_CALL                 \
-  BEFORE_CALL                  \
-  const auto ret = mSymbols.X; \
-  AFTER_CALL                   \
-  return ret
-
- public:
-  EGLDisplay fGetDisplay(void* display_id) const {
-    WRAP(fGetDisplay(display_id));
+#define WRAP(X)                  \
+  {                              \
+    PROFILE_CALL                 \
+    BEFORE_CALL                  \
+    const auto ret = mSymbols.X; \
+    AFTER_CALL                   \
+    return ret;                  \
   }
 
-  EGLDisplay fGetPlatformDisplayEXT(EGLenum platform, void* native_display,
-                                    const EGLint* attrib_list) const {
-    WRAP(fGetPlatformDisplayEXT(platform, native_display, attrib_list));
+#define VOID_WRAP(X) \
+  {                  \
+    PROFILE_CALL     \
+    BEFORE_CALL      \
+    mSymbols.X;      \
+    AFTER_CALL       \
   }
 
-  EGLSurface fGetCurrentSurface(EGLint id) const {
-    WRAP(fGetCurrentSurface(id));
-  }
+  EGLDisplay fGetDisplay(void* display_id) const WRAP(fGetDisplay(display_id))
 
-  EGLContext fGetCurrentContext() const { WRAP(fGetCurrentContext()); }
+      EGLDisplay fGetPlatformDisplayEXT(EGLenum platform, void* native_display,
+                                        const EGLint* attrib_list) const
+      WRAP(fGetPlatformDisplayEXT(platform, native_display, attrib_list))
 
-  EGLBoolean fBindAPI(EGLenum api) const { WRAP(fBindAPI(api)); }
+          EGLBoolean fTerminate(EGLDisplay display) const
+      WRAP(fTerminate(display))
 
-  EGLint fGetError() const { WRAP(fGetError()); }
+          EGLSurface fGetCurrentSurface(EGLint id) const
+      WRAP(fGetCurrentSurface(id))
 
-  EGLBoolean fWaitNative(EGLint engine) const { WRAP(fWaitNative(engine)); }
+          EGLContext fGetCurrentContext() const WRAP(fGetCurrentContext())
 
-  EGLCastToRelevantPtr fGetProcAddress(const char* procname) const {
-    WRAP(fGetProcAddress(procname));
-  }
+              EGLBoolean fMakeCurrent(EGLDisplay dpy, EGLSurface draw,
+                                      EGLSurface read, EGLContext ctx) const
+      WRAP(fMakeCurrent(dpy, draw, read, ctx))
 
-  // ANGLE_device_creation
-  EGLDeviceEXT fCreateDeviceANGLE(EGLint device_type, void* native_device,
-                                  const EGLAttrib* attrib_list) const {
-    WRAP(fCreateDeviceANGLE(device_type, native_device, attrib_list));
-  }
+          EGLBoolean fDestroyContext(EGLDisplay dpy, EGLContext ctx) const
+      WRAP(fDestroyContext(dpy, ctx))
 
-  EGLBoolean fReleaseDeviceANGLE(EGLDeviceEXT device) {
-    WRAP(fReleaseDeviceANGLE(device));
-  }
+          EGLContext
+      fCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context,
+                     const EGLint* attrib_list) const
+      WRAP(fCreateContext(dpy, config, share_context, attrib_list))
 
-  // ANDROID_get_native_client_buffer
-  EGLClientBuffer fGetNativeClientBufferANDROID(
-      const struct AHardwareBuffer* buffer) {
-    WRAP(fGetNativeClientBufferANDROID(buffer));
-  }
+          EGLBoolean fDestroySurface(EGLDisplay dpy, EGLSurface surface) const
+      WRAP(fDestroySurface(dpy, surface))
 
- private:
-  EGLBoolean fTerminate(EGLDisplay display) const { WRAP(fTerminate(display)); }
+          EGLSurface fCreateWindowSurface(EGLDisplay dpy, EGLConfig config,
+                                          EGLNativeWindowType win,
+                                          const EGLint* attrib_list) const
+      WRAP(fCreateWindowSurface(dpy, config, win, attrib_list))
 
-  EGLBoolean fMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read,
-                          EGLContext ctx) const {
-    WRAP(fMakeCurrent(dpy, draw, read, ctx));
-  }
+          EGLSurface fCreatePbufferSurface(EGLDisplay dpy, EGLConfig config,
+                                           const EGLint* attrib_list) const
+      WRAP(fCreatePbufferSurface(dpy, config, attrib_list))
 
-  EGLBoolean fDestroyContext(EGLDisplay dpy, EGLContext ctx) const {
-    WRAP(fDestroyContext(dpy, ctx));
-  }
+          EGLSurface
+      fCreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buftype,
+                                     EGLClientBuffer buffer, EGLConfig config,
+                                     const EGLint* attrib_list) const
+      WRAP(fCreatePbufferFromClientBuffer(dpy, buftype, buffer, config,
+                                          attrib_list))
 
-  EGLContext fCreateContext(EGLDisplay dpy, EGLConfig config,
-                            EGLContext share_context,
-                            const EGLint* attrib_list) const {
-    WRAP(fCreateContext(dpy, config, share_context, attrib_list));
-  }
+          EGLSurface fCreatePixmapSurface(EGLDisplay dpy, EGLConfig config,
+                                          EGLNativePixmapType pixmap,
+                                          const EGLint* attrib_list) const
+      WRAP(fCreatePixmapSurface(dpy, config, pixmap, attrib_list))
 
-  EGLBoolean fDestroySurface(EGLDisplay dpy, EGLSurface surface) const {
-    WRAP(fDestroySurface(dpy, surface));
-  }
+          EGLBoolean fBindAPI(EGLenum api) const WRAP(fBindAPI(api))
 
- public:
-  EGLSurface fCreateWindowSurface(EGLDisplay dpy, EGLConfig config,
-                                  EGLNativeWindowType win,
-                                  const EGLint* attrib_list) const {
-    WRAP(fCreateWindowSurface(dpy, config, win, attrib_list));
-  }
+              EGLBoolean
+      fInitialize(EGLDisplay dpy, EGLint* major, EGLint* minor) const
+      WRAP(fInitialize(dpy, major, minor))
 
- private:
-  EGLSurface fCreatePbufferSurface(EGLDisplay dpy, EGLConfig config,
-                                   const EGLint* attrib_list) const {
-    WRAP(fCreatePbufferSurface(dpy, config, attrib_list));
-  }
+          EGLBoolean fChooseConfig(EGLDisplay dpy, const EGLint* attrib_list,
+                                   EGLConfig* configs, EGLint config_size,
+                                   EGLint* num_config) const
+      WRAP(fChooseConfig(dpy, attrib_list, configs, config_size, num_config))
 
-  EGLSurface fCreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buftype,
-                                            EGLClientBuffer buffer,
-                                            EGLConfig config,
-                                            const EGLint* attrib_list) const {
-    WRAP(fCreatePbufferFromClientBuffer(dpy, buftype, buffer, config,
-                                        attrib_list));
-  }
+          EGLint fGetError() const WRAP(fGetError())
 
-  EGLSurface fCreatePixmapSurface(EGLDisplay dpy, EGLConfig config,
-                                  EGLNativePixmapType pixmap,
-                                  const EGLint* attrib_list) const {
-    WRAP(fCreatePixmapSurface(dpy, config, pixmap, attrib_list));
-  }
+              EGLBoolean fGetConfigAttrib(EGLDisplay dpy, EGLConfig config,
+                                          EGLint attribute, EGLint* value) const
+      WRAP(fGetConfigAttrib(dpy, config, attribute, value))
 
-  EGLBoolean fInitialize(EGLDisplay dpy, EGLint* major, EGLint* minor) const {
-    WRAP(fInitialize(dpy, major, minor));
-  }
+          EGLBoolean fGetConfigs(EGLDisplay dpy, EGLConfig* configs,
+                                 EGLint config_size, EGLint* num_config) const
+      WRAP(fGetConfigs(dpy, configs, config_size, num_config))
 
-  EGLBoolean fChooseConfig(EGLDisplay dpy, const EGLint* attrib_list,
-                           EGLConfig* configs, EGLint config_size,
-                           EGLint* num_config) const {
-    WRAP(fChooseConfig(dpy, attrib_list, configs, config_size, num_config));
-  }
+          EGLBoolean fWaitNative(EGLint engine) const WRAP(fWaitNative(engine))
 
-  EGLBoolean fGetConfigAttrib(EGLDisplay dpy, EGLConfig config,
-                              EGLint attribute, EGLint* value) const {
-    WRAP(fGetConfigAttrib(dpy, config, attribute, value));
-  }
+              EGLCastToRelevantPtr fGetProcAddress(const char* procname) const
+      WRAP(fGetProcAddress(procname))
 
-  EGLBoolean fGetConfigs(EGLDisplay dpy, EGLConfig* configs, EGLint config_size,
-                         EGLint* num_config) const {
-    WRAP(fGetConfigs(dpy, configs, config_size, num_config));
-  }
+          EGLBoolean fSwapBuffers(EGLDisplay dpy, EGLSurface surface) const
+      WRAP(fSwapBuffers(dpy, surface))
 
-  EGLBoolean fSwapBuffers(EGLDisplay dpy, EGLSurface surface) const {
-    WRAP(fSwapBuffers(dpy, surface));
-  }
+          EGLBoolean fCopyBuffers(EGLDisplay dpy, EGLSurface surface,
+                                  EGLNativePixmapType target) const
+      WRAP(fCopyBuffers(dpy, surface, target))
 
-  EGLBoolean fCopyBuffers(EGLDisplay dpy, EGLSurface surface,
-                          EGLNativePixmapType target) const {
-    WRAP(fCopyBuffers(dpy, surface, target));
-  }
+          const GLubyte* fQueryString(EGLDisplay dpy, EGLint name) const
+      WRAP(fQueryString(dpy, name))
 
- public:
-  const GLubyte* fQueryString(EGLDisplay dpy, EGLint name) const {
-    WRAP(fQueryString(dpy, name));
-  }
+          EGLBoolean fQueryContext(EGLDisplay dpy, EGLContext ctx,
+                                   EGLint attribute, EGLint* value) const
+      WRAP(fQueryContext(dpy, ctx, attribute, value))
 
- private:
-  EGLBoolean fQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute,
-                           EGLint* value) const {
-    WRAP(fQueryContext(dpy, ctx, attribute, value));
-  }
+          EGLBoolean
+      fBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer) const
+      WRAP(fBindTexImage(dpy, surface, buffer))
 
-  EGLBoolean fBindTexImage(EGLDisplay dpy, EGLSurface surface,
-                           EGLint buffer) const {
-    WRAP(fBindTexImage(dpy, surface, buffer));
-  }
+          EGLBoolean
+      fReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer) const
+      WRAP(fReleaseTexImage(dpy, surface, buffer))
 
-  EGLBoolean fReleaseTexImage(EGLDisplay dpy, EGLSurface surface,
-                              EGLint buffer) const {
-    WRAP(fReleaseTexImage(dpy, surface, buffer));
-  }
+          EGLBoolean fSwapInterval(EGLDisplay dpy, EGLint interval) const
+      WRAP(fSwapInterval(dpy, interval))
 
-  EGLBoolean fSwapInterval(EGLDisplay dpy, EGLint interval) const {
-    WRAP(fSwapInterval(dpy, interval));
-  }
+          EGLImage
+      fCreateImage(EGLDisplay dpy, EGLContext ctx, EGLenum target,
+                   EGLClientBuffer buffer, const EGLint* attrib_list) const
+      WRAP(fCreateImageKHR(dpy, ctx, target, buffer, attrib_list))
 
-  EGLImage fCreateImage(EGLDisplay dpy, EGLContext ctx, EGLenum target,
-                        EGLClientBuffer buffer,
-                        const EGLint* attrib_list) const {
-    WRAP(fCreateImageKHR(dpy, ctx, target, buffer, attrib_list));
-  }
+          EGLBoolean fDestroyImage(EGLDisplay dpy, EGLImage image) const
+      WRAP(fDestroyImageKHR(dpy, image))
 
-  EGLBoolean fDestroyImage(EGLDisplay dpy, EGLImage image) const {
-    WRAP(fDestroyImageKHR(dpy, image));
-  }
+          EGLBoolean fLockSurface(EGLDisplay dpy, EGLSurface surface,
+                                  const EGLint* attrib_list) const
+      WRAP(fLockSurfaceKHR(dpy, surface, attrib_list))
 
-  EGLBoolean fQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint attribute,
-                           EGLint* value) const {
-    WRAP(fQuerySurface(dpy, surface, attribute, value));
-  }
+          EGLBoolean fUnlockSurface(EGLDisplay dpy, EGLSurface surface) const
+      WRAP(fUnlockSurfaceKHR(dpy, surface))
 
-  EGLBoolean fQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface,
-                                       EGLint attribute, void** value) const {
-    WRAP(fQuerySurfacePointerANGLE(dpy, surface, attribute, value));
-  }
+          EGLBoolean fQuerySurface(EGLDisplay dpy, EGLSurface surface,
+                                   EGLint attribute, EGLint* value) const
+      WRAP(fQuerySurface(dpy, surface, attribute, value))
 
-  EGLSync fCreateSync(EGLDisplay dpy, EGLenum type,
-                      const EGLint* attrib_list) const {
-    WRAP(fCreateSyncKHR(dpy, type, attrib_list));
-  }
+          EGLBoolean
+      fQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface,
+                                EGLint attribute, void** value) const
+      WRAP(fQuerySurfacePointerANGLE(dpy, surface, attribute, value))
 
-  EGLBoolean fDestroySync(EGLDisplay dpy, EGLSync sync) const {
-    WRAP(fDestroySyncKHR(dpy, sync));
-  }
+          EGLSync
+      fCreateSync(EGLDisplay dpy, EGLenum type, const EGLint* attrib_list) const
+      WRAP(fCreateSyncKHR(dpy, type, attrib_list))
 
-  EGLint fClientWaitSync(EGLDisplay dpy, EGLSync sync, EGLint flags,
-                         EGLTime timeout) const {
-    WRAP(fClientWaitSyncKHR(dpy, sync, flags, timeout));
-  }
+          EGLBoolean fDestroySync(EGLDisplay dpy, EGLSync sync) const
+      WRAP(fDestroySyncKHR(dpy, sync))
 
-  EGLBoolean fGetSyncAttrib(EGLDisplay dpy, EGLSync sync, EGLint attribute,
-                            EGLint* value) const {
-    WRAP(fGetSyncAttribKHR(dpy, sync, attribute, value));
-  }
+          EGLint fClientWaitSync(EGLDisplay dpy, EGLSync sync, EGLint flags,
+                                 EGLTime timeout) const
+      WRAP(fClientWaitSyncKHR(dpy, sync, flags, timeout))
 
-  EGLint fDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSync sync) const {
-    WRAP(fDupNativeFenceFDANDROID(dpy, sync));
-  }
+          EGLBoolean fGetSyncAttrib(EGLDisplay dpy, EGLSync sync,
+                                    EGLint attribute, EGLint* value) const
+      WRAP(fGetSyncAttribKHR(dpy, sync, attribute, value))
 
-  // KHR_stream
-  EGLStreamKHR fCreateStreamKHR(EGLDisplay dpy,
-                                const EGLint* attrib_list) const {
-    WRAP(fCreateStreamKHR(dpy, attrib_list));
-  }
+          EGLint fDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSync sync) const
+      WRAP(fDupNativeFenceFDANDROID(dpy, sync))
 
-  EGLBoolean fDestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream) const {
-    WRAP(fDestroyStreamKHR(dpy, stream));
-  }
+      // KHR_stream
+      EGLStreamKHR
+      fCreateStreamKHR(EGLDisplay dpy, const EGLint* attrib_list) const
+      WRAP(fCreateStreamKHR(dpy, attrib_list))
 
-  EGLBoolean fQueryStreamKHR(EGLDisplay dpy, EGLStreamKHR stream,
-                             EGLenum attribute, EGLint* value) const {
-    WRAP(fQueryStreamKHR(dpy, stream, attribute, value));
-  }
+          EGLBoolean
+      fDestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+      WRAP(fDestroyStreamKHR(dpy, stream))
 
-  // KHR_stream_consumer_gltexture
-  EGLBoolean fStreamConsumerGLTextureExternalKHR(EGLDisplay dpy,
-                                                 EGLStreamKHR stream) const {
-    WRAP(fStreamConsumerGLTextureExternalKHR(dpy, stream));
-  }
+          EGLBoolean fQueryStreamKHR(EGLDisplay dpy, EGLStreamKHR stream,
+                                     EGLenum attribute, EGLint* value) const
+      WRAP(fQueryStreamKHR(dpy, stream, attribute, value))
 
-  EGLBoolean fStreamConsumerAcquireKHR(EGLDisplay dpy,
-                                       EGLStreamKHR stream) const {
-    WRAP(fStreamConsumerAcquireKHR(dpy, stream));
-  }
+      // KHR_stream_consumer_gltexture
+      EGLBoolean fStreamConsumerGLTextureExternalKHR(EGLDisplay dpy,
+                                                     EGLStreamKHR stream) const
+      WRAP(fStreamConsumerGLTextureExternalKHR(dpy, stream))
 
-  EGLBoolean fStreamConsumerReleaseKHR(EGLDisplay dpy,
-                                       EGLStreamKHR stream) const {
-    WRAP(fStreamConsumerReleaseKHR(dpy, stream));
-  }
+          EGLBoolean
+      fStreamConsumerAcquireKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+      WRAP(fStreamConsumerAcquireKHR(dpy, stream))
 
-  // EXT_device_query
-  EGLBoolean fQueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute,
-                                    EGLAttrib* value) const {
-    WRAP(fQueryDisplayAttribEXT(dpy, attribute, value));
-  }
+          EGLBoolean
+      fStreamConsumerReleaseKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+      WRAP(fStreamConsumerReleaseKHR(dpy, stream))
 
- public:
-  EGLBoolean fQueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribute,
-                                   EGLAttrib* value) const {
-    WRAP(fQueryDeviceAttribEXT(device, attribute, value));
-  }
+      // EXT_device_query
+      EGLBoolean fQueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute,
+                                        EGLAttrib* value) const
+      WRAP(fQueryDisplayAttribEXT(dpy, attribute, value))
 
- private:
-  // NV_stream_consumer_gltexture_yuv
-  EGLBoolean fStreamConsumerGLTextureExternalAttribsNV(
-      EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const {
-    WRAP(fStreamConsumerGLTextureExternalAttribsNV(dpy, stream, attrib_list));
-  }
+          EGLBoolean
+      fQueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribute,
+                            EGLAttrib* value) const
+      WRAP(fQueryDeviceAttribEXT(device, attribute, value))
 
-  // ANGLE_stream_producer_d3d_texture
-  EGLBoolean fCreateStreamProducerD3DTextureANGLE(
-      EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const {
-    WRAP(fCreateStreamProducerD3DTextureANGLE(dpy, stream, attrib_list));
-  }
+      // NV_stream_consumer_gltexture_yuv
+      EGLBoolean fStreamConsumerGLTextureExternalAttribsNV(
+          EGLDisplay dpy, EGLStreamKHR stream,
+          const EGLAttrib* attrib_list) const
+      WRAP(fStreamConsumerGLTextureExternalAttribsNV(dpy, stream, attrib_list))
 
-  EGLBoolean fStreamPostD3DTextureANGLE(EGLDisplay dpy, EGLStreamKHR stream,
-                                        void* texture,
-                                        const EGLAttrib* attrib_list) const {
-    WRAP(fStreamPostD3DTextureANGLE(dpy, stream, texture, attrib_list));
-  }
+      // ANGLE_stream_producer_d3d_texture
+      EGLBoolean
+      fCreateStreamProducerD3DTextureANGLE(EGLDisplay dpy, EGLStreamKHR stream,
+                                           const EGLAttrib* attrib_list) const
+      WRAP(fCreateStreamProducerD3DTextureANGLE(dpy, stream, attrib_list))
 
-  // EGL_EXT_swap_buffers_with_damage / EGL_KHR_swap_buffers_with_damage
-  EGLBoolean fSwapBuffersWithDamage(EGLDisplay dpy, EGLSurface surface,
-                                    const EGLint* rects, EGLint n_rects) {
-    WRAP(fSwapBuffersWithDamage(dpy, surface, rects, n_rects));
-  }
+          EGLBoolean
+      fStreamPostD3DTextureANGLE(EGLDisplay dpy, EGLStreamKHR stream,
+                                 void* texture,
+                                 const EGLAttrib* attrib_list) const
+      WRAP(fStreamPostD3DTextureANGLE(dpy, stream, texture, attrib_list))
 
+      // ANGLE_device_creation
+      EGLDeviceEXT fCreateDeviceANGLE(EGLint device_type, void* native_device,
+                                      const EGLAttrib* attrib_list) const
+      WRAP(fCreateDeviceANGLE(device_type, native_device, attrib_list))
+
+          EGLBoolean fReleaseDeviceANGLE(EGLDeviceEXT device)
+              WRAP(fReleaseDeviceANGLE(device))
+
+      // EGL_EXT_swap_buffers_with_damage / EGL_KHR_swap_buffers_with_damage
+      EGLBoolean fSwapBuffersWithDamage(EGLDisplay dpy, EGLSurface surface,
+                                        const EGLint* rects, EGLint n_rects)
+          WRAP(fSwapBuffersWithDamage(dpy, surface, rects, n_rects))
+
+      // ANDROID_get_native_client_buffer
+      EGLClientBuffer
+      fGetNativeClientBufferANDROID(const struct AHardwareBuffer* buffer)
+          WRAP(fGetNativeClientBufferANDROID(buffer))
 #undef WRAP
+#undef VOID_WRAP
 #undef PROFILE_CALL
 #undef BEFORE_CALL
 #undef AFTER_CALL
 #undef MOZ_FUNCTION_NAME
 
-  ////
+      ////
+
+      EGLDisplay Display() const {
+    MOZ_ASSERT(mInitialized);
+    return mEGLDisplay;
+  }
+
+  bool IsANGLE() const {
+    MOZ_ASSERT(mInitialized);
+    return mIsANGLE;
+  }
+
+  bool IsWARP() const {
+    MOZ_ASSERT(mInitialized);
+    return mIsWARP;
+  }
+
+  bool HasKHRImageBase() const {
+    return IsExtensionSupported(KHR_image) ||
+           IsExtensionSupported(KHR_image_base);
+  }
+
+  bool HasKHRImagePixmap() const {
+    return IsExtensionSupported(KHR_image) ||
+           IsExtensionSupported(KHR_image_pixmap);
+  }
+
+  bool HasKHRImageTexture2D() const {
+    return IsExtensionSupported(KHR_gl_texture_2D_image);
+  }
+
+  bool HasANGLESurfaceD3DTexture2DShareHandle() const {
+    return IsExtensionSupported(ANGLE_surface_d3d_texture_2d_share_handle);
+  }
+
+  bool ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surface);
+
+  inline static GLLibraryEGL* Get() { return sEGLLibrary; }
+
+  static bool EnsureInitialized(bool forceAccel,
+                                nsACString* const out_failureId);
+
+  void Shutdown();
+  bool IsAlive() const;
+
+  void DumpEGLConfig(EGLConfig cfg);
+  void DumpEGLConfigs();
+
+  Maybe<SymbolLoader> GetSymbolLoader() const;
 
  private:
   struct {
@@ -510,6 +489,11 @@ class GLLibraryEGL final {
                                           EGLClientBuffer buffer,
                                           const EGLint* attrib_list);
     EGLBoolean(GLAPIENTRY* fDestroyImageKHR)(EGLDisplay dpy, EGLImage image);
+    // New extension which allow us to lock texture and get raw image pointer
+    EGLBoolean(GLAPIENTRY* fLockSurfaceKHR)(EGLDisplay dpy, EGLSurface surface,
+                                            const EGLint* attrib_list);
+    EGLBoolean(GLAPIENTRY* fUnlockSurfaceKHR)(EGLDisplay dpy,
+                                              EGLSurface surface);
     EGLBoolean(GLAPIENTRY* fQuerySurface)(EGLDisplay dpy, EGLSurface surface,
                                           EGLint attribute, EGLint* value);
     EGLBoolean(GLAPIENTRY* fQuerySurfacePointerANGLE)(EGLDisplay dpy,
@@ -567,252 +551,26 @@ class GLLibraryEGL final {
     EGLClientBuffer(GLAPIENTRY* fGetNativeClientBufferANDROID)(
         const struct AHardwareBuffer* buffer);
   } mSymbols = {};
-};
-
-class EglDisplay final {
- public:
-  const RefPtr<GLLibraryEGL> mLib;
-  const EGLDisplay mDisplay;
-  const bool mIsWARP;
 
  private:
-  std::bitset<UnderlyingValue(EGLExtension::Max)> mAvailableExtensions;
+  bool DoEnsureInitialized();
+  bool DoEnsureInitialized(bool forceAccel, nsACString* const out_failureId);
+  EGLDisplay CreateDisplay(bool forceAccel, const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                           nsACString* const out_failureId);
 
-  struct PrivateUseOnly final {};
+  bool mInitialized = false;
+  PRLibrary* mEGLLibrary = nullptr;
+  mutable PRLibrary* mGLLibrary = nullptr;
+  EGLDisplay mEGLDisplay = EGL_NO_DISPLAY;
+  RefPtr<GLContext> mReadbackGL;
 
- public:
-  static std::shared_ptr<EglDisplay> Create(GLLibraryEGL&, EGLDisplay,
-                                            bool isWarp);
-
-  // Only `public` for make_shared.
-  EglDisplay(const PrivateUseOnly&, GLLibraryEGL&, EGLDisplay, bool isWarp);
-
- public:
-  ~EglDisplay();
-
-  bool IsExtensionSupported(EGLExtension aKnownExtension) const {
-    return mAvailableExtensions[UnderlyingValue(aKnownExtension)];
-  }
-
-  void MarkExtensionUnsupported(EGLExtension aKnownExtension) {
-    mAvailableExtensions[UnderlyingValue(aKnownExtension)] = false;
-  }
-
-  void DumpEGLConfig(EGLConfig) const;
-  void DumpEGLConfigs() const;
-
-  void Shutdown();
-
-  // -
-
-  bool HasKHRImageBase() const {
-    return IsExtensionSupported(EGLExtension::KHR_image) ||
-           IsExtensionSupported(EGLExtension::KHR_image_base);
-  }
-
-  bool HasKHRImagePixmap() const {
-    return IsExtensionSupported(EGLExtension::KHR_image) ||
-           IsExtensionSupported(EGLExtension::KHR_image_pixmap);
-  }
-
-  // -
-
-  EGLBoolean fTerminate() { return mLib->fTerminate(mDisplay); }
-
-  EGLBoolean fMakeCurrent(EGLSurface draw, EGLSurface read,
-                          EGLContext ctx) const {
-    return mLib->fMakeCurrent(mDisplay, draw, read, ctx);
-  }
-
-  EGLBoolean fDestroyContext(EGLContext ctx) const {
-    return mLib->fDestroyContext(mDisplay, ctx);
-  }
-
-  EGLContext fCreateContext(EGLConfig config, EGLContext share_context,
-                            const EGLint* attrib_list) const {
-    return mLib->fCreateContext(mDisplay, config, share_context, attrib_list);
-  }
-
-  EGLBoolean fDestroySurface(EGLSurface surface) const {
-    return mLib->fDestroySurface(mDisplay, surface);
-  }
-
-  EGLSurface fCreateWindowSurface(EGLConfig config, EGLNativeWindowType win,
-                                  const EGLint* attrib_list) const {
-    return mLib->fCreateWindowSurface(mDisplay, config, win, attrib_list);
-  }
-
-  EGLSurface fCreatePbufferSurface(EGLConfig config,
-                                   const EGLint* attrib_list) const {
-    return mLib->fCreatePbufferSurface(mDisplay, config, attrib_list);
-  }
-
-  EGLSurface fCreatePbufferFromClientBuffer(EGLenum buftype,
-                                            EGLClientBuffer buffer,
-                                            EGLConfig config,
-                                            const EGLint* attrib_list) const {
-    return mLib->fCreatePbufferFromClientBuffer(mDisplay, buftype, buffer,
-                                                config, attrib_list);
-  }
-
-  EGLBoolean fChooseConfig(const EGLint* attrib_list, EGLConfig* configs,
-                           EGLint config_size, EGLint* num_config) const {
-    return mLib->fChooseConfig(mDisplay, attrib_list, configs, config_size,
-                               num_config);
-  }
-
-  EGLBoolean fGetConfigAttrib(EGLConfig config, EGLint attribute,
-                              EGLint* value) const {
-    return mLib->fGetConfigAttrib(mDisplay, config, attribute, value);
-  }
-
-  EGLBoolean fGetConfigs(EGLConfig* configs, EGLint config_size,
-                         EGLint* num_config) const {
-    return mLib->fGetConfigs(mDisplay, configs, config_size, num_config);
-  }
-
-  EGLBoolean fSwapBuffers(EGLSurface surface) const {
-    return mLib->fSwapBuffers(mDisplay, surface);
-  }
-
-  EGLBoolean fBindTexImage(EGLSurface surface, EGLint buffer) const {
-    return mLib->fBindTexImage(mDisplay, surface, buffer);
-  }
-
-  EGLBoolean fReleaseTexImage(EGLSurface surface, EGLint buffer) const {
-    return mLib->fReleaseTexImage(mDisplay, surface, buffer);
-  }
-
-  EGLBoolean fSwapInterval(EGLint interval) const {
-    return mLib->fSwapInterval(mDisplay, interval);
-  }
-
-  EGLImage fCreateImage(EGLContext ctx, EGLenum target, EGLClientBuffer buffer,
-                        const EGLint* attribList) const {
-    MOZ_ASSERT(HasKHRImageBase());
-    return mLib->fCreateImage(mDisplay, ctx, target, buffer, attribList);
-  }
-
-  EGLBoolean fDestroyImage(EGLImage image) const {
-    MOZ_ASSERT(HasKHRImageBase());
-    return mLib->fDestroyImage(mDisplay, image);
-  }
-
-  EGLBoolean fQuerySurface(EGLSurface surface, EGLint attribute,
-                           EGLint* value) const {
-    return mLib->fQuerySurface(mDisplay, surface, attribute, value);
-  }
-
-  EGLBoolean fQuerySurfacePointerANGLE(EGLSurface surface, EGLint attribute,
-                                       void** value) const {
-    MOZ_ASSERT(IsExtensionSupported(
-        EGLExtension::ANGLE_surface_d3d_texture_2d_share_handle));
-    return mLib->fQuerySurfacePointerANGLE(mDisplay, surface, attribute, value);
-  }
-
-  EGLSync fCreateSync(EGLenum type, const EGLint* attrib_list) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_fence_sync));
-    return mLib->fCreateSync(mDisplay, type, attrib_list);
-  }
-
-  EGLBoolean fDestroySync(EGLSync sync) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_fence_sync));
-    return mLib->fDestroySync(mDisplay, sync);
-  }
-
-  EGLint fClientWaitSync(EGLSync sync, EGLint flags, EGLTime timeout) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_fence_sync));
-    return mLib->fClientWaitSync(mDisplay, sync, flags, timeout);
-  }
-
-  EGLBoolean fGetSyncAttrib(EGLSync sync, EGLint attribute,
-                            EGLint* value) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_fence_sync));
-    return mLib->fGetSyncAttrib(mDisplay, sync, attribute, value);
-  }
-
-  EGLint fDupNativeFenceFDANDROID(EGLSync sync) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::ANDROID_native_fence_sync));
-    return mLib->fDupNativeFenceFDANDROID(mDisplay, sync);
-  }
-
-  // EXT_device_query
-  EGLBoolean fQueryDisplayAttribEXT(EGLint attribute, EGLAttrib* value) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::EXT_device_query));
-    return mLib->fQueryDisplayAttribEXT(mDisplay, attribute, value);
-  }
-
-  // KHR_stream
-  EGLStreamKHR fCreateStreamKHR(const EGLint* attrib_list) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_stream));
-    return mLib->fCreateStreamKHR(mDisplay, attrib_list);
-  }
-
-  EGLBoolean fDestroyStreamKHR(EGLStreamKHR stream) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_stream));
-    return mLib->fDestroyStreamKHR(mDisplay, stream);
-  }
-
-  EGLBoolean fQueryStreamKHR(EGLStreamKHR stream, EGLenum attribute,
-                             EGLint* value) const {
-    MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_stream));
-    return mLib->fQueryStreamKHR(mDisplay, stream, attribute, value);
-  }
-
-  // KHR_stream_consumer_gltexture
-  EGLBoolean fStreamConsumerGLTextureExternalKHR(EGLStreamKHR stream) const {
-    MOZ_ASSERT(
-        IsExtensionSupported(EGLExtension::KHR_stream_consumer_gltexture));
-    return mLib->fStreamConsumerGLTextureExternalKHR(mDisplay, stream);
-  }
-
-  EGLBoolean fStreamConsumerAcquireKHR(EGLStreamKHR stream) const {
-    MOZ_ASSERT(
-        IsExtensionSupported(EGLExtension::KHR_stream_consumer_gltexture));
-    return mLib->fStreamConsumerAcquireKHR(mDisplay, stream);
-  }
-
-  EGLBoolean fStreamConsumerReleaseKHR(EGLStreamKHR stream) const {
-    MOZ_ASSERT(
-        IsExtensionSupported(EGLExtension::KHR_stream_consumer_gltexture));
-    return mLib->fStreamConsumerReleaseKHR(mDisplay, stream);
-  }
-
-  // NV_stream_consumer_gltexture_yuv
-  EGLBoolean fStreamConsumerGLTextureExternalAttribsNV(
-      EGLStreamKHR stream, const EGLAttrib* attrib_list) const {
-    MOZ_ASSERT(
-        IsExtensionSupported(EGLExtension::NV_stream_consumer_gltexture_yuv));
-    return mLib->fStreamConsumerGLTextureExternalAttribsNV(mDisplay, stream,
-                                                           attrib_list);
-  }
-
-  // ANGLE_stream_producer_d3d_texture
-  EGLBoolean fCreateStreamProducerD3DTextureANGLE(
-      EGLStreamKHR stream, const EGLAttrib* attrib_list) const {
-    MOZ_ASSERT(
-        IsExtensionSupported(EGLExtension::ANGLE_stream_producer_d3d_texture));
-    return mLib->fCreateStreamProducerD3DTextureANGLE(mDisplay, stream,
-                                                      attrib_list);
-  }
-
-  EGLBoolean fStreamPostD3DTextureANGLE(EGLStreamKHR stream, void* texture,
-                                        const EGLAttrib* attrib_list) const {
-    MOZ_ASSERT(
-        IsExtensionSupported(EGLExtension::ANGLE_stream_producer_d3d_texture));
-    return mLib->fStreamPostD3DTextureANGLE(mDisplay, stream, texture,
-                                            attrib_list);
-  }
-
-  // EGL_EXT_swap_buffers_with_damage / EGL_KHR_swap_buffers_with_damage
-  EGLBoolean fSwapBuffersWithDamage(EGLSurface surface, const EGLint* rects,
-                                    EGLint n_rects) {
-    MOZ_ASSERT(
-        IsExtensionSupported(EGLExtension::EXT_swap_buffers_with_damage) ||
-        IsExtensionSupported(EGLExtension::KHR_swap_buffers_with_damage));
-    return mLib->fSwapBuffersWithDamage(mDisplay, surface, rects, n_rects);
-  }
+  bool mIsANGLE = false;
+  bool mIsWARP = false;
+  static StaticMutex sMutex;
+  static StaticRefPtr<GLLibraryEGL> sEGLLibrary;
 };
+
+bool DoesEGLContextSupportSharingWithEGLImage(GLContext* gl);
 
 } /* namespace gl */
 } /* namespace mozilla */

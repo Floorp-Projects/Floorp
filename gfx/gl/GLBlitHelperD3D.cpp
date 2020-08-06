@@ -20,29 +20,30 @@
 namespace mozilla {
 namespace gl {
 
-static EGLStreamKHR StreamFromD3DTexture(EglDisplay* const egl,
+static EGLStreamKHR StreamFromD3DTexture(GLLibraryEGL* const egl,
                                          ID3D11Texture2D* const texD3D,
                                          const EGLAttrib* const postAttribs) {
   if (!egl->IsExtensionSupported(
-          EGLExtension::NV_stream_consumer_gltexture_yuv) ||
+          GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
       !egl->IsExtensionSupported(
-          EGLExtension::ANGLE_stream_producer_d3d_texture)) {
+          GLLibraryEGL::ANGLE_stream_producer_d3d_texture)) {
     return 0;
   }
 
-  const auto stream = egl->fCreateStreamKHR(nullptr);
+  const auto& display = egl->Display();
+  const auto stream = egl->fCreateStreamKHR(display, nullptr);
   MOZ_ASSERT(stream);
   if (!stream) return 0;
   bool ok = true;
   MOZ_ALWAYS_TRUE(ok &= bool(egl->fStreamConsumerGLTextureExternalAttribsNV(
-                      stream, nullptr)));
-  MOZ_ALWAYS_TRUE(
-      ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(stream, nullptr)));
-  MOZ_ALWAYS_TRUE(
-      ok &= bool(egl->fStreamPostD3DTextureANGLE(stream, texD3D, postAttribs)));
+                      display, stream, nullptr)));
+  MOZ_ALWAYS_TRUE(ok &= bool(egl->fCreateStreamProducerD3DTextureANGLE(
+                      display, stream, nullptr)));
+  MOZ_ALWAYS_TRUE(ok &= bool(egl->fStreamPostD3DTextureANGLE(
+                      display, stream, texD3D, postAttribs)));
   if (ok) return stream;
 
-  (void)egl->fDestroyStreamKHR(stream);
+  (void)egl->fDestroyStreamKHR(display, stream);
   return 0;
 }
 
@@ -86,6 +87,7 @@ class BindAnglePlanes final {
     const auto& gl = mParent.mGL;
     const auto& gle = GLContextEGL::Cast(gl);
     const auto& egl = gle->mEgl;
+    const auto& display = egl->Display();
 
     gl->fGenTextures(numPlanes, mTempTexs);
 
@@ -96,13 +98,13 @@ class BindAnglePlanes final {
       if (postAttribsList) {
         postAttribs = postAttribsList[i];
       }
-      mStreams[i] = StreamFromD3DTexture(egl.get(), texD3DList[i], postAttribs);
+      mStreams[i] = StreamFromD3DTexture(egl, texD3DList[i], postAttribs);
       mSuccess &= bool(mStreams[i]);
     }
 
     if (mSuccess) {
       for (uint8_t i = 0; i < mNumPlanes; i++) {
-        MOZ_ALWAYS_TRUE(egl->fStreamConsumerAcquireKHR(mStreams[i]));
+        MOZ_ALWAYS_TRUE(egl->fStreamConsumerAcquireKHR(display, mStreams[i]));
 
         auto& mutex = mMutexList[i];
         texD3DList[i]->QueryInterface(IID_IDXGIKeyedMutex,
@@ -122,10 +124,11 @@ class BindAnglePlanes final {
     const auto& gl = mParent.mGL;
     const auto& gle = GLContextEGL::Cast(gl);
     const auto& egl = gle->mEgl;
+    const auto& display = egl->Display();
 
     if (mSuccess) {
       for (uint8_t i = 0; i < mNumPlanes; i++) {
-        MOZ_ALWAYS_TRUE(egl->fStreamConsumerReleaseKHR(mStreams[i]));
+        MOZ_ALWAYS_TRUE(egl->fStreamConsumerReleaseKHR(display, mStreams[i]));
         if (mMutexList[i]) {
           mMutexList[i]->ReleaseSync(0);
         }
@@ -133,7 +136,7 @@ class BindAnglePlanes final {
     }
 
     for (uint8_t i = 0; i < mNumPlanes; i++) {
-      (void)egl->fDestroyStreamKHR(mStreams[i]);
+      (void)egl->fDestroyStreamKHR(display, mStreams[i]);
     }
 
     gl->fDeleteTextures(mNumPlanes, mTempTexs);
@@ -152,9 +155,9 @@ ID3D11Device* GLBlitHelper::GetD3D11() const {
   const auto& gle = GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
   EGLDeviceEXT deviceEGL = 0;
-  MOZ_ALWAYS_TRUE(egl->fQueryDisplayAttribEXT(LOCAL_EGL_DEVICE_EXT,
-                                              (EGLAttrib*)&deviceEGL));
-  if (!egl->mLib->fQueryDeviceAttribEXT(
+  MOZ_ALWAYS_TRUE(egl->fQueryDisplayAttribEXT(
+      egl->Display(), LOCAL_EGL_DEVICE_EXT, (EGLAttrib*)&deviceEGL));
+  if (!egl->fQueryDeviceAttribEXT(
           deviceEGL, LOCAL_EGL_D3D11_DEVICE_ANGLE,
           (EGLAttrib*)(ID3D11Device**)getter_AddRefs(mD3D11))) {
     MOZ_ASSERT(false, "d3d9?");

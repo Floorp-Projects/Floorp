@@ -2326,6 +2326,8 @@ uint32_t GetBytesPerTexel(GLenum format, GLenum type) {
 bool GLContext::MakeCurrent(bool aForce) const {
   if (MOZ_UNLIKELY(IsContextLost())) return false;
 
+  if (MOZ_UNLIKELY(!IsAliveImpl())) return false;
+
   if (MOZ_LIKELY(!aForce)) {
     bool isCurrent;
     if (mUseTLSIsCurrent) {
