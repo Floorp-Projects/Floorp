@@ -47,7 +47,7 @@ def docker_worker_hazard(config, job, taskdesc):
     run = job['run']
 
     worker = taskdesc['worker'] = job['worker']
-    worker['artifacts'] = []
+    worker.setdefault('artifacts', [])
 
     docker_worker_add_artifacts(config, job, taskdesc)
     worker.setdefault('required-volumes', []).append('{workdir}/workspace'.format(**run))

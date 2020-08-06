@@ -49,7 +49,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
     run = job['run']
 
     worker = taskdesc['worker'] = job['worker']
-    worker['artifacts'] = []
+    worker.setdefault('artifacts', [])
 
     docker_worker_add_artifacts(config, job, taskdesc)
 
