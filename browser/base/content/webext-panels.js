@@ -50,7 +50,6 @@ function getBrowser(panel) {
     "initialBrowsingContextGroupId",
     panel.extension.policy.browsingContextGroupId
   );
-  browser.sameProcessAsFrameLoader = panel.extension.groupFrameLoader;
 
   let readyPromise;
   if (panel.extension.remote) {

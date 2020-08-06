@@ -3241,7 +3241,6 @@ async function BrowserViewSourceOfDocument(args) {
     skipAnimation: inNewWindow,
     preferredRemoteType,
     initialBrowsingContextGroupId,
-    sameProcessAsFrameLoader: args.browser ? args.browser.frameLoader : null,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
   args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
@@ -3630,7 +3629,6 @@ var PrintPreviewListener = {
       inBackground: true,
       preferredRemoteType,
       initialBrowsingContextGroupId,
-      sameProcessAsFrameLoader: browser.frameLoader,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
@@ -3660,7 +3658,6 @@ var PrintPreviewListener = {
       inBackground: true,
       preferredRemoteType,
       initialBrowsingContextGroupId,
-      sameProcessAsFrameLoader: browser.frameLoader,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     return this.getSimplifiedSourceBrowser();

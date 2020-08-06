@@ -1158,14 +1158,11 @@ class HiddenXULWindow {
    * @param {Object} xulAttributes
    *        An object that contains the xul attributes to set of the newly
    *        created browser XUL element.
-   * @param {FrameLoader} [groupFrameLoader]
-   *        The frame loader to load this browser into the same process
-   *        and tab group as.
    *
    * @returns {Promise<XULElement>}
    *          A Promise which resolves to the newly created browser XUL element.
    */
-  async createBrowserElement(xulAttributes, groupFrameLoader = null) {
+  async createBrowserElement(xulAttributes) {
     if (!xulAttributes || Object.keys(xulAttributes).length === 0) {
       throw new Error("missing mandatory xulAttributes parameter");
     }
@@ -1177,10 +1174,6 @@ class HiddenXULWindow {
     const browser = chromeDoc.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
-
-    // NOTE: This can be removed once all callers pass
-    // `initialBrowsingContextGroupId`.
-    browser.sameProcessAsFrameLoader = groupFrameLoader;
 
     for (const [name, value] of Object.entries(xulAttributes)) {
       if (value != null) {
@@ -1299,15 +1292,12 @@ class HiddenExtensionPage {
 
     let window = SharedWindow.acquire();
     try {
-      this.browser = await window.createBrowserElement(
-        {
-          "webextension-view-type": this.viewType,
-          remote: this.extension.remote ? "true" : null,
-          remoteType: this.extension.remoteType,
-          initialBrowsingContextGroupId: this.extension.browsingContextGroupId,
-        },
-        this.extension.groupFrameLoader
-      );
+      this.browser = await window.createBrowserElement({
+        "webextension-view-type": this.viewType,
+        remote: this.extension.remote ? "true" : null,
+        remoteType: this.extension.remoteType,
+        initialBrowsingContextGroupId: this.extension.browsingContextGroupId,
+      });
     } catch (e) {
       SharedWindow.release();
       throw e;
@@ -1399,15 +1389,12 @@ const DebugUtils = {
         this.watchExtensionUpdated();
       }
 
-      return this.hiddenXULWindow.createBrowserElement(
-        {
-          "webextension-addon-debug-target": extensionId,
-          remote: extension.remote ? "true" : null,
-          remoteType: extension.remoteType,
-          initialBrowsingContextGroupId: extension.browsingContextGroupId,
-        },
-        extension.groupFrameLoader
-      );
+      return this.hiddenXULWindow.createBrowserElement({
+        "webextension-addon-debug-target": extensionId,
+        remote: extension.remote ? "true" : null,
+        remoteType: extension.remoteType,
+        initialBrowsingContextGroupId: extension.browsingContextGroupId,
+      });
     };
 
     let browserPromise = this.debugBrowserPromises.get(extensionId);

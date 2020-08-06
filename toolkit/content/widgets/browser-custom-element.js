@@ -207,19 +207,6 @@
 
       this._documentContentType = null;
 
-      /**
-       * Weak reference to an optional frame loader that can be used to influence
-       * process selection for this browser.
-       * See nsIBrowser.sameProcessAsFrameLoader.
-       *
-       * tabbrowser sets "sameProcessAsFrameLoader" on some browsers before
-       * they are connected. This avoids clearing that out while we're doing
-       * the initial construct(), which is what would read it.
-       */
-      if (this.mInitialized) {
-        this._sameProcessAsFrameLoader = null;
-      }
-
       this._loadContext = null;
 
       this._webBrowserFind = null;
@@ -355,16 +342,6 @@
           this.contentDocument.documentContentType = aContentType;
         }
       }
-    }
-
-    set sameProcessAsFrameLoader(val) {
-      this._sameProcessAsFrameLoader = Cu.getWeakReference(val);
-    }
-
-    get sameProcessAsFrameLoader() {
-      return (
-        this._sameProcessAsFrameLoader && this._sameProcessAsFrameLoader.get()
-      );
     }
 
     get loadContext() {

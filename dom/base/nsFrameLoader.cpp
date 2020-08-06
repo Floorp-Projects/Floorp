@@ -351,49 +351,6 @@ static bool InitialLoadIsRemote(Element* aOwner) {
                              nsGkAtoms::_true, eCaseMatters);
 }
 
-static void GetInitialRemoteTypeAndProcess(Element* aOwner,
-                                           nsACString& aRemoteType,
-                                           uint64_t* aChildID) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  *aChildID = 0;
-
-  // Check if there is an explicit `remoteType` attribute which we should use.
-  nsAutoString remoteType;
-  bool hasRemoteType =
-      aOwner->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, remoteType);
-  if (!hasRemoteType || remoteType.IsEmpty()) {
-    hasRemoteType = false;
-    aRemoteType = DEFAULT_REMOTE_TYPE;
-  } else {
-    aRemoteType = NS_ConvertUTF16toUTF8(remoteType);
-  }
-
-  // Check if `sameProcessAsFrameLoader` was used to override the process.
-  nsCOMPtr<nsIBrowser> browser = aOwner->AsBrowser();
-  if (!browser) {
-    return;
-  }
-  RefPtr<nsFrameLoader> otherLoader;
-  browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoader));
-  if (!otherLoader) {
-    return;
-  }
-  BrowserParent* browserParent = BrowserParent::GetFrom(otherLoader);
-  if (!browserParent) {
-    return;
-  }
-  RefPtr<ContentParent> contentParent = browserParent->Manager();
-
-  // NOTE: This assertion is known to fail in the wild. It is being kept around
-  // only to ensure that we don't land and test new code which breaks this
-  // desired invariant. (bug 1646328)
-  MOZ_ASSERT(!hasRemoteType || contentParent->GetRemoteType() == aRemoteType,
-             "If specified, remoteType attribute should match "
-             "sameProcessAsFrameLoader");
-  aRemoteType = contentParent->GetRemoteType();
-  *aChildID = contentParent->ChildID();
-}
-
 static already_AddRefed<BrowsingContextGroup> InitialBrowsingContextGroup(
     Element* aOwner) {
   nsAutoString attrString;
@@ -454,8 +411,20 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
   RefPtr<nsFrameLoader> fl =
       new nsFrameLoader(aOwner, context, isRemoteFrame, aNetworkCreated);
   fl->mOpenWindowInfo = aOpenWindowInfo;
+
+  // If this is a toplevel initial remote frame, we're looking at a browser
+  // loaded in the parent process. Pull the remote type attribute off of the
+  // <browser> element to determine which remote type it should be loaded in, or
+  // use `DEFAULT_REMOTE_TYPE` if we can't tell.
   if (isRemoteFrame) {
-    GetInitialRemoteTypeAndProcess(aOwner, fl->mRemoteType, &fl->mChildID);
+    MOZ_ASSERT(XRE_IsParentProcess());
+    nsAutoString remoteType;
+    if (aOwner->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, remoteType) &&
+        !remoteType.IsEmpty()) {
+      CopyUTF16toUTF8(remoteType, fl->mRemoteType);
+    } else {
+      fl->mRemoteType = DEFAULT_REMOTE_TYPE;
+    }
   }
   return fl.forget();
 }
