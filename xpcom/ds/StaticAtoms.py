@@ -37,7 +37,6 @@ STATIC_ATOMS = [
     Atom("_moz_activated", "_moz_activated"),
     Atom("_moz_anonclass", "_moz_anonclass"),
     Atom("_moz_resizing", "_moz_resizing"),
-    Atom("mozallowfullscreen", "mozallowfullscreen"),
     Atom("moztype", "_moz-type"),
     Atom("mozdirty", "_moz_dirty"),
     Atom("mozdisallowselectionprint", "mozdisallowselectionprint"),
