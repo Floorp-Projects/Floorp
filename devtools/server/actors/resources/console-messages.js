@@ -64,11 +64,10 @@ class ConsoleMessageWatcher {
     this.listener = listener;
     listener.init();
 
-    // See `window` definition. It isn't always a DOM Window.
+    // It can happen that the targetActor does not have a window reference (e.g. in worker
+    // thread, targetActor exposes a workerGlobal property)
     const winStartTime =
-      targetActor.window && targetActor.window.performance
-        ? targetActor.window.performance.timing.navigationStart
-        : 0;
+      targetActor.window?.performance?.timing?.navigationStart || 0;
 
     const cachedMessages = listener.getCachedMessages(!targetActor.isRootActor);
     const messages = [];

@@ -244,13 +244,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._dbg;
   },
 
-  get globalDebugObject() {
-    if (!this._parent.window) {
-      return null;
-    }
-    return this.dbg.makeGlobalObjectReference(this._parent.window);
-  },
-
   get state() {
     return this._state;
   },
@@ -506,13 +499,18 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return highlighter;
   },
 
+  _canShowOverlay() {
+    // Accept only browsing context target, which expose a `window` attribute,
+    // but ignore privileged document (top level window, special about:* pages, …)
+    return this._parent.window && !this._parent.window.isChromeWindow;
+  },
+
   async showOverlay() {
     if (
       this._options.shouldShowOverlay &&
       this.isPaused() &&
+      this._canShowOverlay() &&
       this._parent.on &&
-      this._parent.window.document &&
-      !this._parent.window.isChromeWindow &&
       this.pauseOverlay
     ) {
       const reason = this._priorPause.why.type;
@@ -521,13 +519,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
   },
 
-  hideOverlay(msg) {
-    if (
-      this._parent.window.document &&
-      this._parent.on &&
-      !this._parent.window.isChromeWindow &&
-      this._pauseOverlay
-    ) {
+  hideOverlay() {
+    if (this._canShowOverlay() && this._pauseOverlay) {
       this.pauseOverlay.hide();
     }
   },

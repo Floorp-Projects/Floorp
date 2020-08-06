@@ -75,8 +75,6 @@ const proto = {
    *              Increment the actor's grip depth
    *          - decrementGripDepth
    *              Decrement the actor's grip depth
-   *          - globalDebugObject
-   *              The Debuggee Global Object as given by the ThreadActor
    */
   initialize(
     obj,
