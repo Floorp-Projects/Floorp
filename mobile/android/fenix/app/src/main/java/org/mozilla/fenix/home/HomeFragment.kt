@@ -383,8 +383,10 @@ class HomeFragment : Fragment() {
             }
         }
 
+        val args by navArgs<HomeFragmentArgs>()
+
         if (view.context.settings().accessibilityServicesEnabled &&
-            bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)
+            args.focusOnAddressBar
         ) {
             // We cannot put this in the fragment_home.xml file as it breaks tests
             view.toolbar_wrapper.isFocusableInTouchMode = true
@@ -413,6 +415,10 @@ class HomeFragment : Fragment() {
         }
 
         updateTabCounter(requireComponents.core.store.state)
+
+        if (args.focusOnAddressBar && requireContext().settings().useNewSearchExperience) {
+            navigateToSearch()
+        }
     }
 
     private fun removeAllTabsAndShowSnackbar(sessionCode: String) {
