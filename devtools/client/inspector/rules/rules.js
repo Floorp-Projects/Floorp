@@ -41,6 +41,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "getNodeCompatibilityInfo",
+  "devtools/client/inspector/rules/utils/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "COLOR_SCHEMES",
   "devtools/client/inspector/rules/constants",
   true
@@ -444,6 +450,30 @@ CssRuleView.prototype = {
    */
   getNodeInfo: function(node) {
     return getNodeInfo(node, this._elementStyle);
+  },
+
+  /**
+   * Get the node's compatibility issues
+   *
+   * @param {DOMNode} node
+   *        The node which we want information about
+   * @return {Object|null} containing the following props:
+   * - type {String} Compatibility issue type.
+   * - property {string} The incompatible rule
+   * - alias {Array} The browser specific alias of rule
+   * - url {string} Link to MDN documentation
+   * - deprecated {bool} True if the rule is deprecated
+   * - experimental {bool} True if rule is experimental
+   * - unsupportedBrowsers {Array} Array of unsupported browser
+   * Otherwise, returns null if the node has cross-browser compatible CSS
+   */
+  getNodeCompatibilityInfo: async function(node) {
+    const compatibilityInfo = await getNodeCompatibilityInfo(
+      node,
+      this._elementStyle
+    );
+
+    return compatibilityInfo;
   },
 
   /**
