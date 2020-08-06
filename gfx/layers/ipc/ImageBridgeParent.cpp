@@ -421,7 +421,8 @@ void ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture,
     return;
   }
 
-  if (!(texture->GetFlags() & TextureFlags::RECYCLE)) {
+  if (!(texture->GetFlags() & TextureFlags::RECYCLE) &&
+      !(texture->GetFlags() & TextureFlags::WAIT_HOST_USAGE_END)) {
     return;
   }
 
