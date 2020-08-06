@@ -194,8 +194,7 @@ static inline bool IsAutoOrEnumOnBSize(const StyleSize& aSize, bool aIsInline) {
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
  public:
-  FlexboxAxisTracker(const nsFlexContainerFrame* aFlexContainer,
-                     const WritingMode& aWM);
+  explicit FlexboxAxisTracker(const nsFlexContainerFrame* aFlexContainer);
 
   // Accessors:
   LogicalAxis MainAxis() const {
@@ -1205,8 +1204,7 @@ void nsFlexContainerFrame::RemoveFrame(ChildListID aListID,
 
 StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const {
-  WritingMode wm = GetWritingMode();
-  const FlexboxAxisTracker axisTracker(this, wm);
+  const FlexboxAxisTracker axisTracker(this);
 
   // If we're row-oriented and the caller is asking about our inline axis (or
   // alternately, if we're column-oriented and the caller is asking about our
@@ -1263,8 +1261,9 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
              alignment == StyleAlignFlags::RIGHT) {
     if (aLogicalAxis == eLogicalAxisInline) {
       const bool isLeft = (alignment == StyleAlignFlags::LEFT);
-      alignment = (isLeft == wm.IsBidiLTR()) ? StyleAlignFlags::START
-                                             : StyleAlignFlags::END;
+      alignment = (isLeft == GetWritingMode().IsBidiLTR())
+                      ? StyleAlignFlags::START
+                      : StyleAlignFlags::END;
     } else {
       alignment = StyleAlignFlags::START;
     }
@@ -3783,8 +3782,8 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
 }
 
 FlexboxAxisTracker::FlexboxAxisTracker(
-    const nsFlexContainerFrame* aFlexContainer, const WritingMode& aWM)
-    : mWM(aWM) {
+    const nsFlexContainerFrame* aFlexContainer)
+    : mWM(aFlexContainer->GetWritingMode()) {
   if (IsLegacyBox(aFlexContainer)) {
     InitAxesFromLegacyProps(aFlexContainer);
   } else {
@@ -4392,7 +4391,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       HasAnyStateBits(NS_STATE_FLEX_HAS_LINE_CLAMP_ELLIPSIS);
   RemoveStateBits(NS_STATE_FLEX_HAS_LINE_CLAMP_ELLIPSIS);
 
-  const FlexboxAxisTracker axisTracker(this, aReflowInput.GetWritingMode());
+  const FlexboxAxisTracker axisTracker(this);
 
   // Check to see if we need to create a computed info structure, to
   // be filled out for use by devtools.
@@ -5572,7 +5571,7 @@ nscoord nsFlexContainerFrame::IntrinsicISize(
     gfxContext* aRenderingContext, nsLayoutUtils::IntrinsicISizeType aType) {
   nscoord containerISize = 0;
   const nsStylePosition* stylePos = StylePosition();
-  const FlexboxAxisTracker axisTracker(this, GetWritingMode());
+  const FlexboxAxisTracker axisTracker(this);
 
   nscoord mainGapSize;
   if (axisTracker.IsRowOriented()) {
