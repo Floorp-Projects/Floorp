@@ -5235,6 +5235,13 @@ void LIRGenerator::visitIsTypedArrayConstructor(MIsTypedArrayConstructor* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitLoadValueTag(MLoadValueTag* ins) {
+  MDefinition* value = ins->value();
+  MOZ_ASSERT(value->type() == MIRType::Value);
+
+  define(new (alloc()) LLoadValueTag(useBoxAtStart(value)), ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);
