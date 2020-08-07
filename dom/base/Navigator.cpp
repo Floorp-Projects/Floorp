@@ -1448,26 +1448,23 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
     return nullptr;
   }
 
-  auto shareResolver = [self = RefPtr<Navigator>(this)](nsresult aResult) {
-    MOZ_ASSERT(self->mSharePromise);
-    if (NS_SUCCEEDED(aResult)) {
-      self->mSharePromise->MaybeResolveWithUndefined();
-    } else {
-      self->mSharePromise->MaybeReject(aResult);
-    }
-    self->mSharePromise = nullptr;
-  };
-
-  auto shareRejector = [self = RefPtr<Navigator>(this)](
-                           mozilla::ipc::ResponseRejectReason&& aReason) {
-    // IPC died or maybe page navigated...
-    if (self->mSharePromise) {
-      self->mSharePromise = nullptr;
-    }
-  };
-
   // Do the share
-  wgc->SendShare(data, shareResolver, shareRejector);
+  wgc->SendShare(data)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr{this}](
+          PWindowGlobalChild::SharePromise::ResolveOrRejectValue&& aResult) {
+        if (aResult.IsResolve()) {
+          if (NS_SUCCEEDED(aResult.ResolveValue())) {
+            self->mSharePromise->MaybeResolveWithUndefined();
+          } else {
+            self->mSharePromise->MaybeReject(aResult.ResolveValue());
+          }
+        } else if (self->mSharePromise) {
+          // IPC died
+          self->mSharePromise->MaybeReject(NS_BINDING_ABORTED);
+        }
+        self->mSharePromise = nullptr;
+      });
   return mSharePromise;
 }
 
@@ -1490,7 +1487,7 @@ void Navigator::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads,
   if (!mGamepadSecureContextWarningShown && !win->IsSecureContext()) {
     mGamepadSecureContextWarningShown = true;
     auto msg =
-        u"The Gamepad API is only available in "
+        u"The Gamepad API will only be available in "
         "secure contexts (e.g., https). Please see "
         "https://hacks.mozilla.org/2020/07/securing-gamepad-api/ for more "
         "info."_ns;
@@ -1498,11 +1495,14 @@ void Navigator::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads,
         msg, nsIScriptError::warningFlag, "DOM"_ns, win->GetExtantDoc());
   }
 
-#ifdef NIGHTLY_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
   if (!win->IsSecureContext()) {
     return;
   }
+#endif
 
+#ifdef NIGHTLY_BUILD
+  // We will move this into Beta in Firefox 82
   if (!FeaturePolicyUtils::IsFeatureAllowed(win->GetExtantDoc(),
                                             u"gamepad"_ns)) {
     aRv.ThrowSecurityError(

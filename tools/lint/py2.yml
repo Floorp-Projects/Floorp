@@ -31,8 +31,8 @@ py2:
         - xpcom
 
         # These paths are intentionally excluded (Python 3 only)
+        - config/create_rc.py
         - config/printconfigsetting.py
-        - config/version_win.py
         - python/mozbuild/mozbuild/html_build_viewer.py
         - python/mozlint
         - python/mozperftest

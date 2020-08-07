@@ -476,8 +476,9 @@ function accessibleTask(doc, task, options = {}) {
         await SimpleTest.promiseFocus(browser);
         await loadContentScripts(browser, "Common.jsm");
 
-        ok(Services.appinfo.browserTabsRemoteAutostart, "e10s enabled");
-        ok(browser.isRemoteBrowser, "Actually remote browser");
+        if (Services.appinfo.browserTabsRemoteAutostart) {
+          ok(browser.isRemoteBrowser, "Actually remote browser");
+        }
 
         const { accessible: docAccessible } = await onContentDocLoad;
         let iframeDocAccessible;

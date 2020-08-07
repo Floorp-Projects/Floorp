@@ -197,7 +197,6 @@ EXPORTS.dav1d += [
 ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    RCFILE = 'dav1d.rc'
     SOURCES += [
         '../../third_party/dav1d/src/win32/thread.c'
     ]

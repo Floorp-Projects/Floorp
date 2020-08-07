@@ -16,6 +16,7 @@ TEMPLATE = '''
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include<winuser.h>
 #include<winver.h>
 
 // Note: if you contain versioning information in an included
@@ -111,6 +112,17 @@ def split_and_normalize_version(version, len):
     return ([digits_only(x) for x in version.split('.')] + ['0'] * len)[:len]
 
 
+def has_manifest(module_rc, manifest_id):
+    for line in module_rc.splitlines():
+        line = line.split(None, 2)
+        if len(line) < 2:
+            continue
+        id, what, *rest = line
+        if id == manifest_id and what in ('24', 'RT_MANIFEST'):
+            return True
+    return False
+
+
 def generate_module_rc(binary='', rcinclude=None):
     deps = set()
     buildid = get_buildid()
@@ -170,7 +182,15 @@ def generate_module_rc(binary='', rcinclude=None):
         productname=overrides.get('WIN32_MODULE_PRODUCTNAME', display_name),
         buildid=buildid,
     )
-    with io.open('module.rc', 'w', encoding='latin1') as fh:
+
+    manifest_id = '2' if binary.lower().endswith('.dll') else '1'
+    if binary and not has_manifest(data, manifest_id):
+        manifest_path = os.path.join(srcdir, binary + '.manifest')
+        if os.path.exists(manifest_path):
+            manifest_path = manifest_path.replace('\\', '\\\\')
+            data += '\n{} RT_MANIFEST "{}"\n'.format(manifest_id, manifest_path)
+
+    with io.open('{}.rc'.format(binary or 'module'), 'w', encoding='latin1') as fh:
         fh.write(data)
 
 

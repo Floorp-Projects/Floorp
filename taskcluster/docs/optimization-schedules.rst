@@ -94,4 +94,4 @@ Tasks are annotated with the components they belong to using the ``"skip-unless-
     task['optimization'] = {'skip-unless-schedules': ['windows', 'gtest']}
 
 For tests, this value is set automatically by the test transform based on the suite name and the platform family, doing the correct thing for inclusive test suites.
-Tests also use SETA via ``"skip-unless-schedules-or-seta"``, which skips a task if it is not affected *or* if SETA deems it unimportant.
+Tests can also use a variety of other optimizers, such as ``relevant_tests``, ``bugbug`` (uses machine learning) or ``backstop`` (ensures regressions aren't missed).

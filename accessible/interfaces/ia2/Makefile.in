@@ -65,8 +65,6 @@ MIDL_UNUSED_GENERATED_FILES = \
   $(MIDL_LIBRARIES:%.idl=%.c) \
   $(NULL)
 
-EMBED_MANIFEST_AT = 2
-
 INSTALL_TARGETS += midl
 midl_FILES := $(filter %.h %_i.c,$(MIDL_GENERATED_FILES))
 midl_DEST = $(DIST)/include

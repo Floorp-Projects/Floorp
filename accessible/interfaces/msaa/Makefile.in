@@ -29,8 +29,6 @@ export:: done_gen
 register::
 	regsvr32 -s $(DIST)/bin/$(SHARED_LIBRARY)
 
-EMBED_MANIFEST_AT = 2
-
 midl_exports := \
     ISimpleDOM.h \
     ISimpleDOM_i.c \

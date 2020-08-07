@@ -410,7 +410,7 @@ struct Program {
   macro(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, 0, 0)                                  \
   macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, 0, 0)                                 \
   macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE)                      \
-  macro(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA, 0, 0)                                 \ 
+  macro(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA, 0, 0)                                 \
   macro(GL_ZERO, GL_SRC_COLOR, 0, 0) macro(GL_ONE, GL_ONE, 0, 0)               \
   macro(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)                        \
   macro(GL_ONE, GL_ZERO, 0, 0)                                                 \

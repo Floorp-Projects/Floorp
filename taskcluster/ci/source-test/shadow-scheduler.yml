@@ -154,14 +154,3 @@ bugbug_reduced_high:
     worker:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug_reduced_high
-
-seta:
-    description: Runs the SETA optimization strategy instead of the default.
-    treeherder:
-        symbol: SS(seta)
-    index:
-        product: source
-        job-name: shadow-scheduler-seta
-    worker:
-        env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.seta
