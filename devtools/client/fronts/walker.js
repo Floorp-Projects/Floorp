@@ -513,12 +513,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       }
 
       if (nodeSelectors.length > 0) {
-        if (nodeFront.traits.supportsWaitForFrameLoad) {
-          // Backward compatibility: only FF72 or newer are able to wait for
-          // iframes to load. After FF72 reaches release we can unconditionally
-          // call waitForFrameLoad.
-          await nodeFront.waitForFrameLoad();
-        }
+        await nodeFront.waitForFrameLoad();
 
         const { nodes } = await this.children(nodeFront);
 

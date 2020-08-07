@@ -539,17 +539,6 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     );
     return this._remoteFrameTarget;
   }
-
-  async getAllSelectors() {
-    if (!this.traits.supportsGetAllSelectors) {
-      // Backward compatibility: if the server does not support getAllSelectors
-      // fallback on getUniqueSelector and wrap the response in an array.
-      // getAllSelectors was added in FF72.
-      const selector = await super.getUniqueSelector();
-      return [selector];
-    }
-    return super.getAllSelectors();
-  }
 }
 
 exports.NodeFront = NodeFront;
