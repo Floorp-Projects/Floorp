@@ -3343,6 +3343,7 @@ nsDocumentViewer::GetPrintPreviewCurrentPageNumber(int32_t* aNumber) {
 
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
   auto [seqFrame, pageCount] = mPrintJob->GetSeqFrameAndCountPages();
+  Unused << pageCount;
   if (!seqFrame) {
     return NS_ERROR_FAILURE;
   }
