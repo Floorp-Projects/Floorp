@@ -117,7 +117,7 @@ add_task(async function testDeterminingMainController() {
   isCurrentMetadataEmpty();
 });
 
-add_task(async function testPIPControllerIsAlwaysMainController() {
+add_task(async function testPIPControllerWontBeReplacedByNormalController() {
   info(`open two different tabs`);
   const tab0 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
   const tab1 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
@@ -154,6 +154,122 @@ add_task(async function testPIPControllerIsAlwaysMainController() {
   await Promise.all([
     waitUntilMainMediaControllerChanged(),
     BrowserTestUtils.removeTab(tab1),
+  ]);
+  isCurrentMetadataEmpty();
+});
+
+add_task(
+  async function testFullscreenControllerWontBeReplacedByNormalController() {
+    info(`open two different tabs`);
+    const tab0 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+    const tab1 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+
+    info(`set different metadata for each tab`);
+    await setMediaMetadataForTabs([tab0, tab1]);
+
+    info(`start media for tab0, main controller should become tab0`);
+    await makeTabBecomeMainController(tab0);
+
+    info(`currrent metadata should be equal to tab0's metadata`);
+    await isCurrentMetadataEqualTo(tab0.metadata);
+
+    info(`video in tab0 enters fullscreen`);
+    await switchTabToForegroundAndEnableFullScreen(tab0, testVideoId);
+
+    info(
+      `normal controller won't become the main controller, ` +
+        `which is still fullscreen controller`
+    );
+    await playMediaAndWaitUntilRegisteringController(tab1, testVideoId);
+
+    info(`currrent metadata should be equal to tab0's metadata`);
+    await isCurrentMetadataEqualTo(tab0.metadata);
+
+    info(`remove tabs`);
+    await BrowserTestUtils.removeTab(tab0);
+    await BrowserTestUtils.removeTab(tab1);
+  }
+);
+
+add_task(async function testFullscreenAndPIPControllers() {
+  info(`open three different tabs`);
+  const tab0 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab1 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+  const tab2 = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+
+  info(`set different metadata for each tab`);
+  await setMediaMetadataForTabs([tab0, tab1, tab2]);
+
+  /**
+   * Current controller list : [tab0 (fullscreen)]
+   */
+  info(`start media for tab0, main controller should become tab0`);
+  await makeTabBecomeMainController(tab0);
+
+  info(`currrent metadata should be equal to tab0's metadata`);
+  await isCurrentMetadataEqualTo(tab0.metadata);
+
+  info(`video in tab0 enters fullscreen`);
+  await switchTabToForegroundAndEnableFullScreen(tab0, testVideoId);
+
+  /**
+   * Current controller list : [tab1, tab0 (fullscreen)]
+   */
+  info(`start media for tab1, main controller should still be tab0`);
+  await playMediaAndWaitUntilRegisteringController(tab1, testVideoId);
+
+  info(`currrent metadata should be equal to tab0's metadata`);
+  await isCurrentMetadataEqualTo(tab0.metadata);
+
+  /**
+   * Current controller list : [tab0 (fullscreen), tab1 (PIP)]
+   */
+  info(`tab1 enters PIP so tab1 should become new main controller`);
+  const mainControllerChange = waitUntilMainMediaControllerChanged();
+  const winPIP = await triggerPictureInPicture(tab1.linkedBrowser, testVideoId);
+  await mainControllerChange;
+
+  info(`currrent metadata should be equal to tab1's metadata`);
+  await isCurrentMetadataEqualTo(tab1.metadata);
+
+  /**
+   * Current controller list : [tab2, tab0 (fullscreen), tab1 (PIP)]
+   */
+  info(`play video from tab2 which shouldn't affect main controller`);
+  await playMediaAndWaitUntilRegisteringController(tab2, testVideoId);
+
+  /**
+   * Current controller list : [tab2, tab0 (fullscreen)]
+   */
+  info(`remove tab1 and wait until main controller changes`);
+  await BrowserTestUtils.closeWindow(winPIP);
+  await Promise.all([
+    waitUntilMainMediaControllerChanged(),
+    BrowserTestUtils.removeTab(tab1),
+  ]);
+
+  info(`currrent metadata should be equal to tab0's metadata`);
+  await isCurrentMetadataEqualTo(tab0.metadata);
+
+  /**
+   * Current controller list : [tab2]
+   */
+  info(`remove tab0 and wait until main controller changes`);
+  await Promise.all([
+    waitUntilMainMediaControllerChanged(),
+    BrowserTestUtils.removeTab(tab0),
+  ]);
+
+  info(`currrent metadata should be equal to tab0's metadata`);
+  await isCurrentMetadataEqualTo(tab2.metadata);
+
+  /**
+   * Current controller list : []
+   */
+  info(`remove tab2 and wait until main controller changes`);
+  await Promise.all([
+    waitUntilMainMediaControllerChanged(),
+    BrowserTestUtils.removeTab(tab2),
   ]);
   isCurrentMetadataEmpty();
 });
@@ -221,4 +337,24 @@ function playMediaAndWaitUntilRegisteringController(tab, elementId) {
     }
   );
   return Promise.all([waitUntilMediaControllerAmountChanged(), playPromise]);
+}
+
+async function switchTabToForegroundAndEnableFullScreen(tab, elementId) {
+  // Fullscreen can only be allowed to enter from a focus tab.
+  await BrowserTestUtils.switchTab(gBrowser, tab);
+  await SpecialPowers.spawn(tab.linkedBrowser, [elementId], elementId => {
+    return new Promise(r => {
+      const element = content.document.getElementById(elementId);
+      element.requestFullscreen();
+      element.onfullscreenchange = () => {
+        element.onfullscreenchange = null;
+        element.onfullscreenerror = null;
+        r();
+      };
+      element.onfullscreenerror = () => {
+        // Retry until the element successfully enters fullscreen.
+        element.requestFullscreen();
+      };
+    });
+  });
 }
