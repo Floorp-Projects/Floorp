@@ -32,6 +32,7 @@
 #include "nsTArray.h"
 
 class nsDocumentFragment;
+class nsFrameSelection;
 class nsHTMLDocument;
 class nsITransferable;
 class nsIClipboard;
@@ -2449,16 +2450,18 @@ class HTMLEditor final : public TextEditor,
                                   nsIEditor::EDirection aDirectionAndAmount);
 
   /**
-   * GetRangeExtendedToIncludeInvisibleNodes() returns extended range.
-   * If there are some invisible nodes around aAbstractRange, they may
-   * be included.
+   * ExtendRangeToIncludeInvisibleNodes() extends aRange if there are some
+   * invisible nodes around it.
    *
-   * @param aAbstractRange      Original range.  This must not be collapsed
-   *                            and must be positioned.
-   * @return                    Extended range.
+   * @param aFrameSelection     If the caller wants range in selection limiter,
+   *                            set this to non-nullptr which knows the limiter.
+   * @param aRange              The range to be extended.  This must not be
+   *                            collapsed, must be positioned, and must not be
+   *                            in selection.
+   * @return                    true if succeeded to set the range.
    */
-  already_AddRefed<nsRange> GetRangeExtendedToIncludeInvisibleNodes(
-      const dom::AbstractRange& aAbstractRange);
+  bool ExtendRangeToIncludeInvisibleNodes(
+      const nsFrameSelection* aFrameSelection, nsRange& aRange);
 
   /**
    * DeleteTextAndNormalizeSurroundingWhiteSpaces() deletes text between
