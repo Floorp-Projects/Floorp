@@ -482,6 +482,15 @@ partial interface Document {
   readonly attribute long  popupRangeOffset;
   [ChromeOnly]
   attribute Node? tooltipNode;
+
+  /**
+   * Returns all the shadow roots connected to the document, in no particular
+   * order, and without regard to open/closed-ness. Also returns UA widgets
+   * (like <video> controls), which can be checked using
+   * ShadowRoot.isUAWidget().
+   */
+  [ChromeOnly]
+  sequence<ShadowRoot> getConnectedShadowRoots();
 };
 
 dictionary BlockParsingOptions {
