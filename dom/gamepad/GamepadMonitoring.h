@@ -9,9 +9,6 @@
 
 namespace mozilla {
 namespace dom {
-// Functions for platform specific gamepad monitoring.
-
-void MaybeStopGamepadMonitoring();
 
 // These two functions are implemented in the platform specific service files
 // (linux/LinuxGamepad.cpp, cocoa/CocoaGamepad.cpp, etc)
