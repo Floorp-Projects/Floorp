@@ -2009,6 +2009,35 @@ function setInputValue(hud, value) {
   return onValueSet;
 }
 
+
+function assertMenuItemChecked(menuItem, isChecked) {
+  is(
+    !!menuItem.getAttribute("aria-checked"),
+    isChecked,
+    `Item has expected state: ${isChecked ? "checked" : "unchecked"}`
+  );
+}
+
+async function toggleDebbuggerSettingsMenuItem(dbg, { className, isChecked }) {
+  const menuButton = findElementWithSelector(dbg, ".debugger-settings-menu-button");
+  const { parent } = dbg.panel.panelWin;
+  const { document } = parent;
+
+  menuButton.click();
+  // Waits for the debugger settings panel to appear.
+  await waitFor(() => document.querySelector("#debugger-settings-menu-list"));
+
+  const menuItem = document.querySelector(className);
+
+  assertMenuItemChecked(menuItem, isChecked);
+
+  menuItem.click();
+
+  // Waits for the debugger settings panel to disappear.
+  await waitFor(() => menuButton.getAttribute("aria-expanded") === "false");
+}
+
+
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
