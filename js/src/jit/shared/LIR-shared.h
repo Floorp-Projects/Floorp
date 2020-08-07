@@ -7766,6 +7766,18 @@ class LIsTypedArrayConstructor : public LInstructionHelper<1, 1, 0> {
   const LAllocation* object() { return getOperand(0); }
 };
 
+class LLoadValueTag : public LInstructionHelper<1, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(LoadValueTag)
+
+  static const size_t Value = 0;
+
+  explicit LLoadValueTag(const LBoxAllocation& value)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Value, value);
+  }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
