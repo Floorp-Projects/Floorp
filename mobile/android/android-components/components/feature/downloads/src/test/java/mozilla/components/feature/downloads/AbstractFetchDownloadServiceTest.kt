@@ -56,6 +56,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -429,6 +430,7 @@ class AbstractFetchDownloadServiceTest {
         verify(service).startDownloadJob(providedDownload.value)
     }
 
+    @Ignore("https://github.com/mozilla-mobile/android-components/issues/8042")
     @Test
     fun `broadcastReceiver handles ACTION_TRY_AGAIN`() = runBlocking {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
