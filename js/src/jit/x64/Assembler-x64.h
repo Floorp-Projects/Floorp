@@ -292,15 +292,7 @@ class Assembler : public AssemblerX86Shared {
   // jump table at the bottom of the instruction stream, and if a jump
   // overflows its range, it will redirect here.
   //
-  // In our relocation table, we store two offsets instead of one: the offset
-  // to the original jump, and an offset to the extended jump if we will need
-  // to use it instead. The offsets are stored as:
-  //    [unsigned] Unsigned offset to short jump, from the start of the code.
-  //    [unsigned] Unsigned offset to the extended jump, from the start of
-  //               the jump table, in units of SizeOfJumpTableEntry.
-  //
-  // The start of the relocation table contains the offset from the code
-  // buffer to the start of the extended jump table.
+  // The relocation table stores the offset to the short jump.
   //
   // Each entry in this table is a jmp [rip], followed by a ud2 to hint to the
   // hardware branch predictor that there is no fallthrough, followed by the
