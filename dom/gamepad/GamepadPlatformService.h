@@ -85,8 +85,6 @@ class GamepadPlatformService final {
   // Remove IPDL parent instance
   void RemoveChannelParent(GamepadEventChannelParent* aParent);
 
-  bool HasGamepadListeners();
-
   void MaybeShutdown();
 
  private:

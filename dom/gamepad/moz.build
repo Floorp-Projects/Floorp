@@ -41,7 +41,6 @@ UNIFIED_SOURCES = [
     'GamepadHapticActuator.cpp',
     'GamepadLightIndicator.cpp',
     'GamepadManager.cpp',
-    'GamepadMonitoring.cpp',
     'GamepadPlatformService.cpp',
     'GamepadPose.cpp',
     'GamepadRemapping.cpp',
