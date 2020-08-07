@@ -50,7 +50,7 @@ exports[`Worker Renders the expected snapshot for a running worker 1`] = `
     className="worker__source"
   >
     <a
-      className="js-debug-link"
+      className="js-inspect-link"
       href="#"
       onClick={[Function]}
       title="http://example.com/worker.js"

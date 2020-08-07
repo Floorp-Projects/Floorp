@@ -61,6 +61,7 @@ class Worker extends PureComponent {
     super(props);
 
     this.debug = this.debug.bind(this);
+    this.viewSource = this.viewSource.bind(this);
     this.start = this.start.bind(this);
   }
 
@@ -71,6 +72,17 @@ class Worker extends PureComponent {
     }
 
     services.openWorkerInDebugger(this.props.worker.workerTargetFront);
+  }
+
+  viewSource() {
+    if (!this.isRunning()) {
+      console.log(
+        "Service workers cannot be inspected if they are not running"
+      );
+      return;
+    }
+
+    services.viewWorkerSource(this.props.worker.workerTargetFront);
   }
 
   start() {
@@ -124,10 +136,11 @@ class Worker extends PureComponent {
     return getUnicodeUrlPath(parts[parts.length - 1]);
   }
 
-  renderDebugLink(url) {
-    // avoid rendering the debug link if service worker debugging is disabled
-    // or if the worker is stopped
-    const isDisabled = !this.props.isDebugEnabled || !this.isRunning();
+  renderInspectLink(url) {
+    // avoid rendering the inspect link if sw is not running
+    const isDisabled = !this.isRunning();
+    // view source instead of debugging when debugging sw is not available
+    const callbackFn = this.props.isDebugEnabled ? this.debug : this.viewSource;
 
     const sourceUrl = span(
       { className: "js-source-url" },
@@ -138,10 +151,10 @@ class Worker extends PureComponent {
       ? sourceUrl
       : a(
           {
-            onClick: this.debug,
+            onClick: callbackFn,
             title: url,
             href: "#",
-            className: "js-debug-link",
+            className: "js-inspect-link",
           },
           sourceUrl,
           "\u00A0", // &nbsp;
@@ -190,7 +203,7 @@ class Worker extends PureComponent {
           src: "chrome://devtools/skin/images/debugging-workers.svg",
         })
       ),
-      p({ className: "worker__source" }, this.renderDebugLink(worker.url)),
+      p({ className: "worker__source" }, this.renderInspectLink(worker.url)),
       p(
         { className: "worker__misc" },
         span(
