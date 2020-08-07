@@ -19,7 +19,7 @@ var TestingUtils = (function() {
             grid.style.gridTemplateRows = rowsStyle;
             checkGridTemplateColumns(grid, columnsComputedValue);
             checkGridTemplateRows(grid, rowsComputedValue);
-        }, (label + " " || "") + "'" + gridId + "' with: grid-template-columns: " + columnsStyle  + "; and grid-template-rows: " + rowsStyle + ";");
+        }, (label ? label + " " : "") + "'" + gridId + "' with: grid-template-columns: " + columnsStyle  + "; and grid-template-rows: " + rowsStyle + ";");
     }
 
     function checkGridTemplateAreas(element, value) {
