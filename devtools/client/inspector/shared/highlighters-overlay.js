@@ -103,6 +103,8 @@ class HighlightersOverlay {
     this.onClick = this.onClick.bind(this);
     this.onDisplayChange = this.onDisplayChange.bind(this);
     this.onMarkupMutation = this.onMarkupMutation.bind(this);
+    this._onFrameRootAvailable = this._onFrameRootAvailable.bind(this);
+
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseOut = this.onMouseOut.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
@@ -118,6 +120,7 @@ class HighlightersOverlay {
 
     // Add inspector events, not specific to a given view.
     this.inspector.on("markupmutation", this.onMarkupMutation);
+    this.inspector.on("frame-root-available", this._onFrameRootAvailable);
     this.target.on("will-navigate", this.onWillNavigate);
     this.walker.on("display-change", this.onDisplayChange);
 
@@ -1332,6 +1335,15 @@ class HighlightersOverlay {
   }
 
   /**
+   * Handler function called when a new root-node has been added in the
+   * inspector. Nodes may have been added / removed and highlighters should
+   * be updated.
+   */
+  async _onFrameRootAvailable() {
+    await this._updateHighlightersOnMutationOrNavigation();
+  }
+
+  /**
    * Handler function for "markupmutation" events. Hides the flexbox/grid/shapes
    * highlighter if the flexbox/grid/shapes container is no longer in the DOM tree.
    */
@@ -1345,6 +1357,10 @@ class HighlightersOverlay {
       return;
     }
 
+    await this._updateHighlightersOnMutationOrNavigation();
+  }
+
+  async _updateHighlightersOnMutationOrNavigation() {
     for (const node of this.gridHighlighters.keys()) {
       await this._hideHighlighterIfDeadNode(node, this.hideGridHighlighter);
     }
@@ -1448,6 +1464,8 @@ class HighlightersOverlay {
    */
   destroy() {
     this.inspector.off("markupmutation", this.onMarkupMutation);
+    this.inspector.off("frame-root-available", this._onFrameRootAvailable);
+
     this.target.off("will-navigate", this.onWillNavigate);
     this.walker.off("display-change", this.onDisplayChange);
 
