@@ -6592,13 +6592,23 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     vRect.x = scrollbarOnLeft ? aContentArea.x
                               : mScrollPort.x + compositionSize.width;
     if (mHasVerticalScrollbar) {
-      nsMargin margin;
-      // For overlay scrollbars the margin returned from this GetXULMargin call
-      // is a negative margin that moves the scrollbar from just outside the
-      // scrollport (and hence not visible) to just inside the scrollport (and
-      // hence visible). For non-overlay scrollbars it is a 0 margin.
-      mVScrollbarBox->GetXULMargin(margin);
-      vRect.Deflate(margin);
+      if (UsesOverlayScrollbars() || mOnlyNeedVScrollbarToScrollVVInsideLV) {
+        // No layout space is reserved for overlay scrollbars and visual
+        // viewport only scrollbars (whether they are layout or overlay), so at
+        // this point they are both positioned just outside the scrollport (and
+        // hence not visible). We need to move them to just inside the
+        // scrollport so they are visible.
+        nsMargin margin;
+        nsSize vScrollbarPrefSize;
+        GetScrollbarMetrics(aState, mVScrollbarBox, nullptr,
+                            &vScrollbarPrefSize);
+        if (scrollbarOnLeft) {
+          margin.right -= vScrollbarPrefSize.width;
+        } else {
+          margin.left -= vScrollbarPrefSize.width;
+        }
+        vRect.Deflate(margin);
+      }
     }
     AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer,
                                   ScrollDirection::eVertical);
@@ -6614,13 +6624,19 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     hRect.height = aContentArea.height - mScrollPort.height;
     hRect.y = mScrollPort.y + compositionSize.height;
     if (mHasHorizontalScrollbar) {
-      nsMargin margin;
-      // For overlay scrollbars the margin returned from this GetXULMargin call
-      // is a negative margin that moves the scrollbar from just outside the
-      // scrollport (and hence not visible) to just inside the scrollport (and
-      // hence visible). For non-overlay scrollbars it is a 0 margin.
-      mHScrollbarBox->GetXULMargin(margin);
-      hRect.Deflate(margin);
+      if (UsesOverlayScrollbars() || mOnlyNeedVScrollbarToScrollVVInsideLV) {
+        // No layout space is reserved for overlay scrollbars and visual
+        // viewport only scrollbars (whether they are layout or overlay), so at
+        // this point they are both positioned just outside the scrollport (and
+        // hence not visible). We need to move them to just inside the
+        // scrollport so they are visible.
+        nsMargin margin;
+        nsSize hScrollbarPrefSize;
+        GetScrollbarMetrics(aState, mHScrollbarBox, nullptr,
+                            &hScrollbarPrefSize);
+        margin.top -= hScrollbarPrefSize.height;
+        hRect.Deflate(margin);
+      }
     }
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer,
                                   ScrollDirection::eHorizontal);
