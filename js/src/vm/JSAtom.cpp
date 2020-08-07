@@ -972,17 +972,32 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str,
     return nullptr;
   }
 
+  if (cx->isMainThreadContext() && pin == DoNotPinAtom) {
+    if (JSAtom* atom = cx->caches().stringToAtomCache.lookup(linear)) {
+      return atom;
+    }
+  }
+
   Maybe<uint32_t> indexValue;
   if (str->hasIndexValue()) {
     indexValue.emplace(str->getIndexValue());
   }
 
   JS::AutoCheckCannotGC nogc;
-  return linear->hasLatin1Chars()
-             ? AtomizeAndCopyChars(cx, linear->latin1Chars(nogc),
-                                   linear->length(), pin, indexValue)
-             : AtomizeAndCopyChars(cx, linear->twoByteChars(nogc),
-                                   linear->length(), pin, indexValue);
+  JSAtom* atom = linear->hasLatin1Chars()
+                     ? AtomizeAndCopyChars(cx, linear->latin1Chars(nogc),
+                                           linear->length(), pin, indexValue)
+                     : AtomizeAndCopyChars(cx, linear->twoByteChars(nogc),
+                                           linear->length(), pin, indexValue);
+  if (!atom) {
+    return nullptr;
+  }
+
+  if (cx->isMainThreadContext() && pin == DoNotPinAtom) {
+    cx->caches().stringToAtomCache.maybePut(linear, atom);
+  }
+
+  return atom;
 }
 
 bool js::AtomIsPinned(JSContext* cx, JSAtom* atom) {

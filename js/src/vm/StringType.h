@@ -300,6 +300,11 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   // NON_DEDUP_BIT is used in string deduplication during tenuring.
   static const uint32_t NON_DEDUP_BIT = js::Bit(11);
 
+  // If IN_STRING_TO_ATOM_CACHE is set, this string had an entry in the
+  // StringToAtomCache at some point. Note that GC can purge the cache without
+  // clearing this bit.
+  static const uint32_t IN_STRING_TO_ATOM_CACHE = js::Bit(12);
+
   static const uint32_t MAX_LENGTH = js::MaxStringLength;
 
   static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
@@ -513,6 +518,12 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
   MOZ_ALWAYS_INLINE
   bool isDeduplicatable() { return !(flags() & NON_DEDUP_BIT); }
+
+  void setInStringToAtomCache() {
+    MOZ_ASSERT(!isAtom());
+    setFlagBit(IN_STRING_TO_ATOM_CACHE);
+  }
+  bool inStringToAtomCache() const { return flags() & IN_STRING_TO_ATOM_CACHE; }
 
   // Fills |array| with various strings that represent the different string
   // kinds and character encodings.

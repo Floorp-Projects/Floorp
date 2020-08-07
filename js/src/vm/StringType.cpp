@@ -725,12 +725,14 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
         RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
       }
 
-      if constexpr (std::is_same_v<CharT, char16_t>) {
-        left.setLengthAndFlags(left_len, INIT_DEPENDENT_FLAGS);
-      } else {
-        left.setLengthAndFlags(left_len,
-                               INIT_DEPENDENT_FLAGS | LATIN1_CHARS_BIT);
+      uint32_t flags = INIT_DEPENDENT_FLAGS;
+      if (left.inStringToAtomCache()) {
+        flags |= IN_STRING_TO_ATOM_CACHE;
       }
+      if constexpr (std::is_same_v<CharT, Latin1Char>) {
+        flags |= LATIN1_CHARS_BIT;
+      }
+      left.setLengthAndFlags(left_len, flags);
       left.d.s.u3.base = (JSLinearString*)this; /* will be true on exit */
       goto visit_right_child;
     }

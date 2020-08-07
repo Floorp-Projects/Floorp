@@ -2494,6 +2494,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
 
   zone->externalStringCache().purge();
   zone->functionToStringCache().purge();
+  rt->caches().stringToAtomCache.purge();
 
   // Iterate through all cells that can contain relocatable pointers to update
   // them. Since updating each cell is independent we try to parallelize this
