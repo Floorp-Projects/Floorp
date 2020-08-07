@@ -39,7 +39,9 @@ class MachCommands(MachCommandBase):
         self.logger = commandline.setup_logging(
             "python-safety", {"raw": sys.stdout})
 
-        self.activate_pipenv(pipfile=os.path.join(here, 'Pipfile'), python=python, populate=True)
+        self.activate_pipenv(
+            os.path.dirname(self.virtualenv_manager.virtualenv_root),
+            pipfile=os.path.join(here, 'Pipfile'), python=python, populate=True)
 
         pattern = '**/*requirements*.txt'
         path = mozpath.normsep(os.path.dirname(os.path.dirname(here)))
