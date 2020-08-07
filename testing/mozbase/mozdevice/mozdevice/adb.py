@@ -2675,11 +2675,11 @@ class ADBDevice(ADBCommand):
                 # instead read only the requested portion of the local file
                 if offset is not None and length is not None:
                     tf2.seek(offset)
-                    return six.ensure_str(tf2.read(length))
+                    return tf2.read(length)
                 if offset is not None:
                     tf2.seek(offset)
-                    return six.ensure_str(tf2.read())
-                return six.ensure_str(tf2.read())
+                    return tf2.read()
+                return tf2.read()
 
     def rm(self, path, recursive=False, force=False, timeout=None):
         """Delete files or directories on the device.
