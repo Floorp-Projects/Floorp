@@ -112,6 +112,7 @@
 #include "nsDataHashtable.h"
 #include "nsDeckFrame.h"
 #include "nsDisplayList.h"
+#include "nsFlexContainerFrame.h"
 #include "nsFontInflationData.h"
 #include "nsFontMetrics.h"
 #include "nsFrameList.h"
@@ -2224,8 +2225,27 @@ nsRect nsLayoutUtils::GetScrolledRect(nsIFrame* aScrolledFrame,
   bool isInlineFlowFromTopOrLeft = !wm.IsInlineReversed();
   bool isBlockFlowFromTopOrLeft = isHorizontalWM || wm.IsVerticalLR();
 
-  // TODO: Consider flexbox's main-axis and cross-axis in
-  // isInlineFlowFromTopOrLeft and isBlockFlowFromTopOrLeft.
+  if (aScrolledFrame->IsFlexContainerFrame()) {
+    // In a flex container, the children flow (and overflow) along the flex
+    // container's main axis and cross axis. These are analogous to the
+    // inline/block axes, and by default they correspond exactly to those axes;
+    // but the flex container's CSS (e.g. flex-direction: column-reverse) may
+    // have swapped and/or reversed them, and we need to account for that here.
+    FlexboxAxisInfo info(aScrolledFrame);
+    if (info.mIsRowOriented) {
+      // The flex container's inline axis is the main axis.
+      isInlineFlowFromTopOrLeft =
+          isInlineFlowFromTopOrLeft == !info.mIsMainAxisReversed;
+      isBlockFlowFromTopOrLeft =
+          isBlockFlowFromTopOrLeft == !info.mIsCrossAxisReversed;
+    } else {
+      // The flex container's block axis is the main axis.
+      isBlockFlowFromTopOrLeft =
+          isBlockFlowFromTopOrLeft == !info.mIsMainAxisReversed;
+      isInlineFlowFromTopOrLeft =
+          isInlineFlowFromTopOrLeft == !info.mIsCrossAxisReversed;
+    }
+  }
 
   // Clamp the horizontal start-edge (x1 or x2, depending whether the logical
   // axis that corresponds to horizontal progresses from left-to-right or
