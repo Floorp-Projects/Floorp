@@ -111,6 +111,7 @@ CERT_GetCertChainFromCert
 CERT_GetCertEmailAddress
 CERT_GetCertificateDer
 CERT_GetCertificateRequestExtensions
+CERT_GetCertIsPerm
 CERT_GetCertKeyType
 CERT_GetCertTimes
 CERT_GetCertTrust
