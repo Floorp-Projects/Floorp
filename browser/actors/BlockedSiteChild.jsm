@@ -94,8 +94,12 @@ class BlockedSiteChild extends JSWindowActorChild {
           .getElementById("report_detection")
           .setAttribute(
             "href",
-            SafeBrowsing.getReportURL("MalwareMistake", blockedInfo)
+            SafeBrowsing.getReportURL("MalwareMistake", blockedInfo) ||
+              "https://www.stopbadware.org/firefox"
           );
+        doc
+          .getElementById("learn_more_link")
+          .setAttribute("href", "https://www.stopbadware.org/firefox");
         break;
       case "unwanted":
         doc
