@@ -42,7 +42,7 @@ class BaseLocalIter {
 
   const ValTypeVector& locals_;
   const ArgTypeVector& args_;
-  jit::WasmABIArgIter<ArgTypeVector> argsIter_;
+  jit::ABIArgIter<ArgTypeVector> argsIter_;
   size_t index_;
   int32_t frameSize_;
   int32_t nextFrameSize_;

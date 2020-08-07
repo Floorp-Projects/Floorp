@@ -43,8 +43,6 @@ class ABIArgGenerator {
 
     return usedArgSlots_ * sizeof(intptr_t);
   }
-
-  void increaseStackOffset(uint32_t bytes) { MOZ_CRASH("NYI"); }
 };
 
 // These registers may be volatile or nonvolatile.
