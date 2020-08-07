@@ -13532,17 +13532,14 @@ void Document::UnsetFullscreenElement() {
   UpdateViewportScrollbarOverrideForFullscreen(this);
 }
 
-bool Document::SetFullscreenElement(Element* aElement) {
-  if (TopLayerPush(aElement)) {
-    EventStateManager::SetFullscreenState(aElement, true);
-    NotifyFullScreenChangedForMediaControl(aElement, true);
-    UpdateViewportScrollbarOverrideForFullscreen(this);
-    return true;
-  }
-  return false;
+void Document::SetFullscreenElement(Element* aElement) {
+  TopLayerPush(aElement);
+  EventStateManager::SetFullscreenState(aElement, true);
+  NotifyFullScreenChangedForMediaControl(aElement, true);
+  UpdateViewportScrollbarOverrideForFullscreen(this);
 }
 
-bool Document::TopLayerPush(Element* aElement) {
+void Document::TopLayerPush(Element* aElement) {
   NS_ASSERTION(aElement, "Must pass non-null to TopLayerPush()");
   auto predictFunc = [&aElement](Element* element) {
     return element == aElement;
@@ -13551,7 +13548,6 @@ bool Document::TopLayerPush(Element* aElement) {
 
   mTopLayer.AppendElement(do_GetWeakReference(aElement));
   NS_ASSERTION(GetTopLayerTop() == aElement, "Should match");
-  return true;
 }
 
 Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
@@ -13966,8 +13962,7 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
   // element, and the fullscreen-ancestor styles on ancestors of the element
   // in this document.
   Element* elem = aRequest->Element();
-  DebugOnly<bool> x = SetFullscreenElement(elem);
-  MOZ_ASSERT(x, "Fullscreen state of requesting doc should always change!");
+  SetFullscreenElement(elem);
   // Set the iframe fullscreen flag.
   if (auto* iframe = HTMLIFrameElement::FromNode(elem)) {
     iframe->SetFullscreenFlag(true);
@@ -14007,16 +14002,14 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
     }
     Document* parent = child->GetInProcessParentDocument();
     Element* element = parent->FindContentForSubDocument(child);
-    if (parent->SetFullscreenElement(element)) {
-      changed.AppendElement(parent);
-      child = parent;
-    } else {
-      // We've reached either the root, or a point in the doctree where the
-      // new fullscreen element container is the same as the previous
-      // fullscreen element's container. No more changes need to be made
-      // to the top layer of documents further up the tree.
+    if (!element) {
+      // We've reached the root.No more changes need to be made
+      // to the top layer stacks of documents further up the tree.
       break;
     }
+    parent->SetFullscreenElement(element);
+    changed.AppendElement(parent);
+    child = parent;
   }
 
   FullscreenRoots::Add(this);
