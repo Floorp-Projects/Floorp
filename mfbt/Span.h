@@ -438,10 +438,17 @@ class Span {
   // a zero-terminated string. A Span<const char> or Span<const char16_t> can be
   // obtained for const char* or const char16_t pointing to a zero-terminated
   // string using the MakeStringSpan() function.
-  Span(char* aStr) = delete;
-  Span(const char* aStr) = delete;
-  Span(char16_t* aStr) = delete;
-  Span(const char16_t* aStr) = delete;
+  // (This must be a template because otherwise it will prevent the previous
+  // array constructor to match because an array decays to a pointer. This only
+  // exists to point to the above explanation, since there's no other
+  // constructor that would match.)
+  template <
+      typename T,
+      typename = std::enable_if_t<
+          std::is_pointer_v<T> &&
+          (std::is_same_v<std::remove_const_t<std::decay_t<T>>, char> ||
+           std::is_same_v<std::remove_const_t<std::decay_t<T>>, char16_t>)>>
+  Span(T& aStr) = delete;
 
   /**
    * Constructor for std::array.
@@ -490,13 +497,15 @@ class Span {
    */
   template <
       class Container,
-      class = std::enable_if_t<
-          !span_details::is_span<Container>::value &&
-          !span_details::is_std_array<Container>::value &&
-          std::is_convertible_v<typename Container::pointer, pointer> &&
-          std::is_convertible_v<typename Container::pointer,
-                                decltype(std::declval<Container>().data())>>>
-  constexpr MOZ_IMPLICIT Span(Container& cont)
+      class Dummy = std::enable_if_t<
+          !std::is_const_v<Container> &&
+              !span_details::is_span<Container>::value &&
+              !span_details::is_std_array<Container>::value &&
+              std::is_convertible_v<typename Container::pointer, pointer> &&
+              std::is_convertible_v<typename Container::pointer,
+                                    decltype(std::declval<Container>().data())>,
+          Container>>
+  constexpr MOZ_IMPLICIT Span(Container& cont, Dummy* = nullptr)
       : Span(cont.data(), ReleaseAssertedCast<index_type>(cont.size())) {}
 
   /**
@@ -512,6 +521,39 @@ class Span {
                                 decltype(std::declval<Container>().data())>>>
   constexpr MOZ_IMPLICIT Span(const Container& cont)
       : Span(cont.data(), ReleaseAssertedCast<index_type>(cont.size())) {}
+
+  // NB: the SFINAE here uses .Elements() as a incomplete/imperfect proxy for
+  // the requirement on Container to be a contiguous sequence container.
+  /**
+   * Constructor for contiguous Mozilla containers.
+   */
+  template <
+      class Container,
+      class = std::enable_if_t<
+          !std::is_const_v<Container> &&
+          !span_details::is_span<Container>::value &&
+          !span_details::is_std_array<Container>::value &&
+          std::is_convertible_v<typename Container::elem_type*, pointer> &&
+          std::is_convertible_v<
+              typename Container::elem_type*,
+              decltype(std::declval<Container>().Elements())>>>
+  constexpr MOZ_IMPLICIT Span(Container& cont, void* = nullptr)
+      : Span(cont.Elements(), ReleaseAssertedCast<index_type>(cont.Length())) {}
+
+  /**
+   * Constructor for contiguous Mozilla containers (const version).
+   */
+  template <
+      class Container,
+      class = std::enable_if_t<
+          std::is_const_v<element_type> &&
+          !span_details::is_span<Container>::value &&
+          std::is_convertible_v<typename Container::elem_type*, pointer> &&
+          std::is_convertible_v<
+              typename Container::elem_type*,
+              decltype(std::declval<Container>().Elements())>>>
+  constexpr MOZ_IMPLICIT Span(const Container& cont, void* = nullptr)
+      : Span(cont.Elements(), ReleaseAssertedCast<index_type>(cont.Length())) {}
 
   /**
    * Constructor from other Span.
@@ -780,13 +822,19 @@ Span(span_details::span_iterator<Span<T, OtherExtent>, IsConst> aBegin,
     -> Span<std::conditional_t<IsConst, std::add_const_t<T>, T>>;
 
 template <typename T, size_t Extent>
-Span(T (&aArr)[Extent]) -> Span<T, Extent>;
+Span(T (&)[Extent]) -> Span<T, Extent>;
 
 template <class Container>
 Span(Container&) -> Span<typename Container::value_type>;
 
 template <class Container>
 Span(const Container&) -> Span<const typename Container::value_type>;
+
+template <typename T, size_t Extent>
+Span(mozilla::Array<T, Extent>&) -> Span<T, Extent>;
+
+template <typename T, size_t Extent>
+Span(const mozilla::Array<T, Extent>&) -> Span<const T, Extent>;
 
 // [Span.comparison], Span comparison operators
 template <class ElementType, size_t FirstExtent, size_t SecondExtent>
