@@ -196,7 +196,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.targetActor = targetActor;
     this.rootWin = targetActor.window;
     this.rootDoc = this.rootWin.document;
-    this._refMap = new Map();
+
+    // Map of already created node actors, keyed by their corresponding DOMNode.
+    this._nodeActorsMap = new Map();
+
     this._pendingMutations = [];
     this._activePseudoClassLocks = new Set();
     this._mutationBreakpoints = new WeakMap();
@@ -337,7 +340,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     for (const current of changesEnum.enumerate(Ci.nsIEventListenerChange)) {
       const target = current.target;
 
-      if (this._refMap.has(target)) {
+      if (this._nodeActorsMap.has(target)) {
         const actor = this.getNode(target);
         const mutation = {
           type: "events",
@@ -422,7 +425,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this.layoutHelpers = null;
       this._orphaned = null;
       this._retainedOrphans = null;
-      this._refMap = null;
+      this._nodeActorsMap = null;
 
       this.targetActor.off("will-navigate", this.onFrameUnload);
       this.targetActor.off("window-ready", this.onFrameLoad);
@@ -483,7 +486,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
       this.customElementWatcher.unmanageNode(actor);
 
-      this._refMap.delete(actor.rawNode);
+      this._nodeActorsMap.delete(actor.rawNode);
     }
     protocol.Actor.prototype.unmanage.call(this, actor);
   },
@@ -494,7 +497,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @return {Boolean}
    */
   hasNode: function(rawNode) {
-    return this._refMap.has(rawNode);
+    return this._nodeActorsMap.has(rawNode);
   },
 
   /**
@@ -504,10 +507,23 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @return {NodeActor}
    */
   getNode: function(rawNode) {
-    return this._refMap.get(rawNode);
+    return this._nodeActorsMap.get(rawNode);
   },
 
-  _ref: function(node) {
+  /**
+   * Internal helper that will either retrieve the existing NodeActor for the
+   * provided node or create the actor on the fly if it doesn't exist.
+   * This method should only be called when we are sure that the node should be
+   * known by the client and that the parent node is already known.
+   *
+   * Otherwise prefer `getNode` to only retrieve known actors or `attachElement`
+   * to create node actors recursively.
+   *
+   * @param  {DOMNode} node
+   *         The node for which we want to create or get an actor
+   * @return {NodeActor} The corresponding NodeActor
+   */
+  _getOrCreateNodeActor: function(node) {
     let actor = this.getNode(node);
     if (actor) {
       return actor;
@@ -518,7 +534,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // Add the node actor as a child of this walker actor, assigning
     // it an actorID.
     this.manage(actor);
-    this._refMap.set(node, actor);
+    this._nodeActorsMap.set(node, actor);
 
     if (node.nodeType === Node.DOCUMENT_NODE) {
       actor.watchDocument(node, this.onMutations);
@@ -556,7 +572,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     const currentOverflowCausingElementsSet = new Set();
 
-    for (const [node, actor] of this._refMap) {
+    for (const [node, actor] of this._nodeActorsMap) {
       if (Cu.isDeadWrapper(node)) {
         continue;
       }
@@ -654,7 +670,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
           node = this.getDocumentWalker(node).currentNode;
         }
 
-        node = this._ref(node);
+        node = this._getOrCreateNodeActor(node);
       }
 
       this.ensurePathToRoot(node, newParents);
@@ -678,7 +694,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    */
   document: function(node) {
     const doc = isNodeDead(node) ? this.rootDoc : nodeDocument(node.rawNode);
-    return this._ref(doc);
+    return this._getOrCreateNodeActor(doc);
   },
 
   /**
@@ -692,13 +708,13 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     const elt = isNodeDead(node)
       ? this.rootDoc.documentElement
       : nodeDocument(node.rawNode).documentElement;
-    return this._ref(elt);
+    return this._getOrCreateNodeActor(elt);
   },
 
   parentNode: function(node) {
     const parent = this.rawParentNode(node);
     if (parent) {
-      return this._ref(parent);
+      return this._getOrCreateNodeActor(parent);
     }
 
     return null;
@@ -772,7 +788,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       return undefined;
     }
 
-    return this._ref(firstChild);
+    return this._getOrCreateNodeActor(firstChild);
   },
 
   /**
@@ -856,7 +872,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         return newParents;
       }
       // This parent didn't exist, so hasn't been seen by the client yet.
-      parentActor = this._ref(parent);
+      parentActor = this._getOrCreateNodeActor(parent);
       newParents.add(parentActor);
       parent = this.rawParentNode(parentActor);
     }
@@ -905,16 +921,16 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return {
       hasFirst,
       hasLast,
-      nodes: nodes.map(n => this._ref(n)),
+      nodes: nodes.map(n => this._getOrCreateNodeActor(n)),
     };
   },
 
   /**
    * Return chidlren of the given node. Contrary to children children(), this method only
    * returns DOMNodes. Therefore it will not create NodeActor wrappers and will not
-   * update the refMap for the discovered nodes either. This makes this method safe to
-   * call when you are not sure if the discovered nodes will be communicated to the
-   * client.
+   * update the nodeActors map for the discovered nodes either. This makes this method
+   * safe to call when you are not sure if the discovered nodes will be communicated to
+   * the client.
    *
    * @param NodeActor node
    *    See JSDoc for children()
@@ -1148,7 +1164,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     const walker = this.getDocumentWalker(node.rawNode, options.whatToShow);
     const sibling = walker.nextSibling();
-    return sibling ? this._ref(sibling) : null;
+    return sibling ? this._getOrCreateNodeActor(sibling) : null;
   },
 
   /**
@@ -1167,7 +1183,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     const walker = this.getDocumentWalker(node.rawNode, options.whatToShow);
     const sibling = walker.previousSibling();
-    return sibling ? this._ref(sibling) : null;
+    return sibling ? this._getOrCreateNodeActor(sibling) : null;
   },
 
   /**
@@ -1532,7 +1548,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     const walker = this.getDocumentWalker(node.rawNode);
     let cur;
     while ((cur = walker.parentNode())) {
-      const curNode = this._ref(cur);
+      const curNode = this._getOrCreateNodeActor(cur);
       this._addPseudoClassLock(curNode, pseudo, enabled);
     }
   },
@@ -1611,7 +1627,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     const walker = this.getDocumentWalker(node.rawNode);
     let cur;
     while ((cur = walker.parentNode())) {
-      const curNode = this._ref(cur);
+      const curNode = this._getOrCreateNodeActor(cur);
       this._removePseudoClassLock(curNode, pseudo);
     }
   },
@@ -2828,7 +2844,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     const parentGridNode = findGridParentContainerForNode(node.rawNode);
-    return parentGridNode ? this._ref(parentGridNode) : null;
+    return parentGridNode ? this._getOrCreateNodeActor(parentGridNode) : null;
   },
 
   /**
@@ -2846,7 +2862,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       return null;
     }
 
-    return this._ref(offsetParent);
+    return this._getOrCreateNodeActor(offsetParent);
   },
 
   getEmbedderElement(browsingContextID) {
