@@ -250,7 +250,7 @@ class JSTerm extends Component {
 
       this.editor = new Editor({
         autofocus: true,
-        enableCodeFolding: false,
+        enableCodeFolding: this.props.editorMode,
         lineNumbers: this.props.editorMode,
         lineWrapping: true,
         mode: {
@@ -575,6 +575,7 @@ class JSTerm extends Component {
     if (nextProps.editorMode !== this.props.editorMode) {
       if (this.editor) {
         this.editor.setOption("lineNumbers", nextProps.editorMode);
+        this.editor.setOption("enableCodeFolding", nextProps.editorMode);
       }
 
       if (nextProps.editorMode && nextProps.editorWidth) {
