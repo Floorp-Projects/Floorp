@@ -2258,6 +2258,8 @@ toolbar#nav-bar {
         # Used to defer a possible IOError exception from Marionette
         marionette_exception = None
 
+        temp_file_paths = []
+
         # make sure we clean up after ourselves.
         try:
             # set process log environment variable
@@ -2345,8 +2347,6 @@ toolbar#nav-bar {
             gecko_id = "GECKO(%d)" % proc.pid
             self.log.process_start(gecko_id)
             self.message_logger.gecko_id = gecko_id
-
-            temp_file_paths = []
 
             try:
                 # start marionette and kick off the tests
