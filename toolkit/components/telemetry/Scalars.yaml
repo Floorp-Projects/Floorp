@@ -1708,6 +1708,24 @@ findbar:
     record_in_processes:
       - 'main'
 
+sidebar:
+  search:
+    bug_numbers:
+      - 1648524
+    description: >
+      The number of searches from the sidebar, per view (e.g.: bookmarks, history).
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - emalysz@mozilla.com
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 os.environment:
   is_admin_without_uac:
     bug_numbers:
