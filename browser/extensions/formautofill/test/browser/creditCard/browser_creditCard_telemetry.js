@@ -232,9 +232,10 @@ add_task(async function test_submit_creditCard_new() {
       "cc_form",
       undefined,
       {
-        fields_not_auto: "3",
-        fields_auto: "5",
-        fields_modified: "5",
+        // 5 fields plus submit button
+        fields_not_auto: "6",
+        fields_auto: "0",
+        fields_modified: "0",
       },
     ],
   ];
