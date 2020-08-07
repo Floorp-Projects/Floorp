@@ -6777,6 +6777,18 @@
     "description": "Update: Result code from downloading a partial update via BITS",
     "operating_systems": ["windows"]
   },
+  "UPDATE_LANGPACK_OVERTIME": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "dtownsend@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 600,
+    "n_buckets": 22,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1656994],
+    "description": "Update: How much longer langpacks took to download than the app update in seconds."
+  },
   "UPTAKE_REMOTE_CONTENT_RESULT_1": {
     "record_in_processes": ["all"],
     "products": ["firefox", "fennec", "thunderbird"],
