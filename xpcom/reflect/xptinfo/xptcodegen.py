@@ -204,6 +204,8 @@ def link_to_cpp(interfaces, fd, header_fd):
     params = []
     param_cache = {}
     methods = []
+    max_params = 0
+    method_with_max_params = None
     consts = []
     domobjects = []
     domobject_cache = {}
@@ -361,6 +363,10 @@ def link_to_cpp(interfaces, fd, header_fd):
                 for idx, param in enumerate(method['params']):
                     lower_param(param, "%s[%d]" % (methodname, idx))
 
+        nonlocal max_params, method_with_max_params
+        if numparams > max_params:
+            max_params = numparams
+            method_with_max_params = methodname
         methods.append(nsXPTMethodInfo(
             "%d = %s" % (len(methods), methodname),
 
@@ -508,6 +514,12 @@ namespace detail {
     array("nsXPTType", "sTypes", types)
     array("nsXPTParamInfo", "sParams", params)
     array("nsXPTMethodInfo", "sMethods", methods)
+    # Verify that stack-allocated buffers will do for xptcall implementations.
+    msg = "Too many method arguments in %s. " \
+          "Either reduce the number of arguments " \
+          "or increase PARAM_BUFFER_COUNT." % method_with_max_params
+    fd.write("static_assert(%s <= PARAM_BUFFER_COUNT, \"%s\");\n\n"
+             % (max_params, msg))
     array("nsXPTDOMObjectInfo", "sDOMObjects", domobjects)
     array("nsXPTConstantInfo", "sConsts", consts)
 
