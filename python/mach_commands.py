@@ -256,19 +256,19 @@ class MachCommands(MachCommandBase):
         self.activate_pipenv(os.path.dirname(default_manager.virtualenv_root),
                              pipfile=None, populate=True, python=python)
 
-        # The current process might be running under Python 2 and the Python 3
-        # virtualenv will not be set up by mach bootstrap. To avoid problems in tests
+        # If the current process is running under Python 2, the Python 3
+        # virtualenv may not be set up yet. To avoid problems in tests
         # that implicitly depend on the Python 3 virtualenv we ensure the Python 3
         # virtualenv is up to date before the tests start.
-        python3, version = find_python3_executable(min_version='3.5.0')
-
-        py3_manager = VirtualenvManager(
-            default_manager.topsrcdir,
-            py3_root,
-            default_manager.log_handle,
-            default_manager.manifest_path,
-        )
-        py3_manager.ensure(python3)
+        if not six.PY3:
+            python3, version = find_python3_executable(min_version='3.5.0')
+            py3_manager = VirtualenvManager(
+                default_manager.topsrcdir,
+                py3_root,
+                default_manager.log_handle,
+                default_manager.manifest_path,
+            )
+            py3_manager.ensure(python3)
 
     def _run_python_test(self, test):
         from mozprocess import ProcessHandler
