@@ -177,76 +177,13 @@ add_task(async function() {
     loadedInfo.processScripts[uri] = "";
   }
 
-  let loadedList = {};
-
-  for (let scriptType in known_scripts) {
-    loadedList[scriptType] = Object.keys(loadedInfo[scriptType]).filter(c => {
-      if (!known_scripts[scriptType].has(c)) {
-        return true;
-      }
-      known_scripts[scriptType].delete(c);
-      return false;
-    });
-
-    loadedList[scriptType] = loadedList[scriptType].filter(c => {
-      return !intermittently_loaded_scripts[scriptType].has(c);
-    });
-
-    is(
-      loadedList[scriptType].length,
-      0,
-      `should have no unexpected ${scriptType} loaded on content process startup`
-    );
-
-    for (let script of loadedList[scriptType]) {
-      record(
-        false,
-        `Unexpected ${scriptType} loaded during content process startup: ${script}`,
-        undefined,
-        loadedInfo[scriptType][script]
-      );
-    }
-
-    is(
-      known_scripts[scriptType].size,
-      0,
-      `all known ${scriptType} scripts should have been loaded`
-    );
-
-    for (let script of known_scripts[scriptType]) {
-      ok(
-        false,
-        `${scriptType} is expected to load for content process startup but wasn't: ${script}`
-      );
-    }
-
-    if (kDumpAllStacks) {
-      info(`Stacks for all loaded ${scriptType}:`);
-      for (let file in loadedInfo[scriptType]) {
-        if (loadedInfo[scriptType][file]) {
-          info(
-            `${file}\n------------------------------------\n` +
-              loadedInfo[scriptType][file] +
-              "\n"
-          );
-        }
-      }
-    }
-  }
-
-  for (let scriptType in forbiddenScripts) {
-    for (let script of forbiddenScripts[scriptType]) {
-      let loaded = script in loadedInfo[scriptType];
-      if (loaded) {
-        record(
-          false,
-          `Forbidden ${scriptType} loaded during content process startup: ${script}`,
-          undefined,
-          loadedInfo[scriptType][script]
-        );
-      }
-    }
-  }
+  checkLoadedScripts({
+    loadedInfo,
+    known: known_scripts,
+    intermittent: intermittently_loaded_scripts,
+    forbidden: forbiddenScripts,
+    dumpAllStacks: kDumpAllStacks,
+  });
 
   BrowserTestUtils.removeTab(tab);
 });
