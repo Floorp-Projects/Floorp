@@ -753,7 +753,7 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
   items: function(start = 0, end = this.nodeList.length) {
     const items = Array.prototype.slice
       .call(this.nodeList, start, end)
-      .map(item => this.walker._ref(item));
+      .map(item => this.walker._getOrCreateNodeActor(item));
     return this.walker.attachElements(items);
   },
 
