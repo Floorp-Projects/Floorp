@@ -25,14 +25,16 @@ let registry = new FinalizationRegistry(x => {
 });
 
 // Attempt to find the maximum supported stack depth.
+var stackSize = 0;
 function findStackSize(i) {
   try {
-    return findStackSize(i + 1);
-  } catch {
-    return i;
+    stackSize = i;
+    findStackSize(i + 1);
+  } catch (e) {
+    return;
   }
 }
-const stackSize = findStackSize(0);
+findStackSize(0);
 
 // Multiply the calculated stack size by some factor just to be on the safe side.
 const exceedStackDepthLimit = stackSize * 5;

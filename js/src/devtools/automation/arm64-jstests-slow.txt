@@ -47,3 +47,6 @@ test262/built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-cl
 test262/built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-flags-u.js
 test262/built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-flags-u.js
 test262/built-ins/RegExp/property-escapes/generated/
+test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Letter.js
+test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other.js
+test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Unassigned.js
