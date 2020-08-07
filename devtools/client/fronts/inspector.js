@@ -80,15 +80,8 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   }
 
   async getCompatibilityFront() {
-    // DevTools supports a Compatibility actor from version FF79 and above.
-    // This check exists to maintain backwards compatibility with older
-    // backend. This check can be removed once FF79 hits the release channel.
-    if (this._compatibility === undefined) {
-      try {
-        this._compatibility = await super.getCompatibility();
-      } catch (error) {
-        this._compatibility = null;
-      }
+    if (!this._compatibility) {
+      this._compatibility = await super.getCompatibility();
     }
 
     return this._compatibility;

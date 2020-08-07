@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from six.moves.urllib.parse import urlsplit
 
-from taskgraph.optimize import register_strategy, OptimizationStrategy, seta
+from taskgraph.optimize import register_strategy, registry, OptimizationStrategy
 from taskgraph.util.bugbug import (
     BugbugTimeoutException,
     push_schedules,
@@ -18,6 +18,8 @@ from taskgraph.util.bugbug import (
 )
 from taskgraph.util.hg import get_push_data
 
+FALLBACK = "skip-unless-has-relevant-tests"
+
 
 @register_strategy("bugbug-low", args=(CT_LOW,))
 @register_strategy("bugbug-medium", args=(CT_MEDIUM,))
@@ -25,13 +27,13 @@ from taskgraph.util.hg import get_push_data
 @register_strategy("bugbug-tasks-medium", args=(CT_MEDIUM, True))
 @register_strategy("bugbug-tasks-high", args=(CT_HIGH, True))
 @register_strategy("bugbug-reduced", args=(CT_MEDIUM, True, True))
-@register_strategy("bugbug-reduced-fallback", args=(CT_MEDIUM, True, True, True))
+@register_strategy("bugbug-reduced-fallback", args=(CT_MEDIUM, True, True, FALLBACK))
 @register_strategy("bugbug-reduced-high", args=(CT_HIGH, True, True))
 @register_strategy("bugbug-reduced-manifests", args=(CT_MEDIUM, False, True))
-@register_strategy("bugbug-reduced-manifests-fallback", args=(CT_MEDIUM, False, True, True))
+@register_strategy("bugbug-reduced-manifests-fallback", args=(CT_MEDIUM, False, True, FALLBACK))
 @register_strategy(
     "bugbug-reduced-manifests-fallback-last-10-pushes",
-    args=(0.3, False, True, True, 10),
+    args=(0.3, False, True, FALLBACK, 10),
 )
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
@@ -43,8 +45,8 @@ class BugBugPushSchedules(OptimizationStrategy):
             (default: False)
         use_reduced_tasks (bool): Whether or not to use the reduced set of tasks
             provided by the bugbug service (default: False).
-        fallback (bool): Whether or not to fallback to SETA if there was a failure
-            in bugbug (default: False)
+        fallback (str): The fallback strategy to use if there
+            was a failure in bugbug (default: None)
         num_pushes (int): The number of pushes to consider for the selection
             (default: 1).
     """
@@ -54,7 +56,7 @@ class BugBugPushSchedules(OptimizationStrategy):
         confidence_threshold,
         tasks_only=False,
         use_reduced_tasks=False,
-        fallback=False,
+        fallback=None,
         num_pushes=1,
     ):
         self.confidence_threshold = confidence_threshold
@@ -76,7 +78,8 @@ class BugBugPushSchedules(OptimizationStrategy):
         rev = params['head_rev']
 
         if self.timedout:
-            return seta.is_low_value_task(task.label, project)
+            return registry[self.fallback].should_remove_task(
+                    task, params, importance)
 
         data = {}
 

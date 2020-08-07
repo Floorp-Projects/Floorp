@@ -4553,6 +4553,13 @@ Downloader.prototype = {
 
     let update = unwrap(this._update);
 
+    let existing = LangPackUpdates.get(update);
+    if (existing) {
+      // We have already started staging lang packs for this update, no need to
+      // do it again.
+      return;
+    }
+
     // Note that we don't care about success or failure here, either way we will
     // continue with the update process.
     let langPackPromise = AddonManager.stageLangpacksForAppUpdate(
@@ -4565,7 +4572,6 @@ Downloader.prototype = {
         );
       })
       .finally(() => {
-        LangPackUpdates.delete(update);
         this._langPackTimeout = null;
       });
 
