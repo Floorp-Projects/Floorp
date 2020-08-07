@@ -516,8 +516,6 @@ nsPrinterListWin::~nsPrinterListWin() {
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 }
 
-NS_IMPL_ISUPPORTS(nsPrinterListWin, nsIPrinterList)
-
 NS_IMETHODIMP
 nsPrinterListWin::GetSystemDefaultPrinterName(nsAString& aName) {
   GlobalPrinters::GetInstance()->GetDefaultPrinterName(aName);

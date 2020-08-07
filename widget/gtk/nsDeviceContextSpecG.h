@@ -59,17 +59,4 @@ class nsDeviceContextSpecGTK : public nsIDeviceContextSpec {
   static gboolean PrinterEnumerator(GtkPrinter* aPrinter, gpointer aData);
 };
 
-//-------------------------------------------------------------------------
-// Printer Enumerator
-//-------------------------------------------------------------------------
-class nsPrinterListGTK final : public nsIPrinterList {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTERLIST
-  nsPrinterListGTK() = default;
-
- private:
-  ~nsPrinterListGTK() = default;
-};
-
 #endif /* !nsDeviceContextSpecGTK_h___ */
