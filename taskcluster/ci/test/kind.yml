@@ -48,7 +48,6 @@ jobs-from:
 job-defaults:
     attributes:
         retrigger: true
-        resource-monitor: true
     require-signed-extensions:
         by-release-type:
             release|esr.*: true
