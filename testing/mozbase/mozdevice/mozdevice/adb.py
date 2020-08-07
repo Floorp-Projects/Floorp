@@ -236,7 +236,8 @@ class ADBCommand(object):
             executed.
         :param str device_serial: The device's
             serial number if the adb command is to be executed against
-            a specific device.
+            a specific device. If it is not specified, ANDROID_SERIAL
+            from the environment will be used if it is set.
         :param int timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.  This timeout is per adb call. The
@@ -263,6 +264,7 @@ class ADBCommand(object):
         the stdout temporary file.
         """
         args = [self._adb_path]
+        device_serial = device_serial or os.environ.get('ANDROID_SERIAL')
         if self._adb_host:
             args.extend(['-H', self._adb_host])
         if self._adb_port:
@@ -298,7 +300,8 @@ class ADBCommand(object):
             executed.
         :param str device_serial: The device's
             serial number if the adb command is to be executed against
-            a specific device.
+            a specific device. If it is not specified, ANDROID_SERIAL
+            from the environment will be used if it is set.
         :param int timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError.
@@ -561,6 +564,7 @@ def ADBDeviceFactory(device=None,
              :exc:`ADBTimeoutError`
 
     """
+    device = device or os.environ.get('ANDROID_SERIAL')
     if device is not None and device in ADBDEVICES:
         # We have already created an ADBDevice for this device, just re-use it.
         adbdevice = ADBDEVICES[device]
@@ -617,7 +621,9 @@ class ADBDevice(ADBCommand):
         be used to identify the device, otherwise the value of the usb
         key, prefixed with "usb:" is used.  If None is passed and
         there is exactly one device attached to the host, that device
-        is used. If there is more than one device attached, ValueError
+        is used. If None is passed and ANDROID_SERIAL is set in the environment,
+        that device is used. If there is more than one device attached and
+        device is None and ANDROID_SERIAL is not set in the environment, ValueError
         is raised. If no device is attached the constructor will block
         until a device is attached or the timeout is reached.
     :param str adb_host: host of the adb server to connect to.
@@ -958,6 +964,7 @@ class ADBDevice(ADBCommand):
             raise ADBError('Failed to complete boot in time')
 
     def _get_device_serial(self, device):
+        device = device or os.environ.get('ANDROID_SERIAL')
         if device is None:
             devices = ADBHost(adb=self._adb_path, adb_host=self._adb_host,
                               adb_port=self._adb_port).devices()
