@@ -26,20 +26,11 @@ open class GithubDetailsTask : DefaultTask() {
     private val detailsFile = File("/builds/worker/github/customCheckRunText.md")
     private val suffix = "\n\n_(404 if compilation failed)_"
 
-    /**
-     * Captures the link name and URL in a markdown link.
-     * i.e. "### [Hello](/world.html)" -> "/world.html"
-     */
-    private val markdownLinkRegex = """\[(.*)]\((.*)\)""".toRegex()
-
     @TaskAction
     fun writeFile() {
         val taskId = System.getenv("TASK_ID")
-        val url = "https://firefoxci.taskcluster-artifacts.net/$taskId/0/public"
-        val replaced = text.replace(markdownLinkRegex) { match ->
-            val (_, linkName, linkUrl) = match.groupValues
-            "[$linkName](${url + linkUrl})"
-        }
+        val reportsUrl = "https://firefoxci.taskcluster-artifacts.net/$taskId/0/public/reports"
+        val replaced = text.replace("{reportsUrl}", reportsUrl)
 
         project.mkdir("/builds/worker/github")
         detailsFile.writeText(replaced + suffix)

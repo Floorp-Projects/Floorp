@@ -190,13 +190,13 @@ tasks.register("listRepositories") {
 }
 
 tasks.register("githubTestDetails", GithubDetailsTask) {
-    text = "### [Unit Test Results](/reports/test/testGeckoNightlyDebugUnitTest/index.html)"
+    text = "### [Unit Test Results]({reportsUrl}/test/testDebugUnitTest/index.html)"
 }
 
 tasks.register("githubLintDetektDetails", GithubDetailsTask) {
-    text = "### [Detekt Results](/reports/detekt.html)"
+    text = "### [Detekt Results]({reportsUrl}/detekt.html)"
 }
 
 tasks.register("githubLintAndroidDetails", GithubDetailsTask) {
-    text = "### [Android Lint Results](/reports/lint-results-geckoNightlyDebug.html)"
+    text = "### [Android Lint Results]({reportsUrl}/lint-results-geckoNightlyDebug.html)"
 }
