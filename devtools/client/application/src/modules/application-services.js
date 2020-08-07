@@ -6,6 +6,9 @@
 
 const Services = require("Services");
 
+// keyword to use in telemetry, as `reason` parameter
+const REASON = "application";
+
 class ManifestDevToolsError extends Error {
   constructor(...params) {
     super(...params);
@@ -28,12 +31,24 @@ class ApplicationServices {
 
   selectTool(toolId) {
     this._assertInit();
-    return this._toolbox.selectTool(toolId, "application");
+    return this._toolbox.selectTool(toolId, REASON);
   }
 
   async openWorkerInDebugger(workerTargetFront) {
     const debuggerPanel = await this.selectTool("jsdebugger");
     debuggerPanel.selectWorker(workerTargetFront);
+  }
+
+  async viewWorkerSource(workerTargetFront) {
+    // NOTE: this falls back to view-source: if the source can't be inspected
+    //       within the debugger.
+    this._toolbox.viewSourceInDebugger(
+      workerTargetFront.url,
+      1,
+      1,
+      null,
+      REASON
+    );
   }
 
   async fetchManifest() {

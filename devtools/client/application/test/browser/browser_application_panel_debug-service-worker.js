@@ -32,13 +32,13 @@ add_task(async function() {
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
   const container = getWorkerContainers(doc)[0];
-  info("Wait until the debug link is displayed");
+  info("Wait until the inspect link is displayed");
   await waitUntil(() => {
-    return container.querySelector(".js-debug-link");
+    return container.querySelector(".js-inspect-link");
   });
 
-  info("Click on the debug link and wait for debugger to be ready");
-  const debugLink = container.querySelector(".js-debug-link");
+  info("Click on the inspect link and wait for debugger to be ready");
+  const debugLink = container.querySelector(".js-inspect-link");
   debugLink.click();
   await waitFor(() => toolbox.getPanel("jsdebugger"));
 
