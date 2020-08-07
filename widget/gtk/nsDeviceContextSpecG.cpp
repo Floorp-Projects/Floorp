@@ -48,8 +48,6 @@ using mozilla::gfx::PrintTargetPS;
 
 static LazyLogModule sDeviceContextSpecGTKLog("DeviceContextSpecGTK");
 
-static nsCUPSShim sCupsShim;
-
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
     : mGtkPrintSettings(nullptr), mGtkPageSetup(nullptr) {}
 
@@ -316,73 +314,3 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
   }
   return NS_OK;
 }
-
-//  Printer List
-NS_IMPL_ISUPPORTS(nsPrinterListGTK, nsIPrinterList)
-
-NS_IMETHODIMP
-nsPrinterListGTK::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
-  if (!sCupsShim.IsInitialized()) {
-    if (!sCupsShim.Init()) {
-      return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
-    }
-  }
-  // Build the CUPS printer list.
-  mozilla::CUPSPrinterList cupsPrinterList{sCupsShim};
-  cupsPrinterList.Initialize();
-  aPrinters.SetCapacity(cupsPrinterList.NumPrinters());
-  for (int i = 0; i < cupsPrinterList.NumPrinters(); i++) {
-    cups_dest_t* const dest = cupsPrinterList.GetPrinter(i);
-    aPrinters.AppendElement(nsPrinterCUPS::Create(sCupsShim, dest));
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinterListGTK::GetSystemDefaultPrinterName(nsAString& aName) {
-  if (!sCupsShim.IsInitialized()) {
-    if (!sCupsShim.Init()) {
-      return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
-    }
-  }
-  mozilla::CUPSPrinterList cupsPrinterList{sCupsShim};
-  cupsPrinterList.Initialize();
-  // TODO: Once the CUPSPrinterList has default printer support, use that.
-  if (cupsPrinterList.NumPrinters() != 0) {
-    CopyUTF8toUTF16(
-        mozilla::MakeStringSpan(cupsPrinterList.GetPrinter(0)->name), aName);
-    return NS_OK;
-  }
-  // No printers.
-  return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
-}
-
-NS_IMETHODIMP
-nsPrinterListGTK::InitPrintSettingsFromPrinter(
-    const nsAString& aPrinterName, nsIPrintSettings* aPrintSettings) {
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-
-  // Set a default file name.
-  nsAutoString filename;
-  nsresult rv = aPrintSettings->GetToFileName(filename);
-  if (NS_FAILED(rv) || filename.IsEmpty()) {
-    const char* path = PR_GetEnv("PWD");
-    if (!path) {
-      path = PR_GetEnv("HOME");
-    }
-
-    if (path) {
-      CopyUTF8toUTF16(MakeStringSpan(path), filename);
-      filename.AppendLiteral("/mozilla.pdf");
-    } else {
-      filename.AssignLiteral("mozilla.pdf");
-    }
-
-    aPrintSettings->SetToFileName(filename);
-  }
-
-  aPrintSettings->SetIsInitializedFromPrinter(true);
-
-  return NS_OK;
-}
-

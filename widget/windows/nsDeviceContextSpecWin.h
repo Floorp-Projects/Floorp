@@ -8,7 +8,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
-#include "nsIPrinterList.h"
+#include "nsPrinterListBase.h"
 #include "nsIPrintSettings.h"
 #include <windows.h>
 #include "mozilla/Attributes.h"
@@ -83,9 +83,8 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
 //-------------------------------------------------------------------------
 // Printer List
 //-------------------------------------------------------------------------
-class nsPrinterListWin final : public nsIPrinterList {
+class nsPrinterListWin final : public nsPrinterListBase {
  public:
-  NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTERLIST
   nsPrinterListWin() = default;
 

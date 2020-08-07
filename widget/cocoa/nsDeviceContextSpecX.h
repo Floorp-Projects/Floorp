@@ -47,17 +47,4 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec {
 #endif
 };
 
-//----------------------------------------------------------------------
-// nsPrinterErnumeratorX
-
-class nsPrinterListX final : public nsIPrinterList {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTERLIST
-  nsPrinterListX() = default;
-
- private:
-  ~nsPrinterListX() = default;
-};
-
 #endif  // nsDeviceContextSpecX_h_
