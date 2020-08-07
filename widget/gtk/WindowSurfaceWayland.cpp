@@ -386,7 +386,6 @@ void WindowBackBufferShm::Detach(wl_buffer* aBuffer) {
   LOGWAYLAND(("WindowBackBufferShm::Detach [%p] wl_buffer %p ID %d\n",
               (void*)this, (void*)aBuffer,
               aBuffer ? wl_proxy_get_id((struct wl_proxy*)aBuffer) : -1));
-
   mAttached = false;
 
   // Commit any potential cached drawings from latest Lock()/Commit() cycle.
@@ -1034,6 +1033,8 @@ void WindowSurfaceWayland::CommitWaylandBuffer() {
   LOGWAYLAND(("   mBufferPendingCommit = %d\n", mBufferPendingCommit));
   LOGWAYLAND(("   mBufferCommitAllowed = %d\n", mBufferCommitAllowed));
 
+  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
+
   if (!mBufferCommitAllowed) {
     return;
   }
@@ -1181,10 +1182,16 @@ void WindowSurfaceWayland::FrameCallbackHandler() {
 }
 
 void WindowSurfaceWayland::DelayedCommitHandler() {
+  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
   MOZ_ASSERT(mDelayedCommitHandle != nullptr, "Missing mDelayedCommitHandle!");
 
   LOGWAYLAND(
       ("WindowSurfaceWayland::DelayedCommitHandler [%p]\n", (void*)this));
+
+  if (!mDelayedCommitHandle) {
+    LOGWAYLAND(("    We're missing mDelayedCommitHandle!\n"));
+    return;
+  }
 
   *mDelayedCommitHandle = nullptr;
   free(mDelayedCommitHandle);
