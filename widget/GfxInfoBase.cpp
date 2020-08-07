@@ -9,6 +9,8 @@
 
 #include "GfxInfoBase.h"
 
+#include <mutex>  // std::call_once
+
 #include "GfxDriverInfo.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::NewArrayObject
 #include "nsCOMPtr.h"
@@ -24,6 +26,7 @@
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include "nsIXULAppInfo.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/2D.h"
@@ -41,9 +44,17 @@ using namespace mozilla;
 using mozilla::MutexAutoLock;
 
 nsTArray<GfxDriverInfo>* GfxInfoBase::sDriverInfo;
-nsTArray<gfx::GfxInfoFeatureStatus>* GfxInfoBase::sFeatureStatus;
+StaticAutoPtr<nsTArray<gfx::GfxInfoFeatureStatus>> GfxInfoBase::sFeatureStatus;
 bool GfxInfoBase::sDriverInfoObserverInitialized;
 bool GfxInfoBase::sShutdownOccurred;
+
+// Call this when setting sFeatureStatus to a non-null pointer to
+// ensure destruction even if the GfxInfo component is never instantiated.
+static void InitFeatureStatus(nsTArray<gfx::GfxInfoFeatureStatus>* aPtr) {
+  static std::once_flag sOnce;
+  std::call_once(sOnce, [] { ClearOnShutdown(&GfxInfoBase::sFeatureStatus); });
+  GfxInfoBase::sFeatureStatus = aPtr;
+}
 
 // Observes for shutdown so that the child GfxDriverInfo list is freed.
 class ShutdownObserver : public nsIObserver {
@@ -60,9 +71,6 @@ class ShutdownObserver : public nsIObserver {
 
     delete GfxInfoBase::sDriverInfo;
     GfxInfoBase::sDriverInfo = nullptr;
-
-    delete GfxInfoBase::sFeatureStatus;
-    GfxInfoBase::sFeatureStatus = nullptr;
 
     for (auto& deviceFamily : GfxDriverInfo::sDeviceFamilies) {
       delete deviceFamily;
@@ -252,7 +260,6 @@ static void SetPrefValueForFeature(int32_t aFeature, int32_t aValue,
   const char* prefname = GetPrefNameForFeature(aFeature);
   if (!prefname) return;
   if (XRE_IsParentProcess()) {
-    delete GfxInfoBase::sFeatureStatus;
     GfxInfoBase::sFeatureStatus = nullptr;
   }
 
@@ -269,7 +276,6 @@ static void RemovePrefForFeature(int32_t aFeature) {
   if (!prefname) return;
 
   if (XRE_IsParentProcess()) {
-    delete GfxInfoBase::sFeatureStatus;
     GfxInfoBase::sFeatureStatus = nullptr;
   }
   Preferences::ClearUser(prefname);
@@ -711,7 +717,7 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
 void GfxInfoBase::GetAllFeatures(dom::XPCOMInitData& xpcomInit) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   if (!sFeatureStatus) {
-    sFeatureStatus = new nsTArray<gfx::GfxInfoFeatureStatus>();
+    InitFeatureStatus(new nsTArray<gfx::GfxInfoFeatureStatus>());
     for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
       int32_t status = 0;
       nsAutoCString failureId;
@@ -1091,7 +1097,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 void GfxInfoBase::SetFeatureStatus(
     const nsTArray<gfx::GfxInfoFeatureStatus>& aFS) {
   MOZ_ASSERT(!sFeatureStatus);
-  sFeatureStatus = new nsTArray<gfx::GfxInfoFeatureStatus>(aFS.Clone());
+  InitFeatureStatus(new nsTArray<gfx::GfxInfoFeatureStatus>(aFS.Clone()));
 }
 
 bool GfxInfoBase::DoesDesktopEnvironmentMatch(
