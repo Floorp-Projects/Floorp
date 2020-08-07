@@ -10504,10 +10504,10 @@ class CGEnum(CGThing):
             static_assert(static_cast<size_t>(${name}::EndGuard_) == Count,
                           "Mismatch between enum value and enum count");
 
-            inline Span<const char> GetString(${name} stringId) {
+            inline auto GetString(${name} stringId) {
               MOZ_ASSERT(static_cast<${type}>(stringId) < Count);
               const EnumEntry& entry = ${entry_array}[static_cast<${type}>(stringId)];
-              return MakeSpan(entry.value, entry.length);
+              return Span<const char>{entry.value, entry.length};
             }
             """,
             entry_array=ENUM_ENTRY_VARIABLE_NAME,

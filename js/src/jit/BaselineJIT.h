@@ -262,8 +262,7 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
 
   template <typename T>
   mozilla::Span<T> makeSpan(Offset start, Offset end) {
-    return mozilla::MakeSpan(offsetToPointer<T>(start),
-                             numElements<T>(start, end));
+    return mozilla::Span{offsetToPointer<T>(start), numElements<T>(start, end)};
   }
 
   // We store the native code address corresponding to each bytecode offset in

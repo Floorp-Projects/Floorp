@@ -347,7 +347,7 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
   // Span over all raw bytes in this struct and its trailing arrays.
   mozilla::Span<const uint8_t> immutableData() const {
     size_t allocSize = endOffset();
-    return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
+    return mozilla::Span{reinterpret_cast<const uint8_t*>(this), allocSize};
   }
 
  private:
@@ -368,16 +368,16 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
   mozilla::Span<SrcNote> notesSpan() { return {notes(), noteLength()}; }
 
   mozilla::Span<uint32_t> resumeOffsets() {
-    return mozilla::MakeSpan(offsetToPointer<uint32_t>(resumeOffsetsOffset()),
-                             offsetToPointer<uint32_t>(scopeNotesOffset()));
+    return mozilla::Span{offsetToPointer<uint32_t>(resumeOffsetsOffset()),
+                         offsetToPointer<uint32_t>(scopeNotesOffset())};
   }
   mozilla::Span<ScopeNote> scopeNotes() {
-    return mozilla::MakeSpan(offsetToPointer<ScopeNote>(scopeNotesOffset()),
-                             offsetToPointer<ScopeNote>(tryNotesOffset()));
+    return mozilla::Span{offsetToPointer<ScopeNote>(scopeNotesOffset()),
+                         offsetToPointer<ScopeNote>(tryNotesOffset())};
   }
   mozilla::Span<TryNote> tryNotes() {
-    return mozilla::MakeSpan(offsetToPointer<TryNote>(tryNotesOffset()),
-                             offsetToPointer<TryNote>(endOffset()));
+    return mozilla::Span{offsetToPointer<TryNote>(tryNotesOffset()),
+                         offsetToPointer<TryNote>(endOffset())};
   }
 
   // Expose offsets to the JITs.

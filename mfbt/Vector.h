@@ -501,10 +501,12 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
   }
 
   operator mozilla::Span<const T>() const {
-    return mozilla::MakeSpan(mBegin, mLength);
+    // Explicitly specify template argument here to avoid instantiating Span<T>
+    // first and then implicitly converting to Span<const T>
+    return mozilla::Span<const T>{mBegin, mLength};
   }
 
-  operator mozilla::Span<T>() { return mozilla::MakeSpan(mBegin, mLength); }
+  operator mozilla::Span<T>() { return mozilla::Span{mBegin, mLength}; }
 
   class Range {
     friend class Vector;

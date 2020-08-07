@@ -63,10 +63,10 @@ class SFNTData::Font {
         GetDirEntry(TRUETYPE_TAG('h', 'e', 'a', 'd'));
     if (!dirEntry) {
       gfxWarning() << "Head table entry not found.";
-      return nullptr;
+      return {};
     }
 
-    return MakeSpan(mFontData + dirEntry->offset, dirEntry->length);
+    return {mFontData + dirEntry->offset, dirEntry->length};
   }
 
  private:

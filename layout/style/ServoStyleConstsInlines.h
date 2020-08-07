@@ -217,7 +217,9 @@ inline bool StyleArcSlice<T>::IsEmpty() const {
 template <typename T>
 inline Span<const T> StyleArcSlice<T>::AsSpan() const {
   ASSERT_CANARY
-  return MakeSpan(_0.ptr->data.slice, Length());
+  // Explicitly specify template argument here to avoid instantiating Span<T>
+  // first and then implicitly converting to Span<const T>
+  return Span<const T>{_0.ptr->data.slice, Length()};
 }
 
 template <typename T>

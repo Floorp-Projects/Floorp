@@ -79,11 +79,14 @@ struct FakeString {
 
   operator mozilla::Span<const char_type>() const {
     MOZ_ASSERT(mDataInitialized);
-    return mozilla::MakeSpan(mData, Length());
+    // Explicitly specify template argument here to avoid instantiating
+    // Span<char_type> first and then implicitly converting to Span<const
+    // char_type>
+    return mozilla::Span<const char_type>{mData, Length()};
   }
 
   operator mozilla::Span<char_type>() {
-    return mozilla::MakeSpan(BeginWriting(), Length());
+    return mozilla::Span{BeginWriting(), Length()};
   }
 
   mozilla::BulkWriteHandle<CharT> BulkWrite(size_type aCapacity,

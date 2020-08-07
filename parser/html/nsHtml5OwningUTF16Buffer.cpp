@@ -49,7 +49,7 @@ void nsHtml5OwningUTF16Buffer::Swap(nsHtml5OwningUTF16Buffer* aOther) {
 
 Span<char16_t> nsHtml5OwningUTF16Buffer::TailAsSpan(int32_t aBufferSize) {
   MOZ_ASSERT(aBufferSize >= getEnd());
-  return MakeSpan(getBuffer() + getEnd(), aBufferSize - getEnd());
+  return {getBuffer() + getEnd(), static_cast<size_t>(aBufferSize - getEnd())};
 }
 
 void nsHtml5OwningUTF16Buffer::AdvanceEnd(int32_t aNumberOfCodeUnits) {
