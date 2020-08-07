@@ -14,13 +14,12 @@
 // area. The stack pointer has to retain 16-byte alignment, longlongs
 // and doubles are aligned on 8-byte boundaries.
 #ifndef __NO_FPRS__
-#define PARAM_BUFFER_COUNT     16
 #define GPR_COUNT               8
 #define FPR_COUNT               8
 #else
-#define PARAM_BUFFER_COUNT      8
 #define GPR_COUNT               8
 #endif
+#define PARAM_BUFFER_COUNT     16
 // PrepareAndDispatch() is called by SharedStub() and calls the actual method.
 //
 // - 'args[]' contains the arguments passed on stack
