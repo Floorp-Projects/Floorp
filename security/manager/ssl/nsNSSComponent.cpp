@@ -2096,6 +2096,26 @@ nsresult nsNSSComponent::InitializeNSS() {
   }
 }
 
+NS_IMETHODIMP
+nsNSSComponent::DispatchTaskToSerialBackgroundQueue(nsIRunnable* task) {
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> mainThreadRunnable(NS_NewRunnableFunction(
+        "DispatchTaskToSerialBackgroundQueue::mainThreadRunnable",
+        [self = RefPtr<nsNSSComponent>(this),
+         taskHandle = nsCOMPtr<nsIRunnable>(task)]() -> void {
+          nsresult rv = self->DispatchTaskToSerialBackgroundQueue(taskHandle);
+          Unused << NS_WARN_IF(NS_FAILED(rv));
+        }));
+    return NS_DispatchToMainThread(mainThreadRunnable.forget());
+  }
+
+  if (mBackgroundTaskQueue) {
+    return mBackgroundTaskQueue->Dispatch(task, NS_DISPATCH_EVENT_MAY_BLOCK);
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 void nsNSSComponent::ShutdownNSS() {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ShutdownNSS\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -2125,6 +2145,8 @@ void nsNSSComponent::ShutdownNSS() {
     mIntermediatePreloadingHealerTimer->Cancel();
     mIntermediatePreloadingHealerTimer = nullptr;
   }
+
+  mBackgroundTaskQueue = nullptr;
 
   // Release the default CertVerifier. This will cause any held NSS resources
   // to be released.
@@ -2313,6 +2335,14 @@ nsresult nsNSSComponent::Init() {
     return rv;
   }
 
+  rv = NS_CreateBackgroundTaskQueue("nsNSSComponent::mBackgroundTaskQueue",
+                                    getter_AddRefs(mBackgroundTaskQueue));
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+            ("NS_CreateBackgroundTaskQueue failed"));
+    return rv;
+  }
+
   rv = MaybeEnableIntermediatePreloadingHealer();
   if (NS_FAILED(rv)) {
     return rv;
@@ -2340,16 +2370,6 @@ nsresult nsNSSComponent::MaybeEnableIntermediatePreloadingHealer() {
     return NS_OK;
   }
 
-  if (!mIntermediatePreloadingHealerTaskQueue) {
-    nsresult rv = NS_CreateBackgroundTaskQueue(
-        "IntermediatePreloadingHealer",
-        getter_AddRefs(mIntermediatePreloadingHealerTaskQueue));
-    if (NS_FAILED(rv)) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-              ("NS_CreateBackgroundTaskQueue failed"));
-      return rv;
-    }
-  }
   uint32_t timerDelayMS = Preferences::GetUint(
       "security.intermediate_preloading_healer.timer_interval_ms",
       5 * 60 * 1000);
@@ -2357,7 +2377,7 @@ nsresult nsNSSComponent::MaybeEnableIntermediatePreloadingHealer() {
       getter_AddRefs(mIntermediatePreloadingHealerTimer),
       IntermediatePreloadingHealerCallback, nullptr, timerDelayMS,
       nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY,
-      "IntermediatePreloadingHealer", mIntermediatePreloadingHealerTaskQueue);
+      "IntermediatePreloadingHealer", mBackgroundTaskQueue);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error,
             ("NS_NewTimerWithFuncCallback failed"));
