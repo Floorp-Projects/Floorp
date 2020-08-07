@@ -38,6 +38,42 @@ mozilla::GenericErrorResult<OOM&> RaiseParserAtomsOOMError(JSContext* cx) {
   return mozilla::Err(PARSER_ATOMS_OOM);
 }
 
+template <typename CharT>
+/* static */ JS::Result<UniquePtr<ParserAtomEntry>, OOM&>
+ParserAtomEntry::allocate(JSContext* cx,
+                          mozilla::UniquePtr<CharT[], JS::FreePolicy>&& ptr,
+                          uint32_t length, HashNumber hash) {
+  MOZ_ASSERT(length > MaxInline<CharT>());
+
+  ParserAtomEntry* entryPtr = cx->pod_malloc<ParserAtomEntry>();
+  if (!entryPtr) {
+    return RaiseParserAtomsOOMError(cx);
+  }
+  return UniquePtr<ParserAtomEntry>(
+      new (entryPtr) ParserAtomEntry(std::move(ptr), length, hash));
+}
+
+template <typename CharT, typename SeqCharT>
+/* static */ JS::Result<UniquePtr<ParserAtomEntry>, OOM&>
+ParserAtomEntry::allocateInline(JSContext* cx,
+                                InflatedChar16Sequence<SeqCharT> seq,
+                                uint32_t length, HashNumber hash) {
+  MOZ_ASSERT(length <= MaxInline<CharT>());
+
+  ParserAtomEntry* uninitEntry =
+      cx->pod_malloc_with_extra<ParserAtomEntry, CharT>(length);
+  if (!uninitEntry) {
+    return RaiseParserAtomsOOMError(cx);
+  }
+
+  CharT* entryBuf = ParserAtomEntry::inlineBufferPtr<CharT>(
+      reinterpret_cast<ParserAtomEntry*>(uninitEntry));
+  UniquePtr<ParserAtomEntry> entry(new (uninitEntry)
+                                       ParserAtomEntry(entryBuf, length, hash));
+  drainChar16Seq(entryBuf, seq, length);
+  return entry;
+}
+
 bool ParserAtomEntry::equalsJSAtom(JSAtom* other) const {
   // If this parser-atom has already been atomized, or been constructed
   // from an existing js-atom, just compare against that.
@@ -123,67 +159,65 @@ ParserAtomsTable::ParserAtomsTable(JSContext* cx)
     : entrySet_(cx), wellKnownTable_(*cx->runtime()->commonParserNames) {}
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::addEntry(
-    JSContext* cx, EntrySet::AddPtr addPtr, ParserAtomEntry&& entry) {
-  UniquePtr<ParserAtomEntry> uniqueEntry(
-      cx->new_<ParserAtomEntry>(std::move(entry)));
-  if (!uniqueEntry) {
+    JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry) {
+  ParserAtomEntry* entryPtr = entry.get();
+  MOZ_ASSERT(!addPtr);
+  if (!entrySet_.add(addPtr.inner().entrySetAddPtr, std::move(entry))) {
     return RaiseParserAtomsOOMError(cx);
   }
-  ParserAtomEntry* entryPtr = uniqueEntry.get();
-
-  if (!entrySet_.add(addPtr, std::move(uniqueEntry))) {
-    return RaiseParserAtomsOOMError(cx);
-  }
-
   return entryPtr->asAtom();
 }
 
 static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
-template <typename CharT, typename InCharT>
-static void DrainChar16Seq(CharT* buf, InflatedChar16Sequence<InCharT> seq) {
-  static_assert(
-      std::is_same_v<CharT, char16_t> || std::is_same_v<CharT, Latin1Char>,
-      "Invalid target buffer type.");
-  CharT* cur = buf;
-  while (seq.hasMore()) {
-    char16_t ch = seq.next();
-    if constexpr (std::is_same_v<CharT, Latin1Char>) {
-      MOZ_ASSERT(ch <= MAX_LATIN1_CHAR);
-    }
-    *cur = ch;
-    cur++;
-  }
-}
-
 template <typename AtomCharT, typename SeqCharT>
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16Seq(
-    JSContext* cx, EntrySet::AddPtr add, InflatedChar16Sequence<SeqCharT> seq,
-    uint32_t length, HashNumber hash) {
+    JSContext* cx, AddPtr& addPtr, InflatedChar16Sequence<SeqCharT> seq,
+    uint32_t length) {
+  MOZ_ASSERT(!addPtr);
+
+  UniquePtr<ParserAtomEntry> entry;
+
+  // Allocate a fat entry for inline strings.
+  if (length <= ParserAtomEntry::MaxInline<AtomCharT>()) {
+    MOZ_TRY_VAR(entry, ParserAtomEntry::allocateInline<AtomCharT>(
+                           cx, seq, length, addPtr.inner().hash));
+    return addEntry(cx, addPtr, std::move(entry));
+  }
+
+  // Or copy to out-of-line contents.
   using UniqueCharsT = mozilla::UniquePtr<AtomCharT[], JS::FreePolicy>;
   UniqueCharsT copy(cx->pod_malloc<AtomCharT>(length));
   if (!copy) {
     return RaiseParserAtomsOOMError(cx);
   }
-  DrainChar16Seq<AtomCharT, SeqCharT>(copy.get(), seq);
-  ParserAtomEntry ent = ParserAtomEntry::make(std::move(copy), length, hash);
-  return addEntry(cx, add, std::move(ent));
+  ParserAtomEntry::drainChar16Seq<AtomCharT, SeqCharT>(copy.get(), seq, length);
+  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate(cx, std::move(copy), length,
+                                               addPtr.inner().hash));
+  return addEntry(cx, addPtr, std::move(entry));
+}
+
+template <typename CharT>
+ParserAtomsTable::AddPtr ParserAtomsTable::lookupForAdd(
+    JSContext* cx, InflatedChar16Sequence<CharT> seq) {
+  // Check against well-known.
+  const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(seq);
+  if (wk) {
+    return AddPtr(wk);
+  }
+
+  // Check for existing atom.
+  SpecificParserAtomLookup<CharT> lookup(seq);
+  return AddPtr(entrySet_.lookupForAdd(lookup), lookup.hash());
 }
 
 template <typename CharT>
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::lookupOrInternChar16Seq(
     JSContext* cx, InflatedChar16Sequence<CharT> seq) {
-  // Check against well-known.
-  const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(seq);
-  if (wk) {
-    return wk;
-  }
-
-  // Check for existing atom.
-  SpecificParserAtomLookup<CharT> lookup(seq);
-  EntrySet::AddPtr add = entrySet_.lookupForAdd(lookup);
-  if (add) {
-    return add->get()->asAtom();
+  // Check for well-known or existing.
+  AddPtr addPtr = lookupForAdd(cx, seq);
+  if (addPtr) {
+    return addPtr.get()->asAtom();
   }
 
   // Compute the total length and the storage requirements.
@@ -196,9 +230,9 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::lookupOrInternChar16Seq(
     length += 1;
   }
 
-  HashNumber hash = lookup.hash();
-  return wide ? internChar16Seq<char16_t>(cx, add, seq, length, hash)
-              : internChar16Seq<Latin1Char>(cx, add, seq, length, hash);
+  // Otherwise, add new entry.
+  return wide ? internChar16Seq<char16_t>(cx, addPtr, seq, length)
+              : internChar16Seq<Latin1Char>(cx, addPtr, seq, length);
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16(
@@ -210,37 +244,37 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16(
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internAscii(
     JSContext* cx, const char* asciiPtr, uint32_t length) {
+  // ASCII strings are strict subsets of Latin1 strings.
   const Latin1Char* latin1Ptr = reinterpret_cast<const Latin1Char*>(asciiPtr);
   return internLatin1(cx, latin1Ptr, length);
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internLatin1(
     JSContext* cx, const Latin1Char* latin1Ptr, uint32_t length) {
-  // ASCII strings are strict subsets of Latin1 strings, an so can be used
-  // in the same (const) ways.
   InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
 
-  // Check against well-known.
-  const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(seq);
-  if (wk) {
-    return wk;
-  }
-
-  // Look up.
-  SpecificParserAtomLookup<Latin1Char> lookup(seq);
-  EntrySet::AddPtr add = entrySet_.lookupForAdd(lookup);
-  if (add) {
-    return add->get()->asAtom();
+  // Check for well-known or existing.
+  AddPtr addPtr = lookupForAdd(cx, seq);
+  if (addPtr) {
+    return addPtr.get()->asAtom();
   }
 
   // Existing entry not found, heap-allocate a copy and add it to the table.
+  if (length <= ParserAtomEntry::MaxInline<Latin1Char>()) {
+    UniquePtr<ParserAtomEntry> entry;
+    MOZ_TRY_VAR(entry, ParserAtomEntry::allocateInline<Latin1Char>(
+                           cx, seq, length, addPtr.inner().hash));
+    return addEntry(cx, addPtr, std::move(entry));
+  }
+
   UniqueLatin1Chars copy = js::DuplicateString(cx, latin1Ptr, length);
   if (!copy) {
     return RaiseParserAtomsOOMError(cx);
   }
-  ParserAtomEntry ent =
-      ParserAtomEntry::make(std::move(copy), length, lookup.hash());
-  return addEntry(cx, add, std::move(ent));
+  UniquePtr<ParserAtomEntry> entry;
+  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate(cx, std::move(copy), length,
+                                               addPtr.inner().hash));
+  return addEntry(cx, addPtr, std::move(entry));
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
@@ -293,11 +327,19 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::concatAtoms(
   bool latin1 = prefix->hasLatin1Chars() && suffix->hasLatin1Chars();
   size_t prefixLength = prefix->length();
   size_t suffixLength = suffix->length();
-  size_t concatLength = prefixLength + suffixLength;
+  size_t catLen = prefixLength + suffixLength;
 
   if (latin1) {
+    if (catLen <= ParserAtomEntry::MaxInline<Latin1Char>()) {
+      Latin1Char buf[ParserAtomEntry::MaxInline<Latin1Char>()];
+      mozilla::PodCopy(buf, prefix->latin1Chars(), prefixLength);
+      mozilla::PodCopy(buf + prefixLength, suffix->latin1Chars(), suffixLength);
+
+      return internLatin1(cx, buf, catLen);
+    }
+
     // Concatenate a latin1 string and add it to the table.
-    UniqueLatin1Chars copy(cx->pod_malloc<Latin1Char>(concatLength));
+    UniqueLatin1Chars copy(cx->pod_malloc<Latin1Char>(catLen));
     if (!copy) {
       return RaiseParserAtomsOOMError(cx);
     }
@@ -305,52 +347,62 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::concatAtoms(
     mozilla::PodCopy(copy.get() + prefixLength, suffix->latin1Chars(),
                      suffixLength);
 
-    InflatedChar16Sequence<Latin1Char> seq(copy.get(), concatLength);
+    InflatedChar16Sequence<Latin1Char> seq(copy.get(), catLen);
 
-    // Check against well-known.
-    const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(seq);
-    if (wk) {
-      return wk;
+    // Check for well-known or existing.
+    AddPtr addPtr = lookupForAdd(cx, seq);
+    if (addPtr) {
+      return addPtr.get()->asAtom();
     }
 
-    SpecificParserAtomLookup<Latin1Char> lookup(seq);
-    EntrySet::AddPtr add = entrySet_.lookupForAdd(lookup);
-    if (add) {
-      return add->get()->asAtom();
+    // Otherwise, add new entry.
+    UniquePtr<ParserAtomEntry> entry;
+    MOZ_TRY_VAR(entry, ParserAtomEntry::allocate(cx, std::move(copy), catLen,
+                                                 addPtr.inner().hash));
+    return addEntry(cx, addPtr, std::move(entry));
+  }
+
+  if (catLen <= ParserAtomEntry::MaxInline<char16_t>()) {
+    char16_t buf[ParserAtomEntry::MaxInline<char16_t>()];
+    FillChar16Buffer(buf, prefix);
+    FillChar16Buffer(buf + prefixLength, suffix);
+
+    InflatedChar16Sequence<char16_t> seq(buf, catLen);
+
+    // Check for well-known or existing.
+    AddPtr addPtr = lookupForAdd(cx, seq);
+    if (addPtr) {
+      return addPtr.get()->asAtom();
     }
 
-    ParserAtomEntry ent =
-        ParserAtomEntry::make(std::move(copy), concatLength, lookup.hash());
-
-    return addEntry(cx, add, std::move(ent));
+    // Otherwise, add new entry.
+    UniquePtr<ParserAtomEntry> entry;
+    MOZ_TRY_VAR(entry, ParserAtomEntry::allocateInline<char16_t>(
+                           cx, seq, catLen, addPtr.inner().hash));
+    return addEntry(cx, addPtr, std::move(entry));
   }
 
   // Concatenate a char16 string and add it to the table.
-  UniqueTwoByteChars copy(cx->pod_malloc<char16_t>(concatLength));
+  UniqueTwoByteChars copy(cx->pod_malloc<char16_t>(catLen));
   if (!copy) {
     return RaiseParserAtomsOOMError(cx);
   }
   FillChar16Buffer(copy.get(), prefix);
   FillChar16Buffer(copy.get() + prefixLength, suffix);
 
-  InflatedChar16Sequence<char16_t> seq(copy.get(), concatLength);
+  InflatedChar16Sequence<char16_t> seq(copy.get(), catLen);
 
-  // Check against well-known.
-  const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(seq);
-  if (wk) {
-    return wk;
+  // Check for well-known or existing.
+  AddPtr addPtr = lookupForAdd(cx, seq);
+  if (addPtr) {
+    return addPtr.get()->asAtom();
   }
 
-  SpecificParserAtomLookup<char16_t> lookup(seq);
-  EntrySet::AddPtr add = entrySet_.lookupForAdd(lookup);
-  if (add) {
-    return add->get()->asAtom();
-  }
-
-  ParserAtomEntry ent =
-      ParserAtomEntry::make(std::move(copy), concatLength, lookup.hash());
-
-  return addEntry(cx, add, std::move(ent));
+  // Otherwise, add new entry.
+  UniquePtr<ParserAtomEntry> entry;
+  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate(cx, std::move(copy), catLen,
+                                               addPtr.inner().hash));
+  return addEntry(cx, addPtr, std::move(entry));
 }
 
 template <typename CharT>
@@ -382,17 +434,14 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
   InflatedChar16Sequence<Latin1Char> seq(copy.get(), len);
   SpecificParserAtomLookup<Latin1Char> lookup(seq);
 
-  ParserAtomEntry ent =
-      ParserAtomEntry::make(std::move(copy), len, lookup.hash());
-
-  UniquePtr<ParserAtomEntry> uniqueEntry(
-      cx->new_<ParserAtomEntry>(std::move(ent)));
-  if (!uniqueEntry) {
+  auto maybeEntry =
+      ParserAtomEntry::allocate(cx, std::move(copy), len, lookup.hash());
+  if (maybeEntry.isErr()) {
     return false;
   }
-  const ParserName* nm = uniqueEntry.get()->asName();
-
-  if (!entrySet_.putNew(lookup, std::move(uniqueEntry))) {
+  UniquePtr<ParserAtomEntry> entry = maybeEntry.unwrap();
+  const ParserName* nm = entry.get()->asName();
+  if (!entrySet_.putNew(lookup, std::move(entry))) {
     return false;
   }
 

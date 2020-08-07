@@ -198,6 +198,15 @@ class InflatedChar16Sequence {
     MOZ_ASSERT(hasMore());
     return static_cast<char16_t>(*units_++);
   }
+
+  HashNumber computeHash() const {
+    auto copy = *this;
+    HashNumber hash = 0;
+    while (copy.hasMore()) {
+      hash = mozilla::AddToHash(hash, copy.next());
+    }
+    return hash;
+  }
 };
 
 template <>
@@ -248,6 +257,15 @@ class InflatedChar16Sequence<mozilla::Utf8Unit> {
     MOZ_ASSERT(unicode::IsTrailSurrogate(pendingTrailingSurrogate_));
 
     return lead;
+  }
+
+  HashNumber computeHash() const {
+    auto copy = *this;
+    HashNumber hash = 0;
+    while (copy.hasMore()) {
+      hash = mozilla::AddToHash(hash, copy.next());
+    }
+    return hash;
   }
 };
 
