@@ -182,6 +182,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       inlineTextChild: inlineTextChild ? inlineTextChild.form() : undefined,
       displayType: this.displayType,
       isScrollable: this.isScrollable,
+      isTopLevelDocument: this.isTopLevelDocument,
       causesOverflow: this.walker.overflowCausingElementsSet.has(this.rawNode),
 
       // doctype attributes
@@ -208,7 +209,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         this.rawNode.ownerDocument &&
         this.rawNode.ownerDocument.contentType === "text/html",
       hasEventListeners: this._hasEventListeners,
-      traits: {},
+      traits: {
+        supportsIsTopLevelDocument: true,
+      },
     };
 
     if (this.isDocumentElement()) {
@@ -264,6 +267,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   get isRemoteFrame() {
     return isRemoteFrame(this.rawNode);
+  },
+
+  get isTopLevelDocument() {
+    return this.rawNode === this.walker.rootDoc;
   },
 
   // Estimate the number of children that the walker will return without making
