@@ -264,10 +264,7 @@ class CommandAction(argparse.Action):
                 # out for the current context or not. Condition functions can be
                 # applied to the command's decorator.
                 if handler.conditions:
-                    if handler.pass_context:
-                        instance = handler.cls(self._context)
-                    else:
-                        instance = handler.cls()
+                    instance = handler.cls(self._context)
 
                     is_filtered = False
                     for c in handler.conditions:

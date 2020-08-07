@@ -13,6 +13,7 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 here = os.path.abspath(os.path.dirname(__file__))
 logger = None
@@ -106,15 +107,12 @@ def setup_argument_parser():
 
 
 @CommandProvider
-class ReftestCommands(object):
-
-    def __init__(self, context):
-        self.context = context
+class ReftestCommands(MachCommandBase):
 
     @Command('reftest', category='testing',
              description='Run the reftest harness.',
              parser=setup_argument_parser)
     def reftest(self, **kwargs):
-        self.context.activate_mozharness_venv()
+        self._mach_context.activate_mozharness_venv()
         kwargs['suite'] = 'reftest'
-        return run_reftest(self.context, **kwargs)
+        return run_reftest(self._mach_context, **kwargs)

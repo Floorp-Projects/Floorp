@@ -43,8 +43,8 @@ Bug 1556460 tracks supporting newer versions of jsdoc.
 class Documentation(MachCommandBase):
     """Helps manage in-tree documentation."""
 
-    def __init__(self, context):
-        super(Documentation, self).__init__(context)
+    def __init__(self, *args, **kwargs):
+        super(Documentation, self).__init__(*args, **kwargs)
 
         self._manager = None
         self._project = None

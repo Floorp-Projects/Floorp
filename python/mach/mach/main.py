@@ -475,9 +475,9 @@ To see more help for a specific command, run:
             self.load_settings(args.settings_file)
 
         try:
-            return Registrar._run_command_handler(handler, context=context,
-                                                  debug_command=args.debug_command,
-                                                  **vars(args.command_args))
+            return Registrar._run_command_handler(
+                handler, context, debug_command=args.debug_command,
+                **vars(args.command_args))
         except KeyboardInterrupt as ki:
             raise ki
         except FailedCommandError as e:
