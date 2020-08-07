@@ -21,7 +21,7 @@ To begin, we should rename the `TopSitesStorage`  to `PinnedSitesStorage` and cr
 
 We can then follow the architecture of existing features by using the presenter/interactor/view model, and introduce a `TopSitesStorage` which abstract out the complexity of the multiple data sources from `PinnedSitesStorage` and `PlacesHistoryStorage`.
 
-To allow the ability for adding a top site from different parts of the app (e.g. context menus), we introduce the `TopSitesUseCases` that acts on the storage directly. If the `TopSitesFeature` is started, it will then be notified by the `Observer` to update the UI.
+To allow the ability for adding a top site from different parts of the app (e.g. context menus), we introduce the `PinnedSitesUseCases` that acts on the storage directly. If the `TopSitesFeature` is started, it will then be notified by the `Observer` to update the UI.
 
 ```kotlin
 
@@ -56,7 +56,7 @@ interface TopSitesStorage {
    * Return a unified list of top sites based on the given number of sites desired.
    * If `includeFrecent` is true, fill in any missing top sites with frecent top site results.
    */
-  fun getTopSites(totalNumberOfSites: Int, includeFrecent: Boolean): List<TopSite>
+  suspend fun getTopSites(totalNumberOfSites: Int, includeFrecent: Boolean): List<TopSite>
 
   interface Observer {
     /**
@@ -73,22 +73,23 @@ interface PlacesHistoryStorage {
 
 class DefaultTopSitesStorage(
   val pinnedSitesStorage: PinnedSitesStorage,
-  val historyStorage: HistoryStorage? = null
+  val historyStorage: PlacesHistoryStorage
 ) : TopSitesStorage {
 
   /**
    * Merge data sources here, return a single list of top sites.
    */
-  override fun getTopSites(numFrecent): List<TopSite>
+  override suspend fun getTopSites(totalNumberOfSites: Int, includeFrecent: Boolean): List<TopSite>
 }
 
 /**
- * Use cases can be used for adding a top from different places like a context menu.
+ * Use cases can be used for adding a pinned site from different places like a context menu.
  */
-class TopSitesUseCases(topSitesStorage: TopSitesStorage) {
-  val addTopSites: AddTopSiteUseCase
-  val removeTopSites: RemoveTopSiteUseCase
+class PinnedSitesUseCases(pinnedSitesStorage: PinnedSitesStorage) {
+  val addPinnedSites: AddPinnedSiteUseCase
+  val removePinnedSites: RemovePinnedSiteUseCase
 }
+
 /**
  * View-bound feature that updates the UI when changes are made.
  */
@@ -97,9 +98,9 @@ class TopSitesFeature(
   val presenter: TopSitesPresenter,
   val view: TopSitesView,
   val defaultSites: () -> List<TopSites>
-) {
-  fun start()
-  fun stop()
+) : LifecycleAwareFeature {
+  override fun start()
+  override fun stop()
 }
 ```
 
