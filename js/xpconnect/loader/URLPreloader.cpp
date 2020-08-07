@@ -105,6 +105,7 @@ StaticRefPtr<URLPreloader> URLPreloader::sSingleton;
 URLPreloader::~URLPreloader() {
   if (sInitialized) {
     UnregisterWeakMemoryReporter(this);
+    sInitialized = false;
   }
 }
 
