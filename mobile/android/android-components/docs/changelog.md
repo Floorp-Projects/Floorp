@@ -32,6 +32,9 @@ permalink: /changelog/
 
 * **browser-menu**
   * ⚠️ **This is a breaking change**: Removed `SimpleBrowserMenuHighlightableItem.itemType`. Use a WeakMap instead if you need to attach private data.
+  
+* **browser-menu**
+  * For a11y, `BrowserMenuImageSwitch` now highlights the entire row, not just the switch
 
 # 53.0.0
 

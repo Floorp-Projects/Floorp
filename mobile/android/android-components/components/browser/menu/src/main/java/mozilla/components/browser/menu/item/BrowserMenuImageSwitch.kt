@@ -8,7 +8,6 @@ import android.content.Context
 import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.SwitchCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
@@ -35,13 +34,13 @@ class BrowserMenuImageSwitch(
     override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_image_switch
 
     override fun bind(menu: BrowserMenu, view: View) {
-        super.bind(menu, view.findViewById<SwitchCompat>(R.id.switch_widget))
-        bindImage(view)
+        super.bind(menu, view)
+        bindImage(view as SwitchCompat)
     }
 
-    private fun bindImage(view: View) {
-        val imageView = view.findViewById<AppCompatImageView>(R.id.image)
-        imageView.setImageResource(imageResource)
+    private fun bindImage(switch: SwitchCompat) {
+        switch.setCompoundDrawablesWithIntrinsicBounds(
+            imageResource, 0, 0, 0)
     }
 
     override fun asCandidate(context: Context) = super.asCandidate(context).copy(
