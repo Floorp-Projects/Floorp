@@ -106,6 +106,30 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
   gBrowser.removeCurrentTab();
 });
 
+add_task(async function make_default_disabled_until_prefs_are_loaded() {
+  // Testcase with Firefox not set as the default browser
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+  await test_with_mock_shellservice({ isDefault: false }, async function() {
+    let alwaysCheck = content.document.getElementById("alwaysCheckDefault");
+    Assert.ok(
+      !alwaysCheck.disabled,
+      "'Always Check' is enabled after default browser updated"
+    );
+  });
+  gBrowser.removeCurrentTab();
+
+  // Testcase with Firefox set as the default browser
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+  await test_with_mock_shellservice({ isDefault: true }, async function() {
+    let alwaysCheck = content.document.getElementById("alwaysCheckDefault");
+    Assert.ok(
+      alwaysCheck.disabled,
+      "'Always Check' is still disabled after default browser updated"
+    );
+  });
+  gBrowser.removeCurrentTab();
+});
+
 registerCleanupFunction(function() {
   Services.prefs.unlockPref("browser.shell.checkDefaultBrowser");
   Services.prefs.setBoolPref(
