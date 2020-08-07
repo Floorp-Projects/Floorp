@@ -80,8 +80,6 @@ CGLContextObj GLContextCGL::GetCGLContext() const {
   return static_cast<CGLContextObj>([mContext CGLContextObj]);
 }
 
-bool GLContextCGL::IsAliveImpl() const { return true; }
-
 bool GLContextCGL::MakeCurrentImpl() const {
   if (mContext) {
     [mContext makeCurrentContext];
@@ -226,10 +224,6 @@ void GLContextCGL::GetWSIInfo(nsCString* const out) const { out->AppendLiteral("
 Maybe<SymbolLoader> GLContextCGL::GetSymbolLoader() const {
   const auto& lib = sCGLLibrary.Library();
   return Some(SymbolLoader(*lib));
-}
-
-already_AddRefed<GLContext> GLContextProviderCGL::CreateWrappingExisting(void*, void*) {
-  return nullptr;
 }
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
