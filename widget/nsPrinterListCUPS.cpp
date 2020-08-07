@@ -13,10 +13,8 @@ static nsCUPSShim sCupsShim;
 
 NS_IMETHODIMP
 nsPrinterListCUPS::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
-  if (!sCupsShim.IsInitialized()) {
-    if (!sCupsShim.Init()) {
-      return NS_ERROR_FAILURE;
-    }
+  if (!sCupsShim.EnsureInitialized()) {
+    return NS_ERROR_FAILURE;
   }
 
   mozilla::CUPSPrinterList cupsPrinterList(sCupsShim);
@@ -39,10 +37,8 @@ nsPrinterListCUPS::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
 
 NS_IMETHODIMP
 nsPrinterListCUPS::GetSystemDefaultPrinterName(nsAString& aName) {
-  if (!sCupsShim.IsInitialized()) {
-    if (!sCupsShim.Init()) {
-      return NS_ERROR_FAILURE;
-    }
+  if (!sCupsShim.EnsureInitialized()) {
+    return NS_ERROR_FAILURE;
   }
 
   mozilla::CUPSPrinterList cupsPrinterList(sCupsShim);
