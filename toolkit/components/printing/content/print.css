@@ -113,6 +113,8 @@ form#print {
   background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
   background-repeat: no-repeat;
   background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
   width: 20px;
   scale: 1 1;
 }
