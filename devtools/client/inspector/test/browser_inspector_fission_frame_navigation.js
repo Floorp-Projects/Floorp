@@ -119,22 +119,10 @@ async function navigateIframeTo(inspector, url) {
   const { resourceWatcher, targetList } = inspector.toolbox;
   const onTargetProcessed = waitForTargetProcessed(targetList, url);
 
-  let onNewRoot;
-  if (isFissionEnabled()) {
-    // With Fission, the frame navigation will result in a new root-node
-    // resource.
-    onNewRoot = waitForResourceOnce(
-      resourceWatcher,
-      resourceWatcher.TYPES.ROOT_NODE
-    );
-  } else {
-    // Without Fission, the frame navigation is handled on the server and will
-    // create two (fake) mutations: frameLoad + childList.
-    onNewRoot = Promise.all([
-      waitForMutation(inspector, "childList"),
-      waitForMutation(inspector, "frameLoad"),
-    ]);
-  }
+  const onNewRoot = waitForResourceOnce(
+    resourceWatcher,
+    resourceWatcher.TYPES.ROOT_NODE
+  );
 
   info("Update the src attribute of the iframe tag");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(_url) {

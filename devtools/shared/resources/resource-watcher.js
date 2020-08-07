@@ -601,4 +601,6 @@ const ResourceTransformers = {
     .CONSOLE_MESSAGE]: require("devtools/shared/resources/transformers/console-messages"),
   [ResourceWatcher.TYPES
     .ERROR_MESSAGE]: require("devtools/shared/resources/transformers/error-messages"),
+  [ResourceWatcher.TYPES
+    .ROOT_NODE]: require("devtools/shared/resources/transformers/root-node"),
 };

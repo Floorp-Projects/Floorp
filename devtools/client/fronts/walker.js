@@ -330,6 +330,10 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           targetFront._form.numChildren = change.numChildren;
         }
       } else if (change.type === "frameLoad") {
+        // Backward compatibility for FF80 or older.
+        // The frameLoad mutation was removed in FF81 in favor of the root-node
+        // resource.
+
         // Nothing we need to do here, except verify that we don't have any
         // document children, because we should have gotten a documentUnload
         // first.
@@ -343,6 +347,10 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           }
         }
       } else if (change.type === "documentUnload") {
+        // Backward compatibility for FF80 or older.
+        // The documentUnload mutation was removed in FF81 in favor of the
+        // root-node resource.
+
         // We try to give fronts instead of actorIDs, but these fronts need
         // to be destroyed now.
         emittedMutation.target = targetFront.actorID;
@@ -544,12 +552,23 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   }
 
   _onRootNodeAvailable(rootNode) {
-    this.rootNode = rootNode;
+    if (this._isTopLevelRootNode(rootNode)) {
+      this.rootNode = rootNode;
+    }
   }
 
-  _onRootNodeDestroyed() {
-    this._releaseFront(this.rootNode, true);
-    this.rootNode = null;
+  _onRootNodeDestroyed(rootNode) {
+    this._releaseFront(rootNode, true);
+    if (this._isTopLevelRootNode(rootNode)) {
+      this.rootNode = null;
+    }
+  }
+
+  _isTopLevelRootNode(rootNode) {
+    // When `supportsIsTopLevelDocument` is false, a root-node resource is
+    // necessarily top level, so we can fallback to true.
+    const { supportsIsTopLevelDocument } = rootNode.traits;
+    return supportsIsTopLevelDocument ? rootNode.isTopLevelDocument : true;
   }
 
   async watchRootNode(onRootNodeAvailable) {
