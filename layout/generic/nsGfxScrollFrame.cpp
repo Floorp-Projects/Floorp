@@ -521,11 +521,16 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   nscoord oneDevPixel = aState->mBoxState.PresContext()->DevPixelsToAppUnits(1);
 
   if (!aForce) {
+    nsSize sizeToCompare = visualViewportSize;
+    if (gfxPlatform::UseDesktopZoomingScrollbars()) {
+      sizeToCompare = scrollPortSize;
+    }
+
     // If the style is HIDDEN then we already know that aAssumeHScroll is false
     if (aState->mHScrollbar != ShowScrollbar::Never) {
       bool wantHScrollbar =
           aState->mHScrollbar == ShowScrollbar::Always ||
-          scrolledRect.XMost() >= visualViewportSize.width + oneDevPixel ||
+          scrolledRect.XMost() >= sizeToCompare.width + oneDevPixel ||
           scrolledRect.x <= -oneDevPixel;
       // TODO(emilio): This should probably check this scrollbar's minimum size
       // in both axes, for consistency?
@@ -544,7 +549,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     if (aState->mVScrollbar != ShowScrollbar::Never) {
       bool wantVScrollbar =
           aState->mVScrollbar == ShowScrollbar::Always ||
-          scrolledRect.YMost() >= visualViewportSize.height + oneDevPixel ||
+          scrolledRect.YMost() >= sizeToCompare.height + oneDevPixel ||
           scrolledRect.y <= -oneDevPixel;
       // TODO(emilio): This should probably check this scrollbar's minimum size
       // in both axes, for consistency?
