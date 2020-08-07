@@ -77,6 +77,10 @@ class Actor extends Pool {
     this.actorID = null;
   }
 
+  isDestroyed() {
+    return this.actorID === null;
+  }
+
   /**
    * Override this method in subclasses to serialize the actor.
    * @param [optional] string hint
