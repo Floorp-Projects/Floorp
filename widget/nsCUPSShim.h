@@ -57,8 +57,6 @@ class nsCUPSShim {
    */
   bool Init();
 
-  bool IsInitialized() const { return mInited; }
-
   // We can try to get initialized from multiple threads at the same time, this
   // boolean and the mutex below make it safe.
   //
