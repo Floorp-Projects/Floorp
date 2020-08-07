@@ -692,7 +692,7 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
     return NS_OK;
   }
 
-  if (XRE_IsContentProcess()) {
+  if (XRE_IsContentProcess() || XRE_IsGPUProcess()) {
     // Use the cached data received from the parent process.
     MOZ_ASSERT(sFeatureStatus);
     bool success = false;
@@ -714,7 +714,7 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
   return rv;
 }
 
-void GfxInfoBase::GetAllFeatures(dom::XPCOMInitData& xpcomInit) {
+nsTArray<gfx::GfxInfoFeatureStatus> GfxInfoBase::GetAllFeatures() {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   if (!sFeatureStatus) {
     InitFeatureStatus(new nsTArray<gfx::GfxInfoFeatureStatus>());
@@ -729,10 +729,13 @@ void GfxInfoBase::GetAllFeatures(dom::XPCOMInitData& xpcomInit) {
       sFeatureStatus->AppendElement(gfxFeatureStatus);
     }
   }
+
+  nsTArray<gfx::GfxInfoFeatureStatus> features;
   for (const auto& status : *sFeatureStatus) {
     gfx::GfxInfoFeatureStatus copy = status;
-    xpcomInit.gfxFeatureStatus().AppendElement(copy);
+    features.AppendElement(copy);
   }
+  return features;
 }
 
 inline bool MatchingAllowStatus(int32_t aStatus) {
@@ -1094,10 +1097,9 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
   return status;
 }
 
-void GfxInfoBase::SetFeatureStatus(
-    const nsTArray<gfx::GfxInfoFeatureStatus>& aFS) {
+void GfxInfoBase::SetFeatureStatus(nsTArray<gfx::GfxInfoFeatureStatus>&& aFS) {
   MOZ_ASSERT(!sFeatureStatus);
-  InitFeatureStatus(new nsTArray<gfx::GfxInfoFeatureStatus>(aFS.Clone()));
+  InitFeatureStatus(new nsTArray<gfx::GfxInfoFeatureStatus>(std::move(aFS)));
 }
 
 bool GfxInfoBase::DoesDesktopEnvironmentMatch(

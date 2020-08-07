@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUChild.h"
 #include "gfxConfig.h"
+#include "GfxInfoBase.h"
 #include "gfxPlatform.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
@@ -22,6 +23,7 @@
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/Unused.h"
 #include "mozilla/HangDetails.h"
+#include "nsIGfxInfo.h"
 #include "nsIObserverService.h"
 
 #ifdef MOZ_GECKO_PROFILER
@@ -59,7 +61,14 @@ void GPUChild::Init() {
         mappings.AppendElement(LayerTreeIdMapping(aLayersId, aProcessId));
       });
 
-  SendInit(updates, devicePrefs, mappings);
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsTArray<GfxInfoFeatureStatus> features;
+  if (gfxInfo) {
+    auto* gfxInfoRaw = static_cast<widget::GfxInfoBase*>(gfxInfo.get());
+    features = gfxInfoRaw->GetAllFeatures();
+  }
+
+  SendInit(updates, devicePrefs, mappings, features);
 
   gfxVars::AddReceiver(this);
 
