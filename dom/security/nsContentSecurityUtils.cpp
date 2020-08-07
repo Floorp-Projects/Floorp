@@ -233,6 +233,10 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   static constexpr auto kExtensionRegex = u"extensions/(.+)@(.+)!(.+)$"_ns;
   static constexpr auto kSingleFileRegex = u"^[a-zA-Z0-9.?]+$"_ns;
 
+  if (fileName.IsEmpty()) {
+    return FilenameTypeAndDetails(kOther, Nothing());
+  }
+
   // resource:// and chrome://
   if (StringBeginsWith(fileName, u"chrome://"_ns)) {
     return FilenameTypeAndDetails(kChromeURI, Some(fileName));
