@@ -43,7 +43,11 @@ class HttpIconLoader(
         val downloadRequest = Request(
             url = resource.url,
             method = Request.Method.GET,
-            cookiePolicy = Request.CookiePolicy.INCLUDE,
+            cookiePolicy = if (request.isPrivate) {
+                Request.CookiePolicy.OMIT
+            } else {
+                Request.CookiePolicy.INCLUDE
+            },
             connectTimeout = Pair(CONNECT_TIMEOUT, TimeUnit.SECONDS),
             readTimeout = Pair(READ_TIMEOUT, TimeUnit.SECONDS),
             redirect = Request.Redirect.FOLLOW,
