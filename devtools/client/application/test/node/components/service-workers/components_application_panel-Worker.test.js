@@ -58,8 +58,8 @@ describe("Worker", () => {
     );
     // check that Start button is available
     expect(wrapper.find(".js-start-button")).toHaveLength(1);
-    // check that Debug link does not exist
-    expect(wrapper.find(".js-debug-link")).toHaveLength(0);
+    // check that inspect link does not exist
+    expect(wrapper.find(".js-inspect-link")).toHaveLength(0);
 
     expect(wrapper).toMatchSnapshot();
   });
@@ -101,32 +101,8 @@ describe("Worker", () => {
     // check that Start button is not available
     expect(wrapper.find(".js-start-button")).toHaveLength(0);
     // check that Debug link does not exist
-    expect(wrapper.find(".js-debug-link")).toHaveLength(0);
+    expect(wrapper.find(".js-inspect-link")).toHaveLength(0);
 
     expect(wrapper).toMatchSnapshot();
-  });
-
-  it("Shows/hides the debug link depending of debugging being available", () => {
-    const store = setupStore({});
-
-    // check disabled debugging
-    let wrapper = shallow(
-      Worker({
-        isDebugEnabled: false,
-        worker: WORKER_RUNNING,
-        store,
-      })
-    ).dive();
-    expect(wrapper.find(".js-debug-link")).toHaveLength(0);
-
-    // check enabled debugging
-    wrapper = shallow(
-      Worker({
-        isDebugEnabled: true,
-        worker: WORKER_RUNNING,
-        store,
-      })
-    ).dive();
-    expect(wrapper.find(".js-debug-link")).toHaveLength(1);
   });
 });
