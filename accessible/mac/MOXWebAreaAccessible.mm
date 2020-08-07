@@ -76,8 +76,8 @@ using namespace mozilla::a11y;
   return [search performSearch];
 }
 
-- (NSUInteger)moxUIElementCountForSearchPredicate:(NSDictionary*)searchPredicate {
-  return [[self moxUIElementsForSearchPredicate:searchPredicate] count];
+- (NSNumber*)moxUIElementCountForSearchPredicate:(NSDictionary*)searchPredicate {
+  return [NSNumber numberWithDouble:[[self moxUIElementsForSearchPredicate:searchPredicate] count]];
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {

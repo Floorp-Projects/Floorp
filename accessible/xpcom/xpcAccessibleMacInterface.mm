@@ -10,6 +10,7 @@
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "nsString.h"
 
 #import "mozAccessible.h"
 
@@ -268,6 +269,14 @@ id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue, JSContex
     return [NSNumber numberWithInteger:aValue.toInt32()];
   } else if (aValue.isBoolean()) {
     return [NSNumber numberWithBool:aValue.toBoolean()];
+  } else if (aValue.isString()) {
+    nsAutoJSString temp;
+    if (!temp.init(aCx, aValue)) {
+      NS_WARNING("cannot init string with given value");
+      *aResult = NS_ERROR_FAILURE;
+      return nil;
+    }
+    return nsCocoaUtils::ToNSString(temp);
   } else if (aValue.isObject()) {
     JS::Rooted<JSObject*> obj(aCx, aValue.toObjectOrNull());
 
@@ -381,7 +390,7 @@ id xpcAccessibleMacInterface::JsValueToSpecifiedNSObject(JS::HandleObject aObjec
                                                          nsresult* aResult) {
   *aResult = NS_ERROR_FAILURE;
   JS::RootedValue objectTypeValue(aCx);
-  if (!JS_GetProperty(aCx, aObject, "objetType", &objectTypeValue)) {
+  if (!JS_GetProperty(aCx, aObject, "objectType", &objectTypeValue)) {
     NS_WARNING("Could not get objectType");
     return nil;
   }
@@ -393,8 +402,13 @@ id xpcAccessibleMacInterface::JsValueToSpecifiedNSObject(JS::HandleObject aObjec
   }
 
   nsAutoJSString objectType;
-  if (!objectTypeValue.isString() || !objectType.init(aCx, objectTypeValue)) {
+  if (!objectTypeValue.isString()) {
     NS_WARNING("objectType is not a string");
+    return nil;
+  }
+
+  if (!objectType.init(aCx, objectTypeValue)) {
+    NS_WARNING("cannot init string with object type");
     return nil;
   }
 
