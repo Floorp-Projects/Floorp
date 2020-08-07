@@ -14,7 +14,6 @@
 // area. The stack pointer has to retain 16-byte alignment, longlongs
 // and doubles are aligned on 8-byte boundaries.
 
-#define PARAM_BUFFER_COUNT     16
 #define GPR_COUNT               8
 #define FPR_COUNT               8
 

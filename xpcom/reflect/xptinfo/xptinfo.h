@@ -505,6 +505,10 @@ struct nsXPTMethodInfo {
 // The fields in nsXPTMethodInfo were carefully ordered to minimize size.
 static_assert(sizeof(nsXPTMethodInfo) == 8, "wrong size");
 
+// Maximum number of stack allocated nsXPTCMiniVariant structures for argument
+// passing purposes.
+#define PARAM_BUFFER_COUNT 16
+
 /**
  * A nsXPTConstantInfo is used to describe a single interface constant.
  */
