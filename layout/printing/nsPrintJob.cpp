@@ -2693,8 +2693,10 @@ nsresult nsPrintJob::FinishPrintPreview() {
 
 #ifdef NS_PRINT_PREVIEW
 
-  if (!mPrt) {
-    /* we're already finished with print preview */
+  // If mPrt is null we've already finished with print preview. If mPrt is not
+  // null but mIsCreatingPrintPreview is false FinishPrintPreview must have
+  // already failed due to DocumentReadyForPrinting failing.
+  if (!mPrt || !mIsCreatingPrintPreview) {
     return rv;
   }
 
