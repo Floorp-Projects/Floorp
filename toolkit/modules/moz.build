@@ -301,7 +301,6 @@ JAR_MANIFESTS += ['jar.mn']
 DEFINES['TOPOBJDIR'] = TOPOBJDIR
 
 XPIDL_SOURCES += [
-    'nsIBrowserWindowTracker.idl',
     'nsIE10SUtils.idl',
     'nsIRegion.idl',
 ]
