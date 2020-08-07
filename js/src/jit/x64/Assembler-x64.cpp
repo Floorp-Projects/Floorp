@@ -111,16 +111,8 @@ ABIArg ABIArgGenerator::next(MIRType type) {
 }
 
 void Assembler::writeRelocation(JmpSrc src, RelocationKind reloc) {
-  if (!jumpRelocations_.length()) {
-    // The jump relocation table starts with a fixed-width integer pointing
-    // to the start of the extended jump table. But, we don't know the
-    // actual extended jump table offset yet, so write a 0 which we'll
-    // patch later.
-    jumpRelocations_.writeFixedUint32_t(0);
-  }
   if (reloc == RelocationKind::JITCODE) {
     jumpRelocations_.writeUnsigned(src.offset());
-    jumpRelocations_.writeUnsigned(jumps_.length());
   }
 }
 
@@ -163,15 +155,6 @@ void Assembler::finish() {
   // Emit the jump table.
   masm.haltingAlign(SizeOfJumpTableEntry);
   extendedJumpTable_ = masm.size();
-
-  // Now that we know the offset to the jump table, squirrel it into the
-  // jump relocation buffer if any JitCode references exist and must be
-  // tracked for GC.
-  MOZ_ASSERT_IF(jumpRelocations_.length(),
-                jumpRelocations_.length() >= sizeof(uint32_t));
-  if (jumpRelocations_.length()) {
-    *(uint32_t*)jumpRelocations_.buffer() = extendedJumpTable_;
-  }
 
   // Zero the extended jumps table.
   for (size_t i = 0; i < jumps_.length(); i++) {
@@ -224,27 +207,20 @@ void Assembler::executableCopy(uint8_t* buffer) {
 
 class RelocationIterator {
   CompactBufferReader reader_;
-  uint32_t tableStart_;
-  uint32_t offset_;
-  uint32_t extOffset_;
+  uint32_t offset_ = 0;
 
  public:
-  explicit RelocationIterator(CompactBufferReader& reader)
-      : reader_(reader), offset_(0), extOffset_(0) {
-    tableStart_ = reader_.readFixedUint32_t();
-  }
+  explicit RelocationIterator(CompactBufferReader& reader) : reader_(reader) {}
 
   bool read() {
     if (!reader_.more()) {
       return false;
     }
     offset_ = reader_.readUnsigned();
-    extOffset_ = reader_.readUnsigned();
     return true;
   }
 
   uint32_t offset() const { return offset_; }
-  uint32_t extendedOffset() const { return extOffset_; }
 };
 
 JitCode* Assembler::CodeFromJump(JitCode* code, uint8_t* jump) {

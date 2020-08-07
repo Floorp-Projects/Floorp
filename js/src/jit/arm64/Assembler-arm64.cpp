@@ -77,16 +77,6 @@ void Assembler::finish() {
   // The extended jump table is part of the code buffer.
   ExtendedJumpTable_ = emitExtendedJumpTable();
   Assembler::FinalizeCode();
-
-  // The jump relocation table starts with a fixed-width integer pointing
-  // to the start of the extended jump table.
-  // Space for this integer is allocated by Assembler::addJumpRelocation()
-  // before writing the first entry.
-  // Don't touch memory if we saw an OOM error.
-  if (jumpRelocations_.length() && !oom()) {
-    MOZ_ASSERT(jumpRelocations_.length() >= sizeof(uint32_t));
-    *(uint32_t*)jumpRelocations_.buffer() = ExtendedJumpTable_.getOffset();
-  }
 }
 
 bool Assembler::appendRawCode(const uint8_t* code, size_t numBytes) {
@@ -290,17 +280,7 @@ void Assembler::addJumpRelocation(BufferOffset src, RelocationKind reloc) {
   // Only JITCODE relocations are patchable at runtime.
   MOZ_ASSERT(reloc == RelocationKind::JITCODE);
 
-  // The jump relocation table starts with a fixed-width integer pointing
-  // to the start of the extended jump table. But, we don't know the
-  // actual extended jump table offset yet, so write a 0 which we'll
-  // patch later in Assembler::finish().
-  if (!jumpRelocations_.length()) {
-    jumpRelocations_.writeFixedUint32_t(0);
-  }
-
-  // Each entry in the table is an (offset, extendedTableIndex) pair.
   jumpRelocations_.writeUnsigned(src.getOffset());
-  jumpRelocations_.writeUnsigned(pendingJumps_.length());
 }
 
 void Assembler::addPendingJump(BufferOffset src, ImmPtr target,
@@ -451,27 +431,20 @@ void Assembler::UpdateLoad64Value(Instruction* inst0, uint64_t value) {
 
 class RelocationIterator {
   CompactBufferReader reader_;
-  uint32_t tableStart_;
-  uint32_t offset_;
-  uint32_t extOffset_;
+  uint32_t offset_ = 0;
 
  public:
-  explicit RelocationIterator(CompactBufferReader& reader) : reader_(reader) {
-    // The first uint32_t stores the extended table offset.
-    tableStart_ = reader_.readFixedUint32_t();
-  }
+  explicit RelocationIterator(CompactBufferReader& reader) : reader_(reader) {}
 
   bool read() {
     if (!reader_.more()) {
       return false;
     }
     offset_ = reader_.readUnsigned();
-    extOffset_ = reader_.readUnsigned();
     return true;
   }
 
   uint32_t offset() const { return offset_; }
-  uint32_t extendedOffset() const { return extOffset_; }
 };
 
 static JitCode* CodeFromJump(JitCode* code, uint8_t* jump) {
