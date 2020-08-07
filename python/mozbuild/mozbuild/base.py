@@ -280,6 +280,7 @@ class MozbuildObject(ProcessExecutionMixin):
                 name += "_py3"
             self._virtualenv_manager = VirtualenvManager(
                 self.topsrcdir,
+                self.topobjdir,
                 os.path.join(self.topobjdir, '_virtualenvs', name),
                 sys.stdout,
                 os.path.join(self.topsrcdir, 'build', 'virtualenv_packages.txt')
@@ -852,13 +853,11 @@ class MozbuildObject(ProcessExecutionMixin):
                 self.virtualenv_manager.install_pip_package(path, vendored=True)
         return pipenv
 
-    def activate_pipenv(self, workon_home, pipfile=None, populate=False,
-                        python=None):
+    def activate_pipenv(self, pipfile=None, populate=False, python=None):
         if pipfile is not None and not os.path.exists(pipfile):
             raise Exception('Pipfile not found: %s.' % pipfile)
         self.ensure_pipenv()
-        self.virtualenv_manager.activate_pipenv(workon_home, pipfile, populate,
-                                                python)
+        self.virtualenv_manager.activate_pipenv(pipfile, populate, python)
 
     def _ensure_zstd(self):
         try:

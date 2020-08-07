@@ -80,9 +80,7 @@ class Documentation(MachCommandBase):
         if self.check_jsdoc():
             return die(JSDOC_NOT_FOUND)
 
-        self.activate_pipenv(
-            os.path.dirname(self._virtualenv_manager.virtualenv_root),
-            pipfile=os.path.join(here, 'Pipfile'))
+        self.activate_pipenv(os.path.join(here, 'Pipfile'))
 
         import webbrowser
         from livereload import Server

@@ -253,8 +253,7 @@ class MachCommands(MachCommandBase):
         python = python or default_manager.python_path
         py3_root = default_manager.virtualenv_root + '_py3'
 
-        self.activate_pipenv(os.path.dirname(default_manager.virtualenv_root),
-                             pipfile=None, populate=True, python=python)
+        self.activate_pipenv(pipfile=None, populate=True, python=python)
 
         # The current process might be running under Python 2 and the Python 3
         # virtualenv will not be set up by mach bootstrap. To avoid problems in tests
@@ -264,6 +263,7 @@ class MachCommands(MachCommandBase):
 
         py3_manager = VirtualenvManager(
             default_manager.topsrcdir,
+            default_manager.topobjdir,
             py3_root,
             default_manager.log_handle,
             default_manager.manifest_path,
