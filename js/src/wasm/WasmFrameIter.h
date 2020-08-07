@@ -233,10 +233,6 @@ void GenerateFunctionPrologue(jit::MacroAssembler& masm,
 void GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
                               FuncOffsets* offsets);
 
-// Iterates through frames for either possible cross-instance call or an entry
-// stub to obtain tls that corresponds to the passed fp.
-TlsData* GetNearestEffectiveTls(Frame* fp);
-
 // Describes register state and associated code at a given call frame.
 
 struct UnwindState {
