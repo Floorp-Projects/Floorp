@@ -305,7 +305,11 @@ nsresult nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
     return NS_ERROR_FAILURE;
   }
 
-  if (tmpCert->isperm) {
+  PRBool isperm;
+  if (CERT_GetCertIsPerm(tmpCert.get(), &isperm) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+  if (isperm) {
     DisplayCertificateAlert(ctx, "CaCertExists", certToShow);
     return NS_ERROR_FAILURE;
   }
@@ -1026,7 +1030,11 @@ nsNSSCertificateDB::AddCert(const nsACString& aCertDER,
 
   // If there's already a certificate that matches this one in the database, we
   // still want to set its trust to the given value.
-  if (tmpCert->isperm) {
+  PRBool isperm;
+  if (CERT_GetCertIsPerm(tmpCert.get(), &isperm) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+  if (isperm) {
     rv = SetCertTrustFromString(newCert, aTrust);
     if (NS_FAILED(rv)) {
       return rv;
