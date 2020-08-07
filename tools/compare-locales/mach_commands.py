@@ -9,14 +9,14 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
-
 from mach.base import (
     FailedCommandError,
 )
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
-class CompareLocales(object):
+class CompareLocales(MachCommandBase):
     """Run compare-locales."""
 
     @Command('compare-locales', category='build',

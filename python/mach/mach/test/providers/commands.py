@@ -11,6 +11,7 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 
 def is_foo(cls):
@@ -24,7 +25,7 @@ def is_bar(val, cls):
 
 
 @CommandProvider
-class MachCommands(object):
+class MachCommands(MachCommandBase):
     foo = True
     bar = False
 

@@ -9,10 +9,11 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
-class ConditionsProvider(object):
+class ConditionsProvider(MachCommandBase):
     @Command('cmd_foo', category='testing')
     def run_foo(self):
         pass

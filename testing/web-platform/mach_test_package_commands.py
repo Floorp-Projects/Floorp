@@ -12,6 +12,7 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 
 class WebPlatformTestsRunnerSetup(object):
@@ -56,16 +57,15 @@ class WebPlatformTestsRunnerSetup(object):
 
 
 @CommandProvider
-class MachCommands(object):
-    def __init__(self, context):
-        self.context = context
+class MachCommands(MachCommandBase):
 
     @Command("web-platform-tests",
              category="testing",
              parser=create_parser_wpt)
     def run_web_platform_tests(self, **kwargs):
-        self.context.activate_mozharness_venv()
-        return WebPlatformTestsRunner(WebPlatformTestsRunnerSetup(self.context)).run(**kwargs)
+        self._mach_context.activate_mozharness_venv()
+        return WebPlatformTestsRunner(
+            WebPlatformTestsRunnerSetup(self._mach_context)).run(**kwargs)
 
     @Command("wpt",
              category="testing",

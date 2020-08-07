@@ -477,7 +477,7 @@ class TaskClusterImagesProvider(MachCommandBase):
 
 
 @CommandProvider
-class TaskClusterPartialsData(object):
+class TaskClusterPartialsData(MachCommandBase):
     @Command('release-history', category="ci",
              description="Query balrog for release history used by enable partials generation")
     @CommandArgument('-b', '--branch',

@@ -6,11 +6,10 @@ from __future__ import absolute_import, unicode_literals
 
 import argparse
 import collections
-import inspect
-import sys
 
 from .base import MachError
 from .registrar import Registrar
+from mozbuild.base import MachCommandBase
 
 
 class _MachCommand(object):
@@ -41,11 +40,6 @@ class _MachCommand(object):
         # the class if the command is executed.
         'cls',
 
-        # Whether the __init__ method of the class should receive a mach
-        # context instance. This should only affect the mach driver and how
-        # it instantiates classes.
-        'pass_context',
-
         # The name of the method providing the command. In other words, this
         # is the str name of the attribute on the class type corresponding to
         # the name of the function.
@@ -74,7 +68,6 @@ class _MachCommand(object):
         self.order = order
 
         self.cls = None
-        self.pass_context = None
         self.method = None
         self.subcommand_handlers = {}
         self.decl_order = None
@@ -117,22 +110,10 @@ def CommandProvider(cls):
     # attributes on the function types. We just scan over all functions in the
     # class looking for the side-effects of the method decorators.
 
-    # Tell mach driver whether to pass context argument to __init__.
-    pass_context = False
-
-    isfunc = inspect.ismethod if sys.version_info < (3, 0) else inspect.isfunction
-    if isfunc(cls.__init__):
-        spec = inspect.getargspec(cls.__init__)
-
-        if any([arg for arg in spec.args if arg not in ('self', 'context')]):
-            msg = 'Mach @CommandProvider class %s implemented incorrectly. ' + \
-                  '__init__() must not take any arguments other than "context". ' + \
-                  'From %s'
-            msg = msg % (cls.__name__, inspect.getsourcefile(cls))
-            raise MachError(msg)
-
-        if 'context' in spec.args:
-            pass_context = True
+    if not issubclass(cls, MachCommandBase):
+        raise MachError(
+            'Mach command provider class %s must be a subclass of '
+            'mozbuild.base.MachComandBase' % cls.__name__)
 
     seen_commands = set()
 
@@ -171,7 +152,6 @@ def CommandProvider(cls):
 
         command.cls = cls
         command.method = method
-        command.pass_context = pass_context
 
         Registrar.register_command_handler(command)
 
@@ -192,7 +172,6 @@ def CommandProvider(cls):
 
         command.cls = cls
         command.method = method
-        command.pass_context = pass_context
         parent = Registrar.command_handlers[command.name]
 
         if command.subcommand in parent.subcommand_handlers:

@@ -32,10 +32,6 @@ class MachCommands(MachCommandBase):
     '''
     Run Valgrind tests.
     '''
-
-    def __init__(self, context):
-        MachCommandBase.__init__(self, context)
-
     @Command('valgrind-test', category='testing',
              conditions=[conditions.is_firefox_or_thunderbird, is_valgrind_build],
              description='Run the Valgrind test job (memory-related errors).')

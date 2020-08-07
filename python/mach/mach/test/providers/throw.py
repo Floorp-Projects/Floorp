@@ -10,12 +10,12 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
-
 from mach.test.providers import throw2
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
-class TestCommandProvider(object):
+class TestCommandProvider(MachCommandBase):
     @Command('throw', category='testing')
     @CommandArgument('--message', '-m', default='General Error')
     def throw(self, message):

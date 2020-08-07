@@ -12,6 +12,7 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 here = os.path.abspath(os.path.dirname(__file__))
 parser = None
@@ -98,15 +99,12 @@ def setup_argument_parser():
 
 
 @CommandProvider
-class GtestCommands(object):
-
-    def __init__(self, context):
-        self.context = context
+class GtestCommands(MachCommandBase):
 
     @Command('gtest', category='testing',
              description='Run the gtest harness.',
              parser=setup_argument_parser)
     def gtest(self, **kwargs):
-        self.context.activate_mozharness_venv()
-        result = run_gtest(self.context, **kwargs)
+        self._mach_context.activate_mozharness_venv()
+        result = run_gtest(self._mach_context, **kwargs)
         return 0 if result else 1

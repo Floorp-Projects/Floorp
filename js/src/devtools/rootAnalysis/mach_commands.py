@@ -112,8 +112,7 @@ class MachCommands(MachCommandBase):
         try:
             kwargs['from_build'] = ('linux64-gcc-sixgill', 'linux64-gcc-8')
             self._mach_context.commands.dispatch(
-                'artifact', subcommand='toolchain',
-                context=self._mach_context,
+                'artifact', self._mach_context, subcommand='toolchain',
                 **kwargs
             )
         finally:

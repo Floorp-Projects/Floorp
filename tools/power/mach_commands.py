@@ -25,10 +25,6 @@ class MachCommands(MachCommandBase):
     '''
     Get system power consumption and related measurements.
     '''
-
-    def __init__(self, context):
-        MachCommandBase.__init__(self, context)
-
     @Command('power', category='misc',
              conditions=[is_osx_10_10_or_greater],
              description='Get system power consumption and related measurements for '

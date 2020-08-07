@@ -207,7 +207,7 @@ appropriate highlighter.
 
 
 @CommandProvider
-class PastebinProvider(object):
+class PastebinProvider(MachCommandBase):
     @Command('pastebin', category='misc',
              description=MACH_PASTEBIN_DESCRIPTION)
     @CommandArgument('--list-highlighters', action='store_true',

@@ -54,8 +54,8 @@ def setup():
 
 @CommandProvider
 class RemoteCommands(MachCommandBase):
-    def __init__(self, context):
-        MachCommandBase.__init__(self, context)
+    def __init__(self, *args, **kwargs):
+        super(RemoteCommands, self).__init__(*args, **kwargs)
         self.remotedir = os.path.join(self.topsrcdir, "remote")
 
     @Command("remote", category="misc",

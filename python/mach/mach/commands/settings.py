@@ -12,18 +12,20 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
-class Settings(object):
+class Settings(MachCommandBase):
     """Interact with settings for mach.
 
     Currently, we only provide functionality to view what settings are
     available. In the future, this module will be used to modify settings, help
     people create configs via a wizard, etc.
     """
-    def __init__(self, context):
-        self._settings = context.settings
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
+        self._settings = self._mach_context.settings
 
     @Command('settings', category='devenv',
              description='Show available config settings.')

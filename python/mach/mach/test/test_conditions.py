@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import os
 
+from buildconfig import topsrcdir
 from mach.base import MachError
 from mach.main import Mach
 from mach.registrar import Registrar
@@ -15,25 +16,34 @@ from mach.test.common import TestBase
 from mozunit import main
 
 
-def _populate_context(key=None):
-    if key is None:
-        return
+def _make_populate_context(include_extra_attributes):
+    def _populate_context(key=None):
+        if key is None:
+            return
 
-    attributes = {
-        'foo': True,
-        'bar': False,
-        'topdir': '',
-    }
-    try:
-        return attributes[key]
-    except KeyError:
-        raise AttributeError(key)
+        attributes = {
+            'topdir': topsrcdir,
+        }
+        if include_extra_attributes:
+            attributes['foo'] = True
+            attributes['bar'] = False
+
+        try:
+            return attributes[key]
+        except KeyError:
+            raise AttributeError(key)
+
+    return _populate_context
+
+
+_populate_bare_context = _make_populate_context(False)
+_populate_context = _make_populate_context(True)
 
 
 class TestConditions(TestBase):
     """Tests for conditionally filtering commands."""
 
-    def _run_mach(self, args, context_handler=None):
+    def _run_mach(self, args, context_handler=_populate_bare_context):
         return TestBase._run_mach(self, args, 'conditions.py',
                                   context_handler=context_handler)
 
