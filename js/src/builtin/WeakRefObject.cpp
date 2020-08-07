@@ -76,18 +76,20 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   // 4. Perfom ! KeepDuringJob(target).
   if (!target->zone()->keepDuringJob(target)) {
+    ReportOutOfMemory(cx);
     return false;
   };
-
-  // 5. Set weakRef.[[Target]] to target.
-  weakRef->setPrivateGCThing(target);
 
   // Add an entry to the per-zone maps from target JS object to a list of weak
   // ref objects.
   gc::GCRuntime* gc = &cx->runtime()->gc;
   if (!gc->registerWeakRef(target, wrappedWeakRef)) {
+    ReportOutOfMemory(cx);
     return false;
   };
+
+  // 5. Set weakRef.[[Target]] to target.
+  weakRef->setPrivateGCThing(target);
 
   // 6. Return weakRef.
   args.rval().setObject(*weakRef);
