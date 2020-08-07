@@ -17,6 +17,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/dom/PContentParent.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "nsCOMPtr.h"
 #include "nsIGfxInfo.h"
@@ -95,7 +96,8 @@ class GfxInfoBase : public nsIGfxInfo,
   static void RemoveCollector(GfxInfoCollectorBase* collector);
 
   static nsTArray<GfxDriverInfo>* sDriverInfo;
-  static nsTArray<mozilla::gfx::GfxInfoFeatureStatus>* sFeatureStatus;
+  static StaticAutoPtr<nsTArray<mozilla::gfx::GfxInfoFeatureStatus>>
+      sFeatureStatus;
   static bool sDriverInfoObserverInitialized;
   static bool sShutdownOccurred;
 
