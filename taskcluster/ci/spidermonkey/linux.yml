@@ -150,6 +150,25 @@ sm-arm64-sim-linux64/debug:
     run:
         spidermonkey-variant: arm64-sim
 
+sm-arm64-sim-cranelift-linux64/debug:
+    description: "Spidermonkey ARM64 sim with Cranelift Wasm backend"
+    index:
+        job-name: sm-arm64-sim-cranelift-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(arm64cl)
+    run:
+        spidermonkey-variant: arm64-cranelift-sim
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-clang
+            - linux64-gcc
+            - linux64-rust
+            - linux64-rust-size
+            - linux64-cbindgen
+    run-on-projects: ['mozilla-central']
+
 sm-asan-linux64/opt:
     description: "Spidermonkey Address Sanitizer"
     index:
