@@ -2464,7 +2464,6 @@
     "test-windows7-32-shippable/opt-mochitest-browser-chrome-e10s-6",
     "test-android-em-7.0-x86_64/debug-geckoview-xpcshell-e10s-4",
     "test-windows10-64-qr/debug-mochitest-browser-chrome-e10s-5",
-    "source-test-shadow-scheduler-seta",
     "test-windows10-64-shippable-qr/opt-awsy-base-e10s",
     "test-vismet-android-hw-g5-7-0-arm7-api-16-shippable/opt-browsertime-tp6m-geckoview-cold-ebay-kleinanzeigen-search",
     "test-vismet-android-hw-p2-8-0-android-aarch64-shippable/opt-browsertime-tp6m-geckoview-cold-amazon-search",

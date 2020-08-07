@@ -12,7 +12,6 @@ UNIFIED_SOURCES = [
 ]
 
 RCFILE  = 'TestDllBlocklist_AllowByVersion.rc'
-RESFILE = 'TestDllBlocklist_AllowByVersion.res'
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.gtest += ['!TestDllBlocklist_AllowByVersion.dll']

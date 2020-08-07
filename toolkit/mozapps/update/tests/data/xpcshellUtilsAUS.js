@@ -4106,7 +4106,7 @@ function waitForUpdateDownload(aUpdates, aExpectedStatus) {
       onStartRequest: aRequest => {},
       onProgress: (aRequest, aContext, aProgress, aMaxProgress) => {},
       onStatus: (aRequest, aStatus, aStatusText) => {},
-      onStopRequest: (request, status) => {
+      onStopRequest(request, status) {
         gAUS.removeDownloadListener(this);
         Assert.equal(
           aExpectedStatus,
