@@ -1447,20 +1447,6 @@ Span(const nsTSubstring<char>&)->Span<const char>;
 Span(nsTSubstring<char16_t>&)->Span<char16_t>;
 Span(const nsTSubstring<char16_t>&)->Span<const char16_t>;
 
-inline Span<char> MakeSpan(nsTSubstring<char>& aString) { return aString; }
-
-inline Span<const char> MakeSpan(const nsTSubstring<char>& aString) {
-  return aString;
-}
-
-inline Span<char16_t> MakeSpan(nsTSubstring<char16_t>& aString) {
-  return aString;
-}
-
-inline Span<const char16_t> MakeSpan(const nsTSubstring<char16_t>& aString) {
-  return aString;
-}
-
 }  // namespace mozilla
 
 #endif

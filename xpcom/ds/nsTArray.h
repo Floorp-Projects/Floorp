@@ -3098,18 +3098,6 @@ class CopyableAutoTArray : public AutoTArray<E, N> {
 
 // Span integration
 namespace mozilla {
-
-template <class ElementType, class TArrayAlloc>
-Span<ElementType> MakeSpan(nsTArray_Impl<ElementType, TArrayAlloc>& aTArray) {
-  return aTArray;
-}
-
-template <class ElementType, class TArrayAlloc>
-Span<const ElementType> MakeSpan(
-    const nsTArray_Impl<ElementType, TArrayAlloc>& aTArray) {
-  return aTArray;
-}
-
 template <typename E, typename ArrayT>
 class nsTArrayBackInserter
     : public std::iterator<std::output_iterator_tag, void, void, void, void> {
