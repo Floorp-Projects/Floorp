@@ -4,9 +4,10 @@
 
 #include "nsPrinterListCUPS.h"
 
-#include "CUPSPrinterList.h"
+#include "mozilla/IntegerRange.h"
 #include "nsCUPSShim.h"
 #include "nsPrinterCUPS.h"
+#include "nsString.h"
 #include "prenv.h"
 
 static nsCUPSShim sCupsShim;
@@ -17,12 +18,12 @@ nsPrinterListCUPS::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::CUPSPrinterList cupsPrinterList(sCupsShim);
-  cupsPrinterList.Initialize();
-  aPrinters.SetCapacity(cupsPrinterList.NumPrinters());
+  cups_dest_t* printers = nullptr;
+  auto numPrinters = sCupsShim.cupsGetDests(&printers);
+  aPrinters.SetCapacity(numPrinters);
 
-  for (int i = 0; i < cupsPrinterList.NumPrinters(); i++) {
-    cups_dest_t* const dest = cupsPrinterList.GetPrinter(i);
+  for (auto i : mozilla::IntegerRange(0, numPrinters)) {
+    cups_dest_t* dest = printers + i;
 
     nsString displayName;
     GetDisplayNameForPrinter(*dest, displayName);
@@ -32,6 +33,7 @@ nsPrinterListCUPS::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
     aPrinters.AppendElement(cupsPrinter);
   }
 
+  sCupsShim.cupsFreeDests(numPrinters, printers);
   return NS_OK;
 }
 
@@ -41,10 +43,10 @@ nsPrinterListCUPS::GetSystemDefaultPrinterName(nsAString& aName) {
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::CUPSPrinterList cupsPrinterList(sCupsShim);
-  cupsPrinterList.Initialize();
-
-  cups_dest_t* const dest = cupsPrinterList.GetDefaultPrinter();
+  // Passing in nullptr for the name will return the default, if any.
+  const cups_dest_t* dest =
+      sCupsShim.cupsGetNamedDest(CUPS_HTTP_DEFAULT, /* name */ nullptr,
+                                 /* instance */ nullptr);
   if (!dest) {
     return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   }
