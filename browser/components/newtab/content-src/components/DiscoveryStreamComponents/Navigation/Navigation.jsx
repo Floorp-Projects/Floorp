@@ -17,9 +17,10 @@ export class Topic extends React.PureComponent {
   onLinkClick(event) {
     if (this.props.dispatch) {
       this.props.dispatch(
-        ac.ImpressionStats({
+        ac.UserEvent({
           event: "CLICK",
           source: "POPULAR_TOPICS",
+          action_position: 0,
           value: {
             topic: event.target.text.toLowerCase().replace(` `, `-`),
           },
