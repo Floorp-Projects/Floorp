@@ -664,20 +664,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
     mCancelContentJSEpoch = aEpoch;
   }
 
-  static bool HasVisibleTabs() {
-    return sVisibleTabs && !sVisibleTabs->IsEmpty();
-  }
-
-  // Returns the set of BrowserChilds that are currently rendering layers. There
-  // can be multiple BrowserChilds in this state if Firefox has multiple windows
-  // open or is warming tabs up. There can also be zero BrowserChilds in this
-  // state. Note that this function should only be called if HasVisibleTabs()
-  // returns true.
-  static const nsTHashtable<nsPtrHashKey<BrowserChild>>& GetVisibleTabs() {
-    MOZ_ASSERT(HasVisibleTabs());
-    return *sVisibleTabs;
-  }
-
   bool UpdateSessionStore(uint32_t aFlushId, bool aIsFinal = false);
 
 #ifdef XP_WIN
@@ -933,12 +919,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // Should only be accessed on main thread.
   Maybe<bool> mWindowSupportsProtectedMedia;
 #endif
-
-  // This state is used to keep track of the current visible tabs (the ones
-  // rendering layers). There may be more than one if there are multiple browser
-  // windows open, or tabs are being warmed up. There may be none if this
-  // process does not host any visible or warming tabs.
-  static nsTHashtable<nsPtrHashKey<BrowserChild>>* sVisibleTabs;
 
   DISALLOW_EVIL_CONSTRUCTORS(BrowserChild);
 };

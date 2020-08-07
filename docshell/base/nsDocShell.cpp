@@ -4572,8 +4572,7 @@ nsDocShell::SetIsActive(bool aIsActive) {
   // Tell the nsDOMNavigationTiming about it
   RefPtr<nsDOMNavigationTiming> timing = mTiming;
   if (!timing && mContentViewer) {
-    Document* doc = mContentViewer->GetDocument();
-    if (doc) {
+    if (Document* doc = mContentViewer->GetDocument()) {
       timing = doc->GetNavigationTiming();
     }
   }
