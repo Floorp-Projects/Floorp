@@ -59,8 +59,8 @@ wr::WrExternalImage RenderEGLImageTextureHost::Lock(
   if (mSync) {
     const auto& gle = gl::GLContextEGL::Cast(mGL);
     const auto& egl = gle->mEgl;
-    MOZ_ASSERT(egl->IsExtensionSupported(gl::GLLibraryEGL::KHR_fence_sync));
-    status = egl->fClientWaitSync(egl->Display(), mSync, 0, LOCAL_EGL_FOREVER);
+    MOZ_ASSERT(egl->IsExtensionSupported(gl::EGLExtension::KHR_fence_sync));
+    status = egl->fClientWaitSync(mSync, 0, LOCAL_EGL_FOREVER);
     // We do not need to delete sync here. It is deleted by
     // SharedSurface_EGLImage.
     mSync = 0;

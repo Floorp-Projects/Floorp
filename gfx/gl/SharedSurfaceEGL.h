@@ -51,9 +51,6 @@ class SharedSurface_EGLImage final : public SharedSurface {
   virtual void ProducerReadReleaseImpl() override{};
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
-
-  virtual bool ReadbackBySharedHandle(
-      gfx::DataSourceSurface* out_surface) override;
 };
 
 class SurfaceFactory_EGLImage final : public SurfaceFactory {

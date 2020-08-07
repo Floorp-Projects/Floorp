@@ -10,6 +10,7 @@ with Files('**'):
 EXPORTS.mozilla.webrender += [
     'RenderBufferTextureHost.h',
     'RenderCompositor.h',
+    'RenderCompositorEGL.h',
     'RenderCompositorOGL.h',
     'RenderCompositorSWGL.h',
     'RenderEGLImageTextureHost.h',
@@ -30,6 +31,7 @@ UNIFIED_SOURCES += [
     'Moz2DImageRenderer.cpp',
     'RenderBufferTextureHost.cpp',
     'RenderCompositor.cpp',
+    'RenderCompositorEGL.cpp',
     'RenderCompositorOGL.cpp',
     'RenderCompositorSWGL.cpp',
     'RenderEGLImageTextureHost.cpp',
@@ -59,12 +61,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS.mozilla.webrender += [
         'RenderAndroidHardwareBufferTextureHost.h',
         'RenderAndroidSurfaceTextureHostOGL.h',
-        'RenderCompositorEGL.h',
     ]
     UNIFIED_SOURCES += [
         'RenderAndroidHardwareBufferTextureHost.cpp',
         'RenderAndroidSurfaceTextureHostOGL.cpp',
-        'RenderCompositorEGL.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
@@ -84,11 +84,9 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
 
 if CONFIG['MOZ_WAYLAND']:
     EXPORTS.mozilla.webrender += [
-        'RenderCompositorEGL.h',
         'RenderDMABUFTextureHostOGL.h',
     ]
     SOURCES += [
-        'RenderCompositorEGL.cpp',
         'RenderDMABUFTextureHostOGL.cpp',
     ]
 

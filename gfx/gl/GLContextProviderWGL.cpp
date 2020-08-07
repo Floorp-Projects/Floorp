@@ -298,8 +298,6 @@ GLContextWGL::~GLContextWGL() {
   }
 }
 
-bool GLContextWGL::IsAliveImpl() const { return true; }
-
 bool GLContextWGL::MakeCurrentImpl() const {
   const bool succeeded = sWGLLib.mSymbols.fMakeCurrent(mDC, mContext);
   NS_ASSERTION(succeeded, "Failed to make GL context current!");
@@ -318,11 +316,6 @@ bool GLContextWGL::SwapBuffers() {
 void GLContextWGL::GetWSIInfo(nsCString* const out) const {
   out->AppendLiteral("wglGetExtensionsString: ");
   out->Append(sWGLLib.mSymbols.fGetExtensionsStringARB(mDC));
-}
-
-already_AddRefed<GLContext> GLContextProviderWGL::CreateWrappingExisting(
-    void*, void*) {
-  return nullptr;
 }
 
 HGLRC

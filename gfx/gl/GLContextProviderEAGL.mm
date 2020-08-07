@@ -123,10 +123,6 @@ bool GLContextEAGL::SwapBuffers() {
 
 void GLContextEAGL::GetWSIInfo(nsCString* const out) const { out->AppendLiteral("EAGL"); }
 
-already_AddRefed<GLContext> GLContextProviderEAGL::CreateWrappingExisting(void*, void*) {
-  return nullptr;
-}
-
 static GLContextEAGL* GetGlobalContextEAGL() {
   return static_cast<GLContextEAGL*>(GLContextProviderEAGL::GetGlobalContext());
 }

@@ -48,23 +48,6 @@ class GL_CONTEXT_PROVIDER_NAME {
       const GLContextCreateDesc&, nsACString* const out_failureId);
 
   /**
-   * Create wrapping Gecko GLContext for external gl context.
-   *
-   * @param aContext External context which will be wrapped by Gecko GLContext.
-   * @param aSurface External surface which is used for external context.
-   *
-   * @return Wrapping Context to use for rendering
-   */
-  static already_AddRefed<GLContext> CreateWrappingExisting(void* aContext,
-                                                            void* aSurface);
-
-#if defined(MOZ_WIDGET_ANDROID)
-  static EGLSurface CreateEGLSurface(void* aWindow,
-                                     EGLConfig aConfig = nullptr);
-  static void DestroyEGLSurface(EGLSurface surface);
-#endif  // defined(MOZ_WIDGET_ANDROID)
-
-  /**
    * Get a pointer to the global context, creating it if it doesn't exist.
    */
   static GLContext* GetGlobalContext();

@@ -130,6 +130,7 @@ EXPORTS.mozilla.layers += [
     'basic/TextureHostBasic.h',
     'BSPTree.h',
     'BufferTexture.h',
+    'BuildConstants.h',
     'CanvasDrawEventRecorder.h',
     'CanvasRenderer.h',
     'client/CanvasClient.h',

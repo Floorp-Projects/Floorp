@@ -16,15 +16,6 @@ using namespace mozilla::widget;
 static class GLContextProviderGLX sGLContextProviderGLX;
 static class GLContextProviderEGL sGLContextProviderEGL;
 
-already_AddRefed<GLContext> GLContextProviderX11::CreateWrappingExisting(
-    void* aContext, void* aSurface) {
-  if (!gfxVars::UseEGL()) {
-    return sGLContextProviderGLX.CreateWrappingExisting(aContext, aSurface);
-  } else {
-    return sGLContextProviderEGL.CreateWrappingExisting(aContext, aSurface);
-  }
-}
-
 already_AddRefed<GLContext> GLContextProviderX11::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aWebRender,
     bool aForceAccelerated) {

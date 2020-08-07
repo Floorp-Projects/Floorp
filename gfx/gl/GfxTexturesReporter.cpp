@@ -10,14 +10,13 @@
 #include "GfxTexturesReporter.h"
 #include "mozilla/StaticPrefs_gfx.h"
 
-using namespace mozilla;
 using namespace mozilla::gl;
 
 NS_IMPL_ISUPPORTS(GfxTexturesReporter, nsIMemoryReporter)
 
-Atomic<size_t> GfxTexturesReporter::sAmount(0);
-Atomic<size_t> GfxTexturesReporter::sPeakAmount(0);
-Atomic<size_t> GfxTexturesReporter::sTileWasteAmount(0);
+mozilla::Atomic<size_t> GfxTexturesReporter::sAmount(0);
+mozilla::Atomic<size_t> GfxTexturesReporter::sPeakAmount(0);
+mozilla::Atomic<size_t> GfxTexturesReporter::sTileWasteAmount(0);
 
 static std::string FormatBytes(size_t amount) {
   std::stringstream stream;
