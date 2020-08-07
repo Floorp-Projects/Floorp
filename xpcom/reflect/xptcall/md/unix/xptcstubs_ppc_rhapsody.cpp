@@ -45,7 +45,6 @@ PrepareAndDispatch(
 #define PARAM_GPR_COUNT     7
 
   nsXPTCMiniVariant      paramBuffer[PARAM_BUFFER_COUNT];
-  nsXPTCMiniVariant     *dispatchParams = nullptr;
   const nsXPTMethodInfo *methodInfo;
   uint8_t                paramCount;
   uint8_t                i;
@@ -64,18 +63,10 @@ PrepareAndDispatch(
 
   paramCount = methodInfo->GetParamCount();
 
-  if(paramCount > PARAM_BUFFER_COUNT) {
-    dispatchParams = new nsXPTCMiniVariant[paramCount];
-  }
-  else {
-    dispatchParams = paramBuffer;
-  }
-  NS_ASSERTION(dispatchParams,"no place for params");
-
   for(i = 0; i < paramCount; i++, argIndex++) {
     const nsXPTParamInfo &param = methodInfo->GetParam(i);
     const nsXPTType      &type  = param.GetType();
-    nsXPTCMiniVariant    *dp    = &dispatchParams[i];
+    nsXPTCMiniVariant    *dp    = &paramBuffer[i];
     uint32_t              theParam;
 
     if(argIndex < PARAM_GPR_COUNT)
@@ -143,10 +134,7 @@ PrepareAndDispatch(
   }
 
   nsresult result = self->mOuter->
-    CallMethod((uint16_t)methodIndex, methodInfo, dispatchParams);
-
-  if(dispatchParams != paramBuffer)
-    delete [] dispatchParams;
+    CallMethod((uint16_t)methodIndex, methodInfo, paramBuffer);
 
   return result;
 }
