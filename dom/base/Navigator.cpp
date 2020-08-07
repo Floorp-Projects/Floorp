@@ -1448,26 +1448,23 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
     return nullptr;
   }
 
-  auto shareResolver = [self = RefPtr<Navigator>(this)](nsresult aResult) {
-    MOZ_ASSERT(self->mSharePromise);
-    if (NS_SUCCEEDED(aResult)) {
-      self->mSharePromise->MaybeResolveWithUndefined();
-    } else {
-      self->mSharePromise->MaybeReject(aResult);
-    }
-    self->mSharePromise = nullptr;
-  };
-
-  auto shareRejector = [self = RefPtr<Navigator>(this)](
-                           mozilla::ipc::ResponseRejectReason&& aReason) {
-    // IPC died or maybe page navigated...
-    if (self->mSharePromise) {
-      self->mSharePromise = nullptr;
-    }
-  };
-
   // Do the share
-  wgc->SendShare(data, shareResolver, shareRejector);
+  wgc->SendShare(data)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr{this}](
+          PWindowGlobalChild::SharePromise::ResolveOrRejectValue&& aResult) {
+        if (aResult.IsResolve()) {
+          if (NS_SUCCEEDED(aResult.ResolveValue())) {
+            self->mSharePromise->MaybeResolveWithUndefined();
+          } else {
+            self->mSharePromise->MaybeReject(aResult.ResolveValue());
+          }
+        } else if (self->mSharePromise) {
+          // IPC died
+          self->mSharePromise->MaybeReject(NS_BINDING_ABORTED);
+        }
+        self->mSharePromise = nullptr;
+      });
   return mSharePromise;
 }
 
