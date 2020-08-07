@@ -3290,30 +3290,15 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
   // Else we have a non-collapsed selection.  First adjust the selection.
   // XXX Why do we extend selection only when there is only one range?
   if (aRangesToDelete.Ranges().Length() == 1) {
-    RefPtr<nsRange> extendedRange = GetRangeExtendedToIncludeInvisibleNodes(
-        aRangesToDelete.FirstRangeRef());
-    if (!extendedRange || !extendedRange->IsPositioned() ||
-        !extendedRange->StartRef().IsSet() ||
-        !extendedRange->EndRef().IsSet()) {
-      NS_WARNING(
-          "HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes() failed");
-      return EditActionResult(NS_ERROR_FAILURE);
-    }
-
     nsFrameSelection* frameSelection = SelectionRefPtr()->GetFrameSelection();
     if (NS_WARN_IF(!frameSelection)) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
-    if (!frameSelection->IsValidSelectionPoint(
-            extendedRange->GetStartContainer()) ||
-        !frameSelection->IsValidSelectionPoint(
-            extendedRange->GetEndContainer())) {
-      NS_WARNING(
-          "HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes() returned a "
-          "range outer limit");
+    if (!ExtendRangeToIncludeInvisibleNodes(frameSelection,
+                                            aRangesToDelete.FirstRangeRef())) {
+      NS_WARNING("HTMLEditor::ExtendRangeToIncludeInvisibleNodes() failed");
       return EditActionResult(NS_ERROR_FAILURE);
     }
-    aRangesToDelete.FirstRangeRef() = *extendedRange;
   }
 
   // Remember that we did a ranged delete for the benefit of AfterEditInner().
@@ -8063,32 +8048,32 @@ size_t HTMLEditor::CollectChildren(
   return numberOfFoundChildren;
 }
 
-already_AddRefed<nsRange> HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
-    const AbstractRange& aAbstractRange) {
+bool HTMLEditor::ExtendRangeToIncludeInvisibleNodes(
+    const nsFrameSelection* aFrameSelection, nsRange& aRange) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!aAbstractRange.Collapsed());
-  MOZ_ASSERT(aAbstractRange.IsPositioned());
+  MOZ_ASSERT(!aRange.Collapsed());
+  MOZ_ASSERT(aRange.IsPositioned());
+  MOZ_ASSERT(!aRange.IsInSelection());
 
-  EditorRawDOMPoint atStart(aAbstractRange.StartRef());
-  EditorRawDOMPoint atEnd(aAbstractRange.EndRef());
+  EditorRawDOMPoint atStart(aRange.StartRef());
+  EditorRawDOMPoint atEnd(aRange.EndRef());
 
-  if (NS_WARN_IF(
-          !aAbstractRange.GetClosestCommonInclusiveAncestor()->IsContent())) {
-    return nullptr;
+  if (NS_WARN_IF(!aRange.GetClosestCommonInclusiveAncestor()->IsContent())) {
+    return false;
   }
 
   // Find current selection common block parent
   Element* commonAncestorBlock =
       HTMLEditUtils::GetInclusiveAncestorBlockElement(
-          *aAbstractRange.GetClosestCommonInclusiveAncestor()->AsContent());
+          *aRange.GetClosestCommonInclusiveAncestor()->AsContent());
   if (NS_WARN_IF(!commonAncestorBlock)) {
-    return nullptr;
+    return false;
   }
 
   // Set up for loops and cache our root element
   Element* editingHost = GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
-    return nullptr;
+    return false;
   }
 
   // Find previous visible things before start of selection
@@ -8111,6 +8096,11 @@ already_AddRefed<nsRange> HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
         break;
       }
       atStart = backwardScanFromStartResult.PointAtContent();
+    }
+    if (aFrameSelection &&
+        !aFrameSelection->IsValidSelectionPoint(atStart.GetContainer())) {
+      NS_WARNING("Computed start container was out of selection limiter");
+      return false;
     }
   }
 
@@ -8163,31 +8153,36 @@ already_AddRefed<nsRange> HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
       break;
     }
 
+    if (aFrameSelection &&
+        !aFrameSelection->IsValidSelectionPoint(atEnd.GetContainer())) {
+      NS_WARNING("Computed end container was out of selection limiter");
+      return false;
+    }
+
     if (atFirstInvisibleBRElement.IsInContentNode()) {
       // Find block node containing invisible `<br>` element.
       if (RefPtr<Element> brElementParent =
               HTMLEditUtils::GetInclusiveAncestorBlockElement(
                   *atFirstInvisibleBRElement.ContainerAsContent())) {
-        // Create a range that represents extended selection.
-        RefPtr<nsRange> range =
-            nsRange::Create(atStart.ToRawRangeBoundary(),
-                            atEnd.ToRawRangeBoundary(), IgnoreErrors());
-        if (!range) {
-          NS_WARNING("StaticRange::Create() failed");
-          return nullptr;
-        }
-
-        // Check if block is entirely inside range
-        bool nodeBefore = false, nodeAfter = false;
-        DebugOnly<nsresult> rvIgnored = RangeUtils::CompareNodeToRange(
-            brElementParent, range, &nodeBefore, &nodeAfter);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                             "RangeUtils::CompareNodeToRange() failed");
-        // If block is contained in the range, include the invisible `<br>`.
-        if (!nodeBefore && !nodeAfter) {
-          return range.forget();
+        EditorRawDOMRange range(atStart, atEnd);
+        if (range.Contains(EditorRawDOMPoint(brElementParent))) {
+          nsresult rv = aRange.SetStartAndEnd(atStart.ToRawRangeBoundary(),
+                                              atEnd.ToRawRangeBoundary());
+          if (NS_FAILED(rv)) {
+            NS_WARNING("nsRange::SetStartAndEnd() failed to extend the range");
+            return false;
+          }
+          return aRange.IsPositioned() && aRange.StartRef().IsSet() &&
+                 aRange.EndRef().IsSet();
         }
         // Otherwise, the new range should end at the invisible `<br>`.
+        if (aFrameSelection && !aFrameSelection->IsValidSelectionPoint(
+                                   atFirstInvisibleBRElement.GetContainer())) {
+          NS_WARNING(
+              "Computed end container (`<br>` element) was out of selection "
+              "limiter");
+          return false;
+        }
         atEnd = atFirstInvisibleBRElement;
       }
     }
@@ -8195,8 +8190,14 @@ already_AddRefed<nsRange> HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
 
   // XXX This is unnecessary creation cost for us since we just want to return
   //     the start point and the end point.
-  return nsRange::Create(atStart.ToRawRangeBoundary(),
-                         atEnd.ToRawRangeBoundary(), IgnoreErrors());
+  nsresult rv = aRange.SetStartAndEnd(atStart.ToRawRangeBoundary(),
+                                      atEnd.ToRawRangeBoundary());
+  if (NS_FAILED(rv)) {
+    NS_WARNING("nsRange::SetStartAndEnd() failed to extend the range");
+    return false;
+  }
+  return aRange.IsPositioned() && aRange.StartRef().IsSet() &&
+         aRange.EndRef().IsSet();
 }
 
 nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
