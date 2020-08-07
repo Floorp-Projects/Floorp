@@ -37,7 +37,7 @@ class SVGSVGElement;
  *
  * See the comment in DOMSVGLength.h (yes, LENGTH), which applies here too.
  */
-class DOMSVGNumber final : public nsISupports, public nsWrapperCache {
+class DOMSVGNumber final : public nsWrapperCache {
   template <class T>
   friend class AutoChangeNumberListNotifier;
 
@@ -51,8 +51,8 @@ class DOMSVGNumber final : public nsISupports, public nsWrapperCache {
   }
 
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGNumber)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGNumber)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGNumber)
 
   /**
    * Generic ctor for DOMSVGNumber objects that are created for an attribute.

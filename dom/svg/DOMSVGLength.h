@@ -15,18 +15,6 @@
 #include "mozilla/Attributes.h"
 #include "nsWrapperCache.h"
 
-// We make DOMSVGLength a pseudo-interface to allow us to QI to it in order to
-// check that the objects that scripts pass to DOMSVGLengthList methods are our
-// *native* length objects.
-//
-// {A8468350-7F7B-4976-9A7E-3765A1DADF9A}
-#define MOZILLA_DOMSVGLENGTH_IID                     \
-  {                                                  \
-    0xA8468350, 0x7F7B, 0x4976, {                    \
-      0x9A, 0x7E, 0x37, 0x65, 0xA1, 0xDA, 0xDF, 0x9A \
-    }                                                \
-  }
-
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 22  // supports > 4 million list items
 
 namespace mozilla {
@@ -78,7 +66,7 @@ class SVGElement;
  * if-else as appropriate. The bug for doing that work is:
  * https://bugzilla.mozilla.org/show_bug.cgi?id=571734
  */
-class DOMSVGLength final : public nsISupports, public nsWrapperCache {
+class DOMSVGLength final : public nsWrapperCache {
   template <class T>
   friend class AutoChangeLengthListNotifier;
 
@@ -92,9 +80,8 @@ class DOMSVGLength final : public nsISupports, public nsWrapperCache {
   ~DOMSVGLength();
 
  public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGLENGTH_IID)
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGLength)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGLength)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGLength)
 
   /**
    * Generic ctor for DOMSVGLength objects that are created for an attribute.
@@ -238,8 +225,6 @@ class DOMSVGLength final : public nsISupports, public nsWrapperCache {
   SVGAnimatedLength* mVal;  // kept alive because it belongs to mSVGElement
   RefPtr<dom::SVGElement> mSVGElement;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGLength, MOZILLA_DOMSVGLENGTH_IID)
 
 }  // namespace dom
 }  // namespace mozilla
