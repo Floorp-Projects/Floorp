@@ -29,7 +29,6 @@ XPCOMUtils.defineLazyScriptGetter(
 var gHistoryTree;
 var gSearchBox;
 var gHistoryGrouping = "";
-var gSearching = false;
 
 function HistorySidebarInit() {
   let uidensity = window.top.document.documentElement.getAttribute("uidensity");
@@ -43,6 +42,11 @@ function HistorySidebarInit() {
   gHistoryGrouping = document
     .getElementById("viewButton")
     .getAttribute("selectedsort");
+
+  this.groupHistogram = Services.telemetry.getHistogramById(
+    "HISTORY_SIDEBAR_VIEW_TYPE"
+  );
+  this.groupHistogram.add(gHistoryGrouping);
 
   if (gHistoryGrouping == "site") {
     document.getElementById("bysite").setAttribute("checked", "true");
@@ -70,6 +74,9 @@ function HistorySidebarInit() {
 }
 
 function GroupBy(groupingType) {
+  if (groupingType != gHistoryGrouping) {
+    this.groupHistogram.add(groupingType);
+  }
   gHistoryGrouping = groupingType;
   searchHistory(gSearchBox.value);
 }
@@ -123,6 +130,7 @@ function searchHistory(aInput) {
   // call load() on the tree manually
   // instead of setting the place attribute in historySidebar.xhtml
   // otherwise, we will end up calling load() twice
+  Services.telemetry.keyedScalarAdd("sidebar.search", "history", 1);
   gHistoryTree.load(query, options);
 
   if (gHistoryGrouping == "lastvisited") {
