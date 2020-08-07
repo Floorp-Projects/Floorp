@@ -393,7 +393,7 @@ bool NS_EscapeURL(const char* aPart, int32_t aPartLen, uint32_t aFlags,
     partLen = aPartLen;
   }
 
-  return NS_EscapeURLSpan(mozilla::MakeSpan(aPart, partLen), aFlags, aResult);
+  return NS_EscapeURLSpan(mozilla::Span(aPart, partLen), aFlags, aResult);
 }
 
 bool NS_EscapeURLSpan(mozilla::Span<const char> aStr, uint32_t aFlags,

@@ -67,9 +67,9 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::CheckedInt;
-using mozilla::MakeSpan;
 using mozilla::Nothing;
 using mozilla::RangedPtr;
+using mozilla::Span;
 
 extern mozilla::Atomic<bool> fuzzingSafe;
 
@@ -1375,7 +1375,7 @@ bool WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     mozilla::Unused << JS::DeflateStringToUTF8Buffer(
-        linear, MakeSpan(name.begin(), name.length()));
+        linear, Span(name.begin(), name.length()));
   }
 
   RootedValueVector elems(cx);

@@ -457,7 +457,7 @@ static void EnsureToolbarMetrics(void) {
     // Calculate titlebar button visibility and positions.
     ButtonLayout aButtonLayout[TOOLBAR_BUTTONS];
     size_t activeButtonNums =
-        GetGtkHeaderBarButtonLayout(mozilla::MakeSpan(aButtonLayout), nullptr);
+        GetGtkHeaderBarButtonLayout(mozilla::Span(aButtonLayout), nullptr);
 
     for (size_t i = 0; i < activeButtonNums; i++) {
       int buttonIndex =

@@ -21,7 +21,7 @@ using mozilla::EnumSet;
 using mozilla::IntegerRange;
 using mozilla::IsAscii;
 using mozilla::IsUtf8;
-using mozilla::MakeSpan;
+using mozilla::Span;
 using mozilla::Utf8Unit;
 
 // Disable the C++ 2a warning. See bug #1509926
@@ -250,15 +250,15 @@ static void ExpectBadCodePoint(const Char (&aCharN)[N],
 static void TestIsUtf8() {
   // Note we include the U+0000 NULL in this one -- and that's fine.
   static const char asciiBytes[] = u8"How about a nice game of chess?";
-  MOZ_RELEASE_ASSERT(IsUtf8(MakeSpan(asciiBytes, ArrayLength(asciiBytes))));
+  MOZ_RELEASE_ASSERT(IsUtf8(Span(asciiBytes, ArrayLength(asciiBytes))));
 
   static const char endNonAsciiBytes[] = u8"Life is like a 🌯";
   MOZ_RELEASE_ASSERT(
-      IsUtf8(MakeSpan(endNonAsciiBytes, ArrayLength(endNonAsciiBytes) - 1)));
+      IsUtf8(Span(endNonAsciiBytes, ArrayLength(endNonAsciiBytes) - 1)));
 
   static const unsigned char badLeading[] = {0x80};
   MOZ_RELEASE_ASSERT(
-      !IsUtf8(AsChars(MakeSpan(badLeading, ArrayLength(badLeading)))));
+      !IsUtf8(AsChars(Span(badLeading, ArrayLength(badLeading)))));
 
   // Byte-counts
 
@@ -266,13 +266,13 @@ static void TestIsUtf8() {
   static const char oneBytes[] = u8"A";  // U+0041 LATIN CAPITAL LETTER A
   constexpr size_t oneBytesLen = ArrayLength(oneBytes);
   static_assert(oneBytesLen == 2, "U+0041 plus nul");
-  MOZ_RELEASE_ASSERT(IsUtf8(MakeSpan(oneBytes, oneBytesLen)));
+  MOZ_RELEASE_ASSERT(IsUtf8(Span(oneBytes, oneBytesLen)));
 
   // 2
   static const char twoBytes[] = u8"؆";  // U+0606 ARABIC-INDIC CUBE ROOT
   constexpr size_t twoBytesLen = ArrayLength(twoBytes);
   static_assert(twoBytesLen == 3, "U+0606 in two bytes plus nul");
-  MOZ_RELEASE_ASSERT(IsUtf8(MakeSpan(twoBytes, twoBytesLen)));
+  MOZ_RELEASE_ASSERT(IsUtf8(Span(twoBytes, twoBytesLen)));
 
   ExpectValidCodePoint(twoBytes, 0x0606);
 
@@ -280,7 +280,7 @@ static void TestIsUtf8() {
   static const char threeBytes[] = u8"᨞";  // U+1A1E BUGINESE PALLAWA
   constexpr size_t threeBytesLen = ArrayLength(threeBytes);
   static_assert(threeBytesLen == 4, "U+1A1E in three bytes plus nul");
-  MOZ_RELEASE_ASSERT(IsUtf8(MakeSpan(threeBytes, threeBytesLen)));
+  MOZ_RELEASE_ASSERT(IsUtf8(Span(threeBytes, threeBytesLen)));
 
   ExpectValidCodePoint(threeBytes, 0x1A1E);
 
@@ -289,7 +289,7 @@ static void TestIsUtf8() {
       u8"🁡";  // U+1F061 DOMINO TILE HORIZONTAL-06-06
   constexpr size_t fourBytesLen = ArrayLength(fourBytes);
   static_assert(fourBytesLen == 5, "U+1F061 in four bytes plus nul");
-  MOZ_RELEASE_ASSERT(IsUtf8(MakeSpan(fourBytes, fourBytesLen)));
+  MOZ_RELEASE_ASSERT(IsUtf8(Span(fourBytes, fourBytesLen)));
 
   ExpectValidCodePoint(fourBytes, 0x1F061);
 
@@ -297,7 +297,7 @@ static void TestIsUtf8() {
   static const char maxCodePoint[] = u8"􏿿";  // U+10FFFF
   constexpr size_t maxCodePointLen = ArrayLength(maxCodePoint);
   static_assert(maxCodePointLen == 5, "U+10FFFF in four bytes plus nul");
-  MOZ_RELEASE_ASSERT(IsUtf8(MakeSpan(maxCodePoint, maxCodePointLen)));
+  MOZ_RELEASE_ASSERT(IsUtf8(Span(maxCodePoint, maxCodePointLen)));
 
   ExpectValidCodePoint(maxCodePoint, 0x10FFFF);
 
@@ -306,7 +306,7 @@ static void TestIsUtf8() {
                                                       0x0};
   constexpr size_t onePastMaxCodePointLen = ArrayLength(onePastMaxCodePoint);
   MOZ_RELEASE_ASSERT(
-      !IsUtf8(AsChars(MakeSpan(onePastMaxCodePoint, onePastMaxCodePointLen))));
+      !IsUtf8(AsChars(Span(onePastMaxCodePoint, onePastMaxCodePointLen))));
 
   ExpectBadCodePoint(onePastMaxCodePoint, 0x110000, 4);
 
@@ -319,14 +319,13 @@ static void TestIsUtf8() {
   constexpr size_t justBeforeSurrogatesLen =
       ArrayLength(justBeforeSurrogates) - 1;
   MOZ_RELEASE_ASSERT(
-      IsUtf8(AsChars(MakeSpan(justBeforeSurrogates, justBeforeSurrogatesLen))));
+      IsUtf8(AsChars(Span(justBeforeSurrogates, justBeforeSurrogatesLen))));
 
   ExpectValidCodePoint(justBeforeSurrogates, 0xD7FF);
 
   static const unsigned char leastSurrogate[] = {0xED, 0xA0, 0x80, 0x0};
   constexpr size_t leastSurrogateLen = ArrayLength(leastSurrogate) - 1;
-  MOZ_RELEASE_ASSERT(
-      !IsUtf8(AsChars(MakeSpan(leastSurrogate, leastSurrogateLen))));
+  MOZ_RELEASE_ASSERT(!IsUtf8(AsChars(Span(leastSurrogate, leastSurrogateLen))));
 
   ExpectBadCodePoint(leastSurrogate, 0xD800, 3);
 
@@ -334,22 +333,22 @@ static void TestIsUtf8() {
   constexpr size_t arbitraryHighSurrogateLen =
       ArrayLength(arbitraryHighSurrogate) - 1;
   MOZ_RELEASE_ASSERT(!IsUtf8(
-      AsChars(MakeSpan(arbitraryHighSurrogate, arbitraryHighSurrogateLen))));
+      AsChars(Span(arbitraryHighSurrogate, arbitraryHighSurrogateLen))));
 
   ExpectBadCodePoint(arbitraryHighSurrogate, 0xD887, 3);
 
   static const unsigned char arbitraryLowSurrogate[] = {0xED, 0xB7, 0xAF, 0x0};
   constexpr size_t arbitraryLowSurrogateLen =
       ArrayLength(arbitraryLowSurrogate) - 1;
-  MOZ_RELEASE_ASSERT(!IsUtf8(
-      AsChars(MakeSpan(arbitraryLowSurrogate, arbitraryLowSurrogateLen))));
+  MOZ_RELEASE_ASSERT(
+      !IsUtf8(AsChars(Span(arbitraryLowSurrogate, arbitraryLowSurrogateLen))));
 
   ExpectBadCodePoint(arbitraryLowSurrogate, 0xDDEF, 3);
 
   static const unsigned char greatestSurrogate[] = {0xED, 0xBF, 0xBF, 0x0};
   constexpr size_t greatestSurrogateLen = ArrayLength(greatestSurrogate) - 1;
   MOZ_RELEASE_ASSERT(
-      !IsUtf8(AsChars(MakeSpan(greatestSurrogate, greatestSurrogateLen))));
+      !IsUtf8(AsChars(Span(greatestSurrogate, greatestSurrogateLen))));
 
   ExpectBadCodePoint(greatestSurrogate, 0xDFFF, 3);
 
@@ -357,7 +356,7 @@ static void TestIsUtf8() {
   constexpr size_t justAfterSurrogatesLen =
       ArrayLength(justAfterSurrogates) - 1;
   MOZ_RELEASE_ASSERT(
-      IsUtf8(AsChars(MakeSpan(justAfterSurrogates, justAfterSurrogatesLen))));
+      IsUtf8(AsChars(Span(justAfterSurrogates, justAfterSurrogatesLen))));
 
   ExpectValidCodePoint(justAfterSurrogates, 0xE000);
 }

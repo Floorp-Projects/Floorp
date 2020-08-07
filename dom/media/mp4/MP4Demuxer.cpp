@@ -422,7 +422,7 @@ already_AddRefed<MediaRawData> MP4TrackDemuxer::GetNextSample() {
       }
     } else if (mType == kVP9 && !sample->mCrypto.IsEncrypted()) {
       bool keyframe = VPXDecoder::IsKeyframe(
-          MakeSpan<const uint8_t>(sample->Data(), sample->Size()),
+          Span<const uint8_t>(sample->Data(), sample->Size()),
           VPXDecoder::Codec::VP9);
       if (sample->mKeyframe != keyframe) {
         NS_WARNING(nsPrintfCString(

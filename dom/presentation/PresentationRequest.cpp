@@ -199,7 +199,7 @@ already_AddRefed<Promise> PresentationRequest::StartWithDevice(
   char buffer[NSID_LENGTH];
   uuid.ToProvidedString(buffer);
   nsAutoString id;
-  CopyASCIItoUTF16(MakeSpan(buffer, NSID_LENGTH - 1), id);
+  CopyASCIItoUTF16(Span(buffer, NSID_LENGTH - 1), id);
 
   nsCOMPtr<nsIPresentationService> service =
       do_GetService(PRESENTATION_SERVICE_CONTRACTID);

@@ -463,7 +463,7 @@ bool LanguageTag::canonicalizeUnicodeExtension(
   JS_TRY_VAR_OR_RETURN_FALSE(
       cx, ok,
       LanguageTagParser::parseUnicodeExtension(
-          cx, mozilla::MakeSpan(extension, length), attributes, keywords));
+          cx, mozilla::Span(extension, length), attributes, keywords));
   MOZ_ASSERT(ok, "unexpected invalid Unicode extension subtag");
 
   auto attributesLessOrEqual = [extension](const Attribute& a,
@@ -756,7 +756,7 @@ bool LanguageTag::canonicalizeTransformExtension(
   JS_TRY_VAR_OR_RETURN_FALSE(
       cx, ok,
       LanguageTagParser::parseTransformExtension(
-          cx, mozilla::MakeSpan(extension, length), tag, fields));
+          cx, mozilla::Span(extension, length), tag, fields));
   MOZ_ASSERT(ok, "unexpected invalid transform extension subtag");
 
   auto tfieldLessOrEqual = [extension](const TField& a, const TField& b) {

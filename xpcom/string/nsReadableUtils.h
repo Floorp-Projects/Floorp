@@ -420,7 +420,7 @@ char16_t* CopyUnicodeTo(const nsAString& aSource, uint32_t aSrcOffset,
   if (!ptr) {
     return false;
   }
-  auto span = mozilla::MakeSpan(ptr, len);
+  auto span = mozilla::Span(ptr, len);
   span[upTo] = 0xFFFD;
   mozilla::EnsureUtf16ValiditySpan(span.From(upTo + 1));
   return true;

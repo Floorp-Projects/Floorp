@@ -159,7 +159,7 @@ JSObject* Library::Create(JSContext* cx, HandleValue path,
     }
 
     nbytes = JS::DeflateStringToUTF8Buffer(
-        pathStr, mozilla::MakeSpan(pathBytes.get(), nbytes));
+        pathStr, mozilla::Span(pathBytes.get(), nbytes));
     pathBytes[nbytes] = 0;
   }
 

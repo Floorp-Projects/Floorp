@@ -277,7 +277,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
 
       nsCOMPtr<nsIInputStream> byteStream;
       NS_NewByteInputStream(getter_AddRefs(byteStream),
-                            MakeSpan(clipboardData, clipboardDataLength),
+                            Span(clipboardData, clipboardDataLength),
                             NS_ASSIGNMENT_COPY);
       aTransferable->SetTransferData(flavorStr.get(), byteStream);
       LOGCLIP(("    got %s MIME data\n", flavorStr.get()));
@@ -735,7 +735,7 @@ bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
       return false;
     }
 
-    auto dataSpan = MakeSpan(data, dataLength);
+    auto dataSpan = Span(data, dataLength);
     // Remove kHTMLMarkupPrefix again, it won't necessarily cause any
     // issues, but might confuse other users.
     const size_t prefixLen = ArrayLength(kHTMLMarkupPrefix) - 1;
@@ -761,7 +761,7 @@ bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
       size_t written;
       bool hadErrors;
       Tie(result, read, written, hadErrors) = decoder->DecodeToUTF16(
-          AsBytes(dataSpan), MakeSpan(*unicodeData, needed.value()), true);
+          AsBytes(dataSpan), Span(*unicodeData, needed.value()), true);
       MOZ_ASSERT(result == kInputEmpty);
       MOZ_ASSERT(read == size_t(dataSpan.Length()));
       MOZ_ASSERT(written <= needed.value());

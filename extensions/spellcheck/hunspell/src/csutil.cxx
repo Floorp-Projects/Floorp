@@ -2316,10 +2316,10 @@ struct cs_info* get_current_cs(const std::string& es) {
       char16_t uni[2];
       char16_t uniCased;
       uint8_t destination[4];
-      auto src1 = MakeSpan(&source, 1);
-      auto dst1 = MakeSpan(uni);
-      auto src2 = MakeSpan(&uniCased, 1);
-      auto dst2 = MakeSpan(destination);
+      auto src1 = Span(&source, 1);
+      auto dst1 = Span(uni);
+      auto src2 = Span(&uniCased, 1);
+      auto dst2 = Span(destination);
 
       uint32_t result;
       size_t read;

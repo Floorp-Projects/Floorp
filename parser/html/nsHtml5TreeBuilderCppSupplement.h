@@ -738,8 +738,7 @@ void nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent,
   memcpy(bufferCopy.get(), aBuffer, aLength * sizeof(char16_t));
 
   if (mImportScanner.ShouldScan()) {
-    nsTArray<nsString> imports =
-        mImportScanner.Scan(MakeSpan(aBuffer, aLength));
+    nsTArray<nsString> imports = mImportScanner.Scan(Span(aBuffer, aLength));
     for (nsString& url : imports) {
       mSpeculativeLoadQueue.AppendElement()->InitImportStyle(std::move(url));
     }

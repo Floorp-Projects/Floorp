@@ -17,7 +17,7 @@
 #include "nsTArray.h"
 #include "nsUTF8Utils.h"
 
-using mozilla::MakeSpan;
+using mozilla::Span;
 
 /**
  * A helper function that allocates a buffer of the desired character type big
@@ -49,7 +49,7 @@ char* ToNewCString(const nsAString& aSource,
   }
 
   auto len = aSource.Length();
-  LossyConvertUtf16toLatin1(aSource, MakeSpan(dest, len));
+  LossyConvertUtf16toLatin1(aSource, Span(dest, len));
   dest[len] = 0;
   return dest;
 }
@@ -76,7 +76,7 @@ char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count,
     return nullptr;
   }
 
-  size_t written = ConvertUtf16toUtf8(aSource, MakeSpan(dest, destLenVal));
+  size_t written = ConvertUtf16toUtf8(aSource, Span(dest, destLenVal));
   dest[written] = 0;
 
   if (aUTF8Count) {
@@ -158,7 +158,7 @@ char16_t* ToNewUnicode(const nsACString& aSource,
   }
 
   auto len = aSource.Length();
-  ConvertLatin1toUtf16(aSource, MakeSpan(dest, len));
+  ConvertLatin1toUtf16(aSource, Span(dest, len));
   dest[len] = 0;
   return dest;
 }
@@ -183,7 +183,7 @@ char16_t* UTF8ToNewUnicode(const nsACString& aSource, uint32_t* aUTF16Count,
     return nullptr;
   }
 
-  size_t written = ConvertUtf8toUtf16(aSource, MakeSpan(dest, lengthPlusOne));
+  size_t written = ConvertUtf8toUtf16(aSource, Span(dest, lengthPlusOne));
   dest[written] = 0;
 
   if (aUTF16Count) {

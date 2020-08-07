@@ -826,7 +826,7 @@ class DoReadToStringEvent final : public AbstractReadEvent {
                  ScopedArrayBufferContents& aBuffer) override {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    auto src = MakeSpan(aBuffer.get().data, aBuffer.get().nbytes);
+    auto src = Span(aBuffer.get().data, aBuffer.get().nbytes);
 
     CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(src.Length());
     if (!needed.isValid() ||

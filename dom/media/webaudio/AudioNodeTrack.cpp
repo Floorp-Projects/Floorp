@@ -533,10 +533,8 @@ void AudioNodeTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
                               &finished);
       } else {
         mEngine->ProcessBlocksOnPorts(
-            this, aFrom,
-            MakeSpan(mInputChunks.Elements(), mEngine->InputCount()),
-            MakeSpan(mLastChunks.Elements(), mEngine->OutputCount()),
-            &finished);
+            this, aFrom, Span(mInputChunks.Elements(), mEngine->InputCount()),
+            Span(mLastChunks.Elements(), mEngine->OutputCount()), &finished);
       }
     }
     for (uint16_t i = 0; i < outputCount; ++i) {

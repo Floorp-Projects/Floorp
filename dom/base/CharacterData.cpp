@@ -286,7 +286,7 @@ nsresult CharacterData::SetTextInternal(
     if (aLength) {
       to.Append(aBuffer, aLength);
       if (!bidi && (!document || !document->GetBidiEnabled())) {
-        bidi = HasRTLChars(MakeSpan(aBuffer, aLength));
+        bidi = HasRTLChars(Span(aBuffer, aLength));
       }
     }
     if (endOffset != textLength) {

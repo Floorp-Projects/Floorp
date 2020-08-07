@@ -239,7 +239,7 @@ inline StyleArcSlice<T>::~StyleArcSlice() {
   if (MOZ_LIKELY(!_0.ptr->DecrementRef())) {
     return;
   }
-  for (T& elem : MakeSpan(_0.ptr->data.slice, Length())) {
+  for (T& elem : Span(_0.ptr->data.slice, Length())) {
     elem.~T();
   }
   free(_0.ptr);  // Drop the allocation now.

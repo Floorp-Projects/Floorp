@@ -479,10 +479,10 @@ class MOZ_STACK_CLASS LanguageTagParser final {
     size_t length = tok.length();
     if (locale_.is<const JS::Latin1Char*>()) {
       using T = const JS::Latin1Char;
-      subtag.set(mozilla::MakeSpan(locale_.as<T*>() + index, length));
+      subtag.set(mozilla::Span(locale_.as<T*>() + index, length));
     } else {
       using T = const char16_t;
-      subtag.set(mozilla::MakeSpan(locale_.as<T*>() + index, length));
+      subtag.set(mozilla::Span(locale_.as<T*>() + index, length));
     }
   }
 

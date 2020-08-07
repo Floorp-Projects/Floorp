@@ -558,9 +558,9 @@ void HttpTransactionParent::DoOnDataAvailable(const nsCString& aData,
   }
 
   nsCOMPtr<nsIInputStream> stringStream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stringStream),
-                                      MakeSpan(aData.get(), aCount),
-                                      NS_ASSIGNMENT_DEPEND);
+  nsresult rv =
+      NS_NewByteInputStream(getter_AddRefs(stringStream),
+                            Span(aData.get(), aCount), NS_ASSIGNMENT_DEPEND);
 
   if (NS_FAILED(rv)) {
     CancelOnMainThread(rv);

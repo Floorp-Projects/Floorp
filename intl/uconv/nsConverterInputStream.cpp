@@ -196,8 +196,8 @@ uint32_t nsConverterInputStream::Fill(nsresult* aErrorCode) {
                "mByteData is lying to us somewhere");
 
   // Now convert as much of the byte buffer to unicode as possible
-  auto src = AsBytes(MakeSpan(mByteData));
-  auto dst = MakeSpan(mUnicharData);
+  auto src = AsBytes(Span(mByteData));
+  auto dst = Span(mUnicharData);
   // mUnicharData.Length() is the buffer length, not the fill status.
   // mUnicharDataLength reflects the current fill status.
   mUnicharDataLength = 0;

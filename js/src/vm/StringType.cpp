@@ -53,10 +53,10 @@ using mozilla::ConvertLatin1toUtf16;
 using mozilla::IsAsciiDigit;
 using mozilla::IsUtf16Latin1;
 using mozilla::LossyConvertUtf16toLatin1;
-using mozilla::MakeSpan;
 using mozilla::PodCopy;
 using mozilla::RangedPtr;
 using mozilla::RoundUpPow2;
+using mozilla::Span;
 using mozilla::Unused;
 
 using JS::AutoCheckCannotGC;
@@ -163,7 +163,7 @@ mozilla::Maybe<mozilla::Tuple<size_t, size_t> > JSString::encodeUTF8Partial(
         pendingLeadSurrogate = 0;
       }
       auto src = mozilla::AsChars(
-          mozilla::MakeSpan(linear.latin1Chars(nogc), linear.length()));
+          mozilla::Span(linear.latin1Chars(nogc), linear.length()));
       size_t read;
       size_t written;
       mozilla::Tie(read, written) =
@@ -175,7 +175,7 @@ mozilla::Maybe<mozilla::Tuple<size_t, size_t> > JSString::encodeUTF8Partial(
         return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
       }
     } else {
-      auto src = mozilla::MakeSpan(linear.twoByteChars(nogc), linear.length());
+      auto src = mozilla::Span(linear.twoByteChars(nogc), linear.length());
       if (MOZ_UNLIKELY(pendingLeadSurrogate)) {
         char16_t first = 0;
         if (!src.IsEmpty()) {
@@ -579,9 +579,9 @@ void CopyChars(Latin1Char* dest, const JSLinearString& str) {
      */
     size_t len = str.length();
     const char16_t* chars = str.twoByteChars(nogc);
-    auto src = MakeSpan(chars, len);
+    auto src = Span(chars, len);
     MOZ_ASSERT(IsUtf16Latin1(src));
-    LossyConvertUtf16toLatin1(src, AsWritableChars(MakeSpan(dest, len)));
+    LossyConvertUtf16toLatin1(src, AsWritableChars(Span(dest, len)));
   }
 }
 
@@ -957,7 +957,7 @@ template JSString* js::ConcatStrings<NoGC>(JSContext* cx, JSString* const& left,
  */
 static inline void FillChars(char16_t* dest, const unsigned char* src,
                              size_t length) {
-  ConvertLatin1toUtf16(AsChars(MakeSpan(src, length)), MakeSpan(dest, length));
+  ConvertLatin1toUtf16(AsChars(Span(src, length)), Span(dest, length));
 }
 
 static inline void FillChars(char16_t* dest, const char16_t* src,
@@ -988,8 +988,8 @@ static inline void FillChars(char16_t* dest, LittleEndianChars src,
  */
 static inline void FillFromCompatible(unsigned char* dest, const char16_t* src,
                                       size_t length) {
-  LossyConvertUtf16toLatin1(MakeSpan(src, length),
-                            AsWritableChars(MakeSpan(dest, length)));
+  LossyConvertUtf16toLatin1(Span(src, length),
+                            AsWritableChars(Span(dest, length)));
 }
 
 static inline void FillFromCompatible(unsigned char* dest,
@@ -1152,9 +1152,9 @@ bool js::StringIsAscii(JSLinearString* str) {
   JS::AutoCheckCannotGC nogc;
   if (str->hasLatin1Chars()) {
     return mozilla::IsAscii(
-        AsChars(MakeSpan(str->latin1Chars(nogc), str->length())));
+        AsChars(Span(str->latin1Chars(nogc), str->length())));
   }
-  return mozilla::IsAscii(MakeSpan(str->twoByteChars(nogc), str->length()));
+  return mozilla::IsAscii(Span(str->twoByteChars(nogc), str->length()));
 }
 
 bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes) {
@@ -1163,7 +1163,7 @@ bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes) {
 
 bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes,
                            size_t length) {
-  MOZ_ASSERT(JS::StringIsASCII(MakeSpan(asciiBytes, length)));
+  MOZ_ASSERT(JS::StringIsASCII(Span(asciiBytes, length)));
 
   if (length != str->length()) {
     return false;
@@ -1559,7 +1559,7 @@ JSLinearString* js::NewDependentString(JSContext* cx, JSString* baseArg,
 }
 
 static inline bool CanStoreCharsAsLatin1(const char16_t* s, size_t length) {
-  return IsUtf16Latin1(MakeSpan(s, length));
+  return IsUtf16Latin1(Span(s, length));
 }
 
 static bool CanStoreCharsAsLatin1(LittleEndianChars chars, size_t length) {

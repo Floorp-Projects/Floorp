@@ -630,7 +630,7 @@ static void CreateHeaderBarButtons() {
   ButtonLayout buttonLayout[TOOLBAR_BUTTONS];
 
   size_t activeButtons =
-      GetGtkHeaderBarButtonLayout(mozilla::MakeSpan(buttonLayout), nullptr);
+      GetGtkHeaderBarButtonLayout(mozilla::Span(buttonLayout), nullptr);
 
   if (IsToolbarButtonEnabled(buttonLayout, activeButtons,
                              MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE)) {
