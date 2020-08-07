@@ -31,7 +31,7 @@ function serverOwnershipTree(walkerArg) {
       }
 
       function serverOwnershipSubtree(walker, node) {
-        const actor = walker._refMap.get(node);
+        const actor = walker.getNode(node);
         if (!actor) {
           return undefined;
         }
