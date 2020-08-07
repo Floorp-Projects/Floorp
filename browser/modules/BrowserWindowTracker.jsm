@@ -195,6 +195,20 @@ this.BrowserWindowTracker = {
     return [..._trackedWindows];
   },
 
+  getAllVisibleTabs() {
+    let tabs = [];
+    for (let win of BrowserWindowTracker.orderedWindows) {
+      for (let tab of win.gBrowser.visibleTabs) {
+        // Only use tabs which are not discarded / unrestored
+        if (tab.linkedPanel) {
+          let { contentTitle, browserId } = tab.linkedBrowser;
+          tabs.push({ contentTitle, browserId });
+        }
+      }
+    }
+    return tabs;
+  },
+
   track(window) {
     return WindowHelper.addWindow(window);
   },
