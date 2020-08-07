@@ -129,16 +129,6 @@ void Assembler::addPendingJump(JmpSrc src, ImmPtr target,
       jumps_.append(RelativePatch(src.offset(), target.value, reloc));
 }
 
-size_t Assembler::addPatchableJump(JmpSrc src, RelocationKind reloc) {
-  // This jump is patchable at runtime so we always need to make sure the
-  // jump table is emitted.
-  writeRelocation(src, reloc);
-
-  size_t index = jumps_.length();
-  enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), nullptr, reloc));
-  return index;
-}
-
 void Assembler::finish() {
   if (oom()) {
     return;
@@ -179,12 +169,7 @@ void Assembler::executableCopy(uint8_t* buffer) {
   for (size_t i = 0; i < jumps_.length(); i++) {
     RelativePatch& rp = jumps_[i];
     uint8_t* src = buffer + rp.offset;
-    if (!rp.target) {
-      // The patch target is nullptr for jumps that have been linked to
-      // a label within the same code block, but may be repatched later
-      // to jump to a different code block.
-      continue;
-    }
+    MOZ_ASSERT(rp.target);
     if (X86Encoding::CanRelinkJump(src, rp.target)) {
       X86Encoding::SetRel32(src, rp.target);
     } else {

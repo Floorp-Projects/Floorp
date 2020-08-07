@@ -288,10 +288,6 @@ class Assembler : public vixl::Assembler {
   // The jump may not be patched at runtime.
   void addPendingJump(BufferOffset src, ImmPtr target, RelocationKind kind);
 
-  // Add a jump whose target is unknown until finalization, and may change
-  // thereafter. The jump is patchable at runtime.
-  size_t addPatchableJump(BufferOffset src, RelocationKind kind);
-
  public:
   static uint32_t PatchWrite_NearCallSize() { return 4; }
 
