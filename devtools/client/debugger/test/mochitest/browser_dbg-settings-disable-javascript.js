@@ -4,41 +4,23 @@
 
 requestLongerTimeout(2);
 
-async function toggleJavaScript(dbg, shouldBeCheckedAtStart) {
-  const menuItemClassName = ".debugger-settings-menu-item-disable-javascript";
-
-  const menuButton = findElementWithSelector(dbg, ".debugger-settings-menu-button");
-  menuButton.click();
-  await waitForTime(200);
-
-  const { parent } = dbg.panel.panelWin;
-  const { document } = parent;
-
-  const menuItem = document.querySelector(menuItemClassName);
-  is(
-    !!menuItem.getAttribute("aria-checked"), 
-    shouldBeCheckedAtStart,
-    "Item is checked before clicking"
-  );
-  menuItem.click();
-}
-
 // Tests that using the Settings menu to enable and disable JavaScript
 // updates the pref properly
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
+  const menuItemClassName = ".debugger-settings-menu-item-disable-javascript";
 
   info("Waiting for source to load");
   await waitForSource(dbg, "simple1.js");
 
   info("Clicking the disable javascript button in the settings menu");
-  await toggleJavaScript(dbg, false);
+  await toggleDebbuggerSettingsMenuItem(dbg, { className: menuItemClassName, isChecked: false });
 
   info("Waiting for reload triggered by disabling javascript");
   await waitForSourceCount(dbg, 0);
 
   info("Clicking the disable javascript button in the settings menu to reenable JavaScript");
-  await toggleJavaScript(dbg, true);
+  await toggleDebbuggerSettingsMenuItem(dbg, { className: menuItemClassName, isChecked: true });
   is(Services.prefs.getBoolPref("javascript.enabled"), true, "JavaScript is enabled");
 
   info("Reloading page to ensure there are sources");
