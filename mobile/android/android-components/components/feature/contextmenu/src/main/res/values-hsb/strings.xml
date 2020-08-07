@@ -30,6 +30,14 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Přepinać</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Wotkaz w eksternym nałoženju wočinić</string>
+    <!-- Text for context menu item to share the email with another app. -->
+    <string name="mozac_feature_contextmenu_share_email_address">E-mejlowu adresu dźělić</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">E-mejlowu adresu kopěrować</string>
+    <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">E-mejlowa adresa je so do mjezyskłada kopěrowała</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">Kontaktej přidać</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">Pytać</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
