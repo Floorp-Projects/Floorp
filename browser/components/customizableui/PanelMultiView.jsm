@@ -782,7 +782,10 @@ var PanelMultiView = class extends AssociatedToNode {
    */
   async _showMainView() {
     let nextPanelView = PanelView.forNode(
-      this.document.getElementById(this.node.getAttribute("mainViewId"))
+      PanelMultiView.getViewNode(
+        this.document,
+        this.node.getAttribute("mainViewId")
+      )
     );
 
     // If the view is already open in another panel, close the panel first.
