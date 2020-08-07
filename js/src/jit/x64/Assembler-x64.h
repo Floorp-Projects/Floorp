@@ -314,9 +314,6 @@ class Assembler : public AssemblerX86Shared {
   void writeRelocation(JmpSrc src, RelocationKind reloc);
   void addPendingJump(JmpSrc src, ImmPtr target, RelocationKind reloc);
 
- protected:
-  size_t addPatchableJump(JmpSrc src, RelocationKind reloc);
-
  public:
   using AssemblerX86Shared::j;
   using AssemblerX86Shared::jmp;

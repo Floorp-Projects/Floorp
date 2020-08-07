@@ -150,13 +150,7 @@ void Assembler::executableCopy(uint8_t* buffer) {
   // The extended jump table may be used for distant jumps.
   for (size_t i = 0; i < pendingJumps_.length(); i++) {
     RelativePatch& rp = pendingJumps_[i];
-
-    if (!rp.target) {
-      // The patch target is nullptr for jumps that have been linked to
-      // a label within the same code block, but may be repatched later
-      // to jump to a different code block.
-      continue;
-    }
+    MOZ_ASSERT(rp.target);
 
     Instruction* target = (Instruction*)rp.target;
     Instruction* branch = (Instruction*)(buffer + rp.offset.getOffset());
@@ -298,17 +292,6 @@ void Assembler::addPendingJump(BufferOffset src, ImmPtr target,
       pendingJumps_.append(RelativePatch(src, target.value, reloc));
 }
 
-size_t Assembler::addPatchableJump(BufferOffset src, RelocationKind reloc) {
-  MOZ_CRASH("TODO: This is currently unused (and untested)");
-  if (reloc == RelocationKind::JITCODE) {
-    addJumpRelocation(src, reloc);
-  }
-
-  size_t extendedTableIndex = pendingJumps_.length();
-  enoughMemory_ &= pendingJumps_.append(RelativePatch(src, nullptr, reloc));
-  return extendedTableIndex;
-}
-
 void Assembler::PatchWrite_NearCall(CodeLocationLabel start,
                                     CodeLocationLabel toCall) {
   Instruction* dest = (Instruction*)start.raw();
@@ -317,7 +300,6 @@ void Assembler::PatchWrite_NearCall(CodeLocationLabel start,
   MOZ_RELEASE_ASSERT((relTarget & 0x3) == 0);
   MOZ_RELEASE_ASSERT(vixl::IsInt26(relTarget00));
 
-  // printf("patching %p with call to %p\n", start.raw(), toCall.raw());
   bl(dest, relTarget00);
 }
 
