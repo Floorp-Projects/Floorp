@@ -623,6 +623,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x5923);
       APPEND_DEVICE(0x5927);
       APPEND_DEVICE(0x593b);
+      APPEND_DEVICE(0x87c0);
 
       // coffeelake gt1
       APPEND_DEVICE(0x3e90);
