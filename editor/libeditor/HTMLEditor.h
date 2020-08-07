@@ -2851,17 +2851,19 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aSelectionEndPoint);
 
   /**
-   * HandleDeleteAroundCollapsedSelection() handles deletion with collapsed
-   * `Selection`.  Callers must guarantee that this is called only when
-   * `Selection` is collapsed.
+   * HandleDeleteAroundCollapsedRanges() handles deletion with collapsed
+   * ranges.  Callers must guarantee that this is called only when
+   * aRangesToDelete.IsCollapsed() returns true.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
+   * @param aRangesToDelete     Ranges to delete.  This `IsCollapsed()` must
+   *                            return true.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteAroundCollapsedSelection(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers);
+  HandleDeleteAroundCollapsedRanges(nsIEditor::EDirection aDirectionAndAmount,
+                                    nsIEditor::EStripWrappers aStripWrappers,
+                                    AutoRangeArray& aRangesToDelete);
 
   /**
    * HandleDeleteTextAroundCollapsedSelection() handles deletion of

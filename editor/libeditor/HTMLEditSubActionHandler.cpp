@@ -2503,11 +2503,12 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
     }
 
     if (SelectionRefPtr()->IsCollapsed()) {
-      EditActionResult result = HandleDeleteAroundCollapsedSelection(
-          aDirectionAndAmount, aStripWrappers);
+      AutoRangeArray rangesToDelete(*SelectionRefPtr());
+      EditActionResult result = HandleDeleteAroundCollapsedRanges(
+          aDirectionAndAmount, aStripWrappers, rangesToDelete);
       NS_WARNING_ASSERTION(
           result.Succeeded(),
-          "HTMLEditor::HandleDeleteAroundCollapsedSelection() failed");
+          "HTMLEditor::HandleDeleteAroundCollapsedRanges() failed");
       return result;
     }
   }
@@ -2521,14 +2522,14 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
   return result;
 }
 
-EditActionResult HTMLEditor::HandleDeleteAroundCollapsedSelection(
+EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
     nsIEditor::EDirection aDirectionAndAmount,
-    nsIEditor::EStripWrappers aStripWrappers) {
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-  MOZ_ASSERT(SelectionRefPtr()->IsCollapsed());
+  MOZ_ASSERT(aRangesToDelete.IsCollapsed());
   MOZ_ASSERT(aDirectionAndAmount != nsIEditor::eNone);
 
-  EditorDOMPoint startPoint(EditorBase::GetStartPoint(*SelectionRefPtr()));
+  EditorDOMPoint startPoint(aRangesToDelete.GetStartPointOfFirstRange());
   if (NS_WARN_IF(!startPoint.IsInContentNode())) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
