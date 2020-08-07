@@ -1154,9 +1154,11 @@ void MacroAssembler::initGCSlots(Register obj, Register temp,
     fillSlotsWithUninitialized(Address(obj, offset), temp, startOfUninitialized,
                                std::min(startOfUndefined, nfixed));
 
-    offset = NativeObject::getFixedSlotOffset(startOfUndefined);
-    fillSlotsWithUndefined(Address(obj, offset), temp, startOfUndefined,
-                           nfixed);
+    if (startOfUndefined < nfixed) {
+      offset = NativeObject::getFixedSlotOffset(startOfUndefined);
+      fillSlotsWithUndefined(Address(obj, offset), temp, startOfUndefined,
+                             nfixed);
+    }
   }
 
   if (ndynamic) {
