@@ -1,3 +1,4 @@
+
 use std::borrow::Borrow;
 
 /// Key equivalence trait.
@@ -16,9 +17,8 @@ pub trait Equivalent<K: ?Sized> {
 }
 
 impl<Q: ?Sized, K: ?Sized> Equivalent<K> for Q
-where
-    Q: Eq,
-    K: Borrow<Q>,
+    where Q: Eq,
+          K: Borrow<Q>,
 {
     #[inline]
     fn equivalent(&self, key: &K) -> bool {

@@ -1073,12 +1073,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "data-encoding"
-version = "2.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72aa14c04dfae8dd7d8a2b1cb7ca2152618cd01336dbfe704b8dcbf8d41dbd69"
-
-[[package]]
 name = "dbus"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1978,7 +1972,6 @@ dependencies = [
  "gecko_logger",
  "geckoservo",
  "gkrust_utils",
- "http_sfv",
  "jsrust_shared",
  "kvstore",
  "lmdb-rkv-sys",
@@ -2263,17 +2256,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "http_sfv"
-version = "0.1.0"
-dependencies = [
- "nserror",
- "nsstring",
- "sfv",
- "thin-vec",
- "xpcom",
-]
-
-[[package]]
 name = "httparse"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2351,12 +2333,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.4.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c398b2b113b55809ceb9ee3e753fcbac793f1956663f3c36549c1346015c2afe"
-dependencies = [
- "autocfg 1.0.0",
-]
+checksum = "a4d6d89e0948bf10c08b9ecc8ac5b83f07f857ebe2c0cbe38de15b4e4f510356"
 
 [[package]]
 name = "inflate"
@@ -4252,16 +4231,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_decimal"
-version = "1.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95ba36e8c41bf675947e200af432325f332f60a0aea0ef2dc456636c2f6037d7"
-dependencies = [
- "num-traits",
- "serde",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4475,17 +4444,6 @@ version = "0.1.1"
 dependencies = [
  "nodrop",
  "stable_deref_trait",
-]
-
-[[package]]
-name = "sfv"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83166498beeaadbb6ddf69e7ed7b2b009e2b2d4e827aae762d2d310d4f648a3b"
-dependencies = [
- "data-encoding",
- "indexmap",
- "rust_decimal",
 ]
 
 [[package]]

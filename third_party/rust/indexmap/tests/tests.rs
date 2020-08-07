@@ -1,6 +1,8 @@
+
 #[macro_use]
 extern crate indexmap;
 extern crate itertools;
+
 
 #[test]
 fn test_sort() {
@@ -11,11 +13,10 @@ fn test_sort() {
         3 => 3,
     };
 
-    itertools::assert_equal(
-        m.sorted_by(|_k1, v1, _k2, v2| v1.cmp(v2)),
-        vec![(7, 1), (1, 2), (2, 2), (3, 3)],
-    );
+    itertools::assert_equal(m.sorted_by(|_k1, v1, _k2, v2| v1.cmp(v2)),
+                            vec![(7, 1), (1, 2), (2, 2), (3, 3)]);
 }
+
 
 #[test]
 fn test_sort_set() {
@@ -26,5 +27,6 @@ fn test_sort_set() {
         3,
     };
 
-    itertools::assert_equal(s.sorted_by(|v1, v2| v1.cmp(v2)), vec![1, 2, 3, 7]);
+    itertools::assert_equal(s.sorted_by(|v1, v2| v1.cmp(v2)),
+                            vec![1, 2, 3, 7]);
 }
