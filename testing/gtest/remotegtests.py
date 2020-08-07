@@ -73,7 +73,7 @@ class RemoteGTests(object):
                                                  device=device_serial,
                                                  test_root=remote_test_root,
                                                  logger_name=LOGGER_NAME,
-                                                 verbose=True,
+                                                 verbose=False,
                                                  run_as_package=package)
         root = self.device.test_root
         self.remote_profile = posixpath.join(root, 'gtest-profile')
