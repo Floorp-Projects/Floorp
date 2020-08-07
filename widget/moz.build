@@ -144,6 +144,7 @@ EXPORTS += [
     'nsIRollupListener.h',
     'nsIWidget.h',
     'nsIWidgetListener.h',
+    'nsPrinterListBase.h',
     'nsUserIdleService.h',
     'nsWidgetInitData.h',
     'nsWidgetsCID.h',
@@ -240,6 +241,7 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
         'nsPaper.cpp',
         'nsPaperMargin.cpp',
         'nsPrinterBase.cpp',
+        'nsPrinterListBase.cpp',
         'nsPrintSession.cpp',
         'nsPrintSettingsService.cpp',
     ]
@@ -249,6 +251,7 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
             'CUPSPrinterList.cpp',
             'nsCUPSShim.cpp',
             'nsPrinterCUPS.cpp',
+            'nsPrinterListCUPS.cpp',
         ]
 
 # nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers
