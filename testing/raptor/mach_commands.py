@@ -232,7 +232,7 @@ class MachRaptor(MachCommandBase):
 
         if is_android:
             from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
-            from mozdevice import ADBAndroid
+            from mozdevice import ADBDeviceFactory
             install = InstallIntent.NO if kwargs.pop('noinstall', False) else InstallIntent.YES
             verbose = False
             if kwargs.get('log_mach_verbose') or kwargs.get('log_tbpl_level') == 'debug' or \
@@ -253,7 +253,7 @@ class MachRaptor(MachCommandBase):
 
         try:
             if kwargs['power_test'] and is_android:
-                device = ADBAndroid(verbose=True)
+                device = ADBDeviceFactory(verbose=True)
                 disable_charging(device)
             return raptor.run_test(sys.argv[2:], kwargs)
         except BinaryNotFoundException as e:
