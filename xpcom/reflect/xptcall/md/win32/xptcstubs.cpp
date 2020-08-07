@@ -20,7 +20,6 @@ nsresult __stdcall
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
                    uint32_t* args, uint32_t* stackBytesToPop)
 {
-#define PARAM_BUFFER_COUNT     16
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = nullptr;

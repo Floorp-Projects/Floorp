@@ -16,7 +16,6 @@
 // caller.  The rest of the parameters are passed in the callers stack
 // area.
 
-const uint32_t PARAM_BUFFER_COUNT   = 16;
 const uint32_t GPR_COUNT            = 6;
 const uint32_t FPR_COUNT            = 8;
 

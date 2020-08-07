@@ -20,7 +20,6 @@ extern "C" nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args,
                    uint64_t *gprData, double *fprData)
 {
-#define PARAM_BUFFER_COUNT        16
 #define PARAM_GPR_COUNT            8
 #define PARAM_FPR_COUNT            8
 

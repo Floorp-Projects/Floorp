@@ -19,7 +19,6 @@
 #else
 #define GPR_COUNT               8
 #endif
-#define PARAM_BUFFER_COUNT     16
 // PrepareAndDispatch() is called by SharedStub() and calls the actual method.
 //
 // - 'args[]' contains the arguments passed on stack

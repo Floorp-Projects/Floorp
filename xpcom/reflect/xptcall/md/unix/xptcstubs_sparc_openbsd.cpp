@@ -19,7 +19,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
     } DU;               // have to move 64 bit entities as 32 bit halves since
                         // stack slots are not guaranteed 16 byte aligned
 
-#define PARAM_BUFFER_COUNT     16
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = nullptr;

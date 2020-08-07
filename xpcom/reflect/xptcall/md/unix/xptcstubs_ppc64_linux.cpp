@@ -22,7 +22,6 @@
 // allocated for these by the caller. The rest of the parameters are passed
 // in the caller's stack area. The stack pointer must stay 16-byte aligned.
 
-const uint32_t PARAM_BUFFER_COUNT   = 16;
 const uint32_t GPR_COUNT            = 7;
 const uint32_t FPR_COUNT            = 13;
 

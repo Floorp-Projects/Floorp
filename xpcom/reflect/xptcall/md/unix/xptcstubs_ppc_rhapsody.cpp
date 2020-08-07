@@ -41,7 +41,6 @@ PrepareAndDispatch(
   uint32_t       *argsStack,
   uint32_t       *argsGPR,
   double         *argsFPR) {
-#define PARAM_BUFFER_COUNT 16
 #define PARAM_FPR_COUNT    13
 #define PARAM_GPR_COUNT     7
 
