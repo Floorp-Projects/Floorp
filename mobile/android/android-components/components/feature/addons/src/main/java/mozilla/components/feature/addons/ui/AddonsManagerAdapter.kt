@@ -19,7 +19,6 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
-import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
@@ -109,7 +108,6 @@ class AddonsManagerAdapter(
         val context = parent.context
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(R.layout.mozac_feature_addons_item, parent, false)
-        val iconContainer = view.findViewById<CardView>(R.id.icon_container)
         val iconView = view.findViewById<ImageView>(R.id.add_on_icon)
         val titleView = view.findViewById<TextView>(R.id.add_on_name)
         val summaryView = view.findViewById<TextView>(R.id.add_on_description)
@@ -120,7 +118,6 @@ class AddonsManagerAdapter(
         val allowedInPrivateBrowsingLabel = view.findViewById<ImageView>(R.id.allowed_in_private_browsing_label)
         return AddonViewHolder(
             view,
-            iconContainer,
             iconView,
             titleView,
             summaryView,
@@ -230,10 +227,6 @@ class AddonsManagerAdapter(
         holder.allowedInPrivateBrowsingLabel.isVisible = addon.isAllowedInPrivateBrowsing()
         style?.maybeSetPrivateBrowsingLabelDrawale(holder.allowedInPrivateBrowsingLabel)
 
-        style?.addonBackgroundIconColor?.let {
-            val backgroundColor = ContextCompat.getColor(holder.iconContainer.context, it)
-            holder.iconContainer.setCardBackgroundColor(backgroundColor)
-        }
         fetchIcon(addon, holder.iconView)
         style?.maybeSetAddonNameTextColor(holder.titleView)
         style?.maybeSetAddonSummaryTextColor(holder.summaryView)
@@ -333,8 +326,6 @@ class AddonsManagerAdapter(
         @ColorRes
         val addonSummaryTextColor: Int? = null,
         val sectionsTypeFace: Typeface? = null,
-        @ColorRes
-        val addonBackgroundIconColor: Int? = null,
         @DrawableRes
         val addonAllowPrivateBrowsingLabelDrawableRes: Int? = null
     ) {

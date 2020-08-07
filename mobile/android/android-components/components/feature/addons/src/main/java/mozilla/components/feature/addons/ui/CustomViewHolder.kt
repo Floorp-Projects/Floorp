@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 
 /**
@@ -35,9 +34,9 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     /**
      * A view holder for displaying add-on items.
      */
+    @Suppress("LongParameterList")
     class AddonViewHolder(
         view: View,
-        val iconContainer: CardView,
         val iconView: ImageView,
         val titleView: TextView,
         val summaryView: TextView,

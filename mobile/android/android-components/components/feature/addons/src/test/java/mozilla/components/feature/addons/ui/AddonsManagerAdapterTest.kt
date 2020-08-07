@@ -171,7 +171,6 @@ class AddonsManagerAdapterTest {
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
-            iconContainer = iconContainer,
             iconView = mock(),
             titleView = titleView,
             summaryView = summaryView,
@@ -203,8 +202,7 @@ class AddonsManagerAdapterTest {
         val style = AddonsManagerAdapter.Style(
             sectionsTextColor = android.R.color.black,
             addonNameTextColor = android.R.color.transparent,
-            addonSummaryTextColor = android.R.color.white,
-            addonBackgroundIconColor = android.R.color.darker_gray
+            addonSummaryTextColor = android.R.color.white
         )
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList(), style)
 
@@ -215,7 +213,6 @@ class AddonsManagerAdapterTest {
         verify(titleView).setTextColor(ContextCompat.getColor(testContext, style.addonNameTextColor!!))
         verify(summaryView).setText("summary")
         verify(summaryView).setTextColor(ContextCompat.getColor(testContext, style.addonSummaryTextColor!!))
-        verify(iconContainer).setCardBackgroundColor(ContextCompat.getColor(testContext, style.addonBackgroundIconColor!!))
         assertNotNull(addonViewHolder.itemView.tag)
 
         addonViewHolder.itemView.performClick()
@@ -254,7 +251,6 @@ class AddonsManagerAdapterTest {
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
-            iconContainer = CardView(testContext),
             iconView = mock(),
             titleView = titleView,
             summaryView = summaryView,
