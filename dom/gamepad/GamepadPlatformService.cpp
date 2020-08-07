@@ -255,19 +255,14 @@ void GamepadPlatformService::RemoveChannelParent(
   {
     MutexAutoLock autoLock(mMutex);
     mChannelParents.RemoveElement(aParent);
+    if (!mChannelParents.IsEmpty()) {
+      return;
+    }
   }
 
-  MaybeStopGamepadMonitoring();
-}
-
-bool GamepadPlatformService::HasGamepadListeners() {
-  // mChannelParents may be accessed by background thread in the
-  // same time, we use mutex to prevent possible race condtion
-  AssertIsOnBackgroundThread();
-
-  // We use mutex here to prevent race condition with monitor thread
-  MutexAutoLock autoLock(mMutex);
-  return !mChannelParents.IsEmpty();
+  StopGamepadMonitoring();
+  ResetGamepadIndexes();
+  MaybeShutdown();
 }
 
 void GamepadPlatformService::MaybeShutdown() {
