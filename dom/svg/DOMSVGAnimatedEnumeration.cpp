@@ -14,13 +14,8 @@ namespace dom {
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedEnumeration,
                                                mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedEnumeration)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedEnumeration)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedEnumeration)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAnimatedEnumeration, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedEnumeration, Release)
 
 JSObject* DOMSVGAnimatedEnumeration::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

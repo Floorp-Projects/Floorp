@@ -24,13 +24,9 @@ namespace mozilla {
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(
     DOMSVGAnimatedPreserveAspectRatio, mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedPreserveAspectRatio)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedPreserveAspectRatio)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedPreserveAspectRatio)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAnimatedPreserveAspectRatio, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedPreserveAspectRatio,
+                                       Release)
 
 JSObject* DOMSVGAnimatedPreserveAspectRatio::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

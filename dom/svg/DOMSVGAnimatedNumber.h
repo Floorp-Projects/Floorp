@@ -15,10 +15,10 @@
 namespace mozilla {
 namespace dom {
 
-class DOMSVGAnimatedNumber : public nsISupports, public nsWrapperCache {
+class DOMSVGAnimatedNumber : public nsWrapperCache {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGAnimatedNumber)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedNumber)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAnimatedNumber)
 
   SVGElement* GetParentObject() const { return mSVGElement; }
 
