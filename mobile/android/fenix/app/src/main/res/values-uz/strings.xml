@@ -746,6 +746,13 @@
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Varaqlar yopildi</string>
 
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Bekor qilish</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Toʻliq ekran rejimiga oʻtmoqda</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Manzildan nusxa olindi</string>
+
     <!-- Accessibility description text for a completed migration item -->
     <string name="migration_icon_description">Koʻchirish tugadi</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->

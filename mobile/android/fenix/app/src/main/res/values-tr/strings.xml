@@ -65,7 +65,7 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Ana ekranınızdan gizli sekme açmak için bir kısayol ekleyin.</string>
+    <string name="cfr_message">Ana ekranınızdan gizli sekme açmak için kısayol ekleyebilirsiniz.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Kısayol ekle</string>
     <!-- Text for the negative button -->

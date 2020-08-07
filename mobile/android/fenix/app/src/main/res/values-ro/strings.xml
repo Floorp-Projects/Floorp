@@ -113,7 +113,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Bibliotecă</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Versiune site pentru calculator</string>
+    <string name="browser_menu_desktop_site">Versiune site de desktop</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Adaugă în ecranul de start</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -167,8 +167,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scanează</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_engines_shortcut_button">Motor de căutare</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Motor de căutare</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Setări pentru motorul de căutare</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -1451,9 +1451,7 @@
     <string name="saved_login_duplicate">Există un set de date de autentificare cu acest nume de utilizator</string>
 
     <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">Conectare cu un cont Firefox.</string>
-    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+   <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Conectează alt dispozitiv.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Te rugăm să te autentifici din nou.</string>
@@ -1474,13 +1472,4 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, am înțeles</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Comenzi rapide</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Căutare cu</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">De data aceasta, caută cu:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Afișează comenzile rapide pentru căutări</string>
     </resources>
