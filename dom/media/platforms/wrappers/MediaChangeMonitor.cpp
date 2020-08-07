@@ -169,7 +169,7 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       return NS_OK;
     }
 
-    auto dataSpan = MakeSpan<const uint8_t>(aSample->Data(), aSample->Size());
+    auto dataSpan = Span<const uint8_t>(aSample->Data(), aSample->Size());
 
     VPXDecoder::VPXStreamInfo info;
     if (!VPXDecoder::GetStreamInfo(dataSpan, info, mCodec)) {

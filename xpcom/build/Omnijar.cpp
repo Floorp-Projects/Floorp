@@ -123,7 +123,7 @@ void Omnijar::InitOne(nsIFile* aPath, Type aType) {
     }
   } else {
     if (NS_FAILED(zipReader->LazyOpenArchive(
-            file, MakeSpan(centralBuf, centralBufLength)))) {
+            file, Span(centralBuf, centralBufLength)))) {
       return;
     }
   }
@@ -398,7 +398,7 @@ nsresult CacheAwareZipReader::GetPersistentHandle(
     MOZ_ASSERT(aItem->RealSize() == aItem->Size());
     const uint8_t* data = mZip->GetData(aItem);
     if (data) {
-      aHandle->mDataToCache = MakeSpan(data, aItem->Size());
+      aHandle->mDataToCache = Span(data, aItem->Size());
     }
   }
 

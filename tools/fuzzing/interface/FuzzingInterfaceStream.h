@@ -66,7 +66,7 @@ void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc);
       if (size > INT32_MAX) return 0;                                          \
       nsCOMPtr<nsIInputStream> stream;                                         \
       nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),              \
-                                          MakeSpan((const char*)data, size),   \
+                                          Span((const char*)data, size),       \
                                           NS_ASSIGNMENT_DEPEND);               \
       MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));                                    \
       testFunc(stream.forget());                                               \

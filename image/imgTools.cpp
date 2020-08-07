@@ -334,7 +334,7 @@ imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
   // Let's create a temporary inputStream.
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
-      getter_AddRefs(stream), MakeSpan(aBuffer, aSize), NS_ASSIGNMENT_DEPEND);
+      getter_AddRefs(stream), Span(aBuffer, aSize), NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(stream);
   MOZ_ASSERT(NS_InputStreamIsBuffered(stream));

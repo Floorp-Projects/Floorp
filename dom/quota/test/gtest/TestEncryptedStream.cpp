@@ -412,7 +412,7 @@ TEST_P(ParametrizedCryptTest, DummyCipherStrategy_CheckOutput) {
     return;
   }
 
-  const auto encryptedDataSpan = AsBytes(MakeSpan(encryptedDataStream->Data()));
+  const auto encryptedDataSpan = AsBytes(Span(encryptedDataStream->Data()));
 
   const auto plainTestData = MakeTestData(testParams.DataSize());
   auto encryptedBlock = EncryptedBlock<DummyCipherStrategy::BlockPrefixLength,
@@ -420,7 +420,7 @@ TEST_P(ParametrizedCryptTest, DummyCipherStrategy_CheckOutput) {
       testParams.BlockSize(),
   };
   for (auto [encryptedRemainder, plainRemainder] =
-           std::pair(encryptedDataSpan, MakeSpan(plainTestData));
+           std::pair(encryptedDataSpan, Span(plainTestData));
        !encryptedRemainder.IsEmpty();) {
     const auto [currentBlock, newEncryptedRemainder] =
         encryptedRemainder.SplitAt(testParams.BlockSize());

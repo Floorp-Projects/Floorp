@@ -90,7 +90,7 @@ NS_IMETHODIMP nsEffectiveTLDService::Observe(nsISupports* aSubject,
     size_t size = mDafsaMap.size();
     const uint8_t* remoteDafsaPtr = mDafsaMap.get<uint8_t>().get();
 
-    auto remoteDafsa = mozilla::MakeSpan(remoteDafsaPtr, size);
+    auto remoteDafsa = mozilla::Span(remoteDafsaPtr, size);
 
     mGraph.reset();
     mGraph.emplace(remoteDafsa);

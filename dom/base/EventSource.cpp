@@ -759,8 +759,8 @@ void EventSourceImpl::ParseSegment(const char* aBuffer, uint32_t aLength) {
     return;
   }
   char16_t buffer[1024];
-  auto dst = MakeSpan(buffer);
-  auto src = AsBytes(MakeSpan(aBuffer, aLength));
+  auto dst = Span(buffer);
+  auto src = AsBytes(Span(aBuffer, aLength));
   // XXX EOF handling is https://bugzilla.mozilla.org/show_bug.cgi?id=1369018
   for (;;) {
     uint32_t result;

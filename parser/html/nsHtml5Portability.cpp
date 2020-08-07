@@ -31,7 +31,7 @@ nsHtml5String nsHtml5Portability::newStringFromBuffer(
     return nsHtml5String::EmptyString();
   }
   if (maybeAtomize &&
-      !ContainsWhiteSpace(mozilla::MakeSpan(buf + offset, length))) {
+      !ContainsWhiteSpace(mozilla::Span(buf + offset, length))) {
     return nsHtml5String::FromAtom(
         NS_AtomizeMainThread(nsDependentSubstring(buf + offset, length)));
   }

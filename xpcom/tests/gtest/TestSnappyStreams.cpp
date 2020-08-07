@@ -85,7 +85,7 @@ static void TestUncompressCorrupt(const char* aCorruptData,
                                   uint32_t aCorruptLength) {
   nsCOMPtr<nsIInputStream> source;
   nsresult rv = NS_NewByteInputStream(
-      getter_AddRefs(source), mozilla::MakeSpan(aCorruptData, aCorruptLength),
+      getter_AddRefs(source), mozilla::Span(aCorruptData, aCorruptLength),
       NS_ASSIGNMENT_DEPEND);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 

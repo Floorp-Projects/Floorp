@@ -283,8 +283,7 @@ void WebrtcMediaDataEncoder::ProcessEncode(
 
               nsTArray<AnnexB::NALEntry> entries;
               AnnexB::ParseNALEntries(
-                  MakeSpan<const uint8_t>(frame->Data(), frame->Size()),
-                  entries);
+                  Span<const uint8_t>(frame->Data(), frame->Size()), entries);
               const size_t nalNums = entries.Length();
               LOG_V("NAL nums %zu", nalNums);
               MOZ_ASSERT(nalNums,

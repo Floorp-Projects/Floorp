@@ -166,7 +166,7 @@ nsresult nsXMLContentSerializer::AppendTextData(nsIContent* aNode,
     }
   } else {
     nsAutoString utf16;
-    if (!CopyASCIItoUTF16(MakeSpan(frag->Get1b() + aStartOffset, length), utf16,
+    if (!CopyASCIItoUTF16(Span(frag->Get1b() + aStartOffset, length), utf16,
                           mozilla::fallible_t())) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

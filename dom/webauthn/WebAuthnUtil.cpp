@@ -260,7 +260,7 @@ nsresult U2FDecomposeSignResponse(const CryptoBuffer& aResponse,
     return NS_ERROR_INVALID_ARG;
   }
 
-  Span<const uint8_t> rspView = MakeSpan(aResponse);
+  Span<const uint8_t> rspView = Span(aResponse);
   aFlags = rspView[0];
 
   if (NS_WARN_IF(!aCounterBuf.AppendElements(rspView.FromTo(1, 5),

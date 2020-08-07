@@ -37,7 +37,7 @@ using mozilla::AsChars;
 using mozilla::CheckedInt;
 using mozilla::CheckedInt32;
 using mozilla::IsUtf8;
-using mozilla::MakeSpan;
+using mozilla::Span;
 using mozilla::Unused;
 
 // Decoder implementation.
@@ -1753,7 +1753,7 @@ static UniqueChars DecodeName(Decoder& d) {
     return nullptr;
   }
 
-  if (!IsUtf8(AsChars(MakeSpan(bytes, numBytes)))) {
+  if (!IsUtf8(AsChars(Span(bytes, numBytes)))) {
     return nullptr;
   }
 

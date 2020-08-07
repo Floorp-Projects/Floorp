@@ -119,7 +119,7 @@ already_AddRefed<Document> DOMParser::ParseFromBuffer(const Uint8Array& aBuf,
                                                       SupportedType aType,
                                                       ErrorResult& aRv) {
   aBuf.ComputeState();
-  return ParseFromBuffer(MakeSpan(aBuf.Data(), aBuf.Length()), aType, aRv);
+  return ParseFromBuffer(Span(aBuf.Data(), aBuf.Length()), aType, aRv);
 }
 
 already_AddRefed<Document> DOMParser::ParseFromBuffer(Span<const uint8_t> aBuf,
@@ -129,7 +129,7 @@ already_AddRefed<Document> DOMParser::ParseFromBuffer(Span<const uint8_t> aBuf,
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
       getter_AddRefs(stream),
-      MakeSpan(reinterpret_cast<const char*>(aBuf.Elements()), aBuf.Length()),
+      Span(reinterpret_cast<const char*>(aBuf.Elements()), aBuf.Length()),
       NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

@@ -9,7 +9,7 @@
 #include "mozilla/Maybe.h"                  // mozilla::Maybe
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/Range.h"                  // mozilla::Range
-#include "mozilla/Span.h"                   // mozilla::{Span, MakeSpan}
+#include "mozilla/Span.h"                   // mozilla::{Span, Span}
 #include "mozilla/Variant.h"                // mozilla::AsVariant
 
 #include <stddef.h>  // size_t
@@ -333,8 +333,8 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
       smooshScriptData.nslots, GCThingIndex(smooshScriptData.body_scope_index),
       smooshScriptData.num_ic_entries, smooshScriptData.num_bytecode_type_sets,
       isFunction, smooshScriptData.fun_length,
-      mozilla::MakeSpan(smooshScriptData.bytecode.data,
-                        smooshScriptData.bytecode.len),
+      mozilla::Span(smooshScriptData.bytecode.data,
+                    smooshScriptData.bytecode.len),
       mozilla::Span<const SrcNote>(), mozilla::Span<const uint32_t>(),
       scopeNotes, mozilla::Span<const TryNote>());
 }

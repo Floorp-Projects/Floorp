@@ -608,9 +608,9 @@ ipc::IPCResult ChromiumCDMParent::RecvDecrypted(const uint32_t& aId,
   }
   for (size_t i = 0; i < mDecrypts.Length(); i++) {
     if (mDecrypts[i]->mId == aId) {
-      mDecrypts[i]->PostResult(ToDecryptStatus(aStatus),
-                               MakeSpan<const uint8_t>(aShmem.get<uint8_t>(),
-                                                       aShmem.Size<uint8_t>()));
+      mDecrypts[i]->PostResult(
+          ToDecryptStatus(aStatus),
+          Span<const uint8_t>(aShmem.get<uint8_t>(), aShmem.Size<uint8_t>()));
       mDecrypts.RemoveElementAt(i);
       break;
     }
@@ -768,7 +768,7 @@ ipc::IPCResult ChromiumCDMParent::RecvDecodedShmem(const CDMVideoFrame& aFrame,
   }
 
   RefPtr<VideoData> v = CreateVideoFrame(
-      aFrame, MakeSpan<uint8_t>(aShmem.get<uint8_t>(), aShmem.Size<uint8_t>()));
+      aFrame, Span<uint8_t>(aShmem.get<uint8_t>(), aShmem.Size<uint8_t>()));
   if (!v) {
     mDecodePromise.RejectIfExists(
         MediaResult(NS_ERROR_OUT_OF_MEMORY,

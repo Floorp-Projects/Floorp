@@ -1391,8 +1391,8 @@ bool js::intl_ValidateAndCanonicalizeUnicodeExtensionType(JSContext* cx,
   intl::AsciiToLowerCase(unicodeTypeChars.get(), unicodeTypeLength,
                          unicodeTypeChars.get());
 
-  auto key = mozilla::MakeSpan(unicodeKey, UnicodeKeyLength);
-  auto type = mozilla::MakeSpan(unicodeTypeChars.get(), unicodeTypeLength);
+  auto key = mozilla::Span(unicodeKey, UnicodeKeyLength);
+  auto type = mozilla::Span(unicodeTypeChars.get(), unicodeTypeLength);
 
   // Search if there's a replacement for the current Unicode keyword.
   JSString* result;

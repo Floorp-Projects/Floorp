@@ -113,8 +113,8 @@ nsresult TextStreamer::EncodeAndWrite() {
   }
 
   uint8_t buffer[kEncoderBufferSizeInBytes];
-  auto src = MakeSpan(mOutputBuffer);
-  auto bufferSpan = MakeSpan(buffer);
+  auto src = Span(mOutputBuffer);
+  auto bufferSpan = Span(buffer);
   // Reserve space for terminator
   auto dst = bufferSpan.To(bufferSpan.Length() - 1);
   for (;;) {

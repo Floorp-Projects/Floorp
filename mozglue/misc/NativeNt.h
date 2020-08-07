@@ -702,7 +702,7 @@ class MOZ_RAII PEHeaders final {
       ++curIatThunk;
     }
 
-    return Some(MakeSpan(firstIatThunk, curIatThunk));
+    return Some(Span(firstIatThunk, curIatThunk));
   }
 
   /**
@@ -783,7 +783,7 @@ class MOZ_RAII PEHeaders final {
       }
 
       auto base = RVAToPtr<const uint8_t*>(rva);
-      return Some(MakeSpan(base, size));
+      return Some(Span(base, size));
     }
 
     return Nothing();

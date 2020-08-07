@@ -3424,7 +3424,7 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
             }
 
             nbytes = JS::DeflateStringToUTF8Buffer(
-                sourceLinear, mozilla::MakeSpan(*charBuffer, nbytes));
+                sourceLinear, mozilla::Span(*charBuffer, nbytes));
             (*charBuffer)[nbytes] = '\0';
             *freePointer = true;
             break;
@@ -3546,7 +3546,7 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
 
             char* charBuffer = static_cast<char*>(buffer);
             nbytes = JS::DeflateStringToUTF8Buffer(
-                sourceLinear, mozilla::MakeSpan(charBuffer, nbytes));
+                sourceLinear, mozilla::Span(charBuffer, nbytes));
 
             if (targetLength > nbytes) {
               charBuffer[nbytes] = '\0';

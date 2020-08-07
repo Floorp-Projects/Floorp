@@ -1278,8 +1278,8 @@ void nsLookAndFeel::EnsureInit() {
   // as -moz-gtk* media features.
   ButtonLayout buttonLayout[TOOLBAR_BUTTONS];
 
-  size_t activeButtons = GetGtkHeaderBarButtonLayout(MakeSpan(buttonLayout),
-                                                     &mCSDReversedPlacement);
+  size_t activeButtons =
+      GetGtkHeaderBarButtonLayout(Span(buttonLayout), &mCSDReversedPlacement);
   for (size_t i = 0; i < activeButtons; i++) {
     // We check if a button is represented on the right side of the tabbar.
     // Then we assign it a value from 3 to 5, instead of 0 to 2 when it is on

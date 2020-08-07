@@ -209,7 +209,7 @@ bool Sprinter::putString(JSString* s) {
   }
 
   mozilla::DebugOnly<size_t> written =
-      JS::DeflateStringToUTF8Buffer(linear, mozilla::MakeSpan(buffer, length));
+      JS::DeflateStringToUTF8Buffer(linear, mozilla::Span(buffer, length));
   MOZ_ASSERT(written == length);
 
   buffer[length] = '\0';

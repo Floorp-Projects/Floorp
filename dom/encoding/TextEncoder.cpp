@@ -34,7 +34,7 @@ void TextEncoder::EncodeInto(JSContext* aCx, JS::Handle<JSString*> aSrc,
   size_t read;
   size_t written;
   auto maybe = JS_EncodeStringToUTF8BufferPartial(
-      aCx, aSrc, AsWritableChars(MakeSpan(aDst.Data(), aDst.Length())));
+      aCx, aSrc, AsWritableChars(Span(aDst.Data(), aDst.Length())));
   if (!maybe) {
     aError.ReportOOM();
     return;

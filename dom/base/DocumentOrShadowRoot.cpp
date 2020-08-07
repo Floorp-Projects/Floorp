@@ -172,7 +172,7 @@ void DocumentOrShadowRoot::SetAdoptedStyleSheets(
   mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
 
   // Only add sheets that are not already in the common prefix.
-  for (const auto& sheet : MakeSpan(aAdoptedStyleSheets).From(commonPrefix)) {
+  for (const auto& sheet : Span(aAdoptedStyleSheets).From(commonPrefix)) {
     if (MOZ_UNLIKELY(!set.EnsureInserted(sheet))) {
       // The idea is that this case is rare, so we pay the price of removing the
       // old sheet from the styles and append it later rather than the other way

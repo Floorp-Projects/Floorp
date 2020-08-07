@@ -648,7 +648,7 @@ nsresult AddonManagerStartup::EnumerateJARSubtree(nsIURI* uri,
   pattern.SetCapacity(entry.Length());
 
   // The first character of the entry name is "/", which we want to skip.
-  for (auto chr : MakeSpan(Substring(entry, 1))) {
+  for (auto chr : Span(Substring(entry, 1))) {
     if (metaChars.FindChar(chr) >= 0) {
       pattern.Append('\\');
     }

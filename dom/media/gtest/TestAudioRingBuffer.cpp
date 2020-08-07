@@ -25,7 +25,7 @@ TEST(TestAudioRingBuffer, BasicFloat)
   EXPECT_EQ(ringBuffer.AvailableRead(), 4);
 
   float in[4] = {.1, .2, .3, .4};
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -39,7 +39,7 @@ TEST(TestAudioRingBuffer, BasicFloat)
   EXPECT_EQ(ringBuffer.AvailableWrite(), 0);
   EXPECT_EQ(ringBuffer.AvailableRead(), 10);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 0);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(ringBuffer.IsFull());
@@ -47,7 +47,7 @@ TEST(TestAudioRingBuffer, BasicFloat)
   EXPECT_EQ(ringBuffer.AvailableRead(), 10);
 
   float out[4] = {};
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -57,7 +57,7 @@ TEST(TestAudioRingBuffer, BasicFloat)
     EXPECT_FLOAT_EQ(f, 0.0);
   }
 
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -67,7 +67,7 @@ TEST(TestAudioRingBuffer, BasicFloat)
     EXPECT_FLOAT_EQ(in[i], out[i]);
   }
 
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 2);
   EXPECT_TRUE(ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -103,7 +103,7 @@ TEST(TestAudioRingBuffer, BasicShort)
   EXPECT_EQ(ringBuffer.AvailableRead(), 4);
 
   short in[4] = {1, 2, 3, 4};
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -117,7 +117,7 @@ TEST(TestAudioRingBuffer, BasicShort)
   EXPECT_EQ(ringBuffer.AvailableWrite(), 0);
   EXPECT_EQ(ringBuffer.AvailableRead(), 10);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 0);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(ringBuffer.IsFull());
@@ -125,7 +125,7 @@ TEST(TestAudioRingBuffer, BasicShort)
   EXPECT_EQ(ringBuffer.AvailableRead(), 10);
 
   short out[4] = {};
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -135,7 +135,7 @@ TEST(TestAudioRingBuffer, BasicShort)
     EXPECT_EQ(f, 0);
   }
 
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -145,7 +145,7 @@ TEST(TestAudioRingBuffer, BasicShort)
     EXPECT_EQ(in[i], out[i]);
   }
 
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 2);
   EXPECT_TRUE(ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -174,14 +174,14 @@ TEST(TestAudioRingBuffer, BasicFloat2)
   EXPECT_EQ(ringBuffer.AvailableRead(), 0);
 
   float in[4] = {.1, .2, .3, .4};
-  int rv = ringBuffer.Write(MakeSpan(in, 4));
+  int rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 6);
   EXPECT_EQ(ringBuffer.AvailableRead(), 4);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -189,7 +189,7 @@ TEST(TestAudioRingBuffer, BasicFloat2)
   EXPECT_EQ(ringBuffer.AvailableRead(), 8);
 
   float out[4] = {};
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -200,14 +200,14 @@ TEST(TestAudioRingBuffer, BasicFloat2)
   }
 
   // WriteIndex = 12
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 2);
   EXPECT_EQ(ringBuffer.AvailableRead(), 8);
 
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -217,7 +217,7 @@ TEST(TestAudioRingBuffer, BasicFloat2)
     EXPECT_FLOAT_EQ(in[i], out[i]);
   }
 
-  rv = ringBuffer.Read(MakeSpan(out, 8));
+  rv = ringBuffer.Read(Span(out, 8));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -227,7 +227,7 @@ TEST(TestAudioRingBuffer, BasicFloat2)
     EXPECT_FLOAT_EQ(in[i], out[i]);
   }
 
-  rv = ringBuffer.Read(MakeSpan(out, 8));
+  rv = ringBuffer.Read(Span(out, 8));
   EXPECT_EQ(rv, 0);
   EXPECT_TRUE(ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -238,28 +238,28 @@ TEST(TestAudioRingBuffer, BasicFloat2)
   }
 
   // WriteIndex = 16
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 6);
   EXPECT_EQ(ringBuffer.AvailableRead(), 4);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 2);
   EXPECT_EQ(ringBuffer.AvailableRead(), 8);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 2);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 0);
   EXPECT_EQ(ringBuffer.AvailableRead(), 10);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 0);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(ringBuffer.IsFull());
@@ -278,14 +278,14 @@ TEST(TestAudioRingBuffer, BasicShort2)
   EXPECT_EQ(ringBuffer.AvailableRead(), 0);
 
   int16_t in[4] = {1, 2, 3, 4};
-  int rv = ringBuffer.Write(MakeSpan(in, 4));
+  int rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 6);
   EXPECT_EQ(ringBuffer.AvailableRead(), 4);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -293,7 +293,7 @@ TEST(TestAudioRingBuffer, BasicShort2)
   EXPECT_EQ(ringBuffer.AvailableRead(), 8);
 
   int16_t out[4] = {};
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -304,14 +304,14 @@ TEST(TestAudioRingBuffer, BasicShort2)
   }
 
   // WriteIndex = 12
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 2);
   EXPECT_EQ(ringBuffer.AvailableRead(), 8);
 
-  rv = ringBuffer.Read(MakeSpan(out, 4));
+  rv = ringBuffer.Read(Span(out, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -321,7 +321,7 @@ TEST(TestAudioRingBuffer, BasicShort2)
     EXPECT_EQ(in[i], out[i]);
   }
 
-  rv = ringBuffer.Read(MakeSpan(out, 8));
+  rv = ringBuffer.Read(Span(out, 8));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -331,7 +331,7 @@ TEST(TestAudioRingBuffer, BasicShort2)
     EXPECT_EQ(in[i], out[i]);
   }
 
-  rv = ringBuffer.Read(MakeSpan(out, 8));
+  rv = ringBuffer.Read(Span(out, 8));
   EXPECT_EQ(rv, 0);
   EXPECT_TRUE(ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -342,28 +342,28 @@ TEST(TestAudioRingBuffer, BasicShort2)
   }
 
   // WriteIndex = 16
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 6);
   EXPECT_EQ(ringBuffer.AvailableRead(), 4);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 4);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 2);
   EXPECT_EQ(ringBuffer.AvailableRead(), 8);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 2);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(ringBuffer.IsFull());
   EXPECT_EQ(ringBuffer.AvailableWrite(), 0);
   EXPECT_EQ(ringBuffer.AvailableRead(), 10);
 
-  rv = ringBuffer.Write(MakeSpan(in, 4));
+  rv = ringBuffer.Write(Span(in, 4));
   EXPECT_EQ(rv, 0);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(ringBuffer.IsFull());
@@ -377,7 +377,7 @@ TEST(TestAudioRingBuffer, NoCopyFloat)
   ringBuffer.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   float in[8] = {.0, .1, .2, .3, .4, .5, .6, .7};
-  ringBuffer.Write(MakeSpan(in, 6));
+  ringBuffer.Write(Span(in, 6));
   //  v ReadIndex
   // [x0: .0, x1: .1, x2: .2, x3: .3, x4: .4,
   //  x5: .5, x6: .0, x7: .0, x8: .0, x9: .0, x10: .0]
@@ -399,7 +399,7 @@ TEST(TestAudioRingBuffer, NoCopyFloat)
     EXPECT_FLOAT_EQ(out[i], in[i]);
   }
 
-  ringBuffer.Write(MakeSpan(in, 8));
+  ringBuffer.Write(Span(in, 8));
   // Now the buffer contains:
   // [x0: .5, x1: .6, x2: .2, x3: .3, x4: .4,
   //  x5: .5, x6: .0, x7: .1, x8: .2, x9: .3, x10: .4
@@ -426,7 +426,7 @@ TEST(TestAudioRingBuffer, NoCopyShort)
   ringBuffer.SetSampleFormat(AUDIO_FORMAT_S16);
 
   short in[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-  ringBuffer.Write(MakeSpan(in, 6));
+  ringBuffer.Write(Span(in, 6));
   //  v ReadIndex
   // [x0: 0, x1: 1, x2: 2, x3: 3, x4: 4,
   //  x5: 5, x6: 0, x7: 0, x8: 0, x9: 0, x10: 0]
@@ -448,7 +448,7 @@ TEST(TestAudioRingBuffer, NoCopyShort)
     EXPECT_EQ(out[i], in[i]);
   }
 
-  ringBuffer.Write(MakeSpan(in, 8));
+  ringBuffer.Write(Span(in, 8));
   // Now the buffer contains:
   // [x0: 5, x1: 6, x2: 2, x3: 3, x4: 4,
   //  x5: 5, x6: 0, x7: 1, x8: 2, x9: 3, x10: 4
@@ -475,7 +475,7 @@ TEST(TestAudioRingBuffer, NoCopyFloat2)
   ringBuffer.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   float in[8] = {.0, .1, .2, .3, .4, .5, .6, .7};
-  ringBuffer.Write(MakeSpan(in, 6));
+  ringBuffer.Write(Span(in, 6));
   //  v ReadIndex
   // [x0: .0, x1: .1, x2: .2, x3: .3, x4: .4,
   //  x5: .5, x6: .0, x7: .0, x8: .0, x9: .0, x10: .0]
@@ -525,7 +525,7 @@ TEST(TestAudioRingBuffer, NoCopyFloat2)
     EXPECT_FLOAT_EQ(out[i + 3], in[i + 3]);
   }
 
-  ringBuffer.Write(MakeSpan(in, 8));
+  ringBuffer.Write(Span(in, 8));
   // Now the buffer contains:
   // [x0: .5, x1: .6, x2: .7, x3: .3, x4: .4,
   //  x5: .5, x6: .0, x7: .1, x8: .2, x9: .3, x10: .4
@@ -607,7 +607,7 @@ TEST(TestAudioRingBuffer, NoCopyShort2)
   ringBuffer.SetSampleFormat(AUDIO_FORMAT_S16);
 
   short in[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-  ringBuffer.Write(MakeSpan(in, 6));
+  ringBuffer.Write(Span(in, 6));
   //  v ReadIndex
   // [x0: 0, x1: 1, x2: 2, x3: 3, x4: 4,
   //  x5: 5, x6: 0, x7: 0, x8: 0, x9: 0, x10: 0]
@@ -657,7 +657,7 @@ TEST(TestAudioRingBuffer, NoCopyShort2)
     EXPECT_EQ(out[i + 3], in[i + 3]);
   }
 
-  ringBuffer.Write(MakeSpan(in, 8));
+  ringBuffer.Write(Span(in, 8));
   // Now the buffer contains:
   // [x0: 5, x1: 6, x2: 7, x3: 3, x4: 4,
   //  x5: 5, x6: 0, x7: 1, x8: 2, x9: 3, x10: 4
@@ -739,7 +739,7 @@ TEST(TestAudioRingBuffer, DiscardFloat)
   ringBuffer.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   float in[8] = {.0, .1, .2, .3, .4, .5, .6, .7};
-  ringBuffer.Write(MakeSpan(in, 8));
+  ringBuffer.Write(Span(in, 8));
 
   int rv = ringBuffer.Discard(3);
   EXPECT_EQ(rv, 3);
@@ -749,7 +749,7 @@ TEST(TestAudioRingBuffer, DiscardFloat)
   EXPECT_EQ(ringBuffer.AvailableRead(), 5);
 
   float out[8] = {};
-  rv = ringBuffer.Read(MakeSpan(out, 3));
+  rv = ringBuffer.Read(Span(out, 3));
   EXPECT_EQ(rv, 3);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -781,7 +781,7 @@ TEST(TestAudioRingBuffer, DiscardShort)
   ringBuffer.SetSampleFormat(AUDIO_FORMAT_S16);
 
   short in[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-  ringBuffer.Write(MakeSpan(in, 8));
+  ringBuffer.Write(Span(in, 8));
 
   int rv = ringBuffer.Discard(3);
   EXPECT_EQ(rv, 3);
@@ -791,7 +791,7 @@ TEST(TestAudioRingBuffer, DiscardShort)
   EXPECT_EQ(ringBuffer.AvailableRead(), 5);
 
   short out[8] = {};
-  rv = ringBuffer.Read(MakeSpan(out, 3));
+  rv = ringBuffer.Read(Span(out, 3));
   EXPECT_EQ(rv, 3);
   EXPECT_TRUE(!ringBuffer.IsEmpty());
   EXPECT_TRUE(!ringBuffer.IsFull());
@@ -901,7 +901,7 @@ TEST(TestAudioRingBuffer, WriteFromRingShort)
   ringBuffer1.SetSampleFormat(AUDIO_FORMAT_S16);
 
   short in[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-  int rv = ringBuffer1.Write(MakeSpan(in, 8));
+  int rv = ringBuffer1.Write(Span(in, 8));
   EXPECT_EQ(rv, 8);
 
   AudioRingBuffer ringBuffer2(11 * sizeof(short));
@@ -913,7 +913,7 @@ TEST(TestAudioRingBuffer, WriteFromRingShort)
   EXPECT_EQ(ringBuffer1.AvailableRead(), 8);
 
   short out[4] = {};
-  rv = ringBuffer2.Read(MakeSpan(out, 4));
+  rv = ringBuffer2.Read(Span(out, 4));
   for (int i = 0; i < rv; ++i) {
     EXPECT_EQ(out[i], in[i]);
   }
@@ -930,7 +930,7 @@ TEST(TestAudioRingBuffer, WriteFromRingShort)
   EXPECT_EQ(ringBuffer1.AvailableRead(), 4);
 
   short out2[8] = {};
-  rv = ringBuffer2.Read(MakeSpan(out2, 8));
+  rv = ringBuffer2.Read(Span(out2, 8));
   for (int i = 0; i < rv; ++i) {
     EXPECT_EQ(out2[i], in[i]);
   }
@@ -942,7 +942,7 @@ TEST(TestAudioRingBuffer, WriteFromRingFloat)
   ringBuffer1.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   float in[8] = {.0, .1, .2, .3, .4, .5, .6, .7};
-  int rv = ringBuffer1.Write(MakeSpan(in, 8));
+  int rv = ringBuffer1.Write(Span(in, 8));
   EXPECT_EQ(rv, 8);
 
   AudioRingBuffer ringBuffer2(11 * sizeof(float));
@@ -954,7 +954,7 @@ TEST(TestAudioRingBuffer, WriteFromRingFloat)
   EXPECT_EQ(ringBuffer1.AvailableRead(), 8);
 
   float out[4] = {};
-  rv = ringBuffer2.Read(MakeSpan(out, 4));
+  rv = ringBuffer2.Read(Span(out, 4));
   for (int i = 0; i < rv; ++i) {
     EXPECT_FLOAT_EQ(out[i], in[i]);
   }
@@ -971,7 +971,7 @@ TEST(TestAudioRingBuffer, WriteFromRingFloat)
   EXPECT_EQ(ringBuffer1.AvailableRead(), 4);
 
   float out2[8] = {};
-  rv = ringBuffer2.Read(MakeSpan(out2, 8));
+  rv = ringBuffer2.Read(Span(out2, 8));
   for (int i = 0; i < rv; ++i) {
     EXPECT_FLOAT_EQ(out2[i], in[i]);
   }

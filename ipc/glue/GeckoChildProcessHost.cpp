@@ -854,8 +854,8 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
     std::wstring resolvedPath(NS_ConvertUTF8toUTF16(absPath).get());
     if (widget::WinUtils::ResolveJunctionPointsAndSymLinks(resolvedPath)) {
       AppendUTF16toUTF8(
-          MakeSpan(reinterpret_cast<const char16_t*>(resolvedPath.data()),
-                   resolvedPath.size()),
+          Span(reinterpret_cast<const char16_t*>(resolvedPath.data()),
+               resolvedPath.size()),
           buffer);
     } else
 #  endif

@@ -894,7 +894,7 @@ nsresult ReadCompressedIndexDataValuesFromSource(
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  rv = ReadCompressedIndexDataValuesFromBlob(MakeSpan(blobData, blobDataLength),
+  rv = ReadCompressedIndexDataValuesFromBlob(Span(blobData, blobDataLength),
                                              aOutIndexValues);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3580,8 +3580,7 @@ UpgradeIndexDataValuesFunction::OnFunctionCall(
     return rv;
   }
 
-  auto oldIdvOrErr =
-      ReadOldCompressedIDVFromBlob(MakeSpan(oldBlob, oldBlobLength));
+  auto oldIdvOrErr = ReadOldCompressedIDVFromBlob(Span(oldBlob, oldBlobLength));
   if (NS_WARN_IF(oldIdvOrErr.isErr())) {
     return oldIdvOrErr.unwrapErr();
   }

@@ -262,7 +262,7 @@ namespace {
 void PopulateBufferForBinaryString(char16_t* aDest, const char* aSource,
                                    uint32_t aCount) {
   // Zero-extend each char to char16_t.
-  ConvertLatin1toUtf16(MakeSpan(aSource, aCount), MakeSpan(aDest, aCount));
+  ConvertLatin1toUtf16(Span(aSource, aCount), Span(aDest, aCount));
 }
 
 nsresult ReadFuncBinaryString(nsIInputStream* aInputStream, void* aClosure,
@@ -468,7 +468,7 @@ nsresult FileReader::GetAsText(Blob* aBlob, const nsACString& aCharset,
     }
   }
 
-  auto data = MakeSpan(reinterpret_cast<const uint8_t*>(aFileData), aDataLen);
+  auto data = Span(reinterpret_cast<const uint8_t*>(aFileData), aDataLen);
   nsresult rv;
   Tie(rv, encoding) = encoding->Decode(data, aResult);
   return NS_FAILED(rv) ? rv : NS_OK;

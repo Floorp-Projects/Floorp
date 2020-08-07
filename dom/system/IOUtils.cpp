@@ -268,7 +268,7 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
 
   // Process arguments.
   aData.ComputeState();
-  auto buf = Buffer<uint8_t>::CopyFrom(MakeSpan(aData.Data(), aData.Length()));
+  auto buf = Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
   if (buf.isNothing()) {
     promise->MaybeRejectWithOperationError("Out of memory");
     return promise.forget();

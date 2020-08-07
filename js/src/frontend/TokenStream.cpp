@@ -55,9 +55,9 @@ using mozilla::IsAsciiDigit;
 using mozilla::IsAsciiHexDigit;
 using mozilla::IsTrailingUnit;
 using mozilla::MakeScopeExit;
-using mozilla::MakeSpan;
 using mozilla::Maybe;
 using mozilla::PointerRangeSize;
+using mozilla::Span;
 using mozilla::Utf8Unit;
 
 using JS::ReadOnlyCompileOptions;
@@ -2248,7 +2248,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
       }
     }
 
-    atom = atomizeSourceChars(MakeSpan(chars, length));
+    atom = atomizeSourceChars(Span(chars, length));
   }
   if (!atom) {
     return false;

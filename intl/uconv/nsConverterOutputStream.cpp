@@ -51,8 +51,8 @@ nsConverterOutputStream::Write(uint32_t aCount, const char16_t* aChars,
   }
   MOZ_ASSERT(mConverter, "Must have a converter when not closed");
   uint8_t buffer[4096];
-  auto dst = MakeSpan(buffer);
-  auto src = MakeSpan(aChars, aCount);
+  auto dst = Span(buffer);
+  auto src = Span(aChars, aCount);
   for (;;) {
     uint32_t result;
     size_t read;
@@ -92,7 +92,7 @@ nsConverterOutputStream::Flush() {
   // needs to be large enough for an additional NCR,
   // though.
   uint8_t buffer[12];
-  auto dst = MakeSpan(buffer);
+  auto dst = Span(buffer);
   Span<char16_t> src(nullptr);
   uint32_t result;
   size_t read;

@@ -833,7 +833,7 @@ nsNSSCertificate::Write(nsIObjectOutputStream* aStream) {
     return rv;
   }
   return aStream->WriteBytes(
-      AsBytes(MakeSpan(mCert->derCert.data, mCert->derCert.len)));
+      AsBytes(Span(mCert->derCert.data, mCert->derCert.len)));
 }
 
 // NB: Any updates (except disk-only fields) must be kept in sync with

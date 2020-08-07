@@ -43,7 +43,6 @@
 #include "js/Value.h"       // JS::Value
 
 using mozilla::AsBytes;
-using mozilla::MakeSpan;
 using mozilla::MakeUnique;
 using mozilla::PodCopy;
 using mozilla::Span;
@@ -221,7 +220,7 @@ nsBinaryOutputStream::WriteWStringZ(const char16_t* aString) {
   }
 
 #ifdef IS_BIG_ENDIAN
-  rv = WriteBytes(AsBytes(MakeSpan(aString, length)));
+  rv = WriteBytes(AsBytes(Span(aString, length)));
 #else
   // XXX use WriteSegments here to avoid copy!
   char16_t* copy;
@@ -236,7 +235,7 @@ nsBinaryOutputStream::WriteWStringZ(const char16_t* aString) {
   }
   NS_ASSERTION((uintptr_t(aString) & 0x1) == 0, "aString not properly aligned");
   mozilla::NativeEndian::copyAndSwapToBigEndian(copy, aString, length);
-  rv = WriteBytes(AsBytes(MakeSpan(copy, length)));
+  rv = WriteBytes(AsBytes(Span(copy, length)));
   if (copy != temp) {
     free(copy);
   }
@@ -267,7 +266,7 @@ nsresult nsBinaryOutputStream::WriteBytes(Span<const uint8_t> aBytes) {
 
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteBytesFromJS(const char* aString, uint32_t aLength) {
-  return WriteBytes(AsBytes(MakeSpan(aString, aLength)));
+  return WriteBytes(AsBytes(Span(aString, aLength)));
 }
 
 NS_IMETHODIMP

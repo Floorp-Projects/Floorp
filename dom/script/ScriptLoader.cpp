@@ -3334,7 +3334,7 @@ static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
     return NS_OK;
   }
 
-  auto data = MakeSpan(aData, aLength);
+  auto data = Span(aData, aLength);
 
   // The encoding info precedence is as follows from high to low:
   // The BOM
@@ -3398,7 +3398,7 @@ static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
 
   signalOOM.release();
   aLengthOut = ScriptDecoding<Unit>::DecodeInto(
-      unicodeDecoder, data, MakeSpan(aBufOut, bufferLength.value()),
+      unicodeDecoder, data, Span(aBufOut, bufferLength.value()),
       /* aEndOfSource = */ true);
   return NS_OK;
 }

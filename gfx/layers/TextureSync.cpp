@@ -123,8 +123,8 @@ void TextureSync::HandleWaitForTexturesMessage(MachReceiveMessage* rmsg,
       (rmsg->GetDataLength() - sizeof(WaitForTexturesRequest)) /
       sizeof(uint64_t);
 
-  bool success = WaitForTextureIdsToUnlock(
-      req->pid, MakeSpan<uint64_t>(textureIds, textureIdsLength));
+  bool success =
+      WaitForTextureIdsToUnlock(req->pid, Span(textureIds, textureIdsLength));
 
   if (!success) {
     LOG_ERROR("Waiting for textures to unlock failed.\n");
@@ -219,8 +219,7 @@ void TextureSync::UpdateTextureLocks(base::ProcessId aProcessId) {
 bool TextureSync::WaitForTextures(base::ProcessId aProcessId,
                                   const nsTArray<uint64_t>& textureIds) {
   if (aProcessId == base::GetCurrentProcId()) {
-    bool success =
-        WaitForTextureIdsToUnlock(aProcessId, MakeSpan<uint64_t>(textureIds));
+    bool success = WaitForTextureIdsToUnlock(aProcessId, Span(textureIds));
     if (!success) {
       LOG_ERROR("Failed waiting for textures to unlock.\n");
     }
