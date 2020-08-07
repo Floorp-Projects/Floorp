@@ -39,8 +39,8 @@ struct IPDLParamTraits;
  * performed.
  */
 
-// ================================================
-
+// ====================================================================
+// ====================================================================
 /*
  * Simple Tainted<foo> class
  *
@@ -69,110 +69,230 @@ class Tainted {
   friend struct mozilla::ipc::IPDLParamTraits<Tainted<T>>;
 };
 
-// ================================================
-
+// ====================================================================
+// ====================================================================
 /*
- * Macros to validate and un-taint a value.
- *
- * All macros accept the tainted variable as the first argument, and a condition
- * as the second argument. If the condition is satisfied, then the value is
- * considered valid.
- *
- * Usage:
- *   Tainted<int> a(50);
- *
- *
- *   int w = MOZ_VALIDATE_AND_GET(a, a < 10);
- *       Here we check that a is greater than 10 and if so, we
- *       return its value. If it is not greater than 10 we MOZ_RELEASE_ASSERT.
- *
- *       Note that while the comparison of a < 10 works inside the macro,
- *       doing so outside the macro (such as with if (a < 10) will
- *       (intentionally) fail. We do this to ensure that all validation logic
- *       is self-contained.
- *
- *
- *   int x = MOZ_VALIDATE_AND_GET(a, a < 10, "a is too large");
- *       The macro also supports supplying a custom string to the
- *       MOZ_RELEASE_ASSERT
- *
- *
- *   int y = MOZ_VALIDATE_AND_GET(a, [&a] {
- *     bool intermediate_result = someFunction(a);
- *     if (intermediate_result) {
- *       return true;
- *     } else {
- *       return someOtherFunction(a);
- *     }
- *   }());
- *      In this example we use a lambda function to perform a more complicated
- *      validation that cannot be performed succinctly in a single conditional.
- *
- *
- *   int safeOffset = MOZ_VALIDATE_OR(a, a < 10, 0);
- *      MOZ_VALIDATE_OR will provide a default value to use if the tainted value
- *      is invalid.
- *
- *
- *
- *   if (!MOZ_IS_VALID(a, a > 50)) {
- *     return false;
- *   }
- *      If you want to test validity without triggering an assertion, the
- *      MOZ_IS_VALID macro can be used anywhere as a boolean.
- *
+ * This section contains non-user-facing C++ gobblygook to support
+ * variable-argument macros.
  */
-
 #define MOZ_TAINT_GLUE(a, b) a b
 
 // We use the same variable name in the nested scope, shadowing the outer
 // scope - this allows the user to write the same variable name in the
 // macro's condition without using a magic name like 'value'.
 //
-// We mark it MOZ_MAYBE_UNUSED because sometimes the condition doesn't
-// make use of tainted_value, which causes an unused variable warning.
-// That will only happen when we are bypssing validation, which is a
-// future ergonomic we will iterate on.
+// We explicitly do not mark it MOZ_MAYBE_UNUSED because the condition
+// should always make use of tainted_value, not doing so should cause an
+// unused variable warning. That would only happen when we are bypssing
+// validation.
+//
+// The separate bool variable is required to allow condition to be a lambda
+// expression; lambdas cannot be placed directly inside ASSERTs.
 #define MOZ_VALIDATE_AND_GET_HELPER3(tainted_value, condition, \
                                      assertionstring)          \
-  [&tainted_value]() {                                         \
+  [&]() {                                                      \
     auto& tmp = tainted_value.Coerce();                        \
-    auto& MOZ_MAYBE_UNUSED tainted_value = tmp;                \
-    MOZ_RELEASE_ASSERT((condition), assertionstring);          \
+    auto& tainted_value = tmp;                                 \
+    bool test = (condition);                                   \
+    MOZ_RELEASE_ASSERT(test, assertionstring);                 \
     return tmp;                                                \
   }()
 
-// This and the next macros are heavy C++ gobblygook to support a two and three
-// argument variant.
 #define MOZ_VALIDATE_AND_GET_HELPER2(tainted_value, condition)        \
   MOZ_VALIDATE_AND_GET_HELPER3(tainted_value, condition,              \
                                "MOZ_VALIDATE_AND_GET(" #tainted_value \
                                ", " #condition ") has failed")
 
+// ====================================================================
+// ====================================================================
+/*
+ * Macros to validate and un-taint a value.
+ *
+ * All macros accept the tainted variable as the first argument, and a
+ * condition as the second argument. If the condition is satisfied,
+ * then the value is considered valid.
+ *
+ * This file contains documentation and examples for the functions;
+ * more usage examples are present in mfbt/tests/TestTainting.cpp
+ */
+
+/*
+ * MOZ_VALIDATE_AND_GET is the bread-and-butter validation function.
+ * It confirms the value abides by the condition specified and then
+ * returns the untainted value.
+ *
+ * If the condition is not satisified, we RELEASE_ASSERT.
+ *
+ * Examples:
+ *
+ *   int bar;
+ *   Tainted<int> foo;
+ *   int comparisonVariable = 20;
+ *
+ *   bar = MOZ_VALIDATE_AND_GET(foo, foo < 20);
+ *   bar = MOZ_VALIDATE_AND_GET(foo, foo < comparisonVariable);
+ *
+ * Note that while the comparison of foo < 20 works inside the macro,
+ * doing so outside the macro (such as with `if (foo < 20)` will
+ * (intentionally) fail during compilation. We do this to ensure that
+ * all validation logic is self-contained inside the macro.
+ *
+ *
+ * The macro also supports supplying a custom string to the
+ * MOZ_RELEASE_ASSERT. This is strongly encouraged because it
+ * provides the author the opportunity to explain by way of an
+ * english comment what is happening.
+ *
+ * Good things to include in the comment:
+ *  - What the validation is doing or what it means
+ *  - The impact that could occur if validation was bypassed.
+ *    e.g. 'This value is used to allocate memory, so sane values
+ *          should be enforced.''
+ *  - How validation could change in the future to be more or less
+ *    restrictive.
+ *
+ * Example:
+ *
+ *   bar = MOZ_VALIDATE_AND_GET(
+ *    foo, foo < 20,
+ *    "foo must be less than 20 because higher values represent decibel"
+ *    "levels greater than a a jet engine inside your ear.");
+ *
+ *
+ * The condition can also be a lambda function if you need to
+ * define temporary variables or perform more complex validation.
+ *
+ * Square brackets represent the capture group - local variables
+ * can be specified here to capture them and use them inside the
+ * lambda. Prefacing the variable with '&' means the variable is
+ * captured by-reference. It is typically better to capture
+ * variables by reference rather than making them parameters.
+ *
+ * When using this technique:
+ *  - the tainted value must be present and should be captured
+ *    by reference. (You could make it a parameter if you wish, but
+ *    it's more typing.)
+ *  - the entire lambda function must be enclosed in parens
+ *    (if you omit this, you might get errors of the form:
+ *     'use of undeclared identifier 'MOZ_VALIDATE_AND_GET_HELPER4')
+ *
+ * Example:
+ *
+ *   bar = MOZ_VALIDATE_AND_GET(foo, ([&foo, &comparisonVariable]() {
+ *           bool intermediateResult = externalFunction(foo);
+ *           if (intermediateResult || comparisonVariable < 4) {
+ *             return true;
+ *           }
+ *           return false;
+ *         }()));
+ *
+ *
+ * You can also define a lambda external to the macro if you prefer
+ * this over a static function.
+ *
+ * This is possible, and supported, but requires a different syntax.
+ * Instead of specifying the tainted value in the capture group [&foo],
+ * it must be provided as an argument of the unwrapped type.
+ * (The argument name can be anything you choose of course.)
+ *
+ * Example:
+ *
+ *   auto lambda1 = [](int foo) {
+ *     bool intermediateResult = externalFunction(foo);
+ *     if (intermediateResult) {
+ *       return true;
+ *     }
+ *     return false;
+ *   };
+ *   bar = MOZ_VALIDATE_AND_GET(foo, lambda1(foo));
+ *
+ *
+ * Arguments:
+ *   tainted_value - the name of the Tainted<> variable
+ *   condition - a comparison involving the tainted value
+ *   assertionstring [optional] - A string to include in the RELEASE_ASSERT
+ */
 #define MOZ_VALIDATE_AND_GET(...)                                            \
   MOZ_TAINT_GLUE(MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_VALIDATE_AND_GET_HELPER, \
                                                 __VA_ARGS__),                \
                  (__VA_ARGS__))
 
-// This construct uses a lambda expression to create a scope and test the
-// condition, returning true or false.
-// We use the same variable-shadowing trick.
-#define MOZ_IS_VALID(tainted_value, condition)  \
-  [&tainted_value]() {                          \
-    auto& tmp = tainted_value.Coerce();         \
-    auto& MOZ_MAYBE_UNUSED tainted_value = tmp; \
-    return (condition);                         \
+/*
+ * MOZ_IS_VALID is the other most common use, it allows one to test
+ * validity without asserting, for use in a if/else statement.
+ *
+ * It supports the same lambda behavior, but does not support a
+ * comment explaining the validation.
+ *
+ * Example:
+ *
+ *   if (MOZ_IS_VALID(foo, foo < 20)) {
+ *      ...
+ *   }
+ *
+ *
+ * Arguments:
+ *   tainted_value - the name of the Tainted<> variable
+ *   condition - a comparison involving the tainted value
+ */
+#define MOZ_IS_VALID(tainted_value, condition) \
+  [&]() {                                      \
+    auto& tmp = tainted_value.Coerce();        \
+    auto& tainted_value = tmp;                 \
+    return (condition);                        \
   }()
 
-// Allows us to test validity and returning a default value if the value is
-// invalid.
+/*
+ * MOZ_VALIDATE_OR is a shortcut that tests validity and if invalid,
+ * return an alternate value.
+ *
+ * Note that the following will not work:
+ *   MOZ_RELEASE_ASSERT(MOZ_VALIDATE_OR(foo, foo < 20, 100) == EXPECTED_VALUE);
+ *   MOZ_ASSERT(MOZ_VALIDATE_OR(foo, foo < 20, 100) == EXPECTED_VALUE);
+ * This is because internally, many MOZ_VALIDATE macros use lambda
+ * expressions (for variable shadowing purposes) and lambas cannot be
+ * expressions in (potentially) unevaluated operands.
+ *
+ * Example:
+ *
+ *   bar = MOZ_VALIDATE_OR(foo, foo < 20, 100);
+ *
+ *
+ * Arguments:
+ *   tainted_value - the name of the Tainted<> variable
+ *   condition - a comparison involving the tainted value
+ *   alternate_value - the value to use if the condition is false
+ */
 #define MOZ_VALIDATE_OR(tainted_value, condition, alternate_value) \
   (MOZ_IS_VALID(tainted_value, condition) ? tainted_value.Coerce() \
                                           : alternate_value)
 
-// This allows unsafe removal of the Taint wrapper.
-// A justification string is required to explain why this is acceptable
-#define MOZ_NO_VALIDATE(tainted_value, justification) tainted_value.Coerce()
+/*
+ * MOZ_NO_VALIDATE allows unsafe removal of the Taint wrapper.
+ * A justification string is required to explain why this is acceptable.
+ *
+ * Example:
+ *
+ *  bar = MOZ_NO_VALIDATE(
+ *    foo,
+ *    "Value is used to match against a dictionary key in the parent."
+ *    "If there's no key present, there won't be a match."
+ *    "There is no risk of grabbing a cross-origin value from the dictionary,"
+ *    "because the IPC actor is instatiated per-content-process and the "
+ *    "dictionary is not shared between actors.");
+ *
+ *
+ * Arguments:
+ *   tainted_value - the name of the Tainted<> variable
+ *   justification - a human-understandable string explaining why it is
+ *                   permissible to omit validation
+ */
+#define MOZ_NO_VALIDATE(tainted_value, justification)      \
+  [&tainted_value] {                                       \
+    static_assert(sizeof(justification) > 3,               \
+                  "Must provide a justification string."); \
+    return tainted_value.Coerce();                         \
+  }()
 
 /*
  TODO:
