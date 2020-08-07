@@ -86,6 +86,10 @@ class Front extends Pool {
     this._beforeListeners = null;
   }
 
+  isDestroyed() {
+    return this.actorID === null;
+  }
+
   async manage(front, form, ctx) {
     if (!front.actorID) {
       throw new Error(
