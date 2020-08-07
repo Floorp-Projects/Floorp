@@ -101,8 +101,17 @@ class IO extends Domain {
 
     const bytes = await stream.read(chunkSize);
     // Each UCS2 character has an upper byte of 0 and a lower byte matching
-    // the binary data
-    const data = btoa(String.fromCharCode.apply(null, bytes));
+    // the binary data. Using a loop here prevents us from hitting the browser's
+    // internal `arguments.length` limit.
+    const ARGS_MAX = 262144;
+    const stringData = [];
+    for (let i = 0; i < bytes.length; i += ARGS_MAX) {
+      let argsChunk = Math.min(bytes.length, i + ARGS_MAX);
+      stringData.push(
+        String.fromCharCode.apply(null, bytes.slice(i, argsChunk))
+      );
+    }
+    const data = btoa(stringData.join(""));
 
     return {
       data,
