@@ -244,6 +244,18 @@ TEST_VARIANTS = {
             'webrender': True,
         }
     },
+    'webrender-sw': {
+        'description': "{description} with software webrender enabled",
+        'suffix': 'swr',
+        'merge': {
+            'webrender': True,
+            'mozharness': {
+                'extra-options': [
+                    '--setpref=gfx.webrender.software=true',
+                ],
+            }
+        }
+    },
     'webgl-ipc': {
         # TODO: After November 1st 2020, verify this variant is still needed.
         'description': "{description} with WebGL IPC process enabled",
