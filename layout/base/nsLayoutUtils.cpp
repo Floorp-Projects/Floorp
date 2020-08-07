@@ -8798,9 +8798,7 @@ nsMargin nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
   if (!scrollableFrame) {
     return nsMargin();
   }
-  return scrollableFrame->GetActualScrollbarSizes(
-      nsIScrollableFrame::ScrollbarSizesOptions::
-          INCLUDE_VISUAL_VIEWPORT_SCROLLBARS);
+  return scrollableFrame->GetActualScrollbarSizes();
 }
 
 /* static */
