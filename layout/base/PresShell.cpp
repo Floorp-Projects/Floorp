@@ -10958,6 +10958,7 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
   if (mvmType && mMobileViewportManager &&
       *mvmType == mMobileViewportManager->GetManagerType()) {
     // We need one and we have one of the correct type, so we're done.
+    return;
   }
 
   if (mMobileViewportManager) {
