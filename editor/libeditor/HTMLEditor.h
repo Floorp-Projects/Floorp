@@ -2874,13 +2874,14 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aCaretPosition);
 
   /**
-   * HandleDeleteNonCollapsedSelection() handles deletion with non-collapsed
-   * `Selection`.  Callers must guarantee that this is called only when
-   * `Selection` is NOT collapsed.
+   * HandleDeleteNonCollapsedRanges() handles deletion with non-collapsed
+   * ranges.  Callers must guarantee that this is called only when
+   * aRangesToDelete.IsCollapsed() returns false.
    *
    * @param aDirectionAndAmount         Direction of the deletion.
    * @param aStripWrappers              Must be eStrip or eNoStrip.
-   * @param aSelectionWasCollpased      If the caller extended `Selection`
+   * @param aRangesToDelete             The ranges to delete.
+   * @param aSelectionWasCollapsed      If the caller extended `Selection`
    *                                    from collapsed, set this to `Yes`.
    *                                    Otherwise, i.e., `Selection` is not
    *                                    collapsed from the beginning, set
@@ -2888,10 +2889,10 @@ class HTMLEditor final : public TextEditor,
    */
   enum class SelectionWasCollapsed { Yes, No };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteNonCollapsedSelection(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers,
-      SelectionWasCollapsed aSelectionWasCollapsed);
+  HandleDeleteNonCollapsedRanges(nsIEditor::EDirection aDirectionAndAmount,
+                                 nsIEditor::EStripWrappers aStripWrappers,
+                                 AutoRangeArray& aRangesToDelete,
+                                 SelectionWasCollapsed aSelectionWasCollapsed);
 
   /**
    * DeleteElementsExceptTableRelatedElements() removes elements except

@@ -2512,11 +2512,12 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
     }
   }
 
-  EditActionResult result = HandleDeleteNonCollapsedSelection(
-      aDirectionAndAmount, aStripWrappers, selectionWasCollapsed);
-  NS_WARNING_ASSERTION(
-      result.Succeeded(),
-      "HTMLEditor::HandleDeleteNonCollapasedSelection() failed");
+  AutoRangeArray rangesToDelete(*SelectionRefPtr());
+  EditActionResult result =
+      HandleDeleteNonCollapsedRanges(aDirectionAndAmount, aStripWrappers,
+                                     rangesToDelete, selectionWasCollapsed);
+  NS_WARNING_ASSERTION(result.Succeeded(),
+                       "HTMLEditor::HandleDeleteNonCollapsedRanges() failed");
   return result;
 }
 
@@ -3274,26 +3275,23 @@ EditActionResult HTMLEditor::AutoBlockElementsJoiner::
   return result;
 }
 
-EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
+EditActionResult HTMLEditor::HandleDeleteNonCollapsedRanges(
     nsIEditor::EDirection aDirectionAndAmount,
-    nsIEditor::EStripWrappers aStripWrappers,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
     SelectionWasCollapsed aSelectionWasCollapsed) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-  MOZ_ASSERT(!SelectionRefPtr()->IsCollapsed());
+  MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
 
-  AutoRangeArray rangesToDelete(*SelectionRefPtr());
-  MOZ_ASSERT(!rangesToDelete.IsCollapsed());
-
-  if (NS_WARN_IF(!rangesToDelete.FirstRangeRef()->StartRef().IsSet()) ||
-      NS_WARN_IF(!rangesToDelete.FirstRangeRef()->EndRef().IsSet())) {
+  if (NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->StartRef().IsSet()) ||
+      NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->EndRef().IsSet())) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
 
   // Else we have a non-collapsed selection.  First adjust the selection.
   // XXX Why do we extend selection only when there is only one range?
-  if (rangesToDelete.Ranges().Length() == 1) {
-    RefPtr<nsRange> extendedRange =
-        GetRangeExtendedToIncludeInvisibleNodes(rangesToDelete.FirstRangeRef());
+  if (aRangesToDelete.Ranges().Length() == 1) {
+    RefPtr<nsRange> extendedRange = GetRangeExtendedToIncludeInvisibleNodes(
+        aRangesToDelete.FirstRangeRef());
     if (!extendedRange || !extendedRange->IsPositioned() ||
         !extendedRange->StartRef().IsSet() ||
         !extendedRange->EndRef().IsSet()) {
@@ -3315,7 +3313,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
           "range outer limit");
       return EditActionResult(NS_ERROR_FAILURE);
     }
-    rangesToDelete.FirstRangeRef() = *extendedRange;
+    aRangesToDelete.FirstRangeRef() = *extendedRange;
   }
 
   // Remember that we did a ranged delete for the benefit of AfterEditInner().
@@ -3326,9 +3324,9 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   if (!IsPlaintextEditor()) {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
     AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
-                                        &rangesToDelete.FirstRangeRef());
+                                        &aRangesToDelete.FirstRangeRef());
     nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-        *this, EditorDOMRange(rangesToDelete.FirstRangeRef()));
+        *this, EditorDOMRange(aRangesToDelete.FirstRangeRef()));
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() "
@@ -3336,8 +3334,9 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
       return EditActionResult(rv);
     }
     if (NS_WARN_IF(
-            !rangesToDelete.FirstRangeRef()->StartRef().IsSetAndValid()) ||
-        NS_WARN_IF(!rangesToDelete.FirstRangeRef()->EndRef().IsSetAndValid())) {
+            !aRangesToDelete.FirstRangeRef()->StartRef().IsSetAndValid()) ||
+        NS_WARN_IF(
+            !aRangesToDelete.FirstRangeRef()->EndRef().IsSetAndValid())) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() made the firstr "
           "range invalid");
@@ -3347,16 +3346,16 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
 
   // XXX This is odd.  We do we simply use `DeleteRangesWithTransaction()`
   //     only when **first** range is in same container?
-  if (rangesToDelete.FirstRangeRef()->GetStartContainer() ==
-      rangesToDelete.FirstRangeRef()->GetEndContainer()) {
+  if (aRangesToDelete.FirstRangeRef()->GetStartContainer() ==
+      aRangesToDelete.FirstRangeRef()->GetEndContainer()) {
     // Because of previous DOM tree changes, the range may be collapsed.
     // If we've already removed all contents in the range, we shouldn't
     // delete anything around the caret.
-    if (!rangesToDelete.FirstRangeRef()->Collapsed()) {
+    if (!aRangesToDelete.FirstRangeRef()->Collapsed()) {
       AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
-                                          &rangesToDelete.FirstRangeRef());
-      nsresult rv = DeleteRangesWithTransaction(aDirectionAndAmount,
-                                                aStripWrappers, rangesToDelete);
+                                          &aRangesToDelete.FirstRangeRef());
+      nsresult rv = DeleteRangesWithTransaction(
+          aDirectionAndAmount, aStripWrappers, aRangesToDelete);
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
         return EditActionHandled(rv);
@@ -3366,8 +3365,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
     // containers which become empty.
     nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
         aDirectionAndAmount,
-        EditorDOMPoint(rangesToDelete.FirstRangeRef()->StartRef()),
-        EditorDOMPoint(rangesToDelete.FirstRangeRef()->EndRef()));
+        EditorDOMPoint(aRangesToDelete.FirstRangeRef()->StartRef()),
+        EditorDOMPoint(aRangesToDelete.FirstRangeRef()->EndRef()));
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteUnnecessaryNodesAndCollapseSelection() failed");
@@ -3375,17 +3374,17 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   }
 
   if (NS_WARN_IF(
-          !rangesToDelete.FirstRangeRef()->GetStartContainer()->IsContent()) ||
+          !aRangesToDelete.FirstRangeRef()->GetStartContainer()->IsContent()) ||
       NS_WARN_IF(
-          !rangesToDelete.FirstRangeRef()->GetEndContainer()->IsContent())) {
+          !aRangesToDelete.FirstRangeRef()->GetEndContainer()->IsContent())) {
     return EditActionHandled(NS_ERROR_FAILURE);  // XXX "handled"?
   }
 
   // Figure out mailcite ancestors
   RefPtr<Element> startCiteNode = GetMostAncestorMailCiteElement(
-      *rangesToDelete.FirstRangeRef()->GetStartContainer());
+      *aRangesToDelete.FirstRangeRef()->GetStartContainer());
   RefPtr<Element> endCiteNode = GetMostAncestorMailCiteElement(
-      *rangesToDelete.FirstRangeRef()->GetEndContainer());
+      *aRangesToDelete.FirstRangeRef()->GetEndContainer());
 
   // If we only have a mailcite at one of the two endpoints, set the
   // directionality of the deletion so that the selection will end up
@@ -3399,10 +3398,10 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   // Figure out block parents
   RefPtr<Element> leftBlockElement =
       HTMLEditUtils::GetInclusiveAncestorBlockElement(
-          *rangesToDelete.FirstRangeRef()->GetStartContainer()->AsContent());
+          *aRangesToDelete.FirstRangeRef()->GetStartContainer()->AsContent());
   RefPtr<Element> rightBlockElement =
       HTMLEditUtils::GetInclusiveAncestorBlockElement(
-          *rangesToDelete.FirstRangeRef()->GetEndContainer()->AsContent());
+          *aRangesToDelete.FirstRangeRef()->GetEndContainer()->AsContent());
   if (NS_WARN_IF(!leftBlockElement) || NS_WARN_IF(!rightBlockElement)) {
     return EditActionHandled(NS_ERROR_FAILURE);  // XXX "handled"??
   }
@@ -3413,9 +3412,9 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   if (leftBlockElement && leftBlockElement == rightBlockElement) {
     {
       AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
-                                          &rangesToDelete.FirstRangeRef());
-      nsresult rv = DeleteRangesWithTransaction(aDirectionAndAmount,
-                                                aStripWrappers, rangesToDelete);
+                                          &aRangesToDelete.FirstRangeRef());
+      nsresult rv = DeleteRangesWithTransaction(
+          aDirectionAndAmount, aStripWrappers, aRangesToDelete);
       if (rv == NS_ERROR_EDITOR_DESTROYED) {
         NS_WARNING(
             "EditorBase::DeleteRangesWithTransaction() caused destroying "
@@ -3428,8 +3427,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
     }
     nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
         aDirectionAndAmount,
-        EditorDOMPoint(rangesToDelete.FirstRangeRef()->StartRef()),
-        EditorDOMPoint(rangesToDelete.FirstRangeRef()->EndRef()));
+        EditorDOMPoint(aRangesToDelete.FirstRangeRef()->StartRef()),
+        EditorDOMPoint(aRangesToDelete.FirstRangeRef()->EndRef()));
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteUnnecessaryNodesAndCollapseSelection() failed");
@@ -3452,7 +3451,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
        HTMLEditUtils::IsHeader(*leftBlockElement))) {
     // First delete the selection
     nsresult rv = DeleteRangesWithTransaction(aDirectionAndAmount,
-                                              aStripWrappers, rangesToDelete);
+                                              aStripWrappers, aRangesToDelete);
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
       return EditActionHandled(rv);
@@ -3478,13 +3477,13 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   result.MarkAsHandled();
   {
     AutoTrackDOMRange firstRangeTracker(RangeUpdaterRef(),
-                                        &rangesToDelete.FirstRangeRef());
+                                        &aRangesToDelete.FirstRangeRef());
 
     // Else blocks not same type, or not siblings.  Delete everything
     // except table elements.
     bool join = true;
 
-    for (auto& range : rangesToDelete.Ranges()) {
+    for (auto& range : aRangesToDelete.Ranges()) {
       // Build a list of direct child nodes in the range
       AutoTArray<OwningNonNull<nsIContent>, 10> arrayOfTopChildren;
       DOMSubtreeIterator iter;
@@ -3539,8 +3538,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
     // text node is found, we can delete to end or to begining as
     // appropriate, since the case where both sel endpoints in same text
     // node was already handled (we wouldn't be here)
-    EditorDOMPoint firstRangeStart(rangesToDelete.FirstRangeRef()->StartRef());
-    EditorDOMPoint firstRangeEnd(rangesToDelete.FirstRangeRef()->EndRef());
+    EditorDOMPoint firstRangeStart(aRangesToDelete.FirstRangeRef()->StartRef());
+    EditorDOMPoint firstRangeEnd(aRangesToDelete.FirstRangeRef()->EndRef());
     if (firstRangeStart.IsInTextNode() && !firstRangeStart.IsEndOfContainer()) {
       // Delete to last character
       OwningNonNull<Text> textNode = *firstRangeStart.GetContainerAsText();
@@ -3596,8 +3595,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
 
   nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
       aDirectionAndAmount,
-      EditorDOMPoint(rangesToDelete.FirstRangeRef()->StartRef()),
-      EditorDOMPoint(rangesToDelete.FirstRangeRef()->EndRef()));
+      EditorDOMPoint(aRangesToDelete.FirstRangeRef()->StartRef()),
+      EditorDOMPoint(aRangesToDelete.FirstRangeRef()->EndRef()));
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::DeleteUnnecessaryNodesAndCollapseSelection() failed");
