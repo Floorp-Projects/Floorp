@@ -36,7 +36,6 @@ PrepareAndDispatch(nsXPTCStubBase* self,
                    double *fprData)
 {
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
-    nsXPTCMiniVariant* dispatchParams = nullptr;
     const nsXPTMethodInfo* info = nullptr;
     uint32_t paramCount;
     uint32_t i;
@@ -49,14 +48,6 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         return NS_ERROR_UNEXPECTED;
 
     paramCount = info->GetParamCount();
-
-    // setup variant array pointer
-    if(paramCount > PARAM_BUFFER_COUNT)
-        dispatchParams = new nsXPTCMiniVariant[paramCount];
-    else
-        dispatchParams = paramBuffer;
-
-    NS_ASSERTION(dispatchParams,"no place for params");
 
     const uint8_t indexOfJSContext = info->IndexOfJSContext();
 
@@ -71,7 +62,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     for(i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
-        nsXPTCMiniVariant* dp = &dispatchParams[i];
+        nsXPTCMiniVariant* dp = &paramBuffer[i];
 
         if (i == indexOfJSContext) {
             if (gpr < GPR_COUNT)
@@ -160,10 +151,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
 
     nsresult result = self->mOuter->CallMethod((uint16_t)methodIndex,
                                                info,
-                                               dispatchParams);
-
-    if (dispatchParams != paramBuffer)
-        delete [] dispatchParams;
+                                               paramBuffer);
 
     return result;
 }
