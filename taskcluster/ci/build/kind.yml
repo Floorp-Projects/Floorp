@@ -26,6 +26,8 @@ jobs-from:
     - windows-mingw.yml
 
 job-defaults:
+    attributes:
+        resource-monitor: true
     run:
         mozconfig-variant:
             by-release-type:
