@@ -61,6 +61,13 @@ static_assert(std::is_convertible_v<nsTArray<const int>, Span<const int>>,
 static_assert(!std::is_convertible_v<nsTArray<const int>, Span<int>>,
               "nsTArray should not drop const in conversion");
 
+static_assert(std::is_convertible_v<const std::vector<int>, Span<const int>>,
+              "const std::vector should convert into const");
+static_assert(std::is_convertible_v<std::vector<int>, Span<const int>>,
+              "std::vector should convert into const");
+static_assert(!std::is_convertible_v<const std::vector<int>, Span<int>>,
+              "std::vector should not drop const in conversion");
+
 /**
  * Rust slice-compatible nullptr replacement value.
  */
