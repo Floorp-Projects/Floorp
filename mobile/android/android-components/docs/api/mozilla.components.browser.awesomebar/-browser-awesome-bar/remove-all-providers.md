@@ -2,7 +2,7 @@
 
 # removeAllProviders
 
-`@Synchronized fun removeAllProviders(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/awesomebar/src/main/java/mozilla/components/browser/awesomebar/BrowserAwesomeBar.kt#L123)
+`@Synchronized fun removeAllProviders(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/awesomebar/src/main/java/mozilla/components/browser/awesomebar/BrowserAwesomeBar.kt#L124)
 
 Overrides [AwesomeBar.removeAllProviders](../../mozilla.components.concept.awesomebar/-awesome-bar/remove-all-providers.md)
 

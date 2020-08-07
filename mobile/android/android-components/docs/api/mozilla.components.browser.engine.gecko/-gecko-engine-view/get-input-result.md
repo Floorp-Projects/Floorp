@@ -2,7 +2,7 @@
 
 # getInputResult
 
-`fun getInputResult(): `[`InputResult`](../../mozilla.components.concept.engine/-engine-view/-input-result/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L183)
+`fun getInputResult(): `[`InputResult`](../../mozilla.components.concept.engine/-engine-view/-input-result/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L187)
 
 Overrides [EngineView.getInputResult](../../mozilla.components.concept.engine/-engine-view/get-input-result.md)
 

@@ -2,7 +2,7 @@
 
 # areContentsTheSame
 
-`fun areContentsTheSame(other: `[`Suggestion`](index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L127)
+`fun areContentsTheSame(other: `[`Suggestion`](index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L132)
 
 Returns true if the content of the two suggestions is the same.
 

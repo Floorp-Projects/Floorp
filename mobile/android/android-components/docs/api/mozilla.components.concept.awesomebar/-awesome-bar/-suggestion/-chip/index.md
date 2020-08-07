@@ -2,7 +2,7 @@
 
 # Chip
 
-`data class Chip` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L106)
+`data class Chip` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L111)
 
 Chips are compact actions that are shown as part of a suggestion. For example a [Suggestion](../index.md) from a search
 engine may offer multiple search suggestion chips for different search terms.

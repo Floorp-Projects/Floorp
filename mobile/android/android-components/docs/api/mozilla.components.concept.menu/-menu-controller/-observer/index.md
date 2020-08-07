@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/menu/src/main/java/mozilla/components/concept/menu/MenuController.kt#L35)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/menu/src/main/java/mozilla/components/concept/menu/MenuController.kt#L36)
 
 Observer for the menu controller.
 

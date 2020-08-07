@@ -2,7 +2,7 @@
 
 # onChipClicked
 
-`val onChipClicked: (`[`Chip`](-chip/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L99)
+`val onChipClicked: (`[`Chip`](-chip/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L104)
 
 A callback to be executed when a [Chip](-chip/index.md) was clicked by the user.
 

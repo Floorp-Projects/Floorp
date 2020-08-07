@@ -2,7 +2,7 @@
 
 # onInputCancelled
 
-`@Synchronized fun onInputCancelled(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/awesomebar/src/main/java/mozilla/components/browser/awesomebar/BrowserAwesomeBar.kt#L208)
+`@Synchronized fun onInputCancelled(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/awesomebar/src/main/java/mozilla/components/browser/awesomebar/BrowserAwesomeBar.kt#L209)
 
 Overrides [AwesomeBar.onInputCancelled](../../mozilla.components.concept.awesomebar/-awesome-bar/on-input-cancelled.md)
 

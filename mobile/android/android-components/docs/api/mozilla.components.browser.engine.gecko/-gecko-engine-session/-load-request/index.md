@@ -2,7 +2,7 @@
 
 # LoadRequest
 
-`data class LoadRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L114)
+`data class LoadRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L116)
 
 Represents a request to load a [url](url.md).
 

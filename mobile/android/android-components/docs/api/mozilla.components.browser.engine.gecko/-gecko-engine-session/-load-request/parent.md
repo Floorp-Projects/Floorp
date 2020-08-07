@@ -2,7 +2,7 @@
 
 # parent
 
-`val parent: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L116)
+`val parent: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L118)
 
 the parent (referring) [EngineSession](../../../mozilla.components.concept.engine/-engine-session/index.md) i.e. the session that
 triggered creating this one.

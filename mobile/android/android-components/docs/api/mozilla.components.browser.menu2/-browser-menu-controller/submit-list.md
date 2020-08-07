@@ -2,7 +2,7 @@
 
 # submitList
 
-`fun submitList(list: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`MenuCandidate`](../../mozilla.components.concept.menu.candidate/-menu-candidate/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/BrowserMenuController.kt#L106)
+`fun submitList(list: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`MenuCandidate`](../../mozilla.components.concept.menu.candidate/-menu-candidate/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu2/src/main/java/mozilla/components/browser/menu2/BrowserMenuController.kt#L101)
 
 Overrides [MenuController.submitList](../../mozilla.components.concept.menu/-menu-controller/submit-list.md)
 

@@ -2,7 +2,7 @@
 
 # AppLinksFeature
 
-`class AppLinksFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksFeature.kt#L34)
+`class AppLinksFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksFeature.kt#L39)
 
 This feature implements observer for handling redirects to external apps. The users are asked to
 confirm their intention before leaving the app if in private session.  These include the Android
@@ -16,7 +16,7 @@ It requires: a [Context](#), and a [FragmentManager](#).
 
 `sessionManager` - Provides access to a centralized registry of all active sessions.
 
-`sessionId` - the session ID to observe.
+`sessionId` - The session ID to observe.
 
 `fragmentManager` - FragmentManager for interacting with fragments.
 
@@ -28,11 +28,15 @@ of security concerns.
 `useCases` - These use cases allow for the detection of, and opening of links that other apps
 have registered to open.
 
+`failedToLaunchAction` - Action to perform when failing to launch in third party app.
+
+`loadUrlUseCase` - Used to load URL if user decides not to launch in third party app.
+
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AppLinksFeature(context: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, fragmentManager: FragmentManager? = null, dialog: `[`RedirectDialogFragment`](../-redirect-dialog-fragment/index.md)`? = null, launchInApp: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, useCases: `[`AppLinksUseCases`](../-app-links-use-cases/index.md)` = AppLinksUseCases(context, launchInApp), failedToLaunchAction: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {})`<br>This feature implements observer for handling redirects to external apps. The users are asked to confirm their intention before leaving the app if in private session.  These include the Android Intents, custom schemes and support for [Intent.CATEGORY_BROWSABLE](#) `http(s)` URLs. |
+| [&lt;init&gt;](-init-.md) | `AppLinksFeature(context: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, fragmentManager: FragmentManager? = null, dialog: `[`RedirectDialogFragment`](../-redirect-dialog-fragment/index.md)`? = null, launchInApp: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, useCases: `[`AppLinksUseCases`](../-app-links-use-cases/index.md)` = AppLinksUseCases(context, launchInApp), failedToLaunchAction: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}, loadUrlUseCase: `[`DefaultLoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-default-load-url-use-case/index.md)`? = null)`<br>This feature implements observer for handling redirects to external apps. The users are asked to confirm their intention before leaving the app if in private session.  These include the Android Intents, custom schemes and support for [Intent.CATEGORY_BROWSABLE](#) `http(s)` URLs. |
 
 ### Functions
 

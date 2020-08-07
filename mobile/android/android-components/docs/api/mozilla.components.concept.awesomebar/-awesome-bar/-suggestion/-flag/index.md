@@ -2,7 +2,7 @@
 
 # Flag
 
-`enum class Flag` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L115)
+`enum class Flag` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L120)
 
 Flags can be added by a [SuggestionProvider](../../-suggestion-provider/index.md) to help the [AwesomeBar](../../index.md) implementation decide how to display
 a specific [Suggestion](../index.md). For example an [AwesomeBar](../../index.md) could display a bookmark star icon next to [Suggestion](../index.md)s
