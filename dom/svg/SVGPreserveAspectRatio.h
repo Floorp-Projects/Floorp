@@ -81,11 +81,10 @@ class SVGPreserveAspectRatio final {
 
 namespace dom {
 
-class DOMSVGPreserveAspectRatio final : public nsISupports,
-                                        public nsWrapperCache {
+class DOMSVGPreserveAspectRatio final : public nsWrapperCache {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGPreserveAspectRatio)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGPreserveAspectRatio)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGPreserveAspectRatio)
 
   DOMSVGPreserveAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
                             SVGElement* aSVGElement, bool aIsBaseValue)
