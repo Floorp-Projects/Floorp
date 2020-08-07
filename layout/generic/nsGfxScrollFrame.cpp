@@ -273,6 +273,10 @@ namespace mozilla {
 enum class ShowScrollbar : uint8_t {
   Auto,
   Always,
+  // Never is a misnomer. We can still get a scrollbar if we need to scroll the
+  // visual viewport inside the layout viewport. Thus this enum is best thought
+  // of as value used by layout, which does not know about the visual viewport.
+  // The visual viewport does not affect any layout sizes, so this is sound.
   Never,
 };
 
@@ -292,7 +296,15 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
   const ReflowInput& mReflowInput;
   nsBoxLayoutState mBoxState;
   ShowScrollbar mHScrollbar;
+  // If the horizontal scrollbar is allowed (even if mHScrollbar ==
+  // ShowScrollbar::Never) provided that it is for scrolling the visual viewport
+  // inside the layout viewport only.
+  bool mHScrollbarAllowedForScrollingVVInsideLV = true;
   ShowScrollbar mVScrollbar;
+  // If the vertical scrollbar is allowed (even if mVScrollbar ==
+  // ShowScrollbar::Never) provided that it is for scrolling the visual viewport
+  // inside the layout viewport only.
+  bool mVScrollbarAllowedForScrollingVVInsideLV = true;
   nsMargin mComputedBorder;
 
   // === Filled in by ReflowScrolledFrame ===
@@ -1156,9 +1168,11 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
   // sanity check: ensure that if we have no scrollbar, we treat it
   // as hidden.
   if (!mHelper.mVScrollbarBox || mHelper.mNeverHasVerticalScrollbar) {
+    state.mVScrollbarAllowedForScrollingVVInsideLV = false;
     state.mVScrollbar = ShowScrollbar::Never;
   }
   if (!mHelper.mHScrollbarBox || mHelper.mNeverHasHorizontalScrollbar) {
+    state.mHScrollbarAllowedForScrollingVVInsideLV = false;
     state.mHScrollbar = ShowScrollbar::Never;
   }
 
@@ -1188,6 +1202,8 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
     ComputedStyle* scrollbarStyle = nsLayoutUtils::StyleForScrollbar(this);
     auto scrollbarWidth = scrollbarStyle->StyleUIReset()->mScrollbarWidth;
     if (scrollbarWidth == StyleScrollbarWidth::None) {
+      state.mVScrollbarAllowedForScrollingVVInsideLV = false;
+      state.mHScrollbarAllowedForScrollingVVInsideLV = false;
       state.mVScrollbar = ShowScrollbar::Never;
       state.mHScrollbar = ShowScrollbar::Never;
     }
