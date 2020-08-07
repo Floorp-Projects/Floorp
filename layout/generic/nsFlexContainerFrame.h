@@ -73,33 +73,6 @@ struct ComputedFlexContainerInfo {
 };
 
 /**
- * Helper class to get the orientation of a flex container's axes.
- */
-class MOZ_STACK_CLASS FlexboxAxisInfo final {
- public:
-  explicit FlexboxAxisInfo(const nsIFrame* aFlexContainer);
-
-  // Is our main axis the inline axis? (Are we 'flex-direction:row[-reverse]'?)
-  bool mIsRowOriented = true;
-
-  // Is our main axis in the opposite direction as mWM's corresponding axis?
-  // (e.g. RTL vs LTR)
-  bool mIsMainAxisReversed = false;
-
-  // Is our cross axis in the opposite direction as mWM's corresponding axis?
-  // (e.g. BTT vs TTB)
-  bool mIsCrossAxisReversed = false;
-
- private:
-  // Helpers for constructor which determine the orientation of our axes, based
-  // on legacy box properties (-webkit-box-orient, -webkit-box-direction) or
-  // modern flexbox properties (flex-direction, flex-wrap) depending on whether
-  // the flex container is a "legacy box" (as determined by IsLegacyBox).
-  void InitAxesFromLegacyProps(const nsIFrame* aFlexContainer);
-  void InitAxesFromModernProps(const nsIFrame* aFlexContainer);
-};
-
-/**
  * This is the rendering object used for laying out elements with
  * "display: flex" or "display: inline-flex".
  *
