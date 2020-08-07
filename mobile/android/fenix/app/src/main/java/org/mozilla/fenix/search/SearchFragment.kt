@@ -30,7 +30,6 @@ import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.search_suggestions_onboarding.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.qr.QrFeature
@@ -55,6 +54,7 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
+import org.mozilla.fenix.search.ext.areShortcutsAvailable
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
@@ -71,14 +71,6 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
     private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
-    private fun shouldShowSearchSuggestions(isPrivate: Boolean): Boolean =
-        if (isPrivate) {
-            requireContext().settings().shouldShowSearchSuggestions &&
-                requireContext().settings().shouldShowSearchSuggestionsInPrivate
-        } else {
-            requireContext().settings().shouldShowSearchSuggestions
-        }
-
     @Suppress("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -89,38 +81,18 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         val settings = activity.settings()
         val args by navArgs<SearchFragmentArgs>()
 
-        val tabId = args.sessionId
-        val tab = tabId?.let { requireComponents.core.store.state.findTab(it) }
-
         val view = inflater.inflate(R.layout.fragment_search, container, false)
-        val url = tab?.content?.url.orEmpty()
-        val currentSearchEngine = SearchEngineSource.Default(
-            requireComponents.search.provider.getDefaultEngine(requireContext())
-        )
 
         val isPrivate = activity.browsingModeManager.mode.isPrivate
 
         requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
 
-        val areShortcutsAvailable = areShortcutsAvailable()
         searchStore = StoreProvider.get(this) {
             SearchFragmentStore(
-                SearchFragmentState(
-                    query = url,
-                    url = url,
-                    searchTerms = tab?.content?.searchTerms.orEmpty(),
-                    searchEngineSource = currentSearchEngine,
-                    defaultEngineSource = currentSearchEngine,
-                    showSearchSuggestions = shouldShowSearchSuggestions(isPrivate),
-                    showSearchSuggestionsHint = false,
-                    showSearchShortcuts = settings.shouldShowSearchShortcuts &&
-                            url.isEmpty() &&
-                            areShortcutsAvailable,
-                    areShortcutsAvailable = areShortcutsAvailable,
-                    showClipboardSuggestions = settings.shouldShowClipboardSuggestions,
-                    showHistorySuggestions = settings.shouldShowHistorySuggestions,
-                    showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
-                    tabId = tabId,
+                createInitialSearchFragmentState(
+                    activity,
+                    requireComponents,
+                    tabId = args.sessionId,
                     pastedText = args.pastedText,
                     searchAccessPoint = args.searchAccessPoint
                 )
@@ -165,7 +137,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 ContextCompat.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 requireContext().getString(R.string.voice_search_content_description),
                 visible = {
-                    currentSearchEngine.searchEngine.identifier.contains("google") &&
+                    searchStore.state.searchEngineSource.searchEngine.identifier.contains("google") &&
                         speechIsAvailable() &&
                         settings.shouldShowVoiceSearch
                 },
@@ -343,10 +315,11 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     override fun onResume() {
         super.onResume()
 
+        val provider = requireComponents.search.provider
+
         // The user has the option to go to 'Shortcuts' -> 'Search engine settings' to modify the default search engine.
         // When returning from that settings screen we need to update it to account for any changes.
-        val currentDefaultEngine =
-            requireComponents.search.provider.getDefaultEngine(requireContext())
+        val currentDefaultEngine = provider.getDefaultEngine(requireContext())
 
         if (searchStore.state.defaultEngineSource.searchEngine != currentDefaultEngine) {
             searchStore.dispatch(
@@ -356,7 +329,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         }
 
         // Users can from this fragment go to install/uninstall search engines and then return.
-        val areShortcutsAvailable = areShortcutsAvailable()
+        val areShortcutsAvailable = provider.areShortcutsAvailable(requireContext())
         if (searchStore.state.areShortcutsAvailable != areShortcutsAvailable) {
             searchStore.dispatch(SearchFragmentAction.UpdateShortcutsAvailability(areShortcutsAvailable))
         }
@@ -367,7 +340,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         updateClipboardSuggestion(
             searchStore.state,
-            requireContext().components.clipboardHandler.url
+            requireComponents.clipboardHandler.url
         )
 
         permissionDidUpdate = false
@@ -470,16 +443,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         }
     }
 
-    /**
-     * Return if the user has *at least 2* installed search engines.
-     * Useful to decide whether to show / enable certain functionalities.
-     */
-    private fun areShortcutsAvailable() =
-            requireContext().components.search.provider.installedSearchEngines(requireContext())
-                    .list.size >= MINIMUM_SEARCH_ENGINES_NUMBER_TO_SHOW_SHORTCUTS
-
     companion object {
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
-        private const val MINIMUM_SEARCH_ENGINES_NUMBER_TO_SHOW_SHORTCUTS = 2
     }
 }

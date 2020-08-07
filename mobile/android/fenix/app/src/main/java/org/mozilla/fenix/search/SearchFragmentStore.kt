@@ -5,10 +5,15 @@
 package org.mozilla.fenix.search
 
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.search.ext.areShortcutsAvailable
 
 /**
  * The [Store] for holding the [SearchFragmentState] and applying [SearchFragmentAction]s.
@@ -65,6 +70,51 @@ data class SearchFragmentState(
     val pastedText: String? = null,
     val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?
 ) : State
+
+fun createInitialSearchFragmentState(
+    activity: HomeActivity,
+    components: Components,
+    tabId: String?,
+    pastedText: String?,
+    searchAccessPoint: Event.PerformedSearch.SearchAccessPoint
+): SearchFragmentState {
+    val settings = components.settings
+    val tab = tabId?.let { components.core.store.state.findTab(it) }
+
+    val url = tab?.content?.url.orEmpty()
+    val currentSearchEngine = SearchEngineSource.Default(
+        components.search.provider.getDefaultEngine(activity)
+    )
+
+    val browsingMode = activity.browsingModeManager.mode
+    val areShortcutsAvailable = components.search.provider.areShortcutsAvailable(activity)
+
+    val shouldShowSearchSuggestions = when (browsingMode) {
+        BrowsingMode.Normal -> settings.shouldShowSearchSuggestions
+        BrowsingMode.Private ->
+            settings.shouldShowSearchSuggestions && settings.shouldShowSearchSuggestionsInPrivate
+    }
+
+    return SearchFragmentState(
+        query = url,
+        url = url,
+        searchTerms = tab?.content?.searchTerms.orEmpty(),
+        searchEngineSource = currentSearchEngine,
+        defaultEngineSource = currentSearchEngine,
+        showSearchSuggestions = shouldShowSearchSuggestions,
+        showSearchSuggestionsHint = false,
+        showSearchShortcuts = url.isEmpty() &&
+            areShortcutsAvailable &&
+            settings.shouldShowSearchShortcuts,
+        areShortcutsAvailable = areShortcutsAvailable,
+        showClipboardSuggestions = settings.shouldShowClipboardSuggestions,
+        showHistorySuggestions = settings.shouldShowHistorySuggestions,
+        showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
+        tabId = tabId,
+        pastedText = pastedText,
+        searchAccessPoint = searchAccessPoint
+    )
+}
 
 /**
  * Actions to dispatch through the `SearchStore` to modify `SearchState` through the reducer.
