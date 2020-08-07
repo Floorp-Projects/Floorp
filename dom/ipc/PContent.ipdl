@@ -289,13 +289,6 @@ struct GMPCapabilityData
     GMPAPITags[] capabilities;
 };
 
-struct GfxInfoFeatureStatus
-{
-    int32_t feature;
-    int32_t status;
-    nsCString failureId;
-};
-
 struct XPCOMInitData
 {
     bool isOffline;

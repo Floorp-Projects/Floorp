@@ -41,7 +41,7 @@ using namespace mozilla;
 using mozilla::MutexAutoLock;
 
 nsTArray<GfxDriverInfo>* GfxInfoBase::sDriverInfo;
-nsTArray<dom::GfxInfoFeatureStatus>* GfxInfoBase::sFeatureStatus;
+nsTArray<gfx::GfxInfoFeatureStatus>* GfxInfoBase::sFeatureStatus;
 bool GfxInfoBase::sDriverInfoObserverInitialized;
 bool GfxInfoBase::sShutdownOccurred;
 
@@ -711,12 +711,12 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
 void GfxInfoBase::GetAllFeatures(dom::XPCOMInitData& xpcomInit) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   if (!sFeatureStatus) {
-    sFeatureStatus = new nsTArray<dom::GfxInfoFeatureStatus>();
+    sFeatureStatus = new nsTArray<gfx::GfxInfoFeatureStatus>();
     for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
       int32_t status = 0;
       nsAutoCString failureId;
       GetFeatureStatus(i, failureId, &status);
-      dom::GfxInfoFeatureStatus gfxFeatureStatus;
+      gfx::GfxInfoFeatureStatus gfxFeatureStatus;
       gfxFeatureStatus.feature() = i;
       gfxFeatureStatus.status() = status;
       gfxFeatureStatus.failureId() = failureId;
@@ -724,7 +724,7 @@ void GfxInfoBase::GetAllFeatures(dom::XPCOMInitData& xpcomInit) {
     }
   }
   for (const auto& status : *sFeatureStatus) {
-    dom::GfxInfoFeatureStatus copy = status;
+    gfx::GfxInfoFeatureStatus copy = status;
     xpcomInit.gfxFeatureStatus().AppendElement(copy);
   }
 }
@@ -1089,9 +1089,9 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 }
 
 void GfxInfoBase::SetFeatureStatus(
-    const nsTArray<dom::GfxInfoFeatureStatus>& aFS) {
+    const nsTArray<gfx::GfxInfoFeatureStatus>& aFS) {
   MOZ_ASSERT(!sFeatureStatus);
-  sFeatureStatus = new nsTArray<dom::GfxInfoFeatureStatus>(aFS.Clone());
+  sFeatureStatus = new nsTArray<gfx::GfxInfoFeatureStatus>(aFS.Clone());
 }
 
 bool GfxInfoBase::DoesDesktopEnvironmentMatch(
