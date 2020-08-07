@@ -558,8 +558,10 @@ nsDOMWindowUtils::GetScrollbarSizes(Element* aElement,
     return NS_ERROR_INVALID_ARG;
   }
 
-  CSSIntMargin scrollbarSizes = RoundedToInt(
-      CSSMargin::FromAppUnits(scrollFrame->GetActualScrollbarSizes()));
+  CSSIntMargin scrollbarSizes =
+      RoundedToInt(CSSMargin::FromAppUnits(scrollFrame->GetActualScrollbarSizes(
+          nsIScrollableFrame::ScrollbarSizesOptions::
+              INCLUDE_VISUAL_VIEWPORT_SCROLLBARS)));
   *aOutVerticalScrollbarWidth = scrollbarSizes.LeftRight();
   *aOutHorizontalScrollbarHeight = scrollbarSizes.TopBottom();
 

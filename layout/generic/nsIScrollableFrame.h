@@ -114,8 +114,14 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * positions that don't have a scrollbar or where the scrollbar is not
    * visible. Do not call this while this frame's descendants are being
    * reflowed, it won't be accurate.
+   * INCLUDE_VISUAL_VIEWPORT_SCROLLBARS means we include the size of layout
+   * scrollbars that are only visible to scroll the visual viewport inside the
+   * layout viewport (ie the layout viewport cannot be scrolled) even though
+   * there is no layout space set aside for these scrollbars.
    */
-  virtual nsMargin GetActualScrollbarSizes() const = 0;
+  enum class ScrollbarSizesOptions { NONE, INCLUDE_VISUAL_VIEWPORT_SCROLLBARS };
+  virtual nsMargin GetActualScrollbarSizes(
+      ScrollbarSizesOptions aOptions = ScrollbarSizesOptions::NONE) const = 0;
   /**
    * Return the sizes of all scrollbars assuming that any scrollbars that could
    * be visible due to overflowing content, are. This can be called during
