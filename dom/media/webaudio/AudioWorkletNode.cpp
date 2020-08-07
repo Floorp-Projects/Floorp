@@ -85,8 +85,8 @@ class WorkletNodeEngine final : public AudioNodeEngine {
                     bool* aFinished) override {
     MOZ_ASSERT(InputCount() <= 1);
     MOZ_ASSERT(OutputCount() <= 1);
-    ProcessBlocksOnPorts(aTrack, aFrom, MakeSpan(&aInput, InputCount()),
-                         MakeSpan(aOutput, OutputCount()), aFinished);
+    ProcessBlocksOnPorts(aTrack, aFrom, Span(&aInput, InputCount()),
+                         Span(aOutput, OutputCount()), aFinished);
   }
 
   void ProcessBlocksOnPorts(AudioNodeTrack* aTrack, GraphTime aFrom,

@@ -1590,7 +1590,7 @@ nsresult XMLHttpRequestMainThread::StreamReaderFunc(
     MOZ_ASSERT(!xmlHttpRequest->mResponseXML,
                "We shouldn't be parsing a doc here");
     rv = xmlHttpRequest->AppendToResponseText(
-        AsBytes(MakeSpan(fromRawSegment, count)));
+        AsBytes(Span(fromRawSegment, count)));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1604,7 +1604,7 @@ nsresult XMLHttpRequestMainThread::StreamReaderFunc(
     // stream is not supported.
     nsCOMPtr<nsIInputStream> copyStream;
     rv = NS_NewByteInputStream(getter_AddRefs(copyStream),
-                               MakeSpan(fromRawSegment, count),
+                               Span(fromRawSegment, count),
                                NS_ASSIGNMENT_DEPEND);
 
     if (NS_SUCCEEDED(rv) && xmlHttpRequest->mXMLParserStreamListener) {

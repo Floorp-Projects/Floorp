@@ -192,7 +192,7 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
       if (NS_FAILED(nsrv)) {
         return nsrv;
       }
-      derCertSpanList.EmplaceBack(MakeSpan(rawDerCertList.LastElement()));
+      derCertSpanList.EmplaceBack(rawDerCertList.LastElement());
     }
 
     nsresult nsrv = mozilla::psm::PublicKeyPinningService::ChainHasValidPins(

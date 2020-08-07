@@ -28,7 +28,6 @@ using mozilla::ConvertUtf16toUtf8Partial;
 using mozilla::IsAscii;
 using mozilla::IsUtf8Latin1;
 using mozilla::LossyConvertUtf16toLatin1;
-using mozilla::MakeSpan;
 using mozilla::Span;
 using mozilla::Tie;
 using mozilla::Tuple;
@@ -46,7 +45,7 @@ Latin1CharsZ JS::LossyTwoByteCharsToNewLatin1CharsZ(
   if (!latin1) {
     return Latin1CharsZ();
   }
-  LossyConvertUtf16toLatin1(tbchars, AsWritableChars(MakeSpan(latin1, len)));
+  LossyConvertUtf16toLatin1(tbchars, AsWritableChars(Span(latin1, len)));
   latin1[len] = '\0';
   return Latin1CharsZ(latin1, len);
 }
@@ -99,14 +98,14 @@ JS_PUBLIC_API size_t JS::DeflateStringToUTF8Buffer(JSLinearString* src,
                                                    mozilla::Span<char> dst) {
   JS::AutoCheckCannotGC nogc;
   if (src->hasLatin1Chars()) {
-    auto source = AsChars(MakeSpan(src->latin1Chars(nogc), src->length()));
+    auto source = AsChars(Span(src->latin1Chars(nogc), src->length()));
     size_t read;
     size_t written;
     Tie(read, written) = ConvertLatin1toUtf8Partial(source, dst);
     Unused << read;
     return written;
   }
-  auto source = MakeSpan(src->twoByteChars(nogc), src->length());
+  auto source = Span(src->twoByteChars(nogc), src->length());
   size_t read;
   size_t written;
   Tie(read, written) = ConvertUtf16toUtf8Partial(source, dst);
@@ -148,7 +147,7 @@ UTF8CharsZ JS::CharsToNewUTF8CharsZ(JSContext* maybeCx,
   }
 
   /* Encode to UTF8. */
-  ::ConvertToUTF8(MakeSpan(str, chars.length()), MakeSpan(utf8, len));
+  ::ConvertToUTF8(Span(str, chars.length()), Span(utf8, len));
   utf8[len] = '\0';
 
   return UTF8CharsZ(utf8, len);

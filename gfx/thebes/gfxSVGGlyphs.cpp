@@ -334,7 +334,7 @@ static nsresult CreateBufferedStream(const uint8_t* aBuffer, uint32_t aBufLen,
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
       getter_AddRefs(stream),
-      MakeSpan(reinterpret_cast<const char*>(aBuffer), aBufLen),
+      Span(reinterpret_cast<const char*>(aBuffer), aBufLen),
       NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
 

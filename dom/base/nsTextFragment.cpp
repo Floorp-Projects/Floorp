@@ -314,8 +314,7 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, int32_t aLength,
     }
 
     // Copy data
-    LossyConvertUtf16toLatin1(MakeSpan(aBuffer, aLength),
-                              MakeSpan(buff, aLength));
+    LossyConvertUtf16toLatin1(Span(aBuffer, aLength), Span(buff, aLength));
     m1b = buff;
     mState.mIs2b = false;
   }
@@ -344,7 +343,7 @@ void nsTextFragment::CopyTo(char16_t* aDest, int32_t aOffset, int32_t aCount) {
       memcpy(aDest, Get2b() + aOffset, sizeof(char16_t) * aCount);
     } else {
       const char* cp = m1b + aOffset;
-      ConvertLatin1toUtf16(MakeSpan(cp, aCount), MakeSpan(aDest, aCount));
+      ConvertLatin1toUtf16(Span(cp, aCount), Span(aDest, aCount));
     }
   }
 }
@@ -429,8 +428,7 @@ bool nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength,
 
     // Copy data into buff
     char16_t* data = static_cast<char16_t*>(buff->Data());
-    ConvertLatin1toUtf16(MakeSpan(m1b, mState.mLength),
-                         MakeSpan(data, mState.mLength));
+    ConvertLatin1toUtf16(Span(m1b, mState.mLength), Span(data, mState.mLength));
 
     memcpy(data + mState.mLength, aBuffer, aLength * sizeof(char16_t));
     mState.mLength += aLength;
@@ -471,8 +469,8 @@ bool nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength,
   }
 
   // Copy aBuffer into buff.
-  LossyConvertUtf16toLatin1(MakeSpan(aBuffer, aLength),
-                            MakeSpan(buff + mState.mLength, aLength));
+  LossyConvertUtf16toLatin1(Span(aBuffer, aLength),
+                            Span(buff + mState.mLength, aLength));
 
   m1b = buff;
   mState.mLength += aLength;
@@ -498,7 +496,7 @@ size_t nsTextFragment::SizeOfExcludingThis(
 // every allocation
 void nsTextFragment::UpdateBidiFlag(const char16_t* aBuffer, uint32_t aLength) {
   if (mState.mIs2b && !mState.mIsBidi) {
-    if (HasRTLChars(MakeSpan(aBuffer, aLength))) {
+    if (HasRTLChars(Span(aBuffer, aLength))) {
       mState.mIsBidi = true;
     }
   }

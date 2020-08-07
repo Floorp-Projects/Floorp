@@ -467,8 +467,8 @@ already_AddRefed<FormData> BodyUtil::ConsumeFormData(nsIGlobalObject* aParent,
 // static
 nsresult BodyUtil::ConsumeText(uint32_t aInputLength, uint8_t* aInput,
                                nsString& aText) {
-  nsresult rv = UTF_8_ENCODING->DecodeWithBOMRemoval(
-      MakeSpan(aInput, aInputLength), aText);
+  nsresult rv =
+      UTF_8_ENCODING->DecodeWithBOMRemoval(Span(aInput, aInputLength), aText);
   if (NS_FAILED(rv)) {
     return rv;
   }

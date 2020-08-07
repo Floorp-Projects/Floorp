@@ -284,7 +284,7 @@ void ThreadStackHelper::CollectProfilingStackFrame(
         buffer[sizeof(buffer) - 1] = kTruncationIndicator;
         len = sizeof(buffer);
       }
-      if (MaybeAppendDynamicStackFrame(MakeSpan(buffer, len))) {
+      if (MaybeAppendDynamicStackFrame(Span(buffer, len))) {
         return;
       }
     }
@@ -365,7 +365,7 @@ void ThreadStackHelper::CollectProfilingStackFrame(
     buffer[sizeof(buffer) - 1] = kTruncationIndicator;
     len = sizeof(buffer);
   }
-  if (MaybeAppendDynamicStackFrame(MakeSpan(buffer, len))) {
+  if (MaybeAppendDynamicStackFrame(Span(buffer, len))) {
     return;
   }
 

@@ -5325,7 +5325,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   bool isAscii = false;
   if (linearString->hasLatin1Chars()) {
     JS::AutoCheckCannotGC nogc;
-    isAscii = JS::StringIsASCII(mozilla::MakeSpan(
+    isAscii = JS::StringIsASCII(mozilla::Span(
         reinterpret_cast<const char*>(linearString->latin1Chars(nogc)),
         linearString->length()));
   }
@@ -6693,7 +6693,7 @@ class ShellSourceHook : public SourceHook {
       }
 
       mozilla::DebugOnly<size_t> dstLen = JS::DeflateStringToUTF8Buffer(
-          linear, mozilla::MakeSpan(*utf8Source, *length));
+          linear, mozilla::Span(*utf8Source, *length));
       MOZ_ASSERT(dstLen == *length);
     }
 

@@ -367,7 +367,7 @@ void FTPChannelChild::DoOnDataAvailable(const nsresult& aChannelStatus,
   nsCOMPtr<nsIInputStream> stringStream;
   nsresult rv =
       NS_NewByteInputStream(getter_AddRefs(stringStream),
-                            MakeSpan(aData).To(aCount), NS_ASSIGNMENT_DEPEND);
+                            Span(aData).To(aCount), NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv)) {
     Cancel(rv);
     return;

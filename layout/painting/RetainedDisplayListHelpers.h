@@ -7,6 +7,7 @@
 #ifndef RETAINEDDISPLAYLISTHELPERS_H_
 #define RETAINEDDISPLAYLISTHELPERS_H_
 
+#include "mozilla/Span.h"
 #include "PLDHashTable.h"
 
 struct DisplayItemKey {
@@ -111,9 +112,9 @@ class DirectedAcyclicGraph {
 
   mozilla::Span<Index<T>> GetDirectPredecessors(Index<T> aNodeIndex) {
     NodeInfo& node = mNodesInfo[aNodeIndex.val];
-    return mozilla::MakeSpan(mDirectPredecessorList)
-        .Subspan(node.mIndexInDirectPredecessorList,
-                 node.mDirectPredecessorCount);
+    const auto span = mozilla::Span{mDirectPredecessorList};
+    return span.Subspan(node.mIndexInDirectPredecessorList,
+                        node.mDirectPredecessorCount);
   }
 
   template <typename OtherUnits>

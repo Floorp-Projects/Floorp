@@ -3190,7 +3190,7 @@ class nsTArrayView {
 template <class E, class Alloc>
 std::ostream& operator<<(std::ostream& aOut,
                          const nsTArray_Impl<E, Alloc>& aTArray) {
-  return aOut << mozilla::MakeSpan(aTArray);
+  return aOut << mozilla::Span(aTArray);
 }
 
 // Assert that AutoTArray doesn't have any extra padding inside.

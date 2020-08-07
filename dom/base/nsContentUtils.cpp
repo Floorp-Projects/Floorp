@@ -8301,26 +8301,26 @@ class StringBuilder {
             EncodeAttrString(*(u.mString), appender);
             break;
           case Unit::eLiteral:
-            appender.Append(MakeSpan(u.mLiteral, u.mLength));
+            appender.Append(Span(u.mLiteral, u.mLength));
             break;
           case Unit::eTextFragment:
             if (u.mTextFragment->Is2b()) {
-              appender.Append(MakeSpan(u.mTextFragment->Get2b(),
-                                       u.mTextFragment->GetLength()));
+              appender.Append(
+                  Span(u.mTextFragment->Get2b(), u.mTextFragment->GetLength()));
             } else {
-              appender.Append(MakeSpan(u.mTextFragment->Get1b(),
-                                       u.mTextFragment->GetLength()));
+              appender.Append(
+                  Span(u.mTextFragment->Get1b(), u.mTextFragment->GetLength()));
             }
             break;
           case Unit::eTextFragmentWithEncode:
             if (u.mTextFragment->Is2b()) {
-              EncodeTextFragment(MakeSpan(u.mTextFragment->Get2b(),
-                                          u.mTextFragment->GetLength()),
-                                 appender);
+              EncodeTextFragment(
+                  Span(u.mTextFragment->Get2b(), u.mTextFragment->GetLength()),
+                  appender);
             } else {
-              EncodeTextFragment(MakeSpan(u.mTextFragment->Get1b(),
-                                          u.mTextFragment->GetLength()),
-                                 appender);
+              EncodeTextFragment(
+                  Span(u.mTextFragment->Get1b(), u.mTextFragment->GetLength()),
+                  appender);
             }
             break;
           default:

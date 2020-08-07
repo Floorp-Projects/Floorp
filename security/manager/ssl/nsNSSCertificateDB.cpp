@@ -843,13 +843,13 @@ nsNSSCertificateDB::ConstructX509FromBase64(const nsACString& base64,
     return rv;
   }
 
-  return ConstructX509FromSpan(AsBytes(MakeSpan(certDER)), _retval);
+  return ConstructX509FromSpan(AsBytes(Span(certDER)), _retval);
 }
 
 NS_IMETHODIMP
 nsNSSCertificateDB::ConstructX509(const nsTArray<uint8_t>& certDER,
                                   nsIX509Cert** _retval) {
-  return ConstructX509FromSpan(MakeSpan(certDER.Elements(), certDER.Length()),
+  return ConstructX509FromSpan(Span(certDER.Elements(), certDER.Length()),
                                _retval);
 }
 
@@ -1013,8 +1013,8 @@ nsNSSCertificateDB::AddCert(const nsACString& aCertDER,
   }
 
   nsCOMPtr<nsIX509Cert> newCert;
-  nsresult rv = ConstructX509FromSpan(AsBytes(MakeSpan(aCertDER)),
-                                      getter_AddRefs(newCert));
+  nsresult rv =
+      ConstructX509FromSpan(AsBytes(Span(aCertDER)), getter_AddRefs(newCert));
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -186,8 +186,8 @@ Status ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
       if (data.value() > endBuffer) {
         return Status::kDecryptError;
       }
-      mozilla::Span<uint8_t> encryptedSpan = mozilla::MakeSpan(
-          reinterpret_cast<uint8_t*>(data.value()), aBufferSize);
+      mozilla::Span<uint8_t> encryptedSpan =
+          mozilla::Span(reinterpret_cast<uint8_t*>(data.value()), aBufferSize);
       if (!ClearKeyUtils::DecryptCbcs(mKey, aMetadata.mIV, encryptedSpan,
                                       aMetadata.mCryptByteBlock,
                                       aMetadata.mSkipByteBlock)) {
@@ -207,7 +207,7 @@ Status ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
         // Trying to read past the end of the buffer!
         return Status::kDecryptError;
       }
-      mozilla::Span<uint8_t> encryptedSpan = mozilla::MakeSpan(
+      mozilla::Span<uint8_t> encryptedSpan = mozilla::Span(
           reinterpret_cast<uint8_t*>(data.value()), aMetadata.mCipherBytes[i]);
       if (!ClearKeyUtils::DecryptCbcs(mKey, aMetadata.mIV, encryptedSpan,
                                       aMetadata.mCryptByteBlock,

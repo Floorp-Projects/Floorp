@@ -43,7 +43,7 @@ using mozilla::BlackBox;
 using mozilla::fallible;
 using mozilla::IsAscii;
 using mozilla::IsUtf8;
-using mozilla::MakeSpan;
+using mozilla::Span;
 
 #define TestExample1                                                           \
   "Sed ut perspiciatis unde omnis iste natus error sit voluptatem "            \
@@ -168,11 +168,11 @@ class Strings : public ::testing::Test {
     mExample5Utf8.AssignASCII(TestExample5);
 
     // Use span to make the resulting string as ordinary as possible
-    mAsciiOneUtf8.Append(MakeSpan(mExample3Utf8).To(1));
-    mAsciiThreeUtf8.Append(MakeSpan(mExample3Utf8).To(3));
-    mAsciiFifteenUtf8.Append(MakeSpan(mExample3Utf8).To(15));
-    mAsciiHundredUtf8.Append(MakeSpan(mExample3Utf8).To(100));
-    mAsciiThousandUtf8.Append(MakeSpan(mExample3Utf8).To(1000));
+    mAsciiOneUtf8.Append(Span(mExample3Utf8).To(1));
+    mAsciiThreeUtf8.Append(Span(mExample3Utf8).To(3));
+    mAsciiFifteenUtf8.Append(Span(mExample3Utf8).To(15));
+    mAsciiHundredUtf8.Append(Span(mExample3Utf8).To(100));
+    mAsciiThousandUtf8.Append(Span(mExample3Utf8).To(1000));
 
     ReadFile("ar.txt", mArUtf8);
     ReadFile("de.txt", mDeUtf8);
@@ -208,65 +208,65 @@ class Strings : public ::testing::Test {
     LossyCopyUTF16toASCII(mDeEditUtf16, mDeEditLatin1);
 
     // Use span to make the resulting string as ordinary as possible
-    mArOneUtf16.Append(MakeSpan(mArUtf16).To(1));
-    mDeOneUtf16.Append(MakeSpan(mDeUtf16).To(1));
-    mDeEditOneUtf16.Append(MakeSpan(mDeEditUtf16).To(1));
-    mRuOneUtf16.Append(MakeSpan(mRuUtf16).To(1));
-    mThOneUtf16.Append(MakeSpan(mThUtf16).To(1));
-    mJaOneUtf16.Append(MakeSpan(mJaUtf16).To(1));
-    mKoOneUtf16.Append(MakeSpan(mKoUtf16).To(1));
-    mTrOneUtf16.Append(MakeSpan(mTrUtf16).To(1));
-    mViOneUtf16.Append(MakeSpan(mViUtf16).To(1));
+    mArOneUtf16.Append(Span(mArUtf16).To(1));
+    mDeOneUtf16.Append(Span(mDeUtf16).To(1));
+    mDeEditOneUtf16.Append(Span(mDeEditUtf16).To(1));
+    mRuOneUtf16.Append(Span(mRuUtf16).To(1));
+    mThOneUtf16.Append(Span(mThUtf16).To(1));
+    mJaOneUtf16.Append(Span(mJaUtf16).To(1));
+    mKoOneUtf16.Append(Span(mKoUtf16).To(1));
+    mTrOneUtf16.Append(Span(mTrUtf16).To(1));
+    mViOneUtf16.Append(Span(mViUtf16).To(1));
 
-    mDeEditOneLatin1.Append(MakeSpan(mDeEditLatin1).To(1));
+    mDeEditOneLatin1.Append(Span(mDeEditLatin1).To(1));
 
-    mArThreeUtf16.Append(MakeSpan(mArUtf16).To(3));
-    mDeThreeUtf16.Append(MakeSpan(mDeUtf16).To(3));
-    mDeEditThreeUtf16.Append(MakeSpan(mDeEditUtf16).To(3));
-    mRuThreeUtf16.Append(MakeSpan(mRuUtf16).To(3));
-    mThThreeUtf16.Append(MakeSpan(mThUtf16).To(3));
-    mJaThreeUtf16.Append(MakeSpan(mJaUtf16).To(3));
-    mKoThreeUtf16.Append(MakeSpan(mKoUtf16).To(3));
-    mTrThreeUtf16.Append(MakeSpan(mTrUtf16).To(3));
-    mViThreeUtf16.Append(MakeSpan(mViUtf16).To(3));
+    mArThreeUtf16.Append(Span(mArUtf16).To(3));
+    mDeThreeUtf16.Append(Span(mDeUtf16).To(3));
+    mDeEditThreeUtf16.Append(Span(mDeEditUtf16).To(3));
+    mRuThreeUtf16.Append(Span(mRuUtf16).To(3));
+    mThThreeUtf16.Append(Span(mThUtf16).To(3));
+    mJaThreeUtf16.Append(Span(mJaUtf16).To(3));
+    mKoThreeUtf16.Append(Span(mKoUtf16).To(3));
+    mTrThreeUtf16.Append(Span(mTrUtf16).To(3));
+    mViThreeUtf16.Append(Span(mViUtf16).To(3));
 
-    mDeEditThreeLatin1.Append(MakeSpan(mDeEditLatin1).To(3));
+    mDeEditThreeLatin1.Append(Span(mDeEditLatin1).To(3));
 
-    mArFifteenUtf16.Append(MakeSpan(mArUtf16).To(15));
-    mDeFifteenUtf16.Append(MakeSpan(mDeUtf16).To(15));
-    mDeEditFifteenUtf16.Append(MakeSpan(mDeEditUtf16).To(15));
-    mRuFifteenUtf16.Append(MakeSpan(mRuUtf16).To(15));
-    mThFifteenUtf16.Append(MakeSpan(mThUtf16).To(15));
-    mJaFifteenUtf16.Append(MakeSpan(mJaUtf16).To(15));
-    mKoFifteenUtf16.Append(MakeSpan(mKoUtf16).To(15));
-    mTrFifteenUtf16.Append(MakeSpan(mTrUtf16).To(15));
-    mViFifteenUtf16.Append(MakeSpan(mViUtf16).To(15));
+    mArFifteenUtf16.Append(Span(mArUtf16).To(15));
+    mDeFifteenUtf16.Append(Span(mDeUtf16).To(15));
+    mDeEditFifteenUtf16.Append(Span(mDeEditUtf16).To(15));
+    mRuFifteenUtf16.Append(Span(mRuUtf16).To(15));
+    mThFifteenUtf16.Append(Span(mThUtf16).To(15));
+    mJaFifteenUtf16.Append(Span(mJaUtf16).To(15));
+    mKoFifteenUtf16.Append(Span(mKoUtf16).To(15));
+    mTrFifteenUtf16.Append(Span(mTrUtf16).To(15));
+    mViFifteenUtf16.Append(Span(mViUtf16).To(15));
 
-    mDeEditFifteenLatin1.Append(MakeSpan(mDeEditLatin1).To(15));
+    mDeEditFifteenLatin1.Append(Span(mDeEditLatin1).To(15));
 
-    mArHundredUtf16.Append(MakeSpan(mArUtf16).To(100));
-    mDeHundredUtf16.Append(MakeSpan(mDeUtf16).To(100));
-    mDeEditHundredUtf16.Append(MakeSpan(mDeEditUtf16).To(100));
-    mRuHundredUtf16.Append(MakeSpan(mRuUtf16).To(100));
-    mThHundredUtf16.Append(MakeSpan(mThUtf16).To(100));
-    mJaHundredUtf16.Append(MakeSpan(mJaUtf16).To(100));
-    mKoHundredUtf16.Append(MakeSpan(mKoUtf16).To(100));
-    mTrHundredUtf16.Append(MakeSpan(mTrUtf16).To(100));
-    mViHundredUtf16.Append(MakeSpan(mViUtf16).To(100));
+    mArHundredUtf16.Append(Span(mArUtf16).To(100));
+    mDeHundredUtf16.Append(Span(mDeUtf16).To(100));
+    mDeEditHundredUtf16.Append(Span(mDeEditUtf16).To(100));
+    mRuHundredUtf16.Append(Span(mRuUtf16).To(100));
+    mThHundredUtf16.Append(Span(mThUtf16).To(100));
+    mJaHundredUtf16.Append(Span(mJaUtf16).To(100));
+    mKoHundredUtf16.Append(Span(mKoUtf16).To(100));
+    mTrHundredUtf16.Append(Span(mTrUtf16).To(100));
+    mViHundredUtf16.Append(Span(mViUtf16).To(100));
 
-    mDeEditHundredLatin1.Append(MakeSpan(mDeEditLatin1).To(100));
+    mDeEditHundredLatin1.Append(Span(mDeEditLatin1).To(100));
 
-    mArThousandUtf16.Append(MakeSpan(mArUtf16).To(1000));
-    mDeThousandUtf16.Append(MakeSpan(mDeUtf16).To(1000));
-    mDeEditThousandUtf16.Append(MakeSpan(mDeEditUtf16).To(1000));
-    mRuThousandUtf16.Append(MakeSpan(mRuUtf16).To(1000));
-    mThThousandUtf16.Append(MakeSpan(mThUtf16).To(1000));
-    mJaThousandUtf16.Append(MakeSpan(mJaUtf16).To(1000));
-    mKoThousandUtf16.Append(MakeSpan(mKoUtf16).To(1000));
-    mTrThousandUtf16.Append(MakeSpan(mTrUtf16).To(1000));
-    mViThousandUtf16.Append(MakeSpan(mViUtf16).To(1000));
+    mArThousandUtf16.Append(Span(mArUtf16).To(1000));
+    mDeThousandUtf16.Append(Span(mDeUtf16).To(1000));
+    mDeEditThousandUtf16.Append(Span(mDeEditUtf16).To(1000));
+    mRuThousandUtf16.Append(Span(mRuUtf16).To(1000));
+    mThThousandUtf16.Append(Span(mThUtf16).To(1000));
+    mJaThousandUtf16.Append(Span(mJaUtf16).To(1000));
+    mKoThousandUtf16.Append(Span(mKoUtf16).To(1000));
+    mTrThousandUtf16.Append(Span(mTrUtf16).To(1000));
+    mViThousandUtf16.Append(Span(mViUtf16).To(1000));
 
-    mDeEditThousandLatin1.Append(MakeSpan(mDeEditLatin1).To(1000));
+    mDeEditThousandLatin1.Append(Span(mDeEditLatin1).To(1000));
 
     CopyUTF16toUTF8(mArOneUtf16, mArOneUtf8);
     CopyUTF16toUTF8(mDeOneUtf16, mDeOneUtf8);

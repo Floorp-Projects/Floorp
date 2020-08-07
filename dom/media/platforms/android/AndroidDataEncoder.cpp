@@ -243,7 +243,7 @@ static RefPtr<MediaByteBuffer> ExtractCodecConfig(
   // Convert to avcC.
   nsTArray<AnnexB::NALEntry> paramSets;
   AnnexB::ParseNALEntries(
-      MakeSpan<const uint8_t>(annexB->Elements(), annexB->Length()), paramSets);
+      Span<const uint8_t>(annexB->Elements(), annexB->Length()), paramSets);
 
   auto avcc = MakeRefPtr<MediaByteBuffer>();
   AnnexB::NALEntry& sps = paramSets.ElementAt(0);
@@ -251,8 +251,8 @@ static RefPtr<MediaByteBuffer> ExtractCodecConfig(
   const uint8_t* spsPtr = annexB->Elements() + sps.mOffset;
   H264::WriteExtraData(
       avcc, spsPtr[1], spsPtr[2], spsPtr[3],
-      MakeSpan<const uint8_t>(spsPtr, sps.mSize),
-      MakeSpan<const uint8_t>(annexB->Elements() + pps.mOffset, pps.mSize));
+      Span<const uint8_t>(spsPtr, sps.mSize),
+      Span<const uint8_t>(annexB->Elements() + pps.mOffset, pps.mSize));
   return avcc;
 }
 

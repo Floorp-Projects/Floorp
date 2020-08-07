@@ -1321,8 +1321,8 @@ bool H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
 
   WriteExtraData(
       extraData, aProfile, aConstraints, aLevel,
-      MakeSpan<const uint8_t>(encodedSPS->Elements(), encodedSPS->Length()),
-      MakeSpan<const uint8_t>(PPS, sizeof(PPS)));
+      Span<const uint8_t>(encodedSPS->Elements(), encodedSPS->Length()),
+      Span<const uint8_t>(PPS, sizeof(PPS)));
 
   return extraData.forget();
 }

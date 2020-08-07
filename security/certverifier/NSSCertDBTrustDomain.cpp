@@ -1258,8 +1258,7 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
       if (!der) {
         return Result::FATAL_ERROR_LIBRARY_FAILURE;
       }
-      derCertSpanList.EmplaceBack(
-          MakeSpan(der->UnsafeGetData(), der->GetLength()));
+      derCertSpanList.EmplaceBack(der->UnsafeGetData(), der->GetLength());
     }
 
     nsrv = PublicKeyPinningService::ChainHasValidPins(

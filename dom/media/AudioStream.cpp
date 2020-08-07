@@ -606,8 +606,8 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
   }
 
   auto writer = AudioBufferWriter(
-      MakeSpan<AudioDataValue>(reinterpret_cast<AudioDataValue*>(aBuffer),
-                               mOutChannels * aFrames),
+      Span<AudioDataValue>(reinterpret_cast<AudioDataValue*>(aBuffer),
+                           mOutChannels * aFrames),
       mOutChannels, aFrames);
 
   if (mPrefillQuirk) {

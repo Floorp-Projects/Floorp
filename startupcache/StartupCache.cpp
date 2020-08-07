@@ -796,11 +796,10 @@ Result<Ok, nsresult> StartupCache::DecompressEntry(StartupCacheEntry& aEntry) {
 
   size_t totalRead = 0;
   size_t totalWritten = 0;
-  Span<const char> compressed = MakeSpan(
+  Span<const char> compressed = Span(
       mCacheData.get<char>().get() + mCacheEntriesBaseOffset + aEntry.mOffset,
       aEntry.mCompressedSize);
-  Span<char> uncompressed =
-      MakeSpan(aEntry.mData.get(), aEntry.mUncompressedSize);
+  Span<char> uncompressed = Span(aEntry.mData.get(), aEntry.mUncompressedSize);
   bool finished = false;
   while (!finished) {
     auto result = mDecompressionContext->Decompress(
@@ -1084,7 +1083,7 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
                                    true);     /* aStableSrc */
     size_t writeBufLen = ctx.GetRequiredWriteBufferLength();
     auto writeBuffer = MaybeOwnedCharPtr(writeBufLen);
-    auto writeSpan = MakeSpan(writeBuffer.get(), writeBufLen);
+    auto writeSpan = Span(writeBuffer.get(), writeBufLen);
 
     for (auto& e : entries) {
       auto* value = e.second;
@@ -1100,9 +1099,9 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
       // Reuse the existing compressed entry if possible
       if (mCacheData.initialized() && value->mCompressedSize) {
         Span<const char> compressed =
-            MakeSpan(mCacheData.get<char>().get() + mCacheEntriesBaseOffset +
-                         value->mOffset,
-                     value->mCompressedSize);
+            Span(mCacheData.get<char>().get() + mCacheEntriesBaseOffset +
+                     value->mOffset,
+                 value->mCompressedSize);
         MOZ_TRY(Write(fd, compressed.Elements(), compressed.Length()));
         value->mOffset = offset;
         offset += compressed.Length();
@@ -1117,9 +1116,8 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
         for (size_t i = 0; i < value->mUncompressedSize; i += chunkSize) {
           size_t size = std::min(chunkSize, value->mUncompressedSize - i);
           char* uncompressed = value->mData.get() + i;
-          MOZ_TRY_VAR(result,
-                      ctx.ContinueCompressing(MakeSpan(uncompressed, size))
-                          .mapErr(MapLZ4ErrorToNsresult));
+          MOZ_TRY_VAR(result, ctx.ContinueCompressing(Span(uncompressed, size))
+                                  .mapErr(MapLZ4ErrorToNsresult));
           MOZ_TRY(Write(fd, result.Elements(), result.Length()));
           offset += result.Length();
         }

@@ -16,7 +16,7 @@ BEGIN_TEST(test_DeflateStringToUTF8Buffer) {
   // initialized to 0x1.
 
   char actual[100];
-  auto span = mozilla::MakeSpan(actual);
+  auto span = mozilla::Span(actual);
 
   // Test with an ASCII string, which calls JSLinearString::latin1Chars
   // to retrieve the characters from the string and generates UTF-8 output

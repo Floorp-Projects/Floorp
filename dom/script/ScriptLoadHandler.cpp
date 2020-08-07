@@ -66,8 +66,8 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
   }
 
   size_t written = ScriptDecoding<Unit>::DecodeInto(
-      mDecoder, MakeSpan(aData, aDataLength),
-      MakeSpan(scriptText.begin() + haveRead, needed.value()), aEndOfStream);
+      mDecoder, Span(aData, aDataLength),
+      Span(scriptText.begin() + haveRead, needed.value()), aEndOfStream);
   MOZ_ASSERT(written <= needed.value());
 
   haveRead += written;
@@ -182,7 +182,7 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
   // Do BOM detection.
   const Encoding* encoding;
   size_t bomLength;
-  Tie(encoding, bomLength) = Encoding::ForBOM(MakeSpan(aData, aDataLength));
+  Tie(encoding, bomLength) = Encoding::ForBOM(Span(aData, aDataLength));
   if (encoding) {
     mDecoder = encoding->NewDecoderWithBOMRemoval();
     return true;
