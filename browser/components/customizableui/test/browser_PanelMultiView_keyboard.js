@@ -460,17 +460,10 @@ async function testTabArrowsEmbeddedDoc(aView, aEmbedder) {
   if (doc.readyState != "complete" || doc.location.href != kEmbeddedDocUrl) {
     info(`Embedded doc readyState ${doc.readyState}, location ${doc.location}`);
     info("Waiting for load on embedder");
-    if (aEmbedder.tagName == "browser") {
-      // We can't use BrowserTestUtils.browserLoaded because it assumes the
-      // browser is linked to a tab.
-      await BrowserTestUtils.waitForEvent(
-        aEmbedder,
-        "BrowserTestUtils:ContentEvent:load"
-      );
-    } else {
-      // iframe
-      await BrowserTestUtils.waitForEvent(aEmbedder, "load");
-    }
+    // Browsers don't fire load events, and iframes don't fire load events in
+    // typeChrome windows. We can handle both by using a capturing event
+    // listener to capture the load event from the child document.
+    await BrowserTestUtils.waitForEvent(aEmbedder, "load", true);
     // The original doc might have been a temporary about:blank, so fetch it
     // again.
     doc = aEmbedder.contentDocument;
