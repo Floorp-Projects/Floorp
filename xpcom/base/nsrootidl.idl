@@ -17,6 +17,8 @@ typedef int64_t PRTime;
  */
 #include "nsStringFwd.h"
 
+struct JSContext;
+
 /*
  * Forward declaration of mozilla::dom::Promise
  */
