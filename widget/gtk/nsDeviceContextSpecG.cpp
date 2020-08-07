@@ -19,7 +19,6 @@
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 
-#include "CUPSPrinterList.h"
 #include "nsCUPSShim.h"
 #include "nsPrinterCUPS.h"
 
