@@ -643,26 +643,40 @@ nsresult GlobalPrinters::EnumerateNativePrinters() {
   PR_PL(("-----------------------\n"));
   PR_PL(("EnumerateNativePrinters\n"));
 
-  WCHAR szDefaultPrinterName[1024];
-  DWORD status = GetProfileStringW(L"devices", 0, L",", szDefaultPrinterName,
-                                   ArrayLength(szDefaultPrinterName));
-  if (status > 0) {
-    DWORD count = 0;
-    LPWSTR sPtr = szDefaultPrinterName;
-    LPWSTR ePtr = szDefaultPrinterName + status;
-    LPWSTR prvPtr = sPtr;
-    while (sPtr < ePtr) {
-      if (*sPtr == 0) {
-        LPWSTR name = wcsdup(prvPtr);
-        mPrinters->AppendElement(name);
-        PR_PL(("Printer Name:    %s\n", prvPtr));
-        prvPtr = sPtr + 1;
-        count++;
-      }
-      sPtr++;
+  const DWORD kLevel = 4;
+  using RecType = PRINTER_INFO_4;
+
+  DWORD needed = 0;
+  DWORD count = 0;
+  const DWORD kFlags = PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS;
+  BOOL ok = EnumPrinters(kFlags,
+                         nullptr,  // Name
+                         kLevel,   // Level
+                         nullptr,  // pPrinterEnum
+                         0,        // cbBuf (buffer size)
+                         &needed,  // Bytes needed in buffer
+                         &count);
+
+  AutoTArray<BYTE, 1024> buffer;
+  if (needed > 0) {
+    buffer.SetLength(needed);
+    ok = EnumPrinters(kFlags, nullptr, kLevel, buffer.Elements(),
+                      buffer.Length(), &needed, &count);
+  }
+
+  if (ok && count) {
+    const RecType* printers =
+        reinterpret_cast<const RecType*>(buffer.Elements());
+    for (unsigned i = 0; i < count; i++) {
+      mPrinters->AppendElement(wcsdup(printers[i].pPrinterName));
+      PR_PL(("Printer Name: %s\n",
+             NS_ConvertUTF16toUTF8(printers[i].pPrinterName).get()));
     }
     rv = NS_OK;
+  } else {
+    PR_PL(("[No printers found]\n"));
   }
+
   PR_PL(("-----------------------\n"));
   return rv;
 }
@@ -671,24 +685,24 @@ nsresult GlobalPrinters::EnumerateNativePrinters() {
 // Uses the GetProfileString to get the default printer from the registry
 void GlobalPrinters::GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
   aDefaultPrinterName.Truncate();
-  WCHAR szDefaultPrinterName[1024];
-  DWORD status =
-      GetProfileStringW(L"windows", L"device", 0, szDefaultPrinterName,
-                        ArrayLength(szDefaultPrinterName));
-  if (status > 0) {
-    WCHAR comma = ',';
-    LPWSTR sPtr = szDefaultPrinterName;
-    while (*sPtr != comma && *sPtr != 0) sPtr++;
-    if (*sPtr == comma) {
-      *sPtr = 0;
+
+  DWORD length = 0;
+  GetDefaultPrinterW(nullptr, &length);
+
+  if (length) {
+    aDefaultPrinterName.SetLength(length);
+    if (GetDefaultPrinterW((LPWSTR)aDefaultPrinterName.BeginWriting(),
+                           &length)) {
+      // `length` includes the terminating null, so we subtract that from our
+      // string length.
+      aDefaultPrinterName.SetLength(length - 1);
+    } else {
+      aDefaultPrinterName.Truncate();
     }
-    aDefaultPrinterName = szDefaultPrinterName;
-  } else {
-    aDefaultPrinterName = EmptyString();
   }
 
-  PR_PL(
-      ("DEFAULT PRINTER [%s]\n", PromiseFlatString(aDefaultPrinterName).get()));
+  PR_PL(("DEFAULT PRINTER [%s]\n",
+         NS_ConvertUTF16toUTF8(aDefaultPrinterName).get()));
 }
 
 //----------------------------------------------------------------------------------
