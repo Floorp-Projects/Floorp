@@ -77,3 +77,56 @@ add_task(async () => {
   Services.ppmm.sharedData.set(SHARED_DATA_KEY, {});
   Services.ppmm.sharedData.flush();
 });
+
+/**
+ * Tests that policies are re-evaluated if the page URI is transitioned
+ * via the history API.
+ */
+add_task(async () => {
+  Services.ppmm.sharedData.set(SHARED_DATA_KEY, {
+    "*://example.com/*/test-page.html": TOGGLE_POLICIES.HIDDEN,
+  });
+  Services.ppmm.sharedData.flush();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      await ensureVideosReady(browser);
+      await SimpleTest.promiseFocus(browser);
+
+      await testToggleHelper(
+        browser,
+        "no-controls",
+        false,
+        TOGGLE_POLICIES.HIDDEN
+      );
+
+      await SpecialPowers.spawn(browser, [], async function() {
+        content.history.pushState({}, "2", "otherpage.html");
+      });
+
+      // Since we no longer match the policy URI, we should be able
+      // to use the Picture-in-Picture toggle.
+      await testToggleHelper(browser, "no-controls", true);
+
+      // Now use the history API to put us back at the original location,
+      // which should have the HIDDEN policy re-applied.
+      await SpecialPowers.spawn(browser, [], async function() {
+        content.history.pushState({}, "Return", "test-page.html");
+      });
+
+      await testToggleHelper(
+        browser,
+        "no-controls",
+        false,
+        TOGGLE_POLICIES.HIDDEN
+      );
+    }
+  );
+
+  Services.ppmm.sharedData.set(SHARED_DATA_KEY, {});
+  Services.ppmm.sharedData.flush();
+});
