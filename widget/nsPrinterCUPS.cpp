@@ -13,7 +13,6 @@ nsPrinterCUPS::nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
                              const nsAString& aDisplayName)
     : mDisplayName(aDisplayName), mShim(aShim) {
   MOZ_ASSERT(aPrinter);
-  MOZ_ASSERT(mShim.IsInitialized());
   DebugOnly<const int> numCopied = aShim.cupsCopyDest(aPrinter, 0, &mPrinter);
   MOZ_ASSERT(numCopied == 1);
   mPrinterInfo = aShim.cupsCopyDestInfo(CUPS_HTTP_DEFAULT, mPrinter);
