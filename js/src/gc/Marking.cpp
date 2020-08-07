@@ -3644,6 +3644,36 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
   Zone* zone = src->nurseryZone();
   zone->tenuredStrings++;
 
+  // If this string is in the StringToAtomCache, try to deduplicate it by using
+  // the atom. Don't do this for dependent strings because they're more
+  // complicated. See StringRelocationOverlay and DeduplicationStringHasher
+  // comments.
+  if (src->inStringToAtomCache() && src->isDeduplicatable() &&
+      !src->hasBase()) {
+    JSLinearString* linear = &src->asLinear();
+    JSAtom* atom = runtime()->caches().stringToAtomCache.lookup(linear);
+    MOZ_ASSERT(atom, "Why was the cache purged before minor GC?");
+
+    // Only deduplicate if both strings have the same encoding, to not confuse
+    // dependent strings.
+    if (src->hasTwoByteChars() == atom->hasTwoByteChars()) {
+      // The StringToAtomCache isn't used for inline strings (due to the minimum
+      // length) so canOwnDependentChars must be true for both src and atom.
+      // This means if there are dependent strings floating around using str's
+      // chars, they will be able to use the chars from the atom.
+      static_assert(StringToAtomCache::MinStringLength >
+                    JSFatInlineString::MAX_LENGTH_LATIN1);
+      static_assert(StringToAtomCache::MinStringLength >
+                    JSFatInlineString::MAX_LENGTH_TWO_BYTE);
+      MOZ_ASSERT(src->canOwnDependentChars());
+      MOZ_ASSERT(atom->canOwnDependentChars());
+
+      StringRelocationOverlay::forwardCell(src, atom);
+      gcprobes::PromoteToTenured(src, atom);
+      return atom;
+    }
+  }
+
   JSString* dst;
 
   // A live nursery string can only get deduplicated when:

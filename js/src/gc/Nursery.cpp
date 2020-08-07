@@ -1210,6 +1210,12 @@ js::Nursery::CollectionResult js::Nursery::doCollection(
   gc->storeBuffer().clear();
   endProfile(ProfileKey::ClearStoreBuffer);
 
+  // Purge the StringToAtomCache. This has to happen at the end because the
+  // cache is used when tenuring strings.
+  startProfile(ProfileKey::PurgeStringToAtomCache);
+  runtime()->caches().stringToAtomCache.purge();
+  endProfile(ProfileKey::PurgeStringToAtomCache);
+
   // Make sure hashtables have been updated after the collection.
   startProfile(ProfileKey::CheckHashTables);
 #ifdef JS_GC_ZEAL
