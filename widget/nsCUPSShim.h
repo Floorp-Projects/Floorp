@@ -8,30 +8,16 @@
 #define nsCUPSShim_h___
 
 #include <cups/cups.h>
+#include "mozilla/Atomics.h"
+#include "mozilla/Mutex.h"
 
 struct PRLibrary;
 
 /* Note: this class relies on static initialization. */
 class nsCUPSShim {
  public:
-  /**
-   * Initialize this object. Attempt to load the CUPS shared
-   * library and find function pointers for the supported
-   * functions (see below).
-   * @return false if the shared library could not be loaded, or if
-   *                  any of the functions could not be found.
-   *         true  for successful initialization.
-   */
-  bool Init();
-
-  /**
-   * @return true  if the object was initialized successfully.
-   *         false otherwise.
-   */
-  bool IsInitialized() const { return mInited; }
-
   bool EnsureInitialized() {
-    return IsInitialized() || Init();
+    return mInited || Init();
   }
 
   /**
@@ -61,7 +47,24 @@ class nsCUPSShim {
 #undef CUPS_SHIM_FUNC_DECL
 
  private:
-  bool mInited = false;
+  /**
+   * Initialize this object. Attempt to load the CUPS shared
+   * library and find function pointers for the supported
+   * functions (see below).
+   * @return false if the shared library could not be loaded, or if
+   *                  any of the functions could not be found.
+   *         true  for successful initialization.
+   */
+  bool Init();
+
+  bool IsInitialized() const { return mInited; }
+
+  // We can try to get initialized from multiple threads at the same time, this
+  // boolean and the mutex below make it safe.
+  //
+  // The boolean can't be Relaxed, because it guards our function pointers.
+  mozilla::Atomic<bool, mozilla::ReleaseAcquire> mInited {false};
+  mozilla::OffTheBooksMutex mInitMutex {"nsCUPSShim::mInitMutex"};
   PRLibrary* mCupsLib;
 };
 
