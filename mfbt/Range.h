@@ -64,17 +64,9 @@ class Range {
   operator Span<const T>() const { return Span<T>(mStart.get(), length()); }
 };
 
-template <class T>
-Span<T> MakeSpan(Range<T>& aRange) {
-  return aRange;
-}
 template <typename T>
 Span(Range<T>&) -> Span<T>;
 
-template <class T>
-Span<const T> MakeSpan(const Range<T>& aRange) {
-  return aRange;
-}
 template <typename T>
 Span(const Range<T>&) -> Span<const T>;
 
