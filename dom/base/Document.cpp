@@ -16656,5 +16656,13 @@ bool Document::HasThirdPartyChannel() {
   return false;
 }
 
+void Document::GetConnectedShadowRoots(
+    nsTArray<RefPtr<ShadowRoot>>& aOut) const {
+  aOut.SetCapacity(mComposedShadowRoots.Count());
+  for (const auto& entry : mComposedShadowRoots) {
+    aOut.AppendElement(entry.GetKey());
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
