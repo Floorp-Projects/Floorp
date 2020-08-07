@@ -35,11 +35,18 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
 const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
+const PREF_PIONEER_COMPLETED_STUDIES =
+  "toolkit.telemetry.pioneer-completed-studies";
 
 /**
  * This is the Remote Settings key that we use to get the list of available studies.
  */
 const STUDY_ADDON_COLLECTION_KEY = "pioneer-study-addons-v1";
+
+const STUDY_LEAVE_REASONS = {
+  USER_ABANDONED: "user-abandoned",
+  STUDY_ENDED: "study-ended",
+};
 
 const PREF_TEST_CACHED_ADDONS = "toolkit.pioneer.testCachedAddons";
 const PREF_TEST_ADDONS = "toolkit.pioneer.testAddons";
@@ -171,12 +178,40 @@ async function showAvailableStudies(cachedAddons) {
         );
       }
 
+      const completedStudies = Services.prefs.getStringPref(
+        PREF_PIONEER_COMPLETED_STUDIES,
+        "{}"
+      );
+
       if (addon) {
         joinBtn.disabled = true;
         await addon.uninstall();
         document.l10n.setAttributes(joinBtn, "pioneer-join-study");
         joinBtn.disabled = false;
+
+        // Record that the user abandoned this study, since it may not be re-join-able.
+        if (completedStudies) {
+          const studies = JSON.parse(completedStudies);
+          studies[studyAddonId] = STUDY_LEAVE_REASONS.USER_ABANDONED;
+          Services.prefs.setStringPref(
+            PREF_PIONEER_COMPLETED_STUDIES,
+            JSON.stringify(studies)
+          );
+        }
       } else {
+        // Check if this study is re-join-able before enrollment.
+        const studies = JSON.parse(completedStudies);
+        if (studyAddonId in studies) {
+          if (
+            "canRejoin" in cachedAddons[studyAddonId] &&
+            cachedAddons[studyAddonId].canRejoin === false
+          ) {
+            console.error(
+              `Cannot rejoin ended study ${studyAddonId}, reason: ${studies[studyAddonId]}`
+            );
+            return;
+          }
+        }
         joinBtn.disabled = true;
         await install.install();
         document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
@@ -214,13 +249,24 @@ async function updateStudy(studyAddonId) {
   const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
 
   if (pioneerId) {
-    study.style.opacity = 1;
-    joinBtn.disabled = false;
+    const completedStudies = Services.prefs.getStringPref(
+      PREF_PIONEER_COMPLETED_STUDIES,
+      "{}"
+    );
 
-    if (addon) {
-      document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
+    const studies = JSON.parse(completedStudies);
+    if (studyAddonId in studies) {
+      joinBtn.disabled = true;
+      document.l10n.setAttributes(joinBtn, "pioneer-ended-study");
     } else {
-      document.l10n.setAttributes(joinBtn, "pioneer-join-study");
+      study.style.opacity = 1;
+      joinBtn.disabled = false;
+
+      if (addon) {
+        document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
+      } else {
+        document.l10n.setAttributes(joinBtn, "pioneer-join-study");
+      }
     }
   } else {
     document.l10n.setAttributes(joinBtn, "pioneer-join-study");
@@ -247,6 +293,7 @@ async function setup(cachedAddons) {
 
       if (pioneerId) {
         Services.prefs.clearUserPref(PREF_PIONEER_ID);
+        Services.prefs.clearUserPref(PREF_PIONEER_COMPLETED_STUDIES);
         for (const cachedAddon of cachedAddons) {
           const addon = await AddonManager.getAddonByID(cachedAddon.addon_id);
           if (addon) {
@@ -343,6 +390,23 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
     }
   } else {
     cachedAddons = await RemoteSettings(STUDY_ADDON_COLLECTION_KEY).get();
+  }
+
+  for (const cachedAddon of cachedAddons) {
+    // Record any studies that have been marked as concluded on the server.
+    if ("studyEnded" in cachedAddon && cachedAddon.studyEnded === true) {
+      const completedStudies = Services.prefs.getStringPref(
+        PREF_PIONEER_COMPLETED_STUDIES,
+        "{}"
+      );
+      const studies = JSON.parse(completedStudies);
+      studies[cachedAddon.addon_id] = STUDY_LEAVE_REASONS.STUDY_ENDED;
+
+      Services.prefs.setStringPref(
+        PREF_PIONEER_COMPLETED_STUDIES,
+        JSON.stringify(studies)
+      );
+    }
   }
 
   await setup(cachedAddons);

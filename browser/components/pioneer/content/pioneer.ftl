@@ -18,3 +18,4 @@ pioneer-enrollment-button = Enroll
 pioneer-unenrollment-button = Leave
 pioneer-available-studies = Available Studies
 pioneer-end-study = End Study
+pioneer-ended-study = Study Ended
