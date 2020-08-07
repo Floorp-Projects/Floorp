@@ -543,8 +543,8 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
 #undef ADD_PLANE_ATTRIBS
   attribs.AppendElement(LOCAL_EGL_NONE);
 
-  if (!mGL) return false;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
+  if (!aGLContext) return false;
+  const auto& gle = gl::GLContextEGL::Cast(aGLContext);
   const auto& egl = gle->mEgl;
   mEGLImage =
       egl->fCreateImage(LOCAL_EGL_NO_CONTEXT, LOCAL_EGL_LINUX_DMA_BUF_EXT,
@@ -947,8 +947,8 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   MOZ_ASSERT(!mEGLImage[aPlane] && !mTexture[aPlane],
              "EGLImage/Texture is already created!");
 
-  if (!mGL) return false;
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
+  if (!aGLContext) return false;
+  const auto& gle = gl::GLContextEGL::Cast(aGLContext);
   const auto& egl = gle->mEgl;
 
   nsTArray<EGLint> attribs;
