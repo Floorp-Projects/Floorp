@@ -43,6 +43,15 @@ def test_parse_valid_linter(parse):
     assert set(lintobj['extensions']) == set(['js', 'jsm'])
 
 
+def test_parser_valid_multiple(parse):
+    lintobj = parse('multiple.yml')
+    assert isinstance(lintobj, list)
+    assert len(lintobj) == 2
+
+    assert lintobj[0]['name'] == "StringLinter"
+    assert lintobj[1]['name'] == "RegexLinter"
+
+
 @pytest.mark.parametrize('linter', [
     'invalid_type.yml',
     'invalid_extension.ym',

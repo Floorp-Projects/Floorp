@@ -1,0 +1,19 @@
+---
+StringLinter:
+    description: >-
+        Make sure the string foobar never appears in browser js
+        files because it is bad
+    rule: no-foobar
+    extensions: ['.js', 'jsm']
+    type: string
+    payload: foobar
+
+---
+RegexLinter:
+    description: >-
+        Make sure the string foobar never appears in browser js
+        files because it is bad
+    rule: no-foobar
+    extensions: ['.js', 'jsm']
+    type: regex
+    payload: foobar
