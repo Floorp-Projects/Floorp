@@ -93,13 +93,27 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
            "other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns
 #endif
        }},
+      {// test for cases where finalURI is empty
+       ""_ns,
+       nsIContentPolicy::TYPE_IMAGE,
+       "web"_ns,
+       {"other"_ns, "TYPE_IMAGE"_ns, "web"_ns, "unknown"_ns}},
+      {// test for cases where finalURI is null, due to the struct layout, we'll
+       // override the URL with nullptr in loop below.
+       "URLWillResultInNullPtr"_ns,
+       nsIContentPolicy::TYPE_FONT,
+       "web"_ns,
+       {"other"_ns, "TYPE_FONT"_ns, "web"_ns, "unknown"_ns}},
   };
 
   int i = 0;
   for (auto const& currentTest : myTestCases) {
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), currentTest.urlstring);
 
+    // special-casing for a case where the uri is null
+    if (!currentTest.urlstring.Equals("URLWillResultInNullPtr")) {
+      NS_NewURI(getter_AddRefs(uri), currentTest.urlstring);
+    }
     // this will record the event
     nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
         uri, currentTest.contentType, currentTest.remoteType);
