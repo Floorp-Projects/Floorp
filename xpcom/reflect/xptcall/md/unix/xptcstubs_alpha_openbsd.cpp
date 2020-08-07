@@ -15,7 +15,6 @@ __asm__("PrepareAndDispatch") ATTRIBUTE_USED;
 static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args)
 {
-    const uint8_t PARAM_BUFFER_COUNT = 16;
     const uint8_t NUM_ARG_REGS = 6-1;        // -1 for "this" pointer
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];

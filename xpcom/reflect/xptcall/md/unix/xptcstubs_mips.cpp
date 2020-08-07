@@ -19,7 +19,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
 {
     args++; // always skip over a0
 
-#define PARAM_BUFFER_COUNT		16
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = nullptr;

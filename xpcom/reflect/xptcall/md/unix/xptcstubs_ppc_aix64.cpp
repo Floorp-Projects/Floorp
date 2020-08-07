@@ -18,7 +18,6 @@ extern "C" nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase* self, uint64_t methodIndex, uint64_t* args, uint64_t *gprData, double *fprData)
 {
 
-#define PARAM_BUFFER_COUNT     16
 #define PARAM_GPR_COUNT         7
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];

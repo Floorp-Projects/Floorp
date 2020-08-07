@@ -12,7 +12,6 @@ static nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
                    uint32_t* a_gpr, uint64_t *a_fpr, uint32_t *a_ov)
 {
-#define PARAM_BUFFER_COUNT     16
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = nullptr;

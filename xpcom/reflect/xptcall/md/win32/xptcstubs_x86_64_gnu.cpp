@@ -19,7 +19,6 @@ extern "C" nsresult __attribute__((__used__))
 PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
                    uint64_t * args, uint64_t * gprData, double *fprData)
 {
-#define PARAM_BUFFER_COUNT  16
 //
 // "this" pointer is first parameter, so parameter count is 3.
 //
