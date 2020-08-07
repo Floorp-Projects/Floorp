@@ -1948,27 +1948,35 @@ static JS::RealmCreationOptions& SelectZone(
     return aOptions.setExistingCompartment(xpc::PrivilegedJunkScope());
   }
 
-  if (aNewInner->GetOuterWindow()) {
-    nsGlobalWindowOuter* top = aNewInner->GetInProcessTopInternal();
-    if (top == aNewInner->GetOuterWindow()) {
-      // We're a toplevel load.  Use a new zone.  This way, when we do
-      // zone-based compartment sharing we won't share compartments
-      // across navigations.
-      return aOptions.setNewCompartmentAndZone();
-    }
+  BrowsingContext* bc = aNewInner->GetBrowsingContext();
+  if (bc->IsTop()) {
+    // We're a toplevel load.  Use a new zone.  This way, when we do
+    // zone-based compartment sharing we won't share compartments
+    // across navigations.
+    return aOptions.setNewCompartmentAndZone();
+  }
 
-    // If we have a top-level window, use its zone.
-    if (top && top->GetGlobalJSObject()) {
-      JS::Zone* zone = JS::GetObjectZone(top->GetGlobalJSObject());
-      // Now try to find an existing compartment that's same-origin
-      // with our principal.
-      CompartmentFinderState data(aPrincipal);
-      JS_IterateCompartmentsInZone(aCx, zone, &data, FindSameOriginCompartment);
-      if (data.compartment) {
-        return aOptions.setExistingCompartment(data.compartment);
-      }
-      return aOptions.setNewCompartmentInExistingZone(top->GetGlobalJSObject());
+  // Find the in-process ancestor highest in the hierarchy.
+  nsGlobalWindowInner* ancestor = nullptr;
+  for (WindowContext* wc = bc->GetParentWindowContext(); wc;
+       wc = wc->GetParentWindowContext()) {
+    if (nsGlobalWindowInner* win = wc->GetInnerWindow()) {
+      ancestor = win;
     }
+  }
+
+  // If we have an ancestor window, use its zone.
+  if (ancestor && ancestor->GetGlobalJSObject()) {
+    JS::Zone* zone = JS::GetObjectZone(ancestor->GetGlobalJSObject());
+    // Now try to find an existing compartment that's same-origin
+    // with our principal.
+    CompartmentFinderState data(aPrincipal);
+    JS_IterateCompartmentsInZone(aCx, zone, &data, FindSameOriginCompartment);
+    if (data.compartment) {
+      return aOptions.setExistingCompartment(data.compartment);
+    }
+    return aOptions.setNewCompartmentInExistingZone(
+        ancestor->GetGlobalJSObject());
   }
 
   return aOptions.setNewCompartmentAndZone();
