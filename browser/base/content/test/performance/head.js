@@ -791,3 +791,111 @@ async function runUrlbarTest(
 
   await BrowserTestUtils.closeWindow(win);
 }
+
+/**
+ * Helper method for checking which scripts are loaded on content process
+ * startup, used by `browser_startup_content.js` and
+ * `browser_startup_content_subframe.js`.
+ *
+ * Parameters to this function are passed in an object literal to avoid
+ * confusion about parameter order.
+ *
+ * @param loadedInfo (Object)
+ *        Mapping from script type to a set of scripts which have been loaded
+ *        of that type.
+ *
+ * @param known (Object)
+ *        Mapping from script type to a set of scripts which must have been
+ *        loaded of that type.
+ *
+ * @param intermittent (Object)
+ *        Mapping from script type to a set of scripts which may have been
+ *        loaded of that type. There must be a script type map for every type
+ *        in `known`.
+ *
+ * @param forbidden (Object)
+ *        Mapping from script type to a set of scripts which must not have been
+ *        loaded of that type.
+ *
+ * @param dumpAllStacks (bool)
+ *        If true, dump the stacks for all loaded modules. Makes the output
+ *        noisy.
+ */
+function checkLoadedScripts({
+  loadedInfo,
+  known,
+  intermittent,
+  forbidden,
+  dumpAllStacks,
+}) {
+  let loadedList = {};
+
+  for (let scriptType in known) {
+    loadedList[scriptType] = Object.keys(loadedInfo[scriptType]).filter(c => {
+      if (!known[scriptType].has(c)) {
+        return true;
+      }
+      known[scriptType].delete(c);
+      return false;
+    });
+
+    loadedList[scriptType] = loadedList[scriptType].filter(c => {
+      return !intermittent[scriptType].has(c);
+    });
+
+    is(
+      loadedList[scriptType].length,
+      0,
+      `should have no unexpected ${scriptType} loaded on content process startup`
+    );
+
+    for (let script of loadedList[scriptType]) {
+      record(
+        false,
+        `Unexpected ${scriptType} loaded during content process startup: ${script}`,
+        undefined,
+        loadedInfo[scriptType][script]
+      );
+    }
+
+    is(
+      known[scriptType].size,
+      0,
+      `all known ${scriptType} scripts should have been loaded`
+    );
+
+    for (let script of known[scriptType]) {
+      ok(
+        false,
+        `${scriptType} is expected to load for content process startup but wasn't: ${script}`
+      );
+    }
+
+    if (dumpAllStacks) {
+      info(`Stacks for all loaded ${scriptType}:`);
+      for (let file in loadedInfo[scriptType]) {
+        if (loadedInfo[scriptType][file]) {
+          info(
+            `${file}\n------------------------------------\n` +
+              loadedInfo[scriptType][file] +
+              "\n"
+          );
+        }
+      }
+    }
+  }
+
+  for (let scriptType in forbidden) {
+    for (let script of forbidden[scriptType]) {
+      let loaded = script in loadedInfo[scriptType];
+      if (loaded) {
+        record(
+          false,
+          `Forbidden ${scriptType} loaded during content process startup: ${script}`,
+          undefined,
+          loadedInfo[scriptType][script]
+        );
+      }
+    }
+  }
+}
