@@ -14299,6 +14299,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "The type of update manifest served for a given update request."
   },
+  "HISTORY_SIDEBAR_VIEW_TYPE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "alert_emails": ["emalysz@mozilla.com", "rtestard@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1648524],
+    "kind": "categorical",
+    "labels": ["visited", "lastvisited", "dayandsite", "site", "day"],
+    "description": "The type of view used for the history sidebar."
+  },
   "NOTIFY_OBSERVERS_LATENCY_MS": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec"],

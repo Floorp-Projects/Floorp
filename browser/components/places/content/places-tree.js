@@ -434,6 +434,7 @@
       if (folderRestrict) {
         query.setParents(folderRestrict);
         options.queryType = options.QUERY_TYPE_BOOKMARKS;
+        Services.telemetry.keyedScalarAdd("sidebar.search", "bookmarks", 1);
       }
 
       options.includeHidden = !!includeHidden;
