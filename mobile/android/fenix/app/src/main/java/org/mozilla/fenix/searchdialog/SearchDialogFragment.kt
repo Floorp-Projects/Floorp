@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.searchdialog
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,12 +16,12 @@ import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -46,7 +47,7 @@ fun Settings.shouldShowSearchSuggestions(isPrivate: Boolean): Boolean {
     }
 }
 
-class SearchDialogFragment : AppCompatDialogFragment() {
+class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private lateinit var interactor: SearchDialogInteractor
     private lateinit var store: SearchDialogFragmentStore
@@ -56,6 +57,14 @@ class SearchDialogFragment : AppCompatDialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.SearchDialogStyle)
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return object : Dialog(requireContext(), this.theme) {
+            override fun onBackPressed() {
+                this@SearchDialogFragment.onBackPressed()
+            }
+        }
     }
 
     override fun onCreateView(
@@ -110,13 +119,18 @@ class SearchDialogFragment : AppCompatDialogFragment() {
                 clear(toolbar.id, TOP)
                 connect(toolbar.id, BOTTOM, PARENT_ID, BOTTOM)
 
-                clear(scrollView.id, TOP)
-                clear(scrollView.id, BOTTOM)
-                connect(scrollView.id, TOP, PARENT_ID, TOP)
-                connect(scrollView.id, BOTTOM, toolbar.id, TOP)
+                clear(awesomeBar.id, TOP)
+                clear(awesomeBar.id, BOTTOM)
+                connect(awesomeBar.id, TOP, PARENT_ID, TOP)
+                connect(awesomeBar.id, BOTTOM, toolbar.id, TOP)
 
                 applyTo(search_wrapper)
             }
+        }
+
+        search_wrapper.setOnClickListener {
+            it.hideKeyboard()
+            dismissAllowingStateLoss()
         }
 
         consumeFrom(store) {
@@ -124,6 +138,13 @@ class SearchDialogFragment : AppCompatDialogFragment() {
             toolbarView.update(it)
             awesomeBarView.update(it)
         }
+    }
+
+    override fun onBackPressed(): Boolean {
+        view?.hideKeyboard()
+        dismissAllowingStateLoss()
+
+        return true
     }
 
     private fun setUpState(): SearchFragmentState {

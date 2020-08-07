@@ -8,6 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:background="?attr/scrimBackground"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <mozilla.components.browser.toolbar.BrowserToolbar
         android:id="@+id/toolbar"
@@ -27,29 +28,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
-    <androidx.core.widget.NestedScrollView
+    <mozilla.components.browser.awesomebar.BrowserAwesomeBar
+        xmlns:mozac="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/awesomeBar"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:id="@+id/scrollView"
-        android:background="?attr/scrimBackground"
+        android:fadingEdge="horizontal"
+        android:fadingEdgeLength="40dp"
+        android:nestedScrollingEnabled="false"
+        android:requiresFadingEdge="vertical"
+        android:background="?attr/foundation"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
-        android:scrollbars="vertical">
-        <mozilla.components.browser.awesomebar.BrowserAwesomeBar
-            xmlns:mozac="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/awesomeBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fadingEdge="horizontal"
-            android:fadingEdgeLength="40dp"
-            android:nestedScrollingEnabled="false"
-            android:requiresFadingEdge="vertical"
-            android:background="?attr/foundation"
-            android:visibility="invisible"
-            mozac:awesomeBarChipBackgroundColor="@color/photonGreen50"
-            mozac:awesomeBarDescriptionTextColor="?secondaryText"
-            mozac:awesomeBarTitleTextColor="?primaryText" />
-    </androidx.core.widget.NestedScrollView>
+        mozac:awesomeBarChipBackgroundColor="@color/photonGreen50"
+        mozac:awesomeBarDescriptionTextColor="?secondaryText"
+        mozac:awesomeBarTitleTextColor="?primaryText" />
 </androidx.constraintlayout.widget.ConstraintLayout>
