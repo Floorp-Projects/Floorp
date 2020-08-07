@@ -5162,7 +5162,7 @@ static bool FrontendTest(JSContext* cx,
           return false;
         }
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
+#if defined(DEBUG)
         js::Fprinter out(stderr);
         DumpParseTree(pn, out);
 #endif
@@ -5214,7 +5214,7 @@ static bool FrontendTest(JSContext* cx,
           return false;
         }
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
+#if defined(DEBUG)
         js::Fprinter out(stderr);
         DumpParseTree(pn, out);
 #endif
