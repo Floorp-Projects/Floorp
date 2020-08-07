@@ -39,6 +39,7 @@
 #include "util/Memory.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
+#include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
@@ -2003,6 +2004,11 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 #else
       return write("[bigint]");
 #endif
+
+    case JSOp::BuiltinObject: {
+      auto kind = BuiltinObjectKind(GET_UINT8(pc));
+      return write(BuiltinObjectName(kind));
+    }
 
     default:
       break;

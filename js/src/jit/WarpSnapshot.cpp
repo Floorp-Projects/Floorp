@@ -133,8 +133,8 @@ void WarpRegExp::dumpData(GenericPrinter& out) const {
   out.printf("    hasShared: %u\n", hasShared());
 }
 
-void WarpFunctionProto::dumpData(GenericPrinter& out) const {
-  out.printf("    proto: 0x%p\n", proto());
+void WarpBuiltinObject::dumpData(GenericPrinter& out) const {
+  out.printf("    builtin: 0x%p\n", builtin());
 }
 
 void WarpGetIntrinsic::dumpData(GenericPrinter& out) const {
@@ -267,8 +267,8 @@ void WarpRegExp::traceData(JSTracer* trc) {
   // No GC pointers.
 }
 
-void WarpFunctionProto::traceData(JSTracer* trc) {
-  TraceWarpGCPtr(trc, proto_, "warp-function-proto");
+void WarpBuiltinObject::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, builtin_, "warp-builtin-object");
 }
 
 void WarpGetIntrinsic::traceData(JSTracer* trc) {
