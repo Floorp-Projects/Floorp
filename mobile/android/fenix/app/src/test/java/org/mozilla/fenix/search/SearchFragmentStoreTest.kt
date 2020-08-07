@@ -4,19 +4,143 @@
 
 package org.mozilla.fenix.search
 
+import io.mockk.MockKAnnotations
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.search.provider.SearchEngineList
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.TabSessionState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint
+import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
+import org.mozilla.fenix.utils.Settings
 
 @ExperimentalCoroutinesApi
 class SearchFragmentStoreTest {
+
+    @MockK private lateinit var searchEngine: SearchEngine
+    @MockK private lateinit var searchProvider: FenixSearchEngineProvider
+    @MockK private lateinit var activity: HomeActivity
+    @MockK(relaxed = true) private lateinit var components: Components
+    @MockK(relaxed = true) private lateinit var settings: Settings
+
+    @Before
+    fun setup() {
+        MockKAnnotations.init(this)
+        every { activity.browsingModeManager } returns object : BrowsingModeManager {
+            override var mode: BrowsingMode = BrowsingMode.Normal
+        }
+        every { components.settings } returns settings
+        every { components.search.provider } returns searchProvider
+        every { searchProvider.getDefaultEngine(activity) } returns searchEngine
+        every { searchProvider.installedSearchEngines(activity) } returns SearchEngineList(
+            list = listOf(mockk(), mockk()),
+            default = searchEngine
+        )
+    }
+
+    @Test
+    fun `createInitialSearchFragmentState with no tab`() {
+        activity.browsingModeManager.mode = BrowsingMode.Normal
+        every { components.core.store.state } returns BrowserState()
+        every { settings.shouldShowSearchShortcuts } returns true
+
+        val expected = SearchFragmentState(
+            query = "",
+            url = "",
+            searchTerms = "",
+            searchEngineSource = SearchEngineSource.Default(searchEngine),
+            defaultEngineSource = SearchEngineSource.Default(searchEngine),
+            showSearchSuggestions = false,
+            showSearchSuggestionsHint = false,
+            showSearchShortcuts = true,
+            areShortcutsAvailable = true,
+            showClipboardSuggestions = false,
+            showHistorySuggestions = false,
+            showBookmarkSuggestions = false,
+            tabId = null,
+            pastedText = "pastedText",
+            searchAccessPoint = SearchAccessPoint.ACTION
+        )
+
+        assertEquals(
+            expected,
+            createInitialSearchFragmentState(
+                activity,
+                components,
+                tabId = null,
+                pastedText = "pastedText",
+                searchAccessPoint = SearchAccessPoint.ACTION
+            )
+        )
+        assertEquals(
+            expected.copy(tabId = "tabId"),
+            createInitialSearchFragmentState(
+                activity,
+                components,
+                tabId = "tabId",
+                pastedText = "pastedText",
+                searchAccessPoint = SearchAccessPoint.ACTION
+            )
+        )
+    }
+
+    @Test
+    fun `createInitialSearchFragmentState with tab`() {
+        activity.browsingModeManager.mode = BrowsingMode.Private
+        every { components.core.store.state } returns BrowserState(
+            tabs = listOf(
+                TabSessionState(
+                    id = "tabId",
+                    content = ContentState(
+                        url = "https://example.com",
+                        searchTerms = "search terms"
+                    )
+                )
+            )
+        )
+
+        assertEquals(
+            SearchFragmentState(
+                query = "https://example.com",
+                url = "https://example.com",
+                searchTerms = "search terms",
+                searchEngineSource = SearchEngineSource.Default(searchEngine),
+                defaultEngineSource = SearchEngineSource.Default(searchEngine),
+                showSearchSuggestions = false,
+                showSearchSuggestionsHint = false,
+                showSearchShortcuts = false,
+                areShortcutsAvailable = true,
+                showClipboardSuggestions = false,
+                showHistorySuggestions = false,
+                showBookmarkSuggestions = false,
+                tabId = "tabId",
+                pastedText = "",
+                searchAccessPoint = SearchAccessPoint.SHORTCUT
+            ),
+            createInitialSearchFragmentState(
+                activity,
+                components,
+                tabId = "tabId",
+                pastedText = "",
+                searchAccessPoint = SearchAccessPoint.SHORTCUT
+            )
+        )
+    }
 
     @Test
     fun updateQuery() = runBlocking {
@@ -33,7 +157,6 @@ class SearchFragmentStoreTest {
     fun selectSearchShortcutEngine() = runBlocking {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
-        val searchEngine: SearchEngine = mockk()
 
         store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)).join()
         assertNotSame(initialState, store.state)
@@ -91,11 +214,10 @@ class SearchFragmentStoreTest {
     fun selectNewDefaultEngine() = runBlocking {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
-        val engine = mockk<SearchEngine>()
 
-        store.dispatch(SearchFragmentAction.SelectNewDefaultSearchEngine(engine)).join()
+        store.dispatch(SearchFragmentAction.SelectNewDefaultSearchEngine(searchEngine)).join()
         assertNotSame(initialState, store.state)
-        assertEquals(SearchEngineSource.Default(engine), store.state.searchEngineSource)
+        assertEquals(SearchEngineSource.Default(searchEngine), store.state.searchEngineSource)
     }
 
     private fun emptyDefaultState(): SearchFragmentState = SearchFragmentState(
@@ -112,6 +234,6 @@ class SearchFragmentStoreTest {
         showClipboardSuggestions = false,
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
-        searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.NONE
+        searchAccessPoint = SearchAccessPoint.NONE
     )
 }
