@@ -113,7 +113,7 @@ loader.lazyServiceGetter(
 // Minimum delay between two "new-mutations" events.
 const MUTATIONS_THROTTLING_DELAY = 100;
 // List of mutation types that should -not- be throttled.
-const IMMEDIATE_MUTATIONS = ["documentUnload", "frameLoad", "pseudoClassLock"];
+const IMMEDIATE_MUTATIONS = ["pseudoClassLock"];
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 
@@ -296,7 +296,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     this._isWatchingRootNode = true;
     if (this.rootNode && this._isRootDocumentReady()) {
-      this._emitNewRoot();
+      this._emitNewRoot(this.rootNode, { isTopLevelDocument: true });
     }
   },
 
@@ -305,13 +305,17 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._emittedRootNode = null;
   },
 
-  _emitNewRoot() {
-    if (!this._isWatchingRootNode || this._emittedRootNode === this.rootNode) {
+  _emitNewRoot(rootNode, { isTopLevelDocument }) {
+    const alreadyEmittedTopRootNode = this._emittedRootNode === rootNode;
+    if (!this._isWatchingRootNode || alreadyEmittedTopRootNode) {
       return;
     }
 
-    this._emittedRootNode = this.rootNode;
-    this.emit("root-available", this.rootNode);
+    if (isTopLevelDocument) {
+      this._emittedRootNode = this.rootNode;
+    }
+
+    this.emit("root-available", rootNode);
   },
 
   _isRootDocumentReady() {
@@ -2527,6 +2531,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       );
       return;
     }
+
     if (isTopLevel) {
       // If we initialize the inspector while the document is loading,
       // we may already have a root document set in the constructor.
@@ -2541,27 +2546,17 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this.rootWin = window;
       this.rootDoc = window.document;
       this.rootNode = this.document();
-      this._emitNewRoot();
-      return;
+      this._emitNewRoot(this.rootNode, { isTopLevelDocument: true });
+    } else {
+      const frame = getFrameElement(window);
+      const frameActor = this.getNode(frame);
+      if (frameActor) {
+        // If the parent frame is in the map of known node actors, create the
+        // actor for the new document and emit a root-available event.
+        const documentActor = this._getOrCreateNodeActor(window.document);
+        this._emitNewRoot(documentActor, { isTopLevelDocument: false });
+      }
     }
-    const frame = getFrameElement(window);
-    const frameActor = this.getNode(frame);
-    if (!frameActor) {
-      return;
-    }
-
-    this.queueMutation({
-      type: "frameLoad",
-      target: frameActor.actorID,
-    });
-
-    // Send a childList mutation on the frame.
-    this.queueMutation({
-      type: "childList",
-      target: frameActor.actorID,
-      added: [],
-      removed: [],
-    });
   },
 
   // Returns true if domNode is in window or a subframe.
@@ -2615,40 +2610,18 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this._updateMutationBreakpointState("unload", node, null);
     }
 
+    if (this._isWatchingRootNode) {
+      this.emit("root-destroyed", documentActor);
+    }
+
+    // Cleanup root doc references if we just unloaded the top level root
+    // document.
     if (this.rootDoc === doc) {
       this.rootDoc = null;
-      if (this._isWatchingRootNode) {
-        this.emit("root-destroyed", this.rootNode);
-      }
       this.rootNode = null;
-      this.releaseNode(documentActor, { force: true });
-      // XXX: Only top-level "roots" trigger root-available/root-destroyed
-      // events. When a frame living in the same process as the parent frame
-      // navigates, we rely on legacy mutations to communicate the update to the
-      // markup view.
-      return;
     }
 
-    this.queueMutation({
-      type: "documentUnload",
-      target: documentActor.actorID,
-    });
-
-    const walker = this.getDocumentWalker(doc);
-    const parentNode = walker.parentNode();
-    if (parentNode) {
-      // Send a childList mutation on the frame so that clients know
-      // they should reread the children list.
-      this.queueMutation({
-        type: "childList",
-        target: this.getNode(parentNode).actorID,
-        added: [],
-        removed: [],
-      });
-    }
-
-    // Need to force a release of this node, because those nodes can't
-    // be accessed anymore.
+    // Release the actor for the unloaded document.
     this.releaseNode(documentActor, { force: true });
   },
 
