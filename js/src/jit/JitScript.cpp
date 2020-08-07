@@ -63,7 +63,7 @@ JitScript::JitScript(JSScript* script, Offset typeSetOffset,
       bytecodeTypeMapOffset_(bytecodeTypeMapOffset),
       endOffset_(endOffset),
       icScript_(this, script->getWarmUpCount(),
-                typeSetOffset - offsetOfICScript()) {
+                typeSetOffset - offsetOfICScript(), /*depth=*/0) {
   setTypesGeneration(script->zone()->types.generation);
 
   if (IsTypeInferenceEnabled()) {

@@ -93,11 +93,12 @@ class InliningRoot;
 class alignas(uintptr_t) ICScript final : public TrailingArray {
  public:
   ICScript(JitScript* jitScript, uint32_t warmUpCount, Offset endOffset,
-           InliningRoot* inliningRoot = nullptr)
+           uint32_t depth, InliningRoot* inliningRoot = nullptr)
       : jitScript_(jitScript),
         inliningRoot_(inliningRoot),
         warmUpCount_(warmUpCount),
-        endOffset_(endOffset) {}
+        endOffset_(endOffset),
+        depth_(depth) {}
 
   JitScript* jitScript() const { return jitScript_; }
 
@@ -111,6 +112,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   }
 
   InliningRoot* inliningRoot() const { return inliningRoot_; }
+  uint32_t depth() const { return depth_; }
 
   static constexpr size_t offsetOfFirstStub(uint32_t entryIndex) {
     return sizeof(ICScript) + entryIndex * sizeof(ICEntry) +
@@ -175,6 +177,9 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 
   // The size of this allocation.
   Offset endOffset_;
+
+  // The inlining depth of this ICScript. 0 for the inlining root.
+  uint32_t depth_;
 
   Offset icEntriesOffset() const { return offsetOfICEntries(); }
   Offset endOffset() const { return endOffset_; }
