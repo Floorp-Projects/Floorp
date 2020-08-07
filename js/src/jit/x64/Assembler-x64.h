@@ -311,7 +311,6 @@ class Assembler : public AssemblerX86Shared {
   static JitCode* CodeFromJump(JitCode* code, uint8_t* jump);
 
  private:
-  void writeRelocation(JmpSrc src, RelocationKind reloc);
   void addPendingJump(JmpSrc src, ImmPtr target, RelocationKind reloc);
 
  public:

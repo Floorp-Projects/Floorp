@@ -270,19 +270,12 @@ void Assembler::bind(Label* label, BufferOffset targetOffset) {
   label->bind(targetOffset.getOffset());
 }
 
-void Assembler::addJumpRelocation(BufferOffset src, RelocationKind reloc) {
-  // Only JITCODE relocations are patchable at runtime.
-  MOZ_ASSERT(reloc == RelocationKind::JITCODE);
-
-  jumpRelocations_.writeUnsigned(src.getOffset());
-}
-
 void Assembler::addPendingJump(BufferOffset src, ImmPtr target,
                                RelocationKind reloc) {
   MOZ_ASSERT(target.value != nullptr);
 
   if (reloc == RelocationKind::JITCODE) {
-    addJumpRelocation(src, reloc);
+    jumpRelocations_.writeUnsigned(src.getOffset());
   }
 
   // This jump is not patchable at runtime. Extended jump table entry

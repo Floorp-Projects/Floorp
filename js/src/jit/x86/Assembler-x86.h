@@ -229,14 +229,11 @@ static constexpr ValueOperand JSReturnOperand{JSReturnReg_Type,
                                               JSReturnReg_Data};
 
 class Assembler : public AssemblerX86Shared {
-  void writeRelocation(JmpSrc src) {
-    jumpRelocations_.writeUnsigned(src.offset());
-  }
   void addPendingJump(JmpSrc src, ImmPtr target, RelocationKind kind) {
     enoughMemory_ &=
         jumps_.append(RelativePatch(src.offset(), target.value, kind));
     if (kind == RelocationKind::JITCODE) {
-      writeRelocation(src);
+      jumpRelocations_.writeUnsigned(src.offset());
     }
   }
 
