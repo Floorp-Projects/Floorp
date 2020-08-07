@@ -208,12 +208,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         this.rawNode.ownerDocument &&
         this.rawNode.ownerDocument.contentType === "text/html",
       hasEventListeners: this._hasEventListeners,
-      traits: {
-        // Added in FF72
-        supportsGetAllSelectors: true,
-        // Added in FF72
-        supportsWaitForFrameLoad: true,
-      },
+      traits: {},
     };
 
     if (this.isDocumentElement()) {
