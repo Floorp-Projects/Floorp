@@ -52,8 +52,6 @@ class BackgroundThumbnailsChild extends JSWindowActorChild {
           .loadGroup.QueryInterface(Ci.nsISupportsPriority).priority =
           Ci.nsISupportsPriority.PRIORITY_LOWEST;
 
-        docShell.isActive = true;
-
         docShell.allowMedia = false;
         docShell.allowPlugins = false;
         docShell.allowContentRetargeting = false;
