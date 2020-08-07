@@ -2,7 +2,7 @@
 
 # shouldClearSuggestions
 
-`open val shouldClearSuggestions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L180)
+`open val shouldClearSuggestions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L185)
 
 If true an [AwesomeBar](../index.md) implementation can clear the previous suggestions of this provider as soon as the
 user continues to type. If this is false an [AwesomeBar](../index.md) implementation is allowed to keep the previous

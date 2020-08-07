@@ -29,6 +29,8 @@ Describes a combination of flags provided to the engine when loading a URL.
 | [BYPASS_CLASSIFIER](-b-y-p-a-s-s_-c-l-a-s-s-i-f-i-e-r.md) | `const val BYPASS_CLASSIFIER: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [BYPASS_PROXY](-b-y-p-a-s-s_-p-r-o-x-y.md) | `const val BYPASS_PROXY: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [EXTERNAL](-e-x-t-e-r-n-a-l.md) | `const val EXTERNAL: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [LOAD_FLAGS_FORCE_ALLOW_DATA_URI](-l-o-a-d_-f-l-a-g-s_-f-o-r-c-e_-a-l-l-o-w_-d-a-t-a_-u-r-i.md) | `const val LOAD_FLAGS_FORCE_ALLOW_DATA_URI: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [LOAD_FLAGS_REPLACE_HISTORY](-l-o-a-d_-f-l-a-g-s_-r-e-p-l-a-c-e_-h-i-s-t-o-r-y.md) | `const val LOAD_FLAGS_REPLACE_HISTORY: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [NONE](-n-o-n-e.md) | `const val NONE: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 
 ### Companion Object Functions

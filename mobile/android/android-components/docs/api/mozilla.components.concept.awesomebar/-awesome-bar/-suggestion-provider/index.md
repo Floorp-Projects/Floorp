@@ -2,7 +2,7 @@
 
 # SuggestionProvider
 
-`interface SuggestionProvider` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L139)
+`interface SuggestionProvider` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L144)
 
 A [SuggestionProvider](./index.md) is queried by an [AwesomeBar](../index.md) whenever the text in the address bar is changed by the user.
 It returns a list of [Suggestion](../-suggestion/index.md)s to be displayed by the [AwesomeBar](../index.md).

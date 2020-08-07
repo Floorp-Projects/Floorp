@@ -2,4 +2,4 @@
 
 # KEY_TITLE_TEXT
 
-`const val KEY_TITLE_TEXT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/SimpleRedirectDialogFragment.kt#L91)
+`const val KEY_TITLE_TEXT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/SimpleRedirectDialogFragment.kt#L92)

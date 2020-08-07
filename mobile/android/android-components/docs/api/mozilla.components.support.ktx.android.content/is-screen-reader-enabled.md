@@ -2,7 +2,7 @@
 
 # isScreenReaderEnabled
 
-`inline val <ERROR CLASS>.isScreenReaderEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/content/Context.kt#L206)
+`inline val <ERROR CLASS>.isScreenReaderEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/content/Context.kt#L211)
 
 Check if TalkBack service is enabled.
 

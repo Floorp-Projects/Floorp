@@ -2,7 +2,7 @@
 
 # Suggestion
 
-`data class Suggestion` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L89)
+`data class Suggestion` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L94)
 
 A [Suggestion](./index.md) to be displayed by an [AwesomeBar](../index.md) implementation.
 

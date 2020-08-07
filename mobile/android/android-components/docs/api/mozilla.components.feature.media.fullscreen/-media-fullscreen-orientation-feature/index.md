@@ -2,7 +2,7 @@
 
 # MediaFullscreenOrientationFeature
 
-`class MediaFullscreenOrientationFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/fullscreen/MediaFullscreenOrientationFeature.kt#L23)
+`class MediaFullscreenOrientationFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/fullscreen/MediaFullscreenOrientationFeature.kt#L25)
 
 Feature that will auto-rotate the device to the correct orientation for the media aspect ratio.
 

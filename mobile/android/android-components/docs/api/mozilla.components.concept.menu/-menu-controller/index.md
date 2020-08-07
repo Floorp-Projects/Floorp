@@ -17,7 +17,7 @@ Controls a popup menu composed of MenuCandidate objects.
 | Name | Summary |
 |---|---|
 | [dismiss](dismiss.md) | `abstract fun dismiss(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Dismiss the menu popup if the menu is visible. |
-| [show](show.md) | `abstract fun show(anchor: <ERROR CLASS>): <ERROR CLASS>` |
+| [show](show.md) | `abstract fun show(anchor: <ERROR CLASS>, orientation: `[`Orientation`](../-orientation/index.md)`? = null): <ERROR CLASS>` |
 | [submitList](submit-list.md) | `abstract fun submitList(list: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`MenuCandidate`](../../mozilla.components.concept.menu.candidate/-menu-candidate/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Changes the contents of the menu. |
 
 ### Inherited Functions

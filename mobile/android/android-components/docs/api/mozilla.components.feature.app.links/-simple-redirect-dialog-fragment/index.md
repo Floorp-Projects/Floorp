@@ -21,6 +21,7 @@ Intents passed are guaranteed to be openable by a non-browser app.
 
 | Name | Summary |
 |---|---|
+| [onCancelRedirect](../-redirect-dialog-fragment/on-cancel-redirect.md) | `var onCancelRedirect: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`?`<br>A callback to trigger when user dismisses the dialog. For instance, a valid use case can be in confirmation dialog, after the negative button is clicked, this callback must be called. |
 | [onConfirmRedirect](../-redirect-dialog-fragment/on-confirm-redirect.md) | `var onConfirmRedirect: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A callback to trigger a download, call it when you are ready to open the linked app. For instance, a valid use case can be in confirmation dialog, after the positive button is clicked, this callback must be called. |
 
 ### Functions

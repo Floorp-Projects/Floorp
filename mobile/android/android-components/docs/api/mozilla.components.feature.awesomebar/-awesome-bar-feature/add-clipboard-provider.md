@@ -2,7 +2,7 @@
 
 # addClipboardProvider
 
-`fun addClipboardProvider(context: <ERROR CLASS>, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`? = null): `[`AwesomeBarFeature`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/AwesomeBarFeature.kt#L194)
+`fun addClipboardProvider(context: <ERROR CLASS>, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`? = null): `[`AwesomeBarFeature`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/AwesomeBarFeature.kt#L195)
 
 Add a [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) for clipboard items to the [AwesomeBar](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md).
 

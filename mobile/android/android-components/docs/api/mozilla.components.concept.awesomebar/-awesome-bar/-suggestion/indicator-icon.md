@@ -2,7 +2,7 @@
 
 # indicatorIcon
 
-`val indicatorIcon: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L95)
+`val indicatorIcon: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L100)
 
 A drawable for indicating different types of [Suggestion](index.md).
 
