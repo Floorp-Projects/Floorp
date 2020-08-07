@@ -4,9 +4,7 @@
 "use strict";
 
 /* exported assertOwnershipTrees, checkMissing, waitForMutation,
-   isSrcChange, isUnretained,
-   assertSrcChange, assertUnload, assertFrameLoad, assertChildList,
-*/
+   isSrcChange, isUnretained, isChildList */
 
 function serverOwnershipTree(walkerArg) {
   return SpecialPowers.spawn(
@@ -153,23 +151,8 @@ function waitForMutation(walker, test, mutations = []) {
   });
 }
 
-function assertAndStrip(mutations, message, test) {
-  const size = mutations.length;
-  mutations = mutations.filter(test);
-  ok(mutations.size != size, message);
-  return mutations;
-}
-
 function isSrcChange(change) {
   return change.type === "attributes" && change.attributeName === "src";
-}
-
-function isUnload(change) {
-  return change.type === "documentUnload";
-}
-
-function isFrameLoad(change) {
-  return change.type === "frameLoad";
 }
 
 function isUnretained(change) {
@@ -178,44 +161,4 @@ function isUnretained(change) {
 
 function isChildList(change) {
   return change.type === "childList";
-}
-
-// Make sure an iframe's src attribute changed and then
-// strip that mutation out of the list.
-function assertSrcChange(mutations) {
-  return assertAndStrip(
-    mutations,
-    "Should have had an iframe source change.",
-    isSrcChange
-  );
-}
-
-// Make sure there's an unload in the mutation list and strip
-// that mutation out of the list
-function assertUnload(mutations) {
-  return assertAndStrip(
-    mutations,
-    "Should have had a document unload change.",
-    isUnload
-  );
-}
-
-// Make sure there's a frame load in the mutation list and strip
-// that mutation out of the list
-function assertFrameLoad(mutations) {
-  return assertAndStrip(
-    mutations,
-    "Should have had a frame load change.",
-    isFrameLoad
-  );
-}
-
-// Make sure there's a childList change in the mutation list and strip
-// that mutation out of the list
-function assertChildList(mutations) {
-  return assertAndStrip(
-    mutations,
-    "Should have had a frame load change.",
-    isChildList
-  );
 }
