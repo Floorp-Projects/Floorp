@@ -304,7 +304,7 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
     virtualenvs_root = os.path.join(topobjdir, '_virtualenvs')
     with LineIO(lambda l: log.info(l), 'replace') as out:
         manager = VirtualenvManager(
-            topsrcdir,
+            topsrcdir, topobjdir,
             os.path.join(virtualenvs_root, 'init_py3'), out,
             os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 

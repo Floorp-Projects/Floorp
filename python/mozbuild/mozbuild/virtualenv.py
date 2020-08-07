@@ -38,7 +38,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 class VirtualenvManager(object):
     """Contains logic for managing virtualenvs for building the tree."""
 
-    def __init__(self, topsrcdir, virtualenv_path, log_handle, manifest_path):
+    def __init__(self, topsrcdir, topobjdir, virtualenv_path, log_handle,
+                 manifest_path):
         """Create a new manager.
 
         Each manager is associated with a source directory, a path where you
@@ -47,6 +48,7 @@ class VirtualenvManager(object):
         assert os.path.isabs(
             manifest_path), "manifest_path must be an absolute path: %s" % (manifest_path)
         self.topsrcdir = topsrcdir
+        self.topobjdir = topobjdir
         self.virtualenv_root = virtualenv_path
 
         # Record the Python executable that was used to create the Virtualenv
@@ -158,6 +160,7 @@ class VirtualenvManager(object):
         for submanifest in submanifests:
             submanifest = os.path.join(self.topsrcdir, submanifest)
             submanager = VirtualenvManager(self.topsrcdir,
+                                           self.topobjdir,
                                            self.virtualenv_root,
                                            self.log_handle,
                                            submanifest)
@@ -287,6 +290,10 @@ class VirtualenvManager(object):
             will be read and processed as if its contents were concatenated
             into the manifest being read.
 
+        objdir -- Denotes a relative path in the object directory to add to the
+            search path. e.g. "objdir:build" will add $topobjdir/build to the
+            search path.
+
         windows -- This denotes that the action should only be taken when run
             on Windows.
 
@@ -343,6 +350,7 @@ class VirtualenvManager(object):
                 src = os.path.join(self.topsrcdir, package[1])
                 assert os.path.isfile(src), "'%s' does not exist" % src
                 submanager = VirtualenvManager(self.topsrcdir,
+                                               self.topobjdir,
                                                self.virtualenv_root,
                                                self.log_handle,
                                                src)
@@ -360,7 +368,12 @@ class VirtualenvManager(object):
                     # relative path allows the srcdir/objdir combination
                     # to be moved around (as long as the paths relative to
                     # each other remain the same).
-                    f.write("%s\n" % os.path.relpath(path, python_lib))
+                    try:
+                        f.write("%s\n" % os.path.relpath(path, python_lib))
+                    except ValueError:
+                        # When objdir is on a separate drive, relpath throws
+                        f.write("%s\n" % os.path.join(python_lib, path))
+
                 return True
 
             if package[0] == 'optional':
@@ -384,6 +397,15 @@ class VirtualenvManager(object):
                 for_python3 = package[0].endswith('3')
                 if PY3 == for_python3:
                     handle_package(package[1:])
+                return True
+
+            if package[0] == 'objdir':
+                assert len(package) == 2
+                path = os.path.join(self.topobjdir, package[1])
+
+                with open(os.path.join(python_lib, 'objdir.pth'), 'a') as f:
+                    f.write('%s\n' % path)
+
                 return True
 
             raise Exception('Unknown action: %s' % package[0])
@@ -488,7 +510,7 @@ class VirtualenvManager(object):
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1635481
         os.environ.pop('__PYVENV_LAUNCHER__', None)
         args = [self.python_path, thismodule, 'populate', self.topsrcdir,
-                self.virtualenv_root, self.manifest_path]
+                self.topobjdir, self.virtualenv_root, self.manifest_path]
 
         result = self._log_process_output(args, cwd=self.topsrcdir)
 
@@ -598,8 +620,7 @@ class VirtualenvManager(object):
         subprocess.check_call([pip] + args, stderr=subprocess.STDOUT, cwd=self.topsrcdir,
                               universal_newlines=PY3)
 
-    def activate_pipenv(self, workon_home, pipfile=None, populate=False,
-                        python=None):
+    def activate_pipenv(self, pipfile=None, populate=False, python=None):
         """Activate a virtual environment managed by pipenv
 
         If ``pipfile`` is not ``None`` then the Pipfile located at the path
@@ -612,7 +633,7 @@ class VirtualenvManager(object):
         env = ensure_subprocess_env(os.environ.copy())
         env.update(ensure_subprocess_env({
             'PIPENV_IGNORE_VIRTUALENVS': '1',
-            'WORKON_HOME': str(os.path.normpath(workon_home)),
+            'WORKON_HOME': str(os.path.normpath(os.path.join(self.topobjdir, '_virtualenvs')))
         }))
         # On mac, running pipenv with LC_CTYPE set to "UTF-8" (which happens
         # when wrapping with run-task on automation) fails.
@@ -669,7 +690,7 @@ class VirtualenvManager(object):
             # Populate from the manifest
             subprocess.check_call([
                 pipenv, 'run', 'python', os.path.join(here, 'virtualenv.py'), 'populate',
-                self.topsrcdir, self.virtualenv_root, self.manifest_path],
+                self.topsrcdir, self.topobjdir, self.virtualenv_root, self.manifest_path],
                 stderr=subprocess.STDOUT, env=env)
 
         self.activate()
@@ -752,23 +773,23 @@ def ensure_subprocess_env(env, encoding='utf-8'):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 5:
         print(
-            'Usage: virtualenv.py /path/to/topsrcdir '
-            '/path/to/virtualenv /path/to/virtualenv_manifest')
+            'Usage: populate_virtualenv.py /path/to/topsrcdir '
+            '/path/to/topobjdir /path/to/virtualenv /path/to/virtualenv_manifest')
         sys.exit(1)
 
     verify_python_version(sys.stdout)
 
-    topsrcdir, virtualenv_path, manifest_path = sys.argv[1:4]
+    topsrcdir, topobjdir, virtualenv_path, manifest_path = sys.argv[1:5]
     populate = False
 
     # This should only be called internally.
     if sys.argv[1] == 'populate':
         populate = True
-        topsrcdir, virtualenv_path, manifest_path = sys.argv[2:]
+        topsrcdir, topobjdir, virtualenv_path, manifest_path = sys.argv[2:]
 
-    manager = VirtualenvManager(topsrcdir, virtualenv_path,
+    manager = VirtualenvManager(topsrcdir, topobjdir, virtualenv_path,
                                 sys.stdout, manifest_path)
 
     if populate:

@@ -194,6 +194,7 @@ def setup(app):
     # properly. We leverage the in-tree virtualenv for this.
     topsrcdir = manager.topsrcdir
     ve = VirtualenvManager(topsrcdir,
+                           os.path.join(topsrcdir, 'dummy-objdir'),
                            os.path.join(app.outdir, '_venv'),
                            sys.stderr,
                            os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
