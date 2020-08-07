@@ -12,6 +12,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIScriptError.h"
 #include "nsRefPtrHashtable.h"
 #include "nsContentUtils.h"
@@ -51,6 +52,14 @@ WindowGlobalParent* WindowContext::Canonical() {
 
 bool WindowContext::IsCached() const {
   return mBrowsingContext->mCurrentWindowContext != this;
+}
+
+nsGlobalWindowInner* WindowContext::GetInnerWindow() const {
+  if (mInProcess) {
+    // FIXME: Replace this with something more efficient.
+    return nsGlobalWindowInner::GetInnerWindowWithId(mInnerWindowId);
+  }
+  return nullptr;
 }
 
 WindowContext* WindowContext::GetParentWindowContext() {
