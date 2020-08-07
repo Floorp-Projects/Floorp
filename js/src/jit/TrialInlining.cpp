@@ -8,6 +8,7 @@
 
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineIC.h"
+#include "jit/Ion.h"  // TooManyFormalArguments
 
 #include "jit/BaselineFrame-inl.h"
 #include "vm/BytecodeIterator-inl.h"
@@ -24,6 +25,11 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
   RootedScript script(cx, frame->script());
   ICScript* icScript = frame->icScript();
   bool isRecursive = !!icScript->inliningRoot();
+
+  const uint32_t MAX_INLINING_DEPTH = 5;
+  if (icScript->depth() > MAX_INLINING_DEPTH) {
+    return true;
+  }
 
   InliningRoot* root =
       isRecursive ? icScript->inliningRoot()
@@ -194,6 +200,18 @@ bool TrialInliner::shouldInline(JSFunction* target, ICStub* stub,
     return false;
   }
 
+  if (TooManyFormalArguments(target->nargs())) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: Too many formal arguments: %u",
+            unsigned(target->nargs()));
+    return false;
+  }
+
+  if (TooManyFormalArguments(loc.getCallArgc())) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: argc too large: %u",
+            unsigned(loc.getCallArgc()));
+    return false;
+  }
+
   return true;
 }
 
@@ -223,8 +241,9 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
   // ICScript to give more precise control.
   const uint32_t InitialWarmUpCount = 0;
 
+  uint32_t depth = icScript_->depth() + 1;
   UniquePtr<ICScript> inlinedICScript(new (raw) ICScript(
-      targetJitScript, InitialWarmUpCount, allocSize, root_));
+      targetJitScript, InitialWarmUpCount, allocSize, depth, root_));
 
   {
     // Suppress GC. This matches the AutoEnterAnalysis in
