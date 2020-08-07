@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 ChromeUtils.defineModuleGetter(
@@ -17,6 +13,8 @@ ChromeUtils.defineModuleGetter(
 const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
 const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
+const PREF_PIONEER_COMPLETED_STUDIES =
+  "toolkit.telemetry.pioneer-completed-studies";
 
 const PREF_TEST_CACHED_ADDONS = "toolkit.pioneer.testCachedAddons";
 const PREF_TEST_ADDONS = "toolkit.pioneer.testAddons";
@@ -51,6 +49,7 @@ const CACHED_ADDONS = [
       spec: "http://localhost",
     },
     isDefault: false,
+    studyEnded: true,
   },
   {
     addon_id: "pioneer-v2-default-example@mozilla.org",
@@ -81,6 +80,7 @@ const CACHED_ADDONS = [
       spec: "http://localhost",
     },
     isDefault: true,
+    studyEnded: false,
   },
   {
     addon_id: "study@partner",
@@ -111,6 +111,7 @@ const CACHED_ADDONS = [
       spec: "http://localhost",
     },
     isDefault: false,
+    studyEnded: false,
   },
 ];
 
@@ -134,7 +135,7 @@ add_task(async function testMockSchema() {
     throw new Error("Failed to load PioneerStudyAddonsSchema");
   }
 
-  const ajv = new Ajv();
+  const ajv = new Ajv({ allErrors: true });
   const validate = ajv.compile(schema);
 
   for (const addon of CACHED_ADDONS) {
@@ -229,8 +230,25 @@ add_task(async function testAboutPage() {
           continue;
         }
 
-        ok(!joinButton.disabled, "After enrollment, join button is enabled.");
-        ok(!joinButton.hidden, "After enrollment, join button is not hidden.");
+        const completedStudies = Services.prefs.getStringPref(
+          PREF_PIONEER_COMPLETED_STUDIES,
+          "{}"
+        );
+
+        const studies = JSON.parse(completedStudies);
+
+        if (cachedAddon.studyEnded || Object.keys(studies).includes(addonId)) {
+          ok(
+            joinButton.disabled,
+            "Join button is disabled, study has already ended."
+          );
+          continue;
+        }
+
+        await waitForAnimationFrame();
+
+        ok(!joinButton.disabled, "Before enrollment, join button is enabled.");
+
         for (const testAddon of TEST_ADDONS) {
           if (testAddon.id == addonId) {
             Services.prefs.setStringPref(
@@ -239,6 +257,8 @@ add_task(async function testAboutPage() {
             );
           }
         }
+
+        await waitForAnimationFrame();
 
         joinButton.click();
         await waitForAnimationFrame();
@@ -278,10 +298,6 @@ add_task(async function testAboutPage() {
           ok(
             joinButton.disabled,
             "After unenrollment, join button is disabled."
-          );
-          ok(
-            !joinButton.hidden,
-            "After unenrollment, join button is not hidden."
           );
 
           joinButton.click();
