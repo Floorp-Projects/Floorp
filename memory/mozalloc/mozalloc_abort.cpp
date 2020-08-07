@@ -55,7 +55,8 @@ void fillAbortMessage(char (&msg)[N], uintptr_t retAddress) {
 }
 #endif
 
-#if defined(XP_UNIX) && !defined(MOZ_ASAN) && !defined(MOZ_TSAN)
+#if defined(XP_UNIX) && !defined(MOZ_ASAN) && !defined(MOZ_TSAN) && \
+    !defined(LIBFUZZER)
 // Define abort() here, so that it is used instead of the system abort(). This
 // lets us control the behavior when aborting, in order to get better results
 // on *NIX platforms. See mozalloc_abort for details.
@@ -71,6 +72,9 @@ void fillAbortMessage(char (&msg)[N], uintptr_t retAddress) {
 //
 // The same applies to ThreadSanitizer when run with "halt_on_error=1" in
 // combination with "abort_on_error=1".
+//
+// When building with libFuzzer, it pulls in the UndefinedBehaviorSanitizer
+// runtime which also requires the same workaround as with ASan or TSan.
 extern "C" void abort(void) {
 #  ifdef MOZ_WIDGET_ANDROID
   char msg[64] = {};
