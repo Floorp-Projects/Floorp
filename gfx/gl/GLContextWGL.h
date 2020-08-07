@@ -30,7 +30,6 @@ class GLContextWGL final : public GLContext {
     return GLContextType::WGL;
   }
 
-  virtual bool IsAliveImpl() const override;
   virtual bool MakeCurrentImpl() const override;
   virtual bool IsCurrentImpl() const override;
   virtual bool IsDoubleBuffered() const override { return mIsDoubleBuffered; }
