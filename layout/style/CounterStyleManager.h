@@ -122,7 +122,7 @@ class AnonymousCounterStyle final : public CounterStyle {
   virtual AnonymousCounterStyle* AsAnonymous() override { return this; }
 
   bool IsSingleString() const { return mSingleString; }
-  Span<const nsString> GetSymbols() const { return MakeSpan(mSymbols); }
+  auto GetSymbols() const { return Span<const nsString>{mSymbols}; }
 
   StyleCounterSystem GetSystem() const;
 

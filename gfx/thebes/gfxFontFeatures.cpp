@@ -23,7 +23,7 @@ Span<const uint32_t> gfxFontFeatureValueSet::GetFontFeatureValuesFor(
   }
   NS_ASSERTION(entry->mValues.Length() > 0,
                "null array of font feature values");
-  return MakeSpan(entry->mValues);
+  return {entry->mValues};
 }
 
 nsTArray<uint32_t>* gfxFontFeatureValueSet::AppendFeatureValueHashEntry(
