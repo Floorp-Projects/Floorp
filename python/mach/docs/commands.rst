@@ -32,10 +32,8 @@ The important decorators are as follows:
   ``@CommandArgument`` can be used on ``@SubCommand`` instances just
   like they can on ``@Command`` instances.
 
-Classes with the ``@CommandProvider`` decorator **must** have an
-``__init__`` method that accepts 1 or 2 arguments. If it accepts 2
-arguments, the 2nd argument will be a
-:py:class:`mach.base.CommandContext` instance.
+Classes with the ``@CommandProvider`` decorator **must** subclass
+``MachCommandBase`` and have a compatible ``__init__`` method.
 
 Here is a complete example:
 
@@ -46,9 +44,10 @@ Here is a complete example:
        CommandProvider,
        Command,
    )
+   from mozbuild.base import MachCommandBase
 
    @CommandProvider
-   class MyClass(object):
+   class MyClass(MachCommandBase):
        @Command('doit', help='Do ALL OF THE THINGS.')
        @CommandArgument('--force', '-f', action='store_true',
            help='Force doing it.')
@@ -95,10 +94,11 @@ Here is an example:
        """The build needs to be available."""
        return cls.build_path is not None
 
-    @CommandProvider
+   @CommandProvider
    class MyClass(MachCommandBase):
-       def __init__(self, build_path=None):
-           self.build_path = build_path
+       def __init__(self, *args, **kwargs):
+           super(MyClass, self).__init__(*args, **kwargs)
+           self.build_path = ...
 
        @Command('run_tests', conditions=[build_available])
        def run_tests(self):

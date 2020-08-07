@@ -17,6 +17,7 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 
 def run_xpcshell(context, **kwargs):
@@ -51,14 +52,11 @@ def run_xpcshell(context, **kwargs):
 
 
 @CommandProvider
-class MochitestCommands(object):
-
-    def __init__(self, context):
-        self.context = context
+class MochitestCommands(MachCommandBase):
 
     @Command('xpcshell-test', category='testing',
              description='Run the xpcshell harness.',
              parser=parser_desktop)
     def xpcshell(self, **kwargs):
-        self.context.activate_mozharness_venv()
-        return run_xpcshell(self.context, **kwargs)
+        self._mach_context.activate_mozharness_venv()
+        return run_xpcshell(self._mach_context, **kwargs)

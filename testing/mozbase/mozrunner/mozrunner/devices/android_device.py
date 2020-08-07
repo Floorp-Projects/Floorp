@@ -259,18 +259,15 @@ def verify_android_device(build_obj, install=InstallIntent.NO, xre=False, debugg
                 device.uninstall_app(app)
             _log_info("Installing geckoview AndroidTest...")
             sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
-            build_obj._mach_context.commands.dispatch('gradle',
-                                                      args=[sub],
-                                                      context=build_obj._mach_context)
+            build_obj._mach_context.commands.dispatch(
+                'gradle', build_obj._mach_context, args=[sub])
         elif app == 'org.mozilla.geckoview_example':
             if installed:
                 device.uninstall_app(app)
             _log_info("Installing geckoview_example...")
             sub = 'install-geckoview_example'
-            build_obj._mach_context.commands.dispatch('android',
-                                                      subcommand=sub,
-                                                      args=[],
-                                                      context=build_obj._mach_context)
+            build_obj._mach_context.commands.dispatch(
+                'android', build_obj._mach_context, subcommand=sub, args=[])
         elif not installed:
             response = input(
                 "It looks like %s is not installed on this device,\n"

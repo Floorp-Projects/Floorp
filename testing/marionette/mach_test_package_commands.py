@@ -14,6 +14,7 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 parser = None
 
@@ -54,10 +55,7 @@ def setup_marionette_argument_parser():
 
 
 @CommandProvider
-class MachCommands(object):
-
-    def __init__(self, context):
-        self.context = context
+class MachCommands(MachCommandBase):
 
     @Command(
         'marionette-test', category='testing',

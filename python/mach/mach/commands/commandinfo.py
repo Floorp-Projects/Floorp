@@ -12,16 +12,16 @@ from mach.decorators import (
     Command,
     CommandArgument,
 )
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
-class BuiltinCommands(object):
-    def __init__(self, context):
-        self.context = context
+class BuiltinCommands(MachCommandBase):
 
     @property
     def command_keys(self):
-        return (k for k, v in self.context.commands.command_handlers.items())
+        return (k for k, v in
+                self._mach_context.commands.command_handlers.items())
 
     @Command('mach-commands', category='misc',
              description='List all mach commands.')
@@ -35,7 +35,7 @@ class BuiltinCommands(object):
     def debug_commands(self, match=None):
         import inspect
 
-        handlers = self.context.commands.command_handlers
+        handlers = self._mach_context.commands.command_handlers
         for command in sorted(self.command_keys):
             if match and match not in command:
                 continue
@@ -75,7 +75,7 @@ class BuiltinCommands(object):
             print("\n".join(all_commands))
             return
 
-        handler = self.context.commands.command_handlers[command]
+        handler = self._mach_context.commands.command_handlers[command]
         # If a subcommand was typed, update the handler.
         for arg in args:
             if arg in handler.subcommand_handlers:

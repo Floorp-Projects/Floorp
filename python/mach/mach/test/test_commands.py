@@ -8,6 +8,7 @@ import os
 
 from mozunit import main
 
+from buildconfig import topsrcdir
 import mach
 from mach.test.common import TestBase
 
@@ -22,12 +23,16 @@ class TestCommands(TestBase):
         'mach-debug-commands',
     ]
 
-    def _run_mach(self, args, context_handler=None):
+    def _run_mach(self, args):
         mach_dir = os.path.dirname(mach.__file__)
         providers = [
             'commands.py',
             os.path.join(mach_dir, 'commands', 'commandinfo.py'),
         ]
+
+        def context_handler(key):
+            if key == 'topdir':
+                return topsrcdir
 
         return TestBase._run_mach(self, args, providers,
                                   context_handler=context_handler)
