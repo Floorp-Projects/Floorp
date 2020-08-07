@@ -45,7 +45,7 @@ else # !upload
 
 # Provide a note for users on why we don't include artifacts for these builds
 # by default, and how they can get the artifacts if they really need them.
-cat >$UPLOAD_DIR/README-artifacts.txt <<EOF
+cat >$UPLOAD_DIR/README-artifacts.txt <<'EOF'
 Artifact upload has been disabled for this build due to infrequent usage of the
 generated artifacts.  If you find yourself in a position where you need the
 shell or similar artifacts from this build, please redo your push with the
