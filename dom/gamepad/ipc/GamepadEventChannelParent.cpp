@@ -49,8 +49,6 @@ bool GamepadEventChannelParent::Init() {
 
   service->AddChannelParent(this);
 
-  StartGamepadMonitoring();
-
   return true;
 }
 
@@ -61,8 +59,6 @@ void GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
       GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
   service->RemoveChannelParent(this);
-
-  MaybeStopGamepadMonitoring();
 }
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvVibrateHaptic(
