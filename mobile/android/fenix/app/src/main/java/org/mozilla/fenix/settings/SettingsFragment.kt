@@ -29,6 +29,7 @@ import mozilla.components.support.ktx.android.content.hasCamera
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.application
@@ -301,7 +302,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         val leakKey = getPreferenceKey(R.string.pref_key_leakcanary)
         val debuggingKey = getPreferenceKey(R.string.pref_key_remote_debugging)
-
+        val preferenceExternalDownloadManager = requirePreference<Preference>(R.string.pref_key_make_default_browser)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
         val preferenceMakeDefaultBrowser = requirePreference<Preference>(R.string.pref_key_make_default_browser)
@@ -314,6 +315,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        preferenceExternalDownloadManager.isVisible = FeatureFlags.externalDownloadManager
         preferenceRemoteDebugging?.setOnPreferenceChangeListener<Boolean> { preference, newValue ->
             preference.context.settings().preferences.edit()
                 .putBoolean(preference.key, newValue).apply()

@@ -48,4 +48,9 @@ object FeatureFlags {
      * Enables wait til first contentful paint
      */
     val waitUntilPaintToDraw = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables downloads with external download managers.
+     */
+    val externalDownloadManager = Config.channel.isNightlyOrDebug
 }

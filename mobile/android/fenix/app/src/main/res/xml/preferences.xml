@@ -133,6 +133,12 @@
             android:title="@string/preferences_open_links_in_apps" />
 
         <androidx.preference.SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_download"
+            android:key="@string/pref_key_external_download_manager"
+            android:title="@string/preferences_external_download_manager" />
+
+        <androidx.preference.SwitchPreference
             android:defaultValue="true"
             android:icon="@drawable/ic_info"
             android:key="@string/pref_key_leakcanary"

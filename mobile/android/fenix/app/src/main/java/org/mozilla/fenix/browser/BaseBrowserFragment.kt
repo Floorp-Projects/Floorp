@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
@@ -96,6 +97,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.accessibilityManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
@@ -346,6 +348,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view = view
             )
 
+            val shouldForwardToThirdParties =
+                PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
+                    context.getPreferenceKey(R.string.pref_key_external_download_manager), false
+                )
+
             val downloadFeature = DownloadsFeature(
                 context.applicationContext,
                 store = store,
@@ -357,6 +364,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     store,
                     DownloadService::class
                 ),
+                shouldForwardToThirdParties = { shouldForwardToThirdParties },
                 promptsStyling = DownloadsFeature.PromptsStyling(
                     gravity = Gravity.BOTTOM,
                     shouldWidthMatchParent = true,
