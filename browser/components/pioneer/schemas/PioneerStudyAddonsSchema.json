@@ -79,6 +79,12 @@
           }
         }
       }
+    },
+    "isDefault": {
+      "type": "boolean"
+    },
+    "studyEnded": {
+      "type": "boolean"
     }
   },
   "required": [
@@ -91,6 +97,8 @@
     "studyType",
     "moreInfo",
     "dataCollectionDetails",
-    "authors"
+    "authors",
+    "isDefault",
+    "studyEnded"
   ]
 }
