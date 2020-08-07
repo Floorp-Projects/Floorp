@@ -16,7 +16,8 @@ import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SU
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
 private const val WWW = "www."
-private const val MOBILE = "m."
+private const val M = "m."
+private const val MOBILE = "mobile."
 
 /**
  * This feature implements use cases for detecting and handling redirects to external apps. The user
@@ -146,6 +147,7 @@ class AppLinksInterceptor(
         return when {
             url == null -> return null
             url.startsWith(WWW) -> url.replaceFirst(WWW, "")
+            url.startsWith(M) -> url.replaceFirst(M, "")
             url.startsWith(MOBILE) -> url.replaceFirst(MOBILE, "")
             else -> url
         }
