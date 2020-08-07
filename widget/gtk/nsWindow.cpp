@@ -1880,6 +1880,9 @@ static bool WorkspaceManagementDisabled(GdkWindow* gdk_window) {
   if (Preferences::GetBool("widget.disable-workspace-management", false)) {
     return true;
   }
+  if (Preferences::HasUserValue("widget.workspace-management")) {
+    return Preferences::GetBool("widget.workspace-management");
+  }
 
   static const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   if (currentDesktop && strstr(currentDesktop, "GNOME")) {
