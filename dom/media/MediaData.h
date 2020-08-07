@@ -627,7 +627,7 @@ class MediaRawData final : public MediaData {
            mAlphaBuffer.ComputedSizeOfExcludingThis();
   }
   // Access the buffer as a Span.
-  operator Span<const uint8_t>() { return MakeSpan(Data(), Size()); }
+  operator Span<const uint8_t>() { return Span{Data(), Size()}; }
 
   const CryptoSample& mCrypto;
   RefPtr<MediaByteBuffer> mExtraData;

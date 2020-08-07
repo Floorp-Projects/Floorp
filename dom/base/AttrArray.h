@@ -178,13 +178,12 @@ class AttrArray {
       return sizeof(Impl) + aAttrCount * sizeof(InternalAttr);
     }
 
-    mozilla::Span<const InternalAttr> NonMappedAttrs() const {
-      return mozilla::MakeSpan(static_cast<const InternalAttr*>(mBuffer),
-                               mAttrCount);
+    auto NonMappedAttrs() const {
+      return mozilla::Span<const InternalAttr>{mBuffer, mAttrCount};
     }
 
-    mozilla::Span<InternalAttr> NonMappedAttrs() {
-      return mozilla::MakeSpan(static_cast<InternalAttr*>(mBuffer), mAttrCount);
+    auto NonMappedAttrs() {
+      return mozilla::Span<InternalAttr>{mBuffer, mAttrCount};
     }
 
     Impl(const Impl&) = delete;

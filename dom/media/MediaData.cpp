@@ -55,7 +55,7 @@ AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
       mFrames(mAudioData.Length() / aChannels) {}
 
 Span<AudioDataValue> AudioData::Data() const {
-  return MakeSpan(GetAdjustedData(), mFrames * mChannels);
+  return Span{GetAdjustedData(), mFrames * mChannels};
 }
 
 bool AudioData::AdjustForStartTime(const media::TimeUnit& aStartTime) {

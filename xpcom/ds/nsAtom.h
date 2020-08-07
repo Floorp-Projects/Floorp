@@ -59,8 +59,10 @@ class nsAtom {
   uint32_t GetLength() const { return mLength; }
 
   operator mozilla::Span<const char16_t>() const {
-    return mozilla::MakeSpan(static_cast<const char16_t*>(GetUTF16String()),
-                             GetLength());
+    // Explicitly specify template argument here to avoid instantiating
+    // Span<char16_t> first and then implicitly converting to Span<const
+    // char16_t>
+    return mozilla::Span<const char16_t>{GetUTF16String(), GetLength()};
   }
 
   void ToString(nsAString& aString) const;

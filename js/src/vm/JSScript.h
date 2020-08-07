@@ -1378,7 +1378,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   // Accessors for typed array spans.
   mozilla::Span<JS::GCCellPtr> gcthings() {
     Offset offset = offsetOfGCThings();
-    return mozilla::MakeSpan(offsetToPointer<JS::GCCellPtr>(offset), ngcthings);
+    return mozilla::Span{offsetToPointer<JS::GCCellPtr>(offset), ngcthings};
   }
 
   void setFieldInitializers(FieldInitializers fieldInitializers) {

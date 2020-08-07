@@ -143,12 +143,8 @@ class Buffer final {
     return Some(Buffer(std::move(data), aLength));
   }
 
-  mozilla::Span<const T> AsSpan() const {
-    return mozilla::MakeSpan(mData.get(), mLength);
-  }
-  mozilla::Span<T> AsWritableSpan() {
-    return mozilla::MakeSpan(mData.get(), mLength);
-  }
+  auto AsSpan() const { return mozilla::Span<const T>{mData.get(), mLength}; }
+  auto AsWritableSpan() { return mozilla::Span<T>{mData.get(), mLength}; }
   operator mozilla::Span<const T>() const { return AsSpan(); }
   operator mozilla::Span<T>() { return AsWritableSpan(); }
 
