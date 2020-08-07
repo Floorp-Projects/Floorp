@@ -6669,7 +6669,10 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     }
   }
 
-  if (!LookAndFeel::GetInt(LookAndFeel::IntID::AllowOverlayScrollbarsOverlap)) {
+  // Layout scrollbars can overlap at this point if they are both present and
+  // both only needed to scroll the VV inside the LV.
+  if (!LookAndFeel::GetInt(LookAndFeel::IntID::AllowOverlayScrollbarsOverlap) ||
+      hasVisualOnlyScrollbarsOnBothDirections) {
     AdjustOverlappingScrollbars(vRect, hRect);
   }
   if (mVScrollbarBox) {
