@@ -19,7 +19,6 @@
 #include "mozilla/Telemetry.h"
 
 #include "AppleUtils.h"
-#include "CUPSPrinterList.h"
 #include "nsCocoaUtils.h"
 #include "nsCRT.h"
 #include "nsCUPSShim.h"
