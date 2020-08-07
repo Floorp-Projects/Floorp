@@ -110,12 +110,6 @@ ABIArg ABIArgGenerator::next(MIRType type) {
 #endif
 }
 
-void Assembler::writeRelocation(JmpSrc src, RelocationKind reloc) {
-  if (reloc == RelocationKind::JITCODE) {
-    jumpRelocations_.writeUnsigned(src.offset());
-  }
-}
-
 void Assembler::addPendingJump(JmpSrc src, ImmPtr target,
                                RelocationKind reloc) {
   MOZ_ASSERT(target.value != nullptr);
@@ -123,7 +117,7 @@ void Assembler::addPendingJump(JmpSrc src, ImmPtr target,
   // Emit reloc before modifying the jump table, since it computes a 0-based
   // index. This jump is not patchable at runtime.
   if (reloc == RelocationKind::JITCODE) {
-    writeRelocation(src, reloc);
+    jumpRelocations_.writeUnsigned(src.offset());
   }
   enoughMemory_ &=
       jumps_.append(RelativePatch(src.offset(), target.value, reloc));

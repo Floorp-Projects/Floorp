@@ -280,9 +280,6 @@ class Assembler : public vixl::Assembler {
 
   static bool HasRoundInstruction(RoundingMode mode) { return false; }
 
-  // Tracks a jump that is patchable after finalization.
-  void addJumpRelocation(BufferOffset src, RelocationKind reloc);
-
  protected:
   // Add a jump whose target is unknown until finalization.
   // The jump may not be patched at runtime.
