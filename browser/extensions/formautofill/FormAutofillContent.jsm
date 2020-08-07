@@ -553,14 +553,34 @@ var FormAutofillContent = {
     }
 
     records.creditCard.forEach(record => {
-      let totalCount = handler.form.elements.length;
-      let autofilledCount = Object.keys(record.record).length;
-      let unmodifiedCount = record.untouchedFields.length;
-      const extra = {
-        fields_not_auto: (totalCount - autofilledCount).toString(),
-        fields_auto: autofilledCount.toString(),
-        fields_modified: (autofilledCount - unmodifiedCount).toString(),
+      let extra = {
+        // Fields which have been filled manually.
+        fields_not_auto: "0",
+        // Fields which have been autofilled.
+        fields_auto: "0",
+        // Fields which have been autofilled and then modified.
+        fields_modified: "0",
       };
+
+      if (record.guid !== null) {
+        // If the `guid` is not null, it means we're editing an existing record.
+        // In that case, all fields in the record are autofilled, and fields in
+        // `untouchedFields` are unmodified.
+        let totalCount = handler.form.elements.length;
+        let autofilledCount = Object.keys(record.record).length;
+        let unmodifiedCount = record.untouchedFields.length;
+
+        extra.fields_not_auto = (totalCount - autofilledCount).toString();
+        extra.fields_auto = autofilledCount.toString();
+        extra.fields_modified = (autofilledCount - unmodifiedCount).toString();
+      } else {
+        // If the `guid` is null, we're filling a new form.
+        // In that case, all not-null fields are manually filled.
+        extra.fields_not_auto = Array.from(handler.form.elements)
+          .filter(element => !!element.value.trim().length)
+          .length.toString();
+      }
+
       Services.telemetry.recordEvent(
         "creditcard",
         "submitted",
