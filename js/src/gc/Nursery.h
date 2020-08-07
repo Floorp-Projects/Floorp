@@ -41,6 +41,7 @@
   _(FreeMallocedBuffers, "frSlts")            \
   _(ClearStoreBuffer, "clrSB")                \
   _(ClearNursery, "clear")                    \
+  _(PurgeStringToAtomCache, "pStoA")          \
   _(Pretenure, "pretnr")
 
 template <typename T>

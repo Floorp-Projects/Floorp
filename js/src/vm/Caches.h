@@ -223,12 +223,54 @@ class NewObjectCache {
   }
 };
 
+// Cache for AtomizeString, mapping JSLinearString* to the corresponding
+// JSAtom*. Also used by nursery GC to de-duplicate strings to atoms.
+// Purged on minor and major GC.
+class StringToAtomCache {
+  using Map = HashMap<JSLinearString*, JSAtom*, PointerHasher<JSLinearString*>,
+                      SystemAllocPolicy>;
+  Map map_;
+
+ public:
+  // Don't use the cache for short strings. Hashing them is less expensive.
+  static constexpr size_t MinStringLength = 30;
+
+  JSAtom* lookup(JSLinearString* s) {
+    MOZ_ASSERT(!s->isAtom());
+    if (!s->inStringToAtomCache()) {
+      MOZ_ASSERT(!map_.lookup(s));
+      return nullptr;
+    }
+
+    MOZ_ASSERT(s->length() >= MinStringLength);
+
+    auto p = map_.lookup(s);
+    JSAtom* atom = p ? p->value() : nullptr;
+    MOZ_ASSERT_IF(atom, EqualStrings(s, atom));
+    return atom;
+  }
+
+  void maybePut(JSLinearString* s, JSAtom* atom) {
+    MOZ_ASSERT(!s->isAtom());
+    if (s->length() < MinStringLength) {
+      return;
+    }
+    if (!map_.putNew(s, atom)) {
+      return;
+    }
+    s->setInStringToAtomCache();
+  }
+
+  void purge() { map_.clearAndCompact(); }
+};
+
 class RuntimeCaches {
  public:
   js::GSNCache gsnCache;
   js::NewObjectCache newObjectCache;
   js::UncompressedSourceCache uncompressedSourceCache;
   js::EvalCache evalCache;
+  js::StringToAtomCache stringToAtomCache;
 
   void purgeForMinorGC(JSRuntime* rt) {
     newObjectCache.clearNurseryObjects(rt);
@@ -238,6 +280,7 @@ class RuntimeCaches {
   void purgeForCompaction() {
     newObjectCache.purge();
     evalCache.clear();
+    stringToAtomCache.purge();
   }
 
   void purge() {
