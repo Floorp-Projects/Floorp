@@ -263,15 +263,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     const mutations = await super.getMutations(options);
     const emitMutations = [];
     for (const change of mutations) {
-      // Backward compatibility. FF77 or older will send "new root" information
-      // via mutations. Newer servers use the new-root-available event.
-      if (change.type === "newRoot") {
-        const rootNode = types.getType("domnode").read(change.target, this);
-        this.emit("root-available", rootNode);
-        // Don't process this as a regular mutation.
-        continue;
-      }
-
       // The target is only an actorID, get the associated front.
       const targetID = change.target;
       const targetFront = this.getActorByID(targetID);

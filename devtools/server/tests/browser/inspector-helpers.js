@@ -4,7 +4,7 @@
 "use strict";
 
 /* exported assertOwnershipTrees, checkMissing, waitForMutation,
-   isSrcChange, isUnretained, isNewRoot,
+   isSrcChange, isUnretained,
    assertSrcChange, assertUnload, assertFrameLoad, assertChildList,
 */
 
@@ -178,10 +178,6 @@ function isUnretained(change) {
 
 function isChildList(change) {
   return change.type === "childList";
-}
-
-function isNewRoot(change) {
-  return change.type === "newRoot";
 }
 
 // Make sure an iframe's src attribute changed and then
