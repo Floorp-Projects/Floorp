@@ -2545,11 +2545,16 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
       // If the previous margin is dirty, reflow the current line
       line->MarkDirty();
       line->ClearPreviousMarginDirty();
-    } else if (aState.ContentBSize() != NS_UNCONSTRAINEDSIZE &&
-               line->BEnd() + deltaBCoord > aState.ContentBEnd()) {
-      // Lines that aren't dirty but get slid past our height constraint must
-      // be reflowed.
-      line->MarkDirty();
+    } else if (aState.ContentBSize() != NS_UNCONSTRAINEDSIZE) {
+      const nscoord scrollableOverflowBEnd =
+          LogicalRect(line->mWritingMode, line->ScrollableOverflowRect(),
+                      line->mContainerSize)
+              .BEnd(line->mWritingMode);
+      if (scrollableOverflowBEnd + deltaBCoord > aState.ContentBEnd()) {
+        // Lines that aren't dirty but get slid past our available block-size
+        // constraint must be reflowed.
+        line->MarkDirty();
+      }
     }
 
     // If we have a constrained height (i.e., breaking columns/pages),
