@@ -438,8 +438,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   nsSize vScrollbarPrefSize(0, 0);
   if (mHelper.mVScrollbarBox) {
     GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox,
-                        &vScrollbarMinSize,
-                        aAssumeVScroll ? &vScrollbarPrefSize : nullptr);
+                        &vScrollbarMinSize, &vScrollbarPrefSize);
     nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mVScrollbarBox);
     scrollbar->SetScrollbarMediatorContent(mContent);
   }
@@ -450,8 +449,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   nsSize hScrollbarPrefSize(0, 0);
   if (mHelper.mHScrollbarBox) {
     GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
-                        &hScrollbarMinSize,
-                        aAssumeHScroll ? &hScrollbarPrefSize : nullptr);
+                        &hScrollbarMinSize, &hScrollbarPrefSize);
     nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mHScrollbarBox);
     scrollbar->SetScrollbarMediatorContent(mContent);
   }
@@ -586,6 +584,44 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     scrollPortOrigin.x += vScrollbarActualWidth;
   }
   mHelper.mScrollPort = nsRect(scrollPortOrigin, scrollPortSize);
+
+  if (mHelper.mIsRoot && gfxPlatform::UseDesktopZoomingScrollbars()) {
+    bool vvChanged = true;
+    // This loop can run at most twice since we can only add a scrollbar once.
+    // At this point we've already decided that this layout is consistent so we
+    // will return true. Scrollbars added here never take up layout space even
+    // if they are layout scrollbars so any changes made here will not make us
+    // return false.
+    while (vvChanged) {
+      vvChanged = false;
+      if (!aState->mShowHScrollbar &&
+          aState->mHScrollbarAllowedForScrollingVVInsideLV) {
+        if (mHelper.mScrollPort.width >=
+                visualViewportSize.width + oneDevPixel &&
+            visualViewportSize.width >= hScrollbarMinSize.width) {
+          vvChanged = true;
+          visualViewportSize.height -= hScrollbarPrefSize.height;
+          aState->mShowHScrollbar = true;
+          ROOT_SCROLLBAR_LOG("TryLayout added H scrollbar for VV, VV now %s\n",
+                             Stringify(visualViewportSize).c_str());
+        }
+      }
+
+      if (!aState->mShowVScrollbar &&
+          aState->mVScrollbarAllowedForScrollingVVInsideLV) {
+        if (mHelper.mScrollPort.height >=
+                visualViewportSize.height + oneDevPixel &&
+            visualViewportSize.height >= vScrollbarMinSize.height) {
+          vvChanged = true;
+          visualViewportSize.width -= vScrollbarPrefSize.width;
+          aState->mShowVScrollbar = true;
+          ROOT_SCROLLBAR_LOG("TryLayout added V scrollbar for VV, VV now %s\n",
+                             Stringify(visualViewportSize).c_str());
+        }
+      }
+    }
+  }
+
   return true;
 }
 
