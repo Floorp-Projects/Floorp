@@ -137,7 +137,7 @@ Result<Ok, nsresult> URLPreloader::InitInternal() {
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
 
-    obs->AddObserver(this, DELAYED_STARTUP_TOPIC, false);
+    MOZ_TRY(obs->AddObserver(this, DELAYED_STARTUP_TOPIC, false));
 
     MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
   } else {
