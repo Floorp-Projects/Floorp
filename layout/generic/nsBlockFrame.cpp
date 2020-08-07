@@ -2557,28 +2557,43 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
       }
     }
 
-    // If we have a constrained height (i.e., breaking columns/pages),
-    // and the distance to the bottom might have changed, then we need
-    // to reflow any line that might have floats in it, both because the
-    // breakpoints within those floats may have changed and because we
-    // might have to push/pull the floats in their entirety.
-    //
-    // We must also always reflow a line with floats on it, even within nested
-    // blocks within the same BFC, if it moves to a different block fragment.
-    // This is because the decision about whether the float fits may be
-    // different in a different fragment.
-    //
-    // FIXME: What about a deltaBCoord or block-size change that forces us to
-    // push lines?  Why does that work?
-    if (!line->IsDirty() &&
-        (aState.mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE ||
-         // last column can be reflowed unconstrained during column balancing
-         GetPrevInFlow() || GetNextInFlow() || HasPushedFloats()) &&
-        (deltaBCoord != 0 || aState.mReflowInput.IsBResize() ||
-         aState.mReflowInput.mFlags.mMustReflowPlaceholders ||
-         aState.mReflowInput.mFlags.mMovedBlockFragments) &&
-        (line->IsBlock() || line->HasFloats() || line->HadFloatPushed())) {
-      line->MarkDirty();
+    if (!line->IsDirty()) {
+      const bool isPaginated =
+          // Last column can be reflowed unconstrained during column balancing.
+          // Hence the additional GetPrevInFlow() and GetNextInFlow() as a
+          // fail-safe fallback.
+          aState.mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE ||
+          GetPrevInFlow() || GetNextInFlow() ||
+          // TODO: We had pushed floats which haven't being drained by our
+          // next-in-flow. We should reflow the line that may contain floats
+          // below.
+          HasPushedFloats();
+      if (isPaginated) {
+        // We are in a paginated context, i.e. in columns or pages.
+        const bool mayContainFloats =
+            line->IsBlock() || line->HasFloats() || line->HadFloatPushed();
+        if (mayContainFloats) {
+          // The following if-else conditions check whether this line -- which
+          // might have floats in its subtree, or has floats as direct children,
+          // or had floats pushed -- needs to be reflowed.
+          if (deltaBCoord != 0 || aState.mReflowInput.IsBResize()) {
+            // The distance to the block-end edge might have changed. Reflow the
+            // line both because the breakpoints within its floats may have
+            // changed and because we might have to push/pull the floats in
+            // their entirety.
+            line->MarkDirty();
+          } else if (aState.mReflowInput.mFlags.mMustReflowPlaceholders) {
+            // Reflow the line (that may containing a float's placeholder frame)
+            // if our parent tells us to do so.
+            line->MarkDirty();
+          } else if (aState.mReflowInput.mFlags.mMovedBlockFragments) {
+            // Our parent's line containing us moved to a different fragment.
+            // Reflow the line because the decision about whether the float fits
+            // may be different in a different fragment.
+            line->MarkDirty();
+          }
+        }
+      }
     }
 
     if (!line->IsDirty()) {
