@@ -165,7 +165,6 @@ bool nsDMABufDevice::IsDMABufEnabled() {
   mIsDMABufConfigured = true;
   bool isDMABufUsed = (
 #ifdef NIGHTLY_BUILD
-      StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() ||
       StaticPrefs::widget_dmabuf_textures_enabled() ||
 #endif
       StaticPrefs::widget_dmabuf_webgl_enabled() ||
@@ -189,10 +188,6 @@ bool nsDMABufDevice::IsDMABufEnabled() {
 }
 
 #ifdef NIGHTLY_BUILD
-bool nsDMABufDevice::IsDMABufBasicEnabled() {
-  return IsDMABufEnabled() &&
-         StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled();
-}
 bool nsDMABufDevice::IsDMABufTexturesEnabled() {
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::widget_dmabuf_textures_enabled();
