@@ -24,7 +24,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">فائل نہیں کھول سکتے</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported">%1$s فائلوں کو کھولنے کے لئے کوئی ایپ نہیں ملا</string>
+    <string name="mozac_feature_downloads_open_not_supported1">%1$s فائلوں کو کھولنے کے لئے کوئی ایپ نہیں ملا</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">توقف کریں</string>
