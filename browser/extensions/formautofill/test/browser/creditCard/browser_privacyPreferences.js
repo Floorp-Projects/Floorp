@@ -214,6 +214,37 @@ add_task(async function test_creditCardNotAvailable() {
   );
 });
 
+add_task(async function test_creditCardHiddenUI() {
+  const AUTOFILL_CREDITCARDS_HIDE_UI_PREF =
+    "extensions.formautofill.creditCards.hideui";
+
+  await SpecialPowers.pushPrefEnv({
+    set: [[AUTOFILL_CREDITCARDS_HIDE_UI_PREF, true]],
+  });
+  let finalPrefPaneLoaded = TestUtils.topicObserved(
+    "sync-pane-loaded",
+    () => true
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_PRIVACY },
+    async function(browser) {
+      await finalPrefPaneLoaded;
+      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
+        is(
+          content.document.querySelector(selectors.group).hidden,
+          false,
+          "Form Autofill group should be visible"
+        );
+        ok(
+          !content.document.querySelector(selectors.creditCardAutofillCheckbox),
+          "Autofill credit cards checkbox should not exist"
+        );
+      });
+    }
+  );
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_HIDE_UI_PREF);
+});
+
 add_task(async function test_reauth() {
   await SpecialPowers.pushPrefEnv({
     set: [[AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true]],
