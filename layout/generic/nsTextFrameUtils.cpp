@@ -47,7 +47,7 @@ static bool IsDiscardable(uint8_t ch, nsTextFrameUtils::Flags* aFlags) {
   return false;
 }
 
-static bool IsSegmentBreak(char16_t aCh) { return aCh == '\n' || aCh == '\r'; }
+static bool IsSegmentBreak(char16_t aCh) { return aCh == '\n'; }
 
 static bool IsSpaceOrTab(char16_t aCh) { return aCh == ' ' || aCh == '\t'; }
 
