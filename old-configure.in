@@ -602,8 +602,6 @@ case "$target" in
         fi
 
         DSO_LDOPTS='-shared'
-        # Use temp file for windres (bug 213281)
-        RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -luuid -lusp10 -lgdi32 -lwinmm -lwsock32 -luserenv -lsecur32"
         MOZ_FIX_LINK_PATHS=
@@ -754,7 +752,6 @@ case "$target" in
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
         fi
-        RCFLAGS="-nologo"
         dnl Minimum reqiurement of Gecko is VS2015 or later which supports
         dnl both SSSE3 and SSE4.1.
         HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
@@ -2534,7 +2531,6 @@ dnl ========================================================
 
 AC_SUBST(NM)
 AC_SUBST_LIST(ASFLAGS)
-AC_SUBST(RCFLAGS)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(MOZ_AUTH_EXTENSION)
