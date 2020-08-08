@@ -12,10 +12,10 @@ job-defaults:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
                 index: mobile.v2.fenix.nightly.latest.arm64-v8a
-                name: build/arm64-v8a/geckoNightly/target.apk
+                name: build/arm64-v8a/target.apk
             default:
                 index: mobile.v2.fenix.nightly.latest.armeabi-v7a
-                name: build/armeabi-v7a/geckoNightly/target.apk
+                name: build/armeabi-v7a/target.apk
     e10s: true
     virtualization: hardware
     mozharness:

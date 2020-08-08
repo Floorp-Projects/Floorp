@@ -19,7 +19,7 @@ COMMON_OPTIONS = [("processStartTime", "true"),
                   ("firefox.android.intentArgument", URL)]
 
 NIGHTLY_SIM_ROUTE = "mobile.v2.fenix.nightly-simulation"
-ROUTE_SUFFIX = "artifacts/public/build/{architecture}/geckoNightly/target.apk"
+ROUTE_SUFFIX = "artifacts/public/build/{architecture}/target.apk"
 
 build_generator = None
 
