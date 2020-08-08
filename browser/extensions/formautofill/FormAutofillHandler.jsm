@@ -42,10 +42,6 @@ const formFillController = Cc[
   "@mozilla.org/satchel/form-fill-controller;1"
 ].getService(Ci.nsIFormFillController);
 
-const formFillControllerInput = Cc[
-  "@mozilla.org/satchel/form-fill-controller;1"
-].getService(Ci.nsIAutoCompleteInput);
-
 XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
   const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
     "brandShortName"
@@ -375,7 +371,8 @@ class FormAutofillSection {
           (element != focusedInput && !element.value) ||
           fieldDetail.state == FIELD_STATES.AUTO_FILLED
         ) {
-          this._focusAndSetTextValue(element, value);
+          element.focus({ preventScroll: true });
+          element.setUserInput(value);
           this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
         }
       } else if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
@@ -672,15 +669,6 @@ class FormAutofillSection {
         break;
       }
     }
-  }
-
-  _focusAndSetTextValue(
-    element,
-    value,
-    reason = Ci.nsIAutoCompletePopup.TEXTVALUE_REASON_COMPLETESELECTED
-  ) {
-    element.focus({ preventScroll: true });
-    formFillControllerInput.setTextValueWithReason(value, reason);
   }
 }
 
