@@ -2,6 +2,7 @@ browser/components/newtab/vendor/
 browser/components/pocket/content/panels/js/vendor/
 browser/components/translation/cld2/
 browser/extensions/formautofill/content/third-party/
+browser/extensions/formautofill/test/fixtures/third_party/
 browser/extensions/screenshots/build/raven.js
 devtools/client/debugger/flow-typed/npm/
 devtools/client/inspector/markup/test/lib_*
