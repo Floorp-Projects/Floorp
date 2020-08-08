@@ -9,7 +9,8 @@ from setuptools import setup
 PACKAGE_NAME = "mozperftest"
 PACKAGE_VERSION = "0.2"
 
-deps = ["regex", "jsonschema", "mozlog >= 6.0", "mozdevice >= 4.0.0", "mozproxy", "mozinfo"]
+deps = ["regex", "jsonschema", "mozlog >= 6.0", "mozdevice >= 4.0.0", "mozproxy",
+        "mozinfo", "mozfile"]
 
 setup(
     name=PACKAGE_NAME,
