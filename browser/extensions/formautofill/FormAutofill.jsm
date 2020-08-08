@@ -27,8 +27,6 @@ const ENABLED_AUTOFILL_CREDITCARDS_PREF =
   "extensions.formautofill.creditCards.enabled";
 const ENABLED_AUTOFILL_CREDITCARDS_REAUTH_PREF =
   "extensions.formautofill.reauth.enabled";
-const AUTOFILL_CREDITCARDS_HIDE_UI_PREF =
-  "extensions.formautofill.creditCards.hideui";
 const SUPPORTED_COUNTRIES_PREF = "extensions.formautofill.supportedCountries";
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -114,11 +112,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
   "_isAutofillCreditCardsEnabled",
   ENABLED_AUTOFILL_CREDITCARDS_PREF
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  FormAutofill,
-  "isAutofillCreditCardsHideUI",
-  AUTOFILL_CREDITCARDS_HIDE_UI_PREF
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
