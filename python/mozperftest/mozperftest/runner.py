@@ -111,6 +111,8 @@ def run_tests(mach_cmd, **kwargs):
         mach_cmd.log_manager.terminal_handler.level = log_level
     else:
         mach_cmd.log_manager.add_terminal_logging(level=log_level)
+        mach_cmd.log_manager.enable_all_structured_loggers()
+        mach_cmd.log_manager.enable_unstructured()
 
     try:
         hooks.run("before_iterations", kwargs)
