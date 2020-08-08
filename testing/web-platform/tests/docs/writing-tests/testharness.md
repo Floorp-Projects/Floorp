@@ -1,4 +1,4 @@
-# JavaScript Tests (testharness.js)
+# testharness.js Tests
 
 ```eval_rst
 .. toctree::
