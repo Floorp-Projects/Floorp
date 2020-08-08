@@ -795,9 +795,11 @@ var UrlbarUtils = {
    * history for the search.
    * @param {UrlbarInput} input The UrlbarInput object requesting the addition.
    * @param {string} value The value to add.
+   * @param {string} [source] The source of the addition, usually
+   *        the name of the engine the search was made with.
    * @returns {Promise} resolved once the operation is complete
    */
-  addToFormHistory(input, value) {
+  addToFormHistory(input, value, source) {
     // If the user types a search engine alias without a search string,
     // we have an empty search string and we can't bump it.
     // We also don't want to add history in private browsing mode.
@@ -810,6 +812,7 @@ var UrlbarUtils = {
           op: "bump",
           fieldname: input.formHistoryName,
           value,
+          source,
         },
         {
           handleError: reject,

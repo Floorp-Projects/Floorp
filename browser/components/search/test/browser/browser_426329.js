@@ -1,9 +1,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-ChromeUtils.defineModuleGetter(
-  this,
-  "FormHistory",
-  "resource://gre/modules/FormHistory.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
+});
 
 function expectedURL(aSearchTerms) {
   const ENGINE_HTML_BASE =
@@ -58,26 +56,6 @@ function getMenuEntries() {
   return Array.from(searchBar.textbox.popup.richlistbox.itemChildren, item =>
     item.getAttribute("ac-value")
   );
-}
-
-function countEntries(name, value) {
-  return new Promise(resolve => {
-    let count = 0;
-    let obj = name && value ? { fieldname: name, value } : {};
-    FormHistory.count(obj, {
-      handleResult(result) {
-        count = result;
-      },
-      handleError(error) {
-        throw error;
-      },
-      handleCompletion(reason) {
-        if (!reason) {
-          resolve(count);
-        }
-      },
-    });
-  });
 }
 
 var searchBar;
@@ -287,9 +265,9 @@ add_task(async function testRightClick() {
 add_task(async function testSearchHistory() {
   let textbox = searchBar._textbox;
   for (let i = 0; i < searchEntries.length; i++) {
-    let count = await countEntries(
+    let count = await FormHistoryTestUtils.count(
       textbox.getAttribute("autocompletesearchparam"),
-      searchEntries[i]
+      { value: searchEntries[i], source: "Bug 426329" }
     );
     ok(count > 0, "form history entry '" + searchEntries[i] + "' should exist");
   }
@@ -327,7 +305,9 @@ add_task(async function testClearHistory() {
   let historyCleared = promiseObserver("satchel-storage-changed");
   menuitem.click();
   await historyCleared;
-  let count = await countEntries();
+  let count = await FormHistoryTestUtils.count(
+    textbox.getAttribute("autocompletesearchparam")
+  );
   ok(count == 0, "History cleared");
 });
 

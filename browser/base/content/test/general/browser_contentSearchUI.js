@@ -9,9 +9,10 @@ const TEST_ENGINE_2_BASENAME = "searchSuggestionEngine2.xml";
 
 const TEST_MSG = "ContentSearchUIControllerTest";
 
-let { SearchTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SearchTestUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
+});
 
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
@@ -541,10 +542,17 @@ add_task(async function formHistory() {
     }, "satchel-storage-changed");
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.gController.addInputValueToFormHistory();
+  await FormHistoryTestUtils.clear("searchbar-history");
+  let entry = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    return content.gController.addInputValueToFormHistory();
   });
   await observePromise;
+  Assert.greater(
+    await FormHistoryTestUtils.count("searchbar-history", {
+      source: entry.source,
+    }),
+    0
+  );
 
   // Reset the input.
   state = await msg("reset");

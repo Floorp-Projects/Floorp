@@ -385,6 +385,7 @@
 
     doSearch(aData, aWhere, aEngine, aParams, aOneOff) {
       let textBox = this._textbox;
+      let engine = aEngine || this.currentEngine;
 
       // Save the current value in the form history
       if (
@@ -397,6 +398,7 @@
             op: "bump",
             fieldname: textBox.getAttribute("autocompletesearchparam"),
             value: aData,
+            source: engine.name,
           },
           {
             handleError(aError) {
@@ -408,7 +410,6 @@
         );
       }
 
-      let engine = aEngine || this.currentEngine;
       let submission = engine.getSubmission(aData, null, "searchbar");
       let telemetrySearchDetails = this.telemetrySearchDetails;
       this.telemetrySearchDetails = null;
