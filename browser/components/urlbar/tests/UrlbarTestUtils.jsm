@@ -421,11 +421,13 @@ var UrlbarTestUtils = {
       window.gURLBar._searchModeIndicatorTitle,
       window.gURLBar._searchModeLabel,
     ]) {
-      this.Assert.equal(
-        element.textContent,
-        expectedTextContent,
-        "Expected textContent"
-      );
+      if (expectedTextContent) {
+        this.Assert.equal(
+          element.textContent,
+          expectedTextContent,
+          "Expected textContent"
+        );
+      }
       this.Assert.deepEqual(
         window.document.l10n.getAttributes(element),
         expectedL10n,
