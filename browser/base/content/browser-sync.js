@@ -171,11 +171,7 @@ var gSync = {
     this._generateNodeGetters();
 
     // Label for the sync buttons.
-    const appMenuLabel = PanelMultiView.getViewNode(
-      document,
-      "appMenu-fxa-label"
-    );
-    if (!appMenuLabel) {
+    if (!this.appMenuLabel) {
       // We are in a window without our elements - just abort now, without
       // setting this._initialized, so we don't attempt to remove observers.
       return;
@@ -493,10 +489,7 @@ var gSync = {
       "defaultLabel"
     );
 
-    const appMenuFxAButtonEl = PanelMultiView.getViewNode(
-      document,
-      "appMenu-fxa-label"
-    );
+    const appMenuFxAButtonEl = document.getElementById("appMenu-fxa-label");
 
     let panelTitle = this.fxaStrings.GetStringFromName("account.title");
 
@@ -624,26 +617,13 @@ var gSync = {
   },
 
   updatePanelPopup(state) {
-    const appMenuStatus = PanelMultiView.getViewNode(
-      document,
-      "appMenu-fxa-status"
-    );
-    const appMenuLabel = PanelMultiView.getViewNode(
-      document,
-      "appMenu-fxa-label"
-    );
-    const appMenuAvatar = PanelMultiView.getViewNode(
-      document,
-      "appMenu-fxa-avatar"
-    );
-
-    let defaultLabel = appMenuStatus.getAttribute("defaultlabel");
+    let defaultLabel = this.appMenuStatus.getAttribute("defaultlabel");
     const status = state.status;
     // Reset the status bar to its original state.
-    appMenuLabel.setAttribute("label", defaultLabel);
-    appMenuStatus.removeAttribute("fxastatus");
-    appMenuAvatar.style.removeProperty("list-style-image");
-    appMenuLabel.classList.remove("subviewbutton-nav");
+    this.appMenuLabel.setAttribute("label", defaultLabel);
+    this.appMenuStatus.removeAttribute("fxastatus");
+    this.appMenuAvatar.style.removeProperty("list-style-image");
+    this.appMenuLabel.classList.remove("subviewbutton-nav");
 
     if (status == UIState.STATUS_NOT_CONFIGURED) {
       return;
@@ -655,28 +635,28 @@ var gSync = {
         "reconnectDescription",
         [state.email]
       );
-      let errorLabel = appMenuStatus.getAttribute("errorlabel");
-      appMenuStatus.setAttribute("fxastatus", "login-failed");
-      appMenuLabel.setAttribute("label", errorLabel);
-      appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
+      let errorLabel = this.appMenuStatus.getAttribute("errorlabel");
+      this.appMenuStatus.setAttribute("fxastatus", "login-failed");
+      this.appMenuLabel.setAttribute("label", errorLabel);
+      this.appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
     } else if (status == UIState.STATUS_NOT_VERIFIED) {
       let tooltipDescription = this.fxaStrings.formatStringFromName(
         "verifyDescription",
         [state.email]
       );
-      let unverifiedLabel = appMenuStatus.getAttribute("unverifiedlabel");
-      appMenuStatus.setAttribute("fxastatus", "unverified");
-      appMenuLabel.setAttribute("label", unverifiedLabel);
-      appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
+      let unverifiedLabel = this.appMenuStatus.getAttribute("unverifiedlabel");
+      this.appMenuStatus.setAttribute("fxastatus", "unverified");
+      this.appMenuLabel.setAttribute("label", unverifiedLabel);
+      this.appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
     }
 
     // At this point we consider sync to be logged-in.
-    appMenuStatus.setAttribute("fxastatus", "signedin");
-    appMenuLabel.setAttribute("label", state.displayName || state.email);
-    appMenuLabel.classList.add("subviewbutton-nav");
-    appMenuStatus.removeAttribute("tooltiptext");
+    this.appMenuStatus.setAttribute("fxastatus", "signedin");
+    this.appMenuLabel.setAttribute("label", state.displayName || state.email);
+    this.appMenuLabel.classList.add("subviewbutton-nav");
+    this.appMenuStatus.removeAttribute("tooltiptext");
   },
 
   updateState(state) {
