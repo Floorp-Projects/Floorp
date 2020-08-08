@@ -107,6 +107,16 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
 
   /**
    * @returns {boolean}
+   *   True if the one-offs are connected to a view.
+   */
+  get hasView() {
+    // Return true if the one-offs are enabled.  We set style.display = "none"
+    // when they're disabled, so use that to check.
+    return this.style.display != "none";
+  }
+
+  /**
+   * @returns {boolean}
    *   True if the view is open.
    */
   get isViewOpen() {
