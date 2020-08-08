@@ -245,6 +245,7 @@ var UrlbarTokenizer = {
    */
   isRestrictionToken(token) {
     return (
+      token &&
       token.type >= this.TYPE.RESTRICT_HISTORY &&
       token.type <= this.TYPE.RESTRICT_URL
     );
