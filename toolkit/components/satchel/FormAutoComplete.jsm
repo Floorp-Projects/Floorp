@@ -293,7 +293,10 @@ FormAutoComplete.prototype = {
   /*
    * autoCompleteSearchAsync
    *
-   * aInputName    -- |name| attribute from the form input being autocompleted.
+   * aSearchParam    -- The searchParam, each entry is separated by the "\x1F"
+   *                    char. The first entry is the `name` attribute from the
+   *                    form input being autocompleted, while the next entries
+   *                    are in `key=value` form.
    * aUntrimmedSearchString -- current value of the input
    * aField -- HTMLInputElement being autocompleted (may be null if from chrome)
    * aPreviousResult -- previous search result, if any.
@@ -302,62 +305,62 @@ FormAutoComplete.prototype = {
    *              that may be returned asynchronously.
    */
   autoCompleteSearchAsync(
-    aInputName,
+    aSearchParam,
     aUntrimmedSearchString,
     aField,
     aPreviousResult,
     aDatalistResult,
     aListener
   ) {
-    function sortBytotalScore(a, b) {
-      return b.totalScore - a.totalScore;
-    }
-
     // Guard against void DOM strings filtering into this code.
-    if (typeof aInputName === "object") {
-      aInputName = "";
+    if (typeof aSearchParam === "object") {
+      aSearchParam = "";
     }
     if (typeof aUntrimmedSearchString === "object") {
       aUntrimmedSearchString = "";
     }
 
+    let searchParams = aSearchParam.split("\x1F");
+    let inputName = searchParams.shift();
+    let params = {};
+    for (let p of searchParams) {
+      let [key, val] = p.split("=");
+      params[key] = val;
+    }
+
     let client = new FormHistoryClient({
       formField: aField,
-      inputName: aInputName,
+      inputName,
     });
+
+    function maybeNotifyListener(result) {
+      if (aListener) {
+        aListener.onSearchCompletion(result);
+      }
+    }
 
     // If we have datalist results, they become our "empty" result.
     let emptyResult =
       aDatalistResult ||
-      new FormAutoCompleteResult(
-        client,
-        [],
-        aInputName,
-        aUntrimmedSearchString
-      );
+      new FormAutoCompleteResult(client, [], inputName, aUntrimmedSearchString);
     if (!this._enabled) {
-      if (aListener) {
-        aListener.onSearchCompletion(emptyResult);
-      }
+      maybeNotifyListener(emptyResult);
       return;
     }
 
-    // don't allow form inputs (aField != null) to get results from search bar history
-    if (aInputName == "searchbar-history" && aField) {
+    // Don't allow form inputs (aField != null) to get results from
+    // search bar history.
+    if (inputName == "searchbar-history" && aField) {
       this.log(
-        'autoCompleteSearch for input name "' + aInputName + '" is denied'
+        'autoCompleteSearch for input name "' + inputName + '" is denied'
       );
-      if (aListener) {
-        aListener.onSearchCompletion(emptyResult);
-      }
+      maybeNotifyListener(emptyResult);
       return;
     }
 
     if (aField && isAutocompleteDisabled(aField)) {
       this.log("autoCompleteSearch not allowed due to autcomplete=off");
-      if (aListener) {
-        aListener.onSearchCompletion(emptyResult);
-      }
+      maybeNotifyListener(emptyResult);
       return;
     }
 
@@ -435,7 +438,7 @@ FormAutoComplete.prototype = {
         );
         filteredEntries.push(entry);
       }
-      filteredEntries.sort(sortBytotalScore);
+      filteredEntries.sort((a, b) => b.totalScore - a.totalScore);
       wrappedResult.entries = filteredEntries;
 
       // If we had datalistResults, re-merge them back into the filtered
@@ -459,9 +462,7 @@ FormAutoComplete.prototype = {
         wrappedResult._comments = comments;
       }
 
-      if (aListener) {
-        aListener.onSearchCompletion(result);
-      }
+      maybeNotifyListener(result);
     } else {
       this.log("Creating new autocomplete search result.");
 
@@ -470,7 +471,7 @@ FormAutoComplete.prototype = {
         ? new FormAutoCompleteResult(
             client,
             [],
-            aInputName,
+            inputName,
             aUntrimmedSearchString
           )
         : emptyResult;
@@ -488,15 +489,14 @@ FormAutoComplete.prototype = {
           result = this.mergeResults(result, aDatalistResult);
         }
 
-        if (aListener) {
-          aListener.onSearchCompletion(result);
-        }
+        maybeNotifyListener(result);
       };
 
       this.getAutoCompleteValues(
         client,
-        aInputName,
+        inputName,
         searchString,
+        params,
         processEntry
       );
     }
@@ -552,21 +552,26 @@ FormAutoComplete.prototype = {
    *  client - a FormHistoryClient instance to perform the search with
    *  fieldName - fieldname field within form history (the form input name)
    *  searchString - string to search for
+   *  params - object containing additional properties to query autocomplete.
    *  callback - called when the values are available. Passed an array of objects,
    *             containing properties for each result. The callback is only called
    *             when successful.
    */
-  getAutoCompleteValues(client, fieldName, searchString, callback) {
-    let params = {
-      agedWeight: this._agedWeight,
-      bucketSize: this._bucketSize,
-      expiryDate: 1000 * (Date.now() - this._expireDays * 24 * 60 * 60 * 1000),
-      fieldname: fieldName,
-      maxTimeGroupings: this._maxTimeGroupings,
-      timeGroupingSize: this._timeGroupingSize,
-      prefixWeight: this._prefixWeight,
-      boundaryWeight: this._boundaryWeight,
-    };
+  getAutoCompleteValues(client, fieldName, searchString, params, callback) {
+    params = Object.assign(
+      {
+        agedWeight: this._agedWeight,
+        bucketSize: this._bucketSize,
+        expiryDate:
+          1000 * (Date.now() - this._expireDays * 24 * 60 * 60 * 1000),
+        fieldname: fieldName,
+        maxTimeGroupings: this._maxTimeGroupings,
+        timeGroupingSize: this._timeGroupingSize,
+        prefixWeight: this._prefixWeight,
+        boundaryWeight: this._boundaryWeight,
+      },
+      params
+    );
 
     this.stopAutoCompleteSearch();
     client.requestAutoCompleteResults(searchString, params, entries => {

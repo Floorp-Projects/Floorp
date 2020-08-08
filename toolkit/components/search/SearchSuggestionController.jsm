@@ -201,6 +201,8 @@ SearchSuggestionController.prototype = {
    * @param {boolean} privateMode - whether the request is being made in the context of private browsing
    * @param {nsISearchEngine} engine - search engine for the suggestions.
    * @param {int} userContextId - the userContextId of the selected tab.
+   * @param {boolean} restrictToEngine - whether to restrict local historical
+   *   suggestions to the ones registered under the given engine.
    *
    * @returns {Promise} resolving to an object with the following contents:
    * @returns {array<SearchSuggestionEntry>} results.local
@@ -208,7 +210,13 @@ SearchSuggestionController.prototype = {
    * @returns {array<SearchSuggestionEntry>} results.remote
    *   Contains remote search suggestions.
    */
-  fetch(searchTerm, privateMode, engine, userContextId = 0) {
+  fetch(
+    searchTerm,
+    privateMode,
+    engine,
+    userContextId = 0,
+    restrictToEngine = false
+  ) {
     // There is no smart filtering from previous results here (as there is when looking through
     // history/form data) because the result set returned by the server is different for every typed
     // value - e.g. "ocean breathes" does not return a subset of the results returned for "ocean".
@@ -256,7 +264,12 @@ SearchSuggestionController.prototype = {
 
     // Local results from form history
     if (this.maxLocalResults) {
-      promises.push(this._fetchFormHistory(searchTerm));
+      promises.push(
+        this._fetchFormHistory(
+          searchTerm,
+          restrictToEngine ? engine.name : null
+        )
+      );
     }
 
     function handleRejection(reason) {
@@ -289,7 +302,7 @@ SearchSuggestionController.prototype = {
 
   // Private methods
 
-  _fetchFormHistory(searchTerm) {
+  _fetchFormHistory(searchTerm, source) {
     return new Promise(resolve => {
       let acSearchObserver = {
         // Implements nsIAutoCompleteSearch
@@ -336,9 +349,13 @@ SearchSuggestionController.prototype = {
       let formHistory = Cc[
         "@mozilla.org/autocomplete/search;1?name=form-history"
       ].createInstance(Ci.nsIAutoCompleteSearch);
+      let params = this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM;
+      if (source) {
+        params += "\x1Fsource=" + source;
+      }
       formHistory.startSearch(
         searchTerm,
-        this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM,
+        params,
         this._formHistoryResult,
         acSearchObserver
       );

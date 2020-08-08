@@ -64,7 +64,7 @@ class ProviderTopSites extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return !queryContext.searchString;
+    return !queryContext.restrictSource && !queryContext.searchString;
   }
 
   /**
