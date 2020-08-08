@@ -6593,11 +6593,27 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
                               : mScrollPort.x + compositionSize.width;
     if (mHasVerticalScrollbar) {
       nsMargin margin;
+
       // For overlay scrollbars the margin returned from this GetXULMargin call
       // is a negative margin that moves the scrollbar from just outside the
       // scrollport (and hence not visible) to just inside the scrollport (and
       // hence visible). For non-overlay scrollbars it is a 0 margin.
       mVScrollbarBox->GetXULMargin(margin);
+
+      if (!UsesOverlayScrollbars() && mOnlyNeedVScrollbarToScrollVVInsideLV) {
+        // There is no space reserved for the layout scrollbar, it is currently
+        // not visible because it is positioned just outside the scrollport. But
+        // we know that it needs to be made visible so we shift it back in.
+        nsSize vScrollbarPrefSize(0, 0);
+        GetScrollbarMetrics(aState, mVScrollbarBox, nullptr,
+                            &vScrollbarPrefSize);
+        if (scrollbarOnLeft) {
+          margin.right -= vScrollbarPrefSize.width;
+        } else {
+          margin.left -= vScrollbarPrefSize.width;
+        }
+      }
+
       vRect.Deflate(margin);
     }
     AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer,
@@ -6615,11 +6631,23 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     hRect.y = mScrollPort.y + compositionSize.height;
     if (mHasHorizontalScrollbar) {
       nsMargin margin;
+
       // For overlay scrollbars the margin returned from this GetXULMargin call
       // is a negative margin that moves the scrollbar from just outside the
       // scrollport (and hence not visible) to just inside the scrollport (and
       // hence visible). For non-overlay scrollbars it is a 0 margin.
       mHScrollbarBox->GetXULMargin(margin);
+
+      if (!UsesOverlayScrollbars() && mOnlyNeedHScrollbarToScrollVVInsideLV) {
+        // There is no space reserved for the layout scrollbar, it is currently
+        // not visible because it is positioned just outside the scrollport. But
+        // we know that it needs to be made visible so we shift it back in.
+        nsSize hScrollbarPrefSize(0, 0);
+        GetScrollbarMetrics(aState, mHScrollbarBox, nullptr,
+                            &hScrollbarPrefSize);
+        margin.top -= hScrollbarPrefSize.height;
+      }
+
       hRect.Deflate(margin);
     }
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer,
