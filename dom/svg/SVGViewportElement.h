@@ -51,6 +51,8 @@ class SVGViewportElement : public SVGGraphicsElement {
   ~SVGViewportElement() = default;
 
  public:
+  bool IsNodeOfType(uint32_t aFlags) const override;
+
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
