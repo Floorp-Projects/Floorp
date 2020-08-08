@@ -2564,10 +2564,8 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
           // fail-safe fallback.
           aState.mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE ||
           GetPrevInFlow() || GetNextInFlow() ||
-          // TODO: We had pushed floats which haven't being drained by our
-          // next-in-flow. We should reflow the line that may contain floats
-          // below.
-          HasPushedFloats();
+          // Table can also be reflowed unconstrained during printing.
+          aState.mPresContext->IsPaginated();
       if (isPaginated) {
         // We are in a paginated context, i.e. in columns or pages.
         const bool mayContainFloats =
@@ -2581,6 +2579,13 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
             // line both because the breakpoints within its floats may have
             // changed and because we might have to push/pull the floats in
             // their entirety.
+            line->MarkDirty();
+          } else if (HasPushedFloats()) {
+            // We had pushed floats which haven't been drained by our
+            // next-in-flow, which means our parent is currently reflowing us
+            // again due to clearance without creating a next-in-flow for us.
+            // Reflow the line to redo the floats split logic to correctly set
+            // our reflow status.
             line->MarkDirty();
           } else if (aState.mReflowInput.mFlags.mMustReflowPlaceholders) {
             // Reflow the line (that may containing a float's placeholder frame)
@@ -3511,8 +3516,8 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
   }
 
   nsIFrame* clearanceFrame = nullptr;
-  nscoord startingBCoord = aState.mBCoord;
-  nsCollapsingMargin incomingMargin = aState.mPrevBEndMargin;
+  const nscoord startingBCoord = aState.mBCoord;
+  const nsCollapsingMargin incomingMargin = aState.mPrevBEndMargin;
   nscoord clearance;
   // Save the original position of the frame so that we can reposition
   // its view as needed.
@@ -3876,6 +3881,8 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
     } while (true);
 
     if (mayNeedRetry && clearanceFrame) {
+      // Found a clearance frame, so we need to reflow |frame| a second time.
+      // Restore the states and start over again.
       aState.FloatManager()->PopState(&floatManagerState);
       aState.mBCoord = startingBCoord;
       aState.mPrevBEndMargin = incomingMargin;
