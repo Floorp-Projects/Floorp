@@ -176,7 +176,10 @@ FormAutofillPreferences.prototype = {
       savedAddressesBtn,
     };
 
-    if (FormAutofill.isAutofillCreditCardsAvailable) {
+    if (
+      FormAutofill.isAutofillCreditCardsAvailable &&
+      !FormAutofill.isAutofillCreditCardsHideUI
+    ) {
       let creditCardAutofill = document.createXULElement("hbox");
       let creditCardAutofillCheckboxGroup = document.createXULElement("hbox");
       let creditCardAutofillCheckbox = document.createXULElement("checkbox");
