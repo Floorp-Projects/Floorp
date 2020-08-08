@@ -38,9 +38,11 @@ const PanelUI = {
    */
   get kElements() {
     return {
+      mainView: "appMenu-mainView",
       multiView: "appMenu-multiView",
       menuButton: "PanelUI-menu-button",
       panel: "appMenu-popup",
+      addonNotificationContainer: "appMenu-addon-banners",
       overflowFixedList: "widget-overflow-fixed-list",
       overflowPanel: "widget-overflow",
       navbar: "nav-bar",
@@ -956,24 +958,6 @@ const PanelUI = {
       }
     }
     return this._notificationPanel;
-  },
-
-  get mainView() {
-    if (!this._mainView) {
-      this._mainView = PanelMultiView.getViewNode(document, "appMenu-mainView");
-    }
-    return this._mainView;
-  },
-
-  get addonNotificationContainer() {
-    if (!this._addonNotificationContainer) {
-      this._addonNotificationContainer = PanelMultiView.getViewNode(
-        document,
-        "appMenu-addon-banners"
-      );
-    }
-
-    return this._addonNotificationContainer;
   },
 
   _formatDescriptionMessage(n) {
