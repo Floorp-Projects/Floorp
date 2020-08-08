@@ -234,7 +234,12 @@ this.ContentSearchUIController = (function() {
     },
 
     addInputValueToFormHistory() {
-      this._sendMsg("AddFormHistoryEntry", this.input.value);
+      let entry = {
+        value: this.input.value,
+        engineName: this.selectedEngineName,
+      };
+      this._sendMsg("AddFormHistoryEntry", entry);
+      return entry;
     },
 
     handleEvent(event) {

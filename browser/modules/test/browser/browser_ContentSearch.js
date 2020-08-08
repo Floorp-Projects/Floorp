@@ -250,7 +250,10 @@ add_task(
     // Add a form history suggestion and wait for Satchel to notify about it.
     sendEventToContent(browser, {
       type: "AddFormHistoryEntry",
-      data: searchStr + "form",
+      data: {
+        value: searchStr + "form",
+        engineName: engine.name,
+      },
     });
     await new Promise(resolve => {
       Services.obs.addObserver(function onAdd(subj, topic, data) {

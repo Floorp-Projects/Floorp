@@ -463,7 +463,11 @@ class UrlbarInput {
       );
       this._recordSearch(selectedOneOff.engine, event);
 
-      UrlbarUtils.addToFormHistory(this, searchString).catch(Cu.reportError);
+      UrlbarUtils.addToFormHistory(
+        this,
+        searchString,
+        selectedOneOff.engine.name
+      ).catch(Cu.reportError);
     } else {
       // Use the current value if we don't have a UrlbarResult e.g. because the
       // view is closed.
@@ -759,7 +763,8 @@ class UrlbarInput {
         if (!result.payload.inPrivateWindow) {
           UrlbarUtils.addToFormHistory(
             this,
-            result.payload.suggestion || result.payload.query
+            result.payload.suggestion || result.payload.query,
+            engine.name
           ).catch(Cu.reportError);
         }
         break;
