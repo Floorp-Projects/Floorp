@@ -11,6 +11,7 @@
 #  include <signal.h>
 #  include <unistd.h>
 #endif
+#include "js/experimental/CodeCoverage.h"
 #include "mozilla/dom/ScriptSettings.h"  // for AutoJSAPI
 #include "mozilla/CodeCoverageHandler.h"
 #include "mozilla/ClearOnShutdown.h"

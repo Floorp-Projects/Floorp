@@ -220,6 +220,7 @@ EXPORTS.js += [
 # change, but they're at least plausible first passes at designing something.
 # We expose them as-is, buyer beware.
 EXPORTS.js.experimental += [
+    '../public/experimental/CodeCoverage.h',
     '../public/experimental/SourceHook.h',
     '../public/experimental/TypedData.h',
 ]
