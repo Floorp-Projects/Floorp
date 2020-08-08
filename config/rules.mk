@@ -836,14 +836,9 @@ endif
 endif
 
 # EXTRA_DEPS contains manifests (manually added in Makefile.in ; bug 1498414)
-%.res: $(or $(RCFILE),%.rc) $(EXTRA_DEPS)
+%.res: $(or $(RCFILE),%.rc) $(MOZILLA_DIR)/config/create_res.py $(EXTRA_DEPS)
 	$(REPORT_BUILD)
-	@echo Creating Resource file: $@
-ifdef GNU_CC
-	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) $(OUTOPTION)$@ $<
-else
-	$(call WINEWRAP,$(RC)) $(RCFLAGS) -r $(DEFINES) $(INCLUDES:-I%=-I$(call relativize,%)) $(OUTOPTION)$@ $(call relativize,$<)
-endif
+	$(PYTHON3) $(MOZILLA_DIR)/config/create_res.py $(DEFINES) $(INCLUDES) -o $@ $<
 
 $(notdir $(addsuffix .rc,$(PROGRAM) $(SHARED_LIBRARY) $(SIMPLE_PROGRAMS) module)): %.rc: $(RCINCLUDE) $(MOZILLA_DIR)/config/create_rc.py
 	$(PYTHON3) $(MOZILLA_DIR)/config/create_rc.py '$(if $(filter module,$*),,$*)' '$(RCINCLUDE)'
