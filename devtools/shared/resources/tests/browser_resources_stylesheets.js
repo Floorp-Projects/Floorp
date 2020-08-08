@@ -126,9 +126,10 @@ add_task(async function() {
   info("Check whether the stylesheet actor is updated correctly or not");
   const firstResource = availableResources[0];
   await firstResource.styleSheet.update("", false);
+  const expectedResource = findMatchingExpectedResource(firstResource);
   await assertResource(
     availableResources[0],
-    Object.assign(EXISTING_RESOURCES[0], { styleText: "" })
+    Object.assign(expectedResource, { styleText: "" })
   );
 
   await targetList.stopListening();
