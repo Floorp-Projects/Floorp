@@ -429,6 +429,7 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       engine: engineName,
       suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+      isSearchHistory: true,
       lowerCaseSuggestion: suggestion.toLocaleLowerCase(),
     })
   );
