@@ -599,6 +599,10 @@ ContentBlocking::CompleteAllowAccessFor(
     return;
   }
 
+  if (!doc->GetChannel()) {
+    return;
+  }
+
   // Theoratically this can be done in the parent process. But right now,
   // we need the channel while notifying content blocking events, and
   // we don't have a trivial way to obtain the channel in the parent
