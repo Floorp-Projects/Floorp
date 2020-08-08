@@ -304,7 +304,7 @@ let ContentSearch = {
     return result;
   },
 
-  async addFormHistoryEntry(browser, entry = "") {
+  async addFormHistoryEntry(browser, entry = null) {
     let isPrivate = false;
     try {
       // isBrowserPrivate assumes that the passed-in browser has all the normal
@@ -314,7 +314,7 @@ let ContentSearch = {
     } catch (err) {
       return false;
     }
-    if (isPrivate || entry === "") {
+    if (isPrivate || !entry) {
       return false;
     }
     let browserData = this._suggestionDataForBrowser(browser, true);
@@ -322,7 +322,8 @@ let ContentSearch = {
       {
         op: "bump",
         fieldname: browserData.controller.formHistoryParam,
-        value: entry,
+        value: entry.value,
+        source: entry.engineName,
       },
       {
         handleCompletion: () => {},

@@ -43,23 +43,23 @@ var FormHistoryTestUtils = {
    * Adds values to form history.
    *
    * @param {string} fieldname The field name.
-   * @param {array} additions Array of objects describing the values to add,
-   *   each object must have a value property and can have a source property.
+   * @param {array} additions Array of entries describing the values to add.
+   *   Each entry can either be a string, or an object with the shape
+   *   { value, source}.
    * @returns {Promise} Resolved once the operation is complete.
    */
-  add(fieldname, additions = []) {
-    let promises = [];
+  async add(fieldname, additions = []) {
+    // Additions are made one by one, so multiple identical entries are properly
+    // applied.
+    additions = additions.map(v => (typeof v == "string" ? { value: v } : v));
     for (let { value, source } of additions) {
-      promises.push(
-        new Promise((resolve, reject) => {
-          FormHistory.update(
-            Object.assign({ fieldname }, { op: "bump", value, source }),
-            this.makeListener(resolve, reject)
-          );
-        })
-      );
+      await new Promise((resolve, reject) => {
+        FormHistory.update(
+          Object.assign({ fieldname }, { op: "bump", value, source }),
+          this.makeListener(resolve, reject)
+        );
+      });
     }
-    return Promise.all(promises);
   },
 
   /**
@@ -84,26 +84,21 @@ var FormHistoryTestUtils = {
    * If you want to remove all history, use clear() instead.
    *
    * @param {string} fieldname The field name.
-   * @param {array} removals Array of objects describing the values to remove,
-   *   each object must have a value property and can have a source property.
-   *   If source is specified, only the source relation will be removed, while
-   *   the global form history value persists.
+   * @param {array} removals Array of entries describing the values to add.
+   *   Each entry can either be a string, or an object with the shape
+   *   { value, source}. If source is specified, only the source relation will
+   *   be removed, while the global form history value persists.
    * @param {object} window The window containing the urlbar.
    * @returns {Promise} Resolved once the operation is complete.
    */
   remove(fieldname, removals) {
-    let promises = [];
-    for (let { value, source } of removals) {
-      promises.push(
-        new Promise((resolve, reject) => {
-          FormHistory.update(
-            Object.assign({ fieldname }, { op: "remove", value, source }),
-            this.makeListener(resolve, reject)
-          );
-        })
-      );
-    }
-    return Promise.all(promises);
+    let changes = removals.map(v => {
+      let criteria = typeof v == "string" ? { value: v } : v;
+      return Object.assign({ fieldname, op: "remove" }, criteria);
+    });
+    return new Promise((resolve, reject) => {
+      FormHistory.update(changes, this.makeListener(resolve, reject));
+    });
   },
 
   /**
