@@ -52,33 +52,143 @@ add_task(async function init() {
   });
 });
 
-// Opens the top-sites view, i.e., the view that's shown when the input hasn't
-// been edited.  The one-offs should be hidden.
-add_task(async function topSitesView() {
+// Opens the view without showing the one-offs.  They should be hidden and arrow
+// key selection should work properly.
+add_task(async function noOneOffs() {
+  // Do a search for "@" since we hide the one-offs in that case.
+  let value = "@";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "",
+    value,
     fireInputEvent: true,
   });
+  await TestUtils.waitForCondition(
+    () => !oneOffSearchButtons._rebuilding,
+    "Waiting for one-offs to finish rebuilding"
+  );
+
   Assert.equal(
     UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
     false,
     "One-offs should be hidden"
   );
+  assertState(-1, -1, value);
+
+  // Get the result count.  We don't care what the results are, just what the
+  // count is so that we can key through them all.
+  let resultCount = UrlbarTestUtils.getResultCount(window);
+
+  // Key down through all results.
+  for (let i = 0; i < resultCount; i++) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    assertState(i, -1);
+  }
+
+  // Key down again.  Nothing should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  assertState(-1, -1, value);
+
+  // Key down again.  The first result should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  assertState(0, -1);
+
+  // Key up.  Nothing should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  assertState(-1, -1, value);
+
+  // Key up through all the results.
+  for (let i = resultCount - 1; i >= 0; i--) {
+    EventUtils.synthesizeKey("KEY_ArrowUp");
+    assertState(i, -1);
+  }
+
+  // Key up again.  Nothing should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  assertState(-1, -1, value);
+
   await hidePopup();
 });
 
-// Opens the top-sites view with update2 enabled.  The one-offs should be shown.
-add_task(async function topSitesViewUpdate2() {
+// The same as the previous task but with update 2 enabled.  Opens the view
+// without showing the one-offs.  Makes sure they're hidden and that arrow key
+// selection works properly.
+add_task(async function noOneOffsUpdate2() {
   // Set the update2 prefs.
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.localOneOffs", true],
       ["browser.urlbar.update2.oneOffsRefresh", true],
     ],
   });
 
-  // Do a search.
+  // Do a search for "@" since we hide the one-offs in that case.
+  let value = "@";
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value,
+    fireInputEvent: true,
+  });
+  await TestUtils.waitForCondition(
+    () => !oneOffSearchButtons._rebuilding,
+    "Waiting for one-offs to finish rebuilding"
+  );
+
+  Assert.equal(
+    UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
+    false,
+    "One-offs should be hidden"
+  );
+  assertState(-1, -1, value);
+
+  // Get the result count.  We don't particularly care what the results are,
+  // just what the count is so that we can key through them all.
+  let resultCount = UrlbarTestUtils.getResultCount(window);
+
+  // Key down through all results.
+  for (let i = 0; i < resultCount; i++) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    assertState(i, -1);
+  }
+
+  // Key down again.  Nothing should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  assertState(-1, -1, value);
+
+  // Key down again.  The first result should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  assertState(0, -1);
+
+  // Key up.  Nothing should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  assertState(-1, -1, value);
+
+  // Key up through all the results.
+  for (let i = resultCount - 1; i >= 0; i--) {
+    EventUtils.synthesizeKey("KEY_ArrowUp");
+    assertState(i, -1);
+  }
+
+  // Key up again.  Nothing should be selected.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  assertState(-1, -1, value);
+
+  await hidePopup();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Opens the top-sites view with update2 enabled.  The one-offs should be shown.
+add_task(async function topSitesUpdate2() {
+  // Set the update2 prefs.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.localOneOffs", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+
+  // Do a search that shows top sites.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "",
