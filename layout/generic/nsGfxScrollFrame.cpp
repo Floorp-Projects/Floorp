@@ -6519,67 +6519,6 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
         mOuter, false, &compositionSize);
   }
 
-  // place the scrollcorner
-  if (mScrollCornerBox || mResizerBox) {
-    MOZ_ASSERT(!mScrollCornerBox || mScrollCornerBox->IsXULBoxFrame(),
-               "Must be a box frame!");
-
-    nsRect r(0, 0, 0, 0);
-    if (aContentArea.x != mScrollPort.x || scrollbarOnLeft) {
-      // scrollbar (if any) on left
-      r.x = aContentArea.x;
-      r.width = mScrollPort.x - aContentArea.x;
-      NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
-    } else {
-      // scrollbar (if any) on right
-      r.width = aContentArea.XMost() - mScrollPort.XMost();
-      r.x = aContentArea.XMost() - r.width;
-      NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
-    }
-    if (aContentArea.y != mScrollPort.y) {
-      NS_ERROR("top scrollbars not supported");
-    } else {
-      // scrollbar (if any) on bottom
-      r.height = aContentArea.YMost() - mScrollPort.YMost();
-      r.y = aContentArea.YMost() - r.height;
-      NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
-    }
-
-    if (mScrollCornerBox) {
-      nsBoxFrame::LayoutChildAt(aState, mScrollCornerBox, r);
-    }
-
-    if (hasResizer) {
-      // if a resizer is present, get its size. Assume a default size of 15
-      // pixels.
-      nscoord defaultSize = nsPresContext::CSSPixelsToAppUnits(15);
-      nsSize resizerMinSize = mResizerBox->GetXULMinSize(aState);
-
-      nscoord vScrollbarWidth =
-          mVScrollbarBox ? mVScrollbarBox->GetXULPrefSize(aState).width
-                         : defaultSize;
-      r.width =
-          std::max(std::max(r.width, vScrollbarWidth), resizerMinSize.width);
-      if (aContentArea.x == mScrollPort.x && !scrollbarOnLeft) {
-        r.x = aContentArea.XMost() - r.width;
-      }
-
-      nscoord hScrollbarHeight =
-          mHScrollbarBox ? mHScrollbarBox->GetXULPrefSize(aState).height
-                         : defaultSize;
-      r.height =
-          std::max(std::max(r.height, hScrollbarHeight), resizerMinSize.height);
-      if (aContentArea.y == mScrollPort.y) {
-        r.y = aContentArea.YMost() - r.height;
-      }
-
-      nsBoxFrame::LayoutChildAt(aState, mResizerBox, r);
-    } else if (mResizerBox) {
-      // otherwise lay out the resizer with an empty rectangle
-      nsBoxFrame::LayoutChildAt(aState, mResizerBox, nsRect());
-    }
-  }
-
   nsPresContext* presContext = mScrolledFrame->PresContext();
   nsRect vRect;
   if (mVScrollbarBox) {
@@ -6652,6 +6591,67 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     }
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer,
                                   ScrollDirection::eHorizontal);
+  }
+
+  // place the scrollcorner
+  if (mScrollCornerBox || mResizerBox) {
+    MOZ_ASSERT(!mScrollCornerBox || mScrollCornerBox->IsXULBoxFrame(),
+               "Must be a box frame!");
+
+    nsRect r(0, 0, 0, 0);
+    if (aContentArea.x != mScrollPort.x || scrollbarOnLeft) {
+      // scrollbar (if any) on left
+      r.x = aContentArea.x;
+      r.width = mScrollPort.x - aContentArea.x;
+      NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
+    } else {
+      // scrollbar (if any) on right
+      r.width = aContentArea.XMost() - mScrollPort.XMost();
+      r.x = aContentArea.XMost() - r.width;
+      NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
+    }
+    if (aContentArea.y != mScrollPort.y) {
+      NS_ERROR("top scrollbars not supported");
+    } else {
+      // scrollbar (if any) on bottom
+      r.height = aContentArea.YMost() - mScrollPort.YMost();
+      r.y = aContentArea.YMost() - r.height;
+      NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
+    }
+
+    if (mScrollCornerBox) {
+      nsBoxFrame::LayoutChildAt(aState, mScrollCornerBox, r);
+    }
+
+    if (hasResizer) {
+      // if a resizer is present, get its size. Assume a default size of 15
+      // pixels.
+      nscoord defaultSize = nsPresContext::CSSPixelsToAppUnits(15);
+      nsSize resizerMinSize = mResizerBox->GetXULMinSize(aState);
+
+      nscoord vScrollbarWidth =
+          mVScrollbarBox ? mVScrollbarBox->GetXULPrefSize(aState).width
+                         : defaultSize;
+      r.width =
+          std::max(std::max(r.width, vScrollbarWidth), resizerMinSize.width);
+      if (aContentArea.x == mScrollPort.x && !scrollbarOnLeft) {
+        r.x = aContentArea.XMost() - r.width;
+      }
+
+      nscoord hScrollbarHeight =
+          mHScrollbarBox ? mHScrollbarBox->GetXULPrefSize(aState).height
+                         : defaultSize;
+      r.height =
+          std::max(std::max(r.height, hScrollbarHeight), resizerMinSize.height);
+      if (aContentArea.y == mScrollPort.y) {
+        r.y = aContentArea.YMost() - r.height;
+      }
+
+      nsBoxFrame::LayoutChildAt(aState, mResizerBox, r);
+    } else if (mResizerBox) {
+      // otherwise lay out the resizer with an empty rectangle
+      nsBoxFrame::LayoutChildAt(aState, mResizerBox, nsRect());
+    }
   }
 
   if (!LookAndFeel::GetInt(LookAndFeel::IntID::AllowOverlayScrollbarsOverlap)) {
