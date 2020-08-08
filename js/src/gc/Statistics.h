@@ -118,7 +118,7 @@ struct Trigger {
   _(EvictNursery, "evict", PhaseKind::EVICT_NURSERY)                \
   _(Barriers, "brrier", PhaseKind::BARRIER)
 
-const char* ExplainAbortReason(gc::AbortReason reason);
+const char* ExplainAbortReason(GCAbortReason reason);
 const char* ExplainInvocationKind(JSGCInvocationKind gckind);
 
 /*
@@ -186,8 +186,8 @@ struct Statistics {
   void sweptZone() { ++zoneStats.sweptZoneCount; }
   void sweptCompartment() { ++zoneStats.sweptCompartmentCount; }
 
-  void reset(gc::AbortReason reason) {
-    MOZ_ASSERT(reason != gc::AbortReason::None);
+  void reset(GCAbortReason reason) {
+    MOZ_ASSERT(reason != GCAbortReason::None);
     if (!aborted) {
       slices_.back().resetReason = reason;
     }
@@ -196,14 +196,14 @@ struct Statistics {
   void measureInitialHeapSize();
   void adoptHeapSizeDuringIncrementalGC(Zone* mergedZone);
 
-  void nonincremental(gc::AbortReason reason) {
-    MOZ_ASSERT(reason != gc::AbortReason::None);
+  void nonincremental(GCAbortReason reason) {
+    MOZ_ASSERT(reason != GCAbortReason::None);
     nonincrementalReason_ = reason;
     writeLogMessage("Non-incremental reason: %s", nonincrementalReason());
   }
 
   bool nonincremental() const {
-    return nonincrementalReason_ != gc::AbortReason::None;
+    return nonincrementalReason_ != GCAbortReason::None;
   }
 
   const char* nonincrementalReason() const {
@@ -269,7 +269,7 @@ struct Statistics {
     mozilla::Maybe<Trigger> trigger;
     gc::State initialState = gc::State::NotActive;
     gc::State finalState = gc::State::NotActive;
-    gc::AbortReason resetReason = gc::AbortReason::None;
+    GCAbortReason resetReason = GCAbortReason::None;
     TimeStamp start;
     TimeStamp end;
     size_t startFaults = 0;
@@ -278,7 +278,7 @@ struct Statistics {
     PhaseTimeTable maxParallelTimes;
 
     TimeDuration duration() const { return end - start; }
-    bool wasReset() const { return resetReason != gc::AbortReason::None; }
+    bool wasReset() const { return resetReason != GCAbortReason::None; }
   };
 
   typedef Vector<SliceData, 8, SystemAllocPolicy> SliceDataVector;
@@ -332,7 +332,7 @@ struct Statistics {
 
   JSGCInvocationKind gckind;
 
-  gc::AbortReason nonincrementalReason_;
+  GCAbortReason nonincrementalReason_;
 
   SliceDataVector slices_;
 
