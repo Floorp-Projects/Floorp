@@ -141,7 +141,7 @@ def install_certificates():
 
 
 def install_chrome(channel):
-    if channel in ("experimental", "dev"):
+    if channel in ("experimental", "dev", "nightly"):
         deb_archive = "google-chrome-unstable_current_amd64.deb"
     elif channel == "beta":
         deb_archive = "google-chrome-beta_current_amd64.deb"
@@ -323,10 +323,7 @@ def setup_environment(args):
 
     if "chrome" in args.browser:
         assert args.channel is not None
-        # Chrome Nightly will be installed via `wpt run --install-browser`
-        # later in taskcluster-run.py.
-        if args.channel != "nightly":
-            install_chrome(args.channel)
+        install_chrome(args.channel)
     elif "webkitgtk_minibrowser" in args.browser:
         assert args.channel is not None
         install_webkitgtk(args.channel)
