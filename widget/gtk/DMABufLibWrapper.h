@@ -134,7 +134,6 @@ class nsDMABufDevice {
   int GetGbmDeviceFd();
 
   bool IsDMABufEnabled();
-  bool IsDMABufBasicEnabled();
   bool IsDMABufTexturesEnabled();
   bool IsDMABufVideoTexturesEnabled();
   bool IsDMABufWebGLEnabled();

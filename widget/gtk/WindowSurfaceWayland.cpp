@@ -6,7 +6,6 @@
 
 #include "nsWaylandDisplay.h"
 #include "WindowSurfaceWayland.h"
-#include "DMABufLibWrapper.h"
 
 #include "nsPrintfCString.h"
 #include "mozilla/gfx/2D.h"
@@ -39,9 +38,6 @@ extern mozilla::LazyLogModule gWidgetWaylandLog;
 
 namespace mozilla {
 namespace widget {
-
-bool WindowSurfaceWayland::mUseDMABuf = false;
-bool WindowSurfaceWayland::mUseDMABufInitialized = false;
 
 /*
   Wayland multi-thread rendering scheme
@@ -104,33 +100,6 @@ bool WindowSurfaceWayland::mUseDMABufInitialized = false;
   |  -----------------------      |
   ---------------------------------
 
-----------------------------------------------------------------
-When WindowBackBufferDMABuf is used it's similar to
-WindowBackBufferShm scheme:
-
-    |
-    |
-    |
-  -----------------------------------         ------------------
-  | WindowSurfaceWayland             |<------>| nsWindow       |
-  |                                  |        ------------------
-  |  --------------------------      |
-  |  |WindowBackBufferDMABuf  |      |
-  |  |                        |      |
-  |  | ---------------------- |      |
-  |  | |DMABufSurface         |      |
-  |  | ---------------------- |      |
-  |  --------------------------      |
-  |                                  |
-  |  --------------------------      |
-  |  |WindowBackBufferDMABuf  |      |
-  |  |                        |      |
-  |  | ---------------------- |      |
-  |  | |DMABufSurface         |      |
-  |  | ---------------------- |      |
-  |  --------------------------      |
-  -----------------------------------
-
 
 nsWaylandDisplay
 
@@ -186,15 +155,6 @@ We allocate shared memory (shm) by mmap(..., MAP_SHARED,...) as an interface
 between us and wayland compositor. We draw our graphics data to the shm and
 handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 (wl_buffer/wl_surface).
-
-WindowBackBufferDMABuf
-
-It's WindowBackBuffer implementation based on DMA Buffer.
-It owns wl_buffer object, owns DMABufSurface
-(which provides the DMA Buffer) and ties them together.
-
-WindowBackBufferDMABuf backend is used only when DMABufSurface is
-available and widget.wayland_dmabuf_backend.enabled preference is set.
 
 */
 
@@ -419,72 +379,6 @@ already_AddRefed<gfx::DrawTarget> WindowBackBufferShm::Lock() {
       BUFFER_BPP * mWidth, GetSurfaceFormat());
 }
 
-WindowBackBufferDMABuf::WindowBackBufferDMABuf(
-    WindowSurfaceWayland* aWindowSurfaceWayland, int aWidth, int aHeight)
-    : WindowBackBuffer(aWindowSurfaceWayland) {
-  mDMAbufSurface = DMABufSurfaceRGBA::CreateDMABufSurface(
-      aWidth, aHeight, DMABUF_ALPHA | DMABUF_CREATE_WL_BUFFER);
-  LOGWAYLAND(
-      ("WindowBackBufferDMABuf::WindowBackBufferDMABuf [%p] Created DMABuf "
-       "buffer [%d x %d]\n",
-       (void*)this, aWidth, aHeight));
-}
-
-WindowBackBufferDMABuf::~WindowBackBufferDMABuf() = default;
-
-already_AddRefed<gfx::DrawTarget> WindowBackBufferDMABuf::Lock() {
-  LOGWAYLAND(
-      ("WindowBackBufferDMABuf::Lock [%p] [%d x %d] wl_buffer %p ID %d\n",
-       (void*)this, GetWidth(), GetHeight(), (void*)GetWlBuffer(),
-       GetWlBuffer() ? wl_proxy_get_id((struct wl_proxy*)GetWlBuffer()) : -1));
-
-  uint32_t stride;
-  void* pixels = mDMAbufSurface->Map(&stride);
-  gfx::IntSize lockSize(GetWidth(), GetHeight());
-  return gfxPlatform::CreateDrawTargetForData(
-      static_cast<unsigned char*>(pixels), lockSize, stride,
-      GetSurfaceFormat());
-}
-
-void WindowBackBufferDMABuf::Unlock() { mDMAbufSurface->Unmap(); }
-
-bool WindowBackBufferDMABuf::IsAttached() {
-  return mDMAbufSurface->WLBufferIsAttached();
-}
-
-void WindowBackBufferDMABuf::SetAttached() {
-  return mDMAbufSurface->WLBufferSetAttached();
-}
-
-int WindowBackBufferDMABuf::GetWidth() { return mDMAbufSurface->GetWidth(); }
-
-int WindowBackBufferDMABuf::GetHeight() { return mDMAbufSurface->GetHeight(); }
-
-wl_buffer* WindowBackBufferDMABuf::GetWlBuffer() {
-  return mDMAbufSurface->GetWLBuffer();
-}
-
-bool WindowBackBufferDMABuf::IsLocked() { return mDMAbufSurface->IsMapped(); }
-
-bool WindowBackBufferDMABuf::Resize(int aWidth, int aHeight) {
-  return mDMAbufSurface->Resize(aWidth, aHeight);
-}
-
-bool WindowBackBufferDMABuf::SetImageDataFromBuffer(
-    class WindowBackBuffer* aSourceBuffer) {
-  NS_WARNING("WindowBackBufferDMABuf copy is not implemented!");
-  return true;
-}
-
-void WindowBackBufferDMABuf::Detach(wl_buffer* aBuffer) {
-  mDMAbufSurface->WLBufferDetach();
-
-  // Commit any potential cached drawings from latest Lock()/Commit() cycle.
-  mWindowSurfaceWayland->CommitWaylandBuffer();
-}
-
-void WindowBackBufferDMABuf::Clear() { mDMAbufSurface->Clear(); }
-
 static void frame_callback_handler(void* data, struct wl_callback* callback,
                                    uint32_t time) {
   auto surface = reinterpret_cast<WindowSurfaceWayland*>(data);
@@ -512,7 +406,6 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mIsMainThread(NS_IsMainThread()) {
   for (int i = 0; i < BACK_BUFFER_NUM; i++) {
     mShmBackupBuffer[i] = nullptr;
-    mDMABackupBuffer[i] = nullptr;
   }
 }
 
@@ -538,51 +431,15 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
     if (mShmBackupBuffer[i]) {
       delete mShmBackupBuffer[i];
     }
-    if (mDMABackupBuffer[i]) {
-      delete mDMABackupBuffer[i];
-    }
   }
 }
 
-bool WindowSurfaceWayland::UseDMABufBackend() {
-  if (!mUseDMABufInitialized) {
-    mUseDMABuf = GetDMABufDevice()->IsDMABufBasicEnabled();
-    LOGWAYLAND(("WindowSurfaceWayland::UseDMABufBackend DMABuf state %d\n",
-                mUseDMABuf));
-    mUseDMABufInitialized = true;
-  }
-  return mUseDMABuf;
-}
-
-WindowBackBuffer* WindowSurfaceWayland::CreateWaylandBufferInternal(
-    int aWidth, int aHeight, bool aAllowDMABufBackend) {
-  if (aAllowDMABufBackend && UseDMABufBackend()) {
-    WindowBackBuffer* buffer =
-        new WindowBackBufferDMABuf(this, aWidth, aHeight);
-
-    if (buffer && buffer->GetWlBuffer() != nullptr) {
-      return buffer;
-    }
-
-    // Buffer was created as incomplete, delete it.
-    delete buffer;
-
-    NS_WARNING("Wayland DMABuf failed, switched back to Shm backend!");
-    mUseDMABuf = false;
-  }
-
-  return new WindowBackBufferShm(this, aWidth, aHeight);
-}
-
-WindowBackBuffer* WindowSurfaceWayland::CreateWaylandBuffer(
-    int aWidth, int aHeight, bool aAllowDMABufBackend) {
-  bool createDMABufBuffer = aAllowDMABufBackend && UseDMABufBackend();
-  WindowBackBuffer** backBufferStore =
-      createDMABufBuffer ? mDMABackupBuffer : mShmBackupBuffer;
+WindowBackBuffer* WindowSurfaceWayland::CreateWaylandBuffer(int aWidth,
+                                                            int aHeight) {
   int availableBuffer;
   for (availableBuffer = 0; availableBuffer < BACK_BUFFER_NUM;
        availableBuffer++) {
-    if (!backBufferStore[availableBuffer]) {
+    if (!mShmBackupBuffer[availableBuffer]) {
       break;
     }
   }
@@ -592,25 +449,21 @@ WindowBackBuffer* WindowSurfaceWayland::CreateWaylandBuffer(
     return nullptr;
   }
 
-  WindowBackBuffer* buffer =
-      CreateWaylandBufferInternal(aWidth, aHeight, aAllowDMABufBackend);
+  WindowBackBuffer* buffer = new WindowBackBufferShm(this, aWidth, aHeight);
   if (buffer) {
-    backBufferStore[availableBuffer] = buffer;
+    mShmBackupBuffer[availableBuffer] = buffer;
   }
 
   return buffer;
 }
 
 WindowBackBuffer* WindowSurfaceWayland::WaylandBufferFindAvailable(
-    int aWidth, int aHeight, bool aUseDMABufBackend) {
+    int aWidth, int aHeight) {
   int availableBuffer;
-  WindowBackBuffer** backBufferStore =
-      aUseDMABufBackend ? mDMABackupBuffer : mShmBackupBuffer;
-
   // Try to find a buffer which matches the size
   for (availableBuffer = 0; availableBuffer < BACK_BUFFER_NUM;
        availableBuffer++) {
-    WindowBackBuffer* buffer = backBufferStore[availableBuffer];
+    WindowBackBuffer* buffer = mShmBackupBuffer[availableBuffer];
     if (buffer && !buffer->IsAttached() &&
         buffer->IsMatchingSize(aWidth, aHeight)) {
       return buffer;
@@ -620,7 +473,7 @@ WindowBackBuffer* WindowSurfaceWayland::WaylandBufferFindAvailable(
   // Try to find any buffer
   for (availableBuffer = 0; availableBuffer < BACK_BUFFER_NUM;
        availableBuffer++) {
-    WindowBackBuffer* buffer = backBufferStore[availableBuffer];
+    WindowBackBuffer* buffer = mShmBackupBuffer[availableBuffer];
     if (buffer && !buffer->IsAttached()) {
       return buffer;
     }
@@ -629,21 +482,18 @@ WindowBackBuffer* WindowSurfaceWayland::WaylandBufferFindAvailable(
   return nullptr;
 }
 
-WindowBackBuffer* WindowSurfaceWayland::SetNewWaylandBuffer(
-    bool aUseDMABufBackend) {
+WindowBackBuffer* WindowSurfaceWayland::SetNewWaylandBuffer() {
   LOGWAYLAND(
       ("WindowSurfaceWayland::NewWaylandBuffer [%p] Requested buffer [%d "
-       "x %d] DMABuf %d\n",
-       (void*)this, mWLBufferRect.width, mWLBufferRect.height,
-       aUseDMABufBackend));
+       "x %d]\n",
+       (void*)this, mWLBufferRect.width, mWLBufferRect.height));
 
-  mWaylandBuffer = WaylandBufferFindAvailable(
-      mWLBufferRect.width, mWLBufferRect.height, aUseDMABufBackend);
+  mWaylandBuffer =
+      WaylandBufferFindAvailable(mWLBufferRect.width, mWLBufferRect.height);
   if (!mWaylandBuffer) {
-    mWaylandBuffer = CreateWaylandBuffer(
-        mWLBufferRect.width, mWLBufferRect.height, aUseDMABufBackend);
+    mWaylandBuffer =
+        CreateWaylandBuffer(mWLBufferRect.width, mWLBufferRect.height);
   }
-
   return mWaylandBuffer;
 }
 
@@ -655,7 +505,7 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferRecent() {
 
   // There's no buffer created yet, create a new one for partial screen updates.
   if (!mWaylandBuffer) {
-    return SetNewWaylandBuffer(/* aAllowDMABufBackend */ false);
+    return SetNewWaylandBuffer();
   }
 
   if (mWaylandBuffer->IsAttached()) {
@@ -684,9 +534,8 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferWithSwitch() {
        (void*)this, mWLBufferRect.width, mWLBufferRect.height));
 
   // There's no buffer created yet or actual buffer is attached, get a new one.
-  // Use DMABuf for fullscreen updates only.
   if (!mWaylandBuffer || mWaylandBuffer->IsAttached()) {
-    return SetNewWaylandBuffer(UseDMABufBackend() && mWaylandFullscreenDamage);
+    return SetNewWaylandBuffer();
   }
 
   // Reuse existing buffer
@@ -707,7 +556,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
   mWLBufferRect = LayoutDeviceIntRect(region.GetBounds());
 
   // mCanSwitchWaylandBuffer set means we're getting buffer for fullscreen
-  // update. We can use DMABuf and we can get a new buffer for drawing.
+  // update.
   WindowBackBuffer* buffer = mCanSwitchWaylandBuffer
                                  ? GetWaylandBufferWithSwitch()
                                  : GetWaylandBufferRecent();
