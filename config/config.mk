@@ -406,5 +406,5 @@ endif # ! WINNT
 
 # Enable verbose logs when not using `make -s`
 ifeq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
-BUILD_VERBOSE_LOG = 1
+export BUILD_VERBOSE_LOG = 1
 endif
