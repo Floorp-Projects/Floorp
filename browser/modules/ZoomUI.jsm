@@ -13,12 +13,6 @@ const gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const gZoomPropertyName = "browser.content.full-zoom";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
-
 var ZoomUI = {
   init(aWindow) {
     aWindow.addEventListener("EndSwapDocShells", onEndSwapDocShells, true);
@@ -129,8 +123,7 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
     return;
   }
 
-  let appMenuZoomReset = PanelMultiView.getViewNode(
-    win.document,
+  let appMenuZoomReset = win.document.getElementById(
     "appMenu-zoomReset-button"
   );
   let customizableZoomControls = win.document.getElementById("zoom-controls");

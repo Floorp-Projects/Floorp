@@ -483,10 +483,9 @@ DevToolsStartup.prototype = {
       .getElementById("webDeveloperMenu")
       .setAttribute("hidden", "true");
     // This will hide the "Web Developer" item in the hamburger menu.
-    PanelMultiView.getViewNode(
-      window.document,
-      "appMenu-developer-button"
-    ).setAttribute("hidden", "true");
+    window.document
+      .getElementById("appMenu-developer-button")
+      .setAttribute("hidden", "true");
   },
 
   onFirstWindowReady(window) {
