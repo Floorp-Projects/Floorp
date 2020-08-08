@@ -12,15 +12,11 @@ from pathlib import Path
 
 from mozperftest.utils import install_package
 from mozperftest.test.noderunner import NodeRunner
-from mozperftest.test.browsertime.setup import (
-    system_prerequisites,
-    append_system_env,
-)
 from mozperftest.test.browsertime.script import ScriptInfo
 
 
 BROWSERTIME_SRC_ROOT = Path(__file__).parent
-PILLOW_VERSION = "6.2.1"
+PILLOW_VERSION = "7.2.0"
 PYSSIM_VERSION = "0.4"
 
 
@@ -122,7 +118,20 @@ class BrowsertimeRunner(NodeRunner):
     @property
     def browsertime_js(self):
         root = os.environ.get("BROWSERTIME", self.state_path)
-        return Path(root, "node_modules", "browsertime", "bin", "browsertime.js")
+        path = Path(root, "node_modules", "browsertime", "bin", "browsertime.js")
+        if path.exists():
+            os.environ["BROWSERTIME_JS"] = str(path)
+        return path
+
+    @property
+    def visualmetrics_py(self):
+        root = os.environ.get("BROWSERTIME", self.state_path)
+        path = Path(
+            root, "node_modules", "browsertime", "browsertime", "visualmetrics.py"
+        )
+        if path.exists():
+            os.environ["VISUALMETRICS_PY"] = str(path)
+        return path
 
     def setup(self):
         """Install browsertime and visualmetrics.py prerequisites and the Node.js package.
@@ -148,13 +157,12 @@ class BrowsertimeRunner(NodeRunner):
 
         # check if the browsertime package has been deployed correctly
         # for this we just check for the browsertime directory presence
-        if self.browsertime_js.exists() and not self.get_arg("clobber"):
+        if (
+            self.visualmetrics_py.exists()
+            and self.browsertime_js.exists()
+            and not self.get_arg("clobber")
+        ):
             return
-
-        if install_url is None:
-            system_prerequisites(
-                str(self.state_path), str(self.artifact_cache_path), self.log, self.info
-            )
 
         # preparing ~/.mozbuild/browsertime
         for file in ("package.json", "package-lock.json"):
@@ -222,10 +230,6 @@ class BrowsertimeRunner(NodeRunner):
             should_clobber=should_clobber,
             no_optional=install_url or automation,
         )
-
-    def append_env(self, append_path=True):
-        env = super(BrowsertimeRunner, self).append_env(append_path)
-        return append_system_env(env, str(self.state_path), append_path)
 
     def extra_default_args(self, args=[]):
         # Add Mozilla-specific default arguments.  This is tricky because browsertime is quite
@@ -331,6 +335,10 @@ class BrowsertimeRunner(NodeRunner):
 
         if self.get_arg("verbose"):
             args += ["-vvv"]
+
+        # if the visualmetrics layer is activated, we want to feed it
+        if self.get_arg("visualmetrics"):
+            args += ["--video", "true"]
 
         extra_options = self.get_arg("extra-options")
         if extra_options:
