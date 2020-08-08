@@ -581,6 +581,10 @@ class FormAutofillParent extends JSWindowActorParent {
   }
 
   async _onCreditCardSubmit(creditCard, browser, timeStartedFillingMS) {
+    if (FormAutofill.isAutofillCreditCardsHideUI) {
+      return false;
+    }
+
     // Updates the used status for shield/heartbeat to recognize users who have
     // used Credit Card Autofill.
     let setUsedStatus = status => {

@@ -591,3 +591,92 @@ add_task(async function test_histogram() {
 
   assertHistogram(CC_NUM_USES_HISTOGRAM, {});
 });
+
+add_task(async function test_submit_creditCard_new_with_hidden_ui() {
+  const AUTOFILL_CREDITCARDS_HIDE_UI_PREF =
+    "extensions.formautofill.creditCards.hideui";
+
+  Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
+  Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
+  Services.telemetry.setEventRecordingEnabled("creditcard", true);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [CREDITCARDS_USED_STATUS_PREF, 0],
+      [AUTOFILL_CREDITCARDS_HIDE_UI_PREF, true],
+    ],
+  });
+
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      await openPopupOn(browser, "form #cc-number").then(
+        () => {
+          return Promise.reject("Popup should not be displayed");
+        },
+        () => {
+          ok(true, "Popup has not been displayed");
+        }
+      );
+
+      await SpecialPowers.spawn(browser, [], async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+
+        name.focus();
+        name.setUserInput("User 1");
+
+        form.querySelector("#cc-number").setUserInput("5038146897157463");
+        form.querySelector("#cc-exp-month").setUserInput("12");
+        form.querySelector("#cc-exp-year").setUserInput("2017");
+        form.querySelector("#cc-type").value = "mastercard";
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await sleep(1000);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+    }
+  );
+
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
+  SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_HIDE_UI_PREF);
+
+  assertHistogram(CC_NUM_USES_HISTOGRAM, { 0: 1 });
+
+  let expected_content = [
+    ["creditcard", "detected", "cc_form"],
+    [
+      "creditcard",
+      "submitted",
+      "cc_form",
+      undefined,
+      {
+        fields_not_auto: "6",
+        fields_auto: "0",
+        fields_modified: "0",
+      },
+    ],
+  ];
+  await assertTelemetry(expected_content, []);
+  await removeAllRecords();
+
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("content"),
+    "formautofill.creditCards.detected_sections_count",
+    1,
+    "There should be 1 sections detected."
+  );
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("content"),
+    "formautofill.creditCards.submitted_sections_count",
+    1,
+    "There should be 1 section submitted."
+  );
+});
