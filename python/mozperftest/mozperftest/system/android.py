@@ -15,7 +15,7 @@ from mozperftest.utils import download_file
 _ROOT_URL = "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
 _FENIX_NIGHTLY_BUILDS = (
     "mobile.v2.fenix.nightly.latest.{architecture}"
-    "/artifacts/public/build/{architecture}/geckoNightly/target.apk"
+    "/artifacts/public/build/{architecture}/target.apk"
 )
 _GV_BUILDS = "gecko.v2.mozilla-central.nightly.latest.mobile.android-"
 _REFBROW_BUILDS = (
