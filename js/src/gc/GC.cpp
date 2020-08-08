@@ -6470,7 +6470,7 @@ JS_PUBLIC_API JS::HeapState JS::RuntimeHeapState() {
 }
 
 GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
-    gc::AbortReason reason) {
+    GCAbortReason reason) {
   // Drop as much work as possible from an ongoing incremental GC so
   // we can start a new GC after it has finished.
   if (incrementalState == State::NotActive) {
@@ -6693,7 +6693,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       if (isIncremental && !hasValidGrayRootsBuffer()) {
         budget.makeUnlimited();
         isIncremental = false;
-        stats().nonincremental(AbortReason::GrayRootBufferingFailed);
+        stats().nonincremental(GCAbortReason::GrayRootBufferingFailed);
       }
 
       incrementalState = State::Mark;
@@ -6867,14 +6867,14 @@ IncrementalProgress GCRuntime::waitForBackgroundTask(GCParallelTask& task,
   return Finished;
 }
 
-gc::AbortReason gc::IsIncrementalGCUnsafe(JSRuntime* rt) {
+GCAbortReason gc::IsIncrementalGCUnsafe(JSRuntime* rt) {
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
   if (!rt->gc.isIncrementalGCAllowed()) {
-    return gc::AbortReason::IncrementalDisabled;
+    return GCAbortReason::IncrementalDisabled;
   }
 
-  return gc::AbortReason::None;
+  return GCAbortReason::None;
 }
 
 inline void GCRuntime::checkZoneIsScheduled(Zone* zone, JS::GCReason reason,
@@ -6901,7 +6901,7 @@ inline void GCRuntime::checkZoneIsScheduled(Zone* zone, JS::GCReason reason,
 GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     bool nonincrementalByAPI, JS::GCReason reason, SliceBudget& budget) {
   if (nonincrementalByAPI) {
-    stats().nonincremental(gc::AbortReason::NonIncrementalRequested);
+    stats().nonincremental(GCAbortReason::NonIncrementalRequested);
     budget.makeUnlimited();
 
     // Reset any in progress incremental GC if this was triggered via the
@@ -6909,7 +6909,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     // the caller expects this GC to collect certain objects, and we need
     // to make sure to collect everything possible.
     if (reason != JS::GCReason::ALLOC_TRIGGER) {
-      return resetIncrementalGC(gc::AbortReason::NonIncrementalRequested);
+      return resetIncrementalGC(GCAbortReason::NonIncrementalRequested);
     }
 
     return IncrementalResult::Ok;
@@ -6917,27 +6917,27 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
 
   if (reason == JS::GCReason::ABORT_GC) {
     budget.makeUnlimited();
-    stats().nonincremental(gc::AbortReason::AbortRequested);
-    return resetIncrementalGC(gc::AbortReason::AbortRequested);
+    stats().nonincremental(GCAbortReason::AbortRequested);
+    return resetIncrementalGC(GCAbortReason::AbortRequested);
   }
 
-  AbortReason unsafeReason = IsIncrementalGCUnsafe(rt);
-  if (unsafeReason == AbortReason::None) {
+  GCAbortReason unsafeReason = IsIncrementalGCUnsafe(rt);
+  if (unsafeReason == GCAbortReason::None) {
     if (reason == JS::GCReason::COMPARTMENT_REVIVED) {
-      unsafeReason = gc::AbortReason::CompartmentRevived;
+      unsafeReason = GCAbortReason::CompartmentRevived;
     } else if (mode != JSGC_MODE_INCREMENTAL &&
                mode != JSGC_MODE_ZONE_INCREMENTAL) {
-      unsafeReason = gc::AbortReason::ModeChange;
+      unsafeReason = GCAbortReason::ModeChange;
     }
   }
 
-  if (unsafeReason != AbortReason::None) {
+  if (unsafeReason != GCAbortReason::None) {
     budget.makeUnlimited();
     stats().nonincremental(unsafeReason);
     return resetIncrementalGC(unsafeReason);
   }
 
-  AbortReason resetReason = AbortReason::None;
+  GCAbortReason resetReason = GCAbortReason::None;
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     if (!zone->canCollect()) {
       continue;
@@ -6947,9 +6947,9 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
         zone->gcHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "GC bytes");
       budget.makeUnlimited();
-      stats().nonincremental(AbortReason::GCBytesTrigger);
+      stats().nonincremental(GCAbortReason::GCBytesTrigger);
       if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
-        resetReason = AbortReason::GCBytesTrigger;
+        resetReason = GCAbortReason::GCBytesTrigger;
       }
     }
 
@@ -6957,9 +6957,9 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
         zone->mallocHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "malloc bytes");
       budget.makeUnlimited();
-      stats().nonincremental(AbortReason::MallocBytesTrigger);
+      stats().nonincremental(GCAbortReason::MallocBytesTrigger);
       if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
-        resetReason = AbortReason::MallocBytesTrigger;
+        resetReason = GCAbortReason::MallocBytesTrigger;
       }
     }
 
@@ -6967,20 +6967,20 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
         zone->jitHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "JIT code bytes");
       budget.makeUnlimited();
-      stats().nonincremental(AbortReason::JitCodeBytesTrigger);
+      stats().nonincremental(GCAbortReason::JitCodeBytesTrigger);
       if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
-        resetReason = AbortReason::JitCodeBytesTrigger;
+        resetReason = GCAbortReason::JitCodeBytesTrigger;
       }
     }
 
     if (isIncrementalGCInProgress() &&
         zone->isGCScheduled() != zone->wasGCStarted()) {
       budget.makeUnlimited();
-      resetReason = AbortReason::ZoneChange;
+      resetReason = GCAbortReason::ZoneChange;
     }
   }
 
-  if (resetReason != AbortReason::None) {
+  if (resetReason != GCAbortReason::None) {
     return resetIncrementalGC(resetReason);
   }
 

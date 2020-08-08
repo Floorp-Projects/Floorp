@@ -84,10 +84,10 @@ JS_PUBLIC_API bool JS::InternalGCReason(JS::GCReason reason) {
   return reason < JS::GCReason::FIRST_FIREFOX_REASON;
 }
 
-const char* js::gcstats::ExplainAbortReason(gc::AbortReason reason) {
+const char* js::gcstats::ExplainAbortReason(GCAbortReason reason) {
   switch (reason) {
 #define SWITCH_REASON(name, _) \
-  case gc::AbortReason::name:  \
+  case GCAbortReason::name:    \
     return #name;
     GC_ABORT_REASONS(SWITCH_REASON)
 
@@ -682,7 +682,7 @@ void Statistics::formatJsonDescription(JSONPrinter& json) const {
   json.property("scc_sweep_total", sccTotal, JSONPrinter::MILLISECONDS);
   json.property("scc_sweep_max_pause", sccLongest, JSONPrinter::MILLISECONDS);
 
-  if (nonincrementalReason_ != AbortReason::None) {
+  if (nonincrementalReason_ != GCAbortReason::None) {
     json.property("nonincremental_reason",
                   ExplainAbortReason(nonincrementalReason_));
   }
@@ -746,7 +746,7 @@ Statistics::Statistics(GCRuntime* gc)
     : gc(gc),
       gcTimerFile(nullptr),
       gcDebugFile(nullptr),
-      nonincrementalReason_(gc::AbortReason::None),
+      nonincrementalReason_(GCAbortReason::None),
       creationTime_(ReallyNow()),
       allocsSinceMinorGC({0, 0}),
       preTotalHeapBytes(0),
@@ -994,7 +994,7 @@ void Statistics::beginGC(JSGCInvocationKind kind,
   slices_.clearAndFree();
   sccTimes.clearAndFree();
   gckind = kind;
-  nonincrementalReason_ = gc::AbortReason::None;
+  nonincrementalReason_ = GCAbortReason::None;
 
   preTotalHeapBytes = gc->heapSize.bytes();
 
@@ -1592,8 +1592,8 @@ void Statistics::printSliceProfile() {
   TimeDuration ts = slice.end - creationTime();
 
   bool shrinking = gckind == GC_SHRINK;
-  bool reset = slice.resetReason != AbortReason::None;
-  bool nonIncremental = nonincrementalReason_ != AbortReason::None;
+  bool reset = slice.resetReason != GCAbortReason::None;
+  bool nonIncremental = nonincrementalReason_ != GCAbortReason::None;
   bool full = zoneStats.isFullCollection();
 
   fprintf(stderr, "MajorGC: %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s ",
