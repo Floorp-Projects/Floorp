@@ -51,6 +51,7 @@ var UrlbarTestUtils = {
     this._testScope = scope;
     if (scope) {
       this.Assert = scope.Assert;
+      this.EventUtils = scope.EventUtils;
     }
   },
 
@@ -372,6 +373,7 @@ var UrlbarTestUtils = {
    *   The browser window.
    * @param {object} expectedSearchMode
    *   The expected search mode object.
+   * @note Can only be used if UrlbarTestUtils has been initialized with init().
    */
   assertSearchMode(window, expectedSearchMode) {
     this.Assert.equal(
@@ -433,6 +435,96 @@ var UrlbarTestUtils = {
         expectedL10n,
         "Expected l10n"
       );
+    }
+  },
+
+  /**
+   * Enters search mode by clicking the first one-off.
+   * @param {object} window
+   * @note Can only be used if UrlbarTestUtils has been initialized with init().
+   */
+  async enterSearchMode(window) {
+    // Ensure any pending query is complete.
+    await this.promiseSearchComplete(window);
+    // Ensure oneoffbuttons
+    let oneOffs = this.getOneOffSearchButtons(window).getSelectableButtons(
+      true
+    );
+    this.EventUtils.synthesizeMouseAtCenter(oneOffs[0], {});
+    await this.promiseSearchComplete(window);
+    this.Assert.ok(this.isPopupOpen(window), "Urlbar view is still open.");
+    this.assertSearchMode(window, {
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engineName: oneOffs[0].engine.name,
+    });
+  },
+
+  /**
+   * Exits search mode.
+   * @param {object} window
+   * @param {boolean} options.backspace
+   *   Exits search mode by backspacing at the beginning of the search string.
+   * @param {boolean} options.clickClose
+   *   Exits search mode by clicking the close button on the search mode
+   *   indicator.
+   * @param {boolean} [waitForSearch]
+   *   Whether the test should wait for a search after exiting search mode.
+   *   Defaults to true.
+   * @note One and only one of `backspace` and `clickClose` should be passed
+   *       as true.
+   * @note Can only be used if UrlbarTestUtils has been initialized with init().
+   */
+  async exitSearchMode(
+    window,
+    { backspace, clickClose, waitForSearch = true }
+  ) {
+    let urlbar = window.gURLBar;
+    // If the Urlbar is not extended, ignore the clickClose parameter. The close
+    // button is not clickable in this state. This state might be encountered on
+    // Linux, where prefers-reduced-motion is enabled in automation.
+    if (!urlbar.hasAttribute("breakout-extend") && clickClose) {
+      if (waitForSearch) {
+        let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+        urlbar.setSearchMode(null);
+        await searchPromise;
+      } else {
+        urlbar.setSearchMode(null);
+      }
+      return;
+    }
+
+    if (backspace) {
+      let urlbarValue = urlbar.value;
+      urlbar.selectionStart = urlbar.selectionEnd = 0;
+      if (waitForSearch) {
+        let searchPromise = this.promiseSearchComplete(window);
+        this.EventUtils.synthesizeKey("KEY_Backspace");
+        await searchPromise;
+      } else {
+        this.EventUtils.synthesizeKey("KEY_Backspace");
+      }
+      this.Assert.equal(
+        urlbar.value,
+        urlbarValue,
+        "Urlbar value hasn't changed."
+      );
+      this.assertSearchMode(window, null);
+    } else if (clickClose) {
+      // We need to hover the indicator to make the close button clickable in the
+      // test.
+      let indicator = urlbar.querySelector("#urlbar-search-mode-indicator");
+      this.EventUtils.synthesizeMouseAtCenter(indicator, { type: "mouseover" });
+      let closeButton = urlbar.querySelector(
+        "#urlbar-search-mode-indicator-close"
+      );
+      if (waitForSearch) {
+        let searchPromise = this.promiseSearchComplete(window);
+        this.EventUtils.synthesizeMouseAtCenter(closeButton, {});
+        await searchPromise;
+      } else {
+        this.EventUtils.synthesizeMouseAtCenter(closeButton, {});
+      }
+      this.assertSearchMode(window, null);
     }
   },
 

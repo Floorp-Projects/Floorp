@@ -398,6 +398,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
           UrlbarUtils.RESULT_SOURCE.HISTORY,
           ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             engine: engine.name,
+            isSearchHistory: true,
             suggestion: [entry.value, UrlbarUtils.HIGHLIGHT.SUGGESTED],
             lowerCaseSuggestion: entry.value.toLocaleLowerCase(),
           })
