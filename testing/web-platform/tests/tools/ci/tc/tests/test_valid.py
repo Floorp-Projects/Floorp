@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from io import open
 
 import jsone
@@ -8,6 +9,7 @@ import pytest
 import requests
 import yaml
 from jsonschema import validate
+from six import PY3
 
 from tools.ci.tc import decision
 
@@ -19,6 +21,8 @@ def data_path(filename):
     return os.path.join(here, "..", "testdata", filename)
 
 
+@pytest.mark.xfail(sys.platform == "win32" and PY3,
+                   reason="https://github.com/web-platform-tests/wpt/issues/24561")
 def test_verify_taskcluster_yml():
     """Verify that the json-e in the .taskcluster.yml is valid"""
     with open(os.path.join(root, ".taskcluster.yml"), encoding="utf8") as f:
@@ -128,7 +132,7 @@ def test_verify_payload():
       'wpt-firefox-nightly-print-reftest-1',
       'wpt-chrome-dev-print-reftest-1',
       'lint']),
-    ("pr_event.json", True, {".taskcluster.yml", ".travis.yml", "tools/ci/start.sh"},
+    ("pr_event.json", True, {".taskcluster.yml",".travis.yml","tools/ci/start.sh"},
      ['lint',
       'tools/ unittests (Python 2)',
       'tools/ unittests (Python 3.6)',
@@ -171,22 +175,6 @@ def test_verify_payload():
       'wpt-firefox-stable-testharness-14',
       'wpt-firefox-stable-testharness-15',
       'wpt-firefox-stable-testharness-16',
-      'wpt-chrome-nightly-testharness-1',
-      'wpt-chrome-nightly-testharness-2',
-      'wpt-chrome-nightly-testharness-3',
-      'wpt-chrome-nightly-testharness-4',
-      'wpt-chrome-nightly-testharness-5',
-      'wpt-chrome-nightly-testharness-6',
-      'wpt-chrome-nightly-testharness-7',
-      'wpt-chrome-nightly-testharness-8',
-      'wpt-chrome-nightly-testharness-9',
-      'wpt-chrome-nightly-testharness-10',
-      'wpt-chrome-nightly-testharness-11',
-      'wpt-chrome-nightly-testharness-12',
-      'wpt-chrome-nightly-testharness-13',
-      'wpt-chrome-nightly-testharness-14',
-      'wpt-chrome-nightly-testharness-15',
-      'wpt-chrome-nightly-testharness-16',
       'wpt-chrome-stable-testharness-1',
       'wpt-chrome-stable-testharness-2',
       'wpt-chrome-stable-testharness-3',
@@ -240,11 +228,6 @@ def test_verify_payload():
       'wpt-firefox-stable-reftest-3',
       'wpt-firefox-stable-reftest-4',
       'wpt-firefox-stable-reftest-5',
-      'wpt-chrome-nightly-reftest-1',
-      'wpt-chrome-nightly-reftest-2',
-      'wpt-chrome-nightly-reftest-3',
-      'wpt-chrome-nightly-reftest-4',
-      'wpt-chrome-nightly-reftest-5',
       'wpt-chrome-stable-reftest-1',
       'wpt-chrome-stable-reftest-2',
       'wpt-chrome-stable-reftest-3',
@@ -262,8 +245,6 @@ def test_verify_payload():
       'wpt-servo-nightly-reftest-5',
       'wpt-firefox-stable-wdspec-1',
       'wpt-firefox-stable-wdspec-2',
-      'wpt-chrome-nightly-wdspec-1',
-      'wpt-chrome-nightly-wdspec-2',
       'wpt-chrome-stable-wdspec-1',
       'wpt-chrome-stable-wdspec-2',
       'wpt-webkitgtk_minibrowser-nightly-wdspec-1',
@@ -271,13 +252,11 @@ def test_verify_payload():
       'wpt-servo-nightly-wdspec-1',
       'wpt-servo-nightly-wdspec-2',
       'wpt-firefox-stable-crashtest-1',
-      'wpt-chrome-nightly-crashtest-1',
       'wpt-chrome-stable-crashtest-1',
       'wpt-webkitgtk_minibrowser-nightly-crashtest-1',
       'wpt-servo-nightly-crashtest-1',
       'wpt-firefox-stable-print-reftest-1',
-      'wpt-chrome-nightly-print-reftest-1',
-      'wpt-chrome-stable-print-reftest-1'])
+      'wpt-chrome-stable-print-reftest-1',])
 ])
 def test_schedule_tasks(event_path, is_pr, files_changed, expected):
     with mock.patch("tools.ci.tc.decision.get_fetch_rev", return_value=(None, None, None)):
