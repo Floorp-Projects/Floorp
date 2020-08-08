@@ -789,6 +789,9 @@ class SearchOneOffs {
    * @returns {boolean} True if the one-offs handled the key press.
    */
   handleKeyDown(event, numListItems, allowEmptySelection, textboxUserValue) {
+    if (!this.hasView) {
+      return false;
+    }
     let handled = this._handleKeyDown(
       event,
       numListItems,
@@ -1047,6 +1050,13 @@ class SearchOneOffs {
   }
 
   // Methods for subclasses to override
+
+  /**
+   * @returns {boolean} True if the one-offs are connected to a view.
+   */
+  get hasView() {
+    return !!this.popup;
+  }
 
   /**
    * @returns {boolean} True if the view is open.
