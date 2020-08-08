@@ -31,6 +31,7 @@ class SVGTextElement final : public SVGTextElementBase {
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
+  bool IsNodeOfType(uint32_t aFlags) const override;
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
  protected:

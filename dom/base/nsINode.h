@@ -382,6 +382,8 @@ class nsINode : public mozilla::dom::EventTarget {
   enum {
     /** form control elements */
     eHTML_FORM_CONTROL = 1 << 6,
+    /** SVG use targets */
+    eUSE_TARGET = 1 << 9,
     /** animation elements */
     eANIMATION = 1 << 10,
     /** filter elements that implement SVGFilterPrimitiveStandardAttributes */
