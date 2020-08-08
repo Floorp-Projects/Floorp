@@ -183,9 +183,13 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let isInputAutofilled = activeFieldDetail.state == FIELD_STATES.AUTO_FILLED;
     let allFieldNames = activeSection.allFieldNames;
     let filledRecordGUID = activeSection.filledRecordGUID;
+
+    let creditCardsEnabledAndVisible =
+      FormAutofill.isAutofillCreditCardsEnabled &&
+      !FormAutofill.isAutofillCreditCardsHideUI;
     let searchPermitted = isAddressField
       ? FormAutofill.isAutofillAddressesEnabled
-      : FormAutofill.isAutofillCreditCardsEnabled;
+      : creditCardsEnabledAndVisible;
     let AutocompleteResult = isAddressField ? AddressResult : CreditCardResult;
     let isFormAutofillSearch = true;
     let pendingSearchResult = null;
