@@ -35,6 +35,21 @@ const PREF_SECTION_ENABLED = "extensions.formautofill.section.enabled";
 const DEFAULT_SECTION_NAME = "-moz-section-default";
 
 /**
+ * To help us classify sections, we want to know what fields can appear
+ * multiple times in a row.
+ * Such fields, like `address-line{X}`, should not break sections.
+ */
+const MULTI_FIELD_NAMES = [
+  "address-level3",
+  "address-level2",
+  "address-level1",
+  "tel",
+  "postal-code",
+  "email",
+  "street-address",
+];
+
+/**
  * A scanner for traversing all elements in a form and retrieving the field
  * detail with FormAutofillHeuristics.getInfo function. It also provides a
  * cursor (parsingIndex) to indicate which element is waiting for parsing.
@@ -141,7 +156,8 @@ class FieldScanner {
       }
       if (
         seenTypes.has(fieldDetail.fieldName) &&
-        previousType != fieldDetail.fieldName
+        (previousType != fieldDetail.fieldName ||
+          !MULTI_FIELD_NAMES.includes(fieldDetail.fieldName))
       ) {
         seenTypes.clear();
         sectionCount++;
