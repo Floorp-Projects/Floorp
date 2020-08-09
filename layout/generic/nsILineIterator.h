@@ -56,6 +56,8 @@ class nsILineIterator {
      * positioning then its coordinates may be outside the line bounds)
      */
     nsRect mLineBounds;
+    /** Whether the line is wrapped at the end */
+    bool mIsWrapped;
   };
 
   // Return miscellaneous information about a line.
