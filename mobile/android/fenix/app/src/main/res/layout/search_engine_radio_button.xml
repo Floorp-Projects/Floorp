@@ -10,12 +10,12 @@
     android:minHeight="@dimen/radio_button_preference_height"
     android:background="?android:selectableItemBackground"
     android:clickable="true"
+    android:labelFor="@+id/radio_button"
     android:focusable="true">
     <RadioButton
         android:id="@+id/radio_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:importantForAccessibility="no"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:layout_marginStart="@dimen/search_bar_search_engine_icon_padding"
         android:layout_gravity="center" />
