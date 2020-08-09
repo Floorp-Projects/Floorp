@@ -11,6 +11,7 @@ import android.content.pm.ResolveInfo
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.Browsers.Companion.SAMPLE_BROWSER_HTTP_URL
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -247,7 +248,7 @@ class BrowsersTest {
 
     @Test
     fun `forUrl() with empty package manager`() {
-        val browsers = Browsers.forUrl(testContext, "http://www.mozilla.org")
+        val browsers = Browsers.forUrl(testContext, SAMPLE_BROWSER_HTTP_URL)
 
         assertNull(browsers.defaultBrowser)
         assertNull(browsers.firefoxBrandedBrowser)
@@ -265,7 +266,7 @@ class BrowsersTest {
             defaultBrowser = Browsers.KnownBrowser.FIREFOX.packageName
         )
 
-        val browsers = Browsers.forUrl(testContext, "http://www.mozilla.org")
+        val browsers = Browsers.forUrl(testContext, SAMPLE_BROWSER_HTTP_URL)
 
         assertNotNull(browsers.defaultBrowser)
         assertEquals(Browsers.KnownBrowser.FIREFOX.packageName, browsers.defaultBrowser!!.packageName)
@@ -304,7 +305,7 @@ class BrowsersTest {
     private fun pretendBrowsersAreInstalled(
         browsers: List<String> = listOf(),
         defaultBrowser: String? = null,
-        url: String = "http://www.mozilla.org",
+        url: String = SAMPLE_BROWSER_HTTP_URL,
         browsersExported: Boolean = true,
         defaultBrowserExported: Boolean = true
     ) {
@@ -315,6 +316,7 @@ class BrowsersTest {
             val intent = Intent(Intent.ACTION_VIEW)
             intent.`package` = packageName
             intent.data = Uri.parse(url)
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
             val packageInfo = PackageInfo()
             packageInfo.packageName = packageName
@@ -335,6 +337,7 @@ class BrowsersTest {
         if (defaultBrowser != null) {
             val intent = Intent(Intent.ACTION_VIEW)
             intent.data = Uri.parse(url)
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
             val activityInfo = ActivityInfo()
             activityInfo.exported = defaultBrowserExported

@@ -53,6 +53,7 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: Renamed the following data classes from `BrowserAction`: `QueuedDownloadAction` to `AddDownloadAction`, `RemoveQueuedDownloadAction` to `RemoveDownloadAction`, `RemoveAllQueuedDownloadsAction` to `RemoveAllDownloadsAction`, and `UpdateQueuedDownloadAction` to `UpdateDownloadAction`.
   * ⚠️ **This is a breaking change**: Renamed `queuedDownloads` from `BrowserState` to `downloads` .
   * Removed automatic deletion of `downloads` upon a completed download.
+  * 🆕 Added support for choosing a third party app to perform a download.
 
 * **browser-menu**
   * ⚠️ **This is a breaking change**: `BrowserMenuItemToolbar.Button.longClickListener` is now nullable and defaults to null.

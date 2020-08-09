@@ -12,8 +12,8 @@
 
     <!-- Needed to prompt the user to give permission to install a downloaded apk -->
     <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    
-    <application>
+
+    <application android:supportsRtl="true">
         <provider
             android:name="mozilla.components.feature.downloads.provider.FileProvider"
             android:authorities="${applicationId}.feature.downloads.fileprovider"
