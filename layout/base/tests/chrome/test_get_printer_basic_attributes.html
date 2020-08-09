@@ -14,7 +14,9 @@ async function run() {
       Ci.nsIPrinterList
     );
 
-    for await (printer of printerList.printers) {
+    let printers = await printerList.printers;
+    for (let printer of printers) {
+      printer.QueryInterface(Ci.nsIPrinter);
       info(`Listing basic attributes for ${printer.name}:`);
       let [supportsDuplex, supportsColor] = await Promise.all([printer.supportsDuplex, printer.supportsColor]);
       info(`* supportsDuplex: ${supportsDuplex}`);

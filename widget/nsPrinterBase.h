@@ -8,6 +8,7 @@
 
 #include "mozilla/gfx/Rect.h"
 #include "nsIPrinter.h"
+#include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/EnumeratedArray.h"
@@ -50,12 +51,8 @@ class nsPrinterBase : public nsIPrinter {
     Last,
   };
 
-  template <typename T, typename... Args>
-  using BackgroundTask = T (nsPrinterBase::*)(Args...) const;
-
-  // Resolves a promise when a background task finishes.
-  template <typename T, typename... Args>
-  void SpawnBackgroundTask(Promise&, BackgroundTask<T, Args...>, Args... aArgs);
+  template <typename Result, typename... Args>
+  using BackgroundTask = Result (nsPrinterBase::*)(Args...) const;
 
   // Resolves an async attribute via a background task.
   template <typename T, typename... Args>
