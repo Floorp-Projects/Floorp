@@ -89,7 +89,7 @@ class nsPrinterListWin final : public nsPrinterListBase {
                                           nsIPrintSettings*) final;
   NS_IMETHOD GetSystemDefaultPrinterName(nsAString&) final;
 
-  nsTArray<PrinterInfo> GetPrinters() const final;
+  nsTArray<PrinterInfo> Printers() const final;
   RefPtr<nsIPrinter> CreatePrinter(PrinterInfo) const final;
 
   nsPrinterListWin() = default;

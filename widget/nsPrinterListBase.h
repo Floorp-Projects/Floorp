@@ -29,7 +29,7 @@ class nsPrinterListBase : public nsIPrinterList {
 
   // Called off the main thread, collect information to create an appropriate
   // list of printers.
-  virtual nsTArray<PrinterInfo> GetPrinters() const = 0;
+  virtual nsTArray<PrinterInfo> Printers() const = 0;
 
   // Create an nsIPrinter object given the information we obtained from the
   // background thread.
