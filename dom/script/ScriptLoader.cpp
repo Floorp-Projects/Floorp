@@ -31,6 +31,7 @@
 #include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SRILogHelper.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -3309,13 +3310,18 @@ bool ScriptLoader::ReadyToExecuteParserBlockingScripts() {
     return false;
   }
 
-  for (Document* doc = mDocument; doc;
-       doc = doc->GetInProcessParentDocument()) {
-    ScriptLoader* ancestor = doc->ScriptLoader();
-    if (!ancestor->SelfReadyToExecuteParserBlockingScripts() &&
-        ancestor->AddPendingChildLoader(this)) {
-      AddParserBlockingScriptExecutionBlocker();
-      return false;
+  if (mDocument && mDocument->GetWindowContext()) {
+    for (WindowContext* wc =
+             mDocument->GetWindowContext()->GetParentWindowContext();
+         wc; wc = wc->GetParentWindowContext()) {
+      if (Document* doc = wc->GetDocument()) {
+        ScriptLoader* ancestor = doc->ScriptLoader();
+        if (!ancestor->SelfReadyToExecuteParserBlockingScripts() &&
+            ancestor->AddPendingChildLoader(this)) {
+          AddParserBlockingScriptExecutionBlocker();
+          return false;
+        }
+      }
     }
   }
 
