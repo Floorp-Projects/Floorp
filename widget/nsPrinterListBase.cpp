@@ -42,5 +42,5 @@ void ResolveOrReject(dom::Promise& aPromise, nsPrinterListBase& aList,
 NS_IMETHODIMP nsPrinterListBase::GetPrinters(JSContext* aCx,
                                              Promise** aResult) {
   return mozilla::AsyncPromiseAttributeGetter(
-      *this, mPrintersPromise, aCx, aResult, &nsPrinterListBase::GetPrinters);
+      *this, mPrintersPromise, aCx, aResult, &nsPrinterListBase::Printers);
 }

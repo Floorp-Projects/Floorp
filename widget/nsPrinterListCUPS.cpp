@@ -13,7 +13,7 @@
 static nsCUPSShim sCupsShim;
 using PrinterInfo = nsPrinterListBase::PrinterInfo;
 
-nsTArray<PrinterInfo> nsPrinterListCUPS::GetPrinters() const {
+nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
   if (!sCupsShim.EnsureInitialized()) {
     return {};
   }

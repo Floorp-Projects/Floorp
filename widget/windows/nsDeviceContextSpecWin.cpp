@@ -484,7 +484,7 @@ nsresult nsDeviceContextSpecWin::GetDataFromPrinter(const nsAString& aName,
 
 nsPrinterListWin::~nsPrinterListWin() = default;
 
-nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::GetPrinters() const {
+nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
   PR_PL(("EnumerateNativePrinters\n"));
 
   const DWORD kLevel = 4;
