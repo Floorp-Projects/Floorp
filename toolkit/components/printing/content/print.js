@@ -38,11 +38,13 @@ var PrintEventHandler = {
     document.addEventListener("open-system-dialog", () =>
       this.print({ silent: false })
     );
-    document.dispatchEvent(
-      new CustomEvent("available-destinations", {
-        detail: this.getPrintDestinations(),
-      })
-    );
+    this.getPrintDestinations().then(destinations => {
+      document.dispatchEvent(
+        new CustomEvent("available-destinations", {
+          detail: destinations,
+        })
+      );
+    });
 
     // Some settings are only used by the UI
     // assigning new values should update the underlying settings
@@ -164,19 +166,20 @@ var PrintEventHandler = {
     return browsingContext.embedderElement;
   },
 
-  getPrintDestinations() {
+  async getPrintDestinations() {
     let printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
       Ci.nsIPrinterList
     );
     let currentPrinterName = PrintUtils._getLastUsedPrinterName();
-    let destinations = printerList.printers.map(printer => {
+    let printers = await printerList.printers;
+    return printers.map(printer => {
+      printer.QueryInterface(Ci.nsIPrinter);
       return {
         name: printer.name,
         value: printer.name,
         selected: printer.name == currentPrinterName,
       };
     });
-    return destinations;
   },
 };
 
