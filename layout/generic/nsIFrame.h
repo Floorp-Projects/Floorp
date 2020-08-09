@@ -3776,8 +3776,10 @@ class nsIFrame : public nsQueryFrame {
      * indicates that we arrived at its end.
      */
     int32_t mOffset = 0;
-    /** whether this frame and the returned frame are on different lines */
+    /** whether the input frame and the returned frame are on different lines */
     bool mJumpedLine = false;
+    /** whether we met a hard break between the input and the returned frame */
+    bool mJumpedHardBreak = false;
     /** whether we jumped over a non-selectable frame during the search */
     bool mMovedOverNonSelectableText = false;
 
