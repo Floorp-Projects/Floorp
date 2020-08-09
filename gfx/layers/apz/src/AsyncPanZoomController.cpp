@@ -2415,18 +2415,12 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
 
       RecordScrollPayload(aEvent.mTimeStamp);
       // Perform scroll snapping if appropriate.
-      CSSPoint startPosition = Metrics().GetScrollOffset();
       // If we're already in a wheel scroll or smooth scroll animation,
       // the delta is applied to its destination, not to the current
       // scroll position. Take this into account when finding a snap point.
-      if (mState == WHEEL_SCROLL) {
-        startPosition = mAnimation->AsWheelScrollAnimation()->GetDestination();
-      } else if (mState == SMOOTH_SCROLL) {
-        startPosition = mAnimation->AsSmoothScrollAnimation()->GetDestination();
-      } else if (mState == KEYBOARD_SCROLL) {
-        startPosition =
-            mAnimation->AsKeyboardScrollAnimation()->GetDestination();
-      }
+      CSSPoint startPosition = GetCurrentAnimationDestination(lock).valueOr(
+          Metrics().GetScrollOffset());
+
       if (MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
                                                         startPosition)) {
         // If we're scroll snapping, use a smooth scroll animation to get
