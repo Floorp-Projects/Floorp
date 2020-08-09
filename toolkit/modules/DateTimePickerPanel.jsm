@@ -28,7 +28,7 @@ var DateTimePickerPanel = class {
     return frame;
   }
 
-  openPicker(type, anchor, detail) {
+  openPicker(type, rect, detail) {
     this.type = type;
     this.pickerState = {};
     // TODO: Resize picker according to content zoom level
@@ -58,7 +58,15 @@ var DateTimePickerPanel = class {
       }
     }
     this.element.hidden = false;
-    this.element.openPopup(anchor, "after_start", 0, 0);
+    this.element.openPopupAtScreenRect(
+      "after_start",
+      rect.left,
+      rect.top,
+      rect.width,
+      rect.height,
+      false,
+      false
+    );
   }
 
   closePicker() {
