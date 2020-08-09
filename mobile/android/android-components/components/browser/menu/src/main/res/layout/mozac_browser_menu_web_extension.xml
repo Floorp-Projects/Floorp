@@ -2,7 +2,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -44,9 +43,13 @@
         android:id="@+id/badge_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:minWidth="22dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textColor="@color/photonWhite"
+        android:background="@drawable/rounded_corner"
         android:visibility="invisible"
         android:padding="3dp"
         android:textSize="12sp"
         tools:text="18" />
-
 </LinearLayout>

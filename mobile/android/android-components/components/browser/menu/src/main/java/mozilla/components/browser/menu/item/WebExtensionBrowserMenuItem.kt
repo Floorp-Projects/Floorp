@@ -54,7 +54,7 @@ class WebExtensionBrowserMenuItem(
         }
         badgeView.setBadgeText(action.badgeText)
         action.badgeTextColor?.let { badgeView.setTextColor(it) }
-        action.badgeBackgroundColor?.let { badgeView.setBackgroundColor(it) }
+        action.badgeBackgroundColor?.let { badgeView.background?.setTint(it) }
 
         MainScope().launch {
             loadIcon(view.context, imageView.measuredHeight)?.let {

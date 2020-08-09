@@ -7,6 +7,7 @@ package mozilla.components.browser.menu.item
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
@@ -21,7 +22,6 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -94,10 +94,12 @@ class WebExtensionBrowserMenuItemTest {
         val icon: Bitmap = mock()
         val imageView: ImageView = mock()
         val badgeView: TextView = mock()
+        val background: Drawable = mock()
         val labelView: TextView = mock()
         val container = View(testContext)
         val view: View = mock()
 
+        whenever(badgeView.background).thenReturn(background)
         whenever(view.findViewById<ImageView>(R.id.action_image)).thenReturn(imageView)
         whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(badgeView)
         whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
@@ -119,13 +121,13 @@ class WebExtensionBrowserMenuItemTest {
 
         val iconCaptor = argumentCaptor<BitmapDrawable>()
         verify(imageView).setImageDrawable(iconCaptor.capture())
-        Assert.assertEquals(icon, iconCaptor.value.bitmap)
+        assertEquals(icon, iconCaptor.value.bitmap)
 
         verify(imageView).contentDescription = "title"
-        verify(labelView).setText("title")
-        verify(badgeView).setText("badgeText")
+        verify(labelView).text = "title"
+        verify(badgeView).text = "badgeText"
         verify(badgeView).setTextColor(Color.WHITE)
-        verify(badgeView).setBackgroundColor(Color.BLUE)
+        verify(background).setTint(Color.BLUE)
     }
 
     @Test
@@ -263,8 +265,8 @@ class WebExtensionBrowserMenuItemTest {
         item.bind(menu, view)
         testDispatcher.advanceUntilIdle()
 
-        verify(labelView).setText("title")
-        verify(badgeView).setText("badgeText")
+        verify(labelView).text = "title"
+        verify(badgeView).text = "badgeText"
 
         val browserActionOverride = Action(
                 title = "override",
@@ -278,8 +280,8 @@ class WebExtensionBrowserMenuItemTest {
         item.action = browserActionOverride
         item.invalidate(view)
 
-        verify(labelView).setText("override")
-        verify(badgeView).setText("overrideBadge")
+        verify(labelView).text = "override"
+        verify(badgeView).text = "overrideBadge"
         verify(labelView).invalidate()
         verify(badgeView).invalidate()
     }
