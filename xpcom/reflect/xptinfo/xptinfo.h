@@ -510,7 +510,11 @@ static_assert(sizeof(nsXPTMethodInfo) == 8, "wrong size");
 // code from xptcodegen.py to verify that decision.  It is therefore also the
 // maximum number of stack allocated nsXPTCMiniVariant structures for argument
 // passing purposes in PrepareAndDispatch implementations.
-#define PARAM_BUFFER_COUNT 14
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+#  define PARAM_BUFFER_COUNT 18
+#else
+#  define PARAM_BUFFER_COUNT 14
+#endif
 
 /**
  * A nsXPTConstantInfo is used to describe a single interface constant.
