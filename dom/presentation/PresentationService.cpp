@@ -1102,8 +1102,10 @@ already_AddRefed<nsIPresentationService> NS_CreatePresentationService() {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     service = new mozilla::dom::PresentationIPCService();
   } else {
-    service = new PresentationService();
-    if (NS_WARN_IF(!static_cast<PresentationService*>(service.get())->Init())) {
+    service = new mozilla::dom::PresentationService();
+    if (NS_WARN_IF(
+            !static_cast<mozilla::dom::PresentationService*>(service.get())
+                 ->Init())) {
       return nullptr;
     }
   }
