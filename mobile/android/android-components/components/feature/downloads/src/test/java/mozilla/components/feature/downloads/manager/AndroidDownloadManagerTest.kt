@@ -160,14 +160,14 @@ class AndroidDownloadManagerTest {
         verify(mockRequest).addRequestHeader(anyString(), anyString())
     }
 
-    private fun notifyDownloadFailed(id: Long) {
+    private fun notifyDownloadFailed(id: String) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, id)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadState.Status.FAILED)
         testContext.sendBroadcast(intent)
     }
 
-    private fun notifyDownloadCompleted(id: Long) {
+    private fun notifyDownloadCompleted(id: String) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, id)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadState.Status.COMPLETED)

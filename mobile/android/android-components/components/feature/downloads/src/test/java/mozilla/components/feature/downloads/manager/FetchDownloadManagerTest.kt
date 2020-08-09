@@ -204,14 +204,14 @@ class FetchDownloadManagerTest {
         assertEquals(DownloadState.Status.COMPLETED, downloadStatus)
     }
 
-    private fun notifyDownloadFailed(id: Long) {
+    private fun notifyDownloadFailed(id: String) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_ID, id)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadState.Status.FAILED)
         broadcastManager.sendBroadcast(intent)
     }
 
-    private fun notifyDownloadCompleted(id: Long) {
+    private fun notifyDownloadCompleted(id: String) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_ID, id)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadState.Status.COMPLETED)

@@ -11,6 +11,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertSame
 import org.junit.Test
 
 class DownloadActionTest {
@@ -28,6 +29,30 @@ class DownloadActionTest {
         store.dispatch(DownloadAction.AddDownloadAction(download2)).joinBlocking()
         assertEquals(download2, store.state.downloads[download2.id])
         assertEquals(2, store.state.downloads.size)
+    }
+
+    @Test
+    fun `RestoreDownloadStateAction adds download`() {
+        val store = BrowserStore(BrowserState())
+
+        val download1 = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
+        store.dispatch(DownloadAction.RestoreDownloadStateAction(download1)).joinBlocking()
+        assertEquals(download1, store.state.downloads[download1.id])
+        assertEquals(1, store.state.downloads.size)
+
+        val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "")
+        store.dispatch(DownloadAction.RestoreDownloadStateAction(download2)).joinBlocking()
+        assertEquals(download2, store.state.downloads[download2.id])
+        assertEquals(2, store.state.downloads.size)
+    }
+
+    @Test
+    fun `RestoreDownloadsStateAction does nothing`() {
+        val store = BrowserStore(BrowserState())
+
+        val state = store.state
+        store.dispatch(DownloadAction.RestoreDownloadsStateAction).joinBlocking()
+        assertSame(store.state, state)
     }
 
     @Test

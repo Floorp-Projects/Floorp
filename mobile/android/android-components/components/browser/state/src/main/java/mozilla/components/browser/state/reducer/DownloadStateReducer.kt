@@ -25,6 +25,8 @@ internal object DownloadStateReducer {
             is DownloadAction.RemoveAllDownloadsAction -> {
                 state.copy(downloads = emptyMap())
             }
+            is DownloadAction.RestoreDownloadsStateAction -> state
+            is DownloadAction.RestoreDownloadStateAction -> updateDownloads(state, action.download)
         }
     }
 

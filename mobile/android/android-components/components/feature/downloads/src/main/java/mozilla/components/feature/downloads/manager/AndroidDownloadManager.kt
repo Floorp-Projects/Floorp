@@ -55,7 +55,7 @@ class AndroidDownloadManager(
      * @return the id reference of the scheduled download.
      */
     @RequiresPermission(allOf = [INTERNET, WRITE_EXTERNAL_STORAGE])
-    override fun download(download: DownloadState, cookie: String): Long? {
+    override fun download(download: DownloadState, cookie: String): String? {
         val androidDownloadManager: SystemDownloadManager = applicationContext.getSystemService()!!
 
         if (!download.isScheme(listOf("http", "https"))) {
@@ -69,15 +69,15 @@ class AndroidDownloadManager(
 
         val request = download.toAndroidRequest(cookie)
         val downloadID = androidDownloadManager.enqueue(request)
-        store.dispatch(DownloadAction.AddDownloadAction(download.copy(id = downloadID)))
+        store.dispatch(DownloadAction.AddDownloadAction(download.copy(id = downloadID.toString())))
         downloadRequests[downloadID] = request
         registerBroadcastReceiver()
-        return downloadID
+        return downloadID.toString()
     }
 
-    override fun tryAgain(downloadId: Long) {
+    override fun tryAgain(downloadId: String) {
         val androidDownloadManager: SystemDownloadManager = applicationContext.getSystemService()!!
-        androidDownloadManager.enqueue(downloadRequests[downloadId])
+        androidDownloadManager.enqueue(downloadRequests[downloadId.toLong()])
     }
 
     /**
@@ -104,7 +104,7 @@ class AndroidDownloadManager(
      * download if it's complete.
      */
     override fun onReceive(context: Context, intent: Intent) {
-        val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
+        val downloadID = intent.getStringExtra(EXTRA_DOWNLOAD_ID) ?: ""
         val download = store.state.downloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(AbstractFetchDownloadService.EXTRA_DOWNLOAD_STATUS)
             as Status

@@ -53,7 +53,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
      * @param cookie any additional cookie to add as part of the download request.
      * @return the id reference of the scheduled download.
      */
-    override fun download(download: DownloadState, cookie: String): Long? {
+    override fun download(download: DownloadState, cookie: String): String? {
         if (!download.isScheme(listOf("http", "https", "data", "blob"))) {
             return null
         }
@@ -67,7 +67,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
         return download.id
     }
 
-    override fun tryAgain(downloadId: Long) {
+    override fun tryAgain(downloadId: String) {
         val download = store.state.downloads[downloadId] ?: return
 
         val intent = Intent(applicationContext, service.java)
@@ -100,7 +100,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
      * download if it's complete.
      */
     override fun onReceive(context: Context, intent: Intent) {
-        val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
+        val downloadID = intent.getStringExtra(EXTRA_DOWNLOAD_ID) ?: ""
         val download = store.state.downloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(EXTRA_DOWNLOAD_STATUS)
             as Status

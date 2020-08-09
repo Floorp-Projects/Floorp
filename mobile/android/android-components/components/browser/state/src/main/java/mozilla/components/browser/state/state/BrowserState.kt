@@ -28,6 +28,6 @@ data class BrowserState(
     val containers: Map<String, ContainerState> = emptyMap(),
     val extensions: Map<String, WebExtensionState> = emptyMap(),
     val media: MediaState = MediaState(),
-    val downloads: Map<Long, DownloadState> = emptyMap(),
+    val downloads: Map<String, DownloadState> = emptyMap(),
     val search: SearchState = SearchState()
 ) : State

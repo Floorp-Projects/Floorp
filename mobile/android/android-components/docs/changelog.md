@@ -34,6 +34,16 @@ permalink: /changelog/
 * **feature-prompts**
   * Replaced generic icon in `LoginDialogFragment` with site icon (keep the generic one as fallback)
 
+* **feature-downloads**
+  * ⚠️ **This is a breaking change**: `AndroidDownloadManager.download` returns a `Strings`, `AndroidDownloadManager.tryAgain` requires a `Strings` `id` parameter.
+  * ⚠️ **This is a breaking change**: `ConsumeDownloadAction` requires a `Strings` `id` parameter.
+  * ⚠️ **This is a breaking change**: `DownloadManager#onDownloadStopped` requires a `Strings` `(DownloadState, Long, Status) -> Unit`.
+  * ⚠️ **This is a breaking change**: `DownloadsUseCases.invoke` requires an `Strings` `downloadId` parameter.
+  * ⚠️ **This is a breaking change**: `DownloadState.id` has changed its type from `Long` to `String`.
+  * ⚠️ **This is a breaking change**: `BrowserState.downloads` has changed it's type from `Map<Long, DownloadState>` to `Map<String, DownloadState>`.
+  * 🌟 Added support for persisting/restoring downloads see issue [#7762](https://github.com/mozilla-mobile/android-components/issues/7762).
+  * 🌟 Added `DownloadStorage` for querying stored download metadata.
+
 * **ui-widgets**
   * 🆕 New VerticalSwipeRefreshLayout that comes to resolve many of the issues of the platform SwipeRefreshLayout and filters out other gestures than swipe down/up.
 

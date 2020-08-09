@@ -126,3 +126,10 @@ jobs:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'support-ktx', 'arm', '1']
         treeherder:
             symbol: 'unit-support-ktx'
+    android-feature-downloads:
+        description: 'Run unit tests on device for feature downloads'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'support-ktx', 'arm', '1']
+        treeherder:
+            symbol: 'unit-feature-downloads'
