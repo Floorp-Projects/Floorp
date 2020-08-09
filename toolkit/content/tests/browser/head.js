@@ -166,14 +166,15 @@ class DateTimeTestHelper {
    * ready for testing.
    *
    * @param  {String} pageUrl
+   * @param  {bool} inFrame true if input is in the first child frame
    */
-  async openPicker(pageUrl) {
+  async openPicker(pageUrl, inFrame) {
     this.tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "input",
-      {},
-      gBrowser.selectedBrowser
-    );
+    let bc = gBrowser.selectedBrowser;
+    if (inFrame) {
+      bc = bc.browsingContext.children[0];
+    }
+    await BrowserTestUtils.synthesizeMouseAtCenter("input", {}, bc);
     this.frame = this.panel.querySelector("#dateTimePopupFrame");
     await this.waitForPickerReady();
   }
