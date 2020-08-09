@@ -12,7 +12,12 @@
 struct cups_dest_s;
 
 class nsPrinterListCUPS final : public nsPrinterListBase {
-  NS_DECL_NSIPRINTERLIST
+  NS_IMETHOD InitPrintSettingsFromPrinter(const nsAString&,
+                                          nsIPrintSettings*) final;
+  NS_IMETHOD GetSystemDefaultPrinterName(nsAString&) final;
+
+  nsTArray<PrinterInfo> GetPrinters() const final;
+  RefPtr<nsIPrinter> CreatePrinter(PrinterInfo) const final;
 
 #ifdef XP_MACOSX
   // This is implemented in nsDeviceContextSpecX. We could add a new class to
