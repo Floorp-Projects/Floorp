@@ -493,7 +493,7 @@ ScaledFontMac::InstanceData::InstanceData(
 }
 
 static CFDictionaryRef CreateVariationDictionaryOrNull(
-    CGFontRef aCGFont, uint32_t aVariationCount,
+    CGFontRef aCGFont, CFArrayRef& aAxesCache, uint32_t aVariationCount,
     const FontVariation* aVariations) {
   // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
   // versions (see bug 1331683)
@@ -501,14 +501,16 @@ static CFDictionaryRef CreateVariationDictionaryOrNull(
     return nullptr;
   }
 
-  AutoRelease<CTFontRef> ctFont(
-      CTFontCreateWithGraphicsFont(aCGFont, 0, nullptr, nullptr));
-  AutoRelease<CFArrayRef> axes(CTFontCopyVariationAxes(ctFont));
-  if (!axes) {
-    return nullptr;
+  if (!aAxesCache) {
+    AutoRelease<CTFontRef> ctFont(
+        CTFontCreateWithGraphicsFont(aCGFont, 0, nullptr, nullptr));
+    aAxesCache = CTFontCopyVariationAxes(ctFont);
+    if (!aAxesCache) {
+      return nullptr;
+    }
   }
 
-  CFIndex axisCount = CFArrayGetCount(axes);
+  CFIndex axisCount = CFArrayGetCount(aAxesCache);
   AutoRelease<CFMutableDictionaryRef> dict(CFDictionaryCreateMutable(
       kCFAllocatorDefault, axisCount, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks));
@@ -520,7 +522,7 @@ static CFDictionaryRef CreateVariationDictionaryOrNull(
   for (CFIndex i = 0; i < axisCount; ++i) {
     // We sanity-check the axis info found in the CTFont, and bail out
     // (returning null) if it doesn't have the expected types.
-    CFTypeRef axisInfo = CFArrayGetValueAtIndex(axes, i);
+    CFTypeRef axisInfo = CFArrayGetValueAtIndex(aAxesCache, i);
     if (CFDictionaryGetTypeID() != CFGetTypeID(axisInfo)) {
       return nullptr;
     }
@@ -592,14 +594,15 @@ static CFDictionaryRef CreateVariationDictionaryOrNull(
   return dict.forget();
 }
 
+/* static */
 CGFontRef UnscaledFontMac::CreateCGFontWithVariations(
-    CGFontRef aFont, uint32_t aVariationCount,
+    CGFontRef aFont, CFArrayRef& aAxesCache, uint32_t aVariationCount,
     const FontVariation* aVariations) {
   MOZ_ASSERT(aVariationCount > 0);
   MOZ_ASSERT(aVariations);
 
-  AutoRelease<CFDictionaryRef> varDict(
-      CreateVariationDictionaryOrNull(aFont, aVariationCount, aVariations));
+  AutoRelease<CFDictionaryRef> varDict(CreateVariationDictionaryOrNull(
+      aFont, aAxesCache, aVariationCount, aVariations));
   if (!varDict) {
     return nullptr;
   }
@@ -622,8 +625,8 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
 
   CGFontRef fontRef = mFont;
   if (aNumVariations > 0) {
-    CGFontRef varFont =
-        CreateCGFontWithVariations(mFont, aNumVariations, aVariations);
+    CGFontRef varFont = CreateCGFontWithVariations(mFont, mAxesCache,
+                                                   aNumVariations, aVariations);
     if (varFont) {
       fontRef = varFont;
     }
