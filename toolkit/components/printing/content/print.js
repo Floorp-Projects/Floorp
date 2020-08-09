@@ -167,19 +167,39 @@ var PrintEventHandler = {
   },
 
   async getPrintDestinations() {
-    let printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
+    const printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
       Ci.nsIPrinterList
     );
-    let currentPrinterName = PrintUtils._getLastUsedPrinterName();
-    let printers = await printerList.printers;
-    return printers.map(printer => {
+
+    const lastUsedPrinterName = PrintUtils._getLastUsedPrinterName();
+    const defaultPrinterName = printerList.systemDefaultPrinterName;
+    const printers = await printerList.printers;
+
+    let defaultIndex = 0;
+    let foundSelected = false;
+    let i = 0;
+    let destinations = printers.map(printer => {
       printer.QueryInterface(Ci.nsIPrinter);
-      return {
-        name: printer.name,
-        value: printer.name,
-        selected: printer.name == currentPrinterName,
-      };
+      const name = printer.name;
+      const value = name;
+      const selected = name == lastUsedPrinterName;
+      if (selected) {
+        foundSelected = true;
+      }
+      if (name == defaultPrinterName) {
+        defaultIndex = i;
+      }
+      ++i;
+      return { name, value, selected };
     });
+
+    // If there's no valid last selected printer, select the system default, or
+    // the first on the list otherwise.
+    if (destinations.length && !foundSelected) {
+      destinations[defaultIndex].selected = true;
+    }
+
+    return destinations;
   },
 };
 
