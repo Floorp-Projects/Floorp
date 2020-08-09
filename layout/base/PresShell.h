@@ -350,10 +350,10 @@ class PresShell final : public nsStubDocumentObserver,
 
  public:
   /**
-   * Note that the assumptions that determine whether we have a potentially
-   * zoomable viewport may have changed.
+   * Note that the assumptions that determine whether we need a mobile viewport
+   * manager may have changed.
    */
-  void UpdateViewportOverridden(bool aAfterInitialization);
+  void MaybeRecreateMobileViewportManager(bool aAfterInitialization);
 
   /**
    * Returns true if this document uses mobile viewport sizing (including

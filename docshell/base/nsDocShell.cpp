@@ -2276,7 +2276,7 @@ nsDocShell::SetMetaViewportOverride(
   // Inform our presShell that it needs to re-check its need for a viewport
   // override.
   if (RefPtr<PresShell> presShell = GetPresShell()) {
-    presShell->UpdateViewportOverridden(true);
+    presShell->MaybeRecreateMobileViewportManager(true);
   }
 
   return NS_OK;
