@@ -78,7 +78,7 @@ class DateTimePickerChild extends JSWindowActorChild {
    * relative to the left/top of the content area.
    */
   getBoundingContentRect(aElement) {
-    return BrowserUtils.getElementBoundingRect(aElement);
+    return BrowserUtils.getElementBoundingScreenRect(aElement);
   }
 
   getTimePickerPref() {
