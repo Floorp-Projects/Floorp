@@ -1319,7 +1319,7 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Zoom pe toate site-urile web</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Activează permiterea apropierii/depărtării cu degetele pentru zoom, chiar și pe site-uri web care împiedică acest gest.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Activează funcția de zoom prin gesturi tactile chiar și pe site-uri web care nu o acceptă.</string>
 
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Denumire (A-Z)</string>
