@@ -11018,7 +11018,7 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
 }
 
 bool PresShell::UsesMobileViewportSizing() const {
-  return GetIsViewportOverridden() &&
+  return mMobileViewportManager != nullptr &&
          nsLayoutUtils::ShouldHandleMetaViewport(mDocument);
 }
 
