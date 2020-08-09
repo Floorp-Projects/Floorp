@@ -30,7 +30,7 @@ interface nsIPrinterList : nsISupports
   readonly attribute AString systemDefaultPrinterName;
 
   /**
-   * The list of printers.
+   * Returns a promise that resolves to an array of printers.
    */
-  readonly attribute Array<nsIPrinter> printers;
+  [implicit_jscontext] readonly attribute Promise printers;
 };
