@@ -84,6 +84,13 @@ class AutoCompleteChild extends JSWindowActorChild {
     this._input = null;
     this._popupOpen = false;
     this._attached = false;
+    this._suppressInputEvent = false;
+
+    // UI elements can't be nsIObservers; this is the workaround.
+    const parent = this;
+    this._observer = { observe: (...args) => parent.observe(...args), parent };
+    Services.obs.addObserver(this._observer, "autofill-fill-starting");
+    Services.obs.addObserver(this._observer, "autofill-fill-complete");
   }
 
   static addPopupStateListener(listener) {
@@ -97,6 +104,20 @@ class AutoCompleteChild extends JSWindowActorChild {
   willDestroy() {
     if (this._attached) {
       formFill.detachFromDocument(this.document);
+    }
+    Services.obs.removeObserver(this._observer, "autofill-fill-starting");
+    Services.obs.removeObserver(this._observer, "autofill-fill-complete");
+  }
+
+  // nsIObserver
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "autofill-fill-starting":
+        this._suppressInputEvent = true;
+        break;
+      case "autofill-fill-complete":
+        this._suppressInputEvent = false;
+        break;
     }
   }
 
@@ -121,7 +142,13 @@ class AutoCompleteChild extends JSWindowActorChild {
           formFill.detachFromDocument(this.document);
           this._attached = false;
         }
-      // fall through
+        formFill.handleFormEvent(event);
+        break;
+      case "input":
+        if (!this._suppressInputEvent) {
+          formFill.handleFormEvent(event);
+        }
+        break;
       default:
         formFill.handleFormEvent(event);
         break;
