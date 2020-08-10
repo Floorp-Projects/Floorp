@@ -444,6 +444,9 @@ var SidebarUI = {
    * @return {Promise<boolean>}
    */
   async show(commandID, triggerNode) {
+    let panelType = commandID.substring(4, commandID.length - 7);
+    Services.telemetry.keyedScalarAdd("sidebar.opened", panelType, 1);
+
     // Extensions without private window access wont be in the
     // sidebars map.
     if (!this.sidebars.has(commandID)) {
@@ -470,6 +473,9 @@ var SidebarUI = {
    * @return {Promise<boolean>}
    */
   async showInitially(commandID) {
+    let panelType = commandID.substring(4, commandID.length - 7);
+    Services.telemetry.keyedScalarAdd("sidebar.opened", panelType, 1);
+
     // Extensions without private window access wont be in the
     // sidebars map.
     if (!this.sidebars.has(commandID)) {
