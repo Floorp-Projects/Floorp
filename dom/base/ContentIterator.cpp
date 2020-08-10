@@ -847,6 +847,35 @@ nsIContent* ContentSubtreeIterator::DetermineFirstContent() const {
   return GetTopAncestorInRange(firstCandidate);
 }
 
+nsIContent* ContentSubtreeIterator::DetermineCandidateForLastContent() const {
+  nsIContent* lastCandidate{nullptr};
+  nsINode* endContainer = mRange->GetEndContainer();
+  // now to find the last node
+  int32_t offset = mRange->EndOffset();
+  int32_t numChildren = endContainer->GetChildCount();
+
+  nsINode* node = nullptr;
+  if (offset > numChildren) {
+    // Can happen for text nodes
+    offset = numChildren;
+  }
+  if (!offset || !numChildren) {
+    node = endContainer;
+  } else {
+    lastCandidate = mRange->EndRef().Ref();
+    MOZ_ASSERT(lastCandidate == endContainer->GetChildAt_Deprecated(--offset));
+    NS_ASSERTION(lastCandidate,
+                 "tree traversal trouble in ContentSubtreeIterator::Init");
+  }
+
+  if (!lastCandidate) {
+    // then lastCandidate is prev node before node
+    lastCandidate = ContentIteratorBase::GetPrevSibling(node);
+  }
+
+  return lastCandidate;
+}
+
 nsresult ContentSubtreeIterator::InitWithRange() {
   MOZ_ASSERT(mRange);
   MOZ_ASSERT(mRange->IsPositioned());
@@ -875,37 +904,13 @@ nsresult ContentSubtreeIterator::InitWithRange() {
 
   CacheInclusiveAncestorsOfEndContainer();
 
-  nsIContent* lastCandidate = nullptr;
-
   mFirst = DetermineFirstContent();
   if (!mFirst) {
     SetEmpty();
     return NS_OK;
   }
 
-  // now to find the last node
-  int32_t offset = mRange->EndOffset();
-  int32_t numChildren = endContainer->GetChildCount();
-
-  nsINode* node = nullptr;
-  if (offset > numChildren) {
-    // Can happen for text nodes
-    offset = numChildren;
-  }
-  if (!offset || !numChildren) {
-    node = endContainer;
-  } else {
-    lastCandidate = mRange->EndRef().Ref();
-    MOZ_ASSERT(lastCandidate == endContainer->GetChildAt_Deprecated(--offset));
-    NS_ASSERTION(lastCandidate,
-                 "tree traversal trouble in ContentSubtreeIterator::Init");
-  }
-
-  if (!lastCandidate) {
-    // then lastCandidate is prev node before node
-    lastCandidate = ContentIteratorBase::GetPrevSibling(node);
-  }
-
+  nsIContent* lastCandidate = DetermineCandidateForLastContent();
   if (!lastCandidate) {
     SetEmpty();
     return NS_OK;
