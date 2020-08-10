@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozHunspellFileMgr_h
-#define mozHunspellFileMgr_h
+#ifndef mozHunspellFileMgrSandbox_h
+#define mozHunspellFileMgrSandbox_h
 
 #include <string>
+#include <stdint.h>
 
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
@@ -25,21 +26,16 @@ class FileMgr final {
    * unsupported. The argument is there solely for compatibility.
    */
   explicit FileMgr(const char* aFilename, const char* aKey = nullptr);
-  ~FileMgr() = default;
+  ~FileMgr();
 
   // Note: The nonstandard naming conventions of these methods are necessary for
   // Hunspell compatibility.
   bool getline(std::string& aLine);
-  int getlinenum() const { return mLineNum; }
+  int getlinenum() const;
 
  private:
-  mozilla::Result<mozilla::Ok, nsresult> Open(const nsACString& aPath);
-
-  mozilla::Result<mozilla::Ok, nsresult> ReadLine(nsACString& aLine);
-
-  int mLineNum = 0;
-  nsCOMPtr<nsIInputStream> mStream;
-  nsLineBuffer<char> mLineBuffer;
+  // opaque file descriptor got from the host application
+  uint32_t mFd;
 };
 
-#endif  // mozHunspellFileMgr_h
+#endif  // mozHunspellFileMgrSandbox_h
