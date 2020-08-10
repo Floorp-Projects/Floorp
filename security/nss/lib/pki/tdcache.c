@@ -74,7 +74,7 @@ log_cert_ref(const char *msg, NSSCertificate *c)
 
 /* should it live in its own arena? */
 struct nssTDCertificateCacheStr {
-    PZLock *lock;
+    PZLock *lock; /* Must not be held when calling nssSlot_IsTokenPresent. See bug 1625791. */
     NSSArena *arena;
     nssHash *issuerAndSN;
     nssHash *subject;
@@ -712,6 +712,14 @@ add_cert_to_cache(
     cache_entry *ce;
     NSSCertificate *rvCert = NULL;
     NSSUTF8 *certNickname = nssCertificate_GetNickname(cert, NULL);
+
+    /* Set cc->trust and cc->nssCertificate before taking td->cache->lock.
+     * Otherwise, the sorter in add_subject_entry may eventually call
+     * nssSlot_IsTokenPresent, which must not occur while the cache lock
+     * is held. See bugs 1625791 and 1651564 for details. */
+    if (cert->type == NSSCertificateType_PKIX) {
+        (void)STAN_GetCERTCertificate(cert);
+    }
 
     PZ_Lock(td->cache->lock);
     /* If it exists in the issuer/serial hash, it's already in all */

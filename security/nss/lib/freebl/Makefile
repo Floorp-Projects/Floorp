@@ -234,7 +234,12 @@ endif
 endif
 
 ifeq ($(OS_TARGET),Darwin)
-ifeq ($(CPU_ARCH),x86)
+ifeq ($(CPU_ARCH),x86_64)
+    ASFILES  = mpi_amd64_common.s
+    DEFINES += -DMPI_AMD64 -DMP_IS_LITTLE_ENDIAN
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DNSS_USE_COMBA
+    MPI_SRCS += mpi_amd64.c mp_comba.c
+else ifeq ($(CPU_ARCH),x86)
     ASFILES  = mpi_sse2.s
     DEFINES += -DMP_USE_UINT_DIGIT
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
@@ -244,7 +249,8 @@ endif # Darwin
 
 ifeq ($(OS_TARGET),Linux)
 ifeq ($(CPU_ARCH),x86_64)
-    ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
+    # Lower case s on mpi_amd64_common due to make implicit rules.
+    ASFILES  = arcfour-amd64-gas.s mpi_amd64_common.s
     ASFLAGS += -fPIC -Wa,--noexecstack
     DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
     DEFINES += -DNSS_USE_COMBA
@@ -484,7 +490,7 @@ else
     ifeq ($(USE_64),1)
 	# Solaris for AMD64
 	ifdef NS_USE_GCC
-	    ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
+	    ASFILES  = arcfour-amd64-gas.s mpi_amd64_common.s
 	    ASFLAGS += -march=opteron -m64 -fPIC
 	    MPI_SRCS += mp_comba.c
 	    # comment the next four lines to turn off Intel HW acceleration
