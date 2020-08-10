@@ -538,7 +538,7 @@
       )
 
       // Clean up.
-      await cleanup(destDir);
+      await cleanup(srcDir, destDir);
     });
 
     add_task(async function test_move_failures() {
@@ -618,7 +618,7 @@
         "IOUtils::stat can get the last modification date for a regular file"
       );
 
-      await cleanup(emptyFileName, tempFileName, tempFileName)
+      await cleanup(emptyFileName, tempFileName, tempDirName)
     });
 
     add_task(async function test_stat_failures() {
@@ -630,6 +630,188 @@
         /Could not stat file\(.*\) because it does not exist/,
         "IOUtils::stat throws if the target file does not exist"
       );
+    });
+
+    add_task(async function test_copy_relative_path() {
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_copy_relative_path.tmp");
+      const dest = "relative_to_cwd.tmp";
+      await createFile(tmpFileName, "source");
+
+      info("Test copy a file to a relative destination");
+      await Assert.rejects(
+        window.IOUtils.copy(tmpFileName, dest),
+        /Refusing to work with path\(.*\) because only absolute file paths are permitted/,
+        "IOUtils::copy only works with absolute paths"
+      );
+      ok(
+        await fileHasTextContents(tmpFileName, "source"),
+        "IOUtils::copy doesn't change source file when copy fails"
+      );
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_copy() {
+      // Set up.
+      const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_orig.tmp");
+      const destFileName = OS.Path.join(tmpDir, "test_ioutils_copy.tmp");
+      await createFile(tmpFileName, "original");
+      // Test.
+      info("Test copy to new file in same directory");
+      await window.IOUtils.copy(tmpFileName, destFileName);
+      ok(
+        await fileExists(tmpFileName)
+        && await fileHasTextContents(destFileName, "original"),
+        "IOUtils::copy can copy source to dest in same directory"
+      );
+
+      // Set up.
+      info("Test copy to existing file with no overwrite");
+      await createFile(tmpFileName, "new contents");
+      // Test.
+      await Assert.rejects(
+        window.IOUtils.copy(tmpFileName, destFileName, { noOverwrite: true }),
+        /Could not copy source file\(.*\) to destination\(.*\) because the destination already exists and overwrites are not allowed/,
+        "IOUtils::copy will refuse to copy to existing destination if overwrites are disabled"
+      );
+      ok(
+        await fileExists(tmpFileName)
+        && await fileHasTextContents(destFileName, "original"),
+        "Failed IOUtils::move doesn't move the source file"
+      );
+
+      // Test.
+      info("Test copy to existing file with overwrite");
+      await window.IOUtils.copy(tmpFileName, destFileName, { noOverwrite: false });
+      ok(await fileExists(tmpFileName), "IOUtils::copy retains source");
+      ok(
+        await fileHasTextContents(destFileName, "new contents"),
+        "IOUtils::copy overwrote the destination with the source"
+      );
+
+      // Clean up.
+      await cleanup(tmpFileName, destFileName);
+    });
+
+    add_task(async function test_copy_file_to_dir() {
+      // Set up.
+      info("Test copy file to non-existing directory");
+      const tmpFileName = OS.Path.join(tmpDir, "test_copy_file_to_dir.tmp");
+      const destDir = OS.Path.join(tmpDir, "test_copy_file_to_dir.tmp.d");
+      const dest = OS.Path.join(destDir, "dest.tmp");
+      await createFile(tmpFileName);
+      // Test.
+      ok(!await fileOrDirExists(destDir), "Expected path not to exist");
+      await window.IOUtils.copy(tmpFileName, dest);
+      ok(
+        await fileExists(tmpFileName) && await fileExists(dest),
+        "IOUtils::copy creates non-existing parents if needed"
+      );
+
+      // Set up.
+      info("Test copy file to existing directory")
+      await createFile(tmpFileName);
+      // Test.
+      ok(await dirExists(destDir), `Expected ${destDir} to be a directory`);
+      await window.IOUtils.copy(tmpFileName, dest);
+      ok(
+        await fileExists(tmpFileName)
+        && await fileExists(dest),
+        "IOUtils::copy can copy a file into an existing dir"
+      );
+
+      // Set up.
+      info("Test copy file to existing directory without specifying leaf name")
+      await createFile(tmpFileName);
+      // Test.
+      await window.IOUtils.copy(tmpFileName, destDir);
+      ok(await dirExists(destDir), `Expected ${destDir} to be a directory`);
+      ok(
+        await fileExists(tmpFileName)
+        && await fileExists(OS.Path.join(destDir, OS.Path.basename(tmpFileName))),
+        "IOUtils::copy can copy a file into an existing dir"
+      );
+
+      // Clean up.
+      await cleanup(tmpFileName, destDir);
+    });
+
+    add_task(async function test_copy_dir_recursive() {
+      // Set up.
+      info("Test rename an empty directory");
+      const srcDir = OS.Path.join(tmpDir, "test_copy_dir.tmp.d");
+      const destDir = OS.Path.join(tmpDir, "test_copy_dir_dest.tmp.d");
+      await createDir(srcDir);
+      // Test.
+      await window.IOUtils.copy(srcDir, destDir, { recursive: true });
+      ok(
+        await dirExists(srcDir) && await dirExists(destDir),
+        "IOUtils::copy can recursively copy entire directories"
+      );
+
+      // Set up.
+      info("Test copy directory and its content into another directory");
+      await createDir(srcDir);
+      await createFile(OS.Path.join(srcDir, "file.tmp"), "foo");
+      // Test.
+      await window.IOUtils.copy(srcDir, destDir, { recursive: true });
+      const destFile = OS.Path.join(destDir, OS.Path.basename(srcDir), "file.tmp");
+      ok(
+        await dirExists(srcDir)
+        && await dirExists(destDir)
+        && await dirExists(OS.Path.join(destDir, OS.Path.basename(srcDir)))
+        && await fileHasTextContents(destFile, "foo"),
+        "IOUtils::copy can move a directory and its contents into another one"
+      )
+
+      // Clean up.
+      await cleanup(srcDir, destDir);
+    });
+
+    add_task(async function test_copy_failures() {
+      // Set up.
+      info("Test attempt to copy a non-existent source file");
+      const notExistsSrc = OS.Path.join(tmpDir, "test_copy_not_exists_src.tmp");
+      const notExistsDest = OS.Path.join(tmpDir, "test_copy_not_exists_dest.tmp");
+      // Test.
+      await Assert.rejects(
+        window.IOUtils.copy(notExistsSrc, notExistsDest),
+        /Could not copy source file\(.*\) because it does not exist/,
+        "IOUtils::copy throws if source file does not exist"
+      );
+      ok(
+        !await fileExists(notExistsSrc) && !await fileExists(notExistsDest),
+        "IOUtils::copy failure due to missing source file does not affect destination"
+      );
+
+      // Set up.
+      info("Test attempt to copy a directory to a file");
+      const destFile = OS.Path.join(tmpDir, "test_copy_failures_file_dest.tmp");
+      const srcDir = OS.Path.join(tmpDir, "test_copy_failure_src.tmp.d");
+      await createFile(destFile);
+      await createDir(srcDir);
+      // Test.
+      await Assert.rejects(
+        window.IOUtils.copy(srcDir, destFile, { recursive: true }),
+        /Could not copy the source directory\(.*\) to the destination\(.*\) because the destination is not a directory/,
+        "IOUtils::copy throws if try to move dir into an existing file"
+      );
+      ok(await fileHasTextContents(destFile, ""), "IOUtils::copy failure does not affect destination");
+
+      // Set up.
+      info("Test copy directory without recursive option");
+      await createDir(srcDir);
+      // Test.
+      await Assert.rejects(
+        window.IOUtils.copy(srcDir, notExistsDest, { recursive: false }),
+        /Refused to copy source directory\(.*\) to the destination\(.*\)/,
+        "IOUtils::copy throws if try to copy a directory with { recursive: false }"
+      );
+      console.log(`${notExistsDest} exists?`, await fileOrDirExists(notExistsDest))
+      ok(!await fileOrDirExists(notExistsDest), "IOUtils::copy failure does not affect destination");
+
+      // Clean up.
+      await cleanup(destFile, srcDir);
     });
 
 
