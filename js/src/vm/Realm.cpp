@@ -729,6 +729,10 @@ bool Realm::collectCoverage() const {
 }
 
 bool Realm::collectCoverageForPGO() const {
+  if (jit::JitOptions.warpBuilder) {
+    // Warp inserts bailouts based on the Baseline IC counters.
+    return false;
+  }
   return !jit::JitOptions.disablePgo;
 }
 

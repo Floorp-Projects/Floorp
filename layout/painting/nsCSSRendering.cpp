@@ -2751,7 +2751,8 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
     // finished and this page only displays the continuations of
     // absolutely positioned content).
     if (geometryFrame) {
-      positionArea = geometryFrame->GetRect();
+      positionArea =
+          nsPlaceholderFrame::GetRealFrameFor(geometryFrame)->GetRect();
     }
   } else {
     positionArea = nsRect(nsPoint(0, 0), aBorderArea.Size());

@@ -85,7 +85,13 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
 //-------------------------------------------------------------------------
 class nsPrinterListWin final : public nsPrinterListBase {
  public:
-  NS_DECL_NSIPRINTERLIST
+  NS_IMETHOD InitPrintSettingsFromPrinter(const nsAString&,
+                                          nsIPrintSettings*) final;
+  NS_IMETHOD GetSystemDefaultPrinterName(nsAString&) final;
+
+  nsTArray<PrinterInfo> Printers() const final;
+  RefPtr<nsIPrinter> CreatePrinter(PrinterInfo) const final;
+
   nsPrinterListWin() = default;
 
  private:

@@ -9,15 +9,6 @@
 
 using namespace mozilla;
 
-nsPrinterCUPS::nsPrinterCUPS(const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-                             const nsAString& aDisplayName)
-    : mDisplayName(aDisplayName), mShim(aShim) {
-  MOZ_ASSERT(aPrinter);
-  DebugOnly<const int> numCopied = aShim.cupsCopyDest(aPrinter, 0, &mPrinter);
-  MOZ_ASSERT(numCopied == 1);
-  mPrinterInfo = aShim.cupsCopyDestInfo(CUPS_HTTP_DEFAULT, mPrinter);
-}
-
 nsPrinterCUPS::~nsPrinterCUPS() {
   if (mPrinterInfo) {
     mShim.cupsFreeDestInfo(mPrinterInfo);
@@ -27,13 +18,6 @@ nsPrinterCUPS::~nsPrinterCUPS() {
     mShim.cupsFreeDests(1, mPrinter);
     mPrinter = nullptr;
   }
-}
-
-// static
-already_AddRefed<nsPrinterCUPS> nsPrinterCUPS::Create(
-    const nsCUPSShim& aShim, cups_dest_t* aPrinter,
-    const nsAString& aDisplayName) {
-  return do_AddRef(new nsPrinterCUPS(aShim, aPrinter, aDisplayName));
 }
 
 NS_IMETHODIMP

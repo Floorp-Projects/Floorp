@@ -13,11 +13,13 @@ async function run() {
     let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
       Ci.nsIPrinterList
     );
-    if (printerList.printers.length == 0) {
+    let printers = await printerList.printers;
+    if (printers.length == 0) {
       ok(true, "There were no printers to iterate through.");
     }
 
-    for (let printer of printerList.printers) {
+    for (let printer of printers) {
+      printer.QueryInterface(Ci.nsIPrinter);
       isnot(printer.name, null, "Printer name should never be null.");
       isnot(printer.name, "", "Printer name should never be empty.");
       info(printer.name);

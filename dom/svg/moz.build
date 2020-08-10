@@ -10,6 +10,8 @@ with Files("**"):
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS.mozilla += [
+    'SVGAnimatedClass.h',
+    'SVGAnimatedClassOrString.h',
     'SVGAttrValueWrapper.h',
     'SVGContentUtils.h',
     'SVGFragmentIdentifier.h',
@@ -20,7 +22,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'SVGAElement.h',
-    'SVGAnimatedClass.h',
     'SVGAnimatedRect.h',
     'SVGAnimateElement.h',
     'SVGAnimateMotionElement.h',
@@ -123,6 +124,7 @@ UNIFIED_SOURCES += [
     'SVGAElement.cpp',
     'SVGAnimatedBoolean.cpp',
     'SVGAnimatedClass.cpp',
+    'SVGAnimatedClassOrString.cpp',
     'SVGAnimatedEnumeration.cpp',
     'SVGAnimatedInteger.cpp',
     'SVGAnimatedIntegerPair.cpp',
