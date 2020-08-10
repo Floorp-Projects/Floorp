@@ -792,6 +792,34 @@ void ContentSubtreeIterator::CacheInclusiveAncestorsOfEndContainer() {
   }
 }
 
+nsIContent* ContentSubtreeIterator::DetermineCandidateForFirstContent() const {
+  nsINode* startContainer = mRange->GetStartContainer();
+  nsIContent* firstCandidate = nullptr;
+  // find first node in range
+  nsINode* node = nullptr;
+  if (!startContainer->GetChildCount()) {
+    // no children, start at the node itself
+    node = startContainer;
+  } else {
+    nsIContent* child = mRange->GetChildAtStartOffset();
+    MOZ_ASSERT(child ==
+               startContainer->GetChildAt_Deprecated(mRange->StartOffset()));
+    if (!child) {
+      // offset after last child
+      node = startContainer;
+    } else {
+      firstCandidate = child;
+    }
+  }
+
+  if (!firstCandidate) {
+    // then firstCandidate is next node after node
+    firstCandidate = ContentIteratorBase::GetNextSibling(node);
+  }
+
+  return firstCandidate;
+}
+
 nsresult ContentSubtreeIterator::InitWithRange() {
   MOZ_ASSERT(mRange);
   MOZ_ASSERT(mRange->IsPositioned());
@@ -823,31 +851,10 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   nsIContent* firstCandidate = nullptr;
   nsIContent* lastCandidate = nullptr;
 
-  // find first node in range
-  nsINode* node = nullptr;
-  if (!startContainer->GetChildCount()) {
-    // no children, start at the node itself
-    node = startContainer;
-  } else {
-    nsIContent* child = mRange->GetChildAtStartOffset();
-    MOZ_ASSERT(child ==
-               startContainer->GetChildAt_Deprecated(mRange->StartOffset()));
-    if (!child) {
-      // offset after last child
-      node = startContainer;
-    } else {
-      firstCandidate = child;
-    }
-  }
-
+  firstCandidate = DetermineCandidateForFirstContent();
   if (!firstCandidate) {
-    // then firstCandidate is next node after node
-    firstCandidate = ContentIteratorBase::GetNextSibling(node);
-
-    if (!firstCandidate) {
-      SetEmpty();
-      return NS_OK;
-    }
+    SetEmpty();
+    return NS_OK;
   }
 
   firstCandidate = ContentIteratorBase::GetDeepFirstChild(firstCandidate);
@@ -873,6 +880,7 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   int32_t offset = mRange->EndOffset();
   int32_t numChildren = endContainer->GetChildCount();
 
+  nsINode* node = nullptr;
   if (offset > numChildren) {
     // Can happen for text nodes
     offset = numChildren;
