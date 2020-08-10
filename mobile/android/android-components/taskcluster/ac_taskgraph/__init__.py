@@ -58,6 +58,6 @@ def get_decision_parameters(graph_config, parameters):
         if head_tag[1:] != version:
             raise ValueError(
                 "Cannot run github-release if tag {} is different than in-tree "
-                "{version} from buildconfig.yml".format(head_tag[1:], version)
+                "{} from buildconfig.yml".format(head_tag[1:], version)
             )
         parameters["target_tasks_method"] = "release"
