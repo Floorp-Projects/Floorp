@@ -23,7 +23,7 @@ use std::fmt;
 use std::mem;
 
 use cranelift_codegen::binemit::{
-    Addend, CodeInfo, CodeOffset, NullStackmapSink, Reloc, RelocSink, TrapSink,
+    Addend, CodeInfo, CodeOffset, NullStackMapSink, Reloc, RelocSink, TrapSink,
 };
 use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::{
@@ -213,7 +213,7 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
                     code_buffer.as_mut_ptr(),
                     &mut relocs,
                     &mut self.trap_relocs,
-                    &mut NullStackmapSink {},
+                    &mut NullStackMapSink {},
                 )
             };
 
@@ -236,19 +236,19 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
     /// Iterate over safepoint information contained in the returned `MachBufferFinalized`.
     fn emit_stackmaps(&self, mut stackmaps: bindings::Stackmaps) {
         let mach_buf = &self.context.mach_compile_result.as_ref().unwrap().buffer;
-        let mach_stackmaps = mach_buf.stackmaps();
+        let mach_stackmaps = mach_buf.stack_maps();
 
         for &MachStackMap {
             offset_end,
-            ref stackmap,
+            ref stack_map,
             ..
         } in mach_stackmaps
         {
             debug!(
                 "Stack map at end-of-insn offset {}: {:?}",
-                offset_end, stackmap
+                offset_end, stack_map
             );
-            stackmaps.add_stackmap(/* inbound_args_size = */ 0, offset_end, stackmap);
+            stackmaps.add_stackmap(/* inbound_args_size = */ 0, offset_end, stack_map);
         }
     }
 
