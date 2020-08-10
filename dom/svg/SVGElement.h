@@ -14,10 +14,10 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGAnimatedClass.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/SVGAnimatedClass.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/UniquePtr.h"
 #include "nsChangeHint.h"
