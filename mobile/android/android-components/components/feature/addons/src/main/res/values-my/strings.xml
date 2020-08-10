@@ -178,4 +178,10 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">နောက်ဆုံးကြိုးပမ်းမှု -</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">အခြေအနေ -</string>
-    </resources>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s  ကို %2$s သို့ ထည့်သွင်ပြီး</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">၎င်း ကို မီနူး ထဲတွင် ဖွင့်ပါ</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">အိုကေ၊ ရပြီ</string>
+</resources>
