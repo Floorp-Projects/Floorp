@@ -11,14 +11,13 @@ use crate::composite::{CompositeState};
 use crate::glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuCacheAddress};
 use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
-use crate::gpu_types::{SplitCompositeInstance, BrushShaderKind};
+use crate::gpu_types::{ClipMaskInstance, SplitCompositeInstance, BrushShaderKind};
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
-use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
-use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
+use crate::gpu_types::{ImageBrushData, get_shader_opacity};
 use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSource, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, ClusterFlags};
-use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind, ClipData};
+use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
 use crate::prim_store::VECS_PER_SEGMENT;
@@ -3170,11 +3169,11 @@ pub fn resolve_image(
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ClipBatchList {
     /// Rectangle draws fill up the rectangles with rounded corners.
-    pub slow_rectangles: Vec<ClipMaskInstanceRect>,
-    pub fast_rectangles: Vec<ClipMaskInstanceRect>,
+    pub slow_rectangles: Vec<ClipMaskInstance>,
+    pub fast_rectangles: Vec<ClipMaskInstance>,
     /// Image draws apply the image masking.
-    pub images: FastHashMap<TextureSource, Vec<ClipMaskInstanceImage>>,
-    pub box_shadows: FastHashMap<TextureSource, Vec<ClipMaskInstanceBoxShadow>>,
+    pub images: FastHashMap<TextureSource, Vec<ClipMaskInstance>>,
+    pub box_shadows: FastHashMap<TextureSource, Vec<ClipMaskInstance>>,
 }
 
 impl ClipBatchList {
@@ -3217,24 +3216,24 @@ impl ClipBatcher {
 
     pub fn add_clip_region(
         &mut self,
+        clip_data_address: GpuCacheAddress,
         local_pos: LayoutPoint,
         sub_rect: DeviceRect,
-        clip_data: ClipData,
         task_origin: DevicePoint,
         screen_origin: DevicePoint,
         device_pixel_scale: f32,
     ) {
-        let instance = ClipMaskInstanceRect {
-            common: ClipMaskInstanceCommon {
-                clip_transform_id: TransformPaletteId::IDENTITY,
-                prim_transform_id: TransformPaletteId::IDENTITY,
-                sub_rect,
-                task_origin,
-                screen_origin,
-                device_pixel_scale,
-            },
+        let instance = ClipMaskInstance {
+            clip_transform_id: TransformPaletteId::IDENTITY,
+            prim_transform_id: TransformPaletteId::IDENTITY,
+            clip_data_address,
+            resource_address: GpuCacheAddress::INVALID,
             local_pos,
-            clip_data,
+            tile_rect: LayoutRect::zero(),
+            sub_rect,
+            task_origin,
+            screen_origin,
+            device_pixel_scale,
         };
 
         self.primary_clips.slow_rectangles.push(instance);
@@ -3250,7 +3249,8 @@ impl ClipBatcher {
         spatial_tree: &SpatialTree,
         world_rect: &WorldRect,
         device_pixel_scale: DevicePixelScale,
-        common: &ClipMaskInstanceCommon,
+        gpu_address: GpuCacheAddress,
+        instance: &ClipMaskInstance,
         is_first_clip: bool,
     ) -> bool {
         // Only try to draw in tiles if the clip mark is big enough.
@@ -3318,13 +3318,11 @@ impl ClipBatcher {
                 // these pixels would be redundant - since this clip can't possibly
                 // affect the pixels in this tile, skip them!
                 if !world_device_rect.contains_rect(&world_sub_rect) {
-                    clip_list.slow_rectangles.push(ClipMaskInstanceRect {
-                        common: ClipMaskInstanceCommon {
-                            sub_rect: normalized_sub_rect,
-                            ..*common
-                        },
+                    clip_list.slow_rectangles.push(ClipMaskInstance {
+                        clip_data_address: gpu_address,
+                        sub_rect: normalized_sub_rect,
                         local_pos: local_clip_rect.origin,
-                        clip_data: ClipData::uniform(local_clip_rect.size, 0.0, ClipMode::Clip),
+                        ..*instance
                     });
                 }
             }
@@ -3380,7 +3378,13 @@ impl ClipBatcher {
                 spatial_tree,
             );
 
-            let common = ClipMaskInstanceCommon {
+            let instance = ClipMaskInstance {
+                clip_transform_id,
+                prim_transform_id,
+                clip_data_address: GpuCacheAddress::INVALID,
+                resource_address: GpuCacheAddress::INVALID,
+                local_pos: LayoutPoint::zero(),
+                tile_rect: LayoutRect::zero(),
                 sub_rect: DeviceRect::new(
                     DevicePoint::zero(),
                     actual_rect.size,
@@ -3388,8 +3392,6 @@ impl ClipBatcher {
                 task_origin,
                 screen_origin,
                 device_pixel_scale: device_pixel_scale.0,
-                clip_transform_id,
-                prim_transform_id,
             };
 
             let added_clip = match clip_node.item.kind {
@@ -3399,6 +3401,9 @@ impl ClipBatcher {
                         rendering: ImageRendering::Auto,
                         tile: None,
                     };
+
+                    let clip_data_address =
+                        gpu_cache.get_address(&clip_node.gpu_cache_handle);
 
                     let mut add_image = |request: ImageRequest, local_tile_rect: LayoutRect| {
                         let cache_item = match resource_cache.get_cached_image(request) {
@@ -3414,11 +3419,12 @@ impl ClipBatcher {
                             .images
                             .entry(cache_item.texture_id)
                             .or_insert_with(Vec::new)
-                            .push(ClipMaskInstanceImage {
-                                common,
+                            .push(ClipMaskInstance {
+                                clip_data_address,
                                 resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
                                 tile_rect: local_tile_rect,
-                                local_rect: rect,
+                                local_pos: rect.origin,
+                                ..instance
                             });
                     };
 
@@ -3439,6 +3445,8 @@ impl ClipBatcher {
                     true
                 }
                 ClipItemKind::BoxShadow { ref source }  => {
+                    let gpu_address =
+                        gpu_cache.get_address(&clip_node.gpu_cache_handle);
                     let rt_handle = source
                         .cache_handle
                         .as_ref()
@@ -3453,27 +3461,23 @@ impl ClipBatcher {
                         .box_shadows
                         .entry(cache_item.texture_id)
                         .or_insert_with(Vec::new)
-                        .push(ClipMaskInstanceBoxShadow {
-                            common,
+                        .push(ClipMaskInstance {
+                            clip_data_address: gpu_address,
                             resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
-                            shadow_data: BoxShadowData {
-                                src_rect_size: source.original_alloc_size,
-                                clip_mode: source.clip_mode as i32,
-                                stretch_mode_x: source.stretch_mode_x as i32,
-                                stretch_mode_y: source.stretch_mode_y as i32,
-                                dest_rect: source.prim_shadow_rect,
-                            },
+                            ..instance
                         });
 
                     true
                 }
                 ClipItemKind::Rectangle { rect, mode: ClipMode::ClipOut } => {
+                    let gpu_address =
+                        gpu_cache.get_address(&clip_node.gpu_cache_handle);
                     self.get_batch_list(is_first_clip)
                         .slow_rectangles
-                        .push(ClipMaskInstanceRect {
-                            common,
+                        .push(ClipMaskInstance {
                             local_pos: rect.origin,
-                            clip_data: ClipData::uniform(rect.size, 0.0, ClipMode::ClipOut),
+                            clip_data_address: gpu_address,
+                            ..instance
                         });
 
                     true
@@ -3482,6 +3486,8 @@ impl ClipBatcher {
                     if clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) {
                         false
                     } else {
+                        let gpu_address = gpu_cache.get_address(&clip_node.gpu_cache_handle);
+
                         if !self.add_tiled_clip_mask(
                             actual_rect,
                             rect,
@@ -3489,27 +3495,30 @@ impl ClipBatcher {
                             spatial_tree,
                             world_rect,
                             device_pixel_scale,
-                            &common,
+                            gpu_address,
+                            &instance,
                             is_first_clip,
                         ) {
                             self.get_batch_list(is_first_clip)
                                 .slow_rectangles
-                                .push(ClipMaskInstanceRect {
-                                    common,
+                                .push(ClipMaskInstance {
+                                    clip_data_address: gpu_address,
                                     local_pos: rect.origin,
-                                    clip_data: ClipData::uniform(rect.size, 0.0, ClipMode::Clip),
+                                    ..instance
                                 });
                         }
 
                         true
                     }
                 }
-                ClipItemKind::RoundedRectangle { rect, ref radius, mode, .. } => {
+                ClipItemKind::RoundedRectangle { rect, .. } => {
+                    let gpu_address =
+                        gpu_cache.get_address(&clip_node.gpu_cache_handle);
                     let batch_list = self.get_batch_list(is_first_clip);
-                    let instance = ClipMaskInstanceRect {
-                        common,
+                    let instance = ClipMaskInstance {
+                        clip_data_address: gpu_address,
                         local_pos: rect.origin,
-                        clip_data: ClipData::rounded_rect(rect.size, radius, mode),
+                        ..instance
                     };
                     if clip_instance.flags.contains(ClipNodeFlags::USE_FAST_PATH) {
                         batch_list.fast_rectangles.push(instance);
