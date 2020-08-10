@@ -485,7 +485,7 @@ TEST_F(APZScrollHandoffTester, PartialFlingHandoff) {
   // Advance the child's fling animation once to give the partial handoff
   // a chance to occur.
   mcc->AdvanceByMillis(10);
-  child->AdvanceAnimations(mcc->Time());
+  child->AdvanceAnimations(mcc->GetSampleTime());
 
   // Assert that partial handoff has occurred.
   child->AssertStateIsFling();
