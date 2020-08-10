@@ -7,6 +7,7 @@
 #include "nsPaperMargin.h"
 #include <utility>
 #include "nsPaper.h"
+#include "PrintBackgroundTask.h"
 #include "mozilla/dom/Promise.h"
 
 using namespace mozilla;
@@ -32,10 +33,7 @@ inline void ImplCycleCollectionUnlink(
   }
 }
 
-template <typename T>
-void ResolveOrReject(Promise& aPromise, nsPrinterBase&, T& aResult) {
-  aPromise.MaybeResolve(std::forward<T>(aResult));
-}
+namespace mozilla {
 
 template <>
 void ResolveOrReject(Promise& aPromise, nsPrinterBase&,
@@ -55,86 +53,42 @@ void ResolveOrReject(Promise& aPromise, nsPrinterBase& aPrinter,
   aPromise.MaybeResolve(result);
 }
 
-template <typename T, typename... Args>
-void nsPrinterBase::SpawnBackgroundTask(
-    Promise& aPromise, BackgroundTask<T, Args...> aBackgroundTask,
-    Args... aArgs) {
-  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<Promise>>(
-      "nsPrinterBase::SpawnBackgroundTaskPromise", &aPromise);
-  // We actually want to allow to access the printer data from the callback, so
-  // disable strict checking. They should of course only access immutable
-  // members.
-  auto holder = MakeRefPtr<nsMainThreadPtrHolder<nsPrinterBase>>(
-      "nsPrinterBase::SpawnBackgroundTaskPrinter", this, /* strict = */ false);
-  // See
-  // https://stackoverflow.com/questions/47496358/c-lambdas-how-to-capture-variadic-parameter-pack-from-the-upper-scope
-  // about the tuple shenanigans. It could be improved with C++20
-  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-      "nsPrinterBase::SpawnBackgroundTask",
-      [holder = std::move(holder), promiseHolder = std::move(promiseHolder),
-       aBackgroundTask, aArgs = std::make_tuple(std::forward<Args>(aArgs)...)] {
-        T result = std::apply(
-            [&](auto&&... args) {
-              return (holder->get()->*aBackgroundTask)(args...);
-            },
-            std::move(aArgs));
-        NS_DispatchToMainThread(NS_NewRunnableFunction(
-            "nsPrinterBase::SpawnBackgroundTaskResolution",
-            [holder = std::move(holder),
-             promiseHolder = std::move(promiseHolder),
-             result = std::move(result)] {
-              ResolveOrReject(*promiseHolder->get(), *holder->get(), result);
-            }));
-      }));
-}
+}  // namespace mozilla
 
 template <typename T, typename... Args>
 nsresult nsPrinterBase::AsyncPromiseAttributeGetter(
     JSContext* aCx, Promise** aResultPromise, AsyncAttribute aAttribute,
     BackgroundTask<T, Args...> aBackgroundTask, Args... aArgs) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (RefPtr<Promise> existing = mAsyncAttributePromises[aAttribute]) {
-    existing.forget(aResultPromise);
-    return NS_OK;
-  }
-  ErrorResult rv;
-  mAsyncAttributePromises[aAttribute] =
-      Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
-  if (MOZ_UNLIKELY(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  RefPtr<Promise> promise = mAsyncAttributePromises[aAttribute];
-  SpawnBackgroundTask(*promise, aBackgroundTask, aArgs...);
-
-  promise.forget(aResultPromise);
-  return NS_OK;
+  return mozilla::AsyncPromiseAttributeGetter(
+      *this, mAsyncAttributePromises[aAttribute], aCx, aResultPromise,
+      aBackgroundTask, std::forward<Args>(aArgs)...);
 }
 
 NS_IMETHODIMP nsPrinterBase::GetSupportsDuplex(JSContext* aCx,
                                                Promise** aResultPromise) {
-  return AsyncPromiseAttributeGetter<bool>(aCx, aResultPromise,
-                                           AsyncAttribute::SupportsDuplex,
-                                           &nsPrinterBase::SupportsDuplex);
+  return AsyncPromiseAttributeGetter(aCx, aResultPromise,
+                                     AsyncAttribute::SupportsDuplex,
+                                     &nsPrinterBase::SupportsDuplex);
 }
 
 NS_IMETHODIMP nsPrinterBase::GetSupportsColor(JSContext* aCx,
                                               Promise** aResultPromise) {
-  return AsyncPromiseAttributeGetter<bool>(aCx, aResultPromise,
-                                           AsyncAttribute::SupportsColor,
-                                           &nsPrinterBase::SupportsColor);
+  return AsyncPromiseAttributeGetter(aCx, aResultPromise,
+                                     AsyncAttribute::SupportsColor,
+                                     &nsPrinterBase::SupportsColor);
 }
 
 NS_IMETHODIMP nsPrinterBase::GetPaperList(JSContext* aCx,
                                           Promise** aResultPromise) {
-  return AsyncPromiseAttributeGetter<nsTArray<PaperInfo>>(
-      aCx, aResultPromise, AsyncAttribute::PaperList,
-      &nsPrinterBase::PaperList);
+  return AsyncPromiseAttributeGetter(aCx, aResultPromise,
+                                     AsyncAttribute::PaperList,
+                                     &nsPrinterBase::PaperList);
 }
 
 void nsPrinterBase::QueryMarginsForPaper(Promise& aPromise, uint64_t aPaperId) {
-  return SpawnBackgroundTask<MarginDouble, uint64_t>(
-      aPromise, &nsPrinterBase::GetMarginsForPaper, aPaperId);
+  return SpawnPrintBackgroundTask(*this, aPromise,
+                                  &nsPrinterBase::GetMarginsForPaper, aPaperId);
 }
 
 NS_IMPL_CYCLE_COLLECTION(nsPrinterBase, mAsyncAttributePromises)

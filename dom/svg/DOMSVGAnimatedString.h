@@ -7,26 +7,41 @@
 #ifndef DOM_SVG_DOMSVGANIMATEDSTRING_H_
 #define DOM_SVG_DOMSVGANIMATEDSTRING_H_
 
-#include "SVGElement.h"
+#include "mozilla/SVGAnimatedClassOrString.h"
+#include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
 namespace dom {
 
-class DOMSVGAnimatedString : public nsISupports, public nsWrapperCache {
+class DOMSVGAnimatedString final : public nsWrapperCache {
  public:
-  explicit DOMSVGAnimatedString(SVGElement* aSVGElement)
-      : mSVGElement(aSVGElement) {}
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAnimatedString)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedString)
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  DOMSVGAnimatedString(SVGAnimatedClassOrString* aVal, SVGElement* aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   SVGElement* GetParentObject() const { return mSVGElement; }
 
-  virtual void GetBaseVal(nsAString& aResult) = 0;
-  virtual void SetBaseVal(const nsAString& aValue) = 0;
-  virtual void GetAnimVal(nsAString& aResult) = 0;
+  void GetBaseVal(nsAString& aResult) {
+    mVal->GetBaseValue(aResult, mSVGElement);
+  }
+  void SetBaseVal(const nsAString& aValue) {
+    mVal->SetBaseValue(aValue, mSVGElement, true);
+  }
+  void GetAnimVal(nsAString& aResult) {
+    mSVGElement->FlushAnimations();
+    mVal->GetAnimValue(aResult, mSVGElement);
+  }
 
+ private:
+  ~DOMSVGAnimatedString() { mVal->RemoveTearoff(); }
+
+  SVGAnimatedClassOrString* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
 };
 

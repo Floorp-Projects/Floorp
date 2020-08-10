@@ -11,34 +11,52 @@
 #include "prenv.h"
 
 static nsCUPSShim sCupsShim;
+using PrinterInfo = nsPrinterListBase::PrinterInfo;
 
-NS_IMETHODIMP
-nsPrinterListCUPS::GetPrinters(nsTArray<RefPtr<nsIPrinter>>& aPrinters) {
+nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
   if (!sCupsShim.EnsureInitialized()) {
-    return NS_ERROR_FAILURE;
+    return {};
   }
+
+  nsTArray<PrinterInfo> printerInfoList;
 
   cups_dest_t* printers = nullptr;
   auto numPrinters = sCupsShim.cupsGetDests(&printers);
-  aPrinters.SetCapacity(numPrinters);
+  printerInfoList.SetCapacity(numPrinters);
 
   for (auto i : mozilla::IntegerRange(0, numPrinters)) {
     cups_dest_t* dest = printers + i;
 
-    nsString displayName;
-    GetDisplayNameForPrinter(*dest, displayName);
-    RefPtr<nsPrinterCUPS> cupsPrinter =
-        nsPrinterCUPS::Create(sCupsShim, dest, displayName);
+    cups_dest_t* ownedDest = nullptr;
+    mozilla::DebugOnly<const int> numCopied =
+        sCupsShim.cupsCopyDest(dest, 0, &ownedDest);
+    MOZ_ASSERT(numCopied == 1);
 
-    aPrinters.AppendElement(cupsPrinter);
+    cups_dinfo_t* ownedInfo =
+        sCupsShim.cupsCopyDestInfo(CUPS_HTTP_DEFAULT, ownedDest);
+
+    nsString name;
+    GetDisplayNameForPrinter(*dest, name);
+
+    printerInfoList.AppendElement(
+        PrinterInfo{std::move(name), {ownedDest, ownedInfo}});
   }
 
   sCupsShim.cupsFreeDests(numPrinters, printers);
-  return NS_OK;
+  return printerInfoList;
+}
+
+RefPtr<nsIPrinter> nsPrinterListCUPS::CreatePrinter(PrinterInfo aInfo) const {
+  return mozilla::MakeRefPtr<nsPrinterCUPS>(
+      sCupsShim, std::move(aInfo.mName),
+      static_cast<cups_dest_t*>(aInfo.mCupsHandles[0]),
+      static_cast<cups_dinfo_t*>(aInfo.mCupsHandles[1]));
 }
 
 NS_IMETHODIMP
 nsPrinterListCUPS::GetSystemDefaultPrinterName(nsAString& aName) {
+  aName.Truncate();
+
   if (!sCupsShim.EnsureInitialized()) {
     return NS_ERROR_FAILURE;
   }
@@ -48,7 +66,7 @@ nsPrinterListCUPS::GetSystemDefaultPrinterName(nsAString& aName) {
       sCupsShim.cupsGetNamedDest(CUPS_HTTP_DEFAULT, /* name */ nullptr,
                                  /* instance */ nullptr);
   if (!dest) {
-    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
+    return NS_OK;
   }
 
   GetDisplayNameForPrinter(*dest, aName);
