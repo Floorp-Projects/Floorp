@@ -1545,8 +1545,7 @@ bool CacheIRCompiler::emitGuardBooleanToInt32(ValOperandId inputId,
     return false;
   }
 
-  masm.branchTestBoolean(Assembler::NotEqual, input, failure->label());
-  masm.unboxBoolean(input, output);
+  masm.fallibleUnboxBoolean(input, output, failure->label());
   return true;
 }
 
@@ -7163,8 +7162,7 @@ bool CacheIRCompiler::emitCallIsSuspendedGeneratorResult(ValOperandId valId) {
   // If the resumeIndex slot holds an int32 value < RESUME_INDEX_RUNNING,
   // the generator is suspended.
   Address addr(scratch, AbstractGeneratorObject::offsetOfResumeIndexSlot());
-  masm.branchTestInt32(Assembler::NotEqual, addr, &returnFalse);
-  masm.unboxInt32(addr, scratch);
+  masm.fallibleUnboxInt32(addr, scratch, &returnFalse);
   masm.branch32(Assembler::AboveOrEqual, scratch,
                 Imm32(AbstractGeneratorObject::RESUME_INDEX_RUNNING),
                 &returnFalse);
