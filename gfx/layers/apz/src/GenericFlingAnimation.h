@@ -64,7 +64,7 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
         mOverscrollHandoffChain(aOverscrollHandoffChain),
         mScrolledApzc(aScrolledApzc) {
     MOZ_ASSERT(mOverscrollHandoffChain);
-    TimeStamp now = aApzc.GetFrameTime();
+    SampleTime now = aApzc.GetFrameTime();
 
     // Drop any velocity on axes where we don't have room to scroll anyways
     // (in this APZC, or an APZC further in the handoff chain).

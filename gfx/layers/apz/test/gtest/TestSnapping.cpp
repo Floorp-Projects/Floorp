@@ -56,7 +56,7 @@ TEST_F(APZCSnappingTester, Bug1265510) {
                  AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting)
              .y < 70) {
     mcc->AdvanceByMillis(5);
-    outer->AdvanceAnimations(mcc->Time());
+    outer->AdvanceAnimations(mcc->GetSampleTime());
   }
   // Now do another wheel in a new transaction. This should start scrolling the
   // inner frame; we verify that it does by checking the inner scroll position.

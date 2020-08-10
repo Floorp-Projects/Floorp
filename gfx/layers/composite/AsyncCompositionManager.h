@@ -29,6 +29,7 @@ class Layer;
 class LayerManagerComposite;
 class AutoResolveRefLayers;
 class CompositorBridgeParent;
+class SampleTime;
 
 // Represents async transforms consisting of a scale and a translation.
 struct AsyncTransform {
@@ -83,7 +84,7 @@ class AsyncCompositionManager final {
   // Sample transforms for layer trees.  Return true to request
   // another animation frame.
   bool TransformShadowTree(
-      TimeStamp aCurrentFrame, TimeDuration aVsyncRate,
+      const SampleTime& aCurrentFrame, TimeDuration aVsyncRate,
       CompositorBridgeParentBase::TransformsToSkip aSkip =
           CompositorBridgeParentBase::TransformsToSkip::NoneOfThem);
 

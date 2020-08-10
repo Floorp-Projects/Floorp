@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"      // for RefPtr
 #include "mozilla/TimeStamp.h"   // for TimeStamp
 #include "mozilla/gfx/Point.h"   // for IntSize
+#include "mozilla/layers/SampleTime.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"
@@ -90,7 +91,7 @@ class CompositorVsyncScheduler {
    * Return the vsync timestamp of the last or ongoing composite. Must be called
    * on the compositor thread.
    */
-  const TimeStamp& GetLastComposeTime() const;
+  const SampleTime& GetLastComposeTime() const;
 
   /**
    * Return the vsync timestamp and id of the most recently received
@@ -147,7 +148,7 @@ class CompositorVsyncScheduler {
   };
 
   CompositorVsyncSchedulerOwner* mVsyncSchedulerOwner;
-  TimeStamp mLastComposeTime;
+  SampleTime mLastComposeTime;
   TimeStamp mLastVsyncTime;
   TimeStamp mLastVsyncOutputTime;
   VsyncId mLastVsyncId;

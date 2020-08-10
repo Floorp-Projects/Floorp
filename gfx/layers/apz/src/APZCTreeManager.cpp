@@ -348,11 +348,11 @@ void APZCTreeManager::SetTestSampleTime(const Maybe<TimeStamp>& aTime) {
   mTestSampleTime = aTime;
 }
 
-TimeStamp APZCTreeManager::GetFrameTime() {
+SampleTime APZCTreeManager::GetFrameTime() {
   if (mTestSampleTime) {
-    return *mTestSampleTime;
+    return SampleTime::FromTest(*mTestSampleTime);
   }
-  return TimeStamp::Now();
+  return SampleTime::FromNow();
 }
 
 void APZCTreeManager::SetAllowedTouchBehavior(
@@ -704,7 +704,7 @@ void APZCTreeManager::UpdateHitTestingTree(
 }
 
 void APZCTreeManager::SampleForWebRender(
-    wr::TransactionWrapper& aTxn, const TimeStamp& aSampleTime,
+    wr::TransactionWrapper& aTxn, const SampleTime& aSampleTime,
     const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
   AssertOnSamplerThread();
   MutexAutoLock lock(mMapLock);
@@ -894,7 +894,7 @@ void APZCTreeManager::SampleForWebRender(
   aTxn.AppendTransformProperties(transforms);
 }
 
-bool APZCTreeManager::AdvanceAnimations(const TimeStamp& aSampleTime) {
+bool APZCTreeManager::AdvanceAnimations(const SampleTime& aSampleTime) {
   MutexAutoLock lock(mMapLock);
   return AdvanceAnimationsInternal(lock, aSampleTime);
 }
@@ -958,7 +958,7 @@ ParentLayerRect APZCTreeManager::ComputeClippedCompositionBounds(
 }
 
 bool APZCTreeManager::AdvanceAnimationsInternal(
-    const MutexAutoLock& aProofOfMapLock, const TimeStamp& aSampleTime) {
+    const MutexAutoLock& aProofOfMapLock, const SampleTime& aSampleTime) {
   ClippedCompositionBoundsMap clippedCompBounds;
   bool activeAnimations = false;
   for (const auto& mapping : mApzcMap) {
