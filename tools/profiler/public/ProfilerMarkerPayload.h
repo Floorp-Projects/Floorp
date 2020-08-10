@@ -441,7 +441,8 @@ class VsyncMarkerPayload : public ProfilerMarkerPayload {
 
 class NetworkMarkerPayload : public ProfilerMarkerPayload {
  public:
-  NetworkMarkerPayload(int64_t aID, const char* aURI, NetworkLoadType aType,
+  NetworkMarkerPayload(int64_t aID, const char* aURI,
+                       const nsACString& aRequestMethod, NetworkLoadType aType,
                        const mozilla::TimeStamp& aStartTime,
                        const mozilla::TimeStamp& aEndTime, int32_t aPri,
                        int64_t aCount,
@@ -460,6 +461,7 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
         mRedirectURI(aRedirectURI && (strlen(aRedirectURI) > 0)
                          ? strdup(aRedirectURI)
                          : nullptr),
+        mRequestMethod(aRequestMethod),
         mType(aType),
         mPri(aPri),
         mCount(aCount),
@@ -476,7 +478,8 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
   NetworkMarkerPayload(CommonProps&& aCommonProps, int64_t aID,
                        mozilla::UniqueFreePtr<char>&& aURI,
                        mozilla::UniqueFreePtr<char>&& aRedirectURI,
-                       NetworkLoadType aType, int32_t aPri, int64_t aCount,
+                       nsCString&& aRequestMethod, NetworkLoadType aType,
+                       int32_t aPri, int64_t aCount,
                        mozilla::net::TimingStruct aTimings,
                        mozilla::net::CacheDisposition aCacheDisposition,
                        mozilla::Maybe<nsAutoCString>&& aContentType)
@@ -484,6 +487,7 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
         mID(aID),
         mURI(std::move(aURI)),
         mRedirectURI(std::move(aRedirectURI)),
+        mRequestMethod(std::move(aRequestMethod)),
         mType(aType),
         mPri(aPri),
         mCount(aCount),
@@ -494,14 +498,16 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
   int64_t mID;
   mozilla::UniqueFreePtr<char> mURI;
   mozilla::UniqueFreePtr<char> mRedirectURI;
+  // Request method and content type further down are usually short,
+  // e.g., "GET" and "text/html", so we use nsAutoCString to reduce
+  // heap usage; the bigger object size is acceptable here because
+  // markers are short-lived on-stack objects.
+  nsAutoCString mRequestMethod;
   NetworkLoadType mType;
   int32_t mPri;
   int64_t mCount;
   mozilla::net::TimingStruct mTimings;
   mozilla::net::CacheDisposition mCacheDisposition;
-  // Content type is usually short, so we use nsAutoCString to reduce
-  // heap usage; the bigger object size is acceptable here because
-  // markers are short-lived on-stack objects.
   mozilla::Maybe<nsAutoCString> mContentType;
 };
 

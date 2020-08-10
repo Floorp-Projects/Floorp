@@ -6065,6 +6065,9 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
     int32_t priority = PRIORITY_NORMAL;
     GetPriority(&priority);
 
@@ -6079,10 +6082,10 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
     }
 
     profiler_add_network_marker(
-        mURI, priority, mChannelId, NetworkLoadType::LOAD_REDIRECT,
-        mLastStatusReported, TimeStamp::Now(), mLogicalOffset,
-        mCacheDisposition, mLoadInfo->GetInnerWindowID(), &timings,
-        mRedirectURI, std::move(mSource),
+        mURI, requestMethod, priority, mChannelId,
+        NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
+        mLogicalOffset, mCacheDisposition, mLoadInfo->GetInnerWindowID(),
+        &timings, mRedirectURI, std::move(mSource),
         Some(nsDependentCString(contentType.get())));
   }
 #endif
@@ -6521,8 +6524,11 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   mLastStatusReported =
       TimeStamp::Now();  // in case we enable the profiler after AsyncOpen()
   if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
     profiler_add_network_marker(
-        mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
+        mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
         mChannelCreationTimestamp, mLastStatusReported, 0, mCacheDisposition,
         mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
   }
@@ -8141,6 +8147,9 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
   if (profiler_can_accept_markers() && !mRedirectURI) {
     // Don't include this if we already redirected
     // These do allocations/frees/etc; avoid if not active
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
     nsCOMPtr<nsIURI> uri;
     GetURI(getter_AddRefs(uri));
     int32_t priority = PRIORITY_NORMAL;
@@ -8151,7 +8160,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
       mResponseHead->ContentType(contentType);
     }
     profiler_add_network_marker(
-        uri, priority, mChannelId, NetworkLoadType::LOAD_STOP,
+        uri, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
         mLastStatusReported, TimeStamp::Now(), mLogicalOffset,
         mCacheDisposition, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
         nullptr, std::move(mSource),
