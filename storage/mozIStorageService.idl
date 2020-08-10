@@ -161,8 +161,12 @@ interface mozIStorageService : nsISupports {
    *
    * @param aURL
    *        A nsIFileURL that represents the database that is to be opened.
+   * @param [optional] aTelemetryFilename
+   *        The name to use for the database in telemetry. Only needed if the
+   *        actual filename can contain sensitive information.
    */
-  mozIStorageConnection openDatabaseWithFileURL(in nsIFileURL aFileURL);
+  mozIStorageConnection openDatabaseWithFileURL(in nsIFileURL aFileURL,
+                                                [optional] in ACString aTelemetryFilename);
 
   /*
    * Utilities

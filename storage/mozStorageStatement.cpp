@@ -105,7 +105,9 @@ Statement::Statement()
       mParamCount(0),
       mResultColumnCount(0),
       mColumnNames(),
-      mExecuting(false) {}
+      mExecuting(false),
+      mQueryStatusRecorded(false),
+      mHasExecuted(false) {}
 
 nsresult Statement::initialize(Connection* aDBConnection,
                                sqlite3* aNativeConnection,
@@ -124,6 +126,9 @@ nsresult Statement::initialize(Connection* aDBConnection,
              ::sqlite3_errmsg(aNativeConnection)));
     MOZ_LOG(gStorageLog, LogLevel::Error,
             ("Statement was: '%s'", PromiseFlatCString(aSQLStatement).get()));
+
+    aDBConnection->RecordQueryStatus(srv);
+    mQueryStatusRecorded = true;
     return NS_ERROR_FAILURE;
   }
 
@@ -215,6 +220,28 @@ mozIStorageBindingParams* Statement::getParams() {
   return *mParamsArray->begin();
 }
 
+void Statement::MaybeRecordQueryStatus(int srv, bool isResetting) {
+  // If the statement hasn't been executed synchronously since it was last reset
+  // or created then there is no need to record anything. Asynchronous
+  // statements have their status tracked and recorded by StatementData.
+  if (!mHasExecuted) {
+    return;
+  }
+
+  if (!isResetting && !isErrorCode(srv)) {
+    // Non-errors will be recorded when finalizing.
+    return;
+  }
+
+  // We only record a status if no status has been recorded previously.
+  if (!mQueryStatusRecorded && mDBConnection) {
+    mDBConnection->RecordQueryStatus(srv);
+  }
+
+  // Allow another status to be recorded if we are resetting this statement.
+  mQueryStatusRecorded = !isResetting;
+}
+
 Statement::~Statement() { (void)internalFinalize(true); }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -250,6 +277,7 @@ int Statement::getAsyncStatement(sqlite3_stmt** _stmt) {
     int rc = mDBConnection->prepareStatement(mNativeConnection, sql,
                                              &mAsyncStatement);
     if (rc != SQLITE_OK) {
+      mDBConnection->RecordQueryStatus(rc);
       *_stmt = nullptr;
       return rc;
     }
@@ -345,6 +373,11 @@ nsresult Statement::internalFinalize(bool aDestructing) {
     }
 #endif  // DEBUG
   }
+
+  // This will be a no-op if the status has already been recorded or if this
+  // statement has not been executed. Async statements have their status
+  // tracked and recorded in StatementData.
+  MaybeRecordQueryStatus(srv, true);
 
   mDBStatement = nullptr;
 
@@ -460,6 +493,12 @@ Statement::Reset() {
 
   mExecuting = false;
 
+  // This will be a no-op if the status has already been recorded or if this
+  // statement has not been executed. Async statements have their status
+  // tracked and recorded in StatementData.
+  MaybeRecordQueryStatus(SQLITE_OK, true);
+  mHasExecuted = false;
+
   return NS_OK;
 }
 
@@ -517,6 +556,8 @@ Statement::ExecuteStep(bool* _moreResults) {
     mParamsArray = nullptr;
   }
   int srv = mDBConnection->stepStatement(mNativeConnection, mDBStatement);
+  mHasExecuted = true;
+  MaybeRecordQueryStatus(srv);
 
   if (srv != SQLITE_ROW && srv != SQLITE_DONE &&
       MOZ_LOG_TEST(gStorageLog, LogLevel::Debug)) {
