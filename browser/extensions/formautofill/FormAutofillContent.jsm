@@ -359,7 +359,7 @@ let ProfileAutocomplete = {
     Services.obs.removeObserver(this, "autocomplete-will-enter-text");
   },
 
-  observe(subject, topic, data) {
+  async observe(subject, topic, data) {
     switch (topic) {
       case "autocomplete-will-enter-text": {
         if (!FormAutofillContent.activeInput) {
@@ -367,7 +367,10 @@ let ProfileAutocomplete = {
           break;
         }
         FormAutofillContent.autofillPending = true;
-        this._fillFromAutocompleteRow(FormAutofillContent.activeInput);
+        Services.obs.notifyObservers(null, "autofill-fill-starting");
+        await this._fillFromAutocompleteRow(FormAutofillContent.activeInput);
+        Services.obs.notifyObservers(null, "autofill-fill-complete");
+        FormAutofillContent.autofillPending = false;
         break;
       }
     }
@@ -387,7 +390,6 @@ let ProfileAutocomplete = {
     let formDetails = FormAutofillContent.activeFormDetails;
     if (!formDetails) {
       // The observer notification is for a different frame.
-      FormAutofillContent.autofillPending = false;
       return;
     }
 
@@ -398,7 +400,6 @@ let ProfileAutocomplete = {
       this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) !=
         "autofill-profile"
     ) {
-      FormAutofillContent.autofillPending = false;
       return;
     }
 
@@ -407,7 +408,6 @@ let ProfileAutocomplete = {
     );
 
     await FormAutofillContent.activeHandler.autofillFormFields(profile);
-    FormAutofillContent.autofillPending = false;
   },
 
   _clearProfilePreview() {
