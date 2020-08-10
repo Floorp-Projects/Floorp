@@ -2652,6 +2652,8 @@ toolbar#nav-bar {
 
             "socketprocess_e10s": self.extraPrefs.get(
                 'network.process.enabled', False),
+            "socketprocess_networking": self.extraPrefs.get(
+                'network.http.network_access_on_socket_process.enabled', False),
             "verify": options.verify,
             "webrender": options.enable_webrender,
             "xorigin": options.xOriginTests,
