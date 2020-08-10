@@ -9,7 +9,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-  <hbox>
+  <hbox id="searchbox-container">
     <search-textbox id="searchbox"
                     oncommand="doSearch(this.value);"
                     placeholder="random placeholder"
@@ -29,6 +29,14 @@ var gLastTest;
 
 function doTests() {
   var textbox = $("searchbox");
+
+  // Reconnect the searchbox to ensure connectedCallback only runs once
+  // (bug 1650486).
+  textbox.remove();
+  $("searchbox-container").append(textbox);
+  is(textbox.shadowRoot.querySelectorAll(".textbox-search-sign").length, 1,
+      "only one search icon in the search box");
+
   var icons = textbox._searchIcons;
   var searchIcon = icons.querySelector(".textbox-search-icon");
   var clearIcon = icons.querySelector(".textbox-search-clear");

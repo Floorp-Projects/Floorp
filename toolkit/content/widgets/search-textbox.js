@@ -71,9 +71,10 @@
     }
 
     connectedCallback() {
-      if (this.delayConnectedCallback()) {
+      if (this.delayConnectedCallback() || this.connected) {
         return;
       }
+      this.connected = true;
       this.textContent = "";
 
       const stylesheet = document.createElement("link");
