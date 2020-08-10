@@ -22,6 +22,7 @@ self.onmessage = async function(msg) {
   await test_api_is_available_on_worker();
   await test_full_read_and_write();
   await test_move_file();
+  await test_copy_file();
   await test_make_directory();
 
   finish();
@@ -76,6 +77,21 @@ self.onmessage = async function(msg) {
     await cleanup(dest);
   }
 
+  async function test_copy_file() {
+    const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_orig.tmp");
+    const destFileName = OS.Path.join(tmpDir, "test_ioutils_copy.tmp");
+    await createFile(tmpFileName, "original");
+
+    await self.IOUtils.copy(tmpFileName, destFileName);
+    ok(
+      (await fileExists(tmpFileName)) &&
+        (await fileHasTextContents(destFileName, "original")),
+      "IOUtils::copy can copy source to dest in same directory"
+    );
+
+    await cleanup(tmpFileName, destFileName);
+  }
+
   async function test_make_directory() {
     const dir = OS.Path.join(tmpDir, "test_make_dir.tmp.d");
     await self.IOUtils.makeDirectory(dir);
@@ -87,12 +103,30 @@ self.onmessage = async function(msg) {
     await cleanup(dir);
   }
 
+  // Utility functions.
+
+  Uint8Array.prototype.equals = function equals(other) {
+    if (this.byteLength !== other.byteLength) {
+      return false;
+    }
+    return this.every((val, i) => val === other[i]);
+  };
+
   async function cleanup(...files) {
     for (const file of files) {
       await self.IOUtils.remove(file, { ignoreAbsent: true, recursive: true });
       const exists = await fileOrDirExists(file);
       ok(!exists, `Removed temporary file: ${file}`);
     }
+  }
+
+  async function createFile(location, contents = "") {
+    if (typeof contents === "string") {
+      contents = new TextEncoder().encode(contents);
+    }
+    await self.IOUtils.writeAtomic(location, contents);
+    const exists = await fileExists(location);
+    ok(exists, `Created temporary file at: ${location}`);
   }
 
   async function fileOrDirExists(location) {
@@ -111,5 +145,15 @@ self.onmessage = async function(msg) {
     } catch (ex) {
       return false;
     }
+  }
+
+  async function fileHasTextContents(location, expectedContents) {
+    if (typeof expectedContents !== "string") {
+      throw new TypeError("expectedContents must be a string");
+    }
+    info(`Opening ${location} for reading`);
+    const bytes = await self.IOUtils.read(location);
+    const contents = new TextDecoder().decode(bytes);
+    return contents === expectedContents;
   }
 };

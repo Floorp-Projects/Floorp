@@ -61,6 +61,15 @@ namespace IOUtils {
    * @see FileInfo
    */
   Promise<FileInfo> stat(DOMString path);
+  /**
+   * Copies a file or directory from |sourcePath| to |destPath| according to
+   * |options|.
+   *
+   * @param sourcePath An absolute file path identifying the source file to be
+   *                   copied.
+   * @param destPath   An absolute file path identifying the location for the
+   */
+  Promise<void> copy(DOMString sourcePath, DOMString destPath, optional CopyOptions options = {});
 };
 
 /**
@@ -115,6 +124,9 @@ dictionary RemoveOptions {
   boolean recursive = false;
 };
 
+/**
+ * Options to be passed to the |IOUtils.makeDirectory| method.
+ */
 dictionary MakeDirectoryOptions {
   /**
    * If true, create the directory and all necessary ancestors if they do not
@@ -127,6 +139,20 @@ dictionary MakeDirectoryOptions {
    * Otherwise, fail if the directory already exists.
    */
   boolean ignoreExisting = true;
+};
+
+/**
+ * Options to be passed to the |IOUtils.copy| method.
+ */
+dictionary CopyOptions {
+  /**
+   * If true, fail if the destination already exists.
+   */
+  boolean noOverwrite = false;
+  /**
+   * If true, copy the source recursively.
+   */
+  boolean recursive = false;
 };
 
 /**
