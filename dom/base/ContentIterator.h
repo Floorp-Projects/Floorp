@@ -225,6 +225,11 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   void CacheInclusiveAncestorsOfEndContainer();
 
   /**
+   * @return may be nullptr.
+   */
+  nsIContent* DetermineCandidateForFirstContent() const;
+
+  /**
    * Callers must guarantee that mRange isn't nullptr and is positioned.
    */
   nsresult InitWithRange();
