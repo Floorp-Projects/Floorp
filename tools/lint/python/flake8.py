@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 import mozfile
+import mozpack.path as mozpath
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
@@ -131,7 +132,7 @@ def lint(paths, config, **lintargs):
         # Ignore exclude rules if `--no-filter` was passed in.
         config.setdefault("exclude", [])
         if lintargs.get("use_filters", True):
-            config["exclude"].extend(self.options.exclude)
+            config["exclude"].extend(map(mozpath.normpath, self.options.exclude))
 
         # Since we use the root .flake8 file to store exclusions, we haven't
         # properly filtered the paths through mozlint's `filterpaths` function
