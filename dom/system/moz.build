@@ -103,5 +103,5 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini', 'tests/ioutils/chrome.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

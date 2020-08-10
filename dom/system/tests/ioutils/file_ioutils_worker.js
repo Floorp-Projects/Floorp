@@ -2,7 +2,7 @@
 // - http://creativecommons.org/publicdomain/zero/1.0/
 
 /* eslint-env mozilla/chrome-worker, node */
-/* global finish, log*/
+/* global finish, log */
 
 "use strict";
 
@@ -12,6 +12,7 @@ importScripts("resource://gre/modules/ObjectUtils.jsm");
 // TODO: Remove this import for OS.File. It is currently being used as a
 //       stop gap for missing IOUtils functionality.
 importScripts("resource://gre/modules/osfile.jsm");
+importScripts("file_ioutils_test_fixtures.js");
 
 self.onmessage = async function(msg) {
   const tmpDir = OS.Constants.Path.tmpDir;
@@ -101,59 +102,5 @@ self.onmessage = async function(msg) {
     );
 
     await cleanup(dir);
-  }
-
-  // Utility functions.
-
-  Uint8Array.prototype.equals = function equals(other) {
-    if (this.byteLength !== other.byteLength) {
-      return false;
-    }
-    return this.every((val, i) => val === other[i]);
-  };
-
-  async function cleanup(...files) {
-    for (const file of files) {
-      await self.IOUtils.remove(file, { ignoreAbsent: true, recursive: true });
-      const exists = await fileOrDirExists(file);
-      ok(!exists, `Removed temporary file: ${file}`);
-    }
-  }
-
-  async function createFile(location, contents = "") {
-    if (typeof contents === "string") {
-      contents = new TextEncoder().encode(contents);
-    }
-    await self.IOUtils.writeAtomic(location, contents);
-    const exists = await fileExists(location);
-    ok(exists, `Created temporary file at: ${location}`);
-  }
-
-  async function fileOrDirExists(location) {
-    try {
-      await self.IOUtils.stat(location);
-      return true;
-    } catch (ex) {
-      return false;
-    }
-  }
-
-  async function fileExists(location) {
-    try {
-      let { type } = await self.IOUtils.stat(location);
-      return type === "regular";
-    } catch (ex) {
-      return false;
-    }
-  }
-
-  async function fileHasTextContents(location, expectedContents) {
-    if (typeof expectedContents !== "string") {
-      throw new TypeError("expectedContents must be a string");
-    }
-    info(`Opening ${location} for reading`);
-    const bytes = await self.IOUtils.read(location);
-    const contents = new TextDecoder().decode(bytes);
-    return contents === expectedContents;
   }
 };
