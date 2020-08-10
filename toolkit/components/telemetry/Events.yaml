@@ -2522,3 +2522,25 @@ webrtc.ui:
       - 1639283
     expiry_version: "82"
     release_channel_collection: opt-out
+
+ysod:
+  shown:
+    bug_numbers:
+      - 1657242
+    description: >-
+      This event is recorded only for Firefox UI documents (chrome).
+      Recorded when a Yellow Screen of Death is shown. The `value` is a url on which the error happened.
+      Yellow Screen of Death happens when XML or XHTML document encounters a parsing error. It is commonly a result
+      of the document being malformed or missing DTD entity.
+      Mozilla has a number of documents that rely on DTD entities for localization, and in some error scenarios those
+      entities may be missing or malformed themselves, in which case the user will see a broken UI.
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+    expiry_version: "never"
+    notification_emails:
+      - zbraniecki@mozilla.com
+      - vchin@mozilla.com
+    objects:
+      - "ysod"
