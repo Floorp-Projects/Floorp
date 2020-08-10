@@ -46,7 +46,8 @@ class ReaderView {
       {url: new URL(url).hostname},
       {readingTime: this.getReadingTime(result.length, result.language)},
       {byline: this.getByline()},
-      {dir: this.getTextDirection(result)}
+      {dir: this.getTextDirection(result)},
+      {title: this.getTitle(result)}
     );
 
     document.body.outerHTML = this.createHtmlBody(article);
@@ -265,7 +266,8 @@ class ReaderView {
        }
      });
 
-     return values["dc:creator"] || values["dcterm:creator"] || values["author"] || "";
+     let byline = values["dc:creator"] || values["dcterm:creator"] || values["author"] || "";
+     return this.escapeHTML(byline);
    }
 
    /**
@@ -282,6 +284,19 @@ class ReaderView {
      }
 
      return "ltr";
+   }
+
+   getTitle(article) {
+     return this.escapeHTML(article.title || "");
+   }
+
+   escapeHTML(text) {
+     return text
+       .replace(/\&/g, "&amp;")
+       .replace(/\</g, "&lt;")
+       .replace(/\>/g, "&gt;")
+       .replace(/\"/g, "&quot;")
+       .replace(/\'/g, "&#039;");
    }
 }
 
