@@ -617,7 +617,6 @@ Result<nsILineIterator::LineInfo, nsresult> nsLineIterator::GetLine(
   structure.mFirstFrameOnLine = line->mFirstChild;
   structure.mNumFramesOnLine = line->GetChildCount();
   structure.mLineBounds = line->GetPhysicalBounds();
-  structure.mIsWrapped = line->IsLineWrapped();
   return structure;
 }
 
