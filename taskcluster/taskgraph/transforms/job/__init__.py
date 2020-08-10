@@ -172,7 +172,12 @@ def add_resource_monitor(config, jobs):
             )
             # Normalise worker os so that linux-bitbar and similar use linux tools.
             worker_os = worker_os.split('-')[0]
-            if 'win7' in job["worker-type"]:
+            # We don't currently support an Arm worker, due to gopsutil's indirect
+            # dependencies (go-ole)
+            if 'aarch64' in job["worker-type"]:
+                yield job
+                continue
+            elif 'win7' in job["worker-type"]:
                 arch = '32'
             else:
                 arch = '64'
