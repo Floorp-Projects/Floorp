@@ -1341,6 +1341,10 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
   RefPtr<CanonicalBrowsingContext> browsingContext =
       CanonicalBrowsingContext::Get(aInit.context().mBrowsingContextId);
   if (!browsingContext) {
+    CrashReporter::AutoAnnotateCrashReport autoMissingBCId(
+        CrashReporter::Annotation::NewWindowMissingBCId,
+        static_cast<unsigned int>(aInit.context().mBrowsingContextId));
+
     return IPC_FAIL(this, "Cannot create for missing BrowsingContext");
   }
   if (!aInit.principal()) {
