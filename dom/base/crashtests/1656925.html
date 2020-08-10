@@ -1,0 +1,18 @@
+<html>
+<head>
+<script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const area = document.createElementNS('http://www.w3.org/1999/xhtml', 'area')
+        document.documentElement.appendChild(area)
+        area.setAttribute('href', '')
+        for (let i = 0; i < 16; i++) {
+          area.setAttribute('download', '')
+        }
+        area.click()
+        object = document.createElementNS('http://www.w3.org/1999/xhtml', 'object')
+        document.documentElement.appendChild(object)
+        setTimeout("location.reload()", 100)
+      })
+    </script>
+</head>
+</html>

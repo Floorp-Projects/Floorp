@@ -57,8 +57,10 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   rv = NS_CheckPortSafety(mURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // add ourselves to the load group.
-  if (mLoadGroup) {
+  bool isNotDownload = mLoadState->FileName().IsVoid();
+
+  // If not a download, add ourselves to the load group
+  if (isNotDownload && mLoadGroup) {
     // During this call, we can re-enter back into the DocumentChannelChild to
     // call SetNavigationTiming.
     mLoadGroup->AddRequest(this, nullptr);
