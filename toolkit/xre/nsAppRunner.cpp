@@ -1450,7 +1450,6 @@ static void DumpHelp() {
       "  --new-instance     Open new instance, not a new window in running "
       "instance.\n"
 #endif
-      "  --UILocale <locale> Start with <locale> resources as UI Locale.\n"
       "  --safe-mode        Disables extensions and themes for this session.\n"
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
       "  --allow-downgrade  Allows downgrading a profile.\n"
