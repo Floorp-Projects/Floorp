@@ -258,7 +258,8 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
 
   RefPtr<nsRange> mRange;
 
-  AutoTArray<nsIContent*, 8> mEndNodes;
+  // See <https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor>.
+  AutoTArray<nsIContent*, 8> mInclusiveAncestorsOfEndContainer;
 };
 
 inline void ImplCycleCollectionTraverse(
