@@ -240,6 +240,11 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   nsIContent* DetermineFirstContent() const;
 
   /**
+   * @return may be nullptr.
+   */
+  nsIContent* DetermineLastContent() const;
+
+  /**
    * Callers must guarantee that mRange isn't nullptr and is positioned.
    */
   nsresult InitWithRange();
