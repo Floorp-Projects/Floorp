@@ -5422,8 +5422,9 @@ bool profiler_is_locked_on_current_thread() {
 }
 
 void profiler_add_network_marker(
-    nsIURI* aURI, int32_t aPriority, uint64_t aChannelId, NetworkLoadType aType,
-    mozilla::TimeStamp aStart, mozilla::TimeStamp aEnd, int64_t aCount,
+    nsIURI* aURI, const nsACString& aRequestMethod, int32_t aPriority,
+    uint64_t aChannelId, NetworkLoadType aType, mozilla::TimeStamp aStart,
+    mozilla::TimeStamp aEnd, int64_t aCount,
     mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
     const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI,
     UniqueProfilerBacktrace aSource,
@@ -5448,9 +5449,10 @@ void profiler_add_network_marker(
   profiler_add_marker(
       name, JS::ProfilingCategoryPair::NETWORK,
       NetworkMarkerPayload(static_cast<int64_t>(aChannelId),
-                           PromiseFlatCString(spec).get(), aType, aStart, aEnd,
-                           aPriority, aCount, aCacheDisposition, aInnerWindowID,
-                           aTimings, PromiseFlatCString(redirect_spec).get(),
+                           PromiseFlatCString(spec).get(), aRequestMethod,
+                           aType, aStart, aEnd, aPriority, aCount,
+                           aCacheDisposition, aInnerWindowID, aTimings,
+                           PromiseFlatCString(redirect_spec).get(),
                            std::move(aSource), aContentType));
 }
 

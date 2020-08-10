@@ -776,21 +776,23 @@ TEST(GeckoProfiler, Markers)
                                    OTHER, NativeAllocationMarkerPayload,
                                    (ts1, 9876543210, 1234, 5678, nullptr));
 
+  nsCString requestMethod = "GET"_ns;
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "NetworkMarkerPayload start marker", OTHER, NetworkMarkerPayload,
-      (1, "http://mozilla.org/", NetworkLoadType::LOAD_START, ts1, ts2, 34, 56,
-       net::kCacheHit, 78));
+      (1, "http://mozilla.org/", requestMethod, NetworkLoadType::LOAD_START,
+       ts1, ts2, 34, 56, net::kCacheHit, 78));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "NetworkMarkerPayload stop marker", OTHER, NetworkMarkerPayload,
-      (12, "http://mozilla.org/", NetworkLoadType::LOAD_STOP, ts1, ts2, 34, 56,
-       net::kCacheUnresolved, 78, nullptr, nullptr, nullptr,
+      (12, "http://mozilla.org/", requestMethod, NetworkLoadType::LOAD_STOP,
+       ts1, ts2, 34, 56, net::kCacheUnresolved, 78, nullptr, nullptr, nullptr,
        Some(nsDependentCString("text/html"))));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "NetworkMarkerPayload redirect marker", OTHER, NetworkMarkerPayload,
-      (123, "http://mozilla.org/", NetworkLoadType::LOAD_REDIRECT, ts1, ts2, 34,
-       56, net::kCacheUnresolved, 78, nullptr, "http://example.com/"));
+      (123, "http://mozilla.org/", requestMethod,
+       NetworkLoadType::LOAD_REDIRECT, ts1, ts2, 34, 56, net::kCacheUnresolved,
+       78, nullptr, "http://example.com/"));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "PrefMarkerPayload marker", OTHER, PrefMarkerPayload,
@@ -1290,6 +1292,7 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(typeString, "Network");
                 EXPECT_EQ_JSON(payload["id"], Int64, 1);
                 EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
                 EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                 EXPECT_EQ_JSON(payload["count"], Int64, 56);
                 EXPECT_EQ_JSON(payload["cache"], String, "Hit");
@@ -1302,6 +1305,7 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(typeString, "Network");
                 EXPECT_EQ_JSON(payload["id"], Int64, 12);
                 EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
                 EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                 EXPECT_EQ_JSON(payload["count"], Int64, 56);
                 EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
@@ -1314,6 +1318,7 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(typeString, "Network");
                 EXPECT_EQ_JSON(payload["id"], Int64, 123);
                 EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
                 EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                 EXPECT_EQ_JSON(payload["count"], Int64, 56);
                 EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
