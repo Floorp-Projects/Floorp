@@ -7103,7 +7103,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-07-29T17:11:44Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-08-07T17:16:50Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7318,7 +7318,7 @@ auspost
 // author : 2014-12-18 Amazon Registry Services, Inc.
 author
 
-// auto : 2014-11-13 Cars Registry Limited
+// auto : 2014-11-13 XYZ.COM LLC
 auto
 
 // autos : 2014-01-09 DERAutos, LLC
@@ -7594,7 +7594,7 @@ capital
 // capitalone : 2015-08-06 Capital One Financial Corporation
 capitalone
 
-// car : 2015-01-22 Cars Registry Limited
+// car : 2015-01-22 XYZ.COM LLC
 car
 
 // caravan : 2013-12-12 Caravan International, Inc.
@@ -7612,7 +7612,7 @@ career
 // careers : 2013-10-02 Binky Moon, LLC
 careers
 
-// cars : 2014-11-13 Cars Registry Limited
+// cars : 2014-11-13 XYZ.COM LLC
 cars
 
 // casa : 2013-11-21 Minds + Machines Group Limited
@@ -10072,7 +10072,7 @@ travelers
 // travelersinsurance : 2015-03-26 Travelers TLD, LLC
 travelersinsurance
 
-// trust : 2014-10-16 NCC Group Inc.
+// trust : 2014-10-16 NCC Group Domain Services, Inc.
 trust
 
 // trv : 2015-03-26 Travelers TLD, LLC
@@ -10681,6 +10681,12 @@ barsy.ca
 // all-inkl.com : https://all-inkl.com
 // Submitted by Werner Kaltofen <wk@all-inkl.com>
 kasserver.com
+
+// Algorithmia, Inc. : algorithmia.com
+// Submitted by Eli Perelman <eperelman@algorithmia.io>
+*.algorithmia.com
+!teams.algorithmia.com
+!test.algorithmia.com
 
 // Altervista: https://www.altervista.org
 // Submitted by Carlo Cannas <tech_staff@altervista.it>
@@ -12340,6 +12346,19 @@ bmoattachments.org
 net.ru
 org.ru
 pp.ru
+
+// Mythic Beasts : https://www.mythic-beasts.com
+// Submitted by Paul Cammish <kelduum@mythic-beasts.com>
+hostedpi.com
+customer.mythic-beasts.com
+lynx.mythic-beasts.com
+ocelot.mythic-beasts.com
+onza.mythic-beasts.com
+sphinx.mythic-beasts.com
+vs.mythic-beasts.com
+x.mythic-beasts.com
+yali.mythic-beasts.com
+cust.retrosnub.co.uk
 
 // Nabu Casa : https://www.nabucasa.com
 // Submitted by Paulus Schoutsen <infra@nabucasa.com>
