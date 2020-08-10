@@ -33,12 +33,16 @@
     <string name="tab_tray_add_new_collection_name">Nom</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Seleccionar una colleccion</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Sortir del mòde seleccion multipla</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Enregistrar los onglets seleccionats dins la colleccion</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">%1$s seleccionat</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
     <string name="tab_tray_item_unselected_multiselect_content_description">%1$s deseleccionat</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Sortida del mòde seleccion multipla</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Seleccionat</string>
 
@@ -912,6 +916,8 @@
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Aquò suprimirà totas las donadas de navegacion.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s suprimirà las donadas de navegacion seleccionadas.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Anullar</string>
 
@@ -1123,6 +1129,10 @@
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Qu’es nòu dins %s</string>
 
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Bibliotècas liuras</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Assisténcia</string>
 
@@ -1192,6 +1202,10 @@
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Per ne saber mai sus Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepcions</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Los identificants e senhals pas salvats seràn mostrats aquí.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Los identificants e senhals seràn pas salvats per aquestes sites.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Suprimir totas las excepcions</string>
     <!-- Hint for search box in logins list -->
@@ -1245,6 +1259,8 @@
     <string name="logins_warning_dialog_set_up_now">O configurar ara</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Desverrolhatz lo periferic</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zoom per totes los sites</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Nom (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1274,6 +1290,8 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Ne saber mai</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detalhs del motor de recèrca personalizat</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">Ligam per ne saber mai</string>
 
@@ -1359,6 +1377,9 @@
     <string name="voice_search_content_description">Recèrca a la votz</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Parlatz ara</string>
+
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Un identificant amb aqueste nom d’utilizaire existís ja</string>
 
     <!-- Synced Tabs -->
    <!-- Text displayed to ask user to connect another device as no devices found with account -->
