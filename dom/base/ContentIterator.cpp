@@ -129,10 +129,10 @@ nsresult ContentIteratorBase::Init(nsINode* aRoot) {
 
   if (mPre) {
     mFirst = aRoot;
-    mLast = GetDeepLastChild(aRoot);
+    mLast = ContentIteratorBase::GetDeepLastChild(aRoot);
     NS_WARNING_ASSERTION(mLast, "GetDeepLastChild returned null");
   } else {
-    mFirst = GetDeepFirstChild(aRoot);
+    mFirst = ContentIteratorBase::GetDeepFirstChild(aRoot);
     NS_WARNING_ASSERTION(mFirst, "GetDeepFirstChild returned null");
     mLast = aRoot;
   }
@@ -334,7 +334,7 @@ nsINode* ContentIteratorBase::Initializer::DetermineFirstNode() const {
       return cChild;
     }
     // post-order
-    nsINode* const result = mIterator.GetDeepFirstChild(cChild);
+    nsINode* const result = ContentIteratorBase::GetDeepFirstChild(cChild);
     NS_WARNING_ASSERTION(result, "GetDeepFirstChild returned null");
 
     // Does mFirst node really intersect the range?  The range could be
@@ -413,7 +413,7 @@ Result<nsINode*, nsresult> ContentIteratorBase::Initializer::DetermineLastNode()
     }
 
     if (mIterator.mPre) {
-      nsINode* const result = mIterator.GetDeepLastChild(cChild);
+      nsINode* const result = ContentIteratorBase::GetDeepLastChild(cChild);
       NS_WARNING_ASSERTION(result, "GetDeepLastChild returned null");
 
       if (NS_WARN_IF(
@@ -436,14 +436,16 @@ void ContentIteratorBase::SetEmpty() {
   mIsDone = true;
 }
 
+// static
 nsINode* ContentIteratorBase::GetDeepFirstChild(nsINode* aRoot) {
   if (NS_WARN_IF(!aRoot) || !aRoot->HasChildren()) {
     return aRoot;
   }
 
-  return GetDeepFirstChild(aRoot->GetFirstChild());
+  return ContentIteratorBase::GetDeepFirstChild(aRoot->GetFirstChild());
 }
 
+// static
 nsIContent* ContentIteratorBase::GetDeepFirstChild(nsIContent* aRoot) {
   if (NS_WARN_IF(!aRoot)) {
     return nullptr;
@@ -460,14 +462,16 @@ nsIContent* ContentIteratorBase::GetDeepFirstChild(nsIContent* aRoot) {
   return node;
 }
 
+// static
 nsINode* ContentIteratorBase::GetDeepLastChild(nsINode* aRoot) {
   if (NS_WARN_IF(!aRoot) || !aRoot->HasChildren()) {
     return aRoot;
   }
 
-  return GetDeepLastChild(aRoot->GetLastChild());
+  return ContentIteratorBase::GetDeepLastChild(aRoot->GetLastChild());
 }
 
+// static
 nsIContent* ContentIteratorBase::GetDeepLastChild(nsIContent* aRoot) {
   if (NS_WARN_IF(!aRoot)) {
     return nullptr;
@@ -559,7 +563,7 @@ nsINode* ContentIteratorBase::NextNode(nsINode* aNode) {
   nsIContent* sibling = node->GetNextSibling();
   if (sibling) {
     // next node is sibling's "deep left" child
-    return GetDeepFirstChild(sibling);
+    return ContentIteratorBase::GetDeepFirstChild(sibling);
   }
 
   return parent;
@@ -579,7 +583,7 @@ nsINode* ContentIteratorBase::PrevNode(nsINode* aNode) {
 
     nsIContent* sibling = node->GetPreviousSibling();
     if (sibling) {
-      return GetDeepLastChild(sibling);
+      return ContentIteratorBase::GetDeepLastChild(sibling);
     }
 
     return parent;
@@ -835,7 +839,7 @@ nsresult ContentSubtreeIterator::InitWithRange() {
     }
   }
 
-  firstCandidate = GetDeepFirstChild(firstCandidate);
+  firstCandidate = ContentIteratorBase::GetDeepFirstChild(firstCandidate);
 
   // confirm that this first possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
@@ -881,7 +885,7 @@ nsresult ContentSubtreeIterator::InitWithRange() {
     return NS_OK;
   }
 
-  lastCandidate = GetDeepLastChild(lastCandidate);
+  lastCandidate = ContentIteratorBase::GetDeepLastChild(lastCandidate);
 
   // confirm that this last possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
@@ -971,11 +975,11 @@ void ContentSubtreeIterator::Prev() {
 
   // If any of these function calls return null, so will all succeeding ones,
   // so mCurNode will wind up set to null.
-  nsINode* prevNode = GetDeepFirstChild(mCurNode);
+  nsINode* prevNode = ContentIteratorBase::GetDeepFirstChild(mCurNode);
 
   prevNode = PrevNode(prevNode);
 
-  prevNode = GetDeepLastChild(prevNode);
+  prevNode = ContentIteratorBase::GetDeepLastChild(prevNode);
 
   mCurNode = GetTopAncestorInRange(prevNode);
 
