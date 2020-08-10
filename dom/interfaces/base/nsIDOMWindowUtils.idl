@@ -2060,9 +2060,6 @@ interface nsIDOMWindowUtils : nsISupports {
   // Returns true if we are using overlay scrollbars.
   readonly attribute bool usesOverlayScrollbars;
 
-  // Returns true if we are effectively throttling frame requests.
-  readonly attribute bool effectivelyThrottlesFrameRequests;
-
   // Returns the ID for the underlying window widget, which can
   // be compared against the rawId from a nsIMediaDevice to determine
   // if the window is being shared.

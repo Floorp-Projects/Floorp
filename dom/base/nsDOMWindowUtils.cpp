@@ -4401,14 +4401,3 @@ nsDOMWindowUtils::GetWebrtcRawDeviceId(nsAString& aRawDeviceId) {
   aRawDeviceId.AppendInt(rawDeviceId);
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsDOMWindowUtils::GetEffectivelyThrottlesFrameRequests(bool* aResult) {
-  Document* doc = GetDocument();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-  *aResult = !doc->WouldScheduleFrameRequestCallbacks() ||
-             doc->ShouldThrottleFrameRequests();
-  return NS_OK;
-}
