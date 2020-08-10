@@ -199,8 +199,6 @@ static RefPtr<MozPromiseT> InvokeToMozPromise(Fn aFunc, Args... aArgs) {
 template <typename OkT, typename Fn, typename... Args>
 already_AddRefed<Promise> IOUtils::RunOnBackgroundThread(
     RefPtr<Promise>& aPromise, Fn aFunc, Args... aArgs) {
-  REJECT_IF_SHUTTING_DOWN(aPromise);
-
   RefPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   REJECT_IF_NULL_EVENT_TARGET(bg, aPromise);
 
@@ -239,6 +237,7 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const Optional<uint32_t>& aMaxBytes) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
   // Process arguments.
   REJECT_IF_RELATIVE_PATH(aPath, promise);
@@ -264,6 +263,7 @@ already_AddRefed<Promise> IOUtils::WriteAtomic(
     const WriteAtomicOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
   // Process arguments.
   REJECT_IF_RELATIVE_PATH(aPath, promise);
@@ -295,6 +295,7 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const MoveOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
   // Process arguments.
   REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
@@ -312,6 +313,7 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                                           const RemoveOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
   REJECT_IF_RELATIVE_PATH(aPath, promise);
   nsAutoString path(aPath);
@@ -326,6 +328,7 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
     const MakeDirectoryOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
   REJECT_IF_RELATIVE_PATH(aPath, promise);
   nsAutoString path(aPath);
@@ -339,6 +342,7 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
                                         const nsAString& aPath) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
   REJECT_IF_RELATIVE_PATH(aPath, promise);
   nsAutoString path(aPath);
@@ -353,6 +357,7 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
                                         const CopyOptions& aOptions) {
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
+  REJECT_IF_SHUTTING_DOWN(promise);
 
   // Process arguments.
   REJECT_IF_RELATIVE_PATH(aSourcePath, promise);
