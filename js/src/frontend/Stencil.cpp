@@ -36,8 +36,8 @@
 using namespace js;
 using namespace js::frontend;
 
-bool frontend::RegExpCreationData::init(JSContext* cx, JSAtom* pattern,
-                                        JS::RegExpFlags flags) {
+bool frontend::RegExpStencil::init(JSContext* cx, JSAtom* pattern,
+                                   JS::RegExpFlags flags) {
   length_ = pattern->length();
   buf_ = cx->make_pod_array<char16_t>(length_);
   if (!buf_) {
@@ -659,13 +659,13 @@ bool CompilationInfo::instantiateStencils() {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
-void RegExpCreationData::dump() {
+void RegExpStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json);
 }
 
-void RegExpCreationData::dump(js::JSONPrinter& json) {
+void RegExpStencil::dump(js::JSONPrinter& json) {
   GenericPrinter& out = json.beginString();
 
   out.put("/");
@@ -707,13 +707,13 @@ void RegExpCreationData::dump(js::JSONPrinter& json) {
   json.endString();
 }
 
-void BigIntCreationData::dump() {
+void BigIntStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json);
 }
 
-void BigIntCreationData::dump(js::JSONPrinter& json) {
+void BigIntStencil::dump(js::JSONPrinter& json) {
   GenericPrinter& out = json.beginString();
 
   for (size_t i = 0; i < length_; i++) {

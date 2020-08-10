@@ -16,14 +16,14 @@
 
 #include "frontend/AbstractScopePtr.h"    // AbstractScopePtr, ScopeIndex
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
-#include "frontend/ObjLiteral.h"          // ObjLiteralCreationData
+#include "frontend/ObjLiteral.h"          // ObjLiteralStencil
 #include "frontend/TypedIndex.h"          // TypedIndex
 #include "js/GCVariant.h"                 // GC Support for mozilla::Variant
 #include "js/RegExpFlags.h"               // JS::RegExpFlags
 #include "js/RootingAPI.h"                // Handle
 #include "js/TypeDecls.h"                 // JSContext,JSAtom,JSFunction
 #include "js/UniquePtr.h"                 // js::UniquePtr
-#include "js/Utility.h"                   // JS::FreePolicy, UniqueTwoByteChars
+#include "js/Utility.h"                   // UniqueTwoByteChars
 #include "js/Vector.h"                    // js::Vector
 #include "util/Text.h"                    // DuplicateString
 #include "vm/BigIntType.h"                // ParseBigIntLiteral
@@ -44,6 +44,9 @@ class JSONPrinter;
 namespace frontend {
 
 struct CompilationInfo;
+class ScriptStencil;
+class RegExpStencil;
+class BigIntStencil;
 
 // [SMDOC] Script Stencil (Frontend Representation)
 //
@@ -54,18 +57,11 @@ struct CompilationInfo;
 //
 // Renaming to use the term stencil more broadly is still in progress.
 
-// Arbitrary typename to disambiguate TypedIndexes;
-class FunctionIndexType;
-
-// We need to be able to forward declare this type, so make a subclass
-// rather than just using.
-class FunctionIndex : public TypedIndex<FunctionIndexType> {
-  // Delegate constructors;
-  using Base = TypedIndex<FunctionIndexType>;
-  using Base::Base;
-};
-
-using ObjLiteralIndex = TypedIndex<ObjLiteralCreationData>;
+// Typed indices for the different stencil elements in the compilation result.
+using RegExpIndex = TypedIndex<RegExpStencil>;
+using BigIntIndex = TypedIndex<BigIntStencil>;
+using ObjLiteralIndex = TypedIndex<ObjLiteralStencil>;
+using FunctionIndex = TypedIndex<ScriptStencil>;
 
 FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
                                    GeneratorKind generatorKind,
@@ -75,13 +71,13 @@ FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
 
 // This owns a set of characters, previously syntax checked as a RegExp. Used
 // to avoid allocating the RegExp on the GC heap during parsing.
-class RegExpCreationData {
-  UniquePtr<char16_t[], JS::FreePolicy> buf_;
+class RegExpStencil {
+  UniqueTwoByteChars buf_;
   size_t length_ = 0;
   JS::RegExpFlags flags_;
 
  public:
-  RegExpCreationData() = default;
+  RegExpStencil() = default;
 
   MOZ_MUST_USE bool init(JSContext* cx, mozilla::Range<const char16_t> range,
                          JS::RegExpFlags flags) {
@@ -104,17 +100,15 @@ class RegExpCreationData {
 #endif
 };
 
-using RegExpIndex = TypedIndex<RegExpCreationData>;
-
 // This owns a set of characters guaranteed to parse into a BigInt via
 // ParseBigIntLiteral. Used to avoid allocating the BigInt on the
 // GC heap during parsing.
-class BigIntCreationData {
+class BigIntStencil {
   UniqueTwoByteChars buf_;
   size_t length_ = 0;
 
  public:
-  BigIntCreationData() = default;
+  BigIntStencil() = default;
 
   MOZ_MUST_USE bool init(JSContext* cx, const Vector<char16_t, 32>& buf) {
 #ifdef DEBUG
@@ -145,8 +139,6 @@ class BigIntCreationData {
   void dump(JSONPrinter& json);
 #endif
 };
-
-using BigIntIndex = TypedIndex<BigIntCreationData>;
 
 class ScopeStencil {
   friend class js::AbstractScopePtr;

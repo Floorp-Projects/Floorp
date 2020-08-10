@@ -176,11 +176,11 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
 
-  // Hold onto the RegExpCreationData and BigIntCreationData that are allocated
-  // during parse to ensure correct destruction.
-  Vector<RegExpCreationData> regExpData;
-  Vector<BigIntCreationData> bigIntData;
-  Vector<ObjLiteralCreationData> objLiteralData;
+  // Hold onto the RegExpStencil, BigIntStencil, and ObjLiteralStencil that are
+  // allocated during parse to ensure correct destruction.
+  Vector<RegExpStencil> regExpData;
+  Vector<BigIntStencil> bigIntData;
+  Vector<ObjLiteralStencil> objLiteralData;
 
   // A Rooted vector to handle tracing of JSFunction*
   // and Atoms within.

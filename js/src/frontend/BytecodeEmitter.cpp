@@ -1636,7 +1636,7 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
   if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
 
   data.writer().beginObject(flags);
 
@@ -4598,7 +4598,7 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
   if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
 
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   data.writer().beginObject(flags);
@@ -8832,7 +8832,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
   if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
 
   data.writer().beginObject(flags);
   bool noValues = flags.contains(ObjLiteralFlag::NoValues);
@@ -8900,7 +8900,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
 
   data.writer().beginObject(flags);
 
@@ -8952,7 +8952,7 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
   if (!compilationInfo.objLiteralData.emplaceBack(cx)) {
     return false;
   }
-  ObjLiteralCreationData& data = compilationInfo.objLiteralData.back();
+  ObjLiteralStencil& data = compilationInfo.objLiteralData.back();
 
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   if (isCow) {
@@ -8991,7 +8991,7 @@ bool BytecodeEmitter::isRHSObjLiteralCompatible(ParseNode* value) {
          value->isKind(ParseNodeKind::TemplateStringExpr);
 }
 
-bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralCreationData* data,
+bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralStencil* data,
                                           ParseNode* value) {
   MOZ_ASSERT(isRHSObjLiteralCompatible(value));
   if (value->isKind(ParseNodeKind::NumberExpr)) {
@@ -9386,12 +9386,12 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
   bool isSingletonContext = !objNode->hasNonConstInitializer() &&
                             objNode->head() && checkSingletonContext();
 
-  // Note: this method uses the ObjLiteralWriter and emits
-  // ObjLiteralCreationData objects into the GCThingList, which will evaluate
-  // them into real GC objects during JSScript::fullyInitFromEmitter.
-  // Eventually we want OBJLITERAL to be a real opcode, but for now,
-  // performance constraints limit us to evaluating object literals at the end
-  // of parse, when we're allowed to allocate GC things.
+  // Note: this method uses the ObjLiteralWriter and emits ObjLiteralStencil
+  // objects into the GCThingList, which will evaluate them into real GC objects
+  // during JSScript::fullyInitFromEmitter. Eventually we want OBJLITERAL to be
+  // a real opcode, but for now, performance constraints limit us to evaluating
+  // object literals at the end of parse, when we're allowed to allocate GC
+  // things.
   //
   // There are three cases here, in descending order of preference:
   //
