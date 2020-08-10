@@ -428,7 +428,6 @@ dependencies {
     implementation Deps.androidx_lifecycle_viewmodel
     implementation Deps.androidx_core
     implementation Deps.androidx_core_ktx
-    implementation Deps.androidx_dynamic_animation
     implementation Deps.androidx_transition
     implementation Deps.androidx_work_ktx
     implementation Deps.google_material

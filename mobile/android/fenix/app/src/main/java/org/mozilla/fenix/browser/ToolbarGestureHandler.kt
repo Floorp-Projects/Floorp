@@ -6,19 +6,19 @@ package org.mozilla.fenix.browser
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.graphics.PointF
 import android.graphics.Rect
-import android.util.TypedValue
 import android.view.View
 import android.view.ViewConfiguration
 import androidx.annotation.Dimension
 import androidx.annotation.Dimension.DP
+import androidx.core.animation.doOnEnd
 import androidx.core.graphics.contains
 import androidx.core.graphics.toPoint
 import androidx.core.view.isVisible
-import androidx.dynamicanimation.animation.DynamicAnimation
-import androidx.dynamicanimation.animation.FlingAnimation
+import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -61,11 +61,6 @@ class ToolbarGestureHandler(
 
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
     private val minimumFlingVelocity = ViewConfiguration.get(activity).scaledMinimumFlingVelocity
-    private val defaultVelocity = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        MINIMUM_ANIMATION_VELOCITY,
-        activity.resources.displayMetrics
-    )
 
     private var gestureDirection = GestureDirection.LEFT_TO_RIGHT
 
@@ -143,24 +138,11 @@ class ToolbarGestureHandler(
     ) {
         val destination = getDestination()
         if (destination is Destination.Tab && isGestureComplete(velocityX)) {
-            animateToNextTab(velocityX, destination.session)
+            animateToNextTab(destination.session)
         } else {
             animateCanceledGesture(velocityX)
         }
     }
-
-    private fun createFlingAnimation(
-        view: View,
-        minValue: Float,
-        maxValue: Float,
-        startVelocity: Float
-    ): FlingAnimation =
-        FlingAnimation(view, DynamicAnimation.TRANSLATION_X).apply {
-            setMinValue(minValue)
-            setMaxValue(maxValue)
-            setStartVelocity(startVelocity)
-            friction = ViewConfiguration.getScrollFriction()
-        }
 
     private fun getDestination(): Destination {
         val isLtr = activity.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_LTR
@@ -234,73 +216,59 @@ class ToolbarGestureHandler(
             abs(velocityX) >= minimumFlingVelocity)
     }
 
-    private fun getVelocityFromFling(velocityX: Float): Float {
-        return max(abs(velocityX), defaultVelocity)
+    private fun getAnimator(finalContextX: Float, duration: Long): ValueAnimator {
+        return ValueAnimator.ofFloat(contentLayout.translationX, finalContextX).apply {
+            this.duration = duration
+            this.interpolator = LinearOutSlowInInterpolator()
+            addUpdateListener { animator ->
+                val value = animator.animatedValue as Float
+                contentLayout.translationX = value
+                tabPreview.translationX = when (gestureDirection) {
+                    GestureDirection.RIGHT_TO_LEFT -> value + windowWidth + previewOffset
+                    GestureDirection.LEFT_TO_RIGHT -> value - windowWidth - previewOffset
+                }
+            }
+        }
     }
 
-    private fun animateToNextTab(velocityX: Float, session: Session) {
+    private fun animateToNextTab(session: Session) {
         val browserFinalXCoordinate: Float = when (gestureDirection) {
             GestureDirection.RIGHT_TO_LEFT -> -windowWidth.toFloat() - previewOffset
             GestureDirection.LEFT_TO_RIGHT -> windowWidth.toFloat() + previewOffset
         }
-        val animationVelocity = when (gestureDirection) {
-            GestureDirection.RIGHT_TO_LEFT -> -getVelocityFromFling(velocityX)
-            GestureDirection.LEFT_TO_RIGHT -> getVelocityFromFling(velocityX)
-        }
 
         // Finish animating the contentLayout off screen and tabPreview on screen
-        createFlingAnimation(
-            view = contentLayout,
-            minValue = min(0f, browserFinalXCoordinate),
-            maxValue = max(0f, browserFinalXCoordinate),
-            startVelocity = animationVelocity
-        ).addUpdateListener { _, value, _ ->
-            tabPreview.translationX = when (gestureDirection) {
-                GestureDirection.RIGHT_TO_LEFT -> value + windowWidth + previewOffset
-                GestureDirection.LEFT_TO_RIGHT -> value - windowWidth - previewOffset
-            }
-        }.addEndListener { _, _, _, _ ->
-            contentLayout.translationX = 0f
-            sessionManager.select(session)
+        getAnimator(browserFinalXCoordinate, FINISHED_GESTURE_ANIMATION_DURATION).apply {
+            doOnEnd {
+                contentLayout.translationX = 0f
+                sessionManager.select(session)
 
-            // Fade out the tab preview to prevent flickering
-            val shortAnimationDuration =
-                activity.resources.getInteger(android.R.integer.config_shortAnimTime)
-            tabPreview.animate()
-                .alpha(0f)
-                .setDuration(shortAnimationDuration.toLong())
-                .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator?) {
-                        tabPreview.isVisible = false
-                    }
-                })
+                // Fade out the tab preview to prevent flickering
+                val shortAnimationDuration =
+                    activity.resources.getInteger(android.R.integer.config_shortAnimTime)
+                tabPreview.animate()
+                    .alpha(0f)
+                    .setDuration(shortAnimationDuration.toLong())
+                    .setListener(object : AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: Animator?) {
+                            tabPreview.isVisible = false
+                        }
+                    })
+            }
         }.start()
     }
 
-    private fun animateCanceledGesture(gestureVelocity: Float) {
-        val velocity = if (getDestination() is Destination.None) {
-            defaultVelocity
+    private fun animateCanceledGesture(velocityX: Float) {
+        val duration = if (abs(velocityX) >= minimumFlingVelocity) {
+            CANCELED_FLING_ANIMATION_DURATION
         } else {
-            getVelocityFromFling(gestureVelocity)
-        }.let { v ->
-            when (gestureDirection) {
-                GestureDirection.RIGHT_TO_LEFT -> v
-                GestureDirection.LEFT_TO_RIGHT -> -v
-            }
+            CANCELED_GESTURE_ANIMATION_DURATION
         }
 
-        createFlingAnimation(
-            view = contentLayout,
-            minValue = min(0f, contentLayout.translationX),
-            maxValue = max(0f, contentLayout.translationX),
-            startVelocity = velocity
-        ).addUpdateListener { _, value, _ ->
-            tabPreview.translationX = when (gestureDirection) {
-                GestureDirection.RIGHT_TO_LEFT -> value + windowWidth + previewOffset
-                GestureDirection.LEFT_TO_RIGHT -> value - windowWidth - previewOffset
+        getAnimator(0f, duration).apply {
+            doOnEnd {
+                tabPreview.isVisible = false
             }
-        }.addEndListener { _, _, _, _ ->
-            tabPreview.isVisible = false
         }.start()
     }
 
@@ -337,15 +305,24 @@ class ToolbarGestureHandler(
         private const val OVERSCROLL_HIDE_PERCENT = 0.20
 
         /**
-         * The speed of the fling animation (in dp per second).
-         */
-        @Dimension(unit = DP)
-        private const val MINIMUM_ANIMATION_VELOCITY = 1500f
-
-        /**
          * The size of the gap between the tab preview and content layout.
          */
         @Dimension(unit = DP)
         private const val PREVIEW_OFFSET = 48
+
+        /**
+         * Animation duration when switching to another tab
+         */
+        private const val FINISHED_GESTURE_ANIMATION_DURATION = 250L
+
+        /**
+         * Animation duration gesture is canceled due to the swipe not being far enough
+         */
+        private const val CANCELED_GESTURE_ANIMATION_DURATION = 200L
+
+        /**
+         * Animation duration gesture is canceled due to a swipe in the opposite direction
+         */
+        private const val CANCELED_FLING_ANIMATION_DURATION = 150L
     }
 }

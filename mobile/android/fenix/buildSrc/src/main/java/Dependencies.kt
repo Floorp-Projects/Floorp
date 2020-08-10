@@ -27,7 +27,6 @@ object Versions {
     const val androidx_paging = "2.1.0"
     const val androidx_transition = "1.3.0"
     const val androidx_work = "2.2.0"
-    const val androidx_dynamic_animation = "1.0.0"
     const val google_material = "1.1.0"
     const val google_flexbox = "2.0.1"
 
@@ -172,7 +171,6 @@ object Deps {
     const val androidx_recyclerview = "androidx.recyclerview:recyclerview:${Versions.androidx_recyclerview}"
     const val androidx_core = "androidx.core:core:${Versions.androidx_core}"
     const val androidx_core_ktx = "androidx.core:core-ktx:${Versions.androidx_core}"
-    const val androidx_dynamic_animation = "androidx.dynamicanimation:dynamicanimation:${Versions.androidx_dynamic_animation}"
     const val androidx_transition = "androidx.transition:transition:${Versions.androidx_transition}"
     const val androidx_work_ktx = "androidx.work:work-runtime-ktx:${Versions.androidx_work}"
     const val androidx_work_testing = "androidx.work:work-testing:${Versions.androidx_work}"
