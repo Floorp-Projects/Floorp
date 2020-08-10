@@ -7,35 +7,29 @@
 #ifndef frontend_Stencil_h
 #define frontend_Stencil_h
 
-#include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_RELEASE_ASSERT
-#include "mozilla/CheckedInt.h"  // CheckedUint32
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Maybe.h"       // mozilla::{Maybe, Nothing}
 #include "mozilla/Range.h"       // mozilla::Range
-#include "mozilla/Span.h"        // mozilla::Span
 
 #include <stdint.h>  // char16_t, uint8_t, uint32_t
 #include <stdlib.h>  // size_t
 
 #include "frontend/AbstractScopePtr.h"    // AbstractScopePtr, ScopeIndex
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
-#include "frontend/NameAnalysisTypes.h"   // AtomVector
 #include "frontend/ObjLiteral.h"          // ObjLiteralCreationData
 #include "frontend/TypedIndex.h"          // TypedIndex
-#include "gc/Barrier.h"                   // HeapPtr, GCPtrAtom
-#include "gc/Rooting.h"  // HandleAtom, HandleModuleObject, HandleScriptSourceObject, MutableHandleScope
-#include "js/GCVariant.h"              // GC Support for mozilla::Variant
-#include "js/RegExpFlags.h"            // JS::RegExpFlags
-#include "js/RootingAPI.h"             // Handle
-#include "js/TypeDecls.h"              // JSContext,JSAtom,JSFunction
-#include "js/UniquePtr.h"              // js::UniquePtr
-#include "js/Utility.h"                // JS::FreePolicy, UniqueTwoByteChars
-#include "js/Vector.h"                 // js::Vector
-#include "util/Text.h"                 // DuplicateString
-#include "vm/BigIntType.h"             // ParseBigIntLiteral
-#include "vm/FunctionFlags.h"          // FunctionFlags
-#include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
-#include "vm/JSScript.h"  // GeneratorKind, FunctionAsyncKind, FieldInitializers
-#include "vm/Runtime.h"   // ReportOutOfMemory
+#include "js/GCVariant.h"                 // GC Support for mozilla::Variant
+#include "js/RegExpFlags.h"               // JS::RegExpFlags
+#include "js/RootingAPI.h"                // Handle
+#include "js/TypeDecls.h"                 // JSContext,JSAtom,JSFunction
+#include "js/UniquePtr.h"                 // js::UniquePtr
+#include "js/Utility.h"                   // JS::FreePolicy, UniqueTwoByteChars
+#include "js/Vector.h"                    // js::Vector
+#include "util/Text.h"                    // DuplicateString
+#include "vm/BigIntType.h"                // ParseBigIntLiteral
+#include "vm/FunctionFlags.h"             // FunctionFlags
+#include "vm/GeneratorAndAsyncKind.h"     // GeneratorKind, FunctionAsyncKind
+#include "vm/JSScript.h"                  // FieldInitializers
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
 #include "vm/ScopeKind.h"      // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptFlags, GCThingIndex

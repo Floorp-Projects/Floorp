@@ -16,6 +16,7 @@
 #include "gc/ZoneAllocator.h"
 #include "js/GCVector.h"
 #include "js/Id.h"
+#include "js/Modules.h"
 #include "js/UniquePtr.h"
 #include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
