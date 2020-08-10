@@ -204,7 +204,15 @@ class DefaultBrowserToolbarController(
         trackToolbarItemInteraction(item)
 
         Do exhaustive when (item) {
-            ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke(currentSession)
+            is ToolbarMenu.Item.Back -> {
+                if (FeatureFlags.tabHistory && item.viewHistory) {
+                    navController.navigate(R.id.action_global_tabHistoryDialogFragment)
+                } else if (!item.viewHistory) {
+                    sessionUseCases.goBack.invoke(currentSession)
+                } else {
+                    // Do nothing if tab history feature flag is off and item.viewHistory is true
+                }
+            }
             is ToolbarMenu.Item.Forward -> {
                 if (FeatureFlags.tabHistory && item.viewHistory) {
                     navController.navigate(R.id.action_global_tabHistoryDialogFragment)
@@ -383,7 +391,7 @@ class DefaultBrowserToolbarController(
     @Suppress("ComplexMethod")
     private fun trackToolbarItemInteraction(item: ToolbarMenu.Item) {
         val eventItem = when (item) {
-            ToolbarMenu.Item.Back -> Event.BrowserMenuItemTapped.Item.BACK
+            is ToolbarMenu.Item.Back -> Event.BrowserMenuItemTapped.Item.BACK
             is ToolbarMenu.Item.Forward -> Event.BrowserMenuItemTapped.Item.FORWARD
             is ToolbarMenu.Item.Reload -> Event.BrowserMenuItemTapped.Item.RELOAD
             ToolbarMenu.Item.Stop -> Event.BrowserMenuItemTapped.Item.STOP

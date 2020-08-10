@@ -217,13 +217,24 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarBackPress() = runBlockingTest {
-        val item = ToolbarMenu.Item.Back
+        val item = ToolbarMenu.Item.Back(false)
 
         val controller = createController(scope = this)
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BACK)) }
         verify { sessionUseCases.goBack(currentSession) }
+    }
+
+    @Test
+    fun handleToolbarBackLongPress() = runBlockingTest {
+        val item = ToolbarMenu.Item.Back(true)
+
+        val controller = createController(scope = this)
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BACK)) }
+        verify { navController.navigate(R.id.action_global_tabHistoryDialogFragment) }
     }
 
     @Test
