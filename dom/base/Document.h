@@ -2682,8 +2682,15 @@ class Document : public nsINode,
 
   uint32_t EventHandlingSuppressed() const { return mEventsSuppressed; }
 
-  bool IsEventHandlingEnabled() {
+  bool IsEventHandlingEnabled() const {
     return !EventHandlingSuppressed() && mScriptGlobalObject;
+  }
+
+  bool WouldScheduleFrameRequestCallbacks() const {
+    // If this function changes to depend on some other variable, make sure to
+    // call UpdateFrameRequestCallbackSchedulingState() calls to the places
+    // where that variable can change.
+    return mPresShell && IsEventHandlingEnabled();
   }
 
   void DecreaseEventSuppression() {
@@ -3017,7 +3024,7 @@ class Document : public nsINode,
    * throttled. We throttle requestAnimationFrame for documents which aren't
    * visible (e.g. scrolled out of the viewport).
    */
-  bool ShouldThrottleFrameRequests();
+  bool ShouldThrottleFrameRequests() const;
 
   // This returns true when the document tree is being teared down.
   bool InUnlinkOrDeletion() { return mInUnlinkOrDeletion; }
