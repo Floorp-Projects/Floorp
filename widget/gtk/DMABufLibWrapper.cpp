@@ -193,7 +193,6 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() {
          StaticPrefs::widget_dmabuf_textures_enabled();
 }
 #else
-bool nsDMABufDevice::IsDMABufBasicEnabled() { return false; }
 bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
 bool nsDMABufDevice::IsDMABufVideoTexturesEnabled() {
