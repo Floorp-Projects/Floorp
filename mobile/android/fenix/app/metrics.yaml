@@ -34,6 +34,8 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/11830
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12114#pullrequestreview-445245341
+    data_sensitivity:
+      - interaction
     notification_emails:
       - esmyth@mozilla.com
       - perf-android-fe@mozilla.com
@@ -78,6 +80,8 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/10616
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+    data_sensitivity:
+      - interaction
     notification_emails:
       - telemetry-client-dev@mozilla.com
       - fenix-core@mozilla.com
@@ -95,6 +99,8 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/959
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -111,6 +117,8 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/959
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -133,6 +141,8 @@ events:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
       - https://github.com/mozilla-mobile/fenix/pull/1677
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -156,6 +166,8 @@ events:
       - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
       - https://github.com/mozilla-mobile/fenix/pull/5098#issuecomment-529658996
       - https://github.com/mozilla-mobile/fenix/pull/6310
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -175,6 +187,8 @@ events:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1785
       - https://github.com/mozilla-mobile/fenix/pull/8314
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -213,6 +227,9 @@ events:
       - https://github.com/mozilla-mobile/fenix/pull/6352
       - https://github.com/mozilla-mobile/fenix/pull/6601
       - https://github.com/mozilla-mobile/fenix/pull/6746
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -224,6 +241,8 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/5021
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5090
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -239,6 +258,8 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/5737
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5975
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -257,6 +278,8 @@ events:
       - https://github.com/mozilla-mobile/fenix/issues/11442
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11533
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -270,6 +293,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -282,6 +307,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -294,6 +321,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -306,6 +335,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -323,6 +354,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -340,6 +373,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -352,6 +387,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -369,6 +406,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -381,6 +420,8 @@ onboarding:
       - https://github.com/mozilla-mobile/fenix/issues/10824
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11867
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -416,6 +457,8 @@ toolbar_settings:
       - https://github.com/mozilla-mobile/fenix/issues/6054
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6608
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -429,6 +472,8 @@ crash_reporter:
       - https://github.com/mozilla-mobile/fenix/issues/1040
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -445,6 +490,8 @@ crash_reporter:
       - https://github.com/mozilla-mobile/fenix/issues/1040
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -467,6 +514,8 @@ context_menu:
       - https://github.com/mozilla-mobile/fenix/issues/957
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -480,6 +529,8 @@ login_dialog:
       - https://github.com/mozilla-mobile/fenix/issues/9730
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/13050
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-02-01"
@@ -491,6 +542,8 @@ login_dialog:
       - https://github.com/mozilla-mobile/fenix/issues/9730
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/13050
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-02-01"
@@ -502,6 +555,8 @@ login_dialog:
       - https://github.com/mozilla-mobile/fenix/issues/9730
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/13050
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-02-01"
@@ -513,6 +568,8 @@ login_dialog:
       - https://github.com/mozilla-mobile/fenix/issues/9730
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/13050
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-02-01"
@@ -526,6 +583,8 @@ find_in_page:
       - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -537,6 +596,8 @@ find_in_page:
       - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -548,6 +609,8 @@ find_in_page:
       - https://github.com/mozilla-mobile/fenix/issues/1036
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -564,6 +627,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/960
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -582,6 +647,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/8125
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9556
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -596,6 +663,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/8125
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9556
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -618,6 +687,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/11909
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11982#pullrequestreview-437963817
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-12-01"
@@ -633,6 +704,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/11909
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11982#pullrequestreview-437963817
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-12-01"
@@ -658,6 +731,9 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/pull/1677
       - https://github.com/mozilla-mobile/fenix/pull/5216
       - https://github.com/mozilla-mobile/fenix/pull/7310
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -676,6 +752,9 @@ metrics:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1953/
       - https://github.com/mozilla-mobile/fenix/pull/5216
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -692,6 +771,9 @@ metrics:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1953/
       - https://github.com/mozilla-mobile/fenix/pull/5216
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -709,6 +791,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9136
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5579
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -726,6 +810,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9136
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9253
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -743,6 +829,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9136
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9253
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -760,6 +848,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9136
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9253
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -774,6 +864,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/6054
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6608
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -788,6 +880,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -806,6 +900,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/11479
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12024
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -820,6 +916,8 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/issues/11479
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12024
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -836,6 +934,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -850,6 +950,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -866,6 +968,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -881,6 +985,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -895,6 +1001,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -909,6 +1017,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -923,6 +1033,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -937,6 +1049,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -951,6 +1065,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -965,6 +1081,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -981,6 +1099,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -995,6 +1115,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1010,6 +1132,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1024,6 +1148,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1039,6 +1165,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11211
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1053,6 +1181,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11446
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1067,6 +1197,8 @@ preferences:
       - https://github.com/mozilla-mobile/fenix/issues/11118
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11446
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1087,6 +1219,9 @@ search.default_engine:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1606
       - https://github.com/mozilla-mobile/fenix/pull/5216
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1105,6 +1240,9 @@ search.default_engine:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1606
       - https://github.com/mozilla-mobile/fenix/pull/5216
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1124,6 +1262,9 @@ search.default_engine:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1606
       - https://github.com/mozilla-mobile/fenix/pull/5216
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1137,6 +1278,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1148,6 +1291,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1159,6 +1304,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1170,6 +1317,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1181,6 +1330,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1192,6 +1343,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1203,6 +1356,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1214,6 +1369,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1225,6 +1382,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1236,6 +1395,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1247,6 +1408,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/974
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1708
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1258,6 +1421,8 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/issues/3174
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3724
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1271,6 +1436,8 @@ custom_tab:
       - https://github.com/mozilla-mobile/fenix/issues/977
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1697
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1282,6 +1449,8 @@ custom_tab:
       - https://github.com/mozilla-mobile/fenix/issues/977
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1697
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1293,6 +1462,8 @@ custom_tab:
       - https://github.com/mozilla-mobile/fenix/issues/977
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1697
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1311,6 +1482,8 @@ activation:
       - https://bugzilla.mozilla.org/1501822
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+    data_sensitivity:
+      - highly_sensitive
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1326,6 +1499,8 @@ activation:
       - https://bugzilla.mozilla.org/1538011
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+    data_sensitivity:
+      - highly_sensitive
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1341,6 +1516,8 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1353,6 +1530,8 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1365,6 +1544,8 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1377,6 +1558,8 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1393,6 +1576,8 @@ error_page:
       - https://github.com/mozilla-mobile/fenix/issues/1242
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2491#issuecomment-492414486
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1406,6 +1591,8 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1417,6 +1604,8 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1429,6 +1618,8 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/9834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9835#pullrequestreview-398641844
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1440,6 +1631,8 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/9834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9835#pullrequestreview-398641844
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1452,6 +1645,8 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1464,6 +1659,8 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1475,6 +1672,9 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1487,6 +1687,9 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1499,6 +1702,9 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1511,6 +1717,9 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1523,6 +1732,9 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/4971
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1534,6 +1746,8 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1547,6 +1761,8 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1558,6 +1774,8 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1569,6 +1787,8 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/1190
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1580,6 +1800,8 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/4908
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5106
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1591,6 +1813,8 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/issues/4908
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5106
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1604,6 +1828,8 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1615,6 +1841,8 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1626,6 +1854,8 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1637,6 +1867,8 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1648,6 +1880,8 @@ history:
       - https://github.com/mozilla-mobile/fenix/issues/2362
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3940
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1664,6 +1898,8 @@ tip:
       - https://github.com/mozilla-mobile/fenix/issues/9328
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9836
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1678,6 +1914,8 @@ tip:
       - https://github.com/mozilla-mobile/fenix/issues/9328
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9836
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1692,6 +1930,8 @@ tip:
       - https://github.com/mozilla-mobile/fenix/issues/9328
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9836
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1705,6 +1945,8 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/issues/2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3941
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1716,6 +1958,8 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/issues/2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3941
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1727,6 +1971,8 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/issues/2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4328
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1738,6 +1984,8 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/issues/2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3941
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1751,6 +1999,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1762,6 +2012,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1773,6 +2025,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1784,6 +2038,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1795,6 +2051,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1806,6 +2064,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1817,6 +2077,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1828,6 +2090,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1839,6 +2103,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1851,6 +2117,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1863,6 +2131,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1875,6 +2145,8 @@ tabs_tray:
       - https://github.com/mozilla-mobile/fenix/issues/11273
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12036
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1888,6 +2160,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1899,6 +2174,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1910,6 +2188,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1921,6 +2202,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1932,6 +2216,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1943,6 +2230,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1959,6 +2249,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1975,6 +2268,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1987,6 +2283,9 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3935
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -1998,6 +2297,8 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4358
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2009,6 +2310,8 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4358
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2022,6 +2325,8 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4358
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2038,6 +2343,8 @@ collections:
       - https://github.com/mozilla-mobile/fenix/issues/969
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4539
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2052,6 +2359,8 @@ search_widget:
       - https://github.com/mozilla-mobile/fenix/issues/4457
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4714
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2063,6 +2372,8 @@ search_widget:
       - https://github.com/mozilla-mobile/fenix/issues/4457
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4714
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2076,6 +2387,8 @@ search_widget_cfr:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2087,6 +2400,8 @@ search_widget_cfr:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2098,6 +2413,8 @@ search_widget_cfr:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2110,6 +2427,8 @@ search_widget_cfr:
       - https://github.com/mozilla-mobile/fenix/issues/9488
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10958
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2124,6 +2443,8 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2136,6 +2457,8 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2147,6 +2470,8 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2158,6 +2483,8 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2170,6 +2497,8 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/4968
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2184,6 +2513,8 @@ contextual_hint.tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/9625
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11923
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2197,6 +2528,8 @@ contextual_hint.tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/9625
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11923
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2209,6 +2542,8 @@ contextual_hint.tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/9625
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11923
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2221,6 +2556,8 @@ contextual_hint.tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/9625
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11923
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2235,6 +2572,8 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2246,6 +2585,8 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2257,6 +2598,8 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2269,6 +2612,8 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2280,6 +2625,8 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/issues/5312
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2297,6 +2644,8 @@ tracking_protection:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
       - https://github.com/mozilla-mobile/fenix/pull/11383
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2310,6 +2659,8 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2322,6 +2673,8 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2334,6 +2687,8 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2346,6 +2701,8 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2358,6 +2715,8 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2370,6 +2729,8 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/issues/4658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5194
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2383,6 +2744,8 @@ tab:
       - https://github.com/mozilla-mobile/fenix/issues/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5266
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2396,6 +2759,8 @@ tab:
       - https://github.com/mozilla-mobile/fenix/issues/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5266
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2409,6 +2774,8 @@ media_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5520
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2420,6 +2787,8 @@ media_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5520
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2433,6 +2802,8 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/issues/5705
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6463
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2444,6 +2815,8 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/issues/5705
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6463
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2455,6 +2828,8 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/issues/5705
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6463
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2468,6 +2843,8 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2479,6 +2856,8 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2490,6 +2869,8 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2501,6 +2882,8 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2517,6 +2900,8 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7767
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2528,6 +2913,8 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/10173
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/issues/11208
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2539,6 +2926,8 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/10173
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/issues/11208
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2550,6 +2939,8 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/10173
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/issues/11208
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2563,6 +2954,8 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6554
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2574,6 +2967,8 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6554
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2585,6 +2980,8 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6554
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2597,6 +2994,8 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6554
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2608,6 +3007,8 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6554
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2619,6 +3020,8 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6554
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2631,6 +3034,8 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6554
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2644,6 +3049,8 @@ user_specified_search_engines:
       - https://github.com/mozilla-mobile/fenix/issues/5884
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6918
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2658,6 +3065,8 @@ user_specified_search_engines:
       - https://github.com/mozilla-mobile/fenix/issues/7881
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6918
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2671,6 +3080,9 @@ search_suggestions:
       - https://github.com/mozilla-mobile/fenix/issues/6070
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6746
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2684,6 +3096,8 @@ voice_search:
       - https://github.com/mozilla-mobile/fenix/issues/10465
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10785
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2697,6 +3111,8 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/8125
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10752
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2708,6 +3124,8 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/6757
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7523
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2719,6 +3137,8 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/6757
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7523
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2730,6 +3150,8 @@ top_sites:
       - https://github.com/mozilla-mobile/fenix/issues/6757
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7523
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2743,6 +3165,8 @@ about_page:
       - https://github.com/mozilla-mobile/fenix/issues/6834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8047
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2754,6 +3178,8 @@ about_page:
       - https://github.com/mozilla-mobile/fenix/issues/6834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8047
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2765,6 +3191,8 @@ about_page:
       - https://github.com/mozilla-mobile/fenix/issues/6834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8047
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2776,6 +3204,8 @@ about_page:
       - https://github.com/mozilla-mobile/fenix/issues/6834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8047
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2787,6 +3217,8 @@ about_page:
       - https://github.com/mozilla-mobile/fenix/issues/6834
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8047
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2805,6 +3237,8 @@ app_theme:
       - https://github.com/mozilla-mobile/fenix/issues/7289
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/7968
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2818,6 +3252,8 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/8126
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8098
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2832,6 +3268,8 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/8126
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8098
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2847,6 +3285,9 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2860,6 +3301,9 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2873,6 +3317,9 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586480836
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2886,6 +3333,9 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2901,6 +3351,9 @@ first_session:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2917,6 +3370,8 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/6558
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10112
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2931,6 +3386,8 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/6558
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10112
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2944,6 +3401,8 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/6557
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10167
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2957,6 +3416,8 @@ addons:
       - https://github.com/mozilla-mobile/fenix/issues/6174
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8318
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2972,6 +3433,8 @@ addons:
       - https://github.com/mozilla-mobile/fenix/issues/6174
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8318
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2985,6 +3448,8 @@ addons:
       - https://github.com/mozilla-mobile/fenix/issues/6174
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8318
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -2998,6 +3463,8 @@ addons:
       - https://github.com/mozilla-mobile/fenix/issues/6174
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8318
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -3011,6 +3478,8 @@ addons:
       - https://github.com/mozilla-mobile/fenix/issues/8920
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11080
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -3024,6 +3493,8 @@ addons:
       - https://github.com/mozilla-mobile/fenix/issues/8920
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11080
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-10-01"
@@ -3048,6 +3519,8 @@ startup.timeline:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
+    data_sensitivity:
+      - technical
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
@@ -3064,6 +3537,8 @@ startup.timeline:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
+    data_sensitivity:
+      - technical
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
@@ -3080,6 +3555,8 @@ startup.timeline:
       - https://github.com/mozilla-mobile/fenix/issues/10434
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10481
+    data_sensitivity:
+      - technical
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
@@ -3096,6 +3573,8 @@ startup.timeline:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
+    data_sensitivity:
+      - technical
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
@@ -3113,6 +3592,9 @@ perf.awesomebar:
       - https://github.com/mozilla-mobile/android-components/issues/4992
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - gkruglov@mozilla.com
@@ -3128,6 +3610,9 @@ perf.awesomebar:
       - https://github.com/mozilla-mobile/android-components/issues/4992
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - gkruglov@mozilla.com
@@ -3143,6 +3628,9 @@ perf.awesomebar:
       - https://github.com/mozilla-mobile/android-components/issues/4992
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - gkruglov@mozilla.com
@@ -3158,6 +3646,9 @@ perf.awesomebar:
       - https://github.com/mozilla-mobile/android-components/issues/4992
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - gkruglov@mozilla.com
@@ -3173,6 +3664,9 @@ perf.awesomebar:
       - https://github.com/mozilla-mobile/android-components/issues/4992
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - gkruglov@mozilla.com
@@ -3188,6 +3682,9 @@ perf.awesomebar:
       - https://github.com/mozilla-mobile/android-components/issues/4992
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - gkruglov@mozilla.com
@@ -3203,6 +3700,9 @@ perf.awesomebar:
       - https://github.com/mozilla-mobile/android-components/issues/4992
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - gkruglov@mozilla.com
@@ -3216,6 +3716,8 @@ autoplay:
       - https://github.com/mozilla-mobile/fenix/issues/11579
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/13041#issuecomment-665777411
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-02-01"
@@ -3233,6 +3735,8 @@ autoplay:
       - https://github.com/mozilla-mobile/fenix/issues/11579
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/13041#issuecomment-665777411
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-02-01"
@@ -3251,6 +3755,9 @@ storage.stats:
       - https://github.com/mozilla-mobile/fenix/issues/12802
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12876#issuecomment-666770732
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - perf-android-fe@mozilla.com
@@ -3272,6 +3779,9 @@ storage.stats:
       - https://github.com/mozilla-mobile/fenix/issues/12802
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12876#issuecomment-666770732
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - perf-android-fe@mozilla.com
@@ -3290,6 +3800,9 @@ storage.stats:
       - https://github.com/mozilla-mobile/fenix/issues/12802
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12876#issuecomment-666770732
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - perf-android-fe@mozilla.com
@@ -3310,6 +3823,9 @@ storage.stats:
       - https://github.com/mozilla-mobile/fenix/issues/12802
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/12876#issuecomment-666770732
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - perf-android-fe@mozilla.com
@@ -3325,6 +3841,8 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/issues/10261
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11859
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -3337,6 +3855,8 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/issues/10261
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11859
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -3353,6 +3873,8 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/issues/10261
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11859
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
@@ -3369,6 +3891,8 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/issues/10261
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11859
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
