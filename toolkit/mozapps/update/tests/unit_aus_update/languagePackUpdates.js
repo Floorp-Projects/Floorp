@@ -63,6 +63,13 @@ function mockLangpackUpdate() {
 }
 
 add_task(async function init() {
+  // Thunderbird doesn't have one or more of the probes used in this test.
+  // Ensure the data is collected anyway.
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
   await AddonTestUtils.promiseStartupManager();
 });
 
