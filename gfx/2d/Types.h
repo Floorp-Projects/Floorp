@@ -192,10 +192,12 @@ inline bool IsOpaque(SurfaceFormat aFormat) {
   }
 }
 
+// The matrix coeffiecients used for YUV to RGB conversion.
 enum class YUVColorSpace : uint8_t {
   BT601,
   BT709,
   BT2020,
+  Identity,  // aka RGB
   // This represents the unknown format and is a valid value.
   UNKNOWN,
   _NUM_COLORSPACE
