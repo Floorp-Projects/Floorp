@@ -315,7 +315,7 @@ impl Stackmaps {
         &mut self,
         inbound_args_size: u32,
         offset: CodeOffset,
-        map: &cranelift_codegen::binemit::Stackmap,
+        map: &cranelift_codegen::binemit::StackMap,
     ) {
         unsafe {
             let bitslice = map.as_slice();
