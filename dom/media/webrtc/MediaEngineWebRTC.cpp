@@ -261,8 +261,8 @@ void MediaEngineWebRTC::EnumerateDevices(
         // window and fullscreen into a single list of choices. The other values
         // are still useful for testing.
         EnumerateVideoDevices(aWindowId, camera::WinEngine, aDevices);
-        EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
         EnumerateVideoDevices(aWindowId, camera::BrowserEngine, aDevices);
+        EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
         break;
       case dom::MediaSourceEnum::Screen:
         EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
