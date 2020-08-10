@@ -6,6 +6,7 @@
 
 const TYPES = {
   CONSOLE_MESSAGE: "console-message",
+  CSS_CHANGE: "css-change",
   CSS_MESSAGE: "css-message",
   DOCUMENT_EVENT: "document-event",
   ERROR_MESSAGE: "error-message",
@@ -26,6 +27,9 @@ exports.TYPES = TYPES;
 const Resources = {
   [TYPES.CONSOLE_MESSAGE]: {
     path: "devtools/server/actors/resources/console-messages",
+  },
+  [TYPES.CSS_CHANGE]: {
+    path: "devtools/server/actors/resources/css-changes",
   },
   [TYPES.CSS_MESSAGE]: {
     path: "devtools/server/actors/resources/css-messages",
