@@ -817,6 +817,10 @@ nsIContent* ContentSubtreeIterator::DetermineCandidateForFirstContent() const {
     firstCandidate = ContentIteratorBase::GetNextSibling(node);
   }
 
+  if (firstCandidate) {
+    firstCandidate = ContentIteratorBase::GetDeepFirstChild(firstCandidate);
+  }
+
   return firstCandidate;
 }
 
@@ -848,16 +852,13 @@ nsresult ContentSubtreeIterator::InitWithRange() {
 
   CacheInclusiveAncestorsOfEndContainer();
 
-  nsIContent* firstCandidate = nullptr;
   nsIContent* lastCandidate = nullptr;
 
-  firstCandidate = DetermineCandidateForFirstContent();
+  nsIContent* firstCandidate = DetermineCandidateForFirstContent();
   if (!firstCandidate) {
     SetEmpty();
     return NS_OK;
   }
-
-  firstCandidate = ContentIteratorBase::GetDeepFirstChild(firstCandidate);
 
   // confirm that this first possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
