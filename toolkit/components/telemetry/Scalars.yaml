@@ -1709,6 +1709,23 @@ findbar:
       - 'main'
 
 sidebar:
+  opened:
+    bug_numbers:
+      - 1648530
+    description: >
+      The number of times the sidebar was opened, per view (e.g.: bookmarks, history,
+      synced tabs).
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - emalysz@mozilla.com
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
   search:
     bug_numbers:
       - 1648524
