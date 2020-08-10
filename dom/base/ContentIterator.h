@@ -230,6 +230,11 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   nsIContent* DetermineCandidateForFirstContent() const;
 
   /**
+   * @return may be nullptr.
+   */
+  nsIContent* DetermineFirstContent() const;
+
+  /**
    * Callers must guarantee that mRange isn't nullptr and is positioned.
    */
   nsresult InitWithRange();
@@ -239,7 +244,7 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   // in the range.  A node is in the range if (node, 0) comes strictly after
   // the range endpoint, and (node, node.length) comes strictly before it, so
   // the range's start and end nodes will never be considered "in" it.
-  nsIContent* GetTopAncestorInRange(nsINode* aNode);
+  nsIContent* GetTopAncestorInRange(nsINode* aNode) const;
 
   RefPtr<nsRange> mRange;
 
