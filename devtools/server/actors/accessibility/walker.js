@@ -1109,6 +1109,8 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     target.addEventListener("dblclick", this._preventContentEvent, true);
     target.addEventListener("keydown", this.onKey, true);
     target.addEventListener("keyup", this._preventContentEvent, true);
+    target.addEventListener("pointerup", this._preventContentEvent, true);
+    target.addEventListener("pointerdown", this._preventContentEvent, true);
   },
 
   /**
@@ -1133,6 +1135,8 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     target.removeEventListener("dblclick", this._preventContentEvent, true);
     target.removeEventListener("keydown", this.onKey, true);
     target.removeEventListener("keyup", this._preventContentEvent, true);
+    target.removeEventListener("pointerup", this._preventContentEvent, true);
+    target.removeEventListener("pointerdown", this._preventContentEvent, true);
 
     this._resetStateAndReleaseTarget();
   },
