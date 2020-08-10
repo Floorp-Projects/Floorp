@@ -471,7 +471,7 @@ add_task(async function oneOffClick() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         engineName: oneOffs[0].engine.name,
       });
-      window.gURLBar.setSearchMode({});
+      window.gURLBar.setSearchMode(null);
     } else {
       let resultsPromise = BrowserTestUtils.browserLoaded(
         gBrowser.selectedBrowser,
@@ -522,7 +522,7 @@ add_task(async function oneOffReturn() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         engineName: oneOffs[0].engine.name,
       });
-      window.gURLBar.setSearchMode({});
+      window.gURLBar.setSearchMode(null);
     } else {
       let resultsPromise = BrowserTestUtils.browserLoaded(
         gBrowser.selectedBrowser,
@@ -691,7 +691,7 @@ add_task(async function localOneOffClick() {
     });
   }
 
-  window.gURLBar.setSearchMode({});
+  window.gURLBar.setSearchMode(null);
 
   await hidePopup();
   await SpecialPowers.popPrefEnv();
@@ -756,7 +756,7 @@ add_task(async function localOneOffReturn() {
     });
   }
 
-  window.gURLBar.setSearchMode({});
+  window.gURLBar.setSearchMode(null);
 
   await hidePopup();
   await SpecialPowers.popPrefEnv();

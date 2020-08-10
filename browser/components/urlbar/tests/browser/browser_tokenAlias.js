@@ -219,9 +219,8 @@ add_task(async function nonTokenAlias() {
 });
 
 // Clicking on an @ alias offer (an @ alias with an empty search string) in the
-// view should fill it in the urlbar input.
-// This subtest can be removed when update2 is on by default.
-add_task(async function clickAndFillAlias_legacy() {
+// popup should fill it in the urlbar input.
+add_task(async function clickAndFillAlias() {
   // Do a search for "@" to show all the @ aliases.
   gURLBar.search("@");
   await UrlbarTestUtils.promiseSearchComplete(window);
@@ -268,50 +267,9 @@ add_task(async function clickAndFillAlias_legacy() {
   );
 });
 
-// Clicking on an @ alias offer (an @ alias with an empty search string) in the
-// view should enter search mode.
-add_task(async function clickAndFillAlias() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
-
-  // Do a search for "@" to show all the @ aliases.
-  gURLBar.search("@");
-  await UrlbarTestUtils.promiseSearchComplete(window);
-
-  // Find our test engine in the results.  It's probably last, but for
-  // robustness don't assume it is.
-  let testEngineItem;
-  for (let i = 0; !testEngineItem; i++) {
-    let details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    if (details.searchParams && details.searchParams.keyword == ALIAS) {
-      testEngineItem = await UrlbarTestUtils.waitForAutocompleteResultAt(
-        window,
-        i
-      );
-    }
-  }
-
-  // Click it.
-  EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
-
-  UrlbarTestUtils.assertSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    engineName: testEngineItem.result.payload.engine,
-  });
-
-  gURLBar.setSearchMode({});
-
-  await UrlbarTestUtils.promisePopupClose(window, () =>
-    EventUtils.synthesizeKey("KEY_Escape")
-  );
-  await SpecialPowers.popPrefEnv();
-});
-
 // Pressing enter on an @ alias offer (an @ alias with an empty search string)
-// in the view should fill it in the urlbar input.
-// This subtest can be removed when update2 is on by default.
-add_task(async function enterAndFillAlias_legacy() {
+// in the popup should fill it in the urlbar input.
+add_task(async function enterAndFillAlias() {
   // Do a search for "@" to show all the @ aliases.
   gURLBar.search("@");
   await UrlbarTestUtils.promiseSearchComplete(window);
@@ -357,50 +315,9 @@ add_task(async function enterAndFillAlias_legacy() {
   );
 });
 
-// Pressing enter on an @ alias offer (an @ alias with an empty search string)
-// in the view should enter search mode.
-add_task(async function enterAndFillAlias() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
-
-  // Do a search for "@" to show all the @ aliases.
-  gURLBar.search("@");
-  await UrlbarTestUtils.promiseSearchComplete(window);
-
-  // Find our test engine in the results.  It's probably last, but for
-  // robustness don't assume it is.
-  let details;
-  let index = 0;
-  for (; ; index++) {
-    details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
-    if (details.searchParams && details.searchParams.keyword == ALIAS) {
-      index++;
-      break;
-    }
-  }
-
-  // Key down to it and press enter.
-  EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
-  EventUtils.synthesizeKey("KEY_Enter");
-
-  UrlbarTestUtils.assertSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    engineName: details.searchParams.engine,
-  });
-
-  gURLBar.setSearchMode({});
-
-  await UrlbarTestUtils.promisePopupClose(window, () =>
-    EventUtils.synthesizeKey("KEY_Escape")
-  );
-  await SpecialPowers.popPrefEnv();
-});
-
 // Pressing enter on an @ alias autofill should fill it in the urlbar input
 // with a trailing space and move the caret at the end.
-// This subtest can be removed when update2 is on by default.
-add_task(async function enterAutofillsAlias_legacy() {
+add_task(async function enterAutofillsAlias() {
   let expectedString = `${ALIAS} `;
   for (let value of [ALIAS.substring(0, ALIAS.length - 1), ALIAS]) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -425,40 +342,6 @@ add_task(async function enterAutofillsAlias_legacy() {
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
-});
-
-// Pressing enter on an @ alias autofill should fill it in the urlbar input
-// with a trailing space and move the caret at the end.
-add_task(async function enterAutofillsAlias() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
-  for (let value of [ALIAS.substring(0, ALIAS.length - 1), ALIAS]) {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value,
-      selectionStart: value.length,
-      selectionEnd: value.length,
-    });
-    let testEngineItem = await UrlbarTestUtils.waitForAutocompleteResultAt(
-      window,
-      0
-    );
-
-    // Press Enter.
-    EventUtils.synthesizeKey("KEY_Enter");
-
-    UrlbarTestUtils.assertSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-      engineName: testEngineItem.result.payload.engine,
-    });
-
-    gURLBar.setSearchMode({});
-  }
-  await UrlbarTestUtils.promisePopupClose(window, () =>
-    EventUtils.synthesizeKey("KEY_Escape")
-  );
-  await SpecialPowers.popPrefEnv();
 });
 
 async function doSimpleTest(revertBetweenSteps) {
