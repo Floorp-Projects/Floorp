@@ -366,7 +366,7 @@ add_task(async function testAboutProcesses() {
 
     info("Sanity checks: tid");
     let tid = Number.parseInt(tidContent);
-    Assert.ok(tid > 0);
+    Assert.notEqual(tid, 0, "The tid should be set");
     Assert.equal(tid, threadRow.thread.tid);
 
     info("Sanity checks: CPU (user)");
