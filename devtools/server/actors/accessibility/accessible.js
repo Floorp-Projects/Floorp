@@ -214,10 +214,6 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     this.rawAccessible = null;
   },
 
-  get isDestroyed() {
-    return this.walker == null || this.actorID == null;
-  },
-
   get role() {
     if (this.isDefunct) {
       return null;
@@ -397,7 +393,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     }
 
     const doc = await this.walker.getDocument();
-    if (this.isDestroyed) {
+    if (this.isDestroyed()) {
       // This accessible actor is destroyed.
       return relationObjects;
     }
@@ -514,7 +510,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       appliedColorMatrix: this.walker.colorMatrix,
     });
 
-    if (this.isDestroyed) {
+    if (this.isDestroyed()) {
       // This accessible actor is destroyed.
       return null;
     }
@@ -602,7 +598,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
         return Promise.all(audits);
       })
       .then(results => {
-        if (this.isDefunct || this.isDestroyed) {
+        if (this.isDefunct || this.isDestroyed()) {
           return null;
         }
 
@@ -617,7 +613,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
         return audit;
       })
       .catch(error => {
-        if (!this.isDefunct && !this.isDestroyed) {
+        if (!this.isDefunct && !this.isDestroyed()) {
           throw error;
         }
         return null;
