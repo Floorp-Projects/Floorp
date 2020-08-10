@@ -95,9 +95,10 @@ add_task(async function() {
   const toolsMenu = win.document.getElementById("webDeveloperMenu");
   ok(toolsMenu.hidden, "The Web Developer item of the tools menu is hidden");
   const hamburgerMenu = win.document.getElementById("appMenu-developer-button");
-  ok(
-    hamburgerMenu.hidden,
-    "The Web Developer item of the hamburger menu is hidden"
+  is(
+    hamburgerMenu,
+    null,
+    "The Web Developer item of the hamburger menu should not be available"
   );
 
   win.gBrowser.removeTab(tab);

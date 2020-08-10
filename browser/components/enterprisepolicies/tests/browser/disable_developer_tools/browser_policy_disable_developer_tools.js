@@ -44,9 +44,10 @@ add_task(async function test_updates_post_policy() {
   let hamburgerMenu = window.document.getElementById(
     "appMenu-developer-button"
   );
-  ok(
-    hamburgerMenu.hidden,
-    "The Web Developer item of the hamburger menu is hidden"
+  is(
+    hamburgerMenu,
+    null,
+    "The Web Developer item of the hamburger menu should not be available."
   );
 
   BrowserTestUtils.removeTab(tab);

@@ -63,8 +63,10 @@ var AppMenu = {
 
 async function reopenAppMenu(browserWindow) {
   browserWindow.PanelUI.hide();
-  let view = browserWindow.document.getElementById("appMenu-mainView");
-  let promiseViewShown = BrowserTestUtils.waitForEvent(view, "ViewShown");
+  let promiseViewShown = BrowserTestUtils.waitForEvent(
+    PanelUI.panel,
+    "ViewShown"
+  );
   browserWindow.PanelUI.show();
   await promiseViewShown;
 }

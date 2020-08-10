@@ -64,6 +64,11 @@ ChromeUtils.defineModuleGetter(
   "BrowserUsageTelemetry",
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "PanelMultiView",
+  "resource:///modules/PanelMultiView.jsm"
+);
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "browser.uitour.loglevel";
@@ -1010,7 +1015,12 @@ var UITour = {
               node = null;
             }
           } else {
-            node = aWindow.document.querySelector(targetQuery);
+            let viewCacheTemplate = aWindow.document.getElementById(
+              "appMenu-viewCache"
+            );
+            node =
+              aWindow.document.querySelector(targetQuery) ||
+              viewCacheTemplate.content.querySelector(targetQuery);
           }
 
           resolve({
@@ -1033,9 +1043,10 @@ var UITour = {
     let targetElement = aTarget.node;
     // Use the widget for filtering if it exists since the target may be the icon inside.
     if (aTarget.widgetName) {
-      targetElement = aTarget.node.ownerDocument.getElementById(
-        aTarget.widgetName
-      );
+      let doc = aTarget.node.ownerGlobal.document;
+      targetElement =
+        doc.getElementById(aTarget.widgetName) ||
+        PanelMultiView.getViewNode(doc, aTarget.widgetName);
     }
 
     return targetElement.id.startsWith("appMenu-");

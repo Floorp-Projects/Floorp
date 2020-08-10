@@ -37,16 +37,12 @@ add_task(async function test_with_rs_messages() {
     { clear: true }
   );
 
+  UITour.showMenu(window, "appMenu");
+  await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
+  const mainView = document.getElementById("appMenu-mainView");
+
   const whatsNewBtn = document.getElementById("appMenu-whatsnew-button");
   Assert.equal(whatsNewBtn.hidden, true, "What's New btn doesn't exist");
-
-  const mainView = document.getElementById("appMenu-mainView");
-  UITour.showMenu(window, "appMenu");
-  await BrowserTestUtils.waitForEvent(
-    mainView,
-    "ViewShown",
-    "Panel did not open"
-  );
 
   // Reload the provider
   await ASRouter._updateMessageProviders();

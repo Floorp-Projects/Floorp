@@ -478,7 +478,7 @@ class _ToolbarPanelHub {
   }
 
   _showElement(document, id, string_id) {
-    const el = document.getElementById(id);
+    const el = PanelMultiView.getViewNode(document, id);
     document.l10n.setAttributes(el, string_id);
     el.removeAttribute("hidden");
   }
