@@ -74,7 +74,7 @@ def optimize_task_graph(target_task_graph, requested_tasks, params, do_not_optim
 
     return get_subgraph(
             target_task_graph, removed_tasks, replaced_tasks,
-            label_to_taskid, decision_task_id), label_to_taskid
+            label_to_taskid, decision_task_id), label_to_taskid, replaced_tasks
 
 
 def _get_optimizations(target_task_graph, strategies):
