@@ -198,7 +198,7 @@ TEST_F(APZCBasicTester, FlingIntoOverscroll) {
   const TimeDuration increment = TimeDuration::FromMilliseconds(1);
   bool reachedOverscroll = false;
   bool recoveredFromOverscroll = false;
-  while (apzc->AdvanceAnimations(mcc->Time())) {
+  while (apzc->AdvanceAnimations(mcc->GetSampleTime())) {
     if (!reachedOverscroll && apzc->IsOverscrolled()) {
       reachedOverscroll = true;
     }

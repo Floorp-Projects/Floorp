@@ -12,6 +12,7 @@
 #include "base/platform_thread.h"                    // for PlatformThreadId
 #include "mozilla/layers/AsyncCompositionManager.h"  // for AsyncTransform
 #include "mozilla/layers/APZUtils.h"
+#include "mozilla/layers/SampleTime.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "Units.h"
@@ -60,11 +61,11 @@ class APZSampler {
       const wr::WrWindowId& aWindowId, wr::Transaction* aTxn,
       const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
 
-  void SetSampleTime(const TimeStamp& aSampleTime);
+  void SetSampleTime(const SampleTime& aSampleTime);
   void SampleForWebRender(wr::TransactionWrapper& aTxn,
                           const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
 
-  bool AdvanceAnimations(const TimeStamp& aSampleTime);
+  bool AdvanceAnimations(const SampleTime& aSampleTime);
 
   /**
    * Compute the updated shadow transform for a scroll thumb layer that
@@ -161,7 +162,7 @@ class APZSampler {
 
   Mutex mSampleTimeLock;
   // Can only be accessed or modified while holding mSampleTimeLock.
-  TimeStamp mSampleTime;
+  SampleTime mSampleTime;
 };
 
 }  // namespace layers

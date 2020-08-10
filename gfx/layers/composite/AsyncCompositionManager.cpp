@@ -27,6 +27,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerAnimationUtils.h"  // for TimingFunctionToComputedTimingFunction
 #include "mozilla/layers/LayerMetricsWrapper.h"  // for LayerMetricsWrapper
+#include "mozilla/layers/SampleTime.h"
 #include "nsCoord.h"                 // for NSAppUnitsToFloatPixels, etc
 #include "nsDebug.h"                 // for NS_ASSERTION, etc
 #include "nsDeviceContext.h"         // for nsDeviceContext
@@ -1223,7 +1224,7 @@ void AsyncCompositionManager::GetFrameUniformity(
 }
 
 bool AsyncCompositionManager::TransformShadowTree(
-    TimeStamp aCurrentFrame, TimeDuration aVsyncRate,
+    const SampleTime& aCurrentFrame, TimeDuration aVsyncRate,
     CompositorBridgeParentBase::TransformsToSkip aSkip) {
   AUTO_PROFILER_LABEL("AsyncCompositionManager::TransformShadowTree", GRAPHICS);
 
@@ -1235,21 +1236,21 @@ bool AsyncCompositionManager::TransformShadowTree(
   // First, compute and set the shadow transforms from OMT animations.
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
-  bool wantNextFrame = SampleAnimations(root, aCurrentFrame);
+  bool wantNextFrame = SampleAnimations(root, aCurrentFrame.Time());
 
   // Advance animations to the next expected vsync timestamp, if we can
   // get it.
-  TimeStamp nextFrame = aCurrentFrame;
+  SampleTime nextFrame = aCurrentFrame;
 
   MOZ_ASSERT(aVsyncRate != TimeDuration::Forever());
   if (aVsyncRate != TimeDuration::Forever()) {
-    nextFrame += aVsyncRate;
+    nextFrame = nextFrame + aVsyncRate;
   }
 
   // Reset the previous time stamp if we don't already have any running
   // animations to avoid using the time which is far behind for newly
   // started animations.
-  mPreviousFrameTimeStamp = wantNextFrame ? aCurrentFrame : TimeStamp();
+  mPreviousFrameTimeStamp = wantNextFrame ? aCurrentFrame.Time() : TimeStamp();
 
   if (!(aSkip & CompositorBridgeParentBase::TransformsToSkip::APZ)) {
     bool apzAnimating = false;

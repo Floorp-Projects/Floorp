@@ -532,9 +532,10 @@ UniquePtr<VelocityTracker> PlatformSpecificStateBase::CreateVelocityTracker(
   return MakeUnique<SimpleVelocityTracker>(aAxis);
 }
 
-TimeStamp AsyncPanZoomController::GetFrameTime() const {
+SampleTime AsyncPanZoomController::GetFrameTime() const {
   APZCTreeManager* treeManagerLocal = GetApzcTreeManager();
-  return treeManagerLocal ? treeManagerLocal->GetFrameTime() : TimeStamp::Now();
+  return treeManagerLocal ? treeManagerLocal->GetFrameTime()
+                          : SampleTime::FromNow();
 }
 
 class MOZ_STACK_CLASS StateChangeNotificationBlocker final {
@@ -4026,7 +4027,7 @@ void AsyncPanZoomController::RequestContentRepaint(
 }
 
 bool AsyncPanZoomController::UpdateAnimation(
-    const RecursiveMutexAutoLock& aProofOfLock, const TimeStamp& aSampleTime,
+    const RecursiveMutexAutoLock& aProofOfLock, const SampleTime& aSampleTime,
     nsTArray<RefPtr<Runnable>>* aOutDeferredTasks) {
   AssertOnSamplerThread();
 
@@ -4093,7 +4094,7 @@ AsyncTransformComponentMatrix AsyncPanZoomController::GetOverscrollTransform(
                                                        overscrollOffset.y, 0);
 }
 
-bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime) {
+bool AsyncPanZoomController::AdvanceAnimations(const SampleTime& aSampleTime) {
   AssertOnSamplerThread();
 
   // Don't send any state-change notifications until the end of the function,
@@ -4402,7 +4403,7 @@ uint32_t AsyncPanZoomController::GetCheckerboardMagnitude(
 }
 
 void AsyncPanZoomController::ReportCheckerboard(
-    const TimeStamp& aSampleTime,
+    const SampleTime& aSampleTime,
     const ParentLayerRect& aClippedCompositionBounds) {
   if (mLastCheckerboardReport == aSampleTime) {
     // This function will get called multiple times for each APZC on a single

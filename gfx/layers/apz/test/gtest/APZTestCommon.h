@@ -164,16 +164,18 @@ class MockContentController : public GeckoContentController {
 
 class MockContentControllerDelayed : public MockContentController {
  public:
-  MockContentControllerDelayed() : mTime(GetStartupTime()) {}
+  MockContentControllerDelayed()
+      : mTime(SampleTime::FromTest(GetStartupTime())) {}
 
-  const TimeStamp& Time() { return mTime; }
+  const TimeStamp& Time() { return mTime.Time(); }
+  const SampleTime& GetSampleTime() { return mTime; }
 
   void AdvanceByMillis(int aMillis) {
     AdvanceBy(TimeDuration::FromMilliseconds(aMillis));
   }
 
   void AdvanceBy(const TimeDuration& aIncrement) {
-    TimeStamp target = mTime + aIncrement;
+    SampleTime target = mTime + aIncrement;
     while (mTaskQueue.Length() > 0 && mTaskQueue[0].second <= target) {
       RunNextDelayedTask();
     }
@@ -182,7 +184,7 @@ class MockContentControllerDelayed : public MockContentController {
 
   void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) {
     RefPtr<Runnable> task = aTask;
-    TimeStamp runAtTime = mTime + TimeDuration::FromMilliseconds(aDelayMs);
+    SampleTime runAtTime = mTime + TimeDuration::FromMilliseconds(aDelayMs);
     int insIndex = mTaskQueue.Length();
     while (insIndex > 0) {
       if (mTaskQueue[insIndex - 1].second <= runAtTime) {
@@ -199,7 +201,7 @@ class MockContentControllerDelayed : public MockContentController {
   // in the queue after this function is called. Only when the return
   // value is 0 is the queue guaranteed to be empty.
   int RunThroughDelayedTasks() {
-    nsTArray<std::pair<RefPtr<Runnable>, TimeStamp>> runQueue =
+    nsTArray<std::pair<RefPtr<Runnable>, SampleTime>> runQueue =
         std::move(mTaskQueue);
     int numTasks = runQueue.Length();
     for (int i = 0; i < numTasks; i++) {
@@ -215,7 +217,7 @@ class MockContentControllerDelayed : public MockContentController {
 
  private:
   void RunNextDelayedTask() {
-    std::pair<RefPtr<Runnable>, TimeStamp> next = mTaskQueue[0];
+    std::pair<RefPtr<Runnable>, SampleTime> next = mTaskQueue[0];
     mTaskQueue.RemoveElementAt(0);
     mTime = next.second;
     next.first->Run();
@@ -226,8 +228,8 @@ class MockContentControllerDelayed : public MockContentController {
 
   // The following array is sorted by timestamp (tasks are inserted in order by
   // timestamp).
-  nsTArray<std::pair<RefPtr<Runnable>, TimeStamp>> mTaskQueue;
-  TimeStamp mTime;
+  nsTArray<std::pair<RefPtr<Runnable>, SampleTime>> mTaskQueue;
+  SampleTime mTime;
 };
 
 class TestAPZCTreeManager : public APZCTreeManager {
@@ -249,7 +251,7 @@ class TestAPZCTreeManager : public APZCTreeManager {
   AsyncPanZoomController* NewAPZCInstance(
       LayersId aLayersId, GeckoContentController* aController) override;
 
-  TimeStamp GetFrameTime() override { return mcc->Time(); }
+  SampleTime GetFrameTime() override { return mcc->GetSampleTime(); }
 
  private:
   RefPtr<MockContentControllerDelayed> mcc;
@@ -353,7 +355,7 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
 
   void AdvanceAnimationsUntilEnd(
       const TimeDuration& aIncrement = TimeDuration::FromMilliseconds(10)) {
-    while (AdvanceAnimations(mcc->Time())) {
+    while (AdvanceAnimations(mcc->GetSampleTime())) {
       mcc->AdvanceBy(aIncrement);
     }
   }
@@ -362,7 +364,7 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
       AsyncTransform* aOutTransform, ParentLayerPoint& aScrollOffset,
       const TimeDuration& aIncrement = TimeDuration::FromMilliseconds(0)) {
     mcc->AdvanceBy(aIncrement);
-    bool ret = AdvanceAnimations(mcc->Time());
+    bool ret = AdvanceAnimations(mcc->GetSampleTime());
     if (aOutTransform) {
       *aOutTransform =
           GetCurrentAsyncTransform(AsyncPanZoomController::eForHitTesting);

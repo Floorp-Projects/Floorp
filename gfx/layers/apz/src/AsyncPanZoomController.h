@@ -10,6 +10,7 @@
 #include "CrossProcessMutex.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/RepaintRequest.h"
+#include "mozilla/layers/SampleTime.h"
 #include "mozilla/layers/ZoomConstraints.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -246,10 +247,10 @@ class AsyncPanZoomController {
    * The return value indicates whether or not any currently running animation
    * should continue. If true, the compositor should schedule another composite.
    */
-  bool AdvanceAnimations(const TimeStamp& aSampleTime);
+  bool AdvanceAnimations(const SampleTime& aSampleTime);
 
   bool UpdateAnimation(const RecursiveMutexAutoLock& aProofOfLock,
-                       const TimeStamp& aSampleTime,
+                       const SampleTime& aSampleTime,
                        nsTArray<RefPtr<Runnable>>* aOutDeferredTasks);
 
   // --------------------------------------------------------------------------
@@ -318,7 +319,7 @@ class AsyncPanZoomController {
    * See GetCheckerboardMagnitude for documentation of the
    * aClippedCompositionBounds argument that needs to be provided by the caller.
    */
-  void ReportCheckerboard(const TimeStamp& aSampleTime,
+  void ReportCheckerboard(const SampleTime& aSampleTime,
                           const ParentLayerRect& aClippedCompositionBounds);
 
   /**
@@ -544,7 +545,7 @@ class AsyncPanZoomController {
   virtual ~AsyncPanZoomController();
 
   // Returns the cached current frame time.
-  TimeStamp GetFrameTime() const;
+  SampleTime GetFrameTime() const;
 
   /**
    * Helper method for touches beginning. Sets everything up for panning and any
@@ -992,10 +993,10 @@ class AsyncPanZoomController {
 
   // The last time the compositor has sampled the content transform for this
   // frame.
-  TimeStamp mLastSampleTime;
+  SampleTime mLastSampleTime;
 
   // The last sample time at which we submitted a checkerboarding report.
-  TimeStamp mLastCheckerboardReport;
+  SampleTime mLastCheckerboardReport;
 
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
@@ -1375,7 +1376,7 @@ class AsyncPanZoomController {
   // The initial velocity of the most recent fling.
   ParentLayerPoint mLastFlingVelocity;
   // The time at which the most recent fling started.
-  TimeStamp mLastFlingTime;
+  SampleTime mLastFlingTime;
   // Indicates if the repaint-during-pinch timer is currently set
   bool mPinchPaintTimerSet;
 
