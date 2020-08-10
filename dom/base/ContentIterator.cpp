@@ -137,7 +137,7 @@ nsresult ContentIteratorBase::Init(nsINode* aRoot) {
     mLast = aRoot;
   }
 
-  mCommonParent = aRoot;
+  mClosestCommonInclusiveAncestor = aRoot;
   mCurNode = mFirst;
   return NS_OK;
 }
@@ -232,9 +232,10 @@ bool ContentIteratorBase::Initializer::IsSingleNodeCharacterRange() const {
 
 nsresult ContentIteratorBase::Initializer::Run() {
   // get common content parent
-  mIterator.mCommonParent = nsContentUtils::GetClosestCommonInclusiveAncestor(
-      mStart.Container(), mEnd.Container());
-  if (NS_WARN_IF(!mIterator.mCommonParent)) {
+  mIterator.mClosestCommonInclusiveAncestor =
+      nsContentUtils::GetClosestCommonInclusiveAncestor(mStart.Container(),
+                                                        mEnd.Container());
+  if (NS_WARN_IF(!mIterator.mClosestCommonInclusiveAncestor)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -432,7 +433,7 @@ void ContentIteratorBase::SetEmpty() {
   mCurNode = nullptr;
   mFirst = nullptr;
   mLast = nullptr;
-  mCommonParent = nullptr;
+  mClosestCommonInclusiveAncestor = nullptr;
   mIsDone = true;
 }
 
@@ -778,12 +779,12 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   MOZ_ASSERT(mRange->IsPositioned());
 
   // get the start node and offset, convert to nsINode
-  mCommonParent = mRange->GetClosestCommonInclusiveAncestor();
+  mClosestCommonInclusiveAncestor = mRange->GetClosestCommonInclusiveAncestor();
   nsINode* startContainer = mRange->GetStartContainer();
   int32_t startOffset = mRange->StartOffset();
   nsINode* endContainer = mRange->GetEndContainer();
   int32_t endOffset = mRange->EndOffset();
-  MOZ_ASSERT(mCommonParent && startContainer && endContainer);
+  MOZ_ASSERT(mClosestCommonInclusiveAncestor && startContainer && endContainer);
   // Bug 767169
   MOZ_ASSERT(uint32_t(startOffset) <= startContainer->Length() &&
              uint32_t(endOffset) <= endContainer->Length());
