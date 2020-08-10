@@ -136,17 +136,25 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
                          /* bInheritHandle = */ FALSE,
                          /* dwThreadId = */ te32.th32ThreadID));
           if (!hThread) {
-            // Cannot open thread. Not sure why, but let's attempt to find data
-            // on other threads.
+            // Cannot open thread. Not sure why, but let's erase this thread
+            // and attempt to find data on other threads.
+            processLookup->value().threads.RemoveLastElement();
             continue;
           }
 
+          threadInfo->tid = te32.th32ThreadID;
+
+          // Attempt to get thread times.
+          // If we fail, continue without this piece of information.
           FILETIME createTime, exitTime, kernelTime, userTime;
-          if (!GetThreadTimes(hThread.get(), &createTime, &exitTime,
-                              &kernelTime, &userTime)) {
-            continue;
+          if (GetThreadTimes(hThread.get(), &createTime, &exitTime, &kernelTime,
+                             &userTime)) {
+            threadInfo->cpuKernel = ToNanoSeconds(kernelTime);
+            threadInfo->cpuUser = ToNanoSeconds(userTime);
           }
 
+          // Attempt to get thread name.
+          // If we fail, continue without this piece of information.
           if (getThreadDescription) {
             PWSTR threadName = nullptr;
             if (getThreadDescription(hThread.get(), &threadName) &&
@@ -157,9 +165,6 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
               LocalFree(threadName);
             }
           }
-          threadInfo->tid = te32.th32ThreadID;
-          threadInfo->cpuKernel = ToNanoSeconds(kernelTime);
-          threadInfo->cpuUser = ToNanoSeconds(userTime);
         }
 
         // ----- We're ready to return.
