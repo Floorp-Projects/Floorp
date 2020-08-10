@@ -1062,7 +1062,7 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
     mZoomConstraintsClient->Init(this, mDocument);
 
     // We call this to create mMobileViewportManager, if it is needed.
-    UpdateViewportOverridden(false);
+    MaybeRecreateMobileViewportManager(false);
   }
 
   if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
@@ -10944,7 +10944,7 @@ Maybe<MobileViewportManager::ManagerType> UseMobileViewportManager(
   return Nothing();
 }
 
-void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
+void PresShell::MaybeRecreateMobileViewportManager(bool aAfterInitialization) {
   // Determine if we require a MobileViewportManager, and what kind if so. We
   // need one any time we allow resolution zooming for a document, and any time
   // we want to obey <meta name="viewport"> tags for it.
@@ -11018,7 +11018,7 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
 }
 
 bool PresShell::UsesMobileViewportSizing() const {
-  return GetIsViewportOverridden() &&
+  return mMobileViewportManager != nullptr &&
          nsLayoutUtils::ShouldHandleMetaViewport(mDocument);
 }
 

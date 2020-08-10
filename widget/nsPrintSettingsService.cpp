@@ -890,36 +890,8 @@ nsPrintSettingsService::GetNewPrintSettings(
 NS_IMETHODIMP
 nsPrintSettingsService::GetLastUsedPrinterName(
     nsAString& aLastUsedPrinterName) {
-  nsresult rv;
-  nsCOMPtr<nsIPrinterList> printerList =
-      do_GetService(NS_PRINTER_LIST_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   aLastUsedPrinterName.Truncate();
-
-  // Look up the printer from the last print job
-  nsAutoString lastUsedPrinterName;
-  Preferences::GetString(kPrinterName, lastUsedPrinterName);
-  if (!lastUsedPrinterName.IsEmpty()) {
-    // Verify it's still a valid printer
-
-    nsTArray<RefPtr<nsIPrinter>> printers;
-    rv = printerList->GetPrinters(printers);
-    if (NS_SUCCEEDED(rv)) {
-      for (nsIPrinter* printer : printers) {
-        nsAutoString printerName;
-        printer->GetName(printerName);
-        if (printerName.Equals(lastUsedPrinterName)) {
-          aLastUsedPrinterName = lastUsedPrinterName;
-          return NS_OK;
-        }
-      }
-    }
-  }
-
-  // There is no last printer preference, or it doesn't name a valid printer.
-  // Return the system default from the printer list.
-  printerList->GetSystemDefaultPrinterName(aLastUsedPrinterName);
+  Preferences::GetString(kPrinterName, aLastUsedPrinterName);
   return NS_OK;
 }
 

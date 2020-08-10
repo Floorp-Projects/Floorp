@@ -8,6 +8,8 @@ const {
   Services,
 } = window.docShell.chromeEventHandler.ownerGlobal;
 
+const INVALID_INPUT_DELAY_MS = 500;
+
 document.addEventListener(
   "DOMContentLoaded",
   e => {
@@ -38,11 +40,13 @@ var PrintEventHandler = {
     document.addEventListener("open-system-dialog", () =>
       this.print({ silent: false })
     );
-    document.dispatchEvent(
-      new CustomEvent("available-destinations", {
-        detail: this.getPrintDestinations(),
-      })
-    );
+    this.getPrintDestinations().then(destinations => {
+      document.dispatchEvent(
+        new CustomEvent("available-destinations", {
+          detail: destinations,
+        })
+      );
+    });
 
     // Some settings are only used by the UI
     // assigning new values should update the underlying settings
@@ -164,18 +168,39 @@ var PrintEventHandler = {
     return browsingContext.embedderElement;
   },
 
-  getPrintDestinations() {
-    let printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
+  async getPrintDestinations() {
+    const printerList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
       Ci.nsIPrinterList
     );
-    let currentPrinterName = PrintUtils._getLastUsedPrinterName();
-    let destinations = printerList.printers.map(printer => {
-      return {
-        name: printer.name,
-        value: printer.name,
-        selected: printer.name == currentPrinterName,
-      };
+
+    const lastUsedPrinterName = PrintUtils._getLastUsedPrinterName();
+    const defaultPrinterName = printerList.systemDefaultPrinterName;
+    const printers = await printerList.printers;
+
+    let defaultIndex = 0;
+    let foundSelected = false;
+    let i = 0;
+    let destinations = printers.map(printer => {
+      printer.QueryInterface(Ci.nsIPrinter);
+      const name = printer.name;
+      const value = name;
+      const selected = name == lastUsedPrinterName;
+      if (selected) {
+        foundSelected = true;
+      }
+      if (name == defaultPrinterName) {
+        defaultIndex = i;
+      }
+      ++i;
+      return { name, value, selected };
     });
+
+    // If there's no valid last selected printer, select the system default, or
+    // the first on the list otherwise.
+    if (destinations.length && !foundSelected) {
+      destinations[defaultIndex].selected = true;
+    }
+
     return destinations;
   },
 };
@@ -414,28 +439,51 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
 
   initialize() {
     super.initialize();
+
     this._percentScale = this.querySelector("#percent-scale");
     this._percentScale.addEventListener("input", this);
-    this._shrinkToFit = this.querySelector("#fit-choice");
+    this._shrinkToFitChoice = this.querySelector("#fit-choice");
+    this._scaleChoice = this.querySelector("#percent-scale-choice");
+
+    this.addEventListener("input", this);
   }
 
   update(settings) {
-    // TODO: .scaling only goes from 0-1. Need validation mechanism
     let { scaling, shrinkToFit } = settings;
-    this._shrinkToFit.checked = shrinkToFit;
-    this.querySelector("#percent-scale-choice").checked = !shrinkToFit;
+    this._shrinkToFitChoice.checked = shrinkToFit;
+    this._scaleChoice.checked = !shrinkToFit;
     this._percentScale.disabled = shrinkToFit;
 
-    // Only allow whole numbers. 0.14 * 100 would have decimal places, etc.
-    this._percentScale.value = parseInt(scaling * 100, 10);
+    // If the user had an invalid input and switches back to "fit to page",
+    // we repopulate the scale field with the stored, valid scaling value.
+    if (!this._percentScale.value || this._shrinkToFitChoice.checked) {
+      // Only allow whole numbers. 0.14 * 100 would have decimal places, etc.
+      this._percentScale.value = parseInt(scaling * 100, 10);
+    }
   }
 
   handleEvent(e) {
     e.stopPropagation();
-    this.dispatchSettingsChange({
-      shrinkToFit: this._shrinkToFit.checked,
-      scaling: this._percentScale.value / 100,
-    });
+
+    if (e.target == this._shrinkToFitChoice || e.target == this._scaleChoice) {
+      this.dispatchSettingsChange({
+        shrinkToFit: this._shrinkToFitChoice.checked,
+      });
+      return;
+    }
+
+    window.clearTimeout(this.invalidTimeoutId);
+
+    if (this._percentScale.checkValidity() && e.type == "input") {
+      // TODO: set the customError element to hidden ( Bug 1656057 )
+
+      this.invalidTimeoutId = window.setTimeout(() => {
+        this.dispatchSettingsChange({
+          scaling: Number(this._percentScale.value / 100),
+        });
+      }, INVALID_INPUT_DELAY_MS);
+    }
+    // TODO: populate a customError element with erorMessage contents
   }
 }
 customElements.define("scale-input", ScaleInput);

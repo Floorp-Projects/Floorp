@@ -10,6 +10,7 @@
 #include "DOMSVGAnimatedString.h"
 #include "nsError.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGAnimatedClassOrString.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -20,7 +21,7 @@ namespace dom {
 class SVGElement;
 }
 
-class SVGAnimatedString {
+class SVGAnimatedString final : public SVGAnimatedClassOrString {
  public:
   using SVGElement = dom::SVGElement;
 
@@ -31,13 +32,15 @@ class SVGAnimatedString {
   }
 
   void SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
-                    bool aDoSetAttr);
-  void GetBaseValue(nsAString& aValue, const SVGElement* aSVGElement) const {
+                    bool aDoSetAttr) override;
+  void GetBaseValue(nsAString& aValue,
+                    const SVGElement* aSVGElement) const override {
     aSVGElement->GetStringBaseValue(mAttrEnum, aValue);
   }
 
   void SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement);
-  void GetAnimValue(nsAString& aResult, const SVGElement* aSVGElement) const;
+  void GetAnimValue(nsAString& aResult,
+                    const SVGElement* aSVGElement) const override;
 
   // Returns true if the animated value of this string has been explicitly
   // set (either by animation, or by taking on the base value which has been
@@ -45,9 +48,6 @@ class SVGAnimatedString {
   // If this returns false, the animated value is still valid, that is,
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return !!mAnimVal || mIsBaseSet; }
-
-  already_AddRefed<dom::DOMSVGAnimatedString> ToDOMAnimatedString(
-      SVGElement* aSVGElement);
 
   UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
@@ -57,33 +57,6 @@ class SVGAnimatedString {
   bool mIsBaseSet;
 
  public:
-  // DOM wrapper class for the (DOM)SVGAnimatedString interface where the
-  // wrapped class is SVGAnimatedString.
-  struct DOMAnimatedString final : public dom::DOMSVGAnimatedString {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
-
-    DOMAnimatedString(SVGAnimatedString* aVal, SVGElement* aSVGElement)
-        : dom::DOMSVGAnimatedString(aSVGElement), mVal(aVal) {}
-
-    SVGAnimatedString* mVal;  // kept alive because it belongs to content
-
-    void GetBaseVal(nsAString& aResult) override {
-      mVal->GetBaseValue(aResult, mSVGElement);
-    }
-
-    void SetBaseVal(const nsAString& aValue) override {
-      mVal->SetBaseValue(aValue, mSVGElement, true);
-    }
-
-    void GetAnimVal(nsAString& aResult) override {
-      mSVGElement->FlushAnimations();
-      mVal->GetAnimValue(aResult, mSVGElement);
-    }
-
-   private:
-    virtual ~DOMAnimatedString();
-  };
   struct SMILString : public SMILAttr {
    public:
     SMILString(SVGAnimatedString* aVal, SVGElement* aSVGElement)

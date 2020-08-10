@@ -350,18 +350,10 @@ class PresShell final : public nsStubDocumentObserver,
 
  public:
   /**
-   * Returns true if this document has a potentially zoomable viewport,
-   * allowing for its layout and visual viewports to diverge.
+   * Note that the assumptions that determine whether we need a mobile viewport
+   * manager may have changed.
    */
-  bool GetIsViewportOverridden() const {
-    return (mMobileViewportManager != nullptr);
-  }
-
-  /**
-   * Note that the assumptions that determine whether we have a potentially
-   * zoomable viewport may have changed.
-   */
-  void UpdateViewportOverridden(bool aAfterInitialization);
+  void MaybeRecreateMobileViewportManager(bool aAfterInitialization);
 
   /**
    * Returns true if this document uses mobile viewport sizing (including
