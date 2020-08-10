@@ -508,17 +508,30 @@ void MediaTransportHandlerSTS::Destroy() {
       mStsThread, __func__,
       [this, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
         disconnect_all();
+        // Clear the transports before destroying the ice ctx so that
+        // the close_notify alerts have a chance to be sent as the
+        // TransportFlow destructors execute.
+        mTransports.clear();
         if (mIceCtx) {
-          NrIceStats stats = mIceCtx->Destroy();
-          CSFLogDebug(LOGTAG,
-                      "Ice Telemetry: stun (retransmits: %d)"
-                      "   turn (401s: %d   403s: %d   438s: %d)",
-                      stats.stun_retransmits, stats.turn_401s, stats.turn_403s,
-                      stats.turn_438s);
+          // We're already on the STS thread, but the TransportFlow
+          // destructors executed when mTransports.clear() is called
+          // above dispatch calls to DestroyFinal to the STS thread. If
+          // we don't also dispatch the call to destory the NrIceCtx to
+          // the STS thread, it will tear down the NrIceMediaStreams
+          // before the TransportFlows are destroyed.  Without a valid
+          // NrIceMediaStreams the close_notify alert cannot be sent.
+          mStsThread->Dispatch(NS_NewRunnableFunction(
+              __func__, [iceCtx = RefPtr<NrIceCtx>(mIceCtx)] {
+                NrIceStats stats = iceCtx->Destroy();
+                CSFLogDebug(LOGTAG,
+                            "Ice Telemetry: stun (retransmits: %d)"
+                            "   turn (401s: %d   403s: %d   438s: %d)",
+                            stats.stun_retransmits, stats.turn_401s,
+                            stats.turn_403s, stats.turn_438s);
+              }));
 
           mIceCtx = nullptr;
         }
-        mTransports.clear();
       },
       [](const std::string& aError) {});
 }
