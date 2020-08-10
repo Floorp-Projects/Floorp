@@ -151,6 +151,7 @@ _OPT\.OBJ/
 ^node_modules/
 ^tools/browsertime/node_modules/
 ^tools/lint/eslint/eslint-plugin-mozilla/node_modules/
+^browser/components/newtab/node_modules/
 
 # Ignore talos virtualenv and tp5n files.
 # The tp5n set is supposed to be decompressed at
