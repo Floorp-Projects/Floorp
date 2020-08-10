@@ -133,7 +133,11 @@ class GamepadManager final : public nsIObserver {
 
   bool SetGamepadByEvent(const GamepadChangeEvent& aEvent,
                          nsGlobalWindowInner* aWindow = nullptr);
-
+  // To avoid unintentionally causing the gamepad be activated.
+  // Returns false if this gamepad hasn't been seen by this window
+  // and the axis move data is less than AXIS_FIRST_INTENT_THRESHOLD_VALUE.
+  bool AxisMoveIsFirstIntent(nsGlobalWindowInner* aWindow, uint32_t aIndex,
+                             const GamepadChangeEvent& aEvent);
   bool MaybeWindowHasSeenGamepad(nsGlobalWindowInner* aWindow, uint32_t aIndex);
   // Returns true if we have already sent data from this gamepad
   // to this window. This should only return true if the user
