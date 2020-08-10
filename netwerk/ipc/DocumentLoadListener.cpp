@@ -609,10 +609,6 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     }
   }
 
-  // HTTPS-Only Mode fights potential timeouts caused by upgrades. Instantly
-  // after opening the document channel we have to kick off countermeasures.
-  nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(this);
-
   mOtherPid = aPid;
   mChannelCreationURI = aLoadState->URI();
   mLoadStateLoadFlags = aLoadState->LoadFlags();
@@ -1989,19 +1985,6 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // Enforce CSP frame-ancestors and x-frame-options checks which
   // might cancel the channel.
   nsContentSecurityUtils::PerformCSPFrameAncestorAndXFOCheck(mChannel);
-
-  // HTTPS-Only Mode tries to upgrade connections to https. Once loading
-  // is in progress we set that flag so that timeout counter measures
-  // do not kick in.
-  if (httpChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->LoadInfo();
-    bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-    if (nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin)) {
-      uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-      httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS;
-      loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
-    }
-  }
 
   auto* loadingContext = GetLoadingBrowsingContext();
   if (!loadingContext || loadingContext->IsDiscarded()) {

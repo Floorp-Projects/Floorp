@@ -457,14 +457,6 @@ interface nsILoadInfo : nsISupports
   const unsigned long HTTPS_ONLY_EXEMPT = (1 << 3);
 
   /**
-   * This flag can only ever be set on top-level loads. It indicates
-   * that the top-level https connection succeeded. This flag is mostly
-   * used to counter time-outs which allows to cancel the channel
-   * if the https load has not started.
-   */
-  const unsigned long HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS = (1 << 4);
-
-  /**
    * Upgrade state of HTTPS-Only Mode. The flag HTTPS_ONLY_EXEMPT can get
    * set on requests that should be excempt from an upgrade.
    */
