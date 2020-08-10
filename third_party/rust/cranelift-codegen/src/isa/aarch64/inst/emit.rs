@@ -1,6 +1,6 @@
 //! AArch64 ISA: binary code emission.
 
-use crate::binemit::{CodeOffset, Reloc, Stackmap};
+use crate::binemit::{CodeOffset, Reloc, StackMap};
 use crate::ir::constant::ConstantData;
 use crate::ir::types::*;
 use crate::ir::TrapCode;
@@ -378,6 +378,16 @@ fn enc_vec_lanes(q: u32, u: u32, size: u32, opcode: u32, rd: Writable<Reg>, rn: 
         | machreg_to_vec(rd.to_reg())
 }
 
+fn enc_tbl(is_extension: bool, len: u32, rd: Writable<Reg>, rn: Reg, rm: Reg) -> u32 {
+    debug_assert_eq!(len & 0b11, len);
+    0b0_1_001110_000_00000_0_00_0_00_00000_00000
+        | (machreg_to_vec(rm) << 16)
+        | len << 13
+        | (is_extension as u32) << 12
+        | (machreg_to_vec(rn) << 5)
+        | machreg_to_vec(rd.to_reg())
+}
+
 fn enc_dmb_ish() -> u32 {
     0xD5033BBF
 }
@@ -419,8 +429,8 @@ pub struct EmitState {
     pub(crate) virtual_sp_offset: i64,
     /// Offset of FP from nominal-SP.
     pub(crate) nominal_sp_to_fp: i64,
-    /// Safepoint stackmap for upcoming instruction, as provided to `pre_safepoint()`.
-    stackmap: Option<Stackmap>,
+    /// Safepoint stack map for upcoming instruction, as provided to `pre_safepoint()`.
+    stack_map: Option<StackMap>,
 }
 
 impl MachInstEmitState<Inst> for EmitState {
@@ -428,22 +438,22 @@ impl MachInstEmitState<Inst> for EmitState {
         EmitState {
             virtual_sp_offset: 0,
             nominal_sp_to_fp: abi.frame_size() as i64,
-            stackmap: None,
+            stack_map: None,
         }
     }
 
-    fn pre_safepoint(&mut self, stackmap: Stackmap) {
-        self.stackmap = Some(stackmap);
+    fn pre_safepoint(&mut self, stack_map: StackMap) {
+        self.stack_map = Some(stack_map);
     }
 }
 
 impl EmitState {
-    fn take_stackmap(&mut self) -> Option<Stackmap> {
-        self.stackmap.take()
+    fn take_stack_map(&mut self) -> Option<StackMap> {
+        self.stack_map.take()
     }
 
     fn clear_post_insn(&mut self) {
-        self.stackmap = None;
+        self.stack_map = None;
     }
 }
 
@@ -1396,6 +1406,24 @@ impl MachInstEmit for Inst {
                 };
                 sink.put4(enc_vec_lanes(q, u, size, opcode, rd, rn));
             }
+            &Inst::VecTbl {
+                rd,
+                rn,
+                rm,
+                is_extension,
+            } => {
+                sink.put4(enc_tbl(is_extension, 0b00, rd, rn, rm));
+            }
+            &Inst::VecTbl2 {
+                rd,
+                rn,
+                rn2,
+                rm,
+                is_extension,
+            } => {
+                assert_eq!(machreg_to_vec(rn2), (machreg_to_vec(rn) + 1) % 32);
+                sink.put4(enc_tbl(is_extension, 0b01, rd, rn, rm));
+            }
             &Inst::FpuCmp32 { rn, rm } => {
                 sink.put4(enc_fcmp(ScalarSize::Size32, rn, rm));
             }
@@ -1505,9 +1533,26 @@ impl MachInstEmit for Inst {
                 };
                 sink.put4(enc_fround(top22, rd, rn));
             }
-            &Inst::MovToVec64 { rd, rn } => {
+            &Inst::MovToFpu { rd, rn } => {
                 sink.put4(
-                    0b010_01110000_01000_0_0011_1_00000_00000
+                    0b100_11110_01_1_00_111_000000_00000_00000
+                        | (machreg_to_gpr(rn) << 5)
+                        | machreg_to_vec(rd.to_reg()),
+                );
+            }
+            &Inst::MovToVec { rd, rn, idx, size } => {
+                let (imm5, shift) = match size.lane_size() {
+                    ScalarSize::Size8 => (0b00001, 1),
+                    ScalarSize::Size16 => (0b00010, 2),
+                    ScalarSize::Size32 => (0b00100, 3),
+                    ScalarSize::Size64 => (0b01000, 4),
+                    _ => unreachable!(),
+                };
+                debug_assert_eq!(idx & (0b11111 >> shift), idx);
+                let imm5 = imm5 | ((idx as u32) << shift);
+                sink.put4(
+                    0b010_01110000_00000_0_0011_1_00000_00000
+                        | (imm5 << 16)
                         | (machreg_to_gpr(rn) << 5)
                         | machreg_to_vec(rd.to_reg()),
                 );
@@ -1603,6 +1648,33 @@ impl MachInstEmit for Inst {
                     0b000_011110_0000_000_101001_00000_00000
                         | (u << 29)
                         | (immh << 19)
+                        | (machreg_to_vec(rn) << 5)
+                        | machreg_to_vec(rd.to_reg()),
+                );
+            }
+            &Inst::VecMovElement {
+                rd,
+                rn,
+                idx1,
+                idx2,
+                size,
+            } => {
+                let (imm5, shift) = match size.lane_size() {
+                    ScalarSize::Size8 => (0b00001, 1),
+                    ScalarSize::Size16 => (0b00010, 2),
+                    ScalarSize::Size32 => (0b00100, 3),
+                    ScalarSize::Size64 => (0b01000, 4),
+                    _ => unreachable!(),
+                };
+                let mask = 0b11111 >> shift;
+                debug_assert_eq!(idx1 & mask, idx1);
+                debug_assert_eq!(idx2 & mask, idx2);
+                let imm4 = (idx2 as u32) << (shift - 1);
+                let imm5 = imm5 | ((idx1 as u32) << shift);
+                sink.put4(
+                    0b011_01110000_00000_0_0000_1_00000_00000
+                        | (imm5 << 16)
+                        | (imm4 << 11)
                         | (machreg_to_vec(rn) << 5)
                         | machreg_to_vec(rd.to_reg()),
                 );
@@ -1782,8 +1854,8 @@ impl MachInstEmit for Inst {
                 // Noop; this is just a placeholder for epilogues.
             }
             &Inst::Call { ref info } => {
-                if let Some(s) = state.take_stackmap() {
-                    sink.add_stackmap(StackmapExtent::UpcomingBytes(4), s);
+                if let Some(s) = state.take_stack_map() {
+                    sink.add_stack_map(StackMapExtent::UpcomingBytes(4), s);
                 }
                 sink.add_reloc(info.loc, Reloc::Arm64Call, &info.dest, 0);
                 sink.put4(enc_jump26(0b100101, 0));
@@ -1792,8 +1864,8 @@ impl MachInstEmit for Inst {
                 }
             }
             &Inst::CallInd { ref info } => {
-                if let Some(s) = state.take_stackmap() {
-                    sink.add_stackmap(StackmapExtent::UpcomingBytes(4), s);
+                if let Some(s) = state.take_stack_map() {
+                    sink.add_stack_map(StackMapExtent::UpcomingBytes(4), s);
                 }
                 sink.put4(0b1101011_0001_11111_000000_00000_00000 | (machreg_to_gpr(info.rn) << 5));
                 if info.opcode.is_call() {
@@ -1850,8 +1922,8 @@ impl MachInstEmit for Inst {
             &Inst::Udf { trap_info } => {
                 let (srcloc, code) = trap_info;
                 sink.add_trap(srcloc, code);
-                if let Some(s) = state.take_stackmap() {
-                    sink.add_stackmap(StackmapExtent::UpcomingBytes(4), s);
+                if let Some(s) = state.take_stack_map() {
+                    sink.add_stack_map(StackMapExtent::UpcomingBytes(4), s);
                 }
                 sink.put4(0xd4a00000);
             }
