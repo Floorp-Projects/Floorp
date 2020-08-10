@@ -37,7 +37,7 @@
     <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_email_address_copied">E-postadresse kopiert til utklippstavlen</string>
     <!-- Text for context menu item to add to a contact. -->
-    <string name="mozac_feature_contextmenu_add_to_contact">Legg til kontakt</string>
+    <string name="mozac_feature_contextmenu_add_to_contact">Legg til i kontakt</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">Søk</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
