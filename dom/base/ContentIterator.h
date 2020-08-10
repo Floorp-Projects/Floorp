@@ -86,8 +86,8 @@ class ContentIteratorBase {
   // Get the next/previous sibling of aNode, or its parent's, or grandparent's,
   // etc.  Returns null if aNode and all its ancestors have no next/previous
   // sibling.
-  nsIContent* GetNextSibling(nsINode* aNode);
-  nsIContent* GetPrevSibling(nsINode* aNode);
+  static nsIContent* GetNextSibling(nsINode* aNode);
+  static nsIContent* GetPrevSibling(nsINode* aNode);
 
   nsINode* NextNode(nsINode* aNode);
   nsINode* PrevNode(nsINode* aNode);

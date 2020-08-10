@@ -309,7 +309,8 @@ nsINode* ContentIteratorBase::Initializer::DetermineFirstNode() const {
       }
       if (!mStartIsCharacterData &&
           (startIsContainer || !mStart.IsStartOfContainer())) {
-        nsINode* const result = mIterator.GetNextSibling(mStart.Container());
+        nsINode* const result =
+            ContentIteratorBase::GetNextSibling(mStart.Container());
         NS_WARNING_ASSERTION(result, "GetNextSibling returned null");
 
         // Does mFirst node really intersect the range?  The range could be
@@ -395,7 +396,8 @@ Result<nsINode*, nsresult> ContentIteratorBase::Initializer::DetermineLastNode()
       //      cdata node, should we set mLast to the prev sibling?
 
       if (!endIsCharacterData) {
-        nsINode* const result = mIterator.GetPrevSibling(mEnd.Container());
+        nsINode* const result =
+            ContentIteratorBase::GetPrevSibling(mEnd.Container());
         NS_WARNING_ASSERTION(result, "GetPrevSibling returned null");
 
         if (!NodeIsInTraversalRange(result, mIterator.mOrder == Order::Pre,
@@ -489,6 +491,7 @@ nsIContent* ContentIteratorBase::GetDeepLastChild(nsIContent* aRoot) {
 }
 
 // Get the next sibling, or parent's next sibling, or grandpa's next sibling...
+// static
 nsIContent* ContentIteratorBase::GetNextSibling(nsINode* aNode) {
   if (NS_WARN_IF(!aNode)) {
     return nullptr;
@@ -510,10 +513,11 @@ nsIContent* ContentIteratorBase::GetNextSibling(nsINode* aNode) {
     return parent->GetFirstChild();
   }
 
-  return GetNextSibling(parent);
+  return ContentIteratorBase::GetNextSibling(parent);
 }
 
 // Get the prev sibling, or parent's prev sibling, or grandpa's prev sibling...
+// static
 nsIContent* ContentIteratorBase::GetPrevSibling(nsINode* aNode) {
   if (NS_WARN_IF(!aNode)) {
     return nullptr;
@@ -535,7 +539,7 @@ nsIContent* ContentIteratorBase::GetPrevSibling(nsINode* aNode) {
     return parent->GetLastChild();
   }
 
-  return GetPrevSibling(parent);
+  return ContentIteratorBase::GetPrevSibling(parent);
 }
 
 nsINode* ContentIteratorBase::NextNode(nsINode* aNode) {
@@ -552,7 +556,7 @@ nsINode* ContentIteratorBase::NextNode(nsINode* aNode) {
     }
 
     // else next sibling is next
-    return GetNextSibling(node);
+    return ContentIteratorBase::GetNextSibling(node);
   }
 
   // post-order
@@ -598,7 +602,7 @@ nsINode* ContentIteratorBase::PrevNode(nsINode* aNode) {
   }
 
   // else prev sibling is previous
-  return GetPrevSibling(node);
+  return ContentIteratorBase::GetPrevSibling(node);
 }
 
 /******************************************************
@@ -838,7 +842,7 @@ nsresult ContentSubtreeIterator::InitWithRange() {
 
   if (!firstCandidate) {
     // then firstCandidate is next node after node
-    firstCandidate = GetNextSibling(node);
+    firstCandidate = ContentIteratorBase::GetNextSibling(node);
 
     if (!firstCandidate) {
       SetEmpty();
@@ -884,7 +888,7 @@ nsresult ContentSubtreeIterator::InitWithRange() {
 
   if (!lastCandidate) {
     // then lastCandidate is prev node before node
-    lastCandidate = GetPrevSibling(node);
+    lastCandidate = ContentIteratorBase::GetPrevSibling(node);
   }
 
   if (!lastCandidate) {
@@ -943,7 +947,7 @@ void ContentSubtreeIterator::Next() {
     return;
   }
 
-  nsINode* nextNode = GetNextSibling(mCurNode);
+  nsINode* nextNode = ContentIteratorBase::GetNextSibling(mCurNode);
   NS_ASSERTION(nextNode, "No next sibling!?! This could mean deadlock!");
 
   int32_t i = mEndNodes.IndexOf(nextNode);
