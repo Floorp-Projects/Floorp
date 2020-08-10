@@ -645,6 +645,8 @@ menupopup::part(drop-indicator) {
 
 .ac-dropmarker::part(icon) {
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  -moz-context-properties: fill;
+  fill: -moz-DialogText;
 }
 
 .ac-has-end-icon {
