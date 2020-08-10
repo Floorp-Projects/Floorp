@@ -518,7 +518,32 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
-            'pattern':  'testing/mozharness/**'
+            'pattern': 'testing/mozharness/**'
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'pattern': 'browser/config/**'
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': '_tests/modules',
+            'pattern': '**',
+            'dest': 'bin/modules'
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/bin',
+            'patterns': ["browser/**", "chrome/**", "chrome.manifest",
+                         "components/**", "http3server", "*.ini",
+                         "localization/**", "modules/**",
+                         "update.locale", "greprefs.js"],
+            'dest': 'bin',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'netwerk/test/http3serverDB',
+            'pattern': '**',
+            'dest': 'netwerk/test/http3serverDB',
         }
     ],
     'condprof': [

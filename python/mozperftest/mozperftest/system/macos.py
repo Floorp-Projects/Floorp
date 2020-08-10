@@ -14,7 +14,10 @@ from mozperftest.layers import Layer
 # Add here any option that might point to a DMG file we want to extract. The key
 # is name of the option and the value, the file in the DMG we want to use for
 # the option.
-POTENTIAL_DMGS = {"browsertime-binary": "Contents/MacOS/firefox"}
+POTENTIAL_DMGS = {
+    "browsertime-binary": "Contents/MacOS/firefox",
+    "xpcshell-xre-path": "Contents/MacOS",
+}
 
 
 class MacosDevice(Layer):
@@ -100,7 +103,7 @@ class MacosDevice(Layer):
             self._tmp_dirs.append(target)
             self.extract_app(dmg_file, target)
 
-            # ... find a specific file if needed ...
+            # ... find a specific file or directory if needed ...
             path = target / path_in_dmg
             if not path.exists():
                 raise FileNotFoundError(str(path))
