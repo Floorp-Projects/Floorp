@@ -296,8 +296,7 @@ class EventStates {
 #define NS_EVENT_STATE_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(53)
 // Inert subtrees
 #define NS_EVENT_STATE_MOZINERT NS_DEFINE_EVENT_STATE_MACRO(54)
-// Topmost Modal <dialog> element in top layer
-#define NS_EVENT_STATE_TOPMOST_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(55)
+
 /**
  * NOTE: do not go over 63 without updating EventStates::InternalType!
  */
@@ -333,7 +332,7 @@ class EventStates {
    NS_EVENT_STATE_FOCUS_WITHIN | NS_EVENT_STATE_FULLSCREEN |                   \
    NS_EVENT_STATE_HOVER | NS_EVENT_STATE_URLTARGET |                           \
    NS_EVENT_STATE_FOCUS_VISIBLE | NS_EVENT_STATE_MODAL_DIALOG |                \
-   NS_EVENT_STATE_MOZINERT | NS_EVENT_STATE_TOPMOST_MODAL_DIALOG)
+   NS_EVENT_STATE_MOZINERT)
 
 #define INTRINSIC_STATES (~EXTERNALLY_MANAGED_STATES)
 
