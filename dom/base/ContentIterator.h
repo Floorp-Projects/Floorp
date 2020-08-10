@@ -93,7 +93,7 @@ class ContentIteratorBase {
   nsCOMPtr<nsINode> mCommonParent;
 
   bool mIsDone;
-  bool mPre;
+  const bool mPre;
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
                                           ContentIteratorBase&, const char*,
                                           uint32_t);
