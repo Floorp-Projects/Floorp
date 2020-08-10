@@ -13,6 +13,7 @@
 #include "jsfriendapi.h"
 
 #include "frontend/ParseNode.h"
+#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 
 namespace js {
 namespace frontend {
