@@ -266,6 +266,9 @@ def taskgraph_decision(options, parameters=None):
     # write out the target task set to allow reproducing this as input
     write_artifact('target-tasks.json', list(tgg.target_task_set.tasks.keys()))
 
+    # write out some optimization data
+    write_artifact('optimization-data.json', tgg.optimized_data)
+
     # write out the optimized task graph to describe what will actually happen,
     # and the map of labels to taskids
     write_artifact('task-graph.json', tgg.morphed_task_graph.to_json())
