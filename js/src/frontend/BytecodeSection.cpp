@@ -69,7 +69,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const BigIntIndex& index) {
-      BigIntCreationData& data = compilationInfo.bigIntData[index];
+      BigIntStencil& data = compilationInfo.bigIntData[index];
       BigInt* bi = data.createBigInt(cx);
       if (!bi) {
         return false;
@@ -79,7 +79,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const RegExpIndex& rindex) {
-      RegExpCreationData& data = compilationInfo.regExpData[rindex];
+      RegExpStencil& data = compilationInfo.regExpData[rindex];
       RegExpObject* regexp = data.createRegExp(cx);
       if (!regexp) {
         return false;
@@ -89,7 +89,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const ObjLiteralIndex& index) {
-      ObjLiteralCreationData& data = compilationInfo.objLiteralData[index];
+      ObjLiteralStencil& data = compilationInfo.objLiteralData[index];
       JSObject* obj = data.create(cx);
       if (!obj) {
         return false;
@@ -163,7 +163,7 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   list[index].length = offset - list[index].start;
 }
 
-JSObject* ObjLiteralCreationData::create(JSContext* cx) const {
+JSObject* ObjLiteralStencil::create(JSContext* cx) const {
   return InterpretObjLiteral(cx, atoms_, writer_);
 }
 

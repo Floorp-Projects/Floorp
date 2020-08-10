@@ -389,7 +389,7 @@ JSAtom* NumericLiteral::toAtom(JSContext* cx) const {
   return NumberToAtom(cx, value());
 }
 
-RegExpObject* RegExpCreationData::createRegExp(JSContext* cx) const {
+RegExpObject* RegExpStencil::createRegExp(JSContext* cx) const {
   MOZ_ASSERT(buf_);
   return RegExpObject::createSyntaxChecked(cx, buf_.get(), length_, flags_,
                                            TenuredObject);
