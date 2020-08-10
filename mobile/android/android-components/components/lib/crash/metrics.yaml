@@ -31,6 +31,8 @@ crash_metrics:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1553935#c3
       - https://github.com/mozilla-mobile/android-components/pull/5700#pullrequestreview-347721248
+    data_sensitivity:
+      - technical
     notification_emails:
       - android-components-team@mozilla.com
     expires: never

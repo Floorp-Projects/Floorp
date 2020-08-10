@@ -24,6 +24,8 @@ sync:
       - https://github.com/mozilla-mobile/android-components/issues/5371
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5386#pullrequestreview-392363687
+    data_sensitivity:
+      - technical
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -45,6 +47,8 @@ sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -66,6 +70,8 @@ history_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -81,6 +87,8 @@ history_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -97,6 +105,8 @@ history_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -119,6 +129,8 @@ history_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -139,6 +151,8 @@ history_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -156,6 +170,8 @@ history_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -176,6 +192,8 @@ history_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -192,6 +210,8 @@ logins_sync:
       - https://github.com/mozilla-mobile/android-components/issues/4556
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5294
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -207,6 +227,8 @@ logins_sync:
       - https://github.com/mozilla-mobile/android-components/issues/4556
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5294
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -223,6 +245,8 @@ logins_sync:
       - https://github.com/mozilla-mobile/android-components/issues/4556
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5294
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -245,6 +269,8 @@ logins_sync:
       - https://github.com/mozilla-mobile/android-components/issues/4556
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5294
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -265,6 +291,8 @@ logins_sync:
       - https://github.com/mozilla-mobile/android-components/issues/4556
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5294
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -282,6 +310,8 @@ logins_sync:
       - https://github.com/mozilla-mobile/android-components/issues/4556
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5294
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -302,6 +332,8 @@ logins_sync:
       - https://github.com/mozilla-mobile/android-components/issues/4556
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5294
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -318,6 +350,8 @@ bookmarks_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -333,6 +367,8 @@ bookmarks_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -348,6 +384,8 @@ bookmarks_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -366,6 +404,8 @@ bookmarks_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -383,6 +423,8 @@ bookmarks_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -397,6 +439,8 @@ bookmarks_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -415,6 +459,8 @@ bookmarks_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
@@ -439,6 +485,8 @@ bookmarks_sync:
       - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/3092
+    data_sensitivity:
+      - interaction
     notification_emails:
       - sync-core@mozilla.com
     expires: never
