@@ -1127,6 +1127,8 @@ void HttpChannelChild::OnStopRequest(
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
     nsAutoCString contentType;
     if (mResponseHead) {
       mResponseHead->ContentType(contentType);
@@ -1134,7 +1136,7 @@ void HttpChannelChild::OnStopRequest(
     int32_t priority = PRIORITY_NORMAL;
     GetPriority(&priority);
     profiler_add_network_marker(
-        mURI, priority, mChannelId, NetworkLoadType::LOAD_STOP,
+        mURI, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
         mLastStatusReported, TimeStamp::Now(), mTransferSize, kCacheUnknown,
         mLoadInfo->GetInnerWindowID(), &mTransactionTimings, nullptr,
         std::move(mSource), Some(nsDependentCString(contentType.get())));
@@ -1743,14 +1745,16 @@ void HttpChannelChild::Redirect1Begin(
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
     nsAutoCString contentType;
     responseHead.ContentType(contentType);
 
     profiler_add_network_marker(
-        mURI, mPriority, mChannelId, NetworkLoadType::LOAD_REDIRECT,
-        mLastStatusReported, TimeStamp::Now(), 0, kCacheUnknown,
-        mLoadInfo->GetInnerWindowID(), &mTransactionTimings, uri,
-        std::move(mSource), Some(nsDependentCString(contentType.get())));
+        mURI, requestMethod, mPriority, mChannelId,
+        NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
+        0, kCacheUnknown, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
+        uri, std::move(mSource), Some(nsDependentCString(contentType.get())));
   }
 #endif
 
@@ -2211,10 +2215,17 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
    */
 
   mLastStatusReported = TimeStamp::Now();
-  PROFILER_ADD_NETWORK_MARKER(
-      mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
-      mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
-      mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
+    profiler_add_network_marker(
+        mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
+        mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
+        mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
+  }
+#endif
   mIsPending = true;
   mWasOpened = true;
   mListener = aListener;
@@ -2599,11 +2610,17 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   gHttpHandler->OnOpeningRequest(this);
 
   mLastStatusReported = TimeStamp::Now();
-  PROFILER_ADD_NETWORK_MARKER(
-      mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
-      mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
-      mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
 
+    profiler_add_network_marker(
+        mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
+        mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
+        mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
+  }
+#endif
   mIsPending = true;
   mWasOpened = true;
   mListener = listener;
