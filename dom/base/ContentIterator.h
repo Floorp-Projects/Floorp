@@ -90,7 +90,8 @@ class ContentIteratorBase {
   nsCOMPtr<nsINode> mCurNode;
   nsCOMPtr<nsINode> mFirst;
   nsCOMPtr<nsINode> mLast;
-  nsCOMPtr<nsINode> mCommonParent;
+  // See <https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor>.
+  nsCOMPtr<nsINode> mClosestCommonInclusiveAncestor;
 
   bool mIsDone;
   const bool mPre;
@@ -110,14 +111,15 @@ inline void ImplCycleCollectionTraverse(
   ImplCycleCollectionTraverse(aCallback, aField.mCurNode, aName, aFlags);
   ImplCycleCollectionTraverse(aCallback, aField.mFirst, aName, aFlags);
   ImplCycleCollectionTraverse(aCallback, aField.mLast, aName, aFlags);
-  ImplCycleCollectionTraverse(aCallback, aField.mCommonParent, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mClosestCommonInclusiveAncestor,
+                              aName, aFlags);
 }
 
 inline void ImplCycleCollectionUnlink(ContentIteratorBase& aField) {
   ImplCycleCollectionUnlink(aField.mCurNode);
   ImplCycleCollectionUnlink(aField.mFirst);
   ImplCycleCollectionUnlink(aField.mLast);
-  ImplCycleCollectionUnlink(aField.mCommonParent);
+  ImplCycleCollectionUnlink(aField.mClosestCommonInclusiveAncestor);
 }
 
 /**
