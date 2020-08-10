@@ -341,7 +341,7 @@ impl ScriptStencil {
         is_generator: bool,
         is_async: bool,
         fun_flags: FunctionFlags,
-        lazy_function_enclosing_scope_index: ScopeIndex,
+        lazy_function_enclosing_scope_index: Option<ScopeIndex>,
     ) -> Self {
         let mut flags = ImmutableScriptFlagsEnum::IsFunction as u32;
         if is_generator {
@@ -359,7 +359,7 @@ impl ScriptStencil {
             fun_name,
             fun_nargs: 0,
             fun_flags,
-            lazy_function_enclosing_scope_index: Some(lazy_function_enclosing_scope_index),
+            lazy_function_enclosing_scope_index,
             is_standalone_function: false,
             was_function_emitted: false,
             is_singleton_function: false,

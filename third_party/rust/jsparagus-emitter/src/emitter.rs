@@ -810,8 +810,9 @@ impl InstructionWriter {
         self.write_u32(source_end);
     }
 
-    pub fn function_proto(&mut self) {
-        self.emit_op(Opcode::FunctionProto);
+    pub fn builtin_object(&mut self, kind: u8) {
+        self.emit_op(Opcode::BuiltinObject);
+        self.write_u8(kind);
     }
 
     pub fn call(&mut self, argc: u16) {

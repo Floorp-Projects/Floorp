@@ -130,6 +130,10 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
     }
 
     fn enter_enum_statement_variant_function_declaration(&mut self, ast: &'alloc Function<'alloc>) {
+        if !self.builder.is_syntax_only_mode() {
+            self.builder.enter_syntax_only_mode();
+        }
+
         let name = if let Some(ref name) = ast.name {
             name.name.value
         } else {
@@ -146,6 +150,10 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
     }
 
     fn enter_enum_expression_variant_function_expression(&mut self, ast: &'alloc Function<'alloc>) {
+        if !self.builder.is_syntax_only_mode() {
+            self.builder.enter_syntax_only_mode();
+        }
+
         self.builder
             .before_function_expression(ast, ast.is_generator, ast.is_async);
     }
