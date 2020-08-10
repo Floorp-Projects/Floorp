@@ -2866,7 +2866,9 @@ tls13_SendServerHelloSequence(sslSocket *ss)
         }
     }
 
-    ss->ssl3.hs.serverHelloTime = ssl_Time(ss);
+    /* Here we set a baseline value for our RTT estimation.
+     * This value is updated when we get a response from the client. */
+    ss->ssl3.hs.rttEstimate = ssl_Time(ss);
     return SECSuccess;
 }
 
@@ -3251,8 +3253,9 @@ tls13_HandleCertificate(sslSocket *ss, PRUint8 *b, PRUint32 length)
         rv = TLS13_CHECK_HS_STATE(ss, SSL_ERROR_RX_UNEXPECTED_CERTIFICATE,
                                   wait_cert_request, wait_server_cert);
     }
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
         return SECFailure;
+    }
 
     /* We can ignore any other cleartext from the client. */
     if (ss->sec.isServer && IS_DTLS(ss)) {
@@ -3266,6 +3269,11 @@ tls13_HandleCertificate(sslSocket *ss, PRUint8 *b, PRUint32 length)
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             return SECFailure;
         }
+    } else if (ss->sec.isServer) {
+        /* Our first shot an getting an RTT estimate.  If the client took extra
+         * time to fetch a certificate, this will be bad, but we can't do much
+         * about that. */
+        ss->ssl3.hs.rttEstimate = ssl_Time(ss) - ss->ssl3.hs.rttEstimate;
     }
 
     /* Process the context string */
@@ -4772,6 +4780,11 @@ tls13_ServerHandleFinished(sslSocket *ss, PRUint8 *b, PRUint32 length)
         rv = tls13_MaybeHandleSuppressedEndOfEarlyData(ss);
         if (rv != SECSuccess) {
             return SECFailure; /* Code already set. */
+        }
+
+        if (!tls13_IsPostHandshake(ss)) {
+            /* Finalize the RTT estimate. */
+            ss->ssl3.hs.rttEstimate = ssl_Time(ss) - ss->ssl3.hs.rttEstimate;
         }
     }
 

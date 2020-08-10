@@ -915,6 +915,104 @@ TEST_P(TlsConnectTls12, ClientAuthNoSigAlgs) {
   client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
 }
 
+static SECStatus GetEcClientAuthDataHook(void* self, PRFileDesc* fd,
+                                         CERTDistNames* caNames,
+                                         CERTCertificate** clientCert,
+                                         SECKEYPrivateKey** clientKey) {
+  ScopedCERTCertificate cert;
+  ScopedSECKEYPrivateKey priv;
+  // use a different certificate than TlsAgent::kClient
+  if (!TlsAgent::LoadCertificate(TlsAgent::kServerEcdsa256, &cert, &priv)) {
+    return SECFailure;
+  }
+
+  *clientCert = cert.release();
+  *clientKey = priv.release();
+  return SECSuccess;
+}
+
+TEST_P(TlsConnectTls12Plus, ClientAuthDisjointSchemes) {
+  EnsureTlsSetup();
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+
+  SSLSignatureScheme server_scheme = ssl_sig_rsa_pss_rsae_sha256;
+  std::vector<SSLSignatureScheme> client_schemes{
+      ssl_sig_rsa_pss_rsae_sha256, ssl_sig_ecdsa_secp256r1_sha256};
+  SECStatus rv =
+      SSL_SignatureSchemePrefSet(server_->ssl_fd(), &server_scheme, 1);
+  EXPECT_EQ(SECSuccess, rv);
+  rv = SSL_SignatureSchemePrefSet(
+      client_->ssl_fd(), client_schemes.data(),
+      static_cast<unsigned int>(client_schemes.size()));
+  EXPECT_EQ(SECSuccess, rv);
+
+  // Select an EC cert that's incompatible with server schemes.
+  EXPECT_EQ(SECSuccess,
+            SSL_GetClientAuthDataHook(client_->ssl_fd(),
+                                      GetEcClientAuthDataHook, nullptr));
+
+  StartConnect();
+  client_->Handshake();  // CH
+  server_->Handshake();  // SH
+  client_->Handshake();
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    ASSERT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+    ExpectAlert(server_, kTlsAlertCertificateRequired);
+    server_->Handshake();  // Alert
+    server_->CheckErrorCode(SSL_ERROR_NO_CERTIFICATE);
+    client_->Handshake();  // Receive Alert
+    client_->CheckErrorCode(SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT);
+  } else {
+    ASSERT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+    ExpectAlert(server_, kTlsAlertBadCertificate);
+    server_->Handshake();  // Alert
+    server_->CheckErrorCode(SSL_ERROR_NO_CERTIFICATE);
+    client_->Handshake();  // Receive Alert
+    client_->CheckErrorCode(SSL_ERROR_BAD_CERT_ALERT);
+  }
+}
+
+TEST_F(TlsConnectStreamTls13, PostHandshakeAuthDisjointSchemes) {
+  EnsureTlsSetup();
+  SSLSignatureScheme server_scheme = ssl_sig_rsa_pss_rsae_sha256;
+  std::vector<SSLSignatureScheme> client_schemes{
+      ssl_sig_rsa_pss_rsae_sha256, ssl_sig_ecdsa_secp256r1_sha256};
+  SECStatus rv =
+      SSL_SignatureSchemePrefSet(server_->ssl_fd(), &server_scheme, 1);
+  EXPECT_EQ(SECSuccess, rv);
+  rv = SSL_SignatureSchemePrefSet(
+      client_->ssl_fd(), client_schemes.data(),
+      static_cast<unsigned int>(client_schemes.size()));
+  EXPECT_EQ(SECSuccess, rv);
+
+  client_->SetupClientAuth();
+  client_->SetOption(SSL_ENABLE_POST_HANDSHAKE_AUTH, PR_TRUE);
+
+  // Select an EC cert that's incompatible with server schemes.
+  EXPECT_EQ(SECSuccess,
+            SSL_GetClientAuthDataHook(client_->ssl_fd(),
+                                      GetEcClientAuthDataHook, nullptr));
+
+  Connect();
+
+  // Send CertificateRequest.
+  EXPECT_EQ(SECSuccess, SSL_SendCertificateRequest(server_->ssl_fd()))
+      << "Unexpected error: " << PORT_ErrorToName(PORT_GetError());
+
+  // Need to do a round-trip so that the post-handshake message is
+  // handled on both client and server.
+  server_->SendData(50);
+  client_->ReadBytes(50);
+  client_->SendData(50);
+  server_->ReadBytes(50);
+
+  ScopedCERTCertificate cert1(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_EQ(nullptr, cert1.get());
+  ScopedCERTCertificate cert2(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_EQ(nullptr, cert2.get());
+}
+
 static const SSLSignatureScheme kSignatureSchemeEcdsaSha384[] = {
     ssl_sig_ecdsa_secp384r1_sha384};
 static const SSLSignatureScheme kSignatureSchemeEcdsaSha256[] = {

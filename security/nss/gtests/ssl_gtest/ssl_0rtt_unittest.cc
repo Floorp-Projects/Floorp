@@ -211,6 +211,106 @@ TEST_P(TlsConnectTls13, ZeroRttOptionsSetLate) {
   SendReceive();
 }
 
+// Make sure that a session ticket sent well after the original handshake
+// can be used for 0-RTT.
+// Stream because DTLS doesn't support SSL_SendSessionTicket.
+TEST_F(TlsConnectStreamTls13, ZeroRttUsingLateTicket) {
+  // Use a small-ish anti-replay window.
+  ResetAntiReplay(100 * PR_USEC_PER_MSEC);
+  RolloverAntiReplay();
+
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  server_->Set0RttEnabled(true);
+  Connect();
+  CheckKeys();
+
+  // Now move time forward 30s and send a ticket.
+  AdvanceTime(30 * PR_USEC_PER_SEC);
+  EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), NULL, 0));
+  SendReceive();
+  Reset();
+  StartConnect();
+
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(true, true);
+  Handshake();
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+  SendReceive();
+}
+
+// Check that post-handshake authentication with a long RTT doesn't
+// make things worse.
+TEST_F(TlsConnectStreamTls13, ZeroRttUsingLateTicketPha) {
+  // Use a small-ish anti-replay window.
+  ResetAntiReplay(100 * PR_USEC_PER_MSEC);
+  RolloverAntiReplay();
+
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  server_->Set0RttEnabled(true);
+  client_->SetupClientAuth();
+  client_->SetOption(SSL_ENABLE_POST_HANDSHAKE_AUTH, PR_TRUE);
+  Connect();
+  CheckKeys();
+
+  // Add post-handshake authentication, with some added delays.
+  AdvanceTime(10 * PR_USEC_PER_SEC);
+  EXPECT_EQ(SECSuccess, SSL_SendCertificateRequest(server_->ssl_fd()));
+  AdvanceTime(10 * PR_USEC_PER_SEC);
+  server_->SendData(50);
+  client_->ReadBytes(50);
+  client_->SendData(50);
+  server_->ReadBytes(50);
+
+  AdvanceTime(10 * PR_USEC_PER_SEC);
+  EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), NULL, 0));
+  server_->SendData(100);
+  client_->ReadBytes(100);
+  Reset();
+  StartConnect();
+
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(true, true);
+  Handshake();
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+  SendReceive();
+}
+
+// Same, but with client authentication on the first connection.
+TEST_F(TlsConnectStreamTls13, ZeroRttUsingLateTicketClientAuth) {
+  // Use a small-ish anti-replay window.
+  ResetAntiReplay(100 * PR_USEC_PER_MSEC);
+  RolloverAntiReplay();
+
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  server_->Set0RttEnabled(true);
+  Connect();
+  CheckKeys();
+
+  // Now move time forward 30s and send a ticket.
+  AdvanceTime(30 * PR_USEC_PER_SEC);
+  EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), NULL, 0));
+  SendReceive();
+  Reset();
+  StartConnect();
+
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(true, true);
+  Handshake();
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+  SendReceive();
+}
+
 TEST_P(TlsConnectTls13, ZeroRttServerForgetTicket) {
   SetupForZeroRtt();
   client_->Set0RttEnabled(true);

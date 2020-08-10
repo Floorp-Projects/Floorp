@@ -713,18 +713,24 @@ typedef struct SSL3HandshakeStateStr {
     PRBool receivedCcs;                   /* A server received ChangeCipherSpec
                                            * before the handshake started. */
     PRBool clientCertRequested;           /* True if CertificateRequest received. */
+    PRBool endOfFlight;                   /* Processed a full flight (DTLS 1.3). */
     ssl3KEADef kea_def_mutable;           /* Used to hold the writable kea_def
                                            * we use for TLS 1.3 */
-    PRTime serverHelloTime;               /* Time the ServerHello flight was sent. */
     PRUint16 ticketNonce;                 /* A counter we use for tickets. */
     SECItem fakeSid;                      /* ... (server) the SID the client used. */
-    PRBool endOfFlight;                   /* Processed a full flight (DTLS 1.3). */
+
+    /* rttEstimate is used to guess the round trip time between server and client.
+     * When the server sends ServerHello it sets this to the current time.
+     * Only after it receives a message from the client's second flight does it
+     * set the value to something resembling an RTT estimate. */
+    PRTime rttEstimate;
 
     /* The following lists contain DTLSHandshakeRecordEntry */
     PRCList dtlsSentHandshake; /* Used to map records to handshake fragments. */
     PRCList dtlsRcvdHandshake; /* Handshake records we have received
                                 * used to generate ACKs. */
-    PRCList psks;              /* A list of PSKs, resumption and/or external. */
+
+    PRCList psks; /* A list of PSKs, resumption and/or external. */
 } SSL3HandshakeState;
 
 #define SSL_ASSERT_HASHES_EMPTY(ss)                                  \

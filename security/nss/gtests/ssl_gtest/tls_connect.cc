@@ -107,7 +107,7 @@ std::string VersionString(uint16_t version) {
 }
 
 // The default anti-replay window for tests.  Tests that rely on a different
-// value call SSL_InitAntiReplay directly.
+// value call ResetAntiReplay directly.
 static PRTime kAntiReplayWindow = 100 * PR_USEC_PER_SEC;
 
 TlsConnectTestBase::TlsConnectTestBase(SSLProtocolVariant variant,

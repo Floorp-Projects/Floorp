@@ -796,7 +796,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss, const NewSessionTicket *ticket,
      * This is compared to the expected time, which should differ only as a
      * result of clock errors or errors in the RTT estimate.
      */
-    ticketAgeBaseline = (ssl_Time(ss) - ss->ssl3.hs.serverHelloTime) / PR_USEC_PER_MSEC;
+    ticketAgeBaseline = ss->ssl3.hs.rttEstimate / PR_USEC_PER_MSEC;
     ticketAgeBaseline -= ticket->ticket_age_add;
     rv = sslBuffer_AppendNumber(&plaintext, ticketAgeBaseline, 4);
     if (rv != SECSuccess)
