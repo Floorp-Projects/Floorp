@@ -307,6 +307,7 @@ class AutofillRecords {
       if (dataHasChanges) {
         this._store.saveSoon();
       }
+      this._onDataLoaded();
     });
   }
 
@@ -543,6 +544,8 @@ class AutofillRecords {
    *
    * @param  {string} guid
    *         Indicates which record to be notified.
+   * @returns {Object}
+   *         Record corresponding to the guid that was used
    */
   notifyUsed(guid) {
     this.log.debug("notifyUsed:", guid);
@@ -568,6 +571,7 @@ class AutofillRecords {
       "formautofill-storage-changed",
       "notifyUsed"
     );
+    return recordFound;
   }
 
   updateUseCountTelemetry() {}
@@ -1439,6 +1443,9 @@ class AutofillRecords {
 
   // An interface to be inherited.
   async mergeIfPossible(guid, record, strict) {}
+
+  // Called once initalization has completed
+  _onDataLoaded() {}
 }
 
 class Addresses extends AutofillRecords {
@@ -1450,6 +1457,15 @@ class Addresses extends AutofillRecords {
       VALID_ADDRESS_COMPUTED_FIELDS,
       ADDRESS_SCHEMA_VERSION
     );
+    Services.obs.addObserver(this, "formautofill-storage-changed");
+  }
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "formautofill-storage-changed":
+        this._recordEntryPresent();
+        break;
+    }
   }
 
   _recordReadProcessor(address) {
@@ -1755,6 +1771,31 @@ class Addresses extends AutofillRecords {
 
     await this.update(guid, addressToMerge, true);
     return true;
+  }
+
+  _onDataLoaded() {
+    this._recordEntryPresent();
+  }
+
+  // Record in prefs whether the user has any address entries stored.
+  // This information is not uploaded as telemetry, and is used to target
+  // user surveys. See Bug 1654388 for details.
+  _recordEntryPresent() {
+    const records = this._data.filter(entry => !entry.deleted);
+    this.log.debug("Address records:", records);
+    Services.prefs.setBoolPref(
+      "extensions.formautofill.addresses.usage.hasEntry",
+      !!records.length
+    );
+  }
+
+  notifyUsed(guid) {
+    const record = super.notifyUsed(guid);
+    Services.prefs.setIntPref(
+      "extensions.formautofill.addresses.usage.lastUsed",
+      Math.floor(record.timeLastUsed / 1000)
+    );
+    return record;
   }
 }
 
