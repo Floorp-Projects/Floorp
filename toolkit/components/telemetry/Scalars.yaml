@@ -296,6 +296,26 @@ browser.engagement:
       - 'main'
       - 'account-ecosystem'
 
+  profile_count:
+    bug_numbers:
+      - 1647422
+      - 1356265
+    description: >
+      The count of the browser profiles on the current system. This counts profiles that have been
+      used across all OS user accounts on machine since this probe was added. The value persists
+      across installs. A value of 0 is reported if there is an error determining the correct count.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    operating_systems:
+      - windows
+
 # The following section contains the browser engagement scalars.
 browser.engagement.navigation:
   urlbar:
