@@ -196,7 +196,10 @@ class MOZ_STACK_CLASS ContentIteratorBase::Initializer final {
   nsresult Run();
 
  private:
-  void DetermineFirstNode();
+  /**
+   * @return may be nullptr.
+   */
+  nsINode* DetermineFirstNode() const;
   [[nodiscard]] nsresult DetermineLastNode();
 
   bool IsCollapsedNonCharacterRange() const;
@@ -250,7 +253,7 @@ nsresult ContentIteratorBase::Initializer::Run() {
     return NS_OK;
   }
 
-  DetermineFirstNode();
+  mIterator.mFirst = DetermineFirstNode();
   const nsresult rv = DetermineLastNode();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -268,7 +271,7 @@ nsresult ContentIteratorBase::Initializer::Run() {
   return NS_OK;
 }
 
-void ContentIteratorBase::Initializer::DetermineFirstNode() {
+nsINode* ContentIteratorBase::Initializer::DetermineFirstNode() const {
   nsIContent* cChild = nullptr;
 
   // Try to get the child at our starting point. This might return null if
@@ -297,46 +300,47 @@ void ContentIteratorBase::Initializer::DetermineFirstNode() {
       }
       if (!mStartIsCharacterData &&
           (startIsContainer || !mStart.IsStartOfContainer())) {
-        mIterator.mFirst = mIterator.GetNextSibling(mStart.Container());
-        NS_WARNING_ASSERTION(mIterator.mFirst, "GetNextSibling returned null");
+        nsINode* const result = mIterator.GetNextSibling(mStart.Container());
+        NS_WARNING_ASSERTION(result, "GetNextSibling returned null");
 
         // Does mFirst node really intersect the range?  The range could be
         // 'degenerate', i.e., not collapsed but still contain no content.
-        if (mIterator.mFirst &&
-            NS_WARN_IF(!NodeIsInTraversalRange(mIterator.mFirst, mIterator.mPre,
-                                               mStart, mEnd))) {
-          mIterator.mFirst = nullptr;
+        if (result && NS_WARN_IF(!NodeIsInTraversalRange(result, mIterator.mPre,
+                                                         mStart, mEnd))) {
+          return nullptr;
         }
-      } else {
-        mIterator.mFirst = mStart.Container()->AsContent();
+
+        return result;
       }
+      return mStart.Container()->AsContent();
     } else {
       // post-order
       if (NS_WARN_IF(!mStart.Container()->IsContent())) {
         // What else can we do?
-        mIterator.mFirst = nullptr;
-      } else {
-        mIterator.mFirst = mStart.Container()->AsContent();
+        return nullptr;
       }
+      return mStart.Container()->AsContent();
     }
   } else {
     if (mIterator.mPre) {
-      mIterator.mFirst = cChild;
-    } else {
-      // post-order
-      mIterator.mFirst = mIterator.GetDeepFirstChild(cChild);
-      NS_WARNING_ASSERTION(mIterator.mFirst, "GetDeepFirstChild returned null");
-
-      // Does mFirst node really intersect the range?  The range could be
-      // 'degenerate', i.e., not collapsed but still contain no content.
-
-      if (mIterator.mFirst &&
-          !NodeIsInTraversalRange(mIterator.mFirst, mIterator.mPre, mStart,
-                                  mEnd)) {
-        mIterator.mFirst = nullptr;
-      }
+      return cChild;
     }
+    // post-order
+    nsINode* const result = mIterator.GetDeepFirstChild(cChild);
+    NS_WARNING_ASSERTION(result, "GetDeepFirstChild returned null");
+
+    // Does mFirst node really intersect the range?  The range could be
+    // 'degenerate', i.e., not collapsed but still contain no content.
+
+    if (result &&
+        !NodeIsInTraversalRange(result, mIterator.mPre, mStart, mEnd)) {
+      return nullptr;
+    }
+
+    return result;
   }
+
+  return nullptr;
 }
 
 nsresult ContentIteratorBase::Initializer::DetermineLastNode() {
