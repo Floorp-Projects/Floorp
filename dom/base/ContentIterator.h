@@ -218,7 +218,12 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
                                           uint32_t);
   friend void ImplCycleCollectionUnlink(ContentSubtreeIterator&);
 
- protected:
+ private:
+  /**
+   * See <https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor>.
+   */
+  void CacheInclusiveAncestorsOfEndContainer();
+
   /**
    * Callers must guarantee that mRange isn't nullptr and is positioned.
    */
