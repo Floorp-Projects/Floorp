@@ -439,4 +439,24 @@ function formAutoFillCommonSetup() {
   );
 }
 
+function checkUsagePrefs(hasEntry, lastUsed) {
+  lastUsed = Math.floor(lastUsed);
+  is(
+    SpecialPowers.getBoolPref(
+      "extensions.formautofill.addresses.usage.hasEntry",
+      false
+    ),
+    hasEntry,
+    "hasEntry usage pref is " + hasEntry
+  );
+  const lastUsedPref = SpecialPowers.getIntPref(
+    "extensions.formautofill.addresses.usage.lastUsed",
+    0
+  );
+  ok(
+    lastUsed - lastUsedPref < 10,
+    `lastUsed usage pref (${lastUsedPref}) is within 10 seconds of ${lastUsed}`
+  );
+}
+
 formAutoFillCommonSetup();
