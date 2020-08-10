@@ -344,8 +344,9 @@ body.dark blockquote {
   pointer-events: none;
 }
 
-.button:hover > .hover-label,
-.button:-moz-focusring > .hover-label {
+/* Don't show hover styles while dropdowns are open, except in the dropdown. */
+:not(.dropdown-open) > .dropdown > li > .button:hover > .hover-label,
+:not(.dropdown-open) > .dropdown > li > .button:-moz-focusring > .hover-label {
   visibility: visible;
 }
 
@@ -374,15 +375,6 @@ button:disabled {
 .dropdown li {
   margin: 0;
   padding: 0;
-}
-
-/* Don't show hover styles while dropdowns are open, except in the dropdown. */
-.dropdown-open {
-  pointer-events: none;
-}
-
-.dropdown-open .dropdown-popup {
-  pointer-events: initial;
 }
 
 /*======= Popup =======*/
