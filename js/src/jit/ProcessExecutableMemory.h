@@ -100,6 +100,9 @@ extern bool CanLikelyAllocateMoreExecutableMemory();
 // the process allocate executable memory.
 extern size_t LikelyAvailableExecutableMemory();
 
+// Returns whether |p| is stored in the executable code buffer.
+extern bool AddressIsInExecutableMemory(const void* p);
+
 }  // namespace jit
 }  // namespace js
 
