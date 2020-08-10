@@ -100,6 +100,7 @@ use style::gecko_bindings::sugar::ownership::{
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, StyleThreadPool, STYLE_THREAD_POOL};
 use style::invalidation::element::restyle_hints::RestyleHint;
+use style::invalidation::stylesheets::RuleChangeKind;
 use style::media_queries::MediaList;
 use style::parser::{self, Parse, ParserContext};
 use style::profiler_label;
@@ -2169,6 +2170,7 @@ macro_rules! impl_basic_rule_funcs {
         getter: $getter:ident,
         debug: $debug:ident,
         to_css: $to_css:ident,
+        changed: $changed:ident,
     } => {
         #[no_mangle]
         pub extern "C" fn $getter(
@@ -2199,6 +2201,25 @@ macro_rules! impl_basic_rule_funcs {
             }
         }
 
+        #[no_mangle]
+        pub extern "C" fn $changed(
+            styleset: &RawServoStyleSet,
+            rule: &$raw_type,
+            sheet: &DomStyleSheet,
+            change_kind: RuleChangeKind,
+        ) {
+            let mut data = PerDocumentStyleData::from_ffi(styleset).borrow_mut();
+            let data = &mut *data;
+            let global_style_data = &*GLOBAL_STYLE_DATA;
+            let guard = global_style_data.shared_lock.read();
+            // TODO(emilio): Would be nice not to deal with refcount bumps here,
+            // but it's probably not a huge deal.
+            let rule = Locked::<$rule_type>::as_arc(&rule);
+            let rule = CssRule::$name(rule.clone_arc());
+            let sheet = unsafe { GeckoStyleSheet::new(sheet) };
+            data.stylist.rule_changed(&sheet, &rule, &guard, change_kind);
+        }
+
         impl_basic_rule_funcs_without_getter! { ($rule_type, $raw_type),
             debug: $debug,
             to_css: $to_css,
@@ -2226,12 +2247,14 @@ impl_basic_rule_funcs! { (Style, StyleRule, RawServoStyleRule),
     getter: Servo_CssRules_GetStyleRuleAt,
     debug: Servo_StyleRule_Debug,
     to_css: Servo_StyleRule_GetCssText,
+    changed: Servo_StyleSet_StyleRuleChanged,
 }
 
 impl_basic_rule_funcs! { (Import, ImportRule, RawServoImportRule),
     getter: Servo_CssRules_GetImportRuleAt,
     debug: Servo_ImportRule_Debug,
     to_css: Servo_ImportRule_GetCssText,
+    changed: Servo_StyleSet_ImportRuleChanged,
 }
 
 impl_basic_rule_funcs_without_getter! { (Keyframe, RawServoKeyframe),
@@ -2243,6 +2266,7 @@ impl_basic_rule_funcs! { (Keyframes, KeyframesRule, RawServoKeyframesRule),
     getter: Servo_CssRules_GetKeyframesRuleAt,
     debug: Servo_KeyframesRule_Debug,
     to_css: Servo_KeyframesRule_GetCssText,
+    changed: Servo_StyleSet_KeyframesRuleChanged,
 }
 
 impl_group_rule_funcs! { (Media, MediaRule, RawServoMediaRule),
@@ -2250,18 +2274,21 @@ impl_group_rule_funcs! { (Media, MediaRule, RawServoMediaRule),
     getter: Servo_CssRules_GetMediaRuleAt,
     debug: Servo_MediaRule_Debug,
     to_css: Servo_MediaRule_GetCssText,
+    changed: Servo_StyleSet_MediaRuleChanged,
 }
 
 impl_basic_rule_funcs! { (Namespace, NamespaceRule, RawServoNamespaceRule),
     getter: Servo_CssRules_GetNamespaceRuleAt,
     debug: Servo_NamespaceRule_Debug,
     to_css: Servo_NamespaceRule_GetCssText,
+    changed: Servo_StyleSet_NamespaceRuleChanged,
 }
 
 impl_basic_rule_funcs! { (Page, PageRule, RawServoPageRule),
     getter: Servo_CssRules_GetPageRuleAt,
     debug: Servo_PageRule_Debug,
     to_css: Servo_PageRule_GetCssText,
+    changed: Servo_StyleSet_PageRuleChanged,
 }
 
 impl_group_rule_funcs! { (Supports, SupportsRule, RawServoSupportsRule),
@@ -2269,6 +2296,7 @@ impl_group_rule_funcs! { (Supports, SupportsRule, RawServoSupportsRule),
     getter: Servo_CssRules_GetSupportsRuleAt,
     debug: Servo_SupportsRule_Debug,
     to_css: Servo_SupportsRule_GetCssText,
+    changed: Servo_StyleSet_SupportsRuleChanged,
 }
 
 impl_group_rule_funcs! { (Document, DocumentRule, RawServoMozDocumentRule),
@@ -2276,24 +2304,28 @@ impl_group_rule_funcs! { (Document, DocumentRule, RawServoMozDocumentRule),
     getter: Servo_CssRules_GetMozDocumentRuleAt,
     debug: Servo_MozDocumentRule_Debug,
     to_css: Servo_MozDocumentRule_GetCssText,
+    changed: Servo_StyleSet_MozDocumentRuleChanged,
 }
 
 impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule, RawServoFontFeatureValuesRule),
     getter: Servo_CssRules_GetFontFeatureValuesRuleAt,
     debug: Servo_FontFeatureValuesRule_Debug,
     to_css: Servo_FontFeatureValuesRule_GetCssText,
+    changed: Servo_StyleSet_FontFeatureValuesRuleChanged,
 }
 
 impl_basic_rule_funcs! { (FontFace, FontFaceRule, RawServoFontFaceRule),
     getter: Servo_CssRules_GetFontFaceRuleAt,
     debug: Servo_FontFaceRule_Debug,
     to_css: Servo_FontFaceRule_GetCssText,
+    changed: Servo_StyleSet_FontFaceRuleChanged,
 }
 
 impl_basic_rule_funcs! { (CounterStyle, CounterStyleRule, RawServoCounterStyleRule),
     getter: Servo_CssRules_GetCounterStyleRuleAt,
     debug: Servo_CounterStyleRule_Debug,
     to_css: Servo_CounterStyleRule_GetCssText,
+    changed: Servo_StyleSet_CounterStyleRuleChanged,
 }
 
 #[no_mangle]

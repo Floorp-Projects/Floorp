@@ -328,7 +328,8 @@ void ShadowRoot::RuleRemoved(StyleSheet& aSheet, css::Rule& aRule) {
   ApplicableRulesChanged();
 }
 
-void ShadowRoot::RuleChanged(StyleSheet& aSheet, css::Rule*) {
+void ShadowRoot::RuleChanged(StyleSheet& aSheet, css::Rule*,
+                             StyleRuleChangeKind) {
   if (!aSheet.IsApplicable()) {
     return;
   }

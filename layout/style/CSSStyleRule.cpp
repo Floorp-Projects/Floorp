@@ -73,7 +73,7 @@ nsresult CSSStyleRuleDeclaration::SetCSSDeclaration(
       mDecls = std::move(decls);
       mDecls->SetOwningRule(rule);
     }
-    sheet->RuleChanged(rule);
+    sheet->RuleChanged(rule, StyleRuleChangeKind::StyleRuleDeclarations);
   }
   return NS_OK;
 }
@@ -177,9 +177,11 @@ void CSSStyleRule::SetSelectorText(const nsAString& aSelectorText) {
     sheet->AssertHasUniqueInner();
     sheet->WillDirty();
 
+    // TODO(emilio): May actually be more efficient to handle this as rule
+    // removal + addition, from the point of view of invalidation...
     const RawServoStyleSheetContents* contents = sheet->RawContents();
     if (Servo_StyleRule_SetSelectorText(contents, mRawRule, &aSelectorText)) {
-      sheet->RuleChanged(this);
+      sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
     }
   }
 }

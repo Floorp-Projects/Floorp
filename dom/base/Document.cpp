@@ -7442,7 +7442,8 @@ void Document::ContentStateChanged(nsIContent* aContent,
                                (this, aContent, aStateMask));
 }
 
-void Document::RuleChanged(StyleSheet& aSheet, css::Rule* aRule) {
+void Document::RuleChanged(StyleSheet& aSheet, css::Rule*,
+                           StyleRuleChangeKind) {
   if (aSheet.IsApplicable()) {
     ApplicableStylesChanged();
   }
