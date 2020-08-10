@@ -32,6 +32,20 @@ fun View.removeTouchDelegate() {
 }
 
 /**
+ * Fills a [Rect] with data about a view's location in the screen.
+ *
+ * @see View.getLocationOnScreen
+ * @see View.getRectWithViewLocation for a version of this that is relative to a window
+*/
+fun View.getRectWithScreenLocation(): Rect {
+    val locationOnScreen = IntArray(2).apply { getLocationOnScreen(this) }
+    return Rect(locationOnScreen[0],
+        locationOnScreen[1],
+        locationOnScreen[0] + width,
+        locationOnScreen[1] + height)
+}
+
+/**
  * A safer version of [ViewCompat.getRootWindowInsets] that does not throw a NullPointerException
  * if the view is not attached.
  */

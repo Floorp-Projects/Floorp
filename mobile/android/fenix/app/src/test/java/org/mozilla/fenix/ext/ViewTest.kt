@@ -148,4 +148,22 @@ class ViewTest {
         every { view.getKeyboardHeight() } returns 100
         assertEquals(true, view.isKeyboardVisible())
     }
+
+    @Test
+    fun `getRectWithScreenLocation should transform getLocationInScreen method values`() {
+        val locationOnScreen = slot<IntArray>()
+        every { view.getLocationOnScreen(capture(locationOnScreen)) } answers {
+            locationOnScreen.captured[0] = 100
+            locationOnScreen.captured[1] = 200
+        }
+        every { view.width } returns 150
+        every { view.height } returns 250
+
+        val outRect = view.getRectWithScreenLocation()
+
+        assertEquals(100, outRect.left)
+        assertEquals(200, outRect.top)
+        assertEquals(250, outRect.right)
+        assertEquals(450, outRect.bottom)
+    }
 }

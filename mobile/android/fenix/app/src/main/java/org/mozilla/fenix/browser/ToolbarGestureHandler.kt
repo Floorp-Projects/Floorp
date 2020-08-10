@@ -23,6 +23,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
+import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.getWindowInsets
 import org.mozilla.fenix.ext.isKeyboardVisible
 import org.mozilla.fenix.ext.sessionsOfType
@@ -304,7 +305,7 @@ class ToolbarGestureHandler(
     }
 
     private fun PointF.isInToolbar(): Boolean {
-        val toolbarLocation = toolbarLayout.getRectWithViewLocation()
+        val toolbarLocation = toolbarLayout.getRectWithScreenLocation()
         // In Android 10, the system gesture touch area overlaps the bottom of the toolbar, so
         // lets make our swipe area taller by that amount
         activity.window.decorView.getWindowInsets()?.let { insets ->
