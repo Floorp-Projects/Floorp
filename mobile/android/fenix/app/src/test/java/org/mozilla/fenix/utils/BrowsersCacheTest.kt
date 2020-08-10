@@ -101,7 +101,7 @@ class BrowsersCacheTest {
     private fun pretendBrowsersAreInstalled(
         browsers: List<String> = listOf(),
         defaultBrowser: String? = null,
-        url: String = "http://www.mozilla.org",
+        url: String = "http://www.mozilla.org/index.html",
         browsersExported: Boolean = true,
         defaultBrowserExported: Boolean = true
     ) {
@@ -112,6 +112,7 @@ class BrowsersCacheTest {
             val intent = Intent(Intent.ACTION_VIEW)
             intent.`package` = packageName
             intent.data = Uri.parse(url)
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
             val packageInfo = PackageInfo().apply {
                 this.packageName = packageName
@@ -135,6 +136,7 @@ class BrowsersCacheTest {
         if (defaultBrowser != null) {
             val intent = Intent(Intent.ACTION_VIEW)
             intent.data = Uri.parse(url)
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
             val activityInfo = ActivityInfo().apply {
                 exported = defaultBrowserExported
