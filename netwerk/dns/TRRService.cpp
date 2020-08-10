@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsICaptivePortalService.h"
@@ -119,6 +120,32 @@ const nsCString& TRRService::AutoDetectedKey() {
   return kTRRNotAutoDetectedKey.AsString();
 }
 
+static void RemoveTRRBlocklistFile() {
+  MOZ_ASSERT(NS_IsMainThread(), "Getting the profile dir on the main thread");
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv =
+      NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  rv = file->AppendNative("TRRBlacklist.txt"_ns);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  // Dispatch an async task that removes the blocklist file from the profile.
+  rv = NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction("RemoveTRRBlocklistFile::Remove",
+                             [file] { file->Remove(false); }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  Preferences::SetBool("network.trr.blocklist_cleanup_done", true);
+}
+
 nsresult TRRService::Init() {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (mInitialized) {
@@ -163,6 +190,15 @@ nsresult TRRService::Init() {
     }
 
     sTRRBackgroundThread = thread;
+
+    if (!StaticPrefs::network_trr_blocklist_cleanup_done()) {
+      // Dispatch an idle task to the main thread that gets the profile dir
+      // then attempts to delete the blocklist file on a background thread.
+      Unused << NS_DispatchToMainThreadQueue(
+          NS_NewCancelableRunnableFunction("RemoveTRRBlocklistFile::GetDir",
+                                           [] { RemoveTRRBlocklistFile(); }),
+          EventQueuePriority::Idle);
+    }
   }
 
   LOG(("Initialized TRRService\n"));
