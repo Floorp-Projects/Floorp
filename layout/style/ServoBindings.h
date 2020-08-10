@@ -42,6 +42,9 @@ extern "C" {
   StyleStrong<RawServo##type_##Rule> Servo_CssRules_Get##type_##RuleAt( \
       const ServoCssRules* rules, uint32_t index, uint32_t* line,       \
       uint32_t* column);                                                \
+  void Servo_StyleSet_##type_##RuleChanged(                             \
+      const RawServoStyleSet*, const RawServo##type_##Rule*,            \
+      const StyleDomStyleSheet*, StyleRuleChangeKind);                  \
   BASIC_RULE_FUNCS_WITHOUT_GETTER(type_##Rule)
 
 #define GROUP_RULE_FUNCS(type_)                            \
