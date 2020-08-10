@@ -16,13 +16,12 @@
 #include "frontend/BytecodeOffset.h"  // BytecodeOffset
 #include "frontend/EmitterScope.h"    // EmitterScope
 #include "frontend/NameOpEmitter.h"   // NameOpEmitter
-#include "frontend/ObjLiteral.h"     // ObjLiteralWriter, ObjLiteralCreationData
-#include "frontend/TDZCheckCache.h"  // TDZCheckCache
-#include "js/RootingAPI.h"           // JS::Handle, JS::Rooted
-#include "vm/BytecodeUtil.h"         // JSOp
-#include "vm/JSAtom.h"               // JSAtom
-#include "vm/NativeObject.h"         // PlainObject
-#include "vm/Scope.h"                // LexicalScope
+#include "frontend/TDZCheckCache.h"   // TDZCheckCache
+#include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
+#include "vm/BytecodeUtil.h"          // JSOp
+#include "vm/JSAtom.h"                // JSAtom
+#include "vm/NativeObject.h"          // PlainObject
+#include "vm/Scope.h"                 // LexicalScope
 
 namespace js {
 
