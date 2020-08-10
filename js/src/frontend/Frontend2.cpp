@@ -246,7 +246,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 }
 
 // Given the result of SmooshMonkey's parser, convert a list of RegExp data
-// into a list of RegExpCreationData.
+// into a list of RegExpStencil.
 bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
                        CompilationInfo& compilationInfo) {
   for (size_t i = 0; i < result.regexps.len; i++) {

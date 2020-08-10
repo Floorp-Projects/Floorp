@@ -22,7 +22,7 @@
 #include "frontend/CompilationInfo.h"   // CompilationInfo
 #include "frontend/JumpList.h"          // JumpTarget
 #include "frontend/NameCollections.h"   // AtomIndexMap, PooledMapPtr
-#include "frontend/ObjLiteral.h"        // ObjLiteralCreationData
+#include "frontend/ObjLiteral.h"        // ObjLiteralStencil
 #include "frontend/ParseNode.h"         // BigIntLiteral
 #include "frontend/SourceNotes.h"       // SrcNote
 #include "frontend/Stencil.h"           // Stencils

@@ -224,19 +224,19 @@ void ObjLiteralWriter::dumpFields(js::JSONPrinter& json) {
   json.endList();
 }
 
-void ObjLiteralCreationData::dump() {
+void ObjLiteralStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json);
 }
 
-void ObjLiteralCreationData::dump(js::JSONPrinter& json) {
+void ObjLiteralStencil::dump(js::JSONPrinter& json) {
   json.beginObject();
   dumpFields(json);
   json.endObject();
 }
 
-void ObjLiteralCreationData::dumpFields(js::JSONPrinter& json) {
+void ObjLiteralStencil::dumpFields(js::JSONPrinter& json) {
   writer_.dumpFields(json);
 
   json.beginListProperty("atoms");

@@ -556,13 +556,13 @@ inline JSObject* InterpretObjLiteral(JSContext* cx,
   return InterpretObjLiteral(cx, atoms, writer.getCode(), writer.getFlags());
 }
 
-class ObjLiteralCreationData {
+class ObjLiteralStencil {
  private:
   ObjLiteralWriter writer_;
   ObjLiteralAtomVector atoms_;
 
  public:
-  explicit ObjLiteralCreationData(JSContext* cx) : writer_(cx), atoms_(cx) {}
+  explicit ObjLiteralStencil(JSContext* cx) : writer_(cx), atoms_(cx) {}
 
   ObjLiteralWriter& writer() { return writer_; }
 

@@ -501,7 +501,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Is a field value OBJLITERAL-compatible?
   MOZ_MUST_USE bool isRHSObjLiteralCompatible(ParseNode* value);
 
-  MOZ_MUST_USE bool emitObjLiteralValue(ObjLiteralCreationData* data,
+  MOZ_MUST_USE bool emitObjLiteralValue(ObjLiteralStencil* data,
                                         ParseNode* value);
 
   enum class FieldPlacement { Instance, Static };
