@@ -1349,8 +1349,8 @@ pub(crate) fn emit(
         Inst::CallKnown {
             dest, loc, opcode, ..
         } => {
-            if let Some(s) = state.take_stackmap() {
-                sink.add_stackmap(StackmapExtent::UpcomingBytes(5), s);
+            if let Some(s) = state.take_stack_map() {
+                sink.add_stack_map(StackMapExtent::UpcomingBytes(5), s);
             }
             sink.put1(0xE8);
             // The addend adjusts for the difference between the end of the instruction and the
@@ -1393,8 +1393,8 @@ pub(crate) fn emit(
                     );
                 }
             }
-            if let Some(s) = state.take_stackmap() {
-                sink.add_stackmap(StackmapExtent::StartedAtOffset(start_offset), s);
+            if let Some(s) = state.take_stack_map() {
+                sink.add_stack_map(StackMapExtent::StartedAtOffset(start_offset), s);
             }
             if opcode.is_call() {
                 sink.add_call_site(*loc, *opcode);
@@ -1659,6 +1659,10 @@ pub(crate) fn emit(
                 SseOpcode::Mulsd => (LegacyPrefix::_F2, 0x0F59),
                 SseOpcode::Orpd => (LegacyPrefix::_66, 0x0F56),
                 SseOpcode::Orps => (LegacyPrefix::None, 0x0F56),
+                SseOpcode::Paddb => (LegacyPrefix::_66, 0x0FFC),
+                SseOpcode::Paddd => (LegacyPrefix::_66, 0x0FFE),
+                SseOpcode::Paddq => (LegacyPrefix::_66, 0x0FD4),
+                SseOpcode::Paddw => (LegacyPrefix::_66, 0x0FFD),
                 SseOpcode::Subps => (LegacyPrefix::None, 0x0F5C),
                 SseOpcode::Subpd => (LegacyPrefix::_66, 0x0F5C),
                 SseOpcode::Subss => (LegacyPrefix::_F3, 0x0F5C),
@@ -1975,7 +1979,7 @@ pub(crate) fn emit(
 
             // Divide x by two to get it in range for the signed conversion, keep the LSB, and
             // scale it back up on the FP side.
-            let inst = Inst::gen_move(*tmp_gpr1, src.to_reg(), I64);
+            let inst = Inst::gen_move(*tmp_gpr1, src.to_reg(), types::I64);
             inst.emit(sink, flags, state);
 
             // tmp_gpr1 := src >> 1
@@ -1987,7 +1991,7 @@ pub(crate) fn emit(
             );
             inst.emit(sink, flags, state);
 
-            let inst = Inst::gen_move(*tmp_gpr2, src.to_reg(), I64);
+            let inst = Inst::gen_move(*tmp_gpr2, src.to_reg(), types::I64);
             inst.emit(sink, flags, state);
 
             let inst = Inst::alu_rmi_r(
@@ -2428,8 +2432,8 @@ pub(crate) fn emit(
 
         Inst::Ud2 { trap_info } => {
             sink.add_trap(trap_info.0, trap_info.1);
-            if let Some(s) = state.take_stackmap() {
-                sink.add_stackmap(StackmapExtent::UpcomingBytes(2), s);
+            if let Some(s) = state.take_stack_map() {
+                sink.add_stack_map(StackMapExtent::UpcomingBytes(2), s);
             }
             sink.put1(0x0f);
             sink.put1(0x0b);
