@@ -914,10 +914,21 @@ nsresult ContentSubtreeIterator::InitWithRange() {
     return NS_OK;
   }
 
-  nsIContent* lastCandidate = DetermineCandidateForLastContent();
-  if (!lastCandidate) {
+  mLast = DetermineLastContent();
+  if (!mLast) {
     SetEmpty();
     return NS_OK;
+  }
+
+  mCurNode = mFirst;
+
+  return NS_OK;
+}
+
+nsIContent* ContentSubtreeIterator::DetermineLastContent() const {
+  nsIContent* lastCandidate = DetermineCandidateForLastContent();
+  if (!lastCandidate) {
+    return nullptr;
   }
 
   // confirm that this last possible contained node is indeed contained.  Else
@@ -929,18 +940,13 @@ nsresult ContentSubtreeIterator::InitWithRange() {
                                                      &nodeBefore, &nodeAfter));
 
   if (nodeBefore || nodeAfter) {
-    SetEmpty();
-    return NS_OK;
+    return nullptr;
   }
 
   // cool, we have the last node in the range.  Now we walk up its ancestors to
   // find the most senior that is still in the range.  That's the real first
   // node.
-  mLast = GetTopAncestorInRange(lastCandidate);
-
-  mCurNode = mFirst;
-
-  return NS_OK;
+  return GetTopAncestorInRange(lastCandidate);
 }
 
 /****************************************************************
