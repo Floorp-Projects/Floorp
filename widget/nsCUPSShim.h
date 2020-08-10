@@ -37,6 +37,7 @@ class nsCUPSShim {
   X(cupsGetDest)               \
   X(cupsGetDests)              \
   X(cupsGetNamedDest)          \
+  X(cupsGetOption)             \
   X(cupsLocalizeDestMedia)     \
   X(cupsPrintFile)             \
   X(cupsTempFd)                \
