@@ -56,6 +56,16 @@ The files may define any of the following special variables:
         # ...
     ]
 
+    # A list of category registrations
+    Categories = {
+        'category': {
+            'name': 'value',
+            'other-name': ('value', ProcessSelector.MAIN_PROCESS_ONLY),
+            # ...
+        },
+        # ...
+    }
+
 Class definitions may have the following properties:
 
 ``name`` (optional)
@@ -270,3 +280,26 @@ This will define each of the following category entries:
 * ``"content-policy"`` ``"m-foo",`` ``"@mozilla.org/foo;1"``
 * ``"Gecko-Content-Viewers"`` ``"image/jpeg"`` ``"@mozilla.org/foo;1"``
 * ``"Gecko-Content-Viewers"`` ``"image/png"`` ``"@mozilla.org/foo;1"``
+
+Some category entries do not have a contract ID as a value. These entries can
+be specified by adding to a global ``Categories`` dictionary:
+
+.. code-block:: python
+
+    Categories = {
+        'app-startup': {
+            'Mapi Support': 'service,@mozilla.org/mapisupport;1',
+        }
+    }
+
+It is possible to limit these on a per-process basis by using a tuple as the
+value:
+
+.. code-block:: python
+
+    Categories = {
+        'app-startup': {
+            'MainProcessSingleton': ('service,@mozilla.org/main-process-singleton;1', ProcessSelector.MAIN_PROCESS_ONLY),
+        }
+    }
+

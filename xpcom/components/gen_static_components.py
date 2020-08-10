@@ -605,6 +605,7 @@ def gen_substs(manifests):
     headers = set()
 
     modules = []
+    categories = defaultdict(list)
 
     for manifest in manifests:
         headers |= set(manifest.get('Headers', []))
@@ -619,10 +620,17 @@ def gen_substs(manifests):
         for clas in manifest['Classes']:
             modules.append(ModuleEntry(clas, init_idx))
 
+        for category, entries in manifest.get('Categories', {}).items():
+            for key, entry in entries.items():
+                if isinstance(entry, tuple):
+                    value, process = entry
+                else:
+                    value, process = entry, 0
+                categories[category].append((key, value, process))
+
     cids = set()
     contracts = []
     contract_map = {}
-    categories = defaultdict(list)
     js_services = {}
 
     jsms = set()
