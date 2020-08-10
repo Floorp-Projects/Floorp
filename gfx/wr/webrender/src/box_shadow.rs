@@ -8,6 +8,7 @@ use api::units::*;
 use crate::clip::{ClipItemKey, ClipItemKeyKind, ClipChainId};
 use crate::scene_building::SceneBuilder;
 use crate::spatial_tree::SpatialNodeIndex;
+use crate::gpu_cache::GpuCacheHandle;
 use crate::gpu_types::BoxShadowStretchMode;
 use crate::render_task_cache::RenderTaskCacheEntryHandle;
 use crate::util::RectHelpers;
@@ -28,6 +29,7 @@ pub struct BoxShadowClipSource {
     // to the cached clip region and blurred texture.
     pub cache_key: Option<(DeviceIntSize, BoxShadowCacheKey)>,
     pub cache_handle: Option<RenderTaskCacheEntryHandle>,
+    pub clip_data_handle: GpuCacheHandle,
 
     // Local-space size of the required render task size.
     pub shadow_rect_alloc_size: LayoutSize,

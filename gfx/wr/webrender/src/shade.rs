@@ -61,7 +61,7 @@ const PIXEL_LOCAL_STORAGE_FEATURE: &str = "PIXEL_LOCAL_STORAGE";
 pub(crate) enum ShaderKind {
     Primitive,
     Cache(VertexArrayKind),
-    ClipCache(VertexArrayKind),
+    ClipCache,
     Brush,
     Text,
     #[allow(dead_code)]
@@ -191,7 +191,7 @@ impl LazilyCompiledShader {
                         &self.features,
                     )
                 }
-                ShaderKind::ClipCache(..) => {
+                ShaderKind::ClipCache => {
                     create_clip_shader(
                         self.name,
                         device,
@@ -212,7 +212,7 @@ impl LazilyCompiledShader {
                 ShaderKind::Cache(format) => format,
                 ShaderKind::VectorStencil => VertexArrayKind::VectorStencil,
                 ShaderKind::VectorCover => VertexArrayKind::VectorCover,
-                ShaderKind::ClipCache(format) => format,
+                ShaderKind::ClipCache => VertexArrayKind::Clip,
                 ShaderKind::Resolve => VertexArrayKind::Resolve,
                 ShaderKind::Composite => VertexArrayKind::Composite,
                 ShaderKind::Clear => VertexArrayKind::Clear,
@@ -223,9 +223,7 @@ impl LazilyCompiledShader {
                 VertexArrayKind::LineDecoration => &desc::LINE,
                 VertexArrayKind::Gradient => &desc::GRADIENT,
                 VertexArrayKind::Blur => &desc::BLUR,
-                VertexArrayKind::ClipImage => &desc::CLIP_IMAGE,
-                VertexArrayKind::ClipRect => &desc::CLIP_RECT,
-                VertexArrayKind::ClipBoxShadow => &desc::CLIP_BOX_SHADOW,
+                VertexArrayKind::Clip => &desc::CLIP,
                 VertexArrayKind::VectorStencil => &desc::VECTOR_STENCIL,
                 VertexArrayKind::VectorCover => &desc::VECTOR_COVER,
                 VertexArrayKind::Border => &desc::BORDER,
@@ -239,7 +237,7 @@ impl LazilyCompiledShader {
             device.link_program(program, vertex_descriptor)?;
             device.bind_program(program);
             match self.kind {
-                ShaderKind::ClipCache(..) => {
+                ShaderKind::ClipCache => {
                     device.bind_shader_samplers(
                         &program,
                         &[
@@ -744,7 +742,7 @@ impl Shaders {
         )?;
 
         let cs_clip_rectangle_slow = LazilyCompiledShader::new(
-            ShaderKind::ClipCache(VertexArrayKind::ClipRect),
+            ShaderKind::ClipCache,
             "cs_clip_rectangle",
             &[],
             device,
@@ -753,7 +751,7 @@ impl Shaders {
         )?;
 
         let cs_clip_rectangle_fast = LazilyCompiledShader::new(
-            ShaderKind::ClipCache(VertexArrayKind::ClipRect),
+            ShaderKind::ClipCache,
             "cs_clip_rectangle",
             &[FAST_PATH_FEATURE],
             device,
@@ -762,7 +760,7 @@ impl Shaders {
         )?;
 
         let cs_clip_box_shadow = LazilyCompiledShader::new(
-            ShaderKind::ClipCache(VertexArrayKind::ClipBoxShadow),
+            ShaderKind::ClipCache,
             "cs_clip_box_shadow",
             &[],
             device,
@@ -771,7 +769,7 @@ impl Shaders {
         )?;
 
         let cs_clip_image = LazilyCompiledShader::new(
-            ShaderKind::ClipCache(VertexArrayKind::ClipImage),
+            ShaderKind::ClipCache,
             "cs_clip_image",
             &[],
             device,
