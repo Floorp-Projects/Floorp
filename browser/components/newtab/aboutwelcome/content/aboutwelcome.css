@@ -316,7 +316,7 @@ body {
     .multistageContainer .welcome-text h2 {
       font-size: 18px;
       font-weight: normal;
-      margin: 0 6px;
+      margin: 10px 6px 0;
       color: var(--grey-subtitle-1);
       line-height: 28px;
       max-width: 750px;
@@ -437,7 +437,6 @@ body {
     align-self: center;
     position: relative;
     margin-top: -12px;
-    height: 400px;
     margin-bottom: -155px; }
     .multistageContainer .tiles-media-section .fade {
       height: 390px;
@@ -451,8 +450,7 @@ body {
       .multistageContainer .tiles-media-section {
         height: 200px;
         width: 800px;
-        margin-top: 20px;
-        margin-bottom: 12px; }
+        margin: 0; }
         .multistageContainer .tiles-media-section.privacy {
           background: top no-repeat url("../data/content/assets/firefox-protections.svg"); }
         .multistageContainer .tiles-media-section .media {
