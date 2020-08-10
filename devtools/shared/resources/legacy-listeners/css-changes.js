@@ -9,6 +9,10 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 module.exports = async function({ targetFront, onAvailable }) {
+  if (!targetFront.hasActor("changes")) {
+    return;
+  }
+
   const changesFront = await targetFront.getFront("changes");
 
   // Get all changes collected up to this point by the ChangesActor on the server,
