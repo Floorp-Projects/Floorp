@@ -45,31 +45,6 @@ using mozilla::gfx::SurfaceFormat;
 static LazyLogModule sDeviceContextSpecXLog("DeviceContextSpecX");
 
 //----------------------------------------------------------------------
-// nsPrinterListX
-
-/**
- * Retrieves the display name of a printer.
- */
-void nsPrinterListCUPS::GetDisplayNameForPrinter(const cups_dest_t& aDest, nsAString& aName) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // CUPS does not appear to have a native call to retrieve a display name for
-  // a printer, so we need to use cocoa to find a display name for the printer.
-  PMPrinter corePrinter = PMPrinterCreateFromPrinterID(
-      static_cast<CFStringRef>([NSString stringWithUTF8String:aDest.name]));
-
-  if (!corePrinter) {
-    return;
-  }
-
-  CFStringRef printerName = PMPrinterGetName(corePrinter);
-  nsCocoaUtils::GetStringForNSString(static_cast<NSString*>(printerName), aName);
-  PMRelease(corePrinter);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-//----------------------------------------------------------------------
 // nsDeviceContentSpecX
 
 nsDeviceContextSpecX::nsDeviceContextSpecX()
