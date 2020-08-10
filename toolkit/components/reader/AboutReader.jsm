@@ -1097,6 +1097,7 @@ AboutReader.prototype = {
     this._doc.addEventListener("scroll", this);
 
     dropdown.classList.add("open");
+    this._toolbarElement.classList.add("dropdown-open");
 
     this._toolbarContainerElement.classList.add("dropdown-open");
     this._toggleToolbarFixedPosition(true);
@@ -1118,6 +1119,7 @@ AboutReader.prototype = {
     for (let dropdown of openDropdowns) {
       dropdown.classList.remove("open");
     }
+    this._toolbarElement.classList.remove("dropdown-open");
 
     if (haveOpenDropdowns) {
       this._toolbarContainerElement.classList.remove("dropdown-open");
