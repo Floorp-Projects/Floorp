@@ -1,0 +1,91 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+
+    // TODO: Remove this import for OS.File. It is currently being used as a
+    //       stop gap for missing IOUtils functionality.
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+
+    const tmpDir = OS.Constants.Path.tmpDir;
+
+    add_task(async function test_stat() {
+      info("Test attempt to stat a regular empty file");
+      const emptyFileName = OS.Path.join(tmpDir, "test_stat_empty.tmp");
+      await createFile(emptyFileName);
+
+      const emptyFileInfo = await window.IOUtils.stat(emptyFileName);
+      is(emptyFileInfo.size, 0, "IOUtils::stat can get correct (empty) file size");
+      is(emptyFileInfo.path, emptyFileName, "IOUtils::stat result contains the path");
+      is(emptyFileInfo.type, "regular", "IOUtils::stat can stat regular (empty) files");
+      Assert.less(
+        (emptyFileInfo.lastModified - new Date().valueOf()),
+        1000, // Allow for 1 second deviation in case of slow tests.
+        "IOUtils::stat can get the last modification date for a regular file"
+      );
+
+      info("Test attempt to stat a regular binary file");
+      const tempFileName = OS.Path.join(tmpDir, "test_stat_binary.tmp");
+      const bytes = Uint8Array.of(...new Array(50).keys());
+      await createFile(tempFileName, bytes);
+
+      const fileInfo = await window.IOUtils.stat(tempFileName);
+      is(fileInfo.size, 50, "IOUtils::stat can get correct file size");
+      is(fileInfo.path, tempFileName, "IOUtils::stat result contains the path");
+      is(fileInfo.type, "regular", "IOUtils::stat can stat regular files");
+      Assert.less(
+        (fileInfo.lastModified - new Date().valueOf()),
+        1000, // Allow for 1 second deviation in case of slow tests.
+        "IOUtils::stat can get the last modification date for a regular file"
+      );
+
+      info("Test attempt to stat a directory");
+      const tempDirName = OS.Path.join(tmpDir, "test_stat_dir.tmp.d");
+      await OS.File.makeDir(tempDirName);
+
+      const dirInfo = await window.IOUtils.stat(tempDirName);
+      is(dirInfo.size, -1, "IOUtils::stat reports -1 size for directories")
+      is(fileInfo.path, tempFileName, "IOUtils::stat result contains the path");
+      is(fileInfo.type, "regular", "IOUtils::stat can stat directories");
+      Assert.less(
+        (fileInfo.lastModified - new Date().valueOf()),
+        1000, // Allow for 1 second deviation in case of slow tests.
+        "IOUtils::stat can get the last modification date for a regular file"
+      );
+
+      await cleanup(emptyFileName, tempFileName, tempDirName)
+    });
+
+    add_task(async function test_stat_failures() {
+      info("Test attempt to stat a non-existing file");
+      const notExistsFile = OS.Path.join(tmpDir, "test_stat_not_exists.tmp");
+
+      await Assert.rejects(
+        window.IOUtils.stat(notExistsFile),
+        /Could not stat file\(.*\) because it does not exist/,
+        "IOUtils::stat throws if the target file does not exist"
+      );
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>
