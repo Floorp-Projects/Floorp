@@ -18,10 +18,10 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translatedName
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
@@ -189,8 +189,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                 val directions = if (addon.installedState?.openOptionsPageInTab == true) {
                     val components = it.context.components
                     val shouldCreatePrivateSession =
-                        components.core.store.state.selectedTab?.content?.private
-                            ?: components.settings.openLinksInAPrivateTab
+                        (activity as HomeActivity).browsingModeManager.mode.isPrivate
 
                     if (shouldCreatePrivateSession) {
                         components.useCases.tabsUseCases.addPrivateTab(settingUrl)
