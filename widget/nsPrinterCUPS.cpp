@@ -23,7 +23,8 @@ nsPrinterCUPS::~nsPrinterCUPS() {
 NS_IMETHODIMP
 nsPrinterCUPS::GetName(nsAString& aName) {
   if (mDisplayName.IsEmpty()) {
-    aName = NS_ConvertUTF8toUTF16(mPrinter->name);
+    aName.Truncate();
+    CopyUTF8toUTF16(MakeStringSpan(mPrinter->name), aName);
   } else {
     aName = mDisplayName;
   }
