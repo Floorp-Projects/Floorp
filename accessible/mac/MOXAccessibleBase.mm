@@ -9,8 +9,23 @@
 
 #include "nsObjCExceptions.h"
 #include "xpcAccessibleMacInterface.h"
+#include "mozilla/Logging.h"
 
 using namespace mozilla::a11y;
+
+#undef LOG
+mozilla::LogModule* GetMacAccessibilityLog() {
+  static mozilla::LazyLogModule sLog("MacAccessibility");
+
+  return sLog;
+}
+#define LOG(type, format, ...)                                             \
+  do {                                                                     \
+    if (MOZ_LOG_TEST(GetMacAccessibilityLog(), type)) {                    \
+      NSString* msg = [NSString stringWithFormat:(format), ##__VA_ARGS__]; \
+      MOZ_LOG(GetMacAccessibilityLog(), type, ("%s", [msg UTF8String]));   \
+    }                                                                      \
+  } while (0)
 
 @interface NSObject (MOXAccessible)
 
@@ -136,7 +151,7 @@ using namespace mozilla::a11y;
   if ([value isMOXAccessible]) {
     // If this is a MOXAccessible, get its represented view or filter it if
     // it should be ignored.
-    return [value isAccessibilityElement] ? GetObjectOrRepresentedView(value) : nil;
+    value = [value isAccessibilityElement] ? GetObjectOrRepresentedView(value) : nil;
   }
 
   if ([value hasMOXAccessibles]) {
@@ -151,7 +166,16 @@ using namespace mozilla::a11y;
       }
     }
 
-    return arr;
+    value = arr;
+  }
+
+  if (MOZ_LOG_TEST(GetMacAccessibilityLog(), LogLevel::Debug)) {
+    if (MOZ_LOG_TEST(GetMacAccessibilityLog(), LogLevel::Verbose)) {
+      LOG(LogLevel::Verbose, @"[%@] attributeValue %@ => %@", self, attribute, value);
+    } else if (![attribute isEqualToString:@"AXParent"] && ![attribute isEqualToString:@"AXRole"] &&
+               ![attribute isEqualToString:@"AXChildren"]) {
+      LOG(LogLevel::Debug, @"[%@] attributeValue %@", self, attribute);
+    }
   }
 
   return value;
@@ -275,11 +299,13 @@ using namespace mozilla::a11y;
     return nil;
   }
 
+  id value = nil;
+
   NSDictionary* getters = mac::ParameterizedAttributeGetters();
   if (getters[attribute]) {
     SEL selector = NSSelectorFromString(getters[attribute]);
     if ([self isSelectorSupported:selector]) {
-      return [self performSelector:selector withObject:parameter];
+      value = [self performSelector:selector withObject:parameter];
     }
   } else if (id textMarkerDelegate = [self moxTextMarkerDelegate]) {
     // If we have a delegate, check if attribute is a text marker
@@ -289,12 +315,19 @@ using namespace mozilla::a11y;
     if (textMarkerGetters[attribute]) {
       SEL selector = NSSelectorFromString(textMarkerGetters[attribute]);
       if ([textMarkerDelegate respondsToSelector:selector]) {
-        return [textMarkerDelegate performSelector:selector withObject:parameter];
+        value = [textMarkerDelegate performSelector:selector withObject:parameter];
       }
     }
   }
 
-  return nil;
+  if (MOZ_LOG_TEST(GetMacAccessibilityLog(), LogLevel::Verbose)) {
+    LOG(LogLevel::Verbose, @"[%@] attributeValueForParam %@(%@) => %@", self, attribute, parameter,
+        value);
+  } else {
+    LOG(LogLevel::Debug, @"[%@] attributeValueForParam %@", self, attribute);
+  }
+
+  return value;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -347,6 +380,12 @@ using namespace mozilla::a11y;
 }
 
 - (void)moxPostNotification:(NSString*)notification withUserInfo:(NSDictionary*)userInfo {
+  if (MOZ_LOG_TEST(GetMacAccessibilityLog(), LogLevel::Verbose)) {
+    LOG(LogLevel::Verbose, @"[%@] notify %@ %@", self, notification, userInfo);
+  } else {
+    LOG(LogLevel::Debug, @"[%@] notify %@", self, notification);
+  }
+
   // This sends events via nsIObserverService to be consumed by our mochitests.
   xpcAccessibleMacEvent::FireEvent(self, notification, userInfo);
 
