@@ -2465,7 +2465,7 @@ def rc_names(c_compiler, toolchain_prefix):
     return ('llvm-rc',)
 
 
-check_prog('RC', rc_names, paths=sdk_bin_path, when=target_is_windows)
+check_prog('RC', rc_names, paths=toolchain_search_path, when=target_is_windows)
 
 
 @depends(link, toolchain_prefix, c_compiler)
