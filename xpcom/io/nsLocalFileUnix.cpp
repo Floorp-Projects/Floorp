@@ -13,13 +13,9 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/FilePreferences.h"
-#include "prtime.h"
 
-#include <sys/fcntl.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -1077,92 +1073,68 @@ nsLocalFile::Remove(bool aRecursive) {
   return NSRESULT_FOR_RETURN(rmdir(mPath.get()));
 }
 
-nsresult nsLocalFile::GetLastModifiedTimeImpl(PRTime* aLastModTime,
-                                              bool aFollowLinks) {
+NS_IMETHODIMP
+nsLocalFile::GetLastModifiedTime(PRTime* aLastModTime) {
   CHECK_mPath();
   if (NS_WARN_IF(!aLastModTime)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  using StatFn = int (*)(const char*, struct STAT*);
-  StatFn statFn = aFollowLinks ? &STAT : &LSTAT;
-
-  struct STAT fileStats {};
-  if (statFn(mPath.get(), &fileStats) < 0) {
+  PRFileInfo64 info;
+  if (PR_GetFileInfo64(mPath.get(), &info) != PR_SUCCESS) {
     return NSRESULT_FOR_ERRNO();
   }
-
-  int64_t modSec = 0;
-  int64_t modNSec = 0;
-#if (defined(__APPLE__) && defined(__MACH__))
-  modSec = fileStats.st_mtimespec.tv_sec;
-  modNSec = fileStats.st_mtimespec.tv_nsec;
-#else
-  modSec = fileStats.st_mtim.tv_sec;
-  modNSec = fileStats.st_mtim.tv_nsec;
-#endif
-  *aLastModTime =
-      PRTime(modSec * PR_MSEC_PER_SEC) + PRTime(modNSec / PR_NSEC_PER_MSEC);
+  PRTime modTime = info.modifyTime;
+  if (modTime == 0) {
+    *aLastModTime = 0;
+  } else {
+    *aLastModTime = modTime / PR_USEC_PER_MSEC;
+  }
 
   return NS_OK;
 }
 
-nsresult nsLocalFile::SetLastModifiedTimeImpl(PRTime aLastModTime,
-                                              bool aFollowLinks) {
+NS_IMETHODIMP
+nsLocalFile::SetLastModifiedTime(PRTime aLastModTime) {
   CHECK_mPath();
-
-  using UtimesFn = int (*)(const char*, const timeval*);
-  UtimesFn utimesFn = &utimes;
-
-#if HAVE_LUTIMES
-  if (!aFollowLinks) {
-    utimesFn = &lutimes;
-  }
-#endif
 
   int result;
   if (aLastModTime != 0) {
     ENSURE_STAT_CACHE();
-    timeval access{};
-#if (defined(__APPLE__) && defined(__MACH__))
-    access.tv_sec = mCachedStat.st_atimespec.tv_sec;
-    access.tv_usec = mCachedStat.st_atimespec.tv_nsec / 1000;
-#else
-    access.tv_sec = mCachedStat.st_atim.tv_sec;
-    access.tv_usec = mCachedStat.st_atim.tv_nsec / 1000;
-#endif
-    timeval modification{};
-    modification.tv_sec = aLastModTime / PR_MSEC_PER_SEC;
-    modification.tv_usec = (aLastModTime % PR_MSEC_PER_SEC) * PR_USEC_PER_MSEC;
+    struct utimbuf ut;
+    ut.actime = mCachedStat.st_atime;
 
-    timeval times[2];
-    times[0] = access;
-    times[1] = modification;
-    result = utimesFn(mPath.get(), times);
+    // convert milliseconds to seconds since the unix epoch
+    ut.modtime = (time_t)(aLastModTime / PR_MSEC_PER_SEC);
+    result = utime(mPath.get(), &ut);
   } else {
-    result = utimesFn(mPath.get(), nullptr);
+    result = utime(mPath.get(), nullptr);
   }
   return NSRESULT_FOR_RETURN(result);
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTime(PRTime* aLastModTime) {
-  return GetLastModifiedTimeImpl(aLastModTime, /* follow links? */ true);
-}
-
-NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTime(PRTime aLastModTime) {
-  return SetLastModifiedTimeImpl(aLastModTime, /* follow links ? */ true);
-}
-
-NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTimeOfLink(PRTime* aLastModTimeOfLink) {
-  return GetLastModifiedTimeImpl(aLastModTimeOfLink, /* follow link? */ false);
+  CHECK_mPath();
+  if (NS_WARN_IF(!aLastModTimeOfLink)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  struct STAT sbuf;
+  if (LSTAT(mPath.get(), &sbuf) == -1) {
+    return NSRESULT_FOR_ERRNO();
+  }
+  *aLastModTimeOfLink = PRTime(sbuf.st_mtime) * PR_MSEC_PER_SEC;
+
+  return NS_OK;
 }
 
+/*
+ * utime(2) may or may not dereference symlinks, joy.
+ */
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink) {
-  return SetLastModifiedTimeImpl(aLastModTimeOfLink, /* follow links? */ false);
+  return SetLastModifiedTime(aLastModTimeOfLink);
 }
 
 /*
