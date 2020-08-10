@@ -124,7 +124,7 @@ macro_rules! using_opcode_database {
                 (FunWithProto, fun_with_proto, NULL, 5, 1, 1, JOF_OBJECT),
                 (ClassConstructor, class_constructor, NULL, 13, 0, 1, JOF_CLASS_CTOR),
                 (DerivedConstructor, derived_constructor, NULL, 13, 1, 1, JOF_CLASS_CTOR),
-                (FunctionProto, function_proto, NULL, 1, 0, 1, JOF_BYTE),
+                (BuiltinObject, builtin_object, NULL, 2, 0, 1, JOF_UINT8),
                 (Call, call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC),
                 (CallIter, call_iter, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC),
                 (FunApply, fun_apply, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC),
