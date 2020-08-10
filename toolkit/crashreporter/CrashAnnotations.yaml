@@ -650,6 +650,24 @@ MozCrashReason:
   type: string
   ping: true
 
+NewWindowBCId:
+  description: >
+    The ID of the last BrowsingContext that a new PWindowGlobal was created
+    for.
+  type: integer
+
+NewWindowBCIsTop:
+  description: >
+    Whether the last BrowsingContext we tried to create a PWindowGlobal for
+    was top-level, rather than a frame.
+  type: boolean
+
+NewWindowMissingBCId:
+  description: >
+    The ID of the nonexistent BrowsingContext that a child process attempted
+    to create a PWindowGlobal for.
+  type: integer
+
 Notes:
   description: >
     Miscellaneous notes that can be appended to a crash.
