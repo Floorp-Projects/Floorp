@@ -42,13 +42,10 @@ async function* runTests() {
   yield;
 
   function testScrollCommand(cmd, expectTop) {
-    const { top } = root.getBoundingClientRect();
-
-    // XXX(krosylight): Android scrolls slightly more inside
-    // geckoview-test-verify-e10s CI job
-    const isAndroid = SpecialPowers.Services.appinfo.widgetToolkit == "android";
-    const delta = isAndroid ? .134 : 0;
-    isfuzzy(top, -expectTop, delta, cmd);
+    // http://dev.w3.org/csswg/cssom-view/#dom-element-getboundingclientrect
+    // doesn't explicitly rule out -0 here, but for now assume that only
+    // positive zeroes are permitted.
+    is(root.getBoundingClientRect().top, -expectTop + 0, cmd);
   }
 
   function testMoveCommand(cmd, expectNode, expectOffset) {
@@ -135,7 +132,7 @@ async function* runTests() {
   yield;
   testScrollCommand("cmd_scrollLineUp", root.scrollHeight - 100 - lineHeight);
 
-  var runSelectionTests = function() {
+  var runSelectionTests = function(selectWordNextNode, selectWordNextOffset) {
     testMoveCommand("cmd_moveBottom", body, 23);
     testMoveCommand("cmd_moveTop", node(0), 0);
     testSelectCommand("cmd_selectBottom", body, 23);
@@ -168,7 +165,7 @@ async function* runTests() {
     testMoveCommand("cmd_wordNext", body, 23);
     testSelectCommand("cmd_selectWordPrevious", node(22), 0);
     SpecialPowers.doCommand(window, "cmd_moveTop");
-    testSelectCommand("cmd_selectWordNext", body, 1);
+    testSelectCommand("cmd_selectWordNext", selectWordNextNode, selectWordNextOffset);
 
     SpecialPowers.doCommand(window, "cmd_moveTop");
     var lineNum = testPageMoveCommand("cmd_movePageDown", 0);
@@ -185,9 +182,9 @@ async function* runTests() {
   };
 
   await SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", false]]});
-  runSelectionTests();
+  runSelectionTests(body, 1);
   await SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", true]]});
-  runSelectionTests();
+  runSelectionTests(node(2), 0);
 }
 
 function cleanup() {
