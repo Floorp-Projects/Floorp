@@ -25,11 +25,11 @@ function isPrivateWindow(win) {
 }
 
 /**
- * Check current location against the list of whitelisted hosts
+ * Check current location against the list of allowed hosts
  * Additionally verify for redirects and check original request URL against
- * the whitelist.
+ * the list.
  *
- * @returns {object} - {host, url} pair that matched the whitelist
+ * @returns {object} - {host, url} pair that matched the list of allowed hosts
  */
 function checkURLMatch(aLocationURI, { hosts, matchPatternSet }, aRequest) {
   // If checks pass we return a match
@@ -41,7 +41,7 @@ function checkURLMatch(aLocationURI, { hosts, matchPatternSet }, aRequest) {
     return false;
   }
 
-  // Check current location against whitelisted hosts
+  // Check current location against allowed hosts
   if (hosts.has(match.host)) {
     return match;
   }

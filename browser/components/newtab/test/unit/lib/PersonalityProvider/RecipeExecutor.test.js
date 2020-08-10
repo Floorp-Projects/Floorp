@@ -847,9 +847,9 @@ describe("RecipeExecutor", () => {
     });
   });
 
-  describe("#whitelistFields", () => {
+  describe("#allowFields", () => {
     it("should filter the keys out of a map", () => {
-      item = instance.whitelistFields(item, {
+      item = instance.allowFields(item, {
         fields: ["foo", "missing", "bar"],
       });
       assert.deepEqual(item, { foo: "FOO", bar: "BAR" });
