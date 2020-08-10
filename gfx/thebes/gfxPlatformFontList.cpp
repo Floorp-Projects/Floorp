@@ -2439,7 +2439,7 @@ void gfxPlatformFontList::InitializeFamily(uint32_t aGeneration,
     return;
   }
   fontlist::Family* family = list->Families() + aFamilyIndex;
-  if (!family->IsInitialized()) {
+  if (!family->IsInitialized() || aLoadCmaps) {
     Unused << InitializeFamily(family, aLoadCmaps);
   }
 }
