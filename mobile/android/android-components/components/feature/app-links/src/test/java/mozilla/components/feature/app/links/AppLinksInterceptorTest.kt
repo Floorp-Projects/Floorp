@@ -149,6 +149,9 @@ class AppLinksInterceptorTest {
 
         response = appLinksInterceptor.onLoadRequest(mockEngineSession, "http://m.example.com", "https://www.example.com", true, true, true, false, false)
         assertEquals(null, response)
+
+        response = appLinksInterceptor.onLoadRequest(mockEngineSession, "http://mobile.example.com", "http://m.example.com", true, true, true, false, false)
+        assertEquals(null, response)
     }
 
     @Test
