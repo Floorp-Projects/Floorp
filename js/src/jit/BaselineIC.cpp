@@ -1717,12 +1717,12 @@ bool ICTypeUpdate_SingleObject::Compiler::generateStubCode(
 bool ICTypeUpdate_ObjectGroup::Compiler::generateStubCode(
     MacroAssembler& masm) {
   Label failure;
-  masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+  Register scratch1 = R1.scratchReg();
+  masm.fallibleUnboxObject(R0, scratch1, &failure);
 
   // Guard on the object's ObjectGroup.
   Address expectedGroup(ICStubReg, ICTypeUpdate_ObjectGroup::offsetOfGroup());
-  Register scratch1 = R1.scratchReg();
-  masm.unboxObject(R0, scratch1);
   masm.branchTestObjGroup(Assembler::NotEqual, scratch1, expectedGroup,
                           scratch1, R0.payloadOrValueReg(), &failure);
 

@@ -1873,8 +1873,7 @@ void CodeGenerator::visitValueToObject(LValueToObject* lir) {
   OutOfLineCode* ool = oolCallVM<Fn, ToObjectSlow>(
       lir, ArgList(input, Imm32(0)), StoreRegisterTo(output));
 
-  masm.branchTestObject(Assembler::NotEqual, input, ool->entry());
-  masm.unboxObject(input, output);
+  masm.fallibleUnboxObject(input, output, ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -13384,8 +13383,7 @@ void CodeGenerator::visitIsCallableV(LIsCallableV* ins) {
   Register temp = ToRegister(ins->temp());
 
   Label notObject;
-  masm.branchTestObject(Assembler::NotEqual, val, &notObject);
-  masm.unboxObject(val, temp);
+  masm.fallibleUnboxObject(val, temp, &notObject);
 
   OutOfLineIsCallable* ool = new (alloc()) OutOfLineIsCallable(temp, output);
   addOutOfLineCode(ool, ins->mir());
@@ -13498,8 +13496,7 @@ void CodeGenerator::visitIsArrayV(LIsArrayV* lir) {
   Register temp = ToRegister(lir->temp());
 
   Label notArray;
-  masm.branchTestObject(Assembler::NotEqual, val, &notArray);
-  masm.unboxObject(val, temp);
+  masm.fallibleUnboxObject(val, temp, &notArray);
 
   using Fn = bool (*)(JSContext*, HandleObject, bool*);
   OutOfLineCode* ool = oolCallVM<Fn, js::IsArrayFromJit>(

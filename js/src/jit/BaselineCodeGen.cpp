@@ -6130,8 +6130,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   // Store the arguments object if there is one.
   Label noArgsObj;
   Address argsObjSlot(genObj, AbstractGeneratorObject::offsetOfArgsObjSlot());
-  masm.branchTestUndefined(Assembler::Equal, argsObjSlot, &noArgsObj);
-  masm.unboxObject(argsObjSlot, scratch2);
+  masm.fallibleUnboxObject(argsObjSlot, scratch2, &noArgsObj);
   {
     masm.storePtr(scratch2, frame.addressOfArgsObj());
     masm.or32(Imm32(BaselineFrame::HAS_ARGS_OBJ), frame.addressOfFlags());
@@ -6142,10 +6141,8 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   Label noExprStack;
   Address exprStackSlot(genObj,
                         AbstractGeneratorObject::offsetOfExpressionStackSlot());
-  masm.branchTestNull(Assembler::Equal, exprStackSlot, &noExprStack);
+  masm.fallibleUnboxObject(exprStackSlot, scratch2, &noExprStack);
   {
-    masm.unboxObject(exprStackSlot, scratch2);
-
     Register initLength = regs.takeAny();
     masm.loadPtr(Address(scratch2, NativeObject::offsetOfElements()), scratch2);
     masm.load32(Address(scratch2, ObjectElements::offsetOfInitializedLength()),

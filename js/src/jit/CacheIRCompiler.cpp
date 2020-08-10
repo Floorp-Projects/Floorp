@@ -2021,8 +2021,7 @@ bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
   masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
   emitLoadStubField(slot, scratch2);
   BaseObjectSlotIndex expectedSlot(scratch1, scratch2);
-  masm.branchTestObject(Assembler::NotEqual, expectedSlot, failure->label());
-  masm.unboxObject(expectedSlot, scratch1);
+  masm.fallibleUnboxObject(expectedSlot, scratch1, failure->label());
   masm.branchPtr(Assembler::NotEqual, expectedObject, scratch1,
                  failure->label());
 
@@ -3540,10 +3539,8 @@ bool CacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto(
   Address expandoAddress(scratch, NativeObject::getFixedSlotOffset(
                                       GetXrayJitInfo()->holderExpandoSlot));
 
-  masm.branchTestObject(Assembler::NotEqual, holderAddress, failure->label());
-  masm.unboxObject(holderAddress, scratch);
-  masm.branchTestObject(Assembler::NotEqual, expandoAddress, failure->label());
-  masm.unboxObject(expandoAddress, scratch);
+  masm.fallibleUnboxObject(holderAddress, scratch, failure->label());
+  masm.fallibleUnboxObject(expandoAddress, scratch, failure->label());
 
   // Unwrap the expando before checking its shape.
   masm.loadPtr(Address(scratch, ProxyObject::offsetOfReservedSlots()), scratch);
@@ -3582,8 +3579,7 @@ bool CacheIRCompiler::emitGuardXrayNoExpando(ObjOperandId objId) {
                                       GetXrayJitInfo()->holderExpandoSlot));
 
   Label done;
-  masm.branchTestObject(Assembler::NotEqual, holderAddress, &done);
-  masm.unboxObject(holderAddress, scratch);
+  masm.fallibleUnboxObject(holderAddress, scratch, &done);
   masm.branchTestObject(Assembler::Equal, expandoAddress, failure->label());
   masm.bind(&done);
 
@@ -6443,8 +6439,7 @@ void CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val,
     case ReferenceType::TYPE_OBJECT: {
       EmitPreBarrier(masm, dest, MIRType::Object);
       Label isNull, done;
-      masm.branchTestObject(Assembler::NotEqual, val, &isNull);
-      masm.unboxObject(val, scratch);
+      masm.fallibleUnboxObject(val, scratch, &isNull);
       masm.storePtr(scratch, dest);
       masm.jump(&done);
       masm.bind(&isNull);
@@ -6814,10 +6809,9 @@ bool CacheIRCompiler::emitLoadInstanceOfObjectResult(ValOperandId lhsId,
   }
 
   Label returnFalse, returnTrue, done;
-  masm.branchTestObject(Assembler::NotEqual, lhs, &returnFalse);
+  masm.fallibleUnboxObject(lhs, scratch, &returnFalse);
 
   // LHS is an object. Load its proto.
-  masm.unboxObject(lhs, scratch);
   masm.loadObjProto(scratch, scratch);
   {
     // Walk the proto chain until we either reach the target object,
@@ -7159,10 +7153,9 @@ bool CacheIRCompiler::emitCallIsSuspendedGeneratorResult(ValOperandId valId) {
 
   // Test if it's an object.
   Label returnFalse, done;
-  masm.branchTestObject(Assembler::NotEqual, input, &returnFalse);
+  masm.fallibleUnboxObject(input, scratch, &returnFalse);
 
   // Test if it's a GeneratorObject.
-  masm.unboxObject(input, scratch);
   masm.branchTestObjClass(Assembler::NotEqual, scratch,
                           &GeneratorObject::class_, scratch2, scratch,
                           &returnFalse);

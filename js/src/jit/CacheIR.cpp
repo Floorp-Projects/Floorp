@@ -8488,8 +8488,7 @@ void jit::LoadShapeWrapperContents(MacroAssembler& masm, Register obj,
   masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), dst);
   Address privateAddr(dst,
                       js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
-  masm.branchTestObject(Assembler::NotEqual, privateAddr, failure);
-  masm.unboxObject(privateAddr, dst);
+  masm.fallibleUnboxObject(privateAddr, dst, failure);
   masm.unboxNonDouble(
       Address(dst, NativeObject::getFixedSlotOffset(SHAPE_CONTAINER_SLOT)), dst,
       JSVAL_TYPE_PRIVATE_GCTHING);
