@@ -15,7 +15,6 @@
 #include "mozStorageBindingParamsArray.h"
 #include "mozStorageConnection.h"
 #include "StorageBaseStatementInternal.h"
-#include "mozStoragePrivateHelpers.h"
 
 struct sqlite3_stmt;
 
@@ -29,18 +28,16 @@ class StatementData {
                 StorageBaseStatementInternal* aStatementOwner)
       : mStatement(aStatement),
         mParamsArray(aParamsArray),
-        mQueryStatusRecorded(false),
         mStatementOwner(aStatementOwner) {
     MOZ_ASSERT(mStatementOwner, "Must have a statement owner!");
   }
   StatementData(const StatementData& aSource)
       : mStatement(aSource.mStatement),
         mParamsArray(aSource.mParamsArray),
-        mQueryStatusRecorded(false),
         mStatementOwner(aSource.mStatementOwner) {
     MOZ_ASSERT(mStatementOwner, "Must have a statement owner!");
   }
-  StatementData() : mStatement(nullptr), mQueryStatusRecorded(false) {}
+  StatementData() : mStatement(nullptr) {}
   ~StatementData() {
     // We need to ensure that mParamsArray is released on the main thread,
     // as the binding arguments may be XPConnect values, which are safe
@@ -56,7 +53,6 @@ class StatementData {
   inline int getSqliteStatement(sqlite3_stmt** _stmt) {
     if (!mStatement) {
       int rc = mStatementOwner->getAsyncStatement(&mStatement);
-      MaybeRecordQueryStatus(rc);
       NS_ENSURE_TRUE(rc == SQLITE_OK, rc);
     }
     *_stmt = mStatement;
@@ -78,10 +74,6 @@ class StatementData {
       (void)::sqlite3_reset(mStatement);
       (void)::sqlite3_clear_bindings(mStatement);
       mStatement = nullptr;
-
-      if (!mQueryStatusRecorded) {
-        mStatementOwner->getOwner()->RecordQueryStatus(SQLITE_OK);
-      }
     }
   }
 
@@ -116,19 +108,9 @@ class StatementData {
     return mParamsArray ? mParamsArray->length() : 1;
   }
 
-  void MaybeRecordQueryStatus(int srv) {
-    if (mQueryStatusRecorded || !isErrorCode(srv)) {
-      return;
-    }
-
-    mStatementOwner->getOwner()->RecordQueryStatus(srv);
-    mQueryStatusRecorded = true;
-  }
-
  private:
   sqlite3_stmt* mStatement;
   RefPtr<BindingParamsArray> mParamsArray;
-  bool mQueryStatusRecorded;
 
   /**
    * We hold onto a reference of the statement's owner so it doesn't get

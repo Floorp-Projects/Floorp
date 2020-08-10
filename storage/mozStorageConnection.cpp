@@ -72,9 +72,6 @@ mozilla::LazyLogModule gStorageLog("mozStorage");
 namespace mozilla::storage {
 
 using mozilla::dom::quota::QuotaObject;
-using mozilla::Telemetry::AccumulateCategoricalKeyed;
-using mozilla::Telemetry::LABELS_SQLITE_STORE_OPEN;
-using mozilla::Telemetry::LABELS_SQLITE_STORE_QUERY;
 
 const char* GetVFSName(bool);
 
@@ -562,103 +559,17 @@ nsIEventTarget* Connection::getAsyncExecutionTarget() {
   return mAsyncExecutionThread;
 }
 
-void Connection::RecordOpenStatus(nsresult rv) {
-  nsCString histogramKey = mTelemetryFilename;
-
-  if (histogramKey.IsEmpty()) {
-    histogramKey.AssignLiteral("unknown");
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::success);
-    return;
-  }
-
-  switch (rv) {
-    case NS_ERROR_FILE_CORRUPTED:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::corrupt);
-      break;
-    case NS_ERROR_STORAGE_IOERR:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::diskio);
-      break;
-    case NS_ERROR_FILE_ACCESS_DENIED:
-    case NS_ERROR_FILE_IS_LOCKED:
-    case NS_ERROR_FILE_READ_ONLY:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::access);
-      break;
-    case NS_ERROR_FILE_NO_DEVICE_SPACE:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::diskspace);
-      break;
-    default:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::failure);
-  }
-}
-
-void Connection::RecordQueryStatus(int srv) {
-  nsCString histogramKey = mTelemetryFilename;
-
-  if (histogramKey.IsEmpty()) {
-    histogramKey.AssignLiteral("unknown");
-  }
-
-  switch (srv) {
-    case SQLITE_OK:
-    case SQLITE_ROW:
-    case SQLITE_DONE:
-
-    // Note that these are returned when we intentionally cancel a statement so they
-    // aren't indicating a failure.
-    case SQLITE_ABORT:
-    case SQLITE_INTERRUPT:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_QUERY::success);
-      break;
-    case SQLITE_CORRUPT:
-    case SQLITE_NOTADB:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_QUERY::corrupt);
-      break;
-    case SQLITE_PERM:
-    case SQLITE_CANTOPEN:
-    case SQLITE_LOCKED:
-    case SQLITE_READONLY:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_QUERY::access);
-      break;
-    case SQLITE_IOERR:
-    case SQLITE_NOLFS:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_QUERY::diskio);
-      break;
-    case SQLITE_FULL:
-    case SQLITE_TOOBIG:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::diskspace);
-      break;
-    case SQLITE_CONSTRAINT:
-    case SQLITE_RANGE:
-    case SQLITE_MISMATCH:
-    case SQLITE_MISUSE:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::misuse);
-      break;
-    case SQLITE_BUSY:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::busy);
-      break;
-    default:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_QUERY::failure);
-  }
-}
-
 nsresult Connection::initialize() {
   NS_ASSERTION(!connectionReady(),
                "Initialize called on already opened database!");
   MOZ_ASSERT(!mIgnoreLockingMode, "Can't ignore locking on an in-memory db.");
   AUTO_PROFILER_LABEL("Connection::initialize", OTHER);
 
-  mTelemetryFilename.AssignLiteral(":memory:");
-
   // in memory database requested, sqlite uses a magic file name
   int srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, GetVFSName(true));
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
-    nsresult rv = convertResultCode(srv);
-    RecordOpenStatus(rv);
-    return rv;
+    return convertResultCode(srv);
   }
 
 #ifdef MOZ_SQLITE_FTS3_TOKENIZER
@@ -672,7 +583,6 @@ nsresult Connection::initialize() {
   // database.
 
   nsresult rv = initializeInternal();
-  RecordOpenStatus(rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -687,7 +597,6 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
   // Do not set mFileURL here since this is database does not have an associated
   // URL.
   mDatabaseFile = aDatabaseFile;
-  aDatabaseFile->GetNativeLeafName(mTelemetryFilename);
 
   nsAutoString path;
   nsresult rv = aDatabaseFile->GetPath(path);
@@ -717,9 +626,7 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
   }
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
-    rv = convertResultCode(srv);
-    RecordOpenStatus(rv);
-    return rv;
+    return convertResultCode(srv);
   }
 
   rv = initializeInternal();
@@ -735,14 +642,12 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
       rv = initializeInternal();
     }
   }
-
-  RecordOpenStatus(rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-nsresult Connection::initialize(nsIFileURL* aFileURL, const nsACString& aTelemetryFilename) {
+nsresult Connection::initialize(nsIFileURL* aFileURL) {
   NS_ASSERTION(aFileURL, "Passed null file URL!");
   NS_ASSERTION(!connectionReady(),
                "Initialize called on already opened database!");
@@ -756,12 +661,6 @@ nsresult Connection::initialize(nsIFileURL* aFileURL, const nsACString& aTelemet
   mFileURL = aFileURL;
   mDatabaseFile = databaseFile;
 
-  if (!aTelemetryFilename.IsEmpty()) {
-    mTelemetryFilename = aTelemetryFilename;
-  } else {
-    databaseFile->GetNativeLeafName(mTelemetryFilename);
-  }
-
   nsAutoCString spec;
   rv = aFileURL->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -771,13 +670,10 @@ nsresult Connection::initialize(nsIFileURL* aFileURL, const nsACString& aTelemet
       ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName(exclusive));
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
-    rv = convertResultCode(srv);
-    RecordOpenStatus(rv);
-    return rv;
+    return convertResultCode(srv);
   }
 
   rv = initializeInternal();
-  RecordOpenStatus(rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -796,7 +692,24 @@ nsresult Connection::initializeInternal() {
              "SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER should be enabled");
 #endif
 
-  MOZ_ASSERT(!mTelemetryFilename.IsEmpty(), "A telemetry filename should have been set by now.");
+  if (mFileURL) {
+    const char* dbPath = ::sqlite3_db_filename(mDBConn, "main");
+    MOZ_ASSERT(dbPath);
+
+    const char* telemetryFilename =
+        ::sqlite3_uri_parameter(dbPath, "telemetryFilename");
+    if (telemetryFilename) {
+      if (NS_WARN_IF(*telemetryFilename == '\0')) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      mTelemetryFilename = telemetryFilename;
+    }
+  }
+
+  if (mTelemetryFilename.IsEmpty()) {
+    mTelemetryFilename = getFilename();
+    MOZ_ASSERT(!mTelemetryFilename.IsEmpty());
+  }
 
   // Properly wrap the database handle's mutex.
   sharedDBMutex.initWithMutex(sqlite3_db_mutex(mDBConn));
@@ -930,16 +843,11 @@ nsresult Connection::databaseElementExists(
 
   sqlite3_stmt* stmt;
   int srv = prepareStatement(mDBConn, query, &stmt);
-  if (srv != SQLITE_OK) {
-    RecordQueryStatus(srv);
-    return convertResultCode(srv);
-  }
+  if (srv != SQLITE_OK) return convertResultCode(srv);
 
   srv = stepStatement(mDBConn, stmt);
   // we just care about the return value from step
   (void)::sqlite3_finalize(stmt);
-
-  RecordQueryStatus(srv);
 
   if (srv == SQLITE_ROW) {
     *_exists = true;
@@ -1160,7 +1068,11 @@ nsresult Connection::internalClose(sqlite3* aNativeConnection) {
 }
 
 nsCString Connection::getFilename() {
-  return mTelemetryFilename;
+  nsCString leafname(":memory:");
+  if (mDatabaseFile) {
+    (void)mDatabaseFile->GetNativeLeafName(leafname);
+  }
+  return leafname;
 }
 
 int Connection::stepStatement(sqlite3* aNativeConnection,
@@ -1277,7 +1189,6 @@ int Connection::executeSql(sqlite3* aNativeConnection, const char* aSqlString) {
   TimeStamp startTime = TimeStamp::Now();
   int srv =
       ::sqlite3_exec(aNativeConnection, aSqlString, nullptr, nullptr, nullptr);
-  RecordQueryStatus(srv);
 
   // Report very slow SQL statements to Telemetry
   TimeDuration duration = TimeStamp::Now() - startTime;
@@ -1532,7 +1443,7 @@ Connection::AsyncClone(bool aReadOnly,
 }
 
 nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
-  nsresult rv = mFileURL ? aClone->initialize(mFileURL, mTelemetryFilename)
+  nsresult rv = mFileURL ? aClone->initialize(mFileURL)
                          : aClone->initialize(mDatabaseFile);
   if (NS_FAILED(rv)) {
     return rv;

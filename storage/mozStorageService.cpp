@@ -596,7 +596,6 @@ Service::OpenUnsharedDatabase(nsIFile* aDatabaseFile,
 
 NS_IMETHODIMP
 Service::OpenDatabaseWithFileURL(nsIFileURL* aFileURL,
-                                 const nsACString& aTelemetryFilename,
                                  mozIStorageConnection** _connection) {
   NS_ENSURE_ARG(aFileURL);
 
@@ -606,7 +605,7 @@ Service::OpenDatabaseWithFileURL(nsIFileURL* aFileURL,
               SQLITE_OPEN_CREATE | SQLITE_OPEN_URI;
   RefPtr<Connection> msc = new Connection(this, flags, Connection::SYNCHRONOUS);
 
-  nsresult rv = msc->initialize(aFileURL, aTelemetryFilename);
+  nsresult rv = msc->initialize(aFileURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   msc.forget(_connection);
