@@ -25,6 +25,7 @@
 // Header for low level row functions.
 #include "yuv_row.h"
 #include "mozilla/SSE.h"
+#include "mozilla/IntegerRange.h"
 
 namespace mozilla {
 
@@ -69,6 +70,24 @@ libyuv::FourCC FourCCFromYUVType(YUVType aYUVType) {
   }
 }
 
+int GBRPlanarToARGB(const uint8_t* src_y, int y_pitch,
+                     const uint8_t* src_u, int u_pitch,
+                     const uint8_t* src_v, int v_pitch,
+                     uint8_t* rgb_buf, int rgb_pitch,
+                     int pic_width, int pic_height) {
+  // libyuv has no native conversion function for this
+  // fixme: replace with something less awful
+  for (const auto row : IntegerRange(pic_height)) {
+    for (const auto col : IntegerRange(pic_width)) {
+      rgb_buf[rgb_pitch * row + col * 4 + 0] = src_u[u_pitch * row + col];
+      rgb_buf[rgb_pitch * row + col * 4 + 1] = src_y[y_pitch * row + col];
+      rgb_buf[rgb_pitch * row + col * 4 + 2] = src_v[v_pitch * row + col];
+      rgb_buf[rgb_pitch * row + col * 4 + 3] = 255;
+    }
+  }
+  return 0;
+}
+
 // Convert a frame of YUV to 32 bit ARGB.
 void ConvertYCbCrToRGB32(const uint8* y_buf, const uint8* u_buf,
                          const uint8* v_buf, uint8* rgb_buf, int pic_x,
@@ -110,6 +129,9 @@ void ConvertYCbCrToRGB32(const uint8* y_buf, const uint8* u_buf,
           break;
         case YUVColorSpace::BT709:
           fConvertYUVToARGB = libyuv::H444ToARGB;
+          break;
+        case YUVColorSpace::Identity:
+          fConvertYUVToARGB = GBRPlanarToARGB;
           break;
         default:
           fConvertYUVToARGB = libyuv::I444ToARGB;
