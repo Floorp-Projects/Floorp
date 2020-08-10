@@ -1,0 +1,5 @@
+[android-components](../../index.md) / [mozilla.components.browser.engine.gecko](../index.md) / [NestedGeckoView](index.md) / [dispatchNestedPreScroll](./dispatch-nested-pre-scroll.md)
+
+# dispatchNestedPreScroll
+
+`open fun dispatchNestedPreScroll(dx: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, dy: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, consumed: `[`IntArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int-array/index.html)`?, offsetInWindow: `[`IntArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int-array/index.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/NestedGeckoView.kt#L139)
