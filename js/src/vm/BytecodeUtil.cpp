@@ -743,6 +743,13 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
       MOZ_ASSERT(ndefs == 2);
       offsetStack[stackDepth + 1].set(offset, 1);
       break;
+
+    case JSOp::CheckPrivateField:
+      // Keep the top two values, and push one new value.
+      MOZ_ASSERT(nuses == 2);
+      MOZ_ASSERT(ndefs == 3);
+      offsetStack[stackDepth + 2].set(offset, 2);
+      break;
   }
 
 #ifdef DEBUG
@@ -2157,6 +2164,9 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOp::AsyncAwait:
       case JSOp::AsyncResolve:
         return write("PROMISE");
+
+      case JSOp::CheckPrivateField:
+        return write("HasPrivateField");
 
       default:
         break;
