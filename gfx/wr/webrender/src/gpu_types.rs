@@ -8,6 +8,7 @@ use api::units::*;
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use crate::internal_types::FastHashMap;
+use crate::prim_store::ClipData;
 use crate::render_task::RenderTaskAddress;
 use crate::renderer::ShaderColorMode;
 use std::i32;
@@ -168,6 +169,62 @@ pub struct BorderInstance {
     pub clip_params: [f32; 8],
 }
 
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub struct ClipMaskInstanceCommon {
+    pub sub_rect: DeviceRect,
+    pub task_origin: DevicePoint,
+    pub screen_origin: DevicePoint,
+    pub device_pixel_scale: f32,
+    pub clip_transform_id: TransformPaletteId,
+    pub prim_transform_id: TransformPaletteId,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub struct ClipMaskInstanceImage {
+    pub common: ClipMaskInstanceCommon,
+    pub tile_rect: LayoutRect,
+    pub resource_address: GpuCacheAddress,
+    pub local_rect: LayoutRect,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub struct ClipMaskInstanceRect {
+    pub common: ClipMaskInstanceCommon,
+    pub local_pos: LayoutPoint,
+    pub clip_data: ClipData,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub struct BoxShadowData {
+    pub src_rect_size: LayoutSize,
+    pub clip_mode: i32,
+    pub stretch_mode_x: i32,
+    pub stretch_mode_y: i32,
+    pub dest_rect: LayoutRect,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub struct ClipMaskInstanceBoxShadow {
+    pub common: ClipMaskInstanceCommon,
+    pub resource_address: GpuCacheAddress,
+    pub shadow_data: BoxShadowData,
+}
+
 /// A clipping primitive drawn into the clipping mask.
 /// Could be an image or a rectangle, which defines the
 /// way `address` is treated.
@@ -186,16 +243,6 @@ pub struct ClipMaskInstance {
     pub task_origin: DevicePoint,
     pub screen_origin: DevicePoint,
     pub device_pixel_scale: f32,
-}
-
-/// A border corner dot or dash drawn into the clipping mask.
-#[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[repr(C)]
-pub struct ClipMaskBorderCornerDotDash {
-    pub clip_mask_instance: ClipMaskInstance,
-    pub dot_dash_data: [f32; 8],
 }
 
 // 16 bytes per instance should be enough for anyone!

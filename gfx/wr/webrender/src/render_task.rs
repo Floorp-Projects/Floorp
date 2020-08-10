@@ -13,7 +13,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
 use crate::picture::ResolvedSurfaceTexture;
-use crate::prim_store::PictureIndex;
+use crate::prim_store::{ClipData, PictureIndex};
 use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
 #[cfg(feature = "debugger")]
@@ -129,9 +129,9 @@ pub struct CacheMaskTask {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ClipRegionTask {
-    pub clip_data_address: GpuCacheAddress,
     pub local_pos: LayoutPoint,
     pub device_pixel_scale: DevicePixelScale,
+    pub clip_data: ClipData,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -553,7 +553,6 @@ impl RenderTask {
                         .clone();
                     let blur_radius_dp = cache_key.blur_radius_dp as f32;
                     let device_pixel_scale = DevicePixelScale::new(cache_key.device_pixel_scale.to_f32_px());
-                    let clip_data_address = gpu_cache.get_address(&source.clip_data_handle);
 
                     // Request a cacheable render task with a blurred, minimal
                     // sized box-shadow rect.
@@ -567,11 +566,17 @@ impl RenderTask {
                         None,
                         false,
                         |render_tasks| {
+                            let clip_data = ClipData::rounded_rect(
+                                source.minimal_shadow_rect.size,
+                                &source.shadow_radius,
+                                ClipMode::Clip,
+                            );
+
                             // Draw the rounded rect.
                             let mask_task_id = render_tasks.add().init(RenderTask::new_rounded_rect_mask(
                                 cache_size,
-                                clip_data_address,
                                 source.minimal_shadow_rect.origin,
+                                clip_data,
                                 device_pixel_scale,
                                 fb_config,
                             ));
@@ -630,8 +635,8 @@ impl RenderTask {
 
     pub fn new_rounded_rect_mask(
         size: DeviceIntSize,
-        clip_data_address: GpuCacheAddress,
         local_pos: LayoutPoint,
+        clip_data: ClipData,
         device_pixel_scale: DevicePixelScale,
         fb_config: &FrameBuilderConfig,
     ) -> Self {
@@ -645,9 +650,9 @@ impl RenderTask {
             size,
             TaskDependencies::new(),
             RenderTaskKind::ClipRegion(ClipRegionTask {
-                clip_data_address,
                 local_pos,
                 device_pixel_scale,
+                clip_data,
             }),
             clear_mode,
         )
