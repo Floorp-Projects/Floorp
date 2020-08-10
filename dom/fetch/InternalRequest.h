@@ -54,6 +54,7 @@ namespace dom {
  *                   | TYPE_INTERNAL_SERVICE_WORKER,
  *                   | TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS,
  *                   | TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT
+ *                   | TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT
  * sharedworker      | TYPE_INTERNAL_SHARED_WORKER
  * serviceworker     | The spec lists this as a valid value for the enum,
  *                   | however it is impossible to observe a request with this
