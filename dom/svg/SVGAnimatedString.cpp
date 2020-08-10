@@ -16,26 +16,6 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(
-    SVGAnimatedString::DOMAnimatedString, mSVGElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGAnimatedString::DOMAnimatedString)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGAnimatedString::DOMAnimatedString)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedString::DOMAnimatedString)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-static inline SVGAttrTearoffTable<SVGAnimatedString,
-                                  SVGAnimatedString::DOMAnimatedString>&
-SVGAnimatedStringTearoffTable() {
-  static SVGAttrTearoffTable<SVGAnimatedString,
-                             SVGAnimatedString::DOMAnimatedString>
-      sSVGAnimatedStringTearoffTable;
-  return sSVGAnimatedStringTearoffTable;
-}
-
 /* Implementation */
 
 void SVGAnimatedString::SetBaseValue(const nsAString& aValue,
@@ -75,22 +55,6 @@ void SVGAnimatedString::SetAnimValue(const nsAString& aValue,
     *mAnimVal = aValue;
     aSVGElement->DidAnimateString(mAttrEnum);
   }
-}
-
-already_AddRefed<DOMSVGAnimatedString> SVGAnimatedString::ToDOMAnimatedString(
-    SVGElement* aSVGElement) {
-  RefPtr<DOMAnimatedString> domAnimatedString =
-      SVGAnimatedStringTearoffTable().GetTearoff(this);
-  if (!domAnimatedString) {
-    domAnimatedString = new DOMAnimatedString(this, aSVGElement);
-    SVGAnimatedStringTearoffTable().AddTearoff(this, domAnimatedString);
-  }
-
-  return domAnimatedString.forget();
-}
-
-SVGAnimatedString::DOMAnimatedString::~DOMAnimatedString() {
-  SVGAnimatedStringTearoffTable().RemoveTearoff(mVal);
 }
 
 UniquePtr<SMILAttr> SVGAnimatedString::ToSMILAttr(SVGElement* aSVGElement) {

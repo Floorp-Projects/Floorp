@@ -14,50 +14,6 @@
 #include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
-namespace dom {
-
-// DOM wrapper class for the (DOM)SVGAnimatedString interface where the
-// wrapped class is SVGAnimatedClass.
-struct DOMAnimatedString final : public DOMSVGAnimatedString {
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
-
-  DOMAnimatedString(SVGAnimatedClass* aVal, SVGElement* aSVGElement)
-      : DOMSVGAnimatedString(aSVGElement), mVal(aVal) {}
-
-  SVGAnimatedClass* mVal;  // kept alive because it belongs to content
-
-  void GetBaseVal(nsAString& aResult) override {
-    mVal->GetBaseValue(aResult, mSVGElement);
-  }
-
-  void SetBaseVal(const nsAString& aValue) override {
-    mVal->SetBaseValue(aValue, mSVGElement, true);
-  }
-
-  void GetAnimVal(nsAString& aResult) override;
-
- private:
-  ~DOMAnimatedString() = default;
-};
-
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMAnimatedString, mSVGElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMAnimatedString)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMAnimatedString)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMAnimatedString)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-already_AddRefed<DOMSVGAnimatedString> SVGAnimatedClass::ToDOMAnimatedString(
-    SVGElement* aSVGElement) {
-  RefPtr<DOMAnimatedString> result = new DOMAnimatedString(this, aSVGElement);
-  return result.forget();
-}
-
-/* Implementation */
 
 void SVGAnimatedClass::SetBaseValue(const nsAString& aValue,
                                     SVGElement* aSVGElement, bool aDoSetAttr) {
@@ -100,11 +56,6 @@ void SVGAnimatedClass::SetAnimValue(const nsAString& aValue,
   aSVGElement->DidAnimateClass();
 }
 
-void DOMAnimatedString::GetAnimVal(nsAString& aResult) {
-  mSVGElement->FlushAnimations();
-  mVal->GetAnimValue(aResult, mSVGElement);
-}
-
 UniquePtr<SMILAttr> SVGAnimatedClass::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILString>(this, aSVGElement);
 }
@@ -143,5 +94,4 @@ nsresult SVGAnimatedClass::SMILString::SetAnimValue(const SMILValue& aValue) {
   return NS_OK;
 }
 
-}  // namespace dom
 }  // namespace mozilla

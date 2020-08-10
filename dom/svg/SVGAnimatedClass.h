@@ -8,8 +8,7 @@
 #define DOM_SVG_SVGANIMATEDCLASS_H_
 
 #include "nsCycleCollectionParticipant.h"
-#include "nsError.h"
-#include "nsString.h"
+#include "mozilla/SVGAnimatedClassOrString.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
@@ -21,23 +20,23 @@ class SMILValue;
 namespace dom {
 class DOMSVGAnimatedString;
 class SVGElement;
+}  // namespace dom
 
-class SVGAnimatedClass {
+class SVGAnimatedClass final : public SVGAnimatedClassOrString {
  public:
   using SVGElement = dom::SVGElement;
 
   void Init() { mAnimVal = nullptr; }
 
   void SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
-                    bool aDoSetAttr);
-  void GetBaseValue(nsAString& aValue, const SVGElement* aSVGElement) const;
+                    bool aDoSetAttr) override;
+  void GetBaseValue(nsAString& aValue,
+                    const SVGElement* aSVGElement) const override;
 
   void SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement);
-  void GetAnimValue(nsAString& aResult, const SVGElement* aSVGElement) const;
+  void GetAnimValue(nsAString& aResult,
+                    const SVGElement* aSVGElement) const override;
   bool IsAnimated() const { return !!mAnimVal; }
-
-  already_AddRefed<dom::DOMSVGAnimatedString> ToDOMAnimatedString(
-      SVGElement* aSVGElement);
 
   UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
@@ -66,7 +65,6 @@ class SVGAnimatedClass {
   };
 };
 
-}  // namespace dom
 }  // namespace mozilla
 
 #endif  // DOM_SVG_SVGANIMATEDCLASS_H_
