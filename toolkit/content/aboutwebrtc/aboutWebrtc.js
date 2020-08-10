@@ -230,7 +230,7 @@ class AecLogging extends Control {
       ...reports.map(renderPeerConnection),
     ]);
     const logDiv = renderElements("div", { className: "log" }, [
-      renderElement("span", { className: "section-heading" }, [
+      renderElements("span", { className: "section-heading" }, [
         renderText("h3", string("log_heading")),
         renderElement("button", {
           textContent: string("log_clear"),
@@ -876,7 +876,7 @@ function renderICEStats(report) {
 }
 
 function renderIceMetric(label, value) {
-  return renderElement("div", {}, [
+  return renderElements("div", {}, [
     renderText("span", `${string(label)}: `, { className: "info-label" }),
     renderText("span", value, { className: "info-body" }),
   ]);
