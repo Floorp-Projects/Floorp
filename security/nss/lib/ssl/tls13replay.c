@@ -56,8 +56,7 @@ tls13_ReleaseAntiReplayContext(SSLAntiReplayContext *ctx)
     PORT_Free(ctx);
 }
 
-/* Clear the current state and free any resources we allocated. The signature
- * here is odd to allow this to be called during shutdown. */
+/* Clear the current state and free any resources we allocated. */
 SECStatus
 SSLExp_ReleaseAntiReplayContext(SSLAntiReplayContext *ctx)
 {
