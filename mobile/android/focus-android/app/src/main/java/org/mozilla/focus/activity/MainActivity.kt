@@ -12,6 +12,7 @@ import android.util.AttributeSet
 import android.view.View
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
@@ -267,8 +268,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val browserFragment = BrowserFragment.createForSession(currentSession)
         val isNewSession = previousSessionCount < components.sessionManager.sessions.count() && previousSessionCount > 0
 
-        if ((currentSession.source == Session.Source.ACTION_SEND ||
-                currentSession.source == Session.Source.HOME_SCREEN) && isNewSession) {
+        if ((currentSession.source == SessionState.Source.ACTION_SEND ||
+                currentSession.source == SessionState.Source.HOME_SCREEN) && isNewSession) {
             browserFragment.openedFromExternalLink = true
         }
 

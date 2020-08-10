@@ -56,6 +56,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.utils.ColorUtils
@@ -941,7 +942,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             // Go back in web history
             goBack()
         } else {
-            if (session.source == Session.Source.ACTION_VIEW || session.isCustomTabSession()) {
+            if (session.source == SessionState.Source.ACTION_VIEW || session.isCustomTabSession()) {
                 TelemetryWrapper.eraseBackToAppEvent()
 
                 // This session has been started from a VIEW intent. Go back to the previous app
@@ -1140,13 +1141,13 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             }
 
             R.id.help -> {
-                val session = Session(SupportUtils.HELP_URL, source = Session.Source.MENU)
+                val session = Session(SupportUtils.HELP_URL, source = SessionState.Source.MENU)
                 requireComponents.sessionManager.add(session, selected = true)
             }
 
             R.id.help_trackers -> {
                 val url = SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.TRACKERS)
-                val session = Session(url, source = Session.Source.MENU)
+                val session = Session(url, source = SessionState.Source.MENU)
 
                 requireComponents.sessionManager.add(session, selected = true)
             }
@@ -1163,7 +1164,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
             R.id.report_site_issue -> {
                 val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, url)
-                val session = Session(reportUrl, source = Session.Source.MENU)
+                val session = Session(reportUrl, source = SessionState.Source.MENU)
                 requireComponents.sessionManager.add(session, selected = true)
 
                 TelemetryWrapper.reportSiteIssueEvent()

@@ -33,6 +33,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
@@ -159,7 +160,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
             override fun onClick(textView: View) {
                 val context = textView.context
                 val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.SEARCH_SUGGESTIONS)
-                val session = Session(url, source = Session.Source.MENU)
+                val session = Session(url, source = SessionState.Source.MENU)
                 context.components.sessionManager.add(session, selected = true)
             }
 

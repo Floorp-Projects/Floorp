@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
 import mozilla.components.feature.customtabs.isCustomTabIntent
 import mozilla.components.support.utils.SafeIntent
@@ -74,7 +75,7 @@ class IntentProcessor(
                             intent.getBooleanExtra(HomeScreen.REQUEST_DESKTOP, false)
 
                         createSession(
-                            Session.Source.HOME_SCREEN,
+                            SessionState.Source.HOME_SCREEN,
                             intent,
                             intent.dataString ?: "",
                             blockingEnabled,
@@ -82,12 +83,12 @@ class IntentProcessor(
                         )
                     }
                     intent.hasExtra(TextActionActivity.EXTRA_TEXT_SELECTION) -> createSession(
-                        Session.Source.TEXT_SELECTION,
+                        SessionState.Source.TEXT_SELECTION,
                         intent,
                         intent.dataString ?: ""
                     )
                     else -> createSession(
-                        Session.Source.ACTION_VIEW,
+                        SessionState.Source.ACTION_VIEW,
                         intent,
                         intent.dataString ?: ""
                     )
@@ -103,15 +104,15 @@ class IntentProcessor(
                 return if (!UrlUtils.isUrl(dataString)) {
                     val bestURL = WebURLFinder(dataString).bestWebURL()
                     if (!TextUtils.isEmpty(bestURL)) {
-                        createSession(Session.Source.ACTION_SEND, bestURL ?: "")
+                        createSession(SessionState.Source.ACTION_SEND, bestURL ?: "")
                     } else {
                         createSearchSession(
-                            Session.Source.ACTION_SEND,
+                            SessionState.Source.ACTION_SEND,
                             UrlUtils.createSearchUrl(context, dataString),
                             dataString ?: "")
                     }
                 } else {
-                    createSession(Session.Source.ACTION_SEND, dataString ?: "")
+                    createSession(SessionState.Source.ACTION_SEND, dataString ?: "")
                 }
             }
 
@@ -119,22 +120,22 @@ class IntentProcessor(
         }
     }
 
-    private fun createSession(source: Session.Source, url: String): Session {
+    private fun createSession(source: SessionState.Source, url: String): Session {
         return Session(url, source = source).apply {
             sessionManager.add(this, selected = true)
         }
     }
 
-    private fun createSearchSession(source: Session.Source, url: String, searchTerms: String): Session {
+    private fun createSearchSession(source: SessionState.Source, url: String, searchTerms: String): Session {
         return Session(url, source = source).apply {
             this.searchTerms = searchTerms
             sessionManager.add(this, selected = true)
         }
     }
 
-    private fun createSession(source: Session.Source, intent: SafeIntent, url: String): Session {
+    private fun createSession(source: SessionState.Source, intent: SafeIntent, url: String): Session {
         return if (isCustomTabIntent(intent.unsafe)) {
-            Session(url, source = Session.Source.CUSTOM_TAB).apply {
+            Session(url, source = SessionState.Source.CUSTOM_TAB).apply {
                 customTabConfig = createCustomTabConfigFromIntent(intent.unsafe, context.resources)
                 sessionManager.add(this, selected = false)
             }
@@ -146,14 +147,14 @@ class IntentProcessor(
     }
 
     private fun createSession(
-        source: Session.Source,
+        source: SessionState.Source,
         intent: SafeIntent,
         url: String,
         blockingEnabled: Boolean,
         requestDesktop: Boolean
     ): Session {
         val session = if (isCustomTabIntent(intent)) {
-            Session(url, source = Session.Source.CUSTOM_TAB).apply {
+            Session(url, source = SessionState.Source.CUSTOM_TAB).apply {
                 customTabConfig = createCustomTabConfigFromIntent(intent.unsafe, context.resources)
             }
         } else {

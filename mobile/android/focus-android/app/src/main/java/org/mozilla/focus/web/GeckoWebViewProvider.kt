@@ -20,15 +20,12 @@ import android.view.View
 import android.webkit.WebSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.support.ktx.android.util.Base64
-import org.json.JSONException
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedWebViewState
@@ -37,7 +34,6 @@ import org.mozilla.focus.gecko.NestedGeckoView
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.IntentUtils
-import org.mozilla.focus.utils.MobileMetricsPingStorage
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.webview.SystemWebView
@@ -88,7 +84,6 @@ class GeckoWebViewProvider : IWebViewProvider {
     private fun createGeckoRuntime(context: Context) {
         if (geckoRuntime == null) {
             val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
-            runtimeSettingsBuilder.useMultiprocess(true)
             runtimeSettingsBuilder.contentBlocking(ContentBlocking.Settings.Builder()
                     .safeBrowsing(ContentBlocking.SafeBrowsing.MALWARE or ContentBlocking.SafeBrowsing.PHISHING)
                     .build())
@@ -202,8 +197,6 @@ class GeckoWebViewProvider : IWebViewProvider {
             if (job.isCancelled) {
                 job = Job()
             }
-
-            storeTelemetrySnapshots()
         }
 
         override fun stopLoading() {
@@ -694,28 +687,6 @@ class GeckoWebViewProvider : IWebViewProvider {
                     LocalizedContent.URL_ABOUT
             geckoSession.loadData(data.toByteArray(Charsets.UTF_8), mimeType)
             currentUrl = historyURL
-        }
-
-        private fun storeTelemetrySnapshots() {
-            val storage = MobileMetricsPingStorage(context)
-            if (!storage.shouldStoreMetrics()) return
-
-            @Suppress("DEPRECATION")
-            geckoRuntime!!.telemetry.getSnapshots(true).then({ value ->
-                launch(IO) {
-                    try {
-                        value?.also {
-                            storage.save(it)
-                        }
-                    } catch (e: JSONException) {
-                        Log.e("getSnapshots failed", e.message)
-                    }
-                }
-
-                GeckoResult<Void>()
-            }, {
-                GeckoResult<Void>()
-            })
         }
 
         override fun releaseGeckoSession() {

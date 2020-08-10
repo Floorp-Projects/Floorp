@@ -36,6 +36,7 @@ import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteResult
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
@@ -430,7 +431,7 @@ class UrlInputFragment :
                 WhatsNew.userViewedWhatsNew(it)
 
                 val url = SupportUtils.getSumoURLForTopic(it, SupportUtils.SumoTopic.WHATS_NEW)
-                val session = Session(url, source = Session.Source.MENU)
+                val session = Session(url, source = SessionState.Source.MENU)
 
                 requireComponents.sessionManager.add(session, selected = true)
             }
@@ -438,7 +439,7 @@ class UrlInputFragment :
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
 
             R.id.help -> {
-                val session = Session(SupportUtils.HELP_URL, source = Session.Source.MENU)
+                val session = Session(SupportUtils.HELP_URL, source = SessionState.Source.MENU)
                 requireComponents.sessionManager.add(session, selected = true)
             }
 
@@ -761,7 +762,7 @@ class UrlInputFragment :
                 .remove(this)
                 .commit()
         } else {
-            val session = Session(url, source = Session.Source.USER_ENTERED)
+            val session = Session(url, source = SessionState.Source.USER_ENTERED)
             if (!searchTerms.isNullOrEmpty()) {
                 session.searchTerms = searchTerms
             }

@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.preference.Preference
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InfoActivity
 import org.mozilla.focus.ext.components
@@ -55,7 +56,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
                 startActivity(intent)
             }
             resources.getString(R.string.pref_key_help) -> run {
-                val session = Session(SupportUtils.HELP_URL, source = Session.Source.MENU)
+                val session = Session(SupportUtils.HELP_URL, source = SessionState.Source.MENU)
                 activity.components.sessionManager.add(session, true)
                 activity.finish()
             }
@@ -69,7 +70,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
                 else
                     SupportUtils.PRIVACY_NOTICE_URL
 
-                val session = Session(url, source = Session.Source.MENU)
+                val session = Session(url, source = SessionState.Source.MENU)
                 activity.components.sessionManager.add(session, true)
                 activity.finish()
             }

@@ -26,6 +26,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.open.OpenWithFragment
@@ -185,7 +186,7 @@ object WebContextMenu {
                 }
                 R.id.menu_open_in_focus -> {
                     // Open selected link in Focus and navigate there
-                    val newSession = Session(hitTarget.linkURL, source = Session.Source.MENU)
+                    val newSession = Session(hitTarget.linkURL, source = SessionState.Source.MENU)
                     context.components.sessionManager.add(newSession, selected = true)
 
                     val intent = Intent(context, MainActivity::class.java)
@@ -197,7 +198,7 @@ object WebContextMenu {
                     true
                 }
                 R.id.menu_new_tab -> {
-                    val newSession = Session(hitTarget.linkURL, source = Session.Source.MENU)
+                    val newSession = Session(hitTarget.linkURL, source = SessionState.Source.MENU)
                     context.components.sessionManager.add(
                         newSession,
                         selected = Settings.getInstance(context).shouldOpenNewTabs()
