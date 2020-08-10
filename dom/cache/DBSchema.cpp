@@ -288,61 +288,60 @@ static_assert(DEFAULT_NAMESPACE == 0 && CHROME_ONLY_NAMESPACE == 1 &&
 // nsContentPolicy enum in a way that may be incompatible with the existing data
 // stored in the DOM Cache.  You would need to update the Cache database schema
 // accordingly and adjust the failing static_assert.
-static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
-                  nsIContentPolicy::TYPE_OTHER == 1 &&
-                  nsIContentPolicy::TYPE_SCRIPT == 2 &&
-                  nsIContentPolicy::TYPE_IMAGE == 3 &&
-                  nsIContentPolicy::TYPE_STYLESHEET == 4 &&
-                  nsIContentPolicy::TYPE_OBJECT == 5 &&
-                  nsIContentPolicy::TYPE_DOCUMENT == 6 &&
-                  nsIContentPolicy::TYPE_SUBDOCUMENT == 7 &&
-                  nsIContentPolicy::TYPE_REFRESH == 8 &&
-                  nsIContentPolicy::TYPE_PING == 10 &&
-                  nsIContentPolicy::TYPE_XMLHTTPREQUEST == 11 &&
-                  nsIContentPolicy::TYPE_DATAREQUEST == 11 &&
-                  nsIContentPolicy::TYPE_OBJECT_SUBREQUEST == 12 &&
-                  nsIContentPolicy::TYPE_DTD == 13 &&
-                  nsIContentPolicy::TYPE_FONT == 14 &&
-                  nsIContentPolicy::TYPE_MEDIA == 15 &&
-                  nsIContentPolicy::TYPE_WEBSOCKET == 16 &&
-                  nsIContentPolicy::TYPE_CSP_REPORT == 17 &&
-                  nsIContentPolicy::TYPE_XSLT == 18 &&
-                  nsIContentPolicy::TYPE_BEACON == 19 &&
-                  nsIContentPolicy::TYPE_FETCH == 20 &&
-                  nsIContentPolicy::TYPE_IMAGESET == 21 &&
-                  nsIContentPolicy::TYPE_WEB_MANIFEST == 22 &&
-                  nsIContentPolicy::TYPE_INTERNAL_SCRIPT == 23 &&
-                  nsIContentPolicy::TYPE_INTERNAL_WORKER == 24 &&
-                  nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER == 25 &&
-                  nsIContentPolicy::TYPE_INTERNAL_EMBED == 26 &&
-                  nsIContentPolicy::TYPE_INTERNAL_OBJECT == 27 &&
-                  nsIContentPolicy::TYPE_INTERNAL_FRAME == 28 &&
-                  nsIContentPolicy::TYPE_INTERNAL_IFRAME == 29 &&
-                  nsIContentPolicy::TYPE_INTERNAL_AUDIO == 30 &&
-                  nsIContentPolicy::TYPE_INTERNAL_VIDEO == 31 &&
-                  nsIContentPolicy::TYPE_INTERNAL_TRACK == 32 &&
-                  nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST == 33 &&
-                  nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE == 34 &&
-                  nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER == 35 &&
-                  nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD == 36 &&
-                  nsIContentPolicy::TYPE_INTERNAL_IMAGE == 37 &&
-                  nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD == 38 &&
-                  nsIContentPolicy::TYPE_INTERNAL_STYLESHEET == 39 &&
-                  nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD == 40 &&
-                  nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON == 41 &&
-                  nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS == 42 &&
-                  nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD == 43 &&
-                  nsIContentPolicy::TYPE_SPECULATIVE == 44 &&
-                  nsIContentPolicy::TYPE_INTERNAL_MODULE == 45 &&
-                  nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD == 46 &&
-                  nsIContentPolicy::TYPE_INTERNAL_DTD == 47 &&
-                  nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD == 48 &&
-                  nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET == 49 &&
-                  nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET == 50 &&
-                  nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD == 51 &&
-                  nsIContentPolicy::TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT ==
-                      52,
-              "nsContentPolicyType values are as expected");
+static_assert(
+    nsIContentPolicy::TYPE_INVALID == 0 && nsIContentPolicy::TYPE_OTHER == 1 &&
+        nsIContentPolicy::TYPE_SCRIPT == 2 &&
+        nsIContentPolicy::TYPE_IMAGE == 3 &&
+        nsIContentPolicy::TYPE_STYLESHEET == 4 &&
+        nsIContentPolicy::TYPE_OBJECT == 5 &&
+        nsIContentPolicy::TYPE_DOCUMENT == 6 &&
+        nsIContentPolicy::TYPE_SUBDOCUMENT == 7 &&
+        nsIContentPolicy::TYPE_REFRESH == 8 &&
+        nsIContentPolicy::TYPE_PING == 10 &&
+        nsIContentPolicy::TYPE_XMLHTTPREQUEST == 11 &&
+        nsIContentPolicy::TYPE_DATAREQUEST == 11 &&
+        nsIContentPolicy::TYPE_OBJECT_SUBREQUEST == 12 &&
+        nsIContentPolicy::TYPE_DTD == 13 && nsIContentPolicy::TYPE_FONT == 14 &&
+        nsIContentPolicy::TYPE_MEDIA == 15 &&
+        nsIContentPolicy::TYPE_WEBSOCKET == 16 &&
+        nsIContentPolicy::TYPE_CSP_REPORT == 17 &&
+        nsIContentPolicy::TYPE_XSLT == 18 &&
+        nsIContentPolicy::TYPE_BEACON == 19 &&
+        nsIContentPolicy::TYPE_FETCH == 20 &&
+        nsIContentPolicy::TYPE_IMAGESET == 21 &&
+        nsIContentPolicy::TYPE_WEB_MANIFEST == 22 &&
+        nsIContentPolicy::TYPE_INTERNAL_SCRIPT == 23 &&
+        nsIContentPolicy::TYPE_INTERNAL_WORKER == 24 &&
+        nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER == 25 &&
+        nsIContentPolicy::TYPE_INTERNAL_EMBED == 26 &&
+        nsIContentPolicy::TYPE_INTERNAL_OBJECT == 27 &&
+        nsIContentPolicy::TYPE_INTERNAL_FRAME == 28 &&
+        nsIContentPolicy::TYPE_INTERNAL_IFRAME == 29 &&
+        nsIContentPolicy::TYPE_INTERNAL_AUDIO == 30 &&
+        nsIContentPolicy::TYPE_INTERNAL_VIDEO == 31 &&
+        nsIContentPolicy::TYPE_INTERNAL_TRACK == 32 &&
+        nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST == 33 &&
+        nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE == 34 &&
+        nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER == 35 &&
+        nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD == 36 &&
+        nsIContentPolicy::TYPE_INTERNAL_IMAGE == 37 &&
+        nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD == 38 &&
+        nsIContentPolicy::TYPE_INTERNAL_STYLESHEET == 39 &&
+        nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD == 40 &&
+        nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON == 41 &&
+        nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS == 42 &&
+        nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD == 43 &&
+        nsIContentPolicy::TYPE_SPECULATIVE == 44 &&
+        nsIContentPolicy::TYPE_INTERNAL_MODULE == 45 &&
+        nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD == 46 &&
+        nsIContentPolicy::TYPE_INTERNAL_DTD == 47 &&
+        nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD == 48 &&
+        nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET == 49 &&
+        nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET == 50 &&
+        nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD == 51 &&
+        nsIContentPolicy::TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT == 52 &&
+        nsIContentPolicy::TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT == 53,
+    "nsContentPolicyType values are as expected");
 
 namespace {
 
