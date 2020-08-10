@@ -15,6 +15,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Result.h"
+#include "nsStringFwd.h"
 #include "nspr/prio.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
@@ -72,6 +73,11 @@ class IOUtils final {
 
   static already_AddRefed<Promise> Stat(GlobalObject& aGlobal,
                                         const nsAString& aPath);
+
+  static already_AddRefed<Promise> Copy(GlobalObject& aGlobal,
+                                        const nsAString& aSourcePath,
+                                        const nsAString& aDestPath,
+                                        const CopyOptions& aOptions);
 
   static bool IsAbsolutePath(const nsAString& aPath);
 
@@ -194,8 +200,45 @@ class IOUtils final {
    *
    * @return Ok if the file was moved successfully, or an error.
    */
-  static Result<Ok, IOError> MoveSync(const nsAString& aSource,
-                                      const nsAString& aDest, bool noOverwrite);
+  static Result<Ok, IOError> MoveSync(const nsAString& aSourcePath,
+                                      const nsAString& aDestPath,
+                                      bool aNoOverwrite);
+
+  /**
+   * Attempts to copy the file at |aSourcePath| to |aDestPath|.
+   *
+   * @param aSourcePath The location of the file to be copied as an absolute
+   *                    path string.
+   * @param aDestPath   The location that the file should be copied to, as an
+   *                    absolute path string.
+   *
+   * @return Ok if the operation was successful, or an error.
+   */
+  static Result<Ok, IOError> CopySync(const nsAString& aSourcePath,
+                                      const nsAString& aDestPath,
+                                      bool aNoOverWrite, bool aRecursive);
+
+  /**
+   * Provides the implementation for |CopySync| and |MoveSync|.
+   *
+   * @param aMethod      A pointer to one of |nsLocalFile::MoveTo| or |CopyTo|
+   *                     instance methods.
+   * @param aMethodName  The name of the method to the performed. Either "move"
+   *                     or "copy".
+   * @param aSource      The source file to be copied or moved.
+   * @param aDest        The destination file.
+   * @param aNoOverwrite If true, allow overwriting |aDest| during the copy or
+   *                     move. Otherwise, abort with an error if the file would
+   *                     be overwritten.
+   *
+   * @return Ok if the operation was successful, or an error.
+   */
+  template <typename CopyOrMoveFn>
+  static Result<Ok, IOError> CopyOrMoveSync(CopyOrMoveFn aMethod,
+                                            const char* aMethodName,
+                                            const RefPtr<nsLocalFile>& aSource,
+                                            const RefPtr<nsLocalFile>& aDest,
+                                            bool aNoOverwrite);
 
   /**
    * Attempts to remove the file located at |aPath|.
@@ -242,9 +285,6 @@ class IOUtils final {
    */
   static Result<IOUtils::InternalFileInfo, IOError> StatSync(
       const nsAString& aPath);
-
-  using IOWriteMozPromise =
-      mozilla::MozPromise<uint32_t, const IOError, /* IsExclusive */ true>;
 };
 
 /**
