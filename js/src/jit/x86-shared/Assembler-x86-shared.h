@@ -277,7 +277,6 @@ class AssemblerX86Shared : public AssemblerShared {
         : offset(offset), target(target), kind(kind) {}
   };
 
-  Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
   CompactBufferWriter jumpRelocations_;
   CompactBufferWriter dataRelocations_;
 
@@ -418,15 +417,6 @@ class AssemblerX86Shared : public AssemblerShared {
 
   static void TraceDataRelocations(JSTracer* trc, JitCode* code,
                                    CompactBufferReader& reader);
-
-  void assertNoGCThings() const {
-#ifdef DEBUG
-    MOZ_ASSERT(dataRelocations_.length() == 0);
-    for (auto& j : jumps_) {
-      MOZ_ASSERT(j.kind == RelocationKind::HARDCODED);
-    }
-#endif
-  }
 
   void setUnlimitedBuffer() {
     // No-op on this platform
