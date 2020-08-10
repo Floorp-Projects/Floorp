@@ -28,6 +28,9 @@ migration:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -44,6 +47,9 @@ migration.telemetry_identifiers:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -59,6 +65,9 @@ migration.telemetry_identifiers:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -73,6 +82,9 @@ migration.telemetry_identifiers:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -87,6 +99,8 @@ migration.telemetry_identifiers:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -101,6 +115,8 @@ migration.telemetry_identifiers:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -116,6 +132,9 @@ migration.telemetry_identifiers:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -136,6 +155,9 @@ migration.history:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -150,6 +172,9 @@ migration.history:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -165,6 +190,9 @@ migration.history:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -180,6 +208,9 @@ migration.history:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -194,6 +225,9 @@ migration.history:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -208,6 +242,8 @@ migration.history:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -222,6 +258,8 @@ migration.history:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -242,6 +280,9 @@ migration.bookmarks:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -256,6 +297,9 @@ migration.bookmarks:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -271,6 +315,9 @@ migration.bookmarks:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -286,6 +333,9 @@ migration.bookmarks:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -300,6 +350,9 @@ migration.bookmarks:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -314,6 +367,8 @@ migration.bookmarks:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -328,6 +383,8 @@ migration.bookmarks:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -344,6 +401,9 @@ migration.open_tabs:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -358,6 +418,9 @@ migration.open_tabs:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -372,6 +435,9 @@ migration.open_tabs:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -386,6 +452,8 @@ migration.open_tabs:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -400,6 +468,8 @@ migration.open_tabs:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -415,6 +485,9 @@ migration.open_tabs:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -431,6 +504,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -445,6 +521,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -459,6 +538,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -473,6 +555,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -487,6 +572,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/android-components/issues/5359
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5582#issuecomment-574673110
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -501,6 +589,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/android-components/issues/5359
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5582#issuecomment-574673110
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -515,6 +606,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/android-components/issues/5359
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5582#issuecomment-574673110
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -529,6 +623,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/android-components/issues/5359
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5582#issuecomment-574673110
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -543,6 +640,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/android-components/issues/5359
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5582#issuecomment-574673110
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -558,6 +658,9 @@ migration.fxa:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -574,6 +677,9 @@ migration.gecko:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -588,6 +694,8 @@ migration.gecko:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -602,6 +710,8 @@ migration.gecko:
       - https://github.com/mozilla-mobile/android-components/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5655#pullrequestreview-346359792
+    data_sensitivity:
+      - technical
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -617,6 +727,9 @@ migration.gecko:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -633,6 +746,9 @@ migration.logins:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -647,6 +763,9 @@ migration.logins:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -661,6 +780,9 @@ migration.logins:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -675,6 +797,9 @@ migration.logins:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -689,6 +814,9 @@ migration.logins:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -706,6 +834,9 @@ migration.logins:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -721,6 +852,9 @@ migration.logins:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -737,6 +871,9 @@ migration.settings:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -751,6 +888,9 @@ migration.settings:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -765,6 +905,9 @@ migration.settings:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -779,6 +922,9 @@ migration.settings:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -794,6 +940,9 @@ migration.settings:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -810,6 +959,9 @@ migration.addons:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -824,6 +976,9 @@ migration.addons:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -838,6 +993,9 @@ migration.addons:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -852,6 +1010,9 @@ migration.addons:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -866,6 +1027,9 @@ migration.addons:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -881,6 +1045,9 @@ migration.addons:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -897,6 +1064,8 @@ migration.search:
       - https://github.com/mozilla-mobile/android-components/issues/5818
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5819#pullrequestreview-353890362
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -911,6 +1080,8 @@ migration.search:
       - https://github.com/mozilla-mobile/android-components/issues/5818
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5819#pullrequestreview-353890362
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -925,6 +1096,8 @@ migration.search:
       - https://github.com/mozilla-mobile/android-components/issues/5818
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5819#pullrequestreview-353890362
+    data_sensitivity:
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -940,6 +1113,9 @@ migration.search:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -956,6 +1132,9 @@ migration.pinned_sites:
       - https://github.com/mozilla-mobile/android-components/issues/5126
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -970,6 +1149,9 @@ migration.pinned_sites:
       - https://github.com/mozilla-mobile/android-components/issues/5126
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -984,6 +1166,9 @@ migration.pinned_sites:
       - https://github.com/mozilla-mobile/android-components/issues/5126
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -998,6 +1183,9 @@ migration.pinned_sites:
       - https://github.com/mozilla-mobile/fenix/issues/5126
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -1012,6 +1200,9 @@ migration.pinned_sites:
       - https://github.com/mozilla-mobile/fenix/issues/5126
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
@@ -1027,6 +1218,9 @@ migration.pinned_sites:
       - https://github.com/mozilla-mobile/android-components/issues/6196
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/6214#pullrequestreview-372237195
+    data_sensitivity:
+      - technical
+      - interaction
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
