@@ -230,7 +230,7 @@ already_AddRefed<nsISVGPoint> SVGGeometryElement::GetPointAtLength(
     float distance, ErrorResult& rv) {
   RefPtr<Path> path = GetOrBuildPathForMeasuring();
   if (!path) {
-    rv.Throw(NS_ERROR_FAILURE);
+    rv.ThrowInvalidStateError("No path available for measuring");
     return nullptr;
   }
 
