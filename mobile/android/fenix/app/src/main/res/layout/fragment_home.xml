@@ -74,6 +74,9 @@
         android:transitionGroup="false"
         android:importantForAccessibility="no"
         android:overScrollMode="never"
+        tools:listheader="@layout/collection_header"
+        tools:listitem="@layout/collection_home_list_row"
+        tools:itemCount="3"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout

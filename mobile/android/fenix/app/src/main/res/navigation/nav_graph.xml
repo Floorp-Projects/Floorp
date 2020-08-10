@@ -304,7 +304,8 @@
     <fragment
         android:id="@+id/bookmarkAddFolderFragment"
         android:name="org.mozilla.fenix.library.bookmarks.addfolder.AddBookmarkFolderFragment"
-        android:label="@string/bookmark_add_folder_fragment_label">
+        android:label="@string/bookmark_add_folder_fragment_label"
+        tools:layout="@layout/fragment_edit_bookmark">
         <action
             android:id="@+id/action_bookmarkAddFolderFragment_to_bookmarkSelectFolderFragment"
             app:destination="@id/bookmarkSelectFolderFragment" />
@@ -388,7 +389,8 @@
     <fragment
         android:id="@+id/editLoginFragment"
         android:name="org.mozilla.fenix.settings.logins.fragment.EditLoginFragment"
-        android:label="@string/edit">
+        android:label="@string/edit"
+        tools:layout="@layout/fragment_edit_login">
         <argument
             android:name="savedLoginItem"
             app:argType="org.mozilla.fenix.settings.logins.SavedLogin"
@@ -567,7 +569,8 @@
     <fragment
         android:id="@+id/turnOnSyncFragment"
         android:name="org.mozilla.fenix.settings.account.TurnOnSyncFragment"
-        android:label="@string/preferences_sync">
+        android:label="@string/preferences_sync"
+        tools:layout="@layout/fragment_turn_on_sync">
         <argument
             android:name="padSnackbar"
             android:defaultValue="false"
@@ -580,7 +583,8 @@
     <fragment
         android:id="@+id/pairFragment"
         android:name="org.mozilla.fenix.settings.PairFragment"
-        android:label="@string/preferences_sync" />
+        android:label="@string/preferences_sync"
+        tools:layout="@layout/fragment_pair" />
 
     <fragment
         android:id="@+id/aboutFragment"
@@ -600,7 +604,8 @@
         android:label="@string/preferences_debug_settings" />
     <fragment
         android:id="@+id/crashReporterFragment"
-        android:name="org.mozilla.fenix.crashes.CrashReporterFragment">
+        android:name="org.mozilla.fenix.crashes.CrashReporterFragment"
+        tools:layout="@layout/fragment_crash_reporter">
         <argument
             android:name="crashIntent"
             app:argType="android.content.Intent" />
@@ -638,11 +643,13 @@
     <fragment
         android:id="@+id/deleteBrowsingDataFragment"
         android:name="org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataFragment"
-        android:label="@string/preferences_delete_browsing_data" />
+        android:label="@string/preferences_delete_browsing_data"
+        tools:layout="@layout/fragment_delete_browsing_data" />
     <fragment
         android:id="@+id/trackingProtectionExceptionsFragment"
         android:name="org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragment"
-        android:label="@string/preference_exceptions" />
+        android:label="@string/preference_exceptions"
+        tools:layout="@layout/fragment_exceptions" />
     <dialog
         android:id="@+id/collectionCreationFragment"
         android:name="org.mozilla.fenix.collections.CollectionCreationFragment"
@@ -704,7 +711,8 @@
     </dialog>
     <dialog
         android:id="@+id/quickSettingsSheetDialogFragment"
-        android:name="org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment">
+        android:name="org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment"
+        tools:layout="@layout/fragment_quick_settings_dialog_sheet">
         <argument
             android:name="sessionId"
             app:argType="string" />
@@ -739,10 +747,12 @@
     </fragment>
     <dialog
         android:id="@+id/signOutFragment"
-        android:name="org.mozilla.fenix.settings.account.SignOutFragment" />
+        android:name="org.mozilla.fenix.settings.account.SignOutFragment"
+        tools:layout="@layout/fragment_sign_out" />
     <dialog
         android:id="@+id/trackingProtectionPanelDialogFragment"
-        android:name="org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragment">
+        android:name="org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragment"
+        tools:layout="@layout/fragment_tracking_protection">
         <argument
             android:name="sessionId"
             app:argType="string" />
@@ -771,17 +781,20 @@
 
     <fragment
         android:id="@+id/addNewDeviceFragment"
-        android:name="org.mozilla.fenix.share.AddNewDeviceFragment" />
+        android:name="org.mozilla.fenix.share.AddNewDeviceFragment"
+        tools:layout="@layout/fragment_add_new_device" />
     <fragment
         android:id="@+id/localeSettingsFragment"
-        android:name="org.mozilla.fenix.settings.advanced.LocaleSettingsFragment" />
+        android:name="org.mozilla.fenix.settings.advanced.LocaleSettingsFragment"
+        tools:layout="@layout/fragment_locale_settings" />
     <fragment
         android:id="@+id/saveLoginSettingFragment"
         android:name="org.mozilla.fenix.settings.logins.fragment.SavedLoginsSettingFragment"
         android:label="SaveLoginSettingFragment" />
     <fragment
         android:id="@+id/webExtensionActionPopupFragment"
-        android:name="org.mozilla.fenix.addons.WebExtensionActionPopupFragment">
+        android:name="org.mozilla.fenix.addons.WebExtensionActionPopupFragment"
+        tools:layout="@layout/fragment_add_on_internal_settings">
         <argument
             android:name="webExtensionId"
             app:argType="string" />
@@ -792,7 +805,8 @@
     </fragment>
     <dialog
         android:id="@+id/tabHistoryDialogFragment"
-        android:name="org.mozilla.fenix.tabhistory.TabHistoryDialogFragment" />
+        android:name="org.mozilla.fenix.tabhistory.TabHistoryDialogFragment"
+        tools:layout="@layout/fragment_tab_history_dialog" />
 
     <navigation android:id="@+id/site_permissions_exceptions_graph"
         app:startDestination="@id/sitePermissionsExceptionsFragment">
