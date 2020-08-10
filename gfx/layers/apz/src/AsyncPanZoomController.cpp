@@ -672,9 +672,9 @@ class ZoomAnimation : public AsyncPanZoomAnimation {
 class SmoothScrollAnimation : public AsyncPanZoomAnimation {
  public:
   SmoothScrollAnimation(AsyncPanZoomController& aApzc,
-                        const nsPoint& aInitialPosition,
-                        const nsPoint& aInitialVelocity,
-                        const nsPoint& aDestination, double aSpringConstant,
+                        const CSSPoint& aInitialPosition,
+                        const CSSPoint& aInitialVelocity,
+                        const CSSPoint& aDestination, double aSpringConstant,
                         double aDampingRatio)
       : mApzc(aApzc),
         mXAxisModel(aInitialPosition.x, aDestination.x, aInitialVelocity.x,
@@ -690,28 +690,28 @@ class SmoothScrollAnimation : public AsyncPanZoomAnimation {
    */
   bool DoSample(FrameMetrics& aFrameMetrics,
                 const TimeDuration& aDelta) override {
-    nsPoint oneParentLayerPixel =
-        CSSPoint::ToAppUnits(ParentLayerPoint(1, 1) / aFrameMetrics.GetZoom());
+    CSSPoint oneParentLayerPixel =
+        ParentLayerPoint(1, 1) / aFrameMetrics.GetZoom();
     if (mXAxisModel.IsFinished(oneParentLayerPixel.x) &&
         mYAxisModel.IsFinished(oneParentLayerPixel.y)) {
       // Set the scroll offset to the exact destination. If we allow the scroll
       // offset to end up being a bit off from the destination, we can get
       // artefacts like "scroll to the next snap point in this direction"
       // scrolling to the snap point we're already supposed to be at.
-      mApzc.ClampAndSetScrollOffset(CSSPoint::FromAppUnits(
-          nsPoint(mXAxisModel.GetDestination(), mYAxisModel.GetDestination())));
+      mApzc.ClampAndSetScrollOffset(
+          CSSPoint(mXAxisModel.GetDestination(), mYAxisModel.GetDestination()));
       return false;
     }
 
     mXAxisModel.Simulate(aDelta);
     mYAxisModel.Simulate(aDelta);
 
-    CSSPoint position = CSSPoint::FromAppUnits(
-        nsPoint(mXAxisModel.GetPosition(), mYAxisModel.GetPosition()));
-    CSSPoint css_velocity = CSSPoint::FromAppUnits(
-        nsPoint(mXAxisModel.GetVelocity(), mYAxisModel.GetVelocity()));
+    CSSPoint position =
+        CSSPoint(mXAxisModel.GetPosition(), mYAxisModel.GetPosition());
+    CSSPoint css_velocity =
+        CSSPoint(mXAxisModel.GetVelocity(), mYAxisModel.GetVelocity());
 
-    // Convert from points/second to points/ms
+    // Convert from pixels/second to pixels/ms
     ParentLayerPoint velocity =
         ParentLayerPoint(css_velocity.x, css_velocity.y) / 1000.0f;
 
@@ -781,14 +781,13 @@ class SmoothScrollAnimation : public AsyncPanZoomAnimation {
     return true;
   }
 
-  void SetDestination(const nsPoint& aNewDestination) {
-    mXAxisModel.SetDestination(static_cast<int32_t>(aNewDestination.x));
-    mYAxisModel.SetDestination(static_cast<int32_t>(aNewDestination.y));
+  void SetDestination(const CSSPoint& aNewDestination) {
+    mXAxisModel.SetDestination(aNewDestination.x);
+    mYAxisModel.SetDestination(aNewDestination.y);
   }
 
   CSSPoint GetDestination() const {
-    return CSSPoint::FromAppUnits(
-        nsPoint(mXAxisModel.GetDestination(), mYAxisModel.GetDestination()));
+    return CSSPoint(mXAxisModel.GetDestination(), mYAxisModel.GetDestination());
   }
 
   SmoothScrollAnimation* AsSmoothScrollAnimation() override { return this; }
@@ -3507,22 +3506,17 @@ void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination) {
     APZC_LOG("%p updating destination on existing animation\n", this);
     RefPtr<SmoothScrollAnimation> animation(
         static_cast<SmoothScrollAnimation*>(mAnimation.get()));
-    animation->SetDestination(CSSPoint::ToAppUnits(aDestination));
+    animation->SetDestination(aDestination);
   } else {
     CancelAnimation();
     SetState(SMOOTH_SCROLL);
-    nsPoint initialPosition = CSSPoint::ToAppUnits(Metrics().GetScrollOffset());
-    // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and
-    // then to appunits/second.
-    nsPoint initialVelocity =
-        CSSPoint::ToAppUnits(ParentLayerPoint(mX.GetVelocity() * 1000.0f,
-                                              mY.GetVelocity() * 1000.0f) /
-                             Metrics().GetZoom());
-
-    nsPoint destination = CSSPoint::ToAppUnits(aDestination);
+    // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s.
+    CSSPoint initialVelocity = ParentLayerPoint(mX.GetVelocity() * 1000.0f,
+                                                mY.GetVelocity() * 1000.0f) /
+                               Metrics().GetZoom();
 
     StartAnimation(new SmoothScrollAnimation(
-        *this, initialPosition, initialVelocity, destination,
+        *this, Metrics().GetScrollOffset(), initialVelocity, aDestination,
         StaticPrefs::layout_css_scroll_behavior_spring_constant(),
         StaticPrefs::layout_css_scroll_behavior_damping_ratio()));
   }
