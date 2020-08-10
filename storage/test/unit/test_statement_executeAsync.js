@@ -179,33 +179,15 @@ function execAsync(aStmt, aOptions, aResults) {
  * error synchronously (and is tested elsewhere).
  */
 function test_illegal_sql_async_deferred() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(QUERY_HISTOGRAM);
-
   // gibberish
   let stmt = makeTestStatement("I AM A ROBOT. DO AS I SAY.");
   execAsync(stmt, { error: Ci.mozIStorageError.ERROR });
   stmt.finalize();
 
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    histogram,
-    TEST_DB_NAME,
-    TELEMETRY_VALUES.failure,
-    1
-  );
-  histogram.clear();
-
   // legal SQL syntax, but with semantics issues.
   stmt = makeTestStatement("SELECT destination FROM funkytown");
   execAsync(stmt, { error: Ci.mozIStorageError.ERROR });
   stmt.finalize();
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    histogram,
-    TEST_DB_NAME,
-    TELEMETRY_VALUES.failure,
-    1
-  );
-  histogram.clear();
 
   run_next_test();
 }
@@ -214,8 +196,6 @@ test_illegal_sql_async_deferred.asyncOnly = true;
 function test_create_table() {
   // Ensure our table doesn't exist
   Assert.ok(!getOpenedDatabase().tableExists("test"));
-
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(QUERY_HISTOGRAM);
 
   var stmt = makeTestStatement(
     "CREATE TABLE test (" +
@@ -229,34 +209,18 @@ function test_create_table() {
   execAsync(stmt);
   stmt.finalize();
 
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    histogram,
-    TEST_DB_NAME,
-    TELEMETRY_VALUES.success,
-    1
-  );
-  histogram.clear();
-
   // Check that the table has been created
   Assert.ok(getOpenedDatabase().tableExists("test"));
-
-  histogram.clear();
 
   // Verify that it's created correctly (this will throw if it wasn't)
   let checkStmt = getOpenedDatabase().createStatement(
     "SELECT id, string, number, nuller, blober FROM test"
   );
   checkStmt.finalize();
-
-  // Nothing has executed so the histogram should be empty.
-  Assert.ok(!histogram.snapshot().values);
-
   run_next_test();
 }
 
 function test_add_data() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(QUERY_HISTOGRAM);
-
   var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
       "VALUES (?, ?, ?, ?, ?)"
@@ -270,35 +234,16 @@ function test_add_data() {
   execAsync(stmt);
   stmt.finalize();
 
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    histogram,
-    TEST_DB_NAME,
-    TELEMETRY_VALUES.success,
-    1
-  );
-  histogram.clear();
-
   // Check that the result is in the table
   verifyQuery(
     "SELECT string, number, nuller, blober FROM test WHERE id = ?",
     INTEGER,
     [TEXT, REAL, null, BLOB]
   );
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    histogram,
-    TEST_DB_NAME,
-    TELEMETRY_VALUES.success,
-    1
-  );
-  histogram.clear();
-
   run_next_test();
 }
 
 function test_get_data() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(QUERY_HISTOGRAM);
-
   var stmt = makeTestStatement(
     "SELECT string, number, nuller, blober, id FROM test WHERE id = ?"
   );
@@ -363,21 +308,10 @@ function test_get_data() {
     },
   ]);
   stmt.finalize();
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    histogram,
-    TEST_DB_NAME,
-    TELEMETRY_VALUES.success,
-    1
-  );
-  histogram.clear();
-
   run_next_test();
 }
 
 function test_tuple_out_of_bounds() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(QUERY_HISTOGRAM);
-
   var stmt = makeTestStatement("SELECT string FROM test");
   execAsync(stmt, {}, [
     function(tuple) {
@@ -414,15 +348,6 @@ function test_tuple_out_of_bounds() {
     },
   ]);
   stmt.finalize();
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    histogram,
-    TEST_DB_NAME,
-    TELEMETRY_VALUES.success,
-    1
-  );
-  histogram.clear();
-
   run_next_test();
 }
 
@@ -525,21 +450,10 @@ function test_cancellation_after_execution() {
  * handleResult to get called multiple times) and not comprehensive.
  */
 function test_double_execute() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(QUERY_HISTOGRAM);
-
   var stmt = makeTestStatement("SELECT 1");
   execAsync(stmt, null, 1);
   execAsync(stmt, null, 1);
   stmt.finalize();
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    histogram,
-    TEST_DB_NAME,
-    TELEMETRY_VALUES.success,
-    2
-  );
-  histogram.clear();
-
   run_next_test();
 }
 
