@@ -777,6 +777,17 @@ nsresult ContentSubtreeIterator::Init(const RawRangeBoundary& aStartBoundary,
   return InitWithRange();
 }
 
+void ContentSubtreeIterator::CacheInclusiveAncestorsOfEndContainer() {
+  mEndNodes.Clear();
+  nsINode* const endContainer = mRange->GetEndContainer();
+  nsIContent* endNode =
+      endContainer->IsContent() ? endContainer->AsContent() : nullptr;
+  while (endNode) {
+    mEndNodes.AppendElement(endNode);
+    endNode = endNode->GetParent();
+  }
+}
+
 nsresult ContentSubtreeIterator::InitWithRange() {
   MOZ_ASSERT(mRange);
   MOZ_ASSERT(mRange->IsPositioned());
@@ -784,9 +795,9 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   // get the start node and offset, convert to nsINode
   mClosestCommonInclusiveAncestor = mRange->GetClosestCommonInclusiveAncestor();
   nsINode* startContainer = mRange->GetStartContainer();
-  int32_t startOffset = mRange->StartOffset();
+  const int32_t startOffset = mRange->StartOffset();
   nsINode* endContainer = mRange->GetEndContainer();
-  int32_t endOffset = mRange->EndOffset();
+  const int32_t endOffset = mRange->EndOffset();
   MOZ_ASSERT(mClosestCommonInclusiveAncestor && startContainer && endContainer);
   // Bug 767169
   MOZ_ASSERT(uint32_t(startOffset) <= startContainer->Length() &&
@@ -803,14 +814,7 @@ nsresult ContentSubtreeIterator::InitWithRange() {
     }
   }
 
-  // cache ancestors
-  mEndNodes.Clear();
-  nsIContent* endNode =
-      endContainer->IsContent() ? endContainer->AsContent() : nullptr;
-  while (endNode) {
-    mEndNodes.AppendElement(endNode);
-    endNode = endNode->GetParent();
-  }
+  CacheInclusiveAncestorsOfEndContainer();
 
   nsIContent* firstCandidate = nullptr;
   nsIContent* lastCandidate = nullptr;
