@@ -154,7 +154,7 @@ diff --git a/extensions/spellcheck/hunspell/src/filemgr.hxx b/extensions/spellch
 - private:
 -  FileMgr(const FileMgr&);
 -  FileMgr& operator=(const FileMgr&);
-+#include "mozHunspellFileMgr.h"
++#include "mozHunspellFileMgrSandbox.h"
  
 - protected:
 -  std::ifstream fin;

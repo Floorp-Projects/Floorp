@@ -6,7 +6,7 @@
 
 UNIFIED_SOURCES += [
     'mozHunspell.cpp',
-    'mozHunspellFileMgr.cpp',
+    'mozHunspellFileMgrHost.cpp',
     'RemoteSpellCheckEngineChild.cpp',
     'RemoteSpellCheckEngineParent.cpp',
 ]
