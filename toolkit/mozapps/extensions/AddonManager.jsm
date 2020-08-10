@@ -4312,7 +4312,11 @@ AMTelemetry = {
 
   onInstallEnded(install) {
     this.recordInstallEvent(install, { step: "completed" });
-    this.recordInstallStatsEvent(install);
+    // Skip install_stats events for install objects related to.
+    // add-on updates.
+    if (!install.existingAddon) {
+      this.recordInstallStatsEvent(install);
+    }
   },
 
   onDownloadStarted(install) {
