@@ -28,6 +28,8 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
 
 #include "mozilla/Logging.h"
 
@@ -755,6 +757,16 @@ nsresult nsExpatDriver::HandleError() {
   if (mOriginalSink) {
     doc = do_QueryInterface(mOriginalSink->GetTarget());
   }
+
+  if (doc && nsContentUtils::IsChromeDoc(doc)) {
+    nsCString path = doc->GetDocumentURI()->GetSpecOrDefault();
+
+    mozilla::Telemetry::SetEventRecordingEnabled("ysod"_ns, true);
+    mozilla::Telemetry::RecordEvent(
+        mozilla::Telemetry::EventID::Ysod_Shown_Ysod, mozilla::Some(path),
+        mozilla::Nothing());
+  }
+
   bool spoofEnglish =
       nsContentUtils::SpoofLocaleEnglish() && (!doc || !doc->AllowsL10n());
   nsParserMsgUtils::GetLocalizedStringByID(
