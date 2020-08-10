@@ -24,7 +24,6 @@ job-defaults:
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-clang-tidy
             - linux64-rust
             - linux64-cbindgen
             - linux64-nasm
@@ -52,7 +51,9 @@ tidy:
         command: >-
             source taskcluster/scripts/misc/source-test-clang-setup.sh &&
             ./mach --log-no-times static-analysis check --outgoing --output $HOME/clang-tidy.json --format json
-
+    fetches:
+        toolchain:
+            - linux64-clang-tidy
     worker:
         artifacts:
             - type: file
@@ -69,6 +70,9 @@ format:
             source taskcluster/scripts/misc/source-test-clang-setup.sh &&
             ./mach --log-no-times clang-format --outgoing --output $HOME/clang-format.json --format json &&
             ./mach --log-no-times clang-format --outgoing --output $HOME/clang-format.diff --format diff
+    fetches:
+        toolchain:
+            - linux64-clang-tidy
     worker:
         artifacts:
             - type: file
@@ -77,3 +81,23 @@ format:
             - type: file
               name: public/code-review/clang-format.diff
               path: /builds/worker/clang-format.diff
+
+civet:
+    description: Run static-analysis (clang-tidy) on C/C++ patches with external checks
+    attributes:
+        code-review: false
+    treeherder:
+        symbol: cpp(clang-civet)
+    run:
+        cwd: '{checkout}'
+        command: >-
+            source taskcluster/scripts/misc/source-test-clang-setup.sh &&
+            ./mach --log-no-times static-analysis check --checks="-*,mozilla-civet-*" --outgoing --output $HOME/clang-tidy.json --format json
+    fetches:
+        toolchain:
+            - linux64-civet-tidy
+    worker:
+        artifacts:
+            - type: file
+              name: public/code-review/clang-tidy.json
+              path: /builds/worker/clang-tidy.json
