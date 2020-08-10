@@ -143,7 +143,7 @@ Endpoint for when a user opts-out of sponsored content to delete the correspondi
 - Default: `https://getpocket.cdn.mozilla.net/,https://spocs.getpocket.com/`
 - Pref Type: AS
 
-A whitelist of endpoints that are allowed to be used by Discovery Stream for remote content (eg: story metadata) and configuration (eg: remote layout definitions for experimentation).
+A list of endpoints that are allowed to be used by Discovery Stream for remote content (eg: story metadata) and configuration (eg: remote layout definitions for experimentation).
 
 #### `browser.newtabpage.activity-stream.discoverystream.engagementLabelEnabled`
 

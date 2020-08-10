@@ -46,15 +46,15 @@ You can preview in the two different themes (light and dark) by adding `&theme=d
 #### IMPORTANT NOTES
 - Links to URLs starting with `about:newtab` cannot be clicked on directly. They must be copy and pasted into the address bar.
 - Previews should only be tested in `Firefox 64` and later.
-- The endpoint must be HTTPS, the host must be whitelisted (see testing instructions below)
+- The endpoint must be HTTPS, the host must be allowed (see testing instructions below)
 - Errors are surfaced in the `Console` tab of the `Browser Toolbox`
 
 #### Testing instructions
 - If your endpoint URL has a host name of `snippets-admin.mozilla.org`, you can paste the URL into the address bar view it without any further steps.
-- If your endpoint URL  starts with some other host name, it must be **whitelisted**. Open the Browser Toolbox devtools (Tools > Developer > Browser Toolbox) and paste the following code (where `gist.githubusercontent.com` is the hostname of your endpoint URL):
+- If your endpoint URL  starts with some other host name, it must be **allowed**. Open the Browser Toolbox devtools (Tools > Developer > Browser Toolbox) and paste the following code (where `gist.githubusercontent.com` is the hostname of your endpoint URL):
 ```js
 Services.prefs.setStringPref(
-  "browser.newtab.activity-stream.asrouter.whitelistHosts",
+  "browser.newtab.activity-stream.asrouter.allowHosts",
   "[\"gist.githubusercontent.com\"]"
 );
 ```

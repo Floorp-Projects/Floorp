@@ -363,26 +363,26 @@ describe("ASRouter", () => {
         FAKE_LOCAL_MESSAGES.length + FAKE_REMOTE_MESSAGES.length
       );
     });
-    it("should load additional whitelisted hosts", async () => {
-      getStringPrefStub.returns('["whitelist.com"]');
+    it("should load additional allowed hosts", async () => {
+      getStringPrefStub.returns('["allow.com"]');
       await createRouterAndInit();
 
-      assert.propertyVal(Router.WHITELIST_HOSTS, "whitelist.com", "preview");
+      assert.propertyVal(Router.ALLOWLIST_HOSTS, "allow.com", "preview");
       // Should still include the defaults
-      assert.lengthOf(Object.keys(Router.WHITELIST_HOSTS), 3);
+      assert.lengthOf(Object.keys(Router.ALLOWLIST_HOSTS), 3);
     });
     it("should fallback to defaults if pref parsing fails", async () => {
       getStringPrefStub.returns("err");
       await createRouterAndInit();
 
-      assert.lengthOf(Object.keys(Router.WHITELIST_HOSTS), 2);
+      assert.lengthOf(Object.keys(Router.ALLOWLIST_HOSTS), 2);
       assert.propertyVal(
-        Router.WHITELIST_HOSTS,
+        Router.ALLOWLIST_HOSTS,
         "snippets-admin.mozilla.org",
         "preview"
       );
       assert.propertyVal(
-        Router.WHITELIST_HOSTS,
+        Router.ALLOWLIST_HOSTS,
         "activity-stream-icons.services.mozilla.com",
         "production"
       );
@@ -1744,7 +1744,7 @@ describe("ASRouter", () => {
           )
         );
       });
-      it("should not add a url that is not from a whitelisted host", async () => {
+      it("should not add a url that is not from an allowed host", async () => {
         const url = "https://mozilla.org";
         const msg = fakeAsyncMessage({
           type: "NEWTAB_MESSAGE_REQUEST",

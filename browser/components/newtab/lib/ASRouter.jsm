@@ -75,12 +75,12 @@ const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 // List of hosts for endpoints that serve router messages.
 // Key is allowed host, value is a name for the endpoint host.
-const DEFAULT_WHITELIST_HOSTS = {
+const DEFAULT_ALLOWLIST_HOSTS = {
   "activity-stream-icons.services.mozilla.com": "production",
   "snippets-admin.mozilla.org": "preview",
 };
-const SNIPPETS_ENDPOINT_WHITELIST =
-  "browser.newtab.activity-stream.asrouter.whitelistHosts";
+const SNIPPETS_ENDPOINT_ALLOWLIST =
+  "browser.newtab.activity-stream.asrouter.allowHosts";
 // Max possible impressions cap for any message
 const MAX_MESSAGE_LIFETIME_CAP = 100;
 
@@ -931,7 +931,7 @@ class _ASRouter {
       this.onMessage
     );
     this._storage = storage;
-    this.WHITELIST_HOSTS = this._loadSnippetsWhitelistHosts();
+    this.ALLOWLIST_HOSTS = this._loadSnippetsAllowHosts();
     this.dispatchToAS = dispatchToAS;
 
     ASRouterPreferences.init();
@@ -1736,16 +1736,16 @@ class _ASRouter {
   _validPreviewEndpoint(url) {
     try {
       const endpoint = new URL(url);
-      if (!this.WHITELIST_HOSTS[endpoint.host]) {
+      if (!this.ALLOWLIST_HOSTS[endpoint.host]) {
         Cu.reportError(
-          `The preview URL host ${endpoint.host} is not in the whitelist.`
+          `The preview URL host ${endpoint.host} is not in the list of allowed hosts.`
         );
       }
       if (endpoint.protocol !== "https:") {
         Cu.reportError("The URL protocol is not https.");
       }
       return (
-        endpoint.protocol === "https:" && this.WHITELIST_HOSTS[endpoint.host]
+        endpoint.protocol === "https:" && this.ALLOWLIST_HOSTS[endpoint.host]
       );
     } catch (e) {
       return false;
@@ -1766,35 +1766,37 @@ class _ASRouter {
     Services.obs.addObserver(addonInstallObs, "webextension-install-notify");
   }
 
-  _loadSnippetsWhitelistHosts() {
+  _loadSnippetsAllowHosts() {
     let additionalHosts = [];
-    const whitelistPrefValue = Services.prefs.getStringPref(
-      SNIPPETS_ENDPOINT_WHITELIST,
+    const allowPrefValue = Services.prefs.getStringPref(
+      SNIPPETS_ENDPOINT_ALLOWLIST,
       ""
     );
     try {
-      additionalHosts = JSON.parse(whitelistPrefValue);
+      additionalHosts = JSON.parse(allowPrefValue);
     } catch (e) {
-      if (whitelistPrefValue) {
+      if (allowPrefValue) {
         Cu.reportError(
-          `Pref ${SNIPPETS_ENDPOINT_WHITELIST} value is not valid JSON`
+          `Pref ${SNIPPETS_ENDPOINT_ALLOWLIST} value is not valid JSON`
         );
       }
     }
 
     if (!additionalHosts.length) {
-      return DEFAULT_WHITELIST_HOSTS;
+      return DEFAULT_ALLOWLIST_HOSTS;
     }
 
-    // If there are additional hosts we want to whitelist, add them as
+    // If there are additional hosts we want to allow, add them as
     // `preview` so that the updateCycle is 0
     return additionalHosts.reduce(
-      (whitelist_hosts, host) => {
-        whitelist_hosts[host] = "preview";
-        Services.console.logStringMessage(`Adding ${host} to whitelist hosts.`);
-        return whitelist_hosts;
+      (allow_hosts, host) => {
+        allow_hosts[host] = "preview";
+        Services.console.logStringMessage(
+          `Adding ${host} to list of allowed hosts.`
+        );
+        return allow_hosts;
       },
-      { ...DEFAULT_WHITELIST_HOSTS }
+      { ...DEFAULT_ALLOWLIST_HOSTS }
     );
   }
 
