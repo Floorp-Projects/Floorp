@@ -824,6 +824,29 @@ nsIContent* ContentSubtreeIterator::DetermineCandidateForFirstContent() const {
   return firstCandidate;
 }
 
+nsIContent* ContentSubtreeIterator::DetermineFirstContent() const {
+  nsIContent* firstCandidate = DetermineCandidateForFirstContent();
+  if (!firstCandidate) {
+    return nullptr;
+  }
+
+  // confirm that this first possible contained node is indeed contained.  Else
+  // we have a range that does not fully contain any node.
+
+  bool nodeBefore, nodeAfter;
+  MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(firstCandidate, mRange,
+                                                     &nodeBefore, &nodeAfter));
+
+  if (nodeBefore || nodeAfter) {
+    return nullptr;
+  }
+
+  // cool, we have the first node in the range.  Now we walk up its ancestors
+  // to find the most senior that is still in the range.  That's the real first
+  // node.
+  return GetTopAncestorInRange(firstCandidate);
+}
+
 nsresult ContentSubtreeIterator::InitWithRange() {
   MOZ_ASSERT(mRange);
   MOZ_ASSERT(mRange->IsPositioned());
@@ -854,28 +877,11 @@ nsresult ContentSubtreeIterator::InitWithRange() {
 
   nsIContent* lastCandidate = nullptr;
 
-  nsIContent* firstCandidate = DetermineCandidateForFirstContent();
-  if (!firstCandidate) {
+  mFirst = DetermineFirstContent();
+  if (!mFirst) {
     SetEmpty();
     return NS_OK;
   }
-
-  // confirm that this first possible contained node is indeed contained.  Else
-  // we have a range that does not fully contain any node.
-
-  bool nodeBefore, nodeAfter;
-  MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(firstCandidate, mRange,
-                                                     &nodeBefore, &nodeAfter));
-
-  if (nodeBefore || nodeAfter) {
-    SetEmpty();
-    return NS_OK;
-  }
-
-  // cool, we have the first node in the range.  Now we walk up its ancestors
-  // to find the most senior that is still in the range.  That's the real first
-  // node.
-  mFirst = GetTopAncestorInRange(firstCandidate);
 
   // now to find the last node
   int32_t offset = mRange->EndOffset();
@@ -910,6 +916,8 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   // confirm that this last possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
 
+  bool nodeBefore{false};
+  bool nodeAfter{false};
   MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(lastCandidate, mRange,
                                                      &nodeBefore, &nodeAfter));
 
@@ -1019,7 +1027,8 @@ nsresult ContentSubtreeIterator::PositionAt(nsINode* aCurNode) {
  * ContentSubtreeIterator helper routines
  ****************************************************************/
 
-nsIContent* ContentSubtreeIterator::GetTopAncestorInRange(nsINode* aNode) {
+nsIContent* ContentSubtreeIterator::GetTopAncestorInRange(
+    nsINode* aNode) const {
   if (!aNode || !aNode->GetParentNode()) {
     return nullptr;
   }
