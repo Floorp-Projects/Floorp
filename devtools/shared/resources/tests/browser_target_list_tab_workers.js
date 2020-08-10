@@ -155,14 +155,19 @@ add_task(async function() {
     () => destroyedTargets.length === 2,
     "Wait for the target list to notify us about the terminated workers"
   );
-  is(
-    destroyedTargets[0],
-    mainPageSpawnedWorkerTarget,
+  const destroyedMainPageSpawnedWorkerTarget = destroyedTargets.find(
+    innerTarget => innerTarget === mainPageSpawnedWorkerTarget
+  );
+  const destroyedIframeSpawnedWorkerTarget = destroyedTargets.find(
+    innerTarget => innerTarget === iframeSpawnedWorkerTarget
+  );
+
+  ok(
+    destroyedMainPageSpawnedWorkerTarget,
     "The target list handled the terminated worker"
   );
-  is(
-    destroyedTargets[1],
-    iframeSpawnedWorkerTarget,
+  ok(
+    destroyedIframeSpawnedWorkerTarget,
     "The target list handled the terminated worker in the iframe"
   );
 
