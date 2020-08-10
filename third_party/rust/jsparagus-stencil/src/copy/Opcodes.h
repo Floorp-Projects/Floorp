@@ -225,6 +225,7 @@
  *     SetPrototype
  *     Array literals
  *     RegExp literals
+ *     Built-in objects
  *   [Functions]
  *     Creating functions
  *     Creating constructors
@@ -1700,17 +1701,17 @@
      */ \
     MACRO(DerivedConstructor, derived_constructor, NULL, 13, 1, 1, JOF_CLASS_CTOR) \
     /*
-     * Pushes the current global's FunctionPrototype.
+     * Pushes the current global's %BuiltinObject%.
      *
-     * `kind` must be in range for `JSProtoKey` (and must not be
-     * `JSProto_LIMIT`).
+     * `kind` must be a valid `BuiltinObjectKind` (and must not be
+     * `BuiltinObjectKind::None`).
      *
-     *   Category: Functions
-     *   Type: Creating constructors
-     *   Operands:
-     *   Stack: => %FunctionPrototype%
+     *   Category: Objects
+     *   Type: Built-in objects
+     *   Operands: uint8_t kind
+     *   Stack: => %BuiltinObject%
      */ \
-    MACRO(FunctionProto, function_proto, NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(BuiltinObject, builtin_object, NULL, 2, 0, 1, JOF_UINT8) \
     /*
      * Invoke `callee` with `this` and `args`, and push the return value. Throw
      * a TypeError if `callee` isn't a function.
