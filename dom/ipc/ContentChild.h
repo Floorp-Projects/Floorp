@@ -104,15 +104,13 @@ class ContentChild final : public PContentChild,
     nsCString updateURL;
   };
 
-  nsresult ProvideWindowCommon(BrowserChild* aTabOpener,
-                               nsIOpenWindowInfo* aOpenWindowInfo,
-                               uint32_t aChromeFlags, bool aCalledFromJS,
-                               bool aWidthSpecified, nsIURI* aURI,
-                               const nsAString& aName,
-                               const nsACString& aFeatures, bool aForceNoOpener,
-                               bool aForceNoReferrer,
-                               nsDocShellLoadState* aLoadState,
-                               bool* aWindowIsNew, BrowsingContext** aReturn);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ProvideWindowCommon(
+      BrowserChild* aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
+      uint32_t aChromeFlags, bool aCalledFromJS, bool aWidthSpecified,
+      nsIURI* aURI, const nsAString& aName, const nsACString& aFeatures,
+      bool aForceNoOpener, bool aForceNoReferrer,
+      nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
+      BrowsingContext** aReturn);
 
   bool Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
             const char* aParentBuildID, UniquePtr<IPC::Channel> aChannel,
@@ -493,7 +491,7 @@ class ContentChild final : public PContentChild,
 
   bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*);
 
-  mozilla::ipc::IPCResult RecvConstructBrowser(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvConstructBrowser(
       ManagedEndpoint<PBrowserChild>&& aBrowserEp,
       ManagedEndpoint<PWindowGlobalChild>&& aWindowEp, const TabId& aTabId,
       const IPCTabContext& aContext, const WindowGlobalInit& aWindowInit,
