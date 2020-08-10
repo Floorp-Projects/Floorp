@@ -18,6 +18,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -183,7 +184,7 @@ function makeUrlbarResult(tokens, info) {
         if (
           action.params.alias &&
           !action.params.searchQuery.trim() &&
-          action.params.alias.startsWith("@")
+          (UrlbarPrefs.get("update2") || action.params.alias.startsWith("@"))
         ) {
           keywordOffer = info.isHeuristic
             ? UrlbarUtils.KEYWORD_OFFER.HIDE
