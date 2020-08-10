@@ -49,7 +49,7 @@ void CSSCounterStyleRule::SetName(const nsAString& aName) {
   NS_ConvertUTF16toUTF8 name(aName);
   if (Servo_CounterStyleRule_SetName(mRawRule, &name)) {
     if (StyleSheet* sheet = GetStyleSheet()) {
-      sheet->RuleChanged(this);
+      sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
     }
   }
 }
@@ -68,7 +68,7 @@ void CSSCounterStyleRule::SetName(const nsAString& aName) {
     if (Servo_CounterStyleRule_SetDescriptor(                       \
             mRawRule, eCSSCounterDesc_##method_, &value)) {         \
       if (StyleSheet* sheet = GetStyleSheet()) {                    \
-        sheet->RuleChanged(this);                                   \
+        sheet->RuleChanged(this, StyleRuleChangeKind::Generic);     \
       }                                                             \
     }                                                               \
   }

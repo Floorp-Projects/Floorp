@@ -58,7 +58,7 @@ void MediaList::DoMediaChange(Func aCallback, ErrorResult& aRv) {
     // FIXME(emilio): We should discern between "owned by a rule" (as in @media)
     // and "owned by a sheet" (as in <style media>), and then pass something
     // meaningful here.
-    mStyleSheet->RuleChanged(nullptr);
+    mStyleSheet->RuleChanged(nullptr, StyleRuleChangeKind::Generic);
   }
 }
 

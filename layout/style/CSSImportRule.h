@@ -44,6 +44,8 @@ class CSSImportRule final : public css::Rule {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  const RawServoImportRule* Raw() const { return mRawRule.get(); }
+
  private:
   ~CSSImportRule();
 

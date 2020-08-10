@@ -147,7 +147,7 @@ void CSSKeyframeRule::UpdateRule(Func aCallback) {
   aCallback();
 
   if (StyleSheet* sheet = GetStyleSheet()) {
-    sheet->RuleChanged(this);
+    sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
   }
 }
 

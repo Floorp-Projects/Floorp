@@ -39,6 +39,8 @@ class CSSNamespaceRule final : public css::Rule {
   // WebIDL interfaces
   uint16_t Type() const final { return CSSRule_Binding::NAMESPACE_RULE; }
 
+  const RawServoNamespaceRule* Raw() const { return mRawRule.get(); }
+
   void GetNamespaceURI(nsString& aNamespaceURI) { GetURLSpec(aNamespaceURI); }
 
   void GetPrefix(DOMString& aPrefix) {

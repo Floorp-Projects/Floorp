@@ -766,7 +766,7 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
   DropRuleList();
   Inner().mContents = std::move(rawContent);
   FinishParse();
-  RuleChanged(nullptr);
+  RuleChanged(nullptr, StyleRuleChangeKind::Generic);
 }
 
 nsresult StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup,
@@ -806,9 +806,9 @@ void StyleSheet::RuleRemoved(css::Rule& aRule) {
   NOTIFY(RuleRemoved, (*this, aRule));
 }
 
-void StyleSheet::RuleChanged(css::Rule* aRule) {
+void StyleSheet::RuleChanged(css::Rule* aRule, StyleRuleChangeKind aKind) {
   SetModifiedRules();
-  NOTIFY(RuleChanged, (*this, aRule));
+  NOTIFY(RuleChanged, (*this, aRule, aKind));
 }
 
 // nsICSSLoaderObserver implementation
