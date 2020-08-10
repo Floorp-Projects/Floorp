@@ -71,10 +71,10 @@ class ContentIteratorBase {
 
   // Recursively get the deepest first/last child of aRoot.  This will return
   // aRoot itself if it has no children.
-  nsINode* GetDeepFirstChild(nsINode* aRoot);
-  nsIContent* GetDeepFirstChild(nsIContent* aRoot);
-  nsINode* GetDeepLastChild(nsINode* aRoot);
-  nsIContent* GetDeepLastChild(nsIContent* aRoot);
+  static nsINode* GetDeepFirstChild(nsINode* aRoot);
+  static nsIContent* GetDeepFirstChild(nsIContent* aRoot);
+  static nsINode* GetDeepLastChild(nsINode* aRoot);
+  static nsIContent* GetDeepLastChild(nsIContent* aRoot);
 
   // Get the next/previous sibling of aNode, or its parent's, or grandparent's,
   // etc.  Returns null if aNode and all its ancestors have no next/previous
