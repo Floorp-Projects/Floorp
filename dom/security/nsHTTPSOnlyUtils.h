@@ -8,6 +8,8 @@
 #define nsHTTPSOnlyUtils_h___
 
 #include "nsIScriptError.h"
+#include "nsISupports.h"
+#include "mozilla/net/DocumentLoadListener.h"
 
 class nsHTTPSOnlyUtils {
  public:
@@ -17,6 +19,16 @@ class nsHTTPSOnlyUtils {
    * @return true if HTTPS-Only Mode is enabled
    */
   static bool IsHttpsOnlyModeEnabled(bool aFromPrivateWindow);
+
+  /**
+   * Potentially fires an http request for a top-level load (provided by
+   * aDocumentLoadListener) in the background to avoid long timeouts in case
+   * the upgraded https top-level load most likely will result in timeout.
+   * @param aDocumentLoadListener The Document listener associated with
+   *                              the original top-level channel.
+   */
+  static void PotentiallyFireHttpRequestToShortenTimout(
+      mozilla::net::DocumentLoadListener* aDocumentLoadListener);
 
   /**
    * Determines if a request should get upgraded because of the HTTPS-Only mode.
@@ -100,4 +112,40 @@ class nsHTTPSOnlyUtils {
    */
   static bool LoopbackOrLocalException(nsIURI* aURI);
 };
+
+/**
+ * Helper class to perform an http request with a N milliseconds
+ * delay. If that http request is 'receiving data' before the
+ * upgraded https request, then it's a strong indicator that
+ * the https request will result in a timeout and hence we
+ * cancel the https request which will result in displaying
+ * the exception page.
+ */
+class TestHTTPAnswerRunnable final : public mozilla::Runnable,
+                                     public nsIStreamListener,
+                                     public nsIInterfaceRequestor,
+                                     public nsITimerCallback {
+ public:
+  // TestHTTPAnswerRunnable needs to implement all these channel related
+  // interfaces because otherwise our Necko code is not happy, but we
+  // really only care about ::OnStartRequest.
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSITIMERCALLBACK
+
+  explicit TestHTTPAnswerRunnable(
+      nsIURI* aURI, mozilla::net::DocumentLoadListener* aDocumentLoadListener);
+
+ protected:
+  ~TestHTTPAnswerRunnable() = default;
+
+ private:
+  RefPtr<nsIURI> mURI;
+  RefPtr<mozilla::net::DocumentLoadListener> mDocumentLoadListener;
+  RefPtr<nsITimer> mTimer;
+};
+
 #endif /* nsHTTPSOnlyUtils_h___ */
