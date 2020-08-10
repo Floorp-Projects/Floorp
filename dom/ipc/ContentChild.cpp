@@ -1014,8 +1014,7 @@ nsresult ContentChild::ProvideWindowCommon(
 
   // Now that |newChild| has had its IPC link established, call |Init| to set it
   // up.
-  RefPtr<nsPIDOMWindowOuter> parentWindow =
-      parent ? parent->GetDOMWindow() : nullptr;
+  nsPIDOMWindowOuter* parentWindow = parent ? parent->GetDOMWindow() : nullptr;
   if (NS_FAILED(newChild->Init(parentWindow, windowChild))) {
     return NS_ERROR_ABORT;
   }
