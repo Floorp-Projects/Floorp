@@ -56,7 +56,14 @@ class ContentIteratorBase {
   virtual nsresult PositionAt(nsINode* aCurNode);
 
  protected:
-  explicit ContentIteratorBase(bool aPre);
+  enum class Order {
+    Pre, /*!< <https://en.wikipedia.org/wiki/Tree_traversal#Pre-order_(NLR)>.
+          */
+    Post /*!< <https://en.wikipedia.org/wiki/Tree_traversal#Post-order_(LRN)>.
+          */
+  };
+
+  explicit ContentIteratorBase(Order aOrder);
 
   class Initializer;
 
@@ -94,7 +101,9 @@ class ContentIteratorBase {
   nsCOMPtr<nsINode> mClosestCommonInclusiveAncestor;
 
   bool mIsDone;
-  const bool mPre;
+
+  const Order mOrder;
+
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
                                           ContentIteratorBase&, const char*,
                                           uint32_t);
@@ -127,7 +136,7 @@ inline void ImplCycleCollectionUnlink(ContentIteratorBase& aField) {
  */
 class PostContentIterator final : public ContentIteratorBase {
  public:
-  PostContentIterator() : ContentIteratorBase(false) {}
+  PostContentIterator() : ContentIteratorBase(Order::Post) {}
   PostContentIterator(const PostContentIterator&) = delete;
   PostContentIterator& operator=(const PostContentIterator&) = delete;
   virtual ~PostContentIterator() = default;
@@ -153,7 +162,7 @@ inline void ImplCycleCollectionUnlink(PostContentIterator& aField) {
  */
 class PreContentIterator final : public ContentIteratorBase {
  public:
-  PreContentIterator() : ContentIteratorBase(true) {}
+  PreContentIterator() : ContentIteratorBase(Order::Pre) {}
   PreContentIterator(const PreContentIterator&) = delete;
   PreContentIterator& operator=(const PreContentIterator&) = delete;
   virtual ~PreContentIterator() = default;
@@ -179,7 +188,7 @@ inline void ImplCycleCollectionUnlink(PreContentIterator& aField) {
  */
 class ContentSubtreeIterator final : public ContentIteratorBase {
  public:
-  ContentSubtreeIterator() : ContentIteratorBase(true) {}
+  ContentSubtreeIterator() : ContentIteratorBase(Order::Pre) {}
   ContentSubtreeIterator(const ContentSubtreeIterator&) = delete;
   ContentSubtreeIterator& operator=(const ContentSubtreeIterator&) = delete;
   virtual ~ContentSubtreeIterator() = default;
