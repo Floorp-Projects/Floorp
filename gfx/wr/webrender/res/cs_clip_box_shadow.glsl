@@ -17,32 +17,50 @@ flat varying float vClipMode;
 
 #ifdef WR_VERTEX_SHADER
 
+PER_INSTANCE in ivec2 aClipDataResourceAddress;
+PER_INSTANCE in vec2 aClipSrcRectSize;
+PER_INSTANCE in int aClipMode;
+PER_INSTANCE in ivec2 aStretchMode;
+PER_INSTANCE in vec4 aClipDestRect;
+
+struct ClipMaskInstanceBoxShadow {
+    ClipMaskInstanceCommon shared;
+    ivec2 resource_address;
+};
+
+ClipMaskInstanceBoxShadow fetch_clip_item() {
+    ClipMaskInstanceBoxShadow cmi;
+
+    cmi.shared = fetch_clip_item_common();
+    cmi.resource_address = aClipDataResourceAddress;
+
+    return cmi;
+}
+
 struct BoxShadowData {
     vec2 src_rect_size;
-    float clip_mode;
+    int clip_mode;
     int stretch_mode_x;
     int stretch_mode_y;
     RectWithSize dest_rect;
 };
 
-BoxShadowData fetch_data(ivec2 address) {
-    vec4 data[3] = fetch_from_gpu_cache_3_direct(address);
-    RectWithSize dest_rect = RectWithSize(data[2].xy, data[2].zw);
+BoxShadowData fetch_data() {
     BoxShadowData bs_data = BoxShadowData(
-        data[0].xy,
-        data[0].z,
-        int(data[1].x),
-        int(data[1].y),
-        dest_rect
+        aClipSrcRectSize,
+        aClipMode,
+        aStretchMode.x,
+        aStretchMode.y,
+        RectWithSize(aClipDestRect.xy, aClipDestRect.zw)
     );
     return bs_data;
 }
 
 void main(void) {
-    ClipMaskInstance cmi = fetch_clip_item();
-    Transform clip_transform = fetch_transform(cmi.clip_transform_id);
-    Transform prim_transform = fetch_transform(cmi.prim_transform_id);
-    BoxShadowData bs_data = fetch_data(cmi.clip_data_address);
+    ClipMaskInstanceBoxShadow cmi = fetch_clip_item();
+    Transform clip_transform = fetch_transform(cmi.shared.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.shared.prim_transform_id);
+    BoxShadowData bs_data = fetch_data();
     ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
     RectWithSize dest_rect = bs_data.dest_rect;
@@ -51,13 +69,13 @@ void main(void) {
         dest_rect,
         prim_transform,
         clip_transform,
-        cmi.sub_rect,
-        cmi.task_origin,
-        cmi.screen_origin,
-        cmi.device_pixel_scale
+        cmi.shared.sub_rect,
+        cmi.shared.task_origin,
+        cmi.shared.screen_origin,
+        cmi.shared.device_pixel_scale
     );
     vLayer = res.layer;
-    vClipMode = bs_data.clip_mode;
+    vClipMode = float(bs_data.clip_mode);
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vec2 local_pos = vi.local_pos.xy / vi.local_pos.w;
