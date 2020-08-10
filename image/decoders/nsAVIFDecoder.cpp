@@ -195,6 +195,9 @@ bool nsAVIFDecoder::DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
     case DAV1D_MC_BT2020_CL:
       aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
       break;
+    case DAV1D_MC_IDENTITY:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::Identity;
+      break;
     case DAV1D_MC_CHROMAT_NCL:
     case DAV1D_MC_CHROMAT_CL:
     case DAV1D_MC_UNKNOWN:  // MIAF specific
@@ -327,6 +330,9 @@ bool nsAVIFDecoder::DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
       break;
     case AOM_CICP_MC_BT_2020_CL:
       aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
+      break;
+    case AOM_CICP_MC_IDENTITY:
+      aDecodedData.mYUVColorSpace = gfx::YUVColorSpace::Identity;
       break;
     case AOM_CICP_MC_CHROMAT_NCL:
     case AOM_CICP_MC_CHROMAT_CL:
