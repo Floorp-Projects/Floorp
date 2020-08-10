@@ -119,8 +119,20 @@ void Assembler::addPendingJump(JmpSrc src, ImmPtr target,
   if (reloc == RelocationKind::JITCODE) {
     jumpRelocations_.writeUnsigned(src.offset());
   }
-  enoughMemory_ &=
-      jumps_.append(RelativePatch(src.offset(), target.value, reloc));
+
+  static_assert(MaxCodeBytesPerProcess <= uint64_t(2) * 1024 * 1024 * 1024,
+                "Code depends on using int32_t for cross-JitCode jump offsets");
+
+  MOZ_ASSERT_IF(reloc == RelocationKind::JITCODE,
+                AddressIsInExecutableMemory(target.value));
+
+  RelativePatch patch(src.offset(), target.value, reloc);
+  if (reloc == RelocationKind::JITCODE ||
+      AddressIsInExecutableMemory(target.value)) {
+    enoughMemory_ &= codeJumps_.append(patch);
+  } else {
+    enoughMemory_ &= extendedJumps_.append(patch);
+  }
 }
 
 void Assembler::finish() {
@@ -128,7 +140,7 @@ void Assembler::finish() {
     return;
   }
 
-  if (!jumps_.length()) {
+  if (!extendedJumps_.length()) {
     // Since we may be folowed by non-executable data, eagerly insert an
     // undefined instruction byte to prevent processors from decoding
     // gibberish into their pipelines. See Intel performance guides.
@@ -141,7 +153,7 @@ void Assembler::finish() {
   extendedJumpTable_ = masm.size();
 
   // Zero the extended jumps table.
-  for (size_t i = 0; i < jumps_.length(); i++) {
+  for (size_t i = 0; i < extendedJumps_.length(); i++) {
 #ifdef DEBUG
     size_t oldSize = masm.size();
 #endif
@@ -160,10 +172,19 @@ void Assembler::finish() {
 void Assembler::executableCopy(uint8_t* buffer) {
   AssemblerX86Shared::executableCopy(buffer);
 
-  for (size_t i = 0; i < jumps_.length(); i++) {
-    RelativePatch& rp = jumps_[i];
+  for (RelativePatch& rp : codeJumps_) {
     uint8_t* src = buffer + rp.offset;
     MOZ_ASSERT(rp.target);
+
+    MOZ_RELEASE_ASSERT(X86Encoding::CanRelinkJump(src, rp.target));
+    X86Encoding::SetRel32(src, rp.target);
+  }
+
+  for (size_t i = 0; i < extendedJumps_.length(); i++) {
+    RelativePatch& rp = extendedJumps_[i];
+    uint8_t* src = buffer + rp.offset;
+    MOZ_ASSERT(rp.target);
+
     if (X86Encoding::CanRelinkJump(src, rp.target)) {
       X86Encoding::SetRel32(src, rp.target);
     } else {
@@ -204,15 +225,9 @@ class RelocationIterator {
 
 JitCode* Assembler::CodeFromJump(JitCode* code, uint8_t* jump) {
   uint8_t* target = (uint8_t*)X86Encoding::GetRel32Target(jump);
-  if (target >= code->raw() &&
-      target < code->raw() + code->instructionsSize()) {
-    // This jump is within the code buffer, so it has been redirected to
-    // the extended jump table.
-    MOZ_ASSERT(target + SizeOfJumpTableEntry <=
-               code->raw() + code->instructionsSize());
 
-    target = (uint8_t*)X86Encoding::GetPointer(target + SizeOfExtendedJump);
-  }
+  MOZ_ASSERT(!code->containsNativePC(target),
+             "Extended jump table not used for cross-JitCode jumps");
 
   return JitCode::FromExecutable(target);
 }
