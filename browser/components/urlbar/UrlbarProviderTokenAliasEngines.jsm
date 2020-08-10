@@ -165,10 +165,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
           // We found a specific engine. We will add an autofill result.
           let aliasPreservingUserCase =
             token.value + alias.substr(token.value.length);
-          // Don't append a space if update2 is on since selecting this result
-          // will just enter search mode.
-          let value =
-            aliasPreservingUserCase + (UrlbarPrefs.get("update2") ? "" : " ");
+          let value = aliasPreservingUserCase + " ";
           let result = new UrlbarResult(
             UrlbarUtils.RESULT_TYPE.SEARCH,
             UrlbarUtils.RESULT_SOURCE.SEARCH,

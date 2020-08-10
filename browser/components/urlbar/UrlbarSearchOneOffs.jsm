@@ -156,20 +156,20 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    *
    * @param {event} event
    *   The event that triggered the pick.
-   * @param {object} searchMode
-   *   Used by UrlbarInput.setSearchMode to enter search mode. See setSearchMode
-   *   documentation for details.
+   * @param {nsISearchEngine|SearchEngine|UrlbarUtils.RESULT_SOURCE} engineOrSource
+   *   The engine that was picked, or for local search mode sources, the source
+   *   that was picked as a UrlbarUtils.RESULT_SOURCE value.
    * @param {boolean} forceNewTab
    *   True if the search results page should be loaded in a new tab.
    */
-  handleSearchCommand(event, searchMode, forceNewTab = false) {
+  handleSearchCommand(event, engineOrSource, forceNewTab = false) {
     if (!this.view.oneOffsRefresh) {
       let { where, params } = this._whereToOpen(event, forceNewTab);
       this.input.handleCommand(event, where, params);
       return;
     }
 
-    this.input.setSearchMode(searchMode);
+    this.input.setSearchMode(engineOrSource);
     this.selectedButton = null;
     this.input.startQuery({
       allowAutofill: false,
@@ -267,13 +267,11 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     }
 
     let button = event.originalTarget;
-    if (!button.engine && !button.source) {
+    let engineOrSource = button.engine || button.source;
+    if (!engineOrSource) {
       return;
     }
 
-    this.handleSearchCommand(event, {
-      engineName: button.engine?.name,
-      source: button.source,
-    });
+    this.handleSearchCommand(event, engineOrSource);
   }
 }
