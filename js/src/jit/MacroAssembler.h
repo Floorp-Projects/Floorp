@@ -3177,6 +3177,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                         Register valueTemp, Register offsetTemp,
                         Register maskTemp) DEFINED_ON(mips_shared);
 
+  void atomicIsLockFreeJS(Register value, Register output);
+
   // ========================================================================
   // Spectre Mitigations.
   //
