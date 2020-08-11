@@ -10,7 +10,7 @@ fuzzy(0-100,0-30) == 1149923.html 1149923-ref.html # use fuzzy due to few distor
 == 1419528.html 1419528-ref.html
 == 1424673.html 1424673-ref.html
 == 1429411.html 1429411-ref.html
-== 1435143.html 1435143-ref.html
+fuzzy-if(winWidget,0-1,0-4) == 1435143.html 1435143-ref.html
 == 1444904.html 1444904-ref.html
 fuzzy-if(winWidget&&webrender,90-95,1000-1100) == 1451168.html 1451168-ref.html
 == 1461313.html 1461313-ref.html
