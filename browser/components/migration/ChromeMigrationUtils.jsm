@@ -20,6 +20,9 @@ const S100NS_FROM1601TO1970 = 0x19db1ded53e8000;
 const S100NS_PER_MS = 10;
 
 var ChromeMigrationUtils = {
+  // Supported browsers with importable logins.
+  CONTEXTUAL_LOGIN_IMPORT_BROWSERS: ["chrome", "chromium-edge", "chromium"],
+
   _extensionVersionDirectoryNames: {},
 
   // The cache for the locale strings.
@@ -371,7 +374,7 @@ var ChromeMigrationUtils = {
       this._importableLoginsCache = new Map();
 
       // Just handle these chromium-based browsers for now.
-      for (const browserId of ["chrome", "chromium-edge", "chromium"]) {
+      for (const browserId of this.CONTEXTUAL_LOGIN_IMPORT_BROWSERS) {
         // Skip if there's no profile data.
         const migrator = await MigrationUtils.getMigrator(browserId);
         if (!migrator) {
