@@ -7284,6 +7284,82 @@ AttachDecision CallIRGenerator::tryAttachAtomicsLoad(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
+  if (!JitSupportsAtomics()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need three arguments.
+  if (argc_ != 3) {
+    return AttachDecision::NoAction;
+  }
+
+  // Atomics.store() is annoying because it returns the result of converting the
+  // value by ToInteger(), not the input value, nor the result of converting the
+  // value by ToInt32(). It is especially annoying because almost nobody uses
+  // the result value.
+  //
+  // As an expedient compromise, therefore, we inline only if the result is
+  // obviously unused or if the argument is already Int32 and thus requires no
+  // conversion.
+
+  // Arguments: typedArray, index (number), value.
+  if (!args_[0].isObject() || !args_[0].toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+  if (!args_[1].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+  if (op_ == JSOp::CallIgnoresRv ? !args_[2].isNumber() : !args_[2].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1].toNumber())) {
+    return AttachDecision::NoAction;
+  }
+
+  // TODO: Uint32 isn't yet supported (bug 1077305).
+  if (typedArray->type() == Scalar::Uint32) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the `store` native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(arg0Id);
+  writer.guardShapeForClass(objId, typedArray->shape());
+
+  // Convert index to int32.
+  ValOperandId indexId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
+
+  // Ensure value is int32.
+  ValOperandId valueId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  Int32OperandId int32ValueId;
+  if (op_ == JSOp::CallIgnoresRv) {
+    int32ValueId = writer.guardToInt32ModUint32(valueId);
+  } else {
+    int32ValueId = writer.guardToInt32(valueId);
+  }
+
+  writer.atomicsStoreResult(objId, int32IndexId, int32ValueId,
+                            typedArray->type());
+
+  // This stub doesn't need to be monitored, because it always returns an int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("AtomicsStore");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8381,6 +8457,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachAtomicsXor(callee);
     case InlinableNative::AtomicsLoad:
       return tryAttachAtomicsLoad(callee);
+    case InlinableNative::AtomicsStore:
+      return tryAttachAtomicsStore(callee);
 
     default:
       return AttachDecision::NoAction;
