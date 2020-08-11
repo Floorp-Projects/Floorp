@@ -23,6 +23,10 @@ em {
   font-weight: 600;
 }
 
+.learn-more-container {
+  margin-block-start: 2rem;
+}
+
 .button-container {
   display: flex;
   flex-flow: row wrap;

@@ -66,6 +66,7 @@ let RemotePageAccessManager = {
       RPMAddToHistogram: ["*"],
     },
     "about:httpsonlyerror": {
+      RPMGetFormatURLPref: ["app.support.baseURL"],
       RPMSendAsyncMessage: ["goBack", "openInsecure"],
     },
     "about:certificate": {

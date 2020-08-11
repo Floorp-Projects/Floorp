@@ -13,3 +13,4 @@ about-httpsonly-explanation-risk = It’s also possible that an attacker is invo
 
 about-httpsonly-button-accept-and-continue = Accept the Risk and Continue
 about-httpsonly-button-go-back = Go Back
+about-httpsonly-link-learn-more = Learn More…
