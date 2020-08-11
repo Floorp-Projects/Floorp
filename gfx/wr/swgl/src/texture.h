@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 template <typename S>
-static PackedRGBA8 textureLinearPackedRGBA8(S sampler, ivec2 i, int zoffset) {
+static WideRGBA8 textureLinearUnpackedRGBA8(S sampler, ivec2 i, int zoffset) {
   assert(sampler->format == TextureFormat::RGBA8);
   ivec2 frac = i & 0x7F;
   i >>= 7;
@@ -48,7 +48,12 @@ static PackedRGBA8 textureLinearPackedRGBA8(S sampler, ivec2 i, int zoffset) {
   auto cdh = combine(highHalf(c0), highHalf(d0));
   cdl += ((cdh - cdl) * fracx.zzzzwwww) >> 7;
 
-  return pack(combine(HalfRGBA8(abl), HalfRGBA8(cdl)));
+  return combine(HalfRGBA8(abl), HalfRGBA8(cdl));
+}
+
+template <typename S>
+static PackedRGBA8 textureLinearPackedRGBA8(S sampler, ivec2 i, int zoffset) {
+  return pack(textureLinearUnpackedRGBA8(sampler, i, zoffset));
 }
 
 template <typename S>
@@ -143,21 +148,21 @@ static PackedRG8 textureLinearPackedRG8(S sampler, ivec2 i, int zoffset) {
   uint16_t* buf = (uint16_t*)sampler->buf;
 
   // Load RG bytes for two adjacent pixels - rgRG
-  auto a0 = unaligned_load<V4<uint8_t> >(&buf[row0.x]);
-  auto b0 = unaligned_load<V4<uint8_t> >(&buf[row0.y]);
+  auto a0 = unaligned_load<V4<uint8_t>>(&buf[row0.x]);
+  auto b0 = unaligned_load<V4<uint8_t>>(&buf[row0.y]);
   auto ab0 = CONVERT(combine(a0, b0), V8<int16_t>);
   // Load two pixels for next row
-  auto a1 = unaligned_load<V4<uint8_t> >(&buf[row1.x]);
-  auto b1 = unaligned_load<V4<uint8_t> >(&buf[row1.y]);
+  auto a1 = unaligned_load<V4<uint8_t>>(&buf[row1.x]);
+  auto b1 = unaligned_load<V4<uint8_t>>(&buf[row1.y]);
   auto ab1 = CONVERT(combine(a1, b1), V8<int16_t>);
   // Blend rows
   ab0 += ((ab1 - ab0) * fracy.xxxxyyyy) >> 7;
 
-  auto c0 = unaligned_load<V4<uint8_t> >(&buf[row0.z]);
-  auto d0 = unaligned_load<V4<uint8_t> >(&buf[row0.w]);
+  auto c0 = unaligned_load<V4<uint8_t>>(&buf[row0.z]);
+  auto d0 = unaligned_load<V4<uint8_t>>(&buf[row0.w]);
   auto cd0 = CONVERT(combine(c0, d0), V8<int16_t>);
-  auto c1 = unaligned_load<V4<uint8_t> >(&buf[row1.z]);
-  auto d1 = unaligned_load<V4<uint8_t> >(&buf[row1.w]);
+  auto c1 = unaligned_load<V4<uint8_t>>(&buf[row1.z]);
+  auto d1 = unaligned_load<V4<uint8_t>>(&buf[row1.w]);
   auto cd1 = CONVERT(combine(c1, d1), V8<int16_t>);
   // Blend rows
   cd0 += ((cd1 - cd0) * fracy.zzzzwwww) >> 7;
@@ -177,4 +182,3 @@ static PackedRG8 textureLinearPackedRG8(S sampler, ivec2 i, int zoffset) {
 
   return pack(WideRG8(abcdl));
 }
-

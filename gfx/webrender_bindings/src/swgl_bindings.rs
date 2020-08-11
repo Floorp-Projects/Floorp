@@ -110,10 +110,10 @@ impl SwTile {
         surface: &SwSurface,
         transform: &CompositorSurfaceTransform,
         clip_rect: &DeviceIntRect,
-    ) -> Option<(DeviceIntRect, DeviceIntRect)> {
+    ) -> Option<(DeviceIntRect, DeviceIntRect, bool)> {
         let valid = self.valid_rect.translate(self.origin(surface).to_vector());
         let valid = transform.transform_rect(&valid.to_f32().cast_unit()).unwrap().round_out().to_i32();
-        valid.cast_unit().intersection(clip_rect).map(|r| (r.translate(-valid.origin.to_vector().cast_unit()), r))
+        valid.cast_unit().intersection(clip_rect).map(|r| (r.translate(-valid.origin.to_vector().cast_unit()), r, transform.m22 < 0.0))
     }
 }
 
@@ -245,6 +245,7 @@ impl DrawTileHelper {
         src: &DeviceIntRect,
         surface: &SwSurface,
         tile: &SwTile,
+        _flip_y: bool,
     ) {
         let dx = dest.origin.x as f32 / viewport.size.width as f32;
         let dy = dest.origin.y as f32 / viewport.size.height as f32;
@@ -258,12 +259,12 @@ impl DrawTileHelper {
                 0.0,
                 0.0,
                 0.0,
-                -2.0 * dh,
+                if flip_y { 2.0 * dh } else { -2.0 * dh },
                 0.0,
                 -1.0 + 2.0 * dx,
-                1.0 - 2.0 * dy,
+                if flip_y [ -1.0 + 2.0 * dy } else { 1.0 - 2.0 * dy },
                 1.0,
-            ],
+             ],
         );
         let sx = src.origin.x as f32 / surface.tile_size.width as f32;
         let sy = src.origin.y as f32 / surface.tile_size.height as f32;
@@ -271,6 +272,7 @@ impl DrawTileHelper {
         let sh = src.size.height as f32 / surface.tile_size.height as f32;
         self.gl
             .uniform_matrix_3fv(self.tex_matrix_loc, false, &[sw, 0.0, 0.0, 0.0, sh, 0.0, sx, sy, 1.0]);
+
         self.gl.bind_texture(gl::TEXTURE_2D, tile.tex_id);
         self.gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
     }
@@ -289,8 +291,9 @@ struct SwCompositeJob {
     /// Locked framebuffer that may be shared among many jobs
     locked_dst: swgl::LockedResource,
     src_rect: DeviceIntRect,
-    dst_offset: DeviceIntPoint,
+    dst_rect: DeviceIntRect,
     opaque: bool,
+    flip_y: bool,
 }
 
 /// The SwComposite thread processes a queue of composite jobs, also signaling
@@ -336,10 +339,12 @@ impl SwCompositeThread {
                         job.src_rect.origin.y,
                         job.src_rect.size.width,
                         job.src_rect.size.height,
-                        job.dst_offset.x,
-                        job.dst_offset.y,
+                        job.dst_rect.origin.x,
+                        job.dst_rect.origin.y,
+                        job.dst_rect.size.width,
+                        job.dst_rect.size.height,
                         job.opaque,
-                        false,
+                        job.flip_y,
                     );
                     // Release locked resources before modifying job count
                     drop(job);
@@ -365,6 +370,7 @@ impl SwCompositeThread {
         src_rect: DeviceIntRect,
         dst_rect: DeviceIntRect,
         opaque: bool,
+        flip_y: bool,
     ) {
         // There are still tile updates happening, so send the job to the SwComposite thread.
         *self.job_count.lock().unwrap() += 1;
@@ -373,8 +379,9 @@ impl SwCompositeThread {
                 locked_src,
                 locked_dst,
                 src_rect,
-                dst_offset: dst_rect.origin,
+                dst_rect,
                 opaque,
+                flip_y,
             })
             .expect("Failing queuing SwComposite job");
     }
@@ -515,10 +522,10 @@ impl SwCompositor {
         tile: &SwTile,
     ) {
         if let Some(ref composite_thread) = self.composite_thread {
-            if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, transform, clip_rect) {
+            if let Some((src_rect, dst_rect, flip_y)) = tile.composite_rects(surface, transform, clip_rect) {
                 if let Some(texture) = self.gl.lock_texture(tile.color_id) {
                     let framebuffer = self.locked_framebuffer.clone().unwrap();
-                    composite_thread.queue_composite(texture, framebuffer, src_rect, dst_rect, surface.is_opaque);
+                    composite_thread.queue_composite(texture, framebuffer, src_rect, dst_rect, surface.is_opaque, flip_y);
                 }
             }
         }
@@ -937,7 +944,7 @@ impl Compositor for SwCompositor {
                     let viewport = dirty.translate(info.origin.to_vector());
                     let draw_tile = self.draw_tile.as_ref().unwrap();
                     draw_tile.enable(&viewport);
-                    draw_tile.draw(&viewport, &viewport, &dirty, &surface, &tile);
+                    draw_tile.draw(&viewport, &viewport, &dirty, &surface, &tile, false);
                     draw_tile.disable();
 
                     native_gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, 0);
@@ -1001,8 +1008,8 @@ impl Compositor for SwCompositor {
                         blend = true;
                     }
                     for tile in &surface.tiles {
-                        if let Some((src_rect, dst_rect)) = tile.composite_rects(surface, transform, clip_rect) {
-                            draw_tile.draw(&viewport, &dst_rect, &src_rect, surface, tile);
+                        if let Some((src_rect, dst_rect, flip_y)) = tile.composite_rects(surface, transform, clip_rect) {
+                            draw_tile.draw(&viewport, &dst_rect, &src_rect, surface, tile, flip_y);
                         }
                     }
                 }
