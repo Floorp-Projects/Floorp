@@ -845,12 +845,11 @@ class MozbuildObject(ProcessExecutionMixin):
     def ensure_pipenv(self):
         self.activate_virtualenv()
         pipenv = os.path.join(self.virtualenv_manager.bin_path, 'pipenv')
-        if not os.path.exists(pipenv):
+        if not os.path.exists(pipenv + '.exe' if self._is_windows() else pipenv):
             for package in ['certifi', 'pipenv', 'six', 'virtualenv', 'virtualenv-clone']:
                 path = os.path.normpath(os.path.join(
                     self.topsrcdir, 'third_party/python', package))
                 self.virtualenv_manager.install_pip_package(path, vendored=True)
-        return pipenv
 
     def activate_pipenv(self, workon_home, pipfile=None, populate=False,
                         python=None):
