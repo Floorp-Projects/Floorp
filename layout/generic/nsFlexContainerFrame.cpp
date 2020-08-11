@@ -1580,7 +1580,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
   }
 
   // We may be about to do computations based on our item's cross-size
-  // (e.g. using it as a contstraint when measuring our content in the
+  // (e.g. using it as a constraint when measuring our content in the
   // main axis, or using it with the intrinsic ratio to obtain a main size).
   // BEFORE WE DO THAT, we need let the item "pre-stretch" its cross size (if
   // it's got 'align-self:stretch'), for a certain case where the spec says
