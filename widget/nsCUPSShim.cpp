@@ -10,33 +10,34 @@
 #include "mozilla/ArrayUtils.h"
 #include "prlink.h"
 
-#ifdef XP_MACOSX
-// TODO: On OS X we are guaranteed to have CUPS, so it would be nice to just
-// assign the members from the header directly instead of dlopen'ing.
-// Alternatively, we could just do some #define's on OS X, but we don't use
-// CUPS all that much, so there really isn't too much overhead in storing this
-// table of functions even on OS X.
+#ifdef CUPS_SHIM_RUNTIME_LINK
+
+// TODO: This is currently pointless as we always use the compile-time linked
+// version of CUPS, but in the future this may become a configure option.
+// We also cannot use NSPR's library suffix support, since that cannot handle
+// version number suffixes.
+#  ifdef XP_MACOSX
 static const char gCUPSLibraryName[] = "libcups.2.dylib";
-#else
+#  else
 static const char gCUPSLibraryName[] = "libcups.so.2";
-#endif
+#  endif
 
 template <typename FuncT>
 static bool LoadCupsFunc(PRLibrary*& lib, FuncT*& dest,
                          const char* const name) {
   dest = (FuncT*)PR_FindSymbol(lib, name);
   if (MOZ_UNLIKELY(!dest)) {
-#ifdef DEBUG
+#  ifdef DEBUG
     nsAutoCString msg(name);
     msg.AppendLiteral(" not found in CUPS library");
     NS_WARNING(msg.get());
-#endif
-#ifndef MOZ_TSAN
+#  endif
+#  ifndef MOZ_TSAN
     // With TSan, we cannot unload libcups once we have loaded it because
     // TSan does not support unloading libraries that are matched from its
     // suppression list. Hence we just keep the library loaded in TSan builds.
     PR_UnloadLibrary(lib);
-#endif
+#  endif
     lib = nullptr;
     return false;
   }
@@ -56,10 +57,19 @@ bool nsCUPSShim::Init() {
 
 // This is a macro so that it could also load from libcups if we are configured
 // to use it as a compile-time dependency.
-#define CUPS_SHIM_LOAD(NAME) \
-  if (!LoadCupsFunc(mCupsLib, NAME, #NAME)) return false;
+#  define CUPS_SHIM_LOAD(NAME) \
+    if (!LoadCupsFunc(mCupsLib, NAME, #NAME)) return false;
   CUPS_SHIM_ALL_FUNCS(CUPS_SHIM_LOAD)
-#undef CUPS_SHIM_LOAD
+#  undef CUPS_SHIM_LOAD
   mInited = true;
   return true;
 }
+
+#else  // CUPS_SHIM_RUNTIME_LINK
+
+bool nsCUPSShim::Init() {
+  mInited = true;
+  return true;
+}
+
+#endif
