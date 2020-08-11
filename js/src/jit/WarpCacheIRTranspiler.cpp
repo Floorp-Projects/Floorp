@@ -2273,7 +2273,7 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
 
   if (length->isConstant()) {
     int32_t len = length->toConstant()->toInt32();
-    if (len >= 0 &&
+    if (len > 0 &&
         uint32_t(len) == templateObj->as<TypedArrayObject>().length()) {
       auto* templateConst = constant(ObjectValue(*templateObj));
       auto* obj = MNewTypedArray::New(alloc(), /* constraints = */ nullptr,
