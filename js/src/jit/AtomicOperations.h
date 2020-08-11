@@ -303,7 +303,7 @@ class AtomicOperations {
 };
 
 inline bool AtomicOperations::isLockfreeJS(int32_t size) {
-  // Keep this in sync with visitAtomicIsLockFree() in jit/CodeGenerator.cpp.
+  // Keep this in sync with atomicIsLockFreeJS() in jit/MacroAssembler.cpp.
 
   switch (size) {
     case 1:
