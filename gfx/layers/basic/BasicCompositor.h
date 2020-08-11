@@ -34,6 +34,11 @@ class BasicCompositingRenderTarget : public CompositingRenderTarget {
   // root render targets and equal to GetOrigin() for non-root render targets.
   gfx::IntPoint GetClipSpaceOrigin() const { return mClipSpaceOrigin; }
 
+  // In render target coordinates, i.e. the same space as GetOrigin().
+  // NOT relative to mClipSpaceOrigin!
+  void SetClipRect(const Maybe<gfx::IntRect>& aRect) { mClipRect = aRect; }
+  const Maybe<gfx::IntRect>& GetClipRect() const { return mClipRect; }
+
   void BindRenderTarget();
 
   gfx::SurfaceFormat GetFormat() const override {
@@ -44,6 +49,7 @@ class BasicCompositingRenderTarget : public CompositingRenderTarget {
   RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::IntPoint mClipSpaceOrigin;
+  Maybe<gfx::IntRect> mClipRect;
 };
 
 class BasicCompositor : public Compositor {
