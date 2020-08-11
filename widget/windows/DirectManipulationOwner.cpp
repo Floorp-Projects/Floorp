@@ -415,6 +415,10 @@ void DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
                           100.0 * ((aPhase == Phase::eEnd) ? 1.f : mLastScale),
                           mods};
 
+  gfx::IntPoint lineOrPageDelta = PinchGestureInput::GetIntegerDeltaForEvent(
+      (aPhase == Phase::eStart), 0, event.ComputeDeltaY(mWindow));
+  event.mLineOrPageDeltaY = lineOrPageDelta.y;
+
   mWindow->SendAnAPZEvent(event);
 }
 

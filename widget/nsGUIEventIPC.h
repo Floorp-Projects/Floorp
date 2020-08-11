@@ -1306,6 +1306,7 @@ struct ParamTraits<mozilla::PinchGestureInput> {
     WriteParam(aMsg, aParam.mLocalFocusPoint);
     WriteParam(aMsg, aParam.mCurrentSpan);
     WriteParam(aMsg, aParam.mPreviousSpan);
+    WriteParam(aMsg, aParam.mLineOrPageDeltaY);
     WriteParam(aMsg, aParam.mHandledByAPZ);
   }
 
@@ -1319,6 +1320,7 @@ struct ParamTraits<mozilla::PinchGestureInput> {
            ReadParam(aMsg, aIter, &aResult->mLocalFocusPoint) &&
            ReadParam(aMsg, aIter, &aResult->mCurrentSpan) &&
            ReadParam(aMsg, aIter, &aResult->mPreviousSpan) &&
+           ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaY) &&
            ReadParam(aMsg, aIter, &aResult->mHandledByAPZ);
   }
 };
