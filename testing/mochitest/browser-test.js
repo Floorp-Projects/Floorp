@@ -383,7 +383,12 @@ Tester.prototype = {
       : "Found an unexpected {elt}";
 
     // Remove stale tabs
-    if (this.currentTest && window.gBrowser && gBrowser.tabs.length > 1) {
+    if (
+      this.currentTest &&
+      window.gBrowser &&
+      AppConstants.MOZ_APP_NAME != "thunderbird" &&
+      gBrowser.tabs.length > 1
+    ) {
       while (gBrowser.tabs.length > 1) {
         let lastTab = gBrowser.tabs[gBrowser.tabs.length - 1];
         if (!lastTab.closing) {
@@ -404,7 +409,7 @@ Tester.prototype = {
     }
 
     // Replace the last tab with a fresh one
-    if (window.gBrowser) {
+    if (window.gBrowser && AppConstants.MOZ_APP_NAME != "thunderbird") {
       gBrowser.addTab("about:blank", {
         skipAnimation: true,
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
