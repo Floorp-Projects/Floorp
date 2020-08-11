@@ -447,9 +447,9 @@ var gPrivacyPane = {
     httpsOnlyBox.removeAttribute("hidehttpsonly");
 
     let link = document.getElementById("httpsOnlyLearnMore");
-    let httpsOnlyURL = Services.urlFormatter.formatURLPref(
-      "domsecurity.httpsonly.infoURL"
-    );
+    let httpsOnlyURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "https-only-prefs";
     link.setAttribute("href", httpsOnlyURL);
 
     setSyncFromPrefListener("httpsOnlyRadioGroup", () =>
