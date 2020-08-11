@@ -286,7 +286,9 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setSourcePragmas(GetWorkerPref<bool>("source_pragmas"_ns))
       .setAsyncStack(GetWorkerPref<bool>("asyncstack"_ns))
       .setAsyncStackCaptureDebuggeeOnly(
-          GetWorkerPref<bool>("asyncstack_capture_debuggee_only"_ns));
+          GetWorkerPref<bool>("asyncstack_capture_debuggee_only"_ns))
+      .setPrivateClassFields(
+          GetWorkerPref<bool>("experimental.private_fields"_ns));
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
