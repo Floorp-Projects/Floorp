@@ -29,7 +29,7 @@ class SpliceableJSONWriter;
 // profile are not accessed until the profile is entirely written. For these
 // reasons we use a chunked writer that keeps an array of chunks, which is
 // concatenated together after writing is finished.
-class ChunkedJSONWriteFunc : public JSONWriteFunc {
+class ChunkedJSONWriteFunc final : public JSONWriteFunc {
  public:
   friend class SpliceableJSONWriter;
 
@@ -154,7 +154,7 @@ class ChunkedJSONWriteFunc : public JSONWriteFunc {
   Vector<size_t> mChunkLengths;
 };
 
-struct OStreamJSONWriteFunc : public JSONWriteFunc {
+struct OStreamJSONWriteFunc final : public JSONWriteFunc {
   explicit OStreamJSONWriteFunc(std::ostream& aStream) : mStream(aStream) {}
 
   void Write(const char* aStr) override { mStream << aStr; }
@@ -208,19 +208,21 @@ class SpliceableJSONWriter : public JSONWriter {
   }
 };
 
-class SpliceableChunkedJSONWriter : public SpliceableJSONWriter {
+class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
  public:
   explicit SpliceableChunkedJSONWriter()
       : SpliceableJSONWriter(MakeUnique<ChunkedJSONWriteFunc>()) {}
 
-  ChunkedJSONWriteFunc* WriteFunc() const {
-    return static_cast<ChunkedJSONWriteFunc*>(JSONWriter::WriteFunc());
+  ChunkedJSONWriteFunc* ChunkedWriteFunc() const {
+    // The WriteFunc was initialized with a ChunkedJSONWriteFunc in the only
+    // constructor above, so it's safe to cast to ChunkedJSONWriteFunc*.
+    return static_cast<ChunkedJSONWriteFunc*>(WriteFunc());
   }
 
   // Adopts the chunks from aFunc without copying.
-  virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) override {
+  void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) override {
     Separator();
-    WriteFunc()->Take(std::move(*aFunc));
+    ChunkedWriteFunc()->Take(std::move(*aFunc));
     mNeedComma[mDepth] = true;
   }
 };
