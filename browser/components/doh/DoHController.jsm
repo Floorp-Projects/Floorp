@@ -360,6 +360,7 @@ const DoHController = {
     let canaries = [];
     let filtering = [];
     let enterprise = [];
+    let platform = [];
 
     for (let [heuristicName, result] of Object.entries(results)) {
       if (result !== Heuristics.DISABLE_DOH) {
@@ -376,12 +377,15 @@ const DoHController = {
         ["policy", "modifiedRoots", "thirdPartyRoots"].includes(heuristicName)
       ) {
         enterprise.push(heuristicName);
+      } else if (["vpn", "proxy", "nrpt"].includes(heuristicName)) {
+        platform.push(heuristicName);
       }
     }
 
     resultsForTelemetry.canaries = canaries.join(",");
     resultsForTelemetry.filtering = filtering.join(",");
     resultsForTelemetry.enterprise = enterprise.join(",");
+    resultsForTelemetry.platform = platform.join(",");
 
     Services.telemetry.recordEvent(
       HEURISTICS_TELEMETRY_CATEGORY,
