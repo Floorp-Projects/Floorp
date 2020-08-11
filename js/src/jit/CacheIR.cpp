@@ -7231,6 +7231,59 @@ AttachDecision CallIRGenerator::tryAttachAtomicsXor(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachAtomicsLoad(HandleFunction callee) {
+  if (!JitSupportsAtomics()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need two arguments.
+  if (argc_ != 2) {
+    return AttachDecision::NoAction;
+  }
+
+  // Arguments: typedArray, index (number).
+  if (!args_[0].isObject() || !args_[0].toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+  if (!args_[1].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1].toNumber())) {
+    return AttachDecision::NoAction;
+  }
+
+  // TODO: Uint32 isn't yet supported (bug 1077305).
+  if (typedArray->type() == Scalar::Uint32) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the `load` native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(arg0Id);
+  writer.guardShapeForClass(objId, typedArray->shape());
+
+  // Convert index to int32.
+  ValOperandId indexId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
+
+  writer.atomicsLoadResult(objId, int32IndexId, typedArray->type());
+
+  // This stub doesn't need to be monitored, because it always returns an int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("AtomicsLoad");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8326,6 +8379,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachAtomicsOr(callee);
     case InlinableNative::AtomicsXor:
       return tryAttachAtomicsXor(callee);
+    case InlinableNative::AtomicsLoad:
+      return tryAttachAtomicsLoad(callee);
 
     default:
       return AttachDecision::NoAction;
