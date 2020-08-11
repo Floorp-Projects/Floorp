@@ -12,32 +12,44 @@ flat varying vec4 vClipMaskUvInnerRect;
 flat varying float vLayer;
 
 #ifdef WR_VERTEX_SHADER
-struct ImageMaskData {
-    vec2 local_mask_size;
+
+PER_INSTANCE in vec4 aClipTileRect;
+PER_INSTANCE in ivec2 aClipDataResourceAddress;
+PER_INSTANCE in vec4 aClipLocalRect;
+
+struct ClipMaskInstanceImage {
+    ClipMaskInstanceCommon shared;
+    RectWithSize tile_rect;
+    ivec2 resource_address;
+    RectWithSize local_rect;
 };
 
-ImageMaskData fetch_mask_data(ivec2 address) {
-    vec4 data = fetch_from_gpu_cache_1_direct(address);
-    ImageMaskData mask_data = ImageMaskData(data.xy);
-    return mask_data;
+ClipMaskInstanceImage fetch_clip_item() {
+    ClipMaskInstanceImage cmi;
+
+    cmi.shared = fetch_clip_item_common();
+
+    cmi.tile_rect = RectWithSize(aClipTileRect.xy, aClipTileRect.zw);
+    cmi.resource_address = aClipDataResourceAddress;
+    cmi.local_rect = RectWithSize(aClipLocalRect.xy, aClipLocalRect.zw);
+
+    return cmi;
 }
 
 void main(void) {
-    ClipMaskInstance cmi = fetch_clip_item();
-    Transform clip_transform = fetch_transform(cmi.clip_transform_id);
-    Transform prim_transform = fetch_transform(cmi.prim_transform_id);
-    ImageMaskData mask = fetch_mask_data(cmi.clip_data_address);
-    RectWithSize local_rect = RectWithSize(cmi.local_pos, mask.local_mask_size);
+    ClipMaskInstanceImage cmi = fetch_clip_item();
+    Transform clip_transform = fetch_transform(cmi.shared.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.shared.prim_transform_id);
     ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
     ClipVertexInfo vi = write_clip_tile_vertex(
-        local_rect,
+        cmi.local_rect,
         prim_transform,
         clip_transform,
-        cmi.sub_rect,
-        cmi.task_origin,
-        cmi.screen_origin,
-        cmi.device_pixel_scale
+        cmi.shared.sub_rect,
+        cmi.shared.task_origin,
+        cmi.shared.screen_origin,
+        cmi.shared.device_pixel_scale
     );
     vLocalPos = vi.local_pos;
     vLayer = res.layer;

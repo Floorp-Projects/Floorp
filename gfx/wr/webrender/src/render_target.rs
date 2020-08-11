@@ -685,9 +685,9 @@ impl RenderTarget for AlphaRenderTarget {
                     target_rect.size.to_f32(),
                 );
                 self.clip_batcher.add_clip_region(
-                    region_task.clip_data_address,
                     region_task.local_pos,
                     device_rect,
+                    region_task.clip_data.clone(),
                     target_rect.origin.to_f32(),
                     DevicePoint::zero(),
                     region_task.device_pixel_scale.0,

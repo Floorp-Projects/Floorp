@@ -17,30 +17,42 @@ flat varying vec4 vClipCenter_Radius_BR;
 flat varying float vClipMode;
 
 #ifdef WR_VERTEX_SHADER
-struct ClipRect {
-    RectWithSize rect;
-    vec4 mode;
+
+PER_INSTANCE in vec2 aClipLocalPos;
+PER_INSTANCE in vec4 aClipLocalRect;
+PER_INSTANCE in float aClipMode;
+PER_INSTANCE in vec4 aClipRect_TL;
+PER_INSTANCE in vec4 aClipRadii_TL;
+PER_INSTANCE in vec4 aClipRect_TR;
+PER_INSTANCE in vec4 aClipRadii_TR;
+PER_INSTANCE in vec4 aClipRect_BL;
+PER_INSTANCE in vec4 aClipRadii_BL;
+PER_INSTANCE in vec4 aClipRect_BR;
+PER_INSTANCE in vec4 aClipRadii_BR;
+
+struct ClipMaskInstanceRect {
+    ClipMaskInstanceCommon shared;
+    vec2 local_pos;
 };
 
-ClipRect fetch_clip_rect(ivec2 address) {
-    vec4 data[2] = fetch_from_gpu_cache_2_direct(address);
-    ClipRect rect = ClipRect(RectWithSize(data[0].xy, data[0].zw), data[1]);
-    return rect;
+ClipMaskInstanceRect fetch_clip_item() {
+    ClipMaskInstanceRect cmi;
+
+    cmi.shared = fetch_clip_item_common();
+    cmi.local_pos = aClipLocalPos;
+
+    return cmi;
 }
+
+struct ClipRect {
+    RectWithSize rect;
+    float mode;
+};
 
 struct ClipCorner {
     RectWithSize rect;
     vec4 outer_inner_radius;
 };
-
-// index is of type float instead of int because using an int led to shader
-// miscompilations with a macOS 10.12 Intel driver.
-ClipCorner fetch_clip_corner(ivec2 address, float index) {
-    address += ivec2(2 + 2 * int(index), 0);
-    vec4 data[2] = fetch_from_gpu_cache_2_direct(address);
-    ClipCorner corner = ClipCorner(RectWithSize(data[0].xy, data[0].zw), data[1]);
-    return corner;
-}
 
 struct ClipData {
     ClipRect rect;
@@ -50,23 +62,23 @@ struct ClipData {
     ClipCorner bottom_right;
 };
 
-ClipData fetch_clip(ivec2 address) {
+ClipData fetch_clip() {
     ClipData clip;
 
-    clip.rect = fetch_clip_rect(address);
-    clip.top_left = fetch_clip_corner(address, 0.0);
-    clip.top_right = fetch_clip_corner(address, 1.0);
-    clip.bottom_left = fetch_clip_corner(address, 2.0);
-    clip.bottom_right = fetch_clip_corner(address, 3.0);
+    clip.rect = ClipRect(RectWithSize(aClipLocalRect.xy, aClipLocalRect.zw), aClipMode);
+    clip.top_left = ClipCorner(RectWithSize(aClipRect_TL.xy, aClipRect_TL.zw), aClipRadii_TL);
+    clip.top_right = ClipCorner(RectWithSize(aClipRect_TR.xy, aClipRect_TR.zw), aClipRadii_TR);
+    clip.bottom_left = ClipCorner(RectWithSize(aClipRect_BL.xy, aClipRect_BL.zw), aClipRadii_BL);
+    clip.bottom_right = ClipCorner(RectWithSize(aClipRect_BR.xy, aClipRect_BR.zw), aClipRadii_BR);
 
     return clip;
 }
 
 void main(void) {
-    ClipMaskInstance cmi = fetch_clip_item();
-    Transform clip_transform = fetch_transform(cmi.clip_transform_id);
-    Transform prim_transform = fetch_transform(cmi.prim_transform_id);
-    ClipData clip = fetch_clip(cmi.clip_data_address);
+    ClipMaskInstanceRect cmi = fetch_clip_item();
+    Transform clip_transform = fetch_transform(cmi.shared.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.shared.prim_transform_id);
+    ClipData clip = fetch_clip();
 
     RectWithSize local_rect = clip.rect.rect;
     local_rect.p0 = cmi.local_pos;
@@ -75,13 +87,13 @@ void main(void) {
         local_rect,
         prim_transform,
         clip_transform,
-        cmi.sub_rect,
-        cmi.task_origin,
-        cmi.screen_origin,
-        cmi.device_pixel_scale
+        cmi.shared.sub_rect,
+        cmi.shared.task_origin,
+        cmi.shared.screen_origin,
+        cmi.shared.device_pixel_scale
     );
 
-    vClipMode = clip.rect.mode.x;
+    vClipMode = clip.rect.mode;
     vLocalPos = vi.local_pos;
 
 #ifdef WR_FEATURE_FAST_PATH
