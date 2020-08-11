@@ -10,13 +10,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 #include "nsIObserver.h"
 #include "nsIProfiler.h"
 #include "nsITimer.h"
 #include "nsServiceManagerUtils.h"
-#include "ProfileJSONWriter.h"
 #include "ProfilerCodeAddressService.h"
 
 class nsProfiler final : public nsIProfiler, public nsIObserver {

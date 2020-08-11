@@ -12,7 +12,6 @@
 #include "GeckoProfiler.h"
 #include "platform.h"
 #include "ProfileBuffer.h"
-#include "ProfileJSONWriter.h"
 #include "ProfilerMarkerPayload.h"
 
 #include "js/Initialization.h"
@@ -22,6 +21,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/BlocksRingBuffer.h"
 #include "mozilla/ProfileBufferEntrySerializationGeckoExtensions.h"
+#include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "nsIThread.h"
@@ -829,7 +829,7 @@ TEST(GeckoProfiler, Markers)
 
   SpliceableChunkedJSONWriter w;
   w.Start();
-  EXPECT_TRUE(profiler_stream_json_for_this_process(w));
+  EXPECT_TRUE(::profiler_stream_json_for_this_process(w));
   w.End();
 
   // The GTestMarkerPayloads should have been deserialized, streamed, and
@@ -1467,7 +1467,7 @@ TEST(GeckoProfiler, Markers)
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
-  EXPECT_TRUE(profiler_stream_json_for_this_process(w));
+  EXPECT_TRUE(::profiler_stream_json_for_this_process(w));
 
   profiler_stop();
 
@@ -1541,7 +1541,7 @@ TEST(GeckoProfiler, Counters)
 
   // Verify we got counters in the output
   SpliceableChunkedJSONWriter w;
-  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
 
   UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
 
@@ -1554,7 +1554,7 @@ TEST(GeckoProfiler, Counters)
   AUTO_PROFILER_COUNT_TOTAL(TestCounter2, 10);
   PR_Sleep(PR_MillisecondsToInterval(200));
 
-  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
 
   profile = w.WriteFunc()->CopyData();
   ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME));
@@ -1634,13 +1634,13 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
   const char* filters[] = {"GeckoMain"};
 
   SpliceableChunkedJSONWriter w;
-  ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
 
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
   w.Start();
-  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
   w.End();
 
   UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
@@ -1649,7 +1649,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
 
   profiler_stop();
 
-  ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
 }
 
 TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
@@ -1663,7 +1663,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
   const char* filters[] = {"GeckoMain"};
 
   SpliceableChunkedJSONWriter w;
-  ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
 
   // Start the profiler on the main thread.
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
@@ -1675,7 +1675,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
           "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
           [&]() {
             w.Start();
-            ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+            ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
             w.End();
           }),
       NS_DISPATCH_SYNC);
@@ -1691,13 +1691,13 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
           "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
           [&]() {
             profiler_stop();
-            ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+            ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
           }),
       NS_DISPATCH_SYNC);
   thread->Shutdown();
 
   // Call profiler_stream_json_for_this_process on the main thread.
-  ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
 }
 
 TEST(GeckoProfiler, ProfilingStack)

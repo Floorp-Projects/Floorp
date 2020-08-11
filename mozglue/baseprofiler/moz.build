@@ -12,7 +12,6 @@
 if CONFIG['MOZ_GECKO_PROFILER']:
     DEFINES['IMPL_MFBT'] = True
     EXPORTS += [
-        'public/BaseProfileJSONWriter.h',
         'public/BaseProfilerMarkerPayload.h',
         'public/BaseProfilerSharedLibraries.h',
         'public/BaseProfilingCategory.h',
@@ -80,6 +79,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'public/BaseProfileJSONWriter.h',
     'public/BaseProfilerCounts.h',
     'public/BaseProfilerDetail.h',
     'public/BlocksRingBuffer.h',
