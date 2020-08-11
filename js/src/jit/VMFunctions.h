@@ -15,6 +15,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/IonScript.h"
 #include "jit/JitFrames.h"
+#include "js/ScalarType.h"
 #include "vm/Interpreter.h"
 
 namespace js {
@@ -1160,6 +1161,11 @@ bool BigIntStringCompare(JSContext* cx, HandleBigInt x, HandleString y,
 template <ComparisonKind Kind>
 bool StringBigIntCompare(JSContext* cx, HandleString x, HandleBigInt y,
                          bool* res);
+
+using AtomicsCompareExchangeFn = int32_t (*)(TypedArrayObject*, int32_t,
+                                             int32_t, int32_t);
+
+AtomicsCompareExchangeFn AtomicsCompareExchange(Scalar::Type elementType);
 
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
