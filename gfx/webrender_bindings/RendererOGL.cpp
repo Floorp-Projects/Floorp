@@ -33,16 +33,7 @@ wr::WrExternalImage wr_renderer_lock_external_image(
                         << AsUint64(aId);
     return InvalidToWrExternalImage();
   }
-  if (auto* gl = renderer->gl()) {
-    return texture->Lock(aChannelIndex, gl, aRendering);
-  } else if (auto* swgl = renderer->swgl()) {
-    return texture->LockSWGL(aChannelIndex, swgl, aRendering);
-  } else {
-    gfxCriticalNoteOnce
-        << "No GL or SWGL context available to lock ExternalImage for extId:"
-        << AsUint64(aId);
-    return InvalidToWrExternalImage();
-  }
+  return texture->Lock(aChannelIndex, renderer->gl(), aRendering);
 }
 
 void wr_renderer_unlock_external_image(void* aObj, wr::ExternalImageId aId,
@@ -53,11 +44,7 @@ void wr_renderer_unlock_external_image(void* aObj, wr::ExternalImageId aId,
   if (!texture) {
     return;
   }
-  if (renderer->gl()) {
-    texture->Unlock();
-  } else if (renderer->swgl()) {
-    texture->UnlockSWGL();
-  }
+  texture->Unlock();
 }
 
 RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
@@ -252,8 +239,6 @@ layers::SyncObjectHost* RendererOGL::GetSyncObject() const {
 }
 
 gl::GLContext* RendererOGL::gl() const { return mCompositor->gl(); }
-
-void* RendererOGL::swgl() const { return mCompositor->swgl(); }
 
 void RendererOGL::SetFrameStartTime(const TimeStamp& aTime) {
   if (mFrameStartTime) {
