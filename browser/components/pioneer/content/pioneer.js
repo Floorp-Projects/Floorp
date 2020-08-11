@@ -2,19 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * MVP UI for Pioneer v2
- *
- * This is an experimental MVP for the Pioneer v2 project. It supports a
- * single study add-on, and the only entry point is the `about:pioneer` page.
- *
- * The purpose of this page is to demonstrate a fully-working Pioneer study
- * data collection pipeline, and also to potentially advertise to real users
- * in order to observe enrollment behavior.
- *
- * Results from the above will inform the next version of Pioneer UI.
- */
-
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -61,6 +48,90 @@ function showEnrollmentStatus() {
     `pioneer-${pioneerId ? "un" : ""}enrollment-button`
   );
   enrollmentButton.classList.toggle("primary", !pioneerId);
+}
+
+async function toggleEnrolled(studyAddonId, cachedAddons) {
+  let addon;
+  let install;
+  let cachedAddon;
+
+  for (cachedAddon of cachedAddons) {
+    if (studyAddonId == cachedAddon.addon_id) {
+      break;
+    }
+  }
+
+  if (Cu.isInAutomation) {
+    let testAddons = Services.prefs.getStringPref(PREF_TEST_ADDONS, "[]");
+    testAddons = JSON.parse(testAddons);
+    install = {
+      install: () => {
+        testAddons.push(studyAddonId);
+        Services.prefs.setStringPref(
+          PREF_TEST_ADDONS,
+          JSON.stringify(testAddons)
+        );
+      },
+    };
+    for (const testAddon of testAddons) {
+      if (testAddon == studyAddonId) {
+        addon = {};
+        addon.install = () => {};
+        addon.uninstall = () => {
+          Services.prefs.setStringPref(PREF_TEST_ADDONS, "[]");
+        };
+      }
+    }
+  } else {
+    addon = await AddonManager.getAddonByID(studyAddonId);
+    install = await AddonManager.getInstallForURL(cachedAddon.sourceURI.spec);
+  }
+
+  const completedStudies = Services.prefs.getStringPref(
+    PREF_PIONEER_COMPLETED_STUDIES,
+    "{}"
+  );
+
+  const study = document.querySelector(`.card[id="${cachedAddon.addon_id}"`);
+  const joinBtn = study.querySelector(".join-button");
+
+  // Check if this study is re-join-able before enrollment.
+  if (addon) {
+    joinBtn.disabled = true;
+    await addon.uninstall();
+    document.l10n.setAttributes(joinBtn, "pioneer-join-study");
+    joinBtn.disabled = false;
+
+    // Record that the user abandoned this study, since it may not be re-join-able.
+    if (completedStudies) {
+      const studies = JSON.parse(completedStudies);
+      studies[studyAddonId] = STUDY_LEAVE_REASONS.USER_ABANDONED;
+      Services.prefs.setStringPref(
+        PREF_PIONEER_COMPLETED_STUDIES,
+        JSON.stringify(studies)
+      );
+    }
+  } else {
+    // Check if this study is re-join-able before enrollment.
+    const studies = JSON.parse(completedStudies);
+    if (studyAddonId in studies) {
+      if (
+        "canRejoin" in cachedAddons[studyAddonId] &&
+        cachedAddons[studyAddonId].canRejoin === false
+      ) {
+        console.error(
+          `Cannot rejoin ended study ${studyAddonId}, reason: ${studies[studyAddonId]}`
+        );
+        return;
+      }
+    }
+    joinBtn.disabled = true;
+    await install.install();
+    document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
+    joinBtn.disabled = false;
+  }
+
+  await updateStudy(cachedAddon.addon_id);
 }
 
 async function showAvailableStudies(cachedAddons) {
@@ -114,6 +185,31 @@ async function showAvailableStudies(cachedAddons) {
     document.l10n.setAttributes(joinBtn, "pioneer-join-study");
     actions.appendChild(joinBtn);
 
+    joinBtn.addEventListener("click", async () => {
+      let addon;
+      if (Cu.isInAutomation) {
+        const testAddons = Services.prefs.getStringPref(PREF_TEST_ADDONS, "[]");
+        for (const testAddon of JSON.parse(testAddons)) {
+          if (testAddon == studyAddonId) {
+            addon = {};
+            addon.install = () => {};
+            addon.uninstall = () => {
+              Services.prefs.setStringPref(PREF_TEST_ADDONS, "[]");
+            };
+          }
+        }
+      } else {
+        addon = await AddonManager.getAddonByID(studyAddonId);
+      }
+      let joinOrLeave = addon ? "leave" : "join";
+      let dialog = document.getElementById(
+        `${joinOrLeave}-study-consent-dialog`
+      );
+      dialog.setAttribute("addon-id", cachedAddon.addon_id);
+      dialog.showModal();
+      dialog.scrollTop = 0;
+    });
+
     const studyDesc = document.createElement("div");
     studyDesc.setAttribute("class", "card-description");
     study.appendChild(studyDesc);
@@ -152,76 +248,6 @@ async function showAvailableStudies(cachedAddons) {
     }
     studyDataCollected.appendChild(dataCollectionDetails);
 
-    async function toggleEnrolled() {
-      let addon;
-      let install;
-
-      if (Cu.isInAutomation) {
-        let testAddons = Services.prefs.getStringPref(PREF_TEST_ADDONS, null);
-        testAddons = JSON.parse(testAddons);
-        install = {
-          install: () => {},
-        };
-        for (const testAddon of testAddons) {
-          if (testAddon.id == studyAddonId) {
-            addon = testAddon;
-            addon.install = () => {};
-            addon.uninstall = () => {
-              Services.prefs.setStringPref(PREF_TEST_ADDONS, "[]");
-            };
-          }
-        }
-      } else {
-        addon = await AddonManager.getAddonByID(studyAddonId);
-        install = await AddonManager.getInstallForURL(
-          cachedAddon.sourceURI.spec
-        );
-      }
-
-      const completedStudies = Services.prefs.getStringPref(
-        PREF_PIONEER_COMPLETED_STUDIES,
-        "{}"
-      );
-
-      if (addon) {
-        joinBtn.disabled = true;
-        await addon.uninstall();
-        document.l10n.setAttributes(joinBtn, "pioneer-join-study");
-        joinBtn.disabled = false;
-
-        // Record that the user abandoned this study, since it may not be re-join-able.
-        if (completedStudies) {
-          const studies = JSON.parse(completedStudies);
-          studies[studyAddonId] = STUDY_LEAVE_REASONS.USER_ABANDONED;
-          Services.prefs.setStringPref(
-            PREF_PIONEER_COMPLETED_STUDIES,
-            JSON.stringify(studies)
-          );
-        }
-      } else {
-        // Check if this study is re-join-able before enrollment.
-        const studies = JSON.parse(completedStudies);
-        if (studyAddonId in studies) {
-          if (
-            "canRejoin" in cachedAddons[studyAddonId] &&
-            cachedAddons[studyAddonId].canRejoin === false
-          ) {
-            console.error(
-              `Cannot rejoin ended study ${studyAddonId}, reason: ${studies[studyAddonId]}`
-            );
-            return;
-          }
-        }
-        joinBtn.disabled = true;
-        await install.install();
-        document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
-        joinBtn.disabled = false;
-      }
-      await updateStudy(studyAddonId);
-    }
-
-    joinBtn.addEventListener("click", toggleEnrolled);
-
     const availableStudies = document.getElementById("available-studies");
     availableStudies.appendChild(study);
 
@@ -235,8 +261,13 @@ async function showAvailableStudies(cachedAddons) {
 async function updateStudy(studyAddonId) {
   let addon;
   if (Cu.isInAutomation) {
-    if (Services.prefs.getBoolPref(PREF_TEST_ADDONS, false)) {
-      addon = { uninstall() {} };
+    const testAddons = Services.prefs.getStringPref(PREF_TEST_ADDONS, "[]");
+    for (const testAddon of JSON.parse(testAddons)) {
+      if (testAddon == studyAddonId) {
+        addon = {
+          uninstall() {},
+        };
+      }
     }
   } else {
     addon = await AddonManager.getAddonByID(studyAddonId);
@@ -248,25 +279,27 @@ async function updateStudy(studyAddonId) {
 
   const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
 
+  const completedStudies = Services.prefs.getStringPref(
+    PREF_PIONEER_COMPLETED_STUDIES,
+    "{}"
+  );
+
+  const studies = JSON.parse(completedStudies);
+  if (studyAddonId in studies) {
+    study.style.opacity = 0.5;
+    joinBtn.disabled = true;
+    document.l10n.setAttributes(joinBtn, "pioneer-ended-study");
+    return;
+  }
+
   if (pioneerId) {
-    const completedStudies = Services.prefs.getStringPref(
-      PREF_PIONEER_COMPLETED_STUDIES,
-      "{}"
-    );
+    study.style.opacity = 1;
+    joinBtn.disabled = false;
 
-    const studies = JSON.parse(completedStudies);
-    if (studyAddonId in studies) {
-      joinBtn.disabled = true;
-      document.l10n.setAttributes(joinBtn, "pioneer-ended-study");
+    if (addon) {
+      document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
     } else {
-      study.style.opacity = 1;
-      joinBtn.disabled = false;
-
-      if (addon) {
-        document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
-      } else {
-        document.l10n.setAttributes(joinBtn, "pioneer-join-study");
-      }
+      document.l10n.setAttributes(joinBtn, "pioneer-join-study");
     }
   } else {
     document.l10n.setAttributes(joinBtn, "pioneer-join-study");
@@ -292,33 +325,39 @@ async function setup(cachedAddons) {
       const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
 
       if (pioneerId) {
-        Services.prefs.clearUserPref(PREF_PIONEER_ID);
-        Services.prefs.clearUserPref(PREF_PIONEER_COMPLETED_STUDIES);
-        for (const cachedAddon of cachedAddons) {
-          const addon = await AddonManager.getAddonByID(cachedAddon.addon_id);
-          if (addon) {
-            await addon.uninstall();
-          }
-
-          const study = document.getElementById(cachedAddon.addon_id);
-          if (study) {
-            await updateStudy(cachedAddon.addon_id);
-          }
-        }
-        showEnrollmentStatus();
+        let dialog = document.getElementById("leave-pioneer-consent-dialog");
+        dialog.showModal();
+        dialog.scrollTop = 0;
       } else {
-        let dialog = document.querySelector("dialog");
+        let dialog = document.getElementById("join-pioneer-consent-dialog");
         dialog.showModal();
         dialog.scrollTop = 0;
       }
     });
 
   document
-    .getElementById("cancel-dialog-button")
-    .addEventListener("click", () => document.querySelector("dialog").close());
+    .getElementById("join-pioneer-cancel-dialog-button")
+    .addEventListener("click", () =>
+      document.getElementById("join-pioneer-consent-dialog").close()
+    );
+  document
+    .getElementById("leave-pioneer-cancel-dialog-button")
+    .addEventListener("click", () =>
+      document.getElementById("leave-pioneer-consent-dialog").close()
+    );
+  document
+    .getElementById("join-study-cancel-dialog-button")
+    .addEventListener("click", () =>
+      document.getElementById("join-study-consent-dialog").close()
+    );
+  document
+    .getElementById("leave-study-cancel-dialog-button")
+    .addEventListener("click", () =>
+      document.getElementById("leave-study-consent-dialog").close()
+    );
 
   document
-    .getElementById("accept-dialog-button")
+    .getElementById("join-pioneer-accept-dialog-button")
     .addEventListener("click", async event => {
       const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
 
@@ -342,6 +381,61 @@ async function setup(cachedAddons) {
       showEnrollmentStatus();
     });
 
+  document
+    .getElementById("leave-pioneer-accept-dialog-button")
+    .addEventListener("click", async event => {
+      Services.prefs.clearUserPref(PREF_PIONEER_ID);
+      Services.prefs.clearUserPref(PREF_PIONEER_COMPLETED_STUDIES);
+
+      for (const cachedAddon of cachedAddons) {
+        // Record any studies that have been marked as concluded on the server.
+        if ("studyEnded" in cachedAddon && cachedAddon.studyEnded === true) {
+          const completedStudies = Services.prefs.getStringPref(
+            PREF_PIONEER_COMPLETED_STUDIES,
+            "{}"
+          );
+          const studies = JSON.parse(completedStudies);
+          studies[cachedAddon.addon_id] = STUDY_LEAVE_REASONS.STUDY_ENDED;
+
+          Services.prefs.setStringPref(
+            PREF_PIONEER_COMPLETED_STUDIES,
+            JSON.stringify(studies)
+          );
+        }
+        const addon = await AddonManager.getAddonByID(cachedAddon.addon_id);
+        if (addon) {
+          await addon.uninstall();
+        }
+
+        const study = document.getElementById(cachedAddon.addon_id);
+        if (study) {
+          await updateStudy(cachedAddon.addon_id);
+        }
+      }
+      document.getElementById("leave-pioneer-consent-dialog").close();
+      showEnrollmentStatus();
+    });
+
+  document
+    .getElementById("join-study-accept-dialog-button")
+    .addEventListener("click", async event => {
+      const dialog = document.getElementById("join-study-consent-dialog");
+      const studyAddonId = dialog.getAttribute("addon-id");
+      toggleEnrolled(studyAddonId, cachedAddons);
+
+      dialog.close();
+    });
+
+  document
+    .getElementById("leave-study-accept-dialog-button")
+    .addEventListener("click", async event => {
+      const dialog = document.getElementById("leave-study-consent-dialog");
+      const studyAddonId = dialog.getAttribute("addon-id");
+      toggleEnrolled(studyAddonId, cachedAddons);
+
+      dialog.close();
+    });
+
   const onAddonEvent = async addon => {
     for (const cachedAddon in cachedAddons) {
       if (cachedAddon.addon_id == addon.id) {
@@ -349,6 +443,7 @@ async function setup(cachedAddons) {
       }
     }
   };
+
   const addonsListener = {
     onEnabled: onAddonEvent,
     onDisabled: onAddonEvent,
@@ -412,3 +507,111 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
   await setup(cachedAddons);
   await showAvailableStudies(cachedAddons);
 });
+
+/**
+ * Prevent tab/shift-tab from leaving the modal dialog.
+ * FIXME - this should be removed once bug 1322939 is fixed.
+ */
+class TrappedDialog extends HTMLDialogElement {
+  static get observedAttributes() {
+    return ["open"];
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    if (name == "open") {
+      if (newVal != null) {
+        this.trapFocus();
+      } else {
+        this.untrapFocus();
+      }
+    }
+  }
+
+  trapFocus() {
+    if (!this.trapped) {
+      this.trapped = true;
+      document.addEventListener("focusin", this);
+      document.addEventListener("keydown", this);
+    }
+  }
+
+  untrapFocus() {
+    document.removeEventListener("focusin", this);
+    document.removeEventListener("keydown", this);
+    this.trapped = false;
+  }
+
+  handleEvent(e) {
+    if (
+      e.type == "focusin" &&
+      // FIXME this should focus on the document when reverse-cycling/shift-tabbing,
+      // but for now let's defer until bug 1322939 is fixed in Firefox 81. This will cause the Accept button to be selected when reversing.
+      // e.relatedTarget == null &&
+      !this.contains(e.target)
+    ) {
+      // Focus entered the document.
+      e.preventDefault();
+      this.focusWalker.currentNode = this;
+
+      // Focus the first focusable child.
+      this.focusWalker.nextNode();
+    } else if (
+      e.type == "keydown" &&
+      e.keyCode == e.DOM_VK_TAB &&
+      !e.ctrlKey &&
+      !e.altKey &&
+      !e.metaKey &&
+      (!this.contains(e.target) || e.target == this)
+    ) {
+      // Focus moved out of the dialog.
+      e.preventDefault();
+      let parentWin = window.docShell.chromeEventHandler.ownerGlobal;
+      let fm = Services.focus;
+
+      if (e.shiftKey) {
+        // Moving backwards out of the document.
+
+        // Focus the first element on the page.
+        this.focusWalker.currentNode = document;
+        //this.focusWalker.nextNode();
+
+        // Move backwards from there.
+        fm.moveFocus(parentWin, null, fm.MOVEFOCUS_BACKWARD, fm.FLAG_BYKEY);
+      } else if (e.target == document.documentElement) {
+        // Focus the first focusable child.
+        this.focusWalker.currentNode = this;
+        this.focusWalker.nextNode();
+      } else {
+        fm.moveFocus(parentWin, null, fm.MOVEFOCUS_ROOT, fm.FLAG_BYKEY);
+      }
+    }
+  }
+
+  get focusWalker() {
+    if (!this._focusWalker) {
+      this._focusWalker = document.createTreeWalker(
+        this,
+        NodeFilter.SHOW_ELEMENT,
+        {
+          acceptNode: node => {
+            // No need to look at hidden nodes.
+            if (node.hidden) {
+              return NodeFilter.FILTER_REJECT;
+            }
+
+            // Focus the node, if it worked then this is the node we want.
+            node.focus();
+            if (node === document.activeElement) {
+              return NodeFilter.FILTER_ACCEPT;
+            }
+
+            // Continue into child nodes if the parent couldn't be focused.
+            return NodeFilter.FILTER_SKIP;
+          },
+        }
+      );
+    }
+    return this._focusWalker;
+  }
+}
+customElements.define("trapped-dialog", TrappedDialog, { extends: "dialog" });
