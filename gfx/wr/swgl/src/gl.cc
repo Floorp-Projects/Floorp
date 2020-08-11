@@ -378,8 +378,10 @@ struct Texture {
   }
 };
 
-#define MAX_ATTRIBS 16
-#define NULL_ATTRIB 15
+// The last vertex attribute is reserved as a null attribute in case a vertex
+// attribute is used without being set.
+#define MAX_ATTRIBS 17
+#define NULL_ATTRIB 16
 struct VertexArray {
   VertexAttrib attribs[MAX_ATTRIBS];
   int max_attrib = -1;
