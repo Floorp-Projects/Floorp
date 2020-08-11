@@ -103,7 +103,8 @@ class Connection final : public mozIStorageConnection,
    *        The nsIFileURL of the location of the database to open, or create if
    * it does not exist.
    */
-  nsresult initialize(nsIFileURL* aFileURL);
+  nsresult initialize(nsIFileURL* aFileURL,
+                      const nsACString& aTelemetryFilename);
 
   /**
    * Same as initialize, but to be used on the async thread.
@@ -305,10 +306,24 @@ class Connection final : public mozIStorageConnection,
 
   nsresult initializeClone(Connection* aClone, bool aReadOnly);
 
+  /**
+   * Records a status from a sqlite statement.
+   *
+   * @param srv The sqlite result for the failure or SQLITE_OK.
+   */
+  void RecordQueryStatus(int srv);
+
  private:
   ~Connection();
   nsresult initializeInternal();
   void initializeFailed();
+
+  /**
+   * Records the status of an attempt to load a sqlite database to telemetry.
+   *
+   * @param rv The state of the load, success or failure.
+   */
+  void RecordOpenStatus(nsresult rv);
 
   /**
    * Sets the database into a closed state so no further actions can be

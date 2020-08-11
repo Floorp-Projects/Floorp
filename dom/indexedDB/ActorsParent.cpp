@@ -3806,8 +3806,7 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection& aConnection) {
 }
 
 Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
-    nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
-    const uint32_t aTelemetryId) {
+    nsIFile& aDatabaseFile, const int64_t aDirectoryLockId) {
   MOZ_ASSERT(aDirectoryLockId >= -1);
 
   nsresult rv;
@@ -3840,17 +3839,9 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
           ? "&directoryLockId="_ns + IntCString(aDirectoryLockId)
           : EmptyCString();
 
-  nsAutoCString telemetryFilenameClause;
-  if (aTelemetryId) {
-    telemetryFilenameClause.AssignLiteral("&telemetryFilename=indexedDB-");
-    telemetryFilenameClause.AppendInt(aTelemetryId);
-    telemetryFilenameClause.Append(NS_ConvertUTF16toUTF8(kSQLiteSuffix));
-  }
-
   nsCOMPtr<nsIFileURL> result;
   rv = NS_MutateURI(mutator)
-           .SetQuery("cache=private"_ns + directoryLockIdClause +
-                     telemetryFilenameClause)
+           .SetQuery("cache=private"_ns + directoryLockIdClause)
            .Finalize(result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
@@ -3984,10 +3975,18 @@ struct StorageOpenTraits;
 template <>
 struct StorageOpenTraits<nsIFileURL> {
   static Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult> Open(
-      mozIStorageService& aStorageService, nsIFileURL& aFileURL) {
+      mozIStorageService& aStorageService, nsIFileURL& aFileURL,
+      const uint32_t aTelemetryId = 0) {
+    nsAutoCString telemetryFilename;
+    if (aTelemetryId) {
+      telemetryFilename.AssignLiteral("indexedDB-");
+      telemetryFilename.AppendInt(aTelemetryId);
+      telemetryFilename.Append(NS_ConvertUTF16toUTF8(kSQLiteSuffix));
+    }
+
     nsCOMPtr<mozIStorageConnection> connection;
     nsresult rv = aStorageService.OpenDatabaseWithFileURL(
-        &aFileURL, getter_AddRefs(connection));
+        &aFileURL, telemetryFilename, getter_AddRefs(connection));
     return ValOrErr(std::move(connection), rv);
   }
 
@@ -4001,7 +4000,8 @@ struct StorageOpenTraits<nsIFileURL> {
 template <>
 struct StorageOpenTraits<nsIFile> {
   static Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult> Open(
-      mozIStorageService& aStorageService, nsIFile& aFile) {
+      mozIStorageService& aStorageService, nsIFile& aFile,
+      const uint32_t aTelemetryId = 0) {
     nsCOMPtr<mozIStorageConnection> connection;
     nsresult rv = aStorageService.OpenUnsharedDatabase(
         &aFile, getter_AddRefs(connection));
@@ -4021,12 +4021,13 @@ struct StorageOpenTraits<nsIFile> {
 template <class FileOrURLType>
 Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult>
 OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
-                          FileOrURLType& aFileOrURL) {
+                          FileOrURLType& aFileOrURL,
+                          const uint32_t aTelemetryId = 0) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
 
-  auto connectionOrErr =
-      StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL);
+  auto connectionOrErr = StorageOpenTraits<FileOrURLType>::Open(
+      aStorageService, aFileOrURL, aTelemetryId);
 
   if (connectionOrErr.isErr() &&
       connectionOrErr.inspectErr() == NS_ERROR_STORAGE_BUSY) {
@@ -4051,8 +4052,8 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
     while (true) {
       PR_Sleep(PR_MillisecondsToInterval(100));
 
-      connectionOrErr =
-          StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL);
+      connectionOrErr = StorageOpenTraits<FileOrURLType>::Open(
+          aStorageService, aFileOrURL, aTelemetryId);
       if (!connectionOrErr.isErr() ||
           connectionOrErr.inspectErr() != NS_ERROR_STORAGE_BUSY ||
           TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
@@ -4080,8 +4081,7 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
   bool exists;
 
-  auto dbFileUrlOrErr =
-      GetDatabaseFileURL(aDBFile, aDirectoryLockId, aTelemetryId);
+  auto dbFileUrlOrErr = GetDatabaseFileURL(aDBFile, aDirectoryLockId);
   if (NS_WARN_IF(dbFileUrlOrErr.isErr())) {
     return dbFileUrlOrErr.propagateErr();
   }
@@ -4095,7 +4095,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     return Err(rv);
   }
 
-  auto connectionOrErr = OpenDatabaseAndHandleBusy(*ss, *dbFileUrl);
+  auto connectionOrErr =
+      OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId);
   if (connectionOrErr.isErr()) {
     if (connectionOrErr.inspectErr() == NS_ERROR_FILE_CORRUPTED) {
       // If we're just opening the database during origin initialization, then
@@ -4133,7 +4134,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
         }
       }
 
-      connectionOrErr = OpenDatabaseAndHandleBusy(*ss, *dbFileUrl);
+      connectionOrErr =
+          OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId);
     }
 
     if (NS_WARN_IF(connectionOrErr.isErr())) {
@@ -4547,8 +4549,7 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
     return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  auto dbFileUrlOrErr =
-      GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId, aTelemetryId);
+  auto dbFileUrlOrErr = GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId);
   if (NS_WARN_IF(dbFileUrlOrErr.isErr())) {
     return dbFileUrlOrErr.propagateErr();
   }
@@ -4560,7 +4561,7 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
   }
 
   auto connectionOrErr =
-      OpenDatabaseAndHandleBusy(*ss, *dbFileUrlOrErr.inspect());
+      OpenDatabaseAndHandleBusy(*ss, *dbFileUrlOrErr.inspect(), aTelemetryId);
   if (NS_WARN_IF(connectionOrErr.isErr())) {
     return connectionOrErr.propagateErr();
   }
