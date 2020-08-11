@@ -34,7 +34,7 @@ config = {
     "installer_path": INSTALLER_PATH,
     "binary_path": BINARY_PATH,
     "xpcshell_name": XPCSHELL_NAME,
-    "virtualenv_modules": ['pypiwin32', 'six==1.13.0', 'vcversioner==2.16.0.0'],
+    "virtualenv_modules": ['pypiwin32'],
     "virtualenv_path": 'venv',
 
     "exe_suffix": EXE_SUFFIX,
@@ -262,23 +262,6 @@ config = {
             'cmd': [
                 'powershell', '-command',
                 '"&{&Stop-Process -ProcessName explorer}"'
-            ],
-            'architectures': ['32bit', '64bit'],
-            'halt_on_failure': True,
-            'enabled': True
-        },
-        {
-            'name': 'prepare chrome profile',
-            'cmd': "cmd.exe /c \"start chrome.exe https://www.mozilla.org\"",
-            'architectures': ['32bit', '64bit'],
-            'halt_on_failure': True,
-            'enabled': True
-        },
-        {
-            'name': 'stop chrome',
-            'cmd': [
-                'powershell', '-command',
-                '"&{&Stop-Process -ProcessName chrome}"'
             ],
             'architectures': ['32bit', '64bit'],
             'halt_on_failure': True,
