@@ -22,6 +22,11 @@ pub extern "C" fn wr_swgl_create_context() -> *mut c_void {
 }
 
 #[no_mangle]
+pub extern "C" fn wr_swgl_reference_context(ctx: *mut c_void) {
+    swgl::Context::from(ctx).reference();
+}
+
+#[no_mangle]
 pub extern "C" fn wr_swgl_destroy_context(ctx: *mut c_void) {
     swgl::Context::from(ctx).destroy();
 }
