@@ -170,41 +170,20 @@ var PrintUtils = {
     });
 
     await dialog.open(
-      `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`
+      `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`,
+      null,
+      null,
+      () => {
+        printPreviewBrowser.messageManager.sendAsyncMessage(
+          "Printing:Preview:Exit"
+        );
+      }
     );
-  },
-
-  /**
-   * Update the preview browser for the provided tab browser and print settings.
-   *
-   * @param sourceBrowser
-   *        The source Browser (the one associated with a tab) that should be updated.
-   * @param printSettings
-   *        The nsIPrintSettings object to be used to render the preview.
-   *        Note: Only printerName is currently used.
-   *
-   * @return {Promise<Integer>} The number of pages that were rendered in the preview.
-   */
-  async updatePrintPreview(sourceBrowser, printSettings) {
-    let container = gBrowser.getBrowserContainer(sourceBrowser);
-    let printPreviewBrowser = container.querySelector(".printPreviewBrowser");
-
-    if (!printPreviewBrowser) {
-      // TODO: This should probably throw and close the print dialog.
-      return 0;
-    }
-
-    let numPages = await this._updatePrintPreview(
-      sourceBrowser,
-      printPreviewBrowser,
-      printSettings
-    );
-    return numPages;
   },
 
   /**
    * Update a print preview for the provided source Browser, print preview Browser
-   * and nsIPrintSettings. This should probably only be called from updatePrintPreview.
+   * and nsIPrintSettings.
    *
    * @param sourceBrowser
    *        The source Browser (the one associated with a tab) that should be updated.
@@ -216,7 +195,7 @@ var PrintUtils = {
    *
    * @return {Promise<Integer>} The number of pages that were rendered in the preview.
    */
-  _updatePrintPreview(sourceBrowser, printPreviewBrowser, printSettings) {
+  updatePrintPreview(sourceBrowser, printPreviewBrowser, printSettings) {
     return new Promise(resolve => {
       printPreviewBrowser.messageManager.addMessageListener(
         "Printing:Preview:UpdatePageCount",

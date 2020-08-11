@@ -29,6 +29,7 @@ window.addEventListener(
 var PrintEventHandler = {
   init() {
     this.sourceBrowser = this.getSourceBrowser();
+    this.previewBrowser = this.getPreviewBrowser();
     this.settings = PrintUtils.getPrintSettings();
     this.updatePrintPreview();
 
@@ -83,7 +84,7 @@ var PrintEventHandler = {
     if (printerName) {
       settings.printerName = printerName;
     }
-    PrintUtils.printWindow(this.sourceBrowser.browsingContext, settings);
+    PrintUtils.printWindow(this.previewBrowser.browsingContext, settings);
   },
 
   cancelPrint() {
@@ -101,6 +102,11 @@ var PrintEventHandler = {
           flags |= this.settingFlags[setting];
         }
         isChanged = true;
+        Services.telemetry.keyedScalarAdd(
+          "printing.settings_changed",
+          setting,
+          1
+        );
       }
     }
 
@@ -139,6 +145,7 @@ var PrintEventHandler = {
   async _updatePrintPreview() {
     let numPages = await PrintUtils.updatePrintPreview(
       this.sourceBrowser,
+      this.previewBrowser,
       this.settings
     );
     document.dispatchEvent(
@@ -166,6 +173,11 @@ var PrintEventHandler = {
       return null;
     }
     return browsingContext.embedderElement;
+  },
+
+  getPreviewBrowser() {
+    let container = gBrowser.getBrowserContainer(this.sourceBrowser);
+    return container.querySelector(".printPreviewBrowser");
   },
 
   async getPrintDestinations() {
