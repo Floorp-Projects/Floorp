@@ -21,162 +21,47 @@
   <body>
     <div id="report-content">
       <button id="enrollment-button" class="primary"></button>
-      <h1 id="report-title" data-l10n-id="pioneer-title"></h1>
+      <h1 id="report-title" data-l10n-id="pioneer-document-title"></h1>
       <div>
         <p data-l10n-id="pioneer-summary"></p>
-        <p><strong data-l10n-id="pioneer-voluntary-notice"></strong></p>
-        <p id="report-details" data-l10n-id="pioneer-details"></p>
       </div>
-      <details>
-        <summary>What happens next?</summary>
-        <p><strong>If you agree</strong> to enroll:</p>
+      <p>
+        <h2>How it works</h2>
         <ol>
-          <li>
-            <p>
-              This <img id="pioneer-icon" src="chrome://browser/skin/pioneer.svg" /> icon will appear
-              on the Firefox toolbar. The icon reminds you that you are a part
-              of Pioneer. You can reach your Pioneer settings at any time by
-              clicking this icon.
-            </p>
-
-            <p>
-              We’ll change a Firefox preference, too. This will tell us you are
-              willing to participate in Pioneer studies. Continue using Firefox
-              as you normally would.
-              <strong
-                >The Pioneer program will not actually collect any data until
-                you decide to join a study.</strong
-              >
-            </p>
-          </li>
-          <li>
-            <p>
-              Periodically, we will offer you opportunities to join studies. The
-              purpose of these studies will vary, but might focus on aspects of
-              Firefox or what you experience on the web.
-            </p>
-            <p>
-              Studies will collect different types of information about your
-              online behavior, possibly including what web pages you visit and
-              how you interact with them. Before you enroll in a study, you will
-              have access to information explaining the data being collected,
-              who will have access to use it, and the study’s purpose.
-            </p>
-          </li>
+          <li>Select the Get Started button. You’ll have the chance to review the kinds of data we collect and how we protect your data. You’ll also be asked to provide some basic demographic information, like age and geography. (Pioneer is currently open to participants in the US.) You can leave Pioneer at any time.</li>
+          <li>The Pioneer icon will appear on the Firefox toolbar. Select the icon any time you want to return to this page to update your Pioneer settings, enroll in a study, or leave the program.</li>
+          <li>A notification dot means there is news about the Pioneer program or an opportunity to enroll in a study. Before you enroll in a study, you can learn more about who is conducting the study, what data they are collecting, and what they hope to learn.</li>
         </ol>
-      </details>
-      <details>
-        <summary>Leaving a Study or Leaving Pioneer</summary>
-        <p>
-          You are welcome to leave any individual study or the Firefox Pioneer
-          program entirely at any time.
-        </p>
-        To leave the Firefox Pioneer program entirely:
-        <ol>
-          <li>
-            Return to this page by clicking the Pioneer toolbar icon in Firefox
-            or typing about:pioneer into the location bar and pressing Enter.
-          </li>
-          <li>Click the “Leave" button above.</li>
-          <li>
-            Leaving the Pioneer program will immediately unenroll you from any
-            in-progress studies that you had already joined. When you leave
-            Pioneer, you will no longer receive offers to join new studies.
-          </li>
-        </ol>
-        <p>To leave individual studies:</p>
-        <ol>
-          <li>
-            Return to this page by clicking the Pioneer toolbar icon in Firefox
-            or typing about:pioneer into the location bar and pressing Enter.
-          </li>
-          <li>
-            All the studies that you have joined will be listed. To leave a
-            specific study, click on the Leave Study button next to the study.
-          </li>
-          <li>
-            Leaving a study will immediately stop collection of data associated
-            with that study and remove any changes made to the browser as part
-            of the study.
-          </li>
-        </ol>
-        <p>
-          Leaving an individual study will not affect opportunities to join future
-          studies.
-        </p>
-      </details>
-      <details>
-        <summary>Your Privacy</summary>
-        <p>
-          Mozilla is sensitive to the nature of the data it may collect in some
-          Pioneer studies. We are always working hard to keep your data private
-          and secure:
-        </p>
-        <ul>
-          <li>
-            We will not collect any data without first telling you what we
-            intend to collect and getting your permission to do so.
-          </li>
-          <li>
-            The <strong>data you submit is encrypted by Firefox</strong> and not
-            decrypted until it is in a secure datastore that is not connected to
-            the wider internet.
-          </li>
-          <li>
-            This data will be linked to a randomly generated ID we only use for
-            Pioneer. It is used to keep a specific user's data together on the
-            server and helps us improve our analysis. No data will be collected
-            from inside Private Browsing windows.
-          </li>
-          <li>
-            All proposed studies will be reviewed by a panel consisting of
-            privacy experts, internet researchers and security engineers to
-            ensure that the data being collected is appropriate and respects
-            participant privacy.
-          </li>
-          <li>
-            Individual level raw data will never be shared publicly or sold.
-          </li>
-          <li>
-            Only a small number of researchers will have access to a study’s raw
-            data. If Mozilla shares aggregate information from studies, we will
-            disclose it in a way that minimizes the risk of participants being
-            identified.
-          </li>
-          <li>
-            In the future, Mozilla may pursue commercial opportunities that
-            advance our mission or create more opportunities for competition on
-            the internet using aggregated, non-personally identifiable data
-            collected during the Pioneer program studies. We will disclose our
-            commercial intent ahead of data collection. Mozilla will never sell
-            your personally identifiable information.
-          </li>
-        </ul>
-      </details>
+      </p>
       <h2 id="header-available-studies"></h2>
       <div id="available-studies"></div>
-      <dialog id="consent-dialog" class="modal">
+      <dialog id="join-pioneer-consent-dialog" class="modal" is="trapped-dialog">
         <h3>Pioneer Privacy Consent Notice</h3>
-          <p>
-            When you enroll in Pioneer, you are sharing personal information. Keeping that information safe is important to us and to the integrity of Pioneer. Here is how we safeguard your data and protect your identity.
-          </p>
-
-          <ul>
-            <li>Pioneer will not collect your data before you enroll in the program. Once you enroll, we will not collect new kinds of data without telling you and getting your permission.</li>
-            <li>Your data is encrypted before it is sent from your browser and is not decrypted until it is in a secure datastore that is not connected to the internet.</li>
-            <li>Your data will be linked to a randomly generated ID we only use for Pioneer. It is used to keep each person’s data together on the server and helps us improve our analysis.</li>
-            <li>Pioneer does not collect data from Private Browsing sessions.</li>
-            <li>Pioneer and Pioneer studies do not collect data from Private Browsing sessions without your permission.
-            <li>All proposed studies will be reviewed by a panel consisting of privacy experts, internet researchers, and security engineers to ensure that the data being collected is appropriate and in accordance with our lean data practices.</li>
-            <li>Pioneer will only share personal browsing data within our own secure environment. Mozilla will always control access to the data and can always limit that access.</li>
-            <li>Mozilla will explore the collected data from Pioneer users to understand internet health, user behavioral trends, and issues of public concern. We will publish findings that benefit the public interest. We will only publish findings at the level of trends. We will not publish anything that reveals the behavior of individual users.</li>
-            <li>In the future, Mozilla may pursue commercial opportunities that advance our mission or create more opportunities for competition on the internet using aggregated, non-personally identifiable data collected by the Pioneer program. Mozilla  will disclose our commercial intent to you ahead of data collection. Mozilla will never sell your personally identifiable information.</li>
-          </ul>
-
-          <footer>
-            <button id="cancel-dialog-button">Cancel</button>
-            <button id="accept-dialog-button">Accept and Join Pioneer</button>
-          </footer>
+        <footer>
+          <button id="join-pioneer-cancel-dialog-button">Cancel</button>
+          <button id="join-pioneer-accept-dialog-button">Accept and Join Pioneer</button>
+        </footer>
+      </dialog>
+      <dialog id="leave-pioneer-consent-dialog" class="modal" is="trapped-dialog">
+        <h3>Leaving Pioneer</h3>
+        <footer>
+          <button id="leave-pioneer-cancel-dialog-button">Cancel</button>
+          <button id="leave-pioneer-accept-dialog-button">Accept and Leave Pioneer</button>
+        </footer>
+      </dialog>
+      <dialog id="join-study-consent-dialog" class="modal" is="trapped-dialog">
+        <h3>Pioneer Study Privacy Consent Notice</h3>
+        <footer>
+          <button id="join-study-cancel-dialog-button">Cancel</button>
+          <button id="join-study-accept-dialog-button">Accept and Join Study</button>
+        </footer>
+      </dialog>
+      <dialog id="leave-study-consent-dialog" class="modal" is="trapped-dialog">
+        <h3>Leaving Study</h3>
+        <footer>
+          <button id="leave-study-cancel-dialog-button">Cancel</button>
+          <button id="leave-study-accept-dialog-button">Accept and Leave Study</button>
+        </footer>
       </dialog>
   </body>
 </html>
