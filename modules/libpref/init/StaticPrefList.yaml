@@ -6418,12 +6418,6 @@
   value: true
   mirror: always
 
-- name: layout.css.shadow-parts.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Is support for CSS text-justify property enabled?
 - name: layout.css.text-justify.enabled
   type: bool

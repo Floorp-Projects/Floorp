@@ -2419,8 +2419,7 @@ bool Element::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       return true;
     }
 
-    if (aAttribute == nsGkAtoms::exportparts &&
-        StaticPrefs::layout_css_shadow_parts_enabled()) {
+    if (aAttribute == nsGkAtoms::exportparts) {
       aResult.ParsePartMapping(aValue);
       return true;
     }

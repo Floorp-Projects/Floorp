@@ -34,7 +34,7 @@ interface Element : Node {
   readonly attribute DOMTokenList classList;
 
   // https://drafts.csswg.org/css-shadow-parts/#idl
-  [SameObject, PutForwards=value, Pref="layout.css.shadow-parts.enabled"]
+  [SameObject, PutForwards=value]
   readonly attribute DOMTokenList part;
 
   [SameObject]
