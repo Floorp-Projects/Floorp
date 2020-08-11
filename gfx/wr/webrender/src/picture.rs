@@ -94,7 +94,7 @@
 //! blend the overlay tile (this is not always optimal right now, but will be
 //! improved as a follow up).
 
-use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
+use api::{MixBlendMode, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF, ColorU, PrimitiveFlags};
 use api::{ImageRendering, ColorDepth, YuvColorSpace, YuvFormat};
@@ -4594,10 +4594,6 @@ pub struct PicturePrimitive {
     pub raster_config: Option<RasterConfig>,
     pub context_3d: Picture3DContext<OrderedPictureChild>,
 
-    // If requested as a frame output (for rendering
-    // pages to a texture), this is the pipeline this
-    // picture is the root of.
-    pub frame_output_pipeline_id: Option<PipelineId>,
     // Optional cache handles for storing extra data
     // in the GPU cache, depending on the type of
     // picture.
@@ -4723,7 +4719,6 @@ impl PicturePrimitive {
     pub fn new_image(
         requested_composite_mode: Option<PictureCompositeMode>,
         context_3d: Picture3DContext<OrderedPictureChild>,
-        frame_output_pipeline_id: Option<PipelineId>,
         apply_local_clip_rect: bool,
         flags: PrimitiveFlags,
         requested_raster_space: RasterSpace,
@@ -4738,7 +4733,6 @@ impl PicturePrimitive {
             requested_composite_mode,
             raster_config: None,
             context_3d,
-            frame_output_pipeline_id,
             extra_gpu_data_handles: SmallVec::new(),
             apply_local_clip_rect,
             is_backface_visible: flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE),

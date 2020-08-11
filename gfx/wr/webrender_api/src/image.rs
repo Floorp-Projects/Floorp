@@ -9,7 +9,7 @@ use peek_poke::PeekPoke;
 use std::ops::{Add, Sub};
 use std::sync::Arc;
 // local imports
-use crate::api::{IdNamespace, PipelineId, TileSize};
+use crate::api::{IdNamespace, TileSize};
 use crate::display_item::ImageRendering;
 use crate::font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
 use crate::units::*;
@@ -98,16 +98,6 @@ pub trait ExternalImageHandler {
     /// Unlock the external image. WR should not read the image content
     /// after this call.
     fn unlock(&mut self, key: ExternalImageId, channel_index: u8);
-}
-
-/// Allows callers to receive a texture with the contents of a specific
-/// pipeline copied to it.
-pub trait OutputImageHandler {
-    /// Return the native texture handle and the size of the texture.
-    fn lock(&mut self, pipeline_id: PipelineId) -> Option<(u32, FramebufferIntSize)>;
-    /// Unlock will only be called if the lock() call succeeds, when WR has issued
-    /// the GL commands to copy the output to the texture handle.
-    fn unlock(&mut self, pipeline_id: PipelineId);
 }
 
 /// Specifies the type of texture target in driver terms.

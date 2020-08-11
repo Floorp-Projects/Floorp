@@ -21,7 +21,7 @@ use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
 use crate::hit_test::{HitTestingItem, HitTestingScene};
 use crate::intern::Interner;
-use crate::internal_types::{FastHashMap, FastHashSet, LayoutPrimitiveInfo, Filter};
+use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList};
 use crate::prim_store::{PrimitiveInstance, register_prim_chase_id};
@@ -223,10 +223,6 @@ pub struct SceneBuilder<'a> {
     /// The map of all font instances.
     font_instances: SharedFontInstanceMap,
 
-    /// A set of pipelines that the caller has requested be made available as
-    /// output textures.
-    output_pipelines: &'a FastHashSet<PipelineId>,
-
     /// The data structure that converts between ClipId/SpatialId and the various
     /// index types that the SpatialTree uses.
     id_to_index_mapper: NodeIdToIndexMapper,
@@ -288,7 +284,6 @@ impl<'a> SceneBuilder<'a> {
         scene: &Scene,
         font_instances: SharedFontInstanceMap,
         view: &SceneView,
-        output_pipelines: &FastHashSet<PipelineId>,
         frame_builder_config: &FrameBuilderConfig,
         interners: &mut Interners,
         stats: &SceneStats,
@@ -316,7 +311,6 @@ impl<'a> SceneBuilder<'a> {
             spatial_tree,
             font_instances,
             config: *frame_builder_config,
-            output_pipelines,
             id_to_index_mapper: NodeIdToIndexMapper::default(),
             hit_testing_scene: HitTestingScene::new(&stats.hit_test_stats),
             pending_shadow_items: VecDeque::new(),
@@ -348,7 +342,6 @@ impl<'a> SceneBuilder<'a> {
             .init(PicturePrimitive::new_image(
                 None,
                 Picture3DContext::Out,
-                None,
                 true,
                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
                 RasterSpace::Screen,
@@ -452,7 +445,6 @@ impl<'a> SceneBuilder<'a> {
                         );
 
                         let sc_info = self.push_stacking_context(
-                            bc.pipeline_id,
                             composition_operations,
                             info.stacking_context.transform_style,
                             info.prim_flags,
@@ -1532,7 +1524,6 @@ impl<'a> SceneBuilder<'a> {
     /// Push a new stacking context. Returns context that must be passed to pop_stacking_context().
     fn push_stacking_context(
         &mut self,
-        pipeline_id: PipelineId,
         composite_ops: CompositeOps,
         transform_style: TransformStyle,
         prim_flags: PrimitiveFlags,
@@ -1542,16 +1533,6 @@ impl<'a> SceneBuilder<'a> {
         flags: StackingContextFlags,
     ) -> StackingContextInfo {
         profile_scope!("push_stacking_context");
-
-        // Check if this stacking context is the root of a pipeline, and the caller
-        // has requested it as an output frame.
-        let is_pipeline_root =
-            self.sc_stack.last().map_or(true, |sc| sc.pipeline_id != pipeline_id);
-        let frame_output_pipeline_id = if is_pipeline_root && self.output_pipelines.contains(&pipeline_id) {
-            Some(pipeline_id)
-        } else {
-            None
-        };
 
         let clip_chain_id = match clip_id {
             Some(clip_id) => self.clip_store.get_or_build_clip_chain_id(clip_id),
@@ -1699,12 +1680,10 @@ impl<'a> SceneBuilder<'a> {
             // pop_stacking_context.
             self.sc_stack.push(FlattenedStackingContext {
                 prim_list: PrimitiveList::empty(),
-                pipeline_id,
                 prim_flags,
                 requested_raster_space,
                 spatial_node_index,
                 clip_chain_id,
-                frame_output_pipeline_id,
                 composite_ops,
                 blit_reason,
                 transform_style,
@@ -1748,7 +1727,7 @@ impl<'a> SceneBuilder<'a> {
             None => true,
         };
 
-        let (leaf_context_3d, leaf_composite_mode, leaf_output_pipeline_id) = match stacking_context.context_3d {
+        let (leaf_context_3d, leaf_composite_mode) = match stacking_context.context_3d {
             // TODO(gw): For now, as soon as this picture is in
             //           a 3D context, we draw it to an intermediate
             //           surface and apply plane splitting. However,
@@ -1759,7 +1738,6 @@ impl<'a> SceneBuilder<'a> {
             Picture3DContext::In { ancestor_index, .. } => (
                 Picture3DContext::In { root_data: None, ancestor_index },
                 Some(PictureCompositeMode::Blit(BlitReason::PRESERVE3D | stacking_context.blit_reason)),
-                None,
             ),
             Picture3DContext::Out => (
                 Picture3DContext::Out,
@@ -1771,7 +1749,6 @@ impl<'a> SceneBuilder<'a> {
                     // Add a dummy composite filter if the SC has to be isolated.
                     Some(PictureCompositeMode::Blit(stacking_context.blit_reason))
                 },
-                stacking_context.frame_output_pipeline_id
             ),
         };
 
@@ -1781,7 +1758,6 @@ impl<'a> SceneBuilder<'a> {
             .init(PicturePrimitive::new_image(
                 leaf_composite_mode.clone(),
                 leaf_context_3d,
-                leaf_output_pipeline_id,
                 true,
                 stacking_context.prim_flags,
                 stacking_context.requested_raster_space,
@@ -1835,7 +1811,6 @@ impl<'a> SceneBuilder<'a> {
                         root_data: Some(Vec::new()),
                         ancestor_index,
                     },
-                    stacking_context.frame_output_pipeline_id,
                     true,
                     stacking_context.prim_flags,
                     stacking_context.requested_raster_space,
@@ -1902,7 +1877,6 @@ impl<'a> SceneBuilder<'a> {
                     .init(PicturePrimitive::new_image(
                         composite_mode.clone(),
                         Picture3DContext::Out,
-                        None,
                         true,
                         stacking_context.prim_flags,
                         stacking_context.requested_raster_space,
@@ -2372,7 +2346,6 @@ impl<'a> SceneBuilder<'a> {
                             .init(PicturePrimitive::new_image(
                                 composite_mode,
                                 Picture3DContext::Out,
-                                None,
                                 is_passthrough,
                                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
                                 raster_space,
@@ -3116,7 +3089,6 @@ impl<'a> SceneBuilder<'a> {
                 .init(PicturePrimitive::new_image(
                     composite_mode.clone(),
                     Picture3DContext::Out,
-                    None,
                     true,
                     prim_flags,
                     requested_raster_space,
@@ -3306,7 +3278,6 @@ impl<'a> SceneBuilder<'a> {
                 .init(PicturePrimitive::new_image(
                     composite_mode.clone(),
                     Picture3DContext::Out,
-                    None,
                     true,
                     flags,
                     requested_raster_space,
@@ -3371,7 +3342,6 @@ impl<'a> SceneBuilder<'a> {
                 .init(PicturePrimitive::new_image(
                     Some(composite_mode.clone()),
                     Picture3DContext::Out,
-                    None,
                     true,
                     flags,
                     requested_raster_space,
@@ -3448,10 +3418,6 @@ struct FlattenedStackingContext {
     /// The clip chain for this stacking context
     clip_chain_id: ClipChainId,
 
-    /// If set, this should be provided to caller
-    /// as an output texture.
-    frame_output_pipeline_id: Option<PipelineId>,
-
     /// The list of filters / mix-blend-mode for this
     /// stacking context.
     composite_ops: CompositeOps,
@@ -3459,9 +3425,6 @@ struct FlattenedStackingContext {
     /// Bitfield of reasons this stacking context needs to
     /// be an offscreen surface.
     blit_reason: BlitReason,
-
-    /// Pipeline this stacking context belongs to.
-    pipeline_id: PipelineId,
 
     /// CSS transform-style property.
     transform_style: TransformStyle,
@@ -3572,7 +3535,6 @@ impl FlattenedStackingContext {
             .init(PicturePrimitive::new_image(
                 composite_mode.clone(),
                 flat_items_context_3d,
-                None,
                 true,
                 self.prim_flags,
                 self.requested_raster_space,

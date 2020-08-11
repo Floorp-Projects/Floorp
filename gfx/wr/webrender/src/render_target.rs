@@ -4,7 +4,7 @@
 
 
 use api::units::*;
-use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle, PipelineId};
+use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures, resolve_image};
 use crate::batch::{ClipBatcher, BatchBuilder};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX};
@@ -299,8 +299,6 @@ pub struct ColorRenderTarget {
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub svg_filters: Vec<(BatchTextures, Vec<SvgFilterInstance>)>,
     pub blits: Vec<BlitJob>,
-    // List of frame buffer outputs for this render target.
-    pub outputs: Vec<FrameOutput>,
     alpha_tasks: Vec<RenderTaskId>,
     screen_size: DeviceIntSize,
     // Track the used rect of the render target, so that
@@ -322,7 +320,6 @@ impl RenderTarget for ColorRenderTarget {
             scalings: FastHashMap::default(),
             svg_filters: Vec::new(),
             blits: Vec::new(),
-            outputs: Vec::new(),
             alpha_tasks: Vec::new(),
             screen_size,
             used_rect: DeviceIntRect::zero(),
@@ -476,18 +473,8 @@ impl RenderTarget for ColorRenderTarget {
                     render_tasks.get_task_address(task.children[0]),
                 );
             }
-            RenderTaskKind::Picture(ref task_info) => {
-                let pic = &ctx.prim_store.pictures[task_info.pic_index.0];
+            RenderTaskKind::Picture(..) => {
                 self.alpha_tasks.push(task_id);
-
-                // If this pipeline is registered as a frame output
-                // store the information necessary to do the copy.
-                if let Some(pipeline_id) = pic.frame_output_pipeline_id {
-                    self.outputs.push(FrameOutput {
-                        pipeline_id,
-                        task_id,
-                    });
-                }
             }
             RenderTaskKind::SvgFilter(ref task_info) => {
                 add_svg_filter_instances(
@@ -1092,15 +1079,4 @@ pub struct GradientJob {
     pub colors: [PremultipliedColorF; GRADIENT_FP_STOPS],
     pub axis_select: f32,
     pub start_stop: [f32; 2],
-}
-
-/// Frame output information for a given pipeline ID.
-/// Storing the task ID allows the renderer to find
-/// the target rect within the render target that this
-/// pipeline exists at.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FrameOutput {
-    pub task_id: RenderTaskId,
-    pub pipeline_id: PipelineId,
 }
