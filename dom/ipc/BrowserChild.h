@@ -189,8 +189,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                dom::BrowsingContext* aBrowsingContext, uint32_t aChromeFlags,
                bool aIsTopLevel);
 
-  nsresult Init(mozIDOMWindowProxy* aParent,
-                WindowGlobalChild* aInitialWindowChild);
+  MOZ_CAN_RUN_SCRIPT nsresult Init(mozIDOMWindowProxy* aParent,
+                                   WindowGlobalChild* aInitialWindowChild);
 
   /** Return a BrowserChild with the given attributes. */
   static already_AddRefed<BrowserChild> Create(
