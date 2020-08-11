@@ -27,10 +27,6 @@ name = "document"
 path = "document.rs"
 
 [[bin]]
-name = "frame_output"
-path = "frame_output.rs"
-
-[[bin]]
 name = "iframe"
 path = "iframe.rs"
 
