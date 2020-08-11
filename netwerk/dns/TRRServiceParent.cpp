@@ -74,9 +74,7 @@ TRRServiceParent::Observe(nsISupports* aSubject, const char* aTopic,
     if (link) {
       nsTArray<nsCString> suffixList;
       link->GetDnsSuffixList(suffixList);
-      bool platformDisabledTRR = TRRService::CheckPlatformDNSStatus(link);
-      Unused << SendUpdatePlatformDNSInformation(suffixList,
-                                                 platformDisabledTRR);
+      Unused << SendUpdatePlatformDNSInformation(suffixList);
     }
 
     if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC) && mURISetByDetection) {

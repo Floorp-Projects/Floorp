@@ -57,7 +57,6 @@ TRRService::TRRService()
       mDisableECS(true),
       mSkipTRRWhenParentalControlEnabled(true),
       mDisableAfterFails(5),
-      mPlatformDisabledTRR(false),
       mTRRBLStorage("DataMutex::TRRBlocklist"),
       mConfirmationState(CONFIRM_INIT),
       mRetryConfirmInterval(1000),
@@ -583,7 +582,6 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
         link->GetDnsSuffixList(suffixList);
         RebuildSuffixList(std::move(suffixList));
       }
-      mPlatformDisabledTRR = CheckPlatformDNSStatus(link);
     }
 
     if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC) && mURISetByDetection) {
@@ -612,23 +610,6 @@ void TRRService::RebuildSuffixList(nsTArray<nsCString>&& aSuffixList) {
     LOG(("TRRService adding %s to suffix list", item.get()));
     mDNSSuffixDomains.PutEntry(item);
   }
-}
-
-// static
-bool TRRService::CheckPlatformDNSStatus(nsINetworkLinkService* aLinkService) {
-  if (!aLinkService) {
-    return false;
-  }
-
-  uint32_t platformIndications = nsINetworkLinkService::NONE_DETECTED;
-  aLinkService->GetPlatformDNSIndications(&platformIndications);
-  LOG(("TRRService platformIndications=%u", platformIndications));
-  return (!StaticPrefs::network_trr_enable_when_vpn_detected() &&
-          (platformIndications & nsINetworkLinkService::VPN_DETECTED)) ||
-         (!StaticPrefs::network_trr_enable_when_proxy_detected() &&
-          (platformIndications & nsINetworkLinkService::PROXY_DETECTED)) ||
-         (!StaticPrefs::network_trr_enable_when_nrpt_detected() &&
-          (platformIndications & nsINetworkLinkService::NRPT_DETECTED));
 }
 
 void TRRService::MaybeConfirm() {
@@ -769,12 +750,6 @@ bool TRRService::IsExcludedFromTRR(const nsACString& aHost) {
 bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
   if (!NS_IsMainThread()) {
     mLock.AssertCurrentThreadOwns();
-  }
-
-  if (mPlatformDisabledTRR) {
-    LOG(("%s is excluded from TRR because of platform indications",
-         aHost.BeginReading()));
-    return true;
   }
 
   int32_t dot = 0;

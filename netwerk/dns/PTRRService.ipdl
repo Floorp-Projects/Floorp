@@ -17,8 +17,7 @@ async refcounted protocol PTRRService
 
 child:
   async __delete__();
-  async UpdatePlatformDNSInformation(nsCString[] aSuffixList,
-                                     bool aPlatformDisabledTRR);
+  async UpdatePlatformDNSInformation(nsCString[] aSuffixList);
   async UpdateParentalControlEnabled(bool aEnabled);
   async ClearDNSCache(bool aTrrToo);
   async SetDetectedTrrURI(nsCString aURI);

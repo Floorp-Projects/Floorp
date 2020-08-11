@@ -8221,26 +8221,6 @@
   value: false
   mirror: always
 
-# This pref controls if TRR will still be enabled when a VPN is detected on
-# the system. Detection is not foolproof, and some VPNs may not be detected.
-# See bug 1565004 comment 3 for details.
-- name: network.trr.enable_when_vpn_detected
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# This pref controls if TRR will still be enabled when a proxy is detected
-- name: network.trr.enable_when_proxy_detected
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# This pref controls if TRR will still be enabled when NRPT rules are detected
-- name: network.trr.enable_when_nrpt_detected
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # This pref controls whether to use TRRServiceChannel off main thread.
 - name: network.trr.fetch_off_main_thread
   type: RelaxedAtomicBool
