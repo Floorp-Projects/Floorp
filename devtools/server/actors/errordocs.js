@@ -9,11 +9,6 @@
 
 "use strict";
 
-const Services = require("Services");
-const supportBaseURL = Services.urlFormatter.formatURLPref(
-  "app.support.baseURL"
-);
-
 const baseErrorURL =
   "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/";
 const params =
@@ -134,7 +129,6 @@ const ErrorCategories = {
   "source map": SOURCE_MAP_LEARN_MORE,
   TLS: TLS_LEARN_MORE,
   requestStorageAccess: REQUEST_STORAGE_ACCESS_LEARN_MORE,
-  HTTPSOnly: supportBaseURL + "https-only-prefs",
 };
 
 const baseCorsErrorUrl =
