@@ -1174,6 +1174,7 @@ AtomicsReadWriteModifyFn AtomicsAdd(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsSub(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsAnd(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsOr(Scalar::Type elementType);
+AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType);
 
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
