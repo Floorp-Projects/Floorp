@@ -1372,6 +1372,16 @@
     index: Int32Id
     elementType: ScalarTypeImm
 
+- name: AtomicsStoreResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+    index: Int32Id
+    value: Int32Id
+    elementType: ScalarTypeImm
+
 - name: CallNativeSetter
   shared: false
   transpile: false

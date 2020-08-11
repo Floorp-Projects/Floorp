@@ -7696,6 +7696,48 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
+                                             Int32OperandId indexId,
+                                             Int32OperandId valueId,
+                                             Scalar::Type elementType) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
+  Register value = allocator.useRegister(masm, valueId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  // Not enough registers on X86.
+  Register spectreTemp = Register::Invalid();
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Bounds check.
+  LoadTypedThingLength(masm, TypedThingLayout::TypedArray, obj, scratch);
+  masm.spectreBoundsCheck32(index, scratch, spectreTemp, failure->label());
+
+  // Load the elements vector.
+  LoadTypedThingData(masm, TypedThingLayout::TypedArray, obj, scratch);
+
+  // Store the value.
+  BaseIndex dest(scratch, index,
+                 ScaleFromElemWidth(Scalar::byteSize(elementType)));
+
+  auto sync = Synchronization::Store();
+
+  masm.memoryBarrierBefore(sync);
+  masm.storeToTypedIntArray(elementType, value, dest);
+  masm.memoryBarrierAfter(sync);
+
+  masm.tagValue(JSVAL_TYPE_INT32, value, output.valueReg());
+
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
