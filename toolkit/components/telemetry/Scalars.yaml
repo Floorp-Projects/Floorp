@@ -3995,6 +3995,7 @@ printing:
     kind: uint
     notification_emails:
       - jwatt@jwatt.org
+      - emalysz@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4060,6 +4061,7 @@ printing:
     kind: uint
     notification_emails:
       - jwatt@jwatt.org
+      - emalysz@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4076,11 +4078,30 @@ printing:
     kind: uint
     notification_emails:
       - jwatt@jwatt.org
+      - emalysz@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
       - 'content'
+
+  settings_changed:
+    bug_numbers:
+      - 1653386
+    description: >
+      A count of how many times the user changed a setting in print preview,
+      broken down per setting.
+    keyed: true
+    expires: never
+    kind: uint
+    notification_emails:
+      - emalysz@mozilla.com
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes:
+      - 'main'
 
   silent_print:
     bug_numbers:
