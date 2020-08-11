@@ -631,7 +631,7 @@ pub(crate) mod desc {
         ],
     };
 
-    pub const CLIP: VertexDescriptor = VertexDescriptor {
+    pub const CLIP_RECT: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[
             VertexAttribute {
                 name: "aPosition",
@@ -640,26 +640,7 @@ pub(crate) mod desc {
             },
         ],
         instance_attributes: &[
-            VertexAttribute {
-                name: "aTransformIds",
-                count: 2,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aClipDataResourceAddress",
-                count: 4,
-                kind: VertexAttributeKind::U16,
-            },
-            VertexAttribute {
-                name: "aClipLocalPos",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-            VertexAttribute {
-                name: "aClipTileRect",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
+            // common clip attributes
             VertexAttribute {
                 name: "aClipDeviceArea",
                 count: 4,
@@ -673,6 +654,175 @@ pub(crate) mod desc {
             VertexAttribute {
                 name: "aDevicePixelScale",
                 count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aTransformIds",
+                count: 2,
+                kind: VertexAttributeKind::I32,
+            },
+            // specific clip attributes
+            VertexAttribute {
+                name: "aClipLocalPos",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipLocalRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipMode",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipRect_TL",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipRadii_TL",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipRect_TR",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipRadii_TR",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipRect_BL",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipRadii_BL",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipRect_BR",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipRadii_BR",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+    };
+
+    pub const CLIP_BOX_SHADOW: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            // common clip attributes
+            VertexAttribute {
+                name: "aClipDeviceArea",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipOrigins",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aDevicePixelScale",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aTransformIds",
+                count: 2,
+                kind: VertexAttributeKind::I32,
+            },
+            // specific clip attributes
+            VertexAttribute {
+                name: "aClipDataResourceAddress",
+                count: 2,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aClipSrcRectSize",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipMode",
+                count: 1,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aStretchMode",
+                count: 2,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aClipDestRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+    };
+
+    pub const CLIP_IMAGE: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            // common clip attributes
+            VertexAttribute {
+                name: "aClipDeviceArea",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipOrigins",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aDevicePixelScale",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aTransformIds",
+                count: 2,
+                kind: VertexAttributeKind::I32,
+            },
+            // specific clip attributes
+            VertexAttribute {
+                name: "aClipTileRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipDataResourceAddress",
+                count: 2,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aClipLocalRect",
+                count: 4,
                 kind: VertexAttributeKind::F32,
             },
         ],
@@ -921,7 +1071,9 @@ pub(crate) mod desc {
 pub(crate) enum VertexArrayKind {
     Primitive,
     Blur,
-    Clip,
+    ClipImage,
+    ClipRect,
+    ClipBoxShadow,
     VectorStencil,
     VectorCover,
     Border,
@@ -1905,7 +2057,9 @@ impl LazyInitializedDebugRenderer {
 pub struct RendererVAOs {
     prim_vao: VAO,
     blur_vao: VAO,
-    clip_vao: VAO,
+    clip_rect_vao: VAO,
+    clip_box_shadow_vao: VAO,
+    clip_image_vao: VAO,
     border_vao: VAO,
     line_vao: VAO,
     scale_vao: VAO,
@@ -2383,7 +2537,9 @@ impl Renderer {
         device.update_vao_main_vertices(&prim_vao, &quad_vertices, VertexUsageHint::Static);
 
         let blur_vao = device.create_vao_with_new_instances(&desc::BLUR, &prim_vao);
-        let clip_vao = device.create_vao_with_new_instances(&desc::CLIP, &prim_vao);
+        let clip_rect_vao = device.create_vao_with_new_instances(&desc::CLIP_RECT, &prim_vao);
+        let clip_box_shadow_vao = device.create_vao_with_new_instances(&desc::CLIP_BOX_SHADOW, &prim_vao);
+        let clip_image_vao = device.create_vao_with_new_instances(&desc::CLIP_IMAGE, &prim_vao);
         let border_vao = device.create_vao_with_new_instances(&desc::BORDER, &prim_vao);
         let scale_vao = device.create_vao_with_new_instances(&desc::SCALE, &prim_vao);
         let line_vao = device.create_vao_with_new_instances(&desc::LINE, &prim_vao);
@@ -2680,7 +2836,9 @@ impl Renderer {
             vaos: RendererVAOs {
                 prim_vao,
                 blur_vao,
-                clip_vao,
+                clip_rect_vao,
+                clip_box_shadow_vao,
+                clip_image_vao,
                 border_vao,
                 scale_vao,
                 gradient_vao,
@@ -5258,7 +5416,7 @@ impl Renderer {
             );
             self.draw_instanced_batch(
                 &list.slow_rectangles,
-                VertexArrayKind::Clip,
+                VertexArrayKind::ClipRect,
                 &BatchTextures::no_texture(),
                 stats,
             );
@@ -5272,7 +5430,7 @@ impl Renderer {
             );
             self.draw_instanced_batch(
                 &list.fast_rectangles,
-                VertexArrayKind::Clip,
+                VertexArrayKind::ClipRect,
                 &BatchTextures::no_texture(),
                 stats,
             );
@@ -5291,7 +5449,7 @@ impl Renderer {
                 .bind(&mut self.device, projection, &mut self.renderer_errors);
             self.draw_instanced_batch(
                 items,
-                VertexArrayKind::Clip,
+                VertexArrayKind::ClipBoxShadow,
                 &textures,
                 stats,
             );
@@ -5311,7 +5469,7 @@ impl Renderer {
                 .bind(&mut self.device, projection, &mut self.renderer_errors);
             self.draw_instanced_batch(
                 items,
-                VertexArrayKind::Clip,
+                VertexArrayKind::ClipImage,
                 &textures,
                 stats,
             );
@@ -6742,7 +6900,9 @@ impl Renderer {
         self.texture_resolver.deinit(&mut self.device);
         self.device.delete_vao(self.vaos.prim_vao);
         self.device.delete_vao(self.vaos.resolve_vao);
-        self.device.delete_vao(self.vaos.clip_vao);
+        self.device.delete_vao(self.vaos.clip_rect_vao);
+        self.device.delete_vao(self.vaos.clip_box_shadow_vao);
+        self.device.delete_vao(self.vaos.clip_image_vao);
         self.device.delete_vao(self.vaos.gradient_vao);
         self.device.delete_vao(self.vaos.blur_vao);
         self.device.delete_vao(self.vaos.line_vao);
@@ -7610,7 +7770,9 @@ impl Renderer {
 fn get_vao(vertex_array_kind: VertexArrayKind, vaos: &RendererVAOs) -> &VAO {
     match vertex_array_kind {
         VertexArrayKind::Primitive => &vaos.prim_vao,
-        VertexArrayKind::Clip => &vaos.clip_vao,
+        VertexArrayKind::ClipImage => &vaos.clip_image_vao,
+        VertexArrayKind::ClipRect => &vaos.clip_rect_vao,
+        VertexArrayKind::ClipBoxShadow => &vaos.clip_box_shadow_vao,
         VertexArrayKind::Blur => &vaos.blur_vao,
         VertexArrayKind::VectorStencil | VertexArrayKind::VectorCover => unreachable!(),
         VertexArrayKind::Border => &vaos.border_vao,
