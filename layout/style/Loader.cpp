@@ -446,7 +446,7 @@ void SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread) {
                                        mLoadFailed ? u"error"_ns : u"load"_ns,
                                        CanBubble::eNo, Cancelable::eNo);
 
-  // And unblock onload
+  MOZ_ASSERT(BlocksLoadEvent());
   mLoader->UnblockOnload(true);
 }
 
@@ -455,10 +455,11 @@ void SheetLoadData::ScheduleLoadEventIfNeeded() {
     return;
   }
 
+  MOZ_ASSERT(BlocksLoadEvent(), "The rel=preload load event happens elsewhere");
+
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
   nsCOMPtr<nsIThreadInternal> internalThread = do_QueryInterface(thread);
   if (NS_SUCCEEDED(internalThread->AddObserver(this))) {
-    // Make sure to block onload here
     mLoader->BlockOnload();
   }
 }
@@ -1146,7 +1147,9 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   // If we're firing a pending load, this load is already accounted for the
   // first time it went through this function.
   if (aPendingLoad == PendingLoad::No) {
-    IncrementOngoingLoadCount();
+    if (aLoadData.BlocksLoadEvent()) {
+      IncrementOngoingLoadCount();
+    }
 
     // We technically never defer non-top-level sheets, so this condition could
     // be outside the branch, but conceptually it should be here.
@@ -1531,7 +1534,9 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
     // NOTE(emilio): This needs to happen before notifying observers, as
     // FontFaceSet for example checks for pending sheet loads from the
     // StyleSheetLoaded callback.
-    DecrementOngoingLoadCount();
+    if (aData.BlocksLoadEvent()) {
+      DecrementOngoingLoadCount();
+    }
   }
 
   if (aData.mMustNotify) {
@@ -2090,7 +2095,9 @@ nsresult Loader::PostLoadEvent(RefPtr<SheetLoadData> aLoadData) {
     NS_WARNING("failed to dispatch stylesheet load event");
     mPostedEvents.RemoveElement(aLoadData);
   } else {
-    IncrementOngoingLoadCount();
+    if (aLoadData->BlocksLoadEvent()) {
+      IncrementOngoingLoadCount();
+    }
 
     // We want to notify the observer for this data.
     aLoadData->mMustNotify = true;
