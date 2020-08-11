@@ -50,7 +50,7 @@ def main():
     args = parser.parse_args()
 
     buildconfig.substs['USE_ELF_HACK'] = False
-    buildconfig.substs['PKG_SKIP_STRIP'] = True
+    buildconfig.substs['PKG_STRIP'] = False
     l10n.repack(args.build, args.l10n, extra_l10n=dict(args.extra_l10n),
                 non_resources=args.non_resource, non_chrome=NON_CHROME)
 
