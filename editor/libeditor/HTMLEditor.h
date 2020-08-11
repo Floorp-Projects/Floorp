@@ -2661,17 +2661,27 @@ class HTMLEditor final : public TextEditor,
   class MOZ_STACK_CLASS AutoEmptyBlockAncestorDeleter final {
    public:
     /**
-     * Look for topmost empty block ancestor of aStartContent in
-     * aEditingHostElement. If found empty ancestor is a list item element,
-     * inserts a <br> element before its parent element if grand parent is a
-     * list element.  Then, collapse Selection to after the empty block. If
-     * found empty ancestor is not a list item element, collapse Selection to
-     * somewhere depending on aAction.
-     * Finally, removes the empty block ancestor.
+     * ScanEmptyBlockInclusiveAncestor() scans an inclusive ancestor element
+     * which is empty and a block element.  Then, stores the result and
+     * returns the found empty block element.
      *
      * @param aHTMLEditor         The HTMLEditor.
      * @param aStartContent       Start content to look for empty ancestors.
      * @param aEditingHostElement Current editing host.
+     */
+    [[nodiscard]] Element* ScanEmptyBlockInclusiveAncestor(
+        const HTMLEditor& aHTMLEditor, nsIContent& aStartContent,
+        Element& aEditingHostElement);
+
+    /**
+     * Deletes found empty block element by `ScanEmptyBlockInclusiveAncestor()`.
+     * If found one is a list item element, inserts a <br> element before its
+     * parent element if grand parent is a list element.  Then, collapse
+     * Selection to after the empty block. If found empty ancestor is not a
+     * list item element, collapse Selection to somewhere depending on aAction.
+     * Finally, removes the empty block ancestor.
+     *
+     * @param aHTMLEditor         The HTMLEditor.
      * @param aDirectionAndAmount If found empty ancestor block is a list item
      *                            element, this is ignored.  Otherwise:
      *                            - If eNext, eNextWord or eToEndOfLine,
@@ -2684,9 +2694,10 @@ class HTMLEditor final : public TextEditor,
      *                              nothing.
      */
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-    Run(HTMLEditor& aHTMLEditor, nsIContent& aStartContent,
-        Element& aEditingHostElement,
-        nsIEditor::EDirection aDirectionAndAmount);
+    Run(HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount);
+
+   private:
+    RefPtr<Element> mEmptyInclusiveAncestorBlockElement;
   };
 
   class MOZ_STACK_CLASS AutoBlockElementsJoiner final {

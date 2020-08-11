@@ -2463,13 +2463,15 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
       AutoEditorDOMPointChildInvalidator lockOffset(startPoint);
 
       AutoEmptyBlockAncestorDeleter deleter;
-      EditActionResult result =
-          deleter.Run(*this, MOZ_KnownLive(*startPoint.GetContainerAsContent()),
-                      *editingHost, aDirectionAndAmount);
-      if (result.Failed() || result.Handled()) {
-        NS_WARNING_ASSERTION(result.Succeeded(),
-                             "AutoEmptyBlockAncestorDeleter::Run() failed");
-        return result;
+      if (deleter.ScanEmptyBlockInclusiveAncestor(
+              *this, MOZ_KnownLive(*startPoint.GetContainerAsContent()),
+              *editingHost)) {
+        EditActionResult result = deleter.Run(*this, aDirectionAndAmount);
+        if (result.Failed() || result.Handled()) {
+          NS_WARNING_ASSERTION(result.Succeeded(),
+                               "AutoEmptyBlockAncestorDeleter::Run() failed");
+          return result;
+        }
       }
     }
 
@@ -7859,44 +7861,56 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   return NS_OK;
 }
 
-EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
-    HTMLEditor& aHTMLEditor, nsIContent& aStartContent,
-    Element& aEditingHostElement, nsIEditor::EDirection aDirectionAndAmount) {
+Element*
+HTMLEditor::AutoEmptyBlockAncestorDeleter::ScanEmptyBlockInclusiveAncestor(
+    const HTMLEditor& aHTMLEditor, nsIContent& aStartContent,
+    Element& aEditingHostElement) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
   // If the editing host is an inline element, bail out early.
   if (HTMLEditUtils::IsInlineElement(aEditingHostElement)) {
-    return EditActionIgnored();
+    return nullptr;
   }
 
   // If we are inside an empty block, delete it.  Note: do NOT delete table
   // elements this way.
-  RefPtr<Element> blockElement =
+  Element* blockElement =
       HTMLEditUtils::GetInclusiveAncestorBlockElement(aStartContent);
-  RefPtr<Element> topMostEmptyBlockElement;
+  if (!blockElement) {
+    return nullptr;
+  }
   while (blockElement && blockElement != &aEditingHostElement &&
          !HTMLEditUtils::IsAnyTableElement(blockElement) &&
          aHTMLEditor.IsEmptyNode(*blockElement, true, false)) {
-    topMostEmptyBlockElement = blockElement;
-    blockElement =
-        HTMLEditUtils::GetAncestorBlockElement(*topMostEmptyBlockElement);
+    mEmptyInclusiveAncestorBlockElement = blockElement;
+    blockElement = HTMLEditUtils::GetAncestorBlockElement(
+        *mEmptyInclusiveAncestorBlockElement);
+  }
+  if (!mEmptyInclusiveAncestorBlockElement) {
+    return nullptr;
   }
 
   // XXX Because of not checking whether found block element is editable
   //     in the above loop, empty ediable block element may be overwritten
   //     with empty non-editable clock element.  Therefore, we fail to
   //     remove the found empty nodes.
-  if (!topMostEmptyBlockElement || !topMostEmptyBlockElement->IsEditable()) {
-    return EditActionIgnored();
+  if (NS_WARN_IF(!mEmptyInclusiveAncestorBlockElement->IsEditable()) ||
+      NS_WARN_IF(!mEmptyInclusiveAncestorBlockElement->GetParentElement())) {
+    mEmptyInclusiveAncestorBlockElement = nullptr;
   }
+  return mEmptyInclusiveAncestorBlockElement;
+}
+
+EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount) {
+  MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
+  MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
   RefPtr<Element> parentOfEmptyBlockElement =
-      topMostEmptyBlockElement->GetParentElement();
-  if (NS_WARN_IF(!parentOfEmptyBlockElement)) {
-    return EditActionResult(NS_ERROR_FAILURE);
-  }
+      mEmptyInclusiveAncestorBlockElement->GetParentElement();
 
-  if (HTMLEditUtils::IsListItem(topMostEmptyBlockElement)) {
+  if (HTMLEditUtils::IsListItem(mEmptyInclusiveAncestorBlockElement)) {
     // If the found empty block is a list item element and its grand parent
     // (i.e., parent of list element) is NOT a list element, insert <br>
     // element before the list element which has the empty list item.
@@ -7906,13 +7920,13 @@ EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
     //     last list item is deleted.  We should follow it since current
     //     behavior is annoying when you type new list item with selecting
     //     all list items.
-    if (aHTMLEditor.IsFirstEditableChild(topMostEmptyBlockElement)) {
+    if (aHTMLEditor.IsFirstEditableChild(mEmptyInclusiveAncestorBlockElement)) {
       EditorDOMPoint atParentOfEmptyBlock(parentOfEmptyBlockElement);
       if (NS_WARN_IF(!atParentOfEmptyBlock.IsSet())) {
         return EditActionResult(NS_ERROR_FAILURE);
       }
       // If the grand parent IS a list element, we'll adjust Selection in
-      // AfterEdit().
+      // OnEndHandlingEditSubAction().
       if (!HTMLEditUtils::IsAnyListElement(
               atParentOfEmptyBlock.GetContainer())) {
         RefPtr<Element> brElement =
@@ -7940,7 +7954,7 @@ EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
       case nsIEditor::eToEndOfLine: {
         // Collapse Selection to next node of after empty block element
         // if there is.  Otherwise, to just after the empty block.
-        EditorRawDOMPoint afterEmptyBlock(topMostEmptyBlockElement);
+        EditorRawDOMPoint afterEmptyBlock(mEmptyInclusiveAncestorBlockElement);
         bool advancedFromEmptyBlock = afterEmptyBlock.AdvanceOffset();
         NS_WARNING_ASSERTION(
             advancedFromEmptyBlock,
@@ -7975,7 +7989,7 @@ EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
       case nsIEditor::eToBeginningOfLine: {
         // Collapse Selection to previous editable node of the empty block
         // if there is.  Otherwise, to after the empty block.
-        EditorRawDOMPoint atEmptyBlock(topMostEmptyBlockElement);
+        EditorRawDOMPoint atEmptyBlock(mEmptyInclusiveAncestorBlockElement);
         nsCOMPtr<nsIContent> previousContentOfEmptyBlock =
             aHTMLEditor.GetPreviousEditableNode(atEmptyBlock);
         if (previousContentOfEmptyBlock) {
@@ -7993,7 +8007,7 @@ EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
           break;
         }
         EditorRawDOMPoint afterEmptyBlock(
-            EditorRawDOMPoint::After(*topMostEmptyBlockElement));
+            EditorRawDOMPoint::After(*mEmptyInclusiveAncestorBlockElement));
         if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
           return EditActionResult(NS_ERROR_FAILURE);
         }
@@ -8011,8 +8025,8 @@ EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
         MOZ_CRASH("CheckForEmptyBlock doesn't support this action yet");
     }
   }
-  nsresult rv =
-      aHTMLEditor.DeleteNodeWithTransaction(*topMostEmptyBlockElement);
+  nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(
+      MOZ_KnownLive(*mEmptyInclusiveAncestorBlockElement));
   if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
