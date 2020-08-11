@@ -7042,6 +7042,91 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   return AttachDecision::Attach;
 }
 
+bool CallIRGenerator::canAttachAtomicsReadWriteModify() {
+  if (!JitSupportsAtomics()) {
+    return false;
+  }
+
+  // Need three arguments.
+  if (argc_ != 3) {
+    return false;
+  }
+
+  // Arguments: typedArray, index (number), value.
+  if (!args_[0].isObject() || !args_[0].toObject().is<TypedArrayObject>()) {
+    return false;
+  }
+  if (!args_[1].isNumber()) {
+    return false;
+  }
+  if (!args_[2].isNumber()) {
+    return false;
+  }
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1].toNumber())) {
+    return false;
+  }
+
+  // TODO: Uint32 isn't yet supported (bug 1077305).
+  if (typedArray->type() == Scalar::Uint32) {
+    return false;
+  }
+
+  return true;
+}
+
+CallIRGenerator::AtomicsReadWriteModifyOperands
+CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee) {
+  MOZ_ASSERT(canAttachAtomicsReadWriteModify());
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is this Atomics function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(arg0Id);
+  writer.guardShapeForClass(objId, typedArray->shape());
+
+  // Convert index to int32.
+  ValOperandId indexId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
+
+  // Convert value to int32.
+  ValOperandId valueId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  Int32OperandId int32ValueId = writer.guardToInt32ModUint32(valueId);
+
+  return {objId, int32IndexId, int32ValueId};
+}
+
+AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
+    HandleFunction callee) {
+  if (!canAttachAtomicsReadWriteModify()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto [objId, int32IndexId, int32ValueId] =
+      emitAtomicsReadWriteModifyOperands(callee);
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+
+  writer.atomicsExchangeResult(objId, int32IndexId, int32ValueId,
+                               typedArray->type());
+
+  // This stub doesn't need to be monitored, because it always returns an int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("AtomicsExchange");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8125,6 +8210,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Atomics intrinsics:
     case InlinableNative::AtomicsCompareExchange:
       return tryAttachAtomicsCompareExchange(callee);
+    case InlinableNative::AtomicsExchange:
+      return tryAttachAtomicsExchange(callee);
 
     default:
       return AttachDecision::NoAction;

@@ -2352,6 +2352,30 @@ bool WarpCacheIRTranspiler::emitAtomicsCompareExchangeResult(
   return resumeAfter(cas);
 }
 
+bool WarpCacheIRTranspiler::emitAtomicsExchangeResult(
+    ObjOperandId objId, Int32OperandId indexId, Int32OperandId valueId,
+    Scalar::Type elementType) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+  MDefinition* value = getOperand(valueId);
+
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  add(length);
+
+  index = addBoundsCheck(index, length);
+
+  auto* elements = MArrayBufferViewElements::New(alloc(), obj);
+  add(elements);
+
+  auto* exchange = MAtomicExchangeTypedArrayElement::New(
+      alloc(), elements, index, value, elementType);
+  exchange->setResultType(MIRType::Int32);
+  addEffectful(exchange);
+
+  pushResult(exchange);
+  return resumeAfter(exchange);
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.

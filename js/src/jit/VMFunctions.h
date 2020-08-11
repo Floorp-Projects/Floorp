@@ -1165,7 +1165,11 @@ bool StringBigIntCompare(JSContext* cx, HandleString x, HandleBigInt y,
 using AtomicsCompareExchangeFn = int32_t (*)(TypedArrayObject*, int32_t,
                                              int32_t, int32_t);
 
+using AtomicsReadWriteModifyFn = int32_t (*)(TypedArrayObject*, int32_t,
+                                             int32_t);
+
 AtomicsCompareExchangeFn AtomicsCompareExchange(Scalar::Type elementType);
+AtomicsReadWriteModifyFn AtomicsExchange(Scalar::Type elementType);
 
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;

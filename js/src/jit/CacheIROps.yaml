@@ -1303,6 +1303,16 @@
     replacement: Int32Id
     elementType: ScalarTypeImm
 
+- name: AtomicsExchangeResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    obj: ObjId
+    index: Int32Id
+    value: Int32Id
+    elementType: ScalarTypeImm
+
 - name: CallNativeSetter
   shared: false
   transpile: false
