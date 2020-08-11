@@ -32,7 +32,6 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderBufferTextureHost.h"
-#include "mozilla/webrender/RenderBufferTextureHostSWGL.h"
 #include "mozilla/webrender/RenderExternalTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -677,9 +676,6 @@ void BufferTextureHost::CreateRenderTexture(
   if (UseExternalTextures()) {
     texture =
         new wr::RenderExternalTextureHost(GetBuffer(), GetBufferDescriptor());
-  } else if (gfx::gfxVars::UseSoftwareWebRender()) {
-    texture =
-        new wr::RenderBufferTextureHostSWGL(GetBuffer(), GetBufferDescriptor());
   } else {
     texture =
         new wr::RenderBufferTextureHost(GetBuffer(), GetBufferDescriptor());
@@ -705,7 +701,7 @@ void BufferTextureHost::PushResourceUpdates(
                     : &wr::TransactionBuilder::UpdateExternalImage;
 
   auto imageType =
-      UseExternalTextures() || gfx::gfxVars::UseSoftwareWebRender()
+      UseExternalTextures()
           ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Rect)
           : wr::ExternalImageType::Buffer();
 
