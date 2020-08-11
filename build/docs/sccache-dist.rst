@@ -128,8 +128,9 @@ must read::
     # Specify the macOS SDK to use
     ac_add_options --with-macos-sdk=/path/to/MacOSX-SDKs/MacOSX10.11.sdk
 
-  You can get the right macOS SDK from the `MacOSX-SDKs repository <https://github.com/phracker/MacOSX-SDKs/>`_
-  or by downloading an old version of XCode from `developer.apple.com <https://developer.apple.com>`_ and unpacking the SKD from it.
+  You can get the right macOS SDK by downloading an old version of XCode from
+  `developer.apple.com <https://developer.apple.com>`_ and unpacking the SDK
+  from it.
 
 * When attempting to get your client running, the output of ``sccache -s`` should
   be consulted to confirm compilations are being distributed. To receive helpful
