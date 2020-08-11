@@ -48,6 +48,7 @@ class ShareControllerTest {
     // Need a valid context to retrieve Strings for example, but we also need it to return our "metrics"
     private val context: Context = spyk(testContext)
     private val metrics: MetricController = mockk(relaxed = true)
+    private val shareSubject = "shareSubject"
     private val shareData = listOf(
         ShareData(url = "url0", title = "title0"),
         ShareData(url = "url1", title = "title1")
@@ -65,7 +66,7 @@ class ShareControllerTest {
     private val dismiss = mockk<(ShareController.Result) -> Unit>(relaxed = true)
     private val recentAppStorage = mockk<RecentAppsStorage>(relaxed = true)
     private val controller = DefaultShareController(
-        context, shareData, sendTabUseCases, snackbar, navController,
+        context, shareSubject, shareData, sendTabUseCases, snackbar, navController,
         recentAppStorage, testCoroutineScope, dismiss
     )
 
@@ -91,8 +92,8 @@ class ShareControllerTest {
         // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
         // need to use an Activity Context.
         val activityContext: Context = mockk<Activity>()
-        val testController = DefaultShareController(activityContext, shareData, mockk(), mockk(), mockk(),
-            recentAppStorage, testCoroutineScope, dismiss)
+        val testController = DefaultShareController(activityContext, shareSubject, shareData, mockk(),
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, dismiss)
         every { activityContext.startActivity(capture(shareIntent)) } just Runs
         every { recentAppStorage.updateRecentApp(appShareOption.activityName) } just Runs
 
@@ -101,6 +102,7 @@ class ShareControllerTest {
         // Check that the Intent used for querying apps has the expected structure
         assertTrue(shareIntent.isCaptured)
         assertEquals(Intent.ACTION_SEND, shareIntent.captured.action)
+        assertEquals(shareSubject, shareIntent.captured.extras!![Intent.EXTRA_SUBJECT])
         assertEquals(textToShare, shareIntent.captured.extras!![Intent.EXTRA_TEXT])
         assertEquals("text/plain", shareIntent.captured.type)
         assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, shareIntent.captured.flags)
@@ -124,8 +126,8 @@ class ShareControllerTest {
         // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
         // need to use an Activity Context.
         val activityContext: Context = mockk<Activity>()
-        val testController = DefaultShareController(activityContext, shareData, mockk(), snackbar,
-            mockk(), mockk(), testCoroutineScope, dismiss)
+        val testController = DefaultShareController(activityContext, shareSubject, shareData, mockk(),
+            snackbar, mockk(), mockk(), testCoroutineScope, dismiss)
         every { activityContext.startActivity(capture(shareIntent)) } throws SecurityException()
         every { activityContext.getString(R.string.share_error_snackbar) } returns "Cannot share to this app"
 
@@ -247,6 +249,7 @@ class ShareControllerTest {
     fun `getSuccessMessage should return different strings depending on the number of shared tabs`() {
         val controllerWithOneSharedTab = DefaultShareController(
             context,
+            shareSubject,
             listOf(ShareData(url = "url0", title = "title0")),
             mockk(),
             mockk(),
@@ -280,12 +283,27 @@ class ShareControllerTest {
             ShareData(url = "url1")
         )
         val controller = DefaultShareController(
-            context, shareData, sendTabUseCases, snackbar, navController,
+            context, shareSubject, shareData, sendTabUseCases, snackbar, navController,
             recentAppStorage, testCoroutineScope, dismiss
         )
 
         val expectedShareText = "${shareData[0].url}\n\nurl0\n\n${shareData[2].url}"
         assertEquals(expectedShareText, controller.getShareText())
+    }
+
+    @Test
+    fun `getShareSubject will return "shareSubject" if that is non null`() {
+        assertEquals(shareSubject, controller.getShareSubject())
+    }
+
+    @Test
+    fun `getShareSubject will return a concatenation of tab titles if "shareSubject" is null`() {
+        val controller = DefaultShareController(
+            context, null, shareData, sendTabUseCases, snackbar, navController,
+            recentAppStorage, testCoroutineScope, dismiss
+        )
+
+        assertEquals("title0, title1", controller.getShareSubject())
     }
 
     @Test

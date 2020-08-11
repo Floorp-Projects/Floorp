@@ -212,6 +212,7 @@ class DefaultSessionControlControllerTest {
     fun handleCollectionShareTabsClicked() {
         val collection = mockk<TabCollection> {
             every { tabs } returns emptyList()
+            every { title } returns ""
         }
         controller.handleCollectionShareTabsClicked(collection)
 

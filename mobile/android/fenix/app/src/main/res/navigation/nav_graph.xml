@@ -677,6 +677,11 @@
             android:defaultValue="null"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="shareSubject"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
     </dialog>
     <dialog
         android:id="@+id/quickSettingsSheetDialogFragment"

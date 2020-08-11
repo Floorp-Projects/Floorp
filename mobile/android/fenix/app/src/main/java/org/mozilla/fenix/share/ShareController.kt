@@ -55,6 +55,7 @@ interface ShareController {
  * Default behavior of [ShareController]. Other implementations are possible.
  *
  * @param context [Context] used for various Android interactions.
+ * @param shareSubject desired message subject used when sharing through 3rd party apps, like email clients.
  * @param shareData the list of [ShareData]s that can be shared.
  * @param sendTabUseCases instance of [SendTabUseCases] which allows sending tabs to account devices.
  * @param snackbar - instance of [FenixSnackbar] for displaying styled snackbars
@@ -64,6 +65,7 @@ interface ShareController {
 @Suppress("TooManyFunctions")
 class DefaultShareController(
     private val context: Context,
+    private val shareSubject: String?,
     private val shareData: List<ShareData>,
     private val sendTabUseCases: SendTabUseCases,
     private val snackbar: FenixSnackbar,
@@ -90,7 +92,7 @@ class DefaultShareController(
 
         val intent = Intent(ACTION_SEND).apply {
             putExtra(EXTRA_TEXT, getShareText())
-            putExtra(EXTRA_SUBJECT, shareData.map { it.title }.joinToString(", "))
+            putExtra(EXTRA_SUBJECT, getShareSubject())
             type = "text/plain"
             flags = FLAG_ACTIVITY_NEW_TASK
             setClassName(app.packageName, app.activityName)
@@ -188,6 +190,9 @@ class DefaultShareController(
             url
         }
     }
+
+    @VisibleForTesting
+    internal fun getShareSubject() = shareSubject ?: shareData.map { it.title }.joinToString(", ")
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
     @VisibleForTesting

@@ -232,7 +232,10 @@ class DefaultSessionControlController(
     }
 
     override fun handleCollectionShareTabsClicked(collection: TabCollection) {
-        showShareFragment(collection.tabs.map { ShareData(url = it.url, title = it.title) })
+        showShareFragment(
+            collection.title,
+            collection.tabs.map { ShareData(url = it.url, title = it.title) }
+        )
         metrics.track(Event.CollectionShared)
     }
 
@@ -366,8 +369,9 @@ class DefaultSessionControlController(
         showTabTrayCollectionCreation()
     }
 
-    private fun showShareFragment(data: List<ShareData>) {
+    private fun showShareFragment(shareSubject: String, data: List<ShareData>) {
         val directions = HomeFragmentDirections.actionGlobalShareFragment(
+            shareSubject = shareSubject,
             data = data.toTypedArray()
         )
         navController.nav(R.id.homeFragment, directions)
