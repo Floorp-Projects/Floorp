@@ -168,13 +168,11 @@ with only_when(host_is_osx | target_is_osx):
         if version < sdk_min_version:
             die('SDK version "%s" is too old. Please upgrade to at least %s. '
                 'You may need to point to it using --with-macos-sdk=<path> in your '
-                'mozconfig. Various SDK versions are available from '
-                'https://github.com/phracker/MacOSX-SDKs' % (version, sdk_min_version))
+                'mozconfig.' % (version, sdk_min_version))
         if version > sdk_max_version:
             die('SDK version "%s" is unsupported. Please downgrade to version '
                 '%s. You may need to point to it using --with-macos-sdk=<path> in '
-                'your mozconfig. Various SDK versions are available from '
-                'https://github.com/phracker/MacOSX-SDKs' % (version, sdk_max_version))
+                'your mozconfig.' % (version, sdk_max_version))
         return sdk
 
     set_config('MACOS_SDK_DIR', macos_sdk)
