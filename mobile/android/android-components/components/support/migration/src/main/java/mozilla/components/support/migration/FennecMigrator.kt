@@ -47,10 +47,10 @@ import mozilla.components.support.migration.GleanMetrics.MigrationSearch
 import mozilla.components.support.migration.GleanMetrics.MigrationSettings
 import java.io.File
 import java.lang.AssertionError
-import java.lang.Exception
 import java.util.Date
 import java.util.UUID
 import java.util.concurrent.Executors
+import kotlin.Exception
 import kotlin.IllegalStateException
 import kotlin.coroutines.CoroutineContext
 
@@ -136,6 +136,12 @@ data class VersionedMigration(val migration: Migration, val version: Int = migra
  */
 sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
     /**
+     * Unexpected exception during high level migration processing.
+     * @param cause Original exception which caused the problem.
+     */
+    class HighLevel(cause: Exception) : FennecMigratorException(cause)
+
+    /**
      * Unexpected exception while migrating history.
      * @param cause Original exception which caused the problem.
      */
@@ -176,6 +182,12 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
      * @param cause Original exception which caused the problem
      */
     class MigrateAddonsException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating FxA.
+     * @param cause Original exception which caused the problem
+     */
+    class MigrateFxaException(cause: Exception) : FennecMigratorException(cause)
 
     /**
      * Unexpected exception while migrating telemetry identifiers.
@@ -576,7 +588,7 @@ class FennecMigrator private constructor(
         }
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "TooGenericExceptionCaught")
     private fun runMigrationsAsync(
         store: MigrationStore,
         migrations: List<VersionedMigration>
@@ -597,21 +609,27 @@ class FennecMigrator private constructor(
 
             versionedMigration.migration.metricTotalDuration().start()
 
-            val migrationResult = when (versionedMigration.migration) {
-                Migration.History -> migrateHistory()
-                Migration.Bookmarks -> migrateBookmarks()
-                Migration.OpenTabs -> migrateOpenTabs()
-                Migration.FxA -> migrateFxA()
-                Migration.Gecko -> migrateGecko(versionedMigration.version)
-                Migration.Logins -> migrateLogins()
-                Migration.Settings -> migrateSharedPrefs()
-                Migration.Addons -> migrateAddons()
-                Migration.TelemetryIdentifiers -> migrateTelemetryIdentifiers()
-                Migration.SearchEngine -> migrateSearchEngine()
-                Migration.PinnedSites -> migratePinnedSites()
+            val migrationResult: Result<*> = try {
+                when (versionedMigration.migration) {
+                    Migration.History -> migrateHistory()
+                    Migration.Bookmarks -> migrateBookmarks()
+                    Migration.OpenTabs -> migrateOpenTabs()
+                    Migration.FxA -> migrateFxA()
+                    Migration.Gecko -> migrateGecko(versionedMigration.version)
+                    Migration.Logins -> migrateLogins()
+                    Migration.Settings -> migrateSharedPrefs()
+                    Migration.Addons -> migrateAddons()
+                    Migration.TelemetryIdentifiers -> migrateTelemetryIdentifiers()
+                    Migration.SearchEngine -> migrateSearchEngine()
+                    Migration.PinnedSites -> migratePinnedSites()
+                }
+            } catch (e: Exception) {
+                logger.error("Unexpected error while migrating $versionedMigration", e)
+                crashReporter.submitCaughtException(FennecMigratorException.HighLevel(e))
+                Result.Failure<Any>(e)
+            } finally {
+                versionedMigration.migration.metricTotalDuration().stop()
             }
-
-            versionedMigration.migration.metricTotalDuration().stop()
 
             val migrationRun = when (migrationResult) {
                 is Result.Failure<*> -> {
@@ -676,24 +694,23 @@ class FennecMigrator private constructor(
 
         // Process migration metrics. Here and elsewhere, we're assuming and hard-coding metrics schema.
         // See application-services repository: https://github.com/mozilla/application-services/commit/a7d5ff1903fb0f904785a1645cb7ae1d6c313f10
-        try {
+        return try {
             MigrationHistory.detected.add(migrationMetrics.getInt("num_total"))
             MigrationHistory.migrated["succeeded"].add(migrationMetrics.getInt("num_succeeded"))
             MigrationHistory.migrated["failed"].add(migrationMetrics.getInt("num_failed"))
             // Assuming that 'total_duration' is in milliseconds.
             MigrationHistory.duration.setRawNanos(migrationMetrics.getLong("total_duration") * 1000000)
+
+            MigrationHistory.successReason.add(SuccessReasonTelemetryCodes.HISTORY_MIGRATED.code)
+            logger.debug("Migrated history.")
+            Result.Success(Unit)
         } catch (e: Exception) {
-            MigrationHistory.anyFailures.set(true)
             MigrationHistory.failureReason.add(FailureReasonTelemetryCodes.HISTORY_TELEMETRY_EXCEPTION.code)
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateHistoryException(e)
             )
+            Result.Failure(e)
         }
-
-        MigrationHistory.successReason.add(SuccessReasonTelemetryCodes.HISTORY_MIGRATED.code)
-
-        logger.debug("Migrated history.")
-        return Result.Success(Unit)
     }
 
     @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber", "ReturnCount")
@@ -723,23 +740,23 @@ class FennecMigrator private constructor(
 
         // Process migration metrics. Here and elsewhere, we're assuming and hard-coding metrics schema.
         // See application-services repository: https://github.com/mozilla/application-services/commit/b2e2edcc06a04503d493e1733b0d566815feac7c#diff-216f62325632ae6549587b038b21cfe0
-        try {
+        return try {
             MigrationBookmarks.detected.add(migrationMetrics.getInt("num_total"))
             MigrationBookmarks.migrated["succeeded"].add(migrationMetrics.getInt("num_succeeded"))
             MigrationBookmarks.migrated["failed"].add(migrationMetrics.getInt("num_failed"))
             // Assuming that 'total_duration' is in milliseconds.
             MigrationBookmarks.duration.setRawNanos(migrationMetrics.getLong("total_duration") * 1000000)
+
+            logger.debug("Migrated bookmarks.")
+            MigrationBookmarks.successReason.add(SuccessReasonTelemetryCodes.BOOKMARKS_MIGRATED.code)
+            Result.Success(Unit)
         } catch (e: Exception) {
             MigrationBookmarks.failureReason.add(FailureReasonTelemetryCodes.BOOKMARKS_TELEMETRY_EXCEPTION.code)
-            MigrationBookmarks.anyFailures.set(true)
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateBookmarksException(e)
             )
+            Result.Failure(e)
         }
-
-        logger.debug("Migrated history.")
-        MigrationBookmarks.successReason.add(SuccessReasonTelemetryCodes.BOOKMARKS_MIGRATED.code)
-        return Result.Success(Unit)
     }
 
     @Suppress("ComplexMethod", "TooGenericExceptionCaught", "LongMethod", "ReturnCount")
@@ -750,81 +767,81 @@ class FennecMigrator private constructor(
             return Result.Failure(IllegalStateException("Missing Profile path"))
         }
 
-        val result = try {
+        return try {
             logger.debug("Migrating logins...")
-            FennecLoginsMigration.migrate(
+            val result = FennecLoginsMigration.migrate(
                 crashReporter,
                 signonsDbPath = "${profile.path}/$signonsDbName",
                 key4DbPath = "${profile.path}/$key4DbName",
                 loginsStorage = loginsStorage!!.value
             )
-        } catch (e: Exception) {
-            crashReporter.submitCaughtException(FennecMigratorException.MigrateLoginsException(e))
-            MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_UNEXPECTED_EXCEPTION.code)
-            return Result.Failure(e)
-        }
 
-        if (result is Result.Failure<LoginsMigrationResult>) {
-            val migrationFailureWrapper = result.throwables.first() as LoginMigrationException
-            return when (val failure = migrationFailureWrapper.failure) {
-                is LoginsMigrationResult.Failure.FailedToCheckMasterPassword -> {
-                    logger.error("Failed to check master password: $failure")
-                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_MP_CHECK.code)
-                    // We definitely expect to be able to check our master password, so report a failure.
-                    crashReporter.submitCaughtException(migrationFailureWrapper)
-                    result
+            if (result is Result.Failure<LoginsMigrationResult>) {
+                val migrationFailureWrapper = result.throwables.first() as LoginMigrationException
+                when (val failure = migrationFailureWrapper.failure) {
+                    is LoginsMigrationResult.Failure.FailedToCheckMasterPassword -> {
+                        logger.error("Failed to check master password: $failure")
+                        MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_MP_CHECK.code)
+                        // We definitely expect to be able to check our master password, so report a failure.
+                        crashReporter.submitCaughtException(migrationFailureWrapper)
+                        result
+                    }
+                    is LoginsMigrationResult.Failure.UnsupportedSignonsDbVersion -> {
+                        logger.error("Unsupported logins database version: $failure")
+                        MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_UNSUPPORTED_LOGINS_DB.code)
+                        MigrationLogins.unsupportedDbVersion.add(failure.version)
+                        // We really don't expect anyone to hit this, so let's submit it to Sentry.
+                        crashReporter.submitCaughtException(migrationFailureWrapper)
+                        result
+                    }
+                    is LoginsMigrationResult.Failure.UnexpectedLoginsKeyMaterialAlg,
+                    is LoginsMigrationResult.Failure.UnexpectedMetadataKeyMaterialAlg -> {
+                        logger.error("Encryption failure: $failure")
+                        MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_ENCRYPTION.code)
+                        // While this may happen in theory, let's keep track of exact reasons.
+                        crashReporter.submitCaughtException(migrationFailureWrapper)
+                        result
+                    }
+                    is LoginsMigrationResult.Failure.GetLoginsThrew -> {
+                        logger.error("getLogins failure: $failure")
+                        MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_GET.code)
+                        crashReporter.submitCaughtException(migrationFailureWrapper)
+                        result
+                    }
+                    is LoginsMigrationResult.Failure.RustImportThrew -> {
+                        logger.error("Rust import failure: $failure")
+                        MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_RUST_IMPORT.code)
+                        crashReporter.submitCaughtException(migrationFailureWrapper)
+                        result
+                    }
                 }
-                is LoginsMigrationResult.Failure.UnsupportedSignonsDbVersion -> {
-                    logger.error("Unsupported logins database version: $failure")
-                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_UNSUPPORTED_LOGINS_DB.code)
-                    MigrationLogins.unsupportedDbVersion.add(failure.version)
-                    // We really don't expect anyone to hit this, so let's submit it to Sentry.
-                    crashReporter.submitCaughtException(migrationFailureWrapper)
-                    result
-                }
-                is LoginsMigrationResult.Failure.UnexpectedLoginsKeyMaterialAlg,
-                is LoginsMigrationResult.Failure.UnexpectedMetadataKeyMaterialAlg -> {
-                    logger.error("Encryption failure: $failure")
-                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_ENCRYPTION.code)
-                    // While this may happen in theory, let's keep track of exact reasons.
-                    crashReporter.submitCaughtException(migrationFailureWrapper)
-                    result
-                }
-                is LoginsMigrationResult.Failure.GetLoginsThrew -> {
-                    logger.error("getLogins failure: $failure")
-                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_GET.code)
-                    crashReporter.submitCaughtException(migrationFailureWrapper)
-                    result
-                }
-                is LoginsMigrationResult.Failure.RustImportThrew -> {
-                    logger.error("Rust import failure: $failure")
-                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_RUST_IMPORT.code)
-                    crashReporter.submitCaughtException(migrationFailureWrapper)
-                    result
-                }
-            }
-        }
+            } else {
+                val loginMigrationSuccess = result as Result.Success<LoginsMigrationResult>
+                when (val success = loginMigrationSuccess.value as LoginsMigrationResult.Success) {
+                    is LoginsMigrationResult.Success.MasterPasswordIsSet -> {
+                        logger.debug("Could not migrate logins - master password is set")
+                        MigrationLogins.successReason.add(SuccessReasonTelemetryCodes.LOGINS_MP_SET.code)
+                        result
+                    }
 
-        val loginMigrationSuccess = result as Result.Success<LoginsMigrationResult>
-        return when (val success = loginMigrationSuccess.value as LoginsMigrationResult.Success) {
-            is LoginsMigrationResult.Success.MasterPasswordIsSet -> {
-                logger.debug("Could not migrate logins - master password is set")
-                MigrationLogins.successReason.add(SuccessReasonTelemetryCodes.LOGINS_MP_SET.code)
-                result
-            }
-
-            is LoginsMigrationResult.Success.ImportedLoginRecords -> {
-                logger.debug("""Imported login records! Details:
+                    is LoginsMigrationResult.Success.ImportedLoginRecords -> {
+                        logger.debug("""Imported login records! Details:
                     Total detected=${success.totalRecordsDetected},
                     failed to process=${success.failedToProcess},
                     failed to import=${success.failedToImport}
                 """.trimIndent())
-                MigrationLogins.successReason.add(SuccessReasonTelemetryCodes.LOGINS_MIGRATED.code)
-                MigrationLogins.detected.add(success.totalRecordsDetected)
-                MigrationLogins.failureCounts["process"].add(success.failedToProcess)
-                MigrationLogins.failureCounts["import"].add(success.failedToImport)
-                result
+                        MigrationLogins.successReason.add(SuccessReasonTelemetryCodes.LOGINS_MIGRATED.code)
+                        MigrationLogins.detected.add(success.totalRecordsDetected)
+                        MigrationLogins.failureCounts["process"].add(success.failedToProcess)
+                        MigrationLogins.failureCounts["import"].add(success.failedToImport)
+                        result
+                    }
+                }
             }
+        } catch (e: Exception) {
+            crashReporter.submitCaughtException(FennecMigratorException.MigrateLoginsException(e))
+            MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_UNEXPECTED_EXCEPTION.code)
+            Result.Failure(e)
         }
     }
 
@@ -858,11 +875,11 @@ class FennecMigrator private constructor(
                     MigrationOpenTabs.migrated.add(sessionManager.all.size)
                     MigrationOpenTabs.successReason.add(SuccessReasonTelemetryCodes.OPEN_TABS_MIGRATED.code)
                 }
-            } else if (result is Result.Failure<*>) {
-                MigrationOpenTabs.anyFailures.set(result.throwables.isNotEmpty())
+                result
+            } else {
                 MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_NO_SNAPSHOT.code)
+                result
             }
-            result
         } catch (e: Exception) {
             MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_RESTORE_EXCEPTION.code)
             crashReporter.submitCaughtException(
@@ -872,70 +889,84 @@ class FennecMigrator private constructor(
         }
     }
 
-    @Suppress("ComplexMethod", "LongMethod")
+    @Suppress("ComplexMethod", "LongMethod", "TooGenericExceptionCaught", "NestedBlockDepth")
     private suspend fun migrateFxA(): Result<FxaMigrationResult> {
-        val result = FennecFxaMigration.migrate(fxaState!!, context, accountManager!!.value)
+        return try {
+            val result = FennecFxaMigration.migrate(fxaState!!, context, accountManager!!.value)
 
-        if (result is Result.Failure<FxaMigrationResult>) {
-            val migrationFailureWrapper = result.throwables.first() as FxaMigrationException
-            return when (val failure = migrationFailureWrapper.failure) {
-                is FxaMigrationResult.Failure.CorruptAccountState -> {
-                    logger.error("Detected a corrupt account state: $failure")
-                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_CORRUPT_ACCOUNT_STATE.code)
+            if (result is Result.Failure<FxaMigrationResult>) {
+                val migrationFailureWrapper = result.throwables.first()
+                if (migrationFailureWrapper is FxaMigrationException) {
+                    when (val failure = migrationFailureWrapper.failure) {
+                        is FxaMigrationResult.Failure.CorruptAccountState -> {
+                            logger.error("Detected a corrupt account state: $failure")
+                            MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_CORRUPT_ACCOUNT_STATE.code)
+                            result
+                        }
+                        is FxaMigrationResult.Failure.UnsupportedVersions -> {
+                            logger.error("Detected unsupported versions: $failure")
+                            MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_UNSUPPORTED_VERSIONS.code)
+                            MigrationFxa.unsupportedAccountVersion.set("${failure.accountVersion}")
+                            MigrationFxa.unsupportedPickleVersion.set("${failure.pickleVersion}")
+                            MigrationFxa.unsupportedStateVersion.set("${failure.stateVersion}")
+                            result
+                        }
+                        is FxaMigrationResult.Failure.FailedToSignIntoAuthenticatedAccount -> {
+                            logger.error("Failed to sign-in into an authenticated account")
+                            MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_SIGN_IN_FAILED.code)
+                            crashReporter.submitCaughtException(migrationFailureWrapper)
+                            result
+                        }
+                        is FxaMigrationResult.Failure.CustomServerConfigPresent -> {
+                            logger.error("Custom config present: token=${failure.customTokenServer}," +
+                                "idp=${failure.customIdpServer}")
+                            MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_CUSTOM_SERVER.code)
+                            MigrationFxa.hasCustomIdpServer.set(failure.customIdpServer)
+                            MigrationFxa.hasCustomTokenServer.set(failure.customTokenServer)
+                            result
+                        }
+                    }
+                } else {
+                    logger.error("Unexpected FxA migration exception", migrationFailureWrapper.cause)
+                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_MIGRATE_EXCEPTION.code)
                     result
                 }
-                is FxaMigrationResult.Failure.UnsupportedVersions -> {
-                    logger.error("Detected unsupported versions: $failure")
-                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_UNSUPPORTED_VERSIONS.code)
-                    MigrationFxa.unsupportedAccountVersion.set("${failure.accountVersion}")
-                    MigrationFxa.unsupportedPickleVersion.set("${failure.pickleVersion}")
-                    MigrationFxa.unsupportedStateVersion.set("${failure.stateVersion}")
-                    result
+            } else {
+                val migrationSuccess = result as Result.Success<FxaMigrationResult>
+                when (val success = migrationSuccess.value as FxaMigrationResult.Success) {
+                    // The rest are all successful migrations.
+                    is FxaMigrationResult.Success.NoAccount -> {
+                        logger.debug("No Fennec account detected")
+                        MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_NO_ACCOUNT.code)
+                        result
+                    }
+                    is FxaMigrationResult.Success.UnauthenticatedAccount -> {
+                        // Here we have an 'email' and a state label.
+                        // "Bad auth state" could be a few things - unverified account, bad credentials
+                        // detected by Fennec, etc
+                        // We could try using the 'email' address as a starting point in the authentication flow.
+                        logger.debug("Detected a Fennec account in a bad authentication state: ${success.stateLabel}")
+                        MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_BAD_AUTH.code)
+                        MigrationFxa.badAuthState.set(success.stateLabel)
+                        result
+                    }
+                    is FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount -> {
+                        logger.debug("Signed-in into a detected Fennec account")
+                        MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_SIGNED_IN.code)
+                        result
+                    }
+                    is FxaMigrationResult.Success.WillAutoRetrySignInLater -> {
+                        logger.debug("Will auto-retry Fennec account migration later")
+                        MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_WILL_RETRY.code)
+                        result
+                    }
                 }
-                is FxaMigrationResult.Failure.FailedToSignIntoAuthenticatedAccount -> {
-                    logger.error("Failed to sign-in into an authenticated account")
-                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_SIGN_IN_FAILED.code)
-                    crashReporter.submitCaughtException(migrationFailureWrapper)
-                    result
-                }
-                is FxaMigrationResult.Failure.CustomServerConfigPresent -> {
-                    logger.error("Custom config present: token=${failure.customTokenServer}," +
-                        "idp=${failure.customIdpServer}")
-                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_CUSTOM_SERVER.code)
-                    MigrationFxa.hasCustomIdpServer.set(failure.customIdpServer)
-                    MigrationFxa.hasCustomTokenServer.set(failure.customTokenServer)
-                    result
-                }
             }
-        }
-
-        val migrationSuccess = result as Result.Success<FxaMigrationResult>
-        return when (val success = migrationSuccess.value as FxaMigrationResult.Success) {
-            // The rest are all successful migrations.
-            is FxaMigrationResult.Success.NoAccount -> {
-                logger.debug("No Fennec account detected")
-                MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_NO_ACCOUNT.code)
-                result
-            }
-            is FxaMigrationResult.Success.UnauthenticatedAccount -> {
-                // Here we have an 'email' and a state label.
-                // "Bad auth state" could be a few things - unverified account, bad credentials detected by Fennec, etc.
-                // We could try using the 'email' address as a starting point in the authentication flow.
-                logger.debug("Detected a Fennec account in a bad authentication state: ${success.stateLabel}")
-                MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_BAD_AUTH.code)
-                MigrationFxa.badAuthState.set(success.stateLabel)
-                result
-            }
-            is FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount -> {
-                logger.debug("Signed-in into a detected Fennec account")
-                MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_SIGNED_IN.code)
-                result
-            }
-            is FxaMigrationResult.Success.WillAutoRetrySignInLater -> {
-                logger.debug("Will auto-retry Fennec account migration later")
-                MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_WILL_RETRY.code)
-                result
-            }
+        } catch (e: Exception) {
+            logger.error("Unexpected FxA migration exception", e)
+            MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_MIGRATE_EXCEPTION.code)
+            crashReporter.submitCaughtException(FennecMigratorException.MigrateFxaException(e))
+            Result.Failure(e)
         }
     }
 
@@ -953,7 +984,7 @@ class FennecMigrator private constructor(
 
             if (result is Result.Failure<GeckoMigrationResult>) {
                 val geckoFailureWrapper = result.throwables.first() as GeckoMigrationException
-                return when (val failure = geckoFailureWrapper.failure) {
+                when (val failure = geckoFailureWrapper.failure) {
                     is GeckoMigrationResult.Failure.FailedToDeleteFile -> {
                         logger.error("Failed to delete prefs.js file: $failure")
                         MigrationGecko.failureReason.add(FailureReasonTelemetryCodes.GECKO_FAILED_TO_DELETE_PREFS.code)
@@ -970,37 +1001,37 @@ class FennecMigrator private constructor(
                         result
                     }
                 }
-            }
-
-            val migrationSuccess = result as Result.Success<GeckoMigrationResult>
-            return when (migrationSuccess.value as GeckoMigrationResult.Success) {
-                is GeckoMigrationResult.Success.NoPrefsFile -> {
-                    logger.debug("No prefs.js file found")
-                    MigrationGecko.successReason.add(
-                        SuccessReasonTelemetryCodes.GECKO_MIGRATED_NO_PREFS_JS_FILE.code
-                    )
-                    result
-                }
-                is GeckoMigrationResult.Success.PrefsFileRemovedNoPrefs -> {
-                    logger.debug("Prefs.js removed - no prefs found to keep")
-                    MigrationGecko.successReason.add(
-                        SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_REMOVED_NO_PREFS.code
-                    )
-                    result
-                }
-                is GeckoMigrationResult.Success.PrefsFileRemovedInvalidPrefs -> {
-                    logger.debug("Prefs.js removed - failed to transform prefs")
-                    MigrationGecko.successReason.add(
-                        SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_REMOVED_INVALID_PREFS.code
-                    )
-                    result
-                }
-                is GeckoMigrationResult.Success.PrefsFileMigrated -> {
-                    logger.debug("Prefs.js transformed")
-                    MigrationGecko.successReason.add(
-                        SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_JS_MIGRATED.code
-                    )
-                    result
+            } else {
+                val migrationSuccess = result as Result.Success<GeckoMigrationResult>
+                when (migrationSuccess.value as GeckoMigrationResult.Success) {
+                    is GeckoMigrationResult.Success.NoPrefsFile -> {
+                        logger.debug("No prefs.js file found")
+                        MigrationGecko.successReason.add(
+                            SuccessReasonTelemetryCodes.GECKO_MIGRATED_NO_PREFS_JS_FILE.code
+                        )
+                        result
+                    }
+                    is GeckoMigrationResult.Success.PrefsFileRemovedNoPrefs -> {
+                        logger.debug("Prefs.js removed - no prefs found to keep")
+                        MigrationGecko.successReason.add(
+                            SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_REMOVED_NO_PREFS.code
+                        )
+                        result
+                    }
+                    is GeckoMigrationResult.Success.PrefsFileRemovedInvalidPrefs -> {
+                        logger.debug("Prefs.js removed - failed to transform prefs")
+                        MigrationGecko.successReason.add(
+                            SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_REMOVED_INVALID_PREFS.code
+                        )
+                        result
+                    }
+                    is GeckoMigrationResult.Success.PrefsFileMigrated -> {
+                        logger.debug("Prefs.js transformed")
+                        MigrationGecko.successReason.add(
+                            SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_JS_MIGRATED.code
+                        )
+                        result
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -1072,17 +1103,17 @@ class FennecMigrator private constructor(
         }
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught")
+    @SuppressWarnings("TooGenericExceptionCaught", "NestedBlockDepth")
     private suspend fun migrateSearchEngine(): Result<SearchEngineMigrationResult> {
         val manager = searchEngineManager
             ?: throw AssertionError("Migrating search engines without search engine manager set")
 
-        try {
+        return try {
             val result = SearchEngineMigration.migrate(context, manager)
 
             if (result is Result.Failure<SearchEngineMigrationResult>) {
                 val migrationFailureWrapper = result.throwables.first() as SearchEngineMigrationException
-                return when (val failure = migrationFailureWrapper.failure) {
+                when (val failure = migrationFailureWrapper.failure) {
                     is SearchEngineMigrationResult.Failure.NoDefault -> {
                         logger.error("Missing search engine default: $failure")
                         crashReporter.submitCaughtException(migrationFailureWrapper)
@@ -1097,14 +1128,14 @@ class FennecMigrator private constructor(
                         result
                     }
                 }
-            }
-
-            val migrationSuccess = result as Result.Success<SearchEngineMigrationResult>
-            return when (migrationSuccess.value as SearchEngineMigrationResult.Success) {
-                is SearchEngineMigrationResult.Success.SearchEngineMigrated -> {
-                    logger.debug("Migrated default search engine")
-                    MigrationSearch.successReason.add(SuccessReasonTelemetryCodes.SEARCH_MIGRATED.code)
-                    result
+            } else {
+                val migrationSuccess = result as Result.Success<SearchEngineMigrationResult>
+                when (migrationSuccess.value as SearchEngineMigrationResult.Success) {
+                    is SearchEngineMigrationResult.Success.SearchEngineMigrated -> {
+                        logger.debug("Migrated default search engine")
+                        MigrationSearch.successReason.add(SuccessReasonTelemetryCodes.SEARCH_MIGRATED.code)
+                        result
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -1112,7 +1143,7 @@ class FennecMigrator private constructor(
                 FennecMigratorException.MigrateSearchEngineException(e)
             )
             MigrationSearch.failureReason.add(FailureReasonTelemetryCodes.SEARCH_EXCEPTION.code)
-            return Result.Failure(e)
+            Result.Failure(e)
         }
     }
 
@@ -1123,7 +1154,7 @@ class FennecMigrator private constructor(
             val result = AddonMigration.migrate(engine!!, addonCollectionProvider!!, addonUpdater!!)
             if (result is Result.Failure<AddonMigrationResult>) {
                 val migrationFailureWrapper = result.throwables.first() as AddonMigrationException
-                return when (val failure = migrationFailureWrapper.failure) {
+                when (val failure = migrationFailureWrapper.failure) {
                     is AddonMigrationResult.Failure.FailedToQueryInstalledAddons -> {
                         logger.error("Failed to query installed add-ons: $failure")
                         MigrationAddons.failureReason.add(FailureReasonTelemetryCodes.ADDON_QUERY.code)
@@ -1146,20 +1177,20 @@ class FennecMigrator private constructor(
                         result
                     }
                 }
-            }
-
-            val migrationSuccess = result as Result.Success<AddonMigrationResult>
-            return when (val success = migrationSuccess.value as AddonMigrationResult.Success) {
-                is AddonMigrationResult.Success.NoAddons -> {
-                    logger.debug("No add-ons to migrate")
-                    MigrationAddons.successReason.add(SuccessReasonTelemetryCodes.ADDONS_NO.code)
-                    result
-                }
-                is AddonMigrationResult.Success.AddonsMigrated -> {
-                    MigrationAddons.successReason.add(SuccessReasonTelemetryCodes.ADDONS_MIGRATED.code)
-                    MigrationAddons.migratedAddons.add(success.migratedAddons.size)
-                    logger.debug("Successfully migrated add-ons")
-                    result
+            } else {
+                val migrationSuccess = result as Result.Success<AddonMigrationResult>
+                when (val success = migrationSuccess.value as AddonMigrationResult.Success) {
+                    is AddonMigrationResult.Success.NoAddons -> {
+                        logger.debug("No add-ons to migrate")
+                        MigrationAddons.successReason.add(SuccessReasonTelemetryCodes.ADDONS_NO.code)
+                        result
+                    }
+                    is AddonMigrationResult.Success.AddonsMigrated -> {
+                        MigrationAddons.successReason.add(SuccessReasonTelemetryCodes.ADDONS_MIGRATED.code)
+                        MigrationAddons.migratedAddons.add(success.migratedAddons.size)
+                        logger.debug("Successfully migrated add-ons")
+                        result
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -1171,7 +1202,7 @@ class FennecMigrator private constructor(
         }
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught")
+    @SuppressWarnings("TooGenericExceptionCaught", "NestedBlockDepth")
     private fun migrateTelemetryIdentifiers(): Result<TelemetryIdentifiersResult> {
         if (profile == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
@@ -1181,9 +1212,45 @@ class FennecMigrator private constructor(
             return Result.Failure(IllegalStateException("Missing Profile path"))
         }
 
-        val result = try {
-            // Will submit unexpected errors via crashReporter.
-            TelemetryIdentifiersMigration.migrate(profile.path, crashReporter)
+        return try {
+            val result = TelemetryIdentifiersMigration.migrate(profile.path, crashReporter)
+
+            if (result is Result.Failure<TelemetryIdentifiersResult>) {
+                // TelemetryIdentifiersMigration.migrate should not report a Result.Failure,
+                // but in case it does, record it.
+                crashReporter.submitCaughtException(result.throwables.first())
+                MigrationTelemetryIdentifiers.failureReason.add(
+                    FailureReasonTelemetryCodes.TELEMETRY_IDENTIFIERS_MIGRATE_EXCEPTION.code
+                )
+                result
+            } else {
+                result as Result.Success<TelemetryIdentifiersResult>
+                when (val success = result.value as TelemetryIdentifiersResult.Success) {
+                    is TelemetryIdentifiersResult.Success.Identifiers -> {
+                        try {
+                            // It's important that we're aware, during telemetry analysis, that these values
+                            // are missing or present. Absence of a set value should be enough.
+                            success.clientId?.let {
+                                MigrationTelemetryIdentifiers.fennecClientId.set(UUID.fromString(it))
+                            }
+                            // profileCreationDate is a unix timestamp.
+                            success.profileCreationDate?.let {
+                                MigrationTelemetryIdentifiers.fennecProfileCreationDate.set(Date(it))
+                            }
+                            MigrationTelemetryIdentifiers.successReason.add(
+                                SuccessReasonTelemetryCodes.TELEMETRY_IDENTIFIERS_MIGRATED.code
+                            )
+                            result
+                        } catch (e: Exception) {
+                            crashReporter.submitCaughtException(FennecMigratorException.TelemetryIdentifierException(e))
+                            MigrationTelemetryIdentifiers.failureReason.add(
+                                FailureReasonTelemetryCodes.TELEMETRY_IDENTIFIERS_PARSE_SET_EXCEPTION.code
+                            )
+                            Result.Failure<TelemetryIdentifiersResult>(e)
+                        }
+                    }
+                }
+            }
         } catch (e: Exception) {
             crashReporter.submitCaughtException(
                 FennecMigratorException.TelemetryIdentifierException(e)
@@ -1191,30 +1258,11 @@ class FennecMigrator private constructor(
             MigrationTelemetryIdentifiers.failureReason.add(
                 FailureReasonTelemetryCodes.TELEMETRY_IDENTIFIERS_MIGRATE_EXCEPTION.code
             )
-            return Result.Failure(e)
+            Result.Failure(e)
         }
-
-        if (result is Result.Success<TelemetryIdentifiersResult>) {
-            when (val success = result.value as TelemetryIdentifiersResult.Success) {
-                is TelemetryIdentifiersResult.Success.Identifiers -> {
-                    // It's important that we're aware, during telemetry analysis, that these values
-                    // are missing or present. Absence of a set value should be enough.
-                    success.clientId?.let { MigrationTelemetryIdentifiers.fennecClientId.set(UUID.fromString(it)) }
-                    // profileCreationDate is a unix timestamp.
-                    success.profileCreationDate?.let {
-                        MigrationTelemetryIdentifiers.fennecProfileCreationDate.set(Date(it))
-                    }
-                    MigrationTelemetryIdentifiers.successReason.add(
-                        SuccessReasonTelemetryCodes.TELEMETRY_IDENTIFIERS_MIGRATED.code
-                    )
-                }
-            }
-        }
-
-        return result
     }
 
-    @Suppress("ComplexMethod", "TooGenericExceptionCaught", "ReturnCount")
+    @Suppress("ComplexMethod", "TooGenericExceptionCaught", "ReturnCount", "NestedBlockDepth")
     private fun migratePinnedSites(): Result<Unit> {
         checkNotNull(bookmarksStorage) { "Bookmarks storage must be configured to migrate pinned sites" }
         checkNotNull(topSiteStorage) { "TopSiteStorage must be configured to migrate pinned sites" }
@@ -1250,29 +1298,39 @@ class FennecMigrator private constructor(
             MigrationPinnedSites.detectedPinnedSites.add(importedPinnedSites.size)
         }
 
-        // We can't import pinned sites that do not have a url.
-        val pinnedSitesWithUrl = importedPinnedSites.filter { it.url != null }
-        var failedToImport = importedPinnedSites.size - pinnedSitesWithUrl.size
+        return try {
+            // We can't import pinned sites that do not have a url.
+            val pinnedSitesWithUrl = importedPinnedSites.filter { it.url != null }
+            var failedToImport = importedPinnedSites.size - pinnedSitesWithUrl.size
 
-        val recordedFailures = mutableSetOf<String>()
-        // Reversed, so that first pinned site in Fennec ends up as the first one in Fenix, as well.
-        pinnedSitesWithUrl.reversed().forEach { pinnedSite ->
-            try {
-                topSiteStorage.addTopSite(pinnedSite.title ?: "", pinnedSite.url!!)
-            } catch (e: Exception) {
-                failedToImport++
-                // Let's not spam Sentry and submit the same exception multiple times
-                if (recordedFailures.add(e.uniqueId())) {
-                    crashReporter.submitCaughtException(
-                        FennecMigratorException.MigratePinnedSitesException(e)
-                    )
+            val recordedFailures = mutableSetOf<String>()
+            // Reversed, so that first pinned site in Fennec ends up as the first one in Fenix, as well.
+            pinnedSitesWithUrl.reversed().forEach { pinnedSite ->
+                try {
+                    topSiteStorage.addTopSite(pinnedSite.title ?: "", pinnedSite.url!!)
+                } catch (e: Exception) {
+                    failedToImport++
+                    // Let's not spam Sentry and submit the same exception multiple times
+                    if (recordedFailures.add(e.uniqueId())) {
+                        crashReporter.submitCaughtException(
+                            FennecMigratorException.MigratePinnedSitesException(e)
+                        )
+                    }
                 }
             }
+
+            MigrationPinnedSites.migratedPinnedSites.add(importedPinnedSites.size - failedToImport)
+            MigrationPinnedSites.successReason.add(SuccessReasonTelemetryCodes.PINNED_SITES_MIGRATED.code)
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigratePinnedSitesException(e)
+            )
+            MigrationPinnedSites.failureReason.add(
+                FailureReasonTelemetryCodes.PINNED_SITES_EXCEPTION.code
+            )
+            Result.Failure(e)
         }
-
-        MigrationPinnedSites.migratedPinnedSites.add(importedPinnedSites.size - failedToImport)
-        MigrationPinnedSites.successReason.add(SuccessReasonTelemetryCodes.PINNED_SITES_MIGRATED.code)
-
-        return Result.Success(Unit)
     }
 }

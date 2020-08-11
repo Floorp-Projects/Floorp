@@ -42,6 +42,7 @@ import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.eq
+import org.json.JSONObject
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import java.lang.IllegalArgumentException
@@ -372,6 +373,13 @@ class FennecMigratorTest {
 
         // Fail during history migration.
         `when`(historyStorage.importFromFennec(any())).thenThrow(PlacesException("test exception"))
+
+        `when`(bookmarkStorage.importFromFennec(any())).thenReturn(JSONObject().also {
+            it.put("num_total", 25)
+            it.put("num_succeeded", 23)
+            it.put("num_failed", 2)
+            it.put("total_duration", 1245L)
+        })
 
         // DB path is configured, partial success (only history failed).
         val migrator = FennecMigrator.Builder(testContext, mock())
