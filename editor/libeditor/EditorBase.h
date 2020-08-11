@@ -2195,21 +2195,14 @@ class EditorBase : public nsIEditor,
       case nsIEditor::eNextWord:
       case nsIEditor::eToBeginningOfLine:
       case nsIEditor::eToEndOfLine:
-        // If the amount is word or line,`ExtendSelectionForDelete()`
-        // must have already been extended collapsed ranges before.
+        // If the amount is word or
+        // line,`AutoRangeArray::ExtendAnchorFocusRangeFor()` must have already
+        // been extended collapsed ranges before.
         return HowToHandleCollapsedRange::Ignore;
     }
     MOZ_ASSERT_UNREACHABLE("Invalid nsIEditor::EDirection value");
     return HowToHandleCollapsedRange::Ignore;
   }
-
-  /**
-   * Extends the selection for given deletion operation
-   * If done, also update aDirectionAndAmount to what's actually left to do
-   * after the extension.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  ExtendSelectionForDelete(nsIEditor::EDirection* aDirectionAndAmount);
 
   /**
    * DeleteSelectionWithTransaction() removes selected content or content
@@ -2548,6 +2541,7 @@ class EditorBase : public nsIEditor,
   bool mIsHTMLEditorClass;
 
   friend class AlignStateAtSelection;
+  friend class AutoRangeArray;
   friend class CompositionTransaction;
   friend class CreateElementTransaction;
   friend class CSSEditUtils;

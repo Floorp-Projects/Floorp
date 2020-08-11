@@ -809,16 +809,19 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     }
   }
 
-  nsresult rv = ExtendSelectionForDelete(&aDirectionAndAmount);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::ExtendSelectionForDelete() failed");
-    return EditActionResult(rv);
+  AutoRangeArray rangesToDelete(*SelectionRefPtr());
+  Result<nsIEditor::EDirection, nsresult> result =
+      rangesToDelete.ExtendAnchorFocusRangeFor(*this, aDirectionAndAmount);
+  if (result.isErr()) {
+    NS_WARNING("AutoRangeArray::ExtendAnchorFocusRangeFor() failed");
+    return EditActionResult(result.unwrapErr());
   }
 
-  rv = DeleteSelectionWithTransaction(aDirectionAndAmount, nsIEditor::eNoStrip);
+  nsresult rv = DeleteRangesWithTransaction(
+      result.unwrap(), nsIEditor::eNoStrip, rangesToDelete);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "EditorBase::DeleteSelectionWithTransaction(eNoStrip) failed");
+      "EditorBase::DeleteRangesWithTransaction(eNoStrip) failed");
   return EditActionHandled(rv);
 }
 

@@ -2436,30 +2436,32 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
     return EditActionResult(error.StealNSResult());
   }
 
+  AutoRangeArray rangesToDelete(*SelectionRefPtr());
+
   // selectionWasCollapsed is used later to determine whether we should join
-  // blocks in HandleDeleteNonCollapasedSelection(). We don't really care
-  // about collapsed because it will be modified by ExtendSelectionForDelete()
-  // later. TryToJoinBlocksWithTransaction() should happen if the original
-  // selection is collapsed and the cursor is at the end of a block element,
-  // in which case ExtendSelectionForDelete() would always make the selection
+  // blocks in HandleDeleteNonCollapsedRanges(). We don't really care about
+  // collapsed because it will be modified by
+  // AutoRangeArray::ExtendAnchorFocusRangeFor() later.
+  // TryToJoinBlocksWithTransaction() should happen if the original selection is
+  // collapsed and the cursor is at the end of a block element, in which case
+  // AutoRangeArray::ExtendAnchorFocusRangeFor() would always make the selection
   // not collapsed.
-  SelectionWasCollapsed selectionWasCollapsed = SelectionRefPtr()->IsCollapsed()
+  SelectionWasCollapsed selectionWasCollapsed = rangesToDelete.IsCollapsed()
                                                     ? SelectionWasCollapsed::Yes
                                                     : SelectionWasCollapsed::No;
 
   if (selectionWasCollapsed == SelectionWasCollapsed::Yes) {
-    EditorDOMPoint startPoint(EditorBase::GetStartPoint(*SelectionRefPtr()));
+    EditorDOMPoint startPoint(rangesToDelete.GetStartPointOfFirstRange());
     if (NS_WARN_IF(!startPoint.IsSet())) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
 
     // If we are inside an empty block, delete it.
-    RefPtr<Element> editingHost = GetActiveEditingHost();
-    if (NS_WARN_IF(!editingHost)) {
-      return EditActionResult(NS_ERROR_FAILURE);
-    }
-
     if (startPoint.GetContainerAsContent()) {
+      RefPtr<Element> editingHost = GetActiveEditingHost();
+      if (NS_WARN_IF(!editingHost)) {
+        return EditActionResult(NS_ERROR_FAILURE);
+      }
 #ifdef DEBUG
       nsMutationGuard debugMutation;
 #endif  // #ifdef DEBUG
@@ -2479,7 +2481,13 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
                  "if it returns not handled nor error");
     }
 
-    // Test for distance between caret and text that will be deleted
+    // Test for distance between caret and text that will be deleted.
+    // Note that this call modifies `nsFrameSelection` without modifying
+    // `Selection`.  However, it does not have problem for now because
+    // it'll be referred by `AutoRangeArray::ExtendAnchorFocusRangeFor()`
+    // before modifying `Selection`.
+    // XXX This looks odd.  `ExtendAnchorFocusRangeFor()` will extend
+    //     anchor-focus range, but here refers the first range.
     EditActionResult result =
         SetCaretBidiLevelForDeletion(startPoint, aDirectionAndAmount);
     if (result.Failed() || result.Canceled()) {
@@ -2487,29 +2495,37 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
       return result;
     }
 
-    // ExtendSelectionForDelete will use selection controller to set
-    // selection for delete.  But if focus event doesn't receive yet,
-    // ancestor isn't set.  So we must set root eleement of editor to
-    // ancestor.
+    // AutoRangeArray::ExtendAnchorFocusRangeFor() will use `nsFrameSelection`
+    // to extend the range for deletion.  But if focus event doesn't receive
+    // yet, ancestor isn't set.  So we must set root element of editor to
+    // ancestor temporarily.
     AutoSetTemporaryAncestorLimiter autoSetter(*this, *SelectionRefPtr(),
                                                *startPoint.GetContainer());
 
-    nsresult rv = ExtendSelectionForDelete(&aDirectionAndAmount);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("TextEditor::ExtendSelectionForDelete() failed");
-      return EditActionResult(rv);
+    Result<nsIEditor::EDirection, nsresult> extendResult =
+        rangesToDelete.ExtendAnchorFocusRangeFor(*this, aDirectionAndAmount);
+    if (extendResult.isErr()) {
+      NS_WARNING("AutoRangeArray::ExtendAnchorFocusRangeFor() failed");
+      return EditActionResult(extendResult.unwrapErr());
     }
+    aDirectionAndAmount = extendResult.unwrap();
 
     if (aDirectionAndAmount == nsIEditor::eNone) {
       // If we're not called recursively, we should call
       // `DeleteSelectionWithTransaction()` here, but we cannot detect it for
       // now.  Therefore, we should just tell the caller of that we does
       // nothing.
+      // XXX This should handle error of Selection API calls, but a following
+      //     patch will stop doing this.
+      MOZ_ASSERT(rangesToDelete.Ranges().Length() == 1);
+      MOZ_KnownLive(SelectionRefPtr())->RemoveAllRanges(IgnoreErrors());
+      MOZ_KnownLive(SelectionRefPtr())
+          ->AddRangeAndSelectFramesAndNotifyListeners(
+              MOZ_KnownLive(rangesToDelete.FirstRangeRef()), IgnoreErrors());
       return EditActionIgnored();
     }
 
-    if (SelectionRefPtr()->IsCollapsed()) {
-      AutoRangeArray rangesToDelete(*SelectionRefPtr());
+    if (rangesToDelete.IsCollapsed()) {
       EditActionResult result = HandleDeleteAroundCollapsedRanges(
           aDirectionAndAmount, aStripWrappers, rangesToDelete);
       NS_WARNING_ASSERTION(
@@ -2519,7 +2535,6 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
     }
   }
 
-  AutoRangeArray rangesToDelete(*SelectionRefPtr());
   EditActionResult result =
       HandleDeleteNonCollapsedRanges(aDirectionAndAmount, aStripWrappers,
                                      rangesToDelete, selectionWasCollapsed);
