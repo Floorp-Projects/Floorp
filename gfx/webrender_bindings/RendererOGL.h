@@ -109,8 +109,6 @@ class RendererOGL {
 
   gl::GLContext* gl() const;
 
-  void* swgl() const;
-
   bool EnsureAsyncScreenshot();
 
  protected:
