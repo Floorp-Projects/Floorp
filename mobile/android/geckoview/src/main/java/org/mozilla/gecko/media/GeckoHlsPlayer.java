@@ -739,20 +739,23 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on MFR's TaskQueue
     @Override
-    public synchronized GeckoVideoInfo getVideoInfo(final int index) {
-        if (DEBUG) {
-            Log.d(LOGTAG, "getVideoInfo");
-        }
-        if (mVRenderer == null) {
-            Log.e(LOGTAG, "no render to get video info from. Index : " + index);
-            return null;
-        }
-        if (!mTracksInfo.hasVideo()) {
-            return null;
-        }
-        Format fmt = mVRenderer.getFormat(index);
-        if (fmt == null) {
-            return null;
+    public GeckoVideoInfo getVideoInfo(final int index) {
+        Format fmt;
+        synchronized (this) {
+            if (DEBUG) {
+                Log.d(LOGTAG, "getVideoInfo");
+            }
+            if (mVRenderer == null) {
+                Log.e(LOGTAG, "no render to get video info from. Index : " + index);
+                return null;
+            }
+            if (!mTracksInfo.hasVideo()) {
+                return null;
+            }
+            fmt = mVRenderer.getFormat(index);
+            if (fmt == null) {
+                return null;
+            }
         }
         GeckoVideoInfo vInfo = new GeckoVideoInfo(fmt.width, fmt.height,
                                                   fmt.width, fmt.height,
@@ -764,20 +767,23 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on MFR's TaskQueue
     @Override
-    public synchronized GeckoAudioInfo getAudioInfo(final int index) {
-        if (DEBUG) {
-            Log.d(LOGTAG, "getAudioInfo");
-        }
-        if (mARenderer == null) {
-            Log.e(LOGTAG, "no render to get audio info from. Index : " + index);
-            return null;
-        }
-        if (!mTracksInfo.hasAudio()) {
-            return null;
-        }
-        Format fmt = mARenderer.getFormat(index);
-        if (fmt == null) {
-            return null;
+    public GeckoAudioInfo getAudioInfo(final int index) {
+        Format fmt;
+        synchronized (this) {
+            if (DEBUG) {
+                Log.d(LOGTAG, "getAudioInfo");
+            }
+            if (mARenderer == null) {
+                Log.e(LOGTAG, "no render to get audio info from. Index : " + index);
+                return null;
+            }
+            if (!mTracksInfo.hasAudio()) {
+                return null;
+            }
+            fmt = mARenderer.getFormat(index);
+            if (fmt == null) {
+                return null;
+            }
         }
         /* According to https://github.com/google/ExoPlayer/blob
          * /d979469659861f7fe1d39d153b90bdff1ab479cc/library/core/src/main
