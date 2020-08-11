@@ -653,10 +653,16 @@ static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
     // FramePointerStackWalk() on Mac: Registers::SyncPopulate() for the frame
     // pointer, and GetStackTop() for the stack end.
     void** fp;
+#  if defined(__x86_64__)
     asm(
         // Dereference %rbp to get previous %rbp
         "movq (%%rbp), %0\n\t"
         : "=r"(fp));
+#  else
+    asm(
+        "ldr %0, [x29]\n\t"
+        : "=r"(fp));
+#  endif
     void* stackEnd = pthread_get_stackaddr_np(pthread_self());
     FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, MaxFrames,
                           &tmp, fp, stackEnd);
