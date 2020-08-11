@@ -300,6 +300,7 @@ extern "C" {
         flip: GLboolean,
     );
     fn CreateContext() -> *mut c_void;
+    fn ReferenceContext(ctx: *mut c_void);
     fn DestroyContext(ctx: *mut c_void);
     fn MakeCurrent(ctx: *mut c_void);
 }
@@ -311,6 +312,12 @@ impl Context {
     pub fn create() -> Self {
         Context(unsafe { CreateContext() })
     }
+
+    pub fn reference(&self) {
+        unsafe {
+            ReferenceContext(self.0);
+         }
+     }
 
     pub fn destroy(&self) {
         unsafe {
