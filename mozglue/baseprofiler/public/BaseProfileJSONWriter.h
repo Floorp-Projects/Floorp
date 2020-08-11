@@ -43,18 +43,94 @@ class ChunkedJSONWriteFunc : public JSONWriteFunc {
     return !mChunkPtr;
   }
 
-  void Write(const char* aStr) override;
-  void Write(const char* aStr, size_t aLen) override;
+  void Write(const char* aStr) override {
+    size_t len = strlen(aStr);
+    Write(aStr, len);
+  }
+  void Write(const char* aStr, size_t aLen) override {
+    MOZ_ASSERT(mChunkPtr >= mChunkList.back().get() && mChunkPtr <= mChunkEnd);
+    MOZ_ASSERT(mChunkEnd >= mChunkList.back().get() + mChunkLengths.back());
+    MOZ_ASSERT(*mChunkPtr == '\0');
+
+    // Most strings to be written are small, but subprocess profiles (e.g.,
+    // from the content process in e10s) may be huge. If the string is larger
+    // than a chunk, allocate its own chunk.
+    char* newPtr;
+    if (aLen >= kChunkSize) {
+      AllocChunk(aLen + 1);
+      newPtr = mChunkPtr + aLen;
+    } else {
+      newPtr = mChunkPtr + aLen;
+      if (newPtr >= mChunkEnd) {
+        AllocChunk(kChunkSize);
+        newPtr = mChunkPtr + aLen;
+      }
+    }
+
+    memcpy(mChunkPtr, aStr, aLen);
+    *newPtr = '\0';
+    mChunkPtr = newPtr;
+    mChunkLengths.back() += aLen;
+  }
   void CopyDataIntoLazilyAllocatedBuffer(
-      const std::function<char*(size_t)>& aAllocator) const;
-  UniquePtr<char[]> CopyData() const;
-  void Take(ChunkedJSONWriteFunc&& aOther);
+      const std::function<char*(size_t)>& aAllocator) const {
+    size_t totalLen = GetTotalLength();
+    char* ptr = aAllocator(totalLen);
+
+    if (!ptr) {
+      // Failed to allocate memory.
+      return;
+    }
+
+    for (size_t i = 0; i < mChunkList.length(); i++) {
+      size_t len = mChunkLengths[i];
+      memcpy(ptr, mChunkList[i].get(), len);
+      ptr += len;
+    }
+    *ptr = '\0';
+  }
+  UniquePtr<char[]> CopyData() const {
+    UniquePtr<char[]> c;
+    CopyDataIntoLazilyAllocatedBuffer([&](size_t allocationSize) {
+      c = MakeUnique<char[]>(allocationSize);
+      return c.get();
+    });
+    return c;
+  }
+  void Take(ChunkedJSONWriteFunc&& aOther) {
+    for (size_t i = 0; i < aOther.mChunkList.length(); i++) {
+      MOZ_ALWAYS_TRUE(mChunkLengths.append(aOther.mChunkLengths[i]));
+      MOZ_ALWAYS_TRUE(mChunkList.append(std::move(aOther.mChunkList[i])));
+    }
+    mChunkPtr = mChunkList.back().get() + mChunkLengths.back();
+    mChunkEnd = mChunkPtr;
+    aOther.mChunkPtr = nullptr;
+    aOther.mChunkEnd = nullptr;
+    aOther.mChunkList.clear();
+    aOther.mChunkLengths.clear();
+  }
   // Returns the byte length of the complete combined string, including the
   // null terminator byte.
-  size_t GetTotalLength() const;
+  size_t GetTotalLength() const {
+    MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
+    size_t totalLen = 1;
+    for (size_t i = 0; i < mChunkLengths.length(); i++) {
+      MOZ_ASSERT(strlen(mChunkList[i].get()) == mChunkLengths[i]);
+      totalLen += mChunkLengths[i];
+    }
+    return totalLen;
+  }
 
  private:
-  void AllocChunk(size_t aChunkSize);
+  void AllocChunk(size_t aChunkSize) {
+    MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
+    UniquePtr<char[]> newChunk = MakeUnique<char[]>(aChunkSize);
+    mChunkPtr = newChunk.get();
+    mChunkEnd = mChunkPtr + aChunkSize;
+    *mChunkPtr = '\0';
+    MOZ_ALWAYS_TRUE(mChunkLengths.append(0));
+    MOZ_ALWAYS_TRUE(mChunkList.append(std::move(newChunk)));
+  }
 
   static const size_t kChunkSize = 4096 * 512;
 
@@ -104,8 +180,11 @@ class SpliceableJSONWriter : public JSONWriter {
     }
   }
 
-  void Splice(const ChunkedJSONWriteFunc* aFunc);
-  void Splice(const char* aStr);
+  void Splice(const char* aStr) {
+    Separator();
+    WriteFunc()->Write(aStr);
+    mNeedComma[mDepth] = true;
+  }
 
   // Splice the given JSON directly in, without quoting.
   void SplicedJSONProperty(const char* aMaybePropertyName,
@@ -116,7 +195,17 @@ class SpliceableJSONWriter : public JSONWriter {
   // Takes the chunks from aFunc and write them. If move is not possible
   // (e.g., using OStreamJSONWriteFunc), aFunc's chunks are copied and its
   // storage cleared.
-  virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc);
+  virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) {
+    Separator();
+    for (size_t i = 0; i < aFunc->mChunkList.length(); i++) {
+      WriteFunc()->Write(aFunc->mChunkList[i].get());
+    }
+    aFunc->mChunkPtr = nullptr;
+    aFunc->mChunkEnd = nullptr;
+    aFunc->mChunkList.clear();
+    aFunc->mChunkLengths.clear();
+    mNeedComma[mDepth] = true;
+  }
 };
 
 class SpliceableChunkedJSONWriter : public SpliceableJSONWriter {
@@ -129,7 +218,11 @@ class SpliceableChunkedJSONWriter : public SpliceableJSONWriter {
   }
 
   // Adopts the chunks from aFunc without copying.
-  virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) override;
+  virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) override {
+    Separator();
+    WriteFunc()->Take(std::move(*aFunc));
+    mNeedComma[mDepth] = true;
+  }
 };
 
 class JSONSchemaWriter {
