@@ -51,16 +51,16 @@ extensions = [
 # JSDoc must run successfully for dirs specified, so running
 # tree-wide (the default) will not work currently.
 js_source_path = [
-    "browser/components/extensions",
-    "browser/components/uitour",
-    "testing/marionette",
-    "toolkit/components/extensions",
-    "toolkit/components/extensions/parent",
-    "toolkit/components/featuregates",
-    "toolkit/mozapps/extensions",
-    "toolkit/components/prompts/src",
-]
-root_for_relative_js_paths = "."
+    "../browser/components/extensions",
+    "../browser/components/uitour",
+    "../testing/marionette",
+    "../toolkit/components/extensions",
+    "../toolkit/components/extensions/parent",
+    "../toolkit/components/featuregates",
+    "../toolkit/mozapps/extensions",
+    "../toolkit/components/prompts/src",
+ ]
+root_for_relative_js_paths = ".."
 jsdoc_config_path = "jsdoc.json"
 
 templates_path = ["_templates"]
