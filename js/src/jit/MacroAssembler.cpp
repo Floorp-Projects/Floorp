@@ -1081,12 +1081,7 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
     for (size_t i = 0; i < numZeroPointers; i++) {
       storePtr(ImmWord(0), Address(obj, dataOffset + i * sizeof(char*)));
     }
-#ifdef DEBUG
-    if (nbytes == 0) {
-      store8(Imm32(TypedArrayObject::ZeroLengthArrayData),
-             Address(obj, dataSlotOffset));
-    }
-#endif
+    MOZ_ASSERT(nbytes > 0, "Zero-length TypedArrays need ZeroLengthArrayData");
   } else {
     if (lengthKind == TypedArrayLength::Fixed) {
       move32(Imm32(length), lengthReg);
