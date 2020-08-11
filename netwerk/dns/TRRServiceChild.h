@@ -28,7 +28,7 @@ class TRRServiceChild : public PTRRServiceChild {
   mozilla::ipc::IPCResult RecvNotifyObserver(const nsCString& aTopic,
                                              const nsString& aData);
   mozilla::ipc::IPCResult RecvUpdatePlatformDNSInformation(
-      nsTArray<nsCString>&& aDNSSuffixList, const bool& aPlatformDisabledTRR);
+      nsTArray<nsCString>&& aDNSSuffixList);
   mozilla::ipc::IPCResult RecvUpdateParentalControlEnabled(
       const bool& aEnabled);
   mozilla::ipc::IPCResult RecvClearDNSCache(const bool& aTrrToo);

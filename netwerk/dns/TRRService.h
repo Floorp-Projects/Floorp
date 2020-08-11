@@ -135,7 +135,6 @@ class TRRService : public TRRServiceBase,
   Atomic<bool, Relaxed> mSkipTRRWhenParentalControlEnabled;
   Atomic<uint32_t, Relaxed>
       mDisableAfterFails;  // this many fails in a row means failed TRR service
-  Atomic<bool, Relaxed> mPlatformDisabledTRR;
 
   // TRR Blocklist storage
   // mTRRBLStorage is only modified on the main thread, but we query whether it

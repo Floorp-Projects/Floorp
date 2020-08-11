@@ -32,9 +32,8 @@ void TRRServiceChild::Init(const bool& aCaptiveIsPassed,
 }
 
 mozilla::ipc::IPCResult TRRServiceChild::RecvUpdatePlatformDNSInformation(
-    nsTArray<nsCString>&& aDNSSuffixList, const bool& aPlatformDisabledTRR) {
+    nsTArray<nsCString>&& aDNSSuffixList) {
   gTRRService->RebuildSuffixList(std::move(aDNSSuffixList));
-  gTRRService->mPlatformDisabledTRR = aPlatformDisabledTRR;
   return IPC_OK();
 }
 
