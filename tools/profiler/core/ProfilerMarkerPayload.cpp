@@ -7,7 +7,6 @@
 
 #include "GeckoProfiler.h"
 #include "ProfileBufferEntry.h"
-#include "ProfileJSONWriter.h"
 #include "ProfilerBacktrace.h"
 
 #include "gfxASurface.h"
@@ -16,6 +15,7 @@
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfileBufferEntrySerializationGeckoExtensions.h"
+#include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/Sprintf.h"
 
 #include <inttypes.h>
