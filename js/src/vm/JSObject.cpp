@@ -1140,8 +1140,9 @@ JS_FRIEND_API bool JS_CopyPropertyFrom(JSContext* cx, HandleId id,
   return DefineProperty(cx, target, wrappedId, desc);
 }
 
-JS_FRIEND_API bool JS_CopyPropertiesFrom(JSContext* cx, HandleObject target,
-                                         HandleObject obj) {
+JS_FRIEND_API bool JS_CopyOwnPropertiesAndPrivateFields(JSContext* cx,
+                                                        HandleObject target,
+                                                        HandleObject obj) {
   // Both |obj| and |target| must not be CCWs because we need to enter their
   // realms below and CCWs are not associated with a single realm.
   MOZ_ASSERT(!IsCrossCompartmentWrapper(obj));
@@ -1150,8 +1151,10 @@ JS_FRIEND_API bool JS_CopyPropertiesFrom(JSContext* cx, HandleObject target,
   JSAutoRealm ar(cx, obj);
 
   RootedIdVector props(cx);
-  if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
-                       &props)) {
+  if (!GetPropertyKeys(
+          cx, obj,
+          JSITER_PRIVATE | JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
+          &props)) {
     return false;
   }
 
