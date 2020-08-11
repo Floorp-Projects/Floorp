@@ -86,7 +86,7 @@ def may_strip(path):
     Return whether strip() should be called
     '''
     from buildconfig import substs
-    return not substs.get('PKG_SKIP_STRIP')
+    return bool(substs.get('PKG_STRIP'))
 
 
 def strip(path):
