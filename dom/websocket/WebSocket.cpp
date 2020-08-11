@@ -1568,27 +1568,22 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
 
   // If the HTTPS-Only mode is enabled, we need to upgrade the websocket
   // connection from ws:// to wss:// and mark it as secure.
-  if (!mIsServerSide && !mSecure) {
+  if (!mIsServerSide && !mSecure && originDoc) {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), mURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    uint32_t httpsOnlyStatus = nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;
-    if (originDoc) {
-      nsCOMPtr<nsIChannel> channel = originDoc->GetChannel();
-      if (channel) {
-        nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-        httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-      }
-    }
+    nsCOMPtr<nsIChannel> channel = originDoc->GetChannel();
+    if (channel) {
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
-    if (nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(
-            uri, mInnerWindowID, mPrivateBrowsing, httpsOnlyStatus)) {
-      mURI.ReplaceSubstring("ws://", "wss://");
-      if (NS_WARN_IF(mURI.Find("wss://") != 0)) {
-        return NS_OK;
+      if (nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(uri, loadInfo)) {
+        mURI.ReplaceSubstring("ws://", "wss://");
+        if (NS_WARN_IF(mURI.Find("wss://") != 0)) {
+          return NS_OK;
+        }
+        mSecure = true;
       }
-      mSecure = true;
     }
   }
 
