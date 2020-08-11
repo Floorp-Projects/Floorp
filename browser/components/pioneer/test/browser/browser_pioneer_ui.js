@@ -103,7 +103,7 @@ const CACHED_ADDONS = [
     },
     studyType: "extension",
     authors: {
-      name: "Stusdy Partners",
+      name: "Study Partners",
       url: "https://addons.mozilla.org/en-US/firefox/user/6510522/",
     },
     dataCollectionDetails: ["test123", "test345"],
@@ -177,13 +177,15 @@ add_task(async function testAboutPage() {
       );
       enrollmentButton.click();
 
-      const dialog = content.document.getElementById("consent-dialog");
+      const dialog = content.document.getElementById(
+        "join-pioneer-consent-dialog"
+      );
       ok(dialog.open, "after clicking enrollment, consent dialog is open.");
 
-      const cancleDialogButton = content.document.getElementById(
-        "cancel-dialog-button"
+      const cancelDialogButton = content.document.getElementById(
+        "join-pioneer-cancel-dialog-button"
       );
-      cancleDialogButton.click();
+      cancelDialogButton.click();
 
       ok(
         !dialog.open,
@@ -194,6 +196,7 @@ add_task(async function testAboutPage() {
         PREF_PIONEER_ID,
         null
       );
+
       ok(
         !canceledEnrollment,
         "after cancelling enrollment, Pioneer is not enrolled."
@@ -203,7 +206,7 @@ add_task(async function testAboutPage() {
       ok(dialog.open, "after retrying enrollment, consent dialog is open.");
 
       const acceptDialogButton = content.document.getElementById(
-        "accept-dialog-button"
+        "join-pioneer-accept-dialog-button"
       );
       acceptDialogButton.click();
 
@@ -212,6 +215,13 @@ add_task(async function testAboutPage() {
         null
       );
       ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
+
+      await waitForAnimationFrame();
+      ok(
+        document.l10n.getAttributes(enrollmentButton).id ==
+          "pioneer-unenrollment-button",
+        "After Pioneer enrollment, join button is now leave button"
+      );
 
       const enrolledToolbarButton = document.getElementById("pioneer-button");
       ok(
@@ -247,21 +257,74 @@ add_task(async function testAboutPage() {
 
         await waitForAnimationFrame();
 
-        ok(!joinButton.disabled, "Before enrollment, join button is enabled.");
-
-        for (const testAddon of TEST_ADDONS) {
-          if (testAddon.id == addonId) {
-            Services.prefs.setStringPref(
-              PREF_TEST_ADDONS,
-              JSON.stringify([testAddon])
-            );
-          }
-        }
-
-        await waitForAnimationFrame();
+        ok(
+          !joinButton.disabled,
+          "Before study enrollment, join button is enabled."
+        );
 
         joinButton.click();
         await waitForAnimationFrame();
+
+        const studyCancelButton = content.document.getElementById(
+          "join-study-cancel-dialog-button"
+        );
+
+        studyCancelButton.click();
+
+        ok(
+          !joinButton.disabled,
+          "After canceling study enrollment, join button is enabled."
+        );
+
+        joinButton.click();
+        await waitForAnimationFrame();
+
+        const studyAcceptButton = content.document.getElementById(
+          "join-study-accept-dialog-button"
+        );
+
+        studyAcceptButton.click();
+        await waitForAnimationFrame();
+
+        ok(
+          document.l10n.getAttributes(joinButton).id == "pioneer-leave-study",
+          "After study enrollment, join button is now leave button"
+        );
+
+        ok(
+          !joinButton.disabled,
+          "After study enrollment, leave button is enabled."
+        );
+
+        joinButton.click();
+        await waitForAnimationFrame();
+
+        const leaveStudyCancelButton = content.document.getElementById(
+          "leave-study-cancel-dialog-button"
+        );
+
+        leaveStudyCancelButton.click();
+        await waitForAnimationFrame();
+
+        ok(
+          !joinButton.disabled,
+          "After canceling study leave, leave/join button is enabled."
+        );
+
+        joinButton.click();
+        await waitForAnimationFrame();
+
+        const acceptStudyCancelButton = content.document.getElementById(
+          "leave-study-accept-dialog-button"
+        );
+
+        acceptStudyCancelButton.click();
+        await waitForAnimationFrame();
+
+        ok(
+          joinButton.disabled,
+          "After leaving study, join button is disabled."
+        );
 
         ok(
           Services.prefs.getStringPref(PREF_TEST_ADDONS, null) == "[]",
@@ -270,14 +333,40 @@ add_task(async function testAboutPage() {
       }
 
       enrollmentButton.click();
-
       await waitForAnimationFrame();
+
+      const cancelUnenrollmentDialogButton = content.document.getElementById(
+        "leave-pioneer-cancel-dialog-button"
+      );
+      cancelUnenrollmentDialogButton.click();
+
+      const pioneerStillEnrolled = Services.prefs.getStringPref(
+        PREF_PIONEER_ID,
+        null
+      );
+
+      ok(
+        pioneerStillEnrolled,
+        "after canceling unenrollment, Pioneer pref is still set."
+      );
+
+      enrollmentButton.click();
+      await waitForAnimationFrame();
+
+      const acceptUnenrollmentDialogButton = content.document.getElementById(
+        "leave-pioneer-accept-dialog-button"
+      );
+      acceptUnenrollmentDialogButton.click();
 
       const pioneerUnenrolled = Services.prefs.getStringPref(
         PREF_PIONEER_ID,
         null
       );
-      ok(!pioneerUnenrolled, "after unenrollment, Pioneer pref is null.");
+
+      ok(
+        !pioneerUnenrolled,
+        "after accepting unenrollment, Pioneer pref is null."
+      );
 
       const unenrolledToolbarButton = document.getElementById("pioneer-button");
       ok(
