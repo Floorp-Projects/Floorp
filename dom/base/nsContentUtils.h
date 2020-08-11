@@ -3440,6 +3440,9 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
       return nsIContentPolicy::TYPE_FONT;
 
+    case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
+      return nsIContentPolicy::TYPE_FETCH;
+
     default:
       return aType;
   }

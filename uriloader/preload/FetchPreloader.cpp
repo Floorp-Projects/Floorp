@@ -27,7 +27,7 @@ namespace mozilla {
 NS_IMPL_ISUPPORTS(FetchPreloader, nsIStreamListener, nsIRequestObserver)
 
 FetchPreloader::FetchPreloader()
-    : FetchPreloader(nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST) {}
+    : FetchPreloader(nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD) {}
 
 FetchPreloader::FetchPreloader(nsContentPolicyType aContentPolicyType)
     : mContentPolicyType(aContentPolicyType) {}

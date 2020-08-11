@@ -290,6 +290,7 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
       destination = RequestDestination::_empty;
       break;
     case nsIContentPolicy::TYPE_FETCH:
+    case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
       destination = RequestDestination::_empty;
       break;
     case nsIContentPolicy::TYPE_WEB_MANIFEST:

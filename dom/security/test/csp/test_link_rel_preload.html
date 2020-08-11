@@ -27,9 +27,10 @@ examiner.prototype  = {
       let asciiSpec = SpecialPowers.getPrivilegedProps(
                        SpecialPowers.do_QueryInterface(subject, "nsIURI"),
                        "asciiSpec");
-
       if (asciiSpec.includes("fakeServer?script") ||
           asciiSpec.includes("fakeServer?style") ||
+          asciiSpec.includes("fakeServer?fetch") ||
+          asciiSpec.includes("fakeServer?font") ||
           asciiSpec.includes("fakeServer?image")) {
         let type = asciiSpec.substring(asciiSpec.indexOf("?") + 1);
         ok (true, type + " should be blocked by CSP");
@@ -40,6 +41,8 @@ examiner.prototype  = {
     if (topic === "specialpowers-http-notify-request") {
       if (data.includes("fakeServer?script") ||
           data.includes("fakeServer?style") ||
+          data.includes("fakeServer?fetch") ||
+          data.includes("fakeServer?font") ||
           data.includes("fakeServer?image")) {
         let type = data.substring(data.indexOf("?") + 1);
         ok (false, type + " should not be loaded");
