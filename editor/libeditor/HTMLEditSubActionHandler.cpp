@@ -2350,60 +2350,6 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
              aStripWrappers == nsIEditor::eNoStrip);
 
-  EditActionResult result =
-      HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
-  if (result.Failed() || result.Canceled()) {
-    NS_WARNING_ASSERTION(result.Succeeded(),
-                         "HTMLEditor::HandleDeleteSelectionInternal() failed");
-    return result;
-  }
-  // If it's just ignored, we should fall this back to
-  // `DeleteSelectionWithTransaction()` when selection is not collapsed or
-  // content around collapsed range should be deleted.
-  if (!result.Handled() && SelectionRefPtr()->RangeCount() > 0 &&
-      (!SelectionRefPtr()->IsCollapsed() ||
-       EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount) !=
-           HowToHandleCollapsedRange::Ignore)) {
-    nsresult rv =
-        DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
-    if (rv == NS_ERROR_EDITOR_DESTROYED) {
-      NS_WARNING(
-          "EditorBase::DeleteSelectionWithTransaction() caused destroying the "
-          "editor");
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::DeleteSelectionWithTransaction() failed, but ignored");
-  }
-
-  // XXX At here, selection may have no range because of mutation event
-  //     listeners can do anything so that we should just return NS_OK instead
-  //     of returning error.
-  EditorDOMPoint atNewStartOfSelection(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
-  if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
-    return EditActionHandled(NS_ERROR_FAILURE);
-  }
-  if (atNewStartOfSelection.GetContainerAsContent()) {
-    nsresult rv = DeleteMostAncestorMailCiteElementIfEmpty(
-        MOZ_KnownLive(*atNewStartOfSelection.GetContainerAsContent()));
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty() failed");
-      return EditActionHandled(rv);
-    }
-  }
-  return EditActionHandled();
-}
-
-EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
-    nsIEditor::EDirection aDirectionAndAmount,
-    nsIEditor::EStripWrappers aStripWrappers) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
-             aStripWrappers == nsIEditor::eNoStrip);
-
   // Remember that we did a selection deletion.  Used by
   // CreateStyleForInsertText()
   TopLevelEditSubActionDataRef().mDidDeleteSelection = true;
@@ -2437,6 +2383,66 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
   }
 
   AutoRangeArray rangesToDelete(*SelectionRefPtr());
+  EditActionResult result = HandleDeleteSelectionInternal(
+      aDirectionAndAmount, aStripWrappers, rangesToDelete);
+  if (result.Failed() || result.Canceled()) {
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "HTMLEditor::HandleDeleteSelectionInternal() failed");
+    return result;
+  }
+  // If it's just ignored, we should fall this back to
+  // `DeleteSelectionWithTransaction()` when selection is not collapsed or
+  // content around collapsed range should be deleted.
+  if (!result.Handled() && !rangesToDelete.Ranges().IsEmpty() &&
+      (!rangesToDelete.IsCollapsed() ||
+       EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount) !=
+           HowToHandleCollapsedRange::Ignore)) {
+    nsresult rv = DeleteRangesWithTransaction(aDirectionAndAmount,
+                                              aStripWrappers, rangesToDelete);
+    if (rv == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING(
+          "EditorBase::DeleteSelectionWithTransaction() caused destroying the "
+          "editor");
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::DeleteSelectionWithTransaction() failed, but ignored");
+  }
+
+  // XXX At here, selection may have no range because of mutation event
+  //     listeners can do anything so that we should just return NS_OK instead
+  //     of returning error.
+  EditorDOMPoint atNewStartOfSelection(
+      EditorBase::GetStartPoint(*SelectionRefPtr()));
+  if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
+    return EditActionHandled(NS_ERROR_FAILURE);
+  }
+  if (atNewStartOfSelection.GetContainerAsContent()) {
+    nsresult rv = DeleteMostAncestorMailCiteElementIfEmpty(
+        MOZ_KnownLive(*atNewStartOfSelection.GetContainerAsContent()));
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty() failed");
+      return EditActionHandled(rv);
+    }
+  }
+  return EditActionHandled();
+}
+
+EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
+             aStripWrappers == nsIEditor::eNoStrip);
+  MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
+
+  // If there is only padding `<br>` element for empty editor, cancel the
+  // operation.
+  if (mPaddingBRElementForEmptyEditor) {
+    return EditActionCanceled();
+  }
 
   // selectionWasCollapsed is used later to determine whether we should join
   // blocks in HandleDeleteNonCollapsedRanges(). We don't really care about
@@ -2446,12 +2452,12 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
   // collapsed and the cursor is at the end of a block element, in which case
   // AutoRangeArray::ExtendAnchorFocusRangeFor() would always make the selection
   // not collapsed.
-  SelectionWasCollapsed selectionWasCollapsed = rangesToDelete.IsCollapsed()
+  SelectionWasCollapsed selectionWasCollapsed = aRangesToDelete.IsCollapsed()
                                                     ? SelectionWasCollapsed::Yes
                                                     : SelectionWasCollapsed::No;
 
   if (selectionWasCollapsed == SelectionWasCollapsed::Yes) {
-    EditorDOMPoint startPoint(rangesToDelete.GetStartPointOfFirstRange());
+    EditorDOMPoint startPoint(aRangesToDelete.GetStartPointOfFirstRange());
     if (NS_WARN_IF(!startPoint.IsSet())) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
@@ -2503,7 +2509,7 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
                                                *startPoint.GetContainer());
 
     Result<nsIEditor::EDirection, nsresult> extendResult =
-        rangesToDelete.ExtendAnchorFocusRangeFor(*this, aDirectionAndAmount);
+        aRangesToDelete.ExtendAnchorFocusRangeFor(*this, aDirectionAndAmount);
     if (extendResult.isErr()) {
       NS_WARNING("AutoRangeArray::ExtendAnchorFocusRangeFor() failed");
       return EditActionResult(extendResult.unwrapErr());
@@ -2512,22 +2518,16 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
 
     if (aDirectionAndAmount == nsIEditor::eNone) {
       // If we're not called recursively, we should call
-      // `DeleteSelectionWithTransaction()` here, but we cannot detect it for
+      // `DeleteRangesWithTransaction()` here, but we cannot detect it for
       // now.  Therefore, we should just tell the caller of that we does
       // nothing.
-      // XXX This should handle error of Selection API calls, but a following
-      //     patch will stop doing this.
-      MOZ_ASSERT(rangesToDelete.Ranges().Length() == 1);
-      MOZ_KnownLive(SelectionRefPtr())->RemoveAllRanges(IgnoreErrors());
-      MOZ_KnownLive(SelectionRefPtr())
-          ->AddRangeAndSelectFramesAndNotifyListeners(
-              MOZ_KnownLive(rangesToDelete.FirstRangeRef()), IgnoreErrors());
+      MOZ_ASSERT(aRangesToDelete.Ranges().Length() == 1);
       return EditActionIgnored();
     }
 
-    if (rangesToDelete.IsCollapsed()) {
+    if (aRangesToDelete.IsCollapsed()) {
       EditActionResult result = HandleDeleteAroundCollapsedRanges(
-          aDirectionAndAmount, aStripWrappers, rangesToDelete);
+          aDirectionAndAmount, aStripWrappers, aRangesToDelete);
       NS_WARNING_ASSERTION(
           result.Succeeded(),
           "HTMLEditor::HandleDeleteAroundCollapsedRanges() failed");
@@ -2537,7 +2537,7 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
 
   EditActionResult result =
       HandleDeleteNonCollapsedRanges(aDirectionAndAmount, aStripWrappers,
-                                     rangesToDelete, selectionWasCollapsed);
+                                     aRangesToDelete, selectionWasCollapsed);
   NS_WARNING_ASSERTION(result.Succeeded(),
                        "HTMLEditor::HandleDeleteNonCollapsedRanges() failed");
   return result;
@@ -2655,10 +2655,16 @@ EditActionResult HTMLEditor::HandleDeleteAroundCollapsedRanges(
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
     }
+    if (!SelectionRefPtr()->RangeCount()) {
+      NS_WARNING("Failed to put caret to new position");
+      return EditActionHandled(rv);
+    }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::CollapseSelectionTo() failed, but ignored");
-    result = HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
+    AutoRangeArray rangesToDelete(*SelectionRefPtr());
+    result = HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers,
+                                           rangesToDelete);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "Recursive HTMLEditor::HandleDeleteSelectionInternal() failed");
@@ -2917,10 +2923,14 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtAtomicContent(
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
       return EditActionResult(rv);
     }
+    if (!SelectionRefPtr()->RangeCount()) {
+      return EditActionHandled();
+    }
     // XXX This nesting call is not safe.  If mutation event listener
     //     creates same situation, this causes stack-overflow.
-    EditActionResult result =
-        HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
+    AutoRangeArray rangesToDelete(*SelectionRefPtr());
+    EditActionResult result = HandleDeleteSelectionInternal(
+        aDirectionAndAmount, aStripWrappers, rangesToDelete);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "HTMLEditor::Nested HandleDeleteSelectionInternal() failed");

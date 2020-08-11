@@ -2957,7 +2957,8 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteSelectionInternal(nsIEditor::EDirection aDirectionAndAmount,
-                                nsIEditor::EStripWrappers aStripWrappers);
+                                nsIEditor::EStripWrappers aStripWrappers,
+                                AutoRangeArray& aRangesToDelete);
 
   /**
    * This method handles "delete selection" commands.
