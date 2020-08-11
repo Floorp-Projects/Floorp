@@ -2412,7 +2412,7 @@ class HTMLEditor final : public TextEditor,
    *                            Set the direction of handled edit action.
    */
   EditorDOMPoint GetGoodCaretPointFor(
-      nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount);
+      nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount) const;
 
   /**
    * RemoveEmptyInclusiveAncestorInlineElements() removes empty inclusive
@@ -2678,9 +2678,9 @@ class HTMLEditor final : public TextEditor,
      * If found one is a list item element, calls
      * `MaybeInsertBRElementBeforeEmptyListItemElement()` before deleting
      * the list item element.
-     * If found empty ancestor is not a list item element, collapse Selection
-     * to somewhere depending on aDirectionAndAmount.  Finally, removes the
-     * empty block ancestor.
+     * If found empty ancestor is not a list item element,
+     * `GetNewCaretPoisition()` will be called to determine new caret position.
+     * Finally, removes the empty block ancestor.
      *
      * @param aHTMLEditor         The HTMLEditor.
      * @param aDirectionAndAmount If found empty ancestor block is a list item
@@ -2706,6 +2706,14 @@ class HTMLEditor final : public TextEditor,
      */
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
     MaybeInsertBRElementBeforeEmptyListItemElement(HTMLEditor& aHTMLEditor);
+
+    /**
+     * GetNewCaretPoisition() returns new caret position after deleting
+     * `mEmptyInclusiveAncestorBlockElement`.
+     */
+    [[nodiscard]] Result<EditorDOMPoint, nsresult> GetNewCaretPoisition(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount) const;
 
     RefPtr<Element> mEmptyInclusiveAncestorBlockElement;
   };
