@@ -1621,6 +1621,17 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
 
   void emitNativeCalleeGuard(HandleFunction callee);
 
+  bool canAttachAtomicsReadWriteModify();
+
+  struct AtomicsReadWriteModifyOperands {
+    ObjOperandId objId;
+    Int32OperandId int32IndexId;
+    Int32OperandId int32ValueId;
+  };
+
+  AtomicsReadWriteModifyOperands emitAtomicsReadWriteModifyOperands(
+      HandleFunction callee);
+
   AttachDecision tryAttachArrayPush(HandleFunction callee);
   AttachDecision tryAttachArrayPopShift(HandleFunction callee,
                                         InlinableNative native);
@@ -1702,6 +1713,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachTypedArrayConstructor(HandleFunction callee);
   AttachDecision tryAttachReflectGetPrototypeOf(HandleFunction callee);
   AttachDecision tryAttachAtomicsCompareExchange(HandleFunction callee);
+  AttachDecision tryAttachAtomicsExchange(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
