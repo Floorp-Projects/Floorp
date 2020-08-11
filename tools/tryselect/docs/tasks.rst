@@ -2,7 +2,7 @@ Task Generation
 ===============
 
 Many selectors (including ``chooser``, ``coverage`` and ``fuzzy``) source their available tasks
-directly from the :doc:`taskgraph </taskcluster/taskcluster/index>` module by building the taskgraph
+directly from the :ref:`taskgraph <TaskCluster Task-Graph Generation>` module by building the taskgraph
 locally. This means that the list of available tasks will never be stale. While this is very
 powerful, it comes with a large enough performance cost to get annoying (around twenty seconds).
 

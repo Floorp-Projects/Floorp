@@ -26,7 +26,7 @@ update check or confirm that you run the latest version).
 
    If you came here looking for regular ASan builds (e.g. for fuzzing or
    as a developer to reproduce a crash), you should probably go to the
-   :ref:`Firefox and Address Sanitizer` doc instead.
+   :ref:`Address Sanitizer` doc instead.
 
 .. _Requirements:
 

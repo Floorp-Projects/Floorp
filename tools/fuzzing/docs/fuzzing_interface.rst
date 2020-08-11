@@ -161,7 +161,7 @@ non-determinism and loss of performance.
 
 If you are unsure if the fuzzing interface is the right approach for you or you
 require help in evaluating what could be done for your particular task, please
-don't hestitate to :ref:`contact us <Fuzzing#Contact Us>`.
+don't hestitate to :ref:`contact us <Fuzzing#contact-us>`.
 
 
 Develop the fuzzing code
@@ -309,7 +309,7 @@ reduce the amount of noise that libFuzzer sees.
 Build your code
 ^^^^^^^^^^^^^^^
 
-See the :ref:`Build instructions above <Build Requirements>` for instructions
+See the :ref:`Build instructions above <Local build requirements and flags>` for instructions
 how to modify your ``.mozconfig`` to create the appropriate build.
 
 
