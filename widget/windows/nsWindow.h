@@ -451,7 +451,8 @@ class nsWindow final : public nsWindowBase {
   LRESULT ProcessCharMessage(const MSG& aMsg, bool* aEventDispatched);
   LRESULT ProcessKeyUpMessage(const MSG& aMsg, bool* aEventDispatched);
   LRESULT ProcessKeyDownMessage(const MSG& aMsg, bool* aEventDispatched);
-  static bool EventIsInsideWindow(nsWindow* aWindow);
+  static bool EventIsInsideWindow(
+      nsWindow* aWindow, Maybe<POINT> aEventPoint = mozilla::Nothing());
   // Convert nsEventStatus value to a windows boolean
   static bool ConvertStatus(nsEventStatus aStatus);
   static void PostSleepWakeNotification(const bool aIsSleepMode);
@@ -510,7 +511,8 @@ class nsWindow final : public nsWindowBase {
   static void RegisterSpecialDropdownHooks();
   static void UnregisterSpecialDropdownHooks();
   static bool GetPopupsToRollup(nsIRollupListener* aRollupListener,
-                                uint32_t* aPopupsToRollup);
+                                uint32_t* aPopupsToRollup,
+                                Maybe<POINT> aEventPoint = mozilla::Nothing());
   static bool NeedsToHandleNCActivateDelayed(HWND aWnd);
   static bool DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam,
                              LPARAM inLParam, LRESULT* outResult);
