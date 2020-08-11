@@ -2340,5 +2340,34 @@ AtomicsReadWriteModifyFn AtomicsOr(Scalar::Type elementType) {
   }
 }
 
+template <typename T>
+static int32_t AtomicsXor(TypedArrayObject* typedArray, int32_t index,
+                          int32_t value) {
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(!typedArray->hasDetachedBuffer());
+  MOZ_ASSERT(index >= 0 && uint32_t(index) < typedArray->length());
+
+  SharedMem<T*> addr = typedArray->dataPointerEither().cast<T*>();
+  return jit::AtomicOperations::fetchXorSeqCst(addr + index, T(value));
+}
+
+AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType) {
+  switch (elementType) {
+    case Scalar::Int8:
+      return AtomicsXor<int8_t>;
+    case Scalar::Uint8:
+      return AtomicsXor<uint8_t>;
+    case Scalar::Int16:
+      return AtomicsXor<int16_t>;
+    case Scalar::Uint16:
+      return AtomicsXor<uint16_t>;
+    case Scalar::Int32:
+      return AtomicsXor<int32_t>;
+    default:
+      MOZ_CRASH("Unexpected TypedArray type");
+  }
+}
+
 }  // namespace jit
 }  // namespace js
