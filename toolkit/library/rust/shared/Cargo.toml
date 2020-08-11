@@ -50,7 +50,7 @@ mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.3
 remote = { path = "../../../../remote", optional = true }
 fog_control = { path = "../../../components/glean", optional = true }
 app_services_logger = { path = "../../../../services/common/app_services_logger" }
-
+http_sfv = { path = "../../../../netwerk/base/http-sfv" }
 unic-langid = { version = "0.8", features = ["likelysubtags"] }
 unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
 fluent-langneg = { version = "0.12.1", features = ["cldr"] }
