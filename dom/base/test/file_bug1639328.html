@@ -1,0 +1,8 @@
+<!doctype html>
+<script>
+onmessage = function(e) {
+  parent.postMessage({
+    throttledFrameRequests: SpecialPowers.DOMWindowUtils.effectivelyThrottlesFrameRequests,
+  }, e.origin);
+};
+</script>
