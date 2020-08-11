@@ -196,7 +196,7 @@ stage-jstests: make-stage-dir
 
 ifdef OBJCOPY
 ifneq ($(OBJCOPY), :) # see build/autoconf/toolchain.m4:102 for why this is necessary
-ifndef PKG_SKIP_STRIP
+ifdef PKG_STRIP
 STRIP_COMPILED_TESTS := 1
 endif
 endif
