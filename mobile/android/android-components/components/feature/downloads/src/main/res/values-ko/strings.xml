@@ -38,4 +38,8 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">닫기</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">다음 앱을 사용하여 작업 완료</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s 앱을 열 수 없음</string>
 </resources>
