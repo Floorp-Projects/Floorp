@@ -155,6 +155,37 @@ TEST(QuotaCommon_TryVar, Failure_NoErr)
   EXPECT_FALSE(flag);
 }
 
+TEST(QuotaCommon_TryVar, Decl)
+{
+  auto task = []() -> Result<int32_t, nsresult> { return 42; };
+
+  QM_TRY_VAR(int32_t x, task(), QM_VOID);
+
+  static_assert(std::is_same_v<decltype(x), int32_t>);
+  EXPECT_EQ(x, 42);
+}
+
+TEST(QuotaCommon_TryVar, ConstDecl)
+{
+  auto task = []() -> Result<int32_t, nsresult> { return 42; };
+
+  QM_TRY_VAR(const int32_t x, task(), QM_VOID);
+
+  static_assert(std::is_same_v<decltype(x), const int32_t>);
+  EXPECT_EQ(x, 42);
+}
+
+TEST(QuotaCommon_TryVar, SameScopeDecl)
+{
+  auto task = []() -> Result<int32_t, nsresult> { return 42; };
+
+  QM_TRY_VAR(const int32_t x, task(), QM_VOID);
+  EXPECT_EQ(x, 42);
+
+  QM_TRY_VAR(const int32_t y, task(), QM_VOID);
+  EXPECT_EQ(y, 42);
+}
+
 TEST(QuotaCommon_OkIf, True)
 {
   auto res = OkIf(true);
