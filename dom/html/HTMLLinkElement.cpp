@@ -534,7 +534,7 @@ nsContentPolicyType HTMLLinkElement::AsValueToContentPolicy(
     case DESTINATION_STYLE:
       return nsIContentPolicy::TYPE_STYLESHEET;
     case DESTINATION_FETCH:
-      return nsIContentPolicy::TYPE_OTHER;
+      return nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD;
   }
   return nsIContentPolicy::TYPE_INVALID;
 }
@@ -811,7 +811,7 @@ bool HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
   nsString type = nsString(aType);
   ToLowerCase(type);
 
-  if (policyType == nsIContentPolicy::TYPE_OTHER) {
+  if (policyType == nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD) {
     return true;
   }
   if (policyType == nsIContentPolicy::TYPE_MEDIA) {

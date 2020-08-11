@@ -94,6 +94,7 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_BEACON:
       return "empty"_ns;
     case nsIContentPolicy::TYPE_FETCH:
+    case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
       return "empty"_ns;
     case nsIContentPolicy::TYPE_WEB_MANIFEST:
       return "manifest"_ns;
