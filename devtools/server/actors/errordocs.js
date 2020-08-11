@@ -9,6 +9,13 @@
 
 "use strict";
 
+// Worker contexts do not support Services; in that case we have to rely
+// on the support URL redirection.
+const Services = require("Services");
+const supportBaseURL = !isWorker
+  ? Services.urlFormatter.formatURLPref("app.support.baseURL")
+  : "https://support.mozilla.org/kb/";
+
 const baseErrorURL =
   "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/";
 const params =
@@ -129,6 +136,7 @@ const ErrorCategories = {
   "source map": SOURCE_MAP_LEARN_MORE,
   TLS: TLS_LEARN_MORE,
   requestStorageAccess: REQUEST_STORAGE_ACCESS_LEARN_MORE,
+  HTTPSOnly: supportBaseURL + "https-only-prefs",
 };
 
 const baseCorsErrorUrl =
