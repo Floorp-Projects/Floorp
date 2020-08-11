@@ -524,7 +524,8 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   // frames.
   if (mIsTopLevel) {
     nsContentUtils::SetScrollbarsVisibility(
-        docShell, !!(mChromeFlags & nsIWebBrowserChrome::CHROME_SCROLLBARS));
+        window->GetDocShell(),
+        !!(mChromeFlags & nsIWebBrowserChrome::CHROME_SCROLLBARS));
   }
 
   nsWeakPtr weakPtrThis = do_GetWeakReference(
@@ -547,11 +548,6 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   rv = mSessionStoreListener->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
-
-  // We've all set up, make sure our visibility state is consistent. This is
-  // important for OOP iframes, which start off as hidden.
-  UpdateVisibility();
-
   return NS_OK;
 }
 
