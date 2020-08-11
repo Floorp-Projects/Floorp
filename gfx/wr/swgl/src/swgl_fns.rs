@@ -273,7 +273,6 @@ extern "C" {
         min_width: GLsizei,
         min_height: GLsizei,
     );
-    fn SetTextureParameter(tex: GLuint, pname: GLenum, param: GLint);
     fn DeleteTexture(n: GLuint);
     fn DeleteRenderbuffer(n: GLuint);
     fn DeleteFramebuffer(n: GLuint);
@@ -301,7 +300,6 @@ extern "C" {
         flip: GLboolean,
     );
     fn CreateContext() -> *mut c_void;
-    fn ReferenceContext(ctx: *mut c_void);
     fn DestroyContext(ctx: *mut c_void);
     fn MakeCurrent(ctx: *mut c_void);
 }
@@ -313,12 +311,6 @@ impl Context {
     pub fn create() -> Self {
         Context(unsafe { CreateContext() })
     }
-
-    pub fn reference(&self) {
-        unsafe {
-            ReferenceContext(self.0);
-         }
-     }
 
     pub fn destroy(&self) {
         unsafe {
@@ -370,12 +362,6 @@ impl Context {
                 min_width,
                 min_height,
             );
-        }
-    }
-
-    pub fn set_texture_parameter(&self, tex: GLuint, pname: GLenum, param: GLint) {
-        unsafe {
-            SetTextureParameter(tex, pname, param);
         }
     }
 
