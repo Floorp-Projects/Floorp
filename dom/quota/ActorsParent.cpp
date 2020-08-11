@@ -2394,9 +2394,9 @@ bool FileAlreadyExists(nsresult aValue) {
 nsresult EnsureDirectory(nsIFile* aDirectory, bool* aCreated) {
   AssertIsOnIOThread();
 
-  bool exists;
-  QM_TRY_VAR(exists, ToResult(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755),
-                              FileAlreadyExists));
+  QM_TRY_VAR(const bool exists,
+             ToResult(aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755),
+                      FileAlreadyExists));
 
   if (exists) {
     bool isDirectory;
