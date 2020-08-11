@@ -800,12 +800,13 @@ namespace ipc {
 void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
     IPC::Message* aMsg, IProtocol* aActor,
     const dom::SessionHistoryInfo& aParam) {
-  dom::ClonedMessageData stateData;
+  Maybe<dom::ClonedMessageData> stateData;
   if (aParam.mStateData) {
+    stateData.emplace();
     JSStructuredCloneData& data = aParam.mStateData->Data();
     auto iter = data.Start();
     bool success;
-    stateData.data().data = data.Borrow(iter, data.Size(), &success);
+    stateData->data().data = data.Borrow(iter, data.Size(), &success);
     if (NS_WARN_IF(!success)) {
       return;
     }
@@ -838,7 +839,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
 bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     dom::SessionHistoryInfo* aResult) {
-  dom::ClonedMessageData stateData;
+  Maybe<dom::ClonedMessageData> stateData;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mURI) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mOriginalURI) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResultPrincipalURI) ||
@@ -862,12 +863,15 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
     aActor->FatalError("Error reading fields for SessionHistoryInfo");
     return false;
   }
-  aResult->mStateData = new nsStructuredCloneContainer();
-  if (aActor->GetSide() == ChildSide) {
-    UnpackClonedMessageDataForChild(stateData, *aResult->mStateData);
-  } else {
-    UnpackClonedMessageDataForParent(stateData, *aResult->mStateData);
+  if (stateData.isSome()) {
+    aResult->mStateData = new nsStructuredCloneContainer();
+    if (aActor->GetSide() == ChildSide) {
+      UnpackClonedMessageDataForChild(stateData.ref(), *aResult->mStateData);
+    } else {
+      UnpackClonedMessageDataForParent(stateData.ref(), *aResult->mStateData);
+    }
   }
+  MOZ_ASSERT_IF(stateData.isNothing(), !aResult->mStateData);
   return true;
 }
 
