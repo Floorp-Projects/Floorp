@@ -35,6 +35,7 @@ import kotlin.math.min
  * Handles intercepting touch events on the toolbar for swipe gestures and executes the
  * necessary animations.
  */
+@Suppress("LargeClass", "TooManyFunctions")
 class ToolbarGestureHandler(
     private val activity: Activity,
     private val contentLayout: View,
@@ -76,6 +77,7 @@ class ToolbarGestureHandler(
             GestureDirection.LEFT_TO_RIGHT
         }
 
+        @Suppress("ComplexCondition")
         return if (
             !activity.window.decorView.isKeyboardVisible() &&
             start.isInToolbar() &&

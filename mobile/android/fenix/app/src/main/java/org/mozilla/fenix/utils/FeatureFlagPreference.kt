@@ -8,7 +8,11 @@ import mozilla.components.support.ktx.android.content.PreferencesHolder
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-fun featureFlagPreference(key: String, default: Boolean, featureFlag: Boolean): ReadWriteProperty<PreferencesHolder, Boolean> =
+fun featureFlagPreference(
+    key: String,
+    default: Boolean,
+    featureFlag: Boolean
+): ReadWriteProperty<PreferencesHolder, Boolean> =
     FeatureFlagPreferencePreference(key, default, featureFlag)
 
 private class FeatureFlagPreferencePreference(

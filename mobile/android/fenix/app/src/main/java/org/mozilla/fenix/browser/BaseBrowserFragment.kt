@@ -97,10 +97,10 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.accessibilityManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -594,7 +594,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         .ifChanged { it.content.firstContentfulPaint }
                         .collect {
                             val showEngineView =
-                                it.content.firstContentfulPaint || it.content.progress == 100
+                                it.content.firstContentfulPaint || it.content.progress == LOADING_PROGRESS_COMPLETE
 
                             if (showEngineView) {
                                 engineView?.asView()?.isVisible = true
@@ -1082,6 +1082,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
+
+        private const val LOADING_PROGRESS_COMPLETE = 100
     }
 
     override fun onAccessibilityStateChanged(enabled: Boolean) {

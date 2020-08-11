@@ -28,7 +28,14 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     ): RequestInterceptor.InterceptionResponse? {
         return context.components.services.appLinksInterceptor
             .onLoadRequest(
-                engineSession, uri, lastUri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation, isSubframeRequest
+                engineSession,
+                uri,
+                lastUri,
+                hasUserGesture,
+                isSameDomain,
+                isRedirect,
+                isDirectNavigation,
+                isSubframeRequest
             )
     }
 

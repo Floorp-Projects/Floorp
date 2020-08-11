@@ -42,7 +42,7 @@ class BrowserAnimator(
         if (unwrappedSwipeRefresh?.context?.settings()?.waitToShowPageUntilFirstPaint == true) {
             if (firstContentfulHappened()) {
                 viewLifecycleScope.get()?.launch {
-                    delay(100)
+                    delay(ANIMATION_DELAY)
                     unwrappedEngineView?.asView()?.visibility = View.VISIBLE
                     unwrappedSwipeRefresh?.background = null
                     unwrappedSwipeRefresh?.alpha = 1f
@@ -91,6 +91,8 @@ class BrowserAnimator(
     }
 
     companion object {
+        private const val ANIMATION_DELAY = 100L
+
         fun getToolbarNavOptions(context: Context): NavOptions {
             val navOptions = NavOptions.Builder()
 

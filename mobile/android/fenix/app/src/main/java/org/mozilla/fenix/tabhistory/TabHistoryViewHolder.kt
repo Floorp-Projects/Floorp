@@ -33,7 +33,9 @@ class TabHistoryViewHolder(
         history_layout.loadFavicon(item.url)
 
         if (item.isSelected) {
-            history_layout.setBackgroundColor(history_layout.context.getColorFromAttr(R.attr.tabHistoryItemSelectedBackground))
+            history_layout.setBackgroundColor(
+                history_layout.context.getColorFromAttr(R.attr.tabHistoryItemSelectedBackground)
+            )
         } else {
             history_layout.background = null
         }

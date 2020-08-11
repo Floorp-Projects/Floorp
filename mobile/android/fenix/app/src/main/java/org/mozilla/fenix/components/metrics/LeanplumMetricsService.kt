@@ -95,6 +95,7 @@ class LeanplumMetricsService(
         deviceId
     }
 
+    @Suppress("ComplexMethod")
     override fun start() {
 
         if (!application.settings().isMarketingTelemetryEnabled) return
@@ -255,7 +256,7 @@ class LeanplumMetricsService(
             "jpn" // Japanese
         )
 
-        private val PREFERENCE_NAME = "LEANPLUM_PREFERENCES"
-        private val DEVICE_ID_KEY = "LP_DEVICE_ID"
+        private const val PREFERENCE_NAME = "LEANPLUM_PREFERENCES"
+        private const val DEVICE_ID_KEY = "LP_DEVICE_ID"
     }
 }

@@ -5,6 +5,7 @@
 import android.content.Context
 import android.os.Bundle
 import mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrapper
+import mozilla.components.browser.engine.gecko.ext.toContentBlockingSetting
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.storage.LoginsStorage
@@ -50,8 +51,7 @@ object GeckoProvider {
         val runtimeSettings = builder
             .crashHandler(CrashHandlerService::class.java)
             .telemetryDelegate(GeckoAdapter())
-            // TODO: Fix me!
-            // .contentBlocking(policy.toContentBlockingSetting())
+            .contentBlocking(policy.toContentBlockingSetting())
             .aboutConfigEnabled(Config.channel.isBeta)
             .debugLogging(Config.channel.isDebug)
             .build()
