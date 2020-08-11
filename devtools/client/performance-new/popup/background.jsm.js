@@ -126,7 +126,7 @@ const presets = {
       "GraphRunner",
       "MediaDecoderStateMachine",
       "MediaPDecoder",
-      "MediaPlayback",
+      "MediaController",
       "MediaTimer",
       "NativeAudioCallback",
       "RenderBackend",
