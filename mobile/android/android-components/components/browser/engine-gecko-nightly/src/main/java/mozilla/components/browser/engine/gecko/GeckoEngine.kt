@@ -546,6 +546,10 @@ class GeckoEngine(
                         if (cookieBehavior != value.cookiePolicy.id) {
                             cookieBehavior = value.cookiePolicy.id
                         }
+
+                        if (cookiePurging != value.cookiePurging) {
+                            setCookiePurging(value.cookiePurging)
+                        }
                     }
 
                     defaultSettings?.trackingProtectionPolicy = value

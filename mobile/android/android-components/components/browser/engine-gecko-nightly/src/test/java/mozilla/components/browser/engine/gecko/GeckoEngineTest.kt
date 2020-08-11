@@ -363,6 +363,27 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `cookiePurging is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+        val policy = TrackingProtectionPolicy.recommended()
+
+        engine.settings.trackingProtectionPolicy = policy
+
+        verify(mockRuntime.settings.contentBlocking).setCookiePurging(policy.cookiePurging)
+
+        reset(settings)
+
+        engine.settings.trackingProtectionPolicy = policy
+
+        verify(mockRuntime.settings.contentBlocking, never()).setCookiePurging(policy.cookiePurging)
+    }
+
+    @Test
     fun `setCookieBehavior is only invoked when the value is changed`() {
         val mockRuntime = mock<GeckoRuntime>()
         val settings = spy(ContentBlocking.Settings.Builder().build())
