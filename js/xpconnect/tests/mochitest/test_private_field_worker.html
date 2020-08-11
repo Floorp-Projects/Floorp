@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test Private Fields</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      function go() {
+        SimpleTest.waitForExplicitFinish();
+
+        let worker = new Worker('private_field_worker.js');
+
+        var allocated = 0;
+        worker.onmessage = function(e) {
+          is(e.data, allocated, "correctly allocated private field-containing-class");
+          SimpleTest.finish();
+        }
+
+        worker.postMessage("allocate"); allocated++;
+        worker.postMessage("count");
+        info("Messages posted");
+      }
+      go();
+    </script>
+  </head>
+
+</html>
