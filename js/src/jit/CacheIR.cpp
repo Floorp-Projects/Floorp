@@ -7360,6 +7360,38 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachAtomicsIsLockFree(
+    HandleFunction callee) {
+  // Need one argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!args_[0].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the `isLockFree` native function.
+  emitNativeCalleeGuard(callee);
+
+  // Ensure value is int32.
+  ValOperandId valueId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  Int32OperandId int32ValueId = writer.guardToInt32(valueId);
+
+  writer.atomicsIsLockFreeResult(int32ValueId);
+
+  // This stub doesn't need to be monitored, because it always returns a bool.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("AtomicsIsLockFree");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8459,6 +8491,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachAtomicsLoad(callee);
     case InlinableNative::AtomicsStore:
       return tryAttachAtomicsStore(callee);
+    case InlinableNative::AtomicsIsLockFree:
+      return tryAttachAtomicsIsLockFree(callee);
 
     default:
       return AttachDecision::NoAction;
