@@ -15,6 +15,9 @@
 #include "js/ScalarType.h"  // js::Scalar::Type
 
 namespace js {
+
+class TypedArrayObject;
+
 namespace jit {
 
 class BaselineCacheIRCompiler;
@@ -816,6 +819,13 @@ class MOZ_RAII CacheIRCompiler {
   MOZ_MUST_USE bool emitBigIntUnaryOperationShared(BigIntOperandId inputId);
 
   bool emitDoubleIncDecResult(bool isInc, NumberOperandId inputId);
+
+  using AtomicsReadWriteModifyFn = int32_t (*)(TypedArrayObject*, int32_t,
+                                               int32_t);
+
+  MOZ_MUST_USE bool emitAtomicsReadModifyWriteResult(
+      ObjOperandId objId, Int32OperandId indexId, Int32OperandId valueId,
+      Scalar::Type elementType, AtomicsReadWriteModifyFn fn);
 
   CACHE_IR_COMPILER_SHARED_GENERATED
 
