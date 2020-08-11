@@ -2050,6 +2050,12 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       HandleBaselineInfoBailout(cx, outerScript, innerScript);
       break;
 
+    case BailoutKind::NotOptimizedArgumentsGuard:
+      // Optimized-arguments escaped to a slow path. Disable the optimization to
+      // prevent bailout loops.
+      JSScript::argumentsOptimizationFailed(cx, innerScript);
+      break;
+
     case BailoutKind::ArgumentCheck:
       // Do nothing, bailout will resume before the argument monitor ICs.
       break;

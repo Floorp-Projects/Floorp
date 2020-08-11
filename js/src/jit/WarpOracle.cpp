@@ -112,14 +112,22 @@ void WarpOracle::addScriptSnapshot(WarpScriptSnapshot* scriptSnapshot) {
 }
 
 AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
+#ifdef JS_JITSPEW
+  const char* mode;
+  if (mirGen().outerInfo().isAnalysis()) {
+    mode = "Analyzing";
+  } else if (outerScript_->hasIonScript()) {
+    mode = "Recompiling";
+  } else {
+    mode = "Compiling";
+  }
   JitSpew(JitSpew_IonScripts,
-          "Warp %sompiling script %s:%u:%u (%p) (warmup-counter=%" PRIu32
-          ", level=%s)",
-          (outerScript_->hasIonScript() ? "Rec" : "C"),
-          outerScript_->filename(), outerScript_->lineno(),
+          "Warp %s script %s:%u:%u (%p) (warmup-counter=%" PRIu32 ", level=%s)",
+          mode, outerScript_->filename(), outerScript_->lineno(),
           outerScript_->column(), static_cast<JSScript*>(outerScript_),
           outerScript_->getWarmUpCount(),
           OptimizationLevelString(mirGen_.optimizationInfo().level()));
+#endif
 
   MOZ_ASSERT(outerScript_->hasJitScript());
   ICScript* icScript = outerScript_->jitScript()->icScript();
@@ -710,7 +718,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::OptimizeSpreadCall:
       case JSOp::Debugger:
       case JSOp::TableSwitch:
-      case JSOp::Try:
       case JSOp::Exception:
       case JSOp::Throw:
       case JSOp::ThrowSetConst:
@@ -718,6 +725,15 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::Return:
       case JSOp::RetRval:
         // Supported by WarpBuilder. Nothing to do.
+        break;
+
+      case JSOp::Try:
+        if (info_->isAnalysis()) {
+          // Try-catch is not supported for the arguments analysis because
+          // |arguments| uses in the catch-block are not accounted for.
+          return abort(AbortReason::Disable,
+                       "try-catch not supported during analysis");
+        }
         break;
 
         // Unsupported ops. Don't use a 'default' here, we want to trigger a
@@ -772,6 +788,11 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   // * Else, don't add a snapshot and rely on WarpBuilder adding an Ion IC.
 
   MOZ_ASSERT(loc.opHasIC());
+
+  // Don't create snapshots for the arguments analysis.
+  if (info_->isAnalysis()) {
+    return Ok();
+  }
 
   const ICEntry& entry = getICEntry(loc);
   ICStub* stub = entry.firstStub();
@@ -874,6 +895,18 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
       case CacheOp::CallRegExpTesterResult:
         if (!cx_->realm()->jitRealm()->ensureRegExpTesterStubExists(cx_)) {
           return abort(AbortReason::Error);
+        }
+        break;
+      case CacheOp::GuardFrameHasNoArgumentsObject:
+        if (info_->needsArgsObj()) {
+          // The script used optimized-arguments at some point but not anymore.
+          // Don't transpile this stale Baseline IC stub.
+          [[maybe_unused]] unsigned line, column;
+          LineNumberAndColumn(script_, loc, &line, &column);
+          JitSpew(JitSpew_WarpTranspiler,
+                  "GuardFrameHasNoArgumentsObject with NeedsArgsObj @ %s:%u:%u",
+                  script_->filename(), line, column);
+          return Ok();
         }
         break;
       default:
