@@ -6430,17 +6430,6 @@
   value: true
   mirror: always
 
-# Is support for :is() and :where() enabled?
-#
-# TODO(emilio): when removing this pref it would make sense to implement
-# :-moz-any as an alias of :is or such, or maybe its own thing to preserve its
-# specificity.
-- name: layout.css.is-where-selectors.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Is support for the ::file-chooser-button pseudo-element enabled?
 - name: layout.css.file-chooser-button.enabled
   type: RelaxedAtomicBool
