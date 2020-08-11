@@ -76,11 +76,25 @@ class Statement final : public mozIStorageStatement,
   nsTArray<nsCString> mColumnNames;
   bool mExecuting;
 
+  // Tracks whether the status for this statement has been recorded since it was
+  // last reset or created.
+  bool mQueryStatusRecorded;
+  // Tracks whether this statement has been executed since it was last reset or
+  // created.
+  bool mHasExecuted;
+
   /**
    * @return a pointer to the BindingParams object to use with our Bind*
    *         method.
    */
   mozIStorageBindingParams* getParams();
+
+  /**
+   * Records a query status result in telemetry. If a result has already been
+   * recorded for this statement then this does nothing. Otherwise the result
+   * is recorded if it is an error or if this is the final result.
+   */
+  void MaybeRecordQueryStatus(int srv, bool isResetting = false);
 
   /**
    * Holds the array of parameters to bind to this statement when we execute

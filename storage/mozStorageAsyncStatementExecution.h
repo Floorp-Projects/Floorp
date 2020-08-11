@@ -119,26 +119,25 @@ class AsyncExecuteStatements final : public Runnable,
    *
    * @pre mMutex is not held
    *
-   * @param aStatement
-   *        The statement to execute and then process.
+   * @param aData
+   *        The StatementData to execute, and then process.
    * @param aLastStatement
    *        Indicates if this is the last statement or not.  If it is, we have
    *        to set the proper state.
    * @returns true if we should continue to process statements, false otherwise.
    */
-  bool executeAndProcessStatement(sqlite3_stmt* aStatement,
-                                  bool aLastStatement);
+  bool executeAndProcessStatement(StatementData& aData, bool aLastStatement);
 
   /**
    * Executes a statement to completion, properly handling any error conditions.
    *
    * @pre mMutex is not held
    *
-   * @param aStatement
-   *        The statement to execute to completion.
+   * @param aData
+   *        The StatementData to execute to completion.
    * @returns true if results were obtained, false otherwise.
    */
-  bool executeStatement(sqlite3_stmt* aStatement);
+  bool executeStatement(StatementData& aData);
 
   /**
    * Builds a result set up with a row from a given statement.  If we meet the

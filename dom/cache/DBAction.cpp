@@ -226,7 +226,8 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
   }
 
   nsCOMPtr<mozIStorageConnection> conn;
-  rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(conn));
+  rv = ss->OpenDatabaseWithFileURL(dbFileUrl, EmptyCString(),
+                                   getter_AddRefs(conn));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     NS_WARNING("Cache database corrupted. Recreating empty database.");
 
@@ -239,7 +240,8 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
       return rv;
     }
 
-    rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(conn));
+    rv = ss->OpenDatabaseWithFileURL(dbFileUrl, EmptyCString(),
+                                     getter_AddRefs(conn));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -258,7 +260,8 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
       return rv;
     }
 
-    rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(conn));
+    rv = ss->OpenDatabaseWithFileURL(dbFileUrl, EmptyCString(),
+                                     getter_AddRefs(conn));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
