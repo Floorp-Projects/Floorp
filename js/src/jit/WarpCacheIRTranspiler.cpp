@@ -2495,6 +2495,17 @@ bool WarpCacheIRTranspiler::emitAtomicsStoreResult(ObjOperandId objId,
   return resumeAfter(store);
 }
 
+bool WarpCacheIRTranspiler::emitAtomicsIsLockFreeResult(
+    Int32OperandId valueId) {
+  MDefinition* value = getOperand(valueId);
+
+  auto* ilf = MAtomicIsLockFree::New(alloc(), value);
+  add(ilf);
+
+  pushResult(ilf);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.

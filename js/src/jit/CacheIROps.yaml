@@ -1382,6 +1382,13 @@
     value: Int32Id
     elementType: ScalarTypeImm
 
+- name: AtomicsIsLockFreeResult
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    value: Int32Id
+
 - name: CallNativeSetter
   shared: false
   transpile: false
