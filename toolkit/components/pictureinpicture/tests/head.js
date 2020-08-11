@@ -350,6 +350,20 @@ async function assertSawMouseEvents(
  * displayed.
  */
 async function prepareForToggleClick(browser, videoID) {
+  // Synthesize a mouse move just outside of the video to ensure that
+  // the video is in a non-hovering state. We'll go 5 pixels to the
+  // left and above the top-left corner.
+  await BrowserTestUtils.synthesizeMouse(
+    `#${videoID}`,
+    -5,
+    -5,
+    {
+      type: "mousemove",
+    },
+    browser,
+    false
+  );
+
   // For each video, make sure it's scrolled into view, and get the rect for
   // the toggle while we're at it.
   let args = { videoID };
@@ -377,6 +391,17 @@ async function prepareForToggleClick(browser, videoID) {
         100
       );
     }
+
+    let shadowRoot = video.openOrClosedShadowRoot;
+    let controlsOverlay = shadowRoot.querySelector(".controlsOverlay");
+    await ContentTaskUtils.waitForCondition(
+      () => {
+        return !controlsOverlay.classList.contains("hovering");
+      },
+      "Waiting for the video to not be hovered.",
+      100,
+      100
+    );
 
     return {
       controls: video.controls,
