@@ -77,10 +77,9 @@ def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
     # in `substs`.
     for var in (
         'MOZ_SYSTEM_ZLIB', 'MOZ_ZLIB_CFLAGS', 'MOZ_ZLIB_LIBS',
-        'MOZ_APP_NAME', 'MOZ_APP_REMOTINGNAME', 'MOZ_DEV_EDITION',
-        'STLPORT_LIBS', 'DIST', 'MOZ_LINKER', 'ZLIB_IN_MOZGLUE', 'RANLIB',
-        'AR', 'CPP', 'CC', 'CXX', 'CPPFLAGS', 'CFLAGS', 'CXXFLAGS',
-        'LDFLAGS', 'HOST_CC', 'HOST_CXX', 'HOST_CPPFLAGS',
+        'MOZ_DEV_EDITION', 'STLPORT_LIBS', 'DIST', 'MOZ_LINKER',
+        'ZLIB_IN_MOZGLUE', 'RANLIB', 'AR', 'CPP', 'CC', 'CXX', 'CPPFLAGS',
+        'CFLAGS', 'CXXFLAGS', 'LDFLAGS', 'HOST_CC', 'HOST_CXX', 'HOST_CPPFLAGS',
         'HOST_CXXFLAGS', 'HOST_LDFLAGS'
     ):
         if var not in from_assignment and var in substs:

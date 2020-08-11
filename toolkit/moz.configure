@@ -2062,3 +2062,31 @@ def enable_startupcache(value):
 
 set_define('MOZ_DISABLE_STARTUPCACHE', True,
            when=depends(enable_startupcache)(lambda x: not x))
+
+
+# Branding
+# ==============================================================
+option(env='MOZ_APP_REMOTINGNAME', nargs=1,
+       help='Used for the internal program name, which affects profile name '
+       'and remoting. If not set, defaults to MOZ_APP_NAME.')
+
+@depends('MOZ_APP_REMOTINGNAME', moz_app_name)
+def moz_app_remotingname(value, moz_app_name):
+    if value:
+        return value[0]
+    return moz_app_name
+
+set_config('MOZ_APP_REMOTINGNAME', moz_app_remotingname)
+
+option(env='ANDROID_PACKAGE_NAME', nargs=1,
+       help='Name of the Android package (default org.mozilla.$MOZ_APP_NAME)')
+
+@depends('ANDROID_PACKAGE_NAME', moz_app_name)
+def android_package_name(value, moz_app_name):
+    if value:
+        return value[0]
+    if moz_app_name == 'fennec':
+        return 'org.mozilla.fennec_aurora'
+    return 'org.mozilla.%s' % moz_app_name
+
+set_config('ANDROID_PACKAGE_NAME', android_package_name)
