@@ -61,10 +61,6 @@ function closingInternally() {
  * Main control object for the WebRTC global indicator
  */
 const WebRTCIndicator = {
-  // This is the vertical offset from the bottom of the primary display where the
-  // indicator will first appear.
-  VERTICAL_OFFSET_PX: 80,
-
   init(event) {
     addEventListener("load", this);
     addEventListener("unload", this);
@@ -94,7 +90,7 @@ const WebRTCIndicator = {
    * Exposed externally so that webrtcUI can alert the indicator to
    * update itself when sharing states have changed.
    */
-  updateIndicatorState(initialLayout = false) {
+  updateIndicatorState() {
     if (this.macOSIndicator) {
       this.macOSIndicator.updateIndicatorState();
     }
@@ -196,7 +192,7 @@ const WebRTCIndicator = {
       this.ensureOnScreen();
 
       if (!this.positionCustomized) {
-        this.centerOnDisplay(initialLayout);
+        this.centerOnLatestBrowser();
       }
     }
 
@@ -218,82 +214,41 @@ const WebRTCIndicator = {
   },
 
   /**
-   * Finds the appropriate display and moves the indicator at the bottom,
-   * horizontally centered.
-   *
-   * If the indicator is first being opened, the appropriate display is the same
-   * display as the most recently used browser window. Otherwise, the
-   * appropriate display is the same display that the indicator is currently on.
+   * If the indicator is first being opened, we'll find the browser window
+   * associated with the most recent share, and pin the indicator to the
+   * very top of the content area.
    */
-  centerOnDisplay(aInitialLayout) {
+  centerOnLatestBrowser() {
+    let activeStreams = webrtcUI.getActiveStreams(
+      true /* camera */,
+      true /* microphone */,
+      true /* screen */,
+      true /* window */
+    );
+
+    if (!activeStreams.length) {
+      return;
+    }
+
+    let browser = activeStreams[activeStreams.length - 1].browser;
+    let browserWindow = browser.ownerGlobal;
+    let browserRect = browserWindow.windowUtils.getBoundsWithoutFlushing(
+      browser
+    );
+
     // This should be called in initialize right after we've just called
     // updateIndicatorState. Since updateIndicatorState uses
     // window.sizeToContent, the layout information should be up to date,
     // and so the numbers that we get without flushing should be sufficient.
-    let {
-      height: windowHeight,
-      width: windowWidth,
-    } = window.windowUtils.getBoundsWithoutFlushing(document.documentElement);
+    let { width: windowWidth } = window.windowUtils.getBoundsWithoutFlushing(
+      document.documentElement
+    );
 
-    let screen;
-
-    if (aInitialLayout) {
-      // The indicator is opening, so find the most recent browser window, and
-      // make sure the indicator opens on the same display.
-      let recentWindow = BrowserWindowTracker.getTopWindow();
-
-      let {
-        height: originatorHeight,
-        width: originatorWidth,
-      } = recentWindow.windowUtils.getBoundsWithoutFlushing(
-        recentWindow.document.documentElement
-      );
-
-      screen = gScreenManager.screenForRect(
-        recentWindow.screenX,
-        recentWindow.screenY,
-        originatorWidth,
-        originatorHeight
-      );
-    } else {
-      // The indicator is already open, so use the same display that the
-      // indicator is already on.
-      screen = gScreenManager.screenForRect(
-        window.screenX,
-        window.screenY,
-        windowWidth,
-        windowHeight
-      );
-    }
-
-    let scaleFactor = screen.contentsScaleFactor / screen.defaultCSSScaleFactor;
-
-    // We want to center the indicator horizontally on the display regardless of
-    // UI (like a vertical dock) on the left or right sides. This is why we're
-    // using GetRectDisplayPix for the left and width screen values.
-    let leftDevPix = {};
-    let widthDevPix = {};
-    screen.GetRectDisplayPix(leftDevPix, {}, widthDevPix, {});
-    let screenWidth = widthDevPix.value * scaleFactor;
-
-    // However, we want to make sure that vertically, the indicator is above any
-    // existing OS UI, so we use GetAvailRectDisplayPix for the top and height
-    // values.
-    let availTopDevPix = {};
-    let availHeightDevPix = {};
-    screen.GetAvailRectDisplayPix({}, availTopDevPix, {}, availHeightDevPix);
-
-    let left = leftDevPix.value * scaleFactor;
-    let availHeight =
-      (availTopDevPix.value + availHeightDevPix.value) * scaleFactor;
-    // To center the window, we subtract the window width from the screen
-    // width, and divide by 2.
-    //
-    // To put the window at the bottom of the screen, just above any OS UI,
-    // we subtract the window height from the available height.
     window.moveTo(
-      left + (screenWidth - windowWidth) / 2,
-      availHeight - windowHeight - this.VERTICAL_OFFSET_PX
+      browserWindow.mozInnerScreenX +
+        browserRect.left +
+        (browserRect.width - windowWidth) / 2,
+      browserWindow.mozInnerScreenY + browserRect.top
     );
   },
 
@@ -331,7 +286,7 @@ const WebRTCIndicator = {
   onLoad() {
     this.loaded = true;
 
-    this.updateIndicatorState(true /* initialLayout */);
+    this.updateIndicatorState();
 
     window.addEventListener("click", this);
     window.addEventListener("sizemodechange", this);
