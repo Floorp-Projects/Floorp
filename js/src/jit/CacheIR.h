@@ -1714,6 +1714,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachReflectGetPrototypeOf(HandleFunction callee);
   AttachDecision tryAttachAtomicsCompareExchange(HandleFunction callee);
   AttachDecision tryAttachAtomicsExchange(HandleFunction callee);
+  AttachDecision tryAttachAtomicsAdd(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);

@@ -9,6 +9,7 @@
 #include "jsmath.h"
 
 #include "builtin/DataViewObject.h"
+#include "jit/AtomicOp.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/CacheIROpsGenerated.h"
@@ -144,6 +145,11 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   void addDataViewData(MDefinition* obj, Scalar::Type type,
                        MDefinition** offset, MInstruction** elements);
+
+  MOZ_MUST_USE bool emitAtomicsBinaryOp(ObjOperandId objId,
+                                        Int32OperandId indexId,
+                                        Int32OperandId valueId,
+                                        Scalar::Type elementType, AtomicOp op);
 
   MOZ_MUST_USE bool emitLoadArgumentSlot(ValOperandId resultId,
                                          uint32_t slotIndex);
@@ -2374,6 +2380,40 @@ bool WarpCacheIRTranspiler::emitAtomicsExchangeResult(
 
   pushResult(exchange);
   return resumeAfter(exchange);
+}
+
+bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
+                                                Int32OperandId indexId,
+                                                Int32OperandId valueId,
+                                                Scalar::Type elementType,
+                                                AtomicOp op) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+  MDefinition* value = getOperand(valueId);
+
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  add(length);
+
+  index = addBoundsCheck(index, length);
+
+  auto* elements = MArrayBufferViewElements::New(alloc(), obj);
+  add(elements);
+
+  auto* binop = MAtomicTypedArrayElementBinop::New(alloc(), op, elements, index,
+                                                   elementType, value);
+  binop->setResultType(MIRType::Int32);
+  addEffectful(binop);
+
+  pushResult(binop);
+  return resumeAfter(binop);
+}
+
+bool WarpCacheIRTranspiler::emitAtomicsAddResult(ObjOperandId objId,
+                                                 Int32OperandId indexId,
+                                                 Int32OperandId valueId,
+                                                 Scalar::Type elementType) {
+  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
+                             AtomicFetchAddOp);
 }
 
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
