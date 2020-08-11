@@ -671,21 +671,29 @@ add_old_configure_assignment(
     'MOZ_DISABLE_ICF', '1', when=depends('--enable-icf')(lambda x: not x))
 
 
-@depends(compile_environment, target)
-def may_strip(compile_environment, target):
-    return compile_environment and target.kernel != 'WINNT'
+js_option('--enable-strip', help='Enable stripping of libs & executables')
 
-js_option('--enable-strip', when=may_strip, help='Enable stripping of libs & executables')
+# This should be handled as a `when` once bug 1617793 is fixed.
+@depends('--enable-strip', c_compiler)
+def enable_strip(strip, c_compiler):
+    if strip and c_compiler.type != 'clang-cl':
+        return True
 
-set_config('ENABLE_STRIP', True, when='--enable-strip')
+set_config('ENABLE_STRIP', enable_strip)
 
-js_option('--disable-install-strip', when=may_strip,
+js_option('--disable-install-strip',
           help='Enable stripping of libs & executables when packaging')
 
-set_config('PKG_STRIP', True, when='--enable-install-strip')
+# This should be handled as a `when` once bug 1617793 is fixed.
+@depends('--enable-install-strip', c_compiler)
+def enable_install_strip(strip, c_compiler):
+    if strip and c_compiler.type != 'clang-cl':
+        return True
+
+set_config('PKG_STRIP', enable_install_strip)
 
 
-@depends('--enable-strip', '--enable-install-strip', when=may_strip)
+@depends('--enable-strip', '--enable-install-strip')
 def strip(strip, install_strip):
     return strip or install_strip
 
