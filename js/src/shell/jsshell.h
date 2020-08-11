@@ -158,6 +158,8 @@ extern bool dumpEntrainedVariables;
 extern bool OOM_printAllocationCount;
 #endif
 
+extern UniqueChars processWideModuleLoadPath;
+
 // Alias the global dstName to namespaceObj.srcName. For example, if dstName is
 // "snarf", namespaceObj represents "os.file", and srcName is "readFile", then
 // this is equivalent to the JS code:
