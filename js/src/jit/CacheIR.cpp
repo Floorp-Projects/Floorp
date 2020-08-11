@@ -7127,6 +7127,27 @@ AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachAtomicsAdd(HandleFunction callee) {
+  if (!canAttachAtomicsReadWriteModify()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto [objId, int32IndexId, int32ValueId] =
+      emitAtomicsReadWriteModifyOperands(callee);
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+
+  writer.atomicsAddResult(objId, int32IndexId, int32ValueId,
+                          typedArray->type());
+
+  // This stub doesn't need to be monitored, because it always returns an int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("AtomicsAdd");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8212,6 +8233,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachAtomicsCompareExchange(callee);
     case InlinableNative::AtomicsExchange:
       return tryAttachAtomicsExchange(callee);
+    case InlinableNative::AtomicsAdd:
+      return tryAttachAtomicsAdd(callee);
 
     default:
       return AttachDecision::NoAction;
