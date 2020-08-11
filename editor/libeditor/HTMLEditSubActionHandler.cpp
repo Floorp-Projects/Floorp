@@ -7901,50 +7901,68 @@ HTMLEditor::AutoEmptyBlockAncestorDeleter::ScanEmptyBlockInclusiveAncestor(
   return mEmptyInclusiveAncestorBlockElement;
 }
 
+Result<RefPtr<Element>, nsresult> HTMLEditor::AutoEmptyBlockAncestorDeleter::
+    MaybeInsertBRElementBeforeEmptyListItemElement(HTMLEditor& aHTMLEditor) {
+  MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
+  MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
+  MOZ_ASSERT(HTMLEditUtils::IsListItem(mEmptyInclusiveAncestorBlockElement));
+
+  // If the found empty block is a list item element and its grand parent
+  // (i.e., parent of list element) is NOT a list element, insert <br>
+  // element before the list element which has the empty list item.
+  // This odd list structure may occur if `Document.execCommand("indent")`
+  // is performed for list items.
+  // XXX Chrome does not remove empty list elements when last content in
+  //     last list item is deleted.  We should follow it since current
+  //     behavior is annoying when you type new list item with selecting
+  //     all list items.
+  if (!aHTMLEditor.IsFirstEditableChild(mEmptyInclusiveAncestorBlockElement)) {
+    return RefPtr<Element>();
+  }
+
+  EditorDOMPoint atParentOfEmptyListItem(
+      mEmptyInclusiveAncestorBlockElement->GetParentElement());
+  if (NS_WARN_IF(!atParentOfEmptyListItem.IsSet())) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  if (HTMLEditUtils::IsAnyListElement(atParentOfEmptyListItem.GetContainer())) {
+    return RefPtr<Element>();
+  }
+  RefPtr<Element> brElement =
+      aHTMLEditor.InsertBRElementWithTransaction(atParentOfEmptyListItem);
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (!brElement) {
+    NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+    return Err(NS_ERROR_FAILURE);
+  }
+  return brElement;
+}
+
 EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
     HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount) {
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
-  RefPtr<Element> parentOfEmptyBlockElement =
-      mEmptyInclusiveAncestorBlockElement->GetParentElement();
-
   if (HTMLEditUtils::IsListItem(mEmptyInclusiveAncestorBlockElement)) {
-    // If the found empty block is a list item element and its grand parent
-    // (i.e., parent of list element) is NOT a list element, insert <br>
-    // element before the list element which has the empty list item.
-    // This odd list structure may occur if `Document.execCommand("indent")`
-    // is performed for list items.
-    // XXX Chrome does not remove empty list elements when last content in
-    //     last list item is deleted.  We should follow it since current
-    //     behavior is annoying when you type new list item with selecting
-    //     all list items.
-    if (aHTMLEditor.IsFirstEditableChild(mEmptyInclusiveAncestorBlockElement)) {
-      EditorDOMPoint atParentOfEmptyBlock(parentOfEmptyBlockElement);
-      if (NS_WARN_IF(!atParentOfEmptyBlock.IsSet())) {
-        return EditActionResult(NS_ERROR_FAILURE);
-      }
-      // If the grand parent IS a list element, we'll adjust Selection in
-      // OnEndHandlingEditSubAction().
-      if (!HTMLEditUtils::IsAnyListElement(
-              atParentOfEmptyBlock.GetContainer())) {
-        RefPtr<Element> brElement =
-            aHTMLEditor.InsertBRElementWithTransaction(atParentOfEmptyBlock);
-        if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (!brElement) {
-          NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
-          return EditActionResult(NS_ERROR_FAILURE);
-        }
-        nsresult rv =
-            aHTMLEditor.CollapseSelectionTo(EditorRawDOMPoint(brElement));
-        if (NS_FAILED(rv)) {
-          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                               "HTMLEditor::CollapseSelectionTo() failed");
-          return EditActionResult(rv);
-        }
+    Result<RefPtr<Element>, nsresult> result =
+        MaybeInsertBRElementBeforeEmptyListItemElement(aHTMLEditor);
+    if (result.isErr()) {
+      NS_WARNING(
+          "AutoEmptyBlockAncestorDeleter::"
+          "MaybeInsertBRElementBeforeEmptyListItemElement() failed");
+      return EditActionResult(result.inspectErr());
+    }
+    // If a `<br>` element is inserted, caret should be moved to after it.
+    if (RefPtr<Element> brElement = result.unwrap()) {
+      nsresult rv =
+          aHTMLEditor.CollapseSelectionTo(EditorRawDOMPoint(brElement));
+      if (NS_FAILED(rv)) {
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "HTMLEditor::CollapseSelectionTo() failed");
+        return EditActionResult(rv);
       }
     }
   } else {
