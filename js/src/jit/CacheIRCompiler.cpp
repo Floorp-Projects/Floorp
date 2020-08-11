@@ -7633,6 +7633,16 @@ bool CacheIRCompiler::emitAtomicsAndResult(ObjOperandId objId,
                                           AtomicsAnd(elementType));
 }
 
+bool CacheIRCompiler::emitAtomicsOrResult(ObjOperandId objId,
+                                          Int32OperandId indexId,
+                                          Int32OperandId valueId,
+                                          Scalar::Type elementType) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
+                                          AtomicsOr(elementType));
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
