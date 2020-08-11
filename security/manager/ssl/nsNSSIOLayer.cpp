@@ -1552,8 +1552,10 @@ void nsSSLIOLayerHelpers::loadVersionFallbackLimit() {
 }
 
 void nsSSLIOLayerHelpers::clearStoredData() {
+  MOZ_ASSERT(NS_IsMainThread());
+  initInsecureFallbackSites();
+
   MutexAutoLock lock(mutex);
-  mInsecureFallbackSites.Clear();
   mTLSIntoleranceInfo.Clear();
 }
 
