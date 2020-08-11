@@ -435,6 +435,9 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
   } else {
     mCodecContext->extra_hw_frames = EXTRA_HW_FRAMES;
   }
+  if (mLowLatency) {
+    mCodecContext->flags |= AV_CODEC_FLAG_LOW_DELAY;
+  }
 }
 #endif
 
