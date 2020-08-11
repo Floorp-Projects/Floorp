@@ -10,12 +10,31 @@ var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+
+const OPEN_HISTOGRAM = "SQLITE_STORE_OPEN";
+const QUERY_HISTOGRAM = "SQLITE_STORE_QUERY";
+
+const TELEMETRY_VALUES = {
+  success: 0,
+  failure: 1,
+  access: 2,
+  diskio: 3,
+  corrupt: 4,
+  busy: 5,
+  misuse: 6,
+  diskspace: 7,
+};
+
 do_get_profile();
 var gDBConn = null;
 
+const TEST_DB_NAME = "test_storage.sqlite";
 function getTestDB() {
   var db = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  db.append("test_storage.sqlite");
+  db.append(TEST_DB_NAME);
   return db;
 }
 
@@ -95,6 +114,10 @@ function asyncCleanup() {
 function getOpenedDatabase() {
   if (!gDBConn) {
     gDBConn = Services.storage.openDatabase(getTestDB());
+
+    // Clear out counts for any queries that occured while opening the database.
+    TelemetryTestUtils.getAndClearKeyedHistogram(OPEN_HISTOGRAM);
+    TelemetryTestUtils.getAndClearKeyedHistogram(QUERY_HISTOGRAM);
   }
   return gDBConn;
 }
