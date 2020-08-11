@@ -882,12 +882,8 @@ static bool AllDescendantsOfType(BrowsingContext* aParent,
 }
 
 static bool ParentWindowIsActive(Document* aDoc) {
-  nsCOMPtr<nsPIWindowRoot> root = nsContentUtils::GetWindowRoot(aDoc);
-  if (root) {
-    nsPIDOMWindowOuter* rootWin = root->GetWindow();
-    return rootWin && rootWin->IsActive();
-  }
-  return false;
+  BrowsingContext* bc = aDoc->GetBrowsingContext();
+  return bc ? bc->Top()->GetIsActiveBrowserWindow() : false;
 }
 
 void nsFrameLoader::MaybeShowFrame() {
