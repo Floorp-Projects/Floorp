@@ -248,7 +248,17 @@ class SheetLoadData final : public PreloaderBase,
 
   bool IsLinkPreload() const { return mIsPreload == IsPreload::FromLink; }
 
+  bool BlocksLoadEvent() const { return !RootLoadData().IsLinkPreload(); }
+
  private:
+  const SheetLoadData& RootLoadData() const {
+    auto* top = this;
+    while (top->mParentData) {
+      top = top->mParentData;
+    }
+    return *top;
+  }
+
   void FireLoadEvent(nsIThreadInternal* aThread);
 };
 
