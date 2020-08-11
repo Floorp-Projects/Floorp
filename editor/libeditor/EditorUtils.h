@@ -11,6 +11,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
@@ -778,6 +779,17 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   }
 
   /**
+   * ExtendAnchorFocusRangeFor() extends the anchor-focus range for deleting
+   * content for aDirectionAndAmount.  The range won't be extended to outer of
+   * selection limiter.  Note that if a range is extened, the range is
+   * recreated.  Therefore, caller cannot cache pointer of any ranges before
+   * calling this.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<nsIEditor::EDirection, nsresult>
+  ExtendAnchorFocusRangeFor(EditorBase& aEditorBase,
+                            nsIEditor::EDirection aDirectionAndAmount);
+
+  /**
    * The following methods are same as `Selection`'s methods.
    */
   bool IsCollapsed() const {
@@ -1070,8 +1082,10 @@ class EditorUtils final {
    * computed with nsFrameSelection that also requires flushed layout
    * information.
    */
+  template <typename SelectionOrAutoRangeArray>
   static bool IsFrameSelectionRequiredToExtendSelection(
-      nsIEditor::EDirection aDirectionAndAmount, Selection& aSelection) {
+      nsIEditor::EDirection aDirectionAndAmount,
+      SelectionOrAutoRangeArray& aSelectionOrAutoRangeArray) {
     switch (aDirectionAndAmount) {
       case nsIEditor::eNextWord:
       case nsIEditor::ePreviousWord:
@@ -1080,7 +1094,7 @@ class EditorUtils final {
         return true;
       case nsIEditor::ePrevious:
       case nsIEditor::eNext:
-        return aSelection.IsCollapsed();
+        return aSelectionOrAutoRangeArray.IsCollapsed();
       default:
         return false;
     }

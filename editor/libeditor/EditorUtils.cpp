@@ -18,13 +18,15 @@
 #include "nsComponentManagerUtils.h"
 #include "nsComputedDOMStyle.h"
 #include "nsError.h"
+#include "nsFrameSelection.h"
 #include "nsIContent.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINode.h"
+#include "nsRange.h"
 #include "nsStyleStruct.h"
+#include "nsTextFragment.h"
 
 class nsISupports;
-class nsRange;
 
 namespace mozilla {
 
@@ -74,6 +76,189 @@ EditActionResult& EditActionResult::operator|=(
   // Otherwise, use generic success code, NS_OK.
   mRv = NS_OK;
   return *this;
+}
+
+/******************************************************************************
+ * mozilla::AutoRangeArray
+ *****************************************************************************/
+
+Result<nsIEditor::EDirection, nsresult>
+AutoRangeArray::ExtendAnchorFocusRangeFor(
+    EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount) {
+  MOZ_ASSERT(aEditorBase.IsEditActionDataAvailable());
+  MOZ_ASSERT(mAnchorFocusRange);
+  MOZ_ASSERT(mAnchorFocusRange->IsPositioned());
+  MOZ_ASSERT(mAnchorFocusRange->StartRef().IsSet());
+  MOZ_ASSERT(mAnchorFocusRange->EndRef().IsSet());
+
+  if (!EditorUtils::IsFrameSelectionRequiredToExtendSelection(
+          aDirectionAndAmount, *this)) {
+    return aDirectionAndAmount;
+  }
+
+  const RefPtr<Selection>& selection = aEditorBase.SelectionRefPtr();
+  if (NS_WARN_IF(!selection->RangeCount())) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  // At this point, the anchor-focus ranges must match for bidi information.
+  // See `EditorBase::SetCaretBidiLevelForDeletion()`.
+  MOZ_ASSERT(selection->GetAnchorFocusRange()->StartRef() ==
+             mAnchorFocusRange->StartRef());
+  MOZ_ASSERT(selection->GetAnchorFocusRange()->EndRef() ==
+             mAnchorFocusRange->EndRef());
+
+  RefPtr<nsFrameSelection> frameSelection = selection->GetFrameSelection();
+  if (NS_WARN_IF(!frameSelection)) {
+    return Err(NS_ERROR_NOT_INITIALIZED);
+  }
+
+  Result<RefPtr<nsRange>, nsresult> result(NS_ERROR_UNEXPECTED);
+  nsIEditor::EDirection directionAndAmountResult = aDirectionAndAmount;
+  switch (aDirectionAndAmount) {
+    case nsIEditor::eNextWord:
+      result = frameSelection->CreateRangeExtendedToNextWordBoundary<nsRange>();
+      if (NS_WARN_IF(aEditorBase.Destroyed())) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(
+          result.isOk(),
+          "nsFrameSelection::CreateRangeExtendedToNextWordBoundary() failed");
+      // DeleteSelectionWithTransaction() doesn't handle these actions
+      // because it's inside batching, so don't confuse it:
+      directionAndAmountResult = nsIEditor::eNone;
+      break;
+    case nsIEditor::ePreviousWord:
+      result =
+          frameSelection->CreateRangeExtendedToPreviousWordBoundary<nsRange>();
+      if (NS_WARN_IF(aEditorBase.Destroyed())) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(
+          result.isOk(),
+          "nsFrameSelection::CreateRangeExtendedToPreviousWordBoundary() "
+          "failed");
+      // DeleteSelectionWithTransaction() doesn't handle these actions
+      // because it's inside batching, so don't confuse it:
+      directionAndAmountResult = nsIEditor::eNone;
+      break;
+    case nsIEditor::eNext:
+      result =
+          frameSelection
+              ->CreateRangeExtendedToNextGraphemeClusterBoundary<nsRange>();
+      if (NS_WARN_IF(aEditorBase.Destroyed())) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(result.isOk(),
+                           "nsFrameSelection::"
+                           "CreateRangeExtendedToNextGraphemeClusterBoundary() "
+                           "failed");
+      // Don't set directionAndAmount to eNone (see Bug 502259)
+      break;
+    case nsIEditor::ePrevious: {
+      // Only extend the selection where the selection is after a UTF-16
+      // surrogate pair or a variation selector.
+      // For other cases we don't want to do that, in order
+      // to make sure that pressing backspace will only delete the last
+      // typed character.
+      // XXX This is odd if the previous one is a sequence for a grapheme
+      //     cluster.
+      EditorDOMPoint atStartOfSelection(GetStartPointOfFirstRange());
+      if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+        return Err(NS_ERROR_FAILURE);
+      }
+
+      // node might be anonymous DIV, so we find better text node
+      EditorRawDOMPoint insertionPoint =
+          aEditorBase.FindBetterInsertionPoint(atStartOfSelection);
+      if (!insertionPoint.IsSet()) {
+        NS_WARNING(
+            "EditorBase::FindBetterInsertionPoint() failed, but ignored");
+        return aDirectionAndAmount;
+      }
+
+      if (!insertionPoint.IsInTextNode()) {
+        return aDirectionAndAmount;
+      }
+
+      const nsTextFragment* data =
+          &insertionPoint.GetContainerAsText()->TextFragment();
+      uint32_t offset = insertionPoint.Offset();
+      if (!(offset > 1 &&
+            data->IsLowSurrogateFollowingHighSurrogateAt(offset - 1)) &&
+          !(offset > 0 &&
+            gfxFontUtils::IsVarSelector(data->CharAt(offset - 1)))) {
+        return aDirectionAndAmount;
+      }
+      // Different from the `eNext` case, we look for character boundary.
+      // I'm not sure whether this inconsistency between "Delete" and
+      // "Backspace" is intentional or not.
+      result = frameSelection
+                   ->CreateRangeExtendedToPreviousCharacterBoundary<nsRange>();
+      if (NS_WARN_IF(aEditorBase.Destroyed())) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(
+          result.isOk(),
+          "nsFrameSelection::"
+          "CreateRangeExtendedToPreviousGraphemeClusterBoundary() failed");
+      break;
+    }
+    case nsIEditor::eToBeginningOfLine:
+      result =
+          frameSelection->CreateRangeExtendedToPreviousHardLineBreak<nsRange>();
+      if (NS_WARN_IF(aEditorBase.Destroyed())) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(
+          result.isOk(),
+          "nsFrameSelection::CreateRangeExtendedToPreviousHardLineBreak() "
+          "failed");
+      directionAndAmountResult = nsIEditor::eNone;
+      break;
+    case nsIEditor::eToEndOfLine:
+      result =
+          frameSelection->CreateRangeExtendedToNextHardLineBreak<nsRange>();
+      if (NS_WARN_IF(aEditorBase.Destroyed())) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(
+          result.isOk(),
+          "nsFrameSelection::CreateRangeExtendedToNextHardLineBreak() failed");
+      directionAndAmountResult = nsIEditor::eNext;
+      break;
+    default:
+      return aDirectionAndAmount;
+  }
+
+  if (result.isErr()) {
+    return Err(result.inspectErr());
+  }
+  RefPtr<nsRange> extendedRange(result.unwrap().forget());
+  if (!extendedRange || NS_WARN_IF(!extendedRange->IsPositioned())) {
+    NS_WARNING("Failed to extend the range, but ignored");
+    return directionAndAmountResult;
+  }
+  if (NS_WARN_IF(!frameSelection->IsValidSelectionPoint(
+          extendedRange->GetStartContainer())) ||
+      NS_WARN_IF(!frameSelection->IsValidSelectionPoint(
+          extendedRange->GetEndContainer()))) {
+    NS_WARNING("A range was extended to outer of selection limiter");
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  // Swap focus/anchor range with the extended range.
+  DebugOnly<bool> found = false;
+  for (OwningNonNull<nsRange>& range : mRanges) {
+    if (range == mAnchorFocusRange) {
+      range = *extendedRange;
+      found = true;
+      break;
+    }
+  }
+  MOZ_ASSERT(found);
+  mAnchorFocusRange.swap(extendedRange);
+  return directionAndAmountResult;
 }
 
 /******************************************************************************
