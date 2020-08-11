@@ -386,12 +386,10 @@ class UrlbarController {
           !event.shiftKey
         ) {
           this.input.setSearchMode({});
-          if (this.input.value) {
-            this.input.startQuery({
-              allowAutofill: false,
-              event,
-            });
-          }
+          this.input.startQuery({
+            allowAutofill: false,
+            event,
+          });
         }
       // Fall through.
       case KeyEvent.DOM_VK_DELETE:
