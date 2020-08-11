@@ -25,6 +25,13 @@ XPCOMUtils.defineLazyServiceGetter(
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
+  "gNetworkLinkService",
+  "@mozilla.org/network/network-link-service;1",
+  "nsINetworkLinkService"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
   "gParentalControlsService",
   "@mozilla.org/parental-controls-service;1",
   "nsIParentalControlsService"
@@ -50,6 +57,7 @@ const Heuristics = {
 
   async run() {
     let safeSearchChecks = await safeSearch();
+    let platformChecks = await platform();
     let results = {
       google: safeSearchChecks.google,
       youtube: safeSearchChecks.youtube,
@@ -59,6 +67,9 @@ const Heuristics = {
       browserParent: await parentalControls(),
       thirdPartyRoots: await thirdPartyRoots(),
       policy: await enterprisePolicy(),
+      vpn: platformChecks.vpn,
+      proxy: platformChecks.proxy,
+      nrpt: platformChecks.nrpt,
       steeredProvider: "",
     };
 
@@ -74,6 +85,11 @@ const Heuristics = {
 
   async checkEnterprisePolicy() {
     return enterprisePolicy();
+  },
+
+  // Test only
+  async _setMockLinkService(mockLinkService) {
+    this.mockLinkService = mockLinkService;
   },
 };
 
@@ -295,6 +311,38 @@ async function zscalerCanary() {
   }
 
   return "enable_doh";
+}
+
+async function platform() {
+  let platformChecks = {};
+
+  let indications = Ci.nsINetworkLinkService.NONE_DETECTED;
+  try {
+    let linkService = gNetworkLinkService;
+    if (Heuristics.mockLinkService) {
+      linkService = Heuristics.mockLinkService;
+    }
+    indications = linkService.platformDNSIndications;
+  } catch (e) {
+    if (e.result != Cr.NS_ERROR_NOT_IMPLEMENTED) {
+      Cu.reportError(e);
+    }
+  }
+
+  platformChecks.vpn =
+    indications & Ci.nsINetworkLinkService.VPN_DETECTED
+      ? "disable_doh"
+      : "enable_doh";
+  platformChecks.proxy =
+    indications & Ci.nsINetworkLinkService.PROXY_DETECTED
+      ? "disable_doh"
+      : "enable_doh";
+  platformChecks.nrpt =
+    indications & Ci.nsINetworkLinkService.NRPT_DETECTED
+      ? "disable_doh"
+      : "enable_doh";
+
+  return platformChecks;
 }
 
 // Check if the network provides a DoH endpoint to use. Returns the name of the
