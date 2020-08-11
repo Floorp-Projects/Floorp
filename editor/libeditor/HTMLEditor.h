@@ -2675,11 +2675,12 @@ class HTMLEditor final : public TextEditor,
 
     /**
      * Deletes found empty block element by `ScanEmptyBlockInclusiveAncestor()`.
-     * If found one is a list item element, inserts a <br> element before its
-     * parent element if grand parent is a list element.  Then, collapse
-     * Selection to after the empty block. If found empty ancestor is not a
-     * list item element, collapse Selection to somewhere depending on aAction.
-     * Finally, removes the empty block ancestor.
+     * If found one is a list item element, calls
+     * `MaybeInsertBRElementBeforeEmptyListItemElement()` before deleting
+     * the list item element.
+     * If found empty ancestor is not a list item element, collapse Selection
+     * to somewhere depending on aDirectionAndAmount.  Finally, removes the
+     * empty block ancestor.
      *
      * @param aHTMLEditor         The HTMLEditor.
      * @param aDirectionAndAmount If found empty ancestor block is a list item
@@ -2697,6 +2698,15 @@ class HTMLEditor final : public TextEditor,
     Run(HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount);
 
    private:
+    /**
+     * MaybeInsertBRElementBeforeEmptyListItemElement() inserts a `<br>` element
+     * if `mEmptyInclusiveAncestorBlockElement` is a list item element which
+     * is first editable element in its parent, and its grand parent is not a
+     * list element, inserts a `<br>` element before the empty list item.
+     */
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+    MaybeInsertBRElementBeforeEmptyListItemElement(HTMLEditor& aHTMLEditor);
+
     RefPtr<Element> mEmptyInclusiveAncestorBlockElement;
   };
 
