@@ -14,6 +14,8 @@ kind-dependencies:
 
 job-template:
     description: Upload Symbols
+    attributes:
+        cron: true
     worker-type: b-linux
     worker:
         docker-image: {in-tree: "lint"}
