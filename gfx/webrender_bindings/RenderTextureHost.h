@@ -13,6 +13,7 @@
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/webrender/webrender_ffi.h"  // for wr::ImageRendering
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 
@@ -38,8 +39,15 @@ class RenderTextureHost {
   RenderTextureHost();
 
   virtual wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                                   wr::ImageRendering aRendering) = 0;
-  virtual void Unlock() = 0;
+                                   wr::ImageRendering aRendering);
+
+  virtual void Unlock() {}
+
+  virtual wr::WrExternalImage LockSWGL(uint8_t aChannelIndex, void* aContext,
+                                       wr::ImageRendering aRendering);
+
+  virtual void UnlockSWGL() {}
+
   virtual void ClearCachedResources() {}
 
   // Called asynchronouly when corresponding TextureHost's mCompositableCount

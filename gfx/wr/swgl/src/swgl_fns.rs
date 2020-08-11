@@ -317,8 +317,8 @@ impl Context {
     pub fn reference(&self) {
         unsafe {
             ReferenceContext(self.0);
-         }
-     }
+        }
+    }
 
     pub fn destroy(&self) {
         unsafe {
