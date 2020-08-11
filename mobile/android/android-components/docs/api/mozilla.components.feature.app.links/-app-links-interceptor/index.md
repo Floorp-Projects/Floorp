@@ -2,7 +2,7 @@
 
 # AppLinksInterceptor
 
-`class AppLinksInterceptor : `[`RequestInterceptor`](../../mozilla.components.concept.engine.request/-request-interceptor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksInterceptor.kt#L49)
+`class AppLinksInterceptor : `[`RequestInterceptor`](../../mozilla.components.concept.engine.request/-request-interceptor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/AppLinksInterceptor.kt#L50)
 
 This feature implements use cases for detecting and handling redirects to external apps. The user
 is asked to confirm her intention before leaving the app. These include the Android Intents,
