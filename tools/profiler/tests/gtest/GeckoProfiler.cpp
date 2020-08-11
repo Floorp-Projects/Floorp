@@ -840,7 +840,7 @@ TEST(GeckoProfiler, Markers)
   EXPECT_EQ(GTestMarkerPayload::sNumStreamed, 0 + 10);
   EXPECT_EQ(GTestMarkerPayload::sNumDestroyed, 10 + 10);
 
-  UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
+  UniquePtr<char[]> profile = w.ChunkedWriteFunc()->CopyData();
   ASSERT_TRUE(!!profile.get());
 
   // Expected markers, in order.
@@ -1543,7 +1543,7 @@ TEST(GeckoProfiler, Counters)
   SpliceableChunkedJSONWriter w;
   ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
 
-  UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
+  UniquePtr<char[]> profile = w.ChunkedWriteFunc()->CopyData();
 
   // counter name and description should appear as is.
   ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME));
@@ -1556,7 +1556,7 @@ TEST(GeckoProfiler, Counters)
 
   ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
 
-  profile = w.WriteFunc()->CopyData();
+  profile = w.ChunkedWriteFunc()->CopyData();
   ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME));
   ASSERT_TRUE(strstr(profile.get(), COUNTER_DESCRIPTION));
   ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME2));
@@ -1643,7 +1643,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
   ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
   w.End();
 
-  UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
+  UniquePtr<char[]> profile = w.ChunkedWriteFunc()->CopyData();
 
   JSONOutputCheck(profile.get());
 
@@ -1680,7 +1680,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
           }),
       NS_DISPATCH_SYNC);
 
-  UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
+  UniquePtr<char[]> profile = w.ChunkedWriteFunc()->CopyData();
 
   JSONOutputCheck(profile.get());
 
