@@ -31,15 +31,11 @@ class nsHTTPSOnlyUtils {
   /**
    * Determines if a request should get upgraded because of the HTTPS-Only mode.
    * If true, a message is logged in the console.
-   * @param  aURI               nsIURI of request
-   * @param  innerWindowId      Inner Window ID
-   * @param  aFromPrivateWindow Whether this request comes from a private window
-   * @param  httpsOnlyStatus    httpsOnlyStatus from nsILoadInfo
-   * @return                    true if request should get upgraded
+   * @param  aURI      nsIURI of request
+   * @param  aLoadInfo nsILoadInfo of request
+   * @return           true if request should get upgraded
    */
-  static bool ShouldUpgradeWebSocket(nsIURI* aURI, int32_t aInnerWindowId,
-                                     bool aFromPrivateWindow,
-                                     uint32_t aHttpsOnlyStatus);
+  static bool ShouldUpgradeWebSocket(nsIURI* aURI, nsILoadInfo* aLoadInfo);
 
   /**
    * Checks if the error code is on a block-list of codes that are probably not
