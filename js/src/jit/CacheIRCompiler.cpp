@@ -7738,6 +7738,19 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitAtomicsIsLockFreeResult(Int32OperandId valueId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register value = allocator.useRegister(masm, valueId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  masm.atomicIsLockFreeJS(value, scratch);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
