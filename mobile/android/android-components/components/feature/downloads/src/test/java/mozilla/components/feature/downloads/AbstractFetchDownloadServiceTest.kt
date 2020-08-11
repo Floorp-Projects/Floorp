@@ -45,6 +45,7 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
@@ -1133,6 +1134,62 @@ class AbstractFetchDownloadServiceTest {
         service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState)
 
         verify(service).addToDownloadSystemDatabaseCompat(any())
+    }
+
+    @Test
+    fun `WHEN we download on devices with version higher than Q which use legacy external storage THEN we use legacy file stream`() {
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = browserStore
+        })
+        val uniqueFile: DownloadState = mock()
+        val qSdkVersion = 29
+        doReturn(uniqueFile).`when`(service).makeUniqueFileNameIfNecessary(any(), anyBoolean())
+        doNothing().`when`(service).updateDownloadState(uniqueFile)
+        doReturn(true).`when`(service).isExternalStorageLegacy()
+        doNothing().`when`(service).useFileStreamLegacy(eq(uniqueFile), anyBoolean(), any())
+        doReturn(qSdkVersion).`when`(service).getSdkVersion()
+
+        service.useFileStream(mock(), true) {}
+
+        verify(service).useFileStreamLegacy(eq(uniqueFile), anyBoolean(), any())
+    }
+
+    @Test
+    fun `WHEN we download on devices with version higher than Q THEN we use scoped storage`() {
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = browserStore
+        })
+        val uniqueFile: DownloadState = mock()
+        val qSdkVersion = 29
+        doReturn(uniqueFile).`when`(service).makeUniqueFileNameIfNecessary(any(), anyBoolean())
+        doNothing().`when`(service).updateDownloadState(uniqueFile)
+        doNothing().`when`(service).useFileStreamScopedStorage(eq(uniqueFile), any())
+        doReturn(false).`when`(service).isExternalStorageLegacy()
+        doReturn(qSdkVersion).`when`(service).getSdkVersion()
+
+        service.useFileStream(mock(), true) {}
+
+        verify(service).useFileStreamScopedStorage(eq(uniqueFile), any())
+    }
+
+    @Test
+    fun `WHEN we download on devices with version lower than Q THEN we use legacy file stream`() {
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = browserStore
+        })
+        val uniqueFile: DownloadState = mock()
+        val qSdkVersion = 27
+        doReturn(uniqueFile).`when`(service).makeUniqueFileNameIfNecessary(any(), anyBoolean())
+        doNothing().`when`(service).updateDownloadState(uniqueFile)
+        doNothing().`when`(service).useFileStreamLegacy(eq(uniqueFile), anyBoolean(), any())
+        doReturn(qSdkVersion).`when`(service).getSdkVersion()
+
+        service.useFileStream(mock(), true) {}
+
+        verify(service).useFileStreamLegacy(eq(uniqueFile), anyBoolean(), any())
     }
 
     @Test

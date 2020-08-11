@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.downloads
 
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
@@ -24,8 +25,9 @@ import android.os.Environment
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
-import android.widget.Toast
 import android.webkit.MimeTypeMap
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
@@ -40,14 +42,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.DownloadAction
-import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.state.content.DownloadState
-import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
+import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
+import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
 import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
-import mozilla.components.browser.state.state.content.DownloadState.Status.PAUSED
 import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
+import mozilla.components.browser.state.state.content.DownloadState.Status.PAUSED
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_RANGE
@@ -58,11 +60,11 @@ import mozilla.components.feature.downloads.DownloadNotification.NOTIFICATION_DO
 import mozilla.components.feature.downloads.ext.addCompletedDownload
 import mozilla.components.feature.downloads.ext.isScheme
 import mozilla.components.feature.downloads.ext.withResponse
-import mozilla.components.feature.downloads.facts.emitNotificationResumeFact
-import mozilla.components.feature.downloads.facts.emitNotificationPauseFact
 import mozilla.components.feature.downloads.facts.emitNotificationCancelFact
-import mozilla.components.feature.downloads.facts.emitNotificationTryAgainFact
 import mozilla.components.feature.downloads.facts.emitNotificationOpenFact
+import mozilla.components.feature.downloads.facts.emitNotificationPauseFact
+import mozilla.components.feature.downloads.facts.emitNotificationResumeFact
+import mozilla.components.feature.downloads.facts.emitNotificationTryAgainFact
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.support.utils.DownloadUtils
@@ -71,8 +73,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.lang.Exception
-import java.lang.IllegalStateException
 import kotlin.random.Random
 
 /**
@@ -662,6 +662,7 @@ abstract class AbstractFetchDownloadService : Service() {
      *
      * Encapsulates different behaviour depending on the SDK version.
      */
+    @SuppressLint("NewApi")
     internal fun useFileStream(
         download: DownloadState,
         append: Boolean,
@@ -670,12 +671,25 @@ abstract class AbstractFetchDownloadService : Service() {
         val downloadWithUniqueFileName = makeUniqueFileNameIfNecessary(download, append)
         updateDownloadState(downloadWithUniqueFileName)
 
-        if (SDK_INT >= Build.VERSION_CODES.Q && !Environment.isExternalStorageLegacy()) {
+        if (getSdkVersion() >= Build.VERSION_CODES.Q && !isExternalStorageLegacy()) {
             useFileStreamScopedStorage(downloadWithUniqueFileName, block)
         } else {
             useFileStreamLegacy(downloadWithUniqueFileName, append, block)
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    @VisibleForTesting
+    internal fun isExternalStorageLegacy(): Boolean =
+        Environment.isExternalStorageLegacy()
+
+    /**
+     * Gets the SDK version from the system.
+     * Used for testing since current robolectric version doesn't allow mocking API 29, remove after
+     * update
+     */
+    @VisibleForTesting
+    internal fun getSdkVersion(): Int = SDK_INT
 
     /**
      * Updates the given [updatedDownload] in the store and in the [downloadJobs].
@@ -709,7 +723,8 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     @TargetApi(Build.VERSION_CODES.Q)
-    private fun useFileStreamScopedStorage(download: DownloadState, block: (OutputStream) -> Unit) {
+    @VisibleForTesting
+    internal fun useFileStreamScopedStorage(download: DownloadState, block: (OutputStream) -> Unit) {
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, download.fileName)
             put(MediaStore.Downloads.MIME_TYPE, download.contentType ?: "*/*")
@@ -756,7 +771,8 @@ abstract class AbstractFetchDownloadService : Service() {
 
     @TargetApi(Build.VERSION_CODES.P)
     @Suppress("Deprecation")
-    private fun useFileStreamLegacy(download: DownloadState, append: Boolean, block: (OutputStream) -> Unit) {
+    @VisibleForTesting
+    internal fun useFileStreamLegacy(download: DownloadState, append: Boolean, block: (OutputStream) -> Unit) {
         FileOutputStream(File(download.filePath), append).use(block)
     }
 
