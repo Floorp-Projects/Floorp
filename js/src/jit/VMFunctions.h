@@ -1170,6 +1170,7 @@ using AtomicsReadWriteModifyFn = int32_t (*)(TypedArrayObject*, int32_t,
 
 AtomicsCompareExchangeFn AtomicsCompareExchange(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsExchange(Scalar::Type elementType);
+AtomicsReadWriteModifyFn AtomicsAdd(Scalar::Type elementType);
 
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
