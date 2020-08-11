@@ -475,6 +475,10 @@ class PinchGestureInput : public InputData {
 
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
 
+  double ComputeDeltaY(nsIWidget* aWidget) const;
+
+  static gfx::IntPoint GetIntegerDeltaForEvent(bool aIsStart, float x, float y);
+
   // Warning, this class is serialized and sent over IPC. Any change to its
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   PinchGestureType mType;
@@ -508,6 +512,14 @@ class PinchGestureInput : public InputData {
   // This is only really relevant during a PINCHGESTURE_SCALE because when it is
   // of this type then there must have been a history of spans.
   ScreenCoord mPreviousSpan;
+
+  // We accumulate (via GetIntegerDeltaForEvent) the deltaY that would be
+  // computed by ToWidgetWheelEvent, and then whenever we get a whole integer
+  // value we put it in mLineOrPageDeltaY. Since we only ever use deltaY we
+  // don't need a mLineOrPageDeltaX. This field is used to dispatch legacy mouse
+  // events which are only dispatched when the corresponding field on
+  // WidgetWheelEvent is non-zero.
+  int32_t mLineOrPageDeltaY;
 
   bool mHandledByAPZ;
 };
