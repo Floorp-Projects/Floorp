@@ -700,20 +700,13 @@ def strip(strip, install_strip):
 
 js_option(env='STRIP_FLAGS', nargs=1, when=strip, help='Flags for the strip command')
 
-@depends('STRIP_FLAGS', profiling, target, when=strip)
-def strip_flags(flags, profiling, target):
+@depends('STRIP_FLAGS', target, when=strip)
+def strip_flags(flags, target):
     if flags:
         return flags[0].split()
-    if profiling:
-        # Only strip debug info and symbols when profiling is enabled, keeping
-        # local symbols.
-        if target.kernel == 'Darwin':
-            return ['-S']
-        else:
-            return ['--strip-debug']
-    # Otherwise strip everything we can, which happens without flags on non-Darwin.
+    # Strip everything we can, which happens without flags on non-Darwin.
     # On Darwin, it tries to strip things it can't, so we need to limit its scope.
-    elif target.kernel == 'Darwin':
+    if target.kernel == 'Darwin':
         return ['-x', '-S']
 
 set_config('STRIP_FLAGS', strip_flags)
