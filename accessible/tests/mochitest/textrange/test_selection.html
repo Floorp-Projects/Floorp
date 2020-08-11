@@ -94,6 +94,17 @@
       ok(a11yrange.crop(getAccessible("table")), "Range failed to crop #7.");
       testTextRange(a11yrange, "cropped range #7", "table", 0, "table", 1);
 
+      // test compare points for selection with start in nested node
+      range.setStart(a.firstChild, 2);
+      range.setEnd(p.lastChild, 3);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      var res = a11yrange.compareEndPoints(EndPoint_Start, a11yrange, EndPoint_End);
+      is(res, -1, "start must be lesser than end");
+
+      res = a11yrange.compareEndPoints(EndPoint_End, a11yrange, EndPoint_Start);
+      is(res, 1, "end must be greater than start");
+
       SimpleTest.finish();
     }
 

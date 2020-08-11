@@ -41,6 +41,26 @@ bool TextPoint::operator<(const TextPoint& aPoint) const {
       return child1->IndexInParent() < child2->IndexInParent();
   }
 
+  if (pos1 != 0) {
+    // If parents1 is a superset of parents2 then mContainer is a
+    // descendant of aPoint.mContainer. The next element down in parents1
+    // is mContainer's ancestor that is the child of aPoint.mContainer.
+    // We compare its end offset in aPoint.mContainer with aPoint.mOffset.
+    Accessible* child = parents1.ElementAt(pos1 - 1);
+    MOZ_ASSERT(child->Parent() == aPoint.mContainer);
+    return child->EndOffset() < static_cast<uint32_t>(aPoint.mOffset);
+  }
+
+  if (pos2 != 0) {
+    // If parents2 is a superset of parents1 then aPoint.mContainer is a
+    // descendant of mContainer. The next element down in parents2
+    // is aPoint.mContainer's ancestor that is the child of mContainer.
+    // We compare its start offset in mContainer with mOffset.
+    Accessible* child = parents2.ElementAt(pos2 - 1);
+    MOZ_ASSERT(child->Parent() == mContainer);
+    return static_cast<uint32_t>(mOffset) < child->StartOffset();
+  }
+
   NS_ERROR("Broken tree?!");
   return false;
 }
