@@ -7,7 +7,7 @@ Instructions for Fedora 20 and 19
 First ensure that your compiler toolchain and Gecko build dependencies
 are installed.
 
-.. code:: brush:
+.. code::
 
    sudo yum install \
      ccache cmake gcc gcc-c++ glibc-devel.i686 \
@@ -30,7 +30,7 @@ are installed.
 
 Then you need to use a .mozconfig that looks like the following example.
 
-.. code:: brush:
+.. code::
 
    # Flags set for targeting x86.
    export CROSS_COMPILE=1
@@ -63,7 +63,7 @@ These steps were verified to work as of June 2020
 #. Install 32-bit dependencies with the following command (this shouldn't try to
    remove packages. If this is the case, those instructions won't work as-is):
 
-  .. code:: syntaxbox
+  .. code::
 
      sudo apt install gcc-multilib g++-multilib libdbus-glib-1-dev:i386 \
        libgtk2.0-dev:i386 libgtk-3-dev:i386 libpango1.0-dev:i386 libxt-dev:i386 \
@@ -72,7 +72,7 @@ These steps were verified to work as of June 2020
 5. Create a file called ``mozconfig`` in the top-level directory of you
    ``mozilla-central`` checkout, containing at least the following:
 
-  .. code:: syntaxbox
+  .. code::
 
      ac_add_options --target=i686
 

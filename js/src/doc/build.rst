@@ -34,7 +34,7 @@ have.
 
 A basic ``MOZCONFIG`` file for doing a debug build, put into ``$HOME/mozconfigs/debug`` looks like this
 
-.. code:: eval
+.. code::
 
     # Build only the JS shell
     ac_add_options --enable-application=js
@@ -46,7 +46,7 @@ A basic ``MOZCONFIG`` file for doing a debug build, put into ``$HOME/mozconfigs/
 
 To activate a particular ``MOZCONFIG``, set the environment variable:
 
-.. code:: eval
+.. code::
 
     export MOZCONFIG=$HOME/mozconfigs/debug
 
@@ -57,7 +57,7 @@ Once you have activated a ``MOZCONFIG`` by setting the environment variable
 you can then ask ``mach``, located in the top directory of your checkout,
 to do your build:
 
-.. code:: eval
+.. code::
 
     $ cd <path to mozilla-central>
     $ ./mach build
@@ -91,7 +91,7 @@ Testing
 
 Once built, you can then use ``mach`` to run the ``jit-tests``:
 
-.. code:: eval
+.. code::
 
     $ ./mach jit-test
 
@@ -102,7 +102,7 @@ To switch to an optimized build, one need only have an optimized build ``MOZCONF
 and then activate it. An example ``$HOME/mozconfigs/optimized`` ``MOZCONFIG``
 looks like this:
 
-.. code:: eval
+.. code::
 
     # Build only the JS shell
     ac_add_options --enable-application=js
@@ -138,14 +138,14 @@ hello-world program.
 You will also need the appropriate Rust compiler target support installed. For
 example:
 
-.. code:: eval
+.. code::
 
    $ rustup target add aarch64-unknown-linux-gnu
 
 Once you have these prerequisites installed, you simply need to set a few
 environment variables and configure the build appropriately:
 
-.. code:: eval
+.. code::
 
     $ cd js/src/
     $ export CC=aarch64-linux-gnu-gcc  # adjust for target as appropriate.
@@ -182,7 +182,7 @@ shared libraries already if you cross-compiled as described above.
 Then, write a small wrapper script that invokes the JS shell under Qemu. For
 example:
 
-.. code:: eval
+.. code::
 
     #!/bin/sh
 
@@ -197,6 +197,6 @@ example:
 You can then invoke this wrapper as if it were a normal JS shell, and use it
 with ``jit_test.py`` to run tests:
 
-.. code:: eval
+.. code::
 
     $ jit-test/jit_test.py ./js-cross-wrapper

@@ -233,7 +233,7 @@ page <http://www.macports.org/install.php>`_, download the .dmg for
 your platform, and install it. If you already have MacPorts installed,
 ensure it is up to date by running:
 
-.. code:: eval
+.. code::
 
     sudo port selfupdate
     sudo port sync
@@ -249,7 +249,7 @@ Common errors include:
 
 Use MacPorts to install the packages needed for building Firefox:
 
-.. code:: eval
+.. code::
 
     sudo port install libidl autoconf213 yasm python27 py27-gnureadline
 
@@ -331,7 +331,7 @@ current one with the contents of the remote repository.
 Below command will take many minutes to run, as it will be copying a
 couple hundred megabytes of data over the internet.
 
-.. code:: syntaxbox
+.. code::
 
     hg clone https://hg.mozilla.org/mozilla-central/
     cd mozilla-central
@@ -348,7 +348,7 @@ Build Options <https://developer.mozilla.org/en/Configuring_Build_Options>`_.
 
 To get started quickly, create the file with the following contents:
 
-.. code:: eval
+.. code::
 
     # Define where build files should go. This places them in the directory
     # "obj-ff-dbg" under the current source directory
@@ -366,7 +366,7 @@ that is not the case, you need to set CC and CXX. For instance, if you
 installed Clang 9 via Homebrew, then you need to have this in your
 ``mozconfig``:
 
-.. code:: eval
+.. code::
 
     CC=clang-9
     CXX=clang++-9
@@ -374,7 +374,7 @@ installed Clang 9 via Homebrew, then you need to have this in your
 If you installed Autoconf 2.13 with the Homebrew recipe linked above,
 you may need to add the following to your ``mozconfig``:
 
-.. code:: eval
+.. code::
 
     mk_add_options AUTOCONF=/usr/local/Cellar/autoconf@2.13/2.13/bin/autoconf213
 
