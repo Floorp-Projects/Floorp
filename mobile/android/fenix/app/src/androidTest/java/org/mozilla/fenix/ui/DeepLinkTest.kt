@@ -29,6 +29,8 @@ import org.mozilla.fenix.ui.robots.DeepLinkRobot
  *  - fenix://urls_bookmarks — take the user to the bookmarks list
  *  - fenix://settings_logins — take the user to the settings page to do with logins (not the saved logins).
  **/
+
+@Ignore("All tests perma-failing, see: https://github.com/mozilla-mobile/fenix/issues/13491")
 class DeepLinkTest {
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
