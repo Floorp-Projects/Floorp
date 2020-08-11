@@ -8326,7 +8326,7 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!JS_CopyPropertiesFrom(cx, propertyHolder, copyFrom)) {
+  if (!JS_CopyOwnPropertiesAndPrivateFields(cx, propertyHolder, copyFrom)) {
     return false;
   }
 
@@ -8348,7 +8348,7 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
   } else {
     copyTo = source;
   }
-  if (!JS_CopyPropertiesFrom(cx, copyTo, propertyHolder)) {
+  if (!JS_CopyOwnPropertiesAndPrivateFields(cx, copyTo, propertyHolder)) {
     return false;
   }
 

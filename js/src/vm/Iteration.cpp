@@ -126,9 +126,12 @@ static inline bool Enumerate(JSContext* cx, HandleObject pobj, jsid id,
   // Symbol-keyed properties and nonenumerable properties are skipped unless
   // the caller specifically asks for them. A caller can also filter out
   // non-symbols by asking for JSITER_SYMBOLSONLY. PrivateName symbols are
-  // always skipped.
+  // skipped unless JSITER_PRIVATE is passed.
   if (JSID_IS_SYMBOL(id)) {
-    if (!(flags & JSITER_SYMBOLS) || JSID_TO_SYMBOL(id)->isPrivateName()) {
+    if (!(flags & JSITER_SYMBOLS)) {
+      return true;
+    }
+    if (!(flags & JSITER_PRIVATE) && JSID_TO_SYMBOL(id)->isPrivateName()) {
       return true;
     }
   } else {
@@ -401,8 +404,6 @@ struct SortComparatorIds {
     RootedString astr(cx), bstr(cx);
     if (JSID_IS_SYMBOL(a)) {
       MOZ_ASSERT(JSID_IS_SYMBOL(b));
-      MOZ_ASSERT(!JSID_TO_SYMBOL(a)->isPrivateName());
-      MOZ_ASSERT(!JSID_TO_SYMBOL(b)->isPrivateName());
       JS::SymbolCode ca = JSID_TO_SYMBOL(a)->code();
       JS::SymbolCode cb = JSID_TO_SYMBOL(b)->code();
       if (ca != cb) {
@@ -552,7 +553,7 @@ JS_FRIEND_API bool js::GetPropertyKeys(JSContext* cx, HandleObject obj,
                                        MutableHandleIdVector props) {
   return Snapshot(cx, obj,
                   flags & (JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS |
-                           JSITER_SYMBOLSONLY),
+                           JSITER_SYMBOLSONLY | JSITER_PRIVATE),
                   props);
 }
 
