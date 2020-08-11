@@ -257,25 +257,26 @@ Troubleshooting
 
 In some circumstances, the following problems can arise:
 
-**Some antivirus and system protection software can dramatically slow or
-break the build process**
+Antivirus performance
+^^^^^^^^^^^^^^^^^^^^^
 
 -  Windows Defender and some scanning antivirus products are known to
    have a major impact on build times. For example, if you have cloned
-   ``mozilla-central`` successfully but ``./mach build`` fails reporting
+   ``mozilla-central`` successfully but ``./mach build`` fails, reporting
    a missing file, you are likely experiencing this problem. Our
    regression tests, for well-known security bugs, can include code
    samples that some antivirus software will identify as a threat, and
    will either quarantine or otherwise corrupt the files involved. To
    resolve this you will need to add your source and object directories
    (the ``mozilla-source`` and ``mozilla-build``
-   directories) to the allow list in Windows Defender or your antivirus 
-   software and if you're missing files, revert your source tree with the
-   "``hg update -C" `` command. Once this is done your next
+   directories) to the
+   `exclusion list in Windows Defender <https://support.microsoft.com/en-ca/help/4028485/windows-10-add-an-exclusion-to-windows-security>`_
+   or your antivirus software. If you are missing files, revert your source
+   tree with the ``hg update -C`` command. Once this is done your next
    ``./mach build`` should complete successfully.
 
-**Installing Visual Studio in a different language than the system can
-cause issues**
+Installing Visual Studio in a different language than the system can cause issues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  For example, having Visual Studio in French when the system is in
    English causes the build to spew a lot of include errors and finishes

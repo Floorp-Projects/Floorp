@@ -83,6 +83,55 @@ def get_adopt_open_jdk_8_path():
         return None
 
 
+def get_is_windefender_disabled():
+    import winreg
+
+    try:
+        with winreg.OpenKeyEx(
+                winreg.HKEY_LOCAL_MACHINE,
+                r'SOFTWARE\Microsoft\Windows Defender') as windefender_key:
+            is_antivirus_disabled, _ = winreg.QueryValueEx(windefender_key, 'DisableAntiSpyware')
+            # is_antivirus_disabled is either 0 (False) or 1 (True)
+            return bool(is_antivirus_disabled)
+    except (FileNotFoundError, OSError):
+        return True
+
+
+def get_windefender_exclusion_paths():
+    import winreg
+
+    paths = []
+    try:
+        with winreg.OpenKeyEx(
+                winreg.HKEY_LOCAL_MACHINE,
+                r'SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths') as exclusions_key:
+            _, values_count, __ = winreg.QueryInfoKey(exclusions_key)
+            for i in range(0, values_count):
+                path, _, __ = winreg.EnumValue(exclusions_key, i)
+                paths.append(path)
+    except (FileNotFoundError, OSError):
+        pass
+
+    return paths
+
+
+def is_windefender_affecting_srcdir(srcdir):
+    if get_is_windefender_disabled():
+        return False
+
+    # When there's a match, but path cases aren't the same between srcdir and exclusion_path,
+    # commonpath will use the casing of the first path provided.
+    # To avoid surprises here, we normcase(...) so we don't get unexpected breakage if we change
+    # the path order.
+    srcdir = os.path.normcase(os.path.abspath(srcdir))
+    for exclusion_path in get_windefender_exclusion_paths():
+        exclusion_path = os.path.normcase(os.path.abspath(exclusion_path))
+        if os.path.commonpath([exclusion_path, srcdir]) == exclusion_path:
+            # exclusion_path is an ancestor of srcdir
+            return False
+    return True
+
+
 class MozillaBuildBootstrapper(BaseBootstrapper):
     '''Bootstrapper for MozillaBuild to install rustup.'''
 
@@ -97,11 +146,19 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
     def which(self, name, *extra_search_dirs):
         return BaseBootstrapper.which(self, name + '.exe', *extra_search_dirs)
 
-    def prepare(self):
+    def validate_environment(self, srcdir):
         if self.application.startswith('mobile_android'):
             print('WARNING!!! Building Firefox for Android on Windows is not '
                   'fully supported. See https://bugzilla.mozilla.org/show_bug.'
-                  'cgi?id=1169873 for details.')
+                  'cgi?id=1169873 for details.', file=sys.stderr)
+
+        if is_windefender_affecting_srcdir(srcdir):
+            print('Warning: the Firefox checkout directory is currently not in the '
+                  'Windows Defender exclusion list. This can cause the build process '
+                  'to be dramatically slowed or broken. To resolve this, follow the '
+                  'directions here: '
+                  'https://firefox-source-docs.mozilla.org/setup/windows_build.html'
+                  '#antivirus-performance', file=sys.stderr)
 
     def install_system_packages(self):
         pass
