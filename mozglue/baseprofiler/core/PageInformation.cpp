@@ -7,7 +7,8 @@
 #include "PageInformation.h"
 
 #include "BaseProfiler.h"
-#include "BaseProfileJSONWriter.h"
+
+#include "mozilla/BaseProfileJSONWriter.h"
 
 namespace mozilla {
 namespace baseprofiler {

@@ -14,13 +14,15 @@
 
 class ProfileBuffer;
 class ProfilerCodeAddressService;
-class SpliceableJSONWriter;
 class ThreadInfo;
 class UniqueStacks;
 
 namespace mozilla {
 class ProfileChunkedBuffer;
 class TimeStamp;
+namespace baseprofiler {
+class SpliceableJSONWriter;
+}  // namespace baseprofiler
 }  // namespace mozilla
 
 // ProfilerBacktrace encapsulates a synchronous sample.
@@ -38,7 +40,7 @@ class ProfilerBacktrace {
   // That is, markers that contain backtraces should not need their own stack,
   // frame, and string tables. They should instead reuse their parent
   // profile's tables.
-  void StreamJSON(SpliceableJSONWriter& aWriter,
+  void StreamJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
                   const mozilla::TimeStamp& aProcessStartTime,
                   UniqueStacks& aUniqueStacks);
 

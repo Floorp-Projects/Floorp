@@ -30,12 +30,14 @@
 #include "mozilla/ServoTraversalStatistics.h"
 
 namespace mozilla {
+namespace baseprofiler {
+class SpliceableJSONWriter;
+}  // namespace baseprofiler
 namespace layers {
 class Layer;
 }  // namespace layers
 }  // namespace mozilla
 
-class SpliceableJSONWriter;
 class UniqueStacks;
 
 // This is an abstract class that can be implemented to supply data to be
@@ -90,9 +92,10 @@ class ProfilerMarkerPayload {
     return deserializer(aER);
   }
 
-  virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aProcessStartTime,
-                             UniqueStacks& aUniqueStacks) const = 0;
+  virtual void StreamPayload(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      const mozilla::TimeStamp& aProcessStartTime,
+      UniqueStacks& aUniqueStacks) const = 0;
 
   const mozilla::TimeStamp& GetStartTime() const {
     return mCommonProps.mStartTime;
@@ -155,12 +158,14 @@ class ProfilerMarkerPayload {
   static CommonProps DeserializeCommonProps(
       mozilla::ProfileBufferEntryReader& aEntryReader);
 
-  void StreamType(const char* aMarkerType, SpliceableJSONWriter& aWriter) const;
+  void StreamType(const char* aMarkerType,
+                  mozilla::baseprofiler::SpliceableJSONWriter& aWriter) const;
 
-  void StreamCommonProps(const char* aMarkerType, SpliceableJSONWriter& aWriter,
+  void StreamCommonProps(const char* aMarkerType,
+                         mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
                          const mozilla::TimeStamp& aProcessStartTime,
                          UniqueStacks& aUniqueStacks) const;
-  void StreamStartEndTime(SpliceableJSONWriter& aWriter,
+  void StreamStartEndTime(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
                           const mozilla::TimeStamp& aProcessStartTime) const;
 
  private:
@@ -178,7 +183,7 @@ class ProfilerMarkerPayload {
 };
 
 #define DECL_STREAM_PAYLOAD                                                    \
-  void StreamPayload(SpliceableJSONWriter& aWriter,                            \
+  void StreamPayload(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,     \
                      const mozilla::TimeStamp& aProcessStartTime,              \
                      UniqueStacks& aUniqueStacks) const override;              \
   static mozilla::UniquePtr<ProfilerMarkerPayload> Deserialize(                \

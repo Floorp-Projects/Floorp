@@ -8,8 +8,9 @@
 
 #include "ProfileBuffer.h"
 #include "ProfiledThreadData.h"
-#include "ProfileJSONWriter.h"
 #include "ThreadInfo.h"
+
+#include "mozilla/ProfileJSONWriter.h"
 
 ProfilerBacktrace::ProfilerBacktrace(
     const char* aName, int aThreadId,

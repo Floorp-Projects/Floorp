@@ -6,7 +6,7 @@
 
 #include "PageInformation.h"
 
-#include "ProfileJSONWriter.h"
+#include "mozilla/ProfileJSONWriter.h"
 
 PageInformation::PageInformation(uint64_t aBrowsingContextID,
                                  uint64_t aInnerWindowID, const nsCString& aUrl,

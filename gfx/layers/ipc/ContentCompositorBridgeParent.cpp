@@ -385,7 +385,7 @@ void ContentCompositorBridgeParent::ShadowLayersUpdated(
         static const DeserializerTag tag = TagForDeserializer(Deserialize);
         SerializeTagAndCommonProps(tag, aEntryWriter);
       }
-      void StreamPayload(SpliceableJSONWriter& aWriter,
+      void StreamPayload(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
                          const TimeStamp& aProcessStartTime,
                          UniqueStacks& aUniqueStacks) const override {
         StreamCommonProps("CONTENT_FULL_PAINT_TIME", aWriter, aProcessStartTime,

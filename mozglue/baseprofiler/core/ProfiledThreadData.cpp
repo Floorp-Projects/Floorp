@@ -8,7 +8,8 @@
 
 #include "BaseProfiler.h"
 #include "ProfileBuffer.h"
-#include "BaseProfileJSONWriter.h"
+
+#include "mozilla/BaseProfileJSONWriter.h"
 
 #if defined(GP_OS_darwin)
 #  include <pthread.h>

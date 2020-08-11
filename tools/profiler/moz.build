@@ -13,7 +13,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     EXPORTS += [
         'public/ChildProfilerController.h',
         'public/GeckoProfilerReporter.h',
-        'public/ProfileJSONWriter.h',
         'public/ProfilerChild.h',
         'public/ProfilerCodeAddressService.h',
         'public/ProfilerMarkerPayload.h',
@@ -26,7 +25,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'core/ProfileBuffer.cpp',
         'core/ProfileBufferEntry.cpp',
         'core/ProfiledThreadData.cpp',
-        'core/ProfileJSONWriter.cpp',
         'core/ProfilerBacktrace.cpp',
         'core/ProfilerCodeAddressService.cpp',
         'core/ProfilerMarkerPayload.cpp',
@@ -138,6 +136,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'public/ProfileBufferEntrySerializationGeckoExtensions.h',
+    'public/ProfileJSONWriter.h',
     # vm/GeckoProfiler.h needs to include this and doesn't like #include "ProfilerCounts.h"
     'public/ProfilerCounts.h',
 ]

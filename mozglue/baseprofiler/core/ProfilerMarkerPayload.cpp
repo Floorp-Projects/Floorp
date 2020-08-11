@@ -5,15 +5,15 @@
 
 #include "BaseProfilerMarkerPayload.h"
 
-#include <inttypes.h>
+#include "BaseProfiler.h"
+#include "ProfileBufferEntry.h"
+#include "ProfilerBacktrace.h"
 
+#include "mozilla/BaseProfileJSONWriter.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 
-#include "BaseProfiler.h"
-#include "BaseProfileJSONWriter.h"
-#include "ProfileBufferEntry.h"
-#include "ProfilerBacktrace.h"
+#include <inttypes.h>
 
 namespace mozilla {
 namespace baseprofiler {
