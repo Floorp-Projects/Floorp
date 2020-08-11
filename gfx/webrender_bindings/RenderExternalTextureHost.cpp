@@ -61,16 +61,18 @@ bool RenderExternalTextureHost::CreateSurfaces() {
         mSize, mFormat);
   } else {
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    const SurfaceFormat surfaceFormat =
+        SurfaceFormatForColorDepth(desc.colorDepth());
 
     mSurfaces[0] = gfx::Factory::CreateWrappingDataSourceSurface(
         layers::ImageDataSerializer::GetYChannel(GetBuffer(), desc),
-        desc.yStride(), desc.ySize(), gfx::SurfaceFormat::A8);
+        desc.yStride(), desc.ySize(), surfaceFormat);
     mSurfaces[1] = gfx::Factory::CreateWrappingDataSourceSurface(
         layers::ImageDataSerializer::GetCbChannel(GetBuffer(), desc),
-        desc.cbCrStride(), desc.cbCrSize(), gfx::SurfaceFormat::A8);
+        desc.cbCrStride(), desc.cbCrSize(), surfaceFormat);
     mSurfaces[2] = gfx::Factory::CreateWrappingDataSourceSurface(
         layers::ImageDataSerializer::GetCrChannel(GetBuffer(), desc),
-        desc.cbCrStride(), desc.cbCrSize(), gfx::SurfaceFormat::A8);
+        desc.cbCrStride(), desc.cbCrSize(), surfaceFormat);
   }
 
   for (size_t i = 0; i < PlaneCount(); ++i) {
