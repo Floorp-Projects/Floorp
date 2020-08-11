@@ -2448,6 +2448,29 @@ bool WarpCacheIRTranspiler::emitAtomicsXorResult(ObjOperandId objId,
                              AtomicFetchXorOp);
 }
 
+bool WarpCacheIRTranspiler::emitAtomicsLoadResult(ObjOperandId objId,
+                                                  Int32OperandId indexId,
+                                                  Scalar::Type elementType) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  add(length);
+
+  index = addBoundsCheck(index, length);
+
+  auto* elements = MArrayBufferViewElements::New(alloc(), obj);
+  add(elements);
+
+  auto* load = MLoadUnboxedScalar::New(alloc(), elements, index, elementType,
+                                       DoesRequireMemoryBarrier);
+  load->setResultType(MIRType::Int32);
+  addEffectful(load);
+
+  pushResult(load);
+  return resumeAfter(load);
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
