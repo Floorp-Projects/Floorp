@@ -243,6 +243,8 @@ static const uint32_t CPU_TYPE = CPU_TYPE_X86_64;
 static const uint32_t CPU_TYPE = CPU_TYPE_POWERPC;
 #  elif defined(__ppc64__)
 static const uint32_t CPU_TYPE = CPU_TYPE_POWERPC64;
+#  elif defined(__aarch64__)
+static const uint32_t CPU_TYPE = CPU_TYPE_ARM64;
 #  else
 #    error Unsupported CPU type
 #  endif
