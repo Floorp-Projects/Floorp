@@ -538,6 +538,8 @@ bool shell::dumpEntrainedVariables = false;
 bool shell::OOM_printAllocationCount = false;
 #endif
 
+UniqueChars shell::processWideModuleLoadPath;
+
 static bool SetTimeoutValue(JSContext* cx, double t);
 
 static void KillWatchdog(JSContext* cx);
@@ -4131,6 +4133,7 @@ static void WorkerMain(WorkerInput* input) {
   });
 
   sc->isWorker = true;
+
   JS_SetContextPrivate(cx, sc);
   JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
   SetWorkerContextOptions(cx);
@@ -4167,6 +4170,16 @@ static void WorkerMain(WorkerInput* input) {
     }
 
     JSAutoRealm ar(cx, global);
+
+    JS::ConstUTF8CharsZ path(processWideModuleLoadPath.get(), strlen(processWideModuleLoadPath.get()));
+    RootedString moduleLoadPath(cx, JS_NewStringCopyUTF8Z(cx, path));
+    if (!moduleLoadPath) {
+      return;
+    }
+    sc->moduleLoader = js::MakeUnique<ModuleLoader>();
+    if (!sc->moduleLoader || !sc->moduleLoader->init(cx, moduleLoadPath)) {
+      return;
+    }
 
     JS::CompileOptions options(cx);
     options.setFileAndLine("<string>", 1).setIsRunOnce(true);
@@ -10081,6 +10094,12 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   }
 
   if (!moduleLoadPath) {
+    return false;
+  }
+
+  processWideModuleLoadPath = JS_EncodeStringToUTF8(cx, moduleLoadPath);
+  if (!processWideModuleLoadPath) {
+    MOZ_ASSERT(cx->isExceptionPending());
     return false;
   }
 
