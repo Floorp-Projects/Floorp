@@ -764,7 +764,7 @@ void NativeLayerCA::Representation::ApplyChanges(
   bool shouldTintOpaqueness = StaticPrefs::gfx_core_animation_tint_opaque();
   if (shouldTintOpaqueness && !mOpaquenessTintLayer) {
     mOpaquenessTintLayer = [[CALayer layer] retain];
-    mOpaquenessTintLayer.position = mContentCALayer.position;
+    mOpaquenessTintLayer.position = NSZeroPoint;
     mOpaquenessTintLayer.bounds = mContentCALayer.bounds;
     mOpaquenessTintLayer.anchorPoint = NSZeroPoint;
     mOpaquenessTintLayer.contentsGravity = kCAGravityTopLeft;
@@ -828,12 +828,6 @@ void NativeLayerCA::Representation::ApplyChanges(
     } else {
       mWrappingCALayer.masksToBounds = NO;
     }
-    mContentCALayer.position =
-        CGPointMake(clipToLayerOffset.x / aBackingScale, clipToLayerOffset.y / aBackingScale);
-    mContentCALayer.position = CGPointMake(0, 0);
-    if (mOpaquenessTintLayer) {
-      mOpaquenessTintLayer.position = mContentCALayer.position;
-    }
 
     Matrix4x4 transform = aTransform;
     transform.PreTranslate(aPosition.x, aPosition.y, 0);
@@ -860,6 +854,9 @@ void NativeLayerCA::Representation::ApplyChanges(
                               transform._43,
                               transform._44};
     mContentCALayer.transform = transformCA;
+    if (mOpaquenessTintLayer) {
+      mOpaquenessTintLayer.transform = mContentCALayer.transform;
+    }
   }
 
   if (mMutatedFrontSurface) {
