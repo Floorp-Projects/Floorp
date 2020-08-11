@@ -470,8 +470,6 @@ class Bootstrapper(object):
         self.instance.application = application
         self.instance.artifact_mode = 'artifact_mode' in application
 
-        self.instance.prepare()
-
         # This doesn't affect any system state and we'd like to bail out as soon
         # as possible if this check fails.
         self.instance.ensure_python_modern()
@@ -484,6 +482,7 @@ class Bootstrapper(object):
                 env=self.instance._hg_cleanenv(load_hgrc=True),
                 hg=self.instance.which('hg'))
             (checkout_type, checkout_root) = r
+            self.instance.validate_environment(checkout_root)
             have_clone = bool(checkout_type)
 
             if state_dir_available:
@@ -511,6 +510,8 @@ class Bootstrapper(object):
         r = current_firefox_checkout(env=self.instance._hg_cleanenv(load_hgrc=True),
                                      hg=self.instance.which('hg'))
         (checkout_type, checkout_root) = r
+
+        self.instance.validate_environment(checkout_root)
 
         # If we didn't specify a VCS, and we aren't in an exiting clone,
         # offer a choice
