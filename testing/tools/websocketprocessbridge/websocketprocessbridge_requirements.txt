@@ -1,6 +1,6 @@
 # needed by txws, and we'd like pip to get it from the local server before setuptools tries pypi
 six
-
+vcversioner==2.16.0.0
 twisted==10.2.0
 
 # websocket adapter for twisted, might be built into twisted someday
