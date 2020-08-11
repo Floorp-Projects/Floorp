@@ -212,15 +212,15 @@ extern JS_FRIEND_API bool GetIsSecureContext(JS::Realm* realm);
 }  // namespace JS
 
 /**
- * Copies all own properties from |obj| to |target|. Both |obj| and |target|
- * must not be cross-compartment wrappers because we have to enter their realms.
+ * Copies all own properties and private fields from |obj| to |target|. Both
+ * |obj| and |target| must not be cross-compartment wrappers because we have to
+ * enter their realms.
  *
  * This function immediately enters a realm, and does not impose any
  * restrictions on the realm of |cx|.
  */
-extern JS_FRIEND_API bool JS_CopyPropertiesFrom(JSContext* cx,
-                                                JS::HandleObject target,
-                                                JS::HandleObject obj);
+extern JS_FRIEND_API bool JS_CopyOwnPropertiesAndPrivateFields(
+    JSContext* cx, JS::HandleObject target, JS::HandleObject obj);
 
 /*
  * Single-property version of the above. This function asserts that an |own|
@@ -808,7 +808,7 @@ JS_FRIEND_API bool IsObjectInContextCompartment(JSObject* obj,
  */
 /* 0x1 is no longer used */
 /* 0x2 is no longer used */
-/* 0x4 is no longer used */
+#define JSITER_PRIVATE 0x4      /* Include private names in iteration */
 #define JSITER_OWNONLY 0x8      /* iterate over obj's own properties only */
 #define JSITER_HIDDEN 0x10      /* also enumerate non-enumerable properties */
 #define JSITER_SYMBOLS 0x20     /* also include symbol property keys */

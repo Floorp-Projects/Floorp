@@ -282,7 +282,7 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "JS::CompileFunctionUtf8",
     "JS::Construct",
     "JS::ContextOptionsRef",
-    "JS_CopyPropertiesFrom",
+    "JS_CopyOwnPropertiesAndPrivateFields",
     "JS::CurrentGlobalOrNull",
     "JS_DeletePropertyById",
     "js::detail::IsWindowSlow",

@@ -2207,7 +2207,7 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
       return;
     }
 
-    if (!JS_CopyPropertiesFrom(aCx, propertyHolder, copyFrom)) {
+    if (!JS_CopyOwnPropertiesAndPrivateFields(aCx, propertyHolder, copyFrom)) {
       aError.StealExceptionFromJSContext(aCx);
       return;
     }
@@ -2220,7 +2220,8 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
   //
   // NB: It's important to do this _after_ copying the properties to
   // propertyHolder. Otherwise, an object with |foo.x === foo| will
-  // crash when JS_CopyPropertiesFrom tries to call wrap() on foo.x.
+  // crash when JS_CopyOwnPropertiesAndPrivateFields tries to call wrap() on
+  // foo.x.
   js::SetReservedSlot(newobj, DOM_OBJECT_SLOT,
                       js::GetReservedSlot(aObj, DOM_OBJECT_SLOT));
   js::SetReservedSlot(aObj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
@@ -2242,7 +2243,8 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
       copyTo = aObj;
     }
 
-    if (!copyTo || !JS_CopyPropertiesFrom(aCx, copyTo, propertyHolder)) {
+    if (!copyTo ||
+        !JS_CopyOwnPropertiesAndPrivateFields(aCx, copyTo, propertyHolder)) {
       MOZ_CRASH();
     }
   }

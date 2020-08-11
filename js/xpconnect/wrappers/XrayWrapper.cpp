@@ -1443,7 +1443,7 @@ bool XrayTraits::cloneExpandoChain(JSContext* cx, HandleObject dst,
 
     if (movingIntoXrayCompartment) {
       // Just copy properties directly onto dst.
-      if (!JS_CopyPropertiesFrom(cx, dst, oldHead)) {
+      if (!JS_CopyOwnPropertiesAndPrivateFields(cx, dst, oldHead)) {
         return false;
       }
     } else {
@@ -1453,7 +1453,7 @@ bool XrayTraits::cloneExpandoChain(JSContext* cx, HandleObject dst,
           cx,
           attachExpandoObject(cx, dst, exclusiveWrapper, exclusiveWrapperGlobal,
                               GetExpandoObjectPrincipal(oldHead)));
-      if (!JS_CopyPropertiesFrom(cx, newHead, oldHead)) {
+      if (!JS_CopyOwnPropertiesAndPrivateFields(cx, newHead, oldHead)) {
         return false;
       }
     }
