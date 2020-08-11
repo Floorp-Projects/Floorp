@@ -105,7 +105,6 @@ class LoginManagerStorage_json {
         // Load the data asynchronously.
         this.log("Opening database at", this._store.path);
         await this._store.load();
-        this._recordEntryPresent();
       })().catch(Cu.reportError);
     } catch (e) {
       this.log("Initialization failed:", e);
@@ -267,7 +266,6 @@ class LoginManagerStorage_json {
 
     // Send a notification that a login was added.
     LoginHelper.notifyStorageChanged("addLogin", loginClone);
-    this._recordEntryPresent();
     return loginClone;
   }
 
@@ -286,7 +284,6 @@ class LoginManagerStorage_json {
     }
 
     LoginHelper.notifyStorageChanged("removeLogin", storedLogin);
-    this._recordEntryPresent();
   }
 
   modifyLogin(oldLogin, newLoginData) {
@@ -352,11 +349,9 @@ class LoginManagerStorage_json {
     let propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag
     );
-    let now = Date.now();
-    propBag.setProperty("timeLastUsed", now);
+    propBag.setProperty("timeLastUsed", Date.now());
     propBag.setProperty("timesUsedIncrement", 1);
     this.modifyLogin(login, propBag);
-    Services.prefs.setIntPref("signon.usage.lastUsed", Math.floor(now / 1000));
   }
 
   async recordBreachAlertDismissal(loginGUID) {
@@ -832,16 +827,6 @@ class LoginManagerStorage_json {
     }
 
     return result;
-  }
-
-  // Record in prefs whether the user has any password entries stored.
-  // This information is not uploaded as telemetry, and is used to target
-  // user surveys. See Bug 1654388 for details.
-  _recordEntryPresent() {
-    Services.prefs.setBoolPref(
-      "signon.usage.hasEntry",
-      !!this._store.data.logins.length
-    );
   }
 }
 
