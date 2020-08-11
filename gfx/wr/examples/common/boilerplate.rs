@@ -88,12 +88,11 @@ pub trait Example {
     ) -> bool {
         false
     }
-    fn get_image_handlers(
+    fn get_image_handler(
         &mut self,
         _gl: &dyn gl::Gl,
-    ) -> (Option<Box<dyn ExternalImageHandler>>,
-          Option<Box<dyn OutputImageHandler>>) {
-        (None, None)
+    ) -> Option<Box<dyn ExternalImageHandler>> {
+        None
     }
     fn draw_custom(&mut self, _gl: &dyn gl::Gl) {
     }
@@ -188,11 +187,7 @@ pub fn main_wrapper<E: Example>(
     let mut api = sender.create_api();
     let document_id = api.add_document(device_size, 0);
 
-    let (external, output) = example.get_image_handlers(&*gl);
-
-    if let Some(output_image_handler) = output {
-        renderer.set_output_image_handler(output_image_handler);
-    }
+    let external = example.get_image_handler(&*gl);
 
     if let Some(external_image_handler) = external {
         renderer.set_external_image_handler(external_image_handler);

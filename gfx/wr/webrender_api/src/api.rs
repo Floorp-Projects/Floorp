@@ -307,12 +307,6 @@ impl Transaction {
         );
     }
 
-    /// Enable copying of the output of this pipeline id to
-    /// an external texture for callers to consume.
-    pub fn enable_frame_output(&mut self, pipeline_id: PipelineId, enable: bool) {
-        self.scene_ops.push(SceneMsg::EnableFrameOutput(pipeline_id, enable));
-    }
-
     /// Scrolls the scrolling layer under the `cursor`
     ///
     /// WebRender looks for the layer closest to the user
@@ -799,8 +793,6 @@ pub enum SceneMsg {
     ///
     RemovePipeline(PipelineId),
     ///
-    EnableFrameOutput(PipelineId, bool),
-    ///
     SetDisplayList {
         ///
         display_list: BuiltDisplayList,
@@ -862,7 +854,6 @@ impl fmt::Debug for SceneMsg {
             SceneMsg::SetDisplayList { .. } => "SceneMsg::SetDisplayList",
             SceneMsg::SetPageZoom(..) => "SceneMsg::SetPageZoom",
             SceneMsg::RemovePipeline(..) => "SceneMsg::RemovePipeline",
-            SceneMsg::EnableFrameOutput(..) => "SceneMsg::EnableFrameOutput",
             SceneMsg::SetDocumentView { .. } => "SceneMsg::SetDocumentView",
             SceneMsg::SetRootPipeline(..) => "SceneMsg::SetRootPipeline",
             SceneMsg::SetQualitySettings { .. } => "SceneMsg::SetQualitySettings",
@@ -1724,21 +1715,6 @@ impl RenderApi {
         self.send_scene_msg(
             document_id,
             SceneMsg::SetDocumentView { device_rect, device_pixel_ratio },
-        );
-    }
-
-    /// Setup the output region in the framebuffer for a given document.
-    /// Enable copying of the output of this pipeline id to
-    /// an external texture for callers to consume.
-    pub fn enable_frame_output(
-        &self,
-        document_id: DocumentId,
-        pipeline_id: PipelineId,
-        enable: bool,
-    ) {
-        self.send_scene_msg(
-            document_id,
-            SceneMsg::EnableFrameOutput(pipeline_id, enable),
         );
     }
 

@@ -301,12 +301,11 @@ impl Example for App {
         false
     }
 
-    fn get_image_handlers(
+    fn get_image_handler(
         &mut self,
         _gl: &dyn gl::Gl,
-    ) -> (Option<Box<dyn ExternalImageHandler>>,
-          Option<Box<dyn OutputImageHandler>>) {
-        (Some(Box::new(ImageGenerator::new())), None)
+    ) -> Option<Box<dyn ExternalImageHandler>> {
+        Some(Box::new(ImageGenerator::new()))
     }
 }
 

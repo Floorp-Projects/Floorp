@@ -421,7 +421,6 @@ fn create_tile_cache(
     let pic_index = prim_store.pictures.alloc().init(PicturePrimitive::new_image(
         Some(PictureCompositeMode::TileCache { slice_id }),
         Picture3DContext::Out,
-        None,
         true,
         PrimitiveFlags::IS_BACKFACE_VISIBLE,
         RasterSpace::Screen,

@@ -218,9 +218,6 @@ struct Document {
     interners: Interners,
     stats: SceneStats,
     view: SceneView,
-    /// A set of pipelines that the caller has requested be
-    /// made available as output textures.
-    output_pipelines: FastHashSet<PipelineId>,
 }
 
 impl Document {
@@ -229,7 +226,6 @@ impl Document {
             scene: Scene::new(),
             interners: Interners::default(),
             stats: SceneStats::empty(),
-            output_pipelines: FastHashSet::default(),
             view: SceneView {
                 device_rect,
                 layer,
@@ -457,14 +453,11 @@ impl SceneBuilderThread {
             let mut built_scene = None;
             let mut interner_updates = None;
 
-            let output_pipelines = FastHashSet::default();
-
             if item.scene.has_root_pipeline() {
                 built_scene = Some(SceneBuilder::build(
                     &item.scene,
                     item.font_instances,
                     &item.view,
-                    &output_pipelines,
                     &self.config,
                     &mut item.interners,
                     &SceneStats::empty(),
@@ -482,7 +475,6 @@ impl SceneBuilderThread {
                     interners: item.interners,
                     stats: SceneStats::empty(),
                     view: item.view.clone(),
-                    output_pipelines,
                 },
             );
 
@@ -688,13 +680,6 @@ impl SceneBuilderThread {
                     self.removed_pipelines.insert(pipeline_id);
                     removed_pipelines.push((pipeline_id, txn.document_id));
                 }
-                SceneMsg::EnableFrameOutput(pipeline_id, enable) => {
-                    if enable {
-                        doc.output_pipelines.insert(pipeline_id);
-                    } else {
-                        doc.output_pipelines.remove(&pipeline_id);
-                    }
-                }
             }
         }
 
@@ -708,7 +693,6 @@ impl SceneBuilderThread {
                 &scene,
                 self.font_instances.clone(),
                 &doc.view,
-                &doc.output_pipelines,
                 &self.config,
                 &mut doc.interners,
                 &doc.stats,
