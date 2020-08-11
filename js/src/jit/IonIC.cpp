@@ -167,6 +167,9 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   IonScript* ionScript = outerScript->ionScript();
   AutoDetectInvalidation adi(cx, res, ionScript);
 
+  // Optimized-arguments and other magic values must not escape to Ion ICs.
+  MOZ_ASSERT(!val.isMagic());
+
   // If the IC is idempotent, we will redo the op in the interpreter.
   if (ic->idempotent()) {
     adi.disable();

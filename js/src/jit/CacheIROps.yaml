@@ -458,7 +458,7 @@
 
 - name: GuardMagicValue
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     val: ValId
@@ -466,7 +466,7 @@
 
 - name: GuardFrameHasNoArgumentsObject
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
 
@@ -1620,19 +1620,19 @@
 
 - name: LoadFrameCalleeResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
 
 - name: LoadFrameNumActualArgsResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
 
 - name: LoadFrameArgumentResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     index: Int32Id

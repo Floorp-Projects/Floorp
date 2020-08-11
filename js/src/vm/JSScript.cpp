@@ -4642,6 +4642,13 @@ void JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
 
   script->setFlag(MutableFlags::NeedsArgsObj);
 
+  // Warp code depends on the NeedsArgsObj flag so invalidate the script
+  // (including compilations inlining the script).
+  if (jit::JitOptions.warpBuilder) {
+    AutoEnterAnalysis enter(cx->runtime()->defaultFreeOp(), script->zone());
+    script->zone()->types.addPendingRecompile(cx, script);
+  }
+
   /*
    * By design, the arguments optimization is only made when there are no
    * outstanding cases of MagicValue(JS_OPTIMIZED_ARGUMENTS) at any points

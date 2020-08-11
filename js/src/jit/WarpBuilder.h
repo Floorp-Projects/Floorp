@@ -180,6 +180,8 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   MConstant* globalLexicalEnvConstant();
   MDefinition* getCallee();
 
+  MDefinition* maybeGuardNotOptimizedArguments(MDefinition* def);
+
   MOZ_MUST_USE bool buildUnaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildBinaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildCompareOp(BytecodeLocation loc);
