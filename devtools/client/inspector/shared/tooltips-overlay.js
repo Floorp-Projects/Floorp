@@ -65,6 +65,7 @@ loader.lazyRequireGetter(
 const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 
 // Types of existing tooltips
+const TOOLTIP_CSS_COMPATIBILITY = "css-compatibility";
 const TOOLTIP_IMAGE_TYPE = "image";
 const TOOLTIP_FONTFAMILY_TYPE = "font-family";
 const TOOLTIP_INACTIVE_CSS = "inactive-css";
@@ -355,6 +356,8 @@ TooltipsOverlay.prototype = {
         nodeCompatibilityInfo,
         this.getTooltip("interactiveTooltip")
       );
+
+      this.sendOpenScalarToTelemetry(TOOLTIP_CSS_COMPATIBILITY);
       return true;
     }
 
@@ -403,7 +406,7 @@ TooltipsOverlay.prototype = {
    * Send a telemetry Scalar showing that a tooltip of `type` has been opened.
    *
    * @param {String} type
-   *        The node type from `devtools/client/inspector/shared/node-types`.
+   *        The node type from `devtools/client/inspector/shared/node-types` or the Tooltip type.
    */
   sendOpenScalarToTelemetry(type) {
     this.telemetry.keyedScalarAdd(TOOLTIP_SHOWN_SCALAR, type, 1);
