@@ -788,10 +788,6 @@ pref("browser.preferences.exposeHTTPSOnly", false);
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
 
-// URL for "Learn More" for HttpsOnly
-pref("domsecurity.httpsonly.infoURL",
-     "https://developer.mozilla.org/en-US/docs/Glossary/https");
-
 // Backspace and Shift+Backspace behavior
 // 0 goes Back/Forward
 // 1 act like PgUp/PgDown
