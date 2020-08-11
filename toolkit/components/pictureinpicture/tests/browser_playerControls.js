@@ -8,6 +8,11 @@
  * video window.
  */
 add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.videocontrols.picture-in-picture.audio-toggle.enabled", true],
+    ],
+  });
   let videoID = "with-controls";
   info(`Testing ${videoID} case.`);
 
