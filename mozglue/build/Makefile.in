@@ -13,5 +13,3 @@ ifeq (WINNT,$(OS_TARGET))
 # here.
 EXTRA_DEPS += $(srcdir)/mozglue.dll.manifest
 endif
-
-include $(topsrcdir)/mozglue/build/replace_malloc.mk
