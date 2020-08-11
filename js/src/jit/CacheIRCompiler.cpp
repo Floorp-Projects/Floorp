@@ -7653,6 +7653,49 @@ bool CacheIRCompiler::emitAtomicsXorResult(ObjOperandId objId,
                                           AtomicsXor(elementType));
 }
 
+bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
+                                            Int32OperandId indexId,
+                                            Scalar::Type elementType) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoSpectreBoundsScratchRegister spectreTemp(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Bounds check.
+  LoadTypedThingLength(masm, TypedThingLayout::TypedArray, obj, scratch);
+  masm.spectreBoundsCheck32(index, scratch, spectreTemp, failure->label());
+
+  // Load the elements vector.
+  LoadTypedThingData(masm, TypedThingLayout::TypedArray, obj, scratch);
+
+  // Load the value.
+  BaseIndex source(scratch, index,
+                   ScaleFromElemWidth(Scalar::byteSize(elementType)));
+
+  // Uint32 isn't handled yet (bug 1077305).
+  MOZ_ASSERT(elementType != Scalar::Uint32);
+  bool allowDouble = false;
+  Register tempUint32 = Register::Invalid();
+  Label* failUint32 = nullptr;
+
+  auto sync = Synchronization::Load();
+
+  masm.memoryBarrierBefore(sync);
+  masm.loadFromTypedArray(elementType, source, output.valueReg(), allowDouble,
+                          tempUint32, failUint32);
+  masm.memoryBarrierAfter(sync);
+
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
