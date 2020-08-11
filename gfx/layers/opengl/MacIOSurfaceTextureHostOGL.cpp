@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MacIOSurfaceTextureHostOGL.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/webrender/RenderMacIOSurfaceTextureHostOGL.h"
+#include "mozilla/webrender/RenderMacIOSurfaceTextureHostSWGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "GLContextCGL.h"
@@ -132,8 +134,12 @@ gfx::ColorRange MacIOSurfaceTextureHostOGL::GetColorRange() const {
 
 void MacIOSurfaceTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderMacIOSurfaceTextureHostOGL(GetMacIOSurface());
+  RefPtr<wr::RenderTextureHost> texture;
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    texture = new wr::RenderMacIOSurfaceTextureHostSWGL(GetMacIOSurface());
+  } else {
+    texture = new wr::RenderMacIOSurfaceTextureHostOGL(GetMacIOSurface());
+  }
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
