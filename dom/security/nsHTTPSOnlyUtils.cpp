@@ -85,11 +85,10 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
 
 /* static */
 bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
-                                              int32_t aInnerWindowId,
-                                              bool aFromPrivateWindow,
-                                              uint32_t aHttpsOnlyStatus) {
+                                              nsILoadInfo* aLoadInfo) {
   // 1. Check if the HTTPS-Only Mode is even enabled, before we do anything else
-  if (!IsHttpsOnlyModeEnabled(aFromPrivateWindow)) {
+  bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  if (!IsHttpsOnlyModeEnabled(isPrivateWin)) {
     return false;
   }
 
@@ -98,14 +97,17 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
     return false;
   }
 
+  uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
+
   // 3. Check if NoUpgrade-flag is set in LoadInfo
-  if (aHttpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+  uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
     // Let's log to the console, that we didn't upgrade this request
     AutoTArray<nsString, 1> params = {
         NS_ConvertUTF8toUTF16(aURI->GetSpecOrDefault())};
-    nsHTTPSOnlyUtils::LogLocalizedString(
-        "HTTPSOnlyNoUpgradeException", params, nsIScriptError::infoFlag,
-        aInnerWindowId, aFromPrivateWindow, aURI);
+    nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyNoUpgradeException", params,
+                                         nsIScriptError::infoFlag,
+                                         innerWindowId, isPrivateWin, aURI);
     return false;
   }
 
@@ -118,9 +120,9 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
   NS_ConvertUTF8toUTF16 reportScheme(scheme);
 
   AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
-  nsHTTPSOnlyUtils::LogLocalizedString(
-      "HTTPSOnlyUpgradeRequest", params, nsIScriptError::warningFlag,
-      aInnerWindowId, aFromPrivateWindow, aURI);
+  nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeRequest", params,
+                                       nsIScriptError::warningFlag,
+                                       innerWindowId, isPrivateWin, aURI);
 
   return true;
 }
