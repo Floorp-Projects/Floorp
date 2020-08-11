@@ -1341,7 +1341,27 @@ def project_flag(env=None, set_for_old_configure=False,
 
 # milestone.is_nightly corresponds to cases NIGHTLY_BUILD is set.
 
-
 @depends(milestone)
 def enabled_in_nightly(milestone):
     return milestone.is_nightly
+
+# Branding
+# ==============================================================
+option('--with-app-basename', env='MOZ_APP_BASENAME', nargs=1,
+       help='Typically stays consistent for multiple branded versions of a '
+       'given application (e.g. Aurora and Firefox both use "Firefox"), but '
+       'may vary for full rebrandings (e.g. Iceweasel). Used for '
+       'application.ini\'s "Name" field, which controls profile location in '
+       'the absence of a "Profile" field (see below), and various system '
+       'integration hooks (Unix remoting, Windows MessageWindow name, etc.')
+
+@depends('--with-app-basename', target_is_android)
+def moz_app_basename(value, target_is_android):
+    if value:
+        return value[0]
+    if target_is_android:
+        return 'Fennec'
+    return 'Firefox'
+
+set_config('MOZ_APP_BASENAME', moz_app_basename,
+           when=depends(build_project)(lambda p: p != 'js'))
