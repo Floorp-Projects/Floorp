@@ -128,7 +128,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     is_launcher = sys.platform.startswith('win') and '-wait-for-browser' in command
     context = ProcessContext(is_launcher)
     first_time = int(time.time()) * 1000
-    wait_for_quit_timeout = 5
+    wait_for_quit_timeout = 20
     event = Event()
     reader = Reader(event)
 
