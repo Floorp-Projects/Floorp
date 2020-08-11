@@ -2432,6 +2432,14 @@ bool WarpCacheIRTranspiler::emitAtomicsAndResult(ObjOperandId objId,
                              AtomicFetchAndOp);
 }
 
+bool WarpCacheIRTranspiler::emitAtomicsOrResult(ObjOperandId objId,
+                                                Int32OperandId indexId,
+                                                Int32OperandId valueId,
+                                                Scalar::Type elementType) {
+  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
+                             AtomicFetchOrOp);
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
