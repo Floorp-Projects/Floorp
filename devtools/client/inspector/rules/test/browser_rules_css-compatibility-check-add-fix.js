@@ -20,6 +20,7 @@ const TEST_URI = `
     color: green;
     background-color: black;
     user-select: none;
+    -webkit-appearance: none;
   }
 </style>
 <div>`;
@@ -36,12 +37,16 @@ const TEST_DATA_INITIAL = [
           value: "none",
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
         },
+        "-webkit-appearance": {
+          value: "none",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE.experimental,
+        },
       },
     ],
   },
 ];
 
-const TEST_DATA_CHANGED = [
+const TEST_DATA_FIX_USER_SELECT = [
   {
     selector: "div",
     rules: [
@@ -51,6 +56,37 @@ const TEST_DATA_CHANGED = [
         "background-color": { value: "black" },
         "user-select": { value: "none" },
         "-webkit-user-select": { value: "none" },
+        "-webkit-appearance": {
+          value: "none",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE.experimental,
+        },
+      },
+    ],
+  },
+];
+
+// Appearance is an experimental property with aliases.
+// Adding both -webkit and -moz prefix makes it compatible
+// on all platforms but will still show an inline warning
+// for its experimental status.
+const TEST_DATA_FIX_EXPERIMENTAL_SUPPORTED = [
+  {
+    selector: "div",
+    rules: [
+      {},
+      {
+        color: { value: "green" },
+        "background-color": { value: "black" },
+        "user-select": { value: "none" },
+        "-webkit-user-select": { value: "none" },
+        "-webkit-appearance": {
+          value: "none",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE["experimental-supported"],
+        },
+        "-moz-appearance": {
+          value: "none",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE["experimental-supported"],
+        },
       },
     ],
   },
@@ -70,5 +106,15 @@ add_task(async function() {
     'Add -webkit-user-select: "none" which solves the compatibility issue from user-select'
   );
   await addProperty(view, 1, "-webkit-user-select", "none");
-  await runCSSCompatibilityTests(view, inspector, TEST_DATA_CHANGED);
+  await runCSSCompatibilityTests(view, inspector, TEST_DATA_FIX_USER_SELECT);
+
+  info(
+    'Add -moz-appearance: "none" fixing issue but leaving an inline warning of an experimental property'
+  );
+  await addProperty(view, 1, "-moz-appearance", "none");
+  await runCSSCompatibilityTests(
+    view,
+    inspector,
+    TEST_DATA_FIX_EXPERIMENTAL_SUPPORTED
+  );
 });

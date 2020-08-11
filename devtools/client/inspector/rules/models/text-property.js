@@ -343,10 +343,7 @@ class TextProperty {
     } else if (deprecated) {
       msgId = COMPATIBILITY_TOOLTIP_MESSAGE.deprecated;
     } else if (experimental && !unsupportedBrowsers.length) {
-      msgId =
-        COMPATIBILITY_TOOLTIP_MESSAGE[
-          "css-compatibility-experimental-supported-message"
-        ];
+      msgId = COMPATIBILITY_TOOLTIP_MESSAGE["experimental-supported"];
     } else if (experimental) {
       msgId = COMPATIBILITY_TOOLTIP_MESSAGE.experimental;
     }
