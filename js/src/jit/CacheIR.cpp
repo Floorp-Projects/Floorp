@@ -17,6 +17,7 @@
 #include "jit/CacheIRSpewer.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"  // IsIonEnabled
+#include "jit/JitContext.h"
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/Wrapper.h"
@@ -6929,6 +6930,118 @@ AttachDecision CallIRGenerator::tryAttachReflectGetPrototypeOf(
   return AttachDecision::Attach;
 }
 
+static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
+                                      double index) {
+  switch (typedArray->type()) {
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Int32:
+    case Scalar::Uint32:
+      break;
+
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+      // Bug 1638295: Not yet implemented.
+      return false;
+
+    case Scalar::Float32:
+    case Scalar::Float64:
+    case Scalar::Uint8Clamped:
+      // Exclude floating types and Uint8Clamped.
+      return false;
+
+    case Scalar::MaxTypedArrayViewType:
+    case Scalar::Int64:
+    case Scalar::Simd128:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+
+  // Bounds check the index argument.
+  int32_t indexInt32;
+  if (!mozilla::NumberEqualsInt32(index, &indexInt32)) {
+    return false;
+  }
+  if (indexInt32 < 0 || uint32_t(indexInt32) >= typedArray->length()) {
+    return false;
+  }
+
+  return true;
+}
+
+AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
+    HandleFunction callee) {
+  if (!JitSupportsAtomics()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need four arguments.
+  if (argc_ != 4) {
+    return AttachDecision::NoAction;
+  }
+
+  // Arguments: typedArray, index (number), expected, replacement.
+  if (!args_[0].isObject() || !args_[0].toObject().is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+  if (!args_[1].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+  if (!args_[2].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+  if (!args_[3].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1].toNumber())) {
+    return AttachDecision::NoAction;
+  }
+
+  // TODO: Uint32 isn't yet supported (bug 1077305).
+  if (typedArray->type() == Scalar::Uint32) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the `compareExchange` native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(arg0Id);
+  writer.guardShapeForClass(objId, typedArray->shape());
+
+  // Convert index to int32.
+  ValOperandId indexId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
+
+  // Convert expected value to int32.
+  ValOperandId expectedId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  Int32OperandId int32ExpectedId = writer.guardToInt32ModUint32(expectedId);
+
+  // Convert replacement value to int32.
+  ValOperandId replacementId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg3, argc_);
+  Int32OperandId int32ReplacementId =
+      writer.guardToInt32ModUint32(replacementId);
+
+  writer.atomicsCompareExchangeResult(objId, int32IndexId, int32ExpectedId,
+                                      int32ReplacementId, typedArray->type());
+
+  // This stub doesn't need to be monitored, because it always returns an int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("AtomicsCompareExchange");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
@@ -8008,6 +8121,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Reflect natives.
     case InlinableNative::ReflectGetPrototypeOf:
       return tryAttachReflectGetPrototypeOf(callee);
+
+    // Atomics intrinsics:
+    case InlinableNative::AtomicsCompareExchange:
+      return tryAttachAtomicsCompareExchange(callee);
 
     default:
       return AttachDecision::NoAction;

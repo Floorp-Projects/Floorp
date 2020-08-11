@@ -1292,6 +1292,17 @@
     index: Int32Id
     rhs: RawId
 
+- name: AtomicsCompareExchangeResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    obj: ObjId
+    index: Int32Id
+    expected: Int32Id
+    replacement: Int32Id
+    elementType: ScalarTypeImm
+
 - name: CallNativeSetter
   shared: false
   transpile: false

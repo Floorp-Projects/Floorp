@@ -7491,6 +7491,65 @@ bool CacheIRCompiler::emitGetFirstDollarIndexResult(StringOperandId strId) {
   return true;
 }
 
+bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
+    ObjOperandId objId, Int32OperandId indexId, Int32OperandId expectedId,
+    Int32OperandId replacementId, Scalar::Type elementType) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+#ifdef JS_CODEGEN_X86
+  // Use a scratch register to avoid running out of registers.
+  Register obj = output.valueReg().typeReg();
+  allocator.copyToScratchRegister(masm, objId, obj);
+#else
+  Register obj = allocator.useRegister(masm, objId);
+#endif
+  Register index = allocator.useRegister(masm, indexId);
+  Register expected = allocator.useRegister(masm, expectedId);
+  Register replacement = allocator.useRegister(masm, replacementId);
+
+  Register scratch = output.valueReg().scratchReg();
+  MOZ_ASSERT(scratch != obj, "scratchReg must not be typeReg");
+
+  // Not enough registers on X86.
+  Register spectreTemp = Register::Invalid();
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Bounds check.
+  LoadTypedThingLength(masm, TypedThingLayout::TypedArray, obj, scratch);
+  masm.spectreBoundsCheck32(index, scratch, spectreTemp, failure->label());
+
+  // Atomic operations are highly platform-dependent, for example x86/x64 has
+  // specific requirements on which registers are used; MIPS needs multiple
+  // additional temporaries. Therefore we're using an ABI call here instead of
+  // handling each platform separately.
+  {
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
+                                 liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(output.valueReg());
+    volatileRegs.takeUnchecked(scratch);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.passABIArg(obj);
+    masm.passABIArg(index);
+    masm.passABIArg(expected);
+    masm.passABIArg(replacement);
+    masm.callWithABI(
+        JS_FUNC_TO_DATA_PTR(void*, AtomicsCompareExchange(elementType)));
+    masm.storeCallInt32Result(scratch);
+
+    masm.PopRegsInMask(volatileRegs);
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  }
+
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
