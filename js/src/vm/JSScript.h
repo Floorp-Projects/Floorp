@@ -545,14 +545,6 @@ class ScriptSource {
   // will be released in the canonical SSO's finalizer.
   UniquePtr<XDRIncrementalEncoder> xdrEncoder_ = nullptr;
 
-  // Instant at which the first parse of this source ended, or null
-  // if the source hasn't been parsed yet.
-  //
-  // Used for statistics purposes, to determine how much time code spends
-  // syntax parsed before being full parsed, to help determine whether
-  // our syntax parse vs. full parse heuristics are correct.
-  mozilla::TimeStamp parseEnded_;
-
   // A string indicating how this source code was introduced into the system.
   // This is a constant, statically allocated C string, so does not need memory
   // management.
@@ -1036,13 +1028,6 @@ class ScriptSource {
   // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
   // |buffer| is considered undefined.
   bool xdrFinalizeEncoder(JS::TranscodeBuffer& buffer);
-
-  const mozilla::TimeStamp parseEnded() const { return parseEnded_; }
-  // Inform `this` source that it has been fully parsed.
-  void recordParseEnded() {
-    MOZ_ASSERT(parseEnded_.IsNull());
-    parseEnded_ = ReallyNow();
-  }
 
  private:
   template <typename Unit,

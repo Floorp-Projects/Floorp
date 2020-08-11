@@ -1141,30 +1141,6 @@
     "n_values":  10,
     "description": "Count how often we use different fallbacks when the GPU process crashes: None=0, GPUProcessDecodingDisabled=1, GPUProcessDisabled=2"
   },
-  "JS_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["dteller@mozilla.com"],
-    "expires_in_version": "70",
-    "bug_numbers": [1343483],
-    "kind": "exponential",
-    "low": 10,
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Time elapsed between the moment a function is lazy-parsed (end of parsing of the ScriptSource) and the moment it is recompiled as non-lazy (start of compilation), in milliseconds, for privileged code."
-  },
-  "JS_WEB_PARSER_COMPILE_LAZY_AFTER_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["dteller@mozilla.com"],
-    "expires_in_version": "70",
-    "bug_numbers": [1343483],
-    "kind": "exponential",
-    "low": 10,
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Time elapsed between the moment a function is lazy-parsed (end of parsing of the ScriptSource) and the moment it is recompiled as non-lazy (start of compilation), in milliseconds, for web code."
-  },
   "XUL_CACHE_DISABLED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
