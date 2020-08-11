@@ -1539,8 +1539,8 @@ void GenerateMipmap(UNUSED GLenum target) {
   // TODO: support mipmaps
 }
 
-void TexParameteri(GLenum target, GLenum pname, GLint param) {
-  Texture& t = ctx->textures[ctx->get_binding(target)];
+void SetTextureParameter(GLuint texid, GLenum pname, GLint param) {
+  Texture& t = ctx->textures[texid];
   switch (pname) {
     case GL_TEXTURE_WRAP_S:
       assert(param == GL_CLAMP_TO_EDGE);
@@ -1557,6 +1557,10 @@ void TexParameteri(GLenum target, GLenum pname, GLint param) {
     default:
       break;
   }
+}
+
+void TexParameteri(GLenum target, GLenum pname, GLint param) {
+  SetTextureParameter(ctx->get_binding(target), pname, param);
 }
 
 void GenTextures(int n, GLuint* result) {
