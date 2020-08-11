@@ -17,6 +17,10 @@
 #define MOZ_ARG_5(a1, a2, a3, a4, a5, ...) a5
 #define MOZ_ARG_6(a1, a2, a3, a4, a5, a6, ...) a6
 
+#define MOZ_PASTE_HELPER(a, b) a##b
+#define MOZ_PASTE(a, b) MOZ_PASTE_HELPER(a, b)
+#define MOZ_UNIQUE_VAR(base) MOZ_PASTE(base_, __LINE__)
+
 #define BEGIN_QUOTA_NAMESPACE \
   namespace mozilla {         \
   namespace dom {             \
@@ -265,28 +269,24 @@
 // implementation details of QM_TRY_VAR and shouldn't be used directly.
 
 // Handles the three args case when the eror is propagated.
-#define QM_TRY_VAR_PROPAGATE_ERR(ns, target, expr)                         \
-  do {                                                                     \
-    auto mozTryVarTempResult_ = (expr);                                    \
-    if (MOZ_UNLIKELY(mozTryVarTempResult_.isErr())) {                      \
-      ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
-                      __LINE__);                                           \
-      return mozTryVarTempResult_.propagateErr();                          \
-    }                                                                      \
-    (target) = mozTryVarTempResult_.unwrap();                              \
-  } while (0)
+#define QM_TRY_VAR_PROPAGATE_ERR(ns, target, expr)                       \
+  auto MOZ_UNIQUE_VAR(tryVarResult) = (expr);                            \
+  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryVarResult).isErr())) {              \
+    ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
+                    __LINE__);                                           \
+    return MOZ_UNIQUE_VAR(tryVarResult).propagateErr();                  \
+  }                                                                      \
+  target = MOZ_UNIQUE_VAR(tryVarResult).unwrap();
 
 // Handles the four args case when a custom return value needs to be returned
-#define QM_TRY_VAR_CUSTOM_RET_VAR(ns, target, expr, customRetVal)          \
-  do {                                                                     \
-    auto mozTryVarTempResult_ = (expr);                                    \
-    if (MOZ_UNLIKELY(mozTryVarTempResult_.isErr())) {                      \
-      ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
-                      __LINE__);                                           \
-      return customRetVal;                                                 \
-    }                                                                      \
-    (target) = mozTryVarTempResult_.unwrap();                              \
-  } while (0)
+#define QM_TRY_VAR_CUSTOM_RET_VAR(ns, target, expr, customRetVal)        \
+  auto MOZ_UNIQUE_VAR(tryVarResult) = (expr);                            \
+  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryVarResult).isErr())) {              \
+    ns::HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), \
+                    __LINE__);                                           \
+    return customRetVal;                                                 \
+  }                                                                      \
+  target = MOZ_UNIQUE_VAR(tryVarResult).unwrap();
 
 // Chooses the final implementation macro for given argument count.
 // It can be used by other modules to define module specific error handling.
