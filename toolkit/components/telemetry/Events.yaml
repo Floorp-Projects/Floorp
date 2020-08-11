@@ -2255,6 +2255,7 @@ doh:
       evaluateReason: The reason for running heuristics - startup or netchange
       networkID: An ID representing the network on which heuristics were run, unique to this client
       captiveState: The Captive Portal Service state - unknown, not_captive, locked, or unlocked
+      platform: Comma-separated list of platform attributes that would cause split-horizon issues (vpn, proxy, nrpt)
   evaluate:
     methods: ["evaluate"]
     objects: ["heuristics"]
