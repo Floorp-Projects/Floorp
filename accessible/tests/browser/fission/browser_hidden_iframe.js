@@ -28,20 +28,21 @@ addAccessibleTask(
     );
 
     const events = [[EVENT_REORDER, contentDocAcc]];
-    // Until this event is fired, IFRAME accessible has no children attached.
-    events.push([
-      EVENT_STATE_CHANGE,
-      event => {
-        const scEvent = event.QueryInterface(nsIAccessibleStateChangeEvent);
-        const id = getAccessibleDOMNodeID(event.accessible);
-        return (
-          id === DEFAULT_IFRAME_DOC_BODY_ID &&
-          scEvent.state === STATE_BUSY &&
-          scEvent.isEnabled === false
-        );
-      },
-    ]);
-
+    if (!gIsRemoteIframe) {
+      // Until this event is fired, IFRAME accessible has no children attached.
+      events.push([
+        EVENT_STATE_CHANGE,
+        event => {
+          const scEvent = event.QueryInterface(nsIAccessibleStateChangeEvent);
+          const id = getAccessibleDOMNodeID(event.accessible);
+          return (
+            id === DEFAULT_IFRAME_DOC_BODY_ID &&
+            scEvent.state === STATE_BUSY &&
+            scEvent.isEnabled === false
+          );
+        },
+      ]);
+    }
     const onEvents = waitForEvents(events);
     await SpecialPowers.spawn(browser, [DEFAULT_IFRAME_ID], contentId => {
       content.document.getElementById(contentId).style.display = "";
