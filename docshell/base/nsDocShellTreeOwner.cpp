@@ -1287,17 +1287,9 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
 
       if (textFound && (!self->mTooltipShownOnce ||
                         tooltipText != self->mLastShownTooltipText)) {
-        LayoutDeviceIntPoint screenDot = widget->WidgetToScreenOffset();
-        double scaleFactor = 1.0;
-        if (presShell->GetPresContext()) {
-          nsDeviceContext* dc = presShell->GetPresContext()->DeviceContext();
-          scaleFactor = double(AppUnitsPerCSSPixel()) /
-                        dc->AppUnitsPerDevPixelAtUnitFullZoom();
-        }
-        // ShowTooltip expects widget-relative position.
-        self->ShowTooltip(self->mMouseScreenX - screenDot.x / scaleFactor,
-                          self->mMouseScreenY - screenDot.y / scaleFactor,
-                          tooltipText, directionText);
+        // ShowTooltip expects screen-relative position.
+        self->ShowTooltip(self->mMouseScreenX, self->mMouseScreenY, tooltipText,
+                          directionText);
         self->mLastShownTooltipText = std::move(tooltipText);
         self->mLastDocshell = do_GetWeakReference(
             self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
