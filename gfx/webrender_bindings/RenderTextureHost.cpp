@@ -41,5 +41,17 @@ bool RenderTextureHost::IsFilterUpdateNecessary(wr::ImageRendering aRendering) {
   return mCachedRendering != aRendering;
 }
 
+wr::WrExternalImage RenderTextureHost::Lock(uint8_t aChannelIndex,
+                                            gl::GLContext* aGL,
+                                            wr::ImageRendering aRendering) {
+  return InvalidToWrExternalImage();
+}
+
+wr::WrExternalImage RenderTextureHost::LockSWGL(uint8_t aChannelIndex,
+                                                void* aContext,
+                                                wr::ImageRendering aRendering) {
+  return InvalidToWrExternalImage();
+}
+
 }  // namespace wr
 }  // namespace mozilla
