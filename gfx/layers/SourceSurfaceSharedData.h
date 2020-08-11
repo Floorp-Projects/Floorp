@@ -86,7 +86,8 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
 
  private:
   size_t GetDataLength() const {
-    return static_cast<size_t>(mStride) * mSize.height;
+    // extra SIMD padding needed for SWGL
+    return static_cast<size_t>(mStride) * mSize.height + 16;
   }
 
   size_t GetAlignedDataLength() const {
@@ -297,7 +298,8 @@ class SourceSurfaceSharedData : public DataSourceSurface {
   uint8_t* GetDataInternal() const;
 
   size_t GetDataLength() const {
-    return static_cast<size_t>(mStride) * mSize.height;
+    // extra SIMD padding needed for SWGL
+    return static_cast<size_t>(mStride) * mSize.height + 16;
   }
 
   size_t GetAlignedDataLength() const {
