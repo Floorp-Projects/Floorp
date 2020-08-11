@@ -156,10 +156,11 @@ class BaseBootstrapper(object):
         self.no_system_changes = no_system_changes
         self.state_dir = None
 
-    def prepare(self):
+    def validate_environment(self, srcdir):
         '''
-        Called before anything else is done with this bootstrapper, but after it
-        is initialized.
+        Called once the current firefox checkout has been detected.
+        Platform-specific implementations should check the environment and offer advice/warnings
+        to the user, if necessary.
         '''
 
     def install_system_packages(self):
