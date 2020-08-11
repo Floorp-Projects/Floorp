@@ -812,11 +812,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     }
 
     override fun onBackLongPressed(): Boolean {
-        if (FeatureFlags.tabHistory) {
-            findNavController().navigate(R.id.action_global_tabHistoryDialogFragment)
-            return true
-        }
-        return false
+        findNavController().navigate(R.id.action_global_tabHistoryDialogFragment)
+        return true
     }
 
     /**

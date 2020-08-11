@@ -23,7 +23,6 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.isUrl
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -205,21 +204,17 @@ class DefaultBrowserToolbarController(
 
         Do exhaustive when (item) {
             is ToolbarMenu.Item.Back -> {
-                if (FeatureFlags.tabHistory && item.viewHistory) {
+                if (item.viewHistory) {
                     navController.navigate(R.id.action_global_tabHistoryDialogFragment)
-                } else if (!item.viewHistory) {
-                    sessionUseCases.goBack.invoke(currentSession)
                 } else {
-                    // Do nothing if tab history feature flag is off and item.viewHistory is true
+                    sessionUseCases.goBack.invoke(currentSession)
                 }
             }
             is ToolbarMenu.Item.Forward -> {
-                if (FeatureFlags.tabHistory && item.viewHistory) {
+                if (item.viewHistory) {
                     navController.navigate(R.id.action_global_tabHistoryDialogFragment)
-                } else if (!item.viewHistory) {
-                    sessionUseCases.goForward.invoke(currentSession)
                 } else {
-                    // Do nothing if tab history feature flag is off and item.viewHistory is true
+                    sessionUseCases.goForward.invoke(currentSession)
                 }
             }
             is ToolbarMenu.Item.Reload -> {
