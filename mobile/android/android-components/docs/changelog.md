@@ -33,6 +33,12 @@ permalink: /changelog/
 * **browser-menu**
   * ⚠️ **This is a breaking change**: Removed `SimpleBrowserMenuHighlightableItem.itemType`. Use a WeakMap instead if you need to attach private data.
 
+* **concept-engine**
+  * Added the `cookiePurging` property to `TrackingProtectionPolicy` and `TrackingProtectionPolicyForSessionTypes` constructors to enable/disable cookie purging feature read more about it [here](https://blog.mozilla.org/blog/2020/08/04/latest-firefox-rolls-out-enhanced-tracking-protection-2-0-blocking-redirect-trackers-by-default/).
+
+* **browser-engine-nightly**
+  * Added `cookiePurging` to `TrackingProtectionPolicy.toContentBlockingSetting`.
+
 # 53.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v52.0.0...v53.0.0)

@@ -178,12 +178,14 @@ abstract class EngineSession(
      * a [TrackingProtectionPolicy] is applicable to all session types (see
      * [TrackingProtectionPolicyForSessionTypes]).
      */
+    @Suppress("LongParameterList")
     open class TrackingProtectionPolicy internal constructor(
         val trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
         val useForPrivateSessions: Boolean = true,
         val useForRegularSessions: Boolean = true,
         val cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
-        val strictSocialTrackingProtection: Boolean? = null
+        val strictSocialTrackingProtection: Boolean? = null,
+        val cookiePurging: Boolean = false
     ) {
 
         /**
@@ -297,7 +299,8 @@ abstract class EngineSession(
             fun strict() = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = arrayOf(TrackingCategory.STRICT),
                 cookiePolicy = ACCEPT_NON_TRACKERS,
-                strictSocialTrackingProtection = true
+                strictSocialTrackingProtection = true,
+                cookiePurging = true
             )
 
             /**
@@ -308,17 +311,32 @@ abstract class EngineSession(
             fun recommended() = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = arrayOf(TrackingCategory.RECOMMENDED),
                 cookiePolicy = ACCEPT_NON_TRACKERS,
-                strictSocialTrackingProtection = false
+                strictSocialTrackingProtection = false,
+                cookiePurging = true
             )
 
+            /**
+            *  Creates a custom [TrackingProtectionPolicyForSessionTypes] using the provide values .
+            *  @param trackingCategories a list of tracking categories to apply.
+            *  @param cookiePolicy indicate how cookies should behave for this policy.
+            *  @param strictSocialTrackingProtection indicate  if content should be blocked from the
+            *  social-tracking-protection-digest256 list, when given a null value,
+            *  it is only applied when the [EngineSession.TrackingProtectionPolicy.TrackingCategory.STRICT]
+            *  is set.
+            *  @param cookiePurging Whether or not to automatically purge tracking cookies. This will
+            *  purge cookies from tracking sites that do not have recent user interaction provided.
+            */
+            @Suppress("LongParameterList")
             fun select(
                 trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
                 cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
-                strictSocialTrackingProtection: Boolean? = null
+                strictSocialTrackingProtection: Boolean? = null,
+                cookiePurging: Boolean = false
             ) = TrackingProtectionPolicyForSessionTypes(
                 trackingCategories,
                 cookiePolicy,
-                strictSocialTrackingProtection
+                strictSocialTrackingProtection,
+                cookiePurging = cookiePurging
             )
         }
 
@@ -346,15 +364,19 @@ abstract class EngineSession(
      *  social-tracking-protection-digest256 list, when given a null value,
      *  it is only applied when the [EngineSession.TrackingProtectionPolicy.TrackingCategory.STRICT]
      *  is set.
+     *  @param cookiePurging Whether or not to automatically purge tracking cookies. This will
+     *  purge cookies from tracking sites that do not have recent user interaction provided.
      */
     class TrackingProtectionPolicyForSessionTypes internal constructor(
         trackingCategory: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
         cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
-        strictSocialTrackingProtection: Boolean? = null
+        strictSocialTrackingProtection: Boolean? = null,
+        cookiePurging: Boolean = false
     ) : TrackingProtectionPolicy(
         trackingCategories = trackingCategory,
         cookiePolicy = cookiePolicy,
-        strictSocialTrackingProtection = strictSocialTrackingProtection
+        strictSocialTrackingProtection = strictSocialTrackingProtection,
+        cookiePurging = cookiePurging
     ) {
         /**
          * Marks this policy to be used for private sessions only.
@@ -364,7 +386,8 @@ abstract class EngineSession(
             useForPrivateSessions = true,
             useForRegularSessions = false,
             cookiePolicy = cookiePolicy,
-            strictSocialTrackingProtection = strictSocialTrackingProtection
+            strictSocialTrackingProtection = strictSocialTrackingProtection,
+            cookiePurging = cookiePurging
         )
 
         /**
@@ -375,7 +398,8 @@ abstract class EngineSession(
             useForPrivateSessions = false,
             useForRegularSessions = true,
             cookiePolicy = cookiePolicy,
-            strictSocialTrackingProtection = strictSocialTrackingProtection
+            strictSocialTrackingProtection = strictSocialTrackingProtection,
+            cookiePurging = cookiePurging
         )
     }
 
