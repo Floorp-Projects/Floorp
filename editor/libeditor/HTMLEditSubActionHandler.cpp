@@ -4337,7 +4337,7 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
 }
 
 EditorDOMPoint HTMLEditor::GetGoodCaretPointFor(
-    nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount) {
+    nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
              aDirectionAndAmount == nsIEditor::eNextWord ||
@@ -7940,6 +7940,70 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::AutoEmptyBlockAncestorDeleter::
   return brElement;
 }
 
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::AutoEmptyBlockAncestorDeleter::GetNewCaretPoisition(
+    const HTMLEditor& aHTMLEditor,
+    nsIEditor::EDirection aDirectionAndAmount) const {
+  MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
+  MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+
+  switch (aDirectionAndAmount) {
+    case nsIEditor::eNext:
+    case nsIEditor::eNextWord:
+    case nsIEditor::eToEndOfLine: {
+      // Collapse Selection to next node of after empty block element
+      // if there is.  Otherwise, to just after the empty block.
+      EditorDOMPoint afterEmptyBlock(
+          EditorRawDOMPoint::After(mEmptyInclusiveAncestorBlockElement));
+      MOZ_ASSERT(afterEmptyBlock.IsSet());
+      if (nsIContent* nextContentOfEmptyBlock =
+              aHTMLEditor.GetNextNode(afterEmptyBlock)) {
+        EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
+            *nextContentOfEmptyBlock, aDirectionAndAmount);
+        if (!pt.IsSet()) {
+          NS_WARNING("HTMLEditor::GetGoodCaretPointFor() failed");
+          return Err(NS_ERROR_FAILURE);
+        }
+        return pt;
+      }
+      if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
+        return Err(NS_ERROR_FAILURE);
+      }
+      return afterEmptyBlock;
+    }
+    case nsIEditor::ePrevious:
+    case nsIEditor::ePreviousWord:
+    case nsIEditor::eToBeginningOfLine: {
+      // Collapse Selection to previous editable node of the empty block
+      // if there is.  Otherwise, to after the empty block.
+      EditorRawDOMPoint atEmptyBlock(mEmptyInclusiveAncestorBlockElement);
+      if (nsIContent* previousContentOfEmptyBlock =
+              aHTMLEditor.GetPreviousEditableNode(atEmptyBlock)) {
+        EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
+            *previousContentOfEmptyBlock, aDirectionAndAmount);
+        if (!pt.IsSet()) {
+          NS_WARNING("HTMLEditor::GetGoodCaretPointFor() failed");
+          return Err(NS_ERROR_FAILURE);
+        }
+        return pt;
+      }
+      EditorDOMPoint afterEmptyBlock(
+          EditorRawDOMPoint::After(*mEmptyInclusiveAncestorBlockElement));
+      if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
+        return Err(NS_ERROR_FAILURE);
+      }
+      return afterEmptyBlock;
+    }
+    case nsIEditor::eNone:
+      return EditorDOMPoint();
+    default:
+      MOZ_CRASH(
+          "AutoEmptyBlockAncestorDeleter doesn't support this action yet");
+      return EditorDOMPoint();
+  }
+}
+
 EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
     HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount) {
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
@@ -7966,81 +8030,19 @@ EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
       }
     }
   } else {
-    switch (aDirectionAndAmount) {
-      case nsIEditor::eNext:
-      case nsIEditor::eNextWord:
-      case nsIEditor::eToEndOfLine: {
-        // Collapse Selection to next node of after empty block element
-        // if there is.  Otherwise, to just after the empty block.
-        EditorRawDOMPoint afterEmptyBlock(mEmptyInclusiveAncestorBlockElement);
-        bool advancedFromEmptyBlock = afterEmptyBlock.AdvanceOffset();
-        NS_WARNING_ASSERTION(
-            advancedFromEmptyBlock,
-            "Failed to set selection to the after the empty block");
-        nsCOMPtr<nsIContent> nextContentOfEmptyBlock =
-            aHTMLEditor.GetNextNode(afterEmptyBlock);
-        if (nextContentOfEmptyBlock) {
-          EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
-              *nextContentOfEmptyBlock, aDirectionAndAmount);
-          NS_WARNING_ASSERTION(
-              pt.IsSet(),
-              "HTMLEditor::GetGoodCaretPointFor() failed, but ignored");
-          nsresult rv = aHTMLEditor.CollapseSelectionTo(pt);
-          if (NS_FAILED(rv)) {
-            NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-            return EditActionResult(rv);
-          }
-          break;
-        }
-        if (NS_WARN_IF(!advancedFromEmptyBlock)) {
-          return EditActionResult(NS_ERROR_FAILURE);
-        }
-        nsresult rv = aHTMLEditor.CollapseSelectionTo(afterEmptyBlock);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-          return EditActionResult(rv);
-        }
-        break;
+    Result<EditorDOMPoint, nsresult> result =
+        GetNewCaretPoisition(aHTMLEditor, aDirectionAndAmount);
+    if (result.isErr()) {
+      NS_WARNING(
+          "AutoEmptyBlockAncestorDeleter::GetNewCaretPoisition() failed");
+      return EditActionResult(result.inspectErr());
+    }
+    if (result.inspect().IsSet()) {
+      nsresult rv = aHTMLEditor.CollapseSelectionTo(result.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
+        return EditActionResult(rv);
       }
-      case nsIEditor::ePrevious:
-      case nsIEditor::ePreviousWord:
-      case nsIEditor::eToBeginningOfLine: {
-        // Collapse Selection to previous editable node of the empty block
-        // if there is.  Otherwise, to after the empty block.
-        EditorRawDOMPoint atEmptyBlock(mEmptyInclusiveAncestorBlockElement);
-        nsCOMPtr<nsIContent> previousContentOfEmptyBlock =
-            aHTMLEditor.GetPreviousEditableNode(atEmptyBlock);
-        if (previousContentOfEmptyBlock) {
-          EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
-              *previousContentOfEmptyBlock, aDirectionAndAmount);
-          NS_WARNING_ASSERTION(
-              pt.IsSet(),
-              "HTMLEditor::GetGoodCaretPointFor() failed, but ignored");
-          nsresult rv = aHTMLEditor.CollapseSelectionTo(pt);
-          if (NS_FAILED(rv)) {
-            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                                 "HTMLEditor::CollapseSelectionTo() failed");
-            return EditActionResult(rv);
-          }
-          break;
-        }
-        EditorRawDOMPoint afterEmptyBlock(
-            EditorRawDOMPoint::After(*mEmptyInclusiveAncestorBlockElement));
-        if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
-          return EditActionResult(NS_ERROR_FAILURE);
-        }
-        nsresult rv = aHTMLEditor.CollapseSelectionTo(afterEmptyBlock);
-        if (NS_FAILED(rv)) {
-          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                               "HTMLEditor::CollapseSelectionTo() failed");
-          return EditActionResult(rv);
-        }
-        break;
-      }
-      case nsIEditor::eNone:
-        break;
-      default:
-        MOZ_CRASH("CheckForEmptyBlock doesn't support this action yet");
     }
   }
   nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(
