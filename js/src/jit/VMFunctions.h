@@ -1172,6 +1172,7 @@ AtomicsCompareExchangeFn AtomicsCompareExchange(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsExchange(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsAdd(Scalar::Type elementType);
 AtomicsReadWriteModifyFn AtomicsSub(Scalar::Type elementType);
+AtomicsReadWriteModifyFn AtomicsAnd(Scalar::Type elementType);
 
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
