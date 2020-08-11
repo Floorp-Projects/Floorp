@@ -294,6 +294,8 @@ extern "C" {
         src_height: GLsizei,
         dst_x: GLint,
         dst_y: GLint,
+        dst_width: GLsizei,
+        dst_height: GLsizei,
         opaque: GLboolean,
         flip: GLboolean,
     );
@@ -2278,9 +2280,11 @@ impl LockedResource {
         src_x: GLint,
         src_y: GLint,
         src_width: GLsizei,
-        src_height: GLint,
+        src_height: GLsizei,
         dst_x: GLint,
         dst_y: GLint,
+        dst_width: GLsizei,
+        dst_height: GLsizei,
         opaque: bool,
         flip: bool,
     ) {
@@ -2294,6 +2298,8 @@ impl LockedResource {
                 src_height,
                 dst_x,
                 dst_y,
+                dst_width,
+                dst_height,
                 opaque as GLboolean,
                 flip as GLboolean,
             );
