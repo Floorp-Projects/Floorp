@@ -132,6 +132,7 @@ mochitest-browser-chrome:
             linux.*64-ccov/.*: 9000
             windows7-32/debug: 5400
             windows10-64/debug: 5400
+            macosx.*64/debug: 5400
             windows10-64-ccov/.*: 10800
             macosx.*64-ccov/.*: 10800
             linux.*/debug: 5400

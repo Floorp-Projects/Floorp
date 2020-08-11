@@ -3,7 +3,7 @@
 if (AppConstants.MOZ_CODE_COVERAGE) {
   requestLongerTimeout(12);
 } else {
-  requestLongerTimeout(6);
+  requestLongerTimeout(12);
 }
 
 AntiTracking.runTestInNormalAndPrivateMode(

@@ -183,6 +183,20 @@ config = {
             "enabled": DISABLE_SCREEN_SAVER
         },
         {
+            "name": "disable_dock",
+            "cmd": ["defaults", "write", "com.apple.dock", "autohide", "-bool", "true"],
+            "architectures": ["64bit"],
+            "halt_on_failure": True,
+            "enabled": True
+        },
+        {
+            "name": "kill_dock",
+            "cmd": ["killall", "Dock"],
+            "architectures": ["64bit"],
+            "halt_on_failure": True,
+            "enabled": True
+        },
+        {
             "name": "run mouse & screen adjustment script",
             "cmd": [
                 # when configs are consolidated this python path will only show
