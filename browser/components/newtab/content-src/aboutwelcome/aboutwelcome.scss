@@ -26,6 +26,7 @@ body {
   --newtab-button-secondary-color: #0060DF;
   --newtab-card-background-color: #FFF;
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
+  --tiles-theme-section-border-width: 1px;
   --welcome-header-text-color: #2B2156;
   --welcome-header-text-color-1: #20133A;
   --welcome-card-button-background-color: rgba(12, 12, 13, 0.1);
@@ -345,14 +346,22 @@ body {
     display: grid;
     grid-gap: 21px;
     grid-template-columns: repeat(3, auto);
-    border: 0;
+
+    /* --newtab-background-color-1 will be invisible, but it's necessary to
+     * keep the content from jumping around when it gets focus-within and
+     * does sprout a dotted border.  This way it keeps a 1 pixel wide border
+     * either way so things don't change position.
+     */
+    border: var(--tiles-theme-section-border-width)
+    solid
+    var(--newtab-background-color-1);
 
     @media (max-width: $break-point-medium) {
       grid-template-columns: repeat(2, auto);
     }
 
     &:focus-within {
-      border: 1px dotted;
+      border: var(--tiles-theme-section-border-width) dotted;
     }
 
     .theme {
