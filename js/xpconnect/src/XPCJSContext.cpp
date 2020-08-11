@@ -959,10 +959,13 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sWeakRefsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "weakrefs");
   sWeakRefsExposeCleanupSome = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
+
+  // Require private fields disabled outside of nightly.
+  bool privateFieldsEnabled = false;
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
-  bool privateFieldsEnabled =
+  privateFieldsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_fields");
 #endif
 
