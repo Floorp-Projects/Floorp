@@ -15,7 +15,7 @@ use crate::debug_render::DebugItem;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::glyph_rasterizer::GlyphKey;
-use crate::gpu_cache::{GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
+use crate::gpu_cache::{GpuCacheAddress, GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::intern;
 use crate::picture::{PicturePrimitive, RecordedDirtyRegion};
@@ -689,15 +689,19 @@ impl BrushSegment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(C)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct ClipRect {
     rect: LayoutRect,
     mode: f32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(C)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct ClipCorner {
     rect: LayoutRect,
     outer_radius_x: f32,
@@ -706,23 +710,7 @@ struct ClipCorner {
     inner_radius_y: f32,
 }
 
-impl ToGpuBlocks for ClipCorner {
-    fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        self.write(&mut request)
-    }
-}
-
 impl ClipCorner {
-    fn write(&self, request: &mut GpuDataRequest) {
-        request.push(self.rect);
-        request.push([
-            self.outer_radius_x,
-            self.outer_radius_y,
-            self.inner_radius_x,
-            self.inner_radius_y,
-        ]);
-    }
-
     fn uniform(rect: LayoutRect, outer_radius: f32, inner_radius: f32) -> ClipCorner {
         ClipCorner {
             rect,
@@ -734,25 +722,10 @@ impl ClipCorner {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(C)]
-pub struct ImageMaskData {
-    /// The local size of the whole masked area.
-    pub local_mask_size: LayoutSize,
-}
-
-impl ToGpuBlocks for ImageMaskData {
-    fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push([
-            self.local_mask_size.width,
-            self.local_mask_size.height,
-            0.0,
-            0.0,
-        ]);
-    }
-}
-
-#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ClipData {
     rect: ClipRect,
     top_left: ClipCorner,
@@ -879,19 +852,6 @@ impl ClipData {
                 radius,
                 0.0,
             ),
-        }
-    }
-
-    pub fn write(&self, request: &mut GpuDataRequest) {
-        request.push(self.rect.rect);
-        request.push([self.rect.mode, 0.0, 0.0, 0.0]);
-        for corner in &[
-            &self.top_left,
-            &self.top_right,
-            &self.bottom_left,
-            &self.bottom_right,
-        ] {
-            corner.write(request);
         }
     }
 }
