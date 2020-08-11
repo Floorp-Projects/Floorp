@@ -37,7 +37,7 @@
 use api::{ApiMsg, BlobImageHandler, ColorF, ColorU, MixBlendMode};
 use api::{DocumentId, Epoch, ExternalImageHandler, ExternalImageId};
 use api::{ExternalImageSource, ExternalImageType, FontRenderMode, FrameMsg, ImageFormat};
-use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest, OutputImageHandler};
+use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest};
 use api::{DebugCommand, MemoryReport, VoidPtrToSizeFn, PremultipliedColorF};
 use api::{RenderApiSender, RenderNotifier, TextureTarget, SharedFontInstanceMap};
 #[cfg(feature = "replay")]
@@ -56,11 +56,13 @@ use crate::c_str;
 use crate::debug_colors;
 use crate::debug_render::{DebugItem, DebugRenderer};
 use crate::device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
-use crate::device::{DrawTarget, ExternalTexture, FBOId, ReadTarget, TextureSlot};
+use crate::device::{DrawTarget, ExternalTexture, ReadTarget, TextureSlot};
 use crate::device::{ShaderError, TextureFilter, TextureFlags,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use crate::device::ProgramCache;
 use crate::device::query::GpuTimer;
+#[cfg(feature = "capture")]
+use crate::device::FBOId;
 use euclid::{rect, Transform3D, Scale, default};
 use crate::frame_builder::{Frame, ChasePrimitive, FrameBuilderConfig};
 use gleam::gl;
@@ -101,6 +103,7 @@ use crate::util::drain_filter;
 use std;
 use std::cmp;
 use std::collections::VecDeque;
+#[cfg(any(feature = "capture", feature = "replay"))]
 use std::collections::hash_map::Entry;
 use std::f32;
 use std::marker::PhantomData;
@@ -1848,11 +1851,6 @@ impl<T> VertexDataTexture<T> {
     }
 }
 
-struct FrameOutput {
-    last_access: GpuFrameId,
-    fbo_id: FBOId,
-}
-
 #[derive(PartialEq)]
 struct TargetSelector {
     size: DeviceIntSize,
@@ -2090,17 +2088,9 @@ pub struct Renderer {
     /// application to provide external buffers for image data.
     external_image_handler: Option<Box<dyn ExternalImageHandler>>,
 
-    /// Optional trait object that allows the client
-    /// application to provide a texture handle to
-    /// copy the WR output to.
-    output_image_handler: Option<Box<dyn OutputImageHandler>>,
-
     /// Optional function pointers for measuring memory used by a given
     /// heap-allocated pointer.
     size_of_ops: Option<MallocSizeOfOps>,
-
-    // Currently allocated FBOs for output frames.
-    output_targets: FastHashMap<u32, FrameOutput>,
 
     pub renderer_errors: Vec<RendererError>,
 
@@ -2705,9 +2695,7 @@ impl Renderer {
             pipeline_info: PipelineInfo::default(),
             dither_matrix_texture,
             external_image_handler: None,
-            output_image_handler: None,
             size_of_ops: make_size_of_ops(),
-            output_targets: FastHashMap::default(),
             cpu_profiles: VecDeque::new(),
             gpu_profiles: VecDeque::new(),
             gpu_cache_texture,
@@ -3232,11 +3220,6 @@ impl Renderer {
         self.external_image_handler = Some(handler);
     }
 
-    /// Set a callback for handling external outputs.
-    pub fn set_output_image_handler(&mut self, handler: Box<dyn OutputImageHandler>) {
-        self.output_image_handler = Some(handler);
-    }
-
     /// Retrieve (and clear) the current list of recorded frame profiles.
     pub fn get_frame_profiles(&mut self) -> (Vec<CpuProfile>, Vec<GpuProfile>) {
         let cpu_profiles = self.cpu_profiles.drain(..).collect();
@@ -3519,7 +3502,6 @@ impl Renderer {
                 self.draw_frame(
                     frame,
                     device_size,
-                    cpu_frame_id,
                     &mut results,
                     doc_index == 0,
                 );
@@ -5122,7 +5104,6 @@ impl Renderer {
         clear_depth: Option<f32>,
         render_tasks: &RenderTaskGraph,
         projection: &default::Transform3D<f32>,
-        frame_id: GpuFrameId,
         stats: &mut RendererStats,
     ) {
         profile_scope!("draw_color_target");
@@ -5253,49 +5234,6 @@ impl Renderer {
                 render_tasks,
                 stats,
             );
-        }
-
-        // For any registered image outputs on this render target,
-        // get the texture from caller and blit it.
-        for output in &target.outputs {
-            let handler = self.output_image_handler
-                .as_mut()
-                .expect("Found output image, but no handler set!");
-            if let Some((texture_id, output_size)) = handler.lock(output.pipeline_id) {
-                let fbo_id = match self.output_targets.entry(texture_id) {
-                    Entry::Vacant(entry) => {
-                        let fbo_id = self.device.create_fbo_for_external_texture(texture_id);
-                        entry.insert(FrameOutput {
-                            fbo_id,
-                            last_access: frame_id,
-                        });
-                        fbo_id
-                    }
-                    Entry::Occupied(mut entry) => {
-                        let target = entry.get_mut();
-                        target.last_access = frame_id;
-                        target.fbo_id
-                    }
-                };
-                let (src_rect, _) = render_tasks[output.task_id].get_target_rect();
-                if !self.device.surface_origin_is_top_left() {
-                    self.device.blit_render_target_invert_y(
-                        draw_target.into(),
-                        draw_target.to_framebuffer_rect(src_rect.translate(-content_origin.to_vector())),
-                        DrawTarget::External { fbo: fbo_id, size: output_size },
-                        output_size.into(),
-                    );
-                } else {
-                    self.device.blit_render_target(
-                        draw_target.into(),
-                        draw_target.to_framebuffer_rect(src_rect.translate(-content_origin.to_vector())),
-                        DrawTarget::External { fbo: fbo_id, size: output_size },
-                        output_size.into(),
-                        TextureFilter::Linear,
-                    );
-                }
-                handler.unlock(output.pipeline_id);
-            }
         }
     }
 
@@ -5938,7 +5876,6 @@ impl Renderer {
         &mut self,
         frame: &mut Frame,
         device_size: Option<DeviceIntSize>,
-        frame_id: GpuFrameId,
         results: &mut RenderResults,
         clear_framebuffer: bool,
     ) {
@@ -6103,7 +6040,6 @@ impl Renderer {
                                 None,
                                 &frame.render_tasks,
                                 &projection,
-                                frame_id,
                                 &mut results.stats,
                             );
                         }
@@ -6267,7 +6203,6 @@ impl Renderer {
                             clear_depth,
                             &frame.render_tasks,
                             &projection,
-                            frame_id,
                             &mut results.stats,
                         );
                     }
@@ -6298,16 +6233,6 @@ impl Renderer {
             self.draw_zoom_debug(device_size);
         }
         self.draw_epoch_debug();
-
-        // Garbage collect any frame outputs that weren't used this frame.
-        let device = &mut self.device;
-        self.output_targets
-            .retain(|_, target| if target.last_access != frame_id {
-                device.delete_fbo(target.fbo_id);
-                false
-            } else {
-                true
-            });
 
         frame.has_been_rendered = true;
     }
@@ -6829,9 +6754,6 @@ impl Renderer {
 
         self.debug.deinit(&mut self.device);
 
-        for (_, target) in self.output_targets {
-            self.device.delete_fbo(target.fbo_id);
-        }
         if let Ok(shaders) = Rc::try_unwrap(self.shaders) {
             shaders.into_inner().deinit(&mut self.device);
         }
@@ -7294,19 +7216,6 @@ impl ExternalImageHandler for DummyExternalImageHandler {
     fn unlock(&mut self, _key: ExternalImageId, _channel_index: u8) {}
 }
 
-#[cfg(feature = "replay")]
-struct VoidHandler;
-
-#[cfg(feature = "replay")]
-impl OutputImageHandler for VoidHandler {
-    fn lock(&mut self, _: PipelineId) -> Option<(u32, FramebufferIntSize)> {
-        None
-    }
-    fn unlock(&mut self, _: PipelineId) {
-        unreachable!()
-    }
-}
-
 #[derive(Default)]
 pub struct PipelineInfo {
     pub epochs: FastHashMap<(PipelineId, DocumentId), Epoch>,
@@ -7693,7 +7602,6 @@ impl Renderer {
             self.device.end_frame();
         }
 
-        self.output_image_handler = Some(Box::new(VoidHandler) as Box<_>);
         self.external_image_handler = Some(Box::new(image_handler) as Box<_>);
         info!("done.");
     }

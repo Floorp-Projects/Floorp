@@ -195,14 +195,13 @@ impl Example for App {
         false
     }
 
-    fn get_image_handlers(
+    fn get_image_handler(
         &mut self,
         gl: &dyn gl::Gl,
-    ) -> (Option<Box<dyn ExternalImageHandler>>,
-          Option<Box<dyn OutputImageHandler>>) {
+    ) -> Option<Box<dyn ExternalImageHandler>> {
         let provider = YuvImageProvider::new(gl);
         self.texture_id = provider.texture_ids[0];
-        (Some(Box::new(provider)), None)
+        Some(Box::new(provider))
     }
 
     fn draw_custom(&mut self, gl: &dyn gl::Gl) {
