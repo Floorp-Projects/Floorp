@@ -2462,13 +2462,13 @@ EditActionResult HTMLEditor::HandleDeleteSelectionInternal(
     if (startPoint.GetContainerAsContent()) {
       AutoEditorDOMPointChildInvalidator lockOffset(startPoint);
 
-      EditActionResult result = MaybeDeleteTopMostEmptyAncestor(
-          MOZ_KnownLive(*startPoint.GetContainerAsContent()), *editingHost,
-          aDirectionAndAmount);
+      AutoEmptyBlockAncestorDeleter deleter;
+      EditActionResult result =
+          deleter.Run(*this, MOZ_KnownLive(*startPoint.GetContainerAsContent()),
+                      *editingHost, aDirectionAndAmount);
       if (result.Failed() || result.Handled()) {
-        NS_WARNING_ASSERTION(
-            result.Succeeded(),
-            "HTMLEditor::MaybeDeleteTopMostEmptyAncestor() failed");
+        NS_WARNING_ASSERTION(result.Succeeded(),
+                             "AutoEmptyBlockAncestorDeleter::Run() failed");
         return result;
       }
     }
@@ -7859,10 +7859,10 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   return NS_OK;
 }
 
-EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
-    nsIContent& aStartContent, Element& aEditingHostElement,
-    nsIEditor::EDirection aDirectionAndAmount) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
+EditActionResult HTMLEditor::AutoEmptyBlockAncestorDeleter::Run(
+    HTMLEditor& aHTMLEditor, nsIContent& aStartContent,
+    Element& aEditingHostElement, nsIEditor::EDirection aDirectionAndAmount) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
   // If the editing host is an inline element, bail out early.
   if (HTMLEditUtils::IsInlineElement(aEditingHostElement)) {
@@ -7876,7 +7876,7 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
   RefPtr<Element> topMostEmptyBlockElement;
   while (blockElement && blockElement != &aEditingHostElement &&
          !HTMLEditUtils::IsAnyTableElement(blockElement) &&
-         IsEmptyNode(*blockElement, true, false)) {
+         aHTMLEditor.IsEmptyNode(*blockElement, true, false)) {
     topMostEmptyBlockElement = blockElement;
     blockElement =
         HTMLEditUtils::GetAncestorBlockElement(*topMostEmptyBlockElement);
@@ -7906,7 +7906,7 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
     //     last list item is deleted.  We should follow it since current
     //     behavior is annoying when you type new list item with selecting
     //     all list items.
-    if (IsFirstEditableChild(topMostEmptyBlockElement)) {
+    if (aHTMLEditor.IsFirstEditableChild(topMostEmptyBlockElement)) {
       EditorDOMPoint atParentOfEmptyBlock(parentOfEmptyBlockElement);
       if (NS_WARN_IF(!atParentOfEmptyBlock.IsSet())) {
         return EditActionResult(NS_ERROR_FAILURE);
@@ -7916,15 +7916,16 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
       if (!HTMLEditUtils::IsAnyListElement(
               atParentOfEmptyBlock.GetContainer())) {
         RefPtr<Element> brElement =
-            InsertBRElementWithTransaction(atParentOfEmptyBlock);
-        if (NS_WARN_IF(Destroyed())) {
+            aHTMLEditor.InsertBRElementWithTransaction(atParentOfEmptyBlock);
+        if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
           return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (!brElement) {
           NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
           return EditActionResult(NS_ERROR_FAILURE);
         }
-        nsresult rv = CollapseSelectionTo(EditorRawDOMPoint(brElement));
+        nsresult rv =
+            aHTMLEditor.CollapseSelectionTo(EditorRawDOMPoint(brElement));
         if (NS_FAILED(rv)) {
           NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                "HTMLEditor::CollapseSelectionTo() failed");
@@ -7945,14 +7946,14 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
             advancedFromEmptyBlock,
             "Failed to set selection to the after the empty block");
         nsCOMPtr<nsIContent> nextContentOfEmptyBlock =
-            GetNextNode(afterEmptyBlock);
+            aHTMLEditor.GetNextNode(afterEmptyBlock);
         if (nextContentOfEmptyBlock) {
-          EditorDOMPoint pt = GetGoodCaretPointFor(*nextContentOfEmptyBlock,
-                                                   aDirectionAndAmount);
+          EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
+              *nextContentOfEmptyBlock, aDirectionAndAmount);
           NS_WARNING_ASSERTION(
               pt.IsSet(),
               "HTMLEditor::GetGoodCaretPointFor() failed, but ignored");
-          nsresult rv = CollapseSelectionTo(pt);
+          nsresult rv = aHTMLEditor.CollapseSelectionTo(pt);
           if (NS_FAILED(rv)) {
             NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
             return EditActionResult(rv);
@@ -7962,7 +7963,7 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
         if (NS_WARN_IF(!advancedFromEmptyBlock)) {
           return EditActionResult(NS_ERROR_FAILURE);
         }
-        nsresult rv = CollapseSelectionTo(afterEmptyBlock);
+        nsresult rv = aHTMLEditor.CollapseSelectionTo(afterEmptyBlock);
         if (NS_FAILED(rv)) {
           NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
           return EditActionResult(rv);
@@ -7976,14 +7977,14 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
         // if there is.  Otherwise, to after the empty block.
         EditorRawDOMPoint atEmptyBlock(topMostEmptyBlockElement);
         nsCOMPtr<nsIContent> previousContentOfEmptyBlock =
-            GetPreviousEditableNode(atEmptyBlock);
+            aHTMLEditor.GetPreviousEditableNode(atEmptyBlock);
         if (previousContentOfEmptyBlock) {
-          EditorDOMPoint pt = GetGoodCaretPointFor(*previousContentOfEmptyBlock,
-                                                   aDirectionAndAmount);
+          EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
+              *previousContentOfEmptyBlock, aDirectionAndAmount);
           NS_WARNING_ASSERTION(
               pt.IsSet(),
               "HTMLEditor::GetGoodCaretPointFor() failed, but ignored");
-          nsresult rv = CollapseSelectionTo(pt);
+          nsresult rv = aHTMLEditor.CollapseSelectionTo(pt);
           if (NS_FAILED(rv)) {
             NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                  "HTMLEditor::CollapseSelectionTo() failed");
@@ -7996,7 +7997,7 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
         if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
           return EditActionResult(NS_ERROR_FAILURE);
         }
-        nsresult rv = CollapseSelectionTo(afterEmptyBlock);
+        nsresult rv = aHTMLEditor.CollapseSelectionTo(afterEmptyBlock);
         if (NS_FAILED(rv)) {
           NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                "HTMLEditor::CollapseSelectionTo() failed");
@@ -8010,8 +8011,9 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
         MOZ_CRASH("CheckForEmptyBlock doesn't support this action yet");
     }
   }
-  nsresult rv = DeleteNodeWithTransaction(*topMostEmptyBlockElement);
-  if (NS_WARN_IF(Destroyed())) {
+  nsresult rv =
+      aHTMLEditor.DeleteNodeWithTransaction(*topMostEmptyBlockElement);
+  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
