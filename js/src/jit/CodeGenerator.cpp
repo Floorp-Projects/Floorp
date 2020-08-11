@@ -33,7 +33,6 @@
 #include "builtin/TypedObject.h"
 #include "gc/Nursery.h"
 #include "irregexp/RegExpTypes.h"
-#include "jit/AtomicOperations.h"
 #include "jit/BaselineCodeGen.h"
 #include "jit/IonIC.h"
 #include "jit/IonOptimizationLevels.h"
@@ -12906,20 +12905,7 @@ void CodeGenerator::visitAtomicIsLockFree(LAtomicIsLockFree* lir) {
   Register value = ToRegister(lir->value());
   Register output = ToRegister(lir->output());
 
-  // Keep this in sync with isLockfreeJS() in jit/AtomicOperations.h.
-  MOZ_ASSERT(AtomicOperations::isLockfreeJS(1));  // Implementation artifact
-  MOZ_ASSERT(AtomicOperations::isLockfreeJS(2));  // Implementation artifact
-  MOZ_ASSERT(AtomicOperations::isLockfreeJS(4));  // Spec requirement
-  MOZ_ASSERT(
-      !AtomicOperations::isLockfreeJS(8));  // Implementation invariant, for now
-
-  Label Ldone, Lfailed;
-  masm.move32(Imm32(1), output);
-  masm.branch32(Assembler::Equal, value, Imm32(4), &Ldone);
-  masm.branch32(Assembler::Equal, value, Imm32(2), &Ldone);
-  masm.branch32(Assembler::Equal, value, Imm32(1), &Ldone);
-  masm.move32(Imm32(0), output);
-  masm.bind(&Ldone);
+  masm.atomicIsLockFreeJS(value, output);
 }
 
 void CodeGenerator::visitClampIToUint8(LClampIToUint8* lir) {
