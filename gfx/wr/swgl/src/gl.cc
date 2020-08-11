@@ -3861,8 +3861,9 @@ static void scale_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
   }
 }
 
-static void linear_row(uint32_t* dest, int span, const vec2_scalar& srcUV,
-                       float srcDU, int srcZOffset, sampler2DArray sampler) {
+static void linear_row_blit(uint32_t* dest, int span, const vec2_scalar& srcUV,
+                            float srcDU, int srcZOffset,
+                            sampler2DArray sampler) {
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
     auto srcpx = textureLinearPackedRGBA8(sampler, ivec2(uv), srcZOffset);
@@ -3878,8 +3879,9 @@ static void linear_row(uint32_t* dest, int span, const vec2_scalar& srcUV,
   }
 }
 
-static void linear_row(uint8_t* dest, int span, const vec2_scalar& srcUV,
-                       float srcDU, int srcZOffset, sampler2DArray sampler) {
+static void linear_row_blit(uint8_t* dest, int span, const vec2_scalar& srcUV,
+                            float srcDU, int srcZOffset,
+                            sampler2DArray sampler) {
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
     auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
@@ -3895,8 +3897,9 @@ static void linear_row(uint8_t* dest, int span, const vec2_scalar& srcUV,
   }
 }
 
-static void linear_row(uint16_t* dest, int span, const vec2_scalar& srcUV,
-                       float srcDU, int srcZOffset, sampler2DArray sampler) {
+static void linear_row_blit(uint16_t* dest, int span, const vec2_scalar& srcUV,
+                            float srcDU, int srcZOffset,
+                            sampler2DArray sampler) {
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
     auto srcpx = textureLinearPackedRG8(sampler, ivec2(uv), srcZOffset);
@@ -3950,20 +3953,91 @@ static void linear_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
   for (int rows = dstBounds.height(); rows > 0; rows--) {
     switch (bpp) {
       case 1:
-        linear_row((uint8_t*)dest, span, srcUV, srcDUV.x, srcZOffset, &sampler);
+        linear_row_blit((uint8_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
+                        &sampler);
         break;
       case 2:
-        linear_row((uint16_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
-                   &sampler);
+        linear_row_blit((uint16_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
+                        &sampler);
         break;
       case 4:
-        linear_row((uint32_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
-                   &sampler);
+        linear_row_blit((uint32_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
+                        &sampler);
         break;
       default:
         assert(false);
         break;
     }
+    dest += destStride;
+    srcUV.y += srcDUV.y;
+  }
+}
+
+static void linear_row_composite(uint32_t* dest, int span,
+                                 const vec2_scalar& srcUV, float srcDU,
+                                 int srcZOffset, sampler2DArray sampler) {
+  vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
+  for (; span >= 4; span -= 4) {
+    WideRGBA8 srcpx =
+        textureLinearUnpackedRGBA8(sampler, ivec2(uv), srcZOffset);
+    WideRGBA8 dstpx = unpack(unaligned_load<PackedRGBA8>(dest));
+    PackedRGBA8 r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
+    unaligned_store(dest, r);
+
+    dest += 4;
+    uv.x += 4 * srcDU;
+  }
+  if (span > 0) {
+    WideRGBA8 srcpx =
+        textureLinearUnpackedRGBA8(sampler, ivec2(uv), srcZOffset);
+    PackedRGBA8 dstpx = unaligned_load<PackedRGBA8>(dest);
+    WideRGBA8 dstpxu = unpack(dstpx);
+    PackedRGBA8 r = pack(srcpx + dstpxu - muldiv255(dstpxu, alphas(srcpx)));
+
+    auto mask = span_mask_RGBA8(span);
+    unaligned_store(dest, (mask & dstpx) | (~mask & r));
+  }
+}
+
+static void linear_composite(Texture& srctex, const IntRect& srcReq, int srcZ,
+                             Texture& dsttex, const IntRect& dstReq, int dstZ,
+                             bool invertY) {
+  assert(srctex.internal_format == GL_RGBA8 ||
+         srctex.internal_format == GL_R8 || srctex.internal_format == GL_RG8);
+  // Compute valid dest bounds
+  IntRect dstBounds = dsttex.sample_bounds(dstReq, invertY);
+  // Check if sampling bounds are empty
+  if (dstBounds.is_empty()) {
+    return;
+  }
+  // Initialize sampler for source texture
+  sampler2DArray_impl sampler;
+  init_sampler(&sampler, srctex);
+  init_depth(&sampler, srctex);
+  sampler.filter = TextureFilter::LINEAR;
+  // Compute source UVs
+  int srcZOffset = srcZ * sampler.height_stride;
+  vec2_scalar srcUV(srcReq.x0, srcReq.y0);
+  vec2_scalar srcDUV(float(srcReq.width()) / dstReq.width(),
+                     float(srcReq.height()) / dstReq.height());
+  // Skip to clamped source start
+  srcUV += srcDUV * vec2_scalar(dstBounds.x0, dstBounds.y0);
+  // Offset source UVs to texel centers and scale by lerp precision
+  srcUV = linearQuantize(srcUV + 0.5f, 128);
+  srcDUV *= 128.0f;
+  // Calculate dest pointer from clamped offsets
+  int bpp = dsttex.bpp();
+  assert(bpp == 4);
+  int destStride = dsttex.stride();
+  char* dest = dsttex.sample_ptr(dstReq, dstBounds, dstZ, invertY);
+  // Inverted Y must step downward along dest rows
+  if (invertY) {
+    destStride = -destStride;
+  }
+  int span = dstBounds.width();
+  for (int rows = dstBounds.height(); rows > 0; rows--) {
+    linear_row_composite((uint32_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
+                         &sampler);
     dest += destStride;
     srcUV.y += srcDUV.y;
   }
@@ -4091,7 +4165,8 @@ void UnlockResource(LockedTexture* resource) {
 // by another thread.
 void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
                GLint srcY, GLsizei srcWidth, GLsizei srcHeight, GLint dstX,
-               GLint dstY, GLboolean opaque, GLboolean flip) {
+               GLint dstY, GLsizei dstWidth, GLsizei dstHeight,
+               GLboolean opaque, GLboolean flip) {
   if (!lockedDst || !lockedSrc) {
     return;
   }
@@ -4122,40 +4197,49 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
   if (flip) {
     dest_stride = -dest_stride;
   }
+
+  IntRect srcReq = {srcX, srcY, srcX + srcWidth, srcY + srcHeight};
+  IntRect dstReq = {dstX, dstY, dstX + dstWidth, dstY + dstHeight};
+  GLenum filter = GL_LINEAR;  // TODO
+
   if (opaque) {
-    for (int y = 0; y < srcHeight; y++) {
-      memcpy(dest, src, srcWidth * bpp);
-      dest += dest_stride;
-      src += src_stride;
+    if (!srcReq.same_size(dstReq) && filter == GL_LINEAR) {
+      linear_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip);
+    } else {
+      scale_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip);
     }
   } else {
-    for (int y = 0; y < srcHeight; y++) {
-      char* end = src + srcWidth * bpp;
-      while (src + 4 * bpp <= end) {
-        WideRGBA8 srcpx = unpack(unaligned_load<PackedRGBA8>(src));
-        WideRGBA8 dstpx = unpack(unaligned_load<PackedRGBA8>(dest));
-        PackedRGBA8 r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
-        unaligned_store(dest, r);
-        src += 4 * bpp;
-        dest += 4 * bpp;
-      }
-      if (src < end) {
-        WideRGBA8 srcpx = unpack(unaligned_load<PackedRGBA8>(src));
-        WideRGBA8 dstpx = unpack(unaligned_load<PackedRGBA8>(dest));
-        U32 r = bit_cast<U32>(
-            pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx))));
-        unaligned_store(dest, r.x);
-        if (src + bpp < end) {
-          unaligned_store(dest + bpp, r.y);
-          if (src + 2 * bpp < end) {
-            unaligned_store(dest + 2 * bpp, r.z);
-          }
+    if (!srcReq.same_size(dstReq) && filter == GL_LINEAR) {
+      linear_composite(srctex, srcReq, 0, dsttex, dstReq, 0, flip);
+    } else {
+      for (int y = 0; y < srcHeight; y++) {
+        char* end = src + srcWidth * bpp;
+        while (src + 4 * bpp <= end) {
+          WideRGBA8 srcpx = unpack(unaligned_load<PackedRGBA8>(src));
+          WideRGBA8 dstpx = unpack(unaligned_load<PackedRGBA8>(dest));
+          PackedRGBA8 r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
+          unaligned_store(dest, r);
+          src += 4 * bpp;
+          dest += 4 * bpp;
         }
-        dest += end - src;
-        src = end;
+        if (src < end) {
+          WideRGBA8 srcpx = unpack(unaligned_load<PackedRGBA8>(src));
+          WideRGBA8 dstpx = unpack(unaligned_load<PackedRGBA8>(dest));
+          U32 r = bit_cast<U32>(
+              pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx))));
+          unaligned_store(dest, r.x);
+          if (src + bpp < end) {
+            unaligned_store(dest + bpp, r.y);
+            if (src + 2 * bpp < end) {
+              unaligned_store(dest + 2 * bpp, r.z);
+            }
+          }
+          dest += end - src;
+          src = end;
+        }
+        dest += dest_stride - srcWidth * bpp;
+        src += src_stride - srcWidth * bpp;
       }
-      dest += dest_stride - srcWidth * bpp;
-      src += src_stride - srcWidth * bpp;
     }
   }
 }
