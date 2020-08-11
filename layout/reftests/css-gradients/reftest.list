@@ -84,7 +84,7 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,0-2,0-19999) fuzzy-if(azureSkiaGL||skiaC
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-2,0-19999) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-3b.html aja-linear-3-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-4,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-4a.html aja-linear-4-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-4,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-4b.html aja-linear-4-ref.html 
-fuzzy-if(!contentSameGfxBackendAsCanvas,0-4,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) fuzzy-if(webrender&&winWidget,1-1,5900-6100) == aja-linear-5a.html aja-linear-5-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-4,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) fuzzy-if(webrender&&winWidget,1-1,5600-6100) == aja-linear-5a.html aja-linear-5-ref.html
 fuzzy-if(Android,0-6,0-10576) == height-dependence-1.html height-dependence-1-ref.html
 fuzzy-if(cocoaWidget,0-1,0-40000) fuzzy-if(Android,0-6,0-10576) == height-dependence-2.html height-dependence-2-ref.html
 fuzzy-if(Android,0-6,0-10576) == height-dependence-3.html height-dependence-3-ref.html
