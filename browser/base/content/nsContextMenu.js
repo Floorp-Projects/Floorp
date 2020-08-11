@@ -1339,6 +1339,7 @@ class nsContextMenu {
 
     openUILink(this.bgImageURL, e, {
       referrerInfo: this.contentData.referrerInfo,
+      forceAllowDataURI: true,
       triggeringPrincipal: this.principal,
       csp: this.csp,
     });
