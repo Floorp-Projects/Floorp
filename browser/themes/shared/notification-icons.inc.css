@@ -246,8 +246,9 @@ html|*#webRTC-previewVideo {
   margin-inline-start: 42px;
   width: 16px;
   height: 16px;
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
+  fill-opacity: 0.6;
 }
 
 .popup-subitem:-moz-locale-dir(rtl) {
