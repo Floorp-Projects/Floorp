@@ -21,7 +21,6 @@
 #  include "mozilla/layers/D3D11YCbCrImage.h"
 #elif XP_MACOSX
 #  include "MacIOSurfaceImage.h"
-#  include "mozilla/gfx/gfxVars.h"
 #endif
 
 namespace mozilla {
@@ -352,10 +351,8 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     }
   }
 #elif XP_MACOSX
-  if (aAllocator &&
-      aAllocator->GetCompositorBackendType() ==
-          layers::LayersBackend::LAYERS_WR &&
-      !gfxVars::UseSoftwareWebRender()) {
+  if (aAllocator && aAllocator->GetCompositorBackendType() ==
+                        layers::LayersBackend::LAYERS_WR) {
     RefPtr<layers::MacIOSurfaceImage> ioImage =
         new layers::MacIOSurfaceImage(nullptr);
     PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);

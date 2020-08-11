@@ -38,15 +38,8 @@ class RenderTextureHost {
   RenderTextureHost();
 
   virtual wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                                   wr::ImageRendering aRendering);
-
-  virtual void Unlock() {}
-
-  virtual wr::WrExternalImage LockSWGL(uint8_t aChannelIndex, void* aContext,
-                                       wr::ImageRendering aRendering);
-
-  virtual void UnlockSWGL() {}
-
+                                   wr::ImageRendering aRendering) = 0;
+  virtual void Unlock() = 0;
   virtual void ClearCachedResources() {}
 
   // Called asynchronouly when corresponding TextureHost's mCompositableCount
