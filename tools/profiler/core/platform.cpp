@@ -5353,7 +5353,6 @@ void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
 }
 
 static void racy_profiler_add_marker(const char* aMarkerName,
-                                     const MarkerTiming& aMarkerTiming,
                                      JS::ProfilingCategoryPair aCategoryPair,
                                      const ProfilerMarkerPayload* aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -5373,22 +5372,23 @@ static void racy_profiler_add_marker(const char* aMarkerName,
     return;
   }
 
+  const MarkerTiming markerTiming =
+      aPayload ? get_marker_timing_from_payload(*aPayload)
+               : MarkerTiming::Instant();
+
   StoreMarker(CorePS::CoreBuffer(), racyRegisteredThread->ThreadId(),
-              aMarkerName, aMarkerTiming, aCategoryPair, aPayload);
+              aMarkerName, markerTiming, aCategoryPair, aPayload);
 }
 
 void profiler_add_marker(const char* aMarkerName,
                          JS::ProfilingCategoryPair aCategoryPair,
                          const ProfilerMarkerPayload& aPayload) {
-  racy_profiler_add_marker(aMarkerName,
-                           get_marker_timing_from_payload(aPayload),
-                           aCategoryPair, &aPayload);
+  racy_profiler_add_marker(aMarkerName, aCategoryPair, &aPayload);
 }
 
 void profiler_add_marker(const char* aMarkerName,
                          JS::ProfilingCategoryPair aCategoryPair) {
-  racy_profiler_add_marker(aMarkerName, MarkerTiming::Instant(), aCategoryPair,
-                           nullptr);
+  racy_profiler_add_marker(aMarkerName, aCategoryPair, nullptr);
 }
 
 // This is a simplified version of profiler_add_marker that can be easily passed
