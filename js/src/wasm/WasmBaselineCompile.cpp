@@ -8109,6 +8109,11 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitVectorBinopWithTemp(void (*)(MacroAssembler& masm, RegV128 rs,
                                         RegV128 rsd, TempRegType temp));
 
+  template <typename TempRegType1, typename TempRegType2>
+  void emitVectorBinopWithTwoTemps(void (*)(MacroAssembler& masm, RegV128 rs,
+                                            RegV128 rsd, TempRegType1 temp1,
+                                            TempRegType2 temp2));
+
   void emitVectorComparison(Assembler::Condition cond,
                             void (*)(MacroAssembler& masm,
                                      Assembler::Condition cond, RegV128 rs,
@@ -12759,22 +12764,24 @@ static void DivF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.divFloat64x2(rs, rsd);
 }
 
-static void MinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.minFloat32x4(rs, rsd);
+static void MinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
+                     RegV128 temp1, RegV128 temp2) {
+  masm.minFloat32x4(rs, rsd, temp1, temp2);
 }
 
-static void MinF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
-  masm.minFloat64x2(rs, rsd);
+static void MinF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
+                     RegV128 temp1, RegV128 temp2) {
+  masm.minFloat64x2(rs, rsd, temp1, temp2);
 }
 
 static void MaxF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
-                     RegV128 temp) {
-  masm.maxFloat32x4(rs, rsd, temp);
+                     RegV128 temp1, RegV128 temp2) {
+  masm.maxFloat32x4(rs, rsd, temp1, temp2);
 }
 
 static void MaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
-                     RegV128 temp) {
-  masm.maxFloat64x2(rs, rsd, temp);
+                     RegV128 temp1, RegV128 temp2) {
+  masm.maxFloat64x2(rs, rsd, temp1, temp2);
 }
 
 static void PMinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
@@ -13272,6 +13279,21 @@ void BaseCompiler::emitVectorBinopWithTemp(void (*op)(MacroAssembler& masm,
   op(masm, rs, r, temp);
   freeV128(rs);
   free(temp);
+  pushV128(r);
+}
+
+template <typename TempRegType1, typename TempRegType2>
+void BaseCompiler::emitVectorBinopWithTwoTemps(
+    void (*op)(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
+               TempRegType1 temp1, TempRegType2 temp2)) {
+  RegV128 r, rs;
+  pop2xV128(&r, &rs);
+  TempRegType1 temp1 = need<TempRegType1>();
+  TempRegType2 temp2 = need<TempRegType2>();
+  op(masm, rs, r, temp1, temp2);
+  freeV128(rs);
+  free(temp1);
+  free(temp2);
   pushV128(r);
 }
 
@@ -14583,9 +14605,11 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::F32x4Div):
             CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, DivF32x4));
           case uint32_t(SimdOp::F32x4Min):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MinF32x4));
+            CHECK_NEXT(
+                dispatchVectorBinary(emitVectorBinopWithTwoTemps, MinF32x4));
           case uint32_t(SimdOp::F32x4Max):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinopWithTemp, MaxF32x4));
+            CHECK_NEXT(
+                dispatchVectorBinary(emitVectorBinopWithTwoTemps, MaxF32x4));
           case uint32_t(SimdOp::F64x2Add):
             CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddF64x2));
           case uint32_t(SimdOp::F64x2Sub):
@@ -14595,9 +14619,11 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::F64x2Div):
             CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, DivF64x2));
           case uint32_t(SimdOp::F64x2Min):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, MinF64x2));
+            CHECK_NEXT(
+                dispatchVectorBinary(emitVectorBinopWithTwoTemps, MinF64x2));
           case uint32_t(SimdOp::F64x2Max):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinopWithTemp, MaxF64x2));
+            CHECK_NEXT(
+                dispatchVectorBinary(emitVectorBinopWithTwoTemps, MaxF64x2));
           case uint32_t(SimdOp::I8x16NarrowSI16x8):
             CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, NarrowI16x8));
           case uint32_t(SimdOp::I8x16NarrowUI16x8):
