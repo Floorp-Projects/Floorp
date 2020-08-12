@@ -94,6 +94,21 @@ bool RangeUtils::IsValidPoints(
   return *order != 1;
 }
 
+// static
+Maybe<bool> RangeUtils::IsNodeContainedInRange(nsINode& aNode,
+                                               AbstractRange* aAbstractRange) {
+  bool nodeIsBeforeRange{false};
+  bool nodeIsAfterRange{false};
+
+  const nsresult rv = CompareNodeToRange(&aNode, aAbstractRange,
+                                         &nodeIsBeforeRange, &nodeIsAfterRange);
+  if (NS_FAILED(rv)) {
+    return Nothing();
+  }
+
+  return Some(!nodeIsBeforeRange && !nodeIsAfterRange);
+}
+
 // Utility routine to detect if a content node is completely contained in a
 // range If outNodeBefore is returned true, then the node starts before the
 // range does. If outNodeAfter is returned true, then the node ends after the

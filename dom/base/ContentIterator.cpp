@@ -832,12 +832,10 @@ nsIContent* ContentSubtreeIterator::DetermineFirstContent() const {
 
   // confirm that this first possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
-
-  bool nodeBefore, nodeAfter;
-  MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(firstCandidate, mRange,
-                                                     &nodeBefore, &nodeAfter));
-
-  if (nodeBefore || nodeAfter) {
+  const Maybe<bool> isNodeContainedInRange =
+      RangeUtils::IsNodeContainedInRange(*firstCandidate, mRange);
+  MOZ_ALWAYS_TRUE(isNodeContainedInRange);
+  if (!isNodeContainedInRange.value()) {
     return nullptr;
   }
 
@@ -934,12 +932,10 @@ nsIContent* ContentSubtreeIterator::DetermineLastContent() const {
   // confirm that this last possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
 
-  bool nodeBefore{false};
-  bool nodeAfter{false};
-  MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(lastCandidate, mRange,
-                                                     &nodeBefore, &nodeAfter));
-
-  if (nodeBefore || nodeAfter) {
+  const Maybe<bool> isNodeContainedInRange =
+      RangeUtils::IsNodeContainedInRange(*lastCandidate, mRange);
+  MOZ_ALWAYS_TRUE(isNodeContainedInRange);
+  if (!isNodeContainedInRange.value()) {
     return nullptr;
   }
 
@@ -1050,12 +1046,11 @@ nsIContent* ContentSubtreeIterator::GetTopAncestorInRange(
   nsIContent* content = aNode->AsContent();
 
   // sanity check: aNode is itself in the range
-  bool nodeBefore, nodeAfter;
-  nsresult res =
-      RangeUtils::CompareNodeToRange(aNode, mRange, &nodeBefore, &nodeAfter);
-  NS_ASSERTION(NS_SUCCEEDED(res) && !nodeBefore && !nodeAfter,
+  Maybe<bool> isNodeContainedInRange =
+      RangeUtils::IsNodeContainedInRange(*aNode, mRange);
+  NS_ASSERTION(isNodeContainedInRange && isNodeContainedInRange.value(),
                "aNode isn't in mRange, or something else weird happened");
-  if (NS_FAILED(res) || nodeBefore || nodeAfter) {
+  if (!isNodeContainedInRange || !isNodeContainedInRange.value()) {
     return nullptr;
   }
 
@@ -1070,12 +1065,14 @@ nsIContent* ContentSubtreeIterator::GetTopAncestorInRange(
     if (!parent || !parent->GetParentNode()) {
       return content;
     }
-    MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(
-        parent, mRange, &nodeBefore, &nodeAfter));
 
-    if (nodeBefore || nodeAfter) {
+    isNodeContainedInRange =
+        RangeUtils::IsNodeContainedInRange(*parent, mRange);
+    MOZ_ALWAYS_TRUE(isNodeContainedInRange);
+    if (!isNodeContainedInRange.value()) {
       return content;
     }
+
     content = parent;
   }
 
