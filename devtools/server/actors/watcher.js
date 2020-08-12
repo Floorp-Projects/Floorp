@@ -15,12 +15,14 @@ const {
 const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
-const Targets = require("devtools/server/actors/targets/index");
 
+const TARGET_TYPES = {
+  FRAME: "frame",
+};
 const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
   TARGET_HELPERS,
-  Targets.TYPES.FRAME,
+  TARGET_TYPES.FRAME,
   "devtools/server/actors/watcher/target-helpers/frame-helper"
 );
 
@@ -63,7 +65,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   destroy: function() {
     // Force unwatching for all types, even if we weren't watching.
     // This is fine as unwatchTarget is NOOP if we weren't already watching for this target type.
-    for (const targetType of Object.values(Targets.TYPES)) {
+    for (const targetType of Object.values(TARGET_TYPES)) {
       this.unwatchTargets(targetType);
     }
     this.unwatchResources(Object.values(Resources.TYPES));
@@ -131,7 +133,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * resolves.
    *
    * @param {string} targetType
-   *        Type of context to observe. See Targets.TYPES object.
+   *        Type of context to observe. See TARGET_TYPES object.
    */
   async watchTargets(targetType) {
     WatcherRegistry.watchTargets(this, targetType);
@@ -146,7 +148,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * Stop watching for a given target type.
    *
    * @param {string} targetType
-   *        Type of context to observe. See Targets.TYPES object.
+   *        Type of context to observe. See TARGET_TYPES object.
    */
   unwatchTargets(targetType) {
     const isWatchingTargets = WatcherRegistry.unwatchTargets(this, targetType);
@@ -233,19 +235,17 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   async watchResources(resourceTypes) {
     // First process resources which have to be listened from the parent process
     // (the watcher actor always runs in the parent process)
-    Resources.watchResources(
+    const contentProcessResourceTypes = Resources.watchParentProcessResources(
       this,
-      Resources.getParentProcessResourceTypes(resourceTypes)
+      resourceTypes
     );
 
-    // Bail out early if all resources were watched from parent process.
-    // In this scenario, we do not need to update these resource types in the WatcherRegistry
-    // as targets do not care about them.
-    if (!Resources.hasResourceTypesForTargets(resourceTypes)) {
+    // Bail out early if all resources were watched from parent process
+    if (contentProcessResourceTypes.length == 0) {
       return;
     }
 
-    WatcherRegistry.watchResources(this, resourceTypes);
+    WatcherRegistry.watchResources(this, contentProcessResourceTypes);
 
     // Fetch resources from all existing targets
     for (const targetType in TARGET_HELPERS) {
@@ -253,18 +253,14 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       // so we should always process it. It does a second check to isWatchingTargets.
       if (
         !WatcherRegistry.isWatchingTargets(this, targetType) &&
-        targetType != Targets.TYPES.FRAME
+        targetType != TARGET_TYPES.FRAME
       ) {
         continue;
       }
-      const targetResourceTypes = Resources.getResourceTypesForTargetType(
-        resourceTypes,
-        targetType
-      );
       const targetHelperModule = TARGET_HELPERS[targetType];
       await targetHelperModule.watchResources({
         watcher: this,
-        resourceTypes: targetResourceTypes,
+        resourceTypes: contentProcessResourceTypes,
       });
     }
 
@@ -287,15 +283,11 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
      * We will eventually get rid of this code once all targets are properly supported by
      * the Watcher Actor and we have target helpers for all of them.
      */
-    const frameResourceTypes = Resources.getResourceTypesForTargetType(
-      resourceTypes,
-      Targets.TYPES.FRAME
-    );
     const targetActor = this.browserElement
       ? TargetActorRegistry.getTargetActor(this.browserId)
       : TargetActorRegistry.getParentProcessTargetActor();
     if (targetActor) {
-      await targetActor.watchTargetResources(frameResourceTypes);
+      await targetActor.watchTargetResources(resourceTypes);
     }
   },
 
@@ -308,21 +300,21 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   unwatchResources(resourceTypes) {
     // First process resources which are listened from the parent process
     // (the watcher actor always runs in the parent process)
-    Resources.unwatchResources(
+    const contentProcessResourceTypes = Resources.unwatchParentProcessResources(
       this,
-      Resources.getParentProcessResourceTypes(resourceTypes)
+      resourceTypes
     );
 
-    // Bail out early if all resources were all watched from parent process.
-    // In this scenario, we do not need to update these resource types in the WatcherRegistry
-    // as targets do not care about them.
-    if (!Resources.hasResourceTypesForTargets(resourceTypes)) {
+    // Bail out early if all resources were watched from parent process.
+    // These parent process resource types won't be saved in the WatcherRegistry because content processes
+    // do not need to know about them.
+    if (contentProcessResourceTypes.length == 0) {
       return;
     }
 
     const isWatchingResources = WatcherRegistry.unwatchResources(
       this,
-      resourceTypes
+      contentProcessResourceTypes
     );
     if (!isWatchingResources) {
       return;
@@ -336,32 +328,24 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         // so we should always process it. It does a second check to isWatchingTargets.
         if (
           !WatcherRegistry.isWatchingTargets(this, targetType) &&
-          targetType != Targets.TYPES.FRAME
+          targetType != TARGET_TYPES.FRAME
         ) {
           continue;
         }
-        const targetResourceTypes = Resources.getResourceTypesForTargetType(
-          resourceTypes,
-          targetType
-        );
         const targetHelperModule = TARGET_HELPERS[targetType];
         targetHelperModule.unwatchResources({
           watcher: this,
-          resourceTypes: targetResourceTypes,
+          resourceTypes: contentProcessResourceTypes,
         });
       }
     }
 
     // See comment in watchResources.
-    const frameResourceTypes = Resources.getResourceTypesForTargetType(
-      resourceTypes,
-      Targets.TYPES.FRAME
-    );
     const targetActor = this.browserElement
       ? TargetActorRegistry.getTargetActor(this.browserId)
       : TargetActorRegistry.getParentProcessTargetActor();
     if (targetActor) {
-      targetActor.unwatchTargetResources(frameResourceTypes);
+      targetActor.unwatchTargetResources(contentProcessResourceTypes);
     }
 
     // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource
