@@ -66,11 +66,8 @@ HTMLIFrameElement::~HTMLIFrameElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLIFrameElement)
 
-void HTMLIFrameElement::BindToBrowsingContext(
-    BrowsingContext* aBrowsingContext) {
-  if (StaticPrefs::dom_security_featurePolicy_enabled()) {
-    RefreshFeaturePolicy(true /* parse the feature policy attribute */);
-  }
+void HTMLIFrameElement::BindToBrowsingContext(BrowsingContext*) {
+  RefreshFeaturePolicy(true /* parse the feature policy attribute */);
 }
 
 bool HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -154,19 +151,6 @@ nsMapRuleToAttributesFunc HTMLIFrameElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-bool HTMLIFrameElement::HasAllowFullscreenAttribute() const {
-  return GetBoolAttr(nsGkAtoms::allowfullscreen);
-}
-
-bool HTMLIFrameElement::AllowFullscreen() const {
-  if (StaticPrefs::dom_security_featurePolicy_enabled()) {
-    // The feature policy check in Document::GetFullscreenError already accounts
-    // for the allow* attributes, so we're done.
-    return true;
-  }
-  return HasAllowFullscreenAttribute();
-}
-
 nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                          const nsAttrValue* aValue,
                                          const nsAttrValue* aOldValue,
@@ -182,23 +166,14 @@ nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         // alreay been updated.
         mFrameLoader->ApplySandboxFlags(GetSandboxFlags());
       }
-    } else if (aName == nsGkAtoms::allowfullscreen) {
-      if (mFrameLoader) {
-        if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
-          MOZ_ALWAYS_SUCCEEDS(
-              bc->SetFullscreenAllowedByOwner(AllowFullscreen()));
-        }
-      }
     }
 
-    if (StaticPrefs::dom_security_featurePolicy_enabled()) {
-      if (aName == nsGkAtoms::allow || aName == nsGkAtoms::src ||
-          aName == nsGkAtoms::srcdoc || aName == nsGkAtoms::sandbox) {
-        RefreshFeaturePolicy(true /* parse the feature policy attribute */);
-      } else if (aName == nsGkAtoms::allowfullscreen ||
-                 aName == nsGkAtoms::allowpaymentrequest) {
-        RefreshFeaturePolicy(false /* parse the feature policy attribute */);
-      }
+    if (aName == nsGkAtoms::allow || aName == nsGkAtoms::src ||
+        aName == nsGkAtoms::srcdoc || aName == nsGkAtoms::sandbox) {
+      RefreshFeaturePolicy(true /* parse the feature policy attribute */);
+    } else if (aName == nsGkAtoms::allowfullscreen ||
+               aName == nsGkAtoms::allowpaymentrequest) {
+      RefreshFeaturePolicy(false /* parse the feature policy attribute */);
     }
   }
   return nsGenericHTMLFrameElement::AfterSetAttr(
@@ -303,8 +278,6 @@ HTMLIFrameElement::GetFeaturePolicyDefaultOrigin() const {
 }
 
 void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
-  MOZ_ASSERT(StaticPrefs::dom_security_featurePolicy_enabled());
-
   if (aParseAllowAttribute) {
     mFeaturePolicy->ResetDeclaredPolicy();
 
@@ -327,7 +300,7 @@ void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
     mFeaturePolicy->MaybeSetAllowedPolicy(u"payment"_ns);
   }
 
-  if (HasAllowFullscreenAttribute()) {
+  if (AllowFullscreen()) {
     mFeaturePolicy->MaybeSetAllowedPolicy(u"fullscreen"_ns);
   }
 

@@ -650,8 +650,7 @@ static bool HasCameraPermission(const uint64_t& aWindowId) {
 
   // If we delegate permission from first party, we should use the top level
   // window
-  if (StaticPrefs::dom_security_featurePolicy_enabled() &&
-      StaticPrefs::permissions_delegation_enabled()) {
+  if (StaticPrefs::permissions_delegation_enabled()) {
     RefPtr<dom::BrowsingContext> topBC = window->BrowsingContext()->Top();
     window = topBC->Canonical()->GetCurrentWindowGlobal();
   }

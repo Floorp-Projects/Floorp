@@ -514,8 +514,9 @@ static bool OwnerAllowsFullscreen(const Element& aEmbedder) {
   if (aEmbedder.IsXULElement()) {
     return !aEmbedder.HasAttr(nsGkAtoms::disablefullscreen);
   }
-  if (const auto* iframe = HTMLIFrameElement::FromNode(aEmbedder)) {
-    return iframe->AllowFullscreen();
+  if (aEmbedder.IsHTMLElement(nsGkAtoms::iframe)) {
+    // This is controlled by feature policy.
+    return true;
   }
   if (const auto* embed = HTMLEmbedElement::FromNode(aEmbedder)) {
     return embed->AllowFullscreen();

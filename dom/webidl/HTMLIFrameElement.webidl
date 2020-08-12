@@ -25,7 +25,7 @@ interface HTMLIFrameElement : HTMLElement {
            attribute DOMString name;
   [PutForwards=value] readonly attribute DOMTokenList sandbox;
            // attribute boolean seamless;
-  [CEReactions, SetterThrows, Pure, BinaryName="allowFullscreenForBindings"]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean allowFullscreen;
   [CEReactions, SetterThrows, Pure]
            attribute boolean allowPaymentRequest;
@@ -70,6 +70,6 @@ partial interface HTMLIFrameElement {
   [SameObject, Pref="dom.security.featurePolicy.webidl.enabled"]
   readonly attribute FeaturePolicy featurePolicy;
 
-  [CEReactions, SetterThrows, Pure, Pref="dom.security.featurePolicy.enabled"]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString allow;
 };

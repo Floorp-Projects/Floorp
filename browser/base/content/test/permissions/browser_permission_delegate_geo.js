@@ -114,7 +114,6 @@ add_task(async function setup() {
     SpecialPowers.pushPrefEnv(
       {
         set: [
-          ["dom.security.featurePolicy.enabled", true],
           ["dom.security.featurePolicy.header.enabled", true],
           ["dom.security.featurePolicy.webidl.enabled", true],
           ["permissions.delegation.enabled", true],

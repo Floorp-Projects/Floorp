@@ -156,10 +156,6 @@ bool FeaturePolicyUtils::IsFeatureUnsafeAllowedAll(
     Document* aDocument, const nsAString& aFeatureName) {
   MOZ_ASSERT(aDocument);
 
-  if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
-    return false;
-  }
-
   if (!aDocument->IsHTMLDocument()) {
     return false;
   }
@@ -178,10 +174,6 @@ bool FeaturePolicyUtils::IsFeatureUnsafeAllowedAll(
 bool FeaturePolicyUtils::IsFeatureAllowed(Document* aDocument,
                                           const nsAString& aFeatureName) {
   MOZ_ASSERT(aDocument);
-
-  if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
-    return true;
-  }
 
   // Skip apply features in experimental phase
   if (!StaticPrefs::dom_security_featurePolicy_experimental_enabled() &&

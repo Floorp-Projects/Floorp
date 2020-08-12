@@ -25,8 +25,7 @@ interface nsIPermissionDelegateHandler : nsISupports
   boolean maybeUnsafePermissionDelegate(in Array<ACString> aTypes);
 
   /*
-   * Return true if both permissions.delegation.enabled and
-   * dom.security.featurePolicy.enabled pref are true.
+   * Return true if permissions.delegation.enabled is true.
    */
   readonly attribute boolean permissionDelegateFPEnabled;
 };

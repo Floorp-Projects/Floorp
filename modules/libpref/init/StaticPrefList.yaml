@@ -2544,13 +2544,6 @@
   value: false
   mirror: always
 
-# This pref enables FeaturePolicy logic and the parsing of 'allow' attribute in
-# HTMLIFrameElement objects.
-- name: dom.security.featurePolicy.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # This pref enables Sec-Fetch-* logic and causes corresponding
 # request headers to be set.
 - name: dom.security.secFetch.enabled
